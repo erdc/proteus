@@ -1,0 +1,10 @@
+curvature_bubble_2d_p.py curvature_bubble_2d_c0p1_n.py
+twp_navier_stokes_bubble_2d_p.py twp_navier_stokes_bubble_2d_c0p1c0p1_n.py 
+ls_bubble_2d_p.py ls_bubble_2d_c0p1_n.py 
+vof_bubble_2d_p.py vof_bubble_2d_c0p1_n.py 
+redist_bubble_2d_p.py redist_bubble_2d_c0p1_n.py
+ls_consrv_bubble_2d_p.py ls_consrv_bubble_2d_c0p1_n.py 
+name = "twp_navier_stokes_bubble_2d"
+#systemStepControllerType = Sequential_MinFLCBDFStep
+needEBQ_GLOBAL = True
+needEBQ = True

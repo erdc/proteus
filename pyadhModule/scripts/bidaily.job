@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+import os
+import os.path
+import sys
+import time
+pyadh_test_path = os.path.join(os.environ['HOME'],'src','pyadh-trunk-test')
+pyadh_test_path_scripts=os.path.join(pyadh_test_path,'scripts')
+pyadh_test_path_problems=os.path.join(pyadh_test_path,'test','problemDescriptions')
+print "pyadh path = ",pyadh_test_path
+print "pyadh scripts path = ",pyadh_test_path_scripts
+print "pyadh test problems path = ",pyadh_test_path_problems
+try:
+    os.environ['PATH'] = pyadh_test_path_scripts+os.pathsep+os.environ['PATH']
+except:
+    print "Problem setting PATH variable"
+print "PATH = ",os.environ['PATH']
+try:
+    os.environ['PYTHONPATH'] = pyadh_test_path_pyadh+os.pathsep+os.environ['PYTHONPATH']
+except:
+    os.environ['PYTHONPATH'] = pyadh_test_path
+print "PYTHONPATH = ",os.environ['PYTHONPATH']
+try:
+    os.chdir(pyadh_test_path)
+except:
+    print "Unable to change directories to ",pyadh_test_path
+outfileName = 'bidaily.out.'+`time.time()`
+outfile = open(outfileName,'w')
+sys.stdout = outfile
+sys.stderr = outfile
+try:
+    os.system('svn update >& %s' % (outfileName,))
+except:
+    print "Unable to run svn update"
+os.system('make clobber >& %s; make >& %s' % (outfileName,outfileName,))
+os.chdir(pyadh_test_path_problems)
+os.system('runAll.py >& %s' % (outfileName,))

@@ -1,0 +1,5 @@
+HypPar_correction_p.py HypPar_correction_n.py
+HypPar_ADR_p.py HypPar_ADR_n.py 
+sequence = [0,1]
+stepFractions = [1.0,1.0]
+NumberOfSequenceIts = 6

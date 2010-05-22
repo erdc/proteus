@@ -1,0 +1,33 @@
+10 2 0 1 
+#vertices 
+1  0.00000e+00  0.00000e+00 1  #flume lower left
+2  5.00000e-01  0.00000e+00 1  #inflow right
+3  0.99000e+01  0.00000e+00 1  #weir lower left
+4  0.99000e+01  0.40000e+00 1  #weir upper left
+5  1.01000e+01  0.40000e+00 1  #weir upper right
+6  1.01000e+01  0.00000e+00 1  #weir lower right
+7  1.95000e+01  0.00000e+00 1  #outflow left
+8  2.00000e+01  0.00000e+00 1  #flume lower right
+9  2.00000e+01  2.00000e+00 1  #flume upper right
+10  0.00000e+00  2.00000e+00 1 #flume upper left
+# _________________
+# |                |
+# |      __        |
+# |______| |_______|
+#
+#segments 
+10 1 
+1 1 2 0 
+2 2 3 0 
+3 3 4 0 
+4 4 5 0
+5 5 6 0 
+6 6 7 0
+7 7 8 0
+8 8 9 0
+9 9 10 0
+10 10 1 0 
+#holes
+0
+#regions
+0

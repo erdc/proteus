@@ -1,0 +1,7 @@
+*.dmg	filter=lfs diff=lfs merge=lfs -crlf
+*.geo	filter=lfs diff=lfs merge=lfs -crlf
+*.msh	filter=lfs diff=lfs merge=lfs -crlf
+*.smb	filter=lfs diff=lfs merge=lfs -crlf
+*.smd	filter=lfs diff=lfs merge=lfs -crlf
+*.sms	filter=lfs diff=lfs merge=lfs -crlf
+*.x_t	filter=lfs diff=lfs merge=lfs -crlf

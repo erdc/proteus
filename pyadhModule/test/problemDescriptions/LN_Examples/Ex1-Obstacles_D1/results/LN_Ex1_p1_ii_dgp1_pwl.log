@@ -1,0 +1,231 @@
+Running PyADH version 0.7.0
+Setting simulation processing defaults
+Batch file contains 1 runs
+Starting LN_Ex1_p1_ii_dgp1_pwl run number 0
+Initializing NumericalSolution for LN_Ex1_p1_ii_dgp1_pwl
+ System includes: 
+LN_Ex1_p1_ii_dgp1_pwl
+
+Setting Archiver(s)
+Warning Numerical Solution storeQuantity = errorData not recognized won't archive
+Warning Numerical Solution storeQuantity = simulationData not recognized won't archive
+Setting up MultilevelMesh
+Building one multilevel mesh for all models
+Generating mesh for LN_Ex1_p1_ii_dgp1_pwl
+Calling Triangle to generate 2D mesh forLN_Ex1_p1_ii_dgp1_pwl
+Converting to PyADH Mesh
+Generating 5-level mesh from coarse Triangle mesh
+Partitioning mesh among 1 processors using partitioningType = 0
+Number of Subdomain Elements Owned= 217
+Number of Subdomain Elements = 217
+Number of Subdomain Nodes Owned= 127
+Number of Subdomain Nodes = 127
+Number of Subdomain elementBoundaries Owned= 343
+Number of Subdomain elementBoundaries = 343
+Number of Subdomain Edges Owned= 343
+Number of Subdomain Edges = 343
+Finished partitioning
+Partitioning mesh among 1 processors using partitioningType = 0
+Number of Subdomain Elements Owned= 868
+Number of Subdomain Elements = 868
+Number of Subdomain Nodes Owned= 470
+Number of Subdomain Nodes = 470
+Number of Subdomain elementBoundaries Owned= 1337
+Number of Subdomain elementBoundaries = 1337
+Number of Subdomain Edges Owned= 1337
+Number of Subdomain Edges = 1337
+Finished partitioning
+Partitioning mesh among 1 processors using partitioningType = 0
+Number of Subdomain Elements Owned= 3472
+Number of Subdomain Elements = 3472
+Number of Subdomain Nodes Owned= 1807
+Number of Subdomain Nodes = 1807
+Number of Subdomain elementBoundaries Owned= 5278
+Number of Subdomain elementBoundaries = 5278
+Number of Subdomain Edges Owned= 5278
+Number of Subdomain Edges = 5278
+Finished partitioning
+Partitioning mesh among 1 processors using partitioningType = 0
+Number of Subdomain Elements Owned= 13888
+Number of Subdomain Elements = 13888
+Number of Subdomain Nodes Owned= 7085
+Number of Subdomain Nodes = 7085
+Number of Subdomain elementBoundaries Owned= 20972
+Number of Subdomain elementBoundaries = 20972
+Number of Subdomain Edges Owned= 20972
+Number of Subdomain Edges = 20972
+Finished partitioning
+Partitioning mesh among 1 processors using partitioningType = 0
+Number of Subdomain Elements Owned= 55552
+Number of Subdomain Elements = 55552
+Number of Subdomain Nodes Owned= 28057
+Number of Subdomain Nodes = 28057
+Number of Subdomain elementBoundaries Owned= 83608
+Number of Subdomain elementBoundaries = 83608
+Number of Subdomain Edges Owned= 83608
+Number of Subdomain Edges = 83608
+Finished partitioning
+*** Global ***
+Number of triangles  : 217
+Number of edges : 343
+Number of nodes : 127
+
+*** Local ***
+Number of triangles  : 217
+Number of edges : 343
+Number of nodes : 127
+
+*** Global ***
+Number of triangles  : 868
+Number of edges : 1337
+Number of nodes : 470
+
+*** Local ***
+Number of triangles  : 868
+Number of edges : 1337
+Number of nodes : 470
+
+*** Global ***
+Number of triangles  : 3472
+Number of edges : 5278
+Number of nodes : 1807
+
+*** Local ***
+Number of triangles  : 3472
+Number of edges : 5278
+Number of nodes : 1807
+
+*** Global ***
+Number of triangles  : 13888
+Number of edges : 20972
+Number of nodes : 7085
+
+*** Local ***
+Number of triangles  : 13888
+Number of edges : 20972
+Number of nodes : 7085
+
+*** Global ***
+Number of triangles  : 55552
+Number of edges : 83608
+Number of nodes : 28057
+
+*** Local ***
+Number of triangles  : 55552
+Number of edges : 83608
+Number of nodes : 28057
+
+Numerical Solution Sparse diffusion information key (0, 0) = (array([0, 2, 4], dtype=int32), array([0, 1, 0, 1], dtype=int32))
+Setting up MultilevelTransport for LN_Ex1_p1_ii_dgp1_pwl
+Allocating phi
+Setting Boundary Conditions
+Allocating phi
+Setting Boundary Conditions
+Allocating phi
+Setting Boundary Conditions
+Allocating phi
+Setting Boundary Conditions
+Allocating phi
+Setting Boundary Conditions
+Setting LN_Ex1_p1_ii_dgp1_pwl stepController to pyadh.StepControl.SC_base
+Setting up MultilevelLinearSolver forLN_Ex1_p1_ii_dgp1_pwl
+multilevelLinearSolverChooser type= pyadh.LinearSolvers.LU
+Setting up MultilevelNonLinearSolver for LN_Ex1_p1_ii_dgp1_pwl
+Finished setting up models and solvers
+Setting up SimTools for LN_Ex1_p1_ii_dgp1_pwl
+Building tnList from model = LN_Ex1_p1_ii_dgp1_pwl nDTout = 1
+Time sequence[0.0, 1.0]
+Setting LN_Ex1_p1_ii_dgp1_pwl systemStepController to object of type pyadh.SplitOperator.Sequential_MinModelStep
+Finished NumericalSolution initialization
+Setting initial conditions
+No initial conditions provided for model LN_Ex1_p1_ii_dgp1_pwl
+Attaching models and running spin-up step if requested
+Estimating initial time derivative and initializing time history for model LN_Ex1_p1_ii_dgp1_pwl
+Choosing initial time step for model LN_Ex1_p1_ii_dgp1_pwl
+Initializing time step on model LN_Ex1_p1_ii_dgp1_pwl to dt =  1.00000e+00
+Initializing time history for model step controller
+Writing initial mesh for  model = LN_Ex1_p1_ii_dgp1_pwl
+Writing initial conditions for  model = LN_Ex1_p1_ii_dgp1_pwl
+Auxiliary variable calculations for model LN_Ex1_p1_ii_dgp1_pwl
+Velocity Norms in Region [2] L2= 0.0 L1= 0.0 LI= 0.0 
+Velocity Norms in Region [2] L2= 0.0 L1= 0.0 LI= 0.0 
+Velocity Norms in Region [2] L2= 0.0 L1= 0.0 LI= 0.0 
+Velocity Norms in Region [2] L2= 0.0 L1= 0.0 LI= 0.0 
+Velocity Norms in Region [2] L2= 0.0 L1= 0.0 LI= 0.0 
+Syncing Archive
+Initializing time step on system Default System to dt =  1.00000e+00
+Initializing step sequence for system Default System to [(1.0, <pyadh.Transport.MultilevelTransport instance at 0x11c0e1cf8>)]
+Starting time stepping
+Solving over interval [ 0.00000e+00, 1.00000e+00]
+System time step t= 1.00000e+00, dt= 1.00000e+00
+Split operator iteration 0
+Fractional step  1.00000e+00 for model LN_Ex1_p1_ii_dgp1_pwl
+Step exact called for model LN_Ex1_p1_ii_dgp1_pwl
+StepControl base stepExact t_model= 1.0 tOut= 1.0 t_model_last= 0.0 dt_model= 1.0 setting to 1.0 
+Model step t= 1.00000e+00, dt= 1.00000e+00 for model LN_Ex1_p1_ii_dgp1_pwl
+Model substep t= 1.00000e+00 for model LN_Ex1_p1_ii_dgp1_pwl
+Model substep t= 1.00000e+00 for model LN_Ex1_p1_ii_dgp1_pwl model.timeIntegration.t=  1.00000e+00
+Newton it 0 norm(r)= 3.74166e+00
+Newton it 1 norm(r)= 5.49958e-15 (converged)
+Newton it 0 norm(r)= 5.29150e+00
+Newton it 1 norm(r)= 1.17931e-14 (converged)
+Newton it 0 norm(r)= 7.48331e+00
+Newton it 1 norm(r)= 2.47111e-14 (converged)
+Newton it 0 norm(r)= 1.05830e+01
+Newton it 1 norm(r)= 5.15520e-14 (converged)
+Newton it 0 norm(r)= 1.49666e+01
+Newton it 1 norm(r)= 1.05942e-13 (converged)
+SO_base modelStepTaken for model= LN_Ex1_p1_ii_dgp1_pwl t_system_last= 0.0 t_model_last= 0.0  setting to t_stepSequence= 1.0 
+Step Taken, Model step t= 1.00000e+00, dt= 1.00000e+00 for model LN_Ex1_p1_ii_dgp1_pwl
+Velocity Norms in Region [2] L2= 9.62295535074e-05 L1= 0.00146015777057 LI= 0.115295223502 
+Velocity Norms in Region [2] L2= 5.47586245313e-05 L1= 0.00066786690913 LI= 0.139265885829 
+Velocity Norms in Region [2] L2= 2.14990082242e-05 L1= 0.000236425479363 LI= 0.166321520049 
+Velocity Norms in Region [2] L2= 8.64152169488e-06 L1= 7.65006544412e-05 LI= 0.210558723025 
+Velocity Norms in Region [2] L2= 3.44916902509e-06 L1= 2.46007999314e-05 LI= 0.265864351566 
+Step Taken, System time step t= 2.00000e+00, dt= 1.00000e+00
+Step Taken, Model step t= 2.00000e+00, dt= 1.00000e+00 for model LN_Ex1_p1_ii_dgp1_pwl
+Writing mesh header for  model = LN_Ex1_p1_ii_dgp1_pwl at time t=1.0
+Writing solution for  model = LN_Ex1_p1_ii_dgp1_pwl
+Syncing Archive
+Syncing Archive
+Finished calculating solution
+SimTools proj velocity for error calling projectVelocityToFinestLevelNC
+
+t= 1; error_u_L2[0][0]= 0.00291061;
+
+t= 1; error_velocity_L2[0][0]= 0.0887623;
+SimTools proj velocity for error calling projectVelocityToFinestLevelNC
+
+t= 1; error_u_L2[0][1]= 0.000864462;
+
+t= 1; error_velocity_L2[0][1]= 0.0544875;
+SimTools proj velocity for error calling projectVelocityToFinestLevelNC
+
+t= 1; error_u_L2[0][2]= 0.000260527;
+
+t= 1; error_velocity_L2[0][2]= 0.0326639;
+SimTools proj velocity for error calling projectVelocityToFinestLevelNC
+
+t= 1; error_u_L2[0][3]= 7.15959e-05;
+
+t= 1; error_velocity_L2[0][3]= 0.0177642;
+SimTools proj velocity for error calling projectVelocityToFinestLevelNC
+
+t= 1; error_u_L2[0][4]= 0;
+
+t= 1; error_velocity_L2[0][4]= 0;
+
+t= 1; max_localMassBalanceError[0][0]= 1.70404e-15; 
+
+t= 1; max_localMassBalanceError[0][1]= 1.89229e-15; 
+
+t= 1; max_localMassBalanceError[0][2]= 2.92527e-15; 
+
+t= 1; max_localMassBalanceError[0][3]= 6.92336e-15; 
+
+t= 1; max_localMassBalanceError[0][4]= 5.77795e-15; 
+Closing solution archive for LN_Ex1_p1_ii_dgp1_pwl
+Closing Archive
+Completed LN_Ex1_p1_ii_dgp1_pwl run number 1
+Collecting garbage
+Done with garbage

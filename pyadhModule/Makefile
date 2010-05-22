@@ -1,0 +1,40 @@
+include ${PETSC_DIR}/conf/variables
+PY = python
+
+all: build_ext install
+
+build_ext:
+	${PY} setup.py build_ext -i
+	${PY} setuppyx.py build_ext -i
+	${PY} setupf.py build_ext -i
+install:
+	${PY} setuppyx.py install
+	${PY} setupf.py install
+	${PY} setup.py install
+
+petsc-config:
+	setPetscLib.py \'${PETSC_LIB} ${PETSC_INCLUDE}\'
+
+docs:
+	doxygen pyadh-doc.conf
+
+clean:
+	${PY} setup.py clean
+
+cleaner: clean
+	/bin/rm -rf build pyadh/*.pyc pyadh/*.so pyadh/*.a
+
+mpkg:
+	bdist_mpkg --readme=README --license=COPYING --welcome=INTRODUCTION
+
+source:
+	${PY} setup.py sdist
+
+binary:
+	${PY} setup.py bdist_dumb
+
+rpm:
+	${PY} setup.py bdist_rpm
+
+wininst:
+	${PY} setup.py bdist_wininst

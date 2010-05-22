@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+import pyx
+import optparse
+
+usace = "usage: %prog [options] file.poly"
+parser = optparse.OptionParser(usage=usage)
+(opts,args) =parser.parse_args()
+if len(args) != 1:
+   raise RuntimeError("Must specify single input file")
+
+f = open(args[0],'r')
+print f.readlines()
+

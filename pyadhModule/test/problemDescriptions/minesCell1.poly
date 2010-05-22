@@ -1,0 +1,58 @@
+#2d version of Kate's cell at UC Boulder
+#9 cm x 9 cm x 3 cm (deep)
+#nvertices, 2d, no material properties, with flags 
+16 2 0 1  
+#vertices, starting at bottom going around, then inside box
+1  0.0e-2   0.0e-2  0#enforce as part of no flow
+2  6.0e-2   0.0e-2  1#enforce as dirichlet
+3  1.2e-1   0.0e-2  1#enforce as dirichlet
+4  1.8e-1   0.0e-2  0
+5  1.8e-1   6.0e-2  0
+6  1.8e-1   1.2e-1  0
+7  1.8e-1   1.8e-1  0
+8  1.2e-1   1.8e-1  0
+9  6.0e-2   1.8e-1  0
+10 0.0e-2   1.8e-1  0
+11 0.0e-2   1.2e-1  0
+12 0.0e-2   6.0e-2  0
+13 6.0e-2   6.0e-2  2 #inside bloc
+14 1.2e-1   6.0e-2  2
+15 1.2e-1   1.2e-1  2
+16 6.0e-2   1.2e-1  2
+#
+24 1 #number of segments, with flags
+#segments starting at bottom
+#seg id, endpoint 1, endpoint 2, id
+1  1  2  1 #bottom
+2  2  3  1 #bottom 
+3  3  4  1 #bottom
+4  4  5  2 #right
+5  5  6  2 #right
+6  6  7  2 #right
+7  7  8  3 #top
+8  8  9  4 #for inflow at top
+9  9  10 3 #top
+10 10 11 5 #left
+11 11 12 5 #left
+12 12 1 5  #left
+13 2 13 6  #outside to inside
+14 3 14 6  #outside to inside
+15 5 14 6  #outside to inside
+16 6 15 6  #outside to inside
+17 8 15 6  #outside to inside
+18 9 16 6  #outside to inside
+19 11 16 6  #outside to inside
+20 12 13 6  #outside to inside
+21 13 14 7  #inside bottom
+22 14 15 7  #inside right
+23 15 16 7  #inside top
+24 16 13 7  #inside left
+#holes
+0
+#regions
+4
+1 9.0e-2 3.0e-2 0 #bottom row
+2 3.0e-2 9.0e-2 0 #left col
+3 9.0e-2 9.0e-2 1 #center block
+4 1.5e-1 9.0e-2 0 #right block
+5 9.0e-2 1.5e-1 0 #top row

@@ -1,0 +1,18 @@
+#!/usr/bin/env python
+import os
+import os.path
+import sys
+import time
+pyadh_test_path = os.path.join(os.environ['HOME'],'src','pyadh-trunk-test')
+try:
+    os.chdir(pyadh_test_path)
+except:
+    print "Unable to change directories to ",pyadh_test_path
+outfileName = 'doxygen.out.'+`time.time()`
+outfile = open(outfileName,'w')
+sys.stdout = outfile
+sys.stderr = outfile
+try:
+    os.system('make docs >& %s' % (outfileName,))
+except:
+    print "Unable to run make docs"

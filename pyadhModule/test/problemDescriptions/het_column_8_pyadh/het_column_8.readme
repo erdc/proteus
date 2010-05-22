@@ -1,0 +1,12 @@
+het_column_8 tests GW flow
+
+flow_type:	GW
+output:		hd	sat	vel
+
+***Test Results Parameters
+machine:	o3k (ruby)
+processors:	1
+compile flags:
+CFLAGS	= -Ofast -64
+PFLAGS	= -D_MESSG -D_MPI -D_METIS -D_UMFPACK 
+LIB	= -lm -lfastm

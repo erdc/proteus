@@ -1,0 +1,13 @@
+#PBS -A erdcvc2w
+#PBS -l walltime=12:00:00
+#PBS -l ncpus=256
+#PBS -q challenge
+#PBS -N adh.pome3d
+#PBS -j oe
+mkdir $WORKDIR/pome3d.$PBS_JOBID
+cd $PBS_O_WORKDIR
+aprun -n 256 python $PYADH/pyadhModule/scripts/parun stokes_pome_ss_3d_p.py stokes_pome_ss_3d_c0p1c0p1_n.py -s -l 4 -v -P "-ksp_type gmres -ksp_rtol 0.0 -ksp_atol 1.0e-10 -pc_type asm -sub_pc_type lu -ksp_monitor"  -D $WORKDIR/pome3d.$PBS_JOBID
+cd $WORKDIR
+tar czvf pome3d.$PBS_JOBID.tar.gz pome3d.$PBS_JOBID
+mv -f pome3d.$PBS_JOBID.tar.gz $HOME
+rm -rf pome3d.$PBS_JOBID
