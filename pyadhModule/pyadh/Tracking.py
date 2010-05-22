@@ -1,0 +1,3342 @@
+#!/usr/bin/env python
+
+from pyadh import MeshTools,FemTools,Comm,Quadrature,cfemIntegrals,Archiver
+import numpy,math
+"""
+particle tracking tools
+
+TODO
+   Clean up TrackingChooser and debug
+   Decide where things like skipping points with zero solution should be set (outside of track routine,
+    but in the Tracker class or done by the calling routine when setting up flag_track?)
+
+  Decide what the best approach is for copying velocity information. Should these be shallow copies (current)
+    or deep copies. Should we add a flag to provide the deep copy option?
+
+"""
+import ctracking,ftracking
+def TrackingChooser(mesh,nd,problemCoefficients):
+    assert False
+    tracker = None
+    if nd == 1 and problemCoefficients.velocitySpaceFlag == 'c0p1':
+        tracker = SteadyState_LinearAdvection_C0P1Velocity_AnalyticalTracking_1d(mesh,nd,
+                                                                                 coefficients.velocity_l2g,
+                                                                                 coefficients.velocity_dof)
+    elif nd == 2 and problemCoefficients.velocitySpaceFlag == 'rt0':
+        tracker = SteadyState_LinearAdvection_RT0Velocity_AnalyticalTracking_2d(mesh,nd,
+                                                                                coefficients.velocity_l2g,
+                                                                                coefficients.velocity_dof)
+    return tracker
+
+class Tracking_Base:
+    """
+    crude interface for particle tracking algorithms
+    """
+    def __init__(self,mesh,nd,uDict=None,activeComponentList=[0],params={}):
+        self.mesh    = mesh    #spatial mesh
+        self.nd      = nd      #space dimension
+        self.params  = params  #algorithm parameters (e.g., zero tolerances etc)
+        self.uDict   = uDict
+        self.activeComponentList = activeComponentList #which components of solution are relevant for the tracking
+    def forwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        """
+        raise NotImplementedError
+    def backwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        """
+        raise NotImplementedError
+    def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
+        """
+        load tracking velocity degrees of freedom for component at time and call it timeLevel 
+        """
+        pass
+
+    def setFromOptions(self,options):
+        """
+        chance to set parameter flags etc
+        """
+        if 'particleTracking_params' in dir(options):
+            for key in options.particleTracking_params.keys():
+                self.params[key]=options.particleTracking_params[key]
+    def updateTransportInformation(self,transport):
+        """
+        hack for now to allow tracking to grab information it needs from the transport
+        and its coefficients until I figure out a better interface
+        """
+        pass
+
+class SteadyState_LinearAdvection_C0P1Velocity_AnalyticalTracking_1d(Tracking_Base):
+    """
+    exact element by element tracking for a steady piecewise linear velocity field in 1D
+    TODO
+      setFromOptions
+    """
+    def __init__(self,mesh,nd,
+                 component_velocity_l2g={0:None}, #dictionary of component velocity l2g mappings
+                 component_velocity_dofs={0:None}, #dictionary of component velocity dofs
+                 activeComponentList=[0],
+                 params={('zeroTol',0):1.0e-5}):
+        Tracking_Base.__init__(self,mesh,nd,activeComponentList=activeComponentList,params=params)
+        self.component_velocity_l2g=component_velocity_l2g
+        self.component_velocity_dofs=component_velocity_dofs
+    def forwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        """
+        direction = 1.0
+        for ci in self.activeComponentList:
+            ctracking.trackPointsC0P1Velocity1d(self.mesh.nElements_global,
+                                                self.mesh.nNodes_global,
+                                                self.mesh.nNodes_element,
+                                                self.mesh.nElementBoundaries_element,
+                                                self.mesh.nodeArray,
+                                                self.mesh.elementNodesArray,
+                                                self.mesh.elementNeighborsArray,
+                                                self.component_velocity_l2g[ci],
+                                                self.component_velocity_dofs[ci],
+                                                direction,
+                                                t_depart[ci],
+                                                t_track[ci],
+                                                nPoints[ci],
+                                                self.params[('zeroTol',ci)],
+                                                x_depart[ci],
+                                                element_track[ci],
+                                                x_track[ci],
+                                                flag_track[ci])
+    def backwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        """
+        direction = -1.0
+        for ci in self.activeComponentList:
+            ctracking.trackPointsC0P1Velocity1d(self.mesh.nElements_global,
+                                                self.mesh.nNodes_global,
+                                                self.mesh.nNodes_element,
+                                                self.mesh.nElementBoundaries_element,
+                                                self.mesh.nodeArray,
+                                                self.mesh.elementNodesArray,
+                                                self.mesh.elementNeighborsArray,
+                                                self.component_velocity_l2g[ci],
+                                                self.component_velocity_dofs[ci],
+                                                direction,
+                                                t_depart[ci],
+                                                t_track[ci],
+                                                nPoints[ci],
+                                                self.params[('zeroTol',ci)],
+                                                x_depart[ci],
+                                                element_track[ci],
+                                                x_track[ci],
+                                                flag_track[ci])
+                                                
+    def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
+        """
+        load tracking velocity degrees of freedom for component at time and call it timeLevel 
+        ignores time information right now since steady state
+        """
+        self.component_velocity_dofs[component] = trackingVelocity_dofs
+        if trackingVelocity_l2g != None:
+            self.component_velocity_l2g[component] = trackingVelocity_l2g
+
+
+class SteadyState_LinearAdvection_RT0Velocity_AnalyticalTracking_2d(Tracking_Base):
+    """
+    exact element by element tracking for a steady velocity field with local representation in RT0 in 2D
+    TODO
+      turn local velocity reprensentation flag into an enum for this and postprocessing
+    """
+    def __init__(self,mesh,nd,
+                 component_velocity_l2g={0:None}, #dictionary of component velocity l2g mappings
+                 component_velocity_dofs={0:None}, #dictionary of component velocity dofs
+                 activeComponentList=[0],
+                 params={('zeroTol',0):1.0e-5,
+                         ('localVelocityRepresentationFlag',0):2}):
+        Tracking_Base.__init__(self,mesh,nd,activeComponentList=activeComponentList,params=params)
+        self.component_velocity_l2g=component_velocity_l2g
+        self.component_velocity_dofs=component_velocity_dofs
+        
+    def forwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        """
+        direction = 1.0
+        for ci in self.activeComponentList:
+            ctracking.trackPointsRT0Velocity2d(self.params[('localVelocityRepresentationFlag',ci)],
+                                               self.mesh.nElements_global,
+                                               self.mesh.nNodes_global,
+                                               self.mesh.nNodes_element,
+                                               self.mesh.nElementBoundaries_element,
+                                               self.mesh.nodeArray,
+                                               self.mesh.elementNodesArray,
+                                               self.mesh.elementNeighborsArray,
+                                               self.mesh.elementBoundariesArray,
+                                               self.mesh.elementBoundaryBarycentersArray,
+                                               self.elementBoundaryOuterNormalsArray,
+                                               self.component_velocity_l2g[ci],
+                                               self.component_velocity_dofs[ci],
+                                               direction,
+                                               t_depart[ci],
+                                               t_track[ci],
+                                               nPoints[ci],
+                                               self.params[('zeroTol',ci)],
+                                               x_depart[ci],
+                                               element_track[ci],
+                                               x_track[ci],
+                                               flag_track[ci],
+                                               0)
+    def backwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        """
+        direction = -1.0
+        for ci in self.activeComponentList:
+            ctracking.trackPointsRT0Velocity2d(self.params[('localVelocityRepresentationFlag',ci)],
+                                               self.mesh.nElements_global,
+                                               self.mesh.nNodes_global,
+                                               self.mesh.nNodes_element,
+                                               self.mesh.nElementBoundaries_element,
+                                               self.mesh.nodeArray,
+                                               self.mesh.elementNodesArray,
+                                               self.mesh.elementNeighborsArray,
+                                               self.mesh.elementBoundariesArray,
+                                               self.mesh.elementBoundaryBarycentersArray,
+                                               self.elementBoundaryOuterNormalsArray,
+                                               self.component_velocity_l2g[ci],
+                                               self.component_velocity_dofs[ci],
+                                               direction,
+                                               t_depart[ci],
+                                               t_track[ci],
+                                               nPoints[ci],
+                                               self.params[('zeroTol',ci)],
+                                               x_depart[ci],
+                                               element_track[ci],
+                                               x_track[ci],
+                                               flag_track[ci],
+                                               0)
+                                                
+    def updateTransportInformation(self,transport):
+        """
+        hack for now to allow tracking to grab information it needs from the transport
+        and its coefficients until I figure out a better interface
+        """
+        assert 'elementBoundaryOuterNormalsArray' in dir(transport), "RT0 tracking needs elementBoundaryOuterNormalsArray for now"
+        self.elementBoundaryOuterNormalsArray = transport.elementBoundaryOuterNormalsArray
+    def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
+        """
+        load tracking velocity degrees of freedom for component at time and call it timeLevel 
+        ignores time information right now since steady state
+        """
+        self.component_velocity_dofs[component] = trackingVelocity_dofs
+        if trackingVelocity_l2g != None:
+            self.component_velocity_l2g[component] = trackingVelocity_l2g
+
+class SteadyState_LinearAdvection_C0P1Velocity_PT123(Tracking_Base):
+    """
+    element by element tracking for a steady continuous, piecewise linear velocity field
+      using Pearce's PT123 code
+    TODO
+      setup input tracking flags to determine if a point is a node or not
+ 
+
+    """
+    def __init__(self,mesh,nd,
+                 component_velocity_l2g={0:None}, #dictionary of component velocity l2g mappings
+                 component_velocity_dofs={0:None}, #dictionary of component velocity dofs
+                 activeComponentList=[0],
+                 params={('atol_tracking',0):1.0e-7,#RK time integration tolerances
+                         ('rtol_tracking',0):0.0,
+                         ('sf_tracking',0):0.9,     #safety factor for RK integration
+                         ('dn_safe_tracking',0):1.0e-7}):#tolerance for traking in-element tests
+        Tracking_Base.__init__(self,mesh,nd,activeComponentList=activeComponentList,params=params)
+        #build lookup array for indicating which nodes are on the boundary
+        self.nodeOnBoundaryArray = numpy.zeros((self.mesh.nNodes_global,),'i')
+        ctracking.setNodeOnBoundaryArray(self.mesh.exteriorElementBoundariesArray,
+                                         self.mesh.elementBoundaryNodesArray,
+                                         self.nodeOnBoundaryArray)
+
+        #Right now, pt123  uses velocity local to global map that's logically nElements x nNodes x dim
+        #standard C0P1 FemSpace uses a l2g that's consistent with a scalar value and assumes extra dofs
+        #are just tacked on
+        self.component_velocity_dofs=component_velocity_dofs
+        if self.nd == 1: self.component_velocity_l2g=component_velocity_l2g
+        else:
+            self.component_velocity_l2g={}
+            for ci in component_velocity_l2g.keys():
+                if component_velocity_l2g[ci] == None:
+                    self.component_velocity_l2g[ci]=None
+                else:
+                    nVDOF_element=self.nd*self.mesh.nNodes_element
+                    self.component_velocity_l2g[ci] = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'i')
+                    for I in range(self.nd):
+                        self.component_velocity_l2g[ci][:,:,I]=component_velocity_l2g[ci]*self.nd + I
+                    
+                    
+    def forwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        """
+        direction = 1; output_id=6; 
+        for ci in self.activeComponentList:
+            #
+            maxeq = 3;
+            nVDOF_element=self.nd*self.mesh.nNodes_element
+            nVDOF_total  =len(self.component_velocity_dofs[ci].flat)
+            #this is supposed to be for steady-state problems so time levels in velocity field shouldn't matter
+            #as long as they are not the same
+            t_velocity_0 = t_depart[ci].min()
+            t_velocity_1 = t_track[ci].max()
+            #assert abs(t_velocity_1-t_velocity_0) > 0.0, "pt123 requires velocity tracking times different"
+            #NOTE current version of pt123 uses velocity local to global map that's logically nElements x nNodes x dim
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #c data structures here and then convert back to base zero after call
+            fbase = 1
+            self.mesh.elementNodesArray += fbase
+            self.mesh.nodeElementsArray += fbase
+            self.component_velocity_l2g[ci] += fbase
+            element_track[ci] += fbase
+            flag_track[ci]    += fbase
+
+
+            ftracking.pt123(self.mesh.nNodes_global,
+                            self.mesh.nElements_global,
+                            self.mesh.nNodes_element,
+                            self.nd,
+                            nPoints[ci],
+                            direction,
+                            output_id,
+                            self.params[('atol_tracking',ci)],
+                            self.params[('rtol_tracking',ci)],
+                            self.params[('sf_tracking',ci)],
+                            self.params[('dn_safe_tracking',ci)],
+                            self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
+                            self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.nodeElementOffsets,
+                            self.mesh.nodeElementsArray,
+                            self.nodeOnBoundaryArray,
+                            self.component_velocity_l2g[ci].reshape(self.mesh.nElements_global*nVDOF_element),
+                            self.component_velocity_dofs[ci].reshape(nVDOF_total),
+                            self.component_velocity_dofs[ci].reshape(nVDOF_total),
+                            t_velocity_0,
+                            t_velocity_1,
+                            x_depart[ci].reshape(nPoints[ci]*maxeq),
+                            t_depart[ci].reshape(nPoints[ci]),
+                            t_track[ci].reshape(nPoints[ci]),
+                            element_track[ci].reshape(nPoints[ci]),
+                            flag_track[ci].reshape(nPoints[ci]),
+                            x_track[ci].reshape(nPoints[ci]*maxeq),
+                            idve=2,
+                            maxeq=3,
+                            iverbose=0)
+
+            self.mesh.elementNodesArray -= fbase
+            self.mesh.nodeElementsArray -= fbase
+            self.component_velocity_l2g[ci] -= fbase
+            element_track[ci] -= fbase
+            flag_track[ci]    -= fbase
+    def backwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        no need to set direction = -1 if time values are decreasing
+        """
+        direction = 1; output_id=6; 
+        for ci in self.activeComponentList:
+            maxeq = 3
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            #TODO get different velocity degrees of freedom layouts matched
+            nVDOF_element=self.nd*self.mesh.nNodes_element
+            nVDOF_total  =len(self.component_velocity_dofs[ci].flat)
+            #this is supposed to be for steady-state problems so time levels in velocity field shouldn't matter
+            t_velocity_0 = t_depart[ci].max()
+            t_velocity_1 = t_track[ci].min()
+            #assert abs(t_velocity_1-t_velocity_0) > 0.0, "pt123 requires velocity tracking times different"
+
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #c data structures here and then convert back to base zero after call
+            fbase = 1
+            self.mesh.elementNodesArray += fbase
+            self.mesh.nodeElementsArray += fbase
+            self.component_velocity_l2g[ci] += fbase
+            element_track[ci] += fbase
+            flag_track[ci]    += fbase
+            ftracking.pt123(self.mesh.nNodes_global,
+                            self.mesh.nElements_global,
+                            self.mesh.nNodes_element,
+                            self.nd,
+                            nPoints[ci],
+                            direction,
+                            output_id,
+                            self.params[('atol_tracking',ci)],
+                            self.params[('rtol_tracking',ci)],
+                            self.params[('sf_tracking',ci)],
+                            self.params[('dn_safe_tracking',ci)],
+                            self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
+                            self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.nodeElementOffsets,
+                            self.mesh.nodeElementsArray,
+                            self.nodeOnBoundaryArray,
+                            self.component_velocity_l2g[ci].reshape(self.mesh.nElements_global*nVDOF_element),
+                            self.component_velocity_dofs[ci].reshape(nVDOF_total),
+                            self.component_velocity_dofs[ci].reshape(nVDOF_total),
+                            t_velocity_0,
+                            t_velocity_1,
+                            x_depart[ci].reshape(nPoints[ci]*maxeq),
+                            t_depart[ci].reshape(nPoints[ci]),
+                            t_track[ci].reshape(nPoints[ci]),
+                            element_track[ci].reshape(nPoints[ci]),
+                            flag_track[ci].reshape(nPoints[ci]),
+                            x_track[ci].reshape(nPoints[ci]*maxeq),
+                            idve=2,#element based C0-P1
+                            maxeq=3,
+                            iverbose=0)
+
+            self.mesh.elementNodesArray     -= fbase
+            self.mesh.nodeElementsArray     -= fbase
+            self.component_velocity_l2g[ci] -= fbase
+            element_track[ci] -= fbase
+            flag_track[ci]    -= fbase
+
+    def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
+        """
+        load tracking velocity degrees of freedom for component at time and call it timeLevel 
+        ignores time information right now since steady state
+        """
+        self.component_velocity_dofs[component] = trackingVelocity_dofs
+        if trackingVelocity_l2g != None:
+            nVDOF_element=self.nd*self.mesh.nNodes_element
+            if self.nd > 1 and trackingVelocity_l2g.shape[-1] == self.mesh.nNodes_element:
+                    #standard C0P1 FemSpace uses a l2g that's consistent with a scalar value and assumes extra dofs
+                    #are just tacked on
+                    self.component_velocity_l2g[component] = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'i')
+                    for I in range(self.nd):
+                        self.component_velocity_l2g[component][:,:,I]=trackingVelocity_l2g*self.nd + I
+            else:
+                assert ((len(trackingVelocity_l2g.shape) == 2 and trackingVelocity_l2g.shape[-1] == nVDOF_element) or
+                        (len(trackingVelocity_l2g.shape) == 3 and trackingVelocity_l2g.shape[-1] == self.nd)) 
+                self.component_velocity_l2g[component] = trackingVelocity_l2g
+
+class SteadyState_LinearAdvection_BDM1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocity_PT123):
+    """
+    element by element tracking for a steady BDM1 velocity field
+      using Pearce's PT123 code
+    TODO
+      setup input tracking flags to determine if a point is a node or not
+
+
+    """
+    def __init__(self,mesh,nd,
+                 component_velocity_l2g={0:None}, #dictionary of component velocity l2g mappings
+                 component_velocity_dofs={0:None}, #dictionary of component velocity dofs
+                 activeComponentList=[0],
+                 params={('atol_tracking',0):1.0e-7,
+                         ('rtol_tracking',0):0.0,
+                         ('sf_tracking',0):0.9,
+                         ('dn_safe_tracking',0):1.0e-7}):
+        Tracking_Base.__init__(self,mesh,nd,activeComponentList=activeComponentList,params=params)
+        #build lookup array for indicating which nodes are on the boundary
+        self.nodeOnBoundaryArray = numpy.zeros((self.mesh.nNodes_global,),'i')
+        ctracking.setNodeOnBoundaryArray(self.mesh.exteriorElementBoundariesArray,
+                                         self.mesh.elementBoundaryNodesArray,
+                                         self.nodeOnBoundaryArray)
+
+        #Right now, pt123  uses velocity local to global map that's logically nElements x nNodes x dim
+        #The PostProcessingTools BDF representation uses a l2g that uses a basis
+        # use standard basis
+        #   \vec N_i = \lambda_{i/d} \vec e_{i%d}
+        #That is the dofs are locally (say in 2d) [v^x_0,v^y_0,v^x_1,v^y_1,v^x_2,v^y_2]
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        self.component_velocity_dofs=component_velocity_dofs
+        self.component_velocity_l2g=component_velocity_l2g
+
+class SteadyState_LinearAdvection_RT0Velocity_PT123(Tracking_Base):
+    """
+    element by element tracking for a steady continuous, RT0 velocity field
+      on simplices using Pearce's PT123 code 
+    TODO
+      setup input tracking flags to determine if a point is a node or not
+ 
+
+    """
+    def __init__(self,mesh,nd,
+                 component_velocity_l2g={0:None}, #dictionary of component velocity l2g mappings
+                 component_velocity_dofs={0:None}, #dictionary of component velocity dofs
+                 activeComponentList=[0],
+                 params={('atol_tracking',0):1.0e-7,#RK time integration tolerances
+                         ('rtol_tracking',0):0.0,
+                         ('sf_tracking',0):0.9,     #safety factor for RK integration
+                         ('dn_safe_tracking',0):1.0e-7,#tolerance for traking in-element tests
+                         ('localVelocityRepresentationFlag',0):2}):#RT0 velocity representation, 2 -- flux based rep, 1 \vec a + b\vec x
+        Tracking_Base.__init__(self,mesh,nd,activeComponentList=activeComponentList,params=params)
+        #build lookup array for indicating which nodes are on the boundary
+        self.nodeOnBoundaryArray = numpy.zeros((self.mesh.nNodes_global,),'i')
+        ctracking.setNodeOnBoundaryArray(self.mesh.exteriorElementBoundariesArray,
+                                         self.mesh.elementBoundaryNodesArray,
+                                         self.nodeOnBoundaryArray)
+
+        #Right now, pt123  uses velocity local to global map that's logically nElements x nNodes x dim
+        #standard C0P1 FemSpace uses a l2g that's consistent with a scalar value and assumes extra dofs
+        #are just tacked on
+        self.component_velocity_dofs=component_velocity_dofs
+        self.component_velocity_l2g = component_velocity_l2g
+                    
+    def forwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        """
+        direction = 1; output_id=6; 
+        for ci in self.activeComponentList:
+            #
+            maxeq = 3;
+            nVDOF_element=self.mesh.nNodes_element
+            nVDOF_total  =len(self.component_velocity_dofs[ci].flat)
+            assert self.params[('localVelocityRepresentationFlag',ci)] in [1,2], "self.params[('localVelocityRepresentationFlag',ci)]= %s not supported " % (self.params[('localVelocityRepresentationFlag',ci)])
+            idve = 3
+            if self.params[('localVelocityRepresentationFlag',ci)] == 1:
+                idve = 4
+            #this is supposed to be for steady-state problems so time levels in velocity field shouldn't matter
+            #as long as they are not the same
+            t_velocity_0 = t_depart[ci].min()
+            t_velocity_1 = t_track[ci].max()
+            #assert abs(t_velocity_1-t_velocity_0) > 0.0, "pt123 requires velocity tracking times different"
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #c data structures here and then convert back to base zero after call
+            fbase = 1
+            self.mesh.elementNodesArray += fbase
+            self.mesh.nodeElementsArray += fbase
+            self.component_velocity_l2g[ci] += fbase
+            element_track[ci] += fbase
+            flag_track[ci]    += fbase
+
+
+            ftracking.pt123(self.mesh.nNodes_global,
+                            self.mesh.nElements_global,
+                            self.mesh.nNodes_element,
+                            self.nd,
+                            nPoints[ci],
+                            direction,
+                            output_id,
+                            self.params[('atol_tracking',ci)],
+                            self.params[('rtol_tracking',ci)],
+                            self.params[('sf_tracking',ci)],
+                            self.params[('dn_safe_tracking',ci)],
+                            self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
+                            self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.nodeElementOffsets,
+                            self.mesh.nodeElementsArray,
+                            self.nodeOnBoundaryArray,
+                            self.component_velocity_l2g[ci].reshape(self.mesh.nElements_global*nVDOF_element),
+                            self.component_velocity_dofs[ci].reshape(nVDOF_total),
+                            self.component_velocity_dofs[ci].reshape(nVDOF_total),
+                            t_velocity_0,
+                            t_velocity_1,
+                            x_depart[ci].reshape(nPoints[ci]*maxeq),
+                            t_depart[ci].reshape(nPoints[ci]),
+                            t_track[ci].reshape(nPoints[ci]),
+                            element_track[ci].reshape(nPoints[ci]),
+                            flag_track[ci].reshape(nPoints[ci]),
+                            x_track[ci].reshape(nPoints[ci]*maxeq),
+                            idve=idve,
+                            maxeq=3,
+                            iverbose=0)
+            
+            self.mesh.elementNodesArray -= fbase
+            self.mesh.nodeElementsArray -= fbase
+            self.component_velocity_l2g[ci] -= fbase
+            element_track[ci] -= fbase
+            flag_track[ci]    -= fbase
+    def backwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        no need to set direction = -1 if time values are decreasing
+        """
+        direction = 1; output_id=6; 
+        for ci in self.activeComponentList:
+            maxeq = 3
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            #TODO get different velocity degrees of freedom layouts matched
+            nVDOF_element=self.mesh.nNodes_element
+            nVDOF_total  =len(self.component_velocity_dofs[ci].flat)
+            assert self.params[('localVelocityRepresentationFlag',ci)] in [1,2], "self.params[('localVelocityRepresentationFlag',ci)]= %s not supported " % (self.params[('localVelocityRepresentationFlag',ci)])
+            idve = 3
+            if self.params[('localVelocityRepresentationFlag',ci)] == 1:
+                idve = 4
+            #this is supposed to be for steady-state problems so time levels in velocity field shouldn't matter
+            t_velocity_0 = t_depart[ci].max()
+            t_velocity_1 = t_track[ci].min()
+
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #c data structures here and then convert back to base zero after call
+            fbase = 1
+            self.mesh.elementNodesArray += fbase
+            self.mesh.nodeElementsArray += fbase
+            self.component_velocity_l2g[ci] += fbase
+            element_track[ci] += fbase
+            flag_track[ci]    += fbase
+            ftracking.pt123(self.mesh.nNodes_global,
+                            self.mesh.nElements_global,
+                            self.mesh.nNodes_element,
+                            self.nd,
+                            nPoints[ci],
+                            direction,
+                            output_id,
+                            self.params[('atol_tracking',ci)],
+                            self.params[('rtol_tracking',ci)],
+                            self.params[('sf_tracking',ci)],
+                            self.params[('dn_safe_tracking',ci)],
+                            self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
+                            self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.nodeElementOffsets,
+                            self.mesh.nodeElementsArray,
+                            self.nodeOnBoundaryArray,
+                            self.component_velocity_l2g[ci].reshape(self.mesh.nElements_global*nVDOF_element),
+                            self.component_velocity_dofs[ci].reshape(nVDOF_total),
+                            self.component_velocity_dofs[ci].reshape(nVDOF_total),
+                            t_velocity_0,
+                            t_velocity_1,
+                            x_depart[ci].reshape(nPoints[ci]*maxeq),
+                            t_depart[ci].reshape(nPoints[ci]),
+                            t_track[ci].reshape(nPoints[ci]),
+                            element_track[ci].reshape(nPoints[ci]),
+                            flag_track[ci].reshape(nPoints[ci]),
+                            x_track[ci].reshape(nPoints[ci]*maxeq),
+                            idve=idve,#element based C0-P1
+                            maxeq=3,
+                            iverbose=0)
+
+            self.mesh.elementNodesArray     -= fbase
+            self.mesh.nodeElementsArray     -= fbase
+            self.component_velocity_l2g[ci] -= fbase
+            element_track[ci] -= fbase
+            flag_track[ci]    -= fbase
+
+    def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
+        """
+        load tracking velocity degrees of freedom for component at time and call it timeLevel 
+        ignores time information right now since steady state
+        """
+        self.component_velocity_dofs[component] = trackingVelocity_dofs
+        if trackingVelocity_l2g != None:
+            self.component_velocity_l2g[component] = trackingVelocity_l2g
+
+class SteadyState_LinearAdvection_RT0Velocity_PT123A(Tracking_Base):
+    """
+    element by element tracking for a steady continuous, RT0 velocity field
+      on simplices using Pearce's PT123 code 
+    TODO
+      setup input tracking flags to determine if a point is a node or not
+ 
+
+    """
+    def __init__(self,mesh,nd,
+                 component_velocity_l2g={0:None}, #dictionary of component velocity l2g mappings
+                 component_velocity_dofs={0:None}, #dictionary of component velocity dofs
+                 activeComponentList=[0],
+                 params={('atol_tracking',0):1.0e-7,#RK time integration tolerances
+                         ('rtol_tracking',0):0.0,
+                         ('sf_tracking',0):0.9,     #safety factor for RK integration
+                         ('dn_safe_tracking',0):1.0e-7,#tolerance for traking in-element tests
+                         ('localVelocityRepresentationFlag',0):2}):#RT0 velocity representation, 2 -- flux based rep, 1 \vec a + b\vec x
+        Tracking_Base.__init__(self,mesh,nd,activeComponentList=activeComponentList,params=params)
+        #build lookup array for indicating which nodes are on the boundary
+        self.nodeOnBoundaryArray = numpy.zeros((self.mesh.nNodes_global,),'i')
+        ctracking.setNodeOnBoundaryArray(self.mesh.exteriorElementBoundariesArray,
+                                         self.mesh.elementBoundaryNodesArray,
+                                         self.nodeOnBoundaryArray)
+
+        #Right now, pt123  uses velocity local to global map that's logically nElements x nNodes x dim
+        #standard C0P1 FemSpace uses a l2g that's consistent with a scalar value and assumes extra dofs
+        #are just tacked on
+        self.component_velocity_dofs=component_velocity_dofs
+        self.component_velocity_l2g = component_velocity_l2g
+                    
+    def forwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        """
+        direction = 1; output_id=6; 
+        for ci in self.activeComponentList:
+            #
+            maxeq = 3;
+            nVDOF_element=self.mesh.nNodes_element
+            nVDOF_total  =len(self.component_velocity_dofs[ci].flat)
+            assert self.params[('localVelocityRepresentationFlag',ci)] in [1,2], "self.params[('localVelocityRepresentationFlag',ci)]= %s not supported " % (self.params[('localVelocityRepresentationFlag',ci)])
+            idve = 3
+            if self.params[('localVelocityRepresentationFlag',ci)] == 1:
+                idve = 4
+            #this is supposed to be for steady-state problems so time levels in velocity field shouldn't matter
+            #as long as they are not the same
+            t_velocity_0 = t_depart[ci].min()
+            t_velocity_1 = t_track[ci].max()
+            #assert abs(t_velocity_1-t_velocity_0) > 0.0, "pt123 requires velocity tracking times different"
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #c data structures here and then convert back to base zero after call
+            fbase = 1
+            self.mesh.elementNodesArray += fbase
+            self.mesh.nodeElementsArray += fbase
+            self.component_velocity_l2g[ci] += fbase
+            element_track[ci] += fbase
+            flag_track[ci]    += fbase
+
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            ftracking.pt123a(self.mesh.nNodes_global,
+                             self.mesh.nElements_global,
+                             self.mesh.nNodes_element,
+                             self.nd,
+                             nPoints[ci],
+                             direction,
+                             output_id,
+                             self.params[('atol_tracking',ci)],
+                             self.params[('rtol_tracking',ci)],
+                             self.params[('sf_tracking',ci)],
+                             self.params[('dn_safe_tracking',ci)],
+                             self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
+                             self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                             self.mesh.nodeElementOffsets,
+                             self.mesh.nodeElementsArray,
+                             self.nodeOnBoundaryArray,
+                             self.elementBoundaryOuterNormalsArray.reshape(self.mesh.nElements_global*self.mesh.nElementBoundaries_element*self.nd),
+                             self.elementBoundaryBarycentersArray.reshape(self.mesh.nElements_global*self.mesh.nElementBoundaries_element*3),
+                             self.component_velocity_l2g[ci].reshape(self.mesh.nElements_global*nVDOF_element),
+                             self.component_velocity_dofs[ci].reshape(nVDOF_total),
+                             self.component_velocity_dofs[ci].reshape(nVDOF_total),
+                             t_velocity_0,
+                             t_velocity_1,
+                             x_depart[ci].reshape(nPoints[ci]*maxeq),
+                             t_depart[ci].reshape(nPoints[ci]),
+                             t_track[ci].reshape(nPoints[ci]),
+                             element_track[ci].reshape(nPoints[ci]),
+                             flag_track[ci].reshape(nPoints[ci]),
+                             x_track[ci].reshape(nPoints[ci]*maxeq),
+                             idve=idve,
+                             maxeq=3,
+                             iverbose=0)
+            
+            self.mesh.elementNodesArray -= fbase
+            self.mesh.nodeElementsArray -= fbase
+            self.component_velocity_l2g[ci] -= fbase
+            element_track[ci] -= fbase
+            flag_track[ci]    -= fbase
+    def backwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        no need to set direction = -1 if time values are decreasing
+        """
+        direction = 1; output_id=6; 
+        for ci in self.activeComponentList:
+            maxeq = 3
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            #TODO get different velocity degrees of freedom layouts matched
+            nVDOF_element=self.mesh.nNodes_element
+            nVDOF_total  =len(self.component_velocity_dofs[ci].flat)
+            assert self.params[('localVelocityRepresentationFlag',ci)] in [1,2], "self.params[('localVelocityRepresentationFlag',ci)]= %s not supported " % (self.params[('localVelocityRepresentationFlag',ci)])
+            idve = 3
+            if self.params[('localVelocityRepresentationFlag',ci)] == 1:
+                idve = 4
+            #this is supposed to be for steady-state problems so time levels in velocity field shouldn't matter
+            t_velocity_0 = t_depart[ci].max()
+            t_velocity_1 = t_track[ci].min()
+            
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #c data structures here and then convert back to base zero after call
+            fbase = 1
+            self.mesh.elementNodesArray += fbase
+            self.mesh.nodeElementsArray += fbase
+            self.component_velocity_l2g[ci] += fbase
+            element_track[ci] += fbase
+            flag_track[ci]    += fbase
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            ftracking.pt123a(self.mesh.nNodes_global,
+                             self.mesh.nElements_global,
+                             self.mesh.nNodes_element,
+                             self.nd,
+                             nPoints[ci],
+                             direction,
+                             output_id,
+                             self.params[('atol_tracking',ci)],
+                             self.params[('rtol_tracking',ci)],
+                             self.params[('sf_tracking',ci)],
+                             self.params[('dn_safe_tracking',ci)],
+                             self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
+                             self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                             self.mesh.nodeElementOffsets,
+                             self.mesh.nodeElementsArray,
+                             self.nodeOnBoundaryArray,
+                             self.elementBoundaryOuterNormalsArray.reshape(self.mesh.nElements_global*self.mesh.nElementBoundaries_element*self.nd),
+                             self.elementBoundaryBarycentersArray.reshape(self.mesh.nElements_global*self.mesh.nElementBoundaries_element*3),
+                             self.component_velocity_l2g[ci].reshape(self.mesh.nElements_global*nVDOF_element),
+                             self.component_velocity_dofs[ci].reshape(nVDOF_total),
+                             self.component_velocity_dofs[ci].reshape(nVDOF_total),
+                             t_velocity_0,
+                             t_velocity_1,
+                             x_depart[ci].reshape(nPoints[ci]*maxeq),
+                             t_depart[ci].reshape(nPoints[ci]),
+                             t_track[ci].reshape(nPoints[ci]),
+                             element_track[ci].reshape(nPoints[ci]),
+                             flag_track[ci].reshape(nPoints[ci]),
+                             x_track[ci].reshape(nPoints[ci]*maxeq),
+                             idve=idve,#element based C0-P1
+                             maxeq=3,
+                             iverbose=0)
+
+            self.mesh.elementNodesArray     -= fbase
+            self.mesh.nodeElementsArray     -= fbase
+            self.component_velocity_l2g[ci] -= fbase
+            element_track[ci] -= fbase
+            flag_track[ci]    -= fbase
+
+    def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
+        """
+        load tracking velocity degrees of freedom for component at time and call it timeLevel 
+        ignores time information right now since steady state
+        """
+        self.component_velocity_dofs[component] = trackingVelocity_dofs
+        if trackingVelocity_l2g != None:
+            self.component_velocity_l2g[component] = trackingVelocity_l2g
+
+    def updateTransportInformation(self,transport):
+        """
+        hack for now to allow tracking to grab information it needs from the transport
+        and its coefficients until I figure out a better interface
+        """
+        assert 'elementBoundaryOuterNormalsArray' in dir(transport), "RT0 tracking needs elementBoundaryOuterNormalsArray for now"
+        self.elementBoundaryOuterNormalsArray = transport.elementBoundaryOuterNormalsArray
+        self.elementBoundaryBarycentersArray = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,3),'d')
+        #todo put this loop in c
+        for eN in range(self.mesh.nElements_global):
+            for ebN in range(self.mesh.nElementBoundaries_element):
+                ebN_global = self.mesh.elementBoundariesArray[eN,ebN]
+                self.elementBoundaryBarycentersArray[eN,ebN,:] = self.mesh.elementBoundaryBarycentersArray[ebN_global,:]
+class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocity_PT123):
+    """
+    element by element tracking for a linear in time, continous piecewise linear velocity field
+      using Pearce's PT123 code
+    Note that the velocity and times dictionaries are shallow copies
+    TODO
+    
+    """
+    def __init__(self,mesh,nd,
+                 component_velocity_l2g={0:None}, #dictionary of component velocity l2g mappings
+                 component_velocity_dofs_0={0:None}, #dictionary of component velocity dofs at time level 1
+                 component_velocity_dofs_1={0:None}, 
+                 component_velocity_times_0={0:None},#time levels for velocities
+                 component_velocity_times_1={0:None},
+                 activeComponentList=[0],
+                 params={('atol_tracking',0):1.0e-7,#RK time integration tolerances
+                         ('rtol_tracking',0):0.0,
+                         ('sf_tracking',0):0.9,     #safety factor for RK integration
+                         ('dn_safe_tracking',0):1.0e-7}):#tolerance for traking in-element tests
+        SteadyState_LinearAdvection_C0P1Velocity_PT123.__init__(self,mesh,nd,
+                                                                component_velocity_l2g,
+                                                                component_velocity_dofs_0,
+                                                                activeComponentList=activeComponentList,
+                                                                params=params)
+        self.component_velocity_times_0 = component_velocity_times_0
+        self.component_velocity_times_1 = component_velocity_times_1
+        #
+        self.component_velocity_dofs_0  = self.component_velocity_dofs
+        self.component_velocity_dofs_1  = component_velocity_dofs_1
+
+    def forwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        """
+        direction = 1; output_id=6; 
+        for ci in self.activeComponentList:
+            #
+            maxeq = 3;
+            nVDOF_element=self.nd*self.mesh.nNodes_element
+            nVDOF_total  =len(self.component_velocity_dofs[ci].flat)
+            t_velocity_0 = self.component_velocity_times_0[ci]
+            t_velocity_1 = self.component_velocity_times_1[ci]
+            #assert abs(t_velocity_1-t_velocity_0) > 0.0, "pt123 requires velocity tracking times different"
+            #NOTE current version of pt123 uses velocity local to global map that's logically nElements x nNodes x dim
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #c data structures here and then convert back to base zero after call
+            fbase = 1
+            self.mesh.elementNodesArray += fbase
+            self.mesh.nodeElementsArray += fbase
+            self.component_velocity_l2g[ci] += fbase
+            element_track[ci] += fbase
+            flag_track[ci]    += fbase
+
+
+            ftracking.pt123(self.mesh.nNodes_global,
+                            self.mesh.nElements_global,
+                            self.mesh.nNodes_element,
+                            self.nd,
+                            nPoints[ci],
+                            direction,
+                            output_id,
+                            self.params[('atol_tracking',ci)],
+                            self.params[('rtol_tracking',ci)],
+                            self.params[('sf_tracking',ci)],
+                            self.params[('dn_safe_tracking',ci)],
+                            self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
+                            self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.nodeElementOffsets,
+                            self.mesh.nodeElementsArray,
+                            self.nodeOnBoundaryArray,
+                            self.component_velocity_l2g[ci].reshape(self.mesh.nElements_global*nVDOF_element),
+                            self.component_velocity_dofs_0[ci].reshape(nVDOF_total),
+                            self.component_velocity_dofs_1[ci].reshape(nVDOF_total),
+                            t_velocity_0,
+                            t_velocity_1,
+                            x_depart[ci].reshape(nPoints[ci]*maxeq),
+                            t_depart[ci].reshape(nPoints[ci]),
+                            t_track[ci].reshape(nPoints[ci]),
+                            element_track[ci].reshape(nPoints[ci]),
+                            flag_track[ci].reshape(nPoints[ci]),
+                            x_track[ci].reshape(nPoints[ci]*maxeq),
+                            idve=2,#element based C0P1 velocity field
+                            maxeq=3,
+                            iverbose=0)
+
+            self.mesh.elementNodesArray -= fbase
+            self.mesh.nodeElementsArray -= fbase
+            self.component_velocity_l2g[ci] -= fbase
+            element_track[ci] -= fbase
+            flag_track[ci]    -= fbase
+    def backwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        no need to set direction = -1 if time values are decreasing
+        """
+        direction = 1; output_id=6; 
+        for ci in self.activeComponentList:
+            maxeq = 3
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            #TODO get different velocity degrees of freedom layouts matched
+            nVDOF_element=self.nd*self.mesh.nNodes_element
+            nVDOF_total  =len(self.component_velocity_dofs[ci].flat)
+            t_velocity_0 = self.component_velocity_times_0[ci]
+            t_velocity_1 = self.component_velocity_times_1[ci]
+            #assert abs(t_velocity_1-t_velocity_0) > 0.0, "pt123 requires velocity tracking times different"
+
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #c data structures here and then convert back to base zero after call
+            fbase = 1
+            self.mesh.elementNodesArray += fbase
+            self.mesh.nodeElementsArray += fbase
+            self.component_velocity_l2g[ci] += fbase
+            element_track[ci] += fbase
+            flag_track[ci]    += fbase
+            ftracking.pt123(self.mesh.nNodes_global,
+                            self.mesh.nElements_global,
+                            self.mesh.nNodes_element,
+                            self.nd,
+                            nPoints[ci],
+                            direction,
+                            output_id,
+                            self.params[('atol_tracking',ci)],
+                            self.params[('rtol_tracking',ci)],
+                            self.params[('sf_tracking',ci)],
+                            self.params[('dn_safe_tracking',ci)],
+                            self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
+                            self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.nodeElementOffsets,
+                            self.mesh.nodeElementsArray,
+                            self.nodeOnBoundaryArray,
+                            self.component_velocity_l2g[ci].reshape(self.mesh.nElements_global*nVDOF_element),
+                            self.component_velocity_dofs_0[ci].reshape(nVDOF_total),
+                            self.component_velocity_dofs_1[ci].reshape(nVDOF_total),
+                            t_velocity_0,
+                            t_velocity_1,
+                            x_depart[ci].reshape(nPoints[ci]*maxeq),
+                            t_depart[ci].reshape(nPoints[ci]),
+                            t_track[ci].reshape(nPoints[ci]),
+                            element_track[ci].reshape(nPoints[ci]),
+                            flag_track[ci].reshape(nPoints[ci]),
+                            x_track[ci].reshape(nPoints[ci]*maxeq),
+                            idve=2,#element based C0P1 velocity field
+                            maxeq=3,
+                            iverbose=0)
+
+            self.mesh.elementNodesArray     -= fbase
+            self.mesh.nodeElementsArray     -= fbase
+            self.component_velocity_l2g[ci] -= fbase
+            element_track[ci] -= fbase
+            flag_track[ci]    -= fbase
+    def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
+        """
+        load tracking velocity degrees of freedom for component at time and call it timeLevel 
+        
+        """
+        if trackingVelocity_l2g != None:
+            nVDOF_element=self.nd*self.mesh.nNodes_element
+            if self.nd > 1 and trackingVelocity_l2g.shape[-1] == self.mesh.nNodes_element:
+                    #standard C0P1 FemSpace uses a l2g that's consistent with a scalar value and assumes extra dofs
+                    #are just tacked on
+                    self.component_velocity_l2g[component] = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'i')
+                    for I in range(self.nd):
+                        self.component_velocity_l2g[component][:,:,I]=trackingVelocity_l2g*self.nd + I
+            else:
+                assert ((len(trackingVelocity_l2g.shape) == 2 and trackingVelocity_l2g.shape[-1] == nVDOF_element) or
+                        (len(trackingVelocity_l2g.shape) == 3 and trackingVelocity_l2g.shape[-1] == self.nd)) 
+                self.component_velocity_l2g[component] = trackingVelocity_l2g
+
+        if timeLevel == 1:
+            self.component_velocity_dofs_1[component] = trackingVelocity_dofs
+            self.component_velocity_times_1[component]= time
+        else:
+            self.component_velocity_dofs_0[component] = trackingVelocity_dofs
+            self.component_velocity_times_0[component]= time
+
+
+class LinearAdvection_BDM1Velocity_PT123(LinearAdvection_C0P1Velocity_PT123):
+    """
+    element by element tracking for a linear in time,  velocity field with BDM1 representation in space
+      using Pearce's PT123 code
+    TODO
+      setup input tracking flags to determine if a point is a node or not
+
+
+    """
+    def __init__(self,mesh,nd,
+                 component_velocity_l2g={0:None}, #dictionary of component velocity l2g mappings
+                 component_velocity_dofs_0={0:None}, #dictionary of component velocity dofs at time level 1
+                 component_velocity_dofs_1={0:None}, 
+                 component_velocity_times_0={0:None},#time levels for velocities
+                 component_velocity_times_1={0:None},
+                 activeComponentList=[0],
+                 params={('atol_tracking',0):1.0e-7,#RK time integration tolerances
+                         ('rtol_tracking',0):0.0,
+                         ('sf_tracking',0):0.9,     #safety factor for RK integration
+                         ('dn_safe_tracking',0):1.0e-7}):#tolerance for traking in-element tests
+        Tracking_Base.__init__(self,mesh,nd,activeComponentList=activeComponentList,params=params)
+        #build lookup array for indicating which nodes are on the boundary
+        self.nodeOnBoundaryArray = numpy.zeros((self.mesh.nNodes_global,),'i')
+        ctracking.setNodeOnBoundaryArray(self.mesh.exteriorElementBoundariesArray,
+                                         self.mesh.elementBoundaryNodesArray,
+                                         self.nodeOnBoundaryArray)
+
+        self.component_velocity_l2g=component_velocity_l2g
+        #just to be consistent with C0P1 for now
+        self.component_velocity_dofs=component_velocity_dofs_0
+        #
+        self.component_velocity_times_0 = component_velocity_times_0
+        self.component_velocity_times_1 = component_velocity_times_1
+        #
+        self.component_velocity_dofs_0  = self.component_velocity_dofs
+        self.component_velocity_dofs_1  = component_velocity_dofs_1
+
+class LinearAdvection_RT0Velocity_PT123(SteadyState_LinearAdvection_RT0Velocity_PT123):
+    """
+    element by element tracking for a linear in time, RT0 velocity field (on simplices)
+      using Pearce's PT123 code
+    Note that the velocity and times dictionaries are shallow copies
+    TODO
+    
+    """
+    def __init__(self,mesh,nd,
+                 component_velocity_l2g={0:None}, #dictionary of component velocity l2g mappings
+                 component_velocity_dofs_0={0:None}, #dictionary of component velocity dofs at time level 1
+                 component_velocity_dofs_1={0:None}, 
+                 component_velocity_times_0={0:None},#time levels for velocities
+                 component_velocity_times_1={0:None},
+                 activeComponentList=[0],
+                 params={('atol_tracking',0):1.0e-7,#RK time integration tolerances
+                         ('rtol_tracking',0):0.0,
+                         ('sf_tracking',0):0.9,     #safety factor for RK integration
+                         ('dn_safe_tracking',0):1.0e-7,#tolerance for traking in-element tests
+                         ('localVelocityRepresentationFlag',0):2}):#RT0 velocity representation, 2 -- flux based rep, 1 \vec a + b\vec x
+        SteadyState_LinearAdvection_RT0Velocity_PT123.__init__(self,mesh,nd,
+                                                               component_velocity_l2g,
+                                                               component_velocity_dofs_0,
+                                                               activeComponentList=activeComponentList,
+                                                               params=params)
+        self.component_velocity_times_0 = component_velocity_times_0
+        self.component_velocity_times_1 = component_velocity_times_1
+        #
+        self.component_velocity_dofs_0  = self.component_velocity_dofs
+        self.component_velocity_dofs_1  = component_velocity_dofs_1
+
+    def forwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        """
+        direction = 1; output_id=6; 
+        for ci in self.activeComponentList:
+            #
+            maxeq = 3;
+            nVDOF_element=self.mesh.nNodes_element
+            nVDOF_total  =len(self.component_velocity_dofs[ci].flat)
+            assert self.params[('localVelocityRepresentationFlag',ci)] in [1,2], "self.params[('localVelocityRepresentationFlag',ci)]= %s not supported " % (self.params[('localVelocityRepresentationFlag',ci)])
+            idve = 3
+            if self.params[('localVelocityRepresentationFlag',ci)] == 1:
+                idve = 4
+            t_velocity_0 = self.component_velocity_times_0[ci]
+            t_velocity_1 = self.component_velocity_times_1[ci]
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #c data structures here and then convert back to base zero after call
+            fbase = 1
+            self.mesh.elementNodesArray += fbase
+            self.mesh.nodeElementsArray += fbase
+            self.component_velocity_l2g[ci] += fbase
+            element_track[ci] += fbase
+            flag_track[ci]    += fbase
+
+
+            ftracking.pt123(self.mesh.nNodes_global,
+                            self.mesh.nElements_global,
+                            self.mesh.nNodes_element,
+                            self.nd,
+                            nPoints[ci],
+                            direction,
+                            output_id,
+                            self.params[('atol_tracking',ci)],
+                            self.params[('rtol_tracking',ci)],
+                            self.params[('sf_tracking',ci)],
+                            self.params[('dn_safe_tracking',ci)],
+                            self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
+                            self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.nodeElementOffsets,
+                            self.mesh.nodeElementsArray,
+                            self.nodeOnBoundaryArray,
+                            self.component_velocity_l2g[ci].reshape(self.mesh.nElements_global*nVDOF_element),
+                            self.component_velocity_dofs_0[ci].reshape(nVDOF_total),
+                            self.component_velocity_dofs_1[ci].reshape(nVDOF_total),
+                            t_velocity_0,
+                            t_velocity_1,
+                            x_depart[ci].reshape(nPoints[ci]*maxeq),
+                            t_depart[ci].reshape(nPoints[ci]),
+                            t_track[ci].reshape(nPoints[ci]),
+                            element_track[ci].reshape(nPoints[ci]),
+                            flag_track[ci].reshape(nPoints[ci]),
+                            x_track[ci].reshape(nPoints[ci]*maxeq),
+                            idve=idve,
+                            maxeq=3,
+                            iverbose=0)
+
+            self.mesh.elementNodesArray -= fbase
+            self.mesh.nodeElementsArray -= fbase
+            self.component_velocity_l2g[ci] -= fbase
+            element_track[ci] -= fbase
+            flag_track[ci]    -= fbase
+    def backwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        no need to set direction = -1 if time values are decreasing
+        """
+        direction = 1; output_id=6; 
+        for ci in self.activeComponentList:
+            maxeq = 3
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            #TODO get different velocity degrees of freedom layouts matched
+            nVDOF_element=self.mesh.nNodes_element
+            nVDOF_total  =len(self.component_velocity_dofs[ci].flat)
+            assert self.params[('localVelocityRepresentationFlag',ci)] in [1,2], "self.params[('localVelocityRepresentationFlag',ci)]= %s not supported " % (self.params[('localVelocityRepresentationFlag',ci)])
+            idve = 3
+            if self.params[('localVelocityRepresentationFlag',ci)] == 1:
+                idve = 4
+            t_velocity_0 = self.component_velocity_times_0[ci]
+            t_velocity_1 = self.component_velocity_times_1[ci]
+
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #c data structures here and then convert back to base zero after call
+            fbase = 1
+            self.mesh.elementNodesArray += fbase
+            self.mesh.nodeElementsArray += fbase
+            self.component_velocity_l2g[ci] += fbase
+            element_track[ci] += fbase
+            flag_track[ci]    += fbase
+            ftracking.pt123(self.mesh.nNodes_global,
+                            self.mesh.nElements_global,
+                            self.mesh.nNodes_element,
+                            self.nd,
+                            nPoints[ci],
+                            direction,
+                            output_id,
+                            self.params[('atol_tracking',ci)],
+                            self.params[('rtol_tracking',ci)],
+                            self.params[('sf_tracking',ci)],
+                            self.params[('dn_safe_tracking',ci)],
+                            self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
+                            self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.nodeElementOffsets,
+                            self.mesh.nodeElementsArray,
+                            self.nodeOnBoundaryArray,
+                            self.component_velocity_l2g[ci].reshape(self.mesh.nElements_global*nVDOF_element),
+                            self.component_velocity_dofs_0[ci].reshape(nVDOF_total),
+                            self.component_velocity_dofs_1[ci].reshape(nVDOF_total),
+                            t_velocity_0,
+                            t_velocity_1,
+                            x_depart[ci].reshape(nPoints[ci]*maxeq),
+                            t_depart[ci].reshape(nPoints[ci]),
+                            t_track[ci].reshape(nPoints[ci]),
+                            element_track[ci].reshape(nPoints[ci]),
+                            flag_track[ci].reshape(nPoints[ci]),
+                            x_track[ci].reshape(nPoints[ci]*maxeq),
+                            idve=idve,
+                            maxeq=3,
+                            iverbose=0)
+
+            self.mesh.elementNodesArray     -= fbase
+            self.mesh.nodeElementsArray     -= fbase
+            self.component_velocity_l2g[ci] -= fbase
+            element_track[ci] -= fbase
+            flag_track[ci]    -= fbase
+    def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
+        """
+        load tracking velocity degrees of freedom for component at time and call it timeLevel 
+        
+        """
+        if trackingVelocity_l2g != None:
+            self.component_velocity_l2g[component]    = trackingVelocity_l2g
+        if timeLevel == 1:
+            self.component_velocity_dofs_1[component] = trackingVelocity_dofs
+            self.component_velocity_times_1[component]= time
+        else:
+            self.component_velocity_dofs_0[component] = trackingVelocity_dofs
+            self.component_velocity_times_0[component]= time
+
+
+class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity_PT123A):
+    """
+    analytical element by element tracking for a RT0 velocity field (on simplices)
+     V = V_0 + v_x (X-X_0) + V_t (t-t_0) 
+      using Pearce's PT123A framework and Russell, Healy 00 approach (sort of)
+    Note that the velocity and times dictionaries are shallow copies
+    TODO
+    
+    """
+    def __init__(self,mesh,nd,
+                 component_velocity_l2g={0:None}, #dictionary of component velocity l2g mappings
+                 component_velocity_dofs_0={0:None}, #dictionary of component velocity dofs at time level 1
+                 component_velocity_dofs_1={0:None}, 
+                 component_velocity_times_0={0:None},#time levels for velocities
+                 component_velocity_times_1={0:None},
+                 activeComponentList=[0],
+                 params={('atol_tracking',0):1.0e-7,#RK time integration tolerances
+                         ('rtol_tracking',0):0.0,
+                         ('sf_tracking',0):0.9,     #safety factor for RK integration
+                         ('dn_safe_tracking',0):1.0e-7,#tolerance for traking in-element tests
+                         ('localVelocityRepresentationFlag',0):2}):#RT0 velocity representation, 2 -- flux based rep, 1 \vec a + b\vec x
+        SteadyState_LinearAdvection_RT0Velocity_PT123A.__init__(self,mesh,nd,
+                                                               component_velocity_l2g,
+                                                               component_velocity_dofs_0,
+                                                               activeComponentList=activeComponentList,
+                                                               params=params)
+        self.component_velocity_times_0 = component_velocity_times_0
+        self.component_velocity_times_1 = component_velocity_times_1
+        #
+        self.component_velocity_dofs_0  = self.component_velocity_dofs
+        self.component_velocity_dofs_1  = component_velocity_dofs_1
+
+    def forwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        """
+        direction = 1; output_id=6; 
+        for ci in self.activeComponentList:
+            #
+            maxeq = 3;
+            nVDOF_element=self.mesh.nNodes_element
+            nVDOF_total  =len(self.component_velocity_dofs[ci].flat)
+            assert self.params[('localVelocityRepresentationFlag',ci)] in [1,2], "self.params[('localVelocityRepresentationFlag',ci)]= %s not supported " % (self.params[('localVelocityRepresentationFlag',ci)])
+            idve = 3
+            if self.params[('localVelocityRepresentationFlag',ci)] == 1:
+                idve = 4
+            t_velocity_0 = self.component_velocity_times_0[ci]
+            t_velocity_1 = self.component_velocity_times_1[ci]
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #c data structures here and then convert back to base zero after call
+            fbase = 1
+            self.mesh.elementNodesArray += fbase
+            self.mesh.nodeElementsArray += fbase
+            self.component_velocity_l2g[ci] += fbase
+            element_track[ci] += fbase
+            flag_track[ci]    += fbase
+
+
+            ftracking.pt123a(self.mesh.nNodes_global,
+                             self.mesh.nElements_global,
+                             self.mesh.nNodes_element,
+                             self.nd,
+                             nPoints[ci],
+                             direction,
+                             output_id,
+                             self.params[('atol_tracking',ci)],
+                             self.params[('rtol_tracking',ci)],
+                             self.params[('sf_tracking',ci)],
+                             self.params[('dn_safe_tracking',ci)],
+                             self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
+                             self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                             self.mesh.nodeElementOffsets,
+                             self.mesh.nodeElementsArray,
+                             self.nodeOnBoundaryArray,
+                             self.elementBoundaryOuterNormalsArray.reshape(self.mesh.nElements_global*self.mesh.nElementBoundaries_element*self.nd),
+                             self.elementBoundaryBarycentersArray.reshape(self.mesh.nElements_global*self.mesh.nElementBoundaries_element*3),
+                             self.component_velocity_l2g[ci].reshape(self.mesh.nElements_global*nVDOF_element),
+                             self.component_velocity_dofs_0[ci].reshape(nVDOF_total),
+                             self.component_velocity_dofs_1[ci].reshape(nVDOF_total),
+                             t_velocity_0,
+                             t_velocity_1,
+                             x_depart[ci].reshape(nPoints[ci]*maxeq),
+                             t_depart[ci].reshape(nPoints[ci]),
+                             t_track[ci].reshape(nPoints[ci]),
+                             element_track[ci].reshape(nPoints[ci]),
+                             flag_track[ci].reshape(nPoints[ci]),
+                             x_track[ci].reshape(nPoints[ci]*maxeq),
+                             idve=idve,
+                             idvt=1,
+                             maxeq=3,
+                             iverbose=0)
+
+            self.mesh.elementNodesArray -= fbase
+            self.mesh.nodeElementsArray -= fbase
+            self.component_velocity_l2g[ci] -= fbase
+            element_track[ci] -= fbase
+            flag_track[ci]    -= fbase
+    def backwardTrack(self,
+                     t_depart,           #point departure times
+                     t_track,            #target end time
+                     nPoints,            #total number of points
+                     x_depart,           #departure points
+                     element_track,      #in/out element locations
+                     x_track,            #arrival points
+                     flag_track):
+        """
+        track quadrature points in x_depart forward from t_depart --> t_track (input is target)
+        loads
+           x_track   : location of point at end of tracking
+           t_track   : time tracking ended
+           flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
+                           zero solution values) 
+                       -2  point exited the domain somewhere in (t_depart,t_target)
+                       -1  point in interior at t_target
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+          element_track : element containing point at end of tracking
+        no need to set direction = -1 if time values are decreasing
+        """
+        direction = 1; output_id=6; 
+        for ci in self.activeComponentList:
+            maxeq = 3
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            #TODO get different velocity degrees of freedom layouts matched
+            nVDOF_element=self.mesh.nNodes_element
+            nVDOF_total  =len(self.component_velocity_dofs[ci].flat)
+            assert self.params[('localVelocityRepresentationFlag',ci)] in [1,2], "self.params[('localVelocityRepresentationFlag',ci)]= %s not supported " % (self.params[('localVelocityRepresentationFlag',ci)])
+            idve = 3
+            if self.params[('localVelocityRepresentationFlag',ci)] == 1:
+                idve = 4
+            t_velocity_0 = self.component_velocity_times_0[ci]
+            t_velocity_1 = self.component_velocity_times_1[ci]
+
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #c data structures here and then convert back to base zero after call
+            fbase = 1
+            self.mesh.elementNodesArray += fbase
+            self.mesh.nodeElementsArray += fbase
+            self.component_velocity_l2g[ci] += fbase
+            element_track[ci] += fbase
+            flag_track[ci]    += fbase
+            ftracking.pt123a(self.mesh.nNodes_global,
+                             self.mesh.nElements_global,
+                             self.mesh.nNodes_element,
+                             self.nd,
+                             nPoints[ci],
+                             direction,
+                             output_id,
+                             self.params[('atol_tracking',ci)],
+                             self.params[('rtol_tracking',ci)],
+                             self.params[('sf_tracking',ci)],
+                             self.params[('dn_safe_tracking',ci)],
+                             self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
+                             self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                             self.mesh.nodeElementOffsets,
+                             self.mesh.nodeElementsArray,
+                             self.nodeOnBoundaryArray,
+                             self.elementBoundaryOuterNormalsArray.reshape(self.mesh.nElements_global*self.mesh.nElementBoundaries_element*self.nd),
+                             self.elementBoundaryBarycentersArray.reshape(self.mesh.nElements_global*self.mesh.nElementBoundaries_element*3),
+                             self.component_velocity_l2g[ci].reshape(self.mesh.nElements_global*nVDOF_element),
+                             self.component_velocity_dofs_0[ci].reshape(nVDOF_total),
+                             self.component_velocity_dofs_1[ci].reshape(nVDOF_total),
+                             t_velocity_0,
+                             t_velocity_1,
+                             x_depart[ci].reshape(nPoints[ci]*maxeq),
+                             t_depart[ci].reshape(nPoints[ci]),
+                             t_track[ci].reshape(nPoints[ci]),
+                             element_track[ci].reshape(nPoints[ci]),
+                             flag_track[ci].reshape(nPoints[ci]),
+                             x_track[ci].reshape(nPoints[ci]*maxeq),
+                             idve=idve,
+                             idvt=1,
+                             maxeq=3,
+                             iverbose=0)
+
+            self.mesh.elementNodesArray     -= fbase
+            self.mesh.nodeElementsArray     -= fbase
+            self.component_velocity_l2g[ci] -= fbase
+            element_track[ci] -= fbase
+            flag_track[ci]    -= fbase
+    def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
+        """
+        load tracking velocity degrees of freedom for component at time and call it timeLevel 
+        
+        """
+        if trackingVelocity_l2g != None:
+            self.component_velocity_l2g[component]    = trackingVelocity_l2g
+        if timeLevel == 1:
+            self.component_velocity_dofs_1[component] = trackingVelocity_dofs
+            self.component_velocity_times_1[component]= time
+        else:
+            self.component_velocity_dofs_0[component] = trackingVelocity_dofs
+            self.component_velocity_times_0[component]= time
+
+
+
+
+######################################################################
+#routines for testing tracking
+def setupMesh_1d(opts,p):
+    assert p.nd == 1, "1d only for now"
+    #spatial mesh, 
+    mlMesh = MeshTools.MultilevelEdgeMesh(opts.nnx,1,1,p.L[0],refinementLevels=1)
+    #track on finest level only
+    mesh=mlMesh.meshList[-1]
+    return mesh
+def setupMesh_2d(opts,p):
+    assert p.nd == 2, "2d only for now"
+    #spatial mesh, 
+    mlMesh = MeshTools.MultilevelTriangularMesh(opts.nnx,opts.nny,1,p.L[0],p.L[1],refinementLevels=1)
+    #track on finest level only
+    mesh=mlMesh.meshList[-1]
+    return mesh
+def setupMesh_3d(opts,p):
+    assert p.nd == 3, "2d only for now"
+    #spatial mesh, 
+    mlMesh = MeshTools.MultilevelTetrahedralMesh(opts.nnx,opts.nny,opts.nnz,p.L[0],p.L[1],p.L[2],refinementLevels=1)
+    #track on finest level only
+    mesh=mlMesh.meshList[-1]
+    return mesh
+def setupSolution_C0P1(opts,p,mesh,t):
+    """
+    returns FEM space, FEM function, and interpolation values
+    """
+    #solution representation, not used for linear problems
+    trialSpace= FemTools.C0_AffineLinearOnSimplexWithNodalBasis(mesh,p.nd)
+    u = FemTools.FiniteElementFunction(trialSpace,name="u")
+    #evaluate solution dofs from interpolation conditions using problem's initial condition
+    #need to put t0 in p?
+    t=opts.t_start
+    u_interpolation_values = numpy.zeros((mesh.nElements_global,trialSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints),'d')
+    for eN in range(mesh.nElements_global):
+        for k in range(trialSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+            u_interpolation_values[eN,k] = p.initialConditions[0].uOfXT(trialSpace.interpolationPoints[eN,k],t)
+    #evaluate solution dofs from interpolation conditions
+    u.projectFromInterpolationConditions(u_interpolation_values)
+    return trialSpace,u,u_interpolation_values
+def setupVelocity_C0P1(opts,p,mesh,t):
+    """
+    returns FEM space and FEM function, and interpolation values 
+    """
+    velocitySpace= FemTools.C0_AffineLinearOnSimplexWithNodalBasis(mesh,p.nd)
+    velocity = FemTools.FiniteElementFunction(velocitySpace,dim_dof=p.nd,isVector=True,name="velocity")
+    velocity_interpolation_values = numpy.zeros((mesh.nElements_global,velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints,p.nd),'d')
+    for eN in range(mesh.nElements_global):
+        for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+            velocity_interpolation_values[eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
+    #evaluate velocity degrees of freedom from its interpolation conditions
+    velocity.projectFromInterpolationConditions(velocity_interpolation_values)
+    
+    return velocitySpace,velocity,velocity_interpolation_values
+def setupVelocity_RT0(opts,p,mesh,geometricSpace,t):
+    """
+    initially returns just a l2g mapping and dof map for an RT0 velocity representation on 
+    simplexes because we don't have a fem function or space for this yet
+
+    On element e:
+      \vec v_h = \sum^d_{i=0}V^i\vec N_{e,i}
+    for 
+      \vec N_{e,i} = \frac{1}{d|\Omega_e|}(\vec x - x_{n,i}), i=0,...,d
+      
+   The degrees of freedom are flux integrals through faces
+      V^i = \int_{\gamma_i}\vec v\dot n_{i}\ds
+
+    velocity dofs is logically nElements_global x nElementBoundaries_element
+      
+    geometricSpace defines geometry for mesh (affine simplicial for now)
+    """
+    velocity_dofs = numpy.zeros((mesh.nElements_global*mesh.nElementBoundaries_element),'d')
+    velocity_l2g  = numpy.arange((mesh.nElements_global*mesh.nElementBoundaries_element),dtype='i').reshape((mesh.nElements_global,mesh.nElementBoundaries_element))
+    velocity_interpolation_values = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element),'d')
+    
+    #setup information for boundary integrals
+    boundaryQuadrature = Quadrature.GaussEdge(4)
+    elementBoundaryQuadraturePoints = numpy.array([pt for pt in boundaryQuadrature.points])
+    elementBoundaryQuadratureWeights= numpy.array([wt for wt in boundaryQuadrature.weights])
+    
+    nElementBoundaryQuadraturePoints_elementBoundary = elementBoundaryQuadraturePoints.shape[0]
+    ebq = {}
+    ebq['x'] = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
+    ebq['inverse(J)'] = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,nElementBoundaryQuadraturePoints_elementBoundary,p.nd,p.nd),'d')
+    ebq['g'] = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,nElementBoundaryQuadraturePoints_elementBoundary,max(1,p.nd-1),max(1,p.nd-1)),'d')
+    ebq['sqrt(det(g))'] = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,nElementBoundaryQuadraturePoints_elementBoundary),'d')
+    ebq['n'] = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,nElementBoundaryQuadraturePoints_elementBoundary,p.nd),'d')
+    ebq['dS'] = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,nElementBoundaryQuadraturePoints_elementBoundary),'d')
+
+    geometricSpace.elementMaps.getValuesTrace(elementBoundaryQuadraturePoints,
+                                              ebq['x'])
+    geometricSpace.elementMaps.getJacobianValuesTrace(elementBoundaryQuadraturePoints,
+                                                      ebq['inverse(J)'],
+                                                      ebq['g'],
+                                                      ebq['sqrt(det(g))'],
+                                                      ebq['n'])
+    cfemIntegrals.calculateElementBoundaryIntegrationWeights(ebq['sqrt(det(g))'],
+                                                             elementBoundaryQuadratureWeights,
+                                                             ebq['dS'])
+    #manually evaluate velocity degrees of freedom from its interpolation conditions
+    for eN in range(mesh.nElements_global):
+        for ebN in range(mesh.nElementBoundaries_element):
+            integral = 0.0
+            for kb in range(nElementBoundaryQuadraturePoints_elementBoundary):
+                v = p.analyticalSolutionParticleVelocity[0].uOfXT(ebq['x'][eN,ebN,kb],t)
+                for I in range(p.nd):
+                    integral += v[I]*ebq['n'][eN,ebN,kb,I]*ebq['dS'][eN,ebN,kb]
+                #mwf debug
+                #print "setup RT0 eN= %s ebN= %s kb=%s v=[%s,%s] n=[%s,%s] integral=%s " % (eN,ebN,kb,v[0],v[1],ebq['n'][eN,ebN,kb,0],ebq['n'][eN,ebN,kb,1],integral)
+            velocity_interpolation_values[eN,ebN] = integral
+            velocity_dofs[velocity_l2g[eN,ebN]] = velocity_interpolation_values[eN,ebN]
+    
+    return velocity_dofs,velocity_l2g,velocity_interpolation_values,ebq,elementBoundaryQuadraturePoints,elementBoundaryQuadratureWeights
+
+def setupTrackingPointsInReferenceSpace(opts,p,useGaussianQuadrature=False):
+    """
+    return points to track in reference space
+    """
+    #assumes have the same number of integration points per element to start tracking
+    # generate points on reference element, map to domain
+    # these could be arbitrary but test first for standard quadrature points
+    if p.nd == 1:
+        if useGaussianQuadrature:
+            quadrature = Quadrature.GaussianEdge(order=opts.nnq)
+        else:
+            quadrature = Quadrature.CompositeTrapezoidalEdge(order=opts.nnq)
+        #(q['x_hat'],q['w_hat'],q['x_hat_indeces']) = Quadrature.buildUnion({0:quadrature})
+        x_hat = numpy.array([x for x in quadrature.points])
+        return x_hat 
+    elif p.nd == 2:
+        #need CompositeTrapezoidalTriangle
+        if useGaussianQuadrature:
+            quadrature = Quadrature.GaussTriangle(order=opts.nnq)
+        else:
+            quadrature = Quadrature.CompositeTrapezoidalTriangle(order=opts.nnq)
+        
+        x_hat = numpy.array([x for x in quadrature.points])
+        return x_hat 
+    elif p.nd == 3:
+        #need CompositeTrapezoidalTriangle
+        quadrature = Quadrature.GaussTetrahedron(order=opts.nnq)
+        
+        x_hat = numpy.array([x for x in quadrature.points])
+        return x_hat 
+    else:
+        return None
+def setupTrackingDataArrays(t_start,t_target,mesh,q,nq_per_element):
+    #input/arrays
+    #in/out -- element where point is located
+    q['element_track'] = numpy.zeros((mesh.nElements_global,nq_per_element),'i')
+    for eN in range(mesh.nElements_global):
+        q['element_track'][eN,:] = eN
+    #in/out -- departure, arrival times for points
+    q['t_depart'] = numpy.zeros((mesh.nElements_global,nq_per_element),'d')
+    q['t_track'] = numpy.zeros((mesh.nElements_global,nq_per_element),'d')
+    q['t_depart'].fill(t_start)
+    q['t_track'].fill(t_target)
+    #out -- exit points
+    q['x_track'] = numpy.zeros((mesh.nElements_global,nq_per_element,3),'d')
+    #in/out --- status of point
+    #in
+    #0 : track point, later can make >= 0 track, 1 --> vertex 
+    #out
+    #0 : point in interior
+    #1 : point exited domain
+    #-1: did not track
+    q['flag_track']= numpy.zeros((mesh.nElements_global,nq_per_element),'i')
+    #on input -1 means try, it's an interior point
+    q['flag_track'].fill(-1)
+
+def test0(opts):
+    """
+    1d, constant velocity in space and time
+    """
+    p = __import__(opts.problem[:-3])
+
+    assert p.nd == 1, "1d only for now"
+    assert "analyticalSolutionParticleVelocity" in dir(p), "need p.analyticalSolutionParticleVelocity to test tracking"
+    assert opts.nnq > 0, "nnq = %s not ok must be > 0" % opts.nnq
+    if opts.t_target == None:
+        opts.t_target = p.T
+    #to collect integration points etc
+    q = {}
+    #spatial mesh on 1 level for now, 
+    mesh = setupMesh_1d(opts,p)
+    sdmesh = mesh.subdomainMesh
+    #solution representation, not used for linear problems
+
+    trialSpace,u,q['u_interpolation_values'] = setupSolution_C0P1(opts,p,sdmesh,opts.t_start)
+
+    #velocity representation
+    #P^1 in 1d
+    velocitySpace,velocity,q['velocity_interpolation_values'] = setupVelocity_C0P1(opts,p,sdmesh,opts.t_start)
+
+    q['x_hat'] = setupTrackingPointsInReferenceSpace(opts,p)
+    nq_per_element = q['x_hat'].shape[0]
+
+    #map points to physical space
+    q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
+    trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
+    
+    #go ahead and get shape functions at initial points to evaluate solution, may not want to use
+    #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
+    q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
+    trialSpace.getBasisValues(q['x_hat'],q['u_shape_functions'])
+
+    setupTrackingDataArrays(opts.t_start,opts.t_target,sdmesh,q,nq_per_element)
+
+    #tracking-routine specific options
+    #set options controlling tracking strategy
+    skipPointsWithZeroSolution = False
+
+    #epsilon
+    zeroTol = 1.0e-5
+    #which way to track (1. forward, -1. backward)
+    direction = 1.0
+    if opts.t_target < opts.t_start:
+        direction = -1
+    ctracking.trackPointsConstVelocity1d(sdmesh.nElements_global,                #sdmesh representation
+                                         sdmesh.nNodes_global,
+                                         sdmesh.nNodes_element,
+                                         sdmesh.nElementBoundaries_element,
+                                         sdmesh.nodeArray,
+                                         sdmesh.elementNodesArray,
+                                         sdmesh.elementNeighborsArray,
+                                         velocity.dof[0],                     #constant velocity tracking
+                                         direction,
+                                         q['t_depart'],                       #point departure times
+                                         q['t_track'],                        #target end time
+                                         sdmesh.nElements_global*nq_per_element,#total number of points
+                                         zeroTol,                             #for zero tests
+                                         q['x'],                              #departure points
+                                         q['element_track'],                  #in/out element locations
+                                         q['x_track'],                        #arrival points
+                                         q['flag_track'])                     #tracking status
+    
+    #mwf debug
+    #pdb.set_trace()
+    
+    #exact or reference solution
+    q['x_track_exact']= numpy.copy(q['x'])
+    q['t_track_exact']= numpy.copy(q['t_depart'])
+    velocity_exact = velocity.dof[0]
+    #constant velocity
+    for eN in range(sdmesh.nElements_global):
+        for k in range(nq_per_element):
+            dt = opts.t_target - q['t_track_exact'][eN,k]
+            dx = velocity_exact*dt
+            if q['x_track_exact'][eN,k,0] + dx > p.L[0]:
+                dx = p.L[0]-q['x_track_exact'][eN,k,0]
+                dt = dx/velocity_exact
+            elif q['x_track_exact'][eN,k,0] + dx < 0.0:
+                dx = 0.0 - q['x_track_exact'][eN,k,0]
+                dt = dx/velocity_exact
+            q['t_track_exact'][eN,k]   += dt
+            q['x_track_exact'][eN,k,0] += dx
+    #crude output
+    fdep = open('x_depart.grf','w')
+    farr = open('x_arrive.grf','w')
+    fflg = open('x_flag.grf','w')
+    ferr = open('x_err.grf','w')
+    fexa = open('x_exa.grf','w')
+    l2errX= 0.0; l2errT= 0.0; 
+    for eN in range(sdmesh.nElements_global):
+        for k in range(nq_per_element):
+            fdep.write("%12.5e %12.5e \n " % (q['x'][eN,k,0],q['t_depart'][eN,k]))
+            farr.write("%12.5e %12.5e \n " % (q['x_track'][eN,k,0],q['t_track'][eN,k]))
+            fflg.write("%12.5e %d     \n " % (q['x_track'][eN,k,0],q['flag_track'][eN,k]))
+            ferr.write("%12.5e %12.5e \n"  % (q['x_track'][eN,k,0],q['x_track'][eN,k,0]-q['x_track_exact'][eN,k,0]))
+            fexa.write("%12.5e %12.5e \n"  % (q['x_track_exact'][eN,k,0],q['t_track_exact'][eN,k]))
+            l2errX += (q['x_track'][eN,k,0]-q['x_track_exact'][eN,k,0])**2
+            l2errT += (q['t_track'][eN,k]-q['t_track_exact'][eN,k])**2
+    #
+    fdep.close()
+    farr.close()
+    fflg.close()
+    ferr.close()
+    #
+    l2errX = math.sqrt(l2errX)/(sdmesh.nElements_global*nq_per_element)
+    l2errT = math.sqrt(l2errT)/(sdmesh.nElements_global*nq_per_element)
+    print "T= %s ell_2 error in spatial locations = %s ell_2 error in temporal locations = %s " % (opts.t_target,l2errX,l2errT)
+    
+def test1(opts):
+    """
+    1d, steady, linear velocity in space
+    """
+    p = __import__(opts.problem[:-3])
+
+    assert p.nd == 1, "1d only for now"
+    assert "analyticalSolutionParticleVelocity" in dir(p), "need p.analyticalSolutionParticleVelocity to test tracking"
+    assert opts.nnq > 0, "nnq = %s not ok must be > 1" % opts.nnq
+    if opts.t_target == None:
+        opts.t_target = p.T
+    #to collect integration points etc
+    q = {}
+    #spatial mesh on 1 level for now, 
+    mesh = setupMesh_1d(opts,p)
+    sdmesh = mesh.subdomainMesh
+    #solution representation, not used for linear problems
+
+    trialSpace,u,q['u_interpolation_values'] = setupSolution_C0P1(opts,p,sdmesh,opts.t_start)
+
+    #velocity representation
+    #P^1 in 1d
+    velocitySpace,velocity,q['velocity_interpolation_values'] = setupVelocity_C0P1(opts,p,sdmesh,opts.t_start)
+
+    q['x_hat'] = setupTrackingPointsInReferenceSpace(opts,p)
+    nq_per_element = q['x_hat'].shape[0]
+
+    #map points to physical space
+    q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
+    trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
+    
+    #go ahead and get shape functions at initial points to evaluate solution, may not want to use
+    #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
+    q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
+    trialSpace.getBasisValues(q['x_hat'],q['u_shape_functions'])
+
+    setupTrackingDataArrays(opts.t_start,opts.t_target,sdmesh,q,nq_per_element)
+
+    #tracking-routine specific options
+    #set options controlling tracking strategy
+    skipPointsWithZeroSolution = False
+
+    #epsilon
+    zeroTol = 1.0e-5
+    #which way to track (1. forward, -1. backward)
+    direction = 1.0
+    if opts.t_target < opts.t_start:
+        direction = -1
+    ctracking.trackPointsC0P1Velocity1d(sdmesh.nElements_global,                #mesh representation
+                                        sdmesh.nNodes_global,
+                                        sdmesh.nNodes_element,
+                                        sdmesh.nElementBoundaries_element,
+                                        sdmesh.nodeArray,
+                                        sdmesh.elementNodesArray,
+                                        sdmesh.elementNeighborsArray,
+                                        velocitySpace.dofMap.l2g,
+                                        velocity.dof,                       #constant velocity tracking
+                                        direction,
+                                        q['t_depart'],                       #point departure times
+                                        q['t_track'],                        #target end time
+                                        sdmesh.nElements_global*nq_per_element,#total number of points
+                                        zeroTol,                             #for zero tests
+                                        q['x'],                              #departure points
+                                        q['element_track'],                  #in/out element locations
+                                        q['x_track'],                        #arrival points
+                                        q['flag_track'])                     #tracking status
+    
+    #mwf debug
+    #pdb.set_trace()
+    
+    #exact or reference solution
+    q['x_track_exact']= numpy.copy(q['x'])
+    q['t_track_exact']= numpy.copy(q['t_depart'])
+    velocity_exact = velocity.dof[0]
+    if "analyticalSolutionParticleTrajectory" in dir(p):
+        for eN in range(mesh.nElements_global):
+            for k in range(nq_per_element):
+                dt = opts.t_target - q['t_track_exact'][eN,k]
+                x = p.analyticalSolutionParticleTrajectory[0].uOfXT(q['x_track_exact'][eN,k],dt)
+                if x > p.L[0]:
+                    dx = p.L[0]-q['x_track_exact'][eN,k,0]
+                    dt = p.analyticalSolutionParticleTrajectory[0].dtOfdX(q['x_track_exact'][eN,k],
+                                                                  numpy.array([dx,0.0,0.0]))
+                    x = p.L[0]
+                elif x < 0.0:
+                    dx = 0.0 - q['x_track_exact'][eN,k,0]
+                    dt = p.analyticalSolutionParticleTrajectory[0].dtOfdX(q['x_track_exact'][eN,k],
+                                                                  numpy.array([dx,0.0,0.0]))
+                    x = 0.0
+                #mwf debug
+                if dt == None:
+                    pdb.set_trace()
+                q['t_track_exact'][eN,k]   += dt
+                q['x_track_exact'][eN,k,0] = x
+    else:
+        #constant velocity
+        for eN in range(sdmesh.nElements_global):
+            for k in range(nq_per_element):
+                dt = opts.t_target - q['t_track_exact'][eN,k]
+                dx = velocity_exact*dt
+                if q['x_track_exact'][eN,k,0] + dx > p.L[0]:
+                    dx = p.L[0]-q['x_track_exact'][eN,k,0]
+                    dt = dx/velocity_exact
+                elif q['x_track_exact'][eN,k,0] + dx < 0.0:
+                    dx = 0.0 - q['x_track_exact'][eN,k,0]
+                    dt = dx/velocity_exact
+                q['t_track_exact'][eN,k]   += dt
+                q['x_track_exact'][eN,k,0] += dx
+    #crude output
+    fdep = open('x_depart.grf','w')
+    farr = open('x_arrive.grf','w')
+    fflg = open('x_flag.grf','w')
+    ferr = open('x_err.grf','w')
+    fexa = open('x_exa.grf','w')
+    l2errX= 0.0; l2errT= 0.0; 
+    for eN in range(sdmesh.nElements_global):
+        for k in range(nq_per_element):
+            fdep.write("%12.5e %12.5e \n " % (q['x'][eN,k,0],q['t_depart'][eN,k]))
+            farr.write("%12.5e %12.5e \n " % (q['x_track'][eN,k,0],q['t_track'][eN,k]))
+            fflg.write("%12.5e %d     \n " % (q['x_track'][eN,k,0],q['flag_track'][eN,k]))
+            ferr.write("%12.5e %12.5e \n"  % (q['x_track'][eN,k,0],q['x_track'][eN,k,0]-q['x_track_exact'][eN,k,0]))
+            fexa.write("%12.5e %12.5e \n"  % (q['x_track_exact'][eN,k,0],q['t_track_exact'][eN,k]))
+            l2errX += (q['x_track'][eN,k,0]-q['x_track_exact'][eN,k,0])**2
+            l2errT += (q['t_track'][eN,k]-q['t_track_exact'][eN,k])**2
+    #
+    fdep.close()
+    farr.close()
+    fflg.close()
+    ferr.close()
+    #
+    l2errX = math.sqrt(l2errX)/(sdmesh.nElements_global*nq_per_element)
+    l2errT = math.sqrt(l2errT)/(sdmesh.nElements_global*nq_per_element)
+    print "T= %s ell_2 error in spatial locations = %s ell_2 error in temporal locations = %s " % (opts.t_target,l2errX,l2errT)
+    
+def test2(opts):
+    """
+    2d, steady, linear velocity in space
+    """
+    p = __import__(opts.problem[:-3])
+
+    assert p.nd == 2, "2d only for now"
+    assert "analyticalSolutionParticleVelocity" in dir(p), "need p.analyticalSolutionParticleVelocity to test tracking"
+    assert opts.nnq > 0, "nnq = %s not ok must be > 0" % opts.nnq
+    if opts.t_target == None:
+        opts.t_target = p.T
+    #to collect integration points etc
+    q = {}
+    #spatial mesh on 1 level for now, 
+    mesh = setupMesh_2d(opts,p)
+    sdmesh = mesh.subdomainMesh
+    #solution representation, not used for linear problems
+
+    trialSpace,u,q['u_interpolation_values'] = setupSolution_C0P1(opts,p,sdmesh,opts.t_start)
+
+
+    #velocity representation
+    #RT0 in 2d
+    #since don't have a full FEM representation for vector spaces this requires more work
+    q['velocity_dof'],q['velocity_l2g'],q['velocity_interpolation_values'],ebq,q['elementBoundaryQuadraturePoints'],q['elementBoundaryQuadratureWeights'] = setupVelocity_RT0(opts,p,sdmesh,trialSpace,opts.t_start)
+    #uses flux rep
+    localVelocityRepresentationFlag = 2
+
+    q['x_hat'] = setupTrackingPointsInReferenceSpace(opts,p)
+    nq_per_element = q['x_hat'].shape[0]
+
+    #map points to physical space
+    q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
+    trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
+    
+    #go ahead and get shape functions at initial points to evaluate solution, may not want to use
+    #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
+    q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
+    trialSpace.getBasisValues(q['x_hat'],q['u_shape_functions'])
+
+    setupTrackingDataArrays(opts.t_start,opts.t_target,sdmesh,q,nq_per_element)
+
+    #save velocity field for visualization
+    q['J']            = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd,p.nd),'d')
+    q['inverse(J)']   = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd,p.nd),'d')
+    q['det(J)']       = numpy.zeros((q['x'].shape[0],q['x'].shape[1]),'d')
+    trialSpace.elementMaps.getJacobianValues(q['x_hat'],q['J'],q['inverse(J)'],q['det(J)'])
+
+    q['abs(det(J))']  = numpy.absolute(q['det(J)'])
+    q['velocity_depart'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
+    q['velocity_track'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
+
+    from pyadh import cpostprocessing
+    cpostprocessing.getRT0velocityValuesFluxRep_arbitraryElementMembership(sdmesh.nodeArray,
+                                                                           sdmesh.elementNodesArray,
+                                                                           q['abs(det(J))'],
+                                                                           q['x'],
+                                                                           q['element_track'],
+                                                                           q['velocity_dof'],
+                                                                           q['velocity_depart'])
+ 
+
+    ########## visualization and output stuff
+    #mwf debug
+    #pdb.set_trace()
+    archive = Archiver.XdmfArchive(".","test2",useTextArchive=False)
+    import xml.etree.ElementTree as ElementTree
+    archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
+    writer   = Archiver.XdmfWriter()
+
+    if opts.view:
+        try:  #run time visualization?
+            from pyadh import Viewers
+            from pyadhGraphical import vtkViewers
+            Viewers.viewerOn("test2",'vtk')
+            viewer = Viewers.V_base(p)
+        except:
+            pass
+    #
+    arGrid = writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x'],opts.t_start,init=True,tCount=0)
+    writer.writeScalarXdmf_particles(archive,q['t_depart'],"t_particle",tCount=0)
+    writer.writeVectorXdmf_particles(archive,q['velocity_depart'],"velocity",tCount=0)
+
+    #to accomodate updating pardigm for visualization copy _track info to be consistent
+    #with start locations
+    q['x_track'].flat[:] = q['x']; q['t_viz'] = numpy.copy(q['t_depart'])
+    q['x_depart'] = numpy.copy(q['x'])
+    #for exact or reference solution
+    q['x_track_exact']= numpy.copy(q['x_depart'])
+    q['t_track_exact']= numpy.copy(q['t_depart'])
+    if opts.view:
+        try: #run time visualization?
+            vtkViewers.viewScalar_pointCloud_2D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray,
+                                                vectors=q['velocity_depart'],viewTypes=['spheres'])#viewTypes=['spheres','streamlines'])
+            if opts.wait:
+                raw_input("Hit any key to continue")
+        except:
+            pass
+
+
+
+    #2d need outer normals on each face
+    #right now have element boundary quadrature array calculated values already so can grab 1st one
+    #since its affine geometry
+    #In actual code can skip most of the ebq info by just using 
+    #  \vec n = (\ten{J}^{-T} \vec \hat{n})/||\ten{J}^{-T} \vec \hat{n})||
+    
+    elementBoundaryOuterNormals = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,p.nd),'d')
+    elementBoundaryOuterNormalsOrig = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,p.nd),'d')
+    #mwf orig
+    for eN in range(mesh.nElements_global):
+        for ebN in range(mesh.nElementBoundaries_element):
+            elementBoundaryOuterNormalsOrig[eN,ebN,:] = ebq['n'][eN,ebN,0,:]
+    boundaryNormals = numpy.array(trialSpace.elementMaps.referenceElement.boundaryUnitNormalList)
+    ctracking.getOuterNormals_affineSimplex(boundaryNormals,
+                                            q['inverse(J)'],
+                                            elementBoundaryOuterNormals)
+    assert numpy.max(numpy.absolute(elementBoundaryOuterNormalsOrig.flat[:]-elementBoundaryOuterNormals.flat[:])) < 1.0e-8
+    #tracking-routine specific options
+    #set options controlling tracking strategy
+    skipPointsWithZeroSolution = False
+
+    #epsilon
+    zeroTol = 1.0e-5
+    #which way to track (1. forward, -1. backward)
+    direction = 1.0
+    if opts.t_target < opts.t_start:
+        direction = -1
+
+
+    #
+    t     = opts.t_start
+    dtout = (opts.t_target - opts.t_start)/opts.nnt
+    for i in range(int(opts.nnt)):
+        #update for next step
+        t += dtout
+
+        q['t_track'].fill(t) 
+        ctracking.trackPointsRT0Velocity2d(localVelocityRepresentationFlag,
+                                           sdmesh.nElements_global,                #mesh representation
+                                           sdmesh.nNodes_global,
+                                           sdmesh.nNodes_element,
+                                           sdmesh.nElementBoundaries_element,
+                                           sdmesh.nodeArray,
+                                           sdmesh.elementNodesArray,
+                                           sdmesh.elementNeighborsArray,
+                                           sdmesh.elementBoundariesArray,
+                                           sdmesh.elementBoundaryBarycentersArray,
+                                           elementBoundaryOuterNormals,
+                                           q['velocity_l2g'],
+                                           q['velocity_dof'],                       #constant velocity tracking
+                                           direction,
+                                           q['t_depart'],                       #point departure times
+                                           q['t_track'],                        #target end time
+                                           sdmesh.nElements_global*nq_per_element,#total number of points
+                                           zeroTol,                             #for zero tests
+                                           q['x'],                              #departure points
+                                           q['element_track'],                  #in/out element locations
+                                           q['x_track'],                        #arrival points
+                                           q['flag_track'])                     #tracking status
+
+
+        #evaluate velocity at tracked points too
+        cpostprocessing.getRT0velocityValuesFluxRep_arbitraryElementMembership(sdmesh.nodeArray,
+                                                                               sdmesh.elementNodesArray,
+                                                                               q['abs(det(J))'],
+                                                                               q['x_track'],
+                                                                               q['element_track'],
+                                                                               q['velocity_dof'],
+                                                                               q['velocity_track'])
+
+
+
+
+
+
+        writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track'],t,init=False,meshChanged=True,arGrid=arGrid,tCount=i+1)
+        writer.writeScalarXdmf_particles(archive,q['t_track'],"t_particle",tCount=i+1)
+        writer.writeVectorXdmf_particles(archive,q['velocity_track'],"velocity",tCount=i+1)
+
+        if opts.view:
+            q['t_viz'].flat[:] = q['t_track']
+            try: #run time visualization?
+                vtkViewers.viewScalar_pointCloud_2D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray)
+                if opts.wait:
+                    raw_input("Hit any key to continue")
+            except:
+                pass
+
+        q['t_depart'].flat[:] = q['t_track'].flat
+        q['x'].flat[:] = q['x_track'].flat
+        #can also set flag so that don't track points that exited the domain
+        #q['flag_track'][numpy.where(q['flag_track'] == 1)] = -2
+        #mwf debug
+        #pdb.set_trace()
+    #output step loop
+    #exact or reference solution
+    if "analyticalSolutionParticleTrajectory" in dir(p):
+        for eN in range(mesh.nElements_global):
+            for k in range(nq_per_element):
+                dt = t - q['t_track_exact'][eN,k]
+                x0= q['x_track_exact'][eN,k]
+                x = p.analyticalSolutionParticleTrajectory[0].uOfXT(x0,dt)
+#                 #check distances to the boundaries
+#                 if x[0] < 0.0:
+#                     n  = numpy.array([-1.0,0.0]); xb = numpy.array([0.0,0.5])
+#                     dx = xb-x0[:p.nd]
+#                     dtb= p.analyticalSolutionParticleTrajectory[0].dtOfdX(x0,
+#                                                                           dx,n)
+#                     if abs(dtb) < abs(dt):
+#                         dt = dtb
+#                 if x[0] > p.L[0]:
+#                     n  = numpy.array([1.0,0.0]); xb = numpy.array([p.L[0],0.5])
+#                     dx = xb-x0[:p.nd]
+#                     dtb= p.analyticalSolutionParticleTrajectory[0].dtOfdX(x0,
+#                                                                           dx,n)
+#                     if abs(dtb) < abs(dt):
+#                         dt = dtb
+    
+#                 if x[1] < 0.0:
+#                     n  = numpy.array([0.0,-1.0]); xb = numpy.array([0.5,0.0])
+#                     dx = xb-x0[:p.nd]
+#                     dtb= p.analyticalSolutionParticleTrajectory[0].dtOfdX(x0,
+#                                                                           dx,n)
+#                     if abs(dtb) < abs(dt):
+#                         dt = dtb
+
+#                 if x[1] > p.L[1]:
+#                     n  = numpy.array([0.0,1.0]); xb = numpy.array([0.5,p.L[1]])
+#                     dx = xb-x0[:p.nd]
+#                     dtb= p.analyticalSolutionParticleTrajectory[0].dtOfdX(x0,
+#                                                                           dx,n)
+#                     if abs(dtb) < abs(dt):
+#                         dt = dtb
+
+                x = p.analyticalSolutionParticleTrajectory[0].uOfXT(x0,dt)
+                #mwf debug
+                if dt == None:
+                    pdb.set_trace()
+                q['t_track_exact'][eN,k]          += dt
+                q['x_track_exact'][eN,k][:p.nd]    = x
+
+    writerExact = Archiver.XdmfWriter()
+    arGridExact = writerExact.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track_exact'],t,init=True,tCount=0,spaceSuffix="_particles_exact")
+    writerExact.writeScalarXdmf_particles(archive,q['t_track_exact'],"t_particle_exact",tCount=0)
+
+    #crude error calculation
+    fdep = open('x_depart.grf','w')
+    farr = open('x_arrive.grf','w')
+    fflg = open('x_flag.grf','w')
+    ferr = open('x_err.grf','w')
+    fexa = open('x_exa.grf','w')
+    l2errX= 0.0; l2errT= 0.0; 
+    for eN in range(sdmesh.nElements_global):
+        for k in range(nq_per_element):
+            fdep.write("%12.5e %12.5e %12.5e \n " % (q['x'][eN,k,0],q['x'][eN,k,1],q['t_depart'][eN,k]))
+            farr.write("%12.5e %12.5e %12.5e \n " % (q['x_track'][eN,k,0],q['x_track'][eN,k,1],q['t_track'][eN,k]))
+            fflg.write("%12.5e %12.5e %d     \n " % (q['x_track'][eN,k,0],q['x_track'][eN,k,1],q['flag_track'][eN,k]))
+            ferr.write("%12.5e %12.5e %12.5e \n"  % (q['x_track'][eN,k,0],q['x_track'][eN,k,1],numpy.sqrt(numpy.dot(q['x_track'][eN,k]-q['x_track_exact'][eN,k],
+                                                                                                                    q['x_track'][eN,k]-q['x_track_exact'][eN,k]))))
+            fexa.write("%12.5e %12.5e %12.5e \n"  % (q['x_track_exact'][eN,k,0],q['x_track_exact'][eN,k,1],q['t_track_exact'][eN,k]))
+            l2errX += (q['x_track'][eN,k,0]-q['x_track_exact'][eN,k,0])**2
+            l2errT += (q['t_track'][eN,k]-q['t_track_exact'][eN,k])**2
+    #
+    fdep.close()
+    farr.close()
+    fflg.close()
+    ferr.close()
+    #
+    l2errX = math.sqrt(l2errX)/(sdmesh.nElements_global*nq_per_element)
+    l2errT = math.sqrt(l2errT)/(sdmesh.nElements_global*nq_per_element)
+    print "T= %s ell_2 error in spatial locations = %s ell_2 error in temporal locations = %s " % (opts.t_target,l2errX,l2errT)
+    #accommodate vtk updating paradigm
+    if opts.view:
+        q['t_viz'].flat[:] = q['t_track']
+        try: #run time visualization?
+            vtkViewers.viewScalar_pointCloud_2D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray)
+        except:
+            pass
+
+    #close out archives and visualization
+    archive.close()
+
+    try:#run time visualization?
+        sys.exit(vtkViewers.g.app.exec_())
+    except:
+        pass
+
+def test3(opts):
+    """
+    2d, steady, linear velocity in space, check error by tracking backwards at end of time
+    """
+    p = __import__(opts.problem[:-3])
+
+    assert p.nd == 2, "2d only for now"
+    assert "analyticalSolutionParticleVelocity" in dir(p), "need p.analyticalSolutionParticleVelocity to test tracking"
+    assert opts.nnq > 0, "nnq = %s not ok must be > 0" % opts.nnq
+    if opts.t_target == None:
+        opts.t_target = p.T
+    #to collect integration points etc
+    q = {}
+    #spatial mesh on 1 level for now, 
+    mesh = setupMesh_2d(opts,p)
+    sdmesh = mesh.subdomainMesh
+    #solution representation, not used for linear problems
+
+    trialSpace,u,q['u_interpolation_values'] = setupSolution_C0P1(opts,p,sdmesh,opts.t_start)
+
+
+    #velocity representation
+    #RT0 in 2d
+    #since don't have a full FEM representation for vector spaces this requires more work
+    q['velocity_dof'],q['velocity_l2g'],q['velocity_interpolation_values'],ebq,q['elementBoundaryQuadraturePoints'],q['elementBoundaryQuadratureWeights'] = setupVelocity_RT0(opts,p,sdmesh,trialSpace,opts.t_start)
+
+    q['x_hat'] = setupTrackingPointsInReferenceSpace(opts,p)
+    nq_per_element = q['x_hat'].shape[0]
+
+    #map points to physical space
+    q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
+    trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
+    
+    #go ahead and get shape functions at initial points to evaluate solution, may not want to use
+    #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
+    q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
+    trialSpace.getBasisValues(q['x_hat'],q['u_shape_functions'])
+
+    setupTrackingDataArrays(opts.t_start,opts.t_target,sdmesh,q,nq_per_element)
+
+    #save velocity field for visualization
+    q['J']            = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd,p.nd),'d')
+    q['inverse(J)']   = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd,p.nd),'d')
+    q['det(J)']       = numpy.zeros((q['x'].shape[0],q['x'].shape[1]),'d')
+    trialSpace.elementMaps.getJacobianValues(q['x_hat'],q['J'],q['inverse(J)'],q['det(J)'])
+
+    q['abs(det(J))']  = numpy.absolute(q['det(J)'])
+    q['velocity_depart'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
+    q['velocity_track'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
+
+    from pyadh import cpostprocessing
+    cpostprocessing.getRT0velocityValuesFluxRep_arbitraryElementMembership(sdmesh.nodeArray,
+                                                                           sdmesh.elementNodesArray,
+                                                                           q['abs(det(J))'],
+                                                                           q['x'],
+                                                                           q['element_track'],
+                                                                           q['velocity_dof'],
+                                                                           q['velocity_depart'])
+ 
+
+    ########## visualization and output stuff
+    #mwf debug
+    #pdb.set_trace()
+    archive = Archiver.XdmfArchive(".","test3",useTextArchive=False)
+    import xml.etree.ElementTree as ElementTree
+    archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
+    writer   = Archiver.XdmfWriter()
+
+    if opts.view:
+        try:  #run time visualization?
+            from pyadh import Viewers
+            from pyadhGraphical import vtkViewers
+            Viewers.viewerOn("test2",'vtk')
+            viewer = Viewers.V_base(p)
+        except:
+            pass
+    #
+    arGrid = writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x'],opts.t_start,init=True,tCount=0)
+    writer.writeScalarXdmf_particles(archive,q['t_depart'],"t_particle",tCount=0)
+    writer.writeVectorXdmf_particles(archive,q['velocity_depart'],"velocity",tCount=0)
+
+    #to accomodate updating pardigm for visualization copy _track info to be consistent
+    #with start locations
+    q['x_track'].flat[:] = q['x']; q['t_viz'] = numpy.copy(q['t_depart'])
+    q['x_depart'] = numpy.copy(q['x'])
+    #for exact or reference solution
+    q['x_track_exact']= numpy.copy(q['x_depart'])
+    q['t_track_exact']= numpy.copy(q['t_depart'])
+    if opts.view:
+        try: #run time visualization?
+            vtkViewers.viewScalar_pointCloud_2D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray,
+                                                vectors=q['velocity_depart'],viewTypes=['spheres'])#viewTypes=['spheres','streamlines'])
+            if opts.wait:
+                raw_input("Hit any key to continue")
+        except:
+            pass
+
+
+
+    #2d need outer normals on each face
+    #right now have element boundary quadrature array calculated values already so can grab 1st one
+    #since its affine geometry
+    #In actual code can skip most of the ebq info by just using 
+    #  \vec n = (\ten{J}^{-T} \vec \hat{n})/||\ten{J}^{-T} \vec \hat{n})||
+    
+    elementBoundaryOuterNormals = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,p.nd),'d')
+    elementBoundaryOuterNormalsOrig = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,p.nd),'d')
+    #mwf orig
+    for eN in range(mesh.nElements_global):
+        for ebN in range(mesh.nElementBoundaries_element):
+            elementBoundaryOuterNormalsOrig[eN,ebN,:] = ebq['n'][eN,ebN,0,:]
+    boundaryNormals = numpy.array(trialSpace.elementMaps.referenceElement.boundaryUnitNormalList)
+    ctracking.getOuterNormals_affineSimplex(boundaryNormals,
+                                            q['inverse(J)'],
+                                            elementBoundaryOuterNormals)
+    assert numpy.max(numpy.absolute(elementBoundaryOuterNormalsOrig.flat[:]-elementBoundaryOuterNormals.flat[:])) < 1.0e-8
+    #tracking-routine specific options
+    #set options controlling tracking strategy
+    skipPointsWithZeroSolution = False
+
+    #epsilon
+    zeroTol = 1.0e-5
+    #which way to track (1. forward, -1. backward)
+    direction = 1.0
+    if opts.t_target < opts.t_start:
+        direction = -1
+
+
+    #
+    t     = opts.t_start
+    dtout = (opts.t_target - opts.t_start)/opts.nnt
+    for i in range(int(opts.nnt)):
+        #update for next step
+        t += dtout
+
+        q['t_track'].fill(t) 
+        ctracking.trackPointsRT0Velocity2d(sdmesh.nElements_global,                #mesh representation
+                                           sdmesh.nNodes_global,
+                                           sdmesh.nNodes_element,
+                                           sdmesh.nElementBoundaries_element,
+                                           sdmesh.nodeArray,
+                                           sdmesh.elementNodesArray,
+                                           sdmesh.elementNeighborsArray,
+                                           sdmesh.elementBoundariesArray,
+                                           sdmesh.elementBoundaryBarycentersArray,
+                                           elementBoundaryOuterNormals,
+                                           q['velocity_l2g'],
+                                           q['velocity_dof'],                       #constant velocity tracking
+                                           direction,
+                                           q['t_depart'],                       #point departure times
+                                           q['t_track'],                        #target end time
+                                           sdmesh.nElements_global*nq_per_element,#total number of points
+                                           zeroTol,                             #for zero tests
+                                           q['x'],                              #departure points
+                                           q['element_track'],                  #in/out element locations
+                                           q['x_track'],                        #arrival points
+                                           q['flag_track'])                     #tracking status
+
+
+        #evaluate velocity at tracked points too
+        cpostprocessing.getRT0velocityValuesFluxRep_arbitraryElementMembership(sdmesh.nodeArray,
+                                                                               sdmesh.elementNodesArray,
+                                                                               q['abs(det(J))'],
+                                                                               q['x_track'],
+                                                                               q['element_track'],
+                                                                               q['velocity_dof'],
+                                                                               q['velocity_track'])
+
+
+
+
+
+
+        writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track'],t,init=False,meshChanged=True,arGrid=arGrid,tCount=i+1)
+        writer.writeScalarXdmf_particles(archive,q['t_track'],"t_particle",tCount=i+1)
+        writer.writeVectorXdmf_particles(archive,q['velocity_track'],"velocity",tCount=i+1)
+
+        if opts.view:
+            q['t_viz'].flat[:] = q['t_track']
+            try: #run time visualization?
+                vtkViewers.viewScalar_pointCloud_2D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray)
+                if opts.wait:
+                    raw_input("Hit any key to continue")
+            except:
+                pass
+
+        q['t_depart'].flat[:] = q['t_track'].flat
+        q['x'].flat[:] = q['x_track'].flat
+        #can also set flag so that don't track points that exited the domain
+        #q['flag_track'][numpy.where(q['flag_track'] == 1)] = -2
+        #mwf debug
+        #pdb.set_trace()
+    #output step loop
+
+    #first just test stepping forward with reversed velocity
+    #direction = -1
+    q['velocity_dof'] *= -1.0
+    toutput = t
+    for i in range(int(opts.nnt),2*(int(opts.nnt))):
+        #update for next step
+        toutput += dtout
+        t       += dtout#t       -= dtout
+        q['t_track'].fill(t)#q['t_track'] = numpy.minimum(q['t_track'],t)
+        ctracking.trackPointsRT0Velocity2d(sdmesh.nElements_global,                #mesh representation
+                                           sdmesh.nNodes_global,
+                                           sdmesh.nNodes_element,
+                                           sdmesh.nElementBoundaries_element,
+                                           sdmesh.nodeArray,
+                                           sdmesh.elementNodesArray,
+                                           sdmesh.elementNeighborsArray,
+                                           sdmesh.elementBoundariesArray,
+                                           sdmesh.elementBoundaryBarycentersArray,
+                                           elementBoundaryOuterNormals,
+                                           q['velocity_l2g'],
+                                           q['velocity_dof'],                       #constant velocity tracking
+                                           direction,
+                                           q['t_depart'],                       #point departure times
+                                           q['t_track'],                        #target end time
+                                           sdmesh.nElements_global*nq_per_element,#total number of points
+                                           zeroTol,                             #for zero tests
+                                           q['x'],                              #departure points
+                                           q['element_track'],                  #in/out element locations
+                                           q['x_track'],                        #arrival points
+                                           q['flag_track'])                     #tracking status
+
+
+        #evaluate velocity at tracked points too
+        cpostprocessing.getRT0velocityValuesFluxRep_arbitraryElementMembership(sdmesh.nodeArray,
+                                                                               sdmesh.elementNodesArray,
+                                                                               q['abs(det(J))'],
+                                                                               q['x_track'],
+                                                                               q['element_track'],
+                                                                               q['velocity_dof'],
+                                                                               q['velocity_track'])
+
+
+
+
+
+
+        writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track'],toutput,init=False,meshChanged=True,arGrid=arGrid,tCount=i+1)
+        writer.writeScalarXdmf_particles(archive,q['t_track'],"t_particle",tCount=i+1)
+        writer.writeVectorXdmf_particles(archive,q['velocity_track'],"velocity",tCount=i+1)
+
+        if opts.view:
+            q['t_viz'].flat[:] = q['t_track']
+            try: #run time visualization?
+                vtkViewers.viewScalar_pointCloud_2D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray)
+                if opts.wait:
+                    raw_input("Hit any key to continue")
+            except:
+                pass
+
+        q['t_depart'].flat[:] = q['t_track'].flat
+        q['x'].flat[:] = q['x_track'].flat
+        #can also set flag so that don't track points that exited the domain
+        #q['flag_track'][numpy.where(q['flag_track'] == 1)] = -2
+        #mwf debug
+        #pdb.set_trace()
+    #output step loop
+
+    writerExact = Archiver.XdmfWriter()
+    arGridExact = writerExact.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track_exact'],toutput,init=True,tCount=0,spaceSuffix="_particles_exact")
+    writerExact.writeScalarXdmf_particles(archive,q['t_track_exact'],"t_particle_exact",tCount=0)
+
+    #crude error calculation
+    fdep = open('x_depart.grf','w')
+    farr = open('x_arrive.grf','w')
+    fflg = open('x_flag.grf','w')
+    ferr = open('x_err.grf','w')
+    fexa = open('x_exa.grf','w')
+    l2errX= 0.0; l2errT= 0.0; 
+    for eN in range(sdmesh.nElements_global):
+        for k in range(nq_per_element):
+            fdep.write("%12.5e %12.5e %12.5e \n " % (q['x'][eN,k,0],q['x'][eN,k,1],q['t_depart'][eN,k]))
+            farr.write("%12.5e %12.5e %12.5e \n " % (q['x_track'][eN,k,0],q['x_track'][eN,k,1],q['t_track'][eN,k]))
+            fflg.write("%12.5e %12.5e %d     \n " % (q['x_track'][eN,k,0],q['x_track'][eN,k,1],q['flag_track'][eN,k]))
+            ferr.write("%12.5e %12.5e %12.5e \n"  % (q['x_track'][eN,k,0],q['x_track'][eN,k,1],numpy.sqrt(numpy.dot(q['x_track'][eN,k]-q['x_track_exact'][eN,k],
+                                                                                                                    q['x_track'][eN,k]-q['x_track_exact'][eN,k]))))
+            fexa.write("%12.5e %12.5e %12.5e \n"  % (q['x_track_exact'][eN,k,0],q['x_track_exact'][eN,k,1],q['t_track_exact'][eN,k]))
+            l2errX += (q['x_track'][eN,k,0]-q['x_track_exact'][eN,k,0])**2
+            l2errT += (q['t_track'][eN,k]-q['t_track_exact'][eN,k])**2
+    #
+    fdep.close()
+    farr.close()
+    fflg.close()
+    ferr.close()
+    #
+    l2errX = math.sqrt(l2errX)/(sdmesh.nElements_global*nq_per_element)
+    l2errT = math.sqrt(l2errT)/(sdmesh.nElements_global*nq_per_element)
+    print "T= %s ell_2 error in spatial locations = %s ell_2 error in temporal locations = %s " % (opts.t_target,l2errX,l2errT)
+    #accommodate vtk updating paradigm
+    if opts.view:
+        q['t_viz'].flat[:] = q['t_track']
+        try: #run time visualization?
+            vtkViewers.viewScalar_pointCloud_2D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray)
+        except:
+            pass
+
+    #close out archives and visualization
+    archive.close()
+
+    try:#run time visualization?
+        sys.exit(vtkViewers.g.app.exec_())
+    except:
+        pass
+
+def test4(opts):
+    """
+    2d, steady, linear velocity in space
+    """
+    p = __import__(opts.problem[:-3])
+
+    assert p.nd == 2, "2d only for now"
+    assert "analyticalSolutionParticleVelocity" in dir(p), "need p.analyticalSolutionParticleVelocity to test tracking"
+    assert opts.nnq > 0, "nnq = %s not ok must be > 1" % opts.nnq
+    if opts.t_target == None:
+        opts.t_target = p.T
+    #to collect integration points etc
+    q = {}
+    #spatial mesh on 1 level for now, 
+    mesh = setupMesh_2d(opts,p)
+    sdmesh = mesh.subdomainMesh
+    #solution representation, not used for linear problems
+
+    trialSpace,u,q['u_interpolation_values'] = setupSolution_C0P1(opts,p,sdmesh,opts.t_start)
+
+    #velocity representation
+    #P^1 in 2d
+    velocitySpace,velocity,q['velocity_interpolation_values'] = setupVelocity_C0P1(opts,p,sdmesh,opts.t_start)
+
+    q['x_hat'] = setupTrackingPointsInReferenceSpace(opts,p,useGaussianQuadrature=False)
+    nq_per_element = q['x_hat'].shape[0]
+
+    #map points to physical space
+    q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
+    trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
+    
+    #go ahead and get shape functions at initial points to evaluate solution, may not want to use
+    #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
+    q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
+    trialSpace.getBasisValues(q['x_hat'],q['u_shape_functions'])
+
+    setupTrackingDataArrays(opts.t_start,opts.t_target,sdmesh,q,nq_per_element)
+
+    #save velocity field for visualization
+    q['velocity_depart'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
+    q['velocity_track'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
+
+    velocity.getValues(q[('u_shape_functions')],q['velocity_depart'])
+    q['velocity_track'] = q['velocity_depart'][:]
+    particle_tracker = SteadyState_LinearAdvection_C0P1Velocity_PT123(sdmesh,p.nd,
+                                                                      {0:velocitySpace.dofMap.l2g},
+                                                                      {0:velocity.dof},
+                                                                      activeComponentList=[0])
+
+    particle_tracker.setFromOptions(opts)
+
+    ########## visualization and output stuff
+    #mwf debug
+    #pdb.set_trace()
+    archive = Archiver.XdmfArchive(".","test4",useTextArchive=False)
+    import xml.etree.ElementTree as ElementTree
+    archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
+    writer   = Archiver.XdmfWriter()
+
+    if opts.view:
+        try:  #run time visualization?
+            from pyadh import Viewers
+            from pyadhGraphical import vtkViewers
+            Viewers.viewerOn("test4",'vtk')
+            viewer = Viewers.V_base(p)
+        except:
+            pass
+    #
+    arGrid = writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x'],opts.t_start,init=True,tCount=0)
+    writer.writeScalarXdmf_particles(archive,q['t_depart'],"t_particle",tCount=0)
+    writer.writeVectorXdmf_particles(archive,q['velocity_depart'],"velocity",tCount=0)
+
+    #to accomodate updating pardigm for visualization copy _track info to be consistent
+    #with start locations
+    q['x_track'].flat[:] = q['x']; q['t_viz'] = numpy.copy(q['t_depart'])
+    q['x_depart'] = numpy.copy(q['x'])
+    if opts.view:
+        try: #run time visualization?
+            vtkViewers.viewScalar_pointCloud_2D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray,
+                                                vectors=q['velocity_depart'],viewTypes=['spheres'])#viewTypes=['spheres','streamlines'])
+            if opts.wait:
+                raw_input("Hit any key to continue")
+        except:
+            pass
+
+    #which way to track (1. forward, -1. backward)
+    direction = 1.0
+    if opts.t_target < opts.t_start:
+        direction = -1
+
+
+    #
+    t     = opts.t_start
+    dtout = (opts.t_target - opts.t_start)/opts.nnt
+    for i in range(int(opts.nnt)):
+        #update for next step
+        t += dtout
+
+        q['t_track'].fill(t) 
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        if direction > 0.0:
+            particle_tracker.forwardTrack({0:q['t_depart']},    
+                                          {0:q['t_track']},                          #target end time
+                                          {0:sdmesh.nElements_global*nq_per_element},#total number of points
+                                          {0:q['x']},                                #departure points
+                                          {0:q['element_track']},                    #in/out element locations
+                                          {0:q['x_track']},                          #arrival points
+                                          {0:q['flag_track']})                       
+        else:
+            particle_tracker.backwardTrack({0:q['t_depart']},    
+                                           {0:q['t_track']},                          #target end time
+                                           {0:sdmesh.nElements_global*nq_per_element},#total number of points
+                                           {0:q['x']},                                #departure points
+                                           {0:q['element_track']},                    #in/out element locations
+                                           {0:q['x_track']},                          #arrival points
+                                           {0:q['flag_track']})                       
+            
+        writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track'],t,init=False,meshChanged=True,arGrid=arGrid,tCount=i+1)
+        writer.writeScalarXdmf_particles(archive,q['t_track'],"t_particle",tCount=i+1)
+        writer.writeVectorXdmf_particles(archive,q['velocity_track'],"velocity",tCount=i+1)
+
+        if opts.view:
+            q['t_viz'].flat[:] = q['t_track']
+            try: #run time visualization?
+                vtkViewers.viewScalar_pointCloud_2D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray)
+                if opts.wait:
+                    raw_input("Hit any key to continue")
+            except:
+                pass
+
+        q['t_depart'].flat[:] = q['t_track'].flat
+        q['x'].flat[:] = q['x_track'].flat
+        #can also set flag so that don't track points that exited the domain
+        #q['flag_track'][numpy.where(q['flag_track'] == 1)] = -2
+        #mwf debug
+        #pdb.set_trace()
+    #output step loop
+    #mwf debug
+    #pdb.set_trace()
+    
+    #accommodate vtk updating paradigm
+    if opts.view:
+        q['t_viz'].flat[:] = q['t_track']
+        try: #run time visualization?
+            vtkViewers.viewScalar_pointCloud_2D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray)
+        except:
+            pass
+
+    #close out archives and visualization
+    archive.close()
+
+    try:#run time visualization?
+        sys.exit(vtkViewers.g.app.exec_())
+    except:
+        pass
+
+
+def test5(opts):
+    """
+    transient, linear velocity in space. Computes error by comparing starting and ending location for points in a specified
+      interval
+    """
+    p = __import__(opts.problem[:-3])
+
+    assert p.nd in [1,2], "1d or 2d only for now"
+    assert "analyticalSolutionParticleVelocity" in dir(p), "need p.analyticalSolutionParticleVelocity to test tracking"
+    assert opts.nnq > 0, "nnq = %s not ok must be > 1" % opts.nnq
+    if opts.t_target == None:
+        opts.t_target = p.T
+    #to collect integration points etc
+    q = {}
+    #spatial mesh on 1 level for now, 
+    if p.nd == 2:
+        mesh = setupMesh_2d(opts,p)
+    else:
+        mesh = setupMesh_1d(opts,p)
+
+    sdmesh = mesh.subdomainMesh
+    #solution representation, not used for linear problems
+
+    trialSpace,u,q['u_interpolation_values'] = setupSolution_C0P1(opts,p,sdmesh,opts.t_start)
+
+    #velocity representation
+    #P^1 in 2d
+    velocitySpace,velocity,q['velocity_interpolation_values'] = setupVelocity_C0P1(opts,p,sdmesh,opts.t_start)
+    component_velocity_times={0:opts.t_start}
+
+    velocity_new = FemTools.FiniteElementFunction(velocitySpace,dim_dof=p.nd,isVector=True,name="velocity_new")
+    velocity_new.dof[:] = velocity.dof
+    component_velocity_times_new={0:opts.t_start}
+
+    q['x_hat'] = setupTrackingPointsInReferenceSpace(opts,p,useGaussianQuadrature=False)
+    nq_per_element = q['x_hat'].shape[0]
+
+    #map points to physical space
+    q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
+    trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
+    
+    #go ahead and get shape functions at initial points to evaluate solution, may not want to use
+    #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
+    q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
+    trialSpace.getBasisValues(q['x_hat'],q['u_shape_functions'])
+
+    setupTrackingDataArrays(opts.t_start,opts.t_target,sdmesh,q,nq_per_element)
+
+    #save velocity field for visualization
+    q['velocity_depart'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
+    q['velocity_track'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
+
+    velocity.getValues(q[('u_shape_functions')],q['velocity_depart'])
+    q['velocity_track'] = q['velocity_depart'][:]
+    particle_tracker = LinearAdvection_C0P1Velocity_PT123(sdmesh,p.nd,
+                                                          {0:velocitySpace.dofMap.l2g},
+                                                          {0:velocity.dof},
+                                                          activeComponentList=[0])
+
+    particle_tracker.setFromOptions(opts)
+
+    ########## visualization and output stuff
+    #mwf debug
+    #pdb.set_trace()
+    archive = Archiver.XdmfArchive(".","test5",useTextArchive=False)
+    import xml.etree.ElementTree as ElementTree
+    archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
+    writer   = Archiver.XdmfWriter()
+
+    if opts.view:
+        try:  #run time visualization?
+            from pyadh import Viewers
+            from pyadhGraphical import vtkViewers
+            Viewers.viewerOn("test5",'vtk')
+            viewer = Viewers.V_base(p)
+        except:
+            pass
+    #
+    arGrid = writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x'],opts.t_start,init=True,tCount=0)
+    writer.writeScalarXdmf_particles(archive,q['t_depart'],"t_particle",tCount=0)
+    writer.writeVectorXdmf_particles(archive,q['velocity_depart'],"velocity",tCount=0)
+
+    #to accomodate updating pardigm for visualization copy _track info to be consistent
+    #with start locations
+    q['x_track'].flat[:] = q['x']; q['t_viz'] = numpy.copy(q['t_depart'])
+    q['x_depart'] = numpy.copy(q['x'])
+    if opts.view:
+        try: #run time visualization?
+            vtkViewers.viewScalar_pointCloud_2D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray,
+                                                vectors=q['velocity_depart'],viewTypes=['spheres'])#viewTypes=['spheres','streamlines'])
+            if opts.wait:
+                raw_input("Hit any key to continue")
+        except:
+            pass
+
+    #which way to track (1. forward, -1. backward)
+    direction = 1.0
+    if opts.t_target < opts.t_start:
+        direction = -1
+
+    #
+    t     = opts.t_start
+    dtout = (opts.t_target - opts.t_start)/opts.nnt
+    for i in range(int(opts.nnt)):
+        #update for next step
+        velocity.dof[:]=velocity_new.dof[:]
+        #don't need this actually because setup as a shallow copy?
+        particle_tracker.setTrackingVelocity(velocity.dof,0,t,timeLevel=0)
+
+        t += dtout
+
+        #evaluate velocity
+        for eN in range(mesh.nElements_global):
+            for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        #evaluate velocity degrees of freedom from its interpolation conditions
+        velocity_new.projectFromInterpolationConditions(q['velocity_interpolation_values'])
+        particle_tracker.setTrackingVelocity(velocity_new.dof,0,t,timeLevel=1)
+        
+        q['t_track'].fill(t) 
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        if direction > 0.0:
+            particle_tracker.forwardTrack({0:q['t_depart']},    
+                                          {0:q['t_track']},                          #target end time
+                                          {0:sdmesh.nElements_global*nq_per_element},#total number of points
+                                          {0:q['x']},                                #departure points
+                                          {0:q['element_track']},                    #in/out element locations
+                                          {0:q['x_track']},                          #arrival points
+                                          {0:q['flag_track']})                       
+        else:
+            particle_tracker.backwardTrack({0:q['t_depart']},    
+                                           {0:q['t_track']},                          #target end time
+                                           {0:sdmesh.nElements_global*nq_per_element},#total number of points
+                                           {0:q['x']},                                #departure points
+                                           {0:q['element_track']},                    #in/out element locations
+                                           {0:q['x_track']},                          #arrival points
+                                           {0:q['flag_track']})                       
+            
+        writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track'],t,init=False,meshChanged=True,arGrid=arGrid,tCount=i+1)
+        writer.writeScalarXdmf_particles(archive,q['t_track'],"t_particle",tCount=i+1)
+        writer.writeVectorXdmf_particles(archive,q['velocity_track'],"velocity",tCount=i+1)
+
+        if opts.view:
+            q['t_viz'].flat[:] = q['t_track']
+            try: #run time visualization?
+                if p.nd == 2:
+                    vtkViewers.viewScalar_pointCloud_2D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray)
+                if opts.wait:
+                    raw_input("Hit any key to continue")
+            except:
+                pass
+
+        q['t_depart'].flat[:] = q['t_track'].flat
+        q['x'].flat[:] = q['x_track'].flat
+        #can also set flag so that don't track points that exited the domain
+        #q['flag_track'][numpy.where(q['flag_track'] == 1)] = -2
+        #mwf debug
+        #pdb.set_trace()
+    #output step loop
+    #mwf debug
+    #pdb.set_trace()
+    
+    #accommodate vtk updating paradigm
+    if opts.view:
+        q['t_viz'].flat[:] = q['t_track']
+        try: #run time visualization?
+            vtkViewers.viewScalar_pointCloud_2D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray)
+        except:
+            pass
+
+    #close out archives and visualization
+    archive.close()
+
+    try:#run time visualization?
+        sys.exit(vtkViewers.g.app.exec_())
+    except:
+        pass
+
+     
+def test6(opts):
+    """
+    transient, linear velocity in space. Computes error by comparing starting and ending location for points in a specified
+      interval
+    """
+    p = __import__(opts.problem[:-3])
+
+    assert p.nd in [1,2,3], "1d or 2d only for now"
+    assert "analyticalSolutionParticleVelocity" in dir(p), "need p.analyticalSolutionParticleVelocity to test tracking"
+    assert opts.nnq > 0, "nnq = %s not ok must be > 1" % opts.nnq
+    if opts.t_target == None:
+        opts.t_target = p.T
+    #to collect integration points etc
+    q = {}
+    #spatial mesh on 1 level for now, 
+    if p.nd == 3:
+        mesh = setupMesh_3d(opts,p)
+    elif p.nd == 2:
+        mesh = setupMesh_2d(opts,p)
+    else:
+        mesh = setupMesh_1d(opts,p)
+
+    sdmesh = mesh.subdomainMesh
+    #solution representation, not used for linear problems
+
+    trialSpace,u,q['u_interpolation_values'] = setupSolution_C0P1(opts,p,sdmesh,opts.t_start)
+
+    #velocity representation
+    #
+    velocitySpace,velocity,q['velocity_interpolation_values'] = setupVelocity_C0P1(opts,p,sdmesh,opts.t_start)
+    component_velocity_times={0:opts.t_start}
+
+    velocity_new = FemTools.FiniteElementFunction(velocitySpace,dim_dof=p.nd,isVector=True,name="velocity_new")
+    velocity_new.dof[:] = velocity.dof
+    component_velocity_times_new={0:opts.t_start}
+
+    q['x_hat'] = setupTrackingPointsInReferenceSpace(opts,p,useGaussianQuadrature=False)
+    nq_per_element = q['x_hat'].shape[0]
+
+    #map points to physical space
+    q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
+    trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
+    
+    #go ahead and get shape functions at initial points to evaluate solution, may not want to use
+    #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
+    q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
+    trialSpace.getBasisValues(q['x_hat'],q['u_shape_functions'])
+
+    setupTrackingDataArrays(opts.t_start,opts.t_target,sdmesh,q,nq_per_element)
+
+    #save velocity field for visualization
+    q['velocity_depart'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
+    q['velocity_track'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
+
+    velocity.getValues(q[('u_shape_functions')],q['velocity_depart'])
+    q['velocity_track'] = q['velocity_depart'][:]
+    particle_tracker = LinearAdvection_C0P1Velocity_PT123(sdmesh,p.nd,
+                                                          {0:velocitySpace.dofMap.l2g},
+                                                          {0:velocity.dof},
+                                                          activeComponentList=[0])
+
+    particle_tracker.setFromOptions(opts)
+
+    ########## visualization and output stuff
+    #mwf debug
+    #pdb.set_trace()
+    archive = Archiver.XdmfArchive(".","test6",useTextArchive=False)
+    import xml.etree.ElementTree as ElementTree
+    archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
+    writer   = Archiver.XdmfWriter()
+
+    if opts.view:
+        try:  #run time visualization?
+            from pyadh import Viewers
+            from pyadhGraphical import vtkViewers
+            Viewers.viewerOn("test6",'vtk')
+            viewer = Viewers.V_base(p)
+        except:
+            pass
+    #
+    arGrid = writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x'],opts.t_start,init=True,tCount=0)
+    writer.writeScalarXdmf_particles(archive,q['t_depart'],"t_particle",tCount=0)
+    writer.writeVectorXdmf_particles(archive,q['velocity_depart'],"velocity",tCount=0)
+
+    #to accomodate updating pardigm for visualization copy _track info to be consistent
+    #with start locations
+    q['x_track'].flat[:] = q['x']; q['t_viz'] = numpy.copy(q['t_depart'])
+    q['x_depart'] = numpy.copy(q['x'])
+    if opts.view:
+        try: #run time visualization?
+            vtkViewers.viewScalar_pointCloud_3D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray,
+                                                vectors=q['velocity_depart'],viewTypes=['spheres'])#viewTypes=['spheres','streamlines'])
+            if opts.wait:
+                raw_input("Hit any key to continue")
+        except:
+            pass
+
+    #which way to track (1. forward, -1. backward)
+    direction = 1.0
+    if opts.t_target < opts.t_start:
+        direction = -1
+
+    #
+    t     = opts.t_start
+    dtout = (opts.t_target - opts.t_start)/opts.nnt
+    for i in range(int(opts.nnt)):
+        #update for next step
+        velocity.dof[:]=velocity_new.dof[:]
+        #don't need this actually because setup as a shallow copy?
+        particle_tracker.setTrackingVelocity(velocity.dof,0,t,timeLevel=0)
+
+        t += dtout
+
+        #evaluate velocity
+        for eN in range(mesh.nElements_global):
+            for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        #evaluate velocity degrees of freedom from its interpolation conditions
+        velocity_new.projectFromInterpolationConditions(q['velocity_interpolation_values'])
+        particle_tracker.setTrackingVelocity(velocity_new.dof,0,t,timeLevel=1)
+        
+        q['t_track'].fill(t) 
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        if direction > 0.0:
+            particle_tracker.forwardTrack({0:q['t_depart']},    
+                                          {0:q['t_track']},                          #target end time
+                                          {0:sdmesh.nElements_global*nq_per_element},#total number of points
+                                          {0:q['x']},                                #departure points
+                                          {0:q['element_track']},                    #in/out element locations
+                                          {0:q['x_track']},                          #arrival points
+                                          {0:q['flag_track']})                       
+        else:
+            particle_tracker.backwardTrack({0:q['t_depart']},    
+                                           {0:q['t_track']},                          #target end time
+                                           {0:sdmesh.nElements_global*nq_per_element},#total number of points
+                                           {0:q['x']},                                #departure points
+                                           {0:q['element_track']},                    #in/out element locations
+                                           {0:q['x_track']},                          #arrival points
+                                           {0:q['flag_track']})                       
+            
+        writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track'],t,init=False,meshChanged=True,arGrid=arGrid,tCount=i+1)
+        writer.writeScalarXdmf_particles(archive,q['t_track'],"t_particle",tCount=i+1)
+        writer.writeVectorXdmf_particles(archive,q['velocity_track'],"velocity",tCount=i+1)
+
+        if opts.view:
+            q['t_viz'].flat[:] = q['t_track']
+            try: #run time visualization?
+                if p.nd == 3:
+                    vtkViewers.viewScalar_pointCloud_3D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray)
+                if opts.wait:
+                    raw_input("Hit any key to continue")
+            except:
+                pass
+
+        q['t_depart'].flat[:] = q['t_track'].flat
+        q['x'].flat[:] = q['x_track'].flat
+        #can also set flag so that don't track points that exited the domain
+        #q['flag_track'][numpy.where(q['flag_track'] == 1)] = -2
+        #mwf debug
+        #pdb.set_trace()
+    #output step loop
+    #mwf debug
+    #pdb.set_trace()
+    
+    #accommodate vtk updating paradigm
+    if opts.view:
+        q['t_viz'].flat[:] = q['t_track']
+        try: #run time visualization?
+            vtkViewers.viewScalar_pointCloud_3D(q['x_track'],q['t_viz'],"t",Viewers.windowNumber,sdmesh.nodeArray,sdmesh.elementNodesArray)
+        except:
+            pass
+
+    #close out archives and visualization
+    archive.close()
+
+    try:#run time visualization?
+        sys.exit(vtkViewers.g.app.exec_())
+    except:
+        pass
+
+     
+if __name__=='__main__':
+    """
+    TODO add verbose flag
+         how to visualize?
+         add error calculation
+    """
+    import optparse
+    import sys
+    import pdb
+
+    usage  = "usage: %prog [options] "
+    parser = optparse.OptionParser(usage=usage)
+
+    parser.add_option('--probDir',
+                      default='.',
+                      action="store",
+                      help="""where to find problem descriptions""")
+    parser.add_option("-p", "--problem",
+                      help="problem definition for tracking",
+                      action="store",
+                      type="string",
+                      dest="problem",
+                      default="la_gauss_ellam_1d_p.py")
+    parser.add_option("--nnx",
+                      help="number of nodes in the x direction",
+                      action="store",
+                      type="int",
+                      dest="nnx",
+                      default=21)
+    parser.add_option("--nny",
+                      help="number of nodes in the y direction",
+                      action="store",
+                      type="int",
+                      dest="nny",
+                      default=21)
+    parser.add_option("--nnz",
+                      help="number of nodes in the z direction",
+                      action="store",
+                      type="int",
+                      dest="nnz",
+                      default=21)
+    parser.add_option("--nnq",
+                      help="number of points to track per element must be >= 1 for now",
+                      action="store",
+                      type="int",
+                      dest="nnq",
+                      default=3)
+    parser.add_option("--nnt",
+                      help="number of time intervals over which to track",
+                      action="store",
+                      type="float",
+                      dest="nnt",
+                      default=1)
+    parser.add_option("--t_start",
+                      action="store",
+                      help="initial, uniform time to start tracking",
+                      type="float",
+                      dest="t_start",
+                      default=0.0)
+    parser.add_option("-T","--t_target",
+                      action="store",
+                      help="initial, uniform time to start tracking",
+                      type="float",
+                      dest="t_target",
+                      default=None)
+    parser.add_option("--test_id",
+                      help="flag for which test to run",
+                      action="store",
+                      type="int",
+                      dest="test_id",
+                      default=0)
+    parser.add_option("--view",
+                      help="try run time visualization",
+                      action="store_true",
+                      dest="view",
+                      default=False)
+    parser.add_option("--wait",
+                      help="wait during run time visualization",
+                      action="store_true",
+                      dest="wait",
+                      default=False)
+    
+                      
+    (opts,args) = parser.parse_args()
+
+    #pdb.set_trace()
+    
+    #initialize mpi
+    comm = Comm.init(argv=sys.argv[:1])
+
+    probDir = str(opts.probDir)
+    if probDir not in sys.path:
+        sys.path.insert(0,probDir)
+
+    if opts.test_id == 0:
+        test0(opts)
+    elif opts.test_id == 1:
+        test1(opts)
+    elif opts.test_id == 2:
+        test2(opts)
+    elif opts.test_id == 3:
+        test3(opts)
+    elif opts.test_id == 4:
+        test4(opts)
+    elif opts.test_id == 5:
+        test5(opts)
+    elif opts.test_id == 6:
+        test6(opts)
+    else:
+        print "test_id= %s not supported yet " % opts.test_id
+

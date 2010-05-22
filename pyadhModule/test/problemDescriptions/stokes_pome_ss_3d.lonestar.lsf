@@ -1,0 +1,12 @@
+#!/bin/tcsh 			  
+#BSUB -J stokes_pome_ss_3d
+#BSUB -o oe.stokes_pome_ss_3d.%J   
+#BSUB -e oe.stokes_pome_ss_3d.%J   
+#BSUB -n 8 -W 1:00
+#BSUB -q normal
+set echo                          #Echo all commands.
+cd $LS_SUBCWD                     #cd to directory of submissio
+#echo "-ksp_type gmres -pc_type asm -sub_pc_type lu -ksp_rtol 0.0 -ksp_atol 1.0e-7" > petsc_options.stokes_pome_ss_3d.txt
+echo "-ksp_type preonly -pc_type lu -pc_factor_mat_solver_package spooles" > petsc_options.stokes_pome_ss_3d.txt
+ibrun python ../../scripts/parun stokes_pome_ss_3d_p.py stokes_pome_ss_3d_c0p1c0p1_n.py -l 3 -v -O petsc_options.stokes_pome_ss_3d.txt
+

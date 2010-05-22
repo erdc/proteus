@@ -1,0 +1,17 @@
+#PBS -A erdcvc2w
+#PBS -l walltime=12:00:00
+#PBS -l ncpus=64
+#PBS -q challenge
+#PBS -N adh.wavetank3d
+#PBS -j oe
+env
+which python
+echo $PYTHONPATH
+mkdir $WORKDIR/wavetank3d.$PBS_JOBID
+cd $PBS_O_WORKDIR
+#aprun -n 256 -N 1 python $PYADH/pyadhModule/scripts/parun twp_navier_stokes_wavetank_3d_so.py -s -l 1 -v -P "-ksp_type gmres -pc_type asm -sub_pc_type lu -ksp_rtol 0.0 -ksp_atol 1.0e-8 -ksp_monitor"  -D $WORKDIR/wavetank3d.$PBS_JOBID
+aprun -n 16 -N 1 python $PYADH/pyadhModule/scripts/parun twp_navier_stokes_wavetank_3d_so.py -s -l 5 -v -P "-ksp_type preonly -pc_type lu -pc_factor_mat_solver_package spooles"  -D $WORKDIR/wavetank3d.$PBS_JOBID
+cd $WORKDIR
+tar czvf wavetank3d.$PBS_JOBID.tar.gz wavetank3d.$PBS_JOBID
+mv -f wavetank3d.$PBS_JOBID.tar.gz $HOME
+#rm -rf wavetank3d.$PBS_JOBID

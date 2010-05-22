@@ -1,0 +1,61 @@
+import os
+
+#try debugging options for pyadh extension modules?
+PYADH_DEBUGGING = False
+
+PYADH_PACKAGES = os.getenv('PYADH_PACKAGES',os.getenv('HOME')+'/src/pyadh-packages')
+PYADH          = os.getenv('PYADH',os.getenv('HOME')+'/src/pyadh')
+PYADH_ARCH     = os.getenv('PYADH_ARCH','darwin_x86_64')
+PYADH_LIB_DIR  = PYADH+'/'+PYADH_ARCH+'/lib'
+PYADH_EXTRA_COMPILE_ARGS= ['-Wall']
+PYADH_EXTRA_LINK_ARGS=['-lblas','-lstdc++','-flat_namespace']
+PYADH_SUPERLU_INCLUDE_DIR = PYADH_PACKAGES+'/superlu/SRC'
+PYADH_SUPERLU_H   = r'"slu_ddefs.h"'
+PYADH_SUPERLU_LIB_DIR = PYADH_LIB_DIR #PYADH_PACKAGES+'/superlu/SRC'
+PYADH_SUPERLU_LIB = 'superlu'
+
+PYADH_BLAS_INCLUDE_DIR   = '.'
+PYADH_BLAS_H     = r'"vecLib/cblas.h"'
+PYADH_BLAS_LIB_DIR = '.'
+PYADH_BLAS_LIB   = 'm'
+
+PYADH_LAPACK_INCLUDE_DIR = '.'
+PYADH_LAPACK_H   = r'"vecLib/clapack.h"'
+PYADH_LAPACK_LIB_DIR = '.'
+PYADH_LAPACK_LIB = 'm'
+PYADH_LAPACK_INTEGER = '__CLPK_integer'
+
+PYADH_TRIANGLE_INCLUDE_DIR = PYADH_PACKAGES+'/triangle/src'
+PYADH_TRIANGLE_H = r'"triangle.h"'
+PYADH_TRIANGLE_LIB_DIR = PYADH_LIB_DIR #PYADH_PACKAGES+'/triangle/lib'
+PYADH_TRIANGLE_LIB ='tri'
+
+PYADH_METIS_DIR = PYADH_PACKAGES+'/metis-4.0/Lib'
+
+PYADH_DAETK_DIR = os.getenv('DAETK_DIR',PYADH_PACKAGES+'/daetk')
+PYADH_DAETK_LIB_DIR = PYADH_LIB_DIR #PYADH_DAETK_DIR
+
+PYADH_DAETK_INCLUDE_DIR = [PYADH_DAETK_DIR,PYADH_DAETK_DIR+'/pete/pete-2.1.0/src']
+PYADH_DAETK_LIB ='daetk'
+PYADH_DAETK_ARCH =os.getenv('PYADH_DAETK_ARCH','darwin64_x86_64')
+
+PYADH_PETSC_DIR = os.getenv('PYADH_PETSC_DIR',PYADH_PACKAGES+'/petsc-dev/')
+PYADH_PETSC_ARCH= os.getenv('PYADH_PETSC_ARCH','darwin64_x86_64') #'pyadh-c-debug'
+PYADH_PETSC_INCLUDE_DIRS = [PYADH_PETSC_DIR+'/include',
+                            PYADH_PETSC_DIR+'/'+PYADH_PETSC_ARCH+'/include']
+PYADH_PETSC_LIB_DIRS = [PYADH_PETSC_DIR+'/'+PYADH_PETSC_ARCH+'/lib/','/usr/X11R6/lib']
+#                        PYADH_PETSC_DIR+'/externalpackages/ParMetis-dev-p1/'+PYADH_PETSC_ARCH+'/lib',
+#                        '/usr/X11R6/lib']
+PYADH_PETSC_LIBS =['petsccontrib','petscts','petscsnes','petscksp','petscdm','petscmat','petscvec','petsc','parmetis','metis','X11',
+                   'spooles','spoolesMPI','umfpack','amd']
+
+PYADH_MPI_INCLUDE_DIR = '/usr/include'
+PYADH_MPI_LIB_DIR = '/usr/lib/'
+PYADH_MPI_LIBS =['mpi','mpi_cxx']
+# PYADH_MPI_INCLUDE_DIR = '/usr/local/include'
+# PYADH_MPI_LIB_DIR = '/usr/local/lib'
+# PYADH_MPI_LIBS =['mpi','orte','opal','dl']
+
+PYADH_PETSC_LIB_DIRS = [PYADH_PACKAGES+'/petsc/darwin_x86_64/lib', PYADH_PACKAGES+'/petsc/darwin_x86_64/lib', '/usr/X11/lib', PYADH_PACKAGES+'/petsc/darwin_x86_64/lib']
+PYADH_PETSC_LIBS = ['petscts', 'petscsnes', 'petscksp', 'petscdm', 'petscmat', 'petscvec', 'petsc', 'X11', 'parmetis', 'metis', 'spoolesMPI', 'spooles', 'lapack', 'blas', 'dl']
+PYADH_PETSC_INCLUDE_DIRS = [PYADH_PACKAGES+'/petsc/darwin_x86_64/include', PYADH_PACKAGES+'/petsc/include', '/usr/X11/include', PYADH_PACKAGES+'/petsc/darwin_x86_64/include']

@@ -1,0 +1,1942 @@
+cnst_vel_ls_circle_2d_p.py
+set(['cnst_vel_ls_circle_2d_c0p1_n.py', 'cnst_vel_ls_circle_2d_c0p1hack_n.py'])
+cnst_vel_ls_rotatingcircle_2d_p.py
+set(['cnst_vel_ls_rotatingcircle_2d_c0p1_n.py', 'cnst_vel_ls_rotatingcircle_2d_c0p1hack_n.py'])
+cnst_vel_ls_vortex_2d_p.py
+set(['cnst_vel_ls_vortex_2d_c0p1_n.py', 'cnst_vel_ls_vortex_2d_c0p1hack_n.py'])
+la_2c_cone_2d_p.py
+set(['la_2c_cone_2d_c0p1c0p1_n.py'])
+la_2c_gauss_1d_p.py
+set(['la_2c_gauss_1d_dgp1dgp1_n.py', 'la_2c_gauss_1d_c0p1_n.py', 'la_2c_gauss_1d_dgp1dgp2_n.py'])
+la_cone_2d_p.py
+set(['la_cone_2d_dgp0_n.py', 'la_cone_2d_c0p1_n.py', 'la_cone_2d_dgp1_n.py', 'la_cone_2d_dgp2_n.py'])
+la_gauss_1d_p.py
+set(['la_gauss_1d_c0p1_n.py', 'la_gauss_1d_dgp2_n.py', 'la_gauss_1d_dgp1_n.py', 'la_gauss_1d_dgp0_n.py'])
+la_gauss_2d_p.py
+set(['la_gauss_2d_c0p1_n.py', 'la_gauss_2d_dgp0_n.py', 'la_gauss_2d_dgp1_n.py', 'la_gauss_2d_dgp2_n.py'])
+la_rotatingcircle_2d_p.py
+set(['la_rotatingcircle_2d_dgp0_n.py', 'la_rotatingcircle_2d_dgp1_n.py'])
+la_shock_1d_p.py
+set(['la_shock_1d_c0p1_n.py', 'la_shock_1d_dgp0_n.py', 'la_shock_1d_dgp1_n.py', 'la_shock_1d_dgp2_n.py'])
+la_vortex_2d_p.py
+set(['la_vortex_2d_c0p1_n.py', 'la_vortex_2d_dgp0_n.py', 'la_vortex_2d_dgp1_n.py', 'la_vortex_2d_dgp2_n.py'])
+lad_shock_1d_p.py
+set(['lad_shock_1d_c0p1_n.py'])
+ladr_2c_di_ss_1d_p.py
+set(['ladr_2c_di_ss_1d_c0p1c0p1_n.py', 'ladr_2c_di_ss_1d_c0p1c0p2_n.py'])
+ladr_2c_fc_ss_1d_p.py
+set(['ladr_2c_fc_ss_1d_c0p1c0p1_n.py'])
+ladr_2c_lw_ss_1d_p.py
+set(['ladr_2c_lw_ss_1d_c0p2c0p2_n.py', 'ladr_2c_lw_ss_1d_c0p1c0p1_n.py'])
+ladr_2c_sk_ss_1d_p.py
+set(['ladr_2c_sk_ss_1d_c0p1c0p1_n.py'])
+ladr_2c_up_ss_1d_p.py
+set(['ladr_2c_up_ss_1d_c0p1c0p1_n.py'])
+ladr_5c_fc_ss_1d_p.py
+set(['ladr_5c_fc_ss_1d_c0p1_n.py'])
+ladr_ss_1d_p.py
+set(['ladr_ss_1d_c0p2_n.py', 'ladr_ss_1d_c0p1_n.py'])
+ls_so_darcy_bubble_2d_p.py
+set(['ls_so_darcy_bubble_2d_c0p1_n.py'])
+ls_so_darcy_waterTable_2d_p.py
+set(['ls_so_darcy_waterTable_2d_c0p1_n.py'])
+ls_so_simpleweir_2d_p.py
+set(['ls_so_simpleweir_2d_c0p1hack_n.py', 'ls_so_simpleweir_2d_c0p1_n.py'])
+ls_so_sloshbox_2d_p.py
+set(['ls_so_sloshbox_2d_c0p1_n.py'])
+ls_so_weir_2d_p.py
+set(['ls_so_weir_2d_c0p1_n.py'])
+navier_stokes_cav_ss_2d_p.py
+set(['navier_stokes_cav_ss_2d_c0p1c0p1_n.py', 'navier_stokes_cav_ss_2d_c0p1c0p2_n.py'])
+navier_stokes_cavity_2d_p.py
+set(['navier_stokes_cavity_2d_c0p1c0p1_n.py'])
+navier_stokes_tube_ss_2d_p.py
+set(['navier_stokes_tube_ss_2d_c0p1c0p2_n.py', 'navier_stokes_tube_ss_2d_c0p1c0p1_n.py'])
+nladr_1c_shock_1d_p.py
+set(['nladr_1c_shock_1d_dgp0_n.py', 'nladr_1c_shock_1d_dgp1_n.py', 'nladr_1c_shock_1d_c0p1_n.py'])
+nladr_1c_ss_1d_p.py
+set(['nladr_1c_ss_1d_c0p1_n.py'])
+nladr_5c_fc_ss_1d_p.py
+set(['nladr_5c_fc_ss_1d_c0p1_n.py'])
+nonconsrv_ls_circle_1d_p.py
+set(['nonconsrv_ls_circle_1d_c0p1_n.py', 'nonconsrv_ls_circle_1d_c0p1Hack_n.py'])
+nrml_vel_ls_circle_1d_p.py
+set(['nrml_vel_ls_circle_1d_c0p1_n.py', 'nrml_vel_ls_circle_1d_c0p1Hack_n.py'])
+nrml_vel_ls_circle_2d_p.py
+set(['nrml_vel_ls_circle_2d_c0p1hack_n.py', 'nrml_vel_ls_circle_2d_c0p1_n.py'])
+nrml_vel_ls_circlemerge_2d_p.py
+set(['nrml_vel_ls_circlemerge_2d_c0p1_n.py', 'nrml_vel_ls_circlemerge_2d_c0p1hack_n.py'])
+poisson_2c_2d_p.py
+set(['poisson_2c_2d_c0p1ncp1_n.py'])
+poisson_2c_3d_p.py
+set(['poisson_2c_3d_c0p1ncp1_n.py'])
+poisson_2c_het_2d_p.py
+set(['poisson_2c_het_2d_c0p1ncp1_n.py'])
+poisson_2c_het_3d_p.py
+set(['poisson_2c_het_3d_c0p1ncp1_n.py'])
+poisson_2c_ss_1d_p.py
+set(['poisson_2c_ss_1d_c0p1ncp1_n.py'])
+poisson_het_2d_p.py
+set(['poisson_het_2d_c0p1_n.py'])
+re_bcb_sand_10m_1d_p.py
+set(['re_bcb_sand_10m_1d_c0p1_n.py'])
+re_bcb_sand_10x10m_p.py
+set(['re_bcb_sand_10x10m_c0p1_n.py'])
+re_bcb_sand_10x10x10_3d_p.py
+set(['re_bcb_sand_10x10x10_3d_c0p1_n.py'])
+re_bcb_sand_1m_1d_p.py
+set(['re_bcb_sand_1m_1d_c0p1_n.py'])
+re_kueper_2d_p.py
+set(['re_kueper_2d_c0p1_n.py'])
+re_mvgtobcm_sand_1d_p.py
+set(['re_mvgtobcm_sand_1d_c0p1_n.py'])
+re_sand_1m_1d_p.py
+set(['re_sand_1m_1d_c0p1_n.py'])
+re_vgm_clay_10m_1d_p.py
+set(['re_vgm_clay_10m_1d_c0p1_n.py'])
+re_vgm_het_10m_1d_p.py
+set(['re_vgm_het_10m_1d_c0p1_n.py'])
+re_vgm_sand_10m_1d_p.py
+set(['re_vgm_sand_10m_1d_c0p1_n.py'])
+re_vgm_sand_10x10m_2d_p.py
+set(['re_vgm_sand_10x10m_2d_c0p1_n.py'])
+re_vgm_sand_10x10x10_3d_p.py
+set(['re_vgm_sand_10x10x10_3d_c0p1_n.py'])
+redist_4petal_2d_p.py
+set(['redist_4petal_2d_c0p1_n.py'])
+redist_circle_1d_p.py
+set(['redist_circle_1d_c0p1_n.py', 'redist_circle_1d_c0p1Hack_n.py'])
+redist_circle_2d_p.py
+set(['redist_circle_2d_c0p1_n.py', 'redist_circle_2d_c0p1hack_n.py'])
+redist_circle_b_1d_p.py
+set(['redist_circle_b_1d_c0p1_n.py'])
+redist_cnst_vel_circle_2d_p.py
+set(['redist_cnst_vel_circle_2d_c0p1_n.py'])
+redist_darcy_bubble_2d_p.py
+set(['redist_darcy_bubble_2d_c0p1_n.py'])
+redist_simpleweir_2d_p.py
+set(['redist_simpleweir_2d_c0p1_n.py'])
+redist_sloshbox_2d_p.py
+set([])
+stokes_cavity_2d_p.py
+set(['stokes_cavity_2d_c0p1c0p2_n.py', 'stokes_cavity_2d_c0p1c0p1_n.py'])
+stokes_cavity_ss_2d_p.py
+set(['stokes_cavity_ss_2d_c0p1c0p1_n.py', 'stokes_cavity_ss_2d_c0p1c0p2_n.py'])
+stokes_duct_ss_3d_p.py
+set(['stokes_duct_ss_3d_c0p1c0p2_n.py', 'stokes_duct_ss_3d_c0p1c0p1_n.py'])
+stokes_inflowstep_ss_2d_p.py
+set(['stokes_inflowstep_ss_2d_c0p1c0p2_n.py', 'stokes_inflowstep_ss_2d_c0p1c0p1_n.py'])
+stokes_outflowstep_ss_2d_p.py
+set(['stokes_outflowstep_ss_2d_c0p1c0p2_n.py', 'stokes_outflowstep_ss_2d_c0p1c0p1_n.py'])
+stokes_pome_cube_ss_2d_p.py
+set(['stokes_pome_cube_ss_2d_p1p2_n.py'])
+stokes_simpleweir_2d_p.py
+set(['stokes_simpleweir_2d_c0p1c0p2_n.py'])
+stokes_simpleweir_lsdebug_2d_p.py
+set(['stokes_simpleweir_lsdebug_2d_p1p1_n.py'])
+stokes_simpleweir_ss_2d_p.py
+set(['stokes_simpleweir_ss_2d_p1p2_n.py', 'stokes_simpleweir_ss_2d_p1p1_n.py'])
+stokes_tube_ss_2d_p.py
+set(['stokes_tube_ss_2d_c0p1c0p1_n.py', 'stokes_tube_ss_2d_c0p1c0p2_n.py'])
+stokes_weir_ss_2d_p.py
+set(['stokes_weir_ss_2d_c0p1c0p2_n.py', 'stokes_weir_ss_2d_c0p1c0p1_n.py'])
+twp_darcy_ls_so_bubble_2d_p.py
+set(['twp_darcy_ls_so_bubble_2d_c0p1_n.py'])
+twp_darcy_ls_so_waterTable_2d_p.py
+set(['twp_darcy_ls_so_waterTable_2d_c0p1_n.py'])
+twp_navier_stokes_ls_so_sloshbox_2d_p.py
+set(['twp_navier_stokes_ls_so_sloshbox_2d_c0p1c0p1_n.py'])
+twp_stokes_ls_fc_outstep_2d_p.py
+set(['twp_stokes_ls_fc_outstep_2d_c0p1c0p1c0p2_n.py'])
+twp_stokes_ls_fc_weir_2d_p.py
+set(['twp_stokes_ls_fc_weir_2d_c0p1c0p2_n.py'])
+twp_stokes_ls_so_instep_2d_p.py
+set(['twp_stokes_ls_so_instep_2d_c0p1c0p1_n.py', 'twp_stokes_ls_so_instep_2d_c0p1c0p2_n.py'])
+twp_stokes_ls_so_outstep_2d_p.py
+set(['twp_stokes_ls_so_outstep_2d_c0p1c0p1_n.py', 'twp_stokes_ls_so_outstep_2d_c0p1c0p2_n.py'])
+twp_stokes_ls_so_simpleweir_2d_p.py
+set(['twp_stokes_ls_so_simpleweir_2d_c0p1c0p1_n.py', 'twp_stokes_ls_so_simpleweir_2d_c0p1c0p2_n.py'])
+twp_stokes_ls_so_sloshbox_2d_p.py
+set(['twp_stokes_ls_so_sloshbox_2d_c0p1c0p2_n.py', 'twp_stokes_ls_so_sloshbox_2d_c0p1c0p1_n.py'])
+twp_stokes_ls_so_weir_2d_p.py
+set(['twp_stokes_ls_so_weir_2d_c0p1c0p1_n.py', 'twp_stokes_ls_so_weir_2d_c0p1c0p2_n.py'])
+twp_vgm_sand_10m_1d_p.py
+set(['twp_vgm_sand_10m_1d_c0p1_n.py'])
+twp_vgm_sand_10m_2d_p.py
+set(['twp_vgm_sand_10m_2d_c0p1_n.py'])
+twp_vgm_sand_1m_2d_p.py
+set(['twp_vgm_sand_1m_2d_c0p1_n.py'])
+
+----------------Running  twp_darcy_ls_so_waterTable_2d_p.py---twp_darcy_ls_so_waterTable_2d_c0p1_n.py
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:413: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:414: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:415: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:416: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:417: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:418: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:419: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:424: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:429: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:433: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:439: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:442: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:446: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:450: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:455: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:459: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:464: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:466: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:470: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:473: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:477: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:480: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:484: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:487: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:491: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:494: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:499: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:501: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:505: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:508: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:512: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:515: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:519: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:522: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:526: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:529: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:533: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:536: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:541: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:543: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:547: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:550: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:554: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:557: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:561: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:564: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:568: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:571: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:575: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/AnalyticalSolutions.py:578: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/LinearAlgebraTools.py:209: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/LinearAlgebraTools.py:210: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/FemTools.py:1654: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/FemTools.py:1814: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/FemTools.py:2022: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/FemTools.py:2373: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/FemTools.py:2557: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/LinearSolvers.py:969: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/LinearSolvers.py:970: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/LinearSolvers.py:1041: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/LinearSolvers.py:1042: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/LinearSolvers.py:1049: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/LinearSolvers.py:1051: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/LinearSolvers.py:1064: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/LinearSolvers.py:1066: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/Transport.py:3000: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/Transport.py:3045: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/Transport.py:3062: Warning: 'with' will become a reserved keyword in Python 2.6
+/Users/cekees/src/pyadh/pyadh/Transport.py:3080: Warning: 'with' will become a reserved keyword in Python 2.6
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_stokes_ls_so_simpleweir_2d_p.py---twp_stokes_ls_so_simpleweir_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_stokes_ls_so_simpleweir_2d_p.py---twp_stokes_ls_so_simpleweir_2d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  nonconsrv_ls_circle_1d_p.py---nonconsrv_ls_circle_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  nonconsrv_ls_circle_1d_p.py---nonconsrv_ls_circle_1d_c0p1Hack_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ls_so_weir_2d_p.py---ls_so_weir_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  re_vgm_het_10m_1d_p.py---re_vgm_het_10m_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Skipping redist_sloshbox_2d_p.py.  No n file----------------------
+
+----------------Running  cnst_vel_ls_circle_2d_p.py---cnst_vel_ls_circle_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  cnst_vel_ls_circle_2d_p.py---cnst_vel_ls_circle_2d_c0p1hack_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_gauss_2d_p.py---la_gauss_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_gauss_2d_p.py---la_gauss_2d_dgp0_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_gauss_2d_p.py---la_gauss_2d_dgp1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_gauss_2d_p.py---la_gauss_2d_dgp2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  poisson_2c_het_2d_p.py---poisson_2c_het_2d_c0p1ncp1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  redist_4petal_2d_p.py---redist_4petal_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ladr_2c_fc_ss_1d_p.py---ladr_2c_fc_ss_1d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_darcy_ls_so_bubble_2d_p.py---twp_darcy_ls_so_bubble_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_cone_2d_p.py---la_cone_2d_dgp0_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_cone_2d_p.py---la_cone_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_cone_2d_p.py---la_cone_2d_dgp1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_cone_2d_p.py---la_cone_2d_dgp2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  re_kueper_2d_p.py---re_kueper_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_duct_ss_3d_p.py---stokes_duct_ss_3d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_duct_ss_3d_p.py---stokes_duct_ss_3d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  redist_circle_2d_p.py---redist_circle_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  redist_circle_2d_p.py---redist_circle_2d_c0p1hack_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  nladr_1c_shock_1d_p.py---nladr_1c_shock_1d_dgp0_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  nladr_1c_shock_1d_p.py---nladr_1c_shock_1d_dgp1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  nladr_1c_shock_1d_p.py---nladr_1c_shock_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  re_vgm_sand_10x10m_2d_p.py---re_vgm_sand_10x10m_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_stokes_ls_so_outstep_2d_p.py---twp_stokes_ls_so_outstep_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_stokes_ls_so_outstep_2d_p.py---twp_stokes_ls_so_outstep_2d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  re_sand_1m_1d_p.py---re_sand_1m_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ladr_2c_lw_ss_1d_p.py---ladr_2c_lw_ss_1d_c0p2c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ladr_2c_lw_ss_1d_p.py---ladr_2c_lw_ss_1d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ladr_2c_di_ss_1d_p.py---ladr_2c_di_ss_1d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ladr_2c_di_ss_1d_p.py---ladr_2c_di_ss_1d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  re_mvgtobcm_sand_1d_p.py---re_mvgtobcm_sand_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  navier_stokes_tube_ss_2d_p.py---navier_stokes_tube_ss_2d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  navier_stokes_tube_ss_2d_p.py---navier_stokes_tube_ss_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ls_so_darcy_bubble_2d_p.py---ls_so_darcy_bubble_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_stokes_ls_so_weir_2d_p.py---twp_stokes_ls_so_weir_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_stokes_ls_so_weir_2d_p.py---twp_stokes_ls_so_weir_2d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_stokes_ls_so_sloshbox_2d_p.py---twp_stokes_ls_so_sloshbox_2d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_stokes_ls_so_sloshbox_2d_p.py---twp_stokes_ls_so_sloshbox_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  re_bcb_sand_10x10x10_3d_p.py---re_bcb_sand_10x10x10_3d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_navier_stokes_ls_so_sloshbox_2d_p.py---twp_navier_stokes_ls_so_sloshbox_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  nrml_vel_ls_circle_1d_p.py---nrml_vel_ls_circle_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  nrml_vel_ls_circle_1d_p.py---nrml_vel_ls_circle_1d_c0p1Hack_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_vgm_sand_10m_2d_p.py---twp_vgm_sand_10m_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_stokes_ls_fc_weir_2d_p.py---twp_stokes_ls_fc_weir_2d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_shock_1d_p.py---la_shock_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_shock_1d_p.py---la_shock_1d_dgp0_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_shock_1d_p.py---la_shock_1d_dgp1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_shock_1d_p.py---la_shock_1d_dgp2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  re_bcb_sand_10x10m_p.py---re_bcb_sand_10x10m_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_2c_gauss_1d_p.py---la_2c_gauss_1d_dgp1dgp1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_2c_gauss_1d_p.py---la_2c_gauss_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_2c_gauss_1d_p.py---la_2c_gauss_1d_dgp1dgp2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ls_so_darcy_waterTable_2d_p.py---ls_so_darcy_waterTable_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_outflowstep_ss_2d_p.py---stokes_outflowstep_ss_2d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_outflowstep_ss_2d_p.py---stokes_outflowstep_ss_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  re_vgm_sand_10x10x10_3d_p.py---re_vgm_sand_10x10x10_3d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  cnst_vel_ls_rotatingcircle_2d_p.py---cnst_vel_ls_rotatingcircle_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  cnst_vel_ls_rotatingcircle_2d_p.py---cnst_vel_ls_rotatingcircle_2d_c0p1hack_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ladr_5c_fc_ss_1d_p.py---ladr_5c_fc_ss_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  re_bcb_sand_10m_1d_p.py---re_bcb_sand_10m_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ladr_2c_up_ss_1d_p.py---ladr_2c_up_ss_1d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ladr_2c_sk_ss_1d_p.py---ladr_2c_sk_ss_1d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  poisson_2c_ss_1d_p.py---poisson_2c_ss_1d_c0p1ncp1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  cnst_vel_ls_vortex_2d_p.py---cnst_vel_ls_vortex_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  cnst_vel_ls_vortex_2d_p.py---cnst_vel_ls_vortex_2d_c0p1hack_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  nladr_1c_ss_1d_p.py---nladr_1c_ss_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  redist_circle_1d_p.py---redist_circle_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  redist_circle_1d_p.py---redist_circle_1d_c0p1Hack_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_simpleweir_ss_2d_p.py---stokes_simpleweir_ss_2d_p1p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_simpleweir_ss_2d_p.py---stokes_simpleweir_ss_2d_p1p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_pome_cube_ss_2d_p.py---stokes_pome_cube_ss_2d_p1p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ls_so_sloshbox_2d_p.py---ls_so_sloshbox_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_inflowstep_ss_2d_p.py---stokes_inflowstep_ss_2d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_inflowstep_ss_2d_p.py---stokes_inflowstep_ss_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  lad_shock_1d_p.py---lad_shock_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ls_so_simpleweir_2d_p.py---ls_so_simpleweir_2d_c0p1hack_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ls_so_simpleweir_2d_p.py---ls_so_simpleweir_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_cavity_2d_p.py---stokes_cavity_2d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_cavity_2d_p.py---stokes_cavity_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_vgm_sand_10m_1d_p.py---twp_vgm_sand_10m_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_gauss_1d_p.py---la_gauss_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_gauss_1d_p.py---la_gauss_1d_dgp2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_gauss_1d_p.py---la_gauss_1d_dgp1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_gauss_1d_p.py---la_gauss_1d_dgp0_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_tube_ss_2d_p.py---stokes_tube_ss_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_tube_ss_2d_p.py---stokes_tube_ss_2d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_stokes_ls_fc_outstep_2d_p.py---twp_stokes_ls_fc_outstep_2d_c0p1c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_simpleweir_lsdebug_2d_p.py---stokes_simpleweir_lsdebug_2d_p1p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  re_bcb_sand_1m_1d_p.py---re_bcb_sand_1m_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  re_vgm_clay_10m_1d_p.py---re_vgm_clay_10m_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  nrml_vel_ls_circle_2d_p.py---nrml_vel_ls_circle_2d_c0p1hack_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  nrml_vel_ls_circle_2d_p.py---nrml_vel_ls_circle_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  re_vgm_sand_10m_1d_p.py---re_vgm_sand_10m_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  nrml_vel_ls_circlemerge_2d_p.py---nrml_vel_ls_circlemerge_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  nrml_vel_ls_circlemerge_2d_p.py---nrml_vel_ls_circlemerge_2d_c0p1hack_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_simpleweir_2d_p.py---stokes_simpleweir_2d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_vortex_2d_p.py---la_vortex_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_vortex_2d_p.py---la_vortex_2d_dgp0_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_vortex_2d_p.py---la_vortex_2d_dgp1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_vortex_2d_p.py---la_vortex_2d_dgp2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ladr_ss_1d_p.py---ladr_ss_1d_c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  ladr_ss_1d_p.py---ladr_ss_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_2c_cone_2d_p.py---la_2c_cone_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_stokes_ls_so_instep_2d_p.py---twp_stokes_ls_so_instep_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_stokes_ls_so_instep_2d_p.py---twp_stokes_ls_so_instep_2d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  poisson_2c_het_3d_p.py---poisson_2c_het_3d_c0p1ncp1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_rotatingcircle_2d_p.py---la_rotatingcircle_2d_dgp0_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  la_rotatingcircle_2d_p.py---la_rotatingcircle_2d_dgp1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_weir_ss_2d_p.py---stokes_weir_ss_2d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_weir_ss_2d_p.py---stokes_weir_ss_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  poisson_2c_2d_p.py---poisson_2c_2d_c0p1ncp1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_cavity_ss_2d_p.py---stokes_cavity_ss_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  stokes_cavity_ss_2d_p.py---stokes_cavity_ss_2d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  navier_stokes_cavity_2d_p.py---navier_stokes_cavity_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  redist_cnst_vel_circle_2d_p.py---redist_cnst_vel_circle_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  navier_stokes_cav_ss_2d_p.py---navier_stokes_cav_ss_2d_c0p1c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  navier_stokes_cav_ss_2d_p.py---navier_stokes_cav_ss_2d_c0p1c0p2_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  poisson_2c_3d_p.py---poisson_2c_3d_c0p1ncp1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  twp_vgm_sand_1m_2d_p.py---twp_vgm_sand_1m_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  poisson_het_2d_p.py---poisson_het_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  redist_darcy_bubble_2d_p.py---redist_darcy_bubble_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  nladr_5c_fc_ss_1d_p.py---nladr_5c_fc_ss_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  redist_circle_b_1d_p.py---redist_circle_b_1d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
+
+----------------Running  redist_simpleweir_2d_p.py---redist_simpleweir_2d_c0p1_n.py
+Traceback (most recent call last):
+  File "/Users/cekees/src/pyadh/scripts/pyadhRun.py", line 6, in <module>
+    from pyadh import *
+  File "/Users/cekees/src/pyadh/pyadh/DiagUtils.py", line 6, in <module>
+    from Transport import *
+  File "/Users/cekees/src/pyadh/pyadh/Transport.py", line 9, in <module>
+    from TimeIntegration import *
+  File "/Users/cekees/src/pyadh/pyadh/TimeIntegration.py", line 1299
+    <<<<<<< .mine
+     ^
+SyntaxError: invalid syntax
