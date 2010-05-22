@@ -1,0 +1,15 @@
+#!/bin/tcsh              
+#$ -V                     # Inherit the submission environment
+#$ -cwd                   # Start job in  submission directory
+#$ -N wigley               # Job Name
+#$ -j y                   # combine stderr & stdout into stdout    
+#$ -o oe.$JOB_NAME.$JOB_ID  # Name of the output file (eg. myMPI.oJobID)
+#$ -pe 16way 16           # Requests 16 cores/node, 32 cores total
+#$ -q development              # Queue name
+#$ -l h_rt=2:00:00       # Run time (hh:mm:ss) - 1.5 hours
+#$ -M cekees@gmail.com      # Email notification address (UNCOMMENT)
+#$ -m be                  # Email at Begin/End of job  (UNCOMMENT)
+mkdir $JOB_NAME.$JOB_ID
+echo "-ksp_type bcgsl -pc_type asm  -sub_ksp_type preonly -sub_pc_type lu -sub_pc_factor_mat_solver_package spooles -ksp_rtol 0.0 -ksp_atol 1.0e-10 -ksp_monitor_true_residual" > petsc_bcgsl.txt
+ibrun parun wigley_so.py -l 3 -v -p -O petsc_bcgsl.txt -D $JOB_NAME.$JOB_ID
+

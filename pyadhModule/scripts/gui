@@ -1,0 +1,21 @@
+import Tkinter
+from Tkconstants import *
+import ScalarTransportTests
+tk = Tkinter.Tk()
+frame = Tkinter.Frame(tk, relief=RIDGE, borderwidth=2)
+frame.pack(fill=BOTH,expand=1)
+label = Tkinter.Label(frame, text="ADH")
+label.pack(fill=X, expand=1)
+button = Tkinter.Button(frame,text="Exit",command=tk.destroy)
+button.pack(side=BOTTOM)
+button2 = Tkinter.Button(frame,text="Start",command=ScalarTransportTests.runTests)
+button2.pack(side=TOP)
+pecletEntry = Tkinter.Entry(frame)
+pecletEntry.pack(side=BOTTOM)
+retardationFactorEntry = Tkinter.Entry(frame,text="Retardation Factor")
+retardationFactorEntry.pack(side=BOTTOM)
+checkbutton = Tkinter.Checkbutton(frame,text="steady state")
+checkbutton.pack(side=BOTTOM)
+radiobutton = Tkinter.Radiobutton(frame,text="linear solver")
+radiobutton.pack(side=BOTTOM)
+tk.mainloop()

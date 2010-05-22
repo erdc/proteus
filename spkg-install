@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+if [ "$SAGE_LOCAL" = "" ]; then
+   echo "SAGE_LOCAL undefined ... exiting";
+   echo "Maybe run 'sage -sh'?"
+   exit 1
+fi
+
+export PYADH=$PWD
+export PYADH_ARCH=sage
+export PYADH_PACKAGES=${PYADH}/externalPackages
+export PYADH_PYTHON=python
+export DAETK_DIR=${PYADH_PACKAGES}/daetk
+export DAETK_ARCH=sage
+export BOX=sage
+export PETSC_DIR=${PYADH_PACKAGES}/petsc
+export PETSC_ARCH=sage
+
+cd externalPackages
+
+numpy=`cd $SAGE_ROOT/spkg/standard/; ./newest_version numpy`
+if [ $? -ne 0 ]; then
+    echo "Failed to find numpy.  Please install the numpy spkg"
+    exit 1
+fi
+
+cython=`cd $SAGE_ROOT/spkg/standard/; ./newest_version cython`
+if [ $? -ne 0 ]; then
+    echo "Failed to find cython.  Please install the cython spkg"
+    exit 1
+fi
+
+tables=`cd $SAGE_ROOT/spkg/standard/; ./newest_version tables`
+if [ $? -ne 0 ]; then
+    echo "(Py)tables not installed. Installing tables"
+    make  config_zlib build_zlib install_zlib
+    if [ $? -ne 0 ]; then
+       echo "Error building zlib."
+       exit 1
+    fi
+
+    make  config_szip build_szip install_szip
+
+    if [ $? -ne 0 ]; then
+       echo "Error building szip."
+       exit 1
+    fi
+
+    make  config_hdf5 build_hdf5 install_hdf5
+    if [ $? -ne 0 ]; then
+       echo "Error building hdf5."
+       exit 1
+    fi
+
+    make  config_tables build_tables install_tables
+    if [ $? -ne 0 ]; then
+       echo "Error building tables."
+       exit 1
+    fi
+fi
+
+mpi4py=`cd $SAGE_ROOT/spkg/standard/; ./newest_version mpi4py`
+if [ $? -ne 0 ]; then
+    echo "mpi4py not installed. Installing mpi4py"
+    make  config_mpi4py build_mpi4py install_mpi4py
+    if [ $? -ne 0 ]; then
+       echo "Error building mpi4py."
+       exit 1
+    fi
+fi
+
+petsc4py=`cd $SAGE_ROOT/spkg/standard/; ./newest_version petsc4py`
+if [ $? -ne 0 ]; then
+    echo "petsc4py not installed. Installing petsc4py"
+    make  config_petsc build_petsc install_petsc
+    if [ $? -ne 0 ]; then
+       echo "Error building petsc."
+       exit 1
+    fi
+    make  config_petsc4py build_petsc4py install_petsc4py
+    if [ $? -ne 0 ]; then
+       echo "Error building petsc4py."
+       exit 1
+    fi
+fi
+
+make config_triangle build_triangle install_triangle
+if [ $? -ne 0 ]; then
+   echo "Error building triangle."
+   exit 1
+fi
+
+make config_tetgen build_tetgen install_tetgen
+if [ $? -ne 0 ]; then
+   echo "Error building tetgen."
+   exit 1
+fi
+
+make config_superlu build_superlu install_superlu
+if [ $? -ne 0 ]; then
+   echo "Error building superlu."
+   exit 1
+fi
+
+make config_daetk build_daetk install_daetk
+if [ $? -ne 0 ]; then
+   echo "Error building daetk."
+   exit 1
+fi
+
+cd ../pyadhModule
+cp pyadhConfig/config.${PYADH_ARCH} config.py
+make -f Makefile.petsc petsc-config
+make
+if [ $? -ne 0 ]; then
+   echo "Error building pyadh."
+   exit 1
+fi

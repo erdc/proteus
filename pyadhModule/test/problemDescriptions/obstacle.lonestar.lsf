@@ -1,0 +1,12 @@
+#!/bin/tcsh 			  
+#BSUB -J obstacle
+#BSUB -e err.obstacle.%J
+#BSUB -o out.obstacle.%J
+#BSUB -n 256
+#BSUB -W 48:00
+#BSUB -q normal
+set echo                          #Echo all commands.
+cd $LS_SUBCWD                     #cd to directory of submissio
+echo "-ksp_type preonly -pc_type lu -pc_factor_mat_solver_package superlu_dist" > petsc.obstacle.options
+ibrun parun_mpi obstacleInTank3d_so.py -l 3 -v -O petsc.obstacle.options
+

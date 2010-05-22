@@ -1,0 +1,4 @@
+include defaultConfig.py
+graft include
+graft pyadhConfig
+global-exclude *.svn *~ #*#

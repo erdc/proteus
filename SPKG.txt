@@ -1,0 +1,28 @@
+= pyadh =
+
+== Description ==
+
+A package for solving PDEs with the finite element method
+
+== License ==
+
+Public Domain
+
+== SPKG Maintainers ==
+
+Chris Kees <cekees@gmail.com>
+
+== Upstream Contact ==
+
+Chris Kees <cekees@gmail.com>
+
+== Dependencies ==
+
+numpy, cython, pyrex, tables, mpi4py, petsc4py, 
+
+== Special Update/Build Instructions ==
+
+None
+
+== Changelog ==
+

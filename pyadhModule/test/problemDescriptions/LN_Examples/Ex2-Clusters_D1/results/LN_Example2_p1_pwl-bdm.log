@@ -1,0 +1,221 @@
+Running PyADH version 0.7.0
+Setting simulation processing defaults
+Batch file contains 1 runs
+Starting LN_Example2_p1_pwl-bdm run number 0
+Initializing NumericalSolution for LN_Example2_p1_pwl-bdm
+ System includes: 
+LN_Example2_p1_pwl-bdm
+
+Setting Archiver(s)
+Warning Numerical Solution storeQuantity = errorData not recognized won't archive
+Warning Numerical Solution storeQuantity = simulationData not recognized won't archive
+Setting up MultilevelMesh
+Building one multilevel mesh for all models
+Generating mesh for LN_Example2_p1_pwl-bdm
+Calling Triangle to generate 2D mesh forLN_Example2_p1_pwl-bdm
+Converting to PyADH Mesh
+Generating 5-level mesh from coarse Triangle mesh
+Partitioning mesh among 1 processors using partitioningType = 0
+Number of Subdomain Elements Owned= 1198
+Number of Subdomain Elements = 1198
+Number of Subdomain Nodes Owned= 650
+Number of Subdomain Nodes = 650
+Number of Subdomain elementBoundaries Owned= 1847
+Number of Subdomain elementBoundaries = 1847
+Number of Subdomain Edges Owned= 1847
+Number of Subdomain Edges = 1847
+Finished partitioning
+Partitioning mesh among 1 processors using partitioningType = 0
+Number of Subdomain Elements Owned= 4792
+Number of Subdomain Elements = 4792
+Number of Subdomain Nodes Owned= 2497
+Number of Subdomain Nodes = 2497
+Number of Subdomain elementBoundaries Owned= 7288
+Number of Subdomain elementBoundaries = 7288
+Number of Subdomain Edges Owned= 7288
+Number of Subdomain Edges = 7288
+Finished partitioning
+Partitioning mesh among 1 processors using partitioningType = 0
+Number of Subdomain Elements Owned= 19168
+Number of Subdomain Elements = 19168
+Number of Subdomain Nodes Owned= 9785
+Number of Subdomain Nodes = 9785
+Number of Subdomain elementBoundaries Owned= 28952
+Number of Subdomain elementBoundaries = 28952
+Number of Subdomain Edges Owned= 28952
+Number of Subdomain Edges = 28952
+Finished partitioning
+Partitioning mesh among 1 processors using partitioningType = 0
+Number of Subdomain Elements Owned= 76672
+Number of Subdomain Elements = 76672
+Number of Subdomain Nodes Owned= 38737
+Number of Subdomain Nodes = 38737
+Number of Subdomain elementBoundaries Owned= 115408
+Number of Subdomain elementBoundaries = 115408
+Number of Subdomain Edges Owned= 115408
+Number of Subdomain Edges = 115408
+Finished partitioning
+Partitioning mesh among 1 processors using partitioningType = 0
+Number of Subdomain Elements Owned= 306688
+Number of Subdomain Elements = 306688
+Number of Subdomain Nodes Owned= 154145
+Number of Subdomain Nodes = 154145
+Number of Subdomain elementBoundaries Owned= 460832
+Number of Subdomain elementBoundaries = 460832
+Number of Subdomain Edges Owned= 460832
+Number of Subdomain Edges = 460832
+Finished partitioning
+*** Global ***
+Number of triangles  : 1198
+Number of edges : 1847
+Number of nodes : 650
+
+*** Local ***
+Number of triangles  : 1198
+Number of edges : 1847
+Number of nodes : 650
+
+*** Global ***
+Number of triangles  : 4792
+Number of edges : 7288
+Number of nodes : 2497
+
+*** Local ***
+Number of triangles  : 4792
+Number of edges : 7288
+Number of nodes : 2497
+
+*** Global ***
+Number of triangles  : 19168
+Number of edges : 28952
+Number of nodes : 9785
+
+*** Local ***
+Number of triangles  : 19168
+Number of edges : 28952
+Number of nodes : 9785
+
+*** Global ***
+Number of triangles  : 76672
+Number of edges : 115408
+Number of nodes : 38737
+
+*** Local ***
+Number of triangles  : 76672
+Number of edges : 115408
+Number of nodes : 38737
+
+*** Global ***
+Number of triangles  : 306688
+Number of edges : 460832
+Number of nodes : 154145
+
+*** Local ***
+Number of triangles  : 306688
+Number of edges : 460832
+Number of nodes : 154145
+
+Numerical Solution Sparse diffusion information key (0, 0) = (array([0, 2, 4], dtype=int32), array([0, 1, 0, 1], dtype=int32))
+Setting up MultilevelTransport for LN_Example2_p1_pwl-bdm
+Allocating phi
+Setting Boundary Conditions
+Allocating phi
+Setting Boundary Conditions
+Allocating phi
+Setting Boundary Conditions
+Allocating phi
+Setting Boundary Conditions
+Allocating phi
+Setting Boundary Conditions
+Setting LN_Example2_p1_pwl-bdm stepController to pyadh.StepControl.SC_base
+Setting up MultilevelLinearSolver forLN_Example2_p1_pwl-bdm
+multilevelLinearSolverChooser type= pyadh.LinearSolvers.LU
+Setting up MultilevelNonLinearSolver for LN_Example2_p1_pwl-bdm
+Finished setting up models and solvers
+Setting up SimTools for LN_Example2_p1_pwl-bdm
+Building tnList from model = LN_Example2_p1_pwl-bdm nDTout = 1
+Time sequence[0.0, 1.0]
+Setting LN_Example2_p1_pwl-bdm systemStepController to object of type pyadh.SplitOperator.Sequential_MinModelStep
+Finished NumericalSolution initialization
+Setting initial conditions
+No initial conditions provided for model LN_Example2_p1_pwl-bdm
+Attaching models and running spin-up step if requested
+Estimating initial time derivative and initializing time history for model LN_Example2_p1_pwl-bdm
+Choosing initial time step for model LN_Example2_p1_pwl-bdm
+Initializing time step on model LN_Example2_p1_pwl-bdm to dt =  1.00000e+00
+Initializing time history for model step controller
+Writing initial mesh for  model = LN_Example2_p1_pwl-bdm
+Writing initial conditions for  model = LN_Example2_p1_pwl-bdm
+Auxiliary variable calculations for model LN_Example2_p1_pwl-bdm
+Syncing Archive
+Initializing time step on system Default System to dt =  1.00000e+00
+Initializing step sequence for system Default System to [(1.0, <pyadh.Transport.MultilevelTransport instance at 0x11c1065a8>)]
+Starting time stepping
+Solving over interval [ 0.00000e+00, 1.00000e+00]
+System time step t= 1.00000e+00, dt= 1.00000e+00
+Split operator iteration 0
+Fractional step  1.00000e+00 for model LN_Example2_p1_pwl-bdm
+Step exact called for model LN_Example2_p1_pwl-bdm
+StepControl base stepExact t_model= 1.0 tOut= 1.0 t_model_last= 0.0 dt_model= 1.0 setting to 1.0 
+Model step t= 1.00000e+00, dt= 1.00000e+00 for model LN_Example2_p1_pwl-bdm
+Model substep t= 1.00000e+00 for model LN_Example2_p1_pwl-bdm
+Model substep t= 1.00000e+00 for model LN_Example2_p1_pwl-bdm model.timeIntegration.t=  1.00000e+00
+Newton it 0 norm(r)= 6.04767e+00
+Newton it 1 norm(r)= 8.98090e-15 (converged)
+Newton it 0 norm(r)= 8.67220e+00
+Newton it 1 norm(r)= 1.99462e-14 (converged)
+Newton it 0 norm(r)= 1.23752e+01
+Newton it 1 norm(r)= 4.40056e-14 (converged)
+Newton it 0 norm(r)= 1.75790e+01
+Newton it 1 norm(r)= 9.63898e-14 (converged)
+Newton it 0 norm(r)= 2.49153e+01
+Newton it 1 norm(r)= 2.13250e-13 (converged)
+SO_base modelStepTaken for model= LN_Example2_p1_pwl-bdm t_system_last= 0.0 t_model_last= 0.0  setting to t_stepSequence= 1.0 
+Step Taken, Model step t= 1.00000e+00, dt= 1.00000e+00 for model LN_Example2_p1_pwl-bdm
+Step Taken, System time step t= 2.00000e+00, dt= 1.00000e+00
+Step Taken, Model step t= 2.00000e+00, dt= 1.00000e+00 for model LN_Example2_p1_pwl-bdm
+Writing mesh header for  model = LN_Example2_p1_pwl-bdm at time t=1.0
+Writing solution for  model = LN_Example2_p1_pwl-bdm
+Syncing Archive
+Syncing Archive
+Finished calculating solution
+SimTools proj velocity for error calling projectVelocityToFinestLevelNC
+
+t= 1; error_u_L2[0][0]= 0.00226688;
+
+t= 1; error_velocity_L2[0][0]= 0.0806482;
+SimTools proj velocity for error calling projectVelocityToFinestLevelNC
+
+t= 1; error_u_L2[0][1]= 0.000852823;
+
+t= 1; error_velocity_L2[0][1]= 0.0493173;
+SimTools proj velocity for error calling projectVelocityToFinestLevelNC
+
+t= 1; error_u_L2[0][2]= 0.00030533;
+
+t= 1; error_velocity_L2[0][2]= 0.0286333;
+SimTools proj velocity for error calling projectVelocityToFinestLevelNC
+
+t= 1; error_u_L2[0][3]= 8.79933e-05;
+
+t= 1; error_velocity_L2[0][3]= 0.0138031;
+SimTools proj velocity for error calling projectVelocityToFinestLevelNC
+
+t= 1; error_u_L2[0][4]= 0;
+
+t= 1; error_velocity_L2[0][4]= 0;
+
+t= 1; max_localMassBalanceError[0][0]= 1.99686e-15; 
+
+t= 1; max_localMassBalanceError[0][1]= 3.76258e-15; 
+
+t= 1; max_localMassBalanceError[0][2]= 3.91905e-15; 
+
+t= 1; max_localMassBalanceError[0][3]= 5.3005e-15; 
+
+t= 1; max_localMassBalanceError[0][4]= 1.48837e-14; 
+Closing solution archive for LN_Example2_p1_pwl-bdm
+Closing Archive
+Completed LN_Example2_p1_pwl-bdm run number 1
+Collecting garbage
+Done with garbage

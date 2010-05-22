@@ -1,0 +1,10 @@
+#!/bin/tcsh 			  
+#BSUB -J gw_het_utep_2d
+#BSUB -n 16
+#BSUB -W 0:30
+#BSUB -q development
+cd $LS_SUBCWD                     #cd to directory of submissio
+echo "-ksp_type preonly -pc_type lu -pc_factor_mat_solver_package spooles" > petsc.options
+#echo "-log_trace -info -malloc -help" > petsc.options
+ibrun parun gw_het_utep_2d_p.py gw_het_utep_2d_c0p1_par_n.py -l 7 -v -O petsc.options
+
