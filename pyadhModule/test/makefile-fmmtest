@@ -1,0 +1,61 @@
+#
+# Makefile for mesh development/testing.
+#	Project: meshTest
+#
+###########################################
+#
+CC = gcc
+CFLAGS = -g
+CURDIR = ~/
+
+INCPATH = 
+#INCPATH = -I$(CURDIR)include -I/$(CURDIR)tests
+
+#TESTPATH = -I/$(CURDIR)tests
+
+LINK = gcc
+
+LFLAGS =
+
+LIBDIRS = 
+LIBS = 
+
+#chris mesh test
+#EXE = mesh_013107 
+
+#HEADERS = mesh.h
+#SRC = meshTests.cpp
+#OBJ = meshTests.o
+
+#fast marching solvers
+INCPATH = -I../include -I/sw/include -I$(PETSC_DIR)/include -I$(PETSC_DIR)/bmake/$(PETSC_ARCH)
+EXE = fmmTest
+HEADERS = mesh.h stupidheap.h FMMandFSW.h
+SRC     = ../src/mesh.cpp ../src/stupidheap.cpp ../src/FMMandFSW.cpp ./testFMMandFSW.cpp
+OBJ     = ../src/mesh.o   ../src/stupidheap.o ../src/FMMandFSW.o ./testFMMandFSW.o 
+PYADH_PETSC_DIR = $(PETSC_DIR)
+PYADH_PETSC_ARCH = darwin-pyadh-c-debug
+PYADH_PETSC_LIBS =  -lpetscts -lpetscsnes -l petscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc \
+                    -lmetis -lparmetis -lX11 
+PYADH_MPI_LIBS   =  -lmpi -lorte -lopal -ldl -lmpi_f77 -lmpi_f90 -lmpi_cxx -lopen-rte -lopen-pal
+LIBDIRS   = -L$(PYADH_PETSC_DIR)/lib/$(PYADH_PETSC_ARCH) -L$(PYADH_PETSC_DIR)/externalpackages/ParMetis-dev-p1/$(PYADH_PETSC_ARCH)/lib \
+            -L$(PYADH_PETSC_DIR)/lib/$(PYADH_PETSC_ARCH) -L$(PYADH_PETSC_DIR)/externalpackages/ParMetis-dev-p1 -L/usr/X11R6/lib \
+            -L/sw/lib/openmpi 
+
+LIBS    = -lstdc++ -framework Accelerate -lm $(PYADH_PETSC_LIBS) $(PYADH_MPI_LIBS)
+
+.SUFFIXES: .cpp
+
+.cpp.o: 
+	$(CC) -c $(CFLAGS) $(INCPATH) -o $@ $<
+
+all : $(EXE)
+
+$(EXE): $(OBJ)
+	$(LINK) $(LFLAGS) -o $(EXE) $(OBJ) $(LIBDIRS) $(LIBS)
+
+$(OBJ): $(SRC)
+
+clean:
+	-rm -f $(OBJ) $(EXE)
+	-rm -f core

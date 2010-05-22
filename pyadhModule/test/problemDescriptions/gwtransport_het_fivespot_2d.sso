@@ -1,0 +1,5 @@
+gw_het_fivespot_2d_p.py gw_het_fivespot_2d_c0p1_n.py
+transport_het_fivespot_2d_p.py transport_het_fivespot_2d_c0p1_n.py
+sequence = [0,1,1]
+stepFractions = [1.0,0.25,0.75]
+initialStepOnly=set([0])

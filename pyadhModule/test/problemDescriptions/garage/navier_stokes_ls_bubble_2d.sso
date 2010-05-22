@@ -1,0 +1,3 @@
+twp_navier_stokes_ls_so_bubble_2d_p.py twp_navier_stokes_ls_so_bubble_2d_c0p1c0p1_n.py 
+ls_bubble_2d_p.py ls_bubble_2d_c0p1_n.py 
+redist_bubble_2d_p.py redist_bubble_2d_c0p1_n.py

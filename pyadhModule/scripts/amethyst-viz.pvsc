@@ -1,0 +1,34 @@
+<Servers>
+  <Server name="a8" resource="csrc://amethyst1">
+    <CommandStartup>
+      <Options>
+       <!-- On which port to start the server -->
+       <Option name="PV_SERVER_PORT" label="Server Port: ">
+        <Range type="int" min="1" max="65535" step="1" default="11111" />
+       </Option>
+       <Option name="PV_CONNECT_ID" label="Connect ID" readonly="true">
+         <Range type="int" min="1" max="65535" step="1" default="random" />
+       </Option>
+      </Options>
+      <Command exec="/usr/local/ossh/bin/ssh" timeout="0" delay="5" Arguments="5">
+        <Arguments>
+          <Argument value="-R"/>
+          <Argument value="$PV_SERVER_PORT$:localhost:11111"/>
+          <Argument value="mfarthin@amethyst1.erdc.hpc.mil"/>
+          <Argument value="mpirun"/>
+          <Argument value="-np"/>
+          <Argument value="8"/>
+          <Argument value="/viz/home/rhand/local/pv-3.4/bin/pvserver"/>
+          <Argument value="-rc"/>
+          <Argument value="--use-offscreen-rendering"/>
+          <Argument value="-sp=$PV_SERVER_PORT$"/>
+	  <Argument value="-ch=134.164.29.39"/>
+          <Argument value="--connect-id=$PV_CONNECT_ID$"/>
+        </Arguments>
+      </Command>
+    </CommandStartup>
+  </Server>
+  <Server name="builtin" resource="builtin:">
+    <ManualStartup/>
+  </Server>
+</Servers>

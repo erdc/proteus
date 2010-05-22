@@ -1,0 +1,62 @@
+#!/usr/bin/python
+# cek 10/9/09 based on crtimgseq script by Martin Michel 16/05/08
+"""Create a quicktime animation from a sequence of image files"""
+import sys,os,optparse
+from AppKit import NSImage
+from QTKit import *
+
+usage = "usage: %prog filename.mov frame0.png [frame1.png ...]"
+parser = optparse.OptionParser(usage=usage)
+parser.add_option("-d", "--duration",
+                  help="The total duration of the animation",
+                  action="store",
+                  type="float",
+                  dest="duration",
+                  default=10.0)
+parser.add_option("-u", "--unsorted",
+                  help="Don't sort the list of frames",
+                  action="store_true",
+                  dest="unsorted",
+                  default=False)
+parser.add_option("-c", "--codec",
+                  help="The damn FOUR LETTER image codec",
+                  action="store",
+                  type="string",
+                  dest="codec",
+                  default=None)
+parser.add_option("-n", "--noView",
+                  help="Don't open in quicktime when done",
+                  action="store_true",
+                  dest="noView",
+                  default=False)
+(opts,args) = parser.parse_args()
+
+
+mov, err = QTMovie.alloc().initToWritableFile_error_(args[0], None)
+    
+if mov == None:
+    errmsg = "Could not create movie file: %s. Probably need to remove it." % (movpath)
+    raise IOError, errmsg
+
+frames=args[1:]
+if not opts.unsorted:
+    frames.sort()
+timescale = long(round(len(args[1:])))
+timeval = long(round(opts.duration))
+duration = QTMakeTime(timeval, timescale)
+if opts.codec != None:
+    codec = opts.codec
+    if len(opts.codec) != 4:
+        codec = opts.codec[:3]+' '
+    attrs = {QTAddImageCodecType: opts.codec}
+else:
+    attrs = {QTAddImageCodecType: "png "}
+sys.stdout.write("Adding frames")
+for frame in frames:
+    sys.stdout.write(".");sys.stdout.flush()
+    img = NSImage.alloc().initWithContentsOfFile_(frame)
+    mov.addImage_forDuration_withAttributes_(img, duration, attrs)
+    mov.updateMovieFile()
+sys.stdout.write("Done!\n")
+if not opts.noView:
+    os.system("open "+args[0])
