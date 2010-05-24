@@ -1,4 +1,4 @@
-= pyadh =
+= proteus =
 
 == Description ==
 
@@ -10,19 +10,20 @@ Public Domain
 
 == SPKG Maintainers ==
 
-Chris Kees <cekees@gmail.com>
+Matthew Farthing <matthew.w.farthing@usace.army.mil>
+Chris Kees <christopher.e.kees@usace.army.mil>
 
 == Upstream Contact ==
 
-Chris Kees <cekees@gmail.com>
+Matthew Farthing <matthew.w.farthing@usace.army.mil>
+Chris Kees <christopher.e.kees@usace.army.mil>
 
 == Dependencies ==
 
-numpy, cython, pyrex, tables, mpi4py, petsc4py, 
+None
 
 == Special Update/Build Instructions ==
 
 None
 
 == Changelog ==
-
