@@ -1,6 +1,6 @@
 #ifndef SUPERLUWRAPPERSMODULE_H
 #define SUPERLUWRAPPERSMODULE_H 
-#include PYADH_SUPERLU_H
+#include PROTEUS_SUPERLU_H
 
 /*!
  \file superluWrappersModule.h

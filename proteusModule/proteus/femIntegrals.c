@@ -5,7 +5,7 @@
 #include <strings.h>
 #include <assert.h>
 #include "femIntegrals.h"
-#include PYADH_LAPACK_H
+#include PROTEUS_LAPACK_H
 
 /**
    \file femIntegrals.h
@@ -9133,7 +9133,7 @@ void calculateVelocityQuadrature_MixedForm2(int nElements_global,
 					    double* qV)
 {
   int eN,ebN,k,i,j,I,nDOF_element2=nDOF_element*nDOF_element,nSpace2=nSpace*nSpace;
-  PYADH_LAPACK_INTEGER ipiv[nDOF_element],lwork=((PYADH_LAPACK_INTEGER)nDOF_element),dim=((PYADH_LAPACK_INTEGER)nDOF_element),info=0;
+  PROTEUS_LAPACK_INTEGER ipiv[nDOF_element],lwork=((PROTEUS_LAPACK_INTEGER)nDOF_element),dim=((PROTEUS_LAPACK_INTEGER)nDOF_element),info=0;
   double work[nDOF_element],A_inv[nDOF_element2];
   double V_dof[nSpace][nDOF_element];
   memset(V,0,sizeof(double)*
@@ -9238,7 +9238,7 @@ void calculateVelocityQuadrature_MixedForm2_sd(int nElements_global,
 {
   int eN,ebN,k,i,j,I,nDOF_element2=nDOF_element*nDOF_element,nSpace2=nSpace*nSpace;
   int m,nnz=rowptr[nSpace];
-  PYADH_LAPACK_INTEGER ipiv[nDOF_element],lwork=((PYADH_LAPACK_INTEGER)nDOF_element),dim=((PYADH_LAPACK_INTEGER)nDOF_element),info=0;
+  PROTEUS_LAPACK_INTEGER ipiv[nDOF_element],lwork=((PROTEUS_LAPACK_INTEGER)nDOF_element),dim=((PROTEUS_LAPACK_INTEGER)nDOF_element),info=0;
   double work[nDOF_element],A_inv[nDOF_element2];
   double V_dof[nSpace][nDOF_element];
   memset(V,0,sizeof(double)*
@@ -9511,7 +9511,7 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian(int nElements_global,
                                                     double* qDV_eb)
 {
   int eN,ebN,ebN_ebN,k,i,j,jj,I,nDOF_element2=nDOF_element*nDOF_element,nSpace2=nSpace*nSpace;
-  PYADH_LAPACK_INTEGER ipiv[nDOF_element],lwork=((PYADH_LAPACK_INTEGER)nDOF_element),dim=((PYADH_LAPACK_INTEGER)nDOF_element),info=0;
+  PROTEUS_LAPACK_INTEGER ipiv[nDOF_element],lwork=((PROTEUS_LAPACK_INTEGER)nDOF_element),dim=((PROTEUS_LAPACK_INTEGER)nDOF_element),info=0;
   double work[nDOF_element],A_inv[nSpace*nDOF_element2];
   double DV_dof[nSpace][nDOF_element][nDOF_element];
   memset(DV,0,sizeof(double)*
@@ -9718,7 +9718,7 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian_sd(int nElements_global,
 {
   int eN,ebN,ebN_ebN,k,i,j,jj,I,nDOF_element2=nDOF_element*nDOF_element,nSpace2=nSpace*nSpace;
   int m,nnz=rowptr[nSpace];
-  PYADH_LAPACK_INTEGER ipiv[nDOF_element],lwork=((PYADH_LAPACK_INTEGER)nDOF_element),dim=((PYADH_LAPACK_INTEGER)nDOF_element),info=0;
+  PROTEUS_LAPACK_INTEGER ipiv[nDOF_element],lwork=((PROTEUS_LAPACK_INTEGER)nDOF_element),dim=((PROTEUS_LAPACK_INTEGER)nDOF_element),info=0;
   double work[nDOF_element],A_inv[nSpace*nDOF_element2];
   double DV_dof[nSpace][nDOF_element][nDOF_element];
   memset(DV,0,sizeof(double)*
@@ -9915,7 +9915,7 @@ void calculateVelocityProjectionMatrixLDG(int nElements_global,
                                           double* A_inv)
 {
   int eN,i,j,k,nDOF_element2=nDOF_element*nDOF_element;
-  PYADH_LAPACK_INTEGER ipiv[nDOF_element],lwork=((PYADH_LAPACK_INTEGER)nDOF_element),dim=((PYADH_LAPACK_INTEGER)nDOF_element),info=0;
+  PROTEUS_LAPACK_INTEGER ipiv[nDOF_element],lwork=((PROTEUS_LAPACK_INTEGER)nDOF_element),dim=((PROTEUS_LAPACK_INTEGER)nDOF_element),info=0;
   double work[nDOF_element];
   memset(A_inv,0,sizeof(double)*nElements_global*nDOF_element2);
   for(eN=0;eN<nElements_global;eN++)
@@ -10234,7 +10234,7 @@ void estimate_mt(int nElements_global,
 {
   int eN,i,j,k,nDOF_element2=nDOF_element*nDOF_element;
   char trans='N';
-  PYADH_LAPACK_INTEGER nrhs=1,dim=((PYADH_LAPACK_INTEGER)nDOF_element),info=0,ipiv[nDOF_element];
+  PROTEUS_LAPACK_INTEGER nrhs=1,dim=((PROTEUS_LAPACK_INTEGER)nDOF_element),info=0,ipiv[nDOF_element];
   double massMatrix[nDOF_element2],b[nDOF_element];
   /* loop over elements and solve for the local polynomial \pi(mt) such that (\pi(mt),w) = - elementSpatialResidual = b(u,w) -a(u,w) */
   /* then evaluate \pi(mt) at the quadrature points to recover the mt estimate */
@@ -10242,7 +10242,7 @@ void estimate_mt(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
     {
       memset(massMatrix,0,sizeof(double)*nDOF_element2);
-      memset(ipiv,0,sizeof(PYADH_LAPACK_INTEGER)*nDOF_element);
+      memset(ipiv,0,sizeof(PROTEUS_LAPACK_INTEGER)*nDOF_element);
       for(i=0;i<nDOF_element;i++)
         for(j=0;j<nDOF_element;j++)
           {
@@ -10277,14 +10277,14 @@ void estimate_mt_lowmem(int nElements_global,
 {
   int eN,i,j,k,nDOF_element2=nDOF_element*nDOF_element;
   char trans='N';
-  PYADH_LAPACK_INTEGER nrhs=1,dim=((PYADH_LAPACK_INTEGER)nDOF_element),info=0,ipiv[nDOF_element];
+  PROTEUS_LAPACK_INTEGER nrhs=1,dim=((PROTEUS_LAPACK_INTEGER)nDOF_element),info=0,ipiv[nDOF_element];
   double massMatrix[nDOF_element2],b[nDOF_element];
   /* loop over elements and solve for the local polynomial \pi(mt) such that (\pi(mt),w) = - elementSpatialResidual = b(u,w) -a(u,w) */
   /* then evaluate \pi(mt) at the quadrature points to recover the mt estimate */
   for(eN=0;eN<nElements_global;eN++)
     {
       memset(massMatrix,0,sizeof(double)*nDOF_element2);
-      memset(ipiv,0,sizeof(PYADH_LAPACK_INTEGER)*nDOF_element);
+      memset(ipiv,0,sizeof(PROTEUS_LAPACK_INTEGER)*nDOF_element);
       for(i=0;i<nDOF_element;i++)
         for(j=0;j<nDOF_element;j++)
           {

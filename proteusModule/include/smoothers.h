@@ -11,7 +11,7 @@
 */
 
 #include "slu_ddefs.h"
-#include PYADH_LAPACK_H
+#include PROTEUS_LAPACK_H
 
 void jacobi_NR_prepare(SuperMatrix *A, 
                        double w, 
@@ -49,19 +49,19 @@ int asm_NR_init(SuperMatrix *A,
                  double*** subdomain_L_p, 
                  double*** subdomain_R_p, 
                  double*** subdomain_dX_p,
-                PYADH_LAPACK_INTEGER*** subdomain_pivots_p);
+                PROTEUS_LAPACK_INTEGER*** subdomain_pivots_p);
 void asm_NR_free(int N, 
                  int* subdomain_dim, 
                  int** l2g_L,
                  double** subdomain_L, 
                  double** subdomain_R, 
                  double** subdomain_dX,
-                 PYADH_LAPACK_INTEGER** subdomain_pivots);
+                 PROTEUS_LAPACK_INTEGER** subdomain_pivots);
 void asm_NR_prepare(SuperMatrix *A, 
                     int* subdomain_dim,
                     int** l2g_L,
                     double** subdomainL, 
-                    PYADH_LAPACK_INTEGER** subdomainPivots);
+                    PROTEUS_LAPACK_INTEGER** subdomainPivots);
 void asm_NR_solve(SuperMatrix *A, 
                   double w,
                   double** subdomainL, 
@@ -72,6 +72,6 @@ void asm_NR_solve(SuperMatrix *A,
                   int *node_order, 
                   double** subdomain_dX,
                   double* dX, 
-                  PYADH_LAPACK_INTEGER** subdomainPivots); 
+                  PROTEUS_LAPACK_INTEGER** subdomainPivots); 
 /** @} */
 #endif

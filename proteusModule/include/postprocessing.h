@@ -1,7 +1,7 @@
 #ifndef POSTPROCESSING_H
 #define POSTPROCESSING_H
 #include "Python.h"
-#include PYADH_LAPACK_H
+#include PROTEUS_LAPACK_H
 
 /*!
  \file postprocessing.h
@@ -26,8 +26,8 @@ typedef struct
   double **subdomain_L,
     **subdomain_R,
     **subdomain_U;
-  PYADH_LAPACK_INTEGER** subdomain_pivots;
-  PYADH_LAPACK_INTEGER** subdomain_column_pivots;
+  PROTEUS_LAPACK_INTEGER** subdomain_pivots;
+  PROTEUS_LAPACK_INTEGER** subdomain_column_pivots;
 } NodeStarFactor;
 
 extern void invertLocal(
@@ -396,8 +396,8 @@ extern int nodeStar_init(
   double ***subdomain_L_p,
   double ***subdomain_R_p,
   double ***subdomain_U_p,
-  PYADH_LAPACK_INTEGER *** subdomain_pivots_p,
-  PYADH_LAPACK_INTEGER *** subdomain_column_pivots_p
+  PROTEUS_LAPACK_INTEGER *** subdomain_pivots_p,
+  PROTEUS_LAPACK_INTEGER *** subdomain_column_pivots_p
 );
 extern int nodeStar_free(
   int N,
@@ -405,8 +405,8 @@ extern int nodeStar_free(
   double **subdomain_L,
   double **subdomain_R,
   double **subdomain_U,
-  PYADH_LAPACK_INTEGER ** subdomain_pivots,
-  PYADH_LAPACK_INTEGER ** subdomain_column_pivots_p
+  PROTEUS_LAPACK_INTEGER ** subdomain_pivots,
+  PROTEUS_LAPACK_INTEGER ** subdomain_column_pivots_p
 );
 extern int nodeStar_setU(
   NodeStarFactor * nodeStarFactor,
@@ -418,15 +418,15 @@ extern int nodeStar_copy(
   double **other_subdomain_L,
   double **other_subdomain_R,
   double **other_subdomain_U,
-  PYADH_LAPACK_INTEGER ** other_subdomain_pivots,
-  PYADH_LAPACK_INTEGER ** other_subdomain_column_pivots,
+  PROTEUS_LAPACK_INTEGER ** other_subdomain_pivots,
+  PROTEUS_LAPACK_INTEGER ** other_subdomain_column_pivots,
   int *N_p,
   int **subdomain_dim_p,
   double ***subdomain_L_p,
   double ***subdomain_R_p,
   double ***subdomain_U_p,
-  PYADH_LAPACK_INTEGER *** subdomain_pivots_p,
-  PYADH_LAPACK_INTEGER *** subdomain_column_pivots_p
+  PROTEUS_LAPACK_INTEGER *** subdomain_pivots_p,
+  PROTEUS_LAPACK_INTEGER *** subdomain_column_pivots_p
 );
 extern
 void calculateConservationResidualPWL(int nElements_global,

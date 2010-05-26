@@ -4,7 +4,7 @@
 #include <strings.h>
 #include <assert.h>
 #include "testStuffImpl.h"
-#include PYADH_LAPACK_H
+#include PROTEUS_LAPACK_H
 
 /** \file testStuffImpl.c
     \ingroup testStuffImpl

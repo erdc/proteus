@@ -11,8 +11,8 @@ from numpy.distutils.core import setup, Extension
 try:
     from config import *
 except:
-    print "Using defaultConfig.py"
-    from defaultConfig import *
+    raise RuntimeError("You must first create a config.py file. See proteusConfig for examples")
+
 cv = sysconfig.get_config_vars()
 cv["OPT"] = cv["OPT"].replace("-DNDEBUG","-DDEBUG")
 cv["OPT"] = cv["OPT"].replace("-O3","")
@@ -29,7 +29,7 @@ setup(name='ftracking',
                              ['proteus/ftracking.f'],
                              include_dirs=[numpy.get_include(),'include'],
                              libraries=['m'],
-                             extra_link_args=['-g'],
-                             extra_compile_args=['-g'])],
+                             extra_link_args=['-g']+PROTEUS_EXTRA_FC_LINK_ARGS,
+                             extra_compile_args=['-g']+PROTEUS_EXTRA_FC_COMPILE_ARGS)],
       requires=['numpy']
       )
