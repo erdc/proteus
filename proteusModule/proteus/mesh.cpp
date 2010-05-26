@@ -30,7 +30,7 @@ static double CurrentTime(void)
 #define REAL double
 #define REAL_LOCAL
 #endif
-#include PYADH_TRIANGLE_H
+#include PROTEUS_TRIANGLE_H
 #ifdef REAL_LOCAL
 #undef REAL
 #endif

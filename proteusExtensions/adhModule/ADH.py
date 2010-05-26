@@ -44,7 +44,7 @@ def cadhRun(filename,runname=None):
     """
     import os
     import subprocess
-    ADH_HOME = os.getenv("PYADH_PACKAGES")+"/adh"
+    ADH_HOME = os.getenv("PROTEUS_PACKAGES")+"/adh"
     PRE_ADH = ADH_HOME+"/bin/pre_adh"
     ADH = ADH_HOME+"/bin/adh"
     PRE_ADH_CALL = [PRE_ADH,filename]
@@ -77,7 +77,7 @@ class ADH_InputTranslator:
     For now this will just use an ADH_NumericalSolution object to allocate the needed information
     """
     def __init__(self,adhInput):
-        os.system(os.getenv('PYADH_PACKAGES')+"/adh/bin/pre_adh "+`adhInput`);
+        os.system(os.getenv('PROTEUS_PACKAGES')+"/adh/bin/pre_adh "+`adhInput`);
         self.cinputTranslator = cadh.cADH_InputTranslator(adhInput)
 
 class ADH_MultilevelTransport:

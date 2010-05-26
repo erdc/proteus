@@ -32,7 +32,7 @@ static PyObject* cadhModule_cadhRun(PyObject* self,
   /*could do this in python in an ADH.py module but I'm trying to keep all the cadh stuff in this module*/
   /*note, you can't link the pre_adh code with the adh code because the use incompatible libraries, so I just do a system call*/
   const char* fs = PyString_AsString(filename);
-  const char* preadh = "${PYADH_PACKAGES}/adh/bin/pre_adh ";
+  const char* preadh = "${PROTEUS_PACKAGES}/adh/bin/pre_adh ";
   size_t clen = strlen(preadh)+strlen(fs);
   char command[clen];
   strcpy(command,preadh);
@@ -103,7 +103,7 @@ cADH_NumericalSolution_init(cADH_NumericalSolution* self,PyObject* args,PyObject
   /*could do this in python in an ADH.py module but I'm trying to keep all the cadh stuff in this module*/
   /*note, you can't link the pre_adh code with the adh code because the use incompatible libraries, so I just do a system call*/
   const char* fs = PyString_AsString(filename);
-  const char* preadh = "${PYADH_PACKAGES}/adh/bin/pre_adh ";
+  const char* preadh = "${PROTEUS_PACKAGES}/adh/bin/pre_adh ";
   size_t clen = strlen(preadh)+strlen(fs);
   char command[clen];
   strcpy(command,preadh);

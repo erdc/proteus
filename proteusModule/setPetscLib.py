@@ -13,9 +13,9 @@ for s in sys.argv:
 f = open('config.py','r')
 fstr=f.read()
 f.close()
-fstr+="PYADH_PETSC_LIB_DIRS = " + `lib_dirs`+"\n"
-fstr+="PYADH_PETSC_LIBS = "+`libs`+"\n"
-fstr+="PYADH_PETSC_INCLUDE_DIRS = "+`include_dirs`+"\n"
+fstr+="PROTEUS_PETSC_LIB_DIRS = " + `lib_dirs`+"\n"
+fstr+="PROTEUS_PETSC_LIBS = "+`libs`+"\n"
+fstr+="PROTEUS_PETSC_INCLUDE_DIRS = "+`include_dirs`+"\n"
 f = open('config.py','w')
 f.write(fstr)
 f.close()

@@ -4,7 +4,7 @@
 #include <strings.h>
 #include <assert.h>
 #include "postprocessing.h"
-#include PYADH_LAPACK_H
+#include PROTEUS_LAPACK_H
 /** \file postprocessing.c
     \ingroup postprocessing
     @{
@@ -2682,10 +2682,10 @@ void factorLocalBDM1projectionMatrices(int nElements_global,
 				       double *BDMprojectionMat_element,
 				       int *BDMprojectionMatPivots_element)
 {
-  PYADH_LAPACK_INTEGER INFO=0;
+  PROTEUS_LAPACK_INTEGER INFO=0;
   int eN,i,nVDOFs_element2;
-  PYADH_LAPACK_INTEGER pivots_element[12]; /*maximum size for local space is 3*(3+1)*/
-  PYADH_LAPACK_INTEGER nE_n = ((PYADH_LAPACK_INTEGER) nVDOFs_element);
+  PROTEUS_LAPACK_INTEGER pivots_element[12]; /*maximum size for local space is 3*(3+1)*/
+  PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER) nVDOFs_element);
   nVDOFs_element2 = nVDOFs_element*nVDOFs_element;
   for (eN = 0; eN < nElements_global; eN++)
     {
@@ -2735,12 +2735,12 @@ void solveLocalBDM1projection(int nElements_global,
 
    ***********************************************************************/
 
-  PYADH_LAPACK_INTEGER INFO=0,NRHS=1;
+  PROTEUS_LAPACK_INTEGER INFO=0,NRHS=1;
   char TRANS='N';
   int eN,ebN,s,irow,kp,ibq,J,nSimplex,nVDOFs_element2;
   double btmp;
-  PYADH_LAPACK_INTEGER pivots_element[12]; /*maximum size for local space is 3*(3+1)*/
-  PYADH_LAPACK_INTEGER nE_n = ((PYADH_LAPACK_INTEGER) nVDOFs_element);
+  PROTEUS_LAPACK_INTEGER pivots_element[12]; /*maximum size for local space is 3*(3+1)*/
+  PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER) nVDOFs_element);
 
   nSimplex = nSpace+1;
   assert(nVDOFs_element == nSpace*(nSpace+1));
@@ -2825,12 +2825,12 @@ void solveLocalBDM1projectionFromFlux(int nElements_global,
 
    ***********************************************************************/
   
-  PYADH_LAPACK_INTEGER INFO=0,NRHS=1;
+  PROTEUS_LAPACK_INTEGER INFO=0,NRHS=1;
   char TRANS='N';
   int eN,ebN,ebN_global,nSpace,s,irow,kp,ibq,nSimplex,nVDOFs_element2;
   double btmp,sign;
-  PYADH_LAPACK_INTEGER pivots_element[12]; /*maximum size for local space is 3*(3+1)*/
-  PYADH_LAPACK_INTEGER nE_n = ((PYADH_LAPACK_INTEGER) nVDOFs_element);
+  PROTEUS_LAPACK_INTEGER pivots_element[12]; /*maximum size for local space is 3*(3+1)*/
+  PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER) nVDOFs_element);
   
   nSimplex = nDOFs_test_element;
   nSpace = nSimplex - 1;
@@ -3292,8 +3292,8 @@ int nodeStar_init(int nElements_global,
 		  double *** subdomain_L_p,
 		  double *** subdomain_R_p,
 		  double *** subdomain_U_p,
-		  PYADH_LAPACK_INTEGER*** subdomain_pivots_p,
-		  PYADH_LAPACK_INTEGER*** subdomain_column_pivots_p)
+		  PROTEUS_LAPACK_INTEGER*** subdomain_pivots_p,
+		  PROTEUS_LAPACK_INTEGER*** subdomain_column_pivots_p)
 {
   int I;
   
@@ -3302,15 +3302,15 @@ int nodeStar_init(int nElements_global,
   double** subdomain_R; 
   double** subdomain_U;
   double** subdomain_L; 
-  PYADH_LAPACK_INTEGER** subdomain_pivots;
-  PYADH_LAPACK_INTEGER** subdomain_column_pivots;
+  PROTEUS_LAPACK_INTEGER** subdomain_pivots;
+  PROTEUS_LAPACK_INTEGER** subdomain_column_pivots;
 
   N = nNodes_global;
 
   *N_p = N;
   *subdomain_dim_p    = (int*) malloc(N*sizeof(int));
-  *subdomain_pivots_p = (PYADH_LAPACK_INTEGER**)malloc(N*sizeof(PYADH_LAPACK_INTEGER*));
-  *subdomain_column_pivots_p = (PYADH_LAPACK_INTEGER**)malloc(N*sizeof(PYADH_LAPACK_INTEGER*));
+  *subdomain_pivots_p = (PROTEUS_LAPACK_INTEGER**)malloc(N*sizeof(PROTEUS_LAPACK_INTEGER*));
+  *subdomain_column_pivots_p = (PROTEUS_LAPACK_INTEGER**)malloc(N*sizeof(PROTEUS_LAPACK_INTEGER*));
   *subdomain_R_p      = (double**)malloc(N*sizeof(double*));
   *subdomain_U_p      = (double**)malloc(N*sizeof(double*));
   *subdomain_L_p      = (double**)malloc(N*sizeof(double*));
@@ -3336,8 +3336,8 @@ int nodeStar_init(int nElements_global,
   for (I = 0; I < N; I++)
     {
       subdomain_dim[I]    = nElements_node[I];
-      subdomain_pivots[I] = (PYADH_LAPACK_INTEGER*) malloc(subdomain_dim[I]*sizeof(PYADH_LAPACK_INTEGER));
-      subdomain_column_pivots[I] = (PYADH_LAPACK_INTEGER*) malloc(subdomain_dim[I]*sizeof(PYADH_LAPACK_INTEGER));
+      subdomain_pivots[I] = (PROTEUS_LAPACK_INTEGER*) malloc(subdomain_dim[I]*sizeof(PROTEUS_LAPACK_INTEGER));
+      subdomain_column_pivots[I] = (PROTEUS_LAPACK_INTEGER*) malloc(subdomain_dim[I]*sizeof(PROTEUS_LAPACK_INTEGER));
       subdomain_R[I]      = (double*) malloc(subdomain_dim[I]*sizeof(double));
       subdomain_U[I]      = (double*) malloc(subdomain_dim[I]*sizeof(double));
       subdomain_L[I]      = (double*) malloc(subdomain_dim[I]*subdomain_dim[I]*sizeof(double));
@@ -3361,8 +3361,8 @@ int nodeStar_free(int N,
 		  double ** subdomain_L,
 		  double ** subdomain_R,
 		  double ** subdomain_U,
-		  PYADH_LAPACK_INTEGER** subdomain_pivots,
-		  PYADH_LAPACK_INTEGER** subdomain_column_pivots)
+		  PROTEUS_LAPACK_INTEGER** subdomain_pivots,
+		  PROTEUS_LAPACK_INTEGER** subdomain_column_pivots)
 {
   int I;
   free(subdomain_dim);
@@ -3403,15 +3403,15 @@ int nodeStar_copy(int other_N,
 		  double ** other_subdomain_L,
 		  double ** other_subdomain_R,
 		  double ** other_subdomain_U,
-		  PYADH_LAPACK_INTEGER** other_subdomain_pivots,
-		  PYADH_LAPACK_INTEGER** other_subdomain_column_pivots,
+		  PROTEUS_LAPACK_INTEGER** other_subdomain_pivots,
+		  PROTEUS_LAPACK_INTEGER** other_subdomain_column_pivots,
 		  int* N_p,
 		  int** subdomain_dim_p, 
 		  double *** subdomain_L_p,
 		  double *** subdomain_R_p,
 		  double *** subdomain_U_p,
-		  PYADH_LAPACK_INTEGER*** subdomain_pivots_p,
-		  PYADH_LAPACK_INTEGER*** subdomain_column_pivots_p)
+		  PROTEUS_LAPACK_INTEGER*** subdomain_pivots_p,
+		  PROTEUS_LAPACK_INTEGER*** subdomain_column_pivots_p)
 {
   /*assumes both sets of structure have been allocated*/
   int I,i,N;
@@ -3419,8 +3419,8 @@ int nodeStar_copy(int other_N,
   double** subdomain_R; 
   double** subdomain_U;
   double** subdomain_L; 
-  PYADH_LAPACK_INTEGER** subdomain_pivots;
-  PYADH_LAPACK_INTEGER** subdomain_column_pivots;
+  PROTEUS_LAPACK_INTEGER** subdomain_pivots;
+  PROTEUS_LAPACK_INTEGER** subdomain_column_pivots;
 
   int failed = 0;
   int realloc = 0;
@@ -3449,8 +3449,8 @@ int nodeStar_copy(int other_N,
       N = other_N;
       *N_p = N;
       *subdomain_dim_p    = (int*)malloc(N*sizeof(int));
-      *subdomain_pivots_p = (PYADH_LAPACK_INTEGER**)malloc(N*sizeof(PYADH_LAPACK_INTEGER*));
-      *subdomain_column_pivots_p = (PYADH_LAPACK_INTEGER**)malloc(N*sizeof(PYADH_LAPACK_INTEGER*));
+      *subdomain_pivots_p = (PROTEUS_LAPACK_INTEGER**)malloc(N*sizeof(PROTEUS_LAPACK_INTEGER*));
+      *subdomain_column_pivots_p = (PROTEUS_LAPACK_INTEGER**)malloc(N*sizeof(PROTEUS_LAPACK_INTEGER*));
       *subdomain_R_p      = (double**)malloc(N*sizeof(double*));
       *subdomain_U_p      = (double**)malloc(N*sizeof(double*));
       *subdomain_L_p      = (double**)malloc(N*sizeof(double*));
@@ -3475,8 +3475,8 @@ int nodeStar_copy(int other_N,
       for (I = 0; I < N; I++)
 	{
 	  subdomain_dim[I]    = other_subdomain_dim[I];
-	  subdomain_pivots[I] = (PYADH_LAPACK_INTEGER*)malloc(subdomain_dim[I]*sizeof(PYADH_LAPACK_INTEGER));
-	  subdomain_column_pivots[I] = (PYADH_LAPACK_INTEGER*)malloc(subdomain_dim[I]*sizeof(PYADH_LAPACK_INTEGER));
+	  subdomain_pivots[I] = (PROTEUS_LAPACK_INTEGER*)malloc(subdomain_dim[I]*sizeof(PROTEUS_LAPACK_INTEGER));
+	  subdomain_column_pivots[I] = (PROTEUS_LAPACK_INTEGER*)malloc(subdomain_dim[I]*sizeof(PROTEUS_LAPACK_INTEGER));
 	  subdomain_R[I]      = (double*)malloc(subdomain_dim[I]*sizeof(double));
 	  subdomain_U[I]      = (double*)malloc(subdomain_dim[I]*sizeof(double));
 	  subdomain_L[I]      = (double*)malloc(subdomain_dim[I]*subdomain_dim[I]*sizeof(double));
@@ -3924,15 +3924,15 @@ void calculateConservationJacobianPWL(int nNodes_global,
 
 {
   int eN,ebNI,ebNE,ebN,eN_star,left_eN,right_eN,ebN_element,left_ebN_element,right_ebN_element,left_eN_star,right_eN_star,nN,nN_global,nNI,k;
-  PYADH_LAPACK_INTEGER INFO=0;
+  PROTEUS_LAPACK_INTEGER INFO=0;
   register double wflux;
   /*mwf add for boundaries*/
   int ii,jj;
   double ** starJacobian = nodeStarFactor->subdomain_L;
   int * subdomain_dim    = nodeStarFactor->subdomain_dim;
-  PYADH_LAPACK_INTEGER ** starPivots = nodeStarFactor->subdomain_pivots;
+  PROTEUS_LAPACK_INTEGER ** starPivots = nodeStarFactor->subdomain_pivots;
   /*for full pivoting, to avoid pathological bow-tie nodes*/
-  PYADH_LAPACK_INTEGER ** starColPivots = nodeStarFactor->subdomain_column_pivots;
+  PROTEUS_LAPACK_INTEGER ** starColPivots = nodeStarFactor->subdomain_column_pivots;
  
   /*zero everything for safety*/
   assert(nodeStarFactor);
@@ -4052,7 +4052,7 @@ void calculateConservationJacobianPWL(int nNodes_global,
   /*factor with lapack*/
   for (nN=0;nN<nNodes_global;nN++)
     {
-      PYADH_LAPACK_INTEGER nE_n = ((PYADH_LAPACK_INTEGER)subdomain_dim[nN]);
+      PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER)subdomain_dim[nN]);
 /*       dgetrf_(&nE_n, */
 /*               &nE_n, */
 /*               starJacobian[nN], */
@@ -4093,13 +4093,13 @@ void calculateConservationFluxPWL(int nNodes_global,
 				  NodeStarFactor* nodeStarFactor)
 {
   int nN,nNI,eN;
-  PYADH_LAPACK_INTEGER NRHS=1,INFO=0;
+  PROTEUS_LAPACK_INTEGER NRHS=1,INFO=0;
   double ** starJ = nodeStarFactor->subdomain_L;
   double ** starR = nodeStarFactor->subdomain_R;
   double ** starU = nodeStarFactor->subdomain_U;
-  PYADH_LAPACK_INTEGER ** starPivots = nodeStarFactor->subdomain_pivots;
+  PROTEUS_LAPACK_INTEGER ** starPivots = nodeStarFactor->subdomain_pivots;
   /*for full pivoting, to avoid pathological bow-tie nodes*/
-  PYADH_LAPACK_INTEGER ** starColPivots = nodeStarFactor->subdomain_column_pivots;
+  PROTEUS_LAPACK_INTEGER ** starColPivots = nodeStarFactor->subdomain_column_pivots;
   double scale;
   int * subdomain_dim = nodeStarFactor->subdomain_dim;
   char TRANS='N';
@@ -4124,7 +4124,7 @@ void calculateConservationFluxPWL(int nNodes_global,
   /*solve with lapack*/
   for  (nN=0;nN<nNodes_global;nN++)
     {
-      PYADH_LAPACK_INTEGER nE_n = ((PYADH_LAPACK_INTEGER)subdomain_dim[nN]);
+      PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER)subdomain_dim[nN]);
       /*mwf orig, partial pivoting*/
 /*       dgetrs_(&TRANS, */
 /*               &nE_n, */
@@ -4153,13 +4153,13 @@ void calculateConservationFluxPWL_noNeumannFix(int nNodes_global,
 					       NodeStarFactor* nodeStarFactor)
 {
   int nN,nNI,eN;
-  PYADH_LAPACK_INTEGER NRHS=1,INFO=0;
+  PROTEUS_LAPACK_INTEGER NRHS=1,INFO=0;
   double ** starJ = nodeStarFactor->subdomain_L;
   double ** starR = nodeStarFactor->subdomain_R;
   double ** starU = nodeStarFactor->subdomain_U;
-  PYADH_LAPACK_INTEGER ** starPivots = nodeStarFactor->subdomain_pivots;
+  PROTEUS_LAPACK_INTEGER ** starPivots = nodeStarFactor->subdomain_pivots;
   /*for full pivoting, to avoid pathological bow-tie nodes*/
-  PYADH_LAPACK_INTEGER ** starColPivots = nodeStarFactor->subdomain_column_pivots;
+  PROTEUS_LAPACK_INTEGER ** starColPivots = nodeStarFactor->subdomain_column_pivots;
   double scale;
   int * subdomain_dim = nodeStarFactor->subdomain_dim;
   char TRANS='N';
@@ -4170,7 +4170,7 @@ void calculateConservationFluxPWL_noNeumannFix(int nNodes_global,
   /*solve with lapack*/
   for  (nN=0;nN<nNodes_global;nN++)
     {
-      PYADH_LAPACK_INTEGER nE_n = ((PYADH_LAPACK_INTEGER)subdomain_dim[nN]);
+      PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER)subdomain_dim[nN]);
       dgesc2_(&nE_n,
 	      starJ[nN],
 	      &nE_n,
@@ -4545,15 +4545,15 @@ void calculateConservationJacobianPWL_opt(int nNodes_owned,
 
 {
   int eN,ebNI,ebNE,ebN,eN_star,left_eN,right_eN,ebN_element,left_ebN_element,right_ebN_element,left_eN_star,right_eN_star,nN,nN_global,nNI,k;
-  PYADH_LAPACK_INTEGER INFO=0;
+  PROTEUS_LAPACK_INTEGER INFO=0;
   register double wflux;
   /*mwf add for boundaries*/
   int ii,jj;
   double ** starJacobian = nodeStarFactor->subdomain_L;
   int * subdomain_dim    = nodeStarFactor->subdomain_dim;
-  PYADH_LAPACK_INTEGER ** starPivots = nodeStarFactor->subdomain_pivots;
+  PROTEUS_LAPACK_INTEGER ** starPivots = nodeStarFactor->subdomain_pivots;
   /*for full pivoting, to avoid pathological bow-tie nodes*/
-  PYADH_LAPACK_INTEGER ** starColPivots = nodeStarFactor->subdomain_column_pivots;
+  PROTEUS_LAPACK_INTEGER ** starColPivots = nodeStarFactor->subdomain_column_pivots;
  
   /*zero everything for safety*/
   assert(nodeStarFactor);
@@ -4676,7 +4676,7 @@ void calculateConservationJacobianPWL_opt(int nNodes_owned,
   /*factor with lapack*/
   for (nN=0;nN<nNodes_owned;nN++)
     {
-      PYADH_LAPACK_INTEGER nE_n = ((PYADH_LAPACK_INTEGER)subdomain_dim[nN]);
+      PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER)subdomain_dim[nN]);
 /*       dgetrf_(&nE_n, */
 /*               &nE_n, */
 /*               starJacobian[nN], */
@@ -4718,13 +4718,13 @@ void calculateConservationFluxPWL_opt(int nNodes_owned,
 				  NodeStarFactor* nodeStarFactor)
 {
   int nN,nNI,eN;
-  PYADH_LAPACK_INTEGER NRHS=1,INFO=0;
+  PROTEUS_LAPACK_INTEGER NRHS=1,INFO=0;
   double ** starJ = nodeStarFactor->subdomain_L;
   double ** starR = nodeStarFactor->subdomain_R;
   double ** starU = nodeStarFactor->subdomain_U;
-  PYADH_LAPACK_INTEGER ** starPivots = nodeStarFactor->subdomain_pivots;
+  PROTEUS_LAPACK_INTEGER ** starPivots = nodeStarFactor->subdomain_pivots;
   /*for full pivoting, to avoid pathological bow-tie nodes*/
-  PYADH_LAPACK_INTEGER ** starColPivots = nodeStarFactor->subdomain_column_pivots;
+  PROTEUS_LAPACK_INTEGER ** starColPivots = nodeStarFactor->subdomain_column_pivots;
   double scale;
   int * subdomain_dim = nodeStarFactor->subdomain_dim;
   char TRANS='N';
@@ -4750,7 +4750,7 @@ void calculateConservationFluxPWL_opt(int nNodes_owned,
   /*solve with lapack*/
   for  (nN=0;nN<nNodes_owned;nN++)
     {
-      PYADH_LAPACK_INTEGER nE_n = ((PYADH_LAPACK_INTEGER)subdomain_dim[nN]);
+      PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER)subdomain_dim[nN]);
       /*mwf orig, partial pivoting*/
 /*       dgetrs_(&TRANS, */
 /*               &nE_n, */
@@ -5376,15 +5376,15 @@ void calculateConservationJacobianPWL_interiorBoundaries(int nNodes_global,
 
 {
   int eN,ebNI,ebNE,ebN,eN_star,left_eN,right_eN,ebN_element,left_ebN_element,right_ebN_element,left_eN_star,right_eN_star,nN,nN_global,nNI,k;
-  PYADH_LAPACK_INTEGER INFO=0;
+  PROTEUS_LAPACK_INTEGER INFO=0;
   register double wflux;
   /*mwf add for boundaries*/
   int ii,jj;
   double ** starJacobian = nodeStarFactor->subdomain_L;
   int * subdomain_dim    = nodeStarFactor->subdomain_dim;
-  PYADH_LAPACK_INTEGER ** starPivots = nodeStarFactor->subdomain_pivots;
+  PROTEUS_LAPACK_INTEGER ** starPivots = nodeStarFactor->subdomain_pivots;
   /*for full pivoting, to avoid pathological bow-tie nodes*/
-  PYADH_LAPACK_INTEGER ** starColPivots = nodeStarFactor->subdomain_column_pivots;
+  PROTEUS_LAPACK_INTEGER ** starColPivots = nodeStarFactor->subdomain_column_pivots;
  
   /*zero everything for safety*/
   assert(nodeStarFactor);
@@ -5478,7 +5478,7 @@ void calculateConservationJacobianPWL_interiorBoundaries(int nNodes_global,
   /*factor with lapack*/
   for (nN=0;nN<nNodes_global;nN++)
     {
-      PYADH_LAPACK_INTEGER nE_n = ((PYADH_LAPACK_INTEGER)subdomain_dim[nN]);
+      PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER)subdomain_dim[nN]);
       dgetc2_(&nE_n,
               starJacobian[nN],
               &nE_n,
