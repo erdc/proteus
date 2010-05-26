@@ -828,7 +828,7 @@ static char __pyx_k_28[] = "Non-native byte order not supported";
 static char __pyx_k_29[] = "Format string allocated too short.";
 static char __pyx_k_30[] = "unknown dtype code in numpy.pxd (%d)";
 
-/* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":8
+/* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":8
  *    double smoothedHeaviside(double eps,double phi)
  * 
  * cdef inline double double_max(double a, double b): return a if a >= b else b             # <<<<<<<<<<<<<<
@@ -854,7 +854,7 @@ static INLINE double __pyx_f_13waveFunctions_double_max(double __pyx_v_a, double
   return __pyx_r;
 }
 
-/* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":9
+/* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":9
  * 
  * cdef inline double double_max(double a, double b): return a if a >= b else b
  * cdef inline double double_min(double a, double b): return a if a <= b else b             # <<<<<<<<<<<<<<
@@ -880,7 +880,7 @@ static INLINE double __pyx_f_13waveFunctions_double_min(double __pyx_v_a, double
   return __pyx_r;
 }
 
-/* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":13
+/* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":13
  * ctypedef numpy.double_t DTYPE_t
  * from math import sin,asin,cosh,sinh,cos,sqrt,pi
  * def monochromaticWave(int nElements, int nQuadraturePoints_element, double waveHeight, double waveCelerity, double waveFrequency,             # <<<<<<<<<<<<<<
@@ -1100,7 +1100,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave(PyObject *__pyx_self
   __pyx_bstride_0_r = __pyx_bstruct_r.strides[0]; __pyx_bstride_1_r = __pyx_bstruct_r.strides[1];
   __pyx_bshape_0_r = __pyx_bstruct_r.shape[0]; __pyx_bshape_1_r = __pyx_bstruct_r.shape[1];
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":21
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":21
  *     cdef double distance_x,distance_y,delta,dx_source,dy_source
  *     cdef double tmp_delta
  *     dx_source   = source_x1-source_x0             # <<<<<<<<<<<<<<
@@ -1109,7 +1109,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave(PyObject *__pyx_self
  */
   __pyx_v_dx_source = (__pyx_v_source_x1 - __pyx_v_source_x0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":22
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":22
  *     cdef double tmp_delta
  *     dx_source   = source_x1-source_x0
  *     dy_source   = source_y1-source_y0             # <<<<<<<<<<<<<<
@@ -1118,7 +1118,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave(PyObject *__pyx_self
  */
   __pyx_v_dy_source = (__pyx_v_source_y1 - __pyx_v_source_y0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":23
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":23
  *     dx_source   = source_x1-source_x0
  *     dy_source   = source_y1-source_y0
  *     source_area = dx_source*dy_source             # <<<<<<<<<<<<<<
@@ -1127,7 +1127,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave(PyObject *__pyx_self
  */
   __pyx_v_source_area = (__pyx_v_dx_source * __pyx_v_dy_source);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":24
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":24
  *     dy_source   = source_y1-source_y0
  *     source_area = dx_source*dy_source
  *     factor = waveHeight/source_area*waveCelerity*sin(waveFrequency*t)#/sourceVolume             # <<<<<<<<<<<<<<
@@ -1157,7 +1157,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave(PyObject *__pyx_self
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_factor = __pyx_t_4;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":27
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":27
  *     #mwf debug
  *     #print "monochromaticWave t=%s x_0=%s x_1=%s y_0=%s y_1=%s factor=%s " % (t,source_x0,source_x1,source_y0,source_y1,factor)
  *     for ie in range(nElements):             # <<<<<<<<<<<<<<
@@ -1167,7 +1167,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave(PyObject *__pyx_self
   for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_v_nElements; __pyx_t_5+=1) {
     __pyx_v_ie = __pyx_t_5;
 
-    /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":28
+    /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":28
  *     #print "monochromaticWave t=%s x_0=%s x_1=%s y_0=%s y_1=%s factor=%s " % (t,source_x0,source_x1,source_y0,source_y1,factor)
  *     for ie in range(nElements):
  *         for k in range(nQuadraturePoints_element):             # <<<<<<<<<<<<<<
@@ -1177,7 +1177,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave(PyObject *__pyx_self
     for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_v_nQuadraturePoints_element; __pyx_t_6+=1) {
       __pyx_v_k = __pyx_t_6;
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":31
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":31
  *             #if (source_y0 <= x[ie,k,1] and x[ie,k,1] <= source_y1):
  *                 #delta = smoothedDirac(eps,distance_x)
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source             # <<<<<<<<<<<<<<
@@ -1206,7 +1206,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave(PyObject *__pyx_self
       }
       __pyx_v_distance_x = (fabs(((*__Pyx_BufPtrStrided3d(__pyx_t_13waveFunctions_DTYPE_t *, __pyx_bstruct_x.buf, __pyx_t_7, __pyx_bstride_0_x, __pyx_t_8, __pyx_bstride_1_x, __pyx_t_9, __pyx_bstride_2_x)) - (0.5 * (__pyx_v_source_x0 + __pyx_v_source_x1)))) - (0.5 * __pyx_v_dx_source));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":32
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":32
  *                 #delta = smoothedDirac(eps,distance_x)
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source             # <<<<<<<<<<<<<<
@@ -1235,7 +1235,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave(PyObject *__pyx_self
       }
       __pyx_v_distance_y = (fabs(((*__Pyx_BufPtrStrided3d(__pyx_t_13waveFunctions_DTYPE_t *, __pyx_bstruct_x.buf, __pyx_t_10, __pyx_bstride_0_x, __pyx_t_11, __pyx_bstride_1_x, __pyx_t_12, __pyx_bstride_2_x)) - (0.5 * (__pyx_v_source_y0 + __pyx_v_source_y1)))) - (0.5 * __pyx_v_dy_source));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":33
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":33
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source
  *             tmp_delta =  (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))             # <<<<<<<<<<<<<<
@@ -1244,7 +1244,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave(PyObject *__pyx_self
  */
       __pyx_v_tmp_delta = ((1.0 - smoothedHeaviside(__pyx_v_eps, __pyx_v_distance_x)) * (1.0 - smoothedHeaviside(__pyx_v_eps, __pyx_v_distance_y)));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":34
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":34
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source
  *             tmp_delta =  (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))
  *             delta = tmp_delta #try quadratic instead tmp_delta             # <<<<<<<<<<<<<<
@@ -1253,7 +1253,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave(PyObject *__pyx_self
  */
       __pyx_v_delta = __pyx_v_tmp_delta;
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":35
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":35
  *             tmp_delta =  (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))
  *             delta = tmp_delta #try quadratic instead tmp_delta
  *             r[ie,k] -= delta*factor             # <<<<<<<<<<<<<<
@@ -1303,7 +1303,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave(PyObject *__pyx_self
   return __pyx_r;
 }
 
-/* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":43
+/* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":43
  *             #                                                                                                              ie,k,r[ie,k])
  * 
  * def secondOrderStokesWave(int nElements, int nQuadraturePoints_element,             # <<<<<<<<<<<<<<
@@ -1556,7 +1556,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
   __pyx_bstride_0_r = __pyx_bstruct_r.strides[0]; __pyx_bstride_1_r = __pyx_bstruct_r.strides[1];
   __pyx_bshape_0_r = __pyx_bstruct_r.shape[0]; __pyx_bshape_1_r = __pyx_bstruct_r.shape[1];
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":52
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":52
  *     cdef double p_s,a_s,b_s,kd,term1,term2,term3
  *     cdef double distance_x,distance_y,delta,dx_source,dy_source,source_area,tmp_delta
  *     dx_source   = source_x1-source_x0             # <<<<<<<<<<<<<<
@@ -1565,7 +1565,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
  */
   __pyx_v_dx_source = (__pyx_v_source_x1 - __pyx_v_source_x0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":53
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":53
  *     cdef double distance_x,distance_y,delta,dx_source,dy_source,source_area,tmp_delta
  *     dx_source   = source_x1-source_x0
  *     dy_source   = source_y1-source_y0             # <<<<<<<<<<<<<<
@@ -1574,7 +1574,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
  */
   __pyx_v_dy_source = (__pyx_v_source_y1 - __pyx_v_source_y0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":54
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":54
  *     dx_source   = source_x1-source_x0
  *     dy_source   = source_y1-source_y0
  *     source_area = dx_source*dy_source             # <<<<<<<<<<<<<<
@@ -1583,7 +1583,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
  */
   __pyx_v_source_area = (__pyx_v_dx_source * __pyx_v_dy_source);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":56
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":56
  *     source_area = dx_source*dy_source
  * 
  *     kd  = waveNumber*waterDepth             # <<<<<<<<<<<<<<
@@ -1592,7 +1592,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
  */
   __pyx_v_kd = (__pyx_v_waveNumber * __pyx_v_waterDepth);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":57
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":57
  * 
  *     kd  = waveNumber*waterDepth
  *     a_s = waveHeight*0.5             # <<<<<<<<<<<<<<
@@ -1601,7 +1601,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
  */
   __pyx_v_a_s = (__pyx_v_waveHeight * 0.5);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":58
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":58
  *     kd  = waveNumber*waterDepth
  *     a_s = waveHeight*0.5
  *     b_s = waveHeight*waveHeight*waveNumber*cosh(kd)*(2.0 + cosh(2.*kd)/(16.0+sinh(kd)**3))             # <<<<<<<<<<<<<<
@@ -1680,7 +1680,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_v_b_s = __pyx_t_7;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":59
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":59
  *     a_s = waveHeight*0.5
  *     b_s = waveHeight*waveHeight*waveNumber*cosh(kd)*(2.0 + cosh(2.*kd)/(16.0+sinh(kd)**3))
  *     term1 = -a_s + sqrt(a_s*a_s + 8.0*b_s*b_s)/(4.0*b_s)             # <<<<<<<<<<<<<<
@@ -1716,7 +1716,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_term1 = __pyx_t_7;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":60
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":60
  *     b_s = waveHeight*waveHeight*waveNumber*cosh(kd)*(2.0 + cosh(2.*kd)/(16.0+sinh(kd)**3))
  *     term1 = -a_s + sqrt(a_s*a_s + 8.0*b_s*b_s)/(4.0*b_s)
  *     p_s = asin(term1)             # <<<<<<<<<<<<<<
@@ -1740,7 +1740,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_p_s = __pyx_t_7;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":61
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":61
  *     term1 = -a_s + sqrt(a_s*a_s + 8.0*b_s*b_s)/(4.0*b_s)
  *     p_s = asin(term1)
  *     term1 = waveCelerity*waveHeight*cos(pi*0.5 - waveFrequency*t - p_s)             # <<<<<<<<<<<<<<
@@ -1788,7 +1788,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_term1 = __pyx_t_7;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":62
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":62
  *     p_s = asin(term1)
  *     term1 = waveCelerity*waveHeight*cos(pi*0.5 - waveFrequency*t - p_s)
  *     term2 = waveCelerity*waveHeight*waveHeight*cosh(kd)/(8.0*sinh(kd)**3)             # <<<<<<<<<<<<<<
@@ -1844,7 +1844,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __pyx_v_term2 = __pyx_t_7;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":63
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":63
  *     term1 = waveCelerity*waveHeight*cos(pi*0.5 - waveFrequency*t - p_s)
  *     term2 = waveCelerity*waveHeight*waveHeight*cosh(kd)/(8.0*sinh(kd)**3)
  *     term3 = 2.0 + cosh(2.0*kd)*cos(2.0*(pi*0.5 - waveFrequency*t - p_s))             # <<<<<<<<<<<<<<
@@ -1915,7 +1915,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_v_term3 = __pyx_t_7;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":64
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":64
  *     term2 = waveCelerity*waveHeight*waveHeight*cosh(kd)/(8.0*sinh(kd)**3)
  *     term3 = 2.0 + cosh(2.0*kd)*cos(2.0*(pi*0.5 - waveFrequency*t - p_s))
  *     factor = (term1 + term2*term3)/source_area             # <<<<<<<<<<<<<<
@@ -1928,7 +1928,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
   __pyx_v_factor = __pyx_t_6;
   __pyx_t_6 = 0;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":65
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":65
  *     term3 = 2.0 + cosh(2.0*kd)*cos(2.0*(pi*0.5 - waveFrequency*t - p_s))
  *     factor = (term1 + term2*term3)/source_area
  *     for ie in range(nElements):             # <<<<<<<<<<<<<<
@@ -1938,7 +1938,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
   for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_v_nElements; __pyx_t_8+=1) {
     __pyx_v_ie = __pyx_t_8;
 
-    /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":66
+    /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":66
  *     factor = (term1 + term2*term3)/source_area
  *     for ie in range(nElements):
  *         for k in range(nQuadraturePoints_element):             # <<<<<<<<<<<<<<
@@ -1948,7 +1948,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
     for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_v_nQuadraturePoints_element; __pyx_t_9+=1) {
       __pyx_v_k = __pyx_t_9;
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":70
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":70
  *             #    distance_x = x[ie,k,0]-0.5*(source_x0+source_x1)
  *             #    delta = smoothedDirac(eps,distance_x)
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source             # <<<<<<<<<<<<<<
@@ -1977,7 +1977,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
       }
       __pyx_v_distance_x = (fabs(((*__Pyx_BufPtrStrided3d(__pyx_t_13waveFunctions_DTYPE_t *, __pyx_bstruct_x.buf, __pyx_t_10, __pyx_bstride_0_x, __pyx_t_11, __pyx_bstride_1_x, __pyx_t_12, __pyx_bstride_2_x)) - (0.5 * (__pyx_v_source_x0 + __pyx_v_source_x1)))) - (0.5 * __pyx_v_dx_source));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":71
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":71
  *             #    delta = smoothedDirac(eps,distance_x)
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source             # <<<<<<<<<<<<<<
@@ -2006,7 +2006,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
       }
       __pyx_v_distance_y = (fabs(((*__Pyx_BufPtrStrided3d(__pyx_t_13waveFunctions_DTYPE_t *, __pyx_bstruct_x.buf, __pyx_t_13, __pyx_bstride_0_x, __pyx_t_14, __pyx_bstride_1_x, __pyx_t_15, __pyx_bstride_2_x)) - (0.5 * (__pyx_v_source_y0 + __pyx_v_source_y1)))) - (0.5 * __pyx_v_dy_source));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":72
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":72
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source
  *             tmp_delta = (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))             # <<<<<<<<<<<<<<
@@ -2015,7 +2015,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
  */
       __pyx_v_tmp_delta = ((1.0 - smoothedHeaviside(__pyx_v_eps, __pyx_v_distance_x)) * (1.0 - smoothedHeaviside(__pyx_v_eps, __pyx_v_distance_y)));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":73
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":73
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source
  *             tmp_delta = (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))
  *             delta     = tmp_delta #try quadratic instead tmp_delta?             # <<<<<<<<<<<<<<
@@ -2024,7 +2024,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
  */
       __pyx_v_delta = __pyx_v_tmp_delta;
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":74
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":74
  *             tmp_delta = (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))
  *             delta     = tmp_delta #try quadratic instead tmp_delta?
  *             r[ie,k] -= factor*delta             # <<<<<<<<<<<<<<
@@ -2086,7 +2086,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave(PyObject *__pyx_
   return __pyx_r;
 }
 
-/* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":76
+/* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":76
  *             r[ie,k] -= factor*delta
  * 
  * def solitaryWave(int nElements, int nQuadraturePoints_element,             # <<<<<<<<<<<<<<
@@ -2320,7 +2320,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
   __pyx_bstride_0_r = __pyx_bstruct_r.strides[0]; __pyx_bstride_1_r = __pyx_bstruct_r.strides[1];
   __pyx_bshape_0_r = __pyx_bstruct_r.shape[0]; __pyx_bshape_1_r = __pyx_bstruct_r.shape[1];
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":85
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":85
  *     cdef double factor,term1,x_s,term2
  *     cdef double distance_x,distance_y,delta,dx_source,dy_source,source_area,tmp_delta
  *     dx_source   = source_x1-source_x0             # <<<<<<<<<<<<<<
@@ -2329,7 +2329,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
  */
   __pyx_v_dx_source = (__pyx_v_source_x1 - __pyx_v_source_x0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":86
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":86
  *     cdef double distance_x,distance_y,delta,dx_source,dy_source,source_area,tmp_delta
  *     dx_source   = source_x1-source_x0
  *     dy_source   = source_y1-source_y0             # <<<<<<<<<<<<<<
@@ -2338,7 +2338,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
  */
   __pyx_v_dy_source = (__pyx_v_source_y1 - __pyx_v_source_y0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":87
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":87
  *     dx_source   = source_x1-source_x0
  *     dy_source   = source_y1-source_y0
  *     source_area = dx_source*dy_source             # <<<<<<<<<<<<<<
@@ -2347,7 +2347,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
  */
   __pyx_v_source_area = (__pyx_v_dx_source * __pyx_v_dy_source);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":89
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":89
  *     source_area = dx_source*dy_source
  * 
  *     x_s  = 4.0*waveHeight/sqrt(waveHeight/waterDepth)             # <<<<<<<<<<<<<<
@@ -2377,7 +2377,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_x_s = __pyx_t_4;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":90
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":90
  * 
  *     x_s  = 4.0*waveHeight/sqrt(waveHeight/waterDepth)
  *     term1= sqrt(3.0*waveHeight/(4.0*waterDepth*waterDepth*waterDepth))*(x_s - waveCelerity*t)             # <<<<<<<<<<<<<<
@@ -2407,7 +2407,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_term1 = __pyx_t_4;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":91
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":91
  *     x_s  = 4.0*waveHeight/sqrt(waveHeight/waterDepth)
  *     term1= sqrt(3.0*waveHeight/(4.0*waterDepth*waterDepth*waterDepth))*(x_s - waveCelerity*t)
  *     term1= double_max(term1,-80.0)             # <<<<<<<<<<<<<<
@@ -2416,7 +2416,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
  */
   __pyx_v_term1 = __pyx_f_13waveFunctions_double_max(__pyx_v_term1, (-80.0));
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":92
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":92
  *     term1= sqrt(3.0*waveHeight/(4.0*waterDepth*waterDepth*waterDepth))*(x_s - waveCelerity*t)
  *     term1= double_max(term1,-80.0)
  *     term1= double_min(term1, 80.0)             # <<<<<<<<<<<<<<
@@ -2425,7 +2425,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
  */
   __pyx_v_term1 = __pyx_f_13waveFunctions_double_min(__pyx_v_term1, 80.0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":100
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":100
  *     #                                                                                            t,
  *     #                                                                                            term1)
  *     term2= 1.0/(cosh(term1)+1.0e-12)             # <<<<<<<<<<<<<<
@@ -2461,7 +2461,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_term2 = __pyx_t_4;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":101
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":101
  *     #                                                                                            term1)
  *     term2= 1.0/(cosh(term1)+1.0e-12)
  *     factor = waveHeight*waveCelerity*term2*term2/source_area             # <<<<<<<<<<<<<<
@@ -2470,7 +2470,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
  */
   __pyx_v_factor = ((((__pyx_v_waveHeight * __pyx_v_waveCelerity) * __pyx_v_term2) * __pyx_v_term2) / __pyx_v_source_area);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":102
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":102
  *     term2= 1.0/(cosh(term1)+1.0e-12)
  *     factor = waveHeight*waveCelerity*term2*term2/source_area
  *     for ie in range(nElements):             # <<<<<<<<<<<<<<
@@ -2480,7 +2480,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
   for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_v_nElements; __pyx_t_6+=1) {
     __pyx_v_ie = __pyx_t_6;
 
-    /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":103
+    /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":103
  *     factor = waveHeight*waveCelerity*term2*term2/source_area
  *     for ie in range(nElements):
  *         for k in range(nQuadraturePoints_element):             # <<<<<<<<<<<<<<
@@ -2490,7 +2490,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
     for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_v_nQuadraturePoints_element; __pyx_t_7+=1) {
       __pyx_v_k = __pyx_t_7;
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":107
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":107
  *             #    distance_x = x[ie,k,0]-0.5*(source_x0+source_x1)
  *             #    delta = smoothedDirac(eps,distance_x)
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source             # <<<<<<<<<<<<<<
@@ -2519,7 +2519,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
       }
       __pyx_v_distance_x = (fabs(((*__Pyx_BufPtrStrided3d(__pyx_t_13waveFunctions_DTYPE_t *, __pyx_bstruct_x.buf, __pyx_t_8, __pyx_bstride_0_x, __pyx_t_9, __pyx_bstride_1_x, __pyx_t_10, __pyx_bstride_2_x)) - (0.5 * (__pyx_v_source_x0 + __pyx_v_source_x1)))) - (0.5 * __pyx_v_dx_source));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":108
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":108
  *             #    delta = smoothedDirac(eps,distance_x)
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source             # <<<<<<<<<<<<<<
@@ -2548,7 +2548,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
       }
       __pyx_v_distance_y = (fabs(((*__Pyx_BufPtrStrided3d(__pyx_t_13waveFunctions_DTYPE_t *, __pyx_bstruct_x.buf, __pyx_t_11, __pyx_bstride_0_x, __pyx_t_12, __pyx_bstride_1_x, __pyx_t_13, __pyx_bstride_2_x)) - (0.5 * (__pyx_v_source_y0 + __pyx_v_source_y1)))) - (0.5 * __pyx_v_dy_source));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":109
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":109
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source
  *             tmp_delta = (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))             # <<<<<<<<<<<<<<
@@ -2557,7 +2557,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
  */
       __pyx_v_tmp_delta = ((1.0 - smoothedHeaviside(__pyx_v_eps, __pyx_v_distance_x)) * (1.0 - smoothedHeaviside(__pyx_v_eps, __pyx_v_distance_y)));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":110
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":110
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source
  *             tmp_delta = (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))
  *             delta     = tmp_delta #try quadratic instead tmp_delta             # <<<<<<<<<<<<<<
@@ -2566,7 +2566,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
  */
       __pyx_v_delta = __pyx_v_tmp_delta;
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":111
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":111
  *             tmp_delta = (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))
  *             delta     = tmp_delta #try quadratic instead tmp_delta
  *             r[ie,k] -= delta*factor             # <<<<<<<<<<<<<<
@@ -2617,7 +2617,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave(PyObject *__pyx_self, PyO
   return __pyx_r;
 }
 
-/* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":113
+/* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":113
  *             r[ie,k] -= delta*factor
  * 
  * def monochromaticWave3d(int nElements, int nQuadraturePoints_element, double waveHeight, double waveCelerity, double waveFrequency,             # <<<<<<<<<<<<<<
@@ -2861,7 +2861,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave3d(PyObject *__pyx_se
   __pyx_bstride_0_r = __pyx_bstruct_r.strides[0]; __pyx_bstride_1_r = __pyx_bstruct_r.strides[1];
   __pyx_bshape_0_r = __pyx_bstruct_r.shape[0]; __pyx_bshape_1_r = __pyx_bstruct_r.shape[1];
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":120
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":120
  *     cdef double factor,source_volume
  *     cdef double distance_x,distance_y,distance_z,delta,dx_source,dy_source,dz_source
  *     dx_source   = source_x1-source_x0             # <<<<<<<<<<<<<<
@@ -2870,7 +2870,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave3d(PyObject *__pyx_se
  */
   __pyx_v_dx_source = (__pyx_v_source_x1 - __pyx_v_source_x0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":121
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":121
  *     cdef double distance_x,distance_y,distance_z,delta,dx_source,dy_source,dz_source
  *     dx_source   = source_x1-source_x0
  *     dy_source   = source_y1-source_y0             # <<<<<<<<<<<<<<
@@ -2879,7 +2879,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave3d(PyObject *__pyx_se
  */
   __pyx_v_dy_source = (__pyx_v_source_y1 - __pyx_v_source_y0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":122
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":122
  *     dx_source   = source_x1-source_x0
  *     dy_source   = source_y1-source_y0
  *     dz_source   = source_z1-source_z0             # <<<<<<<<<<<<<<
@@ -2888,7 +2888,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave3d(PyObject *__pyx_se
  */
   __pyx_v_dz_source = (__pyx_v_source_z1 - __pyx_v_source_z0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":123
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":123
  *     dy_source   = source_y1-source_y0
  *     dz_source   = source_z1-source_z0
  *     source_volume = dx_source*dy_source*dz_source             # <<<<<<<<<<<<<<
@@ -2897,7 +2897,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave3d(PyObject *__pyx_se
  */
   __pyx_v_source_volume = ((__pyx_v_dx_source * __pyx_v_dy_source) * __pyx_v_dz_source);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":124
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":124
  *     dz_source   = source_z1-source_z0
  *     source_volume = dx_source*dy_source*dz_source
  *     factor = waveHeight/source_volume*waveCelerity*sin(waveFrequency*t)#             # <<<<<<<<<<<<<<
@@ -2927,7 +2927,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave3d(PyObject *__pyx_se
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_factor = __pyx_t_4;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":127
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":127
  *     #mwf debug
  *     #print "monochromaticWave t=%s x_0=%s x_1=%s y_0=%s y_1=%s factor=%s " % (t,source_x0,source_x1,source_y0,source_y1,factor)
  *     for ie in range(nElements):             # <<<<<<<<<<<<<<
@@ -2937,7 +2937,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave3d(PyObject *__pyx_se
   for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_v_nElements; __pyx_t_5+=1) {
     __pyx_v_ie = __pyx_t_5;
 
-    /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":128
+    /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":128
  *     #print "monochromaticWave t=%s x_0=%s x_1=%s y_0=%s y_1=%s factor=%s " % (t,source_x0,source_x1,source_y0,source_y1,factor)
  *     for ie in range(nElements):
  *         for k in range(nQuadraturePoints_element):             # <<<<<<<<<<<<<<
@@ -2947,7 +2947,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave3d(PyObject *__pyx_se
     for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_v_nQuadraturePoints_element; __pyx_t_6+=1) {
       __pyx_v_k = __pyx_t_6;
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":131
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":131
  *             #if (source_y0 <= x[ie,k,1] and x[ie,k,1] <= source_y1):
  *                 #delta = smoothedDirac(eps,distance_x)
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source             # <<<<<<<<<<<<<<
@@ -2976,7 +2976,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave3d(PyObject *__pyx_se
       }
       __pyx_v_distance_x = (fabs(((*__Pyx_BufPtrStrided3d(__pyx_t_13waveFunctions_DTYPE_t *, __pyx_bstruct_x.buf, __pyx_t_7, __pyx_bstride_0_x, __pyx_t_8, __pyx_bstride_1_x, __pyx_t_9, __pyx_bstride_2_x)) - (0.5 * (__pyx_v_source_x0 + __pyx_v_source_x1)))) - (0.5 * __pyx_v_dx_source));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":132
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":132
  *                 #delta = smoothedDirac(eps,distance_x)
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source             # <<<<<<<<<<<<<<
@@ -3005,7 +3005,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave3d(PyObject *__pyx_se
       }
       __pyx_v_distance_y = (fabs(((*__Pyx_BufPtrStrided3d(__pyx_t_13waveFunctions_DTYPE_t *, __pyx_bstruct_x.buf, __pyx_t_10, __pyx_bstride_0_x, __pyx_t_11, __pyx_bstride_1_x, __pyx_t_12, __pyx_bstride_2_x)) - (0.5 * (__pyx_v_source_y0 + __pyx_v_source_y1)))) - (0.5 * __pyx_v_dy_source));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":133
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":133
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source
  *             distance_z = fabs(x[ie,k,2]-0.5*(source_z0+source_z1)) - 0.5*dz_source             # <<<<<<<<<<<<<<
@@ -3034,7 +3034,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave3d(PyObject *__pyx_se
       }
       __pyx_v_distance_z = (fabs(((*__Pyx_BufPtrStrided3d(__pyx_t_13waveFunctions_DTYPE_t *, __pyx_bstruct_x.buf, __pyx_t_13, __pyx_bstride_0_x, __pyx_t_14, __pyx_bstride_1_x, __pyx_t_15, __pyx_bstride_2_x)) - (0.5 * (__pyx_v_source_z0 + __pyx_v_source_z1)))) - (0.5 * __pyx_v_dz_source));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":134
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":134
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source
  *             distance_z = fabs(x[ie,k,2]-0.5*(source_z0+source_z1)) - 0.5*dz_source
  *             delta = (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))*(1.0-smoothedHeaviside(eps,distance_z))             # <<<<<<<<<<<<<<
@@ -3043,7 +3043,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave3d(PyObject *__pyx_se
  */
       __pyx_v_delta = (((1.0 - smoothedHeaviside(__pyx_v_eps, __pyx_v_distance_x)) * (1.0 - smoothedHeaviside(__pyx_v_eps, __pyx_v_distance_y))) * (1.0 - smoothedHeaviside(__pyx_v_eps, __pyx_v_distance_z)));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":135
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":135
  *             distance_z = fabs(x[ie,k,2]-0.5*(source_z0+source_z1)) - 0.5*dz_source
  *             delta = (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))*(1.0-smoothedHeaviside(eps,distance_z))
  *             r[ie,k] -= delta*factor             # <<<<<<<<<<<<<<
@@ -3093,7 +3093,7 @@ static PyObject *__pyx_pf_13waveFunctions_monochromaticWave3d(PyObject *__pyx_se
   return __pyx_r;
 }
 
-/* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":139
+/* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":139
  *                 #print "monochromaticWave t=%s x=%s y=%s z=%s factor=%s delta=%s r[%s,%s]= %s" % (t,x[ie,k,0],x[ie,k,1],x[ie,k,2],factor,delta,ie,k,r[ie,k])
  * 
  * def secondOrderStokesWave3d(int nElements, int nQuadraturePoints_element,             # <<<<<<<<<<<<<<
@@ -3370,7 +3370,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
   __pyx_bstride_0_r = __pyx_bstruct_r.strides[0]; __pyx_bstride_1_r = __pyx_bstruct_r.strides[1];
   __pyx_bshape_0_r = __pyx_bstruct_r.shape[0]; __pyx_bshape_1_r = __pyx_bstruct_r.shape[1];
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":148
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":148
  *     cdef double p_s,a_s,b_s,kd,term1,term2,term3
  *     cdef double distance_x,distance_y,distance_z,delta,dx_source,dy_source,dz_source,source_volume
  *     dx_source   = source_x1-source_x0             # <<<<<<<<<<<<<<
@@ -3379,7 +3379,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
  */
   __pyx_v_dx_source = (__pyx_v_source_x1 - __pyx_v_source_x0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":149
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":149
  *     cdef double distance_x,distance_y,distance_z,delta,dx_source,dy_source,dz_source,source_volume
  *     dx_source   = source_x1-source_x0
  *     dy_source   = source_y1-source_y0             # <<<<<<<<<<<<<<
@@ -3388,7 +3388,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
  */
   __pyx_v_dy_source = (__pyx_v_source_y1 - __pyx_v_source_y0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":150
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":150
  *     dx_source   = source_x1-source_x0
  *     dy_source   = source_y1-source_y0
  *     dz_source   = source_z1-source_z0             # <<<<<<<<<<<<<<
@@ -3397,7 +3397,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
  */
   __pyx_v_dz_source = (__pyx_v_source_z1 - __pyx_v_source_z0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":151
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":151
  *     dy_source   = source_y1-source_y0
  *     dz_source   = source_z1-source_z0
  *     source_volume = dx_source*dy_source*dz_source             # <<<<<<<<<<<<<<
@@ -3406,7 +3406,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
  */
   __pyx_v_source_volume = ((__pyx_v_dx_source * __pyx_v_dy_source) * __pyx_v_dz_source);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":153
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":153
  *     source_volume = dx_source*dy_source*dz_source
  * 
  *     kd  = waveNumber*waterDepth             # <<<<<<<<<<<<<<
@@ -3415,7 +3415,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
  */
   __pyx_v_kd = (__pyx_v_waveNumber * __pyx_v_waterDepth);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":154
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":154
  * 
  *     kd  = waveNumber*waterDepth
  *     a_s = waveHeight*0.5             # <<<<<<<<<<<<<<
@@ -3424,7 +3424,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
  */
   __pyx_v_a_s = (__pyx_v_waveHeight * 0.5);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":155
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":155
  *     kd  = waveNumber*waterDepth
  *     a_s = waveHeight*0.5
  *     b_s = waveHeight*waveHeight*waveNumber*cosh(kd)*(2.0 + cosh(2.*kd)/(16.0+sinh(kd)**3))             # <<<<<<<<<<<<<<
@@ -3503,7 +3503,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_v_b_s = __pyx_t_7;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":156
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":156
  *     a_s = waveHeight*0.5
  *     b_s = waveHeight*waveHeight*waveNumber*cosh(kd)*(2.0 + cosh(2.*kd)/(16.0+sinh(kd)**3))
  *     term1 = -a_s + sqrt(a_s*a_s + 8.0*b_s*b_s)/(4.0*b_s)             # <<<<<<<<<<<<<<
@@ -3539,7 +3539,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_term1 = __pyx_t_7;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":157
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":157
  *     b_s = waveHeight*waveHeight*waveNumber*cosh(kd)*(2.0 + cosh(2.*kd)/(16.0+sinh(kd)**3))
  *     term1 = -a_s + sqrt(a_s*a_s + 8.0*b_s*b_s)/(4.0*b_s)
  *     p_s = asin(term1)             # <<<<<<<<<<<<<<
@@ -3563,7 +3563,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_p_s = __pyx_t_7;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":158
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":158
  *     term1 = -a_s + sqrt(a_s*a_s + 8.0*b_s*b_s)/(4.0*b_s)
  *     p_s = asin(term1)
  *     term1 = waveCelerity*waveHeight*cos(pi*0.5 - waveFrequency*t - p_s)             # <<<<<<<<<<<<<<
@@ -3611,7 +3611,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_v_term1 = __pyx_t_7;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":159
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":159
  *     p_s = asin(term1)
  *     term1 = waveCelerity*waveHeight*cos(pi*0.5 - waveFrequency*t - p_s)
  *     term2 = waveCelerity*waveHeight*waveHeight*cosh(kd)/(8.0*sinh(kd)**3)             # <<<<<<<<<<<<<<
@@ -3667,7 +3667,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __pyx_v_term2 = __pyx_t_7;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":160
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":160
  *     term1 = waveCelerity*waveHeight*cos(pi*0.5 - waveFrequency*t - p_s)
  *     term2 = waveCelerity*waveHeight*waveHeight*cosh(kd)/(8.0*sinh(kd)**3)
  *     term3 = 2.0 + cosh(2.0*kd)*cos(2.0*(pi*0.5 - waveFrequency*t - p_s))             # <<<<<<<<<<<<<<
@@ -3738,7 +3738,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __pyx_v_term3 = __pyx_t_7;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":161
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":161
  *     term2 = waveCelerity*waveHeight*waveHeight*cosh(kd)/(8.0*sinh(kd)**3)
  *     term3 = 2.0 + cosh(2.0*kd)*cos(2.0*(pi*0.5 - waveFrequency*t - p_s))
  *     factor = (term1 + term2*term3)/source_volume             # <<<<<<<<<<<<<<
@@ -3751,7 +3751,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
   __pyx_v_factor = __pyx_t_6;
   __pyx_t_6 = 0;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":162
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":162
  *     term3 = 2.0 + cosh(2.0*kd)*cos(2.0*(pi*0.5 - waveFrequency*t - p_s))
  *     factor = (term1 + term2*term3)/source_volume
  *     for ie in range(nElements):             # <<<<<<<<<<<<<<
@@ -3761,7 +3761,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
   for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_v_nElements; __pyx_t_8+=1) {
     __pyx_v_ie = __pyx_t_8;
 
-    /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":163
+    /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":163
  *     factor = (term1 + term2*term3)/source_volume
  *     for ie in range(nElements):
  *         for k in range(nQuadraturePoints_element):             # <<<<<<<<<<<<<<
@@ -3771,7 +3771,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
     for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_v_nQuadraturePoints_element; __pyx_t_9+=1) {
       __pyx_v_k = __pyx_t_9;
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":167
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":167
  *             #    distance_x = x[ie,k,0]-0.5*(source_x0+source_x1)
  *             #    delta = smoothedDirac(eps,distance_x)
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source             # <<<<<<<<<<<<<<
@@ -3800,7 +3800,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
       }
       __pyx_v_distance_x = (fabs(((*__Pyx_BufPtrStrided3d(__pyx_t_13waveFunctions_DTYPE_t *, __pyx_bstruct_x.buf, __pyx_t_10, __pyx_bstride_0_x, __pyx_t_11, __pyx_bstride_1_x, __pyx_t_12, __pyx_bstride_2_x)) - (0.5 * (__pyx_v_source_x0 + __pyx_v_source_x1)))) - (0.5 * __pyx_v_dx_source));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":168
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":168
  *             #    delta = smoothedDirac(eps,distance_x)
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source             # <<<<<<<<<<<<<<
@@ -3829,7 +3829,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
       }
       __pyx_v_distance_y = (fabs(((*__Pyx_BufPtrStrided3d(__pyx_t_13waveFunctions_DTYPE_t *, __pyx_bstruct_x.buf, __pyx_t_13, __pyx_bstride_0_x, __pyx_t_14, __pyx_bstride_1_x, __pyx_t_15, __pyx_bstride_2_x)) - (0.5 * (__pyx_v_source_y0 + __pyx_v_source_y1)))) - (0.5 * __pyx_v_dy_source));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":169
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":169
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source
  *             distance_z = fabs(x[ie,k,2]-0.5*(source_z0+source_z1)) - 0.5*dz_source             # <<<<<<<<<<<<<<
@@ -3858,7 +3858,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
       }
       __pyx_v_distance_z = (fabs(((*__Pyx_BufPtrStrided3d(__pyx_t_13waveFunctions_DTYPE_t *, __pyx_bstruct_x.buf, __pyx_t_16, __pyx_bstride_0_x, __pyx_t_17, __pyx_bstride_1_x, __pyx_t_18, __pyx_bstride_2_x)) - (0.5 * (__pyx_v_source_z0 + __pyx_v_source_z1)))) - (0.5 * __pyx_v_dz_source));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":170
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":170
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source
  *             distance_z = fabs(x[ie,k,2]-0.5*(source_z0+source_z1)) - 0.5*dz_source
  *             delta = (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))*(1.0-smoothedHeaviside(eps,distance_z))             # <<<<<<<<<<<<<<
@@ -3867,7 +3867,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
  */
       __pyx_v_delta = (((1.0 - smoothedHeaviside(__pyx_v_eps, __pyx_v_distance_x)) * (1.0 - smoothedHeaviside(__pyx_v_eps, __pyx_v_distance_y))) * (1.0 - smoothedHeaviside(__pyx_v_eps, __pyx_v_distance_z)));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":171
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":171
  *             distance_z = fabs(x[ie,k,2]-0.5*(source_z0+source_z1)) - 0.5*dz_source
  *             delta = (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))*(1.0-smoothedHeaviside(eps,distance_z))
  *             r[ie,k] -= factor*delta             # <<<<<<<<<<<<<<
@@ -3929,7 +3929,7 @@ static PyObject *__pyx_pf_13waveFunctions_secondOrderStokesWave3d(PyObject *__py
   return __pyx_r;
 }
 
-/* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":173
+/* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":173
  *             r[ie,k] -= factor*delta
  * 
  * def solitaryWave3d(int nElements, int nQuadraturePoints_element,             # <<<<<<<<<<<<<<
@@ -4187,7 +4187,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
   __pyx_bstride_0_r = __pyx_bstruct_r.strides[0]; __pyx_bstride_1_r = __pyx_bstruct_r.strides[1];
   __pyx_bshape_0_r = __pyx_bstruct_r.shape[0]; __pyx_bshape_1_r = __pyx_bstruct_r.shape[1];
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":182
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":182
  *     cdef double factor,term1,x_s,term2
  *     cdef double distance_x,distance_y,distance_z,delta,dx_source,dy_source,dz_source,source_volume
  *     dx_source   = source_x1-source_x0             # <<<<<<<<<<<<<<
@@ -4196,7 +4196,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
  */
   __pyx_v_dx_source = (__pyx_v_source_x1 - __pyx_v_source_x0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":183
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":183
  *     cdef double distance_x,distance_y,distance_z,delta,dx_source,dy_source,dz_source,source_volume
  *     dx_source   = source_x1-source_x0
  *     dy_source   = source_y1-source_y0             # <<<<<<<<<<<<<<
@@ -4205,7 +4205,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
  */
   __pyx_v_dy_source = (__pyx_v_source_y1 - __pyx_v_source_y0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":184
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":184
  *     dx_source   = source_x1-source_x0
  *     dy_source   = source_y1-source_y0
  *     dz_source   = source_z1-source_z0             # <<<<<<<<<<<<<<
@@ -4214,7 +4214,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
  */
   __pyx_v_dz_source = (__pyx_v_source_z1 - __pyx_v_source_z0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":185
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":185
  *     dy_source   = source_y1-source_y0
  *     dz_source   = source_z1-source_z0
  *     source_volume = dx_source*dy_source*dz_source             # <<<<<<<<<<<<<<
@@ -4223,7 +4223,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
  */
   __pyx_v_source_volume = ((__pyx_v_dx_source * __pyx_v_dy_source) * __pyx_v_dz_source);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":187
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":187
  *     source_volume = dx_source*dy_source*dz_source
  * 
  *     x_s  = 4.0*waveHeight/sqrt(waveHeight/waterDepth)             # <<<<<<<<<<<<<<
@@ -4253,7 +4253,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_x_s = __pyx_t_4;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":188
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":188
  * 
  *     x_s  = 4.0*waveHeight/sqrt(waveHeight/waterDepth)
  *     term1= sqrt(3.0*waveHeight/(4.0*waterDepth*waterDepth*waterDepth))*(x_s - waveCelerity*t)             # <<<<<<<<<<<<<<
@@ -4283,7 +4283,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_term1 = __pyx_t_4;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":189
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":189
  *     x_s  = 4.0*waveHeight/sqrt(waveHeight/waterDepth)
  *     term1= sqrt(3.0*waveHeight/(4.0*waterDepth*waterDepth*waterDepth))*(x_s - waveCelerity*t)
  *     term1= double_max(term1,-80.0)             # <<<<<<<<<<<<<<
@@ -4292,7 +4292,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
  */
   __pyx_v_term1 = __pyx_f_13waveFunctions_double_max(__pyx_v_term1, (-80.0));
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":190
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":190
  *     term1= sqrt(3.0*waveHeight/(4.0*waterDepth*waterDepth*waterDepth))*(x_s - waveCelerity*t)
  *     term1= double_max(term1,-80.0)
  *     term1= double_min(term1, 80.0)             # <<<<<<<<<<<<<<
@@ -4301,7 +4301,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
  */
   __pyx_v_term1 = __pyx_f_13waveFunctions_double_min(__pyx_v_term1, 80.0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":198
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":198
  *     #                                                                                            t,
  *     #                                                                                            term1)
  *     term2= 1.0/(cosh(term1)+1.0e-12)             # <<<<<<<<<<<<<<
@@ -4337,7 +4337,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __pyx_v_term2 = __pyx_t_4;
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":199
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":199
  *     #                                                                                            term1)
  *     term2= 1.0/(cosh(term1)+1.0e-12)
  *     factor = waveHeight*waveCelerity*term2*term2/source_volume             # <<<<<<<<<<<<<<
@@ -4346,7 +4346,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
  */
   __pyx_v_factor = ((((__pyx_v_waveHeight * __pyx_v_waveCelerity) * __pyx_v_term2) * __pyx_v_term2) / __pyx_v_source_volume);
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":200
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":200
  *     term2= 1.0/(cosh(term1)+1.0e-12)
  *     factor = waveHeight*waveCelerity*term2*term2/source_volume
  *     for ie in range(nElements):             # <<<<<<<<<<<<<<
@@ -4356,7 +4356,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
   for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_v_nElements; __pyx_t_6+=1) {
     __pyx_v_ie = __pyx_t_6;
 
-    /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":201
+    /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":201
  *     factor = waveHeight*waveCelerity*term2*term2/source_volume
  *     for ie in range(nElements):
  *         for k in range(nQuadraturePoints_element):             # <<<<<<<<<<<<<<
@@ -4366,7 +4366,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
     for (__pyx_t_7 = 0; __pyx_t_7 < __pyx_v_nQuadraturePoints_element; __pyx_t_7+=1) {
       __pyx_v_k = __pyx_t_7;
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":205
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":205
  *             #    distance_x = x[ie,k,0]-0.5*(source_x0+source_x1)
  *             #    delta = smoothedDirac(eps,distance_x)
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source             # <<<<<<<<<<<<<<
@@ -4395,7 +4395,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
       }
       __pyx_v_distance_x = (fabs(((*__Pyx_BufPtrStrided3d(__pyx_t_13waveFunctions_DTYPE_t *, __pyx_bstruct_x.buf, __pyx_t_8, __pyx_bstride_0_x, __pyx_t_9, __pyx_bstride_1_x, __pyx_t_10, __pyx_bstride_2_x)) - (0.5 * (__pyx_v_source_x0 + __pyx_v_source_x1)))) - (0.5 * __pyx_v_dx_source));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":206
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":206
  *             #    delta = smoothedDirac(eps,distance_x)
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source             # <<<<<<<<<<<<<<
@@ -4424,7 +4424,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
       }
       __pyx_v_distance_y = (fabs(((*__Pyx_BufPtrStrided3d(__pyx_t_13waveFunctions_DTYPE_t *, __pyx_bstruct_x.buf, __pyx_t_11, __pyx_bstride_0_x, __pyx_t_12, __pyx_bstride_1_x, __pyx_t_13, __pyx_bstride_2_x)) - (0.5 * (__pyx_v_source_y0 + __pyx_v_source_y1)))) - (0.5 * __pyx_v_dy_source));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":207
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":207
  *             distance_x = fabs(x[ie,k,0]-0.5*(source_x0+source_x1)) - 0.5*dx_source
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source
  *             distance_z = fabs(x[ie,k,2]-0.5*(source_z0+source_z1)) - 0.5*dz_source             # <<<<<<<<<<<<<<
@@ -4453,7 +4453,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
       }
       __pyx_v_distance_z = (fabs(((*__Pyx_BufPtrStrided3d(__pyx_t_13waveFunctions_DTYPE_t *, __pyx_bstruct_x.buf, __pyx_t_14, __pyx_bstride_0_x, __pyx_t_15, __pyx_bstride_1_x, __pyx_t_16, __pyx_bstride_2_x)) - (0.5 * (__pyx_v_source_z0 + __pyx_v_source_z1)))) - (0.5 * __pyx_v_dz_source));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":208
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":208
  *             distance_y = fabs(x[ie,k,1]-0.5*(source_y0+source_y1)) - 0.5*dy_source
  *             distance_z = fabs(x[ie,k,2]-0.5*(source_z0+source_z1)) - 0.5*dz_source
  *             delta = (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))*(1.0-smoothedHeaviside(eps,distance_z))             # <<<<<<<<<<<<<<
@@ -4462,7 +4462,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
  */
       __pyx_v_delta = (((1.0 - smoothedHeaviside(__pyx_v_eps, __pyx_v_distance_x)) * (1.0 - smoothedHeaviside(__pyx_v_eps, __pyx_v_distance_y))) * (1.0 - smoothedHeaviside(__pyx_v_eps, __pyx_v_distance_z)));
 
-      /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":209
+      /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":209
  *             distance_z = fabs(x[ie,k,2]-0.5*(source_z0+source_z1)) - 0.5*dz_source
  *             delta = (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))*(1.0-smoothedHeaviside(eps,distance_z))
  *             r[ie,k] -= delta*factor             # <<<<<<<<<<<<<<
@@ -4512,7 +4512,7 @@ static PyObject *__pyx_pf_13waveFunctions_solitaryWave3d(PyObject *__pyx_self, P
   return __pyx_r;
 }
 
-/* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":65
+/* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":65
  *         # experimental exception made for __getbuffer__ and __releasebuffer__
  *         # -- the details of this may change.
  *         def __getbuffer__(ndarray self, Py_buffer* info, int flags):             # <<<<<<<<<<<<<<
@@ -4545,7 +4545,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   __pyx_v_info->obj = Py_None; __Pyx_INCREF(Py_None);
   __Pyx_GIVEREF(__pyx_v_info->obj);
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":71
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":71
  *             # of flags
  *             cdef int copy_shape, i, ndim
  *             cdef int endian_detector = 1             # <<<<<<<<<<<<<<
@@ -4554,7 +4554,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
   __pyx_v_endian_detector = 1;
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":72
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":72
  *             cdef int copy_shape, i, ndim
  *             cdef int endian_detector = 1
  *             cdef bint little_endian = ((<char*>&endian_detector)[0] != 0)             # <<<<<<<<<<<<<<
@@ -4563,7 +4563,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
   __pyx_v_little_endian = ((((char *)(&__pyx_v_endian_detector))[0]) != 0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":74
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":74
  *             cdef bint little_endian = ((<char*>&endian_detector)[0] != 0)
  * 
  *             ndim = PyArray_NDIM(self)             # <<<<<<<<<<<<<<
@@ -4572,7 +4572,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
   __pyx_v_ndim = PyArray_NDIM(((PyArrayObject *)__pyx_v_self));
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":76
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":76
  *             ndim = PyArray_NDIM(self)
  * 
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):             # <<<<<<<<<<<<<<
@@ -4582,7 +4582,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   __pyx_t_1 = ((sizeof(npy_intp)) != (sizeof(Py_ssize_t)));
   if (__pyx_t_1) {
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":77
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":77
  * 
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):
  *                 copy_shape = 1             # <<<<<<<<<<<<<<
@@ -4594,7 +4594,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   }
   /*else*/ {
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":79
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":79
  *                 copy_shape = 1
  *             else:
  *                 copy_shape = 0             # <<<<<<<<<<<<<<
@@ -4605,7 +4605,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   }
   __pyx_L5:;
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":81
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":81
  *                 copy_shape = 0
  * 
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)             # <<<<<<<<<<<<<<
@@ -4614,7 +4614,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
   if (((__pyx_v_flags & PyBUF_C_CONTIGUOUS) == PyBUF_C_CONTIGUOUS)) {
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":82
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":82
  * 
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_C_CONTIGUOUS)):             # <<<<<<<<<<<<<<
@@ -4627,7 +4627,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   }
   if (__pyx_t_1) {
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":83
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":83
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_C_CONTIGUOUS)):
  *                 raise ValueError("ndarray is not C contiguous")             # <<<<<<<<<<<<<<
@@ -4649,7 +4649,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   }
   __pyx_L6:;
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":85
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":85
  *                 raise ValueError("ndarray is not C contiguous")
  * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)             # <<<<<<<<<<<<<<
@@ -4658,7 +4658,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
   if (((__pyx_v_flags & PyBUF_F_CONTIGUOUS) == PyBUF_F_CONTIGUOUS)) {
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":86
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":86
  * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_F_CONTIGUOUS)):             # <<<<<<<<<<<<<<
@@ -4671,7 +4671,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   }
   if (__pyx_t_1) {
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":87
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":87
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_F_CONTIGUOUS)):
  *                 raise ValueError("ndarray is not Fortran contiguous")             # <<<<<<<<<<<<<<
@@ -4693,7 +4693,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   }
   __pyx_L7:;
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":89
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":89
  *                 raise ValueError("ndarray is not Fortran contiguous")
  * 
  *             info.buf = PyArray_DATA(self)             # <<<<<<<<<<<<<<
@@ -4702,7 +4702,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
   __pyx_v_info->buf = PyArray_DATA(((PyArrayObject *)__pyx_v_self));
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":90
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":90
  * 
  *             info.buf = PyArray_DATA(self)
  *             info.ndim = ndim             # <<<<<<<<<<<<<<
@@ -4711,7 +4711,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
   __pyx_v_info->ndim = __pyx_v_ndim;
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":91
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":91
  *             info.buf = PyArray_DATA(self)
  *             info.ndim = ndim
  *             if copy_shape:             # <<<<<<<<<<<<<<
@@ -4721,7 +4721,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   __pyx_t_4 = __pyx_v_copy_shape;
   if (__pyx_t_4) {
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":94
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":94
  *                 # Allocate new buffer for strides and shape info. This is allocated
  *                 # as one block, strides first.
  *                 info.strides = <Py_ssize_t*>stdlib.malloc(sizeof(Py_ssize_t) * ndim * 2)             # <<<<<<<<<<<<<<
@@ -4730,7 +4730,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
     __pyx_v_info->strides = ((Py_ssize_t *)malloc((((sizeof(Py_ssize_t)) * __pyx_v_ndim) * 2)));
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":95
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":95
  *                 # as one block, strides first.
  *                 info.strides = <Py_ssize_t*>stdlib.malloc(sizeof(Py_ssize_t) * ndim * 2)
  *                 info.shape = info.strides + ndim             # <<<<<<<<<<<<<<
@@ -4739,7 +4739,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
     __pyx_v_info->shape = (__pyx_v_info->strides + __pyx_v_ndim);
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":96
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":96
  *                 info.strides = <Py_ssize_t*>stdlib.malloc(sizeof(Py_ssize_t) * ndim * 2)
  *                 info.shape = info.strides + ndim
  *                 for i in range(ndim):             # <<<<<<<<<<<<<<
@@ -4749,7 +4749,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
     for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_v_ndim; __pyx_t_4+=1) {
       __pyx_v_i = __pyx_t_4;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":97
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":97
  *                 info.shape = info.strides + ndim
  *                 for i in range(ndim):
  *                     info.strides[i] = PyArray_STRIDES(self)[i]             # <<<<<<<<<<<<<<
@@ -4758,7 +4758,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
       (__pyx_v_info->strides[__pyx_v_i]) = (PyArray_STRIDES(((PyArrayObject *)__pyx_v_self))[__pyx_v_i]);
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":98
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":98
  *                 for i in range(ndim):
  *                     info.strides[i] = PyArray_STRIDES(self)[i]
  *                     info.shape[i] = PyArray_DIMS(self)[i]             # <<<<<<<<<<<<<<
@@ -4771,7 +4771,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   }
   /*else*/ {
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":100
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":100
  *                     info.shape[i] = PyArray_DIMS(self)[i]
  *             else:
  *                 info.strides = <Py_ssize_t*>PyArray_STRIDES(self)             # <<<<<<<<<<<<<<
@@ -4780,7 +4780,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
     __pyx_v_info->strides = ((Py_ssize_t *)PyArray_STRIDES(((PyArrayObject *)__pyx_v_self)));
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":101
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":101
  *             else:
  *                 info.strides = <Py_ssize_t*>PyArray_STRIDES(self)
  *                 info.shape = <Py_ssize_t*>PyArray_DIMS(self)             # <<<<<<<<<<<<<<
@@ -4791,7 +4791,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   }
   __pyx_L8:;
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":102
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":102
  *                 info.strides = <Py_ssize_t*>PyArray_STRIDES(self)
  *                 info.shape = <Py_ssize_t*>PyArray_DIMS(self)
  *             info.suboffsets = NULL             # <<<<<<<<<<<<<<
@@ -4800,7 +4800,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
   __pyx_v_info->suboffsets = NULL;
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":103
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":103
  *                 info.shape = <Py_ssize_t*>PyArray_DIMS(self)
  *             info.suboffsets = NULL
  *             info.itemsize = PyArray_ITEMSIZE(self)             # <<<<<<<<<<<<<<
@@ -4809,7 +4809,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
   __pyx_v_info->itemsize = PyArray_ITEMSIZE(((PyArrayObject *)__pyx_v_self));
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":104
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":104
  *             info.suboffsets = NULL
  *             info.itemsize = PyArray_ITEMSIZE(self)
  *             info.readonly = not PyArray_ISWRITEABLE(self)             # <<<<<<<<<<<<<<
@@ -4818,7 +4818,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
   __pyx_v_info->readonly = (!PyArray_ISWRITEABLE(((PyArrayObject *)__pyx_v_self)));
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":107
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":107
  * 
  *             cdef int t
  *             cdef char* f = NULL             # <<<<<<<<<<<<<<
@@ -4827,7 +4827,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
   __pyx_v_f = NULL;
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":108
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":108
  *             cdef int t
  *             cdef char* f = NULL
  *             cdef dtype descr = self.descr             # <<<<<<<<<<<<<<
@@ -4837,7 +4837,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   __Pyx_INCREF(((PyObject *)((PyArrayObject *)__pyx_v_self)->descr));
   __pyx_v_descr = ((PyArrayObject *)__pyx_v_self)->descr;
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":112
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":112
  *             cdef int offset
  * 
  *             cdef bint hasfields = PyDataType_HASFIELDS(descr)             # <<<<<<<<<<<<<<
@@ -4846,7 +4846,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
   __pyx_v_hasfields = PyDataType_HASFIELDS(__pyx_v_descr);
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":114
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":114
  *             cdef bint hasfields = PyDataType_HASFIELDS(descr)
  * 
  *             if not hasfields and not copy_shape:             # <<<<<<<<<<<<<<
@@ -4860,7 +4860,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   }
   if (__pyx_t_1) {
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":116
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":116
  *             if not hasfields and not copy_shape:
  *                 # do not call releasebuffer
  *                 info.obj = None             # <<<<<<<<<<<<<<
@@ -4876,7 +4876,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   }
   /*else*/ {
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":119
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":119
  *             else:
  *                 # need to call releasebuffer
  *                 info.obj = self             # <<<<<<<<<<<<<<
@@ -4891,7 +4891,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   }
   __pyx_L11:;
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":121
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":121
  *                 info.obj = self
  * 
  *             if not hasfields:             # <<<<<<<<<<<<<<
@@ -4901,7 +4901,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   __pyx_t_1 = (!__pyx_v_hasfields);
   if (__pyx_t_1) {
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":122
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":122
  * 
  *             if not hasfields:
  *                 t = descr.type_num             # <<<<<<<<<<<<<<
@@ -4910,7 +4910,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
     __pyx_v_t = __pyx_v_descr->type_num;
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":123
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":123
  *             if not hasfields:
  *                 t = descr.type_num
  *                 if ((descr.byteorder == '>' and little_endian) or             # <<<<<<<<<<<<<<
@@ -4924,7 +4924,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
     }
     if (!__pyx_t_1) {
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":124
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":124
  *                 t = descr.type_num
  *                 if ((descr.byteorder == '>' and little_endian) or
  *                     (descr.byteorder == '<' and not little_endian)):             # <<<<<<<<<<<<<<
@@ -4942,7 +4942,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
     }
     if (__pyx_t_6) {
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":125
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":125
  *                 if ((descr.byteorder == '>' and little_endian) or
  *                     (descr.byteorder == '<' and not little_endian)):
  *                     raise ValueError("Non-native byte order not supported")             # <<<<<<<<<<<<<<
@@ -4964,7 +4964,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
     }
     __pyx_L13:;
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":126
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":126
  *                     (descr.byteorder == '<' and not little_endian)):
  *                     raise ValueError("Non-native byte order not supported")
  *                 if   t == NPY_BYTE:        f = "b"             # <<<<<<<<<<<<<<
@@ -4976,7 +4976,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_6;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":127
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":127
  *                     raise ValueError("Non-native byte order not supported")
  *                 if   t == NPY_BYTE:        f = "b"
  *                 elif t == NPY_UBYTE:       f = "B"             # <<<<<<<<<<<<<<
@@ -4987,7 +4987,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_7;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":128
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":128
  *                 if   t == NPY_BYTE:        f = "b"
  *                 elif t == NPY_UBYTE:       f = "B"
  *                 elif t == NPY_SHORT:       f = "h"             # <<<<<<<<<<<<<<
@@ -4998,7 +4998,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_8;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":129
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":129
  *                 elif t == NPY_UBYTE:       f = "B"
  *                 elif t == NPY_SHORT:       f = "h"
  *                 elif t == NPY_USHORT:      f = "H"             # <<<<<<<<<<<<<<
@@ -5009,7 +5009,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_9;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":130
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":130
  *                 elif t == NPY_SHORT:       f = "h"
  *                 elif t == NPY_USHORT:      f = "H"
  *                 elif t == NPY_INT:         f = "i"             # <<<<<<<<<<<<<<
@@ -5020,7 +5020,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_10;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":131
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":131
  *                 elif t == NPY_USHORT:      f = "H"
  *                 elif t == NPY_INT:         f = "i"
  *                 elif t == NPY_UINT:        f = "I"             # <<<<<<<<<<<<<<
@@ -5031,7 +5031,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_11;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":132
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":132
  *                 elif t == NPY_INT:         f = "i"
  *                 elif t == NPY_UINT:        f = "I"
  *                 elif t == NPY_LONG:        f = "l"             # <<<<<<<<<<<<<<
@@ -5042,7 +5042,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_12;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":133
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":133
  *                 elif t == NPY_UINT:        f = "I"
  *                 elif t == NPY_LONG:        f = "l"
  *                 elif t == NPY_ULONG:       f = "L"             # <<<<<<<<<<<<<<
@@ -5053,7 +5053,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_13;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":134
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":134
  *                 elif t == NPY_LONG:        f = "l"
  *                 elif t == NPY_ULONG:       f = "L"
  *                 elif t == NPY_LONGLONG:    f = "q"             # <<<<<<<<<<<<<<
@@ -5064,7 +5064,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_14;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":135
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":135
  *                 elif t == NPY_ULONG:       f = "L"
  *                 elif t == NPY_LONGLONG:    f = "q"
  *                 elif t == NPY_ULONGLONG:   f = "Q"             # <<<<<<<<<<<<<<
@@ -5075,7 +5075,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_15;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":136
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":136
  *                 elif t == NPY_LONGLONG:    f = "q"
  *                 elif t == NPY_ULONGLONG:   f = "Q"
  *                 elif t == NPY_FLOAT:       f = "f"             # <<<<<<<<<<<<<<
@@ -5086,7 +5086,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_16;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":137
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":137
  *                 elif t == NPY_ULONGLONG:   f = "Q"
  *                 elif t == NPY_FLOAT:       f = "f"
  *                 elif t == NPY_DOUBLE:      f = "d"             # <<<<<<<<<<<<<<
@@ -5097,7 +5097,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_17;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":138
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":138
  *                 elif t == NPY_FLOAT:       f = "f"
  *                 elif t == NPY_DOUBLE:      f = "d"
  *                 elif t == NPY_LONGDOUBLE:  f = "g"             # <<<<<<<<<<<<<<
@@ -5108,7 +5108,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_18;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":139
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":139
  *                 elif t == NPY_DOUBLE:      f = "d"
  *                 elif t == NPY_LONGDOUBLE:  f = "g"
  *                 elif t == NPY_CFLOAT:      f = "Zf"             # <<<<<<<<<<<<<<
@@ -5119,7 +5119,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_19;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":140
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":140
  *                 elif t == NPY_LONGDOUBLE:  f = "g"
  *                 elif t == NPY_CFLOAT:      f = "Zf"
  *                 elif t == NPY_CDOUBLE:     f = "Zd"             # <<<<<<<<<<<<<<
@@ -5130,7 +5130,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_20;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":141
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":141
  *                 elif t == NPY_CFLOAT:      f = "Zf"
  *                 elif t == NPY_CDOUBLE:     f = "Zd"
  *                 elif t == NPY_CLONGDOUBLE: f = "Zg"             # <<<<<<<<<<<<<<
@@ -5141,7 +5141,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       __pyx_v_f = __pyx_k_21;
       break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":142
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":142
  *                 elif t == NPY_CDOUBLE:     f = "Zd"
  *                 elif t == NPY_CLONGDOUBLE: f = "Zg"
  *                 elif t == NPY_OBJECT:      f = "O"             # <<<<<<<<<<<<<<
@@ -5153,7 +5153,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       break;
       default:
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":144
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":144
  *                 elif t == NPY_OBJECT:      f = "O"
  *                 else:
  *                     raise ValueError("unknown dtype code in numpy.pxd (%d)" % t)             # <<<<<<<<<<<<<<
@@ -5179,7 +5179,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
       break;
     }
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":145
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":145
  *                 else:
  *                     raise ValueError("unknown dtype code in numpy.pxd (%d)" % t)
  *                 info.format = f             # <<<<<<<<<<<<<<
@@ -5188,7 +5188,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
     __pyx_v_info->format = __pyx_v_f;
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":146
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":146
  *                     raise ValueError("unknown dtype code in numpy.pxd (%d)" % t)
  *                 info.format = f
  *                 return             # <<<<<<<<<<<<<<
@@ -5201,7 +5201,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   }
   /*else*/ {
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":148
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":148
  *                 return
  *             else:
  *                 info.format = <char*>stdlib.malloc(_buffer_format_string_len)             # <<<<<<<<<<<<<<
@@ -5210,7 +5210,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
     __pyx_v_info->format = ((char *)malloc(255));
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":149
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":149
  *             else:
  *                 info.format = <char*>stdlib.malloc(_buffer_format_string_len)
  *                 info.format[0] = '^' # Native data types, manual alignment             # <<<<<<<<<<<<<<
@@ -5219,7 +5219,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
     (__pyx_v_info->format[0]) = '^';
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":150
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":150
  *                 info.format = <char*>stdlib.malloc(_buffer_format_string_len)
  *                 info.format[0] = '^' # Native data types, manual alignment
  *                 offset = 0             # <<<<<<<<<<<<<<
@@ -5228,7 +5228,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
  */
     __pyx_v_offset = 0;
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":153
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":153
  *                 f = _util_dtypestring(descr, info.format + 1,
  *                                       info.format + _buffer_format_string_len,
  *                                       &offset)             # <<<<<<<<<<<<<<
@@ -5238,7 +5238,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
     __pyx_t_7 = __pyx_f_5numpy__util_dtypestring(__pyx_v_descr, (__pyx_v_info->format + 1), (__pyx_v_info->format + 255), (&__pyx_v_offset)); if (unlikely(__pyx_t_7 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 151; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __pyx_v_f = __pyx_t_7;
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":154
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":154
  *                                       info.format + _buffer_format_string_len,
  *                                       &offset)
  *                 f[0] = 0 # Terminate format string             # <<<<<<<<<<<<<<
@@ -5270,7 +5270,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyObject *__pyx_v_self, Py_buf
   return __pyx_r;
 }
 
-/* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":156
+/* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":156
  *                 f[0] = 0 # Terminate format string
  * 
  *         def __releasebuffer__(ndarray self, Py_buffer* info):             # <<<<<<<<<<<<<<
@@ -5284,7 +5284,7 @@ static void __pyx_pf_5numpy_7ndarray___releasebuffer__(PyObject *__pyx_v_self, P
   int __pyx_t_2;
   __Pyx_SetupRefcountContext("__releasebuffer__");
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":157
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":157
  * 
  *         def __releasebuffer__(ndarray self, Py_buffer* info):
  *             if PyArray_HASFIELDS(self):             # <<<<<<<<<<<<<<
@@ -5294,7 +5294,7 @@ static void __pyx_pf_5numpy_7ndarray___releasebuffer__(PyObject *__pyx_v_self, P
   __pyx_t_1 = PyArray_HASFIELDS(((PyArrayObject *)__pyx_v_self));
   if (__pyx_t_1) {
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":158
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":158
  *         def __releasebuffer__(ndarray self, Py_buffer* info):
  *             if PyArray_HASFIELDS(self):
  *                 stdlib.free(info.format)             # <<<<<<<<<<<<<<
@@ -5306,7 +5306,7 @@ static void __pyx_pf_5numpy_7ndarray___releasebuffer__(PyObject *__pyx_v_self, P
   }
   __pyx_L5:;
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":159
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":159
  *             if PyArray_HASFIELDS(self):
  *                 stdlib.free(info.format)
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):             # <<<<<<<<<<<<<<
@@ -5316,7 +5316,7 @@ static void __pyx_pf_5numpy_7ndarray___releasebuffer__(PyObject *__pyx_v_self, P
   __pyx_t_2 = ((sizeof(npy_intp)) != (sizeof(Py_ssize_t)));
   if (__pyx_t_2) {
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":160
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":160
  *                 stdlib.free(info.format)
  *             if sizeof(npy_intp) != sizeof(Py_ssize_t):
  *                 stdlib.free(info.strides)             # <<<<<<<<<<<<<<
@@ -5331,7 +5331,7 @@ static void __pyx_pf_5numpy_7ndarray___releasebuffer__(PyObject *__pyx_v_self, P
   __Pyx_FinishRefcountContext();
 }
 
-/* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":277
+/* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":277
  * ctypedef npy_cdouble     complex_t
  * 
  * cdef inline char* _util_dtypestring(dtype descr, char* f, char* end, int* offset) except NULL:             # <<<<<<<<<<<<<<
@@ -5363,7 +5363,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
   __pyx_v_new_offset = Py_None; __Pyx_INCREF(Py_None);
   __pyx_v_t = Py_None; __Pyx_INCREF(Py_None);
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":284
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":284
  *     cdef int delta_offset
  *     cdef tuple i
  *     cdef int endian_detector = 1             # <<<<<<<<<<<<<<
@@ -5372,7 +5372,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
  */
   __pyx_v_endian_detector = 1;
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":285
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":285
  *     cdef tuple i
  *     cdef int endian_detector = 1
  *     cdef bint little_endian = ((<char*>&endian_detector)[0] != 0)             # <<<<<<<<<<<<<<
@@ -5381,7 +5381,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
  */
   __pyx_v_little_endian = ((((char *)(&__pyx_v_endian_detector))[0]) != 0);
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":287
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":287
  *     cdef bint little_endian = ((<char*>&endian_detector)[0] != 0)
  * 
  *     for i in descr.fields.itervalues():             # <<<<<<<<<<<<<<
@@ -5420,7 +5420,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
     __pyx_v_i = ((PyObject *)__pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":288
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":288
  * 
  *     for i in descr.fields.itervalues():
  *         child = i[0]             # <<<<<<<<<<<<<<
@@ -5434,7 +5434,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
     __pyx_v_child = ((PyArray_Descr *)__pyx_1);
     __pyx_1 = 0;
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":289
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":289
  *     for i in descr.fields.itervalues():
  *         child = i[0]
  *         new_offset = i[1]             # <<<<<<<<<<<<<<
@@ -5447,7 +5447,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
     __pyx_v_new_offset = __pyx_1;
     __pyx_1 = 0;
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":291
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":291
  *         new_offset = i[1]
  * 
  *         if (end - f) - (new_offset - offset[0]) < 15:             # <<<<<<<<<<<<<<
@@ -5472,7 +5472,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     if (__pyx_t_6) {
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":292
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":292
  * 
  *         if (end - f) - (new_offset - offset[0]) < 15:
  *             raise RuntimeError("Format string allocated too short, see comment in numpy.pxd")             # <<<<<<<<<<<<<<
@@ -5494,7 +5494,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
     }
     __pyx_L5:;
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":294
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":294
  *             raise RuntimeError("Format string allocated too short, see comment in numpy.pxd")
  * 
  *         if ((child.byteorder == '>' and little_endian) or             # <<<<<<<<<<<<<<
@@ -5508,7 +5508,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
     }
     if (!__pyx_t_6) {
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":295
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":295
  * 
  *         if ((child.byteorder == '>' and little_endian) or
  *             (child.byteorder == '<' and not little_endian)):             # <<<<<<<<<<<<<<
@@ -5526,7 +5526,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
     }
     if (__pyx_t_8) {
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":296
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":296
  *         if ((child.byteorder == '>' and little_endian) or
  *             (child.byteorder == '<' and not little_endian)):
  *             raise ValueError("Non-native byte order not supported")             # <<<<<<<<<<<<<<
@@ -5548,7 +5548,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
     }
     __pyx_L6:;
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":306
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":306
  * 
  *         # Output padding bytes
  *         while offset[0] < new_offset:             # <<<<<<<<<<<<<<
@@ -5565,7 +5565,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       if (!__pyx_t_8) break;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":307
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":307
  *         # Output padding bytes
  *         while offset[0] < new_offset:
  *             f[0] = 120 # "x"; pad byte             # <<<<<<<<<<<<<<
@@ -5574,7 +5574,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
  */
       (__pyx_v_f[0]) = 120;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":308
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":308
  *         while offset[0] < new_offset:
  *             f[0] = 120 # "x"; pad byte
  *             f += 1             # <<<<<<<<<<<<<<
@@ -5583,7 +5583,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
  */
       __pyx_v_f += 1;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":309
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":309
  *             f[0] = 120 # "x"; pad byte
  *             f += 1
  *             offset[0] += 1             # <<<<<<<<<<<<<<
@@ -5593,7 +5593,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
       (__pyx_v_offset[0]) += 1;
     }
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":311
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":311
  *             offset[0] += 1
  * 
  *         offset[0] += child.itemsize             # <<<<<<<<<<<<<<
@@ -5602,7 +5602,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
  */
     (__pyx_v_offset[0]) += __pyx_v_child->elsize;
 
-    /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":313
+    /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":313
  *         offset[0] += child.itemsize
  * 
  *         if not PyDataType_HASFIELDS(child):             # <<<<<<<<<<<<<<
@@ -5612,7 +5612,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
     __pyx_t_8 = (!PyDataType_HASFIELDS(__pyx_v_child));
     if (__pyx_t_8) {
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":314
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":314
  * 
  *         if not PyDataType_HASFIELDS(child):
  *             t = child.type_num             # <<<<<<<<<<<<<<
@@ -5625,7 +5625,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
       __pyx_v_t = __pyx_t_4;
       __pyx_t_4 = 0;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":315
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":315
  *         if not PyDataType_HASFIELDS(child):
  *             t = child.type_num
  *             if end - f < 5:             # <<<<<<<<<<<<<<
@@ -5635,7 +5635,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
       __pyx_t_8 = ((__pyx_v_end - __pyx_v_f) < 5);
       if (__pyx_t_8) {
 
-        /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":316
+        /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":316
  *             t = child.type_num
  *             if end - f < 5:
  *                 raise RuntimeError("Format string allocated too short.")             # <<<<<<<<<<<<<<
@@ -5657,7 +5657,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
       }
       __pyx_L10:;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":319
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":319
  * 
  *             # Until ticket #99 is fixed, use integers to avoid warnings
  *             if   t == NPY_BYTE:        f[0] =  98 #"b"             # <<<<<<<<<<<<<<
@@ -5676,7 +5676,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":320
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":320
  *             # Until ticket #99 is fixed, use integers to avoid warnings
  *             if   t == NPY_BYTE:        f[0] =  98 #"b"
  *             elif t == NPY_UBYTE:       f[0] =  66 #"B"             # <<<<<<<<<<<<<<
@@ -5695,7 +5695,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":321
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":321
  *             if   t == NPY_BYTE:        f[0] =  98 #"b"
  *             elif t == NPY_UBYTE:       f[0] =  66 #"B"
  *             elif t == NPY_SHORT:       f[0] = 104 #"h"             # <<<<<<<<<<<<<<
@@ -5714,7 +5714,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":322
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":322
  *             elif t == NPY_UBYTE:       f[0] =  66 #"B"
  *             elif t == NPY_SHORT:       f[0] = 104 #"h"
  *             elif t == NPY_USHORT:      f[0] =  72 #"H"             # <<<<<<<<<<<<<<
@@ -5733,7 +5733,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":323
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":323
  *             elif t == NPY_SHORT:       f[0] = 104 #"h"
  *             elif t == NPY_USHORT:      f[0] =  72 #"H"
  *             elif t == NPY_INT:         f[0] = 105 #"i"             # <<<<<<<<<<<<<<
@@ -5752,7 +5752,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":324
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":324
  *             elif t == NPY_USHORT:      f[0] =  72 #"H"
  *             elif t == NPY_INT:         f[0] = 105 #"i"
  *             elif t == NPY_UINT:        f[0] =  73 #"I"             # <<<<<<<<<<<<<<
@@ -5771,7 +5771,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":325
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":325
  *             elif t == NPY_INT:         f[0] = 105 #"i"
  *             elif t == NPY_UINT:        f[0] =  73 #"I"
  *             elif t == NPY_LONG:        f[0] = 108 #"l"             # <<<<<<<<<<<<<<
@@ -5790,7 +5790,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":326
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":326
  *             elif t == NPY_UINT:        f[0] =  73 #"I"
  *             elif t == NPY_LONG:        f[0] = 108 #"l"
  *             elif t == NPY_ULONG:       f[0] = 76  #"L"             # <<<<<<<<<<<<<<
@@ -5809,7 +5809,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":327
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":327
  *             elif t == NPY_LONG:        f[0] = 108 #"l"
  *             elif t == NPY_ULONG:       f[0] = 76  #"L"
  *             elif t == NPY_LONGLONG:    f[0] = 113 #"q"             # <<<<<<<<<<<<<<
@@ -5828,7 +5828,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":328
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":328
  *             elif t == NPY_ULONG:       f[0] = 76  #"L"
  *             elif t == NPY_LONGLONG:    f[0] = 113 #"q"
  *             elif t == NPY_ULONGLONG:   f[0] = 81  #"Q"             # <<<<<<<<<<<<<<
@@ -5847,7 +5847,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":329
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":329
  *             elif t == NPY_LONGLONG:    f[0] = 113 #"q"
  *             elif t == NPY_ULONGLONG:   f[0] = 81  #"Q"
  *             elif t == NPY_FLOAT:       f[0] = 102 #"f"             # <<<<<<<<<<<<<<
@@ -5866,7 +5866,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":330
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":330
  *             elif t == NPY_ULONGLONG:   f[0] = 81  #"Q"
  *             elif t == NPY_FLOAT:       f[0] = 102 #"f"
  *             elif t == NPY_DOUBLE:      f[0] = 100 #"d"             # <<<<<<<<<<<<<<
@@ -5885,7 +5885,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":331
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":331
  *             elif t == NPY_FLOAT:       f[0] = 102 #"f"
  *             elif t == NPY_DOUBLE:      f[0] = 100 #"d"
  *             elif t == NPY_LONGDOUBLE:  f[0] = 103 #"g"             # <<<<<<<<<<<<<<
@@ -5904,7 +5904,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":332
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":332
  *             elif t == NPY_DOUBLE:      f[0] = 100 #"d"
  *             elif t == NPY_LONGDOUBLE:  f[0] = 103 #"g"
  *             elif t == NPY_CFLOAT:      f[0] = 90; f[1] = 102; f += 1 # Zf             # <<<<<<<<<<<<<<
@@ -5925,7 +5925,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":333
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":333
  *             elif t == NPY_LONGDOUBLE:  f[0] = 103 #"g"
  *             elif t == NPY_CFLOAT:      f[0] = 90; f[1] = 102; f += 1 # Zf
  *             elif t == NPY_CDOUBLE:     f[0] = 90; f[1] = 100; f += 1 # Zd             # <<<<<<<<<<<<<<
@@ -5946,7 +5946,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":334
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":334
  *             elif t == NPY_CFLOAT:      f[0] = 90; f[1] = 102; f += 1 # Zf
  *             elif t == NPY_CDOUBLE:     f[0] = 90; f[1] = 100; f += 1 # Zd
  *             elif t == NPY_CLONGDOUBLE: f[0] = 90; f[1] = 103; f += 1 # Zg             # <<<<<<<<<<<<<<
@@ -5967,7 +5967,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
         goto __pyx_L11;
       }
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":335
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":335
  *             elif t == NPY_CDOUBLE:     f[0] = 90; f[1] = 100; f += 1 # Zd
  *             elif t == NPY_CLONGDOUBLE: f[0] = 90; f[1] = 103; f += 1 # Zg
  *             elif t == NPY_OBJECT:      f[0] = 79 #"O"             # <<<<<<<<<<<<<<
@@ -5987,7 +5987,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
       }
       /*else*/ {
 
-        /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":337
+        /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":337
  *             elif t == NPY_OBJECT:      f[0] = 79 #"O"
  *             else:
  *                 raise ValueError("unknown dtype code in numpy.pxd (%d)" % t)             # <<<<<<<<<<<<<<
@@ -6010,7 +6010,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
       }
       __pyx_L11:;
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":338
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":338
  *             else:
  *                 raise ValueError("unknown dtype code in numpy.pxd (%d)" % t)
  *             f += 1             # <<<<<<<<<<<<<<
@@ -6022,7 +6022,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
     }
     /*else*/ {
 
-      /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":342
+      /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":342
  *             # Cython ignores struct boundary information ("T{...}"),
  *             # so don't output it
  *             f = _util_dtypestring(child, f, end, offset)             # <<<<<<<<<<<<<<
@@ -6036,7 +6036,7 @@ static INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx_v_desc
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":343
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/numpy.pxd":343
  *             # so don't output it
  *             f = _util_dtypestring(child, f, end, offset)
  *     return f             # <<<<<<<<<<<<<<
@@ -6214,7 +6214,7 @@ PyMODINIT_FUNC PyInit_waveFunctions(void)
   /*--- Function import code ---*/
   /*--- Execution code ---*/
 
-  /* "/Users/mfarthin/Public/code/pyadh/pyadhModule/pyadh/waveFunctions.pyx":12
+  /* "/Users/mfarthin/Public/code/proteus/proteusModule/proteus/waveFunctions.pyx":12
  * 
  * ctypedef numpy.double_t DTYPE_t
  * from math import sin,asin,cosh,sinh,cos,sqrt,pi             # <<<<<<<<<<<<<<
@@ -6277,7 +6277,7 @@ PyMODINIT_FUNC PyInit_waveFunctions(void)
   __Pyx_DECREF(__pyx_2); __pyx_2 = 0;
   __Pyx_DECREF(__pyx_1); __pyx_1 = 0;
 
-  /* "/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/stdlib.pxd":2
+  /* "/Users/mfarthin/Public/code/proteus/darwin_x86_64/Python.framework/Versions/2.6/lib/python2.6/site-packages/Cython/Includes/stdlib.pxd":2
  * 
  * cdef extern from "stdlib.h" nogil:             # <<<<<<<<<<<<<<
  *     void free(void *ptr)

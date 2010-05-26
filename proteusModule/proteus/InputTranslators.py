@@ -1,7 +1,7 @@
 """
 Classes for taking input in other formats
 """
-from pyadh.EGeometry import *
+from proteus.EGeometry import *
 def logEvent(string):
     print string
 class GF:

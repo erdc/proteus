@@ -1,6 +1,6 @@
 #! /usr/bin/env python
-import pyadh
-from pyadh.MeshTools import *
+import proteus
+from proteus.MeshTools import *
 
 ## \ingroup scripts
 # 

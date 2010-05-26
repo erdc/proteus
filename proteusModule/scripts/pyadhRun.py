@@ -6,7 +6,7 @@
 #
 #
 #
-# \file pyadhRun.py
+# \file proteusRun.py
 # @{
 #   \ingroup scripts
 #   \brief driver for single model simulations
@@ -18,7 +18,7 @@ import socket
 import cPickle
 import numpy as numpy
 print sys.path
-from pyadh import *
+from proteus import *
 from warnings import *
 
 #mwf for debugging mesh id tags
@@ -36,7 +36,7 @@ def testElementBoundaryTags(m):
         assert m.elementBoundaryMaterialTypes[ebN] == 0, "failed interior ebN= %d " % ebN
 
 
-def pyadhRun(runRoutine):
+def proteusRun(runRoutine):
     import optparse
     import sys
     if sys.version_info[1] >= 5:
@@ -119,7 +119,7 @@ def pyadhRun(runRoutine):
     comm = Comm.init()
     print "is initialized",comm.isInitialized()
     print "done with comm.init"
-    #mwf modify path to be able to load pyadh test problems
+    #mwf modify path to be able to load proteus test problems
     #for now always insert
     probDir = str(opts.probDir)
     if probDir not in sys.path:
@@ -173,7 +173,7 @@ def pyadhRun(runRoutine):
                 simFlags['plotOptions']['ensight'] = {'on':True}
         else:
             simFlags['plotOptions'] = {'ensight':{'on':True}}
-        #control convention on case file for multiple models, doesn't effect pyadhRun right now
+        #control convention on case file for multiple models, doesn't effect proteusRun right now
         simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationNameProc']
         
     #get batch file up front?
@@ -272,7 +272,7 @@ def pyadhRun(runRoutine):
         #matlab
         
 def runProblem(pName,p,n,opts,simFlags=None):
-    from pyadh import cmeshTools
+    from proteus import cmeshTools
     comm = Comm.get()
     pNameProc = pName+`comm.rank()` #mwf does this agree with pNameProc above?
     Profiling.memory()
@@ -406,7 +406,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
                     #    n.triangleOptions += 'f'
                     tetcmd = "tetgen -%s %s.poly" % (n.triangleOptions,p.polyfile)
                     #mwf debug
-                    print "pyadhRun trying to run tetgen with %s " % tetcmd
+                    print "proteusRun trying to run tetgen with %s " % tetcmd
                     failed = os.system(tetcmd)
                     elefile = "%s.1.ele" % p.polyfile
                     nodefile = "%s.1.node" % p.polyfile
@@ -500,10 +500,10 @@ def runProblem(pName,p,n,opts,simFlags=None):
         #mlMesh.meshList[-1].writeEdgesGnuplot2('mesh')
         #mlMesh.meshList[-1].viewMeshGnuplotPipe('mesh')
         for l in range(n.nLevels):
-            print """pyadhRun debug: mesh level=%d  nElements= %d nNodes=%d nFaces=%d diameter= %g """ % (l,
+            print """proteusRun debug: mesh level=%d  nElements= %d nNodes=%d nFaces=%d diameter= %g """ % (l,
                                                                                           mlMesh.meshList[l].nElements_global,mlMesh.meshList[l].nNodes_global,mlMesh.meshList[l].nElementBoundaries_global,mlMesh.meshList[l].h)
 
-        Profiling.logEvent(Profiling.memory("mesh","pyadhRun"),level=1)
+        Profiling.logEvent(Profiling.memory("mesh","proteusRun"),level=1)
         Profiling.logEvent("Setting up MultilevelTransport",level=1)
         tolList=[]
         linTolList=[]
@@ -694,14 +694,14 @@ def runProblem(pName,p,n,opts,simFlags=None):
         timeValues = [tn]
         dt = p.T/n.nDTout 
         #mwf debug
-        print """pyadhRun T=%g nDTout= %d dt=%g """ % (p.T,n.nDTout,dt)
+        print """proteusRun T=%g nDTout= %d dt=%g """ % (p.T,n.nDTout,dt)
         failedFlag=False
         while (tn < p.T and not failedFlag==True):
             if opts.wait:
                 raw_input('\nPress return to continue... \n')
 
             #mwf debug
-            print """pyadhRun tn=%g dt=%g """ % (tn,dt)
+            print """proteusRun tn=%g dt=%g """ % (tn,dt)
             failedFlag,tn = timeIntegrator.calculateSolution(tn,tn+dt)
 
             simOutput.processTimeLevel(mlTransport,tn)
@@ -713,7 +713,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
             assert dt > 1.0e-15, "dt= %s too small " % dt 
             #mwf debug
             if failedFlag:
-                print """pyadhRun tn=%g dt=%g failed= %s""" % (tn,dt,failedFlag)
+                print """proteusRun tn=%g dt=%g failed= %s""" % (tn,dt,failedFlag)
 
             if abs(p.T-tn) < 1.0e-15:
                 tn = p.T
@@ -728,7 +728,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
     #mwf hack
     #mlMesh.meshList[-1].writeTriangleFiles("mesh-last",1)
 if __name__ == '__main__':
-    pyadhRun(runProblem)
+    proteusRun(runProblem)
     Profiling.memorySummary()
 
 ## @}

@@ -62,7 +62,7 @@ class ParVec_petsc4py(PETSc.Vec):
 		self.nghosts = nghosts
 		self.blockVecType = blockVecType
 		assert self.blockVecType == "simple", "petsc4py wrappers require self.blockVecType=simple"
-		self.pyadh_array = array
+		self.proteus_array = array
 		if nghosts == None:
 			if blockVecType == "simple":
 				self.createWithArray(array,size=(blockSize*n,blockSize*N),bsize=1)

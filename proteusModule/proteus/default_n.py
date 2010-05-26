@@ -21,10 +21,10 @@ from MeshTools import *
 ## \todo clean up default_n module
 
 stepController = FixedStep
-"""The step controller class derived from :class:`pyadh.StepControl.SC_base`"""
+"""The step controller class derived from :class:`proteus.StepControl.SC_base`"""
 
 timeIntegration = NoIntegration
-"""The time integration class derived from :class:`pyadh.TimeIntegraction.TI_base"""
+"""The time integration class derived from :class:`proteus.TimeIntegraction.TI_base"""
 
 timeIntegrator  = ForwardIntegrator
 """Deprecated, the time integrator class"""
@@ -71,7 +71,7 @@ l_atol_res = 1.0
 femSpaces = {}
 r"""A dictionary of the finite element classes for each component
 
-The classes should be of type :class:`pyadh.FemTools.ParametricFiniteElementSpace` """
+The classes should be of type :class:`proteus.FemTools.ParametricFiniteElementSpace` """
 
 elementQuadrature = None
 """A quadrature object for element integrals"""
@@ -98,7 +98,7 @@ nLevels = 1
 """Number of levels for multilevel mesh"""
 
 subgridError = None
-"""The subgrid error object of a type derived from :class:`pyadh.SubgridError.SGE_base`"""
+"""The subgrid error object of a type derived from :class:`proteus.SubgridError.SGE_base`"""
 
 massLumping = False
 """Boolean to lump mass matrix"""
@@ -107,19 +107,19 @@ reactionLumping = False
 """Boolean to lump reaction term"""
 
 shockCapturing = None
-"""The shock capturing diffusion object of a type derived from :class:`pyadh.ShockCapturing.SC_base`"""
+"""The shock capturing diffusion object of a type derived from :class:`proteus.ShockCapturing.SC_base`"""
 
 numericalFluxType = None
-"""A numerical flux class of type :class:`pyadh.NumericalFlux.NF_base`"""
+"""A numerical flux class of type :class:`proteus.NumericalFlux.NF_base`"""
 
 multilevelNonlinearSolver  = NLNI
-"""A multilevel nonlinear solver class of type :class:`pyadh.NonlinearSolvers.MultilevelNonlinearSolver`"""
+"""A multilevel nonlinear solver class of type :class:`proteus.NonlinearSolvers.MultilevelNonlinearSolver`"""
 
 levelNonlinearSolver = Newton
-"""A nonlinear solver class of type :class:`pyadh.NonlinearSolvers.NonlinearSolver`"""
+"""A nonlinear solver class of type :class:`proteus.NonlinearSolvers.NonlinearSolver`"""
 
 nonlinearSmoother = NLGaussSeidel
-"""A nonlinear solver class of type :class:`pyadh.NonlinearSolvers.NonlinearSolver`"""
+"""A nonlinear solver class of type :class:`proteus.NonlinearSolvers.NonlinearSolver`"""
 
 fullNewtonFlag = True
 """Boolean to do full Newton or modified Newton"""

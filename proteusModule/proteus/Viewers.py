@@ -7,7 +7,7 @@ Some simple modules for doing runtime visualization
 """
 import  subprocess
 import numpy
-from pyadh import default_p,default_n,default_s
+from proteus import default_p,default_n,default_s
 
 cmdFile=None
 datFile=None
@@ -55,7 +55,7 @@ def vtkOn(problemName,silent=True):
     datFilename = problemName+'_vtk_dummy.dat'
     datFile=open(datFilename,'w',1)
     import os
-    from pyadhGraphical import vtkViewers
+    from proteusGraphical import vtkViewers
     #vtkViewers.g.ImageFolderPath = os.path.abspath('.')+"/results/"
     vtkViewers.g.ImageFolderPath = os.path.abspath('.')+"/tmp/"+problemName+"/"
     if not os.path.exists(vtkViewers.g.ImageFolderPath):
@@ -191,7 +191,7 @@ class V_base:
             return
         global windowNumber
         try:
-            from pyadhGraphical import vtkViewers
+            from proteusGraphical import vtkViewers
         except:
             return
         vt = mlvt.levelModelList[-1]
@@ -599,7 +599,7 @@ class V_base:
         """
         p = self.p; n = self.n
 
-        from pyadhGraphical import vtkViewers
+        from proteusGraphical import vtkViewers
         vt = mlvt.levelModelList[-1]
         title = """q[%s]""" % (ckey,)
         assert vt.q.has_key(ckey)
@@ -737,7 +737,7 @@ class V_base:
         and plotOffSet is set correctly
         
         """
-        from pyadhGraphical import vtkViewers
+        from proteusGraphical import vtkViewers
         p = self.p; n = self.n
         
         vt = mlvt.levelModelList[-1]
@@ -933,7 +933,7 @@ class V_base:
         and plotOffSet is set correctly
         
         """
-        from pyadhGraphical import vtkViewers
+        from proteusGraphical import vtkViewers
         p = self.p; n = self.n
 
         vt = mlvt.levelModelList[-1]

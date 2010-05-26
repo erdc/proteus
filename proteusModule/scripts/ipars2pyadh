@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from pyadh.InputTranslators import Ipars
+from proteus.InputTranslators import Ipars
 import optparse
 
 usage = "usage: %prog [option] iparseinput_file"

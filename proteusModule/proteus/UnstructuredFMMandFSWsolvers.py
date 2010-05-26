@@ -4,9 +4,9 @@ Fast marching and fast sweeping solvers
 import numpy
 import math
 
-from pyadh import FemTools, MeshTools, EGeometry
+from proteus import FemTools, MeshTools, EGeometry
 
-from pyadh.StupidHeap import StupidHeap as SHeap
+from proteus.StupidHeap import StupidHeap as SHeap
 
 
 
@@ -32,7 +32,7 @@ class FMMEikonalSolver:
     TODO:
        3D version needs to be tested more
     """
-    from pyadh import cfmmfsw
+    from proteus import cfmmfsw
     def __init__(self,mesh,dofMap,nSpace,localSolverType='QianEtalV2',frontInitType='magnitudeOnly',#'magnitudeOnly',
                  debugLevel=3):
         self.mesh   = mesh
@@ -128,7 +128,7 @@ class FSWEikonalSolver:
     TODO:
        3D version needs to be tested more
     """
-    from pyadh import cfmmfsw
+    from proteus import cfmmfsw
 
     def __init__(self,mesh,dofMap,nSpace,iterAtol=1.0e-8,iterRtol=0.0,maxIts=100,
                  localSolverType='QianEtalV2',frontInitType='magnitudeOnly',#frontInitType='magnitudeOnly',
@@ -443,7 +443,7 @@ def unstructuredEx1dInCpp(initFunc,Lx,nx,method='FMM',verbose=0):
     use c++ interface
     """
     import numpy
-    from pyadh import cfmmfsw
+    from proteus import cfmmfsw
 
     mesh = MeshTools.EdgeMesh()
     mesh.generateEdgeMeshFromRectangularGrid(nx,Lx)
@@ -506,7 +506,7 @@ def unstructuredEx2dInCpp(initFunc,Lx,Ly,nx,ny,method='FMM',verbose=0):
     run a couple of redistancing examples in 2d: 
     """
     import numpy
-    from pyadh import cfmmfsw
+    from proteus import cfmmfsw
 
     mesh = MeshTools.TriangularMesh()
     mesh.generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly)
@@ -573,7 +573,7 @@ def unstructuredEx3dinCpp(initFunc,Lx,Ly,Lz,nx,ny,nz,method='FMM',verbose=0):
     run a redistancing example in 3d: 
     """
     import numpy
-    from pyadh import cfmmfsw
+    from proteus import cfmmfsw
 
 
     mesh = MeshTools.TetrahedralMesh()
@@ -644,9 +644,9 @@ if __name__ == "__main__":
     method = 'FSW'
     dim = 2
     #now need for mpi
-    import pyadh
-    from pyadh import Comm
-    comm = pyadh.Comm.init()
+    import proteus
+    from proteus import Comm
+    comm = proteus.Comm.init()
 
     def circle1d(x):
         return (x-0.5)**2 - 0.2**2

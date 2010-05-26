@@ -1,10 +1,10 @@
 import os
 
-#try debugging options for pyadh extension modules?
+#try debugging options for proteus extension modules?
 PYADH_DEBUGGING = False
 
-PYADH_PACKAGES = os.getenv('PYADH_PACKAGES',os.getenv('HOME')+'/src/pyadh-packages')
-PYADH          = os.getenv('PYADH',os.getenv('HOME')+'/src/pyadh')
+PYADH_PACKAGES = os.getenv('PYADH_PACKAGES',os.getenv('HOME')+'/src/proteus-packages')
+PYADH          = os.getenv('PYADH',os.getenv('HOME')+'/src/proteus')
 PYADH_ARCH     = os.getenv('PYADH_ARCH','darwin_x86_64')
 PYADH_LIB_DIR  = PYADH+'/'+PYADH_ARCH+'/lib'
 PYADH_EXTRA_COMPILE_ARGS= ['-Wall']
@@ -40,7 +40,7 @@ PYADH_DAETK_LIB ='daetk'
 PYADH_DAETK_ARCH =os.getenv('PYADH_DAETK_ARCH','darwin64_x86_64')
 
 PYADH_PETSC_DIR = os.getenv('PYADH_PETSC_DIR',PYADH_PACKAGES+'/petsc-dev/')
-PYADH_PETSC_ARCH= os.getenv('PYADH_PETSC_ARCH','darwin64_x86_64') #'pyadh-c-debug'
+PYADH_PETSC_ARCH= os.getenv('PYADH_PETSC_ARCH','darwin64_x86_64') #'proteus-c-debug'
 PYADH_PETSC_INCLUDE_DIRS = [PYADH_PETSC_DIR+'/include',
                             PYADH_PETSC_DIR+'/'+PYADH_PETSC_ARCH+'/include']
 PYADH_PETSC_LIB_DIRS = [PYADH_PETSC_DIR+'/'+PYADH_PETSC_ARCH+'/lib/','/usr/X11R6/lib']

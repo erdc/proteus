@@ -31,30 +31,30 @@ platform below. PyADH currently depends on many other open source projects,
 so that obtaining and building all the depencies can be time
 consuming. The pre-built packages contain all the binaries and source
 code necessary to develop in PyADH, including the svn repository
-information and the pyadhGraphical module for visualization and
+information and the proteusGraphical module for visualization and
 graphics post-processing. With one of these packages you can update
 the source and rebuild portions of the code if necessary. If one of these doesn't work or if you wish to start from scratch or update your source, see \ref svn below.
 
 Mac OSX 10.5 platforms:
 
-- <tt> https://adh.usace.army.mil/pyadhReleases/pyadh-0.5.0-darwin_i386_macports.tar.gz </tt>
-- <tt> https://adh.usace.army.mil/pyadhReleases/pyadh-0.5.0-darwin_ppc_macports.tar.gz </tt>
-- <tt> https://adh.usace.army.mil/pyadhReleases/pyadh-0.5.0-darwin_x86_64.tar.gz </tt>
-- <tt> https://adh.usace.army.mil/pyadhReleases/pyadh-0.5.0-darwin_ppc64.tar.gz </tt>
+- <tt> https://adh.usace.army.mil/proteusReleases/proteus-0.5.0-darwin_i386_macports.tar.gz </tt>
+- <tt> https://adh.usace.army.mil/proteusReleases/proteus-0.5.0-darwin_ppc_macports.tar.gz </tt>
+- <tt> https://adh.usace.army.mil/proteusReleases/proteus-0.5.0-darwin_x86_64.tar.gz </tt>
+- <tt> https://adh.usace.army.mil/proteusReleases/proteus-0.5.0-darwin_ppc64.tar.gz </tt>
 
 GNU/Linux platforms:
 
-- <tt> https://adh.usace.army.mil/pyadhReleases/pyadh-0.5.0-linux.tar.gz </tt> (RHEL 5)
-- <tt> https://adh.usace.army.mil/pyadhReleases/pyadh-0.5.0-jade.tar.gz </tt> (Cray XT4 CNL at ERDC MSRC)
-- <tt> https://adh.usace.army.mil/pyadhReleases/pyadh-0.5.0-lonestar.tar.gz </tt> (Dell Cluster at TACC)
-- <tt> https://adh.usace.army.mil/pyadhReleases/pyadh-0.5.0-ranger.tar.gz </tt> (Sun Constellation at TACC)
+- <tt> https://adh.usace.army.mil/proteusReleases/proteus-0.5.0-linux.tar.gz </tt> (RHEL 5)
+- <tt> https://adh.usace.army.mil/proteusReleases/proteus-0.5.0-jade.tar.gz </tt> (Cray XT4 CNL at ERDC MSRC)
+- <tt> https://adh.usace.army.mil/proteusReleases/proteus-0.5.0-lonestar.tar.gz </tt> (Dell Cluster at TACC)
+- <tt> https://adh.usace.army.mil/proteusReleases/proteus-0.5.0-ranger.tar.gz </tt> (Sun Constellation at TACC)
 
 \section installing_sec Installing and Running
 
 This example is for the linux64 package and csh.
 
-<tt> \%tar xzf pyadh-0.5.0-linux64.tar.gz </tt> \n
-<Tt> \%setenv PYADH $PWD/pyadh </tt> \n
+<tt> \%tar xzf proteus-0.5.0-linux64.tar.gz </tt> \n
+<Tt> \%setenv PYADH $PWD/proteus </tt> \n
 <tt> \%setenv PYADH_ARCH linux64 </tt> \n
 <tt> \%setenv PATH $PYADH/$PYADH_ARCH/bin:$PATH </tt> \n
 <tt> \%setenv LD_LIBRARY_PATH $PYADH/$PYADH_ARCH/lib:$LD_LIBRARY_PATH </tt> \n
@@ -69,16 +69,16 @@ To use runtime visualization you may also need to add
 
 To run an example do
 
-<tt> \%cd $PYADH/pyadhModule/test/problemDescriptions </tt> \n
+<tt> \%cd $PYADH/proteusModule/test/problemDescriptions </tt> \n
 <tt> \%parun navier_stokes_cylinder_2d_p.py navier_stokes_cylinder_2d_c0p1c0p1_n.py -l 3 -v</tt> \n
 
 The solution will be saved in a file ending in .xmf, which can be opened with ParaView3 or Ensight. ParaView3 is included in the binary package in $PYADH/$PYADH_ARCH.
 
 \section building_sec Compiling
 
-To get updated source and recompile the pyadh module you can do
+To get updated source and recompile the proteus module you can do
 
-<tt> \%cd $PYADH/pyadhModule </tt> \n
+<tt> \%cd $PYADH/proteusModule </tt> \n
 <Tt> \%svn update </tt> \n
 <tt> \%python setup.py install </tt> \n
 
@@ -99,15 +99,15 @@ To obtain or update the source use an svn client to connect to our SVN repositor
 <tt> https://adh.usace.army.mil/svnaccess  </tt>
 
 Select PYADH_R if you only need read access or PYADH_RW if you might
-want to make changes. You can then run 'svn update' from your pyadh or
-pyadhGraphical subdirectory. To check out a clean copy of the source
+want to make changes. You can then run 'svn update' from your proteus or
+proteusGraphical subdirectory. To check out a clean copy of the source
 you can do the following:
 
-<tt> \%svn co https://adh.usace.army.mil/svn/pyadh/trunk pyadh </tt>
+<tt> \%svn co https://adh.usace.army.mil/svn/proteus/trunk proteus </tt>
 
-You may also want pyadhGraphical:
+You may also want proteusGraphical:
 
-<tt> \%svn co https://adh.usace.army.mil/svn/pyadhGraphical/trunk pyadhGraphical </tt>
+<tt> \%svn co https://adh.usace.army.mil/svn/proteusGraphical/trunk proteusGraphical </tt>
 
 Follow the directions in the source to build the packages.
 

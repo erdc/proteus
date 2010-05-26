@@ -812,7 +812,7 @@ class OneLevelRDLS(OneLevelTransport):
     def estimate_mt(self):
         pass
 #OneLevelRDLS
-from pyadh import ctransportCoefficients
+from proteus import ctransportCoefficients
 def setZeroLSweakDirichletBCs(RDLSvt):
     assert hasattr(RDLSvt,'freezeLevelSet')
     assert hasattr(RDLSvt,'u_dof_last')

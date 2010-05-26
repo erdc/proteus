@@ -739,9 +739,9 @@ class OneLevelVOF(OneLevelTransport):
 
 ########################################################################
 #for testing VOF class
-from pyadh import ctransportCoefficients
+from proteus import ctransportCoefficients
 class VOFConstantlinearAdvectionCoefficients(TC_base):
-    from pyadh.ctransportCoefficients import VOFCoefficientsEvaluate
+    from proteus.ctransportCoefficients import VOFCoefficientsEvaluate
     def __init__(self,nc=1,M=[0],B=[0],rFunc=None,useSparseDiffusion = True):
 
         mass={}

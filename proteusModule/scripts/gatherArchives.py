@@ -3,7 +3,7 @@
 import numpy
 import os
 from xml.etree.ElementTree import *
-#rather than import pyadh
+#rather than import proteus
 def indentXML(elem, level=0):
     i = "\n" + level*"  "
     if len(elem):

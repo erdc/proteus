@@ -2,7 +2,7 @@
 #include "numpy/arrayobject.h"
 #include PYADH_LAPACK_H
 #include PYADH_BLAS_H
-#include "pyadh_blas.h"
+#include "proteus_blas.h"
 /** \file lapackWrappersModule.c
     \defgroup lapackWrappers lapackWrappers
     \brief Python interface to lapack

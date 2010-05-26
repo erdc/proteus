@@ -1,6 +1,0 @@
-curvature_sloshbox_2d_p.py curvature_sloshbox_2d_c0p1_n.py
-twp_navier_stokes_ls_so_sloshbox_2d_p.py twp_navier_stokes_ls_so_sloshbox_2d_c0p1c0p1_n.py
-ls_so_sloshbox_2d_p.py ls_so_sloshbox_2d_c0p1_n.py 
-vof_sloshbox_st_2d_p.py vof_sloshbox_st_2d_c0p1_n.py 
-redist_sloshbox_2d_p.py redist_sloshbox_2d_c0p1_n.py
-ls_consrv_sloshbox_2d_p.py ls_consrv_sloshbox_2d_c0p1_n.py 

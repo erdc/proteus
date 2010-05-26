@@ -6,11 +6,11 @@
 # \addtogroup scripts
 # Script to creat an animation of the different parts in a gnuplot dat file 
 
-# Postprocess pyadh runs: 
+# Postprocess proteus runs: 
 # To use: [machine]$ python MakeAnimations.py runfile.cmd runfile.dat yrange
 # example: python MakeAnimations.py TestAnimation.cmd TestAnimation.dat [-0.1:2.5]
 #
-# \file pyadhDat2Gif.py
+# \file proteusDat2Gif.py
 # @{
 #   \ingroup scripts
 #   \brief Convert gnuplot plotting commands and data to gif files
@@ -28,7 +28,7 @@ import optparse
 """ 
 Script to creat an animation of the different parts in a gnuplot dat file 
 
-Postprocess pyadh runs: 
+Postprocess proteus runs: 
 To use: [machine]$ python MakeAnimations.py runfile.cmd runfile.dat yrange
 example: python MakeAnimations.py TestAnimation.cmd TestAnimation.dat [-0.1:2.5]
 """

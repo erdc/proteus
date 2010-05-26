@@ -467,7 +467,7 @@ class Osher_FMM_controller(Osher_controller):
      setup so that can configure from options,
      test with Fast Sweeping
     """
-    from pyadh import UnstructuredFMMandFSWsolvers,NonlinearSolvers
+    from proteus import UnstructuredFMMandFSWsolvers,NonlinearSolvers
     def __init__(self,model,nOptions,maxOsherSteps=4):
         Osher_controller.__init__(self,model,nOptions)
         self.nStepsMax = maxOsherSteps

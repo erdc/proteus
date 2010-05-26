@@ -10,7 +10,7 @@ cdef extern from "cadhimpl.h":
         pass
     int cadhMain(int argc, char* argv[])
     void readBC(ADH_Input*, char* filebase)
-    void messg_finalize_pyadh()
+    void messg_finalize_proteus()
     int ADH_NumericalSolution_step(ADH_NumericalSolution* self)
     int ADH_NumericalSolution_stepTaken(ADH_NumericalSolution* self)
     int ADH_NumericalSolution_init(ADH_NumericalSolution* self, int argc, char* argv[])

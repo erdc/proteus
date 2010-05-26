@@ -16,9 +16,9 @@ class TriangleBaseMesh:
 
        from .ele and .node files
        from a .poly file
-       from a pyadh mesh
+       from a proteus mesh
 
-    It should also be able to generate a pyadh mesh from the
+    It should also be able to generate a proteus mesh from the
     triangle representation and allow the user to access the basic
     data arrays in triangle
 
@@ -111,7 +111,7 @@ number of edges         = %d
     def convertToPyadhMesh(self,verbose=0):
         """
         Generate a representation in the format expected by
-        pyadh.
+        proteus.
 
         Need to make sure the triangle mesh has generated
            nodes
@@ -126,11 +126,11 @@ number of edges         = %d
         import MeshTools
         triInfo = triangleWrappers.getInfo(self.trirep[0])
         if verbose > 1:
-            print 'generating pyadh Mesh:'
+            print 'generating proteus Mesh:'
             print self.infoFormat % triInfo
         #end if
 
-        #create basic pyadh mesh
+        #create basic proteus mesh
         meshout = MeshTools.TriangularMesh()
         meshout.generateFromTriangleMesh(self.trirep[0],self.nbase)
         return meshout
@@ -143,7 +143,7 @@ number of edges         = %d
 #         assert(nNodes_global > 0 and nElems_global > 0
 #                and nNodes_elem >= 3 and nEdges_global > 0)
 
-#         #subtract off base since pyadh.Mesh wants base 0 more or less
+#         #subtract off base since proteus.Mesh wants base 0 more or less
 #         nbase = self.nbase
 #         #should also check? base zero, 
 #         #get the minimum array information
@@ -162,7 +162,7 @@ number of edges         = %d
 #         #mwf commented out 01/29/08
 #         #meshout.nodeDict = dict([(n,n) for n in meshout.nodeList])
 #         elemArray  = triangleWrappers.getTriangles(self.trirep[0])
-#         #ignore higher order nodes for pyadh mesh
+#         #ignore higher order nodes for proteus mesh
 #         meshout.nNodes_element    = spaceDim+1
 #         meshout.nElements_global  = nElems_global
 #         #just copy over first 3 nodes
@@ -179,7 +179,7 @@ number of edges         = %d
 #         #cek added finalize call to build lists and arrays
 #         #mwf commented out 01/29/08 
 #         #meshout.finalize()
-#         ##pyadhMesh keeps elements per node
+#         ##proteusMesh keeps elements per node
 # #         nodeElementsDict={}
 # #         for eN in range(nElems_global):
 # #             for nN_element in range(spaceDim+1):
@@ -366,9 +366,9 @@ number of edges         = %d
     #end convertToPyadhMesh
     def convertFromPyadhMesh(self,meshin,verbose=0):
         """
-        generate a Triangle mesh representation from an pyadh mesh.
+        generate a Triangle mesh representation from an proteus mesh.
         This version will copy over the nodes and elements from the
-        pyadh mesh.
+        proteus mesh.
 
         Deletes the existing Triangle mesh and regenerates.
         """
@@ -724,7 +724,7 @@ def exPyadhMesh0(filebase="trimesh",baseFlags="zen",
     """
     create a Triangle mesh representation
     read it in from a file and initialize
-    convert to an pyadhMesh
+    convert to an proteusMesh
     """
     import TriangleIface
     nbase = 0
@@ -761,19 +761,19 @@ def exPyadhMesh0(filebase="trimesh",baseFlags="zen",
         print 'viewing mesh generated from .node and .ele files'
         mesh.viewShowme()
     #end if
-    pyadhMesh = mesh.convertToPyadhMesh(verbose)
-    pyadhMesh.writeEdgesGnuplot2("gnuMesh") #uses array interface
+    proteusMesh = mesh.convertToPyadhMesh(verbose)
+    proteusMesh.writeEdgesGnuplot2("gnuMesh") #uses array interface
     if viewMesh > 0:
-        pyadhMesh.viewMeshGnuplotPipe("gnuMesh")
+        proteusMesh.viewMeshGnuplotPipe("gnuMesh")
     matmesh = "matlabMesh"
-    pyadhMesh.buildMatlabMeshDataStructures(matmesh)
+    proteusMesh.buildMatlabMeshDataStructures(matmesh)
     
 #end exAdh
 def exPyadhMesh1(baseFlags="zen",viewMesh=1,verbose=0):
     """
-    create an pyadhMesh for a rectangle
+    create an proteusMesh for a rectangle
     create a Triangle mesh representation
-    convert the pyadhMesh mesh to the Triangle mesh representation
+    convert the proteusMesh mesh to the Triangle mesh representation
     """
     import MeshTools
     import TriangleIface
@@ -782,11 +782,11 @@ def exPyadhMesh1(baseFlags="zen",viewMesh=1,verbose=0):
     Ly = 1.0
     nx = 11
     ny = 6
-    pyadhMesh = MeshTools.TriangularMesh()
-    pyadhMesh.constructTriangularMeshOnRectangle(Lx,Ly,nx,ny)
-    pyadhMesh.writeEdgesGnuplot2("gnuMesh") #uses array interface
+    proteusMesh = MeshTools.TriangularMesh()
+    proteusMesh.constructTriangularMeshOnRectangle(Lx,Ly,nx,ny)
+    proteusMesh.writeEdgesGnuplot2("gnuMesh") #uses array interface
     if viewMesh > 0:
-        pyadhMesh.viewMeshGnuplotPipe("gnuMesh")
+        proteusMesh.viewMeshGnuplotPipe("gnuMesh")
     
     nbase = 0
     if baseFlags.find('z') == -1:
@@ -795,10 +795,10 @@ def exPyadhMesh1(baseFlags="zen",viewMesh=1,verbose=0):
     trimesh = TriangleIface.TriangleBaseMesh(baseFlags=baseFlags,
                                              nbase=nbase,
                                              verbose=verbose)
-    trimesh.convertFromPyadhMesh(pyadhMesh,verbose=verbose)
+    trimesh.convertFromPyadhMesh(proteusMesh,verbose=verbose)
 
     if viewMesh > 0:
-        print 'viewing mesh generated from pyadh mesh'
+        print 'viewing mesh generated from proteus mesh'
         trimesh.viewShowme()
     #end if
 
@@ -850,12 +850,12 @@ def exPyadhLaplace1(filebase="trimesh",baseFlags="zen",
         print 'viewing mesh generated from .node and .ele files'
         mesh.viewShowme()
     #end if
-    pyadhMesh = mesh.convertToPyadhMesh(verbose)
-    pyadhMesh.writeEdgesGnuplot2("gnuMesh") #uses array interface
+    proteusMesh = mesh.convertToPyadhMesh(verbose)
+    proteusMesh.writeEdgesGnuplot2("gnuMesh") #uses array interface
     if viewMesh > 0:
-        pyadhMesh.viewMeshGnuplotPipe("gnuMesh")
+        proteusMesh.viewMeshGnuplotPipe("gnuMesh")
     matmesh = "matlabMesh"
-    pyadhMesh.buildMatlabMeshDataStructures(matmesh)
+    proteusMesh.buildMatlabMeshDataStructures(matmesh)
     
     #####
     #solve a simple poisson equation with Dirichlet bc's on left and right?
@@ -894,14 +894,14 @@ def exPyadhLaplace1(filebase="trimesh",baseFlags="zen",
     #try P^2
     if useCG:
         if order == 1:
-            FemSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(pyadhMesh,nd)
+            FemSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(proteusMesh,nd)
         else:
-            FemSpace = FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis(pyadhMesh,nd)
+            FemSpace = FemTools.C0_AffineQuadraticOnSimplexWithNodalBasis(proteusMesh,nd)
     else:
         if order == 1:
-            FemSpace = FemTools.DG_AffineLinearOnSimplexWithNodalBasis(pyadhMesh,nd)
+            FemSpace = FemTools.DG_AffineLinearOnSimplexWithNodalBasis(proteusMesh,nd)
         else:
-            FemSpace = FemTools.DG_AffineQuadraticOnSimplexWithNodalBasis(pyadhMesh,nd)
+            FemSpace = FemTools.DG_AffineQuadraticOnSimplexWithNodalBasis(proteusMesh,nd)
 
     #end if
     u   = FemTools.FiniteElementFunction(FemSpace)
@@ -1021,15 +1021,15 @@ def exPyadhLaplace1(filebase="trimesh",baseFlags="zen",
 
 
 if __name__ == '__main__':
-    #make sure python has pyadh in path
+    #make sure python has proteus in path
     import os,sys
     from optparse import OptionParser
     parser = OptionParser()
 
     #options controlling simulation behavior
-    parser.add_option('-P','--pyadhDir',
-                      default='/Users/mfarthin/Public/code/pyadh-trunk/src',
-                      help="""where to find pyadh library""")
+    parser.add_option('-P','--proteusDir',
+                      default='/Users/mfarthin/Public/code/proteus-trunk/src',
+                      help="""where to find proteus library""")
     parser.add_option('--baseFlags',
                       default='zen',
                       help="""base flags for creating Triangle meshes""")
@@ -1037,7 +1037,7 @@ if __name__ == '__main__':
                       default='trimesh',
                       help="""base filename for reading a Triangle mesh""")
     parser.add_option('--tribase',
-                      default='/Users/mfarthin/Public/code/pyadh-packages/triangle/',
+                      default='/Users/mfarthin/Public/code/proteus-packages/triangle/',
                       help="""base location for Triangle""")
     parser.add_option('--flagsAdd',
                       default='',
@@ -1052,7 +1052,7 @@ if __name__ == '__main__':
                       2 --- exPyadhMesh0 with spiral
                       3 --- exPyadhMesh0 with la 
                       4 --- exPyadhMesh0 with user specified file, and flags 
-                      5 --- exPyadhMesh1 convert pyadhMesh for rectangle
+                      5 --- exPyadhMesh1 convert proteusMesh for rectangle
                       6 --- solve simple laplace equation with dirichlet bcs
                             on the la mesh
                       """)
@@ -1066,13 +1066,13 @@ if __name__ == '__main__':
     #
     verbose  = int(options.verbose)
     testNum  = int(options.testNum)
-    pyadhDir = str(options.pyadhDir)
+    proteusDir = str(options.proteusDir)
     flagsAdd = str(options.flagsAdd)
     baseFlags= str(options.baseFlags)
     filebase = str(options.filebase)
     tribase  = str(options.tribase)
     
-    sys.path.insert(0,pyadhDir)
+    sys.path.insert(0,proteusDir)
 
     if testNum == 0:
         #look at node and ele files

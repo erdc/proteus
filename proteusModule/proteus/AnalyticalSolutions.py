@@ -616,8 +616,8 @@ class PlanePoiseuilleFlow_p(SteadyState):
         return self.grad_p*x[0]
 
 #encapsulate analytical solver for BuckleyLeverett Riemann problems
-from pyadh.ObjectiveFunctions import OsherFuncCoef
-from pyadh.Optimizers import fminbound
+from proteus.ObjectiveFunctions import OsherFuncCoef
+from proteus.Optimizers import fminbound
 class Buckley_Leverett_RiemannSoln(AS_base):
     def __init__(self,coefficients,uLeft=1.0,uRight=0.0,t0=0.0,x0=0.0,T=0.5,ftol=1.0e-8,
                  useShallowCopyCoef=True):
