@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "smoothers.h"
-#include PYADH_LAPACK_H
+#include PROTEUS_LAPACK_H
 /** \file smoothers.c
     \ingroup  smoothers
     @{
@@ -192,7 +192,7 @@ int asm_NR_init(SuperMatrix *A,
                  double*** subdomain_L_p, 
                  double*** subdomain_R_p, 
                  double*** subdomain_dX_p,
-                 PYADH_LAPACK_INTEGER*** subdomain_pivots_p)
+                 PROTEUS_LAPACK_INTEGER*** subdomain_pivots_p)
 { 
   int i,N; 
   int* subdomain_dim; 
@@ -200,11 +200,11 @@ int asm_NR_init(SuperMatrix *A,
   double** subdomain_L; 
   double** subdomain_R; 
   double** subdomain_dX;
-  PYADH_LAPACK_INTEGER** subdomain_pivots;
+  PROTEUS_LAPACK_INTEGER** subdomain_pivots;
   NRformat* ANR = (NRformat*)A->Store;
   N = A->nrow;
   *subdomain_dim_p = (int*)malloc(N*sizeof(int));
-  *subdomain_pivots_p = (PYADH_LAPACK_INTEGER**)malloc(N*sizeof(PYADH_LAPACK_INTEGER*));
+  *subdomain_pivots_p = (PROTEUS_LAPACK_INTEGER**)malloc(N*sizeof(PROTEUS_LAPACK_INTEGER*));
   *l2g_L_p = (int**)malloc(N*sizeof(int*));
   *subdomain_R_p = (double**)malloc(N*sizeof(double*));
   *subdomain_dX_p = (double**)malloc(N*sizeof(double*));
@@ -228,7 +228,7 @@ int asm_NR_init(SuperMatrix *A,
   for (i=0; i<N; i++)  
     { 
       subdomain_dim[i] = ANR->rowptr[i+1]-ANR->rowptr[i];
-      subdomain_pivots[i] = (PYADH_LAPACK_INTEGER*)malloc(subdomain_dim[i]*sizeof(PYADH_LAPACK_INTEGER));
+      subdomain_pivots[i] = (PROTEUS_LAPACK_INTEGER*)malloc(subdomain_dim[i]*sizeof(PROTEUS_LAPACK_INTEGER));
       l2g_L[i] = (int*)malloc(subdomain_dim[i]*subdomain_dim[i]*sizeof(int)); 
       subdomain_R[i] = (double*)malloc(subdomain_dim[i]*sizeof(double)); 
       subdomain_dX[i] = (double*)malloc(subdomain_dim[i]*sizeof(double)); 
@@ -271,7 +271,7 @@ void asm_NR_free(int N,
                  double** subdomain_L, 
                  double** subdomain_R, 
                  double** subdomain_dX,
-                 PYADH_LAPACK_INTEGER** subdomain_pivots)
+                 PROTEUS_LAPACK_INTEGER** subdomain_pivots)
 {
   int i;
   free(subdomain_dim);
@@ -294,7 +294,7 @@ void asm_NR_prepare(SuperMatrix *A,
                     int* subdomain_dim,
                     int** l2g_L,
                     double** subdomainL, 
-                    PYADH_LAPACK_INTEGER** subdomainPivots) 
+                    PROTEUS_LAPACK_INTEGER** subdomainPivots) 
 { 
   /* Purpose: extract subdomain matrices and factor  in place 
    */ 
@@ -316,7 +316,7 @@ void asm_NR_prepare(SuperMatrix *A,
             else 
               subdomainL[i][ii+jj*subdomain_dim[i]] = 0.0;
           } 
-      PYADH_LAPACK_INTEGER La_N=((PYADH_LAPACK_INTEGER)subdomain_dim[i]),INFO=0; 
+      PROTEUS_LAPACK_INTEGER La_N=((PROTEUS_LAPACK_INTEGER)subdomain_dim[i]),INFO=0; 
       dgetrf_(&La_N,&La_N,subdomainL[i],&La_N,subdomainPivots[i],&INFO);  
     } 
 } 
@@ -331,7 +331,7 @@ void asm_NR_solve(SuperMatrix *A,
                   int *node_order, 
                   double** subdomain_dX,
                   double* dX, 
-                  PYADH_LAPACK_INTEGER** subdomainPivots) 
+                  PROTEUS_LAPACK_INTEGER** subdomainPivots) 
 { 
 /* Purpose:  asm method with the additional assumption that A is of Stype NRformat 
  */ 
@@ -343,7 +343,7 @@ void asm_NR_solve(SuperMatrix *A,
     NRformat *AStore = (NRformat*) A->Store; 
     int N = A->nrow; 
     
-    PYADH_LAPACK_INTEGER La_N,INFO=0,NRHS=1; 
+    PROTEUS_LAPACK_INTEGER La_N,INFO=0,NRHS=1; 
     char TRANS='N'; 
 
     nnz = AStore->nnz; 
@@ -372,7 +372,7 @@ void asm_NR_solve(SuperMatrix *A,
             subdomain_dX[cnode][jj] = subdomainR[cnode][jj]; 
           }         
         /* solve  subdomain problem*/
-        La_N = (PYADH_LAPACK_INTEGER) subdomain_dim[cnode];
+        La_N = (PROTEUS_LAPACK_INTEGER) subdomain_dim[cnode];
         dgetrs_(&TRANS, 
                 &La_N, 
                 &NRHS, 

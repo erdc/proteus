@@ -16,10 +16,10 @@ namespace Daetk
 /* hack on diamond */
 #ifdef __cplusplus
 #undef __cplusplus
-#define PYADHREDEFINECPP
+#define PROTEUSREDEFINECPP
 #endif
 #include "mpi.h"
-#ifdef PYADHREDEFINECPP
+#ifdef PROTEUSREDEFINECPP
 #define __cplusplus
 #endif
 #include "petsc.h"

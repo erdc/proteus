@@ -17,7 +17,7 @@
 #define REAL double
 #define _NDIM 2
 /*Triangle package's interface: triangulateio */
-#include PYADH_TRIANGLE_H
+#include PROTEUS_TRIANGLE_H
 
 
 

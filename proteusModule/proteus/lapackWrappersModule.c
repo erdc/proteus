@@ -1,7 +1,7 @@
 #include "Python.h"
 #include "numpy/arrayobject.h"
-#include PYADH_LAPACK_H
-#include PYADH_BLAS_H
+#include PROTEUS_LAPACK_H
+#include PROTEUS_BLAS_H
 #include "proteus_blas.h"
 /** \file lapackWrappersModule.c
     \defgroup lapackWrappers lapackWrappers
@@ -14,7 +14,7 @@ typedef struct
 {
   PyObject_HEAD
   double* lu;
-  PYADH_LAPACK_INTEGER* pivots;
+  PROTEUS_LAPACK_INTEGER* pivots;
 } DenseFactor;
 
 #define DFP(p) ((DenseFactor*)p)
@@ -35,7 +35,7 @@ DenseFactor_init(DenseFactor *self, PyObject *args, PyObject *kwds)
                        "i",
                        &dim))
     return -1;
-  self->pivots=(PYADH_LAPACK_INTEGER*)malloc(dim*sizeof(PYADH_LAPACK_INTEGER));
+  self->pivots=(PROTEUS_LAPACK_INTEGER*)malloc(dim*sizeof(PROTEUS_LAPACK_INTEGER));
   self->lu=(double*)malloc(dim*dim*sizeof(double));
   if ( (self->pivots == NULL) || (self->lu == NULL))
     {
@@ -101,14 +101,14 @@ static PyObject* lapackWrappersDenseFactorPrepare(PyObject* self,
 {
   int dim,dim2;
   int incr1,incr2;
-  PYADH_LAPACK_INTEGER N,INFO=0;
+  PROTEUS_LAPACK_INTEGER N,INFO=0;
   PyObject *mat,*denseFactor;
   if(!PyArg_ParseTuple(args,"iOO",
                        &dim,
                        &mat,
                        &denseFactor))
     return NULL;
-  N = (PYADH_LAPACK_INTEGER)(dim);
+  N = (PROTEUS_LAPACK_INTEGER)(dim);
   dim2=dim*dim; incr1=1; incr2=1;
   dcopy_(&dim2,DDATA(mat),&incr1,DFP(denseFactor)->lu,&incr2);
   dgetrf_(&N,
@@ -125,7 +125,7 @@ static PyObject* lapackWrappersDenseFactorSolve(PyObject* self,
                                                 PyObject* args)
 {
   int dim;
-  PYADH_LAPACK_INTEGER N,INFO=0,NRHS=1;
+  PROTEUS_LAPACK_INTEGER N,INFO=0,NRHS=1;
   char TRANS='N';
   PyObject *mat,*b,*denseFactor;
   if(!PyArg_ParseTuple(args,"iOOO",
@@ -134,7 +134,7 @@ static PyObject* lapackWrappersDenseFactorSolve(PyObject* self,
                        &denseFactor,
                        &b))
     return NULL;
-  N = (PYADH_LAPACK_INTEGER)(dim);
+  N = (PROTEUS_LAPACK_INTEGER)(dim);
   dgetrs_(&TRANS,
           &N,
           &NRHS,
@@ -170,12 +170,12 @@ static PyObject* lapackWrappersDenseCalculateEigenvalues(PyObject* self,
                         &WORK,
                         &LWORK))
     return NULL;
-  PYADH_LAPACK_INTEGER laN=((PYADH_LAPACK_INTEGER)N),
-    laLDA=((PYADH_LAPACK_INTEGER)LDA),
-    laLDVL=((PYADH_LAPACK_INTEGER)LDVL),
-    laLDVR=((PYADH_LAPACK_INTEGER)LDVR),
-    laLWORK=((PYADH_LAPACK_INTEGER)LWORK),
-    laINFO=((PYADH_LAPACK_INTEGER)INFO);
+  PROTEUS_LAPACK_INTEGER laN=((PROTEUS_LAPACK_INTEGER)N),
+    laLDA=((PROTEUS_LAPACK_INTEGER)LDA),
+    laLDVL=((PROTEUS_LAPACK_INTEGER)LDVL),
+    laLDVR=((PROTEUS_LAPACK_INTEGER)LDVR),
+    laLWORK=((PROTEUS_LAPACK_INTEGER)LWORK),
+    laINFO=((PROTEUS_LAPACK_INTEGER)INFO);
   dgeev_(&JOBVL,
          &JOBVR,
          &laN,
