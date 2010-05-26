@@ -89,6 +89,6 @@ cp proteusConfig/config.${PROTEUS_ARCH} config.py
 make -f Makefile.petsc petsc-config
 make
 if [ $? -ne 0 ]; then
-   echo "Error building pyadh."
+   echo "Error building proteusModule."
    exit 1
 fi
