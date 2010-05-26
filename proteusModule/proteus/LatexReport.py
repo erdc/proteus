@@ -208,10 +208,10 @@ class LatexResultsSummary:
 if __name__ == '__main__':
     import os
     import sys
-    PYADH_HOME = os.getenv('PYADH_HOME',os.getenv('HOME')+'/Public/code/proteus')
-    PYADH_SRC  = PYADH_HOME+'/src'
-    if PYADH_SRC not in sys.path:
-        sys.path.insert(0,PYADH_SRC)
+    PROTEUS_HOME = os.getenv('PROTEUS_HOME',os.getenv('HOME')+'/Public/code/proteus')
+    PROTEUS_SRC  = PROTEUS_HOME+'/src'
+    if PROTEUS_SRC not in sys.path:
+        sys.path.insert(0,PROTEUS_SRC)
     #
     import optparse
     usage = "usage: %prog [options] resultsFile [reportFile]"

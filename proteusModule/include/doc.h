@@ -54,31 +54,31 @@ GNU/Linux platforms:
 This example is for the linux64 package and csh.
 
 <tt> \%tar xzf proteus-0.5.0-linux64.tar.gz </tt> \n
-<Tt> \%setenv PYADH $PWD/proteus </tt> \n
-<tt> \%setenv PYADH_ARCH linux64 </tt> \n
-<tt> \%setenv PATH $PYADH/$PYADH_ARCH/bin:$PATH </tt> \n
-<tt> \%setenv LD_LIBRARY_PATH $PYADH/$PYADH_ARCH/lib:$LD_LIBRARY_PATH </tt> \n
+<Tt> \%setenv PROTEUS $PWD/proteus </tt> \n
+<tt> \%setenv PROTEUS_ARCH linux64 </tt> \n
+<tt> \%setenv PATH $PROTEUS/$PROTEUS_ARCH/bin:$PATH </tt> \n
+<tt> \%setenv LD_LIBRARY_PATH $PROTEUS/$PROTEUS_ARCH/lib:$LD_LIBRARY_PATH </tt> \n
 
 Replace linux64 with darwin_i386_macports, jade, etc. for one of the other architechtures. On MacOS also you also need to add
 
-<tt> \%setenv PATH $PYADH/$PYADH_ARCH/Python.framework/Versions/Current/bin:$PATH </tt>
+<tt> \%setenv PATH $PROTEUS/$PROTEUS_ARCH/Python.framework/Versions/Current/bin:$PATH </tt>
 
 To use runtime visualization you may also need to add
 
-<tt> \%setenv LD_LIBRARY_PATH $PYADH/$PYADH_ARCH/lib/vtk-5.3:$LD_LIBRARY_PATH </tt>
+<tt> \%setenv LD_LIBRARY_PATH $PROTEUS/$PROTEUS_ARCH/lib/vtk-5.3:$LD_LIBRARY_PATH </tt>
 
 To run an example do
 
-<tt> \%cd $PYADH/proteusModule/test/problemDescriptions </tt> \n
+<tt> \%cd $PROTEUS/proteusModule/test/problemDescriptions </tt> \n
 <tt> \%parun navier_stokes_cylinder_2d_p.py navier_stokes_cylinder_2d_c0p1c0p1_n.py -l 3 -v</tt> \n
 
-The solution will be saved in a file ending in .xmf, which can be opened with ParaView3 or Ensight. ParaView3 is included in the binary package in $PYADH/$PYADH_ARCH.
+The solution will be saved in a file ending in .xmf, which can be opened with ParaView3 or Ensight. ParaView3 is included in the binary package in $PROTEUS/$PROTEUS_ARCH.
 
 \section building_sec Compiling
 
 To get updated source and recompile the proteus module you can do
 
-<tt> \%cd $PYADH/proteusModule </tt> \n
+<tt> \%cd $PROTEUS/proteusModule </tt> \n
 <Tt> \%svn update </tt> \n
 <tt> \%python setup.py install </tt> \n
 
@@ -98,7 +98,7 @@ To obtain or update the source use an svn client to connect to our SVN repositor
 
 <tt> https://adh.usace.army.mil/svnaccess  </tt>
 
-Select PYADH_R if you only need read access or PYADH_RW if you might
+Select PROTEUS_R if you only need read access or PROTEUS_RW if you might
 want to make changes. You can then run 'svn update' from your proteus or
 proteusGraphical subdirectory. To check out a clean copy of the source
 you can do the following:

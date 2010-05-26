@@ -1,5 +1,5 @@
-#ifndef PYADH_BLAS_PROTO_H
-#define PYADH_BLAS_PROTO_H
+#ifndef PROTEUS_BLAS_PROTO_H
+#define PROTEUS_BLAS_PROTO_H
 #ifdef __cplusplus
 extern "C"
 {

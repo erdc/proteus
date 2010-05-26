@@ -2,7 +2,7 @@
 #define SMOOTHERSMODULE_H
 
 #include "Python.h"
-#include PYADH_LAPACK_H
+#include PROTEUS_LAPACK_H
 
 /**
  \file csmoothersModule.h
@@ -23,7 +23,7 @@ typedef struct
   double **subdomain_L,
     **subdomain_R,
     **subdomain_dX;
-  PYADH_LAPACK_INTEGER** subdomain_pivots;
+  PROTEUS_LAPACK_INTEGER** subdomain_pivots;
 } ASMFactor;
 /** @} */
 #endif

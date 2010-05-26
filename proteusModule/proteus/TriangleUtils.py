@@ -17,8 +17,8 @@ import TriangleFileUtils
 #some global constants and useful things?
 ########################################################################
 #where is showme on the system?
-PYADH_PACKAGES = os.getenv('PYADH_PACKAGES',os.getenv('HOME')+'/src/proteus-packages')
-showmeCmdBase = PYADH_PACKAGES+'/triangle/bin/showme'
+PROTEUS_PACKAGES = os.getenv('PROTEUS_PACKAGES',os.getenv('HOME')+'/src/proteus-packages')
+showmeCmdBase = PROTEUS_PACKAGES+'/triangle/bin/showme'
 
 ########################################################################
 #this set of functions is for writing out triangulations
