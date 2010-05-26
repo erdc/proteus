@@ -8,7 +8,7 @@ import Archiver
 from xml.etree.ElementTree import *
 
 try:
-    from pyadhGraphical import vtkViewers
+    from proteusGraphical import vtkViewers
 except:
     pass
 import copy

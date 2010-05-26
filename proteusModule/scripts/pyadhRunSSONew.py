@@ -5,10 +5,10 @@ import sys
 import socket
 import cPickle
 import numpy as numpy
-from pyadh import *
+from proteus import *
 from warnings import *
 
-def pyadhRun(runRoutines):
+def proteusRun(runRoutines):
     import optparse
     import sys
     if sys.version_info[1] >= 5:
@@ -96,7 +96,7 @@ def pyadhRun(runRoutines):
         sys.argv = sys.argv[:-1]+opts.petscOptions.split()
         print sys.argv
     comm = Comm.init()
-    #mwf modify path to be able to load pyadh test problems
+    #mwf modify path to be able to load proteus test problems
     #for now always insert
     probDir = str(opts.probDir)
     if probDir not in sys.path:
@@ -158,7 +158,7 @@ def pyadhRun(runRoutines):
                     simFlags['plotOptions']['ensight'] = {'on':True}
             else:
                 simFlags['plotOptions'] = {'ensight':{'on':True}}
-            #control convention on case file for multiple models, doesn't effect pyadhRun right now
+            #control convention on case file for multiple models, doesn't effect proteusRun right now
             simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ `comm.rank()`
   
         #viewers section
@@ -375,7 +375,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                         os.path.exists(pM.polyfile+".node")):
                     tetcmd = "tetgen -%s %s.poly" % (nM.triangleOptions,pM.polyfile)
                     #mwf debug
-                    print "pyadhRun trying to run tetgen with %s " % tetcmd
+                    print "proteusRun trying to run tetgen with %s " % tetcmd
                     failed = os.system(tetcmd)
                     elefile = "%s.1.ele" % pM.polyfile
                     nodefile = "%s.1.node" % pM.polyfile
@@ -402,7 +402,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                                                              refinementLevels=nM.nLevels)
     #mwf debug
     for l in range(n.nLevels):
-        print """pyadhRun debug: mesh level=%d  nElements= %d nNodes=%d nFaces=%d diameter= %g """ % (l,
+        print """proteusRun debug: mesh level=%d  nElements= %d nNodes=%d nFaces=%d diameter= %g """ % (l,
                                                                                       mlMesh.meshList[l].nElements_global,mlMesh.meshList[l].nNodes_global,mlMesh.meshList[l].nElementBoundaries_global,mlMesh.meshList[l].h)
         
 
@@ -682,7 +682,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                 #ci
             #end if on weakDirichlet conditions
             #mwf debug
-            #print """pyadhRunSSO tn=%g dt=%g model= %s""" % (tnList[opts.masterModel],dt,it)
+            #print """proteusRunSSO tn=%g dt=%g model= %s""" % (tnList[opts.masterModel],dt,it)
             print "tnList[it],dt",tnList[it],dt
             failedStep[it],tnList[it] = timeIntegratorList[it].calculateSolution(tnList[it],tnList[it]+dt)
             if it == opts.masterModel:
@@ -716,7 +716,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
 #         if abs(tnList[opts.masterModel]+dt) > abs(pList[opts.masterModel].T-1.0e-8*tnList[opts.masterModel]):
 #             dt = pList[opts.masterModel].T-tnList[opts.masterModel]
         if failedFlag:
-            print """pyadhRunSSO tn=%g dt=%g failedStep= %s""" % (tnList[opts.masterModel],dt,failedStep)
+            print """proteusRunSSO tn=%g dt=%g failedStep= %s""" % (tnList[opts.masterModel],dt,failedStep)
         plotOffSet=0
         if opts.viewer and viewSolutionOrig:
             for m,p,tn,pName,mi in zip(mList,pList,tnList,pNameList,range(len(mList))):
@@ -800,4 +800,4 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     Profiling.memorySummary()
     #    raw_input('\nPress return to close windows and exit... \n')
 if __name__ == '__main__':
-   pyadhRun(runProblems)
+   proteusRun(runProblems)

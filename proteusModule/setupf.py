@@ -4,7 +4,7 @@ import numpy
 from distutils import sysconfig
 from numpy.distutils.core import setup, Extension
 ## \file setup.py setup.py
-#  \brief The python script for building pyadh
+#  \brief The python script for building proteus
 #
 #  Set the DISTUTILS_DEBUG environment variable to print detailed information while setup.py is running.
 #
@@ -24,9 +24,9 @@ setup(name='ftracking',
       description='Fortran based Python tools for particle tracking',
       author='Pearce Cheng and Matthew Farthing',
       author_email='matthew.w.farthing@usace.army.mil',
-      ext_package='pyadh',
+      ext_package='proteus',
       ext_modules=[Extension('ftracking',
-                             ['pyadh/ftracking.f'],
+                             ['proteus/ftracking.f'],
                              include_dirs=[numpy.get_include(),'include'],
                              libraries=['m'],
                              extra_link_args=['-g'],

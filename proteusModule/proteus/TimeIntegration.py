@@ -3155,7 +3155,7 @@ class DGlimiterP1Lagrange1d_Sw(DGlimiterP1Lagrange1d):
     DGP1 version of limiting that applies minmod limiting for h < h_eps
       and more aggressive limiting elsewhere
     """
-    from pyadh.ctimeIntegration import applyDGlimitingP1Lagrange1d_withVacuumTol
+    from proteus.ctimeIntegration import applyDGlimitingP1Lagrange1d_withVacuumTol
     def __init__(self,mesh,nSpace,u,transport=None,limiterFlag=0,h_eps=1.0e-3):
         DGlimiterP1Lagrange1d.__init__(self,mesh,nSpace,u,transport=transport,limiterFlag=limiterFlag)
         self.h_eps=h_eps

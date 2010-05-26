@@ -1741,7 +1741,7 @@ class StokesP(TC_base):
 #\end{array} \right.
 #\f]
 #
-#The level set function, \f$\phi\f$, is provided from some other model (e.g. pyadh::TransportCoeffcieints::NCLevelSetCoefficients) that is solved seperately (via operator splitting).
+#The level set function, \f$\phi\f$, is provided from some other model (e.g. proteus::TransportCoeffcieints::NCLevelSetCoefficients) that is solved seperately (via operator splitting).
 #
 class TwophaseNavierStokes_LS_SO(TC_base):
     """
@@ -1971,7 +1971,7 @@ class TwophaseNavierStokes_LS_SO(TC_base):
 #\end{array} \right.
 #\f]
 #
-#The level set function, \f$\phi\f$, is provided from some other model (e.g. pyadh::TransportCoeffcieints::NCLevelSetCoefficients) that is solved seperately (via operator splitting).
+#The level set function, \f$\phi\f$, is provided from some other model (e.g. proteus::TransportCoeffcieints::NCLevelSetCoefficients) that is solved seperately (via operator splitting).
 #
 class TwophaseNavierStokes_ST_LS_SO(TC_base):
     """
@@ -5808,7 +5808,7 @@ class EikonalEquationCoefficients(TC_base):
                                           
 
 class RedistanceLevelSet(TC_base):
-    from pyadh.ctransportCoefficients import redistanceLevelSetCoefficientsEvaluate
+    from proteus.ctransportCoefficients import redistanceLevelSetCoefficientsEvaluate
     def __init__(self,applyRedistancing=True,epsFact=2.0,nModelId=None,u0=None,rdModelId=0):
         variableNames=['phid']
         nc=1
@@ -6060,7 +6060,7 @@ class RedistanceLevelSet(TC_base):
     setZeroLSweakDirichletBCs3 = staticmethod(setZeroLSweakDirichletBCs3)
 #end class
 class RedistanceLevelSetWithWeakPenalty(RedistanceLevelSet):
-    from pyadh.ctransportCoefficients import redistanceLevelSetCoefficientsWithWeakPenaltyEvaluate
+    from proteus.ctransportCoefficients import redistanceLevelSetCoefficientsWithWeakPenaltyEvaluate
     def __init__(self,applyRedistancing=True,epsFact=2.0,nModelId=None,u0=None,rdModelId=0):
         variableNames=['phid']
         nc=1
@@ -6112,7 +6112,7 @@ class RedistanceLevelSetWithWeakPenalty(RedistanceLevelSet):
                                                                    c[('dr',0)])
     
 class RedistanceLevelSetSandF(RedistanceLevelSet):
-    from pyadh.ctransportCoefficients import redistanceLevelSetSandFCoefficientsEvaluate
+    from proteus.ctransportCoefficients import redistanceLevelSetSandFCoefficientsEvaluate
     def __init__(self,applyRedistancing=True,epsFact=2.0,nModelId=1,u0=None,rdModelId=-1,vofModelId=4,massCorrModelId=5,
                  checkMass=True):
         RedistanceLevelSet.__init__(self,applyRedistancing=applyRedistancing,epsFact=epsFact,
@@ -6186,7 +6186,7 @@ class RedistanceLevelSetWithWeakPenalty(RedistanceLevelSet):
                                                                        c[('dr',0)])
 
 class ConservativeHead2PMualemVanGenuchten(TC_base):
-    from pyadh.ctransportCoefficients import  conservativeHeadRichardsMualemVanGenuchtenHomEvaluate
+    from proteus.ctransportCoefficients import  conservativeHeadRichardsMualemVanGenuchtenHomEvaluate
     def __init__(self,
                  hydraulicConductivity,
                  gravity,
@@ -6255,7 +6255,7 @@ class ConservativeHead2PMualemVanGenuchten(TC_base):
                                                                    c[('da',1,1,1)])
 								   
 class PoissonEquationCoefficients(TC_base):
-    from pyadh.ctransportCoefficients import L2projectEvaluate
+    from proteus.ctransportCoefficients import L2projectEvaluate
     def __init__(self,aOfX,fOfX,nc=1,nd=2,l2proj=None,
                  timeVaryingCoefficients=False):
         self.aOfX = aOfX
@@ -6649,9 +6649,9 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
 
     
     """
-    from pyadh.ctransportCoefficients import kEpsilon_2D_Evaluate
-    from pyadh.ctransportCoefficients import kEpsilon_2D_Evaluate_sd
-    from pyadh.ctransportCoefficients import kEpsilon_3D_Evaluate_sd
+    from proteus.ctransportCoefficients import kEpsilon_2D_Evaluate
+    from proteus.ctransportCoefficients import kEpsilon_2D_Evaluate_sd
+    from proteus.ctransportCoefficients import kEpsilon_3D_Evaluate_sd
     def __init__(self,
                  flowModelID=0,
                  nd     =2,
@@ -6986,8 +6986,8 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
 
     
     """
-    from pyadh.ctransportCoefficients import kEpsilon_k_2D_Evaluate_sd
-    from pyadh.ctransportCoefficients import kEpsilon_k_3D_Evaluate_sd
+    from proteus.ctransportCoefficients import kEpsilon_k_2D_Evaluate_sd
+    from proteus.ctransportCoefficients import kEpsilon_k_3D_Evaluate_sd
     def __init__(self,
                  flowModelID=0,
                  epsilonModelID=2,
@@ -7264,8 +7264,8 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
 
     
     """
-    from pyadh.ctransportCoefficients import kEpsilon_epsilon_2D_Evaluate_sd
-    from pyadh.ctransportCoefficients import kEpsilon_epsilon_3D_Evaluate_sd
+    from proteus.ctransportCoefficients import kEpsilon_epsilon_2D_Evaluate_sd
+    from proteus.ctransportCoefficients import kEpsilon_epsilon_3D_Evaluate_sd
     def __init__(self,
                  flowModelID=0,
                  kModelID=1,
@@ -7930,7 +7930,7 @@ class TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure(TwophaseNavierStokes
                 assert False, "nd != 2,3 not done yet"
 
 class ViscousBurgersEqn(TC_base):
-    from pyadh.ctransportCoefficients import burgersDiagonalVelEvaluate,burgersDiagonalVelHJEvaluate
+    from proteus.ctransportCoefficients import burgersDiagonalVelEvaluate,burgersDiagonalVelHJEvaluate
     def __init__(self,v=[1.0,0.0,0.0],nu=0.0,nc=1,nd=3,useHJ=False):
         mass={}
         advection={}
@@ -8028,7 +8028,7 @@ class BuckleyLeverettLiuExample(TC_base):
     S=0 injecting into S=1 background saturation using his definition of f 
 
     """
-    from pyadh.ctransportCoefficients import evaluateBuckleyLeverettLiuExample
+    from proteus.ctransportCoefficients import evaluateBuckleyLeverettLiuExample
     def __init__(self,nu=0.0,nc=1,nd=2):
         mass={}
         advection={}
@@ -8095,7 +8095,7 @@ class BuckleyLeverettLiuExample(TC_base):
 #\end{array} \right.
 #\f]
 #
-#The level set function, \f$\phi\f$, is provided from some other model (e.g. pyadh::TransportCoeffcieints::NCLevelSetCoefficients) that is solved seperately (via operator splitting).
+#The level set function, \f$\phi\f$, is provided from some other model (e.g. proteus::TransportCoeffcieints::NCLevelSetCoefficients) that is solved seperately (via operator splitting).
 #
 class VolumeAveragedNavierStokesFullDevStress(TC_base):
     """
@@ -8464,7 +8464,7 @@ class VolumeAveragedNavierStokesFullDevStress(TC_base):
 #\end{array} \right.
 #\f]
 #
-#The level set function, \f$\phi\f$, is provided from some other model (e.g. pyadh::TransportCoeffcieints::NCLevelSetCoefficients) that is solved seperately (via operator splitting).
+#The level set function, \f$\phi\f$, is provided from some other model (e.g. proteus::TransportCoeffcieints::NCLevelSetCoefficients) that is solved seperately (via operator splitting).
 #
 class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure):
     """
@@ -9179,7 +9179,7 @@ class VolumeAveragedVOFCoefficients(VOFCoefficients):
     #
 #
 class GroundwaterTransportCoefficients(TC_base):
-    from pyadh.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate
+    from proteus.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate
     """
     groundwater advection-dispersion equation with constant coefficients but variable 
     velocity 
@@ -9261,7 +9261,7 @@ class GroundwaterTransportCoefficients(TC_base):
                         
 
 class GroundwaterBiodegradation01Coefficients(TC_base):
-    from pyadh.ctransportCoefficients import groundwaterBiodegradation01EvaluateFC
+    from proteus.ctransportCoefficients import groundwaterBiodegradation01EvaluateFC
     """
     groundwater advection-dispersion equation with constant coefficients but variable 
     velocity and simple 3 component biodegradation system
@@ -9387,7 +9387,7 @@ class GroundwaterBiodegradation01Coefficients(TC_base):
                                                        c[('dr',2,2)])
 
 class GroundwaterBryantDawsonIonExCoefficients(TC_base):
-    from pyadh.ctransportCoefficients import groundwaterBryantDawsonIonExEvaluateFC
+    from proteus.ctransportCoefficients import groundwaterBryantDawsonIonExEvaluateFC
     """
     groundwater advection-dispersion equation with constant coefficients but variable 
     velocity and competitive ion exchange problem from Bryant, Dawson etal 00
@@ -9498,9 +9498,9 @@ class GroundwaterBryantDawsonIonExCoefficients(TC_base):
                                                         c[('dr',1,0)],
                                                         c[('dr',1,1)])
                                                        
-from pyadh import FemTools
+from proteus import FemTools
 class GroundwaterTransportCoefficientsELLAM(TC_base):
-    from pyadh.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate
+    from proteus.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate
     """
     groundwater advection-dispersion equation with constant coefficients but variable 
     velocity 

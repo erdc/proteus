@@ -28,7 +28,7 @@ from Transport import OneLevelTransport
 import Comm
 import cadh
 import MeshTools,FemTools
-import pyadhGraphical
+import proteusGraphical
 import Archiver
 from Archiver import ArchiveFlags
 import default_so,default_p,default_n
@@ -72,7 +72,7 @@ def cadhRun(filename,runname=None):
 
 class ADH_InputTranslator:
     """
-    A class for making cADH style input files available to pyadh
+    A class for making cADH style input files available to proteus
 
     For now this will just use an ADH_NumericalSolution object to allocate the needed information
     """
@@ -376,7 +376,7 @@ class ADH_OneLevelTransport(OneLevelTransport):
           represent vector components as double* 's using shallow copies
         """
         import Viewers
-	from pyadhGraphical import vtkViewers
+	from proteusGraphical import vtkViewers
         if plotOffSet != None:
             windowNumberSave = Viewers.windowNumber
             Viewers.windowNumber=plotOffSet

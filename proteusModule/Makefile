@@ -1,40 +1,40 @@
-include ${PETSC_DIR}/conf/variables
-PY = python
+include ${PROTEUS_PREFIX}/conf/variables
 
 all: build_ext install
 
 build_ext:
-	${PY} setup.py build_ext -i
-	${PY} setuppyx.py build_ext -i
-	${PY} setupf.py build_ext -i
+	${PROTEUS_PYTHON} setup.py build_ext -i
+	${PROTEUS_PYTHON} setuppyx.py build_ext -i
+	${PROTEUS_PYTHON} setupf.py build_ext -i
+
 install:
-	${PY} setuppyx.py install
-	${PY} setupf.py install
-	${PY} setup.py install
+	${PROTEUS_PYTHON} setuppyx.py install
+	${PROTEUS_PYTHON} setupf.py install
+	${PROTEUS_PYTHON} setup.py install
 
 petsc-config:
 	setPetscLib.py \'${PETSC_LIB} ${PETSC_INCLUDE}\'
 
 docs:
-	doxygen pyadh-doc.conf
+	doxygen proteus-doc.conf
 
 clean:
-	${PY} setup.py clean
+	${PROTEUS_PYTHON} setup.py clean
 
 cleaner: clean
-	/bin/rm -rf build pyadh/*.pyc pyadh/*.so pyadh/*.a
+	/bin/rm -rf build proteus/*.pyc proteus/*.so proteus/*.a
 
 mpkg:
 	bdist_mpkg --readme=README --license=COPYING --welcome=INTRODUCTION
 
 source:
-	${PY} setup.py sdist
+	${PROTEUS_PYTHON} setup.py sdist
 
 binary:
-	${PY} setup.py bdist_dumb
+	${PROTEUS_PYTHON} setup.py bdist_dumb
 
 rpm:
-	${PY} setup.py bdist_rpm
+	${PROTEUS_PYTHON} setup.py bdist_rpm
 
 wininst:
-	${PY} setup.py bdist_wininst
+	${PROTEUS_PYTHON} setup.py bdist_wininst

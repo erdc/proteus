@@ -17,10 +17,10 @@ import sys
 import socket
 import cPickle
 import numpy
-import pyadh
+import proteus
 #remove blankent import statements until after Comm initialized for petsc4py
-# from pyadh import *
-from pyadh import Profiling,Comm
+# from proteus import *
+from proteus import Profiling,Comm
 from warnings import *
 import optparse
 import sys
@@ -28,7 +28,7 @@ import pstats
 import pdb
 #remove blankent import statements until after Comm initialized for petsc4py
 # try:
-#     from pyadhGraphical import *
+#     from proteusGraphical import *
 # except:
 #     pass
 try:
@@ -183,9 +183,9 @@ if opts.petscOptionsFile != None:
 comm = Comm.init(argv=petsc_argv)
 
 #blanket import statements can go below here now that petsc4py should be initialized
-from pyadh import *
+from proteus import *
 try:
-    from pyadhGraphical import *
+    from proteusGraphical import *
 except:
     pass
 
@@ -284,7 +284,7 @@ Profiling.procID=comm.rank()
 if sList[0].logAllProcesses or opts.logAllProcesses:
     Profiling.logAllProcesses = True
 Profiling.flushBuffer=sList[0].flushBuffer
-log("Running PyADH version "+pyadh.__version__,level=0)
+log("Running Proteus version "+proteus.__version__,level=0)
 if opts.viewer:
     log("Starting viewer")
     Viewers.viewerOn(so.name+`comm.rank()`,opts.viewer)

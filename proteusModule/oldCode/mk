@@ -1,5 +1,0 @@
-gcc -m64 -pthread -fno-strict-aliasing -DNDEBUG -g -O3 -Wall -Wstrict-prototypes -fPIC -Iinclude -I/home/cekees/include/python2.4 -c SpecialMath_wrap.c -o SpecialMath_wrap.o
-gcc -m64 -pthread -shared SpecialMath_wrap.o -lm -o _SpecialMath.so
-gcc -m64 -pthread -fno-strict-aliasing -DNDEBUG -g -O3 -Wall -Wstrict-prototypes -fPIC -Iinclude -I/home/cekees/include/python2.4 -c analyticalSolutionsModule.c -o analyticalSolutionsModule.o
-gcc -m64 -pthread -fno-strict-aliasing -DNDEBUG -g -O3 -Wall -Wstrict-prototypes -fPIC -Iinclude -I/home/cekees/include/python2.4 -c analyticalSolutions.c -o analyticalSolutions.o
-gcc -m64 -pthread -shared analyticalSolutionsModule.o analyticalSolutions.o -lm -o analyticalSolutions.so

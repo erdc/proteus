@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 """
 just add a place to put things I'm testing out before they are ready for
-including in pyadh
+including in proteus
 """
 import Norms
 import testStuffImpl

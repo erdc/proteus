@@ -1,6 +1,6 @@
 import os
 
-PYADH_PACKAGES = os.getenv('PYADH_PACKAGES',os.getenv('HOME')+'/src/pyadh-packages')
+PYADH_PACKAGES = os.getenv('PYADH_PACKAGES',os.getenv('HOME')+'/src/proteus-packages')
 PYADH_EXTRA_COMPILE_ARGS=['-fPIC','-Wall','-DANSI_DECLARATORS','-DREAL=double','-DVOID=void']
 PYADH_EXTRA_LINK_ARGS=[ '-Wl,--start-group',
                         os.getenv('TACC_MKL_LIB')+'/libmkl_intel_lp64.a',
@@ -29,12 +29,12 @@ PYADH_MPI_LIB_DIR = '.'
 PYADH_MPI_LIBS = []
 
 PYADH_BLAS_INCLUDE_DIR   = os.getenv('TACC_MKL_LIB')
-PYADH_BLAS_H     = r'"pyadh_blas.h"'
+PYADH_BLAS_H     = r'"proteus_blas.h"'
 PYADH_BLAS_LIB_DIR = os.getenv('TACC_MKL_LIB')
 PYADH_BLAS_LIB   = 'm'
 
 PYADH_LAPACK_INCLUDE_DIR = os.getenv('TACC_MKL_LIB')
-PYADH_LAPACK_H   = r'"pyadh_lapack.h"'
+PYADH_LAPACK_H   = r'"proteus_lapack.h"'
 PYADH_LAPACK_LIB_DIR = os.getenv('TACC_MKL_LIB')
 PYADH_LAPACK_LIB = 'm'
 PYADH_LAPACK_INTEGER = 'int'

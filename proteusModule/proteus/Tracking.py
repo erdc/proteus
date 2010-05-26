@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from pyadh import MeshTools,FemTools,Comm,Quadrature,cfemIntegrals,Archiver
+from proteus import MeshTools,FemTools,Comm,Quadrature,cfemIntegrals,Archiver
 import numpy,math
 """
 particle tracking tools
@@ -2157,7 +2157,7 @@ def test2(opts):
     q['velocity_depart'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
     q['velocity_track'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
 
-    from pyadh import cpostprocessing
+    from proteus import cpostprocessing
     cpostprocessing.getRT0velocityValuesFluxRep_arbitraryElementMembership(sdmesh.nodeArray,
                                                                            sdmesh.elementNodesArray,
                                                                            q['abs(det(J))'],
@@ -2177,8 +2177,8 @@ def test2(opts):
 
     if opts.view:
         try:  #run time visualization?
-            from pyadh import Viewers
-            from pyadhGraphical import vtkViewers
+            from proteus import Viewers
+            from proteusGraphical import vtkViewers
             Viewers.viewerOn("test2",'vtk')
             viewer = Viewers.V_base(p)
         except:
@@ -2443,7 +2443,7 @@ def test3(opts):
     q['velocity_depart'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
     q['velocity_track'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
 
-    from pyadh import cpostprocessing
+    from proteus import cpostprocessing
     cpostprocessing.getRT0velocityValuesFluxRep_arbitraryElementMembership(sdmesh.nodeArray,
                                                                            sdmesh.elementNodesArray,
                                                                            q['abs(det(J))'],
@@ -2463,8 +2463,8 @@ def test3(opts):
 
     if opts.view:
         try:  #run time visualization?
-            from pyadh import Viewers
-            from pyadhGraphical import vtkViewers
+            from proteus import Viewers
+            from proteusGraphical import vtkViewers
             Viewers.viewerOn("test2",'vtk')
             viewer = Viewers.V_base(p)
         except:
@@ -2761,8 +2761,8 @@ def test4(opts):
 
     if opts.view:
         try:  #run time visualization?
-            from pyadh import Viewers
-            from pyadhGraphical import vtkViewers
+            from proteus import Viewers
+            from proteusGraphical import vtkViewers
             Viewers.viewerOn("test4",'vtk')
             viewer = Viewers.V_base(p)
         except:
@@ -2930,8 +2930,8 @@ def test5(opts):
 
     if opts.view:
         try:  #run time visualization?
-            from pyadh import Viewers
-            from pyadhGraphical import vtkViewers
+            from proteus import Viewers
+            from proteusGraphical import vtkViewers
             Viewers.viewerOn("test5",'vtk')
             viewer = Viewers.V_base(p)
         except:
@@ -3116,8 +3116,8 @@ def test6(opts):
 
     if opts.view:
         try:  #run time visualization?
-            from pyadh import Viewers
-            from pyadhGraphical import vtkViewers
+            from proteus import Viewers
+            from proteusGraphical import vtkViewers
             Viewers.viewerOn("test6",'vtk')
             viewer = Viewers.V_base(p)
         except:
