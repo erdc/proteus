@@ -32,14 +32,14 @@ class  NS_base:
        digraph NumericalSolutionHasA {
        node [shape=record, fontname=Helvetica, fontsize=12];
        NS   [label="NumericalSolution" URL="\ref NumericalSolution", style="filled", fillcolor="gray"];
-       mList [label="MultilevelTranportModel [n]" URL="\ref pyadh::Transport::MultilevelTransport"];
-       nsList [label="NonLinearSolver [n] " URL="\ref pyadh::NonLinearSolver"];
-       lsList [label="LinearSolver [n] " URL="\ref pyadh::LinearSolver"];
-       pList [label="Problem Specification [n]" URL="\ref pyadh::default_p"];
-       nList [label="Numerics Specifiation [n]" URL="\ref pyadh::default_n"];
-       sList [label="Output Specification [n]" URL="\ref pyadh::SimTools"];
-       so [label="Coupling Specification " URL="\ref pyadh::SO_base"];
-       ar [label="Archiver" URL="\ref pyadh::AR_base"];       
+       mList [label="MultilevelTranportModel [n]" URL="\ref proteus::Transport::MultilevelTransport"];
+       nsList [label="NonLinearSolver [n] " URL="\ref proteus::NonLinearSolver"];
+       lsList [label="LinearSolver [n] " URL="\ref proteus::LinearSolver"];
+       pList [label="Problem Specification [n]" URL="\ref proteus::default_p"];
+       nList [label="Numerics Specifiation [n]" URL="\ref proteus::default_n"];
+       sList [label="Output Specification [n]" URL="\ref proteus::SimTools"];
+       so [label="Coupling Specification " URL="\ref proteus::SO_base"];
+       ar [label="Archiver" URL="\ref proteus::AR_base"];       
        NS -> pList [arrowhead="normal", style="dashed", color="purple"];
        NS -> nList [arrowhead="normal", style="dashed", color="purple"];
        NS -> so [arrowhead="normal", style="dashed", color="purple"];
@@ -230,7 +230,7 @@ class  NS_base:
             if opts.viewMesh:
                 log("Attempting to visualize mesh")
                 try:
-                    from pyadhGraphical import vtkViewers
+                    from proteusGraphical import vtkViewers
                     vtkViewers.ViewMesh(mlMesh.meshList[0],viewMaterialTypes=True)
                     vtkViewers.ViewBoundaryMesh(mlMesh.meshList[0],viewBoundaryMaterialTypes=True)
                 except:
@@ -243,7 +243,7 @@ class  NS_base:
                 if opts.viewMesh and opts.viewLevels and l > 0:
                     log("Attempting to visualize mesh")
                     try:
-                        from pyadhGraphical import vtkViewers
+                        from proteusGraphical import vtkViewers
                         vtkViewers.ViewMesh(mlMesh.meshList[l],title="mesh level %s " % l,
                                             viewMaterialTypes=True)
                         vtkViewers.ViewBoundaryMesh(mlMesh.meshList[l],title="boundary mesh level %s " % l,

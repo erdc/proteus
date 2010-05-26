@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 from numpy import *
-import pyadh
-from pyadh.MeshTools import *
-from pyadh.FemTools import *
+import proteus
+from proteus.MeshTools import *
+from proteus.FemTools import *
 ## \ingroup scripts
 # 
 # \file readFunDump.py

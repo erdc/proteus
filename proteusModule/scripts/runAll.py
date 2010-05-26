@@ -22,9 +22,9 @@ for p,nList in caseDict.iteritems():
         sys.stdout.flush()
     else:
         for n in nList:
-            args = ('pyadhRun.py',p,n,'-l 4','-b','runAllBatch.py')
+            args = ('proteusRun.py',p,n,'-l 4','-b','runAllBatch.py')
             sys.stdout.write("\n----------------Running  "+p+"---"+n+"\n")
             sys.stdout.flush()
-            os.spawnvpe(os.P_WAIT,'pyadhRun.py',args,os.environ)
+            os.spawnvpe(os.P_WAIT,'proteusRun.py',args,os.environ)
     
        

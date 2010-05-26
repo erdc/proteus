@@ -4758,7 +4758,7 @@ class OneLevelTransport(NonlinearEquation):
     def viewSolutionVTK(self,plotOffSet=None,titleModifier='',dgridnx=50,dgridny=50,dgridp=16.,
                         pause=False):
         import Viewers
-	from pyadhGraphical import vtkViewers
+	from proteusGraphical import vtkViewers
         if plotOffSet != None:
             windowNumberSave = Viewers.windowNumber
             Viewers.windowNumber=plotOffSet

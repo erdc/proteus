@@ -17,7 +17,7 @@ import TriangleFileUtils
 #some global constants and useful things?
 ########################################################################
 #where is showme on the system?
-PYADH_PACKAGES = os.getenv('PYADH_PACKAGES',os.getenv('HOME')+'/src/pyadh-packages')
+PYADH_PACKAGES = os.getenv('PYADH_PACKAGES',os.getenv('HOME')+'/src/proteus-packages')
 showmeCmdBase = PYADH_PACKAGES+'/triangle/bin/showme'
 
 ########################################################################

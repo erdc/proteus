@@ -53,8 +53,8 @@ cdef class cADH_NumericalSolution:
         argv[1] = <char*>filename
         argv[2] = <char*>runname
 
-        pyadh_packages = os.getenv('PYADH_PACKAGES',os.getenv('HOME')+'/src/pyadh-packages')
-        preadh = pyadh_packages+'/adh/bin/pre_adh'
+        proteus_packages = os.getenv('PROTEUS_PACKAGES',os.getenv('HOME')+'/src/proteus-packages')
+        preadh = proteus_packages+'/adh/bin/pre_adh'
         command = preadh+' '+filename
         print "cadh calling pre_adh as %s" % command
         os.system(command)

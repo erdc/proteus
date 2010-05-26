@@ -22,7 +22,7 @@ nd = 1
 domain = None
 """The domain object
 
-:type: None or pyadh.Domain.D_base
+:type: None or proteus.Domain.D_base
 """
 
 movingDomain=False
@@ -43,12 +43,12 @@ L=(1.0,1.0,1.0)
 analyticalSolution = {}
 """Dictionary of analytical solutions for each component
 
-Each element should be an object of type :class:`pyadh.AnalyticalSolutions.AS_base`"""
+Each element should be an object of type :class:`proteus.AnalyticalSolutions.AS_base`"""
 
 coefficients = None
 """Transport coefficients object
 
-The object should be of type :class:`pyadh.TransportCoefficients.TC_base`"""
+The object should be of type :class:`proteus.TransportCoefficients.TC_base`"""
 
 dirichletConditions = {}
 """Dictionary of Dirichlet conditions for each component"""

@@ -206,10 +206,10 @@ class TwophaseDarcyFlow_base(TC_base):
                                self.omega_ip)
 #primitive fully coupled formulation
 class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_fc
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_fc_het_matType
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_fc_sd_diag
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_fc_sd_diag_het_matType
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_het_matType
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_sd_diag
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_sd_diag_het_matType
     def __init__(self,
                  g=9.8, 
                  rhon=1.0,
@@ -500,10 +500,10 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
             pdb.set_trace()
 #fully coupled fractional flow formulation
 class TwophaseDarcy_fc_ff(TwophaseDarcyFlow_base):
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_fc_ff
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_fc_ff_het_matType
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_fc_ff_sd_diag
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_fc_ff_sd_diag_het_matType
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_ff
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_ff_het_matType
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_ff_sd_diag
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_ff_sd_diag_het_matType
     def __init__(self,
                  g=9.8, 
                  rhon=1.0,
@@ -733,10 +733,10 @@ class TwophaseDarcy_fc_ff(TwophaseDarcyFlow_base):
 
 #split fractional flow formulation--pressure equation
 class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_split_pressure
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_split_pressure_het_matType
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_split_sd_diag_pressure
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_split_sd_diag_pressure_het_matType
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_split_pressure
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_split_pressure_het_matType
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_split_sd_diag_pressure
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_split_sd_diag_pressure_het_matType
     def __init__(self,
                  g=9.8, 
                  rhon=1.0,
@@ -1032,10 +1032,10 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
 
 #split fractional flow formulation--saturation equation
 class TwophaseDarcy_split_saturation(TwophaseDarcyFlow_base):
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_split_saturation
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_split_saturation_het_matType
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_split_sd_diag_saturation
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_split_sd_diag_saturation_het_matType
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_split_saturation
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_split_saturation_het_matType
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_split_sd_diag_saturation
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_split_sd_diag_saturation_het_matType
     def __init__(self,
                  g=9.8, 
                  rhon=1.0,

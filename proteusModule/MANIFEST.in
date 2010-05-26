@@ -1,4 +1,4 @@
 include defaultConfig.py
 graft include
-graft pyadhConfig
+graft proteusConfig
 global-exclude *.svn *~ #*#

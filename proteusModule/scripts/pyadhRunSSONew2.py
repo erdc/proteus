@@ -5,10 +5,10 @@ import os
 import sys
 import cPickle
 import numpy as numpy
-from pyadh import *
+from proteus import *
 from warnings import *
 
-def pyadhRun(runRoutines):
+def proteusRun(runRoutines):
     import optparse
     if sys.version_info[1] >= 5:
         import cProfile as profiler
@@ -95,7 +95,7 @@ def pyadhRun(runRoutines):
         sys.argv = sys.argv[:-1]+opts.petscOptions.split()
         print sys.argv
     comm = Comm.init()
-    #mwf modify path to be able to load pyadh test problems
+    #mwf modify path to be able to load proteus test problems
     #for now always insert
     probDir = str(opts.probDir)
     if probDir not in sys.path:
@@ -352,7 +352,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
         cPickle.dump(mlMesh,mlMeshFile,protocol=cPickle.HIGHEST_PROTOCOL)
     #mwf debug
     for l in range(n.nLevels):
-        print """pyadhRun debug: mesh level=%d  nElements= %d nNodes=%d nFaces=%d diameter= %g """ % (l,
+        print """proteusRun debug: mesh level=%d  nElements= %d nNodes=%d nFaces=%d diameter= %g """ % (l,
                                                                                       mlMesh.meshList[l].nElements_global,mlMesh.meshList[l].nNodes_global,mlMesh.meshList[l].nElementBoundaries_global,mlMesh.meshList[l].h)
         
 
@@ -519,7 +519,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     firstStep=True
     for n,ti,tn in zip(nList,timeIntegratorList,tnList):
         ti.initialize(n.DT,t0=tn,T=pList[opts.masterModel].T)
-        print "pyadhRunSSONew2 init stage DT",n.DT
+        print "proteusRunSSONew2 init stage DT",n.DT
     for m in mList:
         #mwf debug
         #temporarily turn off if not 1d
@@ -558,7 +558,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
             if True:#firstStep == True:
                 mList[it].chooseDT(nList[it].DT,tnList[it]+dt)
             #mwf debug
-            print """pyadhRunSSONew2 tnMaster=%g tn[it]=%g dt=%g model= %s""" % (tnList[opts.masterModel],tnList[it],dt,it)
+            print """proteusRunSSONew2 tnMaster=%g tn[it]=%g dt=%g model= %s""" % (tnList[opts.masterModel],tnList[it],dt,it)
             print "tnList[it],dt",tnList[it],dt
             failedStep[it],tnList[it] = timeIntegratorList[it].calculateSolution(tnList[it],tnList[it]+dt)
 
@@ -595,7 +595,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
         if abs(tnList[opts.masterModel]+dt) > abs(pList[opts.masterModel].T-1.0e-8*tnList[opts.masterModel]):
             dt = pList[opts.masterModel].T-tnList[opts.masterModel]
         if failedFlag:
-            print """pyadhRunSSO tn=%g dt=%g failedStep= %s""" % (tnList[opts.masterModel],dt,failedStep)
+            print """proteusRunSSO tn=%g dt=%g failedStep= %s""" % (tnList[opts.masterModel],dt,failedStep)
         if abs(pList[opts.masterModel].T-tnList[opts.masterModel]) < 1.0e-8*tnList[opts.masterModel]:
             tnList[opts.masterModel] = pList[opts.masterModel].T
         for m,p,pName in zip(mList,pList,pNameList):
@@ -613,4 +613,4 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
         simOutput.postprocess(p,n,m,tn)
     
 if __name__ == '__main__':
-   pyadhRun(runProblems)
+   proteusRun(runProblems)

@@ -12,7 +12,7 @@ for n in nFiles:
         if line.find('from PyadhTools import *') != -1:
             pass
         elif line.find('from default_n import *') != -1:
-            line = 'from pyadh import *\nfrom pyadh.default_n import *\n'
+            line = 'from proteus import *\nfrom proteus.default_n import *\n'
             nf.write(line)
         elif line.find('conservativeFlux = \'pwl\'') != -1:
             line = 'conservativeFlux = {0:\'pwl\'}'

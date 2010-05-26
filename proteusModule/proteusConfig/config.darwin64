@@ -1,6 +1,6 @@
 import os
 
-PYADH_PACKAGES = os.getenv('PYADH_PACKAGES',os.getenv('HOME')+'/src/pyadh-packages')
+PYADH_PACKAGES = os.getenv('PYADH_PACKAGES',os.getenv('HOME')+'/src/proteus-packages')
 PYADH_EXTRA_COMPILE_ARGS= ['-Wall']
 PYADH_EXTRA_LINK_ARGS=['-lblas','-lstdc++','-flat_namespace']
 PYADH_SUPERLU_INCLUDE_DIR = PYADH_PACKAGES+'/superlu/SRC'
@@ -24,14 +24,14 @@ PYADH_TRIANGLE_H = r'\"triangle.h\"'
 PYADH_TRIANGLE_LIB_DIR = PYADH_PACKAGES+'/triangle/lib'
 PYADH_TRIANGLE_LIB ='tri'
 
-PYADH_DAETK_INCLUDE_DIR = [os.getenv('HOME')+'/src/pyadh-packages/daetk',os.getenv('HOME')+'/src/pyadh-packages/daetk/pete/pete-2.1.0/src']
-PYADH_DAETK_LIB_DIR = os.getenv('HOME')+'/src/pyadh-packages/daetk'
+PYADH_DAETK_INCLUDE_DIR = [os.getenv('HOME')+'/src/proteus-packages/daetk',os.getenv('HOME')+'/src/proteus-packages/daetk/pete/pete-2.1.0/src']
+PYADH_DAETK_LIB_DIR = os.getenv('HOME')+'/src/proteus-packages/daetk'
 PYADH_DAETK_LIB ='daetk'
 
-PYADH_PETSC_INCLUDE_DIRS = [os.getenv('HOME')+'/src/pyadh-packages/petsc/include',
-                            os.getenv('HOME')+'/src/pyadh-packages/petsc/bmake/'+os.getenv('PETSC_ARCH')]
-PYADH_PETSC_LIB_DIRS = [os.getenv('HOME')+'/src/pyadh-packages/petsc/lib/'+os.getenv('PETSC_ARCH'),
-                        os.getenv('HOME')+'/src/pyadh-packages/petsc/externalpackages/ParMetis-dev-p1/'+os.getenv('PETSC_ARCH')+'/lib',
+PYADH_PETSC_INCLUDE_DIRS = [os.getenv('HOME')+'/src/proteus-packages/petsc/include',
+                            os.getenv('HOME')+'/src/proteus-packages/petsc/bmake/'+os.getenv('PETSC_ARCH')]
+PYADH_PETSC_LIB_DIRS = [os.getenv('HOME')+'/src/proteus-packages/petsc/lib/'+os.getenv('PETSC_ARCH'),
+                        os.getenv('HOME')+'/src/proteus-packages/petsc/externalpackages/ParMetis-dev-p1/'+os.getenv('PETSC_ARCH')+'/lib',
                         '/usr/X11R6/lib']
 PYADH_PETSC_LIBS =['petsccontrib','petscts','petscsnes','petscksp','petscdm','petscmat','petscvec','petsc','parmetis','metis','X11']
 

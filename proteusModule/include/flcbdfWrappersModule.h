@@ -61,7 +61,7 @@ extern "C"
   static int
   import_flcbdfWrappers(void)
   {
-    PyObject* module = PyImport_ImportModule("pyadh.flcbdfWrappers");
+    PyObject* module = PyImport_ImportModule("proteus.flcbdfWrappers");
     
     if (module != NULL)
       {

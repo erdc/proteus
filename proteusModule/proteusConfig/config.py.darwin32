@@ -1,6 +1,6 @@
 import os
 
-PYADH_PACKAGES = os.getenv('PYADH_PACKAGES',os.getenv('HOME')+'/src/pyadh-packages')
+PYADH_PACKAGES = os.getenv('PYADH_PACKAGES',os.getenv('HOME')+'/src/proteus-packages')
 PYADH_EXTRA_COMPILE_ARGS= []
 PYADH_EXTRA_LINK_ARGS=[]
 PYADH_SUPERLU_INCLUDE_DIR = PYADH_PACKAGES+'/superlu/SRC'
