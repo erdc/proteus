@@ -3,11 +3,11 @@ import os
 import os.path
 import sys
 import time
-pyadh_test_path = os.path.join(os.environ['HOME'],'src','pyadh-trunk-test')
+proteus_test_path = os.path.join(os.environ['HOME'],'src','proteus-trunk-test')
 try:
-    os.chdir(pyadh_test_path)
+    os.chdir(proteus_test_path)
 except:
-    print "Unable to change directories to ",pyadh_test_path
+    print "Unable to change directories to ",proteus_test_path
 outfileName = 'doxygen.out.'+`time.time()`
 outfile = open(outfileName,'w')
 sys.stdout = outfile

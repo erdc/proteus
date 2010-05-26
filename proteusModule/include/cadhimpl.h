@@ -60,7 +60,7 @@ typedef struct
 
 extern int cadhMain(int argc, char* argv[]);
 extern void readBC(ADH_Input* self, char* filebase);
-extern void messg_finalize_pyadh(void);
+extern void messg_finalize_proteus(void);
 extern int ADH_NumericalSolution_step(ADH_NumericalSolution* self);
 extern int ADH_NumericalSolution_stepTaken(ADH_NumericalSolution* self);
 extern int ADH_NumericalSolution_init(ADH_NumericalSolution* self, int argc, char* argv[]);

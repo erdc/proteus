@@ -119,7 +119,7 @@ void readBC(ADH_Input* self, char* filebase)
     }
 }
 /**A modified version of messg_finalize to allow PyADH to handle MPI*/
-void messg_finalize_pyadh(void)
+void messg_finalize_proteus(void)
 {
   double elapsed_time = DZERO;	/* runtimes for the model */
   int i = 0;			/* Loop Counter */
@@ -428,7 +428,7 @@ int ADH_NumericalSolution_init(ADH_NumericalSolution* self, int argc, char* argv
 	{
 	  printf("ADH svn revision #%s\n", ADHREV);
 	  /*messg_finalize();*/
-	  messg_finalize_pyadh();
+	  messg_finalize_proteus();
 	  exit(0);
 	}
       else
@@ -451,7 +451,7 @@ int ADH_NumericalSolution_init(ADH_NumericalSolution* self, int argc, char* argv
       fprintf(stderr, "Incorrect usage: \n    adh file_base optional_run_name\n");
       fprintf(stderr, "  or,\n    adh -v\n");
       /*messg_finalize();*/
-      messg_finalize_pyadh();
+      messg_finalize_proteus();
       exit(0);
     }
 
@@ -593,7 +593,7 @@ int ADH_NumericalSolution_dealloc(ADH_NumericalSolution* self)
   messg_barrier();
   /* messg_elapsed_time(); */
   /*messg_finalize();*/
-  messg_finalize_pyadh();
+  messg_finalize_proteus();
   solv_finalize();
   debug_finalize();
 
@@ -3482,7 +3482,7 @@ int get_ADH_nNodes_element()
 int get_nodeArray(double * nodeArray)
 {
   /*
-    load adh nodes into a double* array for pyadh
+    load adh nodes into a double* array for proteus
     nodeArray is logically nNodes_global x 3
    */
   int nN;
@@ -3499,7 +3499,7 @@ int get_nodeArray(double * nodeArray)
 int get_elementNodesArray(int* elementNodesArray)
 {
   /*
-    load adh element-node connectivity table into a int* array for pyadh
+    load adh element-node connectivity table into a int* array for proteus
     elementNodesArray is logically nElements_global x (nNodes_element)
    */
   int eN,nN,nNodes_element;
@@ -3531,7 +3531,7 @@ int get_elementNodesArray(int* elementNodesArray)
 
 int get_elementMaterialTypes(int* elementMaterialTypes)
 {
-  /* copy adh element material identifier to pyadh
+  /* copy adh element material identifier to proteus
      may be better to go with elem3d[eN].mat instead
   */
   int eN;
@@ -3556,7 +3556,7 @@ int get_elementMaterialTypes(int* elementMaterialTypes)
 }
 int get_nodeMaterialTypes(int* nodeMaterialTypes)
 {
-  /* copy adh node identifier to pyadh*/
+  /* copy adh node identifier to proteus*/
   int nN;
   for (nN=0; nN < nnode; nN++)
     nodeMaterialTypes[nN] = node_flags[nN];

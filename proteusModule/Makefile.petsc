@@ -7,13 +7,13 @@ petsc-config:
 	setPetscLib.py \'${PETSC_LIB} ${PETSC_INCLUDE}\'
 
 docs:
-	doxygen pyadh-doc.conf
+	doxygen proteus-doc.conf
 
 clean:
 	python setup.py clean
 
 cleaner: clean
-	/bin/rm -rf build pyadh/*.pyc pyadh/*.so
+	/bin/rm -rf build proteus/*.pyc proteus/*.so
 
 mpkg:
 	bdist_mpkg --readme=README --license=COPYING --welcome=INTRODUCTION

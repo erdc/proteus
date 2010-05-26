@@ -6,7 +6,7 @@ from TransportCoefficients import TC_base
 import numpy
 import Profiling
 log = Profiling.logEvent
-from pyadh import FemTools
+from proteus import FemTools
 
 import subsurfaceTransportFunctions as stfuncs
 
@@ -694,7 +694,7 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
 
     TODO:
    """
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_fc_sd_het_matType
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_sd_het_matType
     def __init__(self,
                  nd=1,
                  dimensionless_gravity=[-1.0],
@@ -1179,7 +1179,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
       Figure out if really need to evaluate potential interpolation points
    """
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_incompressible_split_sd_pressure_het_matType
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_incompressible_split_sd_pressure_het_matType
     def __init__(self,
                  nd=1,
                  dimensionless_gravity=[-1.0],
@@ -1367,7 +1367,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
       Figure out if really need to evaluate potential interpolation points
    """
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_incompressible_split_sd_saturation_het_matType
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_incompressible_split_sd_saturation_het_matType
     def __init__(self,
                  nd=1,
                  dimensionless_gravity=[-1.0],
@@ -1565,8 +1565,8 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
       Figure out if really need to evaluate potential interpolation points
    """
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_slightCompressible_split_sd_pressure_het_matType
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_compressibleN_split_sd_pressure_het_matType
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_slightCompressible_split_sd_pressure_het_matType
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_compressibleN_split_sd_pressure_het_matType
     def __init__(self,
                  nd=1,
                  dimensionless_gravity=[-1.0],
@@ -1811,8 +1811,8 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 
       Figure out if really need to evaluate potential interpolation points
     """
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_slightCompressible_split_sd_saturation_het_matType
-    from pyadh.cTwophaseDarcyCoefficients import twophaseDarcy_compressibleN_split_sd_saturation_het_matType
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_slightCompressible_split_sd_saturation_het_matType
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_compressibleN_split_sd_saturation_het_matType
     def __init__(self,
                  nd=1,
                  dimensionless_gravity=[-1.0],
@@ -2217,7 +2217,7 @@ class CompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_compr
 ########################################
 
 class GroundwaterTransportCoefficientsELLAM(TC_base):
-    from pyadh.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate
+    from proteus.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate
     """
     groundwater advection-dispersion equation with constant coefficients but variable 
     velocity 

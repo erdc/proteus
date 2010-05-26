@@ -3,26 +3,26 @@ import os
 import os.path
 import sys
 import time
-pyadh_test_path = os.path.join(os.environ['HOME'],'src','pyadh-trunk-test')
-pyadh_test_path_scripts=os.path.join(pyadh_test_path,'scripts')
-pyadh_test_path_problems=os.path.join(pyadh_test_path,'test','problemDescriptions')
-print "pyadh path = ",pyadh_test_path
-print "pyadh scripts path = ",pyadh_test_path_scripts
-print "pyadh test problems path = ",pyadh_test_path_problems
+proteus_test_path = os.path.join(os.environ['HOME'],'src','proteus-trunk-test')
+proteus_test_path_scripts=os.path.join(proteus_test_path,'scripts')
+proteus_test_path_problems=os.path.join(proteus_test_path,'test','problemDescriptions')
+print "proteus path = ",proteus_test_path
+print "proteus scripts path = ",proteus_test_path_scripts
+print "proteus test problems path = ",proteus_test_path_problems
 try:
-    os.environ['PATH'] = pyadh_test_path_scripts+os.pathsep+os.environ['PATH']
+    os.environ['PATH'] = proteus_test_path_scripts+os.pathsep+os.environ['PATH']
 except:
     print "Problem setting PATH variable"
 print "PATH = ",os.environ['PATH']
 try:
-    os.environ['PYTHONPATH'] = pyadh_test_path_pyadh+os.pathsep+os.environ['PYTHONPATH']
+    os.environ['PYTHONPATH'] = proteus_test_path_proteus+os.pathsep+os.environ['PYTHONPATH']
 except:
-    os.environ['PYTHONPATH'] = pyadh_test_path
+    os.environ['PYTHONPATH'] = proteus_test_path
 print "PYTHONPATH = ",os.environ['PYTHONPATH']
 try:
-    os.chdir(pyadh_test_path)
+    os.chdir(proteus_test_path)
 except:
-    print "Unable to change directories to ",pyadh_test_path
+    print "Unable to change directories to ",proteus_test_path
 outfileName = 'bidaily.out.'+`time.time()`
 outfile = open(outfileName,'w')
 sys.stdout = outfile
@@ -32,5 +32,5 @@ try:
 except:
     print "Unable to run svn update"
 os.system('make clobber >& %s; make >& %s' % (outfileName,outfileName,))
-os.chdir(pyadh_test_path_problems)
+os.chdir(proteus_test_path_problems)
 os.system('runAll.py >& %s' % (outfileName,))

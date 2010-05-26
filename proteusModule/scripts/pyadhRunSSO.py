@@ -5,7 +5,7 @@ import os
 
 ## need to insert more comments
 # \ingroup scripts
-# \file pyadhRunSSO.py
+# \file proteusRunSSO.py
 # 
 # @{
 #   \brief driver for multi-model simulations
@@ -14,10 +14,10 @@ import os
 import sys
 import cPickle
 import numpy as numpy
-from pyadh import *
+from proteus import *
 from warnings import *
 
-def pyadhRun(runRoutines):
+def proteusRun(runRoutines):
     import optparse
     if sys.version_info[1] >= 5:
         import cProfile as profiler
@@ -84,7 +84,7 @@ def pyadhRun(runRoutines):
                       help="""where to find problem descriptions""")
 
     (opts,args) = parser.parse_args()
-    #modify path to be able to load pyadh test problems
+    #modify path to be able to load proteus test problems
     #for now always insert
     probDir = str(opts.probDir)
     if probDir not in sys.path:
@@ -453,6 +453,6 @@ def runProblems(pNameAll,pNameList,pList,nList,opts):
     #    mlTransport.modelList[-1].u[ci].femSpace.writeFunctionGnuplot(mlTransport.modelList[-1].u[ci],pName+"""-gnu-%d""" % ci)
     #    raw_input('\nPress return to close windows and exit... \n')
 if __name__ == '__main__':
-   pyadhRun(runProblems)
+   proteusRun(runProblems)
 
 ## @}

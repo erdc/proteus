@@ -208,7 +208,7 @@ class LatexResultsSummary:
 if __name__ == '__main__':
     import os
     import sys
-    PYADH_HOME = os.getenv('PYADH_HOME',os.getenv('HOME')+'/Public/code/pyadh')
+    PYADH_HOME = os.getenv('PYADH_HOME',os.getenv('HOME')+'/Public/code/proteus')
     PYADH_SRC  = PYADH_HOME+'/src'
     if PYADH_SRC not in sys.path:
         sys.path.insert(0,PYADH_SRC)

@@ -630,7 +630,7 @@ class XdmfWriter:
                         #mwf 10/19/09 orig no longer works because of changes in orderings for
                         #parallel
                         elements=copy.deepcopy(dofMap.l2g)
-                        #pyadh stores 3d dof as
+                        #proteus stores 3d dof as
                         #|n0,n1,n2,n3|(n0,n1),(n1,n2),(n2,n3)|(n0,n2),(n1,n3)|(n0,n3)|
                         #looks like xdmf wants them as 
                         #|n0,n1,n2,n3|(n0,n1),(n1,n2),(n0,n2) (n0,n3),(n1,n3) (n2,n3)|
