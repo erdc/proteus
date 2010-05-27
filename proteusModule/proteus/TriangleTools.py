@@ -108,7 +108,7 @@ number of edges         = %d
             self.vorrepDefaultInit[index] = True
         #end trirep initialized to something non trivial
 
-    def convertToPyadhMesh(self,verbose=0):
+    def convertToProteusMesh(self,verbose=0):
         """
         Generate a representation in the format expected by
         proteus.
@@ -363,8 +363,8 @@ number of edges         = %d
 # #         #end eN
 # #         meshout.hasGeometricInfo=True
 #         return meshout
-    #end convertToPyadhMesh
-    def convertFromPyadhMesh(self,meshin,verbose=0):
+    #end convertToProteusMesh
+    def convertFromProteusMesh(self,meshin,verbose=0):
         """
         generate a Triangle mesh representation from an proteus mesh.
         This version will copy over the nodes and elements from the
@@ -418,7 +418,7 @@ number of edges         = %d
 
         #clean up explicitly
         del tri0
-    #end convertFromPyadhMesh
+    #end convertFromProteusMesh
     ##################################################
     #read from file routines
     ##################################################
@@ -719,7 +719,7 @@ def TriangleCall3(filebase="trimesh",baseFlags="zen",
     mesh.viewShowme()
 
 #end TriangleCall3
-def exPyadhMesh0(filebase="trimesh",baseFlags="zen",
+def exProteusMesh0(filebase="trimesh",baseFlags="zen",
                      flagsAdd="",viewMesh=1,verbose=0):
     """
     create a Triangle mesh representation
@@ -761,7 +761,7 @@ def exPyadhMesh0(filebase="trimesh",baseFlags="zen",
         print 'viewing mesh generated from .node and .ele files'
         mesh.viewShowme()
     #end if
-    proteusMesh = mesh.convertToPyadhMesh(verbose)
+    proteusMesh = mesh.convertToProteusMesh(verbose)
     proteusMesh.writeEdgesGnuplot2("gnuMesh") #uses array interface
     if viewMesh > 0:
         proteusMesh.viewMeshGnuplotPipe("gnuMesh")
@@ -769,7 +769,7 @@ def exPyadhMesh0(filebase="trimesh",baseFlags="zen",
     proteusMesh.buildMatlabMeshDataStructures(matmesh)
     
 #end exAdh
-def exPyadhMesh1(baseFlags="zen",viewMesh=1,verbose=0):
+def exProteusMesh1(baseFlags="zen",viewMesh=1,verbose=0):
     """
     create an proteusMesh for a rectangle
     create a Triangle mesh representation
@@ -795,7 +795,7 @@ def exPyadhMesh1(baseFlags="zen",viewMesh=1,verbose=0):
     trimesh = TriangleIface.TriangleBaseMesh(baseFlags=baseFlags,
                                              nbase=nbase,
                                              verbose=verbose)
-    trimesh.convertFromPyadhMesh(proteusMesh,verbose=verbose)
+    trimesh.convertFromProteusMesh(proteusMesh,verbose=verbose)
 
     if viewMesh > 0:
         print 'viewing mesh generated from proteus mesh'
@@ -804,7 +804,7 @@ def exPyadhMesh1(baseFlags="zen",viewMesh=1,verbose=0):
 
 #end exAdh
 
-def exPyadhLaplace1(filebase="trimesh",baseFlags="zen",
+def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
                         flagsAdd="",viewMesh=1,verbose=0):
     import QuadTools
     import FemTools
@@ -850,7 +850,7 @@ def exPyadhLaplace1(filebase="trimesh",baseFlags="zen",
         print 'viewing mesh generated from .node and .ele files'
         mesh.viewShowme()
     #end if
-    proteusMesh = mesh.convertToPyadhMesh(verbose)
+    proteusMesh = mesh.convertToProteusMesh(verbose)
     proteusMesh.writeEdgesGnuplot2("gnuMesh") #uses array interface
     if viewMesh > 0:
         proteusMesh.viewMeshGnuplotPipe("gnuMesh")
@@ -1049,10 +1049,10 @@ if __name__ == '__main__':
                       0 --- TriangleCall3 trimesh fro  .nodes and .ele file,
                             .poly file,  and .node file
                       1 --- TriangleCall3 with spiral
-                      2 --- exPyadhMesh0 with spiral
-                      3 --- exPyadhMesh0 with la 
-                      4 --- exPyadhMesh0 with user specified file, and flags 
-                      5 --- exPyadhMesh1 convert proteusMesh for rectangle
+                      2 --- exProteusMesh0 with spiral
+                      3 --- exProteusMesh0 with la 
+                      4 --- exProteusMesh0 with user specified file, and flags 
+                      5 --- exProteusMesh1 convert proteusMesh for rectangle
                       6 --- solve simple laplace equation with dirichlet bcs
                             on the la mesh
                       """)
@@ -1100,24 +1100,24 @@ if __name__ == '__main__':
         filebase=os.path.join(tribase,"examples/spiral")
         baseFlags="en" #base 1?
         flagsAdd =""   #just node
-        exPyadhMesh0(filebase=filebase,flagsAdd=flagsAdd,
+        exProteusMesh0(filebase=filebase,flagsAdd=flagsAdd,
                          baseFlags=baseFlags,verbose=verbose)
     elif testNum == 3:
         filebase=os.path.join(tribase,"examples/la")
         baseFlags="en" #base 1?
         flagsAdd ="pa"   #from poly file
-        exPyadhMesh0(filebase=filebase,flagsAdd=flagsAdd,
+        exProteusMesh0(filebase=filebase,flagsAdd=flagsAdd,
                          baseFlags=baseFlags,verbose=verbose)
     elif testNum == 4:
-        exPyadhMesh0(filebase=filebase,flagsAdd=flagsAdd,
+        exProteusMesh0(filebase=filebase,flagsAdd=flagsAdd,
                          baseFlags=baseFlags,verbose=verbose)
     elif testNum == 5:
-        exPyadhMesh1(baseFlags=baseFlags,verbose=verbose)
+        exProteusMesh1(baseFlags=baseFlags,verbose=verbose)
     elif testNum == 6:
         filebase=os.path.join(tribase,"examples/la")
         baseFlags="en" #base 1?
         flagsAdd ="pqa"   #from poly file
-        exPyadhLaplace1(filebase,baseFlags,
+        exProteusLaplace1(filebase,baseFlags,
                             flagsAdd=flagsAdd,viewMesh=1,verbose=0)
         #can view results in matlab with
         #matlabMesh; ex1soln; pdeplot(p,e,t,'xydata',u,'contour','on')

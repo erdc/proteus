@@ -4636,10 +4636,10 @@ DaetkPetscSys_init(DaetkPetscSys *self, PyObject *args, PyObject *kwds)
   argv[argc] = new char[1];
   argv[argc] = '\0';
   if (petscDatabaseFilename)
-    self->petscSys = new Daetk::Petsc::Sys(argc,argv,(char*)("Initializing petsc for PyADH, with options database\n"),
+    self->petscSys = new Daetk::Petsc::Sys(argc,argv,(char*)("Initializing petsc for Proteus, with options database\n"),
 					   petscDatabaseFilename);
   else
-    self->petscSys = new Daetk::Petsc::Sys(argc,argv,(char*)("Initializing petsc for PyADH\n"));
+    self->petscSys = new Daetk::Petsc::Sys(argc,argv,(char*)("Initializing petsc for Proteus\n"));
   Py_PETSC_COMM_WORLD = Daetk::Petsc::cc::PETSC_COMM_WORLD;
   delete [] argv;
   return 0;
