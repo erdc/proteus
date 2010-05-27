@@ -22,9 +22,9 @@ cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","")
 
 setup(name='proteus',
       version='0.9.0',
-      description='Python tools for ADaptive Hydrology(ADH)',
+      description='Python tools for multiphysics modeling',
       author='Chris Kees',
-      author_email='christopher.e.kees@erdc.usace.army.mil',
+      author_email='christopher.e.kees@usace.army.mil',
       url='https://adh.usace.army.mil/proteus',
       packages = ['proteus'],
       ext_package='proteus',

@@ -447,7 +447,7 @@ for(int i=0;i<%(nSegmentFlags)d+1;++i)
             hasVertexFlags=False
             pf.write("""ply
 format ascii 1.0
-comment author: PyADH
+comment author: Proteus
 comment object: %s
 """ % (self.name,))
             pf.write("""element vertex %d
@@ -760,7 +760,7 @@ class PiecewiseLinearComplexDomain(D_base):
             hasVertexFlags=False
             pf.write("""ply
 format ascii 1.0
-comment author: PyADH
+comment author: Proteus
 comment object: %s
 """ % (self.name,))
             pf.write("""element vertex %d
