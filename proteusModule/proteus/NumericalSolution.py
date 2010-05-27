@@ -172,8 +172,8 @@ class  NS_base:
                                                        nbase=1,
                                                        verbose=10)
                 tmesh.readFromPolyFile(p.domain.polyfile)
-                log("Converting to PyADH Mesh")
-                mesh=tmesh.convertToPyadhMesh(verbose=1)
+                log("Converting to Proteus Mesh")
+                mesh=tmesh.convertToProteusMesh(verbose=1)
                 mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
                                                             nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                             parallelPartitioningType=n.parallelPartitioningType)

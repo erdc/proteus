@@ -1500,7 +1500,7 @@ static PyObject* SparsityInfo_getCSR(SparsityInfo *self,
       std::sort(&colind_[rowptr_[I]],&colind_[rowptr_[I+1]]);
       max_nonzeros = std::max(max_nonzeros,rowptr_[I+1] - rowptr_[I]);
     }
-  std::cout<<"PyADH: Maximum nonzeros in any row is "<<max_nonzeros<<std::endl;
+  std::cout<<"Proteus: Maximum nonzeros in any row is "<<max_nonzeros<<std::endl;
   return Py_BuildValue("(O,O,i,O)",PyArray_Return(rowptr),PyArray_Return(colind),nnz,PyArray_Return(nzval));
 }
 
@@ -1587,7 +1587,7 @@ static PyTypeObject SparsityInfoType = {
 //   Daetk::Petsc::cc::PetscInitialize(&argc,
 // 				    &argv,
 // 				    petscDatabaseFilename,
-// 				    (char*)("Initializing petsc for PyADH, with options database\n"));
+// 				    (char*)("Initializing petsc for Proteus, with options database\n"));
 //   Py_PETSC_COMM_WORLD = Daetk::Petsc::cc::PETSC_COMM_WORLD;
 //   delete [] argv;
 //   return Py_None;
