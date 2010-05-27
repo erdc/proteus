@@ -11,7 +11,7 @@ from numpy.distutils.core import setup, Extension
 try:
     from config import *
 except:
-    raise RuntimeError("You must first create a config.py file. See proteusConfig for examples")
+    raise RuntimeError("Missing or broken config.py file. See proteusConfig for examples")
 
 cv = sysconfig.get_config_vars()
 cv["OPT"] = cv["OPT"].replace("-DNDEBUG","-DDEBUG")

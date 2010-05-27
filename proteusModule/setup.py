@@ -9,7 +9,7 @@ import numpy
 try:
     from config import *
 except:
-    raise RuntimeError("You must first create a config.py file. See proteusConfig for examples")
+    raise RuntimeError("Missing or invalid config.py file. See proteusConfig for examples")
 
 ###to turn on debugging in c++
 ##\todo Finishing cleaning up setup.py/setup.cfg, config.py...
