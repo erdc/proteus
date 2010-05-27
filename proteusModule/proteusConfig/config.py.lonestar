@@ -1,44 +1,47 @@
 import os
 
-PYADH_PACKAGES = os.getenv('PYADH_PACKAGES',os.getenv('HOME')+'/src/proteus-packages')
-PYADH_EXTRA_COMPILE_ARGS=['-fPIC','-Wall','-DANSI_DECLARATORS','-DREAL=double','-DVOID=void']
-PYADH_EXTRA_LINK_ARGS=[ '-Wl,--start-group',
+PROTEUS_PACKAGES = os.getenv('PROTEUS_PACKAGES',os.getenv('HOME')+'/src/proteus-packages')
+PROTEUS_EXTRA_COMPILE_ARGS=['-fPIC','-Wall','-DANSI_DECLARATORS','-DREAL=double','-DVOID=void']
+PROTEUS_EXTRA_LINK_ARGS=[ '-Wl,--start-group',
+                        os.getenv('TACC_MKL_LIB')+'/libmkl_intel_lp64.a',
+                        os.getenv('TACC_MKL_LIB')+'/libmkl_sequential.a',
+                        os.getenv('TACC_MKL_LIB')+'/libmkl_core.a',
+                        '-Wl,--end-group',
+                        '-lpthread','-L'+os.getenv('ICC_LIB'),'-lsvml','-lm']
+PROTEUS_EXTRA_FC_COMPILE_ARGS=['-fPIC','-Wall','-DANSI_DECLARATORS','-DREAL=double','-DVOID=void']
+PROTEUS_EXTRA_FC_LINK_ARGS=[ '-Wl,--start-group',
                         os.getenv('TACC_MKL_LIB')+'/libmkl_intel_lp64.a',
                         os.getenv('TACC_MKL_LIB')+'/libmkl_sequential.a',
                         os.getenv('TACC_MKL_LIB')+'/libmkl_core.a',
                         '-Wl,--end-group',
                         '-lpthread','-L'+os.getenv('ICC_LIB'),'-lsvml','-lm']
 
-PYADH_SUPERLU_INCLUDE_DIR = PYADH_PACKAGES+'/superlu/SRC'
-PYADH_SUPERLU_H   = r'"slu_ddefs.h"'
-PYADH_SUPERLU_LIB_DIR = PYADH_PACKAGES+'/superlu/SRC'
-PYADH_SUPERLU_LIB = 'superlu'
+PROTEUS_SUPERLU_INCLUDE_DIR = PROTEUS_INCLUDE_DIR
+PROTEUS_SUPERLU_H   = r'"slu_ddefs.h"'
+PROTEUS_SUPERLU_LIB_DIR = PROTEUS_LIB_DIR
+PROTEUS_SUPERLU_LIB = 'superlu'
 
 
-PYADH_TRIANGLE_INCLUDE_DIR = PYADH_PACKAGES+'/triangle/src'
-PYADH_TRIANGLE_H = r'"triangle.h"'
-PYADH_TRIANGLE_LIB_DIR = PYADH_PACKAGES+'/triangle/lib'
-PYADH_TRIANGLE_LIB ='tri'
+PROTEUS_TRIANGLE_INCLUDE_DIR = PROTEUS_INCLUDE_DIR
+PROTEUS_TRIANGLE_H = r'"triangle.h"'
+PROTEUS_TRIANGLE_LIB_DIR = PROTEUS_LIB_DIR
+PROTEUS_TRIANGLE_LIB ='tri'
 
-PYADH_DAETK_INCLUDE_DIR = [PYADH_PACKAGES+'/daetk',PYADH_PACKAGES+'/daetk/pete/pete-2.1.0/src']
-PYADH_DAETK_LIB_DIR = PYADH_PACKAGES+'/daetk'
-PYADH_DAETK_LIB ='daetk'
+PROTEUS_DAETK_INCLUDE_DIR = [PROTEUS_INCLUDE_DIR]
+PROTEUS_DAETK_LIB_DIR = PROTEUS_LIB_DIR
+PROTEUS_DAETK_LIB ='daetk'
 
-PYADH_MPI_INCLUDE_DIR = '.'
-PYADH_MPI_LIB_DIR = '.'
-PYADH_MPI_LIBS = []
+PROTEUS_MPI_INCLUDE_DIR = '.'
+PROTEUS_MPI_LIB_DIR = '.'
+PROTEUS_MPI_LIBS = []
 
-PYADH_BLAS_INCLUDE_DIR   = os.getenv('TACC_MKL_LIB')
-PYADH_BLAS_H     = r'"proteus_blas.h"'
-PYADH_BLAS_LIB_DIR = os.getenv('TACC_MKL_LIB')
-PYADH_BLAS_LIB   = 'm'
+PROTEUS_BLAS_INCLUDE_DIR   = os.getenv('TACC_MKL_LIB')
+PROTEUS_BLAS_H     = r'"proteus_blas.h"'
+PROTEUS_BLAS_LIB_DIR = os.getenv('TACC_MKL_LIB')
+PROTEUS_BLAS_LIB   = 'm'
 
-PYADH_LAPACK_INCLUDE_DIR = os.getenv('TACC_MKL_LIB')
-PYADH_LAPACK_H   = r'"proteus_lapack.h"'
-PYADH_LAPACK_LIB_DIR = os.getenv('TACC_MKL_LIB')
-PYADH_LAPACK_LIB = 'm'
-PYADH_LAPACK_INTEGER = 'int'
-
-PYADH_PETSC_LIB_DIRS = [os.getenv('PYADH_PACKAGES')+'/petsc/lonestar/lib', os.getenv('PYADH_PACKAGES')+'/petsc/lonestar/lib', '/opt/ofed/lib64', '/opt/apps/intel10/mvapich2/1.2rc2/lib', '/opt/apps/intel/10.1/cc/lib', '/usr/lib/gcc/x86_64-redhat-linux/3.4.6', '/usr/lib64', '/opt/apps/intel/10.1/fc/lib']
-PYADH_PETSC_LIBS = ['petscts', 'petscsnes', 'petscksp', 'petscdm', 'petscmat', 'petscvec', 'petsc', 'superlu_dist_2.3', 'parmetis', 'metis', 'spoolesMPI','spooles', 'PEPCF90', 'dl', 'mpich', 'ibverbs', 'ibumad', 'pthread', 'rdmacm', 'rt', 'imf', 'svml', 'ipgo', 'irc', 'gcc_s', 'irc_s', 'mpichf90', 'ifport', 'ifcore', 'm', 'm', 'dl', 'mpich', 'ibverbs', 'ibumad', 'pthread', 'rdmacm', 'rt', 'imf', 'svml', 'ipgo', 'irc', 'gcc_s', 'irc_s', 'dl']
-PYADH_PETSC_INCLUDE_DIRS = [os.getenv('PYADH_PACKAGES')+'/petsc/lonestar/include', os.getenv('PYADH_PACKAGES')+'/petsc/include', '/opt/ofed//src/openib-1.3.1/src/userspace/management/libibcommon/include', '/opt/ofed//include', '/opt/apps/intel10/mvapich2/1.2rc2/include', os.getenv('PYADH_PACKAGES')+'/petsc/lonestar/include']
+PROTEUS_LAPACK_INCLUDE_DIR = os.getenv('TACC_MKL_LIB')
+PROTEUS_LAPACK_H   = r'"proteus_lapack.h"'
+PROTEUS_LAPACK_LIB_DIR = os.getenv('TACC_MKL_LIB')
+PROTEUS_LAPACK_LIB = 'm'
+PROTEUS_LAPACK_INTEGER = 'int'
