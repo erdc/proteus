@@ -5,7 +5,7 @@ import numpy,os
 try:
     from config import *
 except:
-    raise RuntimeError("You must first create a config.py file. See proteusConfig for examples")
+    raise RuntimeError("Missing or broken config.py file. See proteusConfig for examples")
 
 setup(
     cmdclass = {'build_ext':build_ext},
