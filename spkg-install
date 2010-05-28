@@ -6,7 +6,7 @@ if [ "$SAGE_LOCAL" = "" ]; then
 fi
 
 export PROTEUS_PREFIX=${SAGE_LOCAL}
-export PROTEUS_PYTHON=python
+export PROTEUS_PYTHON=${SAGE_LOCAL}/bin/python
 export PROTEUS=${SAGE_ROOT}/spkg/build/proteus
 export DAETK_DIR=${SAGE_ROOT}/spkg/build/proteus/externalPackages/daetk
 export PETSC_DIR=${SAGE_ROOT}/spkg/build/proteus/externalPackages/petsc-3.1-p1
