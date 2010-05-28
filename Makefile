@@ -14,3 +14,10 @@ clean_externalPackages:
 clean_proteusModule:
 	cd proteusModule && make cleaner
 
+spkg:
+	rm -rf proteus-0.9.0
+	mkdir proteus-0.9.0
+	cp spkg-install Makefile SPKG.txt proteus-0.9.0
+	svn export proteusModule proteus-0.9.0/proteusModule
+	svn export externalPackages proteus-0.9.0/externalPackages
+	tar cjf proteus-0.9.0.spkg proteus-0.9.0
