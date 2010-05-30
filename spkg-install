@@ -108,6 +108,11 @@ if [ $? -ne 0 ]; then
 fi
 
 cd ..
+export FC=sage_fortran
+export F77=sage_fortran
+export F90=sage_fortran
+export CC=mpicc
+export CXX=mpicxx
 make install_proteusModule
 if [ $? -ne 0 ]; then
    echo "Error building proteusModule."
