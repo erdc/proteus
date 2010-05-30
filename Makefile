@@ -20,4 +20,4 @@ spkg:
 	cp spkg-install Makefile SPKG.txt proteus
 	svn export proteusModule proteus/proteusModule
 	svn export externalPackages proteus/externalPackages
-	tar cjf proteus.spkg proteus
+	tar cjf proteus.spkg proteus>>>>>>> .r3415
