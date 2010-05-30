@@ -1,6 +1,8 @@
 import os
 
 PROTEUS_PACKAGES = os.getenv('PROTEUS_PACKAGES',os.getenv('HOME')+'/src/proteus-packages')
+PROTEUS_INCLUDE_DIR = os.getenv('PROTEUS_PREFIX')+'/include'
+PROTEUS_LIB_DIR = os.getenv('PROTEUS_PREFIX')+'/lib'
 PROTEUS_EXTRA_COMPILE_ARGS=['-fPIC','-Wall','-DANSI_DECLARATORS','-DREAL=double','-DVOID=void']
 PROTEUS_EXTRA_LINK_ARGS=[ '-Wl,--start-group',
                         os.getenv('TACC_MKL_LIB')+'/libmkl_intel_lp64.a',
@@ -45,3 +47,6 @@ PROTEUS_LAPACK_H   = r'"proteus_lapack.h"'
 PROTEUS_LAPACK_LIB_DIR = os.getenv('TACC_MKL_LIB')
 PROTEUS_LAPACK_LIB = 'm'
 PROTEUS_LAPACK_INTEGER = 'int'
+PROTEUS_PETSC_LIB_DIRS = ['/work/01020/cekees/src/proteus/lonestar/lib', '/work/01020/cekees/src/proteus/lonestar/lib', '/opt/intel/mkl/10.0.3.020/lib/em64t', '/opt/ofed/lib64', '/opt/apps/intel10/mvapich2/1.2rc2/lib', '/opt/apps/intel/10.1/cc/lib', '/usr/lib/gcc/x86_64-redhat-linux/3.4.6', '/opt/apps/intel/10.1/fc/lib']
+PROTEUS_PETSC_LIBS = ['petsc', 'superlu_dist_2.3', 'parmetis', 'metis', 'spooles', 'mkl_lapack', 'mkl', 'guide', 'pthread', 'PEPCF90', 'dl', 'mpich', 'ibverbs', 'ibumad', 'pthread', 'rdmacm', 'rt', 'l,-rpath,/usr/lib/gcc/x86_64-redhat-linux/3.4.6', '/usr/lib/gcc/x86_64-redhat-linux/3.4.6', 'imf', 'svml', 'ipgo', 'irc', 'gcc_s', 'irc_s', 'mpichf90', 'ifport', 'ifcore', 'm', 'm', 'dl', 'mpich', 'ibverbs', 'ibumad', 'pthread', 'rdmacm', 'rt', 'imf', 'svml', 'ipgo', 'irc', 'gcc_s', 'irc_s', 'dl']
+PROTEUS_PETSC_INCLUDE_DIRS = ['/work/01020/cekees/src/proteus/lonestar/include', '/work/01020/cekees/src/proteus/lonestar/include', '/work/01020/cekees/src/proteus/lonestar/include', '/opt/ofed//src/openib-1.3.1/src/userspace/management/libibcommon/include', '/opt/ofed//include', '/opt/apps/intel10/mvapich2/1.2rc2/include']
