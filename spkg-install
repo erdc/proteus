@@ -17,7 +17,11 @@ echo ${DAETK_DIR}
 ls ${DAETK_DIR}
 echo ${PETSC_DIR}
 ls ${PETSC_DIR}
-
+export CC=/usr/bin/mpicc
+export CXX=/usr/bin/mpicxx
+export FC=${SAGE_LOCAL}/bin/gfortran
+export F77=${SAGE_LOCAL}/bin/gfortran
+export F90=${SAGE_LOCAL}/bin/gfortran
 cd externalPackages
 
 numpy=`cd $SAGE_ROOT/spkg/standard/; ./newest_version numpy`
