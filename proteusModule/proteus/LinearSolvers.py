@@ -228,8 +228,10 @@ class LinearSolver:
         return self.infoString
     #petsc preconditioner interface
     def setUp(self, pc):
+        print "===========preparing preconditioner============="
         self.prepare()
     def apply(self,pc,x,y):
+        print "+++++++++++applying preconditioner++++++++++++++"
         if self.xGhosted == None:
             self.xGhosted = self.par_b.duplicate()
             self.yGhosted = self.par_b.duplicate()
@@ -358,7 +360,6 @@ class KSP_petsc4py(LinearSolver):
                               computeRates=computeRates,
                               printInfo=printInfo)
         import petsc4py
-        import pdb
         self.pccontext = None
         if Preconditioner != None:
             if Preconditioner == Jacobi:
@@ -375,7 +376,7 @@ class KSP_petsc4py(LinearSolver):
             elif Preconditioner == GaussSeidel:
                 self.pccontext= Preconditioner(connectionList,
                                                L,
-                                               weight=0.33,
+                                               weight=1.0,
                                                sym=False,
                                                rtol_r=rtol_r,
                                                atol_r=atol_r,
@@ -384,6 +385,9 @@ class KSP_petsc4py(LinearSolver):
                                                convergenceTest='its',
                                                computeRates=False,
                                                printInfo=False)
+                self.pc = petsc4py.PETSc.PC().createPython(self.pccontext)
+            elif Preconditioner == LU:
+                self.pccontext= Preconditioner(L)
                 self.pc = petsc4py.PETSc.PC().createPython(self.pccontext)
             elif Preconditioner == StarILU:
                 self.pccontext= Preconditioner(connectionList,
@@ -411,12 +415,10 @@ class KSP_petsc4py(LinearSolver):
         #shell for main operator
         self.Lshell = petsc4py.PETSc.Mat().create()
         sizes = self.petsc_L.getSizes()
-        #self.Lshell.setSizes(sizes)
-        self.Lshell.setSizesAll(sizes)
+        self.Lshell.setSizes([[sizes[0][0],None],[sizes[0][1],None]])
         self.Lshell.setType('python')
         self.matcontext  = SparseMatShell(self.petsc_L.ghosted_csr_mat)
         self.Lshell.setPythonContext(self.matcontext)
-        print "parb ",self.matcontext.par_b
         #self.ksp.setOperators(self.petsc_L,self.Lshell)#,self.petsc_L)
         #
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
@@ -440,13 +442,11 @@ class KSP_petsc4py(LinearSolver):
             self.ksp.setConvergenceTest(converged_trueRes)
         else:
             self.r_work = None
+        if Preconditioner != None:
+            self.ksp.setPC(self.pc)
         if prefix != None:
             self.ksp.setOptionsPrefix(prefix)
         self.ksp.setFromOptions()
-        if Preconditioner != None:
-            #pdb.set_trace()
-            #print "setting pc"
-            self.ksp.setPC(self.pc)
     def prepare(self,b=None):
         #self.petsc_L.setOption(petsc4py.PETSc.Mat.Option.SYMMETRIC, True)
         addValues = False
@@ -460,8 +460,6 @@ class KSP_petsc4py(LinearSolver):
         
         self.petsc_L.assemblyBegin()
         self.petsc_L.assemblyEnd()
-        self.pc.setOperators(self.petsc_L,self.petsc_L)
-        self.pc.setUp()
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
         #self.ksp.setOperators(self.Lshell,self.petsc_L)
         self.ksp.setUp()        
@@ -554,7 +552,7 @@ class Jacobi(LinearSolver):
         self.solverName = "Jacobi"
         self.M=Vec(self.n)
         self.w=weight
-        self.node_order=numpy.arange(self.n)
+        self.node_order=numpy.arange(self.n,dtype="i")
     def prepare(self,b=None):
         if type(self.L).__name__ == 'ndarray':
             self.M = self.w/numpy.diagonal(self.L)
@@ -580,7 +578,7 @@ class GaussSeidel(LinearSolver):
     def __init__(self,
                  connectionList,
                  L,
-                 weight=1.0,
+                 weight=0.33,
                  sym=False,
                  rtol_r  = 1.0e-4,
                  atol_r  = 1.0e-16,
@@ -604,7 +602,7 @@ class GaussSeidel(LinearSolver):
         self.solverName = "Gauss-Seidel"
         self.connectionList=connectionList
         self.M=Vec(self.n)
-        self.node_order=numpy.arange(self.n)
+        self.node_order=numpy.arange(self.n,dtype="i")
         self.w=weight
         self.sym=sym
     def prepare(self,b=None):
@@ -612,6 +610,7 @@ class GaussSeidel(LinearSolver):
             self.M = self.w/numpy.diagonal(self.L)
         elif type(self.L).__name__ == 'SparseMatrix':
             self.csmoothers.gauss_seidel_NR_prepare(self.L,self.w,1.0e-16,self.M)
+            #self.csmoothers.jacobi_NR_prepare(self.L,self.w,1.0e-16,self.M)
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
         (r,b) = self.solveInitialize(u,r,b,initialGuessIsZero)
         while (not self.converged(r) and
@@ -634,6 +633,7 @@ class GaussSeidel(LinearSolver):
                     self.du[i] = self.M[i]*rhat
             elif type(self.L).__name__ == "SparseMatrix":
                 self.csmoothers.gauss_seidel_NR_solve(self.L,self.M,r,self.node_order,self.du)
+                #self.csmoothers.jacobi_NR_solve(self.L,self.M,r,self.node_order,self.du)
             u -= self.du
             self.computeResidual(u,r,b)
 
@@ -694,7 +694,7 @@ class StarILU(LinearSolver):
                                                         set(connectionList[j]))
                     self.subdomainIndecesList[i][J].update([i,j])
         elif type(L).__name__ == 'SparseMatrix':
-            self.node_order=numpy.arange(self.n)
+            self.node_order=numpy.arange(self.n,dtype="i")
             self.asmFactorObject = self.csmoothers.ASMFactor(L)
     def prepare(self,b=None):
         if type(self.L).__name__ == 'ndarray':
@@ -1055,7 +1055,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
 						   printInfo = printSmootherInfo))
 		elif smootherType == GaussSeidel:
 		    if relaxationFactor == None:
-			relaxationFactor = 1.0
+			relaxationFactor = 0.33
 		    preSmootherList.append(GaussSeidel(connectionList = connectivityListList[l],
 						       L=linearOperatorList[l],
 						       weight=relaxationFactor,
@@ -1144,7 +1144,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
 	levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == GaussSeidel:
 	if relaxationFactor == None:
-	    relaxationFactor=1.0
+	    relaxationFactor=0.33
 	for l in range(nLevels):
 	    levelLinearSolverList.append(GaussSeidel(connectionList = connectivityListList[l],
 						     L=linearOperatorList[l],

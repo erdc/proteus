@@ -18,7 +18,7 @@ void jacobi_NR_solve(SuperMatrix *A, double* M, double* R, int *node_order, doub
    * Stype NRformat
    */
   int i;
-    int N = A->nrow;
+  int N = A->nrow;
   for (i=0; i<N; i++) 
     dX[i] = M[i]*R[i];   
 }
@@ -43,7 +43,7 @@ void nl_jacobi_NR_solve(SuperMatrix *A,  double* R, int *node_order, double w, d
     memset(dX,0,sizeof(double)*N);
     for (i=0; i<N; i++) 
     {
-      int cnode = (int)node_order[i];
+      int cnode = node_order[i];
       int j;
       double diag = 1.0;
       int diag_found = 0;
@@ -113,29 +113,29 @@ void gauss_seidel_NR_prepare(SuperMatrix *A, double w, double tol, double* M)
   
 void gauss_seidel_NR_solve(SuperMatrix *A, double* M, double* R, int *node_order, double* dX)
 {
-/* Purpose:  gauss_seidel method with the additional assumption that A is of Stype NRformat
- */
-    int i;
-    int nnz;
-    double *nzval;
-    int *colind;
-    int *rowptr;
-    NRformat *AStore = (NRformat*) A->Store;
-    int N = A->nrow;
-
-    nnz = AStore->nnz;
-    nzval = (double*)AStore->nzval;
-    colind = AStore->colind;
-    rowptr = AStore->rowptr;
-    memset(dX,0,sizeof(double)*N);
-    for (i=0; i<N; i++) 
+  /* Purpose:  gauss_seidel method with the additional assumption that A is of Stype NRformat
+   */
+  int i;
+  int nnz;
+  double *nzval;
+  int *colind;
+  int *rowptr;
+  NRformat *AStore = (NRformat*) A->Store;
+  int N = A->nrow;
+  
+  nnz = AStore->nnz;
+  nzval = (double*)AStore->nzval;
+  colind = AStore->colind;
+  rowptr = AStore->rowptr;
+  memset(dX,0,sizeof(double)*N);
+  for (i=0; i<N; i++)
     {
-        int cnode = (int)node_order[i];
-        int j;
-        double val = R[cnode];
-        for (j=rowptr[cnode]; j<rowptr[cnode+1]; j++)
-          val -= nzval[j]*dX[colind[j]];
-        dX[cnode] = M[cnode]*val;
+      int cnode = node_order[i];
+      int j;
+      double val = R[cnode];
+      for (j=rowptr[cnode]; j<rowptr[cnode+1]; j++)
+        val -= nzval[j]*dX[colind[j]];
+      dX[cnode] = M[cnode]*val;
     }
 }
 
@@ -159,7 +159,7 @@ void nl_gauss_seidel_NR_solve(SuperMatrix *A,  double* R, int *node_order, doubl
     memset(dX,0,sizeof(double)*N);
     for (i=0; i<N; i++) 
     {
-        int cnode = (int)node_order[i];
+        int cnode = node_order[i];
         int j;
         double diag=1.0;
         int diag_found = 0;
@@ -353,7 +353,7 @@ void asm_NR_solve(SuperMatrix *A,
     memset(dX,0,sizeof(double)*N); 
     for (i=0; i<N; i++)  
     { 
-        int cnode = (int)node_order[i]; 
+        int cnode = node_order[i]; 
         int j, k,jj, ii; 
         /* extract and update the subdomain residual */ 
         for (jj = 0;jj<subdomain_dim[cnode];jj++) 
