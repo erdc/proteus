@@ -1,0 +1,16 @@
+export PROTEUS=${HOME}/src/proteus
+export PROTEUS_ARCH=linux
+export PROTEUS_PREFIX=${PROTEUS}/${PROTEUS_ARCH}
+export PROTEUS_PYTHON=${PROTEUS_PREFIX}/bin/python
+export DAETK_DIR=${PROTEUS}/externalPackages/daetk
+export DAETK_ARCH=linux
+export PETSC_DIR=${PROTEUS}/externalPackages/petsc-3.1-p1
+export PETSC_ARCH=linux
+export CC=mpicc
+export CXX=mpicxx
+export FC=mpif90
+export F77=mpif77
+export F90=mpif90
+export PATH=.:${PROTEUS_PREFIX}/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin
+export LD_LIBRARY_PATH=${PROTEUS_PREFIX}/lib
+export DYLD_LIBRARY_PATH=${PROTEUS_PREFIX}/lib
