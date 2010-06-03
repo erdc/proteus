@@ -31,8 +31,6 @@ class NF_base:
         self.DOFBoundaryConditionsDictList=[]
         self.DOFBoundaryPointDictList=[]
         self.periodicBoundaryConditionsDictList=[]
-        #mwf change to copy just terms for boundary values
-        #self.ebq=copy.deepcopy(self.vt.ebq)
         #for now need all of the coefficient values, so don't have to distinquish
         # calls to evaluateCoefficients
         #see Transport.py elemenbt boundary quadrature initialization routine
@@ -52,9 +50,6 @@ class NF_base:
                  self.vt.nElementBoundaryQuadraturePoints_elementBoundary),
                 'd')
         for k in self.vt.vectors_elementBoundaryQuadrature:
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             self.ebqeTerms.append(k)
             self.ebqe[k]=numpy.zeros(
                 (self.mesh.nExteriorElementBoundaries_global,
@@ -63,12 +58,21 @@ class NF_base:
                 'd')
         for k in self.vt.tensors_elementBoundaryQuadrature:
             self.ebqeTerms.append(k)
-            self.ebqe[k]=numpy.zeros(
-                (self.mesh.nExteriorElementBoundaries_global,
-                 self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
-                 self.vt.nSpace_global,
-                 self.vt.nSpace_global),
-                'd')
+            if (self.vt.sd and k[0] in ['a','da'] and
+                self.vt.coefficients.sdInfo != None and
+                (k[1],k[2]) in self.vt.coefficients.sdInfo.keys()):
+                self.ebqe[k]=numpy.zeros(
+                    (self.mesh.nExteriorElementBoundaries_global,
+                     self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
+                     self.vt.coefficients.sdInfo[(k[1],k[2])][0][self.vt.nSpace_global]),
+                    'd')
+            else:
+                self.ebqe[k]=numpy.zeros(
+                    (self.mesh.nExteriorElementBoundaries_global,
+                     self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
+                     self.vt.nSpace_global,
+                     self.vt.nSpace_global),
+                    'd')
         self.ebqeTerms.append('g')
 	self.ebqe['g'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
 				       self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
@@ -79,8 +83,6 @@ class NF_base:
             self.ebqe['xt'] = self.vt.ebqe['xt']
             self.ebqe['n'] = self.vt.ebqe['n']
             self.ebqe['sqrt(det(g))'] = self.vt.ebqe['sqrt(det(g))']
-        #mwf debug
-        #print "Numerical Flux ebqTerms= %s self.ebqe.keys() = %s" % (self.ebqeTerms,self.ebqe.keys())
         #copy over stuff from vt.ebq
         for term in self.ebqeTerms:
             self.ebqe[term].flat[:] = self.vt.ebqe[term].flat[:]
@@ -3077,6 +3079,7 @@ class DarcyFCFF_IIPG_exterior(NF_base):
                                                                                                    fluxJacobian_exterior[1][0],
                                                                                                    fluxJacobian_exterior[1][1])
                 
+
 class DarcyFC_IIPG_exterior(NF_base):
     hasInterior=False
     """
@@ -3097,6 +3100,8 @@ class DarcyFC_IIPG_exterior(NF_base):
         for term in ['psi_n_bc','psi_n',('dpsi_n',0),('dpsi_n',1)]:
             self.ebqe[term] = numpy.zeros(self.ebqe[('u',1)].shape,'d')
         self.hasInterior=False
+        self.penalty_constant = 2.0
+        self.penalty_power = 1.0
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         pass
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
@@ -3165,18 +3170,16 @@ class DarcyFC_IIPG_exterior(NF_base):
                                                                        ebqe[('diffusiveFlux',0,0)], #(ck,ci) 
                                                                        ebqe[('diffusiveFlux',1,1)])
             
-            
     def updateInteriorNumericalFluxJacobian(self,l2g,q,ebq,ebq_global,dphi,fluxJacobian,fluxJacobian_eb,fluxJacobian_hj):
         pass
     def updateExteriorNumericalFluxJacobian(self,l2g,inflowFlag,q,ebqe,dphi,fluxJacobian_exterior,fluxJacobian_eb,fluxJacobian_hj):
-
         if (self.vt.timeIntegration.diffusionIsImplicit[0] or self.vt.timeIntegration.diffusionIsImplicit[1]):
             #assume the u_w and u_m spaces are the same right now
-            l2g = dphi[(0,0)].femSpace.dofMap.l2g; v   = ebqe[('v',0)]; grad_v = ebqe[('grad(v)',0)];
+            l2g_local = dphi[(0,0)].femSpace.dofMap.l2g; v   = ebqe[('v',0)]; grad_v = ebqe[('grad(v)',0)];
             if self.vt.sd:
                 cnumericalFlux.calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian_sd(self.vt.coefficients.sdInfo[(0,0)][0],self.vt.coefficients.sdInfo[(0,0)][1],
                                                                                                     self.vt.coefficients.sdInfo[(1,1)][0],self.vt.coefficients.sdInfo[(1,1)][1],
-                                                                                                    l2g,
+                                                                                                    l2g_local,
                                                                                                     self.mesh.exteriorElementBoundariesArray,
                                                                                                     self.mesh.elementBoundaryElementsArray,
                                                                                                     self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -3209,7 +3212,7 @@ class DarcyFC_IIPG_exterior(NF_base):
                                                                                                     fluxJacobian_exterior[1][0],
                                                                                                     fluxJacobian_exterior[1][1])
             else:
-                cnumericalFlux.calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian(l2g,
+                cnumericalFlux.calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian(l2g_local,
                                                                                                  self.mesh.exteriorElementBoundariesArray,
                                                                                                  self.mesh.elementBoundaryElementsArray,
                                                                                                  self.mesh.elementBoundaryLocalElementBoundariesArray,

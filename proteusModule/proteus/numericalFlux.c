@@ -9014,7 +9014,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFCFF_diffusiveFluxJacobian(int nEx
 		      Jacobian_w += 
 			diffusiveVelocityComponent_I_Jacobian_w 
 			*/*should be v_w*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
@@ -9032,7 +9032,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFCFF_diffusiveFluxJacobian(int nEx
 		      Jacobian_m += 
 			diffusiveVelocityComponent_I_Jacobian_m 
 			*/*should be v_m*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
@@ -9173,7 +9173,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFCFF_diffusiveFluxJacobian(int nEx
 		      Jacobian_w += 
 			diffusiveVelocityComponent_I_Jacobian_w 
 			*/*should be v_w*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
@@ -9200,7 +9200,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFCFF_diffusiveFluxJacobian(int nEx
 		      Jacobian_m += 
 			diffusiveVelocityComponent_I_Jacobian_m 
 			*/*should be v_m*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
@@ -9371,7 +9371,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFCFF_diffusiveFluxJacobian_sd(int 
 		      Jacobian_w += 
 			diffusiveVelocityComponent_I_Jacobian_w 
 			*/*should be v_w*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
@@ -9389,7 +9389,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFCFF_diffusiveFluxJacobian_sd(int 
 		      Jacobian_m += 
 			diffusiveVelocityComponent_I_Jacobian_m 
 			*/*should be v_m*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
@@ -9522,7 +9522,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFCFF_diffusiveFluxJacobian_sd(int 
 		      Jacobian_w += 
 			diffusiveVelocityComponent_I_Jacobian_w 
 			*/*should be v_w*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
@@ -9549,7 +9549,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFCFF_diffusiveFluxJacobian_sd(int 
 		      Jacobian_m += 
 			diffusiveVelocityComponent_I_Jacobian_m 
 			*/*should be v_m*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
@@ -9761,9 +9761,8 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_sd(int nExteriorElementBoundari
 						    double * diffusiveFlux_ww,
 						    double * diffusiveFlux_nn)
 {
-  int ebNE,ebN,I,k,m,nnz_ww=rowptr_ww[nSpace],nnz_nn=rowptr_nn[nSpace];/*mwf I think this is wrong colind_nn[nSpace];*/
+  int ebNE,ebN,I,k,m,nnz_ww=rowptr_ww[nSpace],nnz_nn=rowptr_nn[nSpace];
   double diffusiveFlux_I=0.0,penaltyFlux = 0.0;
-
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
     {
       ebN = exteriorElementBoundaries[ebNE];
@@ -9983,7 +9982,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian(int nExte
 		      Jacobian_w += 
 			diffusiveVelocityComponent_I_Jacobian_w 
 			*/*should be v_w*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
@@ -10001,7 +10000,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian(int nExte
 		      Jacobian_n += 
 			diffusiveVelocityComponent_I_Jacobian_n 
 			*/*should be v_n*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
@@ -10099,7 +10098,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian(int nExte
 		      Jacobian_w += 
 			diffusiveVelocityComponent_I_Jacobian_w 
 			*/*should be v_w*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
@@ -10118,7 +10117,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian(int nExte
 		      Jacobian_n += 
 			diffusiveVelocityComponent_I_Jacobian_n 
 			*/*should be v_n*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
@@ -10234,11 +10233,11 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian_sd(int nE
     diffusiveVelocityComponent_I_Jacobian2_ww,
     diffusiveVelocityComponent_I_Jacobian2_nw,
     diffusiveVelocityComponent_I_Jacobian2_nn;
-
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
     {
       ebN = exteriorElementBoundaries[ebNE];
       eN_global = elementBoundaryElements[ebN*2 + 0];
+      
       for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
 	{
 	  /*compute derivative of diffusive flux for first (w) equation (aq. mass
@@ -10305,7 +10304,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian_sd(int nE
 		      Jacobian_w += 
 			diffusiveVelocityComponent_I_Jacobian_w 
 			*/*should be v_w*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
@@ -10323,7 +10322,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian_sd(int nE
 		      Jacobian_n += 
 			diffusiveVelocityComponent_I_Jacobian_n 
 			*/*should be v_n*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
@@ -10417,7 +10416,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian_sd(int nE
 		      Jacobian_w += 
 			diffusiveVelocityComponent_I_Jacobian_w 
 			*/*should be v_w*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
@@ -10436,7 +10435,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian_sd(int nE
 		      Jacobian_n += 
 			diffusiveVelocityComponent_I_Jacobian_n 
 			*/*should be v_n*/
-			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace +
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
 			  k*nDOF_trial_element +
 			  j]
 			*
