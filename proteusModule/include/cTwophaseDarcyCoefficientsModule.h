@@ -113,7 +113,7 @@ inline int twophaseDarcy_fc_sd_het_matType(int nSimplex,
 	      
 		  aw[i*nnz+m]  = density_w.rho*Kbar[matID*nnz+m]*psk.krw/muw;
 		  daw_dsw[i*nnz+m]  = density_w.rho*Kbar[matID*nnz+m]*psk.dkrw/muw + drhow_dsw*Kbar[matID*nnz+m]*psk.krw/muw;
-		  daw_dpsiw[i*nnz+I]= drhow_dpsiw*Kbar[matID*nnz+m]*psk.krw/muw;
+		  daw_dpsiw[i*nnz+m]= drhow_dpsiw*Kbar[matID*nnz+m]*psk.krw/muw;
 	      
 		  /* n-phase  diffusion */
 		  an[i*nnz+m]        = density_n.rho*Kbar[matID*nnz+m]*psk.krn/mun;
