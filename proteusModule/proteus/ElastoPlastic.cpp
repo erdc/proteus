@@ -1,6 +1,14 @@
 #include <iostream>
 #include "ElastoPlastic.h"
 #include "CompKernel.h"
+//plan
+//1. Get it working with existing pre-compute approach
+//a. Work out proper use of templates for inner dims (class for function + extern "C" calls)
+//b. use linear elasticity first
+//c. remember voigt rule is switched when translating old constitutive relations
+//d. translate numerical stress flux functions
+//2. Eliminate precomputations
+//3. Potential improvements: indexing
 
 extern "C" void calculateResidual_ElastoPlastic(int nElements_global,
 						int* materialFlags,
@@ -133,11 +141,11 @@ extern "C" void calculateResidual_ElastoPlastic(int nElements_global,
 		eN_k_i_nSpace = eN_k_i*nSpace;
 
 	      elementResidual_u[i] += Stress_u_weak_c(stress,&disp_grad_test_dV[eN_k_i_nSpace]) + 
-		Reaction_weak_c(force[0],disp_test_dV[eN_k_i]);
+		Reaction_weak_c(force[eN_k],disp_test_dV[eN_k_i]);
 	      elementResidual_v[i] += Stress_v_weak_c(stress,&disp_grad_test_dV[eN_k_i_nSpace]) + 
-		Reaction_weak_c(force[1],disp_test_dV[eN_k_i]);
+		Reaction_weak_c(force[eN_k],disp_test_dV[eN_k_i]);
 	      elementResidual_w[i] += Stress_w_weak_c(stress,&disp_grad_test_dV[eN_k_i_nSpace]) + 
-		Reaction_weak_c(force[2],disp_test_dV[eN_k_i]);
+		Reaction_weak_c(force[eN_k],disp_test_dV[eN_k_i]);
             }//i
 	}
       //
@@ -240,7 +248,8 @@ extern "C" void calculateResidual_ElastoPlastic(int nElements_global,
 	  // 
           evaluateCoefficients_c(materalProperties + nProperties_material*materialFlags_ext[ebNE],//pointer to material array
 				 strain,
-				 stress);
+				 stress,
+				 dstress);
 	  // 
 	  //calculate the numerical fluxes 
 	  // 
@@ -398,7 +407,10 @@ extern "C" void calculateJacobian_ElastoPlastic(int nElements_global,
           //
           evaluateCoefficients_c(materalProperties + nProperties_material*materialFlags[eN],//pointer to material array
 				 strain,
-				 stress);
+				 stress,
+				 dstress);
+	  //convert dstress to dStress_u_u, etc.
+	  //
           //
           //moving mesh
           //

@@ -454,6 +454,6 @@ setup(name='proteus',
                              include_dirs=[numpy.get_include(),'include'])                
                    ],
 
-      scripts = ['scripts/parun'],
+      scripts = ['scripts/parun','scripts/gf2poly'],
       requires=['numpy']
       )
