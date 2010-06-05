@@ -371,6 +371,15 @@ class FLCBDF(TI_base):
     def initialize_dt(self,t0,tOut,q):
         self.tLast = t0
         self.dt = min([self.flcbdf[ci].initialize_dt(t0,tOut,q[('m',ci)],q[('mt',ci)]) for ci in self.massComponents])
+        log("Warning!!! FLDBDF initial dt will be different in parallel until we fix estimate_mt!")
+        #mwf hack
+        #import Comm
+        #comm = Comm.get()
+        #print "rank= %s FLCBDF chose dt= %s |mt,0|_max= %s |mt,1|_max= %s  forcing to (tOut-t)/1000 = %s " % (comm.rank(),self.dt,
+        #                                                                                                      numpy.absolute(q[('mt',0)].flat).max(),
+        #                                                                                                      numpy.absolute(q[('mt',1)].flat).max(),
+        #                                                                                                      (tOut-t0)*1.0e-3)
+        #self.dt = (tOut-t0)*1.0e-3
         for ci in range(self.nc): self.flcbdf[('u',ci)].initialize_dt(t0,tOut,self.transport.u[ci].dof,self.Ddof_Dt[ci])
         self.t = self.tLast + self.dt
     def initializeTimeHistory(self,resetFromDOF=False):
