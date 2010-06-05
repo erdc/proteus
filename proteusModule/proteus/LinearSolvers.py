@@ -361,6 +361,7 @@ class KSP_petsc4py(LinearSolver):
                               printInfo=printInfo)
         import petsc4py
         self.pccontext = None
+        self.pc = None
         if Preconditioner != None:
             if Preconditioner == Jacobi:
                 self.pccontext= Preconditioner(L,
@@ -460,6 +461,9 @@ class KSP_petsc4py(LinearSolver):
         
         self.petsc_L.assemblyBegin()
         self.petsc_L.assemblyEnd()
+        if self.pc != None:
+            self.pc.setOperators(self.petsc_L,self.petsc_L)
+            self.pc.setUp()
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
         #self.ksp.setOperators(self.Lshell,self.petsc_L)
         self.ksp.setUp()        
@@ -485,12 +489,12 @@ class KSP_petsc4py(LinearSolver):
         self.ksp.view(petsc4py.PETSc.Viewer.STDOUT())
         self.ksp.solve(par_b,par_u)
         #mwf debug
-        print "after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
-                                                                                                          self.ksp.atol,
-                                                                                                          self.ksp.converged,
-                                                                                                          self.ksp.its,
-                                                                                                          self.ksp.norm,
-                                                                                                          self.ksp.reason)
+        logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
+                                                                                                             self.ksp.atol,
+                                                                                                             self.ksp.converged,
+                                                                                                             self.ksp.its,
+                                                                                                             self.ksp.norm,
+                                                                                                             self.ksp.reason))
         #import Comm
         #comm = Comm.get()
         #print "rank %s after solve u= %s " % (comm.rank(),u)
