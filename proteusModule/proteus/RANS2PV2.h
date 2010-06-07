@@ -6,6 +6,7 @@
 #define nSpace 3
 #define nQuadraturePoints_element 5
 #define nDOF_trial_element 4
+#define nDOF_mesh_trial_element 4
 #define nDOF_test_element 4
 #define nDOF_test_X_trial_element 16
 #define nQuadraturePoints_elementBoundary 4
