@@ -1,6 +1,188 @@
 #include "RANS2PV2.h"
 #include <iostream>
 #include <cassert>
+
+inline 
+void calculateMapping_element(const int eN,
+			      const int k,
+			      double* mesh_dof,
+			      int* mesh_l2g,
+			      double* mesh_trial_ref,
+			      double* mesh_grad_trial_ref,
+			      double* jac,
+			      double& jacDet,
+			      double* jacInv,
+			      double& x,
+			      double& y,
+			      double& z)
+{
+  using namespace RANS2PV2;
+  const int X=0,Y=1,Z=2,
+    XX=0,XY=1,XZ=2,
+    YX=3,YY=4,YZ=5,
+    ZX=6,ZY=7,ZZ=8;
+  
+  register double Grad_x[nSpace],Grad_y[nSpace],Grad_z[nSpace],oneOverJacDet;
+
+  //
+  //mapping of reference element to physical element
+  //
+  x=0.0;y=0.0;z=0.0;
+  for (int I=0;I<nSpace;I++)
+    {
+      Grad_x[I]=0.0;Grad_y[I]=0.0;Grad_z[I]=0.0;
+    }
+  for (int j=0;j<nDOF_mesh_trial_element;j++)
+    {
+      int eN_j=eN*nDOF_mesh_trial_element+j;
+      x += valFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+0],mesh_trial_ref[k*nDOF_mesh_trial_element+j]);
+      y += valFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+1],mesh_trial_ref[k*nDOF_mesh_trial_element+j]);
+      z += valFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+2],mesh_trial_ref[k*nDOF_mesh_trial_element+j]);	      
+      for (int I=0;I<nSpace;I++)
+	{
+	  Grad_x[I] += gradFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+0],mesh_grad_trial_ref[k*nDOF_mesh_trial_element*nSpace+j*nSpace+I]);
+	  Grad_y[I] += gradFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+1],mesh_grad_trial_ref[k*nDOF_mesh_trial_element*nSpace+j*nSpace+I]);
+	  Grad_z[I] += gradFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+2],mesh_grad_trial_ref[k*nDOF_mesh_trial_element*nSpace+j*nSpace+I]);
+	}
+    }
+  jac[XX] = Grad_x[X];//node[X]*grad[X];
+  jac[XY] = Grad_x[Y];//node[X]*grad[Y];
+  jac[XZ] = Grad_x[Z];//node[X]*grad[Z];
+  jac[YX] = Grad_y[X];//node[Y]*grad[X];
+  jac[YY] = Grad_y[Y];//node[Y]*grad[Y];
+  jac[YZ] = Grad_y[Z];//node[Y]*grad[Z];
+  jac[ZX] = Grad_z[X];//node[Z]*grad[X];
+  jac[ZY] = Grad_z[Y];//node[Z]*grad[Y];
+  jac[ZZ] = Grad_z[Z];//node[Z]*grad[Z];
+  jacDet = 
+    jac[XX]*(jac[YY]*jac[ZZ] - jac[YZ]*jac[ZY]) -
+    jac[XY]*(jac[YX]*jac[ZZ] - jac[YZ]*jac[ZX]) +
+    jac[XZ]*(jac[YX]*jac[ZY] - jac[YY]*jac[ZX]);
+  oneOverJacDet = 1.0/jacDet;
+  jacInv[XX] = oneOverJacDet*(jac[YY]*jac[ZZ] - jac[YZ]*jac[ZY]);
+  jacInv[YX] = oneOverJacDet*(jac[YZ]*jac[ZX] - jac[YX]*jac[ZZ]);
+  jacInv[ZX] = oneOverJacDet*(jac[YX]*jac[ZY] - jac[YY]*jac[ZX]);
+  jacInv[XY] = oneOverJacDet*(jac[ZY]*jac[XZ] - jac[ZZ]*jac[XY]);
+  jacInv[YY] = oneOverJacDet*(jac[ZZ]*jac[XX] - jac[ZX]*jac[XZ]);
+  jacInv[ZY] = oneOverJacDet*(jac[ZX]*jac[XY] - jac[ZY]*jac[XX]);
+  jacInv[XZ] = oneOverJacDet*(jac[XY]*jac[YZ] - jac[XZ]*jac[YY]);
+  jacInv[YZ] = oneOverJacDet*(jac[XZ]*jac[YX] - jac[XX]*jac[YZ]);
+  jacInv[ZZ] = oneOverJacDet*(jac[XX]*jac[YY] - jac[XY]*jac[YX]);
+}
+
+inline 
+void calculateMapping_elementBoundary(const int eN,
+				      const int ebN_local,
+				      const int kb,
+				      double* mesh_dof,
+				      int* mesh_l2g,
+				      double* mesh_trial_trace_ref,
+				      double* mesh_grad_trial_trace_ref,
+				      double* boundaryJac_ref,
+				      double* jac,
+				      double& jacDet,
+				      double* jacInv,
+				      double* boundaryJac,
+				      double* metricTensor,
+				      double& metricTensorDetSqrt,
+				      double* normal_ref,
+				      double* normal,
+				      double& x,
+				      double& y,
+				      double& z)
+{
+  using namespace RANS2PV2;
+  const int X=0,Y=1,Z=2,
+    XX=0,XY=1,XZ=2,
+    YX=3,YY=4,YZ=5,
+    ZX=6,ZY=7,ZZ=8,
+    XHX=0,XHY=1,
+    YHX=2,YHY=3,
+    ZHX=4,ZHY=5,
+    HXHX=0,HXHY=1,
+    HYHX=2,HYHY=3;
+  const int ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
+    ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+  
+  register double Grad_x_ext[nSpace],Grad_y_ext[nSpace],Grad_z_ext[nSpace],oneOverJacDet,norm_normal=0.0;
+  // 
+  //calculate mapping from the reference element to the physical element
+  // 
+  x=0.0;y=0.0;z=0.0;
+  for (int I=0;I<nSpace;I++)
+    {
+      Grad_x_ext[I] = 0.0;
+      Grad_y_ext[I] = 0.0;
+      Grad_z_ext[I] = 0.0;
+    }
+  for (int j=0;j<nDOF_mesh_trial_element;j++) 
+    { 
+      int eN_j = eN*nDOF_trial_element+j;
+      int ebN_local_kb_j = ebN_local_kb*nDOF_trial_element+j;
+      int ebN_local_kb_j_nSpace = ebN_local_kb_j*nSpace;
+      x += valFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+0],mesh_trial_trace_ref[ebN_local_kb_j]); 
+      y += valFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+1],mesh_trial_trace_ref[ebN_local_kb_j]); 
+      z += valFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+2],mesh_trial_trace_ref[ebN_local_kb_j]); 
+      for (int I=0;I<nSpace;I++)
+	{
+	  Grad_x_ext[I] += gradFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+0],mesh_grad_trial_trace_ref[ebN_local_kb_j_nSpace+I]);
+	  Grad_y_ext[I] += gradFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+1],mesh_grad_trial_trace_ref[ebN_local_kb_j_nSpace+I]); 
+	  Grad_z_ext[I] += gradFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+2],mesh_grad_trial_trace_ref[ebN_local_kb_j_nSpace+I]);
+	} 
+    }
+  //Space Mapping Jacobian
+  jac[XX] = Grad_x_ext[X];//node[X]*grad[X];
+  jac[XY] = Grad_x_ext[Y];//node[X]*grad[Y];
+  jac[XZ] = Grad_x_ext[Z];//node[X]*grad[Z];
+  jac[YX] = Grad_y_ext[X];//node[Y]*grad[X];
+  jac[YY] = Grad_y_ext[Y];//node[Y]*grad[Y];
+  jac[YZ] = Grad_y_ext[Z];//node[Y]*grad[Z];
+  jac[ZX] = Grad_z_ext[X];//node[Z]*grad[X];
+  jac[ZY] = Grad_z_ext[Y];//node[Z]*grad[Y];
+  jac[ZZ] = Grad_z_ext[Z];//node[Z]*grad[Z];
+  jacDet = 
+    jac[XX]*(jac[YY]*jac[ZZ] - jac[YZ]*jac[ZY]) -
+    jac[XY]*(jac[YX]*jac[ZZ] - jac[YZ]*jac[ZX]) +
+    jac[XZ]*(jac[YX]*jac[ZY] - jac[YY]*jac[ZX]);
+  oneOverJacDet = 1.0/jacDet;
+  jacInv[XX] = oneOverJacDet*(jac[YY]*jac[ZZ] - jac[YZ]*jac[ZY]);
+  jacInv[YX] = oneOverJacDet*(jac[YZ]*jac[ZX] - jac[YX]*jac[ZZ]);
+  jacInv[ZX] = oneOverJacDet*(jac[YX]*jac[ZY] - jac[YY]*jac[ZX]);
+  jacInv[XY] = oneOverJacDet*(jac[ZY]*jac[XZ] - jac[ZZ]*jac[XY]);
+  jacInv[YY] = oneOverJacDet*(jac[ZZ]*jac[XX] - jac[ZX]*jac[XZ]);
+  jacInv[ZY] = oneOverJacDet*(jac[ZX]*jac[XY] - jac[ZY]*jac[XX]);
+  jacInv[XZ] = oneOverJacDet*(jac[XY]*jac[YZ] - jac[XZ]*jac[YY]);
+  jacInv[YZ] = oneOverJacDet*(jac[XZ]*jac[YX] - jac[XX]*jac[YZ]);
+  jacInv[ZZ] = oneOverJacDet*(jac[XX]*jac[YY] - jac[XY]*jac[YX]);
+  //normal
+  norm_normal=0.0;
+  for (int I=0;I<nSpace;I++)
+    normal[I] = 0.0;
+  for (int I=0;I<nSpace;I++)
+    {
+      for (int J=0;J<nSpace;J++)
+	normal[I] += jacInv[J*nSpace+I]*normal_ref[ebN_local_kb_nSpace+J];
+      norm_normal+=normal[I]*normal[I];
+    }
+  norm_normal = sqrt(norm_normal);
+  for (int I=0;I<nSpace;I++)
+    normal[I] /= norm_normal;
+  //metric tensor and determinant
+  boundaryJac[XHX] = jac[XX]*boundaryJac_ref[ebN_local*6+XHX]+jac[XY]*boundaryJac_ref[ebN_local*6+YHX]+jac[XZ]*boundaryJac_ref[ebN_local*6+ZHX];
+  boundaryJac[XHY] = jac[XX]*boundaryJac_ref[ebN_local*6+XHY]+jac[XY]*boundaryJac_ref[ebN_local*6+YHY]+jac[XZ]*boundaryJac_ref[ebN_local*6+ZHY];
+  boundaryJac[YHX] = jac[YX]*boundaryJac_ref[ebN_local*6+XHX]+jac[YY]*boundaryJac_ref[ebN_local*6+YHX]+jac[YZ]*boundaryJac_ref[ebN_local*6+ZHX];
+  boundaryJac[YHY] = jac[YX]*boundaryJac_ref[ebN_local*6+XHY]+jac[YY]*boundaryJac_ref[ebN_local*6+YHY]+jac[YZ]*boundaryJac_ref[ebN_local*6+ZHY];
+  boundaryJac[ZHX] = jac[ZX]*boundaryJac_ref[ebN_local*6+XHX]+jac[ZY]*boundaryJac_ref[ebN_local*6+YHX]+jac[ZZ]*boundaryJac_ref[ebN_local*6+ZHX];
+  boundaryJac[ZHY] = jac[ZX]*boundaryJac_ref[ebN_local*6+XHY]+jac[ZY]*boundaryJac_ref[ebN_local*6+YHY]+jac[ZZ]*boundaryJac_ref[ebN_local*6+ZHY];
+  
+  metricTensor[HXHX] = boundaryJac[XHX]*boundaryJac[XHX]+boundaryJac[YHX]*boundaryJac[YHX]+boundaryJac[ZHX]*boundaryJac[ZHX];
+  metricTensor[HXHY] = boundaryJac[XHX]*boundaryJac[XHY]+boundaryJac[YHX]*boundaryJac[YHY]+boundaryJac[ZHX]*boundaryJac[ZHY];
+  metricTensor[HYHX] = boundaryJac[XHY]*boundaryJac[XHX]+boundaryJac[YHY]*boundaryJac[YHX]+boundaryJac[ZHY]*boundaryJac[ZHX];
+  metricTensor[HYHY] = boundaryJac[XHY]*boundaryJac[XHY]+boundaryJac[YHY]*boundaryJac[YHY]+boundaryJac[ZHY]*boundaryJac[ZHY];
+  
+  metricTensorDetSqrt=sqrt(metricTensor[HXHX]*metricTensor[HYHY]- metricTensor[HXHY]*metricTensor[HYHX]);
+}
+
 extern "C" void calculateResidual_RANS2PV2(//testing mesh replacement
 					 double* mesh_trial_ref,
 					 double* mesh_grad_trial_ref,
@@ -212,69 +394,27 @@ extern "C" void calculateResidual_RANS2PV2(//testing mesh replacement
 	    subgridError_v=0.0,
 	    subgridError_w=0.0,
 	    tau_0=0.0,
-	    tau_1=0.0;
-	  //
-	  //testing replacement for precomputed mesh quantities
-	  //
-	  //std::cout<<"computing mesh quantities------------------element"<<std::endl;
-	  const int X=0,Y=1,Z=2,
-	    XX=0,XY=1,XZ=2,
-	    YX=3,YY=4,YZ=5,
-	    ZX=6,ZY=7,ZZ=8,
-	    XX_hat=0,XY_hat=1,
-	    YX_hat=2,YY_hat=3,
-	    nSym=6,nSym2=6*6,nSpace2=nSpace*nSpace,nDOF_mesh_trial_element=nDOF_trial_element;
-	  
-	  register double x,y,z,Grad_x[nSpace],Grad_y[nSpace],Grad_z[nSpace],Grad_p[nSpace],Grad_u[nSpace],Grad_v[nSpace],Grad_w[nSpace],jac[nSpace2],jacInv[nSpace2],jacDet,oneOverJacDet,dV,p_test_dV_new[nDOF_test_element],vel_test_dV_new[nDOF_test_element],
-	    p_grad_test_dV_new[nDOF_test_element*nSpace],vel_grad_test_dV_new[nDOF_test_element*nSpace],p_new,u_new,v_new,w_new,grad_p_new[nSpace],grad_u_new[nSpace],grad_v_new[nSpace],grad_w_new[nSpace];
-	  //
-	  //mapping of reference element to physical element
-	  //
-	  x=0.0;y=0.0;z=0.0;
-	  for (int I=0;I<nSpace;I++)
-	    {
-	      Grad_x[I]=0.0;Grad_y[I]=0.0;Grad_z[I]=0.0;
-	    }
-	  for (int j=0;j<nDOF_mesh_trial_element;j++)
-	    {
-	      int eN_j=eN*nDOF_mesh_trial_element+j;
-	      int eN_k_j=eN_k*nDOF_mesh_trial_element+j;
-	      int eN_k_j_nSpace = eN_k_j*nSpace;
-	      x += valFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+0],mesh_trial_ref[k*nDOF_mesh_trial_element+j]);
-	      y += valFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+1],mesh_trial_ref[k*nDOF_mesh_trial_element+j]);
-	      z += valFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+2],mesh_trial_ref[k*nDOF_mesh_trial_element+j]);	      
-	      for (int I=0;I<nSpace;I++)
-		{
-		  Grad_x[I] += gradFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+0],mesh_grad_trial_ref[k*nDOF_mesh_trial_element*nSpace+j*nSpace+I]);
-		  Grad_y[I] += gradFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+1],mesh_grad_trial_ref[k*nDOF_mesh_trial_element*nSpace+j*nSpace+I]);
-		  Grad_z[I] += gradFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+2],mesh_grad_trial_ref[k*nDOF_mesh_trial_element*nSpace+j*nSpace+I]);
-		}
-	    }
-	  jac[XX] = Grad_x[X];//node[X]*grad[X];
-	  jac[XY] = Grad_x[Y];//node[X]*grad[Y];
-	  jac[XZ] = Grad_x[Z];//node[X]*grad[Z];
-	  jac[YX] = Grad_y[X];//node[Y]*grad[X];
-	  jac[YY] = Grad_y[Y];//node[Y]*grad[Y];
-	  jac[YZ] = Grad_y[Z];//node[Y]*grad[Z];
-	  jac[ZX] = Grad_z[X];//node[Z]*grad[X];
-	  jac[ZY] = Grad_z[Y];//node[Z]*grad[Y];
-	  jac[ZZ] = Grad_z[Z];//node[Z]*grad[Z];
-	  jacDet = 
-	    jac[XX]*(jac[YY]*jac[ZZ] - jac[YZ]*jac[ZY]) -
-	    jac[XY]*(jac[YX]*jac[ZZ] - jac[YZ]*jac[ZX]) +
-	    jac[XZ]*(jac[YX]*jac[ZY] - jac[YY]*jac[ZX]);
-	  oneOverJacDet = 1.0/jacDet;
-	  jacInv[XX] = oneOverJacDet*(jac[YY]*jac[ZZ] - jac[YZ]*jac[ZY]);
-	  jacInv[YX] = oneOverJacDet*(jac[YZ]*jac[ZX] - jac[YX]*jac[ZZ]);
-	  jacInv[ZX] = oneOverJacDet*(jac[YX]*jac[ZY] - jac[YY]*jac[ZX]);
-	  jacInv[XY] = oneOverJacDet*(jac[ZY]*jac[XZ] - jac[ZZ]*jac[XY]);
-	  jacInv[YY] = oneOverJacDet*(jac[ZZ]*jac[XX] - jac[ZX]*jac[XZ]);
-	  jacInv[ZY] = oneOverJacDet*(jac[ZX]*jac[XY] - jac[ZY]*jac[XX]);
-	  jacInv[XZ] = oneOverJacDet*(jac[XY]*jac[YZ] - jac[XZ]*jac[YY]);
-	  jacInv[YZ] = oneOverJacDet*(jac[XZ]*jac[YX] - jac[XX]*jac[YZ]);
-	  jacInv[ZZ] = oneOverJacDet*(jac[XX]*jac[YY] - jac[XY]*jac[YX]);
+	    tau_1=0.0,
+	    jac[nSpace*nSpace],
+	    jacDet,
+	    jacInv[nSpace*nSpace],
+	    Grad_p[nSpace],Grad_u[nSpace],Grad_v[nSpace],Grad_w[nSpace],dV,p_test_dV_new[nDOF_test_element],vel_test_dV_new[nDOF_test_element],
+	    p_grad_test_dV_new[nDOF_test_element*nSpace],vel_grad_test_dV_new[nDOF_test_element*nSpace],p_new,u_new,v_new,w_new,
+	    grad_p_new[nSpace],grad_u_new[nSpace],grad_v_new[nSpace],grad_w_new[nSpace],x,y,z;
+	  //get jacobian, etc for mapping reference element
+	  calculateMapping_element(eN,
+				   k,
+				   mesh_dof,
+				   mesh_l2g,
+				   mesh_trial_ref,
+				   mesh_grad_trial_ref,
+				   jac,
+				   jacDet,
+				   jacInv,
+				   x,y,z);
+	  //get the physical integration weight
 	  dV = fabs(jacDet)*dV_ref[k];
-	  
+	  //get the solution and gradients
 	  p=0.0;u=0.0;v=0.0;w=0.0;
 	  for (int I=0;I<nSpace;I++)
 	    {
@@ -289,8 +429,7 @@ extern "C" void calculateResidual_RANS2PV2(//testing mesh replacement
 		  vel_grad_test_dV_new[j*nSpace+I] = 0.0;
 		}
 	      int eN_j=eN*nDOF_trial_element+j;
-	      int eN_k_j=eN_k*nDOF_trial_element+j;
-	      int eN_k_j_nSpace = eN_k_j*nSpace;
+
 	      p += valFromDOF_c(p_dof[p_l2g[eN_j]],p_trial_ref[k*nDOF_trial_element+j]);
 	      u += valFromDOF_c(u_dof[vel_l2g[eN_j]],vel_trial_ref[k*nDOF_trial_element+j]);
 	      v += valFromDOF_c(v_dof[vel_l2g[eN_j]],vel_trial_ref[k*nDOF_trial_element+j]);
@@ -555,9 +694,9 @@ extern "C" void calculateResidual_RANS2PV2(//testing mesh replacement
 		  if(fabs(grad_w[I] - grad_w_new[I]) > epsTest)
 		    std::cout<<"grad_w"<<(grad_w[I] - grad_w_new[I])<<std::endl;
 		  if (fabs(p_grad_test_dV[eN_k_i_nSpace+I] - p_grad_test_dV_new[i*nSpace+I]) > epsTest)
-		    std::cout<<p_grad_test_dV[eN_k_i_nSpace+I]<<'\t'<<p_grad_test_dV_new[i*nSpace+I]<<std::endl;
+		    std::cout<<"p_grad_test_dV"<<p_grad_test_dV[eN_k_i_nSpace+I]<<'\t'<<p_grad_test_dV_new[i*nSpace+I]<<std::endl;
 		  if (fabs(vel_grad_test_dV[eN_k_i_nSpace+I] - vel_grad_test_dV_new[i*nSpace+I]) > epsTest)
-		    std::cout<<vel_grad_test_dV[eN_k_i_nSpace+I]<<'\t'<<vel_grad_test_dV_new[i*nSpace+I]<<std::endl;
+		    std::cout<<"vel_grad_test_dV"<<vel_grad_test_dV[eN_k_i_nSpace+I]<<'\t'<<vel_grad_test_dV_new[i*nSpace+I]<<std::endl;
 		}
 	      elementResidual_p[i] += Advection_weak_c(mass_adv,&p_grad_test_dV[eN_k_i_nSpace]) +
 		SubgridError_c(subgridError_u,Lstar_u_p[i]) + 
@@ -644,8 +783,7 @@ extern "C" void calculateResidual_RANS2PV2(//testing mesh replacement
 	{ 
 	  register int ebNE_kb = ebNE*nQuadraturePoints_elementBoundary+kb,
 	    ebNE_kb_nSpace = ebNE_kb*nSpace,
-	    ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb,
-	    ebN_local_kb_nSpace = ebN_local_kb*nSpace;
+	    ebN_local_kb = ebN_local*nQuadraturePoints_elementBoundary+kb;
 	  register double p_ext=0.0,
 	    u_ext=0.0,
 	    v_ext=0.0,
@@ -751,102 +889,40 @@ extern "C" void calculateResidual_RANS2PV2(//testing mesh replacement
 	    bc_mom_v_ham_ext=0.0,
 	    bc_dmom_v_ham_grad_p_ext[nSpace],
 	    bc_mom_w_ham_ext=0.0,
-	    bc_dmom_w_ham_grad_p_ext[nSpace];
+	    bc_dmom_w_ham_grad_p_ext[nSpace],
+	    jac_ext[nSpace*nSpace],
+	    jacDet_ext,
+	    jacInv_ext[nSpace*nSpace],
+	    boundaryJac[nSpace*(nSpace-1)],
+	    metricTensor[(nSpace-1)*(nSpace-1)],
+	    metricTensorDetSqrt,
+	    Grad_p_ext[nSpace],
+	    Grad_u_ext[nSpace],
+	    Grad_v_ext[nSpace],
+	    Grad_w_ext[nSpace],dS,p_test_dS_new[nDOF_test_element],vel_test_dS_new[nDOF_test_element],
+	    p_ext_new,u_ext_new,v_ext_new,w_ext_new,grad_p_ext_new[nSpace],grad_u_ext_new[nSpace],grad_v_ext_new[nSpace],grad_w_ext_new[nSpace],normal[3],x_ext,y_ext,z_ext;
+
 	  //
 	  //start testing replacement for precomputed quanties
 	  //
 	  //std::cout<<"computing mesh quantities------------------elementBoundary"<<std::endl;
-	  const int X=0,Y=1,Z=2,
-	    XX=0,XY=1,XZ=2,
-	    YX=3,YY=4,YZ=5,
-	    ZX=6,ZY=7,ZZ=8,
-	    XX_hat=0,XY_hat=1,
-	    YX_hat=2,YY_hat=3,
-	    XHX=0,XHY=1,
-	    YHX=2,YHY=3,
-	    ZHX=4,ZHY=5,
-	    HXHX=0,HXHY=1,
-	    HYHX=2,HYHY=3,
-	    nSym=6,nSym2=6*6,nSpace2=nSpace*nSpace,nDOF_mesh_trial_element=nDOF_trial_element;
-	  
-	  register double x_ext,y_ext,z_ext,Grad_x_ext[nSpace],Grad_y_ext[nSpace],Grad_z_ext[nSpace],Grad_p_ext[nSpace],Grad_u_ext[nSpace],Grad_v_ext[nSpace],Grad_w_ext[nSpace],jac_ext[nSpace2],jacInv_ext[nSpace2],jacDet_ext,oneOverJacDet_ext,dS,p_test_dS_new[nDOF_test_element],vel_test_dS_new[nDOF_test_element],
-	    p_ext_new,u_ext_new,v_ext_new,w_ext_new,grad_p_ext_new[nSpace],grad_u_ext_new[nSpace],grad_v_ext_new[nSpace],grad_w_ext_new[nSpace],norm_normal,normal[nSpace],boundaryJac[nSpace*(nSpace-1)],metricTensor[(nSpace-1)*(nSpace-1)],metricTensorDetSqrt;
-	  // 
-	  //calculate mapping from the reference element to the physical element
-	  // 
-	  x_ext=0.0;y_ext=0.0;z_ext=0.0;
-	  for (int I=0;I<nSpace;I++)
-	    {
-	      Grad_x_ext[I] = 0.0;
-	      Grad_y_ext[I] = 0.0;
-	      Grad_z_ext[I] = 0.0;
-	    }
-	  for (int j=0;j<nDOF_mesh_trial_element;j++) 
-	    { 
-	      int eN_j = eN*nDOF_trial_element+j;
-	      int ebNE_kb_j = ebNE_kb*nDOF_trial_element+j;
-	      int ebNE_kb_j_nSpace= ebNE_kb_j*nSpace;
-	      int ebN_local_kb_j = ebN_local_kb*nDOF_trial_element+j;
-	      int ebN_local_kb_j_nSpace = ebN_local_kb_j*nSpace;
-	      x_ext += valFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+0],mesh_trial_trace_ref[ebN_local_kb_j]); 
-	      y_ext += valFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+1],mesh_trial_trace_ref[ebN_local_kb_j]); 
-	      z_ext += valFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+2],mesh_trial_trace_ref[ebN_local_kb_j]); 
-	      for (int I=0;I<nSpace;I++)
-		{
-		  Grad_x_ext[I] += gradFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+0],mesh_grad_trial_trace_ref[ebN_local_kb_j_nSpace+I]);
-		  Grad_y_ext[I] += gradFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+1],mesh_grad_trial_trace_ref[ebN_local_kb_j_nSpace+I]); 
-		  Grad_z_ext[I] += gradFromDOF_c(mesh_dof[mesh_l2g[eN_j]*nSpace+2],mesh_grad_trial_trace_ref[ebN_local_kb_j_nSpace+I]);
-		} 
-	    }
-	  //Space Mapping Jacobian
-	  jac_ext[XX] = Grad_x_ext[X];//node[X]*grad[X];
-	  jac_ext[XY] = Grad_x_ext[Y];//node[X]*grad[Y];
-	  jac_ext[XZ] = Grad_x_ext[Z];//node[X]*grad[Z];
-	  jac_ext[YX] = Grad_y_ext[X];//node[Y]*grad[X];
-	  jac_ext[YY] = Grad_y_ext[Y];//node[Y]*grad[Y];
-	  jac_ext[YZ] = Grad_y_ext[Z];//node[Y]*grad[Z];
-	  jac_ext[ZX] = Grad_z_ext[X];//node[Z]*grad[X];
-	  jac_ext[ZY] = Grad_z_ext[Y];//node[Z]*grad[Y];
-	  jac_ext[ZZ] = Grad_z_ext[Z];//node[Z]*grad[Z];
-	  jacDet_ext = 
-	    jac_ext[XX]*(jac_ext[YY]*jac_ext[ZZ] - jac_ext[YZ]*jac_ext[ZY]) -
-	    jac_ext[XY]*(jac_ext[YX]*jac_ext[ZZ] - jac_ext[YZ]*jac_ext[ZX]) +
-	    jac_ext[XZ]*(jac_ext[YX]*jac_ext[ZY] - jac_ext[YY]*jac_ext[ZX]);
-	  oneOverJacDet_ext = 1.0/jacDet_ext;
-	  jacInv_ext[XX] = oneOverJacDet_ext*(jac_ext[YY]*jac_ext[ZZ] - jac_ext[YZ]*jac_ext[ZY]);
-	  jacInv_ext[YX] = oneOverJacDet_ext*(jac_ext[YZ]*jac_ext[ZX] - jac_ext[YX]*jac_ext[ZZ]);
-	  jacInv_ext[ZX] = oneOverJacDet_ext*(jac_ext[YX]*jac_ext[ZY] - jac_ext[YY]*jac_ext[ZX]);
-	  jacInv_ext[XY] = oneOverJacDet_ext*(jac_ext[ZY]*jac_ext[XZ] - jac_ext[ZZ]*jac_ext[XY]);
-	  jacInv_ext[YY] = oneOverJacDet_ext*(jac_ext[ZZ]*jac_ext[XX] - jac_ext[ZX]*jac_ext[XZ]);
-	  jacInv_ext[ZY] = oneOverJacDet_ext*(jac_ext[ZX]*jac_ext[XY] - jac_ext[ZY]*jac_ext[XX]);
-	  jacInv_ext[XZ] = oneOverJacDet_ext*(jac_ext[XY]*jac_ext[YZ] - jac_ext[XZ]*jac_ext[YY]);
-	  jacInv_ext[YZ] = oneOverJacDet_ext*(jac_ext[XZ]*jac_ext[YX] - jac_ext[XX]*jac_ext[YZ]);
-	  jacInv_ext[ZZ] = oneOverJacDet_ext*(jac_ext[XX]*jac_ext[YY] - jac_ext[XY]*jac_ext[YX]);
-	  //normal
-	  norm_normal=0.0;
-	  for (int I=0;I<nSpace;I++)
-	    {
-	      for (int J=0;J<nSpace;J++)
-		normal[I] += jacInv_ext[J*nSpace+I]*normal_ref[ebN_local_kb_nSpace+J];
-	      norm_normal+=normal[I]*normal[I];
-	    }
-	  norm_normal = sqrt(norm_normal);
-	  for (int I=0;I<nSpace;I++)
-	    normal[I] /= norm_normal;
-	  //metric tensor and determinant
-          boundaryJac[XHX] = jac_ext[XX]*boundaryJac_ref[ebN_local*6+XHX]+jac_ext[XY]*boundaryJac_ref[ebN_local*6+YHX]+jac_ext[XZ]*boundaryJac_ref[ebN_local*6+ZHX];
-          boundaryJac[XHY] = jac_ext[XX]*boundaryJac_ref[ebN_local*6+XHY]+jac_ext[XY]*boundaryJac_ref[ebN_local*6+YHY]+jac_ext[XZ]*boundaryJac_ref[ebN_local*6+ZHY];
-          boundaryJac[YHX] = jac_ext[YX]*boundaryJac_ref[ebN_local*6+XHX]+jac_ext[YY]*boundaryJac_ref[ebN_local*6+YHX]+jac_ext[YZ]*boundaryJac_ref[ebN_local*6+ZHX];
-          boundaryJac[YHY] = jac_ext[YX]*boundaryJac_ref[ebN_local*6+XHY]+jac_ext[YY]*boundaryJac_ref[ebN_local*6+YHY]+jac_ext[YZ]*boundaryJac_ref[ebN_local*6+ZHY];
-          boundaryJac[ZHX] = jac_ext[ZX]*boundaryJac_ref[ebN_local*6+XHX]+jac_ext[ZY]*boundaryJac_ref[ebN_local*6+YHX]+jac_ext[ZZ]*boundaryJac_ref[ebN_local*6+ZHX];
-          boundaryJac[ZHY] = jac_ext[ZX]*boundaryJac_ref[ebN_local*6+XHY]+jac_ext[ZY]*boundaryJac_ref[ebN_local*6+YHY]+jac_ext[ZZ]*boundaryJac_ref[ebN_local*6+ZHY];
-
-          metricTensor[HXHX] = boundaryJac[XHX]*boundaryJac[XHX]+boundaryJac[YHX]*boundaryJac[YHX]+boundaryJac[ZHX]*boundaryJac[ZHX];
-          metricTensor[HXHY] = boundaryJac[XHX]*boundaryJac[XHY]+boundaryJac[YHX]*boundaryJac[YHY]+boundaryJac[ZHX]*boundaryJac[ZHY];
-          metricTensor[HYHX] = boundaryJac[XHY]*boundaryJac[XHX]+boundaryJac[YHY]*boundaryJac[YHX]+boundaryJac[ZHY]*boundaryJac[ZHX];
-          metricTensor[HYHY] = boundaryJac[XHY]*boundaryJac[XHY]+boundaryJac[YHY]*boundaryJac[YHY]+boundaryJac[ZHY]*boundaryJac[ZHY];
-
-          metricTensorDetSqrt=sqrt(metricTensor[HXHX]*metricTensor[HYHY]- metricTensor[HXHY]*metricTensor[HYHX]);
+	  calculateMapping_elementBoundary(eN,
+					   ebN_local,
+					   kb,
+					   mesh_dof,
+					   mesh_l2g,
+					   mesh_trial_trace_ref,
+					   mesh_grad_trial_trace_ref,
+					   boundaryJac_ref,
+					   jac_ext,
+					   jacDet_ext,
+					   jacInv_ext,
+					   boundaryJac,
+					   metricTensor,
+					   metricTensorDetSqrt,
+					   normal_ref,
+					   normal,
+					   x_ext,y_ext,z_ext);
 	  dS = metricTensorDetSqrt*dS_ref[kb];
 
 	  p_ext=0.0;u_ext=0.0;v_ext=0.0;w_ext=0.0;
@@ -868,9 +944,6 @@ extern "C" void calculateResidual_RANS2PV2(//testing mesh replacement
 	  for (int j=0;j<nDOF_trial_element;j++) 
 	    { 
 	      int eN_j = eN*nDOF_trial_element+j;
-	      int ebNE_kb_j = ebNE_kb*nDOF_trial_element+j;
-	      int ebNE_kb_j_nSpace= ebNE_kb_j*nSpace;
-	      int kb_j = kb*nDOF_trial_element+j;
 	      int ebN_local_kb_j = ebN_local_kb*nDOF_trial_element+j;
 	      int ebN_local_kb_j_nSpace = ebN_local_kb_j*nSpace;
 	      p_ext += valFromDOF_c(p_dof[p_l2g[eN_j]],p_trial_trace_ref[ebN_local_kb_j]); 
@@ -880,7 +953,6 @@ extern "C" void calculateResidual_RANS2PV2(//testing mesh replacement
                
 	      for (int I=0;I<nSpace;I++)
 		{
-		  int kb_j_nSpace = kb_j*nSpace;
 		  Grad_p_ext[I] += gradFromDOF_c(p_dof[p_l2g[eN_j]],p_grad_trial_trace_ref[ebN_local_kb_j_nSpace+I]); 
 		  Grad_u_ext[I] += gradFromDOF_c(u_dof[vel_l2g[eN_j]],vel_grad_trial_trace_ref[ebN_local_kb_j_nSpace+I]); 
 		  Grad_v_ext[I] += gradFromDOF_c(v_dof[vel_l2g[eN_j]],vel_grad_trial_trace_ref[ebN_local_kb_j_nSpace+I]); 
