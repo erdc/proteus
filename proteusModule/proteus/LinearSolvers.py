@@ -405,6 +405,10 @@ class KSP_petsc4py(LinearSolver):
             elif Preconditioner == SimpleNavierStokes3D:
                 self.preconditioner = SimpleNavierStokes3D(par_L)
                 self.pc = self.preconditioner.pc
+            elif Preconditioner == SimpleDarcyFC:
+                self.preconditioner = SimpleDarcyFC(par_L)
+                self.pc = self.preconditioner.pc
+                self.pc.setFromOptions()
         assert type(L).__name__ == 'SparseMatrix', "petsc4py PETSc can only be called with a local sparse matrix"
         assert isinstance(par_L,ParMat_petsc4py)
         self.solverName  = "PETSc"
@@ -425,7 +429,7 @@ class KSP_petsc4py(LinearSolver):
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
         self.ksp.atol = self.atol_r; self.ksp.rtol= self.rtol_r ; self.ksp.max_it = self.maxIts
         if convergenceTest == 'r-true':
-            print "WARNING convergenceTest == 'r-true' does not work for KSP_petsc4py right now"
+            #print "WARNING convergenceTest == 'r-true' does not work for KSP_petsc4py right now"
             raise NotImplementedError
             self.r_work = self.petsc_L.getVecLeft()
             self.rnorm0 = None
@@ -433,9 +437,10 @@ class KSP_petsc4py(LinearSolver):
                 #doesn't work because need access to
                 #ksp's current guess which isn't held in ksp.getSolution
                 #need access to PETSc's KSPBuildResidual or BuildSolution at least
-                x = ksp.getSolution(); b = ksp.getRhs()
-                self.petsc_L.mult(x,self.r_work)
-                self.r_work.axpy(-1.0,b)
+                ksp.buildResidual(r_work)
+                #x = ksp.getSolution(); b = ksp.getRhs()
+                #self.petsc_L.mult(x,self.r_work)
+                #self.r_work.axpy(-1.0,b)
                 truenorm = self.r_work.norm()
                 if its == 0: self.rnorm0 = truenorm
                 print "duh_conv its= %s rnorm= %s truenorm= %s self.rnorm0= %s ksp.resnorm= %s " % (its,rnorm,truenorm,self.rnorm0,ksp.getResidualNorm())
@@ -526,6 +531,27 @@ class SimpleNavierStokes3D:
         self.isv.createGeneral(self.velocityDOF,comm=petsc4py.PETSc.COMM_WORLD)
         self.pc.fieldSplitSetIS(self.isp)
         self.pc.fieldSplitSetIS(self.isv)
+
+class SimpleDarcyFC:
+    def __init__(self,L):
+        sizes = L.getSizes()
+        range = L.getOwnershipRange()
+        print "sizes",sizes
+        neqns = sizes[0][0]
+        print "neqns",neqns
+        self.saturationDOF = numpy.arange(range[0],range[0]+neqns/2,dtype="i")
+        #print "saturation",self.saturationDOF
+        self.pressureDOF = numpy.arange(range[0]+neqns/2,range[0]+neqns,dtype="i")
+        #print "pressure",self.pressureDOF
+        self.pc = petsc4py.PETSc.PC().create()
+        self.pc.setType('fieldsplit')
+        self.isp = petsc4py.PETSc.IS()
+        self.isp.createGeneral(self.saturationDOF,comm=petsc4py.PETSc.COMM_WORLD)
+        self.isv = petsc4py.PETSc.IS()
+        self.isv.createGeneral(self.pressureDOF,comm=petsc4py.PETSc.COMM_WORLD)
+        self.pc.fieldSplitSetIS(self.isp)
+        self.pc.fieldSplitSetIS(self.isv)
+
 class Jacobi(LinearSolver):
     """
     Damped Jacobi iteration.
