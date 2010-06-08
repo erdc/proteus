@@ -181,10 +181,10 @@ class NF_base:
                         if getPeriodicBoundaryConditions != None:
                             p = getPeriodicBoundaryConditions[ci](x)
                         if p != None and not parallelPeriodic:
-                            if self.periodicBoundaryConditionsDictList[ci].has_key(ptuple(p).hash()):
+                            if self.periodicBoundaryConditionsDictList[ci].has_key(ptuple(p)):#.hash()):
                                 self.periodicBoundaryConditionsDictList[ci][ptuple(p)].append((ebNE,k))
                             else:
-                                self.periodicBoundaryConditionsDictList[ci][ptuple(p).hash()]=[(ebNE,k)]
+                                self.periodicBoundaryConditionsDictList[ci][ptuple(p)]=[(ebNE,k)]#[ptuple(p).hash()]=[(ebNE,k)]
                         elif g != None:
                             self.isDOFBoundary[ci][ebNE,k]=gFlag
                             self.DOFBoundaryConditionsDictList[ci][(ebNE,k)] = g
