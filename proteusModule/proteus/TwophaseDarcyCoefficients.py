@@ -39,7 +39,7 @@ class TwophaseDarcyFlow_base(TC_base):
 	self.bc_pd = bc_pd
 	self.bc_lambda=bc_lambda 
         #normalize gravity
-        self.g = numpy.array(g)
+        self.g = numpy.array(g,dtype='d')
         gMag= sqrt(numpy.dot(self.g,self.g))
         if gMag <= 0.0:
             gMag = 1.0
@@ -61,13 +61,13 @@ class TwophaseDarcyFlow_base(TC_base):
         #setup rwork arrays for homogeneous media, make heterogeneity later
         if self.psk_model == 'simp':
             self.len_rwork_psk=2
-            self.rwork_psk = numpy.array([self.Sw_min,self.Sw_max])
+            self.rwork_psk = numpy.array([self.Sw_min,self.Sw_max],dtype='d')
         elif self.psk_model in ['VGM','VGB']:
             self.len_rwork_psk=4
-            self.rwork_psk = numpy.array([self.Sw_min,self.Sw_max,self.vg_alpha,self.vg_m])
+            self.rwork_psk = numpy.array([self.Sw_min,self.Sw_max,self.vg_alpha,self.vg_m],dtype='d')
         elif self.psk_model in ['BCM','BCB']:
             self.len_rwork_psk=4
-            self.rwork_psk = numpy.array([self.Sw_min,self.Sw_max,bc_pd,bc_lambda])
+            self.rwork_psk = numpy.array([self.Sw_min,self.Sw_max,bc_pd,bc_lambda],dtype='d')
         #density eos options
         self.density_w_model = density_w_model
         self.density_n_model = density_n_model
@@ -77,8 +77,8 @@ class TwophaseDarcyFlow_base(TC_base):
         assert self.density_w_model in self.density_types
         assert self.density_n_model in self.density_types
         #default is Constant density, put in more general init later
-        self.rwork_density_w=numpy.array([self.rhow])
-        self.rwork_density_n=numpy.array([self.rhon])
+        self.rwork_density_w=numpy.array([self.rhow],dtype='d')
+        self.rwork_density_n=numpy.array([self.rhon],dtype='d')
         #self.sd = sd
     def setMaterialTypes(self,
                          Ksw_types=[1.0],
@@ -302,14 +302,14 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
                 if params['model'] == 'Exponential':
                     setattr(self,rwork,numpy.array([params['rho_0']/params['rho_0'],#normalize by phase density
                                                     params['psi_0'],
-                                                    params['beta']]))
+                                                    params['beta']],dtype='d'))
                 elif params['model'] == 'IdealGas':
                     setattr(self,rwork,numpy.array([params['T'],
                                                     params['W']/params['rho_0'],#normalize by phase density
                                                     params['R'],
                                                     params['headToPressure'],
                                                     params['rho_0']/params['rho_0'],#normalize by phase density
-                                                    params['psi_0']]))
+                                                    params['psi_0']],dtype='d'))
                 else:
                     assert False, 'TwophaseDarcy_fc density params= %s not found ' % params
         #
@@ -402,6 +402,10 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
                                               c[('da',1,1,1)])
     def evaluate_sd_diagonal(self,t,c):
         assert self.diagonal
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+
         if self.isHomogeneous and self.diagonal:
             self.twophaseDarcy_fc_sd_diag(self.psk_types[self.psk_model],
                                           self.density_types[self.density_w_model],

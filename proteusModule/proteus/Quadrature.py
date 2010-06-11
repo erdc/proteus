@@ -113,7 +113,7 @@ class CompositeTrapezoidalEdge(Q_base):
         weightsList= []
         for nintervals in range(1,self.maxOrder+1):
             dx = 1.0/float(nintervals)
-            points=numpy.arange(nintervals+1)*dx
+            points=numpy.arange(nintervals+1,dtype='d')*dx
             weights=numpy.zeros(nintervals+1,'d'); weights.fill(dx)
             weights[0] *= 0.5; weights[-1] *= 0.5
             pointsList.append([EVec(p) for p in points])
@@ -218,7 +218,7 @@ class CompositeTrapezoidalTriangle(Q_base):
         for nintervals in range(1,self.maxOrder+1):
             dx = 1.0/float(nintervals)
             #uniform subdivisions in terms of barycentric coordinates
-            baryvals = numpy.arange(nintervals+1)*dx
+            baryvals = numpy.arange(nintervals+1,dtype='d')*dx
             combos = []; weights = []
             for i in range(nintervals+1):
                 for j in range(nintervals+1-i):
