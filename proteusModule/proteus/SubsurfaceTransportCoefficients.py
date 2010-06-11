@@ -371,7 +371,7 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
     def initializeElementQuadrature(self,t,cq):
         self.materialTypes_q = self.elementMaterialTypes
         self.q_shape = cq[('u',0)].shape
-        cq['Ks'] = numpy.zeros(self.q_shape)
+        cq['Ks'] = numpy.zeros(self.q_shape,'d')
         for k in range(self.q_shape[1]):
             cq['Ks'][:,k] = self.Ksw_types[self.elementMaterialTypes,0]
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
@@ -507,14 +507,14 @@ class TwophaseDarcyFlow_base(TC_base):
                 if params['model'] == 'Exponential':
                     setattr(self,rwork,numpy.array([params['rho_0']/params['rho_0'],#normalize by phase density
                                                     params['psi_0'],
-                                                    params['beta']]))
+                                                    params['beta']],dtype='d'))
                 elif params['model'] == 'IdealGas':
                     setattr(self,rwork,numpy.array([params['T'],
                                                     params['W']/params['rho_0'],#normalize by phase density
                                                     params['R'],
                                                     params['headToPressure'],
                                                     params['rho_0']/params['rho_0'],#normalize by phase density
-                                                    params['psi_0']]))
+                                                    params['psi_0']],dtype='d'))
                 else:
                     assert False, 'TwophaseDarcy_base density params= %s not found ' % params
         #
@@ -547,6 +547,7 @@ class TwophaseDarcyFlow_base(TC_base):
         self.diagonal_conductivity=diagonal_conductivity
     def initializeMesh(self,mesh):
         self.elementMaterialTypes,self.exteriorElementBoundaryTypes,self.elementBoundaryTypes = BlockHeterogeneousCoefficients(mesh).initializeMaterialTypes()
+
     def initializeElementQuadrature(self,t,cq):
         self.materialTypes_q = self.elementMaterialTypes
         self.q_shape = cq[('u',0)].shape
@@ -555,7 +556,7 @@ class TwophaseDarcyFlow_base(TC_base):
         cq[('dpsi_n',0)] = numpy.zeros(cq[('u',0)].shape,'d')
         cq[('dpsi_n',1)] = numpy.zeros(cq[('u',0)].shape,'d')
         #for visualization
-        cq['Ks'] = numpy.zeros(self.q_shape)
+        cq['Ks'] = numpy.zeros(self.q_shape,'d')
         for k in range(self.q_shape[1]):
             cq['Ks'][:,k] = self.Ksw_types[self.elementMaterialTypes,0]
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
@@ -645,6 +646,13 @@ class TwophaseDarcyFlow_base(TC_base):
         self.rwork_psk_tolerances = numpy.zeros((self.nPskTolerances,),'d')
         for i,tol in enumerate(self.psk_tolerances[self.psk_model].values()):
             self.rwork_psk_tolerances[i] = tol
+#         #mwf do some debugging
+#         assert self.elementMaterialTypes.max() < self.nMaterialTypes
+#         assert self.elementMaterialTypes.min() == 0
+#         assert self.exteriorElementBoundaryTypes.max()  < self.nMaterialTypes
+#         assert self.exteriorElementBoundaryTypes.min() == 0
+#         assert self.elementBoundaryTypes.max() <  self.nMaterialTypes
+#         assert self.elementBoundaryTypes.min() == 0
     #
 
 class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
@@ -765,20 +773,49 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
 
 
     def evaluate(self,t,c):
+        #mwf debug
+        import Comm
+        comm = Comm.get()
         if c[('u',0)].shape == self.q_shape:
             materialTypes = self.materialTypes_q
+            #print "rank= %s DarcyFCeval q materialTypes.shape= %s Ksw_types= %s sdInfo[(0,0)][0]= %s sdInfo[(0,0)][1]= %s c[('u',0)].shape=%s  c[('a',0,0)].shape= %s psi_n=%s " % (comm.rank(),
+            #                                                                                                                                                                        materialTypes.shape,self.Ksw_types,
+            #                                                                                                                                                                        self.sdInfo[(0,0)][0],
+            #                                                                                                                                                                        self.sdInfo[(0,0)][1],
+            #                                                                                                                                                                        c[('u',0)].shape,
+            #                                                                                                                                                                        c[('a',0,0)].shape,
+            #                                                                                                                                                                        c['psi_n'].shape)
         elif c[('u',0)].shape == self.ebqe_shape:
             materialTypes = self.materialTypes_ebqe
+            #mwf debug
+            #print "DarcyFCeval ebqe materialTypes.shape= %s Ksw_types= %s sdInfo[(0,0)][0]= %s sdInfo[(0,0)][1]= %s ebqe[('u',0)].shape=%s  ebqe[('a',0,0)].shape= %s psi_n=%s " % (materialTypes.shape,self.Ksw_types,
+            #                                                                                                                                                                        self.sdInfo[(0,0)][0],
+            #                                                                                                                                                                        self.sdInfo[(0,0)][1],
+            #                                                                                                                                                                        c[('u',0)].shape,
+            #                                                                                                                                                                        c[('a',0,0)].shape,
+            #                                                                                                                                                                        c['psi_n'].shape)
         elif c[('u',0)].shape == self.ip_shape:
             materialTypes = self.materialTypes_ip
         elif c[('u',0)].shape == self.ebq_shape:
             materialTypes = self.materialTypes_ebq
+            #print "rank= %s DarcyFCeval ip materialTypes.shape= %s Ksw_types= %s sdInfo[(0,0)][0]= %s sdInfo[(0,0)][1]= %s c[('u',0)].shape=%s  c[('a',0,0)].shape= %s psi_n=%s " % (comm.rank(),
+            #                                                                                                                                                                         materialTypes.shape,self.Ksw_types,
+            #                                                                                                                                                                         self.sdInfo[(0,0)][0],
+            #                                                                                                                                                                         self.sdInfo[(0,0)][1],
+            #                                                                                                                                                                         c[('u',0)].shape,
+            #                                                                                                                                                                         c[('a',0,0)].shape,
+            #                                                                                                                                                                         c['psi_n'].shape)
         else:
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
         #mwf debug
         #import pdb
         #pdb.set_trace()
+        comm.barrier()
         assert self.rwork_psk != None
+        #mwf do some debugging
+        assert materialTypes.max() < self.nMaterialTypes
+        assert materialTypes.min() == 0
+        
         self.twophaseDarcy_fc_sd_het_matType(self.psk_types[self.psk_model],
                                              self.density_types[self.density_w_model],
                                              self.density_types[self.density_n_model],
@@ -2646,8 +2683,8 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
         import Quadrature,cfemIntegrals,cpostprocessing
         if self.need_ebq_arrays:
             boundaryQuadrature = Quadrature.SimplexGaussQuadrature(nd=self.nd-1,order=2)#Quadrature.GaussEdge(2)
-            self.elementBoundaryQuadraturePoints = numpy.array([pt for pt in boundaryQuadrature.points])
-            self.elementBoundaryQuadratureWeights= numpy.array([wt for wt in boundaryQuadrature.weights])
+            self.elementBoundaryQuadraturePoints = numpy.array([pt for pt in boundaryQuadrature.points],dtype='d')
+            self.elementBoundaryQuadratureWeights= numpy.array([wt for wt in boundaryQuadrature.weights],dtype='d')
 
             nElementBoundaryQuadraturePoints_elementBoundary = self.elementBoundaryQuadraturePoints.shape[0]
             self.ebq['x'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,nElementBoundaryQuadraturePoints_elementBoundary,3),'d')

@@ -1766,8 +1766,8 @@ def setupVelocity_RT0(opts,p,mesh,geometricSpace,t):
     
     #setup information for boundary integrals
     boundaryQuadrature = Quadrature.GaussEdge(4)
-    elementBoundaryQuadraturePoints = numpy.array([pt for pt in boundaryQuadrature.points])
-    elementBoundaryQuadratureWeights= numpy.array([wt for wt in boundaryQuadrature.weights])
+    elementBoundaryQuadraturePoints = numpy.array([pt for pt in boundaryQuadrature.points],dtype='d')
+    elementBoundaryQuadratureWeights= numpy.array([wt for wt in boundaryQuadrature.weights],dtype='d')
     
     nElementBoundaryQuadraturePoints_elementBoundary = elementBoundaryQuadraturePoints.shape[0]
     ebq = {}
@@ -1816,7 +1816,7 @@ def setupTrackingPointsInReferenceSpace(opts,p,useGaussianQuadrature=False):
         else:
             quadrature = Quadrature.CompositeTrapezoidalEdge(order=opts.nnq)
         #(q['x_hat'],q['w_hat'],q['x_hat_indeces']) = Quadrature.buildUnion({0:quadrature})
-        x_hat = numpy.array([x for x in quadrature.points])
+        x_hat = numpy.array([x for x in quadrature.points],dtype='d')
         return x_hat 
     elif p.nd == 2:
         #need CompositeTrapezoidalTriangle
@@ -1825,13 +1825,13 @@ def setupTrackingPointsInReferenceSpace(opts,p,useGaussianQuadrature=False):
         else:
             quadrature = Quadrature.CompositeTrapezoidalTriangle(order=opts.nnq)
         
-        x_hat = numpy.array([x for x in quadrature.points])
+        x_hat = numpy.array([x for x in quadrature.points],dtype='d')
         return x_hat 
     elif p.nd == 3:
         #need CompositeTrapezoidalTriangle
         quadrature = Quadrature.GaussTetrahedron(order=opts.nnq)
         
-        x_hat = numpy.array([x for x in quadrature.points])
+        x_hat = numpy.array([x for x in quadrature.points],dtype='d')
         return x_hat 
     else:
         return None
@@ -2053,12 +2053,12 @@ def test1(opts):
                 if x > p.L[0]:
                     dx = p.L[0]-q['x_track_exact'][eN,k,0]
                     dt = p.analyticalSolutionParticleTrajectory[0].dtOfdX(q['x_track_exact'][eN,k],
-                                                                  numpy.array([dx,0.0,0.0]))
+                                                                  numpy.array([dx,0.0,0.0],dtype='d'))
                     x = p.L[0]
                 elif x < 0.0:
                     dx = 0.0 - q['x_track_exact'][eN,k,0]
                     dt = p.analyticalSolutionParticleTrajectory[0].dtOfdX(q['x_track_exact'][eN,k],
-                                                                  numpy.array([dx,0.0,0.0]))
+                                                                  numpy.array([dx,0.0,0.0],dtype='d'))
                     x = 0.0
                 #mwf debug
                 if dt == None:
@@ -2218,7 +2218,7 @@ def test2(opts):
     for eN in range(mesh.nElements_global):
         for ebN in range(mesh.nElementBoundaries_element):
             elementBoundaryOuterNormalsOrig[eN,ebN,:] = ebq['n'][eN,ebN,0,:]
-    boundaryNormals = numpy.array(trialSpace.elementMaps.referenceElement.boundaryUnitNormalList)
+    boundaryNormals = numpy.array(trialSpace.elementMaps.referenceElement.boundaryUnitNormalList,dtype='d')
     ctracking.getOuterNormals_affineSimplex(boundaryNormals,
                                             q['inverse(J)'],
                                             elementBoundaryOuterNormals)
@@ -2504,7 +2504,7 @@ def test3(opts):
     for eN in range(mesh.nElements_global):
         for ebN in range(mesh.nElementBoundaries_element):
             elementBoundaryOuterNormalsOrig[eN,ebN,:] = ebq['n'][eN,ebN,0,:]
-    boundaryNormals = numpy.array(trialSpace.elementMaps.referenceElement.boundaryUnitNormalList)
+    boundaryNormals = numpy.array(trialSpace.elementMaps.referenceElement.boundaryUnitNormalList,dtype='d')
     ctracking.getOuterNormals_affineSimplex(boundaryNormals,
                                             q['inverse(J)'],
                                             elementBoundaryOuterNormals)
