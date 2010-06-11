@@ -865,8 +865,8 @@ class NLJacobi(NonlinearSolver):
         self.fullNewton=fullNewton
         self.M=Vec(self.F.dim)
         self.w=weight
-        self.node_order=numpy.arange(self.F.dim)
-        self.node_order=numpy.arange(self.F.dim-1,-1,-1)
+        self.node_order=numpy.arange(self.F.dim,dtype='i')
+        self.node_order=numpy.arange(self.F.dim-1,-1,-1,dtype='i')
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         r=self.solveInitialize(u,r,b)
         while (not self.converged(r) and
@@ -924,10 +924,10 @@ class NLGaussSeidel(NonlinearSolver):
         self.w=weight
         self.connectionList=connectionList
         self.M=Vec(self.F.dim)
-        self.node_order=numpy.arange(self.F.dim)
+        self.node_order=numpy.arange(self.F.dim,dtype='i')
         self.sym = sym
-        self.node_order=numpy.arange(self.F.dim)
-        self.node_order=numpy.arange(self.F.dim-1,-1,-1)
+        self.node_order=numpy.arange(self.F.dim,dtype='i')
+        self.node_order=numpy.arange(self.F.dim-1,-1,-1,dtype='i')
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         r=self.solveInitialize(u,r,b)
         while (not self.converged(r) and
@@ -1024,8 +1024,8 @@ class NLStarILU(NonlinearSolver):
                                                         set(connectionList[j]))
                     self.subdomainIndecesList[i][J].update([i,j])
         elif type(self.J).__name__ == 'SparseMatrix':
-            self.node_order=numpy.arange(self.F.dim-1,-1,-1)
-            #self.node_order=numpy.arange(self.F.dim)
+            self.node_order=numpy.arange(self.F.dim-1,-1,-1,dtype='i')
+            #self.node_order=numpy.arange(self.F.dim,dtype='i')
             self.asmFactorObject = self.csmoothers.ASMFactor(self.J)
     def prepareSubdomains(self):
         if type(self.J).__name__ == 'ndarray':

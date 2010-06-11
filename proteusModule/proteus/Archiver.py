@@ -330,7 +330,7 @@ class XdmfWriter:
                     #    for nN in range(Xdmf_NodesPerElement):
                     #        q_l2g[eN,nN] = eN*Xdmf_NodesPerElement + nN
                     #
-                    q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement).reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
+                    q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
                     ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,q_l2g)
                     ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,x.flat[:])
             else:
@@ -344,7 +344,7 @@ class XdmfWriter:
                     #    for nN in range(Xdmf_NodesPerElement):
                     #        q_l2g[eN,nN] = eN*Xdmf_NodesPerElement + nN
                     #
-                    q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement).reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
+                    q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
                     numpy.savetxt(ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt",q_l2g,fmt='%d')
                     numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",x.flat[:])
                     
@@ -726,7 +726,7 @@ class XdmfWriter:
                 nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
                 if init or meshChanged:
                     #simple dg l2g mapping
-                    dg_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement).reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
+                    dg_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
                     ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,dg_l2g)
 
                     dgnodes = numpy.reshape(mesh.nodeArray[mesh.elementNodesArray],(Xdmf_NumberOfElements*Xdmf_NodesPerElement,3))
@@ -735,7 +735,7 @@ class XdmfWriter:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt"})
                 if init or meshChanged:
-                    dg_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement).reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
+                    dg_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
                     numpy.savetxt(ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt",dg_l2g,fmt='%d')
 
                     dgnodes = numpy.reshape(mesh.nodeArray[mesh.elementNodesArray],(Xdmf_NumberOfElements*Xdmf_NodesPerElement,3))
@@ -855,11 +855,11 @@ class XdmfWriter:
                                     "Dimensions":"%i %i" % (nDOF_global,3)})
             u_dof = uList[components[0]].dof
             if len(components) < 2:
-                v_dof = numpy.zeros(u_dof.shape)
+                v_dof = numpy.zeros(u_dof.shape,dtype='d')
             else:
                 v_dof = uList[components[1]].dof
             if len(components) < 3:
-                w_dof = numpy.zeros(u_dof.shape)
+                w_dof = numpy.zeros(u_dof.shape,dtype='d')
             else:
                 w_dof = uList[components[2]].dof
             velocity = numpy.column_stack((u_dof,v_dof,w_dof))
@@ -928,14 +928,14 @@ class XdmfWriter:
                 elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
                 nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
                 if init or meshChanged:
-                    q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement).reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
+                    q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
                     ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,q_l2g)
                     ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,interpolationPoints.flat[:])
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt"})
                 if init or meshChanged:
-                    q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement).reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
+                    q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
                     numpy.savetxt(ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt",q_l2g,fmt='%d')
                     numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",interpolationPoints.flat[:])
                     
@@ -1070,11 +1070,11 @@ class XdmfWriter:
                                     "Dimensions":"%i %i" % (u.femSpace.elementMaps.mesh.nElements_global,3)})
             u_dof = uList[components[0]].dof
             if len(components) < 2:
-                v_dof = numpy.zeros(u_dof.shape)
+                v_dof = numpy.zeros(u_dof.shape,dtype='d')
             else:
                 v_dof = uList[components[1]].dof
             if len(components) < 3:
-                w_dof = numpy.zeros(u_dof.shape)
+                w_dof = numpy.zeros(u_dof.shape,dtype='d')
             else:
                 w_dof = uList[components[2]].dof
             velocity = numpy.column_stack((u_dof,v_dof,w_dof))
@@ -1204,11 +1204,11 @@ class XdmfWriter:
                                     "Dimensions":"%i %i" % (nDOF_global,3)})
             u_dof = uList[components[0]].dof[0:nDOF_global]
             if len(components) < 2:
-                v_dof = numpy.zeros((nDOF_global,))
+                v_dof = numpy.zeros((nDOF_global,),dtype='d')
             else:
                 v_dof = uList[components[1]].dof[0:nDOF_global]
             if len(components) < 3:
-                w_dof = numpy.zeros((nDOF_global,))
+                w_dof = numpy.zeros((nDOF_global,),dtype='d')
             else:
                 w_dof = uList[components[2]].dof[0:nDOF_global]
             velocity = numpy.column_stack((u_dof,v_dof,w_dof))
@@ -1280,7 +1280,7 @@ class XdmfWriter:
                     #    for nN in range(Xdmf_NodesPerElement):
                     #        q_l2g[eN,nN] = eN*Xdmf_NodesPerElement + nN
                     #
-                    q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement).reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
+                    q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
                     ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,q_l2g)
                     ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,x.flat[:])
             else:
@@ -1294,7 +1294,7 @@ class XdmfWriter:
                     #    for nN in range(Xdmf_NodesPerElement):
                     #        q_l2g[eN,nN] = eN*Xdmf_NodesPerElement + nN
                     #
-                    q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement).reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
+                    q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
                     numpy.savetxt(ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt",q_l2g,fmt='%d')
                     numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",x.flat[:])
                     
