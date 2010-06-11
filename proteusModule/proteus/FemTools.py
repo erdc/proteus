@@ -2851,8 +2851,8 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 #self.viewer("set terminal x11")
             nx = sqrt(self.elementMaps.mesh.nNodes_global)
             ny = nx
-            x = numpy.arange(nx)/float(nx-1)
-            y = numpy.arange(nx)/float(nx-1)
+            x = numpy.arange(nx,dtype='i')/float(nx-1)
+            y = numpy.arange(nx,dtype='i')/float(nx-1)
             nSol = numpy.reshape(u.dof,(nx,ny))
             self.viewer('set parametric')
             self.viewer('set data style lines')
@@ -2901,11 +2901,11 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                     "Dimensions":"%i %i" % (self.mesh.nNodes_global,3)})
             u_dof = uList[components[0]].dof
             if len(components) < 2:
-                v_dof = numpy.zeros(u_dof.shape)
+                v_dof = numpy.zeros(u_dof.shape,dtype='d')
             else:
                 v_dof = uList[components[1]].dof
             if len(components) < 3:
-                w_dof = numpy.zeros(u_dof.shape)
+                w_dof = numpy.zeros(u_dof.shape,dtype='d')
             else:
                 w_dof = uList[components[2]].dof
             velocity = numpy.column_stack((u_dof,v_dof,w_dof))
@@ -3383,8 +3383,8 @@ class DG_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             elif self.referenceFiniteElement.referenceElement.dim == 2:
                 nx = sqrt(self.elementMaps.mesh.nNodes_global)
                 ny = nx
-                x = numpy.arange(nx)/float(nx-1)
-                y = numpy.arange(nx)/float(nx-1)
+                x = numpy.arange(nx,dtype='i')/float(nx-1)
+                y = numpy.arange(nx,dtype='i')/float(nx-1)
                 nSol = numpy.reshape(nodal_average,(nx,ny))
                 self.viewer('set parametric')
                 self.viewer('set data style lines')
@@ -3624,8 +3624,8 @@ class C0_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             elif self.referenceFiniteElement.referenceElement.dim == 2:
                 nx = sqrt(self.elementMaps.mesh.nNodes_global)
                 ny = nx
-                x = numpy.arange(nx)/float(nx-1)
-                y = numpy.arange(nx)/float(nx-1)
+                x = numpy.arange(nx,dtype='i')/float(nx-1)
+                y = numpy.arange(nx,dtype='i')/float(nx-1)
                 nSol = numpy.reshape(nodal_average,(nx,ny))
                 self.viewer('set parametric')
                 self.viewer('set data style lines')
@@ -4198,8 +4198,8 @@ class DG_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             elif self.referenceFiniteElement.referenceElement.dim == 2:
                 nx = sqrt(self.elementMaps.mesh.nNodes_global)
                 ny = nx
-                x = numpy.arange(nx)/float(nx-1)
-                y = numpy.arange(nx)/float(nx-1)
+                x = numpy.arange(nx,dtype='i')/float(nx-1)
+                y = numpy.arange(nx,dtype='i')/float(nx-1)
                 nSol = numpy.reshape(nodal_average,(nx,ny))
                 self.viewer('set parametric')
                 self.viewer('set data style lines')
@@ -5327,7 +5327,7 @@ class DOFBoundaryConditions:
         nfree = len(self.global2freeGlobal)
         self.global2freeGlobal_global_dofs = numpy.zeros((nfree,),'i')
         self.global2freeGlobal_free_dofs = numpy.zeros((nfree,),'i')
-        test = numpy.array(range(nfree))
+        test = numpy.array(range(nfree),dtype='i')
         for i,dofN in enumerate(self.global2freeGlobal.keys()):
             self.global2freeGlobal_global_dofs[i] = dofN#map each of the unknown DOF's to the original node number
             self.global2freeGlobal_free_dofs[i] = self.global2freeGlobal[dofN]#map each of the unknown DOF's to the free unknown number

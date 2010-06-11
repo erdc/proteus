@@ -413,17 +413,17 @@ class Mesh:
         self.nElementBoundaries_owned=self.nElementBoundaries_global
         self.nEdges_owned=self.nEdges_global
         self.elementOffsets_subdomain_owned=[0,self.nElements_global]
-        self.elementNumbering_subdomain2global=numpy.arange(self.nElements_global)
-        self.elementNumbering_global2original=numpy.arange(self.nElements_global)
+        self.elementNumbering_subdomain2global=numpy.arange(self.nElements_global,dtype='i')
+        self.elementNumbering_global2original=numpy.arange(self.nElements_global,dtype='i')
         self.nodeOffsets_subdomain_owned=[0,self.nNodes_global]
-        self.nodeNumbering_subdomain2global=numpy.arange(self.nNodes_global)
-        self.nodeNumbering_global2original=numpy.arange(self.nNodes_global)
+        self.nodeNumbering_subdomain2global=numpy.arange(self.nNodes_global,dtype='i')
+        self.nodeNumbering_global2original=numpy.arange(self.nNodes_global,dtype='i')
         self.elementBoundaryOffsets_subdomain_owned=[0,self.nElementBoundaries_global]
-        self.elementBoundaryNumbering_subdomain2global=numpy.arange(self.nElementBoundaries_global)
-        self.elementBoundaryNumbering_global2original=numpy.arange(self.nElementBoundaries_global)
+        self.elementBoundaryNumbering_subdomain2global=numpy.arange(self.nElementBoundaries_global,dtype='i')
+        self.elementBoundaryNumbering_global2original=numpy.arange(self.nElementBoundaries_global,dtype='i')
         self.edgeOffsets_subdomain_owned=[0,self.nEdges_global]
-        self.edgeNumbering_subdomain2global=numpy.arange(self.nEdges_global)
-        self.edgeNumbering_global2original=numpy.arange(self.nEdges_global)
+        self.edgeNumbering_subdomain2global=numpy.arange(self.nEdges_global,dtype='i')
+        self.edgeNumbering_global2original=numpy.arange(self.nEdges_global,dtype='i')
         self.subdomainMesh=self
         self.globalMesh = None
         self.arGridCollection=None
@@ -525,14 +525,14 @@ class Mesh:
             #    else:
             #        ghostNodesDict[p] = [i]
             #print ghostNodesDict
-            ghostNodesArray = numpy.arange(self.nNodes_owned,self.nNodes_global,1,'i')
+            ghostNodesArray = numpy.arange(self.nNodes_owned,self.nNodes_global,1,dtype='i')
             if nGhostNodes > 0:
                 ghostNodes = SubElement(ghostNodesSet,"DataItem",
                                         {"Format":ar.dataItemFormat,
                                          "DataType":"Int",
                                          "Dimensions":"%i" % (nGhostNodes,)})
             nGhostElements = self.nElements_global - self.nElements_owned
-            ghostElementsArray = numpy.arange(self.nElements_owned,self.nElements_global,1,'i')
+            ghostElementsArray = numpy.arange(self.nElements_owned,self.nElements_global,1,dtype='i')
             #print "ghost elements",ghostElementsArray
             if nGhostElements > 0:
                 ghostElementsSet = SubElement(self.arGrid,"Set",{"SetType":"Cell",
@@ -1151,7 +1151,7 @@ class PointMesh(Mesh):
     def __init__(self,points):
         self.nodeArray=points
         self.nNodes_global = points.shape[0]
-        self.elementNodesArray=numpy.arange(self.nNodes_global)
+        self.elementNodesArray=numpy.arange(self.nNodes_global,dtype='i')
         self.nElements_global = self.nNodes_global
 
 MX=0
@@ -1207,7 +1207,7 @@ class EdgeGrid(Mesh):
         self.elementNodesArray=self.edgeNodesArray
         self.elementBoundariesArray=self.nodeArray
         self.boundaryMesh=PointMesh(numpy.array([self.nodeArray[0],
-                                                   self.nodeArray[-1]]))
+                                                   self.nodeArray[-1]]),dtype='d')
 
 class QuadrilateralGrid(Mesh):
     def __init__(self,nx=2,ny=2,Lx=1.0,Ly=1.0):

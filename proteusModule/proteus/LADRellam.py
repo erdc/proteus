@@ -1190,7 +1190,7 @@ class OneLevelLADR(OneLevelTransport):
                 ebqe_x_depart[ci] = self.ebqe['x']
             self.NT = max(2,4*int(ceil(self.timeIntegration.runCFL)))
             dtp = (self.timeIntegration.t-self.timeIntegration.tLast)/float(self.NT)
-            integrationTimes = numpy.arange(self.NT+1)*dtp + self.timeIntegration.tLast
+            integrationTimes = numpy.arange(self.NT+1,dtype='d')*dtp + self.timeIntegration.tLast
             integrationTimeWeights=numpy.zeros(self.NT+1,'d'); integrationTimeWeights.fill(dtp)
             integrationTimeWeights[0] *= 0.5; integrationTimeWeights[-1] *= 0.5
 
@@ -1453,7 +1453,7 @@ class OneLevelLADR(OneLevelTransport):
                                                          self.q['det(J)'])
         self.q['abs(det(J))']=numpy.absolute(self.q['det(J)'])
         #extra boundary normal information for 2d, 3d to save need for ebq array
-        boundaryNormals = numpy.array(self.testSpace[0].elementMaps.referenceElement.boundaryUnitNormalList)
+        boundaryNormals = numpy.array(self.testSpace[0].elementMaps.referenceElement.boundaryUnitNormalList,dtype='d')
         ctracking.getOuterNormals_affineSimplex(boundaryNormals,
                                                 self.q['inverse(J)'],
                                                 self.elementBoundaryOuterNormalsArray)
