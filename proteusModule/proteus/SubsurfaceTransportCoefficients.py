@@ -769,10 +769,10 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
             materialTypes = self.materialTypes_q
         elif c[('u',0)].shape == self.ebqe_shape:
             materialTypes = self.materialTypes_ebqe
-        elif c[('u',0)].shape == self.ebq_shape:
-            materialTypes = self.materialTypes_ebq
         elif c[('u',0)].shape == self.ip_shape:
             materialTypes = self.materialTypes_ip
+        elif c[('u',0)].shape == self.ebq_shape:
+            materialTypes = self.materialTypes_ebq
         else:
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
         #mwf debug
