@@ -491,7 +491,7 @@ class KSP_petsc4py(LinearSolver):
             self.matcontext.par_b = par_b
 
         self.ksp.setInitialGuessNonzero(False)
-        self.ksp.view(petsc4py.PETSc.Viewer.STDOUT())
+        #self.ksp.view(petsc4py.PETSc.Viewer.STDOUT())
         self.ksp.solve(par_b,par_u)
         #mwf debug
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
@@ -1258,7 +1258,7 @@ if __name__ == '__main__':
     uFine = uniform(0,1,(n))
     uFine[0]=0.0
     uFine[n-1]=0.0
-    xFine = numpy.arange(0,1.0+h,h)
+    xFine = numpy.arange(0,1.0+h,h,dtype='d')
     bFine = (freq*2*pi)**2*numpy.sin(freq*2*pi*xFine)
     gf.plot(Gnuplot.Data(xFine,bFine))
     ginit.plot(Gnuplot.Data(xFine,uFine))
@@ -1280,7 +1280,7 @@ if __name__ == '__main__':
         H = 1.0/(N-1.0)
         hList.append(H)
         mgItsList.append(6)
-        meshList.append(numpy.arange(0,1.0+H,H)[1:N-1])
+        meshList.append(numpy.arange(0,1.0+H,H,dtype='d')[1:N-1])
         u = uniform(0,1,(N))
         u[0]  = 0.0
         u[N-1] = 0.0
