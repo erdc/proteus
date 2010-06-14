@@ -3456,7 +3456,26 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     std::cout<<"nodeStarArray"<<std::endl;
     for (int i=0;i<mesh.nodeStarOffsets[mesh.nNodes_global];i++)
       mesh.nodeStarArray[i] = nodeStarArray_new[i];
-    
+    std::cout<<"elementNeighborsArray"<<std::endl;
+    for (int i=0; i<mesh.nElements_global*mesh.nElementBoundaries_element; i++)
+      mesh.elementNeighborsArray[i] = elementNeighborsArray_new[i];
+    std::cout<<"elementBoundariesArray"<<std::endl;
+    for (int i=0; i<mesh.nElementBoundaries_global*mesh.nElementBoundaries_element; i++)
+      mesh.elementBoundariesArray[i] = elementBoundariesArray_new[i];
+    std::cout<<"elementBoundaryElementsArray"<<std::endl;
+    for (int i=0; i<mesh.nElementBoundaries_global*2; i++)
+      mesh.elementBoundaryElementsArray[i] = elementBoundaryElementsArray_new[i];
+    std::cout<<"elementBoundaryLocalElementBoundariesArray"<<std::endl;
+    for (int i=0; i<mesh.nElementBoundaries_global*2; i++)
+      mesh.elementBoundaryLocalElementBoundariesArray[i] = elementBoundaryLocalElementBoundariesArray_new[i];
+    //
+    //need material properties too
+    //
+    for (int i=0; i < mesh.nElements_global; i++)
+      mesh.elementMaterialTypes[i] = elementMaterialTypes_new[i];
+    for (int i=0; i < mesh.nElementBoundaries_global; i++)
+      mesh.elementBoundaryMaterialTypes[i] = elementBoundaryMaterialTypes_new[i];
+
     ISRestoreIndices(elementNumberingIS_global_old2new,&elementNumbering_global_old2new);
 
     ISDestroy(elementPartitioningIS_new);
