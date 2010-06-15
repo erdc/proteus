@@ -2670,7 +2670,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     valarray<int> elementNodesArray_new(mesh.nElements_global*mesh.nNodes_element),
       elementNeighborsArray_new(mesh.nElements_global*mesh.nElementBoundaries_element),
       elementMaterialTypes_new(mesh.nElements_global),
-      elementBoundariesArray_new(mesh.nElementBoundaries_global*mesh.nElementBoundaries_element),
+      elementBoundariesArray_new(mesh.nElements_global*mesh.nElementBoundaries_element),
       elementBoundaryElementsArray_new(mesh.nElementBoundaries_global*2),
       elementBoundaryLocalElementBoundariesArray_new(mesh.nElementBoundaries_global*2),
       elementBoundaryNodesArray_new(mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary),
@@ -3460,7 +3460,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     for (int i=0; i<mesh.nElements_global*mesh.nElementBoundaries_element; i++)
       mesh.elementNeighborsArray[i] = elementNeighborsArray_new[i];
     std::cout<<"elementBoundariesArray"<<std::endl;
-    for (int i=0; i<mesh.nElementBoundaries_global*mesh.nElementBoundaries_element; i++)
+    for (int i=0; i<mesh.nElements_global*mesh.nElementBoundaries_element; i++)
       mesh.elementBoundariesArray[i] = elementBoundariesArray_new[i];
     std::cout<<"elementBoundaryElementsArray"<<std::endl;
     for (int i=0; i<mesh.nElementBoundaries_global*2; i++)
