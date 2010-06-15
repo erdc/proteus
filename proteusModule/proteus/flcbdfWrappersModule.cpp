@@ -1875,7 +1875,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 
   //4b,5b. repeat process to build global face numbering
   //first get element --> element boundaries array for new element but old element boundary numbering
-  valarray<int> elementBoundariesArray_new(mesh.nElementBoundaries_global*mesh.nElementBoundaries_element);
+  valarray<int> elementBoundariesArray_new(mesh.nElements_global*mesh.nElementBoundaries_element);
   for (int eN=0; eN < mesh.nElements_global; eN++)
     for (int ebN=0; ebN < mesh.nElementBoundaries_element; ebN++)
       {
