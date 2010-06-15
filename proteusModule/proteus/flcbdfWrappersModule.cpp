@@ -3471,11 +3471,19 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     //
     //need material properties too
     //
-    for (int i=0; i < mesh.nElements_global; i++)
-      mesh.elementMaterialTypes[i] = elementMaterialTypes_new[i];
-    for (int i=0; i < mesh.nElementBoundaries_global; i++)
-      mesh.elementBoundaryMaterialTypes[i] = elementBoundaryMaterialTypes_new[i];
-
+    if (mesh.elementMaterialTypes != NULL)
+      {
+	std::cout<<"elementMaterialTypes"<<std::endl;
+	for (int i=0; i < mesh.nElements_global; i++)
+	  mesh.elementMaterialTypes[i] = elementMaterialTypes_new[i];
+      }
+    if (mesh.elementBoundaryMaterialTypes != NULL)
+      {
+	std::cout<<"elementBoundaryMaterialTypes"<<std::endl;
+	for (int i=0; i < mesh.nElementBoundaries_global; i++)
+	  mesh.elementBoundaryMaterialTypes[i] = elementBoundaryMaterialTypes_new[i];
+      }
+   
     ISRestoreIndices(elementNumberingIS_global_old2new,&elementNumbering_global_old2new);
 
     ISDestroy(elementPartitioningIS_new);
