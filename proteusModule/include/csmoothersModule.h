@@ -25,5 +25,17 @@ typedef struct
     **subdomain_dX;
   PROTEUS_LAPACK_INTEGER** subdomain_pivots;
 } ASMFactor;
+typedef struct 
+{
+  PyObject_HEAD
+  int N; int bs;
+  int *subdomain_dim;
+  int **l2g_L;
+  double **subdomain_L,
+    **subdomain_R,
+    **subdomain_dX;
+  PROTEUS_LAPACK_INTEGER** subdomain_pivots;
+  PROTEUS_LAPACK_INTEGER** subdomain_col_pivots;
+} BASMFactor;
 /** @} */
 #endif
