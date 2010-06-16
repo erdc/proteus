@@ -73,5 +73,49 @@ void asm_NR_solve(SuperMatrix *A,
                   double** subdomain_dX,
                   double* dX, 
                   PROTEUS_LAPACK_INTEGER** subdomainPivots); 
+/*repeat for blocks and use full pivoting*/
+int basm_NR_init(int rowBlocks,
+		 SuperMatrix *A, 
+                 int** subdomain_dim_p, 
+                 int*** l2g_L_p,
+                 double*** subdomain_L_p, 
+                 double*** subdomain_R_p, 
+                 double*** subdomain_dX_p,
+                 PROTEUS_LAPACK_INTEGER*** subdomain_pivots_p,
+		 PROTEUS_LAPACK_INTEGER*** subdomain_col_pivots_p);
+
+void basm_NR_free(int N,
+		  int* subdomain_dim, 
+		  int** l2g_L,
+		  double** subdomain_L, 
+		  double** subdomain_R, 
+		  double** subdomain_dX,
+		  PROTEUS_LAPACK_INTEGER** subdomain_pivots,
+		  PROTEUS_LAPACK_INTEGER** subdomain_col_pivots);
+
+
+void basm_NR_prepare(int rowBlocks,
+		     int N,
+		     SuperMatrix *A, 
+		     int* subdomain_dim,
+		     int** l2g_L,
+		     double** subdomainL, 
+		     PROTEUS_LAPACK_INTEGER** subdomainPivots,
+		     PROTEUS_LAPACK_INTEGER** subdomainColPivots);
+
+void basm_NR_solve(int rowBlocks,
+		   int N,
+		   SuperMatrix *A, 
+		   double w,
+		   double** subdomainL, 
+		   int* subdomain_dim, 
+		   int** l2g_L,  
+		   double* R, 
+		   double** subdomainR,
+		   int *node_order, 
+		   double** subdomain_dX,
+		   double* dX, 
+		   PROTEUS_LAPACK_INTEGER** subdomainPivots,
+		   PROTEUS_LAPACK_INTEGER** subdomainColPivots);
 /** @} */
 #endif
