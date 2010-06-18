@@ -186,7 +186,7 @@ class NonlinearSolver:
                 if self.norm_r < self.lastNorm_r:
                     self.ratio_r_current = self.norm_r/self.lastNorm_r
                 else:
-                    log("residual increase %d" % self.norm_r)
+                    log("residual increase %s" % self.norm_r)
                     self.convergingIts=0
                     self.ratio_r_solve = 1.0
                     self.ratio_du_solve = 1.0
