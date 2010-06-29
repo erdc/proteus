@@ -491,7 +491,7 @@ class KSP_petsc4py(LinearSolver):
             self.matcontext.par_b = par_b
 
         self.ksp.setInitialGuessNonzero(False)
-        #self.ksp.view(petsc4py.PETSc.Viewer.STDOUT())
+        self.ksp.view(petsc4py.PETSc.Viewer.STDOUT())
         self.ksp.solve(par_b,par_u)
         #mwf debug
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
@@ -529,8 +529,8 @@ class SimpleNavierStokes3D:
         self.isp.createGeneral(self.pressureDOF,comm=petsc4py.PETSc.COMM_WORLD)
         self.isv = petsc4py.PETSc.IS()
         self.isv.createGeneral(self.velocityDOF,comm=petsc4py.PETSc.COMM_WORLD)
-        self.pc.fieldSplitSetIS(self.isp)
         self.pc.fieldSplitSetIS(self.isv)
+        self.pc.fieldSplitSetIS(self.isp)
 
 class SimpleDarcyFC:
     def __init__(self,L):
