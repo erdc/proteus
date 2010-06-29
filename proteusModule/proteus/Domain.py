@@ -44,6 +44,12 @@ class RectangularDomain(D_base):
         """
         Write the RectangularDomain using the poly format.
         """
+        self.boundaryLegend = {'left':3,
+                               'right':5,
+                               'front':2,
+                               'back':6,
+                               'top':4,
+                               'bottom':1}
         unitesize=4.0/self.L[0]
         f = open(fileprefix+".poly",'w')
         if self.nd==2:
