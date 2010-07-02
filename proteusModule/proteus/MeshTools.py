@@ -494,6 +494,9 @@ class Mesh:
                                                                "GridType":"Collection",
                                                                "CollectionType":"Temporal"})
         if self.arGrid == None or self.arTime.get('Value') != str(t):
+            #
+            #topology and geometry
+            #
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
             self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
             topology = SubElement(self.arGrid,"Topology",
@@ -509,22 +512,40 @@ class Mesh:
                                    "DataType":"Float",
                                    "Precision":"8",
                                    "Dimensions":"%i %i" % (self.nNodes_global,3)})
+            if ar.hdfFile != None:
+                elements.text = ar.hdfFilename+":/elements"+name+`tCount`
+                nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                if nGhostElements > 0:
+                    ghostElements.text = ar.hdfFilename+":/ghostElements"+name+`tCount`
+                if nGhostNodes > 0:
+                    ghostNodes.text = ar.hdfFilename+":/ghostNodes"+name+`tCount`
+                if init or meshChanged:
+                    ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray)
+                    ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+                    if nGhostElements > 0:
+                        ar.hdfFile.createArray("/",'ghostElements'+name+`tCount`,ghostElementsArray)
+                    if nGhostNodes > 0:
+                        ar.hdfFile.createArray("/",'ghostNodes'+name+`tCount`,ghostNodesArray)
+            else:
+                SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
+                SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
+                if nGhostElements > 0:
+                    SubElement(ghostElements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/ghostElements"+name+".txt"})
+                if nGhostNodes > 0:
+                    SubElement(ghostNodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/ghostNodes"+name+".txt"})
+                if init or meshChanged:
+                    numpy.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray,fmt='%d')
+                    numpy.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
+                    if nGhostElements > 0:
+                        numpy.savetxt(ar.textDataDir+"/ghostElements"+name+".txt",ghostElementsArray,fmt='%d')
+                    if nGhostNodes > 0:
+                        numpy.savetxt(ar.textDataDir+"/ghostNodes"+name+".txt",ghostNodesArray,fmt='%d')
             #
-            #ghost stuff
+            #ghost nodes and elements
             #
             ghostNodesSet = SubElement(self.arGrid,"Set",{"SetType":"Node",
                                                           "Ghost":"1"})
             nGhostNodes = self.nNodes_global-self.nNodes_owned
-            #ghostNodesDict={}
-            #for i in range(nGhostNodes):
-            #    for p in range(comm.size()):
-            #        if self.nodeNumbering_subdomain2global[i+self.nNodes_owned] > self.nodeOffsets_subdomain_owned[p+1]:
-            #            break
-            #    if ghostNodesDict.has_key(p):
-            #        ghostNodesDict[p].append(i)
-            #    else:
-            #        ghostNodesDict[p] = [i]
-            #print ghostNodesDict
             ghostNodesArray = numpy.arange(self.nNodes_owned,self.nNodes_global,1,dtype='i')
             if nGhostNodes > 0:
                 ghostNodes = SubElement(ghostNodesSet,"DataItem",
@@ -533,7 +554,6 @@ class Mesh:
                                          "Dimensions":"%i" % (nGhostNodes,)})
             nGhostElements = self.nElements_global - self.nElements_owned
             ghostElementsArray = numpy.arange(self.nElements_owned,self.nElements_global,1,dtype='i')
-            #print "ghost elements",ghostElementsArray
             if nGhostElements > 0:
                 ghostElementsSet = SubElement(self.arGrid,"Set",{"SetType":"Cell",
                                                                  "Ghost":"1"})
@@ -569,6 +589,23 @@ class Mesh:
                         numpy.savetxt(ar.textDataDir+"/ghostElements"+name+".txt",ghostElementsArray,fmt='%d')
                     if nGhostNodes > 0:
                         numpy.savetxt(ar.textDataDir+"/ghostNodes"+name+".txt",ghostNodesArray,fmt='%d')
+            #
+            #material types
+            #
+            nodeMaterialTypesElement = SubElement(self.mesh.arGrid,"Attribute",{"Name":"nodeMaterialTypes",
+                                                                                "AttributeType":"Scalar",
+                                                                                "Center":"Node"})
+            nodeMaterialTypesValues = SubElement(attribute,"DataItem",
+                                                 {"Format":ar.dataItemFormat,
+                                                  "DataType":"Int",
+                                                  "Dimensions":"%i" % (self.mesh.nNodes_global,)})
+            if ar.hdfFile != None:
+                values.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
+                ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.mesh.nodeMaterialTypes)
+            else:
+                numpy.savetxt(ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt",self.mesh.nodeMaterialTypes)
+                SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt"}) 
+            #done with material types            
     def buildFromC(self,cmesh):
         import cmeshTools
         #
