@@ -33,7 +33,10 @@ class Window:
         self.hardCopies=0
         self.comm = comm
         self.compManager = vtkCompositeRenderManager()
-        self.controller = self.compManager.GetController()
+        self.communicator = vtkMPICommunicator()
+        self.controller = vtkMPIController()
+        self.controller.SetCommunicator(self.communicator.GetWorldCommunicator())
+        self.compManager.SetController(self.controller)
         self.myProcId = comm.rank()
         self.numProcs = comm.size()
         self.isMaster = comm.isMaster()
@@ -418,7 +421,7 @@ def viewScalar_1D(xVals, yVals, xTitle, yTitle, title, winNum, Pause = True, sor
     window.vod['xArray'].Modified()
     window.vod['yArray'].Modified()
     if window.myProcId == 0:
-        window.compManager.ResetAllCameras()
+        #window.compManager.ResetAllCameras()
         window.renWin.Render()
         if hasQt:
             g.app.processEvents()
@@ -740,7 +743,7 @@ def viewScalar_2D(window,windowCreated,viewTypes,Adapted=False):
         #
         exp.Write()
     if window.myProcId == 0:
-        window.compManager.ResetAllCameras()
+        #window.compManager.ResetAllCameras()
         window.renWin.Render()
         if hasQt:
             g.app.processEvents()
@@ -757,7 +760,6 @@ def viewScalar_2D(window,windowCreated,viewTypes,Adapted=False):
         window.compManager.StopServices()
     else:
         window.compManager.StartServices()
-    
 
 #
 #2D Vectors
@@ -1129,7 +1131,7 @@ def viewVector_2D(window,
     if 'streamlines' in viewTypes:
         window.vod['lineWidget'].GetPolyData(window.vod['seeds'])
     if window.myProcId == 0:
-        window.compManager.ResetAllCameras()
+        #window.compManager.ResetAllCameras()
         window.renWin.Render()
         if hasQt:
             g.app.processEvents()
@@ -1411,7 +1413,7 @@ def viewScalar_3D(window,windowCreated,viewTypes,Adapted=False):
     if 'contour' in viewTypes:
         window.vod['algo_contour'].GenerateValues(10,window.vod['dataSet'].GetPointData().GetScalars().GetRange())
     if window.myProcId == 0:
-        window.compManager.ResetAllCameras()
+        #window.compManager.ResetAllCameras()
         window.renWin.Render()
         if hasQt:
             g.app.processEvents()
@@ -1768,7 +1770,7 @@ def viewVector_3D(window,
     if 'streamlines' in viewTypes:
         window.vod['planeWidget'].GetPolyData(window.vod['seeds'])
     if window.myProcId == 0:
-        window.compManager.ResetAllCameras()
+        #window.compManager.ResetAllCameras()
         window.renWin.Render()
         if hasQt:
             g.app.processEvents()
