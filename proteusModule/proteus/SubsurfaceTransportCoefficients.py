@@ -371,9 +371,9 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
     def initializeElementQuadrature(self,t,cq):
         self.materialTypes_q = self.elementMaterialTypes
         self.q_shape = cq[('u',0)].shape
-        cq['Ks'] = numpy.zeros(self.q_shape,'d')
-        for k in range(self.q_shape[1]):
-            cq['Ks'][:,k] = self.Ksw_types[self.elementMaterialTypes,0]
+#        cq['Ks'] = numpy.zeros(self.q_shape,'d')
+#        for k in range(self.q_shape[1]):
+#            cq['Ks'][:,k] = self.Ksw_types[self.elementMaterialTypes,0]
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         self.materialTypes_ebq = numpy.zeros(cebq[('u',0)].shape[0:2],'i')
         self.ebq_shape = cebq[('u',0)].shape
