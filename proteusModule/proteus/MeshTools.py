@@ -493,6 +493,9 @@ class Mesh:
             self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
                                                                "GridType":"Collection",
                                                                "CollectionType":"Temporal"})
+            self.arEBGridCollection = SubElement(ar.domain,"Grid",{"Name":"EBMesh "+name,
+                                                                         "GridType":"Collection",
+                                                                         "CollectionType":"Temporal"})
         if self.arGrid == None or self.arTime.get('Value') != str(t):
             #
             #topology and geometry
@@ -524,6 +527,37 @@ class Mesh:
                 if init or meshChanged:
                     numpy.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray,fmt='%d')
                     numpy.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
+            #
+            #element boundary topology and geometry
+            #
+            self.arEBGrid = SubElement(self.arEBGridCollection,"Grid",{"GridType":"Uniform"})
+            self.arEBTime = SubElement(self.arEBGrid,"Time",{"Value":str(t)})
+            Xdmf_ElementEBTopology = "Triangle" #cek hack
+            ebtopology = SubElement(self.arEBGrid,"Topology",
+                                  {"Type":Xdmf_ElementEBTopology,
+                                   "NumberOfElements":str(self.nElementBoundaries_global)})
+            ebelements = SubElement(ebtopology,"DataItem",
+                                  {"Format":ar.dataItemFormat,
+                                   "DataType":"Int",
+                                   "Dimensions":"%i %i" % (self.nElementBoundaries_global,self.nNodes_elementBoundary)})
+            ebgeometry = SubElement(self.arEBGrid,"Geometry",{"Type":"XYZ"})
+            ebnodes    = SubElement(ebgeometry,"DataItem",
+                                  {"Format":ar.dataItemFormat,
+                                   "DataType":"Float",
+                                   "Precision":"8",
+                                   "Dimensions":"%i %i" % (self.nNodes_global,3)})
+            if ar.hdfFile != None:
+                ebelements.text = ar.hdfFilename+":/elementBoundaries"+name+`tCount`
+                ebnodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                if init or meshChanged:
+                    ar.hdfFile.createArray("/",'elementBoundaries'+name+`tCount`,self.elementBoundaryNodesArray)
+                    #ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+            else:
+                SubElement(ebelements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elementBoundaries"+name+".txt"})
+                SubElement(ebnodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
+                if init or meshChanged:
+                    numpy.savetxt(ar.textDataDir+"/elementBoundaries"+name+".txt",self.elementBoundaryNodesArray,fmt='%d')
+                    #numpy.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
             #
             #ghost nodes and elements
             #
@@ -582,11 +616,29 @@ class Mesh:
                                                     {"Format":ar.dataItemFormat,
                                                      "DataType":"Int",
                                                      "Dimensions":"%i" % (self.nElements_global,)})
+            ebnodeMaterialTypes = SubElement(self.arEBGrid,"Attribute",{"Name":"ebnodeMaterialTypes",
+                                                                    "AttributeType":"Scalar",
+                                                                    "Center":"Node"})
+            ebnodeMaterialTypesValues = SubElement(ebnodeMaterialTypes,"DataItem",
+                                                 {"Format":ar.dataItemFormat,
+                                                  "DataType":"Int",
+                                                  "Dimensions":"%i" % (self.nNodes_global,)})
+            elementBoundaryMaterialTypes = SubElement(self.arEBGrid,"Attribute",{"Name":"elementBoundaryMaterialTypes",
+                                                                                       "AttributeType":"Scalar",
+                                                                                       "Center":"Cell"})
+            elementBoundaryMaterialTypesValues = SubElement(elementBoundaryMaterialTypes,"DataItem",
+                                                    {"Format":ar.dataItemFormat,
+                                                     "DataType":"Int",
+                                                     "Dimensions":"%i" % (self.nElementBoundaries_global,)})
             if ar.hdfFile != None:
                 nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
                 ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
                 elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
                 ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes)
+                ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
+                #ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
+                elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+str(tCount)
+                ar.hdfFile.createArray("/","elementBoundaryMaterialTypes"+str(tCount),self.elementBoundaryMaterialTypes)
             else:
                 numpy.savetxt(ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt",self.nodeMaterialTypes)
                 SubElement(nodeMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt"}) 
