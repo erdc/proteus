@@ -3428,6 +3428,7 @@ class OneLevelTransport(NonlinearEquation):
                     #
                     self.ebqe[('diffusiveFlux',ck,ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
         for ci,sbcObject  in self.stressBoundaryConditionsObjectsDict.iteritems():
+            print "Stress trace component ci ",ci
             for t,g in sbcObject.stressTraceBoundaryConditionsDict.iteritems():
                 self.ebqe[('stressTrace',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
     def calculateQuadrature(self):
@@ -5454,20 +5455,28 @@ class MultilevelTransport:
                 useWeakDirichletConditions=False
             else:
                 useWeakDirichletConditions=numericalFluxType.useWeakDirichletConditions
+            log("Setting Boundary Conditions-1")
             for cj in trialSpaceDict.keys():
                 if not dirichletConditionsSetterDict.has_key(cj):
                     dirichletConditionsSetterDict[cj] = None
                 if not fluxBoundaryConditionsDict.has_key(cj):
                     fluxBoundaryConditionsDict[cj] = None
+            log("Setting Boundary Conditions-2")
             if options == None or options.periodicDirichletConditions == None or options.parallelPeriodic==True:
+                log("Setting Boundary Conditions-2a")
+                print useWeakDirichletConditions
                 dirichletConditionsDict=dict([(cj,DOFBoundaryConditions(
                     trialSpace,dirichletConditionsSetterDict[cj],useWeakDirichletConditions))
                                               for (cj,trialSpace) in trialSpaceDict.iteritems()])
             else:
+                log("Setting Boundary Conditions-2b")
+                print trialSpaceDict
                 dirichletConditionsDict=dict([(cj,DOFBoundaryConditions(
                     trialSpace,dirichletConditionsSetterDict[cj],useWeakDirichletConditions,options.periodicDirichletConditions[cj]))
                                               for (cj,trialSpace) in trialSpaceDict.iteritems()])
+            log("Setting Boundary Conditions-3")
             self.bcDictList.append(dirichletConditionsDict)
+            log("Setting Boundary Conditions-4")
             for cj in TrialSpaceTypeDict.keys():
                 self.trialSpaceListDict[cj].append(trialSpaceDict[cj])
                 self.bcListDict[cj].append(dirichletConditionsDict[cj])

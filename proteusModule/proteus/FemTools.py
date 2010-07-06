@@ -5180,7 +5180,11 @@ class DOFBoundaryConditions:
             def __eq__(self,other):
                 return  enorm(self.p - other.p) < self.h
         if getPointwiseBoundaryConditions!=None and femSpace.strongDirichletConditions and not weakDirichletConditions:
-            for eN in range(femSpace.elementMaps.mesh.nElements_global):
+            # for eN in range(femSpace.elementMaps.mesh.nElements_global):
+            mesh = femSpace.elementMaps.mesh
+            for ebNE in range(mesh.nExteriorElementBoundaries_global):
+                ebN = mesh.exteriorElementBoundariesArray[ebNE]
+                eN = mesh.elementBoundaryElementsArray[ebN,0]
                 for k in range(femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
                     i = femSpace.referenceFiniteElement.interpolationConditions.quadrature2DOF_element(k)
                     dofN = femSpace.dofMap.l2g[eN,i]
