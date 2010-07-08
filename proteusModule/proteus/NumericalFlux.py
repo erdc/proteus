@@ -3687,6 +3687,13 @@ class Stress_IIPG_exterior(NF_base):
                          getPeriodicBoundaryConditions,
                          parallelPeriodic=True)
         self.hasInterior=False
+        self.penalty_constant = 1.0e5
+        self.penalty_power = 1.0
+        self.isStressBoundary={}
+        for ci,sbcObject  in vt.stressBoundaryConditionsObjectsDict.iteritems():
+            self.isStressBoundary[ci] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,vt.ebqe['x'].shape[-2]),'i')
+            for t,g in sbcObject.stressTraceBoundaryConditionsDict.iteritems():
+                self.isStressBoundary[ci][t[0],t[1]] = 1
     def setDirichletValues(self,ebqe):
         for ci in range(self.nc):
             self.ebqe[('u',ci)].flat[:] = ebqe[('u',ci)].flat[:]
@@ -3705,89 +3712,61 @@ class Stress_IIPG_exterior(NF_base):
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
         import ctransportCoefficients
         self.setDirichletValues(ebqe)
-        self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
-        if self.vt.nSpace_global == 2:
-            raise RuntimeError,"2D Stress formulation not implemented"
-        elif self.vt.nSpace_global == 3:
-            cnumericalFlux.calculateExteriorNumericalStressFlux(self.mesh.exteriorElementBoundariesArray,
-                                                                self.mesh.elementBoundaryElementsArray,
-                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                self.isDOFBoundary[0],
-                                                                self.isDOFBoundary[1],
-                                                                self.isDOFBoundary[2],
-                                                                ebqe['n'],
-                                                                self.ebqe[('a',0,0)],
-                                                                self.ebqe[('a',1,1)],
-                                                                self.ebqe[('a',2,2)],
-                                                                self.ebqe[('grad(u)',0)],
-                                                                self.ebqe[('grad(u)',1)],
-                                                                self.ebqe[('grad(u)',2)],
-                                                                self.ebqe[('u',0)],
-                                                                self.ebqe[('u',1)],
-                                                                self.ebqe[('u',2)],
-                                                                ebqe[('a',0,0)],
-                                                                ebqe[('a',1,1)],
-                                                                ebqe[('a',2,2)],
-                                                                ebqe[('grad(u)',0)],
-                                                                ebqe[('grad(u)',1)],
-                                                                ebqe[('grad(u)',2)],
-                                                                ebqe[('u',0)],
-                                                                ebqe[('u',1)],
-                                                                ebqe[('u',2)],
-                                                                ebqe[('penalty')],
-                                                                ebqe[('stressFlux',0)],
-                                                                ebqe[('stressFlux',1)],
-                                                                ebqe[('stressFlux',2)])
+        #not using any coefficients on boundary
+        #self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
+        cnumericalFlux.calculateGlobalExteriorNumericalStressTrace(self.mesh.exteriorElementBoundariesArray,
+                                                                   self.mesh.elementBoundaryElementsArray,
+                                                                   self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                   self.isDOFBoundary[0],
+                                                                   self.isDOFBoundary[1],
+                                                                   self.isDOFBoundary[2],
+                                                                   ebqe['n'],
+                                                                   self.ebqe[('u',0)],
+                                                                   self.ebqe[('u',1)],
+                                                                   self.ebqe[('u',2)],
+                                                                   ebqe['sigma'],
+                                                                   ebqe[('u',0)],
+                                                                   ebqe[('u',1)],
+                                                                   ebqe[('u',2)],
+                                                                   ebqe[('penalty')],
+                                                                   ebqe[('stressTrace',0)],
+                                                                   ebqe[('stressTrace',1)],
+                                                                   ebqe[('stressTrace',2)])
     def updateInteriorNumericalFluxJacobian(self,l2g,q,ebq,ebq_global,dphi,fluxJacobian,fluxJacobian_eb,fluxJacobian_hj):
         pass
     def updateExteriorNumericalFluxJacobian(self,l2g,inflowFlag,q,ebqe,dphi,fluxJacobian_exterior,fluxJacobian_eb,fluxJacobian_hj):
-        import ctransportCoefficients
-        for ci in range(self.nc):
-            for cj in range(self.nc):
-                if ebqe.has_key(('dadvectiveFlux_left',ci,cj)):
-                    cnumericalFlux.updateExteriorNumericalAdvectiveFluxJacobian(self.mesh.exteriorElementBoundariesArray,
-                                                                                self.mesh.elementBoundaryElementsArray,
-                                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                                inflowFlag[0],#mwf should this be [cj]
-                                                                                ebqe[('dadvectiveFlux_left',ci,cj)],
-                                                                                ebqe[('v',cj)],
-                                                                                fluxJacobian_exterior[ci][cj])
-        for ci in range(1,self.nc):
-            if self.vt.sd:
-                cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_sd(self.vt.coefficients.sdInfo[(ci,ci)][0],self.vt.coefficients.sdInfo[(ci,ci)][1],
-                                                                               dphi[(ci,ci)].femSpace.dofMap.l2g,
-                                                                               self.mesh.exteriorElementBoundariesArray,
-                                                                               self.mesh.elementBoundaryElementsArray,
-                                                                               self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                               self.isDOFBoundary[ci],
-                                                                               ebqe['n'],
-                                                                               ebqe[('a',ci,ci)],
-                                                                               ebqe[('da',ci,ci,ci)],
-                                                                               ebqe[('grad(phi)',ci)],
-                                                                               dphi[(ci,ci)].dof,
-                                                                               ebqe[('v',ci)],
-                                                                               ebqe[('grad(v)',ci)],
-                                                                               ebqe['penalty'],
-                                                                               fluxJacobian_exterior[ci][ci])
-            else:
-                cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian(dphi[(ci,ci)].femSpace.dofMap.l2g,
-                                                                            self.mesh.exteriorElementBoundariesArray,
-                                                                            self.mesh.elementBoundaryElementsArray,
-                                                                            self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                            self.isDOFBoundary[ci],
-                                                                            ebqe['n'],
-                                                                            ebqe[('a',ci,ci)],
-                                                                            ebqe[('da',ci,ci,ci)],
-                                                                            ebqe[('grad(phi)',ci)],
-                                                                            dphi[(ci,ci)].dof,
-                                                                            ebqe[('v',ci)],
-                                                                            ebqe[('grad(v)',ci)],
-                                                                            ebqe['penalty'],
-                                                                            fluxJacobian_exterior[ci][ci])
-#             ctransportCoefficients.applyContactLineSlipJacobian(2.0*self.vt.coefficients.eps_viscosity,
-#                                                                 self.isDOFBoundary[ci],
-#                                                                 self.vt.coefficients.ebqe_phi,
-#                                                                 fluxJacobian_exterior[ci][ci])
+        cnumericalFlux.updateExteriorNumericalStressFluxJacobian(self.mesh.exteriorElementBoundariesArray,
+                                                                 self.mesh.elementBoundaryElementsArray,
+                                                                 self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                 self.isDOFBoundary[0],
+                                                                 self.isDOFBoundary[1],
+                                                                 self.isDOFBoundary[2],
+                                                                 self.isStressBoundary[0],
+                                                                 self.isStressBoundary[1],
+                                                                 self.isStressBoundary[2],
+                                                                 ebqe['n'],
+                                                                 ebqe[('dsigma',0,0)],
+                                                                 ebqe[('dsigma',0,1)],
+                                                                 ebqe[('dsigma',0,2)],
+                                                                 ebqe[('dsigma',1,0)],
+                                                                 ebqe[('dsigma',1,1)],
+                                                                 ebqe[('dsigma',1,2)],
+                                                                 ebqe[('dsigma',2,0)],
+                                                                 ebqe[('dsigma',2,1)],
+                                                                 ebqe[('dsigma',2,2)],
+                                                                 ebqe[('v',0)],
+                                                                 ebqe[('grad(v)',0)],
+                                                                 ebqe['penalty'],
+                                                                 fluxJacobian_exterior[0][0],
+                                                                 fluxJacobian_exterior[0][1],
+                                                                 fluxJacobian_exterior[0][2],
+                                                                 fluxJacobian_exterior[1][0],
+                                                                 fluxJacobian_exterior[1][1],
+                                                                 fluxJacobian_exterior[1][2],
+                                                                 fluxJacobian_exterior[2][0],
+                                                                 fluxJacobian_exterior[2][1],
+                                                                 fluxJacobian_exterior[2][2])
+
 class Stress_SIPG_exterior(Stress_IIPG_exterior):
     hasInterior=False
     def __init__(self,vt,getPointwiseBoundaryConditions,
