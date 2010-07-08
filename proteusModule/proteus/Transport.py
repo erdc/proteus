@@ -3428,7 +3428,6 @@ class OneLevelTransport(NonlinearEquation):
                     #
                     self.ebqe[('diffusiveFlux',ck,ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
         for ci,sbcObject  in self.stressBoundaryConditionsObjectsDict.iteritems():
-            print "Stress trace component ci ",ci
             for t,g in sbcObject.stressTraceBoundaryConditionsDict.iteritems():
                 self.ebqe[('stressTrace',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
     def calculateQuadrature(self):
