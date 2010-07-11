@@ -11765,14 +11765,14 @@ void applySeepageFace(int nExteriorElementBoundaries_global,
 		  diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+
 		  		k] = 0.0;
 		}
-	      /* else if (u[ebNE*nQuadraturePoints_elementBoundary+k] < eps) //unsaturated */
-	      /* 	{ */
-	      /* 	  isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k] = 1; */
-	      /* 	  advectiveFlux[ebNE*nQuadraturePoints_elementBoundary+ */
-	      /* 			k]*=smoothedHeaviside(eps,u[ebNE*nQuadraturePoints_elementBoundary+k]); */
-	      /* 	  diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+ */
-	      /* 			k]*=smoothedHeaviside(eps,u[ebNE*nQuadraturePoints_elementBoundary+k]); */
-	      /* 	} */
+	      else if (u[ebNE*nQuadraturePoints_elementBoundary+k] < eps) //unsaturated
+	      	{
+	      	  isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k] = 1;
+	      	  advectiveFlux[ebNE*nQuadraturePoints_elementBoundary+
+	      			k]*=smoothedHeaviside(eps,u[ebNE*nQuadraturePoints_elementBoundary+k]);
+	      	  diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+
+	      			k]*=smoothedHeaviside(eps,u[ebNE*nQuadraturePoints_elementBoundary+k]);
+	      	}
 	    }
 	}
     }
@@ -11829,25 +11829,25 @@ void applySeepageFaceJacobian(int nExteriorElementBoundaries_global,
 				   k*nDOF_trial_element+
 		      		   j] = 0.0;
 		    }
-		  /* else if (u[ebNE*nQuadraturePoints_elementBoundary+k] < eps)//unsaturated */
-		  /*   { */
-		  /*     fluxJacobian[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+ */
-		  /* 		   k*nDOF_trial_element+ */
-		  /* 		   j]*=smoothedHeaviside(eps,u[ebNE*nQuadraturePoints_elementBoundary+k]); */
-		  /*     fluxJacobian[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+ */
-		  /* 		   k*nDOF_trial_element+ */
-		  /* 		   j] += (advectiveFlux[ebNE*nQuadraturePoints_elementBoundary+ */
-		  /* 					k] + */
-		  /* 			  diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+ */
-		  /* 					k]) */
-		  /* 	* */
-		  /* 	smoothedDirac(eps,u[ebNE*nQuadraturePoints_elementBoundary+k]) */
-		  /* 	* */
-		  /* 	v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+ */
-		  /* 	  k*nDOF_trial_element+ */
-		  /* 	  j]; */
+		  else if (u[ebNE*nQuadraturePoints_elementBoundary+k] < eps)//unsaturated
+		    {
+		      fluxJacobian[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+		  		   k*nDOF_trial_element+
+		  		   j]*=smoothedHeaviside(eps,u[ebNE*nQuadraturePoints_elementBoundary+k]);
+		      fluxJacobian[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+		  		   k*nDOF_trial_element+
+		  		   j] += (advectiveFlux[ebNE*nQuadraturePoints_elementBoundary+
+		  					k] +
+		  			  diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+
+		  					k])
+		  	*
+		  	smoothedDirac(eps,u[ebNE*nQuadraturePoints_elementBoundary+k])
+		  	*
+		  	v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+		  	  k*nDOF_trial_element+
+		  	  j];
 		      
-		  /*   } */
+		    }
 		}
 	    }
 	}
