@@ -4436,6 +4436,113 @@ cnumericalFluxUpdateExteriorNumericalStressFluxJacobian(PyObject* self,
   return Py_None;
 }
 
+static PyObject*
+cnumericalFluxCalculateExteriorNumericalFluxRichards_sd(PyObject* self, 
+							PyObject* args)
+{
+  PyObject *rowptr,
+    *colind,
+    *isSeepageFace,
+    *isDOFBoundary,
+    *n,
+    *bc_u,
+    *K,
+    *grad_psi,
+    *u,
+    *K_rho_g,
+    *penalty,
+    *diffusiveFlux;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOOOO",
+                       *rowptr,
+		       *colind,
+		       *isSeepageFace,
+		       *isDOFBoundary,
+		       *n,
+		       *bc_u,
+		       *K,
+		       *grad_psi,
+		       *u,
+		       *K_rho_g,
+		       *penalty,
+		       *diffusiveFlux))
+    return NULL;
+  calculateExteriorNumericalFluxRichards_sd(IDATA(rowptr),
+					    IDATA(colind),
+					    SHAPE(n)[0],
+					    SHAPE(n)[1],
+					    SHAPE(n)[2],
+					    IDATA(isSeepageFace),
+					    IDATA(isDOFBoundary),
+					    DDATA(n),
+					    DDATA(bc_u),
+					    DDATA(K),
+					    DDATA(grad_psi),
+					    DDATA(u),
+					    DDATA(K_rho_g),
+					    DDATA(penalty),
+					    DDATA(diffusiveFlux));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyObject*
+cnumericalFluxCalculateExteriorNumericalFluxJacobianRichards_sd(PyObject* self, 
+								PyObject* args)
+{
+  PyObject *rowptr,
+    *colind,
+    *isSeepageFace,
+    *isDOFBoundary,
+    *n,
+    *bc_u,
+    *K,
+    *dK,
+    *grad_psi,
+    *grad_v,
+    *u,
+    *dK_rho_g,
+    *v,
+    *penalty,
+    *fluxJacobian;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOOOOOOO",
+                       *rowptr,
+		       *colind,
+		       *isSeepageFace,
+		       *isDOFBoundary,
+		       *n,
+		       *bc_u,
+		       *K,
+		       *dK,
+		       *grad_psi,
+		       *grad_v,
+		       *u,
+		       *dK_rho_g,
+		       *v,
+		       *penalty,
+		       *fluxJacobian))
+    return NULL;
+  calculateExteriorNumericalFluxJacobianRichards_sd(IDATA(rowptr),
+						    IDATA(colind),
+						    SHAPE(n)[0],
+						    SHAPE(n)[1],
+						    SHAPE(n)[2],
+						    IDATA(isSeepageFace),
+						    IDATA(isDOFBoundary),
+						    DDATA(n),
+						    DDATA(bc_u),
+						    DDATA(K),
+						    DDATA(dK),
+						    DDATA(grad_psi),
+						    DDATA(grad_v),
+						    DDATA(u),
+						    DDATA(dK_rho_g),
+						    DDATA(v),
+						    DDATA(penalty),
+						    DDATA(fluxJacobian));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
 static PyMethodDef cnumericalFluxMethods[] = {
   {"calculateInteriorNumericalAdvectiveFluxConvexOneSonicPoint",
    cnumericalFluxCalculateInteriorNumericalAdvectiveFluxConvexOneSonicPoint,
@@ -4697,6 +4804,14 @@ static PyMethodDef cnumericalFluxMethods[] = {
     cnumericalFluxUpdateExteriorNumericalStressFluxJacobian,
     METH_VARARGS, 
     "update the stress terms in the flux jacobians"},
+  { "calculateExteriorNumericalFluxRichards_sd",
+    cnumericalFluxCalculateExteriorNumericalFluxRichards_sd,
+    METH_VARARGS, 
+    "calculate the basic IIPG flux for Richards' equation"},
+  { "calculateExteriorNumericalFluxJacobianRichards_sd",
+    cnumericalFluxCalculateExteriorNumericalFluxJacobianRichards_sd,
+    METH_VARARGS, 
+    "calculate the basic IIPG flux Jacobian for Richards' equation"},
    { NULL,NULL,0,NULL}
 };
 
