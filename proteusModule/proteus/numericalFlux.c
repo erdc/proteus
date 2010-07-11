@@ -11778,6 +11778,172 @@ void applySeepageFace(int nExteriorElementBoundaries_global,
     }
 }
 
+void calculateExteriorNumericalFluxRichards_sd(int* rowptr,
+					       int* colind,
+					       int nExteriorElementBoundaries_global,
+					       int nQuadraturePoints_elementBoundary,
+					       int nSpace,
+					       int* isSeepageFace,
+					       int* isDOFBoundary,
+					       double* n,
+					       double* bc_u,
+					       double* K,
+					       double* grad_psi,
+					       double* u,
+					       double* K_rho_g,
+					       double* penalty,
+					       double* diffusiveFlux)
+{
+  int ebNE,k,I,m,nnz=rowptr[nSpace];
+  double flux,v_I;
+  for(ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
+    {
+      for(k=0;k<nQuadraturePoints_elementBoundary;k++)
+        {
+	  if (isSeepageFace[ebNE] || isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k])
+	    {
+	      flux = 0.0;
+	      for(I=0;I<nSpace;I++)
+		{
+		  //initialize to gravity term
+		  v_I = K_rho_g[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+				k*nSpace+
+				I];
+		  //add pressure head term
+		  for(m=rowptr[I];m<rowptr[I+1];m++)
+		    {
+		      v_I 
+			-= 
+			K[ebNE*nQuadraturePoints_elementBoundary*nnz+
+			  k*nnz+
+			  m]
+			*
+			grad_psi[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+				 k*nSpace+colind[m]];
+		    }
+		  flux += 
+		    v_I
+		    *
+		    n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+		      k*nSpace+
+		      I];
+		}
+	      //add Dirichlet penalty
+	      diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+
+			    k] = flux
+		+ 
+		penalty[ebNE*nQuadraturePoints_elementBoundary+k]
+		*
+		(u[ebNE*nQuadraturePoints_elementBoundary+k]
+		 -
+		 bc_u[ebNE*nQuadraturePoints_elementBoundary+k]);
+	      if (isSeepageFace[ebNE])
+		{
+		  if (flux >= 0.0)
+		    {
+		      isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k] = 1;
+		    }
+		  else
+		    {
+		      isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k] = 0;
+		      diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+
+				    k] = 0.0;
+		    }
+		}
+	    }
+	}
+    }
+}
+
+void calculateExteriorNumericalFluxJacobianRichards_sd(int* rowptr,
+						       int* colind,
+						       int nExteriorElementBoundaries_global,
+						       int nQuadraturePoints_elementBoundary,
+						       int nDOF_trial_element,
+						       int nSpace,
+						       int* isDOFBoundary,
+						       double* n,
+						       double* bc_u,
+						       double* K,
+						       double* dK,
+						       double* grad_psi,
+						       double* grad_v,
+						       double* u,
+						       double* dK_rho_g,
+						       double* v,
+						       double* penalty,
+						       double* fluxJacobian)
+{
+  int ebNE,k,j,I,m,nnz=rowptr[nSpace];
+  double dFlux_j,dv_I_j;
+  for(ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
+    {
+      for(k=0;k<nQuadraturePoints_elementBoundary;k++)
+        {
+	  if (isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k])
+	    {
+	      for (j=0;j<nDOF_trial_element;j++)
+		{
+		  dFlux_j = 0.0;
+		  for(I=0;I<nSpace;I++)
+		    {
+		      //initialize to gravity term
+		      dv_I_j = dK_rho_g[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+				      k*nSpace+
+				      I]
+			*
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+			  k*nDOF_trial_element+
+			  j];
+		      //add pressure head term
+		      for(m=rowptr[I];m<rowptr[I+1];m++)
+			{
+			  dv_I_j 
+			    -= 
+			    K[ebNE*nQuadraturePoints_elementBoundary*nnz+
+			      k*nnz+
+			      m]
+			    *
+			    grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+				   k*nDOF_trial_element*nSpace+
+				   j*nSpace+
+				   colind[m]]
+			    +
+			    dK[ebNE*nQuadraturePoints_elementBoundary*nnz+
+			       k*nnz+
+			       m]
+			    *
+			    grad_psi[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+				     k*nSpace+
+				     colind[m]]
+			    *v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+			       k*nDOF_trial_element+
+			       j];
+			}
+		      dFlux_j += 
+			dv_I_j
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+			  k*nSpace+
+			  I];
+		    }
+		  //add Dirichlet penalty
+		  fluxJacobian[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+			       k*nDOF_trial_element+
+			       j]
+		    =
+		    dFlux_j
+		    + 
+		    penalty[ebNE*nQuadraturePoints_elementBoundary+k]
+		    *v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+		       k*nDOF_trial_element+
+		       j];
+		}
+	    }
+	}
+    }
+}
+
 void applySeepageFaceJacobian(int nExteriorElementBoundaries_global,
 			      int nQuadraturePoints_elementBoundary,
 			      int nDOF_trial_element,
