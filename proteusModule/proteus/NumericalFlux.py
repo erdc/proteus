@@ -3788,9 +3788,9 @@ class Richards_IIPG_exterior(NF_base):
         NF_base.__init__(self,vt,getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions)
-        self.epsSeepage = 1.5
+        self.epsSeepage = 3.0
         self.hasInterior=False
-        self.penalty_constant = 10.0
+        self.penalty_constant = 100.0
         self.penalty_power = 1.0
 
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
