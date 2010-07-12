@@ -11840,14 +11840,21 @@ void calculateExteriorNumericalFluxRichards_sd(int* rowptr,
 		(u[ebNE*nQuadraturePoints_elementBoundary+k]
 		 -
 		 bc_u[ebNE*nQuadraturePoints_elementBoundary+k]);
+              /* printf("Seepage Face %d %d psi = %12.5e psi_bc = %12.5e penalty = %12.5e flux = %12.5e \n", */
+              /*        ebNE, */
+              /*        isSeepageFace[ebNE], */
+              /*        u[ebNE*nQuadraturePoints_elementBoundary+k], */
+              /*        bc_u[ebNE*nQuadraturePoints_elementBoundary+k], */
+              /*        penalty[ebNE*nQuadraturePoints_elementBoundary+k], */
+              /*        flux); */
 	      if (isSeepageFace[ebNE])
 		{
 		  //if (u[ebNE*nQuadraturePoints_elementBoundary+k] >= -0.01 || diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+k] > 0.0)
-		  //if (diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+k] > 0.0)
-		  if (
-                      (u[ebNE*nQuadraturePoints_elementBoundary+k] > 0.0) && 
-                      (flux > 0.0)
-                      )
+		  if (diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+k] > 0.0)
+		  /* if ( */
+                  /*     //                      (u[ebNE*nQuadraturePoints_elementBoundary+k] > 0.0) &&  */
+                  /*     (flux > 0.0) */
+                  /*     ) */
 		    {
 		      isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k] = 1;
 		    }

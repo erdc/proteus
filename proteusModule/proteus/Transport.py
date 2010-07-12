@@ -192,6 +192,8 @@ class OneLevelTransport(NonlinearEquation):
         self.dirichletConditions = dofBoundaryConditionsDict
         self.dirichletNodeSetList=None #explicit Dirichlet  conditions for now, no Dirichlet BC constraints
         self.coefficients = coefficients
+        #import pdb
+        #pdb.set_trace()
         self.coefficients.initializeMesh(self.mesh)
         self.nc = self.coefficients.nc
         self.stabilization = stabilization
