@@ -11830,6 +11830,8 @@ void calculateExteriorNumericalFluxRichards_sd(int* rowptr,
 		      I];
 		}
 	      //add Dirichlet penalty
+              if (isSeepageFace[ebNE])
+                bc_u[ebNE*nQuadraturePoints_elementBoundary+k] = 0.0;
 	      diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+k] = 
                 flux
 		+ 
@@ -11840,7 +11842,8 @@ void calculateExteriorNumericalFluxRichards_sd(int* rowptr,
 		 bc_u[ebNE*nQuadraturePoints_elementBoundary+k]);
 	      if (isSeepageFace[ebNE])
 		{
-		  if (u[ebNE*nQuadraturePoints_elementBoundary+k] >= 0.0 || diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+k] > 0.0)
+		  //if (u[ebNE*nQuadraturePoints_elementBoundary+k] >= -0.01 || diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+k] > 0.0)
+		  if (diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+k] > 0.0)
 		    {
 		      isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k] = 1;
 		    }
