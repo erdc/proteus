@@ -3801,18 +3801,20 @@ class Richards_IIPG_exterior(NF_base):
                                 self.DOFBoundaryPointDictList[0].values()):
             self.ebqe[('u',0)][ebNE,k]=g(x,self.vt.timeIntegration.t)
             self.isDOFBoundary[0][ebNE,k] = 1#this will get turned off if on the seepage boundary and flow is inward
-        #don't need coefficients on exterior trace
-        #self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe) 
+        self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
+        self.ebqe[('da',0,0,0)].flat[:]=0.0
+        self.ebqe[('df',0,0)].flat[:]=0.0
+        print "sdInfo",self.vt.coefficients.sdInfo[(0,0)][0],self.vt.coefficients.sdInfo[(0,0)][1]
         cnumericalFlux.calculateExteriorNumericalFluxRichards_sd(self.vt.coefficients.sdInfo[(0,0)][0],
                                                                  self.vt.coefficients.sdInfo[(0,0)][1],
                                                                  self.vt.coefficients.isSeepageFace,
                                                                  self.isDOFBoundary[0],
                                                                  ebqe['n'],
                                                                  self.ebqe[('u',0)],
-                                                                 ebqe[('a',0,0)],
-                                                                 ebqe[('grad(phi)',0)],
+                                                                 self.ebqe[('a',0,0)],
+                                                                 ebqe[('grad(u)',0)],
                                                                  ebqe[('u',0)],
-                                                                 ebqe[('f',0)],
+                                                                 self.ebqe[('f',0)],
                                                                  ebqe[('penalty')],
                                                                  ebqe[('diffusiveFlux',0,0)])
     def updateExteriorNumericalFluxJacobian(self,l2g,inflowFlag,q,ebqe,dphi,fluxJacobian_exterior,fluxJacobian_eb,fluxJacobian_hj):
@@ -3821,12 +3823,12 @@ class Richards_IIPG_exterior(NF_base):
                                                                          self.isDOFBoundary[0],
                                                                          ebqe['n'],
                                                                          self.ebqe[('u',0)],
-                                                                         ebqe[('a',0,0)],
-                                                                         ebqe[('da',0,0,0)],
-                                                                         ebqe[('grad(phi)',0)],
+                                                                         self.ebqe[('a',0,0)],
+                                                                         self.ebqe[('da',0,0,0)],
+                                                                         ebqe[('grad(u)',0)],
                                                                          ebqe[('grad(v)',0)],
                                                                          ebqe[('u',0)],
-                                                                         ebqe[('df',0,0)],
+                                                                         self.ebqe[('df',0,0)],
                                                                          ebqe[('v',0)],
                                                                          ebqe[('penalty')],
                                                                          fluxJacobian_exterior[0][0])
