@@ -5566,13 +5566,12 @@ void conservativeHeadRichardsMualemVanGenuchten_sd_het(const int nSimplex,
 	  //dmass[k] = -rho*DthetaW_DpsiC;
 	  for (I=0;I<nSpace;I++)
 	    {
+              f[k*nSpace+I] = 0.0;
+              df[k*nSpace+I] = 0.0;
 	      for (ii=rowptr[I]; ii < rowptr[I+1]; ii++)
 		{
-		  if (I==colind[ii])
-		    {
-		      f[k*nSpace+I]  = rho2*KWr*KWs[matID*nnz+ii]*gravity[I];
-		      df[k*nSpace+I] = -rho2*DKWr_DpsiC*KWs[matID*nnz+ii]*gravity[I];
-		    }
+                  f[k*nSpace+I]  += rho2*KWr*KWs[matID*nnz+ii]*gravity[colind[ii]];
+                  df[k*nSpace+I] += -rho2*DKWr_DpsiC*KWs[matID*nnz+ii]*gravity[colind[ii]];
 		  a[k*nnz+ii]  = rho*KWr*KWs[matID*nnz+ii];
 		  da[k*nnz+ii] = -rho*DKWr_DpsiC*KWs[matID*nnz+ii];
 		}/*m*/
