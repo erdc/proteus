@@ -505,7 +505,7 @@ class Newton(NonlinearSolver):
 #                 while ( (norm_r_cur >= 0.99 * self.norm_r + self.atol_r) and
 #                         (ls_its < self.maxLSits) and
 #                         norm_r_cur/norm_r_last < 1.0):
-                while ( (norm_r_cur >= 0.99 * self.norm_r) and
+                while ( (norm_r_cur >= 0.9999 * self.norm_r) and
                         (ls_its < self.maxLSits)):
                     self.convergingIts = 0
                     ls_its +=1

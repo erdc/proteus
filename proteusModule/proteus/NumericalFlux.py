@@ -3794,6 +3794,7 @@ class Richards_IIPG_exterior(NF_base):
         self.penalty_power = 1.0
 
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
+        ebqe[('advectiveFlux',0)].flat[:]=0.0#just put everthing in the diffusive flux
         self.ebqe[('u',0)].flat[:] = ebqe[('u',0)].flat[:]
         for (ebNE,k),g,x in zip(self.DOFBoundaryConditionsDictList[0].keys(),
                                 self.DOFBoundaryConditionsDictList[0].values(),
