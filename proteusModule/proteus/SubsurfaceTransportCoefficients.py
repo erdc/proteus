@@ -295,7 +295,8 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
                  gravity,
                  density,
                  beta,
-                 diagonal_conductivity=True):
+                 diagonal_conductivity=True,
+                 getSeepageFace=None):
         variableNames=['pressure_head']
         nc=1
         mass={0:{0:'nonlinear'}}
@@ -304,7 +305,7 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
         potential={0:{0:'u'}}
         reaction={0:{0:'linear'}}
         hamiltonian={}
-
+        self.getSeepageFace=getSeepageFace
         self.gravity=gravity
         self.rho = density
         self.beta=beta
@@ -317,7 +318,6 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
         self.materialTypes_q    = None
         self.materialTypes_ebq  = None
         self.materialTypes_ebqe  = None
-        self.getSeepageFace = None
         self.nd = nd
         self.nMaterialTypes = len(thetaR_types)
         #try to allow some flexibility in input of permeability/conductivity tensor
@@ -359,6 +359,8 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
                          useSparseDiffusion = True)
             
     def initializeMesh(self,mesh):
+        #import pdb
+        #pdb.set_trace()
         self.elementMaterialTypes,self.exteriorElementBoundaryTypes,self.elementBoundaryTypes = BlockHeterogeneousCoefficients(mesh).initializeMaterialTypes()
         #want element boundary material types for evaluating heterogeneity
         #not boundary conditions
@@ -367,7 +369,10 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
             for ebNE in range(mesh.nExteriorElementBoundaries_global):
                 ebN = mesh.exteriorElementBoundariesArray[ebNE]
                 eN  = mesh.elementBoundaryElementsArray[ebN,0]
+                #print "eb flag",mesh.elementBoundaryMaterialTypes[ebN]
+                #print self.getSeepageFace(mesh.elementBoundaryMaterialTypes[ebN])
                 self.isSeepageFace[ebNE] = self.getSeepageFace(mesh.elementBoundaryMaterialTypes[ebN])
+        #print self.isSeepageFace
     def initializeElementQuadrature(self,t,cq):
         self.materialTypes_q = self.elementMaterialTypes
         self.q_shape = cq[('u',0)].shape
