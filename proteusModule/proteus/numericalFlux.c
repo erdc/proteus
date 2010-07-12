@@ -11843,7 +11843,8 @@ void calculateExteriorNumericalFluxRichards_sd(int* rowptr,
 	      if (isSeepageFace[ebNE])
 		{
 		  //if (u[ebNE*nQuadraturePoints_elementBoundary+k] >= -0.01 || diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+k] > 0.0)
-		  if (diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+k] > 0.0)
+		  //if (diffusiveFlux[ebNE*nQuadraturePoints_elementBoundary+k] > 0.0)
+		  if (flux > 0.0)
 		    {
 		      isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k] = 1;
 		    }
