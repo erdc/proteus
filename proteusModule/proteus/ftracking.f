@@ -269,7 +269,7 @@ C
       DOUBLE PRECISION DEQ,TS,DTS,T,SDT,DT0
       DOUBLE PRECISION DIR
 C     
-      INTEGER I,IPT,NODE,NP,M
+      INTEGER I,IPT,NODE,NP,M,K
       INTEGER IDSDT,I1,I2,I3,M2,M3,N1,N2,N3,J1,J2,J3
 C
 C
@@ -290,11 +290,12 @@ C MWF COPY X_I INTO XPT
 C     HAVE TO TREAT AS FLAT ARRAY, SINCE MAY BE DIFFERENT SHAPES IN PYTHON (q, versus ebqe)
 C     ASSUME MPT,TPT SET BY CALLING CODE 
 CMWF DEBUG
-C      WRITE(LU_O,*)'ENTERING PT123'
-C      WRITE(LU_O,*)'NNP= ',NNP,' NEL= ',NEL,' NNDE= ',NNDE,' NEQ= ',NEQ,
-C     &     ' NPT= ',NPT,' IBF= ',IBF,' LU_O= ',LU_O, ' ATOL= ',ATOL,
-C     &     ' RTOL= ',RTOL, ' SF= ',SF, 'DN_SAFE= ',DN_SAFE
-
+      IF (IVERBOSE.GE.1) THEN
+         WRITE(LU_O,*)'ENTERING PT123'
+         WRITE(LU_O,*)'NNP= ',NNP,' NEL= ',NEL,' NNDE= ',NNDE,' NEQ= ',
+     &        NEQ,' NPT= ',NPT,' IBF= ',IBF,' LU_O= ',LU_O, ' ATOL= ',
+     &        ATOL,' RTOL= ',RTOL, ' SF= ',SF, 'DN_SAFE= ',DN_SAFE
+      ENDIF
       DO IPT=1,NPT
          DO I=1,NEQ
             XS(I)=X_I(I + MAXEQ*(IPT-1))
@@ -334,12 +335,16 @@ C        KPATH=NPATH(IPT)
         I2=-1
         I3=-1
 C MWF DEBUG
-C        WRITE(LU_O,*)'START OF STEP 2 IPT= ',IPT,' T1= ',T1,' T2= ',T2,
-C     &       ' DTS= ',DTS,' NP= ',NP
+        IF (IVERBOSE.GE.2) THEN
+           WRITE(LU_O,*)'START OF STEP 2 IPT= ',IPT,' T1= ',T1,' T2= ',
+     &          T2,' DTS= ',DTS,' TS= ',TS,' T= ',T,' NP= ',NP
+        ENDIF
         DO I=1,NEQ
           XS(I)=XPT(I + MAXEQ*(IPT-1))
+          IF (IVERBOSE.GE.3) THEN
 C MWF DEBUG
-C          WRITE(LU_O,*)'XS(',I,')= ',XS(I)
+             WRITE(LU_O,*)'XS(',I,')= ',XS(I)
+          ENDIF
         ENDDO
         
         IF(NP.EQ.0)GOTO 200
@@ -347,8 +352,10 @@ C
 C ===== FOR THE CASE THAT MPT(IPT)=0, I.E., THE VERY FIRST
 C     TRACKING: LOOP OVER ALL CONNECTED ELEMENTS
 C
+        IF (IVERBOSE.GE.4) THEN
 C MWF DEBUG
-C        WRITE(LU_O,*)' ENTERING NODE TRACKING STEP IPT= ', IPT
+           WRITE(LU_O,*)' ENTERING NODE TRACKING STEP IPT= ', IPT
+        ENDIF
         DO 150 I=NLRL(NP)+1,NLRL(NP+1)
           M=LRL(I)
 C ELENOD IN GENERAL SELECTS THE NUMBER OF NODES PER ELEMENT USING IE
@@ -414,9 +421,11 @@ C ELENOD IN GENERAL SELECTS THE NUMBER OF NODES PER ELEMENT USING IE
 C FOR NOW WE KNOW THIS AS INPUT
 C
 C MWF DEBUG
-C        WRITE(LU_O,*)' B4 ELTRACK ELEMENT LOOP T= ',T,' TPT= ',TPT(IPT),
-C     &       ' IPT= ',IPT,' M= ',M
-C        WRITE(LU_O,*)' XS= ',(XS(I),I=1,NEQ)
+        IF (IVERBOSE.GE.5) THEN
+           WRITE(LU_O,*)' B4 ELTRACK ELEMENT LOOP T= ',T,' TPT= ',
+     &          TPT(IPT),' IPT= ',IPT,' M= ',M
+           WRITE(LU_O,*)' XS= ',(XS(I),I=1,NEQ)
+        ENDIF
         CALL EL_VEL_PREP(MAXND,MAXEQ,NNDE,
      &         NNP,NEL,NODE,NEQ,M,IDVE,DIR,
      &         XG,IE,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
@@ -434,13 +443,15 @@ C MWF REMOVE MAXPATH, KPATH ARGS
      M       XOUT5,XOUT4,XERR,DN_S,DN,
      O       IDSDT,XPT,TPT,I1,I2,I3)
 CMWF        NPATH(IPT)=KPATH
+        IF (IVERBOSE.GE.5) THEN
 C MWF DEBUG
-C        WRITE(LU_O,*)' AFTER ELTRACK ELEMENT LOOP T= ',T,
-C     &       ' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),' IPT= ',IPT,' M= ',M
-C        WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
-C        DO K=1,NEQ
-C           WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',XPT(K + IPT*MAXEQ)
-C        ENDDO
+           WRITE(LU_O,*)' AFTER ELTRACK ELEMENT LOOP T= ',T,
+     &          ' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),' IPT= ',IPT,' M= ',M
+           WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
+           DO K=1,NEQ
+              WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',XPT(K + IPT*MAXEQ)
+           ENDDO
+        ENDIF
 C
         IF(IDSDT.EQ.-1)THEN
           MPT(IPT)=M
@@ -503,15 +514,17 @@ C MWF GET RID OF MAXPT,KPATH ARGS
      O                 IDSDT,XPT,TPT,I1,I2,I3)
 C MWF                   NPATH(IPT)=KPATH
 C
+                  IF (IVERBOSE.GE.5) THEN
 C MWF DEBUG
-C                  WRITE(LU_O,*)' AFTER I3.NE.0 ELTRACK ELEMENT LOOP T= '
-C     &                 ,T,' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),' IPT= '
-C     &                 ,IPT,' M= ',M
-C                  WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
-C                  DO K=1,NEQ
-C                     WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',
-C     &                    XPT(K + IPT*MAXEQ)
-C                  ENDDO
+                     WRITE(LU_O,*)' AFTER I3.NE.0 ELTRACK ELEMENT LOOP',
+     &                    'T= ',T,' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),
+     &                    'IPT= ',IPT,' M= ',M
+                     WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
+                     DO K=1,NEQ
+                        WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',
+     &                       XPT(K + IPT*MAXEQ)
+                     ENDDO
+                  ENDIF
                   IF(IDSDT.EQ.-1)THEN
                     MPT(IPT)=M
 C 0 -- INTERIOR
@@ -580,15 +593,18 @@ C REMOVE MAXPT,MAXPATH,KPATH ARGS
 CMWF SKIP NPATH FOR NOW
 C                NPATH(IPT)=KPATH
 C
+                IF (IVERBOSE.GE.5) THEN
 C MWF DEBUG
-C                WRITE(LU_O,*)' AFTER I2.NE.0 ELTRACK ELEMENT LOOP T= '
-C     &               ,T,' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),' IPT= ',IPT
-C     &               ,' M= ',M
-C                WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
-C                DO K=1,NEQ
-C                   WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',
-C     &                  XPT(K + IPT*MAXEQ)
-C                ENDDO
+                   WRITE(LU_O,*)' AFTER I2.NE.0 ELTRACK ELEMENT LOOP',
+     &                  'T= ',T,' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),
+     &                  'IPT= ',IPT,' M= ',M
+                   WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
+                   DO K=1,NEQ
+                      WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',
+     &                     XPT(K + IPT*MAXEQ)
+                   ENDDO
+                ENDIF
+C
                 IF(IDSDT.EQ.-1)THEN
                   MPT(IPT)=M
 C 0 -- INTERIOR
@@ -652,14 +668,17 @@ CMWF REMOVE MAXPT, MAXPATH ARGS, KPATH
      O         IDSDT,XPT,TPT,I1,I2,I3)
 CMWF          NPATH(IPT)=KPATH
 C
+          IF (IVERBOSE.GE.5) THEN
 C MWF DEBUG
-C          WRITE(LU_O,*)' AFTER I1.NE.0 ELTRACK ELEMENT LOOP T= '
-C     &         ,T,' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),' IPT= ',IPT
-C     &         ,' M= ',M
-C          WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
-C          DO K=1,NEQ
-C             WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',XPT(K + IPT*MAXEQ)
-C          ENDDO
+             WRITE(LU_O,*)' AFTER I1.NE.0 ELTRACK ELEMENT LOOP T= '
+     &            ,T,' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),' IPT= ',IPT
+     &            ,' M= ',M
+             WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
+             DO K=1,NEQ
+                WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',XPT(K + IPT*MAXEQ)
+             ENDDO
+          ENDIF
+C
           IF(IDSDT.EQ.-1)THEN
             MPT(IPT)=M
 C 0 -- INTERIOR
@@ -1390,6 +1409,12 @@ C
       DO I=1,NEQ
         AK(I)=VT1(I)+ETA*(VT2(I)-VT1(I))
       ENDDO    
+C MWF DEBUG
+      WRITE(6,*)' VEL123 T1= ',T1, 'T2= ',T2,' TT= ',TT,' ETA= ',ETA
+      DO I=1,NEQ
+         WRITE(6,*)' VT1(',I,')= ',VT1(I),' VT2(',I,')= ',VT2(I),' AK(',
+     &        I,')= ',AK(I)
+      ENDDO
 C
 C  999 CONTINUE
       RETURN
@@ -1586,6 +1611,12 @@ C            IVDOF = VTL2G(K,J,M)
             IVDOF = VTL2G(K + NEQ*(J-1) + NEQ*NNDE*(M-1))
             VT1W(K,J)=VT1E(IVDOF)*DIR
             VT2W(K,J)=VT2E(IVDOF)*DIR
+C MWF DEBUG
+            WRITE(6,*)'EL_VEL_PREP IDVE.EQ.2 M= ',M,' J= ',J,
+     &           ' IEM= ',IEM,' XW(',K,',',J,')= ',XW(K,J),
+     &           ' IVDOF= ',IVDOF,' VT1W(',K,',',J,')= ',VT1W(K,J),
+     &           ' VT2W(',K,',',J,')= ',VT2W(K,J)
+C MWF DEBUG            
           ENDDO
         ENDDO
       ELSE IF (IDVE.EQ.3) THEN
