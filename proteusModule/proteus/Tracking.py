@@ -3228,7 +3228,231 @@ def test6(opts):
     except:
         pass
 
-     
+
+def Liu1Dex(opts):
+    """
+    1D example from Liu 94. Single-phase flow in a semi-infinite 1d
+    domain. Aquifer is b=10 m thick with Transmissivity T=20 cm^2/s,
+    storage coefficient S=0.002, and porosity \theta=0.5. The aquifer
+    conductivity and specific storage are
+
+     K = T/b 2.0e-2 cm/s = 1728.0 cm/d, S_s = S/b = 2.0e-6 1/cm
+
+     S_s \pd{h}{t} = K\pd2{h}{x} 
+
+     for 
+       x \in [0,\infty]
+
+     Initial and boundary conditions are
+  
+       h(x,0) = H= 10 m
+
+       h(0,t) = 0 m, t > 0
+      
+       \pd{h}{x} = 0 x \rightarrow \infty  (double check?)
+           
+     Analytical solution is
+ 
+       h = H \erf(\frac{x}{2\sqrt{tK/S_s}}
+
+      \pd{h}{x} = \frac{H}{\sqrt{\pi t K / S_s}}\exp\left(-\frac{S_s}{4 K t}x^2\right)   , note Liu has extra K in numerator here
+
+      v_x = -\frac{K}{\theta}\pd{h}{x} = -\frac{HK}{\theta\sqrt{\pi t K / S_s}}\exp\left(-\frac{S_s}{4 K t}x^2\right)
+    """
+    from math import pi,sqrt,exp
+    #dummy p module
+    class LiuProblem:
+        class LiuIC:
+            def __init__(self,H=1000.0):
+                self.H=H
+            def uOfXT(self,x,t):
+                return self.H
+        class LiuParticleVelocity1d:
+            def __init__(self,H=1000.0,K=2.0e-2,S=2.0e-6,theta=0.5):
+                self.H=H; self.K=K; self.S=S; self.theta=theta
+            def uOfXT(self,x,t):
+                if t < 1.0e-12:
+                    return 0.0
+                term1 = -self.K*self.H/(self.theta*sqrt(pi*self.K*t/self.S))
+                term2 = exp(-self.S*x[0]*x[0]/(4.0*self.K*t))
+                return term1*term2
+        def __init__(self):
+            self.nd = 1
+            #time intervals for velocity evaluation from Liu in days
+            self.tnList_days=[0.00035,0.001,0.01,0.05,0.2,0.7,1.2,2.0,3.0,5.0,9.0,13.0,17.0,21.0,30.0]
+            self.tnList = [t*60.0*60.0*24.0 for t in self.tnList_days]
+            self.L=(500.0,1.0,1.0) #cm
+            self.H= 1000.0 #cm
+            self.K= 2.0e-2#1728.0 cm/d = 2.0e-2 #cm/s
+            self.S = 2.0e-6
+            self.theta=0.5
+            self.initialConditions = {0:LiuProblem.LiuIC(H=self.H)}
+            self.analyticalSolutionParticleVelocity={0:LiuProblem.LiuParticleVelocity1d(H=self.H,K=self.K,S=self.S,theta=self.theta)}
+    p = LiuProblem()
+
+    assert opts.nnq > 0, "nnq = %s not ok must be > 1" % opts.nnq
+
+    tnList = p.tnList
+        
+    #to collect integration points etc
+    q = {}
+    mesh = setupMesh_1d(opts,p)
+
+    sdmesh = mesh.subdomainMesh
+    #solution representation, not used for linear problems
+
+    trialSpace,u,q['u_interpolation_values'] = setupSolution_C0P1(opts,p,sdmesh,tnList[0])
+
+    #velocity representation
+    #
+    velocitySpace,velocity,q['velocity_interpolation_values'] = setupVelocity_C0P1(opts,p,sdmesh,tnList[0])
+
+    component_velocity_times={0:tnList[0]}
+
+    velocity_new = FemTools.FiniteElementFunction(velocitySpace,dim_dof=p.nd,isVector=True,name="velocity_new")
+    velocity_new.dof[:] = velocity.dof
+    component_velocity_times_new={0:tnList[0]}
+
+    q['x_hat'] = setupTrackingPointsInReferenceSpace(opts,p,useGaussianQuadrature=False)
+    nq_per_element = q['x_hat'].shape[0]
+
+    #map points to physical space
+    q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
+    trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
+    
+    #go ahead and get shape functions at initial points to evaluate solution, may not want to use
+    #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
+    q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
+    trialSpace.getBasisValues(q['x_hat'],q['u_shape_functions'])
+
+    #find the interval where start time lies
+    t = opts.t_start
+    istart = 0
+    while istart < len(tnList)-2 and tnList[istart+1] <= t:
+        istart+=1
+    assert tnList[istart] <= t and t < tnList[istart+1] 
+    #this will get cycled through and set as value at tnList[istart] in loop
+    #evaluate velocity
+    for eN in range(mesh.nElements_global):
+        for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+            q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],tnList[istart])
+    #evaluate velocity degrees of freedom from its interpolation conditions
+    velocity_new.projectFromInterpolationConditions(q['velocity_interpolation_values'])
+
+    setupTrackingDataArrays(tnList[istart],tnList[istart+1],sdmesh,q,nq_per_element)
+
+    particle_tracker = LinearAdvection_C0P1Velocity_PT123(sdmesh,p.nd,
+                                                          {0:velocitySpace.dofMap.l2g},
+                                                          {0:velocity.dof},
+                                                          activeComponentList=[0])
+    particle_tracker.setFromOptions(opts)
+
+
+
+    ########## visualization and output stuff
+    #save velocity field for visualization
+    q['velocity_depart'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
+    q['velocity_track'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
+
+    velocity_new.getValues(q[('u_shape_functions')],q['velocity_depart'])
+    q['velocity_track'] = q['velocity_depart'][:]
+
+    #mwf debug
+    #pdb.set_trace()
+    archive = Archiver.XdmfArchive(".","Liu1D",useTextArchive=False)
+    import xml.etree.ElementTree as ElementTree
+    archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
+    writer   = Archiver.XdmfWriter()
+
+    #
+    arGrid = writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x'],tnList[istart],init=True,tCount=0)
+    writer.writeScalarXdmf_particles(archive,q['t_depart'],"t_particle",tCount=0)
+    writer.writeVectorXdmf_particles(archive,q['velocity_depart'],"velocity",tCount=0)
+
+    #to accomodate updating pardigm for visualization copy _track info to be consistent
+    #with start locations
+    q['x_track'].flat[:] = q['x']; q['t_viz'] = numpy.copy(q['t_depart'])
+    q['x_depart'] = numpy.copy(q['x'])
+
+    #which way to track (1. forward, -1. backward)
+    direction = 1.0
+    
+    
+    #mwf debug
+    import pdb
+    pdb.set_trace()
+    for i,tout in enumerate(tnList[istart+1:]):
+        dtout = tout-t
+        #update for next step
+        velocity.dof[:]=velocity_new.dof[:]
+        #don't need this actually because setup as a shallow copy?
+        particle_tracker.setTrackingVelocity(velocity.dof,0,tnList[istart],timeLevel=0)
+        #time tracking to
+        t += dtout
+
+        #evaluate velocity
+        for eN in range(mesh.nElements_global):
+            for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        #evaluate velocity degrees of freedom from its interpolation conditions
+        velocity_new.projectFromInterpolationConditions(q['velocity_interpolation_values'])
+        particle_tracker.setTrackingVelocity(velocity_new.dof,0,t,timeLevel=1)
+        
+        q['t_track'].fill(t) 
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        if direction > 0.0:
+            particle_tracker.forwardTrack({0:q['t_depart']},    
+                                          {0:q['t_track']},                          #target end time
+                                          {0:sdmesh.nElements_global*nq_per_element},#total number of points
+                                          {0:q['x']},                                #departure points
+                                          {0:q['element_track']},                    #in/out element locations
+                                          {0:q['x_track']},                          #arrival points
+                                          {0:q['flag_track']})                       
+        else:
+            particle_tracker.backwardTrack({0:q['t_depart']},    
+                                           {0:q['t_track']},                          #target end time
+                                           {0:sdmesh.nElements_global*nq_per_element},#total number of points
+                                           {0:q['x']},                                #departure points
+                                           {0:q['element_track']},                    #in/out element locations
+                                           {0:q['x_track']},                          #arrival points
+                                           {0:q['flag_track']})                       
+            
+        velocity_new.getValues(q[('u_shape_functions')],q['velocity_track'])
+        writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track'],t,init=False,meshChanged=True,arGrid=arGrid,tCount=i+1)
+        writer.writeScalarXdmf_particles(archive,q['t_track'],"t_particle",tCount=i+1)
+        writer.writeVectorXdmf_particles(archive,q['velocity_track'],"velocity",tCount=i+1)
+
+
+        q['t_depart'].flat[:] = q['t_track'].flat
+        q['x'].flat[:] = q['x_track'].flat
+        #can also set flag so that don't track points that exited the domain
+        #q['flag_track'][numpy.where(q['flag_track'] == 1)] = -2
+        #mwf debug
+        #pdb.set_trace()
+    #output step loop
+    #mwf debug
+    #pdb.set_trace()
+    
+
+    #close out archives and visualization
+    archive.close()
+
+    #mwf just look at output
+    print """t= %s 
+x_depart[-1]= %s 
+x_track[-1] = %s  """ % (t,q['x_depart'][-1],q['x_track'][-1])
+
+    try:#run time visualization?
+        sys.exit(vtkViewers.g.app.exec_())
+    except:
+        pass
+
+
 if __name__=='__main__':
     """
     TODO add verbose flag
@@ -3337,6 +3561,8 @@ if __name__=='__main__':
         test5(opts)
     elif opts.test_id == 6:
         test6(opts)
+    elif opts.test_id == 7:
+        Liu1Dex(opts)
     else:
         print "test_id= %s not supported yet " % opts.test_id
 
