@@ -356,18 +356,20 @@ class SteadyState_LinearAdvection_C0P1Velocity_PT123(Tracking_Base):
         #standard C0P1 FemSpace uses a l2g that's consistent with a scalar value and assumes extra dofs
         #are just tacked on
         self.component_velocity_dofs=component_velocity_dofs
-        if self.nd == 1: self.component_velocity_l2g=component_velocity_l2g
-        else:
-            self.component_velocity_l2g={}
-            for ci in component_velocity_l2g.keys():
-                if component_velocity_l2g[ci] == None:
-                    self.component_velocity_l2g[ci]=None
-                else:
-                    nVDOF_element=self.nd*self.mesh.nNodes_element
-                    self.component_velocity_l2g[ci] = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'i')
-                    for I in range(self.nd):
-                        self.component_velocity_l2g[ci][:,:,I]=component_velocity_l2g[ci]*self.nd + I
-                    
+        #can't have shallow copy in 1d because increment to account for fortran base 1
+        #and l2g is itself a shallow copy of elementNodesArray
+        #if self.nd == 1: self.component_velocity_l2g=component_velocity_l2g
+        #else:
+        self.component_velocity_l2g={}
+        for ci in component_velocity_l2g.keys():
+            if component_velocity_l2g[ci] == None:
+                self.component_velocity_l2g[ci]=None
+            else:
+                nVDOF_element=self.nd*self.mesh.nNodes_element
+                self.component_velocity_l2g[ci] = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'i')
+                for I in range(self.nd):
+                    self.component_velocity_l2g[ci][:,:,I]=component_velocity_l2g[ci]*self.nd + I
+
                     
     def forwardTrack(self,
                      t_depart,           #point departure times
@@ -538,7 +540,7 @@ class SteadyState_LinearAdvection_C0P1Velocity_PT123(Tracking_Base):
         self.component_velocity_dofs[component] = trackingVelocity_dofs
         if trackingVelocity_l2g != None:
             nVDOF_element=self.nd*self.mesh.nNodes_element
-            if self.nd > 1 and trackingVelocity_l2g.shape[-1] == self.mesh.nNodes_element:
+            if trackingVelocity_l2g.shape[-1] == self.mesh.nNodes_element:
                     #standard C0P1 FemSpace uses a l2g that's consistent with a scalar value and assumes extra dofs
                     #are just tacked on
                     self.component_velocity_l2g[component] = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'i')
@@ -1075,8 +1077,8 @@ class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocit
             #assert abs(t_velocity_1-t_velocity_0) > 0.0, "pt123 requires velocity tracking times different"
             #NOTE current version of pt123 uses velocity local to global map that's logically nElements x nNodes x dim
             #mwf debug
-            #import pdb
-            #pdb.set_trace()
+            import pdb
+            pdb.set_trace()
             #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
             #c data structures here and then convert back to base zero after call
             fbase = 1
@@ -1116,7 +1118,7 @@ class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocit
                             x_track[ci].reshape(nPoints[ci]*maxeq),
                             idve=2,#element based C0P1 velocity field
                             maxeq=3,
-                            iverbose=0)
+                            iverbose=4)
 
             self.mesh.elementNodesArray -= fbase
             self.mesh.nodeElementsArray -= fbase
@@ -1208,7 +1210,7 @@ class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocit
         """
         if trackingVelocity_l2g != None:
             nVDOF_element=self.nd*self.mesh.nNodes_element
-            if self.nd > 1 and trackingVelocity_l2g.shape[-1] == self.mesh.nNodes_element:
+            if trackingVelocity_l2g.shape[-1] == self.mesh.nNodes_element:
                     #standard C0P1 FemSpace uses a l2g that's consistent with a scalar value and assumes extra dofs
                     #are just tacked on
                     self.component_velocity_l2g[component] = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'i')
@@ -3339,7 +3341,7 @@ def Liu1Dex(opts):
     #evaluate velocity degrees of freedom from its interpolation conditions
     velocity_new.projectFromInterpolationConditions(q['velocity_interpolation_values'])
 
-    setupTrackingDataArrays(tnList[istart],tnList[istart+1],sdmesh,q,nq_per_element)
+    setupTrackingDataArrays(opts.t_start,tnList[istart+1],sdmesh,q,nq_per_element)
 
     particle_tracker = LinearAdvection_C0P1Velocity_PT123(sdmesh,p.nd,
                                                           {0:velocitySpace.dofMap.l2g},
@@ -3377,16 +3379,20 @@ def Liu1Dex(opts):
     #which way to track (1. forward, -1. backward)
     direction = 1.0
     
-    
     #mwf debug
-    import pdb
-    pdb.set_trace()
+    print """t= %s 
+x_depart[-1]= %s """ % (t,q['x_depart'][-1])
+    tvelOld = tnList[istart]
+
+    #mwf debug
+    #import pdb
+    #pdb.set_trace()
     for i,tout in enumerate(tnList[istart+1:]):
         dtout = tout-t
         #update for next step
         velocity.dof[:]=velocity_new.dof[:]
         #don't need this actually because setup as a shallow copy?
-        particle_tracker.setTrackingVelocity(velocity.dof,0,tnList[istart],timeLevel=0)
+        particle_tracker.setTrackingVelocity(velocity.dof,0,tvelOld,timeLevel=0)
         #time tracking to
         t += dtout
 
@@ -3430,8 +3436,13 @@ def Liu1Dex(opts):
 
         q['t_depart'].flat[:] = q['t_track'].flat
         q['x'].flat[:] = q['x_track'].flat
+        tvelOld = t
         #can also set flag so that don't track points that exited the domain
         #q['flag_track'][numpy.where(q['flag_track'] == 1)] = -2
+        #mwf debug
+        print """t= %s 
+x_track[-1] = %s  """ % (t,q['x_track'][-1])
+        
         #mwf debug
         #pdb.set_trace()
     #output step loop
@@ -3441,11 +3452,6 @@ def Liu1Dex(opts):
 
     #close out archives and visualization
     archive.close()
-
-    #mwf just look at output
-    print """t= %s 
-x_depart[-1]= %s 
-x_track[-1] = %s  """ % (t,q['x_depart'][-1],q['x_track'][-1])
 
     try:#run time visualization?
         sys.exit(vtkViewers.g.app.exec_())
