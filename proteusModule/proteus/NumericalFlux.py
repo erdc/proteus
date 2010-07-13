@@ -3804,7 +3804,6 @@ class Richards_IIPG_exterior(NF_base):
         self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
         self.ebqe[('da',0,0,0)].flat[:]=0.0
         self.ebqe[('df',0,0)].flat[:]=0.0
-        print "sdInfo",self.vt.coefficients.sdInfo[(0,0)][0],self.vt.coefficients.sdInfo[(0,0)][1]
         cnumericalFlux.calculateExteriorNumericalFluxRichards_sd(self.vt.coefficients.sdInfo[(0,0)][0],
                                                                  self.vt.coefficients.sdInfo[(0,0)][1],
                                                                  self.vt.coefficients.isSeepageFace,
@@ -3848,5 +3847,5 @@ class Richards_SIPG_exterior(Richards_IIPG_exterior):
         self.hasInterior=False
         self.includeBoundaryAdjoint=True
         self.boundaryAdjoint_sigma=1.0
-        self.penalty_constant = 10.0
+        self.penalty_constant = 100.0
         self.penalty_power = 1.0
