@@ -367,8 +367,6 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
         self.isSeepageFace = numpy.zeros((mesh.nExteriorElementBoundaries_global),'i')
         if self.getSeepageFace != None:
             for ebNE in range(mesh.nExteriorElementBoundaries_global):
-                ebN = mesh.exteriorElementBoundariesArray[ebNE]
-                eN  = mesh.elementBoundaryElementsArray[ebN,0]
                 #print "eb flag",mesh.elementBoundaryMaterialTypes[ebN]
                 #print self.getSeepageFace(mesh.elementBoundaryMaterialTypes[ebN])
                 self.isSeepageFace[ebNE] = self.getSeepageFace(mesh.elementBoundaryMaterialTypes[ebN])

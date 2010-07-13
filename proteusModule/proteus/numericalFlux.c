@@ -11903,8 +11903,8 @@ void calculateExteriorNumericalFluxJacobianRichards_sd(int* rowptr,
 		    {
 		      //initialize to gravity term
 		      dv_I_j = dK_rho_g[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-				      k*nSpace+
-				      I]
+					k*nSpace+
+					I]
 			*
 			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 			  k*nDOF_trial_element+
