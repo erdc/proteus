@@ -1410,11 +1410,11 @@ C
         AK(I)=VT1(I)+ETA*(VT2(I)-VT1(I))
       ENDDO    
 C MWF DEBUG
-      WRITE(6,*)' VEL123 T1= ',T1, 'T2= ',T2,' TT= ',TT,' ETA= ',ETA
-      DO I=1,NEQ
-         WRITE(6,*)' VT1(',I,')= ',VT1(I),' VT2(',I,')= ',VT2(I),' AK(',
-     &        I,')= ',AK(I)
-      ENDDO
+C      WRITE(6,*)' VEL123 T1= ',T1, 'T2= ',T2,' TT= ',TT,' ETA= ',ETA
+C      DO I=1,NEQ
+C         WRITE(6,*)' VT1(',I,')= ',VT1(I),' VT2(',I,')= ',VT2(I),' AK(',
+C     &        I,')= ',AK(I)
+C      ENDDO
 C
 C  999 CONTINUE
       RETURN
@@ -1612,10 +1612,10 @@ C            IVDOF = VTL2G(K,J,M)
             VT1W(K,J)=VT1E(IVDOF)*DIR
             VT2W(K,J)=VT2E(IVDOF)*DIR
 C MWF DEBUG
-            WRITE(6,*)'EL_VEL_PREP IDVE.EQ.2 M= ',M,' J= ',J,
-     &           ' IEM= ',IEM,' XW(',K,',',J,')= ',XW(K,J),
-     &           ' IVDOF= ',IVDOF,' VT1W(',K,',',J,')= ',VT1W(K,J),
-     &           ' VT2W(',K,',',J,')= ',VT2W(K,J)
+C            WRITE(6,*)'EL_VEL_PREP IDVE.EQ.2 M= ',M,' J= ',J,
+C     &           ' IEM= ',IEM,' XW(',K,',',J,')= ',XW(K,J),
+C     &           ' IVDOF= ',IVDOF,' VT1W(',K,',',J,')= ',VT1W(K,J),
+C     &           ' VT2W(',K,',',J,')= ',VT2W(K,J)
 C MWF DEBUG            
           ENDDO
         ENDDO

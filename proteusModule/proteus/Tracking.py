@@ -1077,8 +1077,8 @@ class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocit
             #assert abs(t_velocity_1-t_velocity_0) > 0.0, "pt123 requires velocity tracking times different"
             #NOTE current version of pt123 uses velocity local to global map that's logically nElements x nNodes x dim
             #mwf debug
-            import pdb
-            pdb.set_trace()
+            #import pdb
+            #pdb.set_trace()
             #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
             #c data structures here and then convert back to base zero after call
             fbase = 1
@@ -1118,7 +1118,7 @@ class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocit
                             x_track[ci].reshape(nPoints[ci]*maxeq),
                             idve=2,#element based C0P1 velocity field
                             maxeq=3,
-                            iverbose=4)
+                            iverbose=0)
 
             self.mesh.elementNodesArray -= fbase
             self.mesh.nodeElementsArray -= fbase
@@ -3231,9 +3231,9 @@ def test6(opts):
         pass
 
 
-def Liu1Dex(opts):
+def Lu1Dex(opts):
     """
-    1D example from Liu 94. Single-phase flow in a semi-infinite 1d
+    1D example from Lu 94. Single-phase flow in a semi-infinite 1d
     domain. Aquifer is b=10 m thick with Transmissivity T=20 cm^2/s,
     storage coefficient S=0.002, and porosity \theta=0.5. The aquifer
     conductivity and specific storage are
@@ -3257,19 +3257,24 @@ def Liu1Dex(opts):
  
        h = H \erf(\frac{x}{2\sqrt{tK/S_s}}
 
-      \pd{h}{x} = \frac{H}{\sqrt{\pi t K / S_s}}\exp\left(-\frac{S_s}{4 K t}x^2\right)   , note Liu has extra K in numerator here
+      \pd{h}{x} = \frac{H}{\sqrt{\pi t K / S_s}}\exp\left(-\frac{S_s}{4 K t}x^2\right)   , note Lu has extra K in numerator here
 
       v_x = -\frac{K}{\theta}\pd{h}{x} = -\frac{HK}{\theta\sqrt{\pi t K / S_s}}\exp\left(-\frac{S_s}{4 K t}x^2\right)
+
+     Dense grid solution for travel time to boundary of point placed at x=500.0, t=1 min is 14.35 [d], the Lu and Russell Healy answer is 13.28 [d]
+        For a point placed at x=500, t=1000.0 m, the dense grid solution is 21.15 [d], and the Lu answer = 20.77 [d], Russell and Healy answer is 20.78 [d]
+
+     The C0P1 answer on 07/13/10 is 13.2814 for the t=1 min particle and 20.7506153 [d] for the t=1000 [m] particle using atol=dn_safe = 1.0e-7, rtol=0
     """
     from math import pi,sqrt,exp
     #dummy p module
-    class LiuProblem:
-        class LiuIC:
+    class LuProblem:
+        class LuIC:
             def __init__(self,H=1000.0):
                 self.H=H
             def uOfXT(self,x,t):
                 return self.H
-        class LiuParticleVelocity1d:
+        class LuParticleVelocity1d:
             def __init__(self,H=1000.0,K=2.0e-2,S=2.0e-6,theta=0.5):
                 self.H=H; self.K=K; self.S=S; self.theta=theta
             def uOfXT(self,x,t):
@@ -3280,7 +3285,7 @@ def Liu1Dex(opts):
                 return term1*term2
         def __init__(self):
             self.nd = 1
-            #time intervals for velocity evaluation from Liu in days
+            #time intervals for velocity evaluation from Lu in days
             self.tnList_days=[0.00035,0.001,0.01,0.05,0.2,0.7,1.2,2.0,3.0,5.0,9.0,13.0,17.0,21.0,30.0]
             self.tnList = [t*60.0*60.0*24.0 for t in self.tnList_days]
             self.L=(500.0,1.0,1.0) #cm
@@ -3288,9 +3293,9 @@ def Liu1Dex(opts):
             self.K= 2.0e-2#1728.0 cm/d = 2.0e-2 #cm/s
             self.S = 2.0e-6
             self.theta=0.5
-            self.initialConditions = {0:LiuProblem.LiuIC(H=self.H)}
-            self.analyticalSolutionParticleVelocity={0:LiuProblem.LiuParticleVelocity1d(H=self.H,K=self.K,S=self.S,theta=self.theta)}
-    p = LiuProblem()
+            self.initialConditions = {0:LuProblem.LuIC(H=self.H)}
+            self.analyticalSolutionParticleVelocity={0:LuProblem.LuParticleVelocity1d(H=self.H,K=self.K,S=self.S,theta=self.theta)}
+    p = LuProblem()
 
     assert opts.nnq > 0, "nnq = %s not ok must be > 1" % opts.nnq
 
@@ -3361,7 +3366,7 @@ def Liu1Dex(opts):
 
     #mwf debug
     #pdb.set_trace()
-    archive = Archiver.XdmfArchive(".","Liu1D",useTextArchive=False)
+    archive = Archiver.XdmfArchive(".","Lu1D",useTextArchive=False)
     import xml.etree.ElementTree as ElementTree
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     writer   = Archiver.XdmfWriter()
@@ -3378,20 +3383,18 @@ def Liu1Dex(opts):
 
     #which way to track (1. forward, -1. backward)
     direction = 1.0
-    
+
+    #the last point in the domain is the one we'll compare (x=500.0)
     #mwf debug
-    print """t= %s 
-x_depart[-1]= %s """ % (t,q['x_depart'][-1])
+    print """t= %s x_depart[-1][-1][0]= %s """ % (t,q['x_depart'][-1][-1][0])
+    #time value for 'old' velocity
     tvelOld = tnList[istart]
 
-    #mwf debug
-    #import pdb
-    #pdb.set_trace()
     for i,tout in enumerate(tnList[istart+1:]):
         dtout = tout-t
         #update for next step
         velocity.dof[:]=velocity_new.dof[:]
-        #don't need this actually because setup as a shallow copy?
+
         particle_tracker.setTrackingVelocity(velocity.dof,0,tvelOld,timeLevel=0)
         #time tracking to
         t += dtout
@@ -3400,17 +3403,13 @@ x_depart[-1]= %s """ % (t,q['x_depart'][-1])
         for eN in range(mesh.nElements_global):
             for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
                 q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
         #evaluate velocity degrees of freedom from its interpolation conditions
         velocity_new.projectFromInterpolationConditions(q['velocity_interpolation_values'])
         particle_tracker.setTrackingVelocity(velocity_new.dof,0,t,timeLevel=1)
         
-        q['t_track'].fill(t) 
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
+        #only update times for points that are going to be tracked
+        q['t_track'][q['flag_track'] >= -1] = t
+
         if direction > 0.0:
             particle_tracker.forwardTrack({0:q['t_depart']},    
                                           {0:q['t_track']},                          #target end time
@@ -3437,18 +3436,13 @@ x_depart[-1]= %s """ % (t,q['x_depart'][-1])
         q['t_depart'].flat[:] = q['t_track'].flat
         q['x'].flat[:] = q['x_track'].flat
         tvelOld = t
-        #can also set flag so that don't track points that exited the domain
-        #q['flag_track'][numpy.where(q['flag_track'] == 1)] = -2
-        #mwf debug
-        print """t= %s 
-x_track[-1] = %s  """ % (t,q['x_track'][-1])
+
+        print """t= %s t_track[-1][-1]= %s x_track[-1][-1][0] = %s  """ % (t,q['t_track'][-1][-1],q['x_track'][-1][-1][0])
         
-        #mwf debug
-        #pdb.set_trace()
     #output step loop
-    #mwf debug
-    #pdb.set_trace()
-    
+
+    #
+    print "Lu Done, t= %s t_track[-1][-1]= %s [s],  %s [d], x_track[-1][-1][0] = %s  """ % (t,q['t_track'][-1][-1],q['t_track'][-1][-1]/(60.0*60.0*24.0),q['x_track'][-1][-1][0])
 
     #close out archives and visualization
     archive.close()
@@ -3568,7 +3562,7 @@ if __name__=='__main__':
     elif opts.test_id == 6:
         test6(opts)
     elif opts.test_id == 7:
-        Liu1Dex(opts)
+        Lu1Dex(opts)
     else:
         print "test_id= %s not supported yet " % opts.test_id
 
