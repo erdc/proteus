@@ -779,7 +779,7 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
 
 
     def evaluate(self,t,c):
-       if c[('u',0)].shape == self.q_shape:
+        if c[('u',0)].shape == self.q_shape:
             materialTypes = self.materialTypes_q
         elif c[('u',0)].shape == self.ebqe_shape:
             materialTypes = self.materialTypes_ebqe
