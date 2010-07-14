@@ -3089,7 +3089,6 @@ class OneLevelTransport(NonlinearEquation):
                 if flag == 'nonlinear':
                     phiIsNonlinear= True
                     for cj in range(self.coefficients.nc):
-                        #mwf check with Chris if need the first two calls here every time
                         self.u[cj].femSpace.getBasisValues(self.phi[cj].femSpace.referenceFiniteElement.interpolationConditions.quadraturePointArray,
                                                            self.phi_ip[('v',cj)])
                         self.u[cj].femSpace.elementMaps.getValues(self.phi[cj].femSpace.referenceFiniteElement.interpolationConditions.quadraturePointArray,
@@ -3097,6 +3096,7 @@ class OneLevelTransport(NonlinearEquation):
                         
                         self.u[cj].getValues(self.phi_ip[('v',cj)],
                                              self.phi_ip[('u',cj)])
+                    #mwf check with Chris if we can pull this out of ck loop and call only if flag=='nonlinear' for some potential
                     self.coefficients.evaluate(self.timeIntegration.t,self.phi_ip)
                     break
         for ck,cjDict in self.coefficients.potential.iteritems():
@@ -3104,6 +3104,13 @@ class OneLevelTransport(NonlinearEquation):
                 if flag == 'nonlinear':
                     self.phi[ck].projectFromInterpolationConditions(self.phi_ip[('phi',ck)])
                     self.dphi[(ck,cj)].projectFromInterpolationConditions(self.phi_ip[('dphi',ck,cj)])
+                    #mwf need to communicate values across processors if have spatial heterogeneity and spatial dependence of
+                    #potential
+                    if self.phi[ck].par_dof != None:
+                        self.phi[ck].par_dof.scatter_forward_insert()
+                    if self.dphi[(ck,cj)].par_dof != None:
+                        self.dphi[(ck,cj)].par_dof.scatter_forward_insert()
+
                     self.phi[ck].getValues(self.q[('v',ck)],
                                            self.q[('phi',ck)])
                     self.phi[ck].getGradientValues(self.q[('grad(v)',ck)],
@@ -3137,9 +3144,6 @@ class OneLevelTransport(NonlinearEquation):
                     
                     #mwf hack pick up adjoint terms first
                     self.calculateStrongResidualAndAdjoint(self.q)
-                    #mwf debug
-                    #import pdb
-                    #pdb.set_trace()
                     self.coefficients.evaluate(self.timeIntegration.t,self.phi_ip)  
                     if self.timeTerm:
                         self.timeIntegration.calculateGeneralizedInterpolationCoefficients(self.phi_ip)
@@ -5450,6 +5454,9 @@ class MultilevelTransport:
             self.uDictList.append(uDict)
             log("Allocating phi")
             phiDict = dict([(cj,FiniteElementFunction(trialSpace)) for (cj,trialSpace) in trialSpaceDict.iteritems()])
+            #need to communicate phi if nonlinear potential and there is spatial dependence in potential function
+            for cj in phiDict.keys():
+                phiDict[cj].setupParallelCommunication()
             log(memory("finite element spaces","MultilevelTransport"),level=4)
             log("Setting Boundary Conditions")
             if numericalFluxType==None:
