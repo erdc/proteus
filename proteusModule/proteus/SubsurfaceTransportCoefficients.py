@@ -367,6 +367,8 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
         self.isSeepageFace = numpy.zeros((mesh.nExteriorElementBoundaries_global),'i')
         if self.getSeepageFace != None:
             for ebNE in range(mesh.nExteriorElementBoundaries_global):
+                #mwf missing ebNE-->ebN?
+                ebN = mesh.exteriorElementBoundariesArray[ebNE]
                 #print "eb flag",mesh.elementBoundaryMaterialTypes[ebN]
                 #print self.getSeepageFace(mesh.elementBoundaryMaterialTypes[ebN])
                 self.isSeepageFace[ebNE] = self.getSeepageFace(mesh.elementBoundaryMaterialTypes[ebN])
@@ -551,7 +553,7 @@ class TwophaseDarcyFlow_base(TC_base):
         self.diagonal_conductivity=diagonal_conductivity
     def initializeMesh(self,mesh):
         self.elementMaterialTypes,self.exteriorElementBoundaryTypes,self.elementBoundaryTypes = BlockHeterogeneousCoefficients(mesh).initializeMaterialTypes()
-
+        self.mesh = mesh #for debugging
     def initializeElementQuadrature(self,t,cq):
         self.materialTypes_q = self.elementMaterialTypes
         self.q_shape = cq[('u',0)].shape
@@ -777,44 +779,16 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
 
 
     def evaluate(self,t,c):
-        #mwf debug
-        import Comm
-        comm = Comm.get()
-        if c[('u',0)].shape == self.q_shape:
+       if c[('u',0)].shape == self.q_shape:
             materialTypes = self.materialTypes_q
-            #print "rank= %s DarcyFCeval q materialTypes.shape= %s Ksw_types= %s sdInfo[(0,0)][0]= %s sdInfo[(0,0)][1]= %s c[('u',0)].shape=%s  c[('a',0,0)].shape= %s psi_n=%s " % (comm.rank(),
-            #                                                                                                                                                                        materialTypes.shape,self.Ksw_types,
-            #                                                                                                                                                                        self.sdInfo[(0,0)][0],
-            #                                                                                                                                                                        self.sdInfo[(0,0)][1],
-            #                                                                                                                                                                        c[('u',0)].shape,
-            #                                                                                                                                                                        c[('a',0,0)].shape,
-            #                                                                                                                                                                        c['psi_n'].shape)
         elif c[('u',0)].shape == self.ebqe_shape:
             materialTypes = self.materialTypes_ebqe
-            #mwf debug
-            #print "DarcyFCeval ebqe materialTypes.shape= %s Ksw_types= %s sdInfo[(0,0)][0]= %s sdInfo[(0,0)][1]= %s ebqe[('u',0)].shape=%s  ebqe[('a',0,0)].shape= %s psi_n=%s " % (materialTypes.shape,self.Ksw_types,
-            #                                                                                                                                                                        self.sdInfo[(0,0)][0],
-            #                                                                                                                                                                        self.sdInfo[(0,0)][1],
-            #                                                                                                                                                                        c[('u',0)].shape,
-            #                                                                                                                                                                        c[('a',0,0)].shape,
-            #                                                                                                                                                                        c['psi_n'].shape)
         elif c[('u',0)].shape == self.ip_shape:
             materialTypes = self.materialTypes_ip
         elif c[('u',0)].shape == self.ebq_shape:
             materialTypes = self.materialTypes_ebq
-            #print "rank= %s DarcyFCeval ip materialTypes.shape= %s Ksw_types= %s sdInfo[(0,0)][0]= %s sdInfo[(0,0)][1]= %s c[('u',0)].shape=%s  c[('a',0,0)].shape= %s psi_n=%s " % (comm.rank(),
-            #                                                                                                                                                                         materialTypes.shape,self.Ksw_types,
-            #                                                                                                                                                                         self.sdInfo[(0,0)][0],
-            #                                                                                                                                                                         self.sdInfo[(0,0)][1],
-            #                                                                                                                                                                         c[('u',0)].shape,
-            #                                                                                                                                                                         c[('a',0,0)].shape,
-            #                                                                                                                                                                         c['psi_n'].shape)
         else:
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
-        comm.barrier()
         assert self.rwork_psk != None
         #mwf do some debugging
         assert materialTypes.max() < self.nMaterialTypes
@@ -860,10 +834,6 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
                                              c[('da',1,1,0)],
                                              c[('da',1,1,1)])
  
-
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
 
         #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
