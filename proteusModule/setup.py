@@ -383,7 +383,9 @@ setup(name='proteus',
                                             ('PROTEUS_LAPACK_INTEGER',PROTEUS_LAPACK_INTEGER),
                                             ('PROTEUS_BLAS_H',PROTEUS_BLAS_H)],
                              include_dirs=[numpy.get_include(),'include',
-                                           PROTEUS_SUPERLU_INCLUDE_DIR
+                                           PROTEUS_SUPERLU_INCLUDE_DIR,
+					   PROTEUS_LAPACK_INCLUDE_DIR,
+					   PROTEUS_BLAS_INCLUDE_DIR
                                            ],
                              library_dirs=[PROTEUS_SUPERLU_INCLUDE_DIR,
                                            PROTEUS_SUPERLU_LIB_DIR,
@@ -457,6 +459,12 @@ setup(name='proteus',
                              include_dirs=[numpy.get_include(),'include'],
                              extra_link_args=PROTEUS_EXTRA_LINK_ARGS,
                              extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS),
+                   Extension('cpskRelations',
+                             ['proteus/cpskRelationsModule.cpp'],
+                             include_dirs=['include'],
+                             libraries=['m'],
+                             extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS,
+                             extra_link_args=PROTEUS_EXTRA_LINK_ARGS),
                    #Cython generated modules with just c code
                    Extension("waveFunctions",['proteus/waveFunctions.c','proteus/transportCoefficients.c'],
                              include_dirs=[numpy.get_include(),'include'])                

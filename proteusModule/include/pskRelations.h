@@ -27,10 +27,17 @@ public:
     krn,
     dkrn,
     psic,
-    dpsic;
-  PskRelation(const double* rwork):
+    dpsic,
+    //in case need psic--> Se form
+    dSe_dpsic;
+  
+ PskRelation(const double* rwork):
+  Se(1.0),dSe_dSw(1.0),
     Sw_min(rwork[0]),
-    Sw_max(rwork[1])
+    Sw_max(rwork[1]),
+    krw(1.0),dkrw(0.0),
+    krn(0.0),dkrn(0.0),psic(0.0),
+    dpsic(0.0),dSe_dpsic(0.0)
   {}
   virtual inline void setParams(const double* rwork)
   {
@@ -76,6 +83,14 @@ public:
         dSe_dSw = 1.0/(Sw_max - Sw_min);
       }
   }
+  //for Sw as a function of capillary pressure head
+  //note dkrw,dkrn are set to be wrt psic
+  virtual inline void calc_from_psic(const double& psicIn)
+  {
+    bool implemented = false;
+    assert(implemented);
+  }
+
 };
 
 /* quadratic kr */
@@ -301,7 +316,108 @@ class VGM : public VGMorig
     dpsic= DpC_Dsw;
 
   }
+  //TODO add this to other classes
+  virtual inline void calc_from_psic(const double& psicIn)
+  {
+    //taken from MualemVanGenuchten2p in pdetk
+    double sBar,psiC,DsBar_DpC,DDsBar_DDpC,DkrW_DpC,DkrN_DpC;
+    double vBar,uBar,
+      alphaPsiC, alphaPsiC_n, alphaPsiC_nM1, alphaPsiC_nM2,
+      onePlus_alphaPsiC_n,
+      sqrt_sBar, sqrt_1minusSbar,
+      sBarByOnePlus_alphaPsiC_n, sBarBy_onePlus_alphaPsiC_n_2;
+    
+
+    psiC = psicIn;
+    alphaPsiC = alpha*psiC;
+    alphaPsiC_n = pow(alphaPsiC,n);
+    alphaPsiC_nM1 = alphaPsiC_n/alphaPsiC;
+    onePlus_alphaPsiC_n = 1.0 + alphaPsiC_n;
+    sBar = pow(onePlus_alphaPsiC_n,-m);
+    sBarByOnePlus_alphaPsiC_n = sBar/onePlus_alphaPsiC_n;
+    sqrt_sBar = sqrt(sBar);
+    sqrt_1minusSbar = sqrt(1.0 - sBar);
+    //thetaW = thetaSR[i]*sBar + thetaR[i];
+    DsBar_DpC = -alpha*(n-1.0)*alphaPsiC_nM1 
+      *sBarByOnePlus_alphaPsiC_n;
+    //DthetaW_DpC = thetaSR[i] * DsBar_DpC; 
+    vBar = 1.0-alphaPsiC_nM1*sBar;
+    uBar = alphaPsiC_nM1*sBar;
+
+    //change names krW--> krw, krN--> krn
+    krw = sqrt_sBar*vBar*vBar;
+    krn = sqrt_1minusSbar*uBar*uBar;
+    Se = sBar;
+    if(psiC<=0.0) 
+      {
+	sBar = 1.0;
+	Se = sBar;
+	//thetaW = thetaS[i];
+	DsBar_DpC = 0.0;
+	//DthetaW_DpC = 0.0;
+	krw = 1.0;
+	krn = 0.0;
+      }    
+
+    //begin MualemVanGenuchten2p calculateDerivatives
+    alphaPsiC_nM2 =   alphaPsiC_nM1/alphaPsiC;      
   
+    sBarBy_onePlus_alphaPsiC_n_2 = sBarByOnePlus_alphaPsiC_n
+      /onePlus_alphaPsiC_n;
+    DDsBar_DDpC =  alpha*alpha*(n-1.)
+      *((2*n-1.)*alphaPsiC_nM1*alphaPsiC_nM1
+	*sBarBy_onePlus_alphaPsiC_n_2
+      -
+	(n-1.)*alphaPsiC_nM2
+	*sBarByOnePlus_alphaPsiC_n);
+
+    //DDthetaW_DDpC = thetaSR[i]*DDsBar_DDpC;
+
+    DkrW_DpC = (0.5/sqrt_sBar)*DsBar_DpC*vBar*vBar
+      -
+      2.0*sqrt_sBar*vBar*
+      (alpha*(n-1.0)*alphaPsiC_nM2*sBar
+       + alphaPsiC_nM1 * DsBar_DpC);
+
+    //DKW_DpC = KWs[i]*DkrW_DpC;
+
+  
+    //recalculate if necessary
+    if (sqrt_1minusSbar >= sqrt_eps_small)//SQRT_MACHINE_EPSILON)
+      {
+	DkrN_DpC = -(0.5/sqrt_1minusSbar)*DsBar_DpC*uBar*uBar
+	  +
+	  2.0*sqrt_1minusSbar*uBar*
+	  (alpha*(n-1.0)*alphaPsiC_nM2*sBar
+	   + alphaPsiC_nM1 * DsBar_DpC);
+      }
+    else
+      {
+	DkrN_DpC =((1.0 - sBar)/eps_small)*2.0*sqrt_eps_small*uBar*
+	  (alpha*(n-1.0)*alphaPsiC_nM2*sBar
+	   + alphaPsiC_nM1 * DsBar_DpC)
+	  - (DsBar_DpC/eps_small)*sqrt_eps_small*uBar*uBar;
+      }
+    
+    //if we're in the nonsmooth regime
+    if (psiC < ns_del && psiC > 0.0 )
+      {
+	DkrW_DpC = 0.0;
+      }
+
+    if (psiC <= 0.0)
+      {
+	DDsBar_DDpC = 0.0;
+	//DDthetaW_DDpC = 0.0;
+	DkrW_DpC = 0.0;
+	DkrN_DpC = 0.0;
+      }
+    //end calculateDerivatives
+    dkrw = DkrW_DpC; //note: \od{k_{rw}}{\psi_c} not \od{k_{rw}}{S_w}
+    dkrn = DkrN_DpC;
+    dpsic= 1.0;
+    dSe_dpsic=DsBar_DpC;
+  }
 };
 /* Van Genuchten-Burdine */
 class VGB : public  VGM
