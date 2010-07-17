@@ -13,8 +13,5 @@ setup(
     ext_modules = [Extension("waveFunctions",['proteus/waveFunctions.pyx','proteus/transportCoefficients.c'],
                             include_dirs=[numpy.get_include(),'include']),
                    Extension("subsurfaceTransportFunctions",['proteus/subsurfaceTransportFunctions.pyx'],
-                            include_dirs=[numpy.get_include(),'include']),
-                   Extension("pskRelations",['proteus/pskRelations.pyx'],
-                             include_dirs=[numpy.get_include(),'include'])]
-
+                            include_dirs=[numpy.get_include(),'include'])]
     )
