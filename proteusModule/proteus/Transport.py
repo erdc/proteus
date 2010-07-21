@@ -1697,8 +1697,14 @@ class OneLevelTransport(NonlinearEquation):
                                                                   self.elementResidual[ci],
                                                                   r);
         log("Global residual",level=9,data=r)
-        #mwf decide if this is reasonable for keeping solver statistics
+        #for keeping solver statistics
         self.nonlinear_function_evaluations += 1
+        #mwf debug
+        imax = numpy.argmax(r); imin = numpy.argmin(r)
+        print "getResidual max,index r[%s]= %s min,index= r[%s] r= %s " % (imax,r[imax],imin,r[imin])
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
     def getJacobian(self,jacobian):
         import superluWrappers
         import numpy
@@ -3102,6 +3108,9 @@ class OneLevelTransport(NonlinearEquation):
         for ck,cjDict in self.coefficients.potential.iteritems():
             for cj,flag in cjDict.iteritems():
                 if flag == 'nonlinear':
+                    #mwf
+                    #import pdb
+                    #pdb.set_trace()
                     self.phi[ck].projectFromInterpolationConditions(self.phi_ip[('phi',ck)])
                     self.dphi[(ck,cj)].projectFromInterpolationConditions(self.phi_ip[('dphi',ck,cj)])
                     #mwf need to communicate values across processors if have spatial heterogeneity and spatial dependence of
@@ -5360,6 +5369,9 @@ class MultilevelTransport:
             print "using default numerical flux with strong BC's"
             numerics.numericalFluxType = NumericalFlux.StrongDirichletFactory(problem.fluxBoundaryConditions)
         self.OneLevelTransportType=OneLevelTransportType
+        phiSpaces = None
+        if 'phiSpaces' in dir(numerics):
+            phiSpaces = numerics.phiSpaces
         self.initialize(
             problem.nd,
             mlMesh,
@@ -5384,7 +5396,8 @@ class MultilevelTransport:
             problem.weakDirichletConditions,
             numerics,
             problem.sd,
-            problem.movingDomain)        
+            problem.movingDomain,
+            PhiSpaceTypeDict=phiSpaces)        
     def initialize(self,
                    nd,
                    mlMesh,
@@ -5409,7 +5422,8 @@ class MultilevelTransport:
                    weakDirichletConditions=None,
                    options=None,
                    useSparseDiffusion=True,
-                   movingDomain=False):
+                   movingDomain=False,
+                   PhiSpaceTypeDict=None):
         import copy
         """read in the multilevel mesh, mesh independent boundary
         conditions, and types for test and trial spaces and the
@@ -5433,6 +5447,14 @@ class MultilevelTransport:
         self.offsetListList=[]
         self.strideListList=[]
         self.matType = matType
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        if PhiSpaceTypeDict == None: #by default phi in same space as u
+            PhiSpaceTypeDict = TrialSpaceTypeDict
+        self.phiSpaceDictList = []
+        #self.phiSpaceListDict = {}
+
         log("Building Transport for each mesh",level=2)
         for  cj in TrialSpaceTypeDict.keys():
             self.trialSpaceListDict[cj]=[]
@@ -5453,7 +5475,9 @@ class MultilevelTransport:
                 uDict[cj].setupParallelCommunication()
             self.uDictList.append(uDict)
             log("Allocating phi")
-            phiDict = dict([(cj,FiniteElementFunction(trialSpace)) for (cj,trialSpace) in trialSpaceDict.iteritems()])
+            phiSpaceDict = dict([ (cj,PhiSpaceType(sdmesh,nd)) for (cj,PhiSpaceType) in PhiSpaceTypeDict.iteritems()]) 
+            self.phiSpaceDictList.append(phiSpaceDict)
+            phiDict = dict([(cj,FiniteElementFunction(phiSpace)) for (cj,phiSpace) in phiSpaceDict.iteritems()])
             #need to communicate phi if nonlinear potential and there is spatial dependence in potential function
             for cj in phiDict.keys():
                 phiDict[cj].setupParallelCommunication()
