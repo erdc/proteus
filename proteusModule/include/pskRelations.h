@@ -132,6 +132,8 @@ public:
   {
     n = (1.0)/(1.0-m);
     Se_eps_const=1.0e-4;
+    //mwf debug
+    //std::cout<<"VGMorig ctor rwork[2]= "<<rwork[2]<<" alpha= "<<alpha<<" rwork[3]= "<<rwork[3]<<" m= "<<m<<" n= "<<n<<std::endl;
   }
   /*for fudge factors aka tolerances in various models*/
   virtual inline void setTolerances(const double* rwork_tol)
@@ -146,6 +148,8 @@ public:
     alpha = rwork[2];
     m = rwork[3];
     n = (1.0)/(1.0-m);  
+    //mwf debug
+    //std::cout<<"VGMorig setParams rwork[2]= "<<rwork[2]<<" alpha= "<<alpha<<" rwork[3]= "<<rwork[3]<<" m= "<<m<<" n= "<<n<<std::endl;
   }
   inline void calc_Se_eps(const double& Se)
   {
@@ -200,7 +204,7 @@ class VGM : public VGMorig
   /*for fudge factors aka tolerances in various models*/
   virtual inline void setTolerances(const double* rwork_tol)
   {
-    eps_small = rwork_tol[0]; sqrt_eps_small = sqrt(eps_small);
+    eps_small = rwork_tol[0]; //mwf 072110 don't tie to eps_small? sqrt_eps_small = sqrt(eps_small);
     ns_del    = rwork_tol[1];
   }
 
@@ -348,6 +352,7 @@ class VGM : public VGMorig
     krw = sqrt_sBar*vBar*vBar;
     krn = sqrt_1minusSbar*uBar*uBar;
     Se = sBar;
+    psic=psiC;
     if(psiC<=0.0) 
       {
 	sBar = 1.0;
@@ -358,7 +363,9 @@ class VGM : public VGMorig
 	krw = 1.0;
 	krn = 0.0;
       }    
-
+    //mwf debug
+    //std::cout<<"vgm_calc_from_psic alpha= "<<alpha<<" m= "<<m<<" psic= "<<psic<<" sBar= "<<sBar<<" krw= "<<krw<<" krn= "<<krn
+    //     <<std::endl;
     //begin MualemVanGenuchten2p calculateDerivatives
     alphaPsiC_nM2 =   alphaPsiC_nM1/alphaPsiC;      
   
