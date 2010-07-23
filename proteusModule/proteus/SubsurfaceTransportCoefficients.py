@@ -7,7 +7,7 @@ import numpy
 import Profiling
 log = Profiling.logEvent
 from proteus import FemTools
-
+from proteus import Transport
 import subsurfaceTransportFunctions as stfuncs
 
 ######################################################################
@@ -452,6 +452,412 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
 #         if c[('u',0)].shape == self.q_shape:
 #             c[('visPerm',0)]=c[('a',0,0)][:,:,0,0]
 
+from proteus import cfemIntegrals
+class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
+    """
+    OneLevelTransport designed specifically for Non-Conforming P^1 approximation to RE
+    Approximation uses nodal quadrature and upwinding
+    """
+    def __init__(self,
+                 uDict,
+                 phiDict,
+                 testSpaceDict,
+                 matType,
+                 dofBoundaryConditionsDict,
+                 dofBoundaryConditionsSetterDict,
+                 coefficients,
+                 elementQuadrature,
+                 elementBoundaryQuadrature,
+                 fluxBoundaryConditionsDict=None,
+                 advectiveFluxBoundaryConditionsSetterDict=None,
+                 diffusiveFluxBoundaryConditionsSetterDictDict=None,
+                 stressTraceBoundaryConditionsSetterDict=None,
+                 stabilization=None,
+                 shockCapturing=None,
+                 conservativeFluxDict=None,
+                 numericalFluxType=None,
+                 TimeIntegrationClass=None,
+                 massLumping=False,
+                 reactionLumping=False,
+                 options=None,
+                 name='defaultName',
+                 reuse_trial_and_test_quadrature=False,
+                 sd = True,
+                 movingDomain=False):#,
+        Transport.OneLevelTransport.__init__(self,
+                                             uDict,
+                                             phiDict,
+                                             testSpaceDict,
+                                             matType,
+                                             dofBoundaryConditionsDict,
+                                             dofBoundaryConditionsSetterDict,
+                                             coefficients,
+                                             elementQuadrature,
+                                             elementBoundaryQuadrature,
+                                             fluxBoundaryConditionsDict=fluxBoundaryConditionsDict,
+                                             advectiveFluxBoundaryConditionsSetterDict=advectiveFluxBoundaryConditionsSetterDict,
+                                             diffusiveFluxBoundaryConditionsSetterDictDict=diffusiveFluxBoundaryConditionsSetterDictDict,
+                                             stressTraceBoundaryConditionsSetterDict=stressTraceBoundaryConditionsSetterDict,
+                                             stabilization=stabilization,
+                                             shockCapturing=shockCapturing,
+                                             conservativeFluxDict=conservativeFluxDict,
+                                             numericalFluxType=numericalFluxType,
+                                             TimeIntegrationClass=TimeIntegrationClass,
+                                             massLumping=massLumping,
+                                             reactionLumping=reactionLumping,
+                                             options=options,
+                                             name=name,
+                                             reuse_trial_and_test_quadrature=reuse_trial_and_test_quadrature,
+                                             sd = sd,
+                                             movingDomain=movingDomain)
+        
+        assert self.nQuadraturePoints_element == self.nSpace_global+1
+        #particular arrays needed for Darcy flow
+        self.q[('k_r',0,0)]    = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q[('dk_r',0,0,0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q[('f_lin',0)]    = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
+        self.q[('a_lin',0,0)]  = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.coefficients.sdInfo[(0,0)][0][self.nSpace_global]),'d')
+        
+        #need to check that points are the interpolation points too
+
+#         #quadrature dictionary for solution interpolation points
+#         self.n_u_ip_element = [u_j.femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints for  u_j in self.u.values()]
+#         self.u_ip = {}
+#         #coefficients
+#         self.points_u_ip =StorageSet(shape=(self.mesh.nElements_global,self.n_u_ip_element[0],3))
+#         self.scalars_u_ip=StorageSet(shape=(self.mesh.nElements_global,self.n_u_ip_element[0]))
+#         self.vectors_u_ip=StorageSet(shape=(self.mesh.nElements_global,self.n_u_ip_element[0],self.nSpace_global))
+#         self.tensors_u_ip=StorageSet(shape={})
+#         #shape
+#         self.trial_shape_u_ip=StorageSet(shape={})
+#         self.test_shape_u_ip = StorageSet(shape={}) 
+#         self.test_shapeGradient_u_ip = StorageSet(shape={})
+#         self.trial_shapeGradient_u_ip= StorageSet(shape={})
+#         trial_shape_u_ip_duplicate = StorageSet(shape={})
+#         trial_shape_u_ip_duplicate_map = {}
+        
+#         #
+#         # build sets
+#         #
+#         #u
+#         self.scalars_u_ip |= set([('u',ci) for ci  in range(self.nc)])
+#         self.vectors_u_ip |= set([('grad(u)',ci) for ci in range(self.nc)]) 
+#         #trial
+#         self.trial_shape_u_ip |= set([('v',ci) for ci in self.unique_test_trial_range])
+#         trial_shape_u_ip_duplicate |= set([('v',ci) for ci in self.duplicate_test_trial_range])
+#         for ci in self.duplicate_test_trial_range:
+#             trial_shape_u_ip_duplicate_map[('v',ci)] = ('v',self.unique_test_trial_range[0]) 
+#         #test
+# 	self.test_shape_u_ip |= set([('w',ci) for ci in range(self.nc)])
+#         self.test_shapeGradient_u_ip |= set([('grad(w)',ci) for ci in range(self.nc)])
+#         #m
+#         self.scalars_u_ip |= set([('m',ci) for ci  in self.coefficients.mass.keys()])
+#         self.scalars_u_ip |= set([('mt',ci) for ci  in self.coefficients.mass.keys()])
+#         for ci,cjDict in self.coefficients.mass.iteritems():
+#             self.scalars_u_ip |= set([('dm',ci,cj) for cj  in cjDict.keys()])
+#         #f
+#         self.vectors_u_ip |= set([('f',ci) for ci  in self.coefficients.advection.keys()])
+#         #special for Darcy flow
+#         self.vectors_u_ip |= set([('f_lin',ci) for ci  in self.coefficients.advection.keys()])
+#         for ci,cjDict in self.coefficients.advection.iteritems():
+#             self.vectors_u_ip |= set([('df',ci,cj) for cj  in cjDict.keys()])
+#         #a and phi
+#         self.vectors_u_ip |= set([('velocity',ci) for ci  in self.coefficients.diffusion.keys()])
+#         self.scalars_u_ip |= set([('phi',ck) for ck  in self.coefficients.potential.keys()])
+#         for ci,ckDict in self.coefficients.diffusion.iteritems():
+#             self.tensors_u_ip |= set([('a',ci,ck) for ck  in ckDict.keys()])
+#             #special for Darcy flow
+#             self.tensors_u_ip |= set([('a_lin',ci,ck) for ck  in ckDict.keys()])
+#             self.scalars_u_ip |= set([('k_r',ci,ck) for ck  in self.ckDict.keys()])
+            
+#             self.vectors_u_ip |= set([('grad(phi)',ck) for ck  in ckDict.keys()])            
+#             for ck,cjDict in ckDict.iteritems():
+#                 self.tensors_u_ip |= set([('da',ci,ck,cj) for cj  in cjDict.keys()])
+#                 #special for Darcy flow
+#                 self.scalars_u_ip |= set([('dk_r',ci,ck,cj) for cj  in cjDict.keys()])
+#                 #mwf trial-dup start
+# 		#mwf orig self.trial_shape_quadrature |= set([('v',cj) for cj in cjDict.keys()])
+#                 unique_cj   = set.intersection(set(self.unique_test_trial_range),set(cjDict.keys()))
+#                 duplicate_cj= set.intersection(set(self.duplicate_test_trial_range),set(cjDict.keys()))
+# 		self.trial_shape_u_ip |= set([('v',cj) for cj in unique_cj])
+# 		trial_shape_u_ip_duplicate |= set([('v',cj) for cj in duplicate_cj])
+#                 #any reason to do this again
+#                 for cj in self.duplicate_test_trial_range:
+#                     trial_shape_u_ip_duplicate_map[('v',cj)] = ('v',self.unique_test_trial_range[0]) 
+#                 #mwf trial-dup end
+#                 for cj in self.coefficients.potential[ck].keys():
+#                     self.scalars_u_ip |= set([('dphi',ck,cj)])
+#         #mwf what if miss nonlinearities in diffusion that don't match potentials?
+#         for comb in self.dphi.keys():
+#             self.scalars_u_ip |= set([('dphi',comb[0],comb[1])])
+#         #r
+#         self.scalars_u_ip |= set([('r',ci) for ci  in self.coefficients.reaction.keys()])
+#         for ci,cjDict in self.coefficients.reaction.iteritems():
+#             self.scalars_u_ip |= set([('dr',ci,cj) for cj  in cjDict.keys()])
+#         #mesh
+#         self.points_u_ip |= set([('x',ci) for ci in self.unique_test_trial_range])
+#         #
+#         memory()
+#         #
+#         for ci in self.unique_test_trial_range:
+#             self.u_ip[('x',ci)] = self.u[ci].femSpace.updateInterpolationPoints()
+#         for ci in self.duplicate_test_trial_range:
+#             self.u_ip[('x',ci)] = self.u_ip[('x',self.unique_test_trial_range[0])]
+#         #
+#         #allocations
+#         #
+#         self.scalars_u_ip.allocate(self.u_ip)
+#         #points 
+#         self.points_u_ip.allocate(self.u_ip)
+#         #scalars
+#         self.scalars_u_ip.allocate(self.u_ip)
+#         #vectors
+#         self.vectors_u_ip.allocate(self.u_ip)
+#         #allocate tensors element quadrature
+#         for k in self.tensors_u_ip:
+#             if (self.sd
+#                 and k[0] in ['a','da']
+#                 and self.coefficients.sdInfo != None
+#                 and (k[1],k[2]) in self.coefficients.sdInfo.keys()):                
+#                 self.u_ip[k]=numpy.zeros(
+#                     (self.mesh.nElements_global,
+#                      self.n_u_ip_element[k[2]],
+#                      self.coefficients.sdInfo[(k[1],k[2])][0][self.nSpace_global]),
+#                     'd')
+#             else:
+#                 self.u_ip[k]=numpy.zeros(
+#                     (self.mesh.nElements_global,
+#                      self..n_u_ip_element[k[2]],
+#                      self.nSpace_global,
+#                      self.nSpace_global),
+#                     'd')
+#         #
+#         # shape
+#         #
+#         def makeAlias(sd,kw,vstring='v',wstring='w'):
+#             aliased=False
+#             kv0 = kw[0].replace(wstring,vstring)
+#             if len(kw) > 1:
+#                 kv = (kv0,)+kw[1:]
+#             else:
+#                 kv = kv0
+#             if self.testIsTrial:
+#                 if kv in sd.keys():
+#                     log("Shallow copy of trial shape is being used for test shape %s " % kw[0],level=4)
+#                     sd[kw] = sd[kv]
+#                     aliased=True
+#             return aliased
+#         def makeAliasForComponent1(sd,k,entryStrings,refi=0):
+#             aliased=False
+#             #need to add combinatorial options
+#             ks = k[0]
+#             if ks not in entryStrings:
+#                 return False
+#             k0 = (ks,)+(refi,)
+#             if self.reuse_test_trial_quadrature and refi != None:
+#                 if k0 in sd.keys():
+#                     log("Shallow copy of trial shape %s is being used for trial shape %s" % (k0,k),level=4)
+#                     sd[k] = sd[k0]
+#                     aliased=True
+#             return aliased
+#         #
+#         # element quadrature
+#         #
+#         #allocate trial shape functions
+#         for k in sorted(self.trial_shape_u_ip):
+#             if not makeAliasForComponent1(self.u_ip,k,['v'],refi=0):#need to handle multiple component combinations 
+#                 self.u_ip[k]=numpy.zeros(
+#                     (self.mesh.nElements_global,
+#                      self.n_u_ip_element,
+#                      self.nDOF_trial_element[k[-1]]),
+#                     'd')
+#         for k in trial_shape_quadrature_duplicate:
+#             self.u_ip[k] = self.u_ip[trial_shape_quadrature_duplicate_map[k]]
+#         #mwf trial-dup end
+#         log(memory("solution interpolation points, test/trial functions trial_shape","OneLevelTransport"),level=4)
+#         #allocate test shape functions 
+#         for k in self.test_shape_quadrature:
+#             if not makeAlias(self.u_ip,k):
+#                 self.u_ip[k]=numpy.zeros(
+#                     (self.mesh.nElements_global,
+#                      self.n_u_ip_element,
+#                      self.nDOF_test_element[k[-1]]),
+#                     'd')
+#         log(memory("solution interpolation points, test/trial functions test_shape","OneLevelTransport"),level=4)
+#         #allocate trial shape function gradients
+#         for k in sorted(self.trial_shapeGradient_quadrature):
+#             if not makeAliasForComponent1(self.u_ip,k,['grad(v)'],refi=0):#need to handle multiple component combinations 
+#                 self.u_ip[k]=numpy.zeros(
+#                     (self.mesh.nElements_global,
+#                      self.n_u_ip_element,
+#                      self.nDOF_trial_element[k[-1]],
+#                      self.nSpace_global),
+#                     'd')        
+#         log(memory("solution interpolation points, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
+#         #allocate test shape function gradients
+#         for k in self.test_shapeGradient_quadrature:
+#             if not makeAlias(self.u_ip,k):
+#                 self.u_ip[k]=numpy.zeros(
+#                     (self.mesh.nElements_global,
+#                      self.n_u_ip_element,
+#                      self.nDOF_test_element[k[-1]],
+#                      self.nSpace_global),
+#                     'd')
+    def calculateElementCoefficients(self):
+        """
+        calculate the nonlinear coefficients at the quadrature points and nodes 
+        include interpolation points explicitly here now
+        """
+        
+	for cj in range(self.nc):
+	    self.u[cj].getValues(self.q[('v',cj)],
+				 self.q[('u',cj)])
+	    if self.q.has_key(('grad(u)',cj)):
+		self.u[cj].getGradientValues(self.q[('grad(v)',cj)],
+					     self.q[('grad(u)',cj)])
+        
+        #can skip this after first call
+        stfuncs.RE_NCP1_evaluateElementCoefficients_Linear(self.coefficients.rho,
+                                                                                self.coefficients.gravity,
+                                                                                self.coefficients.sdInfo[(0,0)][0],
+                                                                                self.coefficients.sdInfo[(0,0)][1],
+                                                                                self.coefficients.Ksw_types,
+                                                                                self.nSpace_global,
+                                                                                self.mesh.nElements_global,
+                                                                                self.mesh.nElementBoundaries_element,
+                                                                                self.mesh.elementNeighborsArray,
+                                                                                self.mesh.elementMaterialTypes,
+                                                                                self.q[('f_lin',0)],
+                                                                                self.q[('a_lin',0,0)])
+
+        stfuncs.RE_NCP1_evaluateElementCoefficients_VGM(self.coefficients.rho,
+                                                                             self.coefficients.beta,
+                                                                             self.coefficients.gravity,
+                                                                             self.coefficients.vgm_alpha_types,
+                                                                             self.coefficients.vgm_n_types,
+                                                                             self.coefficients.thetaR_types,
+                                                                             self.coefficients.thetaSR_types,
+                                                                             self.nSpace_global,
+                                                                             self.mesh.nElements_global,
+                                                                             self.mesh.nElementBoundaries_element,
+                                                                             self.mesh.elementMaterialTypes,
+                                                                             self.nDOF_trial_element[0],
+                                                                             self.u[0].femSpace.dofMap.l2g,
+                                                                             self.u[0].dof,
+                                                                             self.q['x'],
+                                                                             self.q[('u',0)],
+                                                                             self.q[('m',0)],
+                                                                             self.q[('dm',0,0)],
+                                                                             self.q[('r',0)],
+                                                                             self.q[('k_r',0,0)],
+                                                                             self.q[('dk_r',0,0,0)])
+
+        if self.movingDomain and self.coefficients.movingDomain:
+            self.coefficients.updateToMovingDomain(self.timeIntegration.t,self.q)
+        if self.timeTerm:
+            self.timeIntegration.calculateElementCoefficients(self.q)
+        #cek need to clean up calculation of dimless numbers, might as well do it all the time and pass to subgrid error
+        #mwf figure out what to do with this
+        #what happens if stabilization didn't compute cfl?
+        for ci in range(self.nc):
+            #for two phase flow would need this
+            self.q[('dphi',ci,ci)].fill(1.0)
+            if self.sd:
+                cfemIntegrals.calculateDimensionlessNumbersADR_sd(self.mesh.nElements_global,
+                                                                  self.nQuadraturePoints_element,
+                                                                  self.nSpace_global,
+                                                                  self.coefficients.sdInfo[(ci,ci)][0],self.coefficients.sdInfo[(ci,ci)][1],
+                                                                  self.elementEffectiveDiametersArray, 
+                                                                  self.q[('df',ci,ci)],
+                                                                  self.q[('a',ci,ci)],
+                                                                  self.q[('dphi',ci,ci)],
+                                                                  self.q[('dr',ci,ci)],
+                                                                  self.q[('dmt',ci,ci)],
+                                                                  self.q[('pe',ci)],
+                                                                  self.q[('cfl',ci)])
+            else:
+                cfemIntegrals.calculateDimensionlessNumbersADR(self.mesh.nElements_global,
+                                                               self.nQuadraturePoints_element,
+                                                               self.nSpace_global,
+                                                               self.elementEffectiveDiametersArray, 
+                                                               self.q[('df',ci,ci)],
+                                                               self.q[('a',ci,ci)],
+                                                               self.q[('dphi',ci,ci)],
+                                                               self.q[('dr',ci,ci)],
+                                                               self.q[('dmt',ci,ci)],
+                                                               self.q[('pe',ci)],
+                                                               self.q[('cfl',ci)])
+                    
+        if self.shockCapturing != None:
+            self.shockCapturing.calculateNumericalDiffusion(self.q)
+
+    def calculateElementResidual(self):
+        """Calculate all the element residuals"""
+        import pdb
+        #mwf debug
+        #Transport.OneLevelTransport.calculateElementResidual(self)
+        #self.elementResidual_save = numpy.copy(self.elementResidual[0])
+        for ci in range(self.nc):
+            self.elementResidual[ci].fill(0.0)
+        #pdb.set_trace()
+        stfuncs.RE_NCP1_getElementResidual(self.coefficients.gravity,
+                                           self.coefficients.sdInfo[(0,0)][0],
+                                           self.coefficients.sdInfo[(0,0)][1],
+                                           self.nSpace_global,
+                                           self.mesh.nElements_global,
+                                           self.mesh.nElementBoundaries_global,
+                                           self.mesh.elementNeighborsArray,
+                                           self.mesh.elementBarycentersArray,
+                                           self.nDOF_test_element[0],
+                                           self.q[('u',0)],
+                                           self.q[('grad(u)',0)],
+                                           self.q[('grad(w)',0)],
+                                           self.q['abs(det(J))'],
+                                           self.q[('m',0)],
+                                           self.q[('mt',0)],
+                                           self.q[('r',0)],
+                                           self.q[('k_r',0,0)],
+                                           self.q[('f_lin',0)],
+                                           self.q[('a_lin',0,0)],
+                                           self.elementResidual[0])
+
+        
+    def calculateElementJacobian(self):
+        import pdb
+        #Transport.OneLevelTransport.calculateElementJacobian(self)
+        #self.elementJacobian_save = numpy.copy(self.elementJacobian[0][0])
+        for ci in range(self.nc):
+            for cj in self.coefficients.stencil[ci]:
+                self.elementJacobian[ci][cj].fill(0.0)
+
+        #mwf debug
+        #pdb.set_trace()
+        stfuncs.RE_NCP1_getElementJacobian(self.coefficients.gravity,
+                                           self.coefficients.sdInfo[(0,0)][0],
+                                           self.coefficients.sdInfo[(0,0)][1],
+                                           self.nSpace_global,
+                                           self.mesh.nElements_global,
+                                           self.mesh.nElementBoundaries_global,
+                                           self.mesh.elementNeighborsArray,
+                                           self.mesh.elementBarycentersArray,
+                                           self.nDOF_test_element[0],
+                                           self.nDOF_trial_element[0],
+                                           self.q[('u',0)],
+                                           self.q[('grad(u)',0)],
+                                           self.q[('grad(w)',0)],
+                                           self.q[('grad(v)',0)],
+                                           self.q['abs(det(J))'],
+                                           self.q[('m',0)],
+                                           self.q[('dm',0,0)],
+                                           self.q[('mt',0)],
+                                           self.q[('dmt',0,0)],
+                                           self.q[('r',0)],
+                                           self.q[('k_r',0,0)],
+                                           self.q[('dk_r',0,0,0)],
+                                           self.q[('f_lin',0)],
+                                           self.q[('a_lin',0,0)],
+                                           self.elementJacobian[0][0])
+
 ########################################
 #Immiscible two-phase flow
 ########################################
@@ -893,9 +1299,6 @@ class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
         Sw_min_types   = thetaR_types/thetaS_types
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
         self.psk_tolerances['VGM']['eps_small']=vgm_small_eps
         self.psk_tolerances['VGM']['ns_del']   =vgm_ns_del
         self.setMaterialTypes(Ksw_types=Ksw_types,
