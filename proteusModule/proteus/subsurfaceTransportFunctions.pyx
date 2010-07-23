@@ -2,7 +2,9 @@ import numpy
 cimport numpy
 cdef extern from "math.h":
    double fabs(double x)
-
+   double sqrt(double x)
+   double pow(double x, double y)
+   double exp(double x)
 cdef inline double double_max(double a, double b): return a if a >= b else b
 cdef inline double double_min(double a, double b): return a if a <= b else b
 
@@ -290,3 +292,384 @@ def evaluateSparseTensorMaterialFunctionOverGlobalElementBoundaries_harmonicAver
                     denom = material_functions[material_left](x[ebN,k],t)[I,J] + material_functions[material_right](x[ebN,k],t)[I,J] + 1.0e-20
                     ebq_global_vals[ebN,k,I*nd+J] = numer/denom
 
+
+
+##################################################
+def RE_NCP1_evaluateElementCoefficients_Linear(double rho,
+                                               numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical quantities
+                                               numpy.ndarray[ITYPE_t,ndim=1] rowptr,
+                                               numpy.ndarray[ITYPE_t,ndim=1] colind,
+                                               numpy.ndarray[DTYPE_t,ndim=2] KWs,
+                                               #mesh info
+                                               int nSpace,
+                                               int nElements_global,                  
+                                               int nElementBoundaries_element,
+                                               numpy.ndarray[ITYPE_t,ndim=2] elementNeighborsArray,
+                                               numpy.ndarray[ITYPE_t,ndim=1] elementMaterialTypes,
+                                               numpy.ndarray[DTYPE_t,ndim=3] q_flin,
+                                               numpy.ndarray[DTYPE_t,ndim=3] q_alin):
+    """
+    routine for evaluating linaer interface (nodal) coefficients in NCP1 approximation for Darcy Flow
+
+    Approximation:
+         uses  nodal quadrature where the nodes are face barycenters
+         uses harmonic average for intrinsic permeability/ hydraulic conductivity
+         assumes slight compressiblity for now
+
+    TODO:
+         everything
+         
+    """
+    #temporaries
+    cdef int eN,eN_neighbor,ii,I,ebN,matID,matID_neig
+    cdef int nSpace2 = nSpace*nSpace
+    cdef int nnz = rowptr[nSpace]
+
+    cdef numpy.ndarray[DTYPE_t,ndim=1] a_eN   = numpy.zeros(nnz,'d')
+    cdef numpy.ndarray[DTYPE_t,ndim=1] a_neig = numpy.zeros(nnz,'d')
+    cdef numpy.ndarray[DTYPE_t,ndim=1] a_avg  = numpy.zeros(nnz,'d')
+ 
+    #loop through and evaluate
+    for eN in range(nElements_global):
+        matID = elementMaterialTypes[eN]
+        for ii in range(nnz):
+            a_eN[ii]  = rho*KWs[matID,ii]
+        for ebN in range(nElementBoundaries_element):
+            eN_neighbor = elementNeighborsArray[eN,ebN]
+            for ii in range(nnz):
+                a_neig[ii] = a_eN[ii]
+            if eN_neighbor >= 0:
+                matID_neig = elementMaterialTypes[eN_neighbor]
+                for ii in range(nnz):
+                    a_neig[ii]  = rho*KWs[matID_neig,ii]
+            for ii in range(nnz):
+                a_avg[ii] = 2.0*a_eN[ii]*a_neig[ii]/(a_eN[ii]+a_neig[ii]+1.0e-20)
+                q_alin[eN,ebN,ii] = a_avg[ii]
+            for I in range(nSpace):
+                q_flin[eN,ebN,I] = 0.0
+                for ii in range(rowptr[I],rowptr[I+1]):
+                    q_flin[eN,ebN,I] += rho*a_avg[ii]*gravity[colind[ii]]
+        #ebN
+    #eN
+
+                
+def RE_NCP1_evaluateElementCoefficients_VGM(double rho,
+                                            double beta,
+                                            numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical quantities
+                                            numpy.ndarray[DTYPE_t,ndim=1] alpha,
+                                            numpy.ndarray[DTYPE_t,ndim=1] n,
+                                            numpy.ndarray[DTYPE_t,ndim=1] thetaR,
+                                            numpy.ndarray[DTYPE_t,ndim=1] thetaSR,
+                                            #mesh info
+                                            int nSpace,
+                                            int nElements_global,                  
+                                            int nElementBoundaries_element,
+                                            numpy.ndarray[ITYPE_t,ndim=1] elementMaterialTypes,
+                                            #solution info
+                                            int nDOF_trial_element,
+                                            numpy.ndarray[ITYPE_t,ndim=2] u_l2g,
+                                            numpy.ndarray[DTYPE_t,ndim=1] u_dof,
+                                            #element quadrature arrays, must be nodal
+                                            numpy.ndarray[DTYPE_t,ndim=3] q_x,
+                                            numpy.ndarray[DTYPE_t,ndim=2] q_u,
+                                            numpy.ndarray[DTYPE_t,ndim=2] q_mass,
+                                            numpy.ndarray[DTYPE_t,ndim=2] q_dmass,
+                                            numpy.ndarray[DTYPE_t,ndim=2] q_r,
+                                            numpy.ndarray[DTYPE_t,ndim=2] q_kr,
+                                            numpy.ndarray[DTYPE_t,ndim=2] q_dkr):
+    """
+    routine for evaluating nodal coefficients in NCP1 approximation for conservative head formulation of Richards equation 
+
+    Approximation:
+         uses  nodal quadrature where the nodes are face barycenters
+         uses harmonic average for intrinsic permeability/ hydraulic conductivity
+         assumes slight compressiblity for now
+
+    TODO:
+         everything
+         
+    """
+    #check some sizes
+    for q in [q_u,q_mass,q_r,q_kr,q_dkr]:
+        assert q.shape[1] == nSpace+1
+    assert nDOF_trial_element == nSpace + 1
+    #temporaries
+    cdef double psiC,pcBar,pcBar_n,pcBar_nM1,pcBar_nM2,onePlus_pcBar_n,sBar,sqrt_sBar,DsBar_DpsiC,thetaW,DthetaW_DpsiC
+    cdef double vBar,vBar2,DvBar_DpsiC,KWr,DKWr_DpsiC,rho2=rho*rho,thetaS,rhom,drhom,m
+
+    cdef double u_j
+    cdef int eN,eN_neighbor,ii,I,j,matID
+
+    #loop through and evaluate
+    for eN in range(nElements_global):
+        matID = elementMaterialTypes[eN]
+        for j in range(nDOF_trial_element):
+            u_j = u_dof[u_l2g[eN,j]]
+            q_u[eN,j] = u_j
+
+            #VGM evaluation
+            psiC = -u_j
+            m = 1.0 - 1.0/n[matID]
+            thetaS = thetaR[matID] + thetaSR[matID]
+            if psiC > 0.0:
+                pcBar = alpha[matID]*psiC
+                pcBar_nM2 = pow(pcBar,n[matID]-2)
+                pcBar_nM1 = pcBar_nM2*pcBar
+                pcBar_n   = pcBar_nM1*pcBar
+                onePlus_pcBar_n = 1.0 + pcBar_n
+                
+                sBar = pow(onePlus_pcBar_n,-m)
+	        # using -mn = 1-n
+                DsBar_DpsiC = alpha[matID]*(1.0-n[matID])*(sBar/onePlus_pcBar_n)*pcBar_nM1
+                
+                vBar = 1.0-pcBar_nM1*sBar
+                vBar2 = vBar*vBar
+                DvBar_DpsiC = -alpha[matID]*(n[matID]-1.0)*pcBar_nM2*sBar - pcBar_nM1*DsBar_DpsiC
+
+                thetaW = thetaSR[matID]*sBar + thetaR[matID]
+                DthetaW_DpsiC = thetaSR[matID] * DsBar_DpsiC 
+                
+                sqrt_sBar = sqrt(sBar)
+                KWr= sqrt_sBar*vBar2
+                DKWr_DpsiC= ((0.5/sqrt_sBar)*DsBar_DpsiC*vBar2 + 2.0*sqrt_sBar*vBar*DvBar_DpsiC)
+            else:
+                thetaW        = thetaS
+                DthetaW_DpsiC = 0.0
+                KWr           = 1.0
+                DKWr_DpsiC    = 0.0
+            #
+            rhom = rho*exp(beta*u_j)
+            drhom= beta*rhom
+            q_mass[eN,j] = rhom*thetaW
+            q_dmass[eN,j]=-rhom*DthetaW_DpsiC+drhom*thetaW
+
+            q_kr[eN,j] = KWr
+            q_dkr[eN,j]= -DKWr_DpsiC
+            
+                                           
+                                     
+def RE_NCP1_getElementResidual(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical quantities
+                               numpy.ndarray[ITYPE_t,ndim=1] rowptr,
+                               numpy.ndarray[ITYPE_t,ndim=1] colind,
+                               #mesh info
+                               int nSpace,
+                               int nElements_global,                  
+                               int nElementBoundaries_element,
+                               numpy.ndarray[ITYPE_t,ndim=2] elementNeighborsArray,
+                               numpy.ndarray[DTYPE_t,ndim=2] elementBarycentersArray,
+                               #solution information
+                               int nDOF_test_element,
+                               numpy.ndarray[DTYPE_t,ndim=2] q_u,
+                               numpy.ndarray[DTYPE_t,ndim=3] q_grad_u,
+                               numpy.ndarray[DTYPE_t,ndim=4] q_grad_w,
+                               #element quadrature arrays, must be nodal
+                               numpy.ndarray[DTYPE_t,ndim=2] q_detJ,
+                               numpy.ndarray[DTYPE_t,ndim=2] q_m,
+                               numpy.ndarray[DTYPE_t,ndim=2] q_mt,
+                               numpy.ndarray[DTYPE_t,ndim=2] q_r,
+                               numpy.ndarray[DTYPE_t,ndim=2] q_kr,
+                               #linear parts of f and a assumed to be evaluated
+                               #already at interfaces using harmonic averages
+                               numpy.ndarray[DTYPE_t,ndim=3] q_flin,
+                               numpy.ndarray[DTYPE_t,ndim=3] q_alin,
+                               #element residual information
+                               numpy.ndarray[DTYPE_t,ndim=2] elementResidual
+                               ):
+    """
+    residual routine for NCP1 approximation for conservative head formulation of Richards equation 
+
+    Approximation:
+         uses  nodal quadrature where the nodes are face barycenters
+         uses harmonic average for intrinsic permeability/ hydraulic conductivity
+         upwinds relative permeability based on element averages
+         applies dirichlet boundary conditions strongly but keeps dofs in system
+
+    TODO:
+         everything
+         
+    """
+    #check some sizes
+    for q in [q_u,q_m,q_mt,q_r,q_kr]:
+        assert q.shape[1] == nSpace+1
+    assert nDOF_test_element == nSpace+1
+    cdef int nnz = rowptr[nSpace]
+    #temporaries
+    cdef double u_eN,kr_eN,phi_eN,u_neig,kr_neig,phi_neig
+    cdef int eN,eN_neighbor,ii,I
+    cdef numpy.ndarray[DTYPE_t,ndim=1] a_up= numpy.zeros(nnz,'d')
+    cdef numpy.ndarray[DTYPE_t,ndim=1] f_up= numpy.zeros(nSpace,'d')
+    #for averaging/integration weights
+    cdef double nAvgWeight = 1.0/(nSpace+1.)
+    cdef double weight=1.0,volFactor = 1.0
+    if nSpace == 2:
+        volFactor = 0.5
+    if nSpace == 3:
+        volFactor = 1.0/6.0
+    #
+    for eN in range(nElements_global):
+        volume = volFactor*fabs(q_detJ[eN,0]) #affine transformation
+        weight = nAvgWeight*volume
+
+        
+        ##for advection and stiffness terms
+        u_eN  = numpy.sum(q_u[eN])*nAvgWeight
+        kr_eN = numpy.sum(q_kr[eN])*nAvgWeight
+        #potential assumes slight compressibility
+        phi_eN= u_eN - numpy.dot(gravity,elementBarycentersArray[eN])
+
+        for i in range(nDOF_test_element):
+            #nodal quadrature
+            ##mass
+            elementResidual[eN,i] += weight*q_mt[eN,i] 
+            ##sources
+            elementResidual[eN,i] += weight*q_r[eN,i] 
+
+            #assumes linear parts of f and a have already been evaluated correctly for interface
+            #start with asumption that this element is upwind
+            for ii in range(nnz):
+                a_up[ii] = q_alin[eN,i,ii]*kr_eN
+            for I in range(nSpace):
+                f_up[I] = q_flin[eN,i,I]*kr_eN
+
+            #assume correspondence between face and local dof
+            eN_neighbor = elementNeighborsArray[eN,i]
+            if eN_neighbor >= 0:#interior face
+                u_neig  = numpy.sum(q_u[eN_neighbor])*nAvgWeight
+                kr_neig = numpy.sum(q_kr[eN_neighbor])*nAvgWeight
+                #potential, assumes slight compressibility
+                phi_neig= u_neig - numpy.dot(gravity,elementBarycentersArray[eN_neighbor])
+
+                
+                if phi_eN < phi_neig: #neighbor  is upwind
+                    for ii in range(nnz):
+                        a_up[ii] = q_alin[eN,i,ii]*kr_neig
+                    for I in range(nSpace):
+                        f_up[I] = q_flin[eN,i,I]*kr_neig
+            #
+            #accumulate advection and stiffness contributions
+            for I in range(nSpace):
+                elementResidual[eN,i] -= volume*f_up[I]*q_grad_w[eN,i,i,I]
+                for ii in range(rowptr[I],rowptr[I+1]):
+                    elementResidual[eN,i] += volume*a_up[ii]*q_grad_u[eN,i,colind[ii]]*q_grad_w[eN,i,i,I]
+            #I
+        #i
+    #eN
+def RE_NCP1_getElementJacobian(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical quantities
+                               numpy.ndarray[ITYPE_t,ndim=1] rowptr,
+                               numpy.ndarray[ITYPE_t,ndim=1] colind,
+                               #mesh info
+                               int nSpace,
+                               int nElements_global,                  
+                               int nElementBoundaries_element,
+                               numpy.ndarray[ITYPE_t,ndim=2] elementNeighborsArray,
+                               numpy.ndarray[DTYPE_t,ndim=2] elementBarycentersArray,
+                               #solution information
+                               int nDOF_test_element,
+                               int nDOF_trial_element,
+                               numpy.ndarray[DTYPE_t,ndim=2] q_u,
+                               numpy.ndarray[DTYPE_t,ndim=3] q_grad_u,
+                               numpy.ndarray[DTYPE_t,ndim=4] q_grad_w,
+                               numpy.ndarray[DTYPE_t,ndim=4] q_grad_v,
+                               #element quadrature arrays, must be nodal
+                               numpy.ndarray[DTYPE_t,ndim=2] q_detJ,
+                               numpy.ndarray[DTYPE_t,ndim=2] q_m,
+                               numpy.ndarray[DTYPE_t,ndim=2] q_dm,
+                               numpy.ndarray[DTYPE_t,ndim=2] q_mt,
+                               numpy.ndarray[DTYPE_t,ndim=2] q_dmt,
+                               numpy.ndarray[DTYPE_t,ndim=2] q_r,
+                               numpy.ndarray[DTYPE_t,ndim=2] q_kr,
+                               numpy.ndarray[DTYPE_t,ndim=2] q_dkr,
+                               #linear parts of f and a assumed to be evaluated
+                               #already at interfaces using harmonic averages
+                               numpy.ndarray[DTYPE_t,ndim=3] q_flin,
+                               numpy.ndarray[DTYPE_t,ndim=3] q_alin,
+                               #element residual information
+                               numpy.ndarray[DTYPE_t,ndim=3] elementJacobian
+                               ):
+    """
+    residual routine for NCP1 approximation for conservative head formulation of Richards equation 
+
+    Approximation:
+         uses  nodal quadrature where the nodes are face barycenters
+         uses harmonic average for intrinsic permeability/ hydraulic conductivity
+         upwinds relative permeability based on element averages
+         applies dirichlet boundary conditions strongly but keeps dofs in system
+
+    TODO:
+         everything
+         
+    """
+    #check some sizes
+    for q in [q_u,q_m,q_mt,q_r,q_kr]:
+        assert q.shape[1] == nSpace+1
+    assert nDOF_test_element == nSpace+1
+    cdef int nnz = rowptr[nSpace]
+    #temporaries
+    cdef double u_eN,kr_eN,phi_eN,u_neig,kr_neig,phi_neig,dkr_up
+    cdef int eN,eN_neighbor,ii,I
+    cdef numpy.ndarray[DTYPE_t,ndim=1] a_up= numpy.zeros(nnz,'d')
+    cdef numpy.ndarray[DTYPE_t,ndim=1] f_up= numpy.zeros(nSpace,'d')
+    #for averaging/integration weights
+    cdef double nAvgWeight = 1.0/(nSpace+1.)
+    cdef double weight=1.0,volFactor = 1.0
+    cdef int thisElementIsUpwind = 1
+    if nSpace == 2:
+        volFactor = 0.5
+    if nSpace == 3:
+        volFactor = 1.0/6.0
+    #
+    for eN in range(nElements_global):
+        volume = volFactor*fabs(q_detJ[eN,0]) #affine transformation
+        weight = nAvgWeight*volume
+
+        
+        ##for advection and stiffness terms
+        u_eN  = numpy.sum(q_u[eN])*nAvgWeight
+        kr_eN = numpy.sum(q_kr[eN])*nAvgWeight
+        #potential assumes slight compressibility
+        phi_eN= u_eN - numpy.dot(gravity,elementBarycentersArray[eN])
+
+        for i in range(nDOF_test_element):
+            #nodal quadrature
+            ##mass
+            #elementResidual[eN,i] += weight*q_m[eN,i] 
+            elementJacobian[eN,i,i] += weight*q_dmt[eN,i]
+
+            #assumes linear parts of f and a have already been evaluated correctly for interface
+            #start with asumption that this element is upwind
+            for ii in range(nnz):
+                a_up[ii] = q_alin[eN,i,ii]*kr_eN
+            for I in range(nSpace):
+                f_up[I] = q_flin[eN,i,I]*kr_eN
+            thisElementIsUpwind = 1
+            #assume correspondence between face and local dof
+            eN_neighbor = elementNeighborsArray[eN,i]
+            if eN_neighbor >= 0:#interior face
+                u_neig  = numpy.sum(q_u[eN_neighbor])*nAvgWeight
+                kr_neig = numpy.sum(q_kr[eN_neighbor])*nAvgWeight
+                #potential, assumes slight compressibility
+                phi_neig= u_neig - numpy.dot(gravity,elementBarycentersArray[eN_neighbor])
+
+                
+                if phi_eN < phi_neig: #neighbor  is upwind
+                    for ii in range(nnz):
+                        a_up[ii] = q_alin[eN,i,ii]*kr_neig
+                    for I in range(nSpace):
+                        f_up[I] = q_flin[eN,i,I]*kr_neig
+                    thisElementIsUpwind = 0
+
+            for j in range(nDOF_trial_element):
+                for I in range(nSpace):
+                    for ii in range(rowptr[I],rowptr[I+1]):
+                        elementJacobian[eN,i,j] += volume*a_up[ii]*q_grad_v[eN,i,j,colind[ii]]*q_grad_w[eN,i,i,I]
+            
+            if thisElementIsUpwind:
+                for j in range(nDOF_trial_element):
+                    for I in range(nSpace):
+                        elementJacobian[eN,i,j] -= nAvgWeight*volume*q_dkr[eN,j]*q_flin[eN,i,I]*q_grad_w[eN,i,i,I]
+                        for ii in range(rowptr[I],rowptr[I+1]):
+                            elementJacobian[eN,i,j] += nAvgWeight*volume*q_dkr[eN,j]*q_alin[eN,i,ii]*q_grad_u[eN,i,colind[ii]]*q_grad_w[eN,i,i,I]
+                  
+        
+        #i
+    #eN
