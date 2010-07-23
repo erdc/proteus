@@ -488,6 +488,7 @@ def RE_NCP1_getElementResidual(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical q
          everything
          
     """
+    cdef int upwindFlag = 1
     #check some sizes
     for q in [q_u,q_m,q_mt,q_r,q_kr]:
         assert q.shape[1] == nSpace+1
@@ -517,6 +518,8 @@ def RE_NCP1_getElementResidual(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical q
         #potential assumes slight compressibility
         phi_eN= u_eN - numpy.dot(gravity,elementBarycentersArray[eN])
 
+        #mwf debug
+        print "RE_NCP1 res eN = %s u_eN= %s kr_eN= %s phi_eN= %s " % (eN,u_eN,kr_eN,phi_eN)
         for i in range(nDOF_test_element):
             #nodal quadrature
             ##mass
@@ -533,18 +536,22 @@ def RE_NCP1_getElementResidual(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical q
 
             #assume correspondence between face and local dof
             eN_neighbor = elementNeighborsArray[eN,i]
-            if eN_neighbor >= 0:#interior face
+            if eN_neighbor >= 0 and upwindFlag > 0:#interior face
                 u_neig  = numpy.sum(q_u[eN_neighbor])*nAvgWeight
                 kr_neig = numpy.sum(q_kr[eN_neighbor])*nAvgWeight
                 #potential, assumes slight compressibility
                 phi_neig= u_neig - numpy.dot(gravity,elementBarycentersArray[eN_neighbor])
+                #mwf debug
+                print "RE_NCP1 res eN_neig = %s i= %s u_neig= %s kr_neig= %s phi_neig= %s " % (eN_neighbor,i,u_neig,kr_neig,phi_neig)
 
-                
                 if phi_eN < phi_neig: #neighbor  is upwind
                     for ii in range(nnz):
                         a_up[ii] = q_alin[eN,i,ii]*kr_neig
                     for I in range(nSpace):
                         f_up[I] = q_flin[eN,i,I]*kr_neig
+                    #mwf debug
+                    print "RE_NCP1 upwinded to eN_neig = a_up= %s f_up  %s " % (a_up,f_up)
+                    
             #
             #accumulate advection and stiffness contributions
             for I in range(nSpace):
@@ -599,6 +606,7 @@ def RE_NCP1_getElementJacobian(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical q
          everything
          
     """
+    cdef int upwindFlag = 1
     #check some sizes
     for q in [q_u,q_m,q_mt,q_r,q_kr]:
         assert q.shape[1] == nSpace+1
@@ -644,7 +652,7 @@ def RE_NCP1_getElementJacobian(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical q
             thisElementIsUpwind = 1
             #assume correspondence between face and local dof
             eN_neighbor = elementNeighborsArray[eN,i]
-            if eN_neighbor >= 0:#interior face
+            if eN_neighbor >= 0 and upwindFlag > 0:#interior face
                 u_neig  = numpy.sum(q_u[eN_neighbor])*nAvgWeight
                 kr_neig = numpy.sum(q_kr[eN_neighbor])*nAvgWeight
                 #potential, assumes slight compressibility
