@@ -128,6 +128,20 @@ class CompositeTrapezoidalEdge(Q_base):
         self.points = self.pointsAll[k-1]
         self.weights = self.weightsAll[k-1]
 
+class FaceBarycenterEdge(Q_base):
+    def __init__(self,order=1):
+        order=1
+        Q_base.__init__(self,order)
+        self.pointsAll=(
+            (EVec(1.0),EVec(0.0)),)
+        self.weightsAll=(
+            (0.5,0.5),)
+        self.setOrder(order)
+    def setOrder(self,k):
+        self.order = 1
+        self.points = self.pointsAll[0]
+        self.weights = self.weightsAll[0]
+
 class GaussTriangle(Q_base):
     """
     Gauss quadrature on the unit triangle.
@@ -245,6 +259,21 @@ class CompositeTrapezoidalTriangle(Q_base):
         self.points = self.pointsAll[k-1]
         self.weights = self.weightsAll[k-1]
 
+class FaceBarycenterTriangle(Q_base):
+    def __init__(self,order=1):
+        order=1
+        Q_base.__init__(self,order)
+        self.pointsAll=(
+            ( EVec(1.0/2.0,1.0/2.0), EVec(0.0,1.0/2.0), EVec(1.0/2.0,0.0)),
+            )
+        self.weightsAll=(
+            (1.0/6.0, 1.0/6.0, 1.0/6.0),
+            )
+        self.setOrder(order)
+    def setOrder(self,k):
+        self.order = 1
+        self.points = self.pointsAll[0]
+        self.weights = self.weightsAll[0]
 class GaussTetrahedron(Q_base):
     """
     Gauss-Legendre quadrature on the unit tetrahedron.
@@ -605,6 +634,22 @@ class LobattoTetrahedron(Q_base):
               EVec(0.0,0.0,1.0)),)
         self.weightsAll=(
             (1.0/24.0,1.0/24.0,1.0/24.0,1.0/24.0),)
+        self.setOrder(order)
+    def setOrder(self,k):
+        self.order = 1
+        self.points = self.pointsAll[0]
+        self.weights = self.weightsAll[0]
+
+class FaceBarycenterTetrahedron(Q_base):
+    def __init__(self,order=1):
+        order=1
+        Q_base.__init__(self,order)
+        self.pointsAll=(
+            ( EVec(1.0/3.0,1.0/3.0,1.0/3.0), EVec(0.0,1.0/3.0,1./3.), EVec(1.0/3.0,0.0,1.0/3.0),EVec(1./3.,1./3.,0.0)),
+            )
+        self.weightsAll=(
+            (1.0/24.0, 1.0/24.0, 1.0/24.0),
+            )
         self.setOrder(order)
     def setOrder(self,k):
         self.order = 1
