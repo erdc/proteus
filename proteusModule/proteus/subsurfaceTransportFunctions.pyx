@@ -364,6 +364,8 @@ def RE_NCP1_evaluateElementCoefficients_VGM(double rho,
                                             int nSpace,
                                             int nElements_global,                  
                                             int nElementBoundaries_element,
+                                            numpy.ndarray[ITYPE_t,ndim=2] elementNeighborsArray,
+                                            numpy.ndarray[DTYPE_t,ndim=2] elementBarycentersArray,
                                             numpy.ndarray[ITYPE_t,ndim=1] elementMaterialTypes,
                                             #solution info
                                             int nDOF_trial_element,
@@ -376,7 +378,8 @@ def RE_NCP1_evaluateElementCoefficients_VGM(double rho,
                                             numpy.ndarray[DTYPE_t,ndim=2] q_dmass,
                                             numpy.ndarray[DTYPE_t,ndim=2] q_r,
                                             numpy.ndarray[DTYPE_t,ndim=2] q_kr,
-                                            numpy.ndarray[DTYPE_t,ndim=2] q_dkr):
+                                            numpy.ndarray[DTYPE_t,ndim=2] q_dkr,
+                                            numpy.ndarray[DTYPE_t,ndim=2] q_kr_up):
     """
     routine for evaluating nodal coefficients in NCP1 approximation for conservative head formulation of Richards equation 
 
@@ -396,9 +399,11 @@ def RE_NCP1_evaluateElementCoefficients_VGM(double rho,
     #temporaries
     cdef double psiC,pcBar,pcBar_n,pcBar_nM1,pcBar_nM2,onePlus_pcBar_n,sBar,sqrt_sBar,DsBar_DpsiC,thetaW,DthetaW_DpsiC
     cdef double vBar,vBar2,DvBar_DpsiC,KWr,DKWr_DpsiC,rho2=rho*rho,thetaS,rhom,drhom,m
-
-    cdef double u_j
-    cdef int eN,eN_neighbor,ii,I,j,matID
+    
+    cdef double u_j,u_eN,u_neig,kr_eN,kr_neig,phi_eN,phi_neig
+    cdef int eN,eN_neighbor,ebN,ii,I,j,matID
+    #for averaging/integration weights
+    cdef double nAvgWeight = 1.0/(nSpace+1.)
 
     #loop through and evaluate
     for eN in range(nElements_global):
@@ -446,8 +451,35 @@ def RE_NCP1_evaluateElementCoefficients_VGM(double rho,
             q_kr[eN,j] = KWr
             q_dkr[eN,j]= -DKWr_DpsiC
             
-                                           
-                                     
+        #j
+    #eN
+
+    #now upwind kr
+    for eN in range(nElements_global):
+        u_eN  = numpy.sum(q_u[eN])*nAvgWeight
+        kr_eN = numpy.sum(q_kr[eN])*nAvgWeight
+        #potential assumes slight compressibility
+        phi_eN= u_eN - numpy.dot(gravity,elementBarycentersArray[eN])
+
+
+        #loop over faces to upwind
+        for ebN in range(nElementBoundaries_element):
+            #by default eN is upwind
+            q_kr_up[eN,ebN] = kr_eN
+            eN_neighbor = elementNeighborsArray[eN,ebN]
+            if eN_neighbor >= 0:
+                u_neig  = numpy.sum(q_u[eN_neighbor])*nAvgWeight
+                kr_neig = numpy.sum(q_kr[eN_neighbor])*nAvgWeight
+                #potential, assumes slight compressibility
+                phi_neig= u_neig - numpy.dot(gravity,elementBarycentersArray[eN_neighbor])
+
+                if phi_eN < phi_neig: #neighbor  is upwind
+                    q_kr_up[eN,ebN] = kr_neig
+
+            #neighbor
+        #local boundaries
+    #eN for upwind
+    
 def RE_NCP1_getElementResidual(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical quantities
                                numpy.ndarray[ITYPE_t,ndim=1] rowptr,
                                numpy.ndarray[ITYPE_t,ndim=1] colind,
@@ -468,6 +500,7 @@ def RE_NCP1_getElementResidual(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical q
                                numpy.ndarray[DTYPE_t,ndim=2] q_mt,
                                numpy.ndarray[DTYPE_t,ndim=2] q_r,
                                numpy.ndarray[DTYPE_t,ndim=2] q_kr,
+                               numpy.ndarray[DTYPE_t,ndim=2] q_kr_up,
                                #linear parts of f and a assumed to be evaluated
                                #already at interfaces using harmonic averages
                                numpy.ndarray[DTYPE_t,ndim=3] q_flin,
@@ -496,7 +529,7 @@ def RE_NCP1_getElementResidual(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical q
     cdef int nnz = rowptr[nSpace]
     #temporaries
     cdef double u_eN,kr_eN,phi_eN,u_neig,kr_neig,phi_neig
-    cdef int eN,eN_neighbor,ii,I
+    cdef int eN,eN_neighbor,ii,I,i,ebN
     cdef numpy.ndarray[DTYPE_t,ndim=1] a_up= numpy.zeros(nnz,'d')
     cdef numpy.ndarray[DTYPE_t,ndim=1] f_up= numpy.zeros(nSpace,'d')
     #for averaging/integration weights
@@ -511,54 +544,28 @@ def RE_NCP1_getElementResidual(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical q
         volume = volFactor*fabs(q_detJ[eN,0]) #affine transformation
         weight = nAvgWeight*volume
 
-        
-        ##for advection and stiffness terms
-        u_eN  = numpy.sum(q_u[eN])*nAvgWeight
-        kr_eN = numpy.sum(q_kr[eN])*nAvgWeight
-        #potential assumes slight compressibility
-        phi_eN= u_eN - numpy.dot(gravity,elementBarycentersArray[eN])
-
-        #mwf debug
-        print "RE_NCP1 res eN = %s u_eN= %s kr_eN= %s phi_eN= %s " % (eN,u_eN,kr_eN,phi_eN)
         for i in range(nDOF_test_element):
-            #nodal quadrature
+            #nodal quadrature so diagonal
             ##mass
             elementResidual[eN,i] += weight*q_mt[eN,i] 
             ##sources
             elementResidual[eN,i] += weight*q_r[eN,i] 
 
-            #assumes linear parts of f and a have already been evaluated correctly for interface
-            #start with asumption that this element is upwind
-            for ii in range(nnz):
-                a_up[ii] = q_alin[eN,i,ii]*kr_eN
-            for I in range(nSpace):
-                f_up[I] = q_flin[eN,i,I]*kr_eN
-
-            #assume correspondence between face and local dof
-            eN_neighbor = elementNeighborsArray[eN,i]
-            if eN_neighbor >= 0 and upwindFlag > 0:#interior face
-                u_neig  = numpy.sum(q_u[eN_neighbor])*nAvgWeight
-                kr_neig = numpy.sum(q_kr[eN_neighbor])*nAvgWeight
-                #potential, assumes slight compressibility
-                phi_neig= u_neig - numpy.dot(gravity,elementBarycentersArray[eN_neighbor])
-                #mwf debug
-                print "RE_NCP1 res eN_neig = %s i= %s u_neig= %s kr_neig= %s phi_neig= %s " % (eN_neighbor,i,u_neig,kr_neig,phi_neig)
-
-                if phi_eN < phi_neig: #neighbor  is upwind
-                    for ii in range(nnz):
-                        a_up[ii] = q_alin[eN,i,ii]*kr_neig
-                    for I in range(nSpace):
-                        f_up[I] = q_flin[eN,i,I]*kr_neig
-                    #mwf debug
-                    print "RE_NCP1 upwinded to eN_neig = a_up= %s f_up  %s " % (a_up,f_up)
-                    
-            #
-            #accumulate advection and stiffness contributions
-            for I in range(nSpace):
-                elementResidual[eN,i] -= volume*f_up[I]*q_grad_w[eN,i,i,I]
-                for ii in range(rowptr[I],rowptr[I+1]):
-                    elementResidual[eN,i] += volume*a_up[ii]*q_grad_u[eN,i,colind[ii]]*q_grad_w[eN,i,i,I]
-            #I
+            #have to actually compute loop over other nodes for stiffness terms
+            for ebN in range(nElementBoundaries_element): #same as nDOF_trial , nElementBoundaries_
+                #assumes linear parts of f and a and upwind k_r have already been evaluated correctly for interface
+                for ii in range(nnz):
+                    a_up[ii] = q_alin[eN,ebN,ii]*q_kr_up[eN,ebN]
+                for I in range(nSpace):
+                    f_up[I] = q_flin[eN,ebN,I]*q_kr_up[eN,ebN]
+                #
+                #accumulate advection and stiffness contributions
+                for I in range(nSpace):
+                    elementResidual[eN,i] -= weight*f_up[I]*q_grad_w[eN,ebN,i,I]
+                    for ii in range(rowptr[I],rowptr[I+1]):
+                        elementResidual[eN,i] += weight*a_up[ii]*q_grad_u[eN,ebN,colind[ii]]*q_grad_w[eN,ebN,i,I]
+                #I
+            #j
         #i
     #eN
 def RE_NCP1_getElementJacobian(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical quantities
@@ -586,6 +593,7 @@ def RE_NCP1_getElementJacobian(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical q
                                numpy.ndarray[DTYPE_t,ndim=2] q_r,
                                numpy.ndarray[DTYPE_t,ndim=2] q_kr,
                                numpy.ndarray[DTYPE_t,ndim=2] q_dkr,
+                               numpy.ndarray[DTYPE_t,ndim=2] q_kr_up,
                                #linear parts of f and a assumed to be evaluated
                                #already at interfaces using harmonic averages
                                numpy.ndarray[DTYPE_t,ndim=3] q_flin,
@@ -607,6 +615,7 @@ def RE_NCP1_getElementJacobian(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical q
          
     """
     cdef int upwindFlag = 1
+    cdef int picard = 1
     #check some sizes
     for q in [q_u,q_m,q_mt,q_r,q_kr]:
         assert q.shape[1] == nSpace+1
@@ -631,53 +640,26 @@ def RE_NCP1_getElementJacobian(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical q
         weight = nAvgWeight*volume
 
         
-        ##for advection and stiffness terms
-        u_eN  = numpy.sum(q_u[eN])*nAvgWeight
-        kr_eN = numpy.sum(q_kr[eN])*nAvgWeight
-        #potential assumes slight compressibility
-        phi_eN= u_eN - numpy.dot(gravity,elementBarycentersArray[eN])
-
         for i in range(nDOF_test_element):
-            #nodal quadrature
+            #nodal quadrature so diagonal
             ##mass
             #elementResidual[eN,i] += weight*q_m[eN,i] 
             elementJacobian[eN,i,i] += weight*q_dmt[eN,i]
 
-            #assumes linear parts of f and a have already been evaluated correctly for interface
-            #start with asumption that this element is upwind
-            for ii in range(nnz):
-                a_up[ii] = q_alin[eN,i,ii]*kr_eN
-            for I in range(nSpace):
-                f_up[I] = q_flin[eN,i,I]*kr_eN
-            thisElementIsUpwind = 1
-            #assume correspondence between face and local dof
-            eN_neighbor = elementNeighborsArray[eN,i]
-            if eN_neighbor >= 0 and upwindFlag > 0:#interior face
-                u_neig  = numpy.sum(q_u[eN_neighbor])*nAvgWeight
-                kr_neig = numpy.sum(q_kr[eN_neighbor])*nAvgWeight
-                #potential, assumes slight compressibility
-                phi_neig= u_neig - numpy.dot(gravity,elementBarycentersArray[eN_neighbor])
-
-                
-                if phi_eN < phi_neig: #neighbor  is upwind
-                    for ii in range(nnz):
-                        a_up[ii] = q_alin[eN,i,ii]*kr_neig
-                    for I in range(nSpace):
-                        f_up[I] = q_flin[eN,i,I]*kr_neig
-                    thisElementIsUpwind = 0
-
-            for j in range(nDOF_trial_element):
+            #have to actually compute loop over other nodes for stiffness terms
+            for ebN in range(nElementBoundaries_element): #same as nDOF_trial , nElementBoundaries_
+                #assumes linear parts of f and a and upwind k_r have already been evaluated correctly for interface
+                for ii in range(nnz):
+                    a_up[ii] = q_alin[eN,ebN,ii]*q_kr_up[eN,ebN]
                 for I in range(nSpace):
-                    for ii in range(rowptr[I],rowptr[I+1]):
-                        elementJacobian[eN,i,j] += volume*a_up[ii]*q_grad_v[eN,i,j,colind[ii]]*q_grad_w[eN,i,i,I]
-            
-            if thisElementIsUpwind:
+                    f_up[I] = q_flin[eN,ebN,I]*q_kr_up[eN,ebN]
+                #
+
+                #Picard part first
                 for j in range(nDOF_trial_element):
                     for I in range(nSpace):
-                        elementJacobian[eN,i,j] -= nAvgWeight*volume*q_dkr[eN,j]*q_flin[eN,i,I]*q_grad_w[eN,i,i,I]
                         for ii in range(rowptr[I],rowptr[I+1]):
-                            elementJacobian[eN,i,j] += nAvgWeight*volume*q_dkr[eN,j]*q_alin[eN,i,ii]*q_grad_u[eN,i,colind[ii]]*q_grad_w[eN,i,i,I]
-                  
-        
+                            elementJacobian[eN,i,j] += weight*a_up[ii]*q_grad_v[eN,ebN,j,colind[ii]]*q_grad_w[eN,ebN,i,I]
+                #j picard
         #i
     #eN

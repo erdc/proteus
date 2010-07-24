@@ -517,6 +517,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
         self.q[('dk_r',0,0,0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('f_lin',0)]    = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
         self.q[('a_lin',0,0)]  = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.coefficients.sdInfo[(0,0)][0][self.nSpace_global]),'d')
+        self.q[('k_r_up',0,0)]    = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         
         #need to check that points are the interpolation points too
 
@@ -718,39 +719,42 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
         
         #can skip this after first call
         stfuncs.RE_NCP1_evaluateElementCoefficients_Linear(self.coefficients.rho,
-                                                                                self.coefficients.gravity,
-                                                                                self.coefficients.sdInfo[(0,0)][0],
-                                                                                self.coefficients.sdInfo[(0,0)][1],
-                                                                                self.coefficients.Ksw_types,
-                                                                                self.nSpace_global,
-                                                                                self.mesh.nElements_global,
-                                                                                self.mesh.nElementBoundaries_element,
-                                                                                self.mesh.elementNeighborsArray,
-                                                                                self.mesh.elementMaterialTypes,
-                                                                                self.q[('f_lin',0)],
-                                                                                self.q[('a_lin',0,0)])
+                                                           self.coefficients.gravity,
+                                                           self.coefficients.sdInfo[(0,0)][0],
+                                                           self.coefficients.sdInfo[(0,0)][1],
+                                                           self.coefficients.Ksw_types,
+                                                           self.nSpace_global,
+                                                           self.mesh.nElements_global,
+                                                           self.mesh.nElementBoundaries_element,
+                                                           self.mesh.elementNeighborsArray,
+                                                           self.mesh.elementMaterialTypes,
+                                                           self.q[('f_lin',0)],
+                                                           self.q[('a_lin',0,0)])
 
         stfuncs.RE_NCP1_evaluateElementCoefficients_VGM(self.coefficients.rho,
-                                                                             self.coefficients.beta,
-                                                                             self.coefficients.gravity,
-                                                                             self.coefficients.vgm_alpha_types,
-                                                                             self.coefficients.vgm_n_types,
-                                                                             self.coefficients.thetaR_types,
-                                                                             self.coefficients.thetaSR_types,
-                                                                             self.nSpace_global,
-                                                                             self.mesh.nElements_global,
-                                                                             self.mesh.nElementBoundaries_element,
-                                                                             self.mesh.elementMaterialTypes,
-                                                                             self.nDOF_trial_element[0],
-                                                                             self.u[0].femSpace.dofMap.l2g,
-                                                                             self.u[0].dof,
-                                                                             self.q['x'],
-                                                                             self.q[('u',0)],
-                                                                             self.q[('m',0)],
-                                                                             self.q[('dm',0,0)],
-                                                                             self.q[('r',0)],
-                                                                             self.q[('k_r',0,0)],
-                                                                             self.q[('dk_r',0,0,0)])
+                                                        self.coefficients.beta,
+                                                        self.coefficients.gravity,
+                                                        self.coefficients.vgm_alpha_types,
+                                                        self.coefficients.vgm_n_types,
+                                                        self.coefficients.thetaR_types,
+                                                        self.coefficients.thetaSR_types,
+                                                        self.nSpace_global,
+                                                        self.mesh.nElements_global,
+                                                        self.mesh.nElementBoundaries_element,
+                                                        self.mesh.elementNeighborsArray,
+                                                        self.mesh.elementBarycentersArray,
+                                                        self.mesh.elementMaterialTypes,
+                                                        self.nDOF_trial_element[0],
+                                                        self.u[0].femSpace.dofMap.l2g,
+                                                        self.u[0].dof,
+                                                        self.q['x'],
+                                                        self.q[('u',0)],
+                                                        self.q[('m',0)],
+                                                        self.q[('dm',0,0)],
+                                                        self.q[('r',0)],
+                                                        self.q[('k_r',0,0)],
+                                                        self.q[('dk_r',0,0,0)],
+                                                        self.q[('k_r_up',0,0)])
 
         if self.movingDomain and self.coefficients.movingDomain:
             self.coefficients.updateToMovingDomain(self.timeIntegration.t,self.q)
@@ -805,7 +809,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
                                            self.coefficients.sdInfo[(0,0)][1],
                                            self.nSpace_global,
                                            self.mesh.nElements_global,
-                                           self.mesh.nElementBoundaries_global,
+                                           self.mesh.nElementBoundaries_element,
                                            self.mesh.elementNeighborsArray,
                                            self.mesh.elementBarycentersArray,
                                            self.nDOF_test_element[0],
@@ -817,6 +821,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
                                            self.q[('mt',0)],
                                            self.q[('r',0)],
                                            self.q[('k_r',0,0)],
+                                           self.q[('k_r_up',0,0)],
                                            self.q[('f_lin',0)],
                                            self.q[('a_lin',0,0)],
                                            self.elementResidual[0])
@@ -837,7 +842,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
                                            self.coefficients.sdInfo[(0,0)][1],
                                            self.nSpace_global,
                                            self.mesh.nElements_global,
-                                           self.mesh.nElementBoundaries_global,
+                                           self.mesh.nElementBoundaries_element,
                                            self.mesh.elementNeighborsArray,
                                            self.mesh.elementBarycentersArray,
                                            self.nDOF_test_element[0],
@@ -854,6 +859,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
                                            self.q[('r',0)],
                                            self.q[('k_r',0,0)],
                                            self.q[('dk_r',0,0,0)],
+                                           self.q[('k_r_up',0,0)],
                                            self.q[('f_lin',0)],
                                            self.q[('a_lin',0,0)],
                                            self.elementJacobian[0][0])
