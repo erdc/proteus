@@ -898,7 +898,109 @@ dotfactor=12;
         f_bl.close()
     def writeXdmf(self,fileprefix):
         pass
+    def writeGeo(self,fileprefix):
+        """
+        Write the PLC domain in the gmsh geo format.
+        """
+        if True:#overwrite
+            pf = open(fileprefix+'.geo','w')
+            if self.vertexFlags !=None:
+                hasVertexFlags=1
+            else:
+                hasVertexFlags=0
+            if self.facetFlags != None:
+                hasFacetFlags=1
+            else:
+                hasFacetFlags=0
+            hasFacetFlags=False
+            hasVertexFlags=False
+            pf.write("""
+//format gmsh geo
+//comment author: Proteus
+//comment object: %s
+""" % (self.name,))
 
+            #write the vertices
+            for vN,v in enumerate(self.vertices):
+                pf.write('Point(%d)=(%21.16e,%21.16e,%21.16e);\n' % (vN+1,v[0],v[1],v[2]))
+
+            # find point indices => physical point
+            if self.vertexFlags != None:		   
+	       vertFlagDict={}
+	       for vN,v in enumerate(self.vertices):
+	          if not vertFlagDict.has_key(self.vertexFlags[vN]):
+                     vertFlagDict[self.vertexFlags[vN]] = []
+		 
+	          vertFlagDict[self.vertexFlags[vN]].append(vN+1)
+	    
+	       print  "vertexFlags"
+	       print  vertFlagDict
+               # Physical Surfaces	
+	       pvN=0
+               for pv in vertFlagDict:                                 
+		   pvN+=1  	
+		   pf.write('Physical Point(%d) = {%d' % (pvN,vertFlagDict[pv][0]) )
+		   for vN in range(1,len(vertFlagDict[pv])):
+		      pf.write(',%d' %(vertFlagDict[pv][vN]))
+		   pf.write('};\n' )
+   
+
+            #write the facets	    
+            lN = 0
+	    fNN = 0
+            for fN,f in enumerate(self.facets):
+                for segmentList in f:
+		   lineLoop={}
+		   #write the lines
+                   for vN in range(0,len(segmentList)):
+                        lN+=1			
+			pf.write('Line(%d) = {%d,%d};\n'% (lN,segmentList[vN-1]+1,segmentList[vN]+1))
+			lineLoop[vN] = lN;
+			
+		   #write the lineloop
+		   fNN+=1  	
+		   pf.write('Line Loop(%d) = {%d' % (fNN,lineLoop[0]) )
+		   for vN in range(1,len(segmentList)):
+		      pf.write(',%d' %(lineLoop[vN]))
+		   pf.write('};\n' )
+
+		   #write the surface	   
+                   pf.write('Plane Surface(%d) = {%d};\n'% (fNN,fNN))
+
+            # Find Face indices   => Physical Surfaces		   
+            if self.facetFlags != None:	   
+	       facetFlagDict={}
+
+	       fNN = 0
+               for fN,f in enumerate(self.facets):
+	          if not facetFlagDict.has_key(self.facetFlags[fN]):
+                     facetFlagDict[self.facetFlags[fN]] = []
+		     
+                  for segmentList in f:
+		     fNN+=1  	
+		     facetFlagDict[self.facetFlags[fN]].append(fNN)
+		     
+	       print  "facetFlags"	    
+	       print  facetFlagDict
+
+               # Physical Surfaces	
+	       psN=0
+               for ps in facetFlagDict:                                 
+		   psN+=1  	
+		   pf.write('Physical Surface(%d) = {%d' % (psN,facetFlagDict[ps][0]) )
+		   for vN in range(1,len(facetFlagDict[ps])):
+		      pf.write(',%d' %(facetFlagDict[ps][vN]))
+		   pf.write('};\n' )
+
+
+	       
+	       
+            pf.close()
+        else:
+            print "File already exists, not writing polyfile: " +`self.polyfile`
+	    
+	    
+	    
 if __name__ == "__main__":
     import os
  #    r1d = RectangularDomain(L=[1.2])
@@ -956,7 +1058,8 @@ if __name__ == "__main__":
     plc.writeAsymptote("plc")
     os.system("asy -V plc")
     plc.writePoly("plc")
-
+    plc.writeGeo("geo")
+    
 #    plcFromFile = PiecewiseLinearComplexDomain(units='m')
 #    plcFromFile.readPoly('cylinder3d')
 #    plcFromFile.writeAsymptote('cylinder3d')
