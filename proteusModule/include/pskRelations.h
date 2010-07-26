@@ -111,8 +111,23 @@ public:
     krn  = (1.0-Se)*(1.0-Se); 
     dkrn = 2.0*(Se-1.0)*dSe_dSw; 
     
-    psic  = -Se;
+    psic  =  (1.0-Se)/Sw_min; /*mwf change to test het -Se;*/
     dpsic = -dSe_dSw;   
+  }
+  //
+  virtual inline void calc_from_psic(const double& psicIn)
+  {
+    psic = max(0.0,psicIn);
+    dpsic= 1.0;
+    Se = 1.0-psic*Sw_min;
+    Se = max(0.0,min(1.0,Se));
+    
+    krw  = Se*Se;
+    dkrw = 2.0*Se*dSe_dSw;
+    
+    krn  = (1.0-Se)*(1.0-Se); 
+    dkrn = 2.0*(Se-1.0)*dSe_dSw; 
+    
   }
 };
 
