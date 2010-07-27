@@ -803,6 +803,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
         #self.elementResidual_save = numpy.copy(self.elementResidual[0])
         for ci in range(self.nc):
             self.elementResidual[ci].fill(0.0)
+        #mwf debug
         #pdb.set_trace()
         stfuncs.RE_NCP1_getElementResidual(self.coefficients.gravity,
                                            self.coefficients.sdInfo[(0,0)][0],
@@ -825,6 +826,8 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
                                            self.q[('f_lin',0)],
                                            self.q[('a_lin',0,0)],
                                            self.elementResidual[0])
+        #mwf debug
+        pdb.set_trace()
 
         
     def calculateElementJacobian(self):
@@ -946,6 +949,9 @@ class TwophaseDarcyFlow_base(TC_base):
                         'BCB':4}
         self.psk_tolerances={'default':{'eps_small':1.0e-16},
                              'VGM':{'eps_small':1.0e-16,'ns_del':1.0e-8}}
+        for psk_model_id in self.psk_types:
+            if not self.psk_tolerances.has_key(psk_model_id):
+                self.psk_tolerances[psk_model_id] = self.psk_tolerances['default']
         self.nPskTolerances=1
         assert(self.psk_model in self.psk_types.keys())
         self.nMaterialTypes = nMaterialTypes
@@ -1315,6 +1321,50 @@ class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
                               vg_m_types=vgm_m_types)
 
 
+class FullyCoupledSimplePSKs(TwophaseDarcy_fc):
+    """
+    Formulation using phase continuity equations and
+     'simp' quadratic rel-perm, linear capillary pressure psk relations
+
+    """
+    def __init__(self,
+                 nd,
+                 Ksw_types, 
+                 thetaR_types,
+                 thetaSR_types,
+                 dimensionless_gravity,
+                 density_w,
+                 density_n,
+                 viscosity_w,
+                 viscosity_n,
+                 density_w_params,
+                 density_n_params,
+                 diagonal_conductivity=True):
+
+        TwophaseDarcy_fc.__init__(self,
+                                  nd=nd,
+                                  dimensionless_gravity=dimensionless_gravity,
+                                  density_w=density_w,
+                                  density_n=density_n,
+                                  viscosity_w=viscosity_w,
+                                  viscosity_n=viscosity_n,
+                                  density_w_parameters=density_w_params,
+                                  density_n_parameters=density_n_params,
+                                  psk_model='simp',
+                                  nMaterialTypes=len(thetaR_types),
+                                  diagonal_conductivity=diagonal_conductivity)
+        for input in [thetaR_types,thetaSR_types]:
+            assert len(input)==self.nMaterialTypes
+        
+        thetaS_types   = thetaSR_types + thetaR_types
+        Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
+        Sw_min_types   = thetaR_types/thetaS_types
+        self.setMaterialTypes(Ksw_types,=Ksw_types,
+                              omega_types=thetaS_types,
+                              Sw_max_types=Sw_max_types,
+                              Sw_min_types=Sw_min_types)
+
+
 #
 class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
     """
@@ -1664,6 +1714,17 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             grad_psic = self.q_grad_psic
             c['psi_n']= numpy.copy(self.q_psic)
             c['psi_n'] += c[('u',0)]
+            #mwf debug
+            #for eN in range(c['x'].shape[0]):
+            #    for k in range(c['x'].shape[1]):
+            #        if (1.25 <= c['x'][eN,k,0] and c['x'][eN,k,0] <= 2.25 and
+            #            1.25 <= c['x'][eN,k,1] and c['x'][eN,k,1] <= 1.5):
+            #            print "split press eval inside lens eN=%s k=%s x=%s grad_psiw= %s grad_psic= %s s_w= %s " % (eN,k,c['x'][eN,k],c[('grad(u)',0)][eN,k],grad_psic[eN,k],s_w[eN,k])
+            #        else:
+            #            print "split press eval outside lens eN=%s k=%s x=%s grad_psiw= %s grad_psic= %s s_w= %s " % (eN,k,c['x'][eN,k],c[('grad(u)',0)][eN,k],grad_psic[eN,k],s_w[eN,k])
+                    
+            #import pdb
+            #pdb.set_trace()
         elif c[('u',0)].shape == self.ebqe_s_w.shape:
             materialTypes = self.materialTypes_ebqe
             s_w = self.ebqe_s_w
@@ -1891,7 +1952,24 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                                           c[('df',0,0)],
                                                                           c[('a',0,0)],
                                                                           c[('da',0,0,0)])
-        #material types fi
+        #mwf debug
+#         if c[('f',0)].shape == self.ip_q_t.shape:
+#             for eN in range(c['x'].shape[0]):
+#                 for k in range(c['x'].shape[1]):
+#                     if (1.25 <= c['x'][eN,k,0] and c['x'][eN,k,0] <= 2.25 and
+#                         1.25 <= c['x'][eN,k,1] and c['x'][eN,k,1] <= 1.5):
+#                         print "split sat eval inside lens eN=%s k=%s x=%s matID=%s psic= %s s_w= %s " % (eN,k,c['x'][eN,k],materialTypes[eN],c[('phi',0)][eN,k],c[('u',0)][eN,k])
+#                         if (1.25 < c['x'][eN,k,0] and c['x'][eN,k,0] < 2.25 and
+#                             1.25 < c['x'][eN,k,1] and c['x'][eN,k,1] < 1.5):
+#                             assert materialTypes[eN] == 1
+#                     else:
+#                         print "split sat eval outside lens eN=%s k=%s x=%s matID=%s psic= %s s_w= %s " % (eN,k,c['x'][eN,k],materialTypes[eN],c[('phi',0)][eN,k],c[('u',0)][eN,k])
+#                         assert materialTypes[eN] == 0
+                        
+                    
+            #import pdb
+            #pdb.set_trace()
+
         #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
@@ -2478,7 +2556,7 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_inc
                                                                density_n=density_n,
                                                                viscosity_w=viscosity_w,
                                                                viscosity_n=viscosity_n,
-                                                               psk_model='VGM',
+                                                               psk_model='simp',#mwf hack 'VGM',
                                                                nMaterialTypes=len(thetaR_types),
                                                                nPressModel=nPressModel,
                                                                diagonal_conductivity=diagonal_conductivity,
@@ -2632,6 +2710,103 @@ class CompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_compr
                               vg_m_types=vgm_m_types)
 
 #
+class IncompressibleFractionalFlowPressureSimplePSKs(TwophaseDarcy_incompressible_split_pressure):
+    """
+    Total flow equation coefficients for incompressible flow assuming  'simp' quadratic rel-perm, linear capillary pressure psk relations
+    """
+    def __init__(self,
+                 nd,
+                 Ksw_types, 
+                 thetaR_types,
+                 thetaSR_types,
+                 dimensionless_gravity,
+                 density_w,
+                 density_n,
+                 viscosity_w,
+                 viscosity_n,
+                 nSatModel=1,
+                 diagonal_conductivity=True,
+                 #for debugging
+                 swConstant=1.0,
+                 capillaryDiffusionScaling=1.0):
+        TwophaseDarcy_incompressible_split_pressure.__init__(self,
+                                                             nd=nd,
+                                                             dimensionless_gravity=dimensionless_gravity,
+                                                             density_w=density_w,
+                                                             density_n=density_n,
+                                                             viscosity_w=viscosity_w,
+                                                             viscosity_n=viscosity_n,
+                                                             psk_model='simp',
+                                                             nMaterialTypes=len(thetaR_types),
+                                                             nSatModel=nSatModel,
+                                                             diagonal_conductivity=diagonal_conductivity,
+                                                             swConstant=swConstant,
+                                                             capillaryDiffusionScaling=capillaryDiffusionScaling)
+
+        for input in [thetaR_types,thetaSR_types]:
+            assert len(input)==self.nMaterialTypes
+        
+        thetaS_types   = thetaSR_types + thetaR_types
+        Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
+        Sw_min_types   = thetaR_types/thetaS_types
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        self.setMaterialTypes(Ksw_types=Ksw_types,
+                              omega_types=thetaS_types,
+                              Sw_max_types=Sw_max_types,
+                              Sw_min_types=Sw_min_types)
+
+
+#
+class IncompressibleFractionalFlowSaturationSimplePSKs(TwophaseDarcy_incompressible_split_saturation):
+    """
+    Saturation equation coefficients for incompressible flow assuming  'simp' quadratic rel-perm, linear capillary pressure psk relations
+    """
+    def __init__(self,
+                 nd,
+                 Ksw_types, 
+                 thetaR_types,
+                 thetaSR_types,
+                 dimensionless_gravity,
+                 density_w,
+                 density_n,
+                 viscosity_w,
+                 viscosity_n,
+                 nPressModel=1,
+                 diagonal_conductivity=True,
+                 #for debugging
+                 qScalarConstant=1.0,
+                 capillaryDiffusionScaling=1.0):
+        TwophaseDarcy_incompressible_split_saturation.__init__(self,
+                                                               nd=nd,
+                                                               dimensionless_gravity=dimensionless_gravity,
+                                                               density_w=density_w,
+                                                               density_n=density_n,
+                                                               viscosity_w=viscosity_w,
+                                                               viscosity_n=viscosity_n,
+                                                               psk_model='simp',
+                                                               nMaterialTypes=len(thetaR_types),
+                                                               nPressModel=nPressModel,
+                                                               diagonal_conductivity=diagonal_conductivity,
+                                                               qScalarConstant=qScalarConstant,
+                                                               capillaryDiffusionScaling=capillaryDiffusionScaling)
+
+        for input in [thetaR_types,thetaSR_types]:
+            assert len(input)==self.nMaterialTypes
+        
+        vgm_m_types    = 1.0-1.0/vgm_n_types
+        thetaS_types   = thetaSR_types + thetaR_types
+        Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
+        Sw_min_types   = thetaR_types/thetaS_types
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        self.setMaterialTypes(Ksw_types=Ksw_types,
+                              omega_types=thetaS_types,
+                              Sw_max_types=Sw_max_types,
+                              Sw_min_types=Sw_min_types)
+
 ########################################
 #Single-phase species transport
 ########################################
