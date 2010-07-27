@@ -552,7 +552,13 @@ class OneLevelRBLES2P(OneLevelTransport):
                 for t,g in diffusiveFluxBoundaryConditionsDict.iteritems():
                     self.ebqe[('diffusiveFlux_bc',ck,ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
                     self.ebqe[('diffusiveFlux_bc_flag',ck,ci)][t[0],t[1]] = 1
-        #self.numericalFlux.setDirichletValues(self.ebqe)
+        self.numericalFlux.setDirichletValues(self.ebqe)
+        self.forceStrongConditions=False
+        self.dirichletConditionsForceDOF = {}
+        if self.forceStrongConditions:
+            for cj in range(self.nc):
+                self.dirichletConditionsForceDOF[cj] = DOFBoundaryConditions(self.u[cj].femSpace,dofBoundaryConditionsSetterDict[cj],weakDirichletConditions=False)
+                
     def getResidual(self,u,r):
         """
         Calculate the element residuals and add in to the global residual
@@ -574,7 +580,7 @@ class OneLevelRBLES2P(OneLevelTransport):
         if self.bcsTimeDependent or not self.bcsSet:
             self.bcsSet=True
             #Dirichlet boundary conditions
-            #self.numericalFlux.setDirichletValues(self.ebqe)
+            self.numericalFlux.setDirichletValues(self.ebqe)
             #Flux boundary conditions
             for ci,fbcObject  in self.fluxBoundaryConditionsObjectsDict.iteritems():
                 for t,g in fbcObject.advectiveFluxBoundaryConditionsDict.iteritems():
@@ -590,7 +596,13 @@ class OneLevelRBLES2P(OneLevelTransport):
         self.elementResidual[1].fill(0.0) 
         self.elementResidual[2].fill(0.0) 
         self.elementResidual[3].fill(0.0)
-	
+
+        for ebNE in range(self.numericalFlux.isDOFBoundary[1].shape[0]):
+            for kb in range(self.numericalFlux.isDOFBoundary[1].shape[1]):
+                if self.numericalFlux.isDOFBoundary[1][ebNE,kb] == 1:
+                    print "ebNE= %s kb= %s x= %s ('u',1)= %s isDOFBoundary[1] = %s " % (ebNE,kb,self.ebqe['x'][ebNE,kb],self.numericalFlux.ebqe[('u',1)][ebNE,kb],self.numericalFlux.isDOFBoundary[1][ebNE,kb])
+
+
 	import sys
 	
 	for ci in range(0,3):
@@ -712,6 +724,24 @@ class OneLevelRBLES2P(OneLevelTransport):
                   self.ebqe[('w*dS_f',0)],
                   self.ebqe[('w*dS_f',1)],
                   self.q[('velocity',0)],self.ebqe[('velocity',0)],self.ebq_global[('totalFlux',0)])
+
+        
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        #Load the Dirichlet conditions directly into residual
+        if self.forceStrongConditions:
+            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
+            for cj in range(self.nc):
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                    #self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+                    r[self.offset[cj]+self.stride[cj]*dofN] = scaling*(self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t))
+                    print "RBLES forcing residual cj = %s dofN= %s global_dofN= %s x=%s u=%s g=%s r=%s " % (cj,dofN,
+                                                                                                            self.offset[cj]+self.stride[cj]*dofN,
+                                                                                                            self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],
+                                                                                                            self.u[cj].dof[dofN],
+                                                                                                            g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t),
+                                                                                                            r[self.offset[cj]+self.stride[cj]*dofN])
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
         log("Global residual",level=9,data=r)
