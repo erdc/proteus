@@ -1359,7 +1359,7 @@ class FullyCoupledSimplePSKs(TwophaseDarcy_fc):
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
         Sw_min_types   = thetaR_types/thetaS_types
-        self.setMaterialTypes(Ksw_types,=Ksw_types,
+        self.setMaterialTypes(Ksw_types=Ksw_types,
                               omega_types=thetaS_types,
                               Sw_max_types=Sw_max_types,
                               Sw_min_types=Sw_min_types)
