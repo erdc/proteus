@@ -1747,6 +1747,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             c['psi_n']= numpy.copy(self.ebq_psic)
             c['psi_n'] += c[('u',0)]
         assert self.rwork_psk != None
+
         self.twophaseDarcy_incompressible_split_sd_pressure_het_matType(self.psk_types[self.psk_model],
                                                                         self.sdInfo[(0,0)][0],
                                                                         self.sdInfo[(0,0)][1],
@@ -2556,7 +2557,7 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_inc
                                                                density_n=density_n,
                                                                viscosity_w=viscosity_w,
                                                                viscosity_n=viscosity_n,
-                                                               psk_model='simp',#mwf hack 'VGM',
+                                                               psk_model='VGM',
                                                                nMaterialTypes=len(thetaR_types),
                                                                nPressModel=nPressModel,
                                                                diagonal_conductivity=diagonal_conductivity,
