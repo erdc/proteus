@@ -553,7 +553,7 @@ class OneLevelRBLES2P(OneLevelTransport):
                     self.ebqe[('diffusiveFlux_bc',ck,ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
                     self.ebqe[('diffusiveFlux_bc_flag',ck,ci)][t[0],t[1]] = 1
         self.numericalFlux.setDirichletValues(self.ebqe)
-        self.forceStrongConditions=False
+        self.forceStrongConditions=True
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
@@ -878,6 +878,20 @@ class OneLevelRBLES2P(OneLevelTransport):
                   self.csrColumnOffsets_eb[(3,1)],
                   self.csrColumnOffsets_eb[(3,2)],
                   self.csrColumnOffsets_eb[(3,3)])
+        #Load the Dirichlet conditions directly into residual
+        if self.forceStrongConditions:
+            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
+            for cj in range(self.nc):
+                for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                    global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
+                        if (self.colind[i] == global_dofN):
+                            print "RBLES forcing residual cj = %s dofN= %s global_dofN= %s was self.nzval[i]= %s now =%s " % (cj,dofN,global_dofN,self.nzval[i],scaling)
+                            self.nzval[i] = scaling
+                        else:
+                            self.nzval[i] = 0.0
+                            print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
+
         log("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
