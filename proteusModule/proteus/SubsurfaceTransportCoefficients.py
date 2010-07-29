@@ -1539,7 +1539,7 @@ class TwophaseDarcy_split_saturation_base(TwophaseDarcyFlow_base):
         #for debugging
         self.qScalarConstant=1.0
         self.capillaryDiffusionScaling=capillaryDiffusionScaling
-        self.advectionScaling=1.0
+        self.advectionScaling=advectionScaling
     def attachModels(self,modelList):
         if self.nPressModel == None:
             print 'Warning TwophaseDarcy_split_saturation_base nPressModel == None returning in attachModels'
@@ -1717,6 +1717,8 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             c['psi_n']= numpy.copy(self.q_psic)
             c['psi_n'] += c[('u',0)]
             #mwf debug
+            #import pdb
+            #pdb.set_trace()
             #for eN in range(c['x'].shape[0]):
             #    for k in range(c['x'].shape[1]):
             #        if (1.25 <= c['x'][eN,k,0] and c['x'][eN,k,0] <= 2.25 and
@@ -2649,8 +2651,9 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
         self.u_ip = {}
     def attachModels(self,modelList):
         #mwf debug
-        import pdb
-        pdb.set_trace()
+        #import pdb
+        #pdb.set_trace()
+        IncompressibleFractionalFlowSaturationMualemVanGenuchten.attachModels(self,modelList)
         if 0 <= self.satModelIndex_me and self.satModelIndex_me < len(modelList):
             self.satModel_me = modelList[self.satModelIndex_me]
             #interpolation points on physical mesh for this models fem space
@@ -2670,25 +2673,42 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
                                                              self.u_ip[('v_other',0)])
 
     def preStep(self,t,firstStep=False):
-        import pdb
+        #import pdb
         #pdb.set_trace()
-        if self.satModel_other != None:
-            log("resetting signed distance level set to current level set",level=2)
+        if self.satModel_other != None:# and self.satModelIndex_me != 1:#mwf hack
+            #todo tLast is getting messed up
+            #tLastSave =self.satModel_me.timeIntegration.tLast
+            #todo need to do make sure mass conserved, handle projection from cg to dg correctly
+            #todo ExplicitRK is getting messed up here, going twice as fast
+            log("Incomp.FracFlowSatAdvDiff preStep t= %s model %s setting its solution from model %s " % (t,self.satModel_me,self.satModel_other),level=2)
             self.satModel_other.u[0].getValues(self.u_ip[('v_other',0)],
                                                self.u_ip[('u_other',0)])
             self.satModel_me.u[0].projectFromInterpolationConditions(self.u_ip[('u_other',0)])
             self.satModel_me.calculateCoefficients()
             self.satModel_me.calculateElementResidual()
-            self.satModel_me.timeIntegration.updateTimeHistory(resetFromDOF=True)
-            self.satModel_me.timeIntegration.resetTimeHistory(resetFromDOF=True)
+            #this doesn't work either?
+            self.satModel_me.timeIntegration.initializeTimeHistory(resetFromDOF=True)
+            #mwf hack see if I can replicate copying arrays without time level stuff
+            if self.satModelIndex_me != 1:
+                self.satModel_me.timeIntegration.updateTimeHistory(resetFromDOF=True)
+            else:
+                self.satModel_me.timeIntegration.stageValues['res'][0][0].flat[:]=self.satModel_me.elementResidual[0]
+                self.satModel_me.timeIntegration.stageValues['m'][0][0].flat[:]  =self.satModel_me.q[('m',0)]
+                self.satModel_me.timeIntegration.lstage=0
+            #doesn't do anything right now except for PsiTTe?
+            #self.satModel_me.timeIntegration.resetTimeHistory(resetFromDOF=True)
+            #only effects lagging of stabilization and shock-capturing
             self.satModel_me.updateTimeHistory(t,resetFromDOF=True)
+
             #now do again because of subgrid error lagging
             #\todo modify subgrid error lagging so this won't be necessary
-            self.satModel_me.calculateCoefficients()
-            self.satModel_me.calculateElementResidual()
-            self.satModel_me.timeIntegration.updateTimeHistory(resetFromDOF=True)
-            self.satModel_me.timeIntegration.resetTimeHistory(resetFromDOF=True)
-            self.satModel_me.updateTimeHistory(t,resetFromDOF=True)
+            #self.satModel_me.calculateCoefficients()
+            #self.satModel_me.calculateElementResidual()
+            #self.satModel_me.timeIntegration.updateTimeHistory(resetFromDOF=True)
+            #self.satModel_me.timeIntegration.resetTimeHistory(resetFromDOF=True)
+            #self.satModel_me.updateTimeHistory(t,resetFromDOF=True)
+            #mwf hack tLast is getting messed up
+            #self.satModel_me.timeIntegration.tLast = tLastSave
             copyInstructions = {'copy_uList':True,
                                 'uList_model':self.satModelIndex_other}
             copyInstructions = {'reset_uList':True}
