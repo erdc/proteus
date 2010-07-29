@@ -77,13 +77,26 @@ double mminmod2(double dU, double dU1, double M, int* tag)
   return minmod2(dU,dU1);
 }
 /*make sure doesn't conflict with postprocessing's version*/
-void invertLocal3d(double A[3][3], double AI[3][3])
+int invertLocal3d(double A[3][3], double AI[3][3])
 {
+  int i,j;
   double detA,detAinv;
   detA = 
     A[0][0]*(A[1][1]*A[2][2]-A[2][1]*A[1][2])-
     A[0][1]*(A[1][0]*A[2][2]-A[2][0]*A[1][2])+
     A[0][2]*(A[1][0]*A[2][1]-A[2][0]*A[1][1]);
+  /*mwf debug*/
+  if (fabs(detA) <= 0.0)
+    {
+      printf("WARNING invertLocal3d detA= %g A= \n",detA);
+      for (i=0; i < 3; i++)
+	{
+	  for (j=0; j < 3; j++)
+	    printf("%g  ",A[i][j]);
+	  printf("\n");
+	}
+      return -1;
+    }
   assert(fabs(detA) > 0.0);
   detAinv = 1.0/detA;
   AI[0][0] = detAinv*(A[1][1]*A[2][2]-A[1][2]*A[2][1]);
@@ -97,6 +110,7 @@ void invertLocal3d(double A[3][3], double AI[3][3])
   AI[2][0] = detAinv*(A[1][0]*A[2][1]-A[1][1]*A[2][0]);
   AI[2][1] = detAinv*(A[0][1]*A[2][0]-A[0][0]*A[2][1]);
   AI[2][2] = detAinv*(A[0][0]*A[1][1]-A[0][1]*A[1][0]);
+  return 0;
 }
 
 
@@ -152,6 +166,7 @@ void computeLocalGradient3d(double * x0, double * x1, double * x2, double * x3,
 			    double u0, double u1, double u2, double u3, double * dU)
 {
   double dx[3][3],Jinv[3][3],JinvT[3][3];
+  int gradientFailed = 0;
   /***************************************************
      \hat{N}_0 = 1-\hat{x}-\hat{y}-\hat{z}, \hat{N}_1 = \hat{x}
      \hat{N}_2 = \hat{y}, \hat{N}_3 = \hat{z}
@@ -159,13 +174,17 @@ void computeLocalGradient3d(double * x0, double * x1, double * x2, double * x3,
   const double dN0h[3] = {-1.,-1.,-1.}; 
   const double dN1h[3] = { 1., 0.,0.};
   const double dN2h[3] = { 0., 1.,0.};
-  const double dN3h[3] = { 0., 0.,0.};
+  const double dN3h[3] = { 0., 0.,1.};
   dx[0][0] = x1[0]-x0[0]; dx[1][0] = x1[1]-x0[1]; dx[2][0] = x1[2]-x0[2];
   dx[0][1] = x2[0]-x0[0]; dx[1][1] = x2[1]-x0[1]; dx[2][1] = x2[2]-x0[2];
   dx[0][2] = x3[0]-x0[0]; dx[1][2] = x3[1]-x0[1]; dx[2][2] = x3[2]-x0[2];
  
   /*find routine for 3x3 inverse and jacobian*/
-  invertLocal3d(dx,Jinv);
+  gradientFailed = invertLocal3d(dx,Jinv);
+  if (gradientFailed != 0)
+    {
+      dU[0]=0.0; dU[1]=0.0; dU[2]=0.0;
+    }
   JinvT[0][0] = Jinv[0][0]; JinvT[0][1] = Jinv[1][0]; JinvT[0][2] = Jinv[2][0];
   JinvT[1][0] = Jinv[0][1]; JinvT[1][1] = Jinv[1][1]; JinvT[1][2] = Jinv[2][1];
   JinvT[2][0] = Jinv[0][2]; JinvT[2][1] = Jinv[1][2]; JinvT[2][2] = Jinv[2][2];
@@ -548,12 +567,30 @@ void computeElementNeighborShapeGradients(int nElements_global,
 		  xn[ebN+1][0]        = elementBoundaryBarycentersArray[ebN_global*3 +0];
 		  xn[ebN+1][1]        = elementBoundaryBarycentersArray[ebN_global*3 +1];
 		  xn[ebN+1][2]        = elementBoundaryBarycentersArray[ebN_global*3 +2];
-		}
+		  /*mwf debug*/
+/* 		  printf("Durlofsky3d calling computeLocalGradient3d eN=%d ebN=%d eN_opposite= %d\n", */
+/* 			 eN,ebN,eN_opposite); */
+
+/* 		  for (I=0; I < nSpace; I++) */
+/* 		    { */
+/* 		      printf("xn[%d][%d]= %g \n",ebN+1,I,xn[ebN+1][I]); */
+/* 		    } */
+
+		}		
 	      else
 		{
 		  xn[ebN+1][0]        = elementBarycentersArray[eN_opposite*3 +0];
 		  xn[ebN+1][1]        = elementBarycentersArray[eN_opposite*3 +1];
 		  xn[ebN+1][2]        = elementBarycentersArray[eN_opposite*3 +2];
+		  /*mwf debug*/
+/* 		  printf("Durlofsky3d calling computeLocalGradient3d eN=%d ebN=%d eN_opposite= %d\n", */
+/* 			 eN,ebN,eN_opposite); */
+
+/* 		  for (I=0; I < nSpace; I++) */
+/* 		    { */
+/* 		      printf("xn[%d][%d]= %g \n",ebN+1,I,xn[ebN+1][I]); */
+/* 		    } */
+
 		}
 	    }
 
@@ -566,6 +603,17 @@ void computeElementNeighborShapeGradients(int nElements_global,
 	      ebNplus1 = (ebN+1) % nElementBoundaries_element;
 	      ebNplus2 = (ebN+2) % nElementBoundaries_element;
 	      /*offset of 1 is because xn[0] is this element*/
+	      /*mwf debug*/
+/* 	      printf("Durlofsky3d calling computeLocalGradient3d eN=%d ebN=%d nElementBoundaries_element=%d \n", */
+/* 		     eN,ebN,nElementBoundaries_element); */
+/* 	      for (I=0; I < nSpace; I++) */
+/* 		{ */
+/* 		  printf("xn[%d][%d]= %g xn[%d][%d]= %g xn[%d][%d]= %g xn[%d][%d]= %g \n", */
+/* 			 0,I,xn[0][I], */
+/* 			 ebN+1,I,xn[ebN+1][I], */
+/* 			 ebNplus1+1,I,xn[ebNplus1+1][I], */
+/* 			 ebNplus2+1,I,xn[ebNplus2+1][I]); */
+/* 		} */
 	      computeLocalGradient3d(xn[0],xn[ebN+1],xn[ebNplus1+1],xn[ebNplus2+1],
 				     dN[0],dN[1],dN[2],dN[3],
 				     u[0],u[1],u[2],u[3],dU);
