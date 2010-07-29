@@ -1518,7 +1518,8 @@ class TwophaseDarcy_split_saturation_base(TwophaseDarcyFlow_base):
                  diagonal_conductivity=True,
                  #for debugging
                  qScalarConstant=1.0,
-                 capillaryDiffusionScaling=1.0):
+                 capillaryDiffusionScaling=1.0,
+                 advectionScaling=1.0):
         TwophaseDarcyFlow_base.__init__(self,
                                         nd=nd,
                                         dimensionless_gravity=dimensionless_gravity,
@@ -1538,6 +1539,7 @@ class TwophaseDarcy_split_saturation_base(TwophaseDarcyFlow_base):
         #for debugging
         self.qScalarConstant=1.0
         self.capillaryDiffusionScaling=capillaryDiffusionScaling
+        self.advectionScaling=1.0
     def attachModels(self,modelList):
         if self.nPressModel == None:
             print 'Warning TwophaseDarcy_split_saturation_base nPressModel == None returning in attachModels'
@@ -1863,7 +1865,8 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                  diagonal_conductivity=True,
                  #for debugging
                  qScalarConstant=1.0,
-                 capillaryDiffusionScaling=1.0):
+                 capillaryDiffusionScaling=1.0,
+                 advectionScaling=1.0):
         TwophaseDarcy_split_saturation_base.__init__(self,
                                                      nd=nd,
                                                      dimensionless_gravity=dimensionless_gravity,
@@ -1876,7 +1879,8 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                      nPressModel=nPressModel,
                                                      diagonal_conductivity=diagonal_conductivity,
                                                      qScalarConstant=qScalarConstant,
-                                                     capillaryDiffusionScaling=capillaryDiffusionScaling)
+                                                     capillaryDiffusionScaling=capillaryDiffusionScaling,
+                                                     advectionScaling=advectionScaling)
 
         variableNames=['s_w']
         mass      = {0:{0:'linear'}}
@@ -1938,6 +1942,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                                           self.Ksw_types,
                                                                           self.b,
                                                                           self.capillaryDiffusionScaling,
+                                                                          self.advectionScaling,
                                                                           self.rwork_psk,
                                                                           self.rwork_psk_tolerances,
                                                                           self.rwork_density_w,
@@ -2328,7 +2333,8 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                  diagonal_conductivity=True,
                  #for debugging
                  qScalarConstant=1.0,
-                 capillaryDiffusionScaling=1.0):
+                 capillaryDiffusionScaling=1.0,
+                 advectionScaling=1.0):
         TwophaseDarcy_split_saturation_base.__init__(self,
                                                      nd=nd,
                                                      dimensionless_gravity=dimensionless_gravity,
@@ -2343,7 +2349,8 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                      nPressModel=nPressModel,
                                                      diagonal_conductivity=diagonal_conductivity,
                                                      qScalarConstant=qScalarConstant,
-                                                     capillaryDiffusionScaling=capillaryDiffusionScaling)
+                                                     capillaryDiffusionScaling=capillaryDiffusionScaling,
+                                                     advectionScaling=advectionScaling)
 
         self.compressibilityFlag=compressibilityFlag
         variableNames=['s_w']
@@ -2409,6 +2416,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                                                   self.Ksw_types,
                                                                                   self.b,
                                                                                   self.capillaryDiffusionScaling,
+                                                                                  self.advectionScaling,
                                                                                   self.rwork_psk,
                                                                                   self.rwork_psk_tolerances,
                                                                                   self.rwork_density_w,
@@ -2438,6 +2446,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                                              self.Ksw_types,
                                                                              self.b,
                                                                              self.capillaryDiffusionScaling,
+                                                                             self.advectionScaling,
                                                                              self.rwork_psk,
                                                                              self.rwork_psk_tolerances,
                                                                              self.rwork_density_w,
@@ -2549,7 +2558,8 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_inc
                  vgm_ns_del=1.0e-8,
                  #for debugging
                  qScalarConstant=1.0,
-                 capillaryDiffusionScaling=1.0):
+                 capillaryDiffusionScaling=1.0,
+                 advectionScaling=1.0):
         TwophaseDarcy_incompressible_split_saturation.__init__(self,
                                                                nd=nd,
                                                                dimensionless_gravity=dimensionless_gravity,
@@ -2562,7 +2572,8 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_inc
                                                                nPressModel=nPressModel,
                                                                diagonal_conductivity=diagonal_conductivity,
                                                                qScalarConstant=qScalarConstant,
-                                                               capillaryDiffusionScaling=capillaryDiffusionScaling)
+                                                               capillaryDiffusionScaling=capillaryDiffusionScaling,
+                                                               advectionScaling=advectionScaling)
 
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
@@ -2582,6 +2593,108 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_inc
                               Sw_min_types=Sw_min_types,
                               vg_alpha_types=vgm_alpha_types,
                               vg_m_types=vgm_m_types)
+
+
+class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(IncompressibleFractionalFlowSaturationMualemVanGenuchten):
+    """
+    Saturation equation coefficients for incompressible flow assuming Mualem-Van Genuchten psk's
+    and splitting of advection and capillary diffusion terms
+    """
+    def __init__(self,
+                 nd,
+                 Ksw_types, 
+                 vgm_n_types,
+                 vgm_alpha_types,
+                 thetaR_types,
+                 thetaSR_types,
+                 dimensionless_gravity,
+                 density_w,
+                 density_n,
+                 viscosity_w,
+                 viscosity_n,
+                 nPressModel=1,
+                 diagonal_conductivity=True,
+                 vgm_small_eps=1.0e-16,
+                 vgm_ns_del=1.0e-8,
+                 #for debugging
+                 qScalarConstant=1.0,
+                 capillaryDiffusionScaling=1.0,
+                 advectionScaling=1.0,
+                 satModelIndex_me=1,
+                 satModelIndex_other=2):
+        IncompressibleFractionalFlowSaturationMualemVanGenuchten.__init__(self,
+                                                                          nd,
+                                                                          Ksw_types, 
+                                                                          vgm_n_types,
+                                                                          vgm_alpha_types,
+                                                                          thetaR_types,
+                                                                          thetaSR_types,
+                                                                          dimensionless_gravity,
+                                                                          density_w,
+                                                                          density_n,
+                                                                          viscosity_w,
+                                                                          viscosity_n,
+                                                                          nPressModel=nPressModel,
+                                                                          diagonal_conductivity=diagonal_conductivity,
+                                                                          vgm_small_eps=vgm_small_eps,
+                                                                          vgm_ns_del=vgm_ns_del,
+                                                                          qScalarConstant=qScalarConstant,
+                                                                          capillaryDiffusionScaling=capillaryDiffusionScaling,
+                                                                          advectionScaling=advectionScaling)
+        self.satModelIndex_other=satModelIndex_other
+        self.satModelIndex_me   =satModelIndex_me
+        self.satModel_me = None
+        self.satModel_other=None
+        self.variableNames=['s_w_%s' % self.satModelIndex_me]
+        self.u_ip = {}
+    def attachModels(self,modelList):
+        #mwf debug
+        import pdb
+        pdb.set_trace()
+        if 0 <= self.satModelIndex_me and self.satModelIndex_me < len(modelList):
+            self.satModel_me = modelList[self.satModelIndex_me]
+            #interpolation points on physical mesh for this models fem space
+            self.u_ip['x']    = self.satModel_me.u[0].femSpace.updateInterpolationPoints()
+            #value of other models solution at this models interpolation points
+            self.u_ip[('u_other',0)]= numpy.zeros((self.satModel_me.mesh.nElements_global,
+                                                   self.satModel_me.u[0].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints),
+                                                  'd')
+        if 0 <= self.satModelIndex_other and self.satModelIndex_other < len(modelList):
+            self.satModel_other = modelList[self.satModelIndex_other]
+            #other model's saturation trial functions at this models interpolation points 
+            self.u_ip[('v_other',0)] = numpy.zeros((self.satModel_me.mesh.nElements_global,
+                                                    self.satModel_me.u[0].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints,
+                                                    self.satModel_other.nDOF_trial_element[0]),
+                                                   'd')
+            self.satModel_other.u[0].femSpace.getBasisValues(self.satModel_me.u[0].femSpace.referenceFiniteElement.interpolationConditions.quadraturePointArray,
+                                                             self.u_ip[('v_other',0)])
+
+    def preStep(self,t,firstStep=False):
+        import pdb
+        #pdb.set_trace()
+        if self.satModel_other != None:
+            log("resetting signed distance level set to current level set",level=2)
+            self.satModel_other.u[0].getValues(self.u_ip[('v_other',0)],
+                                               self.u_ip[('u_other',0)])
+            self.satModel_me.u[0].projectFromInterpolationConditions(self.u_ip[('u_other',0)])
+            self.satModel_me.calculateCoefficients()
+            self.satModel_me.calculateElementResidual()
+            self.satModel_me.timeIntegration.updateTimeHistory(resetFromDOF=True)
+            self.satModel_me.timeIntegration.resetTimeHistory(resetFromDOF=True)
+            self.satModel_me.updateTimeHistory(t,resetFromDOF=True)
+            #now do again because of subgrid error lagging
+            #\todo modify subgrid error lagging so this won't be necessary
+            self.satModel_me.calculateCoefficients()
+            self.satModel_me.calculateElementResidual()
+            self.satModel_me.timeIntegration.updateTimeHistory(resetFromDOF=True)
+            self.satModel_me.timeIntegration.resetTimeHistory(resetFromDOF=True)
+            self.satModel_me.updateTimeHistory(t,resetFromDOF=True)
+            copyInstructions = {'copy_uList':True,
+                                'uList_model':self.satModelIndex_other}
+            copyInstructions = {'reset_uList':True}
+            return copyInstructions
+        else:
+            return {}
 
 #
 class CompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_compressible_split_pressure):
@@ -2673,7 +2786,8 @@ class CompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_compr
                  vgm_ns_del=1.0e-8,
                  #for debugging
                  qScalarConstant=1.0,
-                 capillaryDiffusionScaling=1.0):
+                 capillaryDiffusionScaling=1.0,
+                 advectionScaling=1.0):
         TwophaseDarcy_compressible_split_saturation.__init__(self,
                                                              nd=nd,
                                                              dimensionless_gravity=dimensionless_gravity,
@@ -2689,7 +2803,8 @@ class CompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_compr
                                                              compressibilityFlag=compressibilityFlag,
                                                              diagonal_conductivity=diagonal_conductivity,
                                                              qScalarConstant=qScalarConstant,
-                                                             capillaryDiffusionScaling=capillaryDiffusionScaling)
+                                                             capillaryDiffusionScaling=capillaryDiffusionScaling,
+                                                             advectionScaling=advectionScaling)
 
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
@@ -2778,7 +2893,8 @@ class IncompressibleFractionalFlowSaturationSimplePSKs(TwophaseDarcy_incompressi
                  diagonal_conductivity=True,
                  #for debugging
                  qScalarConstant=1.0,
-                 capillaryDiffusionScaling=1.0):
+                 capillaryDiffusionScaling=1.0,
+                 advectionScaling=1.0):
         TwophaseDarcy_incompressible_split_saturation.__init__(self,
                                                                nd=nd,
                                                                dimensionless_gravity=dimensionless_gravity,
@@ -2791,7 +2907,8 @@ class IncompressibleFractionalFlowSaturationSimplePSKs(TwophaseDarcy_incompressi
                                                                nPressModel=nPressModel,
                                                                diagonal_conductivity=diagonal_conductivity,
                                                                qScalarConstant=qScalarConstant,
-                                                               capillaryDiffusionScaling=capillaryDiffusionScaling)
+                                                               capillaryDiffusionScaling=capillaryDiffusionScaling,
+                                                               advectionScaling=advectionScaling)
 
         for input in [thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
