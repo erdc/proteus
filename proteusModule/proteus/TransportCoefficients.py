@@ -3646,7 +3646,7 @@ class NCLevelSetCoefficients(TC_base):
                                                                       self.model.mesh.nElements_owned)
             log("Phase  0 mass before NCLS step (m_last) = %12.5e" % (self.m_last,),level=2)
         #cek todo why is this here
-        if self.flowModel.ebq.has_key(('v',1)):
+        if self.flowModelIndex >= 0 and self.flowModel.ebq.has_key(('v',1)):
             self.model.u[0].getValuesTrace(self.flowModel.ebq[('v',1)],self.model.ebq[('u',0)])
             self.model.u[0].getGradientValuesTrace(self.flowModel.ebq[('grad(v)',1)],self.model.ebq[('grad(u)',0)])
         copyInstructions = {}
@@ -3673,7 +3673,7 @@ class NCLevelSetCoefficients(TC_base):
             self.lsGlobalMassErrorArray.append(self.lsGlobalMass - self.lsGlobalMassArray[0] + self.totalFluxGlobal)
             self.fluxArray.append(self.fluxIntegral)
             self.timeArray.append(self.model.timeIntegration.t)            
-        if self.flowModel.ebq.has_key(('v',1)):
+        if self.flowModelIndex >= 0 and self.flowModel.ebq.has_key(('v',1)):
             self.model.u[0].getValuesTrace(self.flowModel.ebq[('v',1)],self.model.ebq[('u',0)])
             self.model.u[0].getGradientValuesTrace(self.flowModel.ebq[('grad(v)',1)],self.model.ebq[('grad(u)',0)])
         copyInstructions = {}
@@ -4179,7 +4179,7 @@ class LevelSetCurvatureCoefficients(TC_base):
 class LevelSetConservation(TC_base):
     from ctransportCoefficients import levelSetConservationCoefficientsEvaluate
     from ctransportCoefficients import levelSetConservationCoefficientsEvaluate_sd
-    def __init__(self,applyCorrection=True,epsFactHeaviside=0.0,epsFactDirac=1.0,epsFactDiffusion=2.0,LSModel_index=3,V_model=2,me_model=5,VOFModel_index=4,checkMass=True,sd=True,nd=None):
+    def __init__(self,applyCorrection=True,epsFactHeaviside=0.0,epsFactDirac=1.0,epsFactDiffusion=2.0,LSModel_index=3,V_model=2,me_model=5,VOFModel_index=4,checkMass=True,sd=True,nd=None,applyCorrectionToDOF=True):
         self.sd=sd
         self.checkMass=checkMass
         self.variableNames=['phiCorr']
@@ -4217,6 +4217,10 @@ class LevelSetConservation(TC_base):
         self.VOFModelIndex=VOFModel_index
         self.useC = True
         self.applyCorrection=applyCorrection
+        if self.applyCorrection:
+            self.applyCorrectionToDOF=applyCorrectionToDOF
+        else:
+            self.applyCorrection = False
     def initializeMesh(self,mesh):
         self.h=mesh.h
         self.epsHeaviside = self.epsFactHeaviside*mesh.h
@@ -4288,6 +4292,7 @@ class LevelSetConservation(TC_base):
         return copyInstructions
     def postStep(self,t,firstStep=False):
         if self.applyCorrection:
+            
             self.vofModel.q[('m',0)] += self.massCorrModel.q[('r',0)]
             self.lsModel.q[('m',0)] += self.massCorrModel.q[('u',0)]
             if self.vofModel.q[('u',0)] is not self.vofModel.q[('m',0)]:
@@ -4297,7 +4302,8 @@ class LevelSetConservation(TC_base):
             if self.vofModel.q.has_key(('mt',0)):
                 self.vofModel.timeIntegration.calculateElementCoefficients(self.vofModel.q)
                 self.vofModel.timeIntegration.lastStepErrorOk()
-            self.lsModel.u[0].dof += self.massCorrModel.u[0].dof
+            if self.applyCorrectionToDOF:
+                self.lsModel.u[0].dof += self.massCorrModel.u[0].dof
             if self.lsModel.q.has_key(('mt',0)):
                 self.lsModel.timeIntegration.calculateElementCoefficients(self.lsModel.q)
                 self.lsModel.timeIntegration.lastStepErrorOk()
