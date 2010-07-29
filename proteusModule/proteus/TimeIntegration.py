@@ -3093,7 +3093,7 @@ class DGlimiterDurlofskyP1Lagrange2d(UnstructuredLimiter_base):
 #
 class DGlimiterDurlofskyP1Lagrange3d(UnstructuredLimiter_base):
     from ctimeIntegration import applyDurlofskyDGlimiterP1Lagrange3d 
-    def __init__(self,mesh,nSpace,femSpace,transport=None,killExtrema=1,allowMinWithUndershoot=1):
+    def __init__(self,mesh,nSpace,u,transport=None,killExtrema=1,allowMinWithUndershoot=1):
         UnstructuredLimiter_base.__init__(self,mesh,nSpace)
         self.nc = len(u)
         self.femSpaceSolution = dict([(ci,u[ci].femSpace) for ci in range(self.nc)])
@@ -3137,21 +3137,22 @@ class DGlimiterDurlofskyP1Lagrange3d(UnstructuredLimiter_base):
         """
 
         """
-        self.applyDurlofskyDGlimiterP1Lagrange3d(self.killExtrema,
-                                                 self.allowMinWithUndershoot,
-                                                 self.mesh.elementNeighborsArray,
-                                                 self.mesh.elementBoundariesArray,
-                                                 self.mesh.elementNodesArray,
-                                                 self.mesh.nodeArray,
-                                                 self.mesh.elementBarycentersArray,
-                                                 self.mesh.elementBoundaryBarycentersArray,
-                                                 self.elementNeighborShapeGradients,
-                                                 self.l2gLimiting[ci],
-                                                 self.grad_v,
-                                                 self.elementAverages,
-                                                 self.tag,
-                                                 uIn[ci].dof,
-                                                 uDofOut[ci])
+        for ci in range(self.nc):
+            self.applyDurlofskyDGlimiterP1Lagrange3d(self.killExtrema,
+                                                     self.allowMinWithUndershoot,
+                                                     self.mesh.elementNeighborsArray,
+                                                     self.mesh.elementBoundariesArray,
+                                                     self.mesh.elementNodesArray,
+                                                     self.mesh.nodeArray,
+                                                     self.mesh.elementBarycentersArray,
+                                                     self.mesh.elementBoundaryBarycentersArray,
+                                                     self.elementNeighborShapeGradients,
+                                                     self.l2gLimiting[ci],
+                                                     self.grad_v,
+                                                     self.elementAverages,
+                                                     self.tag,
+                                                     uIn[ci].dof,
+                                                     uDofOut[ci])
     #end apply
     def setFromOptions(self,nOptions):
         if 'limiter_killExtrema' in dir(nOptions):

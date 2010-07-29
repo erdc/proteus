@@ -14,7 +14,7 @@ void invertLocal(int nSpace,double A[3][3], double AI[3][3])
   double detA,detAinv;
   if (nSpace == 1)
     {
-      assert(A[0][0] > 0.0);
+      assert(fabs(A[0][0]) > 0.0);
       AI[0][0] = 1.0/A[0][0];
     }
   else if (nSpace == 2)
