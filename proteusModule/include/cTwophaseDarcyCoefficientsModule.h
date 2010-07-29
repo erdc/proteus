@@ -64,7 +64,36 @@ inline int twophaseDarcy_fc_sd_het_matType(int nSimplex,
         {
           i = eN*nPointsPerSimplex+pN;
 	  psk.calc(sw[i]);
-
+	  /*mwf debug*/
+// 	  assert (0 <= matID && matID <= 1);
+// 	  if (matID == 1)
+// 	    {
+// 	      assert (1.25 <= x[i*3+0] && x[i*3+0] <= 2.25);
+// 	      assert (1.25 <= x[i*3+1] && x[i*3+1] <= 1.5);
+// 	      assert (omega[matID] == 0.368);
+// 	      assert (rwork_psk[matID*nParams+0] == 0.277);
+// 	      assert (rwork_psk[matID*nParams+1] == 1.0);
+// 	      assert (rwork_psk[matID*nParams+2] == 3.350);
+// 	      assert (rwork_psk[matID*nParams+3] == 0.5);
+// 	      assert (psk.Sw_min == rwork_psk[matID*nParams+0]);
+// 	      assert (psk.Sw_max == rwork_psk[matID*nParams+1]);
+// 	      assert (psk.alpha == rwork_psk[matID*nParams+2]);
+// 	      assert (psk.m == rwork_psk[matID*nParams+3]);
+// 	      assert (psk.n == 2.0);
+// 	    }
+// 	  else
+// 	    {
+// 	      assert (omega[matID] == 0.301);
+// 	      assert (rwork_psk[matID*nParams+0] == 0.308);
+// 	      assert (rwork_psk[matID*nParams+1] == 1.0);
+// 	      assert (rwork_psk[matID*nParams+2] == 5.470);
+// 	      assert (rwork_psk[matID*nParams+3] == (1.0-1.0/4.264));
+// 	      assert (psk.Sw_min == rwork_psk[matID*nParams+0]);
+// 	      assert (psk.Sw_max == rwork_psk[matID*nParams+1]);
+// 	      assert (psk.alpha == rwork_psk[matID*nParams+2]);
+// 	      assert (psk.m == rwork_psk[matID*nParams+3]);
+// 	      assert (fabs(psk.n-4.264) < 1.0e-6);
+// 	    }
 	  /*non-wetting phase pressure head */
 	  psin[i] = psiw[i] + psk.psic;
 	  dpsin_dsw[i]  = psk.dpsic;
@@ -143,6 +172,7 @@ static inline int twophaseDarcy_incompressible_split_sd_saturation_het_matType(i
 									       const double* Kbar,
 									       double b,
 									       double capillaryDiffusionScaling,
+									       double advectionScaling,
 									       const double* rwork_psk,
 									       const double* rwork_psk_tol,
 									       const double* rwork_density_w,
@@ -191,15 +221,16 @@ static inline int twophaseDarcy_incompressible_split_sd_saturation_het_matType(i
 	  for (int I=0;I<nSpace;I++)
 	    {
 	      /* wetting phase advection */
+	      /* todo, remove diagonal assumption on K*/
 	      for (int m=rowptr[I]; m < rowptr[I+1]; m++)
 		{
 		  const int J = colind[m];
 		  if (I==J)
 		    {
-		      f[i*nSpace+I]  = (qt[i*nSpace+I]*fracFlow.fw
-					- Kbar[matID*nnz+m]*fracFlow.lambdaw*fracFlow.fn*(b*density_n.rho-density_w.rho)*g[I]) ;
-		      df[i*nSpace+I] = (qt[i*nSpace+I]*fracFlow.dfw
-					- (Kbar[matID*nnz+m]*g[I]*(b*density_n.rho-density_w.rho))*(fracFlow.lambdaw*fracFlow.dfn + fracFlow.fn*fracFlow.dlambdaw));
+		      f[i*nSpace+I]  = advectionScaling*(qt[i*nSpace+I]*fracFlow.fw
+							 - Kbar[matID*nnz+m]*fracFlow.lambdaw*fracFlow.fn*(b*density_n.rho-density_w.rho)*g[I]) ;
+		      df[i*nSpace+I] = advectionScaling*(qt[i*nSpace+I]*fracFlow.dfw
+							 - (Kbar[matID*nnz+m]*g[I]*(b*density_n.rho-density_w.rho))*(fracFlow.lambdaw*fracFlow.dfn + fracFlow.fn*fracFlow.dlambdaw));
 		    } 
 		  /* wetting phase  capillary diffusion */
 		  /*include scaling factor in case want to turn of capillary diffusion to test hyperbolic approximations*/
@@ -217,34 +248,35 @@ static inline int twophaseDarcy_incompressible_split_sd_saturation_het_matType(i
  */
 template<class PSK, class DENSITY_W>
 static inline int twophaseDarcy_slightCompressible_split_sd_saturation_het_matType(int nSimplex,
-										     int nPointsPerSimplex,
-										     int nSpace,
-										     int nParams,
-										     const int* rowptr,
-										     const int* colind,
-										     const int* materialTypes,
-										     double muw,
-										     double mun,
-										     const double* omega,
-										     const double* Kbar,
-										     double b,
-										     double capillaryDiffusionScaling,
-										     const double* rwork_psk,
-										     const double* rwork_psk_tol,
-										     const double* rwork_density_w,
-										     const double* rwork_density_n,
-										     const double* g,
-										     const double* qt,
-										     const double* psiw,
-										     const double* sw,
-										     double* m,
-										     double* dm,
-										     double* phi,
-										     double* dphi,
-										     double* f,
-										     double* df,
-										     double* a,
-										     double* da)
+										   int nPointsPerSimplex,
+										   int nSpace,
+										   int nParams,
+										   const int* rowptr,
+										   const int* colind,
+										   const int* materialTypes,
+										   double muw,
+										   double mun,
+										   const double* omega,
+										   const double* Kbar,
+										   double b,
+										   double capillaryDiffusionScaling,
+										   double advectionScaling,
+										   const double* rwork_psk,
+										   const double* rwork_psk_tol,
+										   const double* rwork_density_w,
+										   const double* rwork_density_n,
+										   const double* g,
+										   const double* qt,
+										   const double* psiw,
+										   const double* sw,
+										   double* m,
+										   double* dm,
+										   double* phi,
+										   double* dphi,
+										   double* f,
+										   double* df,
+										   double* a,
+										   double* da)
 {
   int matID;
   PSK psk(rwork_psk);  psk.setTolerances(rwork_psk_tol);
@@ -287,15 +319,16 @@ static inline int twophaseDarcy_slightCompressible_split_sd_saturation_het_matTy
 	  for (int I=0;I<nSpace;I++)
 	    {
 	      /* wetting phase advection */
+	      /* todo remove diagonal K assumption*/
 	      for (int m=rowptr[I]; m < rowptr[I+1]; m++)
 		{
 		  const int J = colind[m];
 		  if (I==J)
 		    {
-		      f[i*nSpace+I]  = (qt[i*nSpace+I]*fracFlow.fw
-					- Kbar[matID*nnz+m]*fracFlow.lambdaw*fracFlow.fn*(b*density_n_x.rho-density_w_x.rho)*g[I]) ;
-		      df[i*nSpace+I] = (qt[i*nSpace+I]*fracFlow.dfw
-					- (Kbar[matID*nnz+m]*g[I]*(b*density_n_x.rho-density_w_x.rho))*(fracFlow.lambdaw*fracFlow.dfn + fracFlow.fn*fracFlow.dlambdaw));
+		      f[i*nSpace+I]  = advectionScaling*(qt[i*nSpace+I]*fracFlow.fw
+							 - Kbar[matID*nnz+m]*fracFlow.lambdaw*fracFlow.fn*(b*density_n_x.rho-density_w_x.rho)*g[I]) ;
+		      df[i*nSpace+I] = advectionScaling*(qt[i*nSpace+I]*fracFlow.dfw
+							 - (Kbar[matID*nnz+m]*g[I]*(b*density_n_x.rho-density_w_x.rho))*(fracFlow.lambdaw*fracFlow.dfn + fracFlow.fn*fracFlow.dlambdaw));
 		    } 
 		  /* wetting phase  capillary diffusion */
 		  /*include scaling factor in case want to turn of capillary diffusion to test hyperbolic approximations*/
@@ -349,6 +382,7 @@ static inline int twophaseDarcy_incompressible_split_sd_pressure_het_matType(int
           i = eN*nPointsPerSimplex+pN;
 	  psk.calc(sw[i]);
 	  fracFlow.calc(psk,density_w,density_n);
+	  /*todo remove diagonal assumption on f*/
 	  for (int I=0;I<nSpace;I++)
 	    {
 	      /*include scaling factor in case want to turn of capillary diffusion to test hyperbolic approximations*/
@@ -470,6 +504,7 @@ static inline int twophaseDarcy_compressibleN_split_sd_saturation_het_matType(in
 									      const double* Kbar,
 									      double b,
 									      double capillaryDiffusionScaling,
+									      double advectionScaling,
 									      const double* rwork_psk,
 									      const double* rwork_psk_tol,
 									      const double* rwork_density_w,
@@ -533,10 +568,10 @@ static inline int twophaseDarcy_compressibleN_split_sd_saturation_het_matType(in
 		  const int J = colind[m];
 		  if (I==J)
 		    {
-		      f[i*nSpace+I]  = (qt[i*nSpace+I]*fracFlow.fw
-					- Kbar[matID*nnz+m]*fracFlow.lambdaw*fracFlow.fn*(b*density_n.rho-density_w.rho)*g[I]) ;
-		      df[i*nSpace+I] = (qt[i*nSpace+I]*fracFlow.dfw
-					- (Kbar[matID*nnz+m]*g[I]*(b*density_n.rho-density_w.rho))*(fracFlow.lambdaw*fracFlow.dfn + fracFlow.fn*fracFlow.dlambdaw));
+		      f[i*nSpace+I]  = advectionScaling*(qt[i*nSpace+I]*fracFlow.fw
+							 - Kbar[matID*nnz+m]*fracFlow.lambdaw*fracFlow.fn*(b*density_n.rho-density_w.rho)*g[I]) ;
+		      df[i*nSpace+I] = advectionScaling*(qt[i*nSpace+I]*fracFlow.dfw
+							 - (Kbar[matID*nnz+m]*g[I]*(b*density_n.rho-density_w.rho))*(fracFlow.lambdaw*fracFlow.dfn + fracFlow.fn*fracFlow.dlambdaw));
 		    } 
 		  /* wetting phase  capillary diffusion */
 		  /*include scaling factor in case want to turn of capillary diffusion to test hyperbolic approximations*/
