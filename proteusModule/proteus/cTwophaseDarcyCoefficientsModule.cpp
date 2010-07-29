@@ -546,11 +546,11 @@ extern "C"
   static PyObject *twophaseDarcy_incompressible_split_sd_saturation_het_matType(PyObject * self,PyObject * args)
   {
     int i,nSimplex=1,nPointsPerSimplex=1,pskModelFlag;
-    double muw, mun, b, capillaryDiffusionScaling;
+    double muw, mun, b, capillaryDiffusionScaling,advectionScaling;
     PyObject *rowptr,*colind,*matType,*omega,*Kbar,*rwork_psk, *rwork_psk_tol,*rwork_density_w, *rwork_density_n, *g, *qt, *sw, *m, *dm, *phi,
       *dphi, *f, *df, *a, *da;
     if(!PyArg_ParseTuple(args,
-                         "iOOOddOOddOOOOOOOOOOOOOOO",
+                         "iOOOddOOdddOOOOOOOOOOOOOOO",
                          &pskModelFlag,
 			 &rowptr,
 			 &colind,
@@ -561,6 +561,7 @@ extern "C"
                          &Kbar,
                          &b,
 			 &capillaryDiffusionScaling,
+			 &advectionScaling,
                          &rwork_psk,
 			 &rwork_psk_tol,
                          &rwork_density_w,
@@ -587,7 +588,7 @@ extern "C"
 										DDATA(omega),
 										DDATA(Kbar),
 										b,
-										capillaryDiffusionScaling,
+										capillaryDiffusionScaling,advectionScaling,
 										DDATA(rwork_psk),DDATA(rwork_psk_tol),
 										DDATA(rwork_density_w),
 										DDATA(rwork_density_n),
@@ -608,7 +609,7 @@ extern "C"
 									  DDATA(omega),
 									  DDATA(Kbar),
 									  b,
-									  capillaryDiffusionScaling,
+									  capillaryDiffusionScaling,advectionScaling,
 									  DDATA(rwork_psk),DDATA(rwork_psk_tol),
 									  DDATA(rwork_density_w),
 									  DDATA(rwork_density_n),
@@ -629,7 +630,7 @@ extern "C"
 									  DDATA(omega),
 									  DDATA(Kbar),
 									  b,
-									  capillaryDiffusionScaling,
+									  capillaryDiffusionScaling,advectionScaling,
 									  DDATA(rwork_psk),DDATA(rwork_psk_tol),
 									  DDATA(rwork_density_w),
 									  DDATA(rwork_density_n),
@@ -650,7 +651,7 @@ extern "C"
 									  DDATA(omega),
 									  DDATA(Kbar),
 									  b,
-									  capillaryDiffusionScaling,
+									  capillaryDiffusionScaling,advectionScaling,
 									  DDATA(rwork_psk),DDATA(rwork_psk_tol),
 									  DDATA(rwork_density_w),
 									  DDATA(rwork_density_n),
@@ -671,7 +672,7 @@ extern "C"
 									  DDATA(omega),
 									  DDATA(Kbar),
 									  b,
-									  capillaryDiffusionScaling,
+									  capillaryDiffusionScaling,advectionScaling,
 									  DDATA(rwork_psk),DDATA(rwork_psk_tol),
 									  DDATA(rwork_density_w),
 									  DDATA(rwork_density_n),
@@ -692,7 +693,7 @@ extern "C"
 										DDATA(omega),
 										DDATA(Kbar),
 										b,
-										capillaryDiffusionScaling,
+										capillaryDiffusionScaling,advectionScaling,
 										DDATA(rwork_psk),DDATA(rwork_psk_tol),
 										DDATA(rwork_density_w),
 										DDATA(rwork_density_n),
@@ -863,11 +864,11 @@ extern "C"
   static PyObject *twophaseDarcy_slightCompressible_split_sd_saturation_het_matType(PyObject * self,PyObject * args)
   {
     int i,nSimplex=1,nPointsPerSimplex=1,pskModelFlag, density_w_flag, density_n_flag;
-    double muw, mun, b, capillaryDiffusionScaling;
+    double muw, mun, b, capillaryDiffusionScaling,advectionScaling;
     PyObject *rowptr,*colind,*matType,*omega,*Kbar,*rwork_psk, *rwork_psk_tol,*rwork_density_w, *rwork_density_n, *g, *qt, *psiw, *sw, *m, *dm, *phi,
       *dphi, *f, *df, *a, *da;
     if(!PyArg_ParseTuple(args,
-                         "iiiOOOddOOddOOOOOOOOOOOOOOOO",
+                         "iiiOOOddOOdddOOOOOOOOOOOOOOOO",
                          &pskModelFlag,
 			 &density_w_flag,
 			 &density_n_flag,
@@ -880,6 +881,7 @@ extern "C"
                          &Kbar,
                          &b,
 			 &capillaryDiffusionScaling,
+			 &advectionScaling,
                          &rwork_psk,
 			 &rwork_psk_tol,
                          &rwork_density_w,
@@ -900,24 +902,24 @@ extern "C"
       {
       case 0:
         twophaseDarcy_slightCompressible_split_sd_saturation_het_matType<SimplePSK,ExponentialDensity>(nSimplex,
-													 nPointsPerSimplex,
-													 SHAPE(g)[0],
-													 2,
-													 IDATA(rowptr),
-													 IDATA(colind),
-													 IDATA(matType),
-													 muw,
-													 mun,
-													 DDATA(omega),
-													 DDATA(Kbar),
-													 b,
-													 capillaryDiffusionScaling,
-													 DDATA(rwork_psk),DDATA(rwork_psk_tol),
-													 DDATA(rwork_density_w),
-													 DDATA(rwork_density_n),
-													 DDATA(g), DDATA(qt), DDATA(psiw),DDATA(sw), 
-													 DDATA(m), DDATA(dm), DDATA(phi), DDATA(dphi), DDATA(f),
-													 DDATA(df), DDATA(a), DDATA(da));
+												       nPointsPerSimplex,
+												       SHAPE(g)[0],
+												       2,
+												       IDATA(rowptr),
+												       IDATA(colind),
+												       IDATA(matType),
+												       muw,
+												       mun,
+												       DDATA(omega),
+												       DDATA(Kbar),
+												       b,
+												       capillaryDiffusionScaling,advectionScaling,
+												       DDATA(rwork_psk),DDATA(rwork_psk_tol),
+												       DDATA(rwork_density_w),
+												       DDATA(rwork_density_n),
+												       DDATA(g), DDATA(qt), DDATA(psiw),DDATA(sw), 
+												       DDATA(m), DDATA(dm), DDATA(phi), DDATA(dphi), DDATA(f),
+												       DDATA(df), DDATA(a), DDATA(da));
         break;
       case 1:
         twophaseDarcy_slightCompressible_split_sd_saturation_het_matType<VGM,ExponentialDensity>(nSimplex,
@@ -932,7 +934,7 @@ extern "C"
 												  DDATA(omega),
 												  DDATA(Kbar),
 												  b,
-												  capillaryDiffusionScaling,
+												  capillaryDiffusionScaling,advectionScaling,
 												  DDATA(rwork_psk),DDATA(rwork_psk_tol),
 												  DDATA(rwork_density_w),
 												  DDATA(rwork_density_n),
@@ -953,7 +955,7 @@ extern "C"
 												  DDATA(omega),
 												  DDATA(Kbar),
 												  b,
-												  capillaryDiffusionScaling,
+												  capillaryDiffusionScaling,advectionScaling,
 												  DDATA(rwork_psk),DDATA(rwork_psk_tol),
 												  DDATA(rwork_density_w),
 												  DDATA(rwork_density_n),
@@ -974,7 +976,7 @@ extern "C"
 												  DDATA(omega),
 												  DDATA(Kbar),
 												  b,
-												  capillaryDiffusionScaling,
+												  capillaryDiffusionScaling,advectionScaling,
 												  DDATA(rwork_psk),DDATA(rwork_psk_tol),
 												  DDATA(rwork_density_w),
 												  DDATA(rwork_density_n),
@@ -996,7 +998,7 @@ extern "C"
 												  DDATA(omega),
 												  DDATA(Kbar),
 												  b,
-												  capillaryDiffusionScaling,
+												  capillaryDiffusionScaling,advectionScaling,
 												  DDATA(rwork_psk),DDATA(rwork_psk_tol),
 												  DDATA(rwork_density_w),
 												  DDATA(rwork_density_n),
@@ -1017,7 +1019,7 @@ extern "C"
 												  DDATA(omega),
 												  DDATA(Kbar),
 												  b,
-												  capillaryDiffusionScaling,
+												  capillaryDiffusionScaling,advectionScaling,
 												  DDATA(rwork_psk),DDATA(rwork_psk_tol),
 												  DDATA(rwork_density_w),
 												  DDATA(rwork_density_n),
@@ -1340,11 +1342,11 @@ extern "C"
   static PyObject *twophaseDarcy_compressibleN_split_sd_saturation_het_matType(PyObject * self,PyObject * args)
   {
     int i,nSimplex=1,nPointsPerSimplex=1,pskModelFlag, density_w_flag, density_n_flag;
-    double muw, mun, b, capillaryDiffusionScaling;
+    double muw, mun, b, capillaryDiffusionScaling,advectionScaling;
     PyObject *rowptr,*colind,*matType,*omega,*Kbar,*rwork_psk, *rwork_psk_tol,*rwork_density_w, *rwork_density_n, *g, *qt, *psiw, *sw, *m, *dm, *phi,
       *dphi, *f, *df, *a, *da;
     if(!PyArg_ParseTuple(args,
-                         "iiiOOOddOOddOOOOOOOOOOOOOOOO",
+                         "iiiOOOddOOdddOOOOOOOOOOOOOOOO",
                          &pskModelFlag,
 			 &density_w_flag,
 			 &density_n_flag,
@@ -1357,6 +1359,7 @@ extern "C"
                          &Kbar,
                          &b,
 			 &capillaryDiffusionScaling,
+			 &advectionScaling,
                          &rwork_psk,
 			 &rwork_psk_tol,
                          &rwork_density_w,
@@ -1386,7 +1389,7 @@ extern "C"
 												      DDATA(omega),
 												      DDATA(Kbar),
 												      b,
-												      capillaryDiffusionScaling,
+												      capillaryDiffusionScaling,advectionScaling,
 												      DDATA(rwork_psk),DDATA(rwork_psk_tol),
 												      DDATA(rwork_density_w),
 												      DDATA(rwork_density_n),
@@ -1407,7 +1410,7 @@ extern "C"
 												DDATA(omega),
 												DDATA(Kbar),
 												b,
-												capillaryDiffusionScaling,
+												capillaryDiffusionScaling,advectionScaling,
 												DDATA(rwork_psk),DDATA(rwork_psk_tol),
 												DDATA(rwork_density_w),
 												DDATA(rwork_density_n),
@@ -1428,7 +1431,7 @@ extern "C"
 												DDATA(omega),
 												DDATA(Kbar),
 												b,
-												capillaryDiffusionScaling,
+												capillaryDiffusionScaling,advectionScaling,
 												DDATA(rwork_psk),DDATA(rwork_psk_tol),
 												DDATA(rwork_density_w),
 												DDATA(rwork_density_n),
@@ -1449,7 +1452,7 @@ extern "C"
 												DDATA(omega),
 												DDATA(Kbar),
 												b,
-												capillaryDiffusionScaling,
+												capillaryDiffusionScaling,advectionScaling,
 												DDATA(rwork_psk),DDATA(rwork_psk_tol),
 												DDATA(rwork_density_w),
 												DDATA(rwork_density_n),
@@ -1471,7 +1474,7 @@ extern "C"
 												DDATA(omega),
 												DDATA(Kbar),
 												b,
-												capillaryDiffusionScaling,
+												capillaryDiffusionScaling,advectionScaling,
 												DDATA(rwork_psk),DDATA(rwork_psk_tol),
 												DDATA(rwork_density_w),
 												DDATA(rwork_density_n),
@@ -1492,7 +1495,7 @@ extern "C"
 												DDATA(omega),
 												DDATA(Kbar),
 												b,
-												capillaryDiffusionScaling,
+												capillaryDiffusionScaling,advectionScaling,
 												DDATA(rwork_psk),DDATA(rwork_psk_tol),
 												DDATA(rwork_density_w),
 												DDATA(rwork_density_n),
@@ -1519,7 +1522,7 @@ extern "C"
 												   DDATA(omega),
 												   DDATA(Kbar),
 												   b,
-												   capillaryDiffusionScaling,
+												   capillaryDiffusionScaling,advectionScaling,
 												   DDATA(rwork_psk),DDATA(rwork_psk_tol),
 												   DDATA(rwork_density_w),
 												   DDATA(rwork_density_n),
@@ -1540,7 +1543,7 @@ extern "C"
 											     DDATA(omega),
 											     DDATA(Kbar),
 											     b,
-											     capillaryDiffusionScaling,
+											     capillaryDiffusionScaling,advectionScaling,
 											     DDATA(rwork_psk),DDATA(rwork_psk_tol),
 											     DDATA(rwork_density_w),
 											     DDATA(rwork_density_n),
@@ -1561,7 +1564,7 @@ extern "C"
 											     DDATA(omega),
 											     DDATA(Kbar),
 											     b,
-											     capillaryDiffusionScaling,
+											     capillaryDiffusionScaling,advectionScaling,
 											     DDATA(rwork_psk),DDATA(rwork_psk_tol),
 											     DDATA(rwork_density_w),
 											     DDATA(rwork_density_n),
@@ -1582,7 +1585,7 @@ extern "C"
 											     DDATA(omega),
 											     DDATA(Kbar),
 											     b,
-											     capillaryDiffusionScaling,
+											     capillaryDiffusionScaling,advectionScaling,
 											     DDATA(rwork_psk),DDATA(rwork_psk_tol),
 											     DDATA(rwork_density_w),
 											     DDATA(rwork_density_n),
@@ -1604,7 +1607,7 @@ extern "C"
 											     DDATA(omega),
 											     DDATA(Kbar),
 											     b,
-											     capillaryDiffusionScaling,
+											     capillaryDiffusionScaling,advectionScaling,
 											     DDATA(rwork_psk),DDATA(rwork_psk_tol),
 											     DDATA(rwork_density_w),
 											     DDATA(rwork_density_n),
@@ -1626,7 +1629,7 @@ extern "C"
 											     DDATA(omega),
 											     DDATA(Kbar),
 											     b,
-											     capillaryDiffusionScaling,
+											     capillaryDiffusionScaling,advectionScaling,
 											     DDATA(rwork_psk),DDATA(rwork_psk_tol),
 											     DDATA(rwork_density_w),
 											     DDATA(rwork_density_n),
@@ -1947,6 +1950,8 @@ extern "C"
     return Py_None;
   }
 
+
+  //------------------------------ start  deprecated routines --------------------
 
   static PyObject *twophaseDarcy_fc(PyObject * self,PyObject * args)
   {
@@ -7340,6 +7345,8 @@ extern "C"
 Py_INCREF(Py_None);
 return Py_None;
   }
+  //------------------------------ end  deprecated routines --------------------
+
   static PyMethodDef cTwophaseDarcyCoefficientsMethods[] = {
     {"twophaseDarcy_fc_sd_het_matType",
      twophaseDarcy_fc_sd_het_matType,
