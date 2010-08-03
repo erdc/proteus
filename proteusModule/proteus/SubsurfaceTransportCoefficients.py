@@ -2650,9 +2650,6 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
         self.variableNames=['s_w_%s' % self.satModelIndex_me]
         self.u_ip = {}
     def attachModels(self,modelList):
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
         IncompressibleFractionalFlowSaturationMualemVanGenuchten.attachModels(self,modelList)
         if 0 <= self.satModelIndex_me and self.satModelIndex_me < len(modelList):
             self.satModel_me = modelList[self.satModelIndex_me]
@@ -2673,8 +2670,6 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
                                                              self.u_ip[('v_other',0)])
 
     def preStep(self,t,firstStep=False):
-        #import pdb
-        #pdb.set_trace()
         if self.satModel_other != None:# and self.satModelIndex_me != 1:#mwf hack
             #todo tLast is getting messed up
             #tLastSave =self.satModel_me.timeIntegration.tLast
@@ -2683,30 +2678,27 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
             log("Incomp.FracFlowSatAdvDiff preStep t= %s model %s setting its solution from model %s " % (t,self.satModel_me,self.satModel_other),level=2)
             self.satModel_other.u[0].getValues(self.u_ip[('v_other',0)],
                                                self.u_ip[('u_other',0)])
+            #mwf hack to test mass conservation
+            #for eN in range(self.u_ip[('u_other',0)].shape[0]):
+            #    uAvg = numpy.sum(self.u_ip[('u_other',0)][eN])/float(self.u_ip[('u_other',0)].shape[1])
+            #    self.u_ip[('u_other',0)][eN].fill(uAvg)
+            #import pdb
+            #pdb.set_trace()
             self.satModel_me.u[0].projectFromInterpolationConditions(self.u_ip[('u_other',0)])
             self.satModel_me.calculateCoefficients()
             self.satModel_me.calculateElementResidual()
             #this doesn't work either?
             self.satModel_me.timeIntegration.initializeTimeHistory(resetFromDOF=True)
-            #mwf hack see if I can replicate copying arrays without time level stuff
-            if self.satModelIndex_me != 1:
-                self.satModel_me.timeIntegration.updateTimeHistory(resetFromDOF=True)
-            else:
-                self.satModel_me.timeIntegration.stageValues['res'][0][0].flat[:]=self.satModel_me.elementResidual[0]
-                self.satModel_me.timeIntegration.stageValues['m'][0][0].flat[:]  =self.satModel_me.q[('m',0)]
-                self.satModel_me.timeIntegration.lstage=0
-            #doesn't do anything right now except for PsiTTe?
-            #self.satModel_me.timeIntegration.resetTimeHistory(resetFromDOF=True)
             #only effects lagging of stabilization and shock-capturing
             self.satModel_me.updateTimeHistory(t,resetFromDOF=True)
 
             #now do again because of subgrid error lagging
             #\todo modify subgrid error lagging so this won't be necessary
-            #self.satModel_me.calculateCoefficients()
-            #self.satModel_me.calculateElementResidual()
+            self.satModel_me.calculateCoefficients()
+            self.satModel_me.calculateElementResidual()
             #self.satModel_me.timeIntegration.updateTimeHistory(resetFromDOF=True)
-            #self.satModel_me.timeIntegration.resetTimeHistory(resetFromDOF=True)
-            #self.satModel_me.updateTimeHistory(t,resetFromDOF=True)
+            self.satModel_me.timeIntegration.resetTimeHistory(resetFromDOF=True)
+            self.satModel_me.updateTimeHistory(t,resetFromDOF=True)
             #mwf hack tLast is getting messed up
             #self.satModel_me.timeIntegration.tLast = tLastSave
             copyInstructions = {'copy_uList':True,
