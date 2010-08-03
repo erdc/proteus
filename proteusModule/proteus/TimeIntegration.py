@@ -727,7 +727,7 @@ class ForwardEuler(TI_base):
             self.runCFL = nOptions.runCFL
 #cek todo rename this. It's forward euler in advection only so it's a special IMEX method
 class ForwardEuler_A(TI_base):
-    def __init__(self,transport,runCFL=0.45):
+    def __init__(self,transport,runCFL=0.45,limiterType=None):
         TI_base.__init__(self,transport)
         self.m_last = {}
         self.m_tmp = {}
@@ -737,9 +737,28 @@ class ForwardEuler_A(TI_base):
         self.bf_tmp = {}
         self.ebf_last = {}
         self.ebf_tmp  = {}
+        #Necessary for Rusanov flux at least
+        #Problem is how to allow for implicit u in diffusion
+        self.ebq_u_last = {} ; self.ebq_u_tmp = {}
+        self.ebqe_u_last = {} ; self.ebqe_u_tmp = {}
+        self.q_df_tmp = {} ;    self.q_df_last= {}
+        self.ebq_df_tmp= {} ;  self.ebq_df_last={}
+        self.ebqe_df_tmp= {} ;  self.ebqe_df_last={}
+        #
+        self.limiter=None; self.uLimDof = None
+        self.limiterType = limiterType
+        if self.limiterType != None:
+            self.limiter = limiterType(transport.mesh,transport.nSpace_global,
+                                       transport.u,
+                                       transport=transport)
+            self.uLimDof = {}
+            for ci in range(self.nc):
+                self.uLimDof[ci]=numpy.zeros((transport.u[ci].dof.shape),'d') 
+        
         for ci in transport.coefficients.mass.keys():
             self.m_last[ci] = numpy.array(transport.q[('m',ci)])
             self.m_tmp[ci] = numpy.array(transport.q[('m',ci)])
+
             if transport.coefficients.advection.has_key(ci):
                 self.f_last[ci] = numpy.array(transport.q[('f',ci)])
                 self.f_tmp[ci] = numpy.array(transport.q[('f',ci)])
@@ -748,6 +767,25 @@ class ForwardEuler_A(TI_base):
                     self.bf_tmp[ci] = numpy.array(transport.ebq[('f',ci)])
                 self.ebf_last[ci] = numpy.array(transport.ebqe[('f',ci)])
                 self.ebf_tmp[ci] = numpy.array(transport.ebqe[('f',ci)])
+                #u
+                if transport.ebq.has_key(('u',ci)):
+                    self.ebq_u_last[ci] = numpy.array(transport.ebq[('u',ci)])
+                    self.ebq_u_tmp[ci] = numpy.array(transport.ebq[('u',ci)])
+                if transport.ebqe.has_key(('u',ci)):
+                    self.ebqe_u_last[ci] = numpy.array(transport.ebqe[('u',ci)])
+                    self.ebqe_u_tmp[ci] = numpy.array(transport.ebqe[('u',ci)])
+                #df
+                for cj in range(self.nc):
+                    if transport.q.has_key(('df',ci,cj)):
+                        self.q_df_last[(ci,cj)] = numpy.array(transport.q[('df',ci,cj)])
+                        self.q_df_tmp[(ci,cj)]  = numpy.array(transport.q[('df',ci,cj)])
+                    if transport.ebq.has_key(('df',ci,cj)):
+                        self.ebq_df_last[(ci,cj)] = numpy.array(transport.ebq[('df',ci,cj)])
+                        self.ebq_df_tmp[(ci,cj)]  = numpy.array(transport.ebq[('df',ci,cj)])
+                    if transport.ebqe.has_key(('df',ci,cj)):
+                        self.ebqe_df_last[(ci,cj)] = numpy.array(transport.ebqe[('df',ci,cj)])
+                        self.ebqe_df_tmp[(ci,cj)]  = numpy.array(transport.ebqe[('df',ci,cj)])
+                    
             self.advectionIsImplicit[ci] = False
         self.runCFL=runCFL
         self.dtLast=None
@@ -768,14 +806,37 @@ class ForwardEuler_A(TI_base):
         for ci in self.f_tmp.keys():
             self.f_tmp[ci][:] = q[('f',ci)]
             q[('f',ci)][:] = self.f_last[ci]
+            #for numerical fluxes like Rusanov that need some element information
+            for cj in range(self.nc):
+                if q.has_key(('df_advectiveNumericalFlux',ci,cj)):
+                    self.q_df_tmp[(ci,cj)][:] = q[('df',ci,cj)]
+                    q[('df_advectiveNumericalFlux',ci,cj)][:] = self.q_df_last[(ci,cj)]
+                    #zero for jacobian? will get skipped because of advectionIsImplicit?
+                    #q[('df',ci,cj)].fill(0.0)
     def calculateElementBoundaryCoefficients(self,ebq):
         for ci in self.bf_tmp.keys():
             self.bf_tmp[ci][:] = ebq[('f',ci)]
             ebq[('f',ci)][:] = self.bf_last[ci]
+            #
+            if ebq.has_key(('u_advectiveNumericalFlux',ci)):
+                self.ebq_u_tmp[ci][:] = ebq[('u',ci)]
+                ebq[('u_advectiveNumericalFlux',ci)][:] = self.ebq_u_last[ci]
+            for cj in range(self.nc):
+                if ebq.has_key(('df_advectiveNumericalFlux',ci,cj)):
+                    self.ebq_df_tmp[(ci,cj)][:] = ebq[('df',ci,cj)]
+                    ebq[('df_advectiveNumericalFlux',ci,cj)][:] = self.ebq_df_last[(ci,cj)]
     def calculateExteriorElementBoundaryCoefficients(self,ebqe):
         for ci in self.ebf_tmp.keys():
             self.ebf_tmp[ci][:] = ebqe[('f',ci)]
             ebqe[('f',ci)][:] = self.ebf_last[ci]
+            #
+            if ebqe.has_key(('u_advectiveNumericalFlux',ci)):
+                self.ebqe_u_tmp[ci][:] = ebqe[('u',ci)]
+                ebqe[('u_advectiveNumericalFlux',ci)][:] = self.ebqe_u_last[ci]
+            for cj in range(self.nc):
+                if ebqe.has_key(('df_advectiveNumericalFlux',ci,cj)):
+                    self.ebqe_df_tmp[(ci,cj)][:] = ebqe[('df',ci,cj)]
+                    ebqe[('df_advectiveNumericalFlux',ci,cj)][:] = self.ebqe_df_last[(ci,cj)]
     def initialize_dt(self,t0,tOut,q):
         """
         Modify self.dt
@@ -798,6 +859,31 @@ class ForwardEuler_A(TI_base):
         if self.dt/self.dtLast  > self.dtRatioMax:
             self.dt = self.dtLast*self.dtRatioMax
         self.t = self.tLast + self.dt
+    def updateStage(self): 
+        """
+        if using limiting
+        """
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        #mwf hack
+        #grad_phi = numpy.array(self.transport.q[('grad(phi)',0)])
+        if self.limiterType != None:
+            self.limiter.applySlopeLimiting(self.transport.u,
+                                            self.uLimDof)
+            for ci in range(self.nc):
+                self.transport.u[ci].dof.flat[:] = self.uLimDof[ci].flat[:]
+                assert self.transport.u[ci].par_dof != None
+                self.transport.u[ci].par_dof.scatter_forward_insert()
+        #if 
+        
+        #update coefficients how?
+        self.transport.calculateCoefficients()
+        #mwf hack
+        #self.transport.q[('grad(phi)',0)][:]= grad_phi
+        #time integration loads in new residual in this call
+        #self.transport.calculateElementResidual()
+
     def updateTimeHistory(self,resetFromDOF=False):
         self.tLast = self.t
         self.dtLast = self.dt
@@ -808,12 +894,42 @@ class ForwardEuler_A(TI_base):
             self.ebf_last[ci][:] = self.ebf_tmp[ci]
         for ci in self.bf_last.keys():
             self.bf_last[ci][:] = self.bf_tmp[ci]
+        #
+        for ci in self.ebq_u_last.keys():
+            self.ebq_u_last[ci][:] = self.ebq_u_tmp[ci]
+        for ci in self.ebqe_u_last.keys():
+            self.ebqe_u_last[ci][:] = self.ebqe_u_tmp[ci]
+        for k in self.q_df_last.keys():
+            self.q_df_last[k][:] = self.q_df_tmp[k]
+        for k in self.q_df_last.keys():
+            self.q_df_last[k][:] = self.q_df_tmp[k]
+        for k in self.ebq_df_last.keys():
+            self.ebq_df_last[k][:] = self.ebq_df_tmp[k]
+        for k in self.ebqe_df_last.keys():
+            self.ebqe_df_last[k][:] = self.ebqe_df_tmp[k]
+
     def setFromOptions(self,nOptions):
         """
         allow classes to set various numerical parameters
         """
         if 'runCFL' in dir(nOptions):
             self.runCFL = nOptions.runCFL
+        
+        if 'limiterType' in dir(nOptions) and nOptions.limiterType != None:
+            self.limiter = None; self.limiterType = None; self.uLimDof = {}
+            self.limiterType = nOptions.limiterType
+            self.limiter = self.limiterType(self.transport.mesh,
+                                            self.transport.nSpace_global,
+                                            self.transport.u,
+                                            transport=self.transport)
+            
+            for ci in range(self.nc):
+                #for limiting, in values
+                self.uLimDof[ci] = numpy.zeros((self.transport.u[ci].dof.shape),'d')
+                
+            #
+            self.limiter.setFromOptions(nOptions)
+        #
     def initializeSpaceHistory(self,resetFromDOF=True):
         self.tLast = self.t
         self.dtLast = self.dt
@@ -822,6 +938,19 @@ class ForwardEuler_A(TI_base):
             self.ebf_last[ci][:] = self.ebf_tmp[ci]
         for ci in self.bf_last.keys():
             self.bf_last[ci][:] = self.bf_tmp[ci]
+        #
+        for ci in self.ebq_u_last.keys():
+            self.ebq_u_last[ci][:] = self.ebq_u_tmp[ci]
+        for ci in self.ebqe_u_last.keys():
+            self.ebqe_u_last[ci][:] = self.ebqe_u_tmp[ci]
+        for k in self.q_df_last.keys():
+            self.q_df_last[k][:] = self.q_df_tmp[k]
+        for k in self.q_df_last.keys():
+            self.q_df_last[k][:] = self.q_df_tmp[k]
+        for k in self.ebq_df_last.keys():
+            self.ebq_df_last[k][:] = self.ebq_df_tmp[k]
+        for k in self.ebqe_df_last.keys():
+            self.ebqe_df_last[k][:] = self.ebqe_df_tmp[k]
     def initializeTimeHistory(self,resetFromDOF=True):
         """
         Push necessary information into time history arrays
@@ -833,6 +962,19 @@ class ForwardEuler_A(TI_base):
             self.ebf_last[ci][:] = self.ebf_tmp[ci]
         for ci in self.bf_last.keys():
             self.bf_last[ci][:] = self.bf_tmp[ci]
+        #
+        for ci in self.ebq_u_last.keys():
+            self.ebq_u_last[ci][:] = self.ebq_u_tmp[ci]
+        for ci in self.ebqe_u_last.keys():
+            self.ebqe_u_last[ci][:] = self.ebqe_u_tmp[ci]
+        for k in self.q_df_last.keys():
+            self.q_df_last[k][:] = self.q_df_tmp[k]
+        for k in self.q_df_last.keys():
+            self.q_df_last[k][:] = self.q_df_tmp[k]
+        for k in self.ebq_df_last.keys():
+            self.ebq_df_last[k][:] = self.ebq_df_tmp[k]
+        for k in self.ebqe_df_last.keys():
+            self.ebqe_df_last[k][:] = self.ebqe_df_tmp[k]
         
     
 class ForwardEuler_H(TI_base):
@@ -1563,7 +1705,9 @@ class ExplicitRK_base(TI_base):
         if self.usingDTinMass == False:
             return self.calculateElementCoefficientsNoDtInMass(q)
         #mwf debug
-        log("""ExplicitRKbase calcElemenCoefs lstage= %d nStages= %d""" % (self.lstage,self.nStages))
+        log("""ExplicitRKbase calcElemenCoefs lstage= %d nStages= %d dt= %s """ % (self.lstage,self.nStages,self.dt))
+        #import pdb
+        #pdb.set_trace()
         for ci in range(self.nc):#loop through components
             if q.has_key(('m',ci)):
                 self.stageValues['m'][ci][self.lstage+1].flat[:] = q[('m',ci)].flat[:]
@@ -1571,6 +1715,11 @@ class ExplicitRK_base(TI_base):
                 for i in range(self.lstage+1): #go from 0 to l-1
                     q[('mt',ci)].flat[:]-= self.alpha[self.lstage,i]*self.stageValues['m'][ci][i].flat[:]
                 #end i loop through stages
+                #mwf debug
+                log("""ExplicitRKbase calcElemenCoefs lstage= %d nStages= %d max dt diff= %s """ % (self.lstage,self.nStages,max(numpy.absolute(q[('mt',0)].flat))))
+                #if max(numpy.absolute(q[('mt',0)].flat)) > 1.0e-6:
+                #    import pdb
+                #    pdb.set_trace()
                 q[('mt',ci)]/= self.dt
                 for cj in range(self.nc):
                     if q.has_key(('dm',ci,cj)):
@@ -1695,6 +1844,9 @@ class ExplicitRK_base(TI_base):
         """
         Modify self.dt
         """
+        #mwf debug
+        import pdb
+        #pdb.set_trace()
         maxCFL=1.0e-6
         for ci in range(self.nc):
             if self.cfl.has_key(ci):
