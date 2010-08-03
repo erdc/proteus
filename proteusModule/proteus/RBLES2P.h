@@ -148,7 +148,7 @@ void backwardEuler(int eN, int k, double dt, double* m_old, double* m, double* d
 inline
 void bdf_c(const double& alpha, const double& beta, const double& m, const double& dm, double& mt, double& dmt)
 {  
-  mt =alpha*m + beta;
+  mt = alpha*m + beta;
   dmt = alpha*dm;
 }
 inline
