@@ -553,7 +553,9 @@ class OneLevelRBLES2P(OneLevelTransport):
                     self.ebqe[('diffusiveFlux_bc',ck,ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
                     self.ebqe[('diffusiveFlux_bc_flag',ck,ci)][t[0],t[1]] = 1
         self.numericalFlux.setDirichletValues(self.ebqe)
-        self.forceStrongConditions=True
+
+        self.forceStrongConditions=True ##False
+
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
@@ -597,25 +599,30 @@ class OneLevelRBLES2P(OneLevelTransport):
         self.elementResidual[2].fill(0.0) 
         self.elementResidual[3].fill(0.0)
 
-        for ebNE in range(self.numericalFlux.isDOFBoundary[1].shape[0]):
-            for kb in range(self.numericalFlux.isDOFBoundary[1].shape[1]):
-                if self.numericalFlux.isDOFBoundary[1][ebNE,kb] == 1:
-                    print "ebNE= %s kb= %s x= %s ('u',1)= %s isDOFBoundary[1] = %s " % (ebNE,kb,self.ebqe['x'][ebNE,kb],self.numericalFlux.ebqe[('u',1)][ebNE,kb],self.numericalFlux.isDOFBoundary[1][ebNE,kb])
+#        for ebNE in range(self.numericalFlux.isDOFBoundary[1].shape[0]):
+#            for kb in range(self.numericalFlux.isDOFBoundary[1].shape[1]):
+#                if self.numericalFlux.isDOFBoundary[1][ebNE,kb] == 1:
+#                    print "ebNE= %s kb= %s x= %s ('u',1)= %s isDOFBoundary[1] = %s " % (ebNE,kb,self.ebqe['x'][ebNE,kb],self.numericalFlux.ebqe[('u',1)][ebNE,kb],self.numericalFlux.isDOFBoundary[1][ebNE,kb])
 
 
-	import sys
+#	import sys	
+#	for ci in range(0,3):
+#		self.l2g[ci]['nFreeDOF']
+#		self.l2g[ci]['freeLocal']
+#		self.l2g[ci]['freeGlobal']	#
+#
+#        	sys.stdout.write('isDOFBoundary')
+#        	print          self.numericalFlux.isDOFBoundary[ci]	
+#	        sys.stdout.write('ebqe')
+#        	print          self.numericalFlux.ebqe[('u',ci)]	
+
+
+
+#	for ebNE in range(self.ebqe['x'].shape[0]): #loop over external faces
+#     		for kb in range(self.ebqe['x'].shape[1]): #loop over quadrature  points on each face
+#        		#if (x_0 <= self.ebqe['x'][ebNE,kb,0] and self.ebqe['x'][ebNE,kb,0] <= x_1 and y_0 <= self.ebqe['x'][ebNE,kb,1] and self.ebqe['x'][ebNE,kb,1] <= y_1):
+#            			print "ebNE= %s kb= %s x= %s self.numericalFlux.ebqe[('u',1)][ebNE,kb]= %s self.numericalFlux.isDOFBoundary[1] = %s " %    (ebNE,kb,self.ebqe['x'][ebNE,kb],self.numericalFlux.ebqe[('u',1)] [ebNE,kb],self.numericalFlux.isDOFBoundary[1])
 	
-	for ci in range(0,3):
-		self.l2g[ci]['nFreeDOF']
-		self.l2g[ci]['freeLocal']
-		self.l2g[ci]['freeGlobal']	
-
-    
-        	sys.stdout.write('isDOFBoundary')
-        	print          self.numericalFlux.isDOFBoundary[ci]	
-	        sys.stdout.write('ebqe')
-        	print          self.numericalFlux.ebqe[('u',ci)]	
-
 	
        # sys.stdout.write('isDOFBoundary 1')
 #	print          self.numericalFlux.isDOFBoundary[1]
@@ -624,8 +631,14 @@ class OneLevelRBLES2P(OneLevelTransport):
 #	sys.stdout.write('isDOFBoundary 3')
 #        print          self.numericalFlux.isDOFBoundary[3]
 
-
-	
+        if self.forceStrongConditions:
+            scaling = 0.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
+            for cj in range(len(self.dirichletConditionsForceDOF)):
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+#                    self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+                    self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+##		    self.q[('w*dV_r',1)][self.offset[cj]+self.stride[cj]*dofN] = 0		    
+	 
         cResidual(self.mesh.nElements_global,
                   self.timeIntegration.alpha_bdf,
                   self.coefficients.epsFact_density,
@@ -730,20 +743,16 @@ class OneLevelRBLES2P(OneLevelTransport):
         #import pdb
         #pdb.set_trace()
         #Load the Dirichlet conditions directly into residual
-        if self.forceStrongConditions:
-            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
-            for cj in range(self.nc):
-                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    #self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
-                    r[self.offset[cj]+self.stride[cj]*dofN] = scaling*(self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t))
-                    print "RBLES forcing residual cj = %s dofN= %s global_dofN= %s x=%s u=%s g=%s r=%s " % (cj,dofN,
-                                                                                                            self.offset[cj]+self.stride[cj]*dofN,
-                                                                                                            self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],
-                                                                                                            self.u[cj].dof[dofN],
-                                                                                                            g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t),
-                                                                                                            r[self.offset[cj]+self.stride[cj]*dofN])
-        if self.stabilization:
-            self.stabilization.accumulateSubgridMassHistory(self.q)
+	if self.forceStrongConditions:
+#	    scaling = 0.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
+#	    for cj in range(self.nc):
+	    for cj in range(len(self.dirichletConditionsForceDOF)):
+		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+#                    self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
+		    
+		    
+        self.stabilization.accumulateSubgridMassHistory(self.q)
         log("Global residual",level=9,data=r)
         #mwf decide if this is reasonable for keeping solver statistics
         self.nonlinear_function_evaluations += 1
@@ -886,11 +895,11 @@ class OneLevelRBLES2P(OneLevelTransport):
                     global_dofN = self.offset[cj]+self.stride[cj]*dofN
                     for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
                         if (self.colind[i] == global_dofN):
-                            print "RBLES forcing residual cj = %s dofN= %s global_dofN= %s was self.nzval[i]= %s now =%s " % (cj,dofN,global_dofN,self.nzval[i],scaling)
+                            #print "RBLES forcing residual cj = %s dofN= %s global_dofN= %s was self.nzval[i]= %s now =%s " % (cj,dofN,global_dofN,self.nzval[i],scaling)
                             self.nzval[i] = scaling
                         else:
                             self.nzval[i] = 0.0
-                            print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
+                            #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
 
         log("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
