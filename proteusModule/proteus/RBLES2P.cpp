@@ -143,30 +143,6 @@ extern "C" void calculateResidual_RBLES2P(int nElements_global,
 	    tau_0=0.0,
 	    tau_1=0.0;
 	    
-	 // double& N = vel_trial[eN_k_j]  
-
- 
-
-          /*for (int j=0;j<nDOF_trial_element;j++)
-            {
-              int eN_k_j=eN_k*nDOF_trial_element+j;
-	      Nq[j] =   p_test_dV [eN_k_j];
-	      Nw[j] = vel_test_dV [eN_k_j];
-              Np[j] =   p_trial[eN_k_j];
-	      Nu[j] = vel_trial[eN_k_j];
-
-              eN_k_j*=nSpace;
-	    for (int I=0;I<nSpace;I++)
-	      {                
-		gNq[j][I] =   p_grad_test_dV [eN_k_j];
-	        gNw[j][I] = vel_grad_test_dV [eN_k_j];
-                gNp[j][I] =   p_grad_trial[eN_k_j];
-	        gNu[j][I] = vel_grad_trial[eN_k_j];
-                eN_k_j += 1;
-	      }
-            }*/
-
-
 	    
           //
           //compute solution and gradients at quadrature points
@@ -204,6 +180,9 @@ extern "C" void calculateResidual_RBLES2P(int nElements_global,
           //
           //calculate pde coefficients at quadrature points
           //
+	  //u = 0.0;
+	  //v = 0.0;
+	  //w = 0.0;	  
  
           double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n;
           H_rho = smoothedHeaviside(eps_rho,phi[eN_k]);
@@ -233,8 +212,13 @@ extern "C" void calculateResidual_RBLES2P(int nElements_global,
 	  q_mom_u_acc[eN_k] = mom_u_acc;			    
 	  q_mom_v_acc[eN_k] = mom_v_acc;			    
 	  q_mom_w_acc[eN_k] = mom_w_acc;
-          
-          //
+
+          // Interpolate velocity for passing down
+          q_velocity[eN_k_nSpace+0]= u;
+          q_velocity[eN_k_nSpace+1]= v;
+          q_velocity[eN_k_nSpace+2]= w;        
+         
+	  //
           //calculate time derivative at quadrature points
           //
           bdf_c(alphaBDF,
@@ -304,18 +288,18 @@ extern "C" void calculateResidual_RBLES2P(int nElements_global,
 	                                 +grad_u[1]*vel_grad_test_dV[eN_k_i_nSpace+1]
 	                                 +grad_u[2]*vel_grad_test_dV[eN_k_i_nSpace+2])	
 	                            -p*vel_grad_test_dV[eN_k_i_nSpace+0]     	 
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+0] * (subgrid_u*u)// + u*subgrid_u + subgrid_u*subgrid_u)
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+1] * (subgrid_u*v)// + u*subgrid_v + subgrid_u*subgrid_v)
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+2] * (subgrid_u*w);// + u*subgrid_w + subgrid_u*subgrid_w);
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+0] * (subgrid_u*u + u*subgrid_u + subgrid_u*subgrid_u)
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+1] * (subgrid_u*v + u*subgrid_v + subgrid_u*subgrid_v)
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+2] * (subgrid_u*w + u*subgrid_w + subgrid_u*subgrid_w);
 		            
 	      elementResidual_v[i] += rho *(mom_v_acc_t + u*grad_v[0] + v*grad_v[1] + w*grad_v[2] - g[1])*vel_test_dV[eN_k_i]
 	                            + mu*(grad_v[0]*vel_grad_test_dV[eN_k_i_nSpace+0]
 	                                 +grad_v[1]*vel_grad_test_dV[eN_k_i_nSpace+1]
 	                                 +grad_v[2]*vel_grad_test_dV[eN_k_i_nSpace+2])		
 	                            -p*vel_grad_test_dV[eN_k_i_nSpace+1] 	                                  
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+0] * (subgrid_v*u)// + v*subgrid_u + subgrid_v*subgrid_u)
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+1] * (subgrid_v*v)// + v*subgrid_v + subgrid_v*subgrid_v)
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+2] * (subgrid_v*w);// + v*subgrid_w + subgrid_v*subgrid_w);
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+0] * (subgrid_v*u + v*subgrid_u + subgrid_v*subgrid_u)
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+1] * (subgrid_v*v + v*subgrid_v + subgrid_v*subgrid_v)
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+2] * (subgrid_v*w + v*subgrid_w + subgrid_v*subgrid_w);
 
 
 	      elementResidual_w[i] += rho *(mom_w_acc_t + u*grad_w[0] + v*grad_w[1] + w*grad_w[2] - g[2])*vel_test_dV[eN_k_i]
@@ -323,9 +307,9 @@ extern "C" void calculateResidual_RBLES2P(int nElements_global,
 	                                 +grad_w[1]*vel_grad_test_dV[eN_k_i_nSpace+1]
 	                                 +grad_w[2]*vel_grad_test_dV[eN_k_i_nSpace+2])		 
 	                            -p*vel_grad_test_dV[eN_k_i_nSpace+2] 
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+0] * (subgrid_w*u)// + w*subgrid_u + subgrid_w*subgrid_u)
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+1] * (subgrid_w*v)// + w*subgrid_v + subgrid_w*subgrid_v)
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+2] * (subgrid_w*w);// + w*subgrid_w + subgrid_w*subgrid_w);
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+0] * (subgrid_w*u + w*subgrid_u + subgrid_w*subgrid_u)
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+1] * (subgrid_w*v + w*subgrid_v + subgrid_w*subgrid_v)
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+2] * (subgrid_w*w + w*subgrid_w + subgrid_w*subgrid_w);
             }//i
 	}
       //
@@ -471,7 +455,7 @@ extern "C" void calculateResidual_RBLES2P(int nElements_global,
       //
       //update the element and global residual storage
       //
-      for (int i=0;i<nDOF_test_element;i++)
+      /*for (int i=0;i<nDOF_test_element;i++)
 	{
 	  int eN_i = eN*nDOF_test_element+i;
 	  q_elementResidual_p[eN_i]+=elementResidual_p[i];
@@ -483,7 +467,7 @@ extern "C" void calculateResidual_RBLES2P(int nElements_global,
 	  globalResidual[offset_u+stride_u*vel_l2g[eN_i]]+=elementResidual_u[i];
 	  globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=elementResidual_v[i];
 	  globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i];
-	}//i
+	}//i*/
     }//ebNE
 
 
@@ -712,7 +696,9 @@ extern "C" void calculateJacobian_RBLES2P(int nElements_global,
           //
           //calculate pde coefficients at quadrature points
           //
- 
+	 // u = 0.0;
+	 // v = 0.0;
+	 // w = 0.0;	 
           double rho,nu,mu,H_rho,d_rho,H_mu,d_mu;
           H_rho = smoothedHeaviside(eps_rho,phi[eN_k]);
           d_rho = smoothedDirac(eps_rho,phi[eN_k]);
@@ -735,7 +721,7 @@ extern "C" void calculateJacobian_RBLES2P(int nElements_global,
           mom_w_acc=w;
           dmom_w_acc_w=1.0;          
           
-          //
+          // 
           //calculate time derivative at quadrature points
           //
           bdf_c(alphaBDF,
@@ -756,7 +742,7 @@ extern "C" void calculateJacobian_RBLES2P(int nElements_global,
 		dmom_w_acc_w,
 		mom_w_acc_t,
 		dmom_w_acc_w_t);          
-
+ 
 
 
          
@@ -847,12 +833,15 @@ extern "C" void calculateJacobian_RBLES2P(int nElements_global,
 
           /* p */
 		  elementJacobian_p_p[i][j] -=  dsubgrid_u_p[j]*p_grad_test_dV[eN_k_i_nSpace+0]
-	                                 +  dsubgrid_v_p[j]*p_grad_test_dV[eN_k_i_nSpace+1]
-	                                 +  dsubgrid_w_p[j]*p_grad_test_dV[eN_k_i_nSpace+2];
+	                                     +  dsubgrid_v_p[j]*p_grad_test_dV[eN_k_i_nSpace+1]
+	                                     +  dsubgrid_w_p[j]*p_grad_test_dV[eN_k_i_nSpace+2];
 
-		  elementJacobian_p_u[i][j] += vel_grad_trial[eN_k_j_nSpace+0]*p_test_dV[eN_k_i];
-		  elementJacobian_p_v[i][j] += vel_grad_trial[eN_k_j_nSpace+1]*p_test_dV[eN_k_i];
-		  elementJacobian_p_w[i][j] += vel_grad_trial[eN_k_j_nSpace+2]*p_test_dV[eN_k_i];
+		  elementJacobian_p_u[i][j] += vel_grad_trial[eN_k_j_nSpace+0]*p_test_dV[eN_k_i]
+		                                - dsubgrid_u_u[j]*p_grad_test_dV[eN_k_i_nSpace+0];
+		  elementJacobian_p_v[i][j] += vel_grad_trial[eN_k_j_nSpace+1]*p_test_dV[eN_k_i]
+		                                - dsubgrid_v_v[j]*p_grad_test_dV[eN_k_i_nSpace+1];
+		  elementJacobian_p_w[i][j] += vel_grad_trial[eN_k_j_nSpace+2]*p_test_dV[eN_k_i]
+		                                - dsubgrid_w_w[j]*p_grad_test_dV[eN_k_i_nSpace+2];
 
           /* u */
 		  elementJacobian_u_p[i][j] -= p_trial[eN_k_j]*vel_grad_test_dV[eN_k_i_nSpace+0];
@@ -861,9 +850,9 @@ extern "C" void calculateJacobian_RBLES2P(int nElements_global,
 	                            + mu*(vel_grad_trial[eN_k_j_nSpace+0]*vel_grad_test_dV[eN_k_i_nSpace+0]
 	                                 +vel_grad_trial[eN_k_j_nSpace+1]*vel_grad_test_dV[eN_k_i_nSpace+1]
 	                                 +vel_grad_trial[eN_k_j_nSpace+2]*vel_grad_test_dV[eN_k_i_nSpace+2])		 
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+0] * (dsubgrid_u_u[j]*u)// + vel_trial[eN_k_j]*subgrid_u + dsubgrid_u_u[j]*subgrid_u)
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+1] * (dsubgrid_u_u[j]*v)// + vel_trial[eN_k_j]*subgrid_v + dsubgrid_u_u[j]*subgrid_v)
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+2] * (dsubgrid_u_u[j]*w);// + vel_trial[eN_k_j]*subgrid_w + dsubgrid_u_u[j]*subgrid_w);
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+0] * (dsubgrid_u_u[j]*u + vel_trial[eN_k_j]*subgrid_u + dsubgrid_u_u[j]*subgrid_u)
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+1] * (dsubgrid_u_u[j]*v + vel_trial[eN_k_j]*subgrid_v + dsubgrid_u_u[j]*subgrid_v)
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+2] * (dsubgrid_u_u[j]*w + vel_trial[eN_k_j]*subgrid_w + dsubgrid_u_u[j]*subgrid_w);
 		  
 		  elementJacobian_u_v[i][j] += 0.0;
 		  elementJacobian_u_w[i][j] += 0.0;
@@ -876,9 +865,9 @@ extern "C" void calculateJacobian_RBLES2P(int nElements_global,
 	                            + mu*(vel_grad_trial[eN_k_j_nSpace+0]*vel_grad_test_dV[eN_k_i_nSpace+0]
 	                                 +vel_grad_trial[eN_k_j_nSpace+1]*vel_grad_test_dV[eN_k_i_nSpace+1]
 	                                 +vel_grad_trial[eN_k_j_nSpace+2]*vel_grad_test_dV[eN_k_i_nSpace+2])		 
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+0] * (dsubgrid_v_v[j]*u)// + vel_trial[eN_k_j]*subgrid_u + dsubgrid_v_v[j]*subgrid_u)
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+1] * (dsubgrid_v_v[j]*v)// + vel_trial[eN_k_j]*subgrid_v + dsubgrid_v_v[j]*subgrid_v)
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+2] * (dsubgrid_v_v[j]*w);// + vel_trial[eN_k_j]*subgrid_w + dsubgrid_v_v[j]*subgrid_w);
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+0] * (dsubgrid_v_v[j]*u + vel_trial[eN_k_j]*subgrid_u + dsubgrid_v_v[j]*subgrid_u)
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+1] * (dsubgrid_v_v[j]*v + vel_trial[eN_k_j]*subgrid_v + dsubgrid_v_v[j]*subgrid_v)
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+2] * (dsubgrid_v_v[j]*w + vel_trial[eN_k_j]*subgrid_w + dsubgrid_v_v[j]*subgrid_w);
 		  elementJacobian_v_w[i][j] += 0.0;
 		 
           /* w */
@@ -892,9 +881,9 @@ extern "C" void calculateJacobian_RBLES2P(int nElements_global,
 	                            + mu*(vel_grad_trial[eN_k_j_nSpace+0]*vel_grad_test_dV[eN_k_i_nSpace+0]
 	                                 +vel_grad_trial[eN_k_j_nSpace+1]*vel_grad_test_dV[eN_k_i_nSpace+1]
 	                                 +vel_grad_trial[eN_k_j_nSpace+2]*vel_grad_test_dV[eN_k_i_nSpace+2])		 
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+0] * (dsubgrid_w_w[j]*u)// + vel_trial[eN_k_j]*subgrid_u + dsubgrid_w_w[j]*subgrid_u)
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+1] * (dsubgrid_w_w[j]*v)// + vel_trial[eN_k_j]*subgrid_v + dsubgrid_w_w[j]*subgrid_v)
-		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+2] * (dsubgrid_w_w[j]*w);// + vel_trial[eN_k_j]*subgrid_w + dsubgrid_w_w[j]*subgrid_w);
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+0] * (dsubgrid_w_w[j]*u + vel_trial[eN_k_j]*subgrid_u + dsubgrid_w_w[j]*subgrid_u)
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+1] * (dsubgrid_w_w[j]*v + vel_trial[eN_k_j]*subgrid_v + dsubgrid_w_w[j]*subgrid_v)
+		                        -rho*vel_grad_test_dV[eN_k_i_nSpace+2] * (dsubgrid_w_w[j]*w + vel_trial[eN_k_j]*subgrid_w + dsubgrid_w_w[j]*subgrid_w);
 		  
 
 
@@ -1108,7 +1097,7 @@ extern "C" void calculateJacobian_RBLES2P(int nElements_global,
        //
        //update the global Jacobian from the flux Jacobian
        //      
-       for (int i=0;i<nDOF_test_element;i++)
+     /*  for (int i=0;i<nDOF_test_element;i++)
          {
            register int eN_i = eN*nDOF_test_element+i;
            for (int j=0;j<nDOF_trial_element;j++)
@@ -1136,7 +1125,7 @@ extern "C" void calculateJacobian_RBLES2P(int nElements_global,
 	       globalJacobian[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_eb_w_w[ebN_i_j]] += boundaryJacobian_w_w[i][j];
 
 	     }//j
-         }//i	       // 
+         }//i	       //  */
 
 	
     }//ebNE
