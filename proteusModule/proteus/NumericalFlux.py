@@ -1942,10 +1942,10 @@ class Diffusion_LDG(NF_base):
             for ci in range(self.nc):
                 for ck in range(self.nc):
                     if self.vt.coefficients.sdInfo.has_key((ci,ck)):
-                        self.eb_aTilde[(ci,ck)] = numpy.zeros(ebq[('a',ci,ck)].shape)
-                        self.eb_aHat[(ci,ck)]   = numpy.zeros(ebq[('a',ci,ck)].shape)
-                        self.aTilde[(ci,ck)]    = numpy.zeros(q[('a',ci,ck)].shape)
-                        self.aHat[(ci,ck)]      = numpy.zeros(q[('a',ci,ck)].shape)
+                        self.eb_aTilde[(ci,ck)] = numpy.zeros(ebq[('a',ci,ck)].shape,dtype='d')
+                        self.eb_aHat[(ci,ck)]   = numpy.zeros(ebq[('a',ci,ck)].shape,dtype='d')
+                        self.aTilde[(ci,ck)]    = numpy.zeros(q[('a',ci,ck)].shape,dtype='d')
+                        self.aHat[(ci,ck)]      = numpy.zeros(q[('a',ci,ck)].shape,dtype='d')
             self.aSplittingsHaveBeenAllocated = True
         for ci in range(self.nc):
             for ck in range(self.nc):
@@ -2382,6 +2382,25 @@ class RusanovNumericalFlux_Diagonal(Advection_DiagonalUpwind):
                                           getAdvectiveFluxBoundaryConditions,
                                           getDiffusiveFluxBoundaryConditions)
         self.safetyFactor=1.1
+        #add extra terms that can be lagged specifically for advective flux. Time integrator has to do this though
+        for ci in range(self.nc):
+            #ebq
+            vt.ebq[('u_advectiveNumericalFlux',ci)]= vt.ebq[('u',ci)]
+            if vt.ebq.has_key(('f',ci)):
+                vt.ebq[('f_advectiveNumericalFlux',ci)]= vt.ebq[('f',ci)]
+            for cj in range(self.nc):
+                if vt.ebq.has_key(('df',ci,cj)):
+                    vt.ebq[('df_advectiveNumericalFlux',ci,cj)]= vt.ebq[('df',ci,cj)]
+                if vt.q.has_key(('df',ci,cj)):
+                    vt.q[('df_advectiveNumericalFlux',ci,cj)] = vt.q[('df',ci,cj)]
+            #ebqe
+            vt.ebqe[('u_advectiveNumericalFlux',ci)]= vt.ebqe[('u',ci)]
+            if vt.ebqe.has_key(('f',ci)):
+                vt.ebqe[('f_advectiveNumericalFlux',ci)]= vt.ebqe[('f',ci)]
+            for cj in range(self.nc):
+                if vt.ebqe.has_key(('df',ci,cj)):
+                    vt.ebqe[('df_advectiveNumericalFlux',ci,cj)]= vt.ebqe[('df',ci,cj)]
+
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         for ci in range(self.nc):
             cnumericalFlux.calculateInteriorNumericalAdvectiveFluxRusanov(self.safetyFactor,
@@ -2389,10 +2408,10 @@ class RusanovNumericalFlux_Diagonal(Advection_DiagonalUpwind):
                                                                           self.mesh.elementBoundaryElementsArray,
                                                                           self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                           ebq['n'],
-                                                                          ebq[('u',ci)],
-                                                                          ebq[('f',ci)],
-                                                                          ebq[('df',ci,ci)],
-                                                                          q[('df',ci,ci)],
+                                                                          ebq[('u_advectiveNumericalFlux',ci)],
+                                                                          ebq[('f_advectiveNumericalFlux',ci)],
+                                                                          ebq[('df_advectiveNumericalFlux',ci,ci)],
+                                                                          q[('df_advectiveNumericalFlux',ci,ci)],
                                                                           ebq_global[('advectiveFlux',ci)],
                                                                           ebq_global[('dadvectiveFlux_left',ci,ci)],
                                                                           ebq_global[('dadvectiveFlux_right',ci,ci)])
@@ -2420,10 +2439,10 @@ class RusanovNumericalFlux_Diagonal(Advection_DiagonalUpwind):
                                                                           self.ebqe[('u',ci)],
                                                                           self.ebqe[('f',ci)],
                                                                           self.ebqe[('df',ci,ci)],
-                                                                          ebqe[('u',ci)],
-                                                                          ebqe[('f',ci)],
-                                                                          ebqe[('df',ci,ci)],
-                                                                          q[('df',ci,ci)],
+                                                                          ebqe[('u_advectiveNumericalFlux',ci)],
+                                                                          ebqe[('f_advectiveNumericalFlux',ci)],
+                                                                          ebqe[('df_advectiveNumericalFlux',ci,ci)],
+                                                                          q[('df_advectiveNumericalFlux',ci,ci)],
                                                                           ebqe[('advectiveFlux',ci)],
                                                                           ebqe[('dadvectiveFlux_left',ci,ci)])
             #mwf debug
@@ -2437,8 +2456,8 @@ class RusanovNumericalFlux_Diagonal(Advection_DiagonalUpwind):
                                                                                inflowFlag[ci],
                                                                                ebqe[('inflowFlux',ci)],
                                                                                ebqe['n'],
-                                                                               ebqe[('f',ci)],
-                                                                               ebqe[('df',ci,ci)],
+                                                                               ebqe[('f_advectiveNumericalFlux',ci)],
+                                                                               ebqe[('df_advectiveNumericalFlux',ci,ci)],
                                                                                ebqe[('advectiveFlux',ci)],
                                                                                ebqe[('dadvectiveFlux_left',ci,ci)])
 class RusanovNumericalFlux_Diagonal_Diffusion_IIPG(Advection_DiagonalUpwind_Diffusion_IIPG):
@@ -2454,6 +2473,25 @@ class RusanovNumericalFlux_Diagonal_Diffusion_IIPG(Advection_DiagonalUpwind_Diff
                                                          getAdvectiveFluxBoundaryConditions,
                                                          getDiffusiveFluxBoundaryConditions)
         self.safetyFactor=1.1
+        #add extra terms that can be lagged specifically for advective flux. Time integrator has to do this though
+        for ci in range(self.nc):
+            #ebq
+            vt.ebq[('u_advectiveNumericalFlux',ci)]= vt.ebq[('u',ci)]
+            if vt.ebq.has_key(('f',ci)):
+                vt.ebq[('f_advectiveNumericalFlux',ci)]= vt.ebq[('f',ci)]
+            for cj in range(self.nc):
+                if vt.ebq.has_key(('df',ci,cj)):
+                    vt.ebq[('df_advectiveNumericalFlux',ci,cj)]= vt.ebq[('df',ci,cj)]
+                if vt.q.has_key(('df',ci,cj)):
+                    vt.q[('df_advectiveNumericalFlux',ci,cj)] = vt.q[('df',ci,cj)]
+            #ebqe
+            vt.ebqe[('u_advectiveNumericalFlux',ci)]= vt.ebqe[('u',ci)]
+            if vt.ebqe.has_key(('f',ci)):
+                vt.ebqe[('f_advectiveNumericalFlux',ci)]= vt.ebqe[('f',ci)]
+            for cj in range(self.nc):
+                if vt.ebqe.has_key(('df',ci,cj)):
+                    vt.ebqe[('df_advectiveNumericalFlux',ci,cj)]= vt.ebqe[('df',ci,cj)]
+
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         for ci in range(self.nc):
             if ebq.has_key(('f',ci)):
@@ -2462,10 +2500,10 @@ class RusanovNumericalFlux_Diagonal_Diffusion_IIPG(Advection_DiagonalUpwind_Diff
                                                                               self.mesh.elementBoundaryElementsArray,
                                                                               self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                               ebq['n'],
-                                                                              ebq[('u',ci)],
-                                                                              ebq[('f',ci)],
-                                                                              ebq[('df',ci,ci)],
-                                                                              q[('df',ci,ci)],
+                                                                              ebq[('u_advectiveNumericalFlux',ci)],
+                                                                              ebq[('f_advectiveNumericalFlux',ci)],
+                                                                              ebq[('df_advectiveNumericalFlux',ci,ci)],
+                                                                              q[('df_advectiveNumericalFlux',ci,ci)],
                                                                               ebq_global[('advectiveFlux',ci)],
                                                                               ebq_global[('dadvectiveFlux_left',ci,ci)],
                                                                               ebq_global[('dadvectiveFlux_right',ci,ci)])
@@ -2516,10 +2554,10 @@ class RusanovNumericalFlux_Diagonal_Diffusion_IIPG(Advection_DiagonalUpwind_Diff
                                                                               self.ebqe[('u',ci)],
                                                                               self.ebqe[('f',ci)],
                                                                               self.ebqe[('df',ci,ci)],
-                                                                              ebqe[('u',ci)],
-                                                                              ebqe[('f',ci)],
-                                                                              ebqe[('df',ci,ci)],
-                                                                              q[('df',ci,ci)],
+                                                                              ebqe[('u_advectiveNumericalFlux',ci)],
+                                                                              ebqe[('f_advectiveNumericalFlux',ci)],
+                                                                              ebqe[('df_advectiveNumericalFlux',ci,ci)],
+                                                                              q[('df_advectiveNumericalFlux',ci,ci)],
                                                                               ebqe[('advectiveFlux',ci)],
                                                                               ebqe[('dadvectiveFlux_left',ci,ci)])
             for ck in range(self.nc):
@@ -2561,8 +2599,8 @@ class RusanovNumericalFlux_Diagonal_Diffusion_IIPG(Advection_DiagonalUpwind_Diff
                                                                                inflowFlag[ci],
                                                                                ebqe[('inflowFlux',ci)],
                                                                                ebqe['n'],
-                                                                               ebqe[('f',ci)],
-                                                                               ebqe[('df',ci,ci)],
+                                                                               ebqe[('f_advectiveNumericalFlux',ci)],
+                                                                               ebqe[('df_advectiveNumericalFlux',ci,ci)],
                                                                                ebqe[('advectiveFlux',ci)],
                                                                                ebqe[('dadvectiveFlux_left',ci,ci)])
 class ConvexOneSonicPointNumericalFlux(Advection_DiagonalUpwind):
@@ -3169,7 +3207,6 @@ class DarcyFC_IIPG_exterior(NF_base):
                                                                        ebqe[('penalty')],
                                                                        ebqe[('diffusiveFlux',0,0)], #(ck,ci) 
                                                                        ebqe[('diffusiveFlux',1,1)])
-            
     def updateInteriorNumericalFluxJacobian(self,l2g,q,ebq,ebq_global,dphi,fluxJacobian,fluxJacobian_eb,fluxJacobian_hj):
         pass
     def updateExteriorNumericalFluxJacobian(self,l2g,inflowFlag,q,ebqe,dphi,fluxJacobian_exterior,fluxJacobian_eb,fluxJacobian_hj):
@@ -3457,8 +3494,8 @@ class RusanovNumericalFlux(RusanovNumericalFlux_Diagonal):
                                                                                              self.mesh.elementBoundaryElementsArray,
                                                                                              self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                                              ebq['n'],
-                                                                                             ebq[('u',ci)],
-                                                                                             ebq[('f',ci)],
+                                                                                             ebq[('u_advectiveNumericalFlux',ci)],
+                                                                                             ebq[('f_advectiveNumericalFlux',ci)],
                                                                                              self.vt.q['eigen_bound'],
                                                                                              ebq_global[('advectiveFlux',ci)])
 
@@ -3490,8 +3527,8 @@ class RusanovNumericalFlux(RusanovNumericalFlux_Diagonal):
                                                                                              ebqe['n'],
                                                                                              self.ebqe[('u',ci)],
                                                                                              self.ebqe[('f',ci)],
-                                                                                             ebqe[('u',ci)],
-                                                                                             ebqe[('f',ci)],
+                                                                                             ebqe[('u_advectiveNumericalFlux',ci)],
+                                                                                             ebqe[('f_advectiveNumericalFlux',ci)],
                                                                                              self.vt.q['eigen_bound'],
                                                                                              ebqe[('advectiveFlux',ci)])
             #mwf debug
@@ -3529,6 +3566,24 @@ class RusanovLDG(Diffusion_LDG):
         self.ebqe['eigen_bound']=numpy.copy(self.ebqe[('u',0)])
         if not self.vt.q.has_key('eigen_bound'):
             self.vt.q['eigen_bound']=numpy.copy(self.vt.q[('u',0)])
+        #add extra terms that can be lagged specifically for advective flux. Time integrator has to do this though
+        for ci in range(self.nc):
+            #ebq
+            vt.ebq[('u_advectiveNumericalFlux',ci)]= vt.ebq[('u',ci)]
+            if vt.ebq.has_key(('f',ci)):
+                vt.ebq[('f_advectiveNumericalFlux',ci)]= vt.ebq[('f',ci)]
+            for cj in range(self.nc):
+                if vt.ebq.has_key(('df',ci,cj)):
+                    vt.ebq[('df_advectiveNumericalFlux',ci,cj)]= vt.ebq[('df',ci,cj)]
+                if vt.q.has_key(('df',ci,cj)):
+                    vt.q[('df_advectiveNumericalFlux',ci,cj)] = vt.q[('df',ci,cj)]
+            #ebqe
+            vt.ebqe[('u_advectiveNumericalFlux',ci)]= vt.ebqe[('u',ci)]
+            if vt.ebqe.has_key(('f',ci)):
+                vt.ebqe[('f_advectiveNumericalFlux',ci)]= vt.ebqe[('f',ci)]
+            for cj in range(self.nc):
+                if vt.ebqe.has_key(('df',ci,cj)):
+                    vt.ebqe[('df_advectiveNumericalFlux',ci,cj)]= vt.ebqe[('df',ci,cj)]
 
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         Diffusion_LDG.calculateInteriorNumericalFlux(self,q,ebq,ebq_global)
@@ -3549,8 +3604,8 @@ class RusanovLDG(Diffusion_LDG):
                                                                                                  self.mesh.elementBoundaryElementsArray,
                                                                                                  self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                                                  ebq['n'],
-                                                                                                 ebq[('u',ci)],
-                                                                                                 ebq[('f',ci)],
+                                                                                                 ebq[('u_advectiveNumericalFlux',ci)],
+                                                                                                 ebq[('f_advectiveNumericalFlux',ci)],
                                                                                                  self.vt.q['eigen_bound'],
                                                                                                  ebq_global[('advectiveFlux',ci)])
 
