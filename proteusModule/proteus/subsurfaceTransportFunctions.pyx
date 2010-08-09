@@ -663,3 +663,45 @@ def RE_NCP1_getElementJacobian(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical q
                 #j picard
         #i
     #eN
+########################################################################
+#
+########################################################################
+def updateMass_weakAvg(numpy.ndarray[DTYPE_t,ndim=2] mt,
+                       numpy.ndarray[DTYPE_t,ndim=3] w,
+                       numpy.ndarray[DTYPE_t,ndim=2] dV,
+                       numpy.ndarray[DTYPE_t,ndim=2] weak_residual):
+   """
+   approximate element mass term as (\bar{c}_e,w_{h,i})_e
+   """
+   cdef int eN,i,k
+   cdef mt_avg,vol
+   for eN in range(mt.shape[0]):
+      mt_avg = 0.0
+      vol    = 0.0
+      for k in range(mt.shape[1]):
+         mt_avg += dV[eN,k]*mt[eN,k]
+         vol += dV[eN,k]
+      mt_avg /= vol
+      for i in range(weak_residual.shape[1]):
+         weak_residual[eN,i] += mt_avg*w[eN,k,i]*dV[eN,k]
+def updateMassJacobian_weakAvg(numpy.ndarray[DTYPE_t,ndim=2] dmt,
+                               numpy.ndarray[DTYPE_t,ndim=3] w,
+                               numpy.ndarray[DTYPE_t,ndim=3] v,
+                               numpy.ndarray[DTYPE_t,ndim=2] dV,
+                               numpy.ndarray[DTYPE_t,ndim=3] jacobian_weak_residual):
+   """
+   approximate element mass Jacobian term as (\pd{\bar{c}_e}{u_j},w_{h,i})_e
+   """
+   cdef int eN,i,j,k
+   cdef dmtj_avg,vol
+   for eN in range(dmt.shape[0]):
+      vol = 0.0 #should I save a loop? 
+      for k in range(dmt.shape[1]):
+         vol += dV[eN,k]
+      for i in range(w.shape[2]):
+         for j in range(v.shape[2]):
+            dmtj_avg = 0.0
+            for k in range(dmt.shape[1]):
+               dmtj_avg += dV[eN,k]*dmt[eN,k]*v[eN,k,j]
+            dmtj_avg /= vol
+            jacobian_weak_residual[eN,i,j] += dmtj_avg*w[eN,k,i]*dV[eN,k]
