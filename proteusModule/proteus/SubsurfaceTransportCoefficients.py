@@ -1365,7 +1365,308 @@ class FullyCoupledSimplePSKs(TwophaseDarcy_fc):
                               Sw_min_types=Sw_min_types)
 
 
+class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
+    """
+    continuity equation for each phase
+
+      \pd{m_w}{t} - \deld (\ten{a}_w \grad \phi_w) + r_w = 0
+
+      \pd{m_n}{t} - \deld (\ten{a}_n \grad \phi_n) + r_n = 0
+
+    (normalized) mass for each phase 
+       m_i = \theta_i \rho_i,  i=w,n
+       
+       \theta_i = \theta_s S_i
+       \rho_i   = \varrho_i/\varrho_{i,0}, i=w,n
+
+     where S_i is the saturation for each phase, \varrho_{i} is the density and
+     \varrho_{i,0} is a reference value
+
+    (normalized) mass flux for each phase is
+
+       \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
+    
+       \ten{a}_i = \rho_i k_{r,i}/\hat{\mu}_i \ten{K}_s
+    and the potentials are defined as
+       \phi_{w}  = \psi_{w} - \rho_w \vec g\cdot \vec x
+       \phi_{n}  = \psi_{n} - b \rho_n \vec g\cdot \vec x
+
+    where
+       \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
+       b        = \varrho_{n,0}/\varrho_{w,0}
+       \hat{mu}_{i} = \mu_i/\mu_{w}
+
+    for the pressure of each phase, p_i, and we have the capillary pressure relation
+       \psi_{c} = \psi_{n} - \psi_{w}
+
+    The dependent variables are
+      \psi_w, and \psi_c
+
+    Note S_n = 1-S_w
+
+    needs to be implemented
+    r_i = r_i(\vec x,t) 
+
+
+    slight compressibility assumed in spatial gradients
+
+    TODO:
+   """
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_pp_sd_het_matType
+    def __init__(self,
+                 nd=1,
+                 dimensionless_gravity=[-1.0],
+                 density_w=998.2, #Water kg/m^3
+                 density_n=1.205, #Air   kg/m^3
+                 viscosity_w=8.9e-4, #Water kg/m s
+                 viscosity_n=1.81e-5,#Air kg/ m s
+                 density_w_parameters=TwophaseDarcyFlow_base.default_density_w_parameters,
+                 density_n_parameters=TwophaseDarcyFlow_base.default_density_n_parameters,
+                 psk_model='VGM',
+                 nMaterialTypes=1,
+                 diagonal_conductivity=True):
+        TwophaseDarcyFlow_base.__init__(self,
+                                        nd=nd,
+                                        dimensionless_gravity=dimensionless_gravity,
+                                        density_w=density_w,
+                                        density_n=density_n,
+                                        viscosity_w=viscosity_w,
+                                        viscosity_n=viscosity_n,
+                                        density_w_parameters=density_w_parameters,
+                                        density_n_parameters=density_n_parameters,
+                                        psk_model=psk_model,
+                                        nMaterialTypes=nMaterialTypes,
+                                        diagonal_conductivity=diagonal_conductivity)
+
+        nc=2
+        variableNames=['psi_w','psi_c']
+        mass = {0:{0:'nonlinear',1:'nonlinear'},
+                1:{0:'nonlinear',1:'nonlinear'}}
+        advection = {}
+        hamiltonian={}
+        potential = {0:{1:'nonlinear',#actually this is just linear if we use slight compressibility
+                        0:'nonlinear'},#don't really need saturation dependence for potential
+                     1:{0:'nonlinear',
+                        1:'nonlinear'}}
+        diffusion = {0:{0:{0:'nonlinear',
+                           1:'nonlinear'}},
+                     1:{1:{0:'nonlinear',
+                           1:'nonlinear'}}}
+        reaction = {0:{0:'linear'},
+                    1:{1:'linear'}}
+        
+
+        if self.diagonal_conductivity:
+            sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd+1,dtype='i'),
+                                             numpy.arange(self.nd,dtype='i')),
+                                      (1,1):(numpy.arange(self.nd+1,dtype='i'),
+                                             numpy.arange(self.nd,dtype='i'))}
+
+        else: #full
+            sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
+                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i')),
+                                      (1,1):(numpy.arange(self.nd**2+1,step=self.nd,dtype='i'),
+                                             numpy.array([range(self.nd) for row in range(self.nd)],dtype='i'))}
+
+
+        TC_base.__init__(self,
+                         nc,
+                         mass,
+                         advection,
+                         diffusion,
+                         potential,
+                         reaction,
+                         hamiltonian,
+			 variableNames,
+                         sparseDiffusionTensors = sparseDiffusionTensors,
+                         useSparseDiffusion = True)
+
+
+    def initializeElementQuadrature(self,t,cq):
+        TwophaseDarcyFlow_base.initializeElementQuadrature(self,t,cq)
+        #
+        cq['sw'] = numpy.zeros(cq[('u',0)].shape,'d')
+    def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
+        TwophaseDarcyFlow_base.initializeElementBoundaryQuadrature(self,t,cebq,cebq_global)
+        if cebq.has_key(('u',0)):
+            cebq['sw'] = numpy.zeros(cebq[('u',0)].shape,'d')
+        if cebq_global.has_key(('u',0)):
+            cebq_global['sw'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
+    def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
+        TwophaseDarcyFlow_base.initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe)
+        cebqe['sw'] = numpy.zeros(cebqe[('u',0)].shape,'d')
+    def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
+        TwophaseDarcyFlow_base.initializeGeneralizedInterpolationPointQuadrature(self,t,cip)
+        cip['sw'] = numpy.zeros(cip[('u',0)].shape,'d')
+    
+    def evaluate(self,t,c):
+        if c[('u',0)].shape == self.q_shape:
+            materialTypes = self.materialTypes_q
+        elif c[('u',0)].shape == self.ebqe_shape:
+            materialTypes = self.materialTypes_ebqe
+        elif c[('u',0)].shape == self.ip_shape:
+            materialTypes = self.materialTypes_ip
+        elif c[('u',0)].shape == self.ebq_shape:
+            materialTypes = self.materialTypes_ebq
+        else:
+            assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
+        assert self.rwork_psk != None
+        #mwf do some debugging
+        assert materialTypes.max() < self.nMaterialTypes
+        assert materialTypes.min() == 0
+        
+        self.twophaseDarcy_fc_pp_sd_het_matType(self.psk_types[self.psk_model],
+                                                self.density_types[self.density_w_model],
+                                                self.density_types[self.density_n_model],
+                                                self.sdInfo[(0,0)][0],
+                                                self.sdInfo[(0,0)][1],
+                                                materialTypes,
+                                                self.muw,
+                                                self.mun,
+                                                self.omega_types,
+                                                self.Ksw_types,
+                                                self.b,
+                                                self.rwork_psk,
+                                                self.rwork_psk_tolerances,
+                                                self.rwork_density_w,
+                                                self.rwork_density_n,
+                                                self.g[:self.nd],#todo get consistent on dimension setting
+                                                c['x'],
+                                                c[('u',0)],
+                                                c[('u',1)],
+                                                c['sw'],
+                                                c[('m',0)],
+                                                c[('dm',0,0)],
+                                                c[('dm',0,1)],
+                                                c[('m',1)],
+                                                c[('dm',1,0)],
+                                                c[('dm',1,1)],
+                                                c[('phi',0)],
+                                                c[('dphi',0,0)],
+                                                c[('phi',1)],
+                                                c[('dphi',1,0)],
+                                                c[('dphi',1,1)],
+                                                c[('a',0,0)],
+                                                c[('da',0,0,0)],
+                                                c[('da',0,0,1)],
+                                                c[('a',1,1)],
+                                                c[('da',1,1,0)],
+                                                c[('da',1,1,1)])
+ 
+
+        #mwf debug
+        if (numpy.isnan(c[('da',0,0,0)]).any() or
+            numpy.isnan(c[('a',0,0)]).any() or
+            numpy.isnan(c[('da',1,1,0)]).any() or
+            numpy.isnan(c[('a',1,1)]).any() or
+            numpy.isnan(c[('u',0)]).any() or
+            numpy.isnan(c[('m',0)]).any() or
+            numpy.isnan(c[('dm',0,0)]).any()):
+            import pdb
+            pdb.set_trace()
 #
+class FullyCoupledPressurePressureMualemVanGenuchten(TwophaseDarcy_fc_pp):
+    """
+    Formulation using phase continuity equations, pressure-pressure formulation and
+     Van-Genuchten Mualem psk relations
+    
+    Basically a convenience wrapper for fully coupled approximation
+     with volume-fraction based inputs as in Richards' equation formulations
+
+    """
+    def __init__(self,
+                 nd,
+                 Ksw_types, 
+                 vgm_n_types,
+                 vgm_alpha_types,
+                 thetaR_types,
+                 thetaSR_types,
+                 dimensionless_gravity,
+                 density_w,
+                 density_n,
+                 viscosity_w,
+                 viscosity_n,
+                 density_w_params,
+                 density_n_params,
+                 diagonal_conductivity=True,
+                 vgm_small_eps=1.0e-16,
+                 vgm_ns_del=1.0e-8):
+
+        TwophaseDarcy_fc_pp.__init__(self,
+                                     nd=nd,
+                                     dimensionless_gravity=dimensionless_gravity,
+                                     density_w=density_w,
+                                     density_n=density_n,
+                                     viscosity_w=viscosity_w,
+                                     viscosity_n=viscosity_n,
+                                     density_w_parameters=density_w_params,
+                                     density_n_parameters=density_n_params,
+                                     psk_model='VGM',
+                                     nMaterialTypes=len(thetaR_types),
+                                     diagonal_conductivity=diagonal_conductivity)
+        for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
+            assert len(input)==self.nMaterialTypes
+        
+        vgm_m_types    = 1.0-1.0/vgm_n_types
+        thetaS_types   = thetaSR_types + thetaR_types
+        Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
+        Sw_min_types   = thetaR_types/thetaS_types
+        self.psk_tolerances['VGM']['eps_small']=vgm_small_eps
+        self.psk_tolerances['VGM']['ns_del']   =vgm_ns_del
+        self.setMaterialTypes(Ksw_types=Ksw_types,
+                              omega_types=thetaS_types,
+                              Sw_max_types=Sw_max_types,
+                              Sw_min_types=Sw_min_types,
+                              vg_alpha_types=vgm_alpha_types,
+                              vg_m_types=vgm_m_types)
+
+
+class FullyCoupledPressurePressureSimplePSKs(TwophaseDarcy_fc_pp):
+    """
+    Formulation using phase continuity equations and
+     'simp' quadratic rel-perm, linear capillary pressure psk relations
+    pressure-pressure formulation
+    """
+    def __init__(self,
+                 nd,
+                 Ksw_types, 
+                 thetaR_types,
+                 thetaSR_types,
+                 dimensionless_gravity,
+                 density_w,
+                 density_n,
+                 viscosity_w,
+                 viscosity_n,
+                 density_w_params,
+                 density_n_params,
+                 diagonal_conductivity=True):
+
+        TwophaseDarcy_fc_pp.__init__(self,
+                                     nd=nd,
+                                     dimensionless_gravity=dimensionless_gravity,
+                                     density_w=density_w,
+                                     density_n=density_n,
+                                     viscosity_w=viscosity_w,
+                                     viscosity_n=viscosity_n,
+                                     density_w_parameters=density_w_params,
+                                     density_n_parameters=density_n_params,
+                                     psk_model='simp',
+                                     nMaterialTypes=len(thetaR_types),
+                                     diagonal_conductivity=diagonal_conductivity)
+        for input in [thetaR_types,thetaSR_types]:
+            assert len(input)==self.nMaterialTypes
+        
+        thetaS_types   = thetaSR_types + thetaR_types
+        Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
+        Sw_min_types   = thetaR_types/thetaS_types
+        self.setMaterialTypes(Ksw_types=Ksw_types,
+                              omega_types=thetaS_types,
+                              Sw_max_types=Sw_max_types,
+                              Sw_min_types=Sw_min_types)
+
+
+
+###########
 class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
     """
     Base class for 'pressure' or total flow conservation equation in fractional flow formulations. This
@@ -2676,6 +2977,7 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
             #todo need to do make sure mass conserved, handle projection from cg to dg correctly
             #todo ExplicitRK is getting messed up here, going twice as fast
             log("Incomp.FracFlowSatAdvDiff preStep t= %s model %s setting its solution from model %s " % (t,self.satModel_me,self.satModel_other),level=2)
+            #if self.satModelIndex_me != 1:#mwf hack
             self.satModel_other.u[0].getValues(self.u_ip[('v_other',0)],
                                                self.u_ip[('u_other',0)])
             #mwf hack to test mass conservation
@@ -2704,6 +3006,10 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
             copyInstructions = {'copy_uList':True,
                                 'uList_model':self.satModelIndex_other}
             copyInstructions = {'reset_uList':True}
+            #print "advDiff satModel_me= %s after \n u_me= %s " % (self.satModelIndex_me,
+            #                                                      self.satModel_me.u[0].dof)
+            #                                                      
+
             return copyInstructions
         else:
             return {}
@@ -2936,6 +3242,9 @@ class IncompressibleFractionalFlowSaturationSimplePSKs(TwophaseDarcy_incompressi
                               omega_types=thetaS_types,
                               Sw_max_types=Sw_max_types,
                               Sw_min_types=Sw_min_types)
+
+
+
 
 ########################################
 #Single-phase species transport
