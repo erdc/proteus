@@ -64,36 +64,6 @@ inline int twophaseDarcy_fc_sd_het_matType(int nSimplex,
         {
           i = eN*nPointsPerSimplex+pN;
 	  psk.calc(sw[i]);
-	  /*mwf debug*/
-// 	  assert (0 <= matID && matID <= 1);
-// 	  if (matID == 1)
-// 	    {
-// 	      assert (1.25 <= x[i*3+0] && x[i*3+0] <= 2.25);
-// 	      assert (1.25 <= x[i*3+1] && x[i*3+1] <= 1.5);
-// 	      assert (omega[matID] == 0.368);
-// 	      assert (rwork_psk[matID*nParams+0] == 0.277);
-// 	      assert (rwork_psk[matID*nParams+1] == 1.0);
-// 	      assert (rwork_psk[matID*nParams+2] == 3.350);
-// 	      assert (rwork_psk[matID*nParams+3] == 0.5);
-// 	      assert (psk.Sw_min == rwork_psk[matID*nParams+0]);
-// 	      assert (psk.Sw_max == rwork_psk[matID*nParams+1]);
-// 	      assert (psk.alpha == rwork_psk[matID*nParams+2]);
-// 	      assert (psk.m == rwork_psk[matID*nParams+3]);
-// 	      assert (psk.n == 2.0);
-// 	    }
-// 	  else
-// 	    {
-// 	      assert (omega[matID] == 0.301);
-// 	      assert (rwork_psk[matID*nParams+0] == 0.308);
-// 	      assert (rwork_psk[matID*nParams+1] == 1.0);
-// 	      assert (rwork_psk[matID*nParams+2] == 5.470);
-// 	      assert (rwork_psk[matID*nParams+3] == (1.0-1.0/4.264));
-// 	      assert (psk.Sw_min == rwork_psk[matID*nParams+0]);
-// 	      assert (psk.Sw_max == rwork_psk[matID*nParams+1]);
-// 	      assert (psk.alpha == rwork_psk[matID*nParams+2]);
-// 	      assert (psk.m == rwork_psk[matID*nParams+3]);
-// 	      assert (fabs(psk.n-4.264) < 1.0e-6);
-// 	    }
 	  /*non-wetting phase pressure head */
 	  psin[i] = psiw[i] + psk.psic;
 	  dpsin_dsw[i]  = psk.dpsic;
@@ -149,6 +119,136 @@ inline int twophaseDarcy_fc_sd_het_matType(int nSimplex,
 		  dan_dsw[i*nnz+m]   = density_n.rho*Kbar[matID*nnz+m]*psk.dkrn/mun + drhon_dsw*Kbar[matID*nnz+m]*psk.krn/mun;
 		  dan_dpsiw[i*nnz+m] = drhon_dpsiw*Kbar[matID*nnz+m]*psk.krn/mun;
 		}
+	    }
+	}
+    }
+  return 0;
+}
+/* fully coupled, phase continuity formulation, wetting phase pressure and capillary pressure are primary dependent
+   variables except say u_1 = 1-S for u_1 <= 0
+   slight-compressibility assumption is used for densities
+   heterogeneity is represented by material types
+   and diffusion tensors are sparse
+*/
+template<class PSK, class DENSITY_W, class DENSITY_N>
+inline int twophaseDarcy_fc_pp_sd_het_matType(int nSimplex,
+					      int nPointsPerSimplex,
+					      int nSpace,
+					      int nParams,		       
+					      const int* rowptr,
+					      const int* colind,
+					      const int* materialTypes,
+					      double muw,
+					      double mun,
+					      const double* omega,
+					      const double* Kbar, /*now has to be tensor*/
+					      double b,
+					      const double* rwork_psk,
+					      const double* rwork_psk_tol,
+					      const double* rwork_density_w,
+					      const double* rwork_density_n,
+					      const double* g,
+					      const double* x,
+					      const double* psiw,
+					      const double* psic,
+					      double *sw,
+					      double* mw,
+					      double* dmw_dpsiw,
+					      double* dmw_dpsic,
+					      double* mn,
+					      double* dmn_dpsiw,
+					      double* dmn_dpsic,
+					      double* phi_psiw,
+					      double* dphi_psiw_dpsiw,
+					      double* phi_psin,
+					      double* dphi_psin_dpsiw,
+					      double* dphi_psin_dpsic,
+					      double* aw,
+					      double* daw_dpsiw,
+					      double* daw_dpsic,
+					      double* an,
+					      double* dan_dpsiw,
+					      double* dan_dpsic)
+{
+  int matID;
+  PSK psk(rwork_psk);  psk.setTolerances(rwork_psk_tol);
+  DENSITY_W density_w(rwork_density_w);
+  DENSITY_N density_n(rwork_density_n);
+  double drhow_dpsiw,drhow_dpsic,drhon_dpsiw,drhon_dpsic,
+    swi,psin,dsw_dpsic;
+  const int nnz = rowptr[nSpace];
+  for (int eN=0;eN<nSimplex;eN++)
+    {
+      matID = materialTypes[eN];
+      psk.setParams(&rwork_psk[matID*nParams]);
+      for(int pN=0,i;pN<nPointsPerSimplex;pN++)
+        {
+          i = eN*nPointsPerSimplex+pN;
+	  psk.calc_from_psic(psic[i]);
+	  
+	  /*non-wetting phase pressure head */
+	  psin = psiw[i] + psic[i];
+	  /*aqueous phase saturation*/
+	  swi = psk.Se*(psk.Sw_max-psk.Sw_min) + psk.Sw_min;
+	  sw[i] = swi;
+	  dsw_dpsic = psk.dSe_dpsic/psk.dSe_dSw;
+
+	  /*mwf need to make sure normalized by rhow and rhon respectively!*/
+	  density_w.calc(psiw[i]); 
+	  density_n.calc(psin);
+	  /*density of wetting phase just a function of psiw*/
+	  drhow_dpsiw = density_w.drho;
+	  drhow_dpsic = 0.0;
+	  /*density of nonwetting phase a function of psic and psiw through psin*/
+	  drhon_dpsiw = density_n.drho;
+	  drhon_dpsic = density_n.drho;
+	  
+	  /* w-phase mass */
+	  mw[i]   = omega[matID]*density_w.rho*swi;
+	  dmw_dpsic[i]= omega[matID]*(density_w.rho*dsw_dpsic + swi*drhow_dpsic); 
+	  dmw_dpsiw[i]= omega[matID]*swi*drhow_dpsiw;
+
+	  /* n-phase mass */
+	  mn[i]       = omega[matID]*density_n.rho*(1.0-swi);
+	  dmn_dpsic[i]= omega[matID]*((1.0-swi)*drhon_dpsic -density_n.rho*dsw_dpsic); 
+	  dmn_dpsiw[i]= omega[matID]*(1.0-swi)*drhon_dpsiw;
+
+	  /* w-phase potential */
+	  phi_psiw[i] = psiw[i];
+	  dphi_psiw_dpsiw[i] = 1.0; /*include density dependence below*/
+      
+	  /* n-phase  potential */
+	  phi_psin[i] = psiw[i] + psic[i];
+	  dphi_psin_dpsiw[i]= 1.0;
+	  dphi_psin_dpsic[i]= 1.0;
+      
+	  for (int I=0;I<nSpace;I++)
+	    {
+	      /* update potentials with gravity */
+	      /*slight compressibility, normalized density=1.0*/
+	      phi_psiw[i] -= g[I]*x[i*3+I];
+	      	      
+	      phi_psin[i] -= b*g[I]*x[i*3+I];
+	      
+	      for (int m=rowptr[I]; m < rowptr[I+1]; m++)
+		{
+		  /* w-phase diffusion */
+	      
+		  aw[i*nnz+m]  = density_w.rho*Kbar[matID*nnz+m]*psk.krw/muw;
+		  daw_dpsic[i*nnz+m]= density_w.rho*Kbar[matID*nnz+m]*psk.dkrw/muw + drhow_dpsic*Kbar[matID*nnz+m]*psk.krw/muw;
+		  daw_dpsiw[i*nnz+m]= drhow_dpsiw*Kbar[matID*nnz+m]*psk.krw/muw;
+	      
+		  /* n-phase  diffusion */
+		  an[i*nnz+m]        = density_n.rho*Kbar[matID*nnz+m]*psk.krn/mun;
+		  dan_dpsic[i*nnz+m] = density_n.rho*Kbar[matID*nnz+m]*psk.dkrn/mun + drhon_dpsic*Kbar[matID*nnz+m]*psk.krn/mun;
+		  dan_dpsiw[i*nnz+m] = drhon_dpsiw*Kbar[matID*nnz+m]*psk.krn/mun;
+		}
+	    }
+	  /*adjust mass terms if psic <= 0, */
+	  if (psic[i] <= 0.0)
+	    {
+	      dmn_dpsic[i] = omega[matID]*density_n.rho;
+	      dmn_dpsiw[i] = 0.0;
 	    }
 	}
     }
@@ -662,6 +762,8 @@ static inline int twophaseDarcy_compressibleN_split_sd_pressure_het_matType(int 
   return 0.0;
 }
 
+
+/********************************** begin deprecated routines ********************/
 /* homogeneous coefficients */
 template<class PSK>
 inline int twophaseDarcy_fc(int nPoints,
