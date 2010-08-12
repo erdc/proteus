@@ -3135,7 +3135,7 @@ class DarcyFC_IIPG_exterior(NF_base):
                  getDiffusiveFluxBoundaryConditions)
         #hold Dirichlet values for \psi_n (non-wetting phase head)
         #also need extra psi_n entries that aren't part of default quadrature
-        for term in ['psi_n_bc','psi_n',('dpsi_n',0),('dpsi_n',1)]:
+        for term in ['psi_n_bc','psi_n',('dpsi_n',0),('dpsi_n',1),'sw']:
             self.ebqe[term] = numpy.zeros(self.ebqe[('u',1)].shape,'d')
         self.hasInterior=False
         self.penalty_constant = 2.0
