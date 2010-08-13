@@ -202,7 +202,8 @@ inline int twophaseDarcy_fc_pp_sd_het_matType(int nSimplex,
 	  /*density of nonwetting phase a function of psic and psiw through psin*/
 	  drhon_dpsiw = density_n.drho;
 	  drhon_dpsic = density_n.drho;
-	  
+	  if (psic[i] <= 0.0)
+	    drhon_dpsic = 0.0;
 	  /* w-phase mass */
 	  mw[i]   = omega[matID]*density_w.rho*swi;
 	  dmw_dpsic[i]= omega[matID]*(density_w.rho*dsw_dpsic + swi*drhow_dpsic); 
@@ -245,10 +246,24 @@ inline int twophaseDarcy_fc_pp_sd_het_matType(int nSimplex,
 		}
 	    }
 	  /*adjust mass terms if psic <= 0, */
-	  if (psic[i] <= 0.0)
+	  if (psic[i] <= 0.0)/*0.0)*/
 	    {
+	      /*mwf debug
+	      printf("psic[%d]=%g krn=%g dkrn=%g krw=%g dkrw=%g sw=%g dsw_dpsic=%g drhow_dpsic=%g drhon_dpsic=%g \n",i,psic[i],psk.krn,psk.dkrn,psk.krw,psk.dkrw,swi,
+		     dsw_dpsic,drhow_dpsic,drhon_dpsic); 
+	      */
 	      dmn_dpsic[i] = omega[matID]*density_n.rho;
 	      dmn_dpsiw[i] = 0.0;
+	      dmw_dpsic[i] = 0.0;
+	      for (int I=0;I<nSpace;I++)
+		{
+		  for (int m=rowptr[I]; m < rowptr[I+1]; m++)
+		    {
+		      daw_dpsic[i*nnz+m] = 0.0;
+		      dan_dpsic[i*nnz+m] = 0.0;
+		    }
+		}
+
 	    }
 	}
     }
