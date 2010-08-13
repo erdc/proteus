@@ -1486,19 +1486,28 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
         TwophaseDarcyFlow_base.initializeElementQuadrature(self,t,cq)
         #
         cq['sw'] = numpy.zeros(cq[('u',0)].shape,'d')
+        cq[('dpsi_n',0)].fill(1.0)
+        cq[('dpsi_n',1)].fill(1.0)
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         TwophaseDarcyFlow_base.initializeElementBoundaryQuadrature(self,t,cebq,cebq_global)
         if cebq.has_key(('u',0)):
             cebq['sw'] = numpy.zeros(cebq[('u',0)].shape,'d')
+            cebq[('dpsi_n',0)].fill(1.0)
+            cebq[('dpsi_n',1)].fill(1.0)
         if cebq_global.has_key(('u',0)):
             cebq_global['sw'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
+            cebq_global[('dpsi_n',0)].fill(1.0)
+            cebq_global[('dpsi_n',1)].fill(1.0)
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         TwophaseDarcyFlow_base.initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe)
         cebqe['sw'] = numpy.zeros(cebqe[('u',0)].shape,'d')
+        cebqe[('dpsi_n',0)].fill(1.0)
+        cebqe[('dpsi_n',1)].fill(1.0)
     def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
         TwophaseDarcyFlow_base.initializeGeneralizedInterpolationPointQuadrature(self,t,cip)
         cip['sw'] = numpy.zeros(cip[('u',0)].shape,'d')
-    
+        cip[('dpsi_n',0)].fill(1.0)
+        cip[('dpsi_n',1)].fill(1.0)
     def evaluate(self,t,c):
         if c[('u',0)].shape == self.q_shape:
             materialTypes = self.materialTypes_q
@@ -1553,7 +1562,12 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
                                                 c[('da',1,1,0)],
                                                 c[('da',1,1,1)])
  
-
+        #todo put this back in cpp eval?
+        c['psi_n'][:] = c[('u',0)]
+        c['psi_n'] += c[('u',1)]
+        c[('dpsi_n',0)].fill(1.0)
+        c[('dpsi_n',1)].fill(1.0)
+        
         #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
@@ -1666,6 +1680,99 @@ class FullyCoupledPressurePressureSimplePSKs(TwophaseDarcy_fc_pp):
 
 
 
+class Twophase_fc_pp_OneLevelTransport(Transport.OneLevelTransport):
+    """
+    Just allow removing non-wetting phase equation if u_1 =psi_c <= 0
+    """
+    def __init__(self,
+                 uDict,
+                 phiDict,
+                 testSpaceDict,
+                 matType,
+                 dofBoundaryConditionsDict,
+                 dofBoundaryConditionsSetterDict,
+                 coefficients,
+                 elementQuadrature,
+                 elementBoundaryQuadrature,
+                 fluxBoundaryConditionsDict=None,
+                 advectiveFluxBoundaryConditionsSetterDict=None,
+                 diffusiveFluxBoundaryConditionsSetterDictDict=None,
+                 stressTraceBoundaryConditionsSetterDict=None,
+                 stabilization=None,
+                 shockCapturing=None,
+                 conservativeFluxDict=None,
+                 numericalFluxType=None,
+                 TimeIntegrationClass=None,
+                 massLumping=False,
+                 reactionLumping=False,
+                 options=None,
+                 name='defaultName',
+                 reuse_trial_and_test_quadrature=False,
+                 sd = True,
+                 movingDomain=False):#,
+        Transport.OneLevelTransport.__init__(self,
+                                             uDict,
+                                             phiDict,
+                                             testSpaceDict,
+                                             matType,
+                                             dofBoundaryConditionsDict,
+                                             dofBoundaryConditionsSetterDict,
+                                             coefficients,
+                                             elementQuadrature,
+                                             elementBoundaryQuadrature,
+                                             fluxBoundaryConditionsDict=fluxBoundaryConditionsDict,
+                                             advectiveFluxBoundaryConditionsSetterDict=advectiveFluxBoundaryConditionsSetterDict,
+                                             diffusiveFluxBoundaryConditionsSetterDictDict=diffusiveFluxBoundaryConditionsSetterDictDict,
+                                             stressTraceBoundaryConditionsSetterDict=stressTraceBoundaryConditionsSetterDict,
+                                             stabilization=stabilization,
+                                             shockCapturing=shockCapturing,
+                                             conservativeFluxDict=conservativeFluxDict,
+                                             numericalFluxType=numericalFluxType,
+                                             TimeIntegrationClass=TimeIntegrationClass,
+                                             massLumping=massLumping,
+                                             reactionLumping=reactionLumping,
+                                             options=options,
+                                             name=name,
+                                             reuse_trial_and_test_quadrature=reuse_trial_and_test_quadrature,
+                                             sd = sd,
+                                             movingDomain=movingDomain)
+
+        self.inactive_equations = None
+        self.try_inactive_equations = True
+        self.inactive_tolerance = 0.0
+    #
+    def getResidual(self,u,r):
+        """
+        Kill non-wetting phase equation if psi_c <= 0
+        """
+        Transport.OneLevelTransport.getResidual(self,u,r)
+        if self.try_inactive_equations:
+            if self.inactive_equations == None:
+                self.inactive_equations = numpy.zeros(u.shape,'i')
+            else:
+                self.inactive_equations.fill(0)
+            scaling = 1.0
+            for J in range(self.offset[1],len(r)):
+                if u[J] <= -self.inactive_tolerance:
+                    r[J] = scaling*(u[J]-0.0)
+                    self.inactive_equations[J] = 1
+
+    def getJacobian(self,jacobian):
+        Transport.OneLevelTransport.getJacobian(self,jacobian)
+        if self.try_inactive_equations:
+            scaling = 1.0
+            for J in range(self.offset[1],len(self.inactive_equations)):
+                if self.inactive_equations[J] == 1:
+                    for i in range(self.rowptr[J],self.rowptr[J+1]):
+                        if (self.colind[i] == J):
+                            self.nzval[i] = scaling
+                        else:
+                            self.nzval[i] = 0.0
+                        #
+                    #
+                #
+            #
+        
 ###########
 class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
     """
