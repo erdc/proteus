@@ -10500,7 +10500,913 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian_sd(int nE
     }/*ebNE*/
 
 }
+/*begin FCPP exterior flux terms*/
+void calculateGlobalExteriorNumericalFluxDarcyFCPP(int nExteriorElementBoundaries_global,
+						   int nQuadraturePoints_elementBoundary,
+						   int nSpace,
+						   const int* exteriorElementBoundaries,
+						   const int* elementBoundaryElements,
+						   const int* elementBoundaryLocalElementBoundaries,
+						   const int* isDOFBoundary_uw,/*1 set bc for psi_w*/
+						   const int* isDOFBoundary_un,/*1 set bc for psi_c, 
+										 2 set bc for psi_n*/
+						   const double* n,
+						   const double* bc_a_ww,      
+						   const double* bc_a_nn,      
+						   const double* bc_grad_phi_w,
+						   const double* bc_grad_phi_n,
+						   const double* bc_psi_w,        
+						   const double* bc_psi_c,       
+						   const double* bc_psi_n,
+						   const double* a_ww,         /*lambda_w K_s*/
+						   const double* a_nn,         /*lambda_n K_s*/
+						   const double* grad_phi_w,   /*psi_w - rho_w g . x*/
+						   const double* grad_phi_n,   /*psi_c + psi_w - rho_n g . x*/
+						   const double* psi_w,           /*psi_w*/
+						   const double* psi_c,           /*psi_c*/
+						   const double* psi_n,
+						   const double* penalty_w,    
+						   const double* penalty_n,
+						   double * diffusiveFlux_ww,
+						   double * diffusiveFlux_nn)
+{
+  int ebNE,ebN,I,J,k,nSpace2=nSpace*nSpace;
+  double diffusiveFlux_I=0.0,penaltyFlux = 0.0;
 
+  for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
+    {
+      ebN = exteriorElementBoundaries[ebNE];
+      for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
+	{
+	  /*compute diffusive flux for first (w) equation (aq. mass
+	    balance for part of boundary where u_0 (i.e., S_w) is
+	    specified*/
+	  diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary+k] = 0.0;
+	  diffusiveFlux_nn[ebNE*nQuadraturePoints_elementBoundary+k] = 0.0;
+	  /*only allow psi_w setting here?*/
+	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
+	    {
+	      /*integration by parts term for diffusive flux wrt phi_w = psi_w - rho_w g . x*/
+	      for (I = 0; I < nSpace; I++)
+		{
+		  diffusiveFlux_I = 0.0;
+		  for (J = 0; J < nSpace; J++)
+		    {
+		      diffusiveFlux_I -= 
+			a_ww[ebNE*nQuadraturePoints_elementBoundary*nSpace2 + 
+			     k*nSpace2 + 
+			     I*nSpace + 
+			     J]
+			*
+			grad_phi_w[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+				   k*nSpace + 
+				   J];
+		    }
+		  diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary+k] += 
+		    diffusiveFlux_I
+		    *
+		    n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		      k*nSpace+
+		      I];
+		}/*I, a_wm grad phi_m term */
+	      /*boundary penalty term*/
+	      penaltyFlux = 
+		penalty_w[ebNE*nQuadraturePoints_elementBoundary + k]
+		*
+		(psi_w[ebNE*nQuadraturePoints_elementBoundary + k]
+		 -
+		 bc_psi_w[ebNE*nQuadraturePoints_elementBoundary + k]);
+	      diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary +k] += 
+		penaltyFlux;
+	    }/*psi_w boundary*/
+	  /*1 set psi_c, 2 set psi_n*/
+	  if(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] >= 1)
+	    {
+	      /*integration by parts term for diffusive flux wrt phi_n = psi_c + psi_w - rho_n g . x*/
+	      for (I = 0; I < nSpace; I++)
+		{
+		  diffusiveFlux_I = 0.0;
+		  for (J = 0; J < nSpace; J++)
+		    {
+		      diffusiveFlux_I -= 
+			a_nn[ebNE*nQuadraturePoints_elementBoundary*nSpace2 + 
+			     k*nSpace2 +
+			     I*nSpace + 
+			     J]
+			*
+			grad_phi_n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+				   k*nSpace +
+				   J];
+		    }/*J*/
+		  diffusiveFlux_nn[ebNE*nQuadraturePoints_elementBoundary + k] += 
+		    diffusiveFlux_I
+		    *
+		    n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+		      k*nSpace + 
+		      I];
+		}/*I, a_mw grad phi_n term */
+	      /*boundary penalty term*/
+	      if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 2)
+		{
+		  penaltyFlux = 
+		    penalty_n[ebNE*nQuadraturePoints_elementBoundary + k]
+		    *
+		    (psi_n[ebNE*nQuadraturePoints_elementBoundary + k]
+		     -
+		     bc_psi_n[ebNE*nQuadraturePoints_elementBoundary + k]);
+		}
+	      else
+		{
+		  assert(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 1);
+		  penaltyFlux = 
+		    penalty_n[ebNE*nQuadraturePoints_elementBoundary + k]
+		    *
+		    (psi_c[ebNE*nQuadraturePoints_elementBoundary + k]
+		     -
+		     bc_psi_c[ebNE*nQuadraturePoints_elementBoundary + k]);
+
+		}
+	      diffusiveFlux_nn[ebNE*nQuadraturePoints_elementBoundary +k] += 
+		penaltyFlux;
+	    }/*um boundary*/
+	}/*k*/
+    }/*ebNE*/
+}
+
+void calculateGlobalExteriorNumericalFluxDarcyFCPP_sd(int nExteriorElementBoundaries_global,
+						      int nQuadraturePoints_elementBoundary,
+						      int nSpace,
+						      int* rowptr_ww,
+						      int* colind_ww,
+						      int* rowptr_nn,
+						      int* colind_nn,
+						      const int* exteriorElementBoundaries,
+						      const int* elementBoundaryElements,
+						      const int* elementBoundaryLocalElementBoundaries,
+						      const int* isDOFBoundary_uw,/*1 set bc for psi_w*/
+						      const int* isDOFBoundary_un,/*1 set bc for psi_c, 
+										    2 set bc for psi_n*/
+						      const double* n,
+						      const double* bc_a_ww,      
+						      const double* bc_a_nn,      
+						      const double* bc_grad_phi_w,
+						      const double* bc_grad_phi_n,
+						      const double* bc_psi_w,        
+						      const double* bc_psi_c,       
+						      const double* bc_psi_n,
+						      const double* a_ww,         /*lambda_w K_s*/
+						      const double* a_nn,         /*lambda_n K_s*/
+						      const double* grad_phi_w,   /*psi_w - rho_w g . x*/
+						      const double* grad_phi_n,   /*psi_c + psi_w - rho_n g . x*/
+						      const double* psi_w,           /*s_w*/
+						      const double* psi_c,           /*psi_w*/
+						      const double* psi_n,
+						      const double* penalty_w,    
+						      const double* penalty_n,
+						      double * diffusiveFlux_ww,
+						      double * diffusiveFlux_nn)
+{
+  int ebNE,ebN,I,k,m,nnz_ww=rowptr_ww[nSpace],nnz_nn=rowptr_nn[nSpace];
+  double diffusiveFlux_I=0.0,penaltyFlux = 0.0;
+  for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
+    {
+      ebN = exteriorElementBoundaries[ebNE];
+      for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
+	{
+	  /*compute diffusive flux for first (w) equation (aq. mass
+	    balance for part of boundary where u_0 (i.e., S_w) is
+	    specified*/
+	  diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary+k] = 0.0;
+	  diffusiveFlux_nn[ebNE*nQuadraturePoints_elementBoundary+k] = 0.0;
+	  /*only allow psi_w setting here?*/
+	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
+	    {
+	      /*integration by parts term for diffusive flux wrt phi_w = psi_w - rho_w g . x*/
+	      for (I = 0; I < nSpace; I++)
+		{
+		  diffusiveFlux_I = 0.0;
+		  for(m=rowptr_ww[I];m<rowptr_ww[I+1];m++)
+		    {
+		      diffusiveFlux_I -= 
+			a_ww[ebNE*nQuadraturePoints_elementBoundary*nnz_ww + 
+			     k*nnz_ww + 
+			     m]
+			*
+			grad_phi_w[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+				   k*nSpace + 
+				   colind_ww[m]];
+		    }
+		  diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary+k] += 
+		    diffusiveFlux_I
+		    *
+		    n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		      k*nSpace+
+		      I];
+		}/*I, a_wm grad phi_m term */
+	      /*boundary penalty term*/
+	      penaltyFlux = 
+		penalty_w[ebNE*nQuadraturePoints_elementBoundary + k]
+		*
+		(psi_w[ebNE*nQuadraturePoints_elementBoundary + k]
+		 -
+		 bc_psi_w[ebNE*nQuadraturePoints_elementBoundary + k]);
+	      diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary +k] += 
+		penaltyFlux;
+	    }/*psi_w boundary*/
+	  /*1 set psi_c, 2 set psi_n*/
+	  if(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] >= 1)
+	    {
+	      /*integration by parts term for diffusive flux wrt phi_n = psi_c + psi_w - rho_n g . x*/
+	      for (I = 0; I < nSpace; I++)
+		{
+		  diffusiveFlux_I = 0.0;
+		  for(m=rowptr_nn[I];m<rowptr_nn[I+1];m++)
+		    {
+		      diffusiveFlux_I -= 
+			a_nn[ebNE*nQuadraturePoints_elementBoundary*nnz_nn + 
+			     k*nnz_nn +
+			     m]
+			*
+			grad_phi_n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+				   k*nSpace +
+				   colind_nn[m]];
+		    }/*J*/
+		  diffusiveFlux_nn[ebNE*nQuadraturePoints_elementBoundary + k] += 
+		    diffusiveFlux_I
+		    *
+		    n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+		      k*nSpace + 
+		      I];
+		}/*I, a_mw grad phi_n term */
+	      /*boundary penalty term*/
+	      if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 2)
+		{
+		  penaltyFlux = 
+		    penalty_n[ebNE*nQuadraturePoints_elementBoundary + k]
+		    *
+		    (psi_n[ebNE*nQuadraturePoints_elementBoundary + k]
+		     -
+		     bc_psi_n[ebNE*nQuadraturePoints_elementBoundary + k]);
+		}
+	      else
+		{
+		  assert(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 1);
+		  penaltyFlux = 
+		    penalty_n[ebNE*nQuadraturePoints_elementBoundary + k]
+		    *
+		    (psi_c[ebNE*nQuadraturePoints_elementBoundary + k]
+		     -
+		     bc_psi_c[ebNE*nQuadraturePoints_elementBoundary + k]);
+
+		}
+	      diffusiveFlux_nn[ebNE*nQuadraturePoints_elementBoundary +k] += 
+		penaltyFlux;
+	    }/*um boundary*/
+	}/*k*/
+    }/*ebNE*/
+}
+
+void calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian(int nExteriorElementBoundaries_global,
+									 int nQuadraturePoints_elementBoundary,
+									 int nSpace,
+									 int nDOF_trial_element,
+									 const int* l2g, /*for now assumes both solution spaces are the same!*/
+									 const int* exteriorElementBoundaries,
+									 const int* elementBoundaryElements,
+									 const int* elementBoundaryLocalElementBoundaries,
+									 const int* isDOFBoundary_uw,/*1 set bc for psi_w*/
+									 const int* isDOFBoundary_un,/*1 set bc for psi_c, 
+												       2 set bc for psi_n*/
+									 const double* n,
+									 const double* a_ww,         /*lambda_w K_s*/
+									 const double* da_ww_dw,         /* a' wrt S_w*/
+									 const double* da_ww_dn,         /* a' wrt psi_w*/
+									 const double* a_nn,         /*lambda_t K_s*/
+									 const double* da_nn_dw,         /* a' wrt S_w*/
+									 const double* da_nn_dn,         /* a' wrt psi_w*/
+									 const double* grad_phi_w,   /*psi_w - rho_w g . x*/
+									 const double* grad_phi_n,   /*psi_n + psi_w - rho_n g . x*/
+									 const double* dphi_w_w,     /*\pd{phi_w}{psi_w} = 1 */     
+									 const double* dphi_w_n,     /*\pd{phi_w}{psi_c}= 0 */
+									 const double* dphi_n_w,     /*\pd{phi_n}{psi_w} = 1  */
+									 const double* dphi_n_n,     /*\pd{phi_n}{psi_c} = 1  */
+									 const double* psi_w,           /*psi_w*/
+									 const double* psi_c,           /*psi_c*/
+									 const double* psi_n,           
+									 const double* dpsi_n_dpsiw, 
+									 const double* dpsi_n_dpsic,
+									 const double* v,            /*trial functions, assumed in same space*/
+									 const double* grad_v,       /*trial function gradients, assumed in same space*/
+									 const double* penalty_w,    
+									 const double* penalty_n,
+									 double * fluxJacobian_ww,
+									 double * fluxJacobian_wn,
+									 double * fluxJacobian_nw,
+									 double * fluxJacobian_nn)
+{
+  int ebNE,ebN,eN_global,j,j_global,I,J,k,nSpace2=nSpace*nSpace;
+  double Jacobian_w,Jacobian_n,
+    diffusiveVelocityComponent_I_Jacobian_w,
+    diffusiveVelocityComponent_I_Jacobian_n,  
+    diffusiveVelocityComponent_I_Jacobian2_wn,
+    diffusiveVelocityComponent_I_Jacobian2_ww,
+    diffusiveVelocityComponent_I_Jacobian2_nw,
+    diffusiveVelocityComponent_I_Jacobian2_nn;
+
+  for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
+    {
+      ebN = exteriorElementBoundaries[ebNE];
+      eN_global = elementBoundaryElements[ebN*2 + 0];
+      for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
+	{
+	  /*compute derivative of diffusive flux for first (w) equation (aq. mass
+	    balance for part of boundary where u_0 (i.e., psi_w) is
+	    specified
+	  */
+	  /*only allow setting psi_w for this equation*/	  
+	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary + k] == 1)
+	    {
+	      /*NOTE! assuming u_w, u_n in the same space and nodal interpolant for potential*/
+	      
+	      for (j = 0; j < nDOF_trial_element; j++)
+		{
+		  Jacobian_w = 0.; /*derivative wrt u_w = S_w */
+		  Jacobian_n = 0.; /*derivative wrt u_n = psi_w */
+		  j_global = l2g[eN_global*nDOF_trial_element + j];/*assuming same space for both*/ 
+		  for (I = 0; I < nSpace; I++)
+		    {
+		      diffusiveVelocityComponent_I_Jacobian_w = 0.0; 
+		      diffusiveVelocityComponent_I_Jacobian_n = 0.0; 
+		      diffusiveVelocityComponent_I_Jacobian2_wn = 0.0;
+		      diffusiveVelocityComponent_I_Jacobian2_ww = 0.0;
+		      for (J = 0; J < nSpace; J++)
+			{
+			  /*only a_ww potential here*/
+			  diffusiveVelocityComponent_I_Jacobian_w -= 
+			    da_ww_dw[ebNE*nQuadraturePoints_elementBoundary*nSpace2 + 
+				     k*nSpace2 + 
+				     I*nSpace  + 
+				     J]
+			    *
+			    grad_phi_w[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+				       k*nSpace + 
+				       J];
+			  diffusiveVelocityComponent_I_Jacobian_n -= 
+			    da_ww_dn[ebNE*nQuadraturePoints_elementBoundary*nSpace2 + 
+				     k*nSpace2 + 
+				     I*nSpace  + 
+				     J]
+			    *
+			    grad_phi_w[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+				       k*nSpace + 
+				       J];
+
+			  diffusiveVelocityComponent_I_Jacobian2_ww -=
+			    a_ww[ebNE*nQuadraturePoints_elementBoundary*nSpace2 + 
+				 k*nSpace2 + 
+				 I*nSpace  + 
+				 J]
+			    * /*should be grad_v_w in general I believe*/
+			    grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace + 
+				   k*nDOF_trial_element*nSpace+
+                                   j*nSpace+
+                                   J];
+			  /*identical for now*/
+			  diffusiveVelocityComponent_I_Jacobian2_wn -=
+			    a_ww[ebNE*nQuadraturePoints_elementBoundary*nSpace2 + 
+				 k*nSpace2 + 
+				 I*nSpace  + 
+				 J]
+			    * /*should be grad_v_w in general I believe*/
+			    grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace + 
+				   k*nDOF_trial_element*nSpace+
+                                   j*nSpace+
+                                   J];
+			    
+			}/*J loop*/
+		      Jacobian_w += 
+			diffusiveVelocityComponent_I_Jacobian_w 
+			*/*should be v_w*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
+			  k*nDOF_trial_element +
+			  j]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+		      Jacobian_w += 
+			diffusiveVelocityComponent_I_Jacobian2_ww 
+			*
+			dphi_w_w[j_global]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+		      Jacobian_n += 
+			diffusiveVelocityComponent_I_Jacobian_n 
+			*/*should be v_n*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
+			  k*nDOF_trial_element +
+			  j]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+		      Jacobian_n += 
+			diffusiveVelocityComponent_I_Jacobian2_wn 
+			*
+			dphi_w_n[j_global]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+		    }/*I loop */
+		  /*only diagonal gets penalty term*/
+		  Jacobian_w += 
+		    penalty_w[ebNE*nQuadraturePoints_elementBoundary+k]
+		    * /*should be v_w*/
+		    v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                      k*nDOF_trial_element+
+                      j];
+		  fluxJacobian_ww[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+				  k*nDOF_trial_element +
+				  j] += 
+		    Jacobian_w;
+		  fluxJacobian_wn[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+				  k*nDOF_trial_element +
+				  j] += 
+		    Jacobian_n;
+		}/* j local dof loop*/
+	    }/*u_w dof boundary loop*/
+	  /*setting psi_w = 1, or psi_n = 2*/
+	  if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] >= 1)
+	    {
+	      /*NOTE! assuming u_w, u_m in the same space and nodal interpolant for potential*/
+	      
+	      for (j = 0; j < nDOF_trial_element; j++)
+		{
+		  Jacobian_w = 0.; /*derivative wrt u_w = psi_w */
+		  Jacobian_n = 0.; /*derivative wrt u_n = psi_c */
+		  j_global = l2g[eN_global*nDOF_trial_element + j];/*assuming same space for both*/ 
+		  for (I = 0; I < nSpace; I++)
+		    {
+		      diffusiveVelocityComponent_I_Jacobian_w = 0.0;
+		      diffusiveVelocityComponent_I_Jacobian_n = 0.0;  
+		      diffusiveVelocityComponent_I_Jacobian2_nw = 0.0;
+		      diffusiveVelocityComponent_I_Jacobian2_nn = 0.0;
+		      for (J = 0; J < nSpace; J++)
+			{
+			  /*nn potential*/
+			  diffusiveVelocityComponent_I_Jacobian_w -= 
+			    da_nn_dw[ebNE*nQuadraturePoints_elementBoundary*nSpace2 + 
+				     k*nSpace2 + 
+				     I*nSpace  + 
+				     J]
+			    *
+			    grad_phi_n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+				       k*nSpace + 
+				       J];
+			  diffusiveVelocityComponent_I_Jacobian_n -= 
+			    da_nn_dn[ebNE*nQuadraturePoints_elementBoundary*nSpace2 + 
+				     k*nSpace2 + 
+				     I*nSpace  + 
+				     J]
+			    *
+			    grad_phi_n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+				       k*nSpace + 
+				       J];
+
+			  /*nn potential*/
+			  diffusiveVelocityComponent_I_Jacobian2_nw -=
+			    a_nn[ebNE*nQuadraturePoints_elementBoundary*nSpace2 + 
+				 k*nSpace2 + 
+				 I*nSpace  + 
+				 J]
+			    * /*should be grad_v_w in general I believe*/
+			    grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace + 
+				   k*nDOF_trial_element*nSpace+
+                                   j*nSpace+
+                                   J];
+			  /*identical for now*/
+			  diffusiveVelocityComponent_I_Jacobian2_nn -=
+			    a_nn[ebNE*nQuadraturePoints_elementBoundary*nSpace2 + 
+				 k*nSpace2 + 
+				 I*nSpace  + 
+				 J]
+			    * /*should be grad_v_m in general I believe*/
+			    grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace + 
+				   k*nDOF_trial_element*nSpace+
+                                   j*nSpace+
+                                   J];
+			    
+			}/*J loop*/
+		      Jacobian_w += 
+			diffusiveVelocityComponent_I_Jacobian_w 
+			*/*should be v_w*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
+			  k*nDOF_trial_element +
+			  j]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+		      Jacobian_w += 
+			diffusiveVelocityComponent_I_Jacobian2_nw 
+			*
+			dphi_n_w[j_global]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+
+		      Jacobian_n += 
+			diffusiveVelocityComponent_I_Jacobian_n 
+			*/*should be v_n*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
+			  k*nDOF_trial_element +
+			  j]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+		      Jacobian_n += 
+			diffusiveVelocityComponent_I_Jacobian2_nn 
+			*
+			dphi_n_n[j_global]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+		    }/*I loop */
+		 
+		  if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] == 2)
+		    {
+		      /*dependency of psi_n on psi_w*/
+		      Jacobian_n += 
+			penalty_n[ebNE*nQuadraturePoints_elementBoundary+k]
+			* /*should be v_n*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+			  k*nDOF_trial_element+
+			  j]
+			*
+			dpsi_n_dpsiw[ebNE*nQuadraturePoints_elementBoundary + k];
+		      /*dependency of psi_n on s_w */
+		      Jacobian_w += 
+			penalty_n[ebNE*nQuadraturePoints_elementBoundary+k]
+			* /*should be v_w*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+			  k*nDOF_trial_element+
+			  j]
+			*
+			dpsi_n_dpsic[ebNE*nQuadraturePoints_elementBoundary + k];
+		    }
+		  else
+		    {
+		      /*only diagonal gets penalty term*/
+		      assert(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] == 1);
+		      Jacobian_n += 
+			penalty_n[ebNE*nQuadraturePoints_elementBoundary+k]
+			* /*should be v_w*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+			  k*nDOF_trial_element+
+			  j];
+
+		    }
+		  fluxJacobian_nw[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+				  k*nDOF_trial_element +
+				  j] += 
+		    Jacobian_w;
+		  fluxJacobian_nn[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+				  k*nDOF_trial_element +
+				  j] += 
+		    Jacobian_n;
+		}/* j local dof loop*/
+	    }/*u_w dof boundary loop*/
+	  
+	}/*k*/
+    }/*ebNE*/
+
+}
+
+void calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian_sd(int nExteriorElementBoundaries_global,
+									    int nQuadraturePoints_elementBoundary,
+									    int nSpace,
+									    int nDOF_trial_element,
+									    int* rowptr_ww,
+									    int* colind_ww,
+									    int* rowptr_nn,
+									    int* colind_nn,
+									    const int* l2g, /*for now assumes both solution spaces are the same!*/
+									    const int* exteriorElementBoundaries,
+									    const int* elementBoundaryElements,
+									    const int* elementBoundaryLocalElementBoundaries,
+									    const int* isDOFBoundary_uw,/*1 set bc for psi_w*/
+									    const int* isDOFBoundary_un,/*1 set bc for psi_c, 
+													  2 set bc for psi_n*/
+									    const double* n,
+									    const double* a_ww,         /*lambda_w K_s*/
+									    const double* da_ww_dw,         /* a' wrt S_w*/
+									    const double* da_ww_dn,         /* a' wrt psi_w*/
+									    const double* a_nn,         /*lambda_t K_s*/
+									    const double* da_nn_dw,         /* a' wrt S_w*/
+									    const double* da_nn_dn,         /* a' wrt psi_w*/
+									    const double* grad_phi_w,   /*psi_w - rho_w g . x*/
+									    const double* grad_phi_n,   /*psi_n + psi_w - rho_n g . x*/
+									    const double* dphi_w_w,     /*\pd{phi_w}{psi_w} = 1 */     
+									    const double* dphi_w_n,     /*\pd{phi_w}{psi_c}= 0 */
+									    const double* dphi_n_w,     /*\pd{phi_n}{psi_w} = 1  */
+									    const double* dphi_n_n,     /*\pd{phi_n}{psi_c} = 1 */
+									    const double* psi_w,           /*psi_w*/
+									    const double* psi_c,           /*psi_c*/
+									    const double* psi_n,           
+									    const double* dpsi_n_dpsiw, 
+									    const double* dpsi_n_dpsic,
+									    const double* v,            /*trial functions, assumed in same space*/
+									    const double* grad_v,       /*trial function gradients, assumed in same space*/
+									    const double* penalty_w,    
+									    const double* penalty_n,
+									    double * fluxJacobian_ww,
+									    double * fluxJacobian_wn,
+									    double * fluxJacobian_nw,
+									    double * fluxJacobian_nn)
+{
+  int ebNE,ebN,eN_global,j,j_global,I,k,m,nnz_ww=rowptr_ww[nSpace],nnz_nn=rowptr_nn[nSpace];
+  double Jacobian_w,Jacobian_n,
+    diffusiveVelocityComponent_I_Jacobian_w,
+    diffusiveVelocityComponent_I_Jacobian_n,  
+    diffusiveVelocityComponent_I_Jacobian2_wn,
+    diffusiveVelocityComponent_I_Jacobian2_ww,
+    diffusiveVelocityComponent_I_Jacobian2_nw,
+    diffusiveVelocityComponent_I_Jacobian2_nn;
+  for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
+    {
+      ebN = exteriorElementBoundaries[ebNE];
+      eN_global = elementBoundaryElements[ebN*2 + 0];
+      
+      for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
+	{
+	  /*compute derivative of diffusive flux for first (w) equation (aq. mass
+	    balance for part of boundary where u_0 (i.e., psi_w) is
+	    specified
+	  */
+	  /*only allow setting psi_w for this equation*/	  
+	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary + k] == 1)
+	    {
+	      /*NOTE! assuming u_w, u_n in the same space and nodal interpolant for potential*/
+	      
+	      for (j = 0; j < nDOF_trial_element; j++)
+		{
+		  Jacobian_w = 0.; /*derivative wrt u_w = S_w */
+		  Jacobian_n = 0.; /*derivative wrt u_n = psi_w */
+		  j_global = l2g[eN_global*nDOF_trial_element + j];/*assuming same space for both*/ 
+		  for (I = 0; I < nSpace; I++)
+		    {
+		      diffusiveVelocityComponent_I_Jacobian_w = 0.0; 
+		      diffusiveVelocityComponent_I_Jacobian_n = 0.0; 
+		      diffusiveVelocityComponent_I_Jacobian2_wn = 0.0;
+		      diffusiveVelocityComponent_I_Jacobian2_ww = 0.0;
+		      for (m=rowptr_ww[I];m<rowptr_ww[I+1];m++)
+			{
+			  /*only a_ww potential here*/
+			  diffusiveVelocityComponent_I_Jacobian_w -= 
+			    da_ww_dw[ebNE*nQuadraturePoints_elementBoundary*nnz_ww + 
+				     k*nnz_ww + 
+				     m]
+			    *
+			    grad_phi_w[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+				       k*nSpace + 
+				       colind_ww[m]];
+			  diffusiveVelocityComponent_I_Jacobian_n -= 
+			    da_ww_dn[ebNE*nQuadraturePoints_elementBoundary*nnz_ww + 
+				     k*nnz_ww + 
+				     m]
+			    *
+			    grad_phi_w[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+				       k*nSpace + 
+				       colind_ww[m]];
+
+			  diffusiveVelocityComponent_I_Jacobian2_ww -=
+			    a_ww[ebNE*nQuadraturePoints_elementBoundary*nnz_ww + 
+				 k*nnz_ww + 
+				 m]
+			    * /*should be grad_v_w in general I believe*/
+			    grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace + 
+				   k*nDOF_trial_element*nSpace+
+                                   j*nSpace+
+                                   colind_ww[m]];
+			  /*identical for now*/
+			  diffusiveVelocityComponent_I_Jacobian2_wn -=
+			    a_ww[ebNE*nQuadraturePoints_elementBoundary*nnz_ww + 
+				 k*nnz_ww + 
+				 m]
+			    * /*should be grad_v_w in general I believe*/
+			    grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace + 
+				   k*nDOF_trial_element*nSpace+
+                                   j*nSpace+
+                                   colind_ww[m]];
+			    
+			}/*J loop*/
+		      Jacobian_w += 
+			diffusiveVelocityComponent_I_Jacobian_w 
+			*/*should be v_w*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
+			  k*nDOF_trial_element +
+			  j]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+		      Jacobian_w += 
+			diffusiveVelocityComponent_I_Jacobian2_ww 
+			*
+			dphi_w_w[j_global]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+		      Jacobian_n += 
+			diffusiveVelocityComponent_I_Jacobian_n 
+			*/*should be v_n*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
+			  k*nDOF_trial_element +
+			  j]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+		      Jacobian_n += 
+			diffusiveVelocityComponent_I_Jacobian2_wn 
+			*
+			dphi_w_n[j_global]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+		    }/*I loop */
+		  /*only diagonal gets penalty term*/
+		  Jacobian_w += 
+		    penalty_w[ebNE*nQuadraturePoints_elementBoundary+k]
+		    * /*should be v_w*/
+		    v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                      k*nDOF_trial_element+
+                      j];
+		  fluxJacobian_ww[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+				  k*nDOF_trial_element +
+				  j] += 
+		    Jacobian_w;
+		  fluxJacobian_wn[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+				  k*nDOF_trial_element +
+				  j] += 
+		    Jacobian_n;
+		}/* j local dof loop*/
+	    }/*u_w dof boundary loop*/
+	  /*setting psi_w = 1, or psi_n = 2*/
+	  if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] >= 1)
+	    {
+	      /*NOTE! assuming u_w, u_m in the same space and nodal interpolant for potential*/
+	      
+	      for (j = 0; j < nDOF_trial_element; j++)
+		{
+		  Jacobian_w = 0.; /*derivative wrt u_w = psi_w */
+		  Jacobian_n = 0.; /*derivative wrt u_n = psi_c */
+		  j_global = l2g[eN_global*nDOF_trial_element + j];/*assuming same space for both*/ 
+		  for (I = 0; I < nSpace; I++)
+		    {
+		      diffusiveVelocityComponent_I_Jacobian_w = 0.0;
+		      diffusiveVelocityComponent_I_Jacobian_n = 0.0;  
+		      diffusiveVelocityComponent_I_Jacobian2_nw = 0.0;
+		      diffusiveVelocityComponent_I_Jacobian2_nn = 0.0;
+		      for (m=rowptr_nn[I];m<rowptr_nn[I+1];m++)
+			{
+			  /*nn potential*/
+			  diffusiveVelocityComponent_I_Jacobian_w -= 
+			    da_nn_dw[ebNE*nQuadraturePoints_elementBoundary*nnz_nn + 
+				     k*nnz_nn + 
+				     m]
+			    *
+			    grad_phi_n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+				       k*nSpace + 
+				       colind_nn[m]];
+			  diffusiveVelocityComponent_I_Jacobian_n -= 
+			    da_nn_dn[ebNE*nQuadraturePoints_elementBoundary*nnz_nn + 
+				     k*nnz_nn + 
+				     m]
+			    *
+			    grad_phi_n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+				       k*nSpace + 
+				       colind_nn[m]];
+
+			  /*nn potential*/
+			  diffusiveVelocityComponent_I_Jacobian2_nw -=
+			    a_nn[ebNE*nQuadraturePoints_elementBoundary*nnz_nn + 
+				 k*nnz_nn + 
+				 m]
+			    * /*should be grad_v_w in general I believe*/
+			    grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace + 
+				   k*nDOF_trial_element*nSpace+
+                                   j*nSpace+
+                                   colind_nn[m]];
+			  /*identical for now*/
+			  diffusiveVelocityComponent_I_Jacobian2_nn -=
+			    a_nn[ebNE*nQuadraturePoints_elementBoundary*nnz_nn + 
+				 k*nnz_nn + 
+				 m]
+			    * /*should be grad_v_m in general I believe*/
+			    grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace + 
+				   k*nDOF_trial_element*nSpace+
+                                   j*nSpace+
+                                   colind_nn[m]];
+			    
+			}/*J loop*/
+		      Jacobian_w += 
+			diffusiveVelocityComponent_I_Jacobian_w 
+			*/*should be v_w*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
+			  k*nDOF_trial_element +
+			  j]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+		      Jacobian_w += 
+			diffusiveVelocityComponent_I_Jacobian2_nw 
+			*
+			dphi_n_w[j_global]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+
+		      Jacobian_n += 
+			diffusiveVelocityComponent_I_Jacobian_n 
+			*/*should be v_n*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element +
+			  k*nDOF_trial_element +
+			  j]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+		      Jacobian_n += 
+			diffusiveVelocityComponent_I_Jacobian2_nn 
+			*
+			dphi_n_n[j_global]
+			*
+			n[ebNE*nQuadraturePoints_elementBoundary*nSpace + 
+			  k*nSpace + 
+			  I];
+		    }/*I loop */
+		 
+		  if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] == 2)
+		    {
+		      /*dependency of psi_n on psi_w*/
+		      Jacobian_n += 
+			penalty_n[ebNE*nQuadraturePoints_elementBoundary+k]
+			* /*should be v_n*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+			  k*nDOF_trial_element+
+			  j]
+			*
+			dpsi_n_dpsiw[ebNE*nQuadraturePoints_elementBoundary + k];
+		      /*dependency of psi_n on psi_c */
+		      Jacobian_w += 
+			penalty_n[ebNE*nQuadraturePoints_elementBoundary+k]
+			* /*should be v_w*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+			  k*nDOF_trial_element+
+			  j]
+			*
+			dpsi_n_dpsic[ebNE*nQuadraturePoints_elementBoundary + k];
+		    }
+		  else
+		    {
+		      /*only diagonal gets penalty term*/
+		      assert(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] == 1);
+		      Jacobian_n += 
+			penalty_n[ebNE*nQuadraturePoints_elementBoundary+k]
+			* /*should be v_w*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+			  k*nDOF_trial_element+
+			  j];
+
+		    }
+		  fluxJacobian_nw[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+				  k*nDOF_trial_element +
+				  j] += 
+		    Jacobian_w;
+		  fluxJacobian_nn[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
+				  k*nDOF_trial_element +
+				  j] += 
+		    Jacobian_n;
+		}/* j local dof loop*/
+	    }/*u_w dof boundary loop*/
+	  
+	}/*k*/
+    }/*ebNE*/
+
+}
+
+/*end FCPP exterior fluxes*/
 void calculateGlobalExteriorNumericalFluxDarcySplitPressure(int nExteriorElementBoundaries_global,
 							    int nQuadraturePoints_elementBoundary,
 							    int nSpace,
