@@ -85,7 +85,8 @@ class NF_base:
             self.ebqe['sqrt(det(g))'] = self.vt.ebqe['sqrt(det(g))']
         #copy over stuff from vt.ebq
         for term in self.ebqeTerms:
-            self.ebqe[term].flat[:] = self.vt.ebqe[term].flat[:]
+            if self.vt.ebqe.has_key(term):
+                self.ebqe[term].flat[:] = self.vt.ebqe[term].flat[:]
         
         logEvent(memory("ebqe","NumericalFlux"),level=4)
         self.isDOFBoundary ={}
@@ -3281,6 +3282,173 @@ class DarcyFC_IIPG_exterior(NF_base):
                                                                                                  fluxJacobian_exterior[0][1],
                                                                                                  fluxJacobian_exterior[1][0],
                                                                                                  fluxJacobian_exterior[1][1])
+
+class DarcyFCPP_IIPG_exterior(NF_base):
+    hasInterior=False
+    """
+    weak dirichlet boundary conditions for Twophase_fc class
+    TODO:
+       put in nonlinear bc for setting \psi_n = \psi_n^b
+         dofFlag = 2
+       put in bc that switches flux and dirichlet types
+    """
+    def __init__(self,vt,getPointwiseBoundaryConditions,
+                 getAdvectiveFluxBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions):
+        NF_base.__init__(self,vt,getPointwiseBoundaryConditions,
+                 getAdvectiveFluxBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions)
+        #hold Dirichlet values for \psi_n (non-wetting phase head)
+        #also need extra psi_n entries that aren't part of default quadrature
+        for term in ['psi_n_bc','psi_n',('dpsi_n',0),('dpsi_n',1),'sw']:
+            self.ebqe[term] = numpy.zeros(self.ebqe[('u',1)].shape,'d')
+        self.hasInterior=False
+        self.penalty_constant = 2.0
+        self.penalty_power = 1.0
+    def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
+        pass
+    def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
+        for ci in range(self.nc):
+            self.ebqe[('u',ci)].flat[:] = ebqe[('u',ci)].flat[:]
+            for (ebNE,k),g,x in zip(self.DOFBoundaryConditionsDictList[ci].keys(),
+                                    self.DOFBoundaryConditionsDictList[ci].values(),
+                                    self.DOFBoundaryPointDictList[ci].values()):
+               if self.isDOFBoundary[ci][ebNE,k] == 2:
+                   self.ebqe['psi_n_bc'][ebNE,k] = g(x,self.vt.timeIntegration.t)
+               else:
+                   self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t)
+        self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
+        if self.vt.movingDomain:
+            self.vt.coefficients.updateToMovingDomain(self.vt.timeIntegration.t,self.ebqe)
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        if self.vt.sd:
+            cnumericalFlux.calculateGlobalExteriorNumericalFluxDarcyFCPP_sd(self.vt.coefficients.sdInfo[(0,0)][0],self.vt.coefficients.sdInfo[(0,0)][1],
+                                                                            self.vt.coefficients.sdInfo[(1,1)][0],self.vt.coefficients.sdInfo[(1,1)][1],
+                                                                            self.mesh.exteriorElementBoundariesArray,
+                                                                            self.mesh.elementBoundaryElementsArray,
+                                                                            self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                            self.isDOFBoundary[0],
+                                                                            self.isDOFBoundary[1],
+                                                                            ebqe['n'],
+                                                                            self.ebqe[('a',0,0)],
+                                                                            self.ebqe[('a',1,1)],
+                                                                            self.ebqe[('grad(phi)',0)],
+                                                                            self.ebqe[('grad(phi)',1)],
+                                                                            self.ebqe[('u',0)],
+                                                                            self.ebqe[('u',1)],
+                                                                            self.ebqe['psi_n_bc'],
+                                                                            ebqe[('a',0,0)],
+                                                                            ebqe[('a',1,1)],
+                                                                            ebqe[('grad(phi)',0)],
+                                                                            ebqe[('grad(phi)',1)],
+                                                                            ebqe[('u',0)],
+                                                                            ebqe[('u',1)],
+                                                                            ebqe['psi_n'],
+                                                                            ebqe[('penalty')],
+                                                                            ebqe[('penalty')],
+                                                                            ebqe[('diffusiveFlux',0,0)], #(ck,ci) 
+                                                                            ebqe[('diffusiveFlux',1,1)])
+        else:
+            cnumericalFlux.calculateGlobalExteriorNumericalFluxDarcyFCPP(self.mesh.exteriorElementBoundariesArray,
+                                                                         self.mesh.elementBoundaryElementsArray,
+                                                                         self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                         self.isDOFBoundary[0],
+                                                                         self.isDOFBoundary[1],
+                                                                         ebqe['n'],
+                                                                         self.ebqe[('a',0,0)],
+                                                                         self.ebqe[('a',1,1)],
+                                                                         self.ebqe[('grad(phi)',0)],
+                                                                         self.ebqe[('grad(phi)',1)],
+                                                                         self.ebqe[('u',0)],
+                                                                         self.ebqe[('u',1)],
+                                                                         self.ebqe['psi_n_bc'],
+                                                                         ebqe[('a',0,0)],
+                                                                         ebqe[('a',1,1)],
+                                                                         ebqe[('grad(phi)',0)],
+                                                                         ebqe[('grad(phi)',1)],
+                                                                         ebqe[('u',0)],
+                                                                         ebqe[('u',1)],
+                                                                         ebqe['psi_n'],
+                                                                         ebqe[('penalty')],
+                                                                         ebqe[('penalty')],
+                                                                         ebqe[('diffusiveFlux',0,0)], #(ck,ci) 
+                                                                         ebqe[('diffusiveFlux',1,1)])
+    def updateInteriorNumericalFluxJacobian(self,l2g,q,ebq,ebq_global,dphi,fluxJacobian,fluxJacobian_eb,fluxJacobian_hj):
+        pass
+    def updateExteriorNumericalFluxJacobian(self,l2g,inflowFlag,q,ebqe,dphi,fluxJacobian_exterior,fluxJacobian_eb,fluxJacobian_hj):
+        if (self.vt.timeIntegration.diffusionIsImplicit[0] or self.vt.timeIntegration.diffusionIsImplicit[1]):
+            #assume the u_w and u_m spaces are the same right now
+            l2g_local = dphi[(0,0)].femSpace.dofMap.l2g; v   = ebqe[('v',0)]; grad_v = ebqe[('grad(v)',0)];
+            if self.vt.sd:
+                cnumericalFlux.calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian_sd(self.vt.coefficients.sdInfo[(0,0)][0],self.vt.coefficients.sdInfo[(0,0)][1],
+                                                                                                      self.vt.coefficients.sdInfo[(1,1)][0],self.vt.coefficients.sdInfo[(1,1)][1],
+                                                                                                      l2g_local,
+                                                                                                      self.mesh.exteriorElementBoundariesArray,
+                                                                                                      self.mesh.elementBoundaryElementsArray,
+                                                                                                      self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                      self.isDOFBoundary[0],
+                                                                                                      self.isDOFBoundary[1],
+                                                                                                      ebqe['n'],
+                                                                                                      ebqe[('a',0,0)],
+                                                                                                      ebqe[('da',0,0,0)],
+                                                                                                      ebqe[('da',0,0,1)],
+                                                                                                      ebqe[('a',1,1)],
+                                                                                                      ebqe[('da',1,1,0)],
+                                                                                                      ebqe[('da',1,1,1)],
+                                                                                                      ebqe[('grad(phi)',0)],
+                                                                                                      ebqe[('grad(phi)',1)],
+                                                                                                      dphi[(0,0)].dof,
+                                                                                                      dphi[(0,1)].dof,
+                                                                                                      dphi[(1,0)].dof,
+                                                                                                      dphi[(1,1)].dof,
+                                                                                                      ebqe[('u',0)],
+                                                                                                      ebqe[('u',1)],
+                                                                                                      ebqe['psi_n'],
+                                                                                                      ebqe[('dpsi_n',0)],
+                                                                                                      ebqe[('dpsi_n',1)],
+                                                                                                      v,         
+                                                                                                      grad_v,    
+                                                                                                      ebqe[('penalty')],    
+                                                                                                      ebqe[('penalty')],
+                                                                                                      fluxJacobian_exterior[0][0],
+                                                                                                      fluxJacobian_exterior[0][1],
+                                                                                                      fluxJacobian_exterior[1][0],
+                                                                                                      fluxJacobian_exterior[1][1])
+            else:
+                cnumericalFlux.calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian(l2g_local,
+                                                                                                   self.mesh.exteriorElementBoundariesArray,
+                                                                                                   self.mesh.elementBoundaryElementsArray,
+                                                                                                   self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                   self.isDOFBoundary[0],
+                                                                                                   self.isDOFBoundary[1],
+                                                                                                   ebqe['n'],
+                                                                                                   ebqe[('a',0,0)],
+                                                                                                   ebqe[('da',0,0,0)],
+                                                                                                   ebqe[('da',0,0,1)],
+                                                                                                   ebqe[('a',1,1)],
+                                                                                                   ebqe[('da',1,1,0)],
+                                                                                                   ebqe[('da',1,1,1)],
+                                                                                                   ebqe[('grad(phi)',0)],
+                                                                                                   ebqe[('grad(phi)',1)],
+                                                                                                   dphi[(0,0)].dof,
+                                                                                                   dphi[(0,1)].dof,
+                                                                                                   dphi[(1,0)].dof,
+                                                                                                   dphi[(1,1)].dof,
+                                                                                                   ebqe[('u',0)],
+                                                                                                   ebqe[('u',1)],
+                                                                                                   ebqe['psi_n'],
+                                                                                                   ebqe[('dpsi_n',0)],
+                                                                                                   ebqe[('dpsi_n',1)],
+                                                                                                   v,         
+                                                                                                   grad_v,    
+                                                                                                   ebqe[('penalty')],    
+                                                                                                   ebqe[('penalty')],
+                                                                                                   fluxJacobian_exterior[0][0],
+                                                                                                   fluxJacobian_exterior[0][1],
+                                                                                                   fluxJacobian_exterior[1][0],
+                                                                                                   fluxJacobian_exterior[1][1])
                 
 class ShallowWater_1D(NF_base):
     def __init__(self,vt,getPointwiseBoundaryConditions,
