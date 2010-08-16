@@ -284,7 +284,7 @@ namespace RANS2PV2
 	v_d_Gv += v[I]*G[I*nSpace+J]*v[J];
     cfl = 0.5*sqrt(v_d_Gv);
     tau_v = 1.0/sqrt(Ct_sge*rho2*Dt2 + rho2*v_d_Gv + Cd_sge*mu2*G_dd_G);
-    tau_p = tr_G/tau_v;
+    tau_p = 1.0/(tr_G*tau_v);
   }
 
   inline
