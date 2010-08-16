@@ -235,7 +235,8 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  //cek todo use symmetry
 	  for (int I=0;I<nSpace;I++)
 	    for (int J=0;J<nSpace;J++)
-	      G[I*nSpace+J] = jacInv[J*nSpace+I]*jacInv[I*nSpace+J];
+	      for (int K=0;K<nSpace;K++)
+	        G[I*nSpace+J] = jacInv[I*nSpace+K]*jacInv[J*nSpace+K];
 	  G_dd_G=0.0;
 	  tr_G = 0.0;
 	  for (int I=0;I<nSpace;I++)
@@ -243,13 +244,13 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	      tr_G += G[I*nSpace+I];
 	      for (int J=0;J<nSpace;J++)
 		{
-		  G_dd_G += G[J*nSpace+I]*G[I*nSpace+J];
+		  G_dd_G += G[I*nSpace+J]*G[I*nSpace+J];
 		}
 	    }
 	  for (int I=0;I<nSpace;I++)
 	    for (int J=0;J<nSpace;J++)
 	      h_phi += n[eN_k_nSpace+I]*G[I*nSpace+J]*n[eN_k_nSpace+J];
-	  h_phi = sqrt(h_phi);
+	  h_phi = 1.0/sqrt(h_phi);
 	  eps_rho = epsFact_rho*h_phi;
 	  eps_mu = epsFact_mu*h_phi;
 	  //new
