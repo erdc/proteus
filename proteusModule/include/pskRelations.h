@@ -347,7 +347,7 @@ class VGM : public VGMorig
       sBarByOnePlus_alphaPsiC_n, sBarBy_onePlus_alphaPsiC_n_2;
     
 
-    psiC = psicIn;
+    psiC = max(0.0,psicIn);
     alphaPsiC = alpha*psiC;
     alphaPsiC_n = pow(alphaPsiC,n);
     alphaPsiC_nM1 = alphaPsiC_n/alphaPsiC;

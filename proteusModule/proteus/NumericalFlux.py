@@ -3141,6 +3141,10 @@ class DarcyFC_IIPG_exterior(NF_base):
         self.hasInterior=False
         self.penalty_constant = 2.0
         self.penalty_power = 1.0
+        self.fluxBoundaryFlags = {0:0,1:0}#default is no-flow
+        for ci in range(2):
+            if vt.fluxBoundaryConditions[ci] == 'outFlow':
+                self.fluxBoundaryFlags[ci] = 1
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         pass
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
@@ -3156,6 +3160,38 @@ class DarcyFC_IIPG_exterior(NF_base):
         self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
         if self.vt.movingDomain:
             self.vt.coefficients.updateToMovingDomain(self.vt.timeIntegration.t,self.ebqe)
+#         if ebqe.has_key(('f',0)) and ebqe.has_key(('f',1)):
+#             cnumericalFlux.calculateGlobalExteriorNumericalAdvectiveFlux_DarcyFC(self.mesh.exteriorElementBoundariesArray,
+#                                                                                  self.mesh.elementBoundaryElementsArray,
+#                                                                                  self.mesh.elementBoundaryLocalElementBoundariesArray,
+#                                                                                  self.isDOFBoundary[0],
+#                                                                                  self.isDOFBoundary[1],
+#                                                                                  ebqe['n'],
+#                                                                                  self.ebqe[('u',0)],
+#                                                                                  self.ebqe[('u',1)],
+#                                                                                  self.ebqe[('f',0)],
+#                                                                                  self.ebqe[('df',0,0)],
+#                                                                                  self.ebqe[('df',0,1)],
+#                                                                                  self.ebqe[('f',1)],
+#                                                                                  self.ebqe[('df',1,0)],
+#                                                                                  self.ebqe[('df',1,1)],
+#                                                                                  ebqe[('u',0)],
+#                                                                                  ebqe[('u',1)],
+#                                                                                  ebqe[('f',0)],
+#                                                                                  ebqe[('df',0,0)],
+#                                                                                  ebqe[('df',0,1)],
+#                                                                                  ebqe[('f',1)],
+#                                                                                  ebqe[('df',1,0)],
+#                                                                                  ebqe[('df',1,1)],
+#                                                                                  ebqe[('advectiveFlux',0)],
+#                                                                                  ebqe[('dadvectiveFlux_left',0,0)],
+#                                                                                  ebqe[('dadvectiveFlux_left',0,1)],
+#                                                                                  ebqe[('advectiveFlux',1)],
+#                                                                                  ebqe[('dadvectiveFlux_left',1,0)],
+#                                                                                  ebqe[('dadvectiveFlux_left',1,1)])
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
         if self.vt.sd:
             cnumericalFlux.calculateGlobalExteriorNumericalFluxDarcyFC_sd(self.vt.coefficients.sdInfo[(0,0)][0],self.vt.coefficients.sdInfo[(0,0)][1],
                                                                           self.vt.coefficients.sdInfo[(1,1)][0],self.vt.coefficients.sdInfo[(1,1)][1],
@@ -3164,6 +3200,8 @@ class DarcyFC_IIPG_exterior(NF_base):
                                                                           self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                           self.isDOFBoundary[0],
                                                                           self.isDOFBoundary[1],
+                                                                          self.fluxBoundaryFlags[0],
+                                                                          self.fluxBoundaryFlags[1],
                                                                           ebqe['n'],
                                                                           self.ebqe[('a',0,0)],
                                                                           self.ebqe[('a',1,1)],
@@ -3189,6 +3227,8 @@ class DarcyFC_IIPG_exterior(NF_base):
                                                                        self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                        self.isDOFBoundary[0],
                                                                        self.isDOFBoundary[1],
+                                                                       self.fluxBoundaryFlags[0],
+                                                                       self.fluxBoundaryFlags[1],
                                                                        ebqe['n'],
                                                                        self.ebqe[('a',0,0)],
                                                                        self.ebqe[('a',1,1)],
@@ -3208,9 +3248,30 @@ class DarcyFC_IIPG_exterior(NF_base):
                                                                        ebqe[('penalty')],
                                                                        ebqe[('diffusiveFlux',0,0)], #(ck,ci) 
                                                                        ebqe[('diffusiveFlux',1,1)])
+        #print "DarcyFC exterior advectiveFlux[0]=%s \n advectiveFlux[1]=%s " % (ebqe[('advectiveFlux',0)],ebqe[('advectiveFlux',1)])
+        #print "DarcyFC exterior diffusiveFlux[0]=%s \n diffusiveFlux[1]=%s " % (ebqe[('diffusiveFlux',0,0)],ebqe[('diffusiveFlux',1,1)])
+
     def updateInteriorNumericalFluxJacobian(self,l2g,q,ebq,ebq_global,dphi,fluxJacobian,fluxJacobian_eb,fluxJacobian_hj):
         pass
     def updateExteriorNumericalFluxJacobian(self,l2g,inflowFlag,q,ebqe,dphi,fluxJacobian_exterior,fluxJacobian_eb,fluxJacobian_hj):
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+#         for ci in range(self.nc):
+#              if self.vt.timeIntegration.advectionIsImplicit[ci]:
+#                 for cj in range(self.nc):
+#                     if ebqe.has_key(('df',ci,cj)):
+#                         cnumericalFlux.updateExteriorNumericalAdvectiveFluxJacobian(self.mesh.exteriorElementBoundariesArray,
+#                                                                                     self.mesh.elementBoundaryElementsArray,
+#                                                                                     self.mesh.elementBoundaryLocalElementBoundariesArray,
+#                                                                                     inflowFlag[ci],#not used
+#                                                                                     ebqe[('dadvectiveFlux_left',ci,cj)],
+#                                                                                     ebqe[('v',cj)],
+#                                                                                     fluxJacobian_exterior[ci][cj])
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+
         if (self.vt.timeIntegration.diffusionIsImplicit[0] or self.vt.timeIntegration.diffusionIsImplicit[1]):
             #assume the u_w and u_m spaces are the same right now
             l2g_local = dphi[(0,0)].femSpace.dofMap.l2g; v   = ebqe[('v',0)]; grad_v = ebqe[('grad(v)',0)];
@@ -3223,6 +3284,8 @@ class DarcyFC_IIPG_exterior(NF_base):
                                                                                                     self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                                                     self.isDOFBoundary[0],
                                                                                                     self.isDOFBoundary[1],
+                                                                                                    self.fluxBoundaryFlags[0],
+                                                                                                    self.fluxBoundaryFlags[1],
                                                                                                     ebqe['n'],
                                                                                                     ebqe[('a',0,0)],
                                                                                                     ebqe[('da',0,0,0)],
@@ -3256,6 +3319,8 @@ class DarcyFC_IIPG_exterior(NF_base):
                                                                                                  self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                                                  self.isDOFBoundary[0],
                                                                                                  self.isDOFBoundary[1],
+                                                                                                 self.fluxBoundaryFlags[0],
+                                                                                                 self.fluxBoundaryFlags[1],
                                                                                                  ebqe['n'],
                                                                                                  ebqe[('a',0,0)],
                                                                                                  ebqe[('da',0,0,0)],
@@ -3283,6 +3348,12 @@ class DarcyFC_IIPG_exterior(NF_base):
                                                                                                  fluxJacobian_exterior[1][0],
                                                                                                  fluxJacobian_exterior[1][1])
 
+            #
+            #print "DarcyFC exterior fluxJacobian[0][0]=%s \n fluxJacobian[0][1]=%s " % (fluxJacobian_exterior[0][0],fluxJacobian_exterior[0][1])
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+
 class DarcyFCPP_IIPG_exterior(NF_base):
     hasInterior=False
     """
@@ -3305,6 +3376,10 @@ class DarcyFCPP_IIPG_exterior(NF_base):
         self.hasInterior=False
         self.penalty_constant = 2.0
         self.penalty_power = 1.0
+        self.fluxBoundaryFlags = {0:0,1:0}#default is no-flow
+        for ci in range(2):
+            if vt.fluxBoundaryConditions[ci] == 'outFlow':
+                self.fluxBoundaryFlags[ci] = 1
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         pass
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
@@ -3317,12 +3392,18 @@ class DarcyFCPP_IIPG_exterior(NF_base):
                    self.ebqe['psi_n_bc'][ebNE,k] = g(x,self.vt.timeIntegration.t)
                else:
                    self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t)
+               #mwf debug
+               #import pdb
+               #pdb.set_trace()
+               #print "DarcyFCPP g(%s,%s)= %s " % (x,self.vt.timeIntegration.t,g(x,self.vt.timeIntegration.t))
         self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
         if self.vt.movingDomain:
             self.vt.coefficients.updateToMovingDomain(self.vt.timeIntegration.t,self.ebqe)
         #mwf debug
         #import pdb
         #pdb.set_trace()
+        #how to handle flux boundary conditions, since usual advective/diffusive split doesn't apply here
+        
         if self.vt.sd:
             cnumericalFlux.calculateGlobalExteriorNumericalFluxDarcyFCPP_sd(self.vt.coefficients.sdInfo[(0,0)][0],self.vt.coefficients.sdInfo[(0,0)][1],
                                                                             self.vt.coefficients.sdInfo[(1,1)][0],self.vt.coefficients.sdInfo[(1,1)][1],
@@ -3331,6 +3412,8 @@ class DarcyFCPP_IIPG_exterior(NF_base):
                                                                             self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                             self.isDOFBoundary[0],
                                                                             self.isDOFBoundary[1],
+                                                                            self.fluxBoundaryFlags[0],
+                                                                            self.fluxBoundaryFlags[1],
                                                                             ebqe['n'],
                                                                             self.ebqe[('a',0,0)],
                                                                             self.ebqe[('a',1,1)],
@@ -3356,6 +3439,8 @@ class DarcyFCPP_IIPG_exterior(NF_base):
                                                                          self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                          self.isDOFBoundary[0],
                                                                          self.isDOFBoundary[1],
+                                                                         self.fluxBoundaryFlags[0],
+                                                                         self.fluxBoundaryFlags[1],
                                                                          ebqe['n'],
                                                                          self.ebqe[('a',0,0)],
                                                                          self.ebqe[('a',1,1)],
@@ -3375,6 +3460,7 @@ class DarcyFCPP_IIPG_exterior(NF_base):
                                                                          ebqe[('penalty')],
                                                                          ebqe[('diffusiveFlux',0,0)], #(ck,ci) 
                                                                          ebqe[('diffusiveFlux',1,1)])
+        #print "DarcyFCPP exterior diffusiveFlux[0]=%s \n diffusiveFlux[1]=%s " % (ebqe[('diffusiveFlux',0,0)],ebqe[('diffusiveFlux',1,1)])
     def updateInteriorNumericalFluxJacobian(self,l2g,q,ebq,ebq_global,dphi,fluxJacobian,fluxJacobian_eb,fluxJacobian_hj):
         pass
     def updateExteriorNumericalFluxJacobian(self,l2g,inflowFlag,q,ebqe,dphi,fluxJacobian_exterior,fluxJacobian_eb,fluxJacobian_hj):
@@ -3390,6 +3476,8 @@ class DarcyFCPP_IIPG_exterior(NF_base):
                                                                                                       self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                                                       self.isDOFBoundary[0],
                                                                                                       self.isDOFBoundary[1],
+                                                                                                      self.fluxBoundaryFlags[0],
+                                                                                                      self.fluxBoundaryFlags[1],
                                                                                                       ebqe['n'],
                                                                                                       ebqe[('a',0,0)],
                                                                                                       ebqe[('da',0,0,0)],
@@ -3423,6 +3511,8 @@ class DarcyFCPP_IIPG_exterior(NF_base):
                                                                                                    self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                                                    self.isDOFBoundary[0],
                                                                                                    self.isDOFBoundary[1],
+                                                                                                   self.fluxBoundaryFlags[0],
+                                                                                                   self.fluxBoundaryFlags[1],
                                                                                                    ebqe['n'],
                                                                                                    ebqe[('a',0,0)],
                                                                                                    ebqe[('da',0,0,0)],
