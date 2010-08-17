@@ -1138,7 +1138,8 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
                  density_n_parameters=TwophaseDarcyFlow_base.default_density_n_parameters,
                  psk_model='VGM',
                  nMaterialTypes=1,
-                 diagonal_conductivity=True):
+                 diagonal_conductivity=True,
+                 spatialCompressibilityFlag=0):#0, slight compressibility, full compressibility otherwise
         TwophaseDarcyFlow_base.__init__(self,
                                         nd=nd,
                                         dimensionless_gravity=dimensionless_gravity,
@@ -1157,6 +1158,8 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
         mass = {0:{0:'linear',1:'nonlinear'},
                 1:{0:'nonlinear',1:'nonlinear'}}
         advection = {}
+        #advection = {0:{0:'nonlinear',1:'nonlinear'},
+        #             1:{0:'nonlinear',1:'nonlinear'}} #don't need 1:nonlinear if using slight compressibility
         hamiltonian={}
         potential = {0:{1:'nonlinear',#actually this is just linear if we use slight compressibility
                         0:'nonlinear'},#don't really need saturation dependence for potential
@@ -1195,7 +1198,7 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion = True)
 
-
+        self.spatialCompressibilityFlag = spatialCompressibilityFlag
     def evaluate(self,t,c):
         if c[('u',0)].shape == self.q_shape:
             materialTypes = self.materialTypes_q
@@ -1212,6 +1215,52 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
         assert materialTypes.max() < self.nMaterialTypes
         assert materialTypes.min() == 0
         
+#         self.twophaseDarcy_fc_sd_het_matType_nonPotentialForm(self.psk_types[self.psk_model],
+#                                              self.density_types[self.density_w_model],
+#                                              self.density_types[self.density_n_model],
+#                                              self.sdInfo[(0,0)][0],
+#                                              self.sdInfo[(0,0)][1],
+#                                              materialTypes,
+#                                              self.muw,
+#                                              self.mun,
+#                                              self.omega_types,
+#                                              self.Ksw_types,
+#                                              self.b,
+#                                              self.rwork_psk,
+#                                              self.rwork_psk_tolerances,
+#                                              self.rwork_density_w,
+#                                              self.rwork_density_n,
+#                                              self.g[:self.nd],#todo get consistent on dimension setting
+#                                              c['x'],
+#                                              c[('u',0)],
+#                                              c[('u',1)],
+#                                              c[('m',0)],
+#                                              c[('dm',0,0)],
+#                                              c[('dm',0,1)],
+#                                              c[('m',1)],
+#                                              c[('dm',1,0)],
+#                                              c[('dm',1,1)],
+#                                              c['psi_n'],
+#                                              c[('dpsi_n',0)],
+#                                              c[('dpsi_n',1)],
+#                                              c[('phi',0)],
+#                                              c[('dphi',0,1)],
+#                                              c[('phi',1)],
+#                                              c[('dphi',1,1)],
+#                                              c[('dphi',1,0)],
+#                                              c[('f',0)],
+#                                              c[('df',0,0)],
+#                                              c[('df',0,1)],
+#                                              c[('f',1)],
+#                                              c[('df',1,0)],
+#                                              c[('df',1,1)],
+#                                              c[('a',0,0)],
+#                                              c[('da',0,0,0)],
+#                                              c[('da',0,0,1)],
+#                                              c[('a',1,1)],
+#                                              c[('da',1,1,0)],
+#                                              c[('da',1,1,1)],
+#                                              self.spatialCompressibilityFlag)
         self.twophaseDarcy_fc_sd_het_matType(self.psk_types[self.psk_model],
                                              self.density_types[self.density_w_model],
                                              self.density_types[self.density_n_model],
@@ -1251,7 +1300,9 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
                                              c[('a',1,1)],
                                              c[('da',1,1,0)],
                                              c[('da',1,1,1)])
- 
+
+        #mwf hack, need to put this in?
+        c[('dphi',0,0)].fill(0.0)
 
         #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
@@ -1562,12 +1613,14 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
                                                 c[('da',1,1,0)],
                                                 c[('da',1,1,1)])
  
-        #todo put this back in cpp eval?
-        c['psi_n'][:] = c[('u',0)]
-        c['psi_n'] += c[('u',1)]
-        c[('dpsi_n',0)].fill(1.0)
-        c[('dpsi_n',1)].fill(1.0)
-        
+        #todo put this back in cpp eval
+        #c['psi_n'][:] = c[('u',0)]
+        #c['psi_n'] += c[('u',1)]
+        #c[('dpsi_n',0)].fill(1.0)
+        #c[('dpsi_n',1)].fill(1.0)
+        c['psi_n'][:] = c[('phi',1)]
+        c[('dpsi_n',0)][:] = c[('dphi',1,0)]
+        c[('dpsi_n',1)][:] = c[('dphi',1,1)]
         #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
@@ -1739,7 +1792,7 @@ class Twophase_fc_pp_OneLevelTransport(Transport.OneLevelTransport):
 
         self.inactive_equations = None
         self.try_inactive_equations = True
-        self.inactive_tolerance = 0.0
+        self.inactive_tolerance = 1.0e-12#0.0
     #
     def getResidual(self,u,r):
         """
@@ -1756,7 +1809,9 @@ class Twophase_fc_pp_OneLevelTransport(Transport.OneLevelTransport):
                 if u[J] <= -self.inactive_tolerance:
                     r[J] = scaling*(u[J]-0.0)
                     self.inactive_equations[J] = 1
-
+        #mwf debug
+        import pdb
+        pdb.set_trace()
     def getJacobian(self,jacobian):
         Transport.OneLevelTransport.getJacobian(self,jacobian)
         if self.try_inactive_equations:
@@ -1772,7 +1827,10 @@ class Twophase_fc_pp_OneLevelTransport(Transport.OneLevelTransport):
                     #
                 #
             #
-        
+        jacobian.fwrite("jacdebug_p%s.txt" % (self.comm.rank()))#,self.nonlinear_function_jacobian_evaluations))
+        import pdb
+        pdb.set_trace()
+
 ###########
 class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
     """
@@ -1847,6 +1905,11 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
         assert modelList[self.nSatModel].phi_ip.has_key(('phi',0))
         assert self.ip_psic.shape ==  modelList[self.nSatModel].phi_ip[('phi',0)].shape
         self.ip_psic = modelList[self.nSatModel].phi_ip[('phi',0)]
+        #
+        self.q_grad_sw   = modelList[self.nSatModel].q[('grad(u)',0)]
+        self.ebqe_grad_sw = modelList[self.nSatModel].ebqe[('grad(u)',0)]
+        if modelList[self.nSatModel].ebq.has_key(('grad(u)',0)):
+            self.ebq_grad_sw = modelList[self.nSatModel].ebq[('grad(u)',0)]
 
     def initializeElementQuadrature(self,t,cq):
         TwophaseDarcyFlow_base.initializeElementQuadrature(self,t,cq)
@@ -1857,6 +1920,7 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
                 self.q_s_w.flat[i] = 1.0e-4
         self.q_grad_psic   = numpy.zeros(cq[('f',0)].shape,'d')
         self.q_psic        = numpy.zeros(cq[('u',0)].shape,'d')
+        self.q_grad_sw   = numpy.zeros(cq[('f',0)].shape,'d')
         #mwf not sure if this is ok
         cq['psi_n'] = numpy.zeros(cq[('u',0)].shape,'d')
         cq[('dpsi_n',0)] = numpy.ones(cq[('u',0)].shape,'d')
@@ -1870,6 +1934,7 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
                 self.ebq_s_w.flat[i] = 1.0e-4
         self.ebq_grad_psic = numpy.zeros(cebq[('f',0)].shape,'d')
         self.ebq_psic = numpy.zeros(cebq[('u',0)].shape,'d')
+        self.ebq_grad_sw = numpy.zeros(cebq[('f',0)].shape,'d')
         if cebq.has_key(('u',0)):
             cebq['psi_n'] = numpy.zeros(cebq[('u',0)].shape,'d')
             cebq[('dpsi_n',0)] = numpy.ones(cebq[('u',0)].shape,'d')
@@ -1885,6 +1950,7 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
                 self.ebqe_s_w.flat[i] = 1.0e-4
         self.ebqe_grad_psic = numpy.zeros(cebqe[('f',0)].shape,'d')
         self.ebqe_psic = numpy.zeros(cebqe[('u',0)].shape,'d')
+        self.ebqe_grad_sw = numpy.zeros(cebqe[('f',0)].shape,'d')
         cebqe['psi_n'] = numpy.zeros(cebqe[('u',0)].shape,'d')
         cebqe[('dpsi_n',0)] = numpy.ones(cebqe[('u',0)].shape,'d')
     def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
@@ -1896,6 +1962,7 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
                 self.ip_s_w.flat[i] = 1.0e-4
         self.ip_grad_psic = numpy.zeros(cip[('f',0)].shape,'d')
         self.ip_psic = numpy.zeros(cip[('u',0)].shape,'d')
+        self.ip_grad_sw = numpy.zeros(cip[('f',0)].shape,'d')
         cip['psi_n'] = numpy.zeros(cip[('u',0)].shape,'d')
         cip[('dpsi_n',0)] = numpy.ones(cip[('u',0)].shape,'d')
 
@@ -2122,6 +2189,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             materialTypes = self.materialTypes_q
             s_w = self.q_s_w
             grad_psic = self.q_grad_psic
+            grad_sw   = self.q_grad_sw
             c['psi_n']= numpy.copy(self.q_psic)
             c['psi_n'] += c[('u',0)]
             #mwf debug
@@ -2141,6 +2209,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             materialTypes = self.materialTypes_ebqe
             s_w = self.ebqe_s_w
             grad_psic = self.ebqe_grad_psic
+            grad_sw   = self.ebqe_grad_sw
             c['psi_n']= numpy.copy(self.ebqe_psic)
             c['psi_n'] += c[('u',0)]
         elif c[('u',0)].shape == self.ip_s_w.shape:
@@ -2151,11 +2220,13 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             materialTypes = self.materialTypes_ip
             s_w = self.ip_s_w
             grad_psic = self.ip_grad_psic
+            grad_sw   = self.ip_grad_sw
         else:
             assert c[('u',0)].shape == self.ebq_s_w.shape
             materialTypes = self.materialTypes_ebq
             s_w = self.ebq_s_w
             grad_psic = self.ebq_grad_psic
+            grad_sw   = self.ebq_grad_sw
             c['psi_n']= numpy.copy(self.ebq_psic)
             c['psi_n'] += c[('u',0)]
         assert self.rwork_psk != None
@@ -2176,7 +2247,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                                         self.rwork_density_n,
                                                                         self.g[:self.nd],
                                                                         s_w,
-                                                                        grad_psic,
+                                                                        grad_psic, #mwf hack try grad_sw
                                                                         c[('f',0)],
                                                                         c[('a',0,0)])
 

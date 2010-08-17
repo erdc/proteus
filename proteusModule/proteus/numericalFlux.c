@@ -9605,6 +9605,8 @@ void calculateGlobalExteriorNumericalFluxDarcyFC(int nExteriorElementBoundaries_
 						 const int* isDOFBoundary_uw,/*1 set bc for s_w*/
 						 const int* isDOFBoundary_un,/*1 set bc for psi_w, 
 									       2 set bc for psi_n*/
+						 int fluxBoundaryFlag_uw, /*0 no flow, 1 outflow*/
+						 int fluxBoundaryFlag_un,
 						 const double* n,
 						 const double* bc_a_ww,      
 						 const double* bc_a_nn,      
@@ -9626,7 +9628,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC(int nExteriorElementBoundaries_
 						 double * diffusiveFlux_nn)
 {
   int ebNE,ebN,I,J,k,nSpace2=nSpace*nSpace;
-  double diffusiveFlux_I=0.0,penaltyFlux = 0.0;
+  double diffusiveFlux_I=0.0,penaltyFlux = 0.0,potential_gradient_w=0.0,potential_gradient_n=0.0;
 
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
     {
@@ -9638,8 +9640,26 @@ void calculateGlobalExteriorNumericalFluxDarcyFC(int nExteriorElementBoundaries_
 	    specified*/
 	  diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary+k] = 0.0;
 	  diffusiveFlux_nn[ebNE*nQuadraturePoints_elementBoundary+k] = 0.0;
+	  /*allow outflow where potential gradient is out even if not Dirichlet, 
+	   do not include K_s in calculation for now*/
+	  potential_gradient_w = 0.0; potential_gradient_n = 0.0; 
+	  for (I=0; I < nSpace; I++)
+	    {
+	      potential_gradient_w += grad_phi_w[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	      potential_gradient_n += grad_phi_n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	    }
 	  /*only allow s_w setting here?*/
-	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
+	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1 || (potential_gradient_w > 0.0 && fluxBoundaryFlag_uw == 1))
 	    {
 	      /*integration by parts term for diffusive flux wrt phi_w = psi_w - rho_w g . x*/
 	      for (I = 0; I < nSpace; I++)
@@ -9664,18 +9684,21 @@ void calculateGlobalExteriorNumericalFluxDarcyFC(int nExteriorElementBoundaries_
 		      k*nSpace+
 		      I];
 		}/*I, a_wm grad phi_m term */
-	      /*boundary penalty term*/
-	      penaltyFlux = 
-		penalty_w[ebNE*nQuadraturePoints_elementBoundary + k]
-		*
-		(s_w[ebNE*nQuadraturePoints_elementBoundary + k]
-		 -
-		 bc_s_w[ebNE*nQuadraturePoints_elementBoundary + k]);
-	      diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary +k] += 
-		penaltyFlux;
+	      if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
+		{
+		  /*boundary penalty term*/
+		  penaltyFlux = 
+		    penalty_w[ebNE*nQuadraturePoints_elementBoundary + k]
+		    *
+		    (s_w[ebNE*nQuadraturePoints_elementBoundary + k]
+		     -
+		     bc_s_w[ebNE*nQuadraturePoints_elementBoundary + k]);
+		  diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary +k] += 
+		    penaltyFlux;
+		}
 	    }/*s_w boundary*/
 	  /*1 set psi_w, 2 set psi_n*/
-	  if(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] >= 1)
+	  if(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] >= 1 || (potential_gradient_n > 0.0 && fluxBoundaryFlag_un == 1))
 	    {
 	      /*integration by parts term for diffusive flux wrt phi_n = psi_c + psi_w - rho_n g . x*/
 	      for (I = 0; I < nSpace; I++)
@@ -9701,6 +9724,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC(int nExteriorElementBoundaries_
 		      I];
 		}/*I, a_mw grad phi_n term */
 	      /*boundary penalty term*/
+	      penaltyFlux = 0.0;
 	      if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 2)
 		{
 		  penaltyFlux = 
@@ -9710,9 +9734,8 @@ void calculateGlobalExteriorNumericalFluxDarcyFC(int nExteriorElementBoundaries_
 		     -
 		     bc_psi_n[ebNE*nQuadraturePoints_elementBoundary + k]);
 		}
-	      else
+	      else if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
 		{
-		  assert(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 1);
 		  penaltyFlux = 
 		    penalty_n[ebNE*nQuadraturePoints_elementBoundary + k]
 		    *
@@ -9741,6 +9764,8 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_sd(int nExteriorElementBoundari
 						    const int* isDOFBoundary_uw,/*1 set bc for s_w*/
 						    const int* isDOFBoundary_un,/*1 set bc for psi_w, 
 										  2 set bc for psi_n*/
+						    int fluxBoundaryFlag_uw, /*0 no flow, 1 outflow*/
+						    int fluxBoundaryFlag_un,
 						    const double* n,
 						    const double* bc_a_ww,      
 						    const double* bc_a_nn,      
@@ -9751,8 +9776,8 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_sd(int nExteriorElementBoundari
 						    const double* bc_psi_n,
 						    const double* a_ww,         /*lambda_w K_s*/
 						    const double* a_nn,         /*lambda_n K_s*/
-						    const double* grad_phi_w,   /*psi_w - rho_w g . x*/
-						    const double* grad_phi_n,   /*psi_c + psi_w - rho_n g . x*/
+						    const double* grad_phi_w,   /*psi_w */
+						    const double* grad_phi_n,   /*psi_c + psi_w */
 						    const double* s_w,           /*s_w*/
 						    const double* psi_w,           /*psi_w*/
 						    const double* psi_n,
@@ -9762,7 +9787,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_sd(int nExteriorElementBoundari
 						    double * diffusiveFlux_nn)
 {
   int ebNE,ebN,I,k,m,nnz_ww=rowptr_ww[nSpace],nnz_nn=rowptr_nn[nSpace];
-  double diffusiveFlux_I=0.0,penaltyFlux = 0.0;
+  double diffusiveFlux_I=0.0,penaltyFlux = 0.0,potential_gradient_w=0.0,potential_gradient_n=0.0;
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
     {
       ebN = exteriorElementBoundaries[ebNE];
@@ -9773,10 +9798,29 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_sd(int nExteriorElementBoundari
 	    specified*/
 	  diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary+k] = 0.0;
 	  diffusiveFlux_nn[ebNE*nQuadraturePoints_elementBoundary+k] = 0.0;
-	  /*only allow s_w setting here?*/
-	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
+	  /*allow outflow where potential gradient is out even if not Dirichlet, 
+	   do not include K_s in calculation for now*/
+	  potential_gradient_w = 0.0; potential_gradient_n = 0.0; 
+	  for (I=0; I < nSpace; I++)
 	    {
-	      /*integration by parts term for diffusive flux wrt phi_w = psi_w - rho_w g . x*/
+	      potential_gradient_w += grad_phi_w[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	      potential_gradient_n += grad_phi_n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	    }
+
+	  /*only allow s_w setting here?*/
+	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1 || (potential_gradient_w > 0.0 && fluxBoundaryFlag_uw==1))
+	    {
+	      /*integration by parts term for diffusive flux wrt phi_w = psi_w */
 	      for (I = 0; I < nSpace; I++)
 		{
 		  diffusiveFlux_I = 0.0;
@@ -9799,19 +9843,22 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_sd(int nExteriorElementBoundari
 		      I];
 		}/*I, a_wm grad phi_m term */
 	      /*boundary penalty term*/
-	      penaltyFlux = 
-		penalty_w[ebNE*nQuadraturePoints_elementBoundary + k]
-		*
-		(s_w[ebNE*nQuadraturePoints_elementBoundary + k]
-		 -
-		 bc_s_w[ebNE*nQuadraturePoints_elementBoundary + k]);
-	      diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary +k] += 
-		penaltyFlux;
+	      if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
+		{
+		  penaltyFlux = 
+		    penalty_w[ebNE*nQuadraturePoints_elementBoundary + k]
+		    *
+		    (s_w[ebNE*nQuadraturePoints_elementBoundary + k]
+		     -
+		     bc_s_w[ebNE*nQuadraturePoints_elementBoundary + k]);
+		  diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary +k] += 
+		    penaltyFlux;
+		}
 	    }/*s_w boundary*/
 	  /*1 set psi_w, 2 set psi_n*/
-	  if(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] >= 1)
+	  if(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] >= 1 || (potential_gradient_n > 0.0 && fluxBoundaryFlag_un==1))
 	    {
-	      /*integration by parts term for diffusive flux wrt phi_n = psi_c + psi_w - rho_n g . x*/
+	      /*integration by parts term for diffusive flux wrt phi_n = psi_c + psi_w */
 	      for (I = 0; I < nSpace; I++)
 		{
 		  diffusiveFlux_I = 0.0;
@@ -9834,6 +9881,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_sd(int nExteriorElementBoundari
 		      I];
 		}/*I, a_mw grad phi_n term */
 	      /*boundary penalty term*/
+	      penaltyFlux = 0.0;
 	      if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 2)
 		{
 		  penaltyFlux = 
@@ -9843,9 +9891,8 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_sd(int nExteriorElementBoundari
 		     -
 		     bc_psi_n[ebNE*nQuadraturePoints_elementBoundary + k]);
 		}
-	      else
+	      else if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
 		{
-		  assert(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 1);
 		  penaltyFlux = 
 		    penalty_n[ebNE*nQuadraturePoints_elementBoundary + k]
 		    *
@@ -9872,6 +9919,8 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian(int nExte
 								       const int* isDOFBoundary_uw,/*1 set bc for s_w*/
 								       const int* isDOFBoundary_un,/*1 set bc for psi_w, 
 												     2 set bc for psi_n*/
+								       int fluxBoundaryFlag_uw, /*0 no flow, 1 outflow*/
+								       int fluxBoundaryFlag_un,
 								       const double* n,
 								       const double* a_ww,         /*lambda_w K_s*/
 								       const double* da_ww_dw,         /* a' wrt S_w*/
@@ -9907,6 +9956,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian(int nExte
     diffusiveVelocityComponent_I_Jacobian2_ww,
     diffusiveVelocityComponent_I_Jacobian2_nw,
     diffusiveVelocityComponent_I_Jacobian2_nn;
+  double potential_gradient_w=0.0,potential_gradient_n=0.0;
 
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
     {
@@ -9918,8 +9968,26 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian(int nExte
 	    balance for part of boundary where u_0 (i.e., S_w) is
 	    specified
 	  */
+	  /*allow outflow where potential gradient is out even if not Dirichlet, 
+	   do not include K_s in calculation for now*/
+	  potential_gradient_w = 0.0; potential_gradient_n = 0.0; 
+	  for (I=0; I < nSpace; I++)
+	    {
+	      potential_gradient_w += grad_phi_w[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	      potential_gradient_n += grad_phi_n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	    }
 	  /*only allow setting s_w for this equation*/	  
-	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary + k] == 1)
+	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary + k] == 1 || (potential_gradient_w > 0.0 && fluxBoundaryFlag_uw==1))
 	    {
 	      /*NOTE! assuming u_w, u_n in the same space and nodal interpolant for potential*/
 	      
@@ -10017,12 +10085,15 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian(int nExte
 			  I];
 		    }/*I loop */
 		  /*only diagonal gets penalty term*/
-		  Jacobian_w += 
-		    penalty_w[ebNE*nQuadraturePoints_elementBoundary+k]
-		    * /*should be v_w*/
-		    v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-                      k*nDOF_trial_element+
-                      j];
+		  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
+		    {
+		      Jacobian_w += 
+			penalty_w[ebNE*nQuadraturePoints_elementBoundary+k]
+			* /*should be v_w*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+			  k*nDOF_trial_element+
+			  j];
+		    }
 		  fluxJacobian_ww[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
 				  k*nDOF_trial_element +
 				  j] += 
@@ -10034,7 +10105,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian(int nExte
 		}/* j local dof loop*/
 	    }/*u_w dof boundary loop*/
 	  /*setting psi_w = 1, or psi_n = 2*/
-	  if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] >= 1)
+	  if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] >= 1 || (potential_gradient_n > 0.0 && fluxBoundaryFlag_un==1))
 	    {
 	      /*NOTE! assuming u_w, u_m in the same space and nodal interpolant for potential*/
 	      
@@ -10155,10 +10226,9 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian(int nExte
 			*
 			dpsi_n_dsw[ebNE*nQuadraturePoints_elementBoundary + k];
 		    }
-		  else
+		  else if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] == 1)
 		    {
 		      /*only diagonal gets penalty term*/
-		      assert(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] == 1);
 		      Jacobian_n += 
 			penalty_n[ebNE*nQuadraturePoints_elementBoundary+k]
 			* /*should be v_w*/
@@ -10198,6 +10268,8 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian_sd(int nE
 									  const int* isDOFBoundary_uw,/*1 set bc for s_w*/
 									  const int* isDOFBoundary_un,/*1 set bc for psi_w, 
 													2 set bc for psi_n*/
+									  int fluxBoundaryFlag_uw, /*0 no flow, 1 outflow*/
+									  int fluxBoundaryFlag_un,
 									  const double* n,
 									  const double* a_ww,         /*lambda_w K_s*/
 									  const double* da_ww_dw,         /* a' wrt S_w*/
@@ -10233,6 +10305,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian_sd(int nE
     diffusiveVelocityComponent_I_Jacobian2_ww,
     diffusiveVelocityComponent_I_Jacobian2_nw,
     diffusiveVelocityComponent_I_Jacobian2_nn;
+  double potential_gradient_w=0.0,potential_gradient_n=0.0;
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
     {
       ebN = exteriorElementBoundaries[ebNE];
@@ -10244,8 +10317,27 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian_sd(int nE
 	    balance for part of boundary where u_0 (i.e., S_w) is
 	    specified
 	  */
+	  /*allow outflow where potential gradient is out even if not Dirichlet, 
+	   do not include K_s in calculation for now*/
+	  potential_gradient_w = 0.0; potential_gradient_n = 0.0; 
+	  for (I=0; I < nSpace; I++)
+	    {
+	      potential_gradient_w += grad_phi_w[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	      potential_gradient_n += grad_phi_n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	    }
+
 	  /*only allow setting s_w for this equation*/	  
-	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary + k] == 1)
+	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary + k] == 1 || (potential_gradient_w > 0.0 && fluxBoundaryFlag_uw==1))
 	    {
 	      /*NOTE! assuming u_w, u_n in the same space and nodal interpolant for potential*/
 	      
@@ -10339,12 +10431,15 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian_sd(int nE
 			  I];
 		    }/*I loop */
 		  /*only diagonal gets penalty term*/
-		  Jacobian_w += 
-		    penalty_w[ebNE*nQuadraturePoints_elementBoundary+k]
-		    * /*should be v_w*/
-		    v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-                      k*nDOF_trial_element+
-                      j];
+		  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
+		    {
+		      Jacobian_w += 
+			penalty_w[ebNE*nQuadraturePoints_elementBoundary+k]
+			* /*should be v_w*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+			  k*nDOF_trial_element+
+			  j];
+		    }
 		  fluxJacobian_ww[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
 				  k*nDOF_trial_element +
 				  j] += 
@@ -10356,7 +10451,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian_sd(int nE
 		}/* j local dof loop*/
 	    }/*u_w dof boundary loop*/
 	  /*setting psi_w = 1, or psi_n = 2*/
-	  if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] >= 1)
+	  if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] >= 1 || (potential_gradient_n > 0.0 && fluxBoundaryFlag_un==1))
 	    {
 	      /*NOTE! assuming u_w, u_m in the same space and nodal interpolant for potential*/
 	      
@@ -10473,10 +10568,9 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian_sd(int nE
 			*
 			dpsi_n_dsw[ebNE*nQuadraturePoints_elementBoundary + k];
 		    }
-		  else
+		  else if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] == 1)
 		    {
 		      /*only diagonal gets penalty term*/
-		      assert(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] == 1);
 		      Jacobian_n += 
 			penalty_n[ebNE*nQuadraturePoints_elementBoundary+k]
 			* /*should be v_w*/
@@ -10500,6 +10594,160 @@ void calculateGlobalExteriorNumericalFluxDarcyFC_diffusiveFluxJacobian_sd(int nE
     }/*ebNE*/
 
 }
+
+/**
+   \brief Calculate the advective (gravity) flux at at exterior element boundaries for Darcy FC
+   does not upwind right now
+*/
+void calculateGlobalExteriorNumericalAdvectiveFlux_DarcyFC(int nExteriorElementBoundaries_global,
+							   int nQuadraturePoints_elementBoundary,
+							   int nSpace,
+							   int* exteriorElementBoundaries,
+							   int* elementBoundaryElements,
+							   int* elementBoundaryLocalElementBoundaries,
+							   int *isDOFBoundary_sw,
+							   int *isDOFBoundary_psiw,
+							   double* n,
+							   double* bc_sw,
+							   double* bc_psiw,
+							   double* bc_fw,
+							   double* bc_dfw_dsw,
+							   double* bc_dfw_dpsiw,
+							   double* bc_fn,
+							   double* bc_dfn_dsw,
+							   double* bc_dfn_dpsiw,
+							   double* sw,
+							   double* psiw,
+							   double* fw,
+							   double* dfw_dsw,
+							   double* dfw_dpsiw,
+							   double* fn,
+							   double* dfn_dsw,
+							   double* dfn_dpsiw,
+							   double* fluxw,
+							   double* dfluxw_dsw,
+							   double* dfluxw_dpsiw,
+							   double* fluxn,
+							   double* dfluxn_dsw,
+							   double* dfluxn_dpsiw)
+{
+  int ebNE,ebN,eN_global,k,J;
+  double left_flux;
+  double dflux_dsw_left,dflux_dpsiw_left;
+  int enforceOutflow = 1;
+  for(ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
+    {
+      ebN = exteriorElementBoundaries[ebNE];
+      eN_global = elementBoundaryElements[ebN*2+0];
+      for(k=0;k<nQuadraturePoints_elementBoundary;k++)
+        {
+          left_flux=0.0;
+	  dflux_dsw_left=0.0; 
+	  dflux_dpsiw_left=0.0;
+          for(J=0;J<nSpace;J++)
+            {
+	      dflux_dsw_left +=
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                  k*nSpace+
+		  J]
+                *
+                dfw_dsw[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+			k*nSpace+
+			J];
+	      dflux_dpsiw_left +=
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                  k*nSpace+
+		  J]
+                *
+                dfw_dpsiw[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+			  k*nSpace+
+			  J];
+
+             left_flux 
+                += 
+                n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                  k*nSpace+
+		  J]
+                *
+                fw[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                  k*nSpace+
+                  J];
+            }
+	  if (!enforceOutflow || isDOFBoundary_sw[ebNE*nQuadraturePoints_elementBoundary+k] || left_flux >= 0.0)
+	    {
+	      fluxw[ebNE*nQuadraturePoints_elementBoundary+
+		    k] = left_flux;
+	      dfluxw_dsw[ebNE*nQuadraturePoints_elementBoundary+
+			 k] = dflux_dsw_left;
+	      dfluxw_dpsiw[ebNE*nQuadraturePoints_elementBoundary+
+			   k] = dflux_dpsiw_left;
+	    }
+	  else
+	    {
+	      fluxw[ebNE*nQuadraturePoints_elementBoundary+
+		    k] = 0.0;
+	      dfluxw_dsw[ebNE*nQuadraturePoints_elementBoundary+
+			 k] = 0.0;
+	      dfluxw_dpsiw[ebNE*nQuadraturePoints_elementBoundary+
+			   k] = 0.0;
+
+	    }
+	  /*now repeat for non-wetting phase*/
+          left_flux=0.0;
+	  dflux_dsw_left=0.0; 
+	  dflux_dpsiw_left=0.0;
+          for(J=0;J<nSpace;J++)
+            {
+	      dflux_dsw_left +=
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                  k*nSpace+
+		  J]
+                *
+                dfn_dsw[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+			k*nSpace+
+			J];
+	      dflux_dpsiw_left +=
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                  k*nSpace+
+		  J]
+                *
+                dfn_dpsiw[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+			  k*nSpace+
+			  J];
+             left_flux 
+                += 
+                n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                  k*nSpace+
+		  J]
+                *
+                fn[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                  k*nSpace+
+                  J];
+            }
+	  if (!enforceOutflow || isDOFBoundary_psiw[ebNE*nQuadraturePoints_elementBoundary+k] || left_flux >= 0.0)
+	    {
+	      fluxn[ebNE*nQuadraturePoints_elementBoundary+
+		    k] = left_flux;
+	      dfluxn_dsw[ebNE*nQuadraturePoints_elementBoundary+
+			 k] = dflux_dsw_left;
+	      dfluxn_dpsiw[ebNE*nQuadraturePoints_elementBoundary+
+			   k] = dflux_dpsiw_left;
+	    }
+	  else
+	    {
+	      fluxn[ebNE*nQuadraturePoints_elementBoundary+
+		    k] = 0.0;
+	      dfluxn_dsw[ebNE*nQuadraturePoints_elementBoundary+
+			 k] = 0.0;
+	      dfluxn_dpsiw[ebNE*nQuadraturePoints_elementBoundary+
+			   k] = 0.0;
+
+	    }
+        }/*k*/
+    }
+}
+
+
 /*begin FCPP exterior flux terms*/
 void calculateGlobalExteriorNumericalFluxDarcyFCPP(int nExteriorElementBoundaries_global,
 						   int nQuadraturePoints_elementBoundary,
@@ -10510,6 +10758,8 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP(int nExteriorElementBoundarie
 						   const int* isDOFBoundary_uw,/*1 set bc for psi_w*/
 						   const int* isDOFBoundary_un,/*1 set bc for psi_c, 
 										 2 set bc for psi_n*/
+						   int fluxBoundaryFlag_uw, /*0 no flow, 1 outflow*/
+						   int fluxBoundaryFlag_un,
 						   const double* n,
 						   const double* bc_a_ww,      
 						   const double* bc_a_nn,      
@@ -10532,6 +10782,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP(int nExteriorElementBoundarie
 {
   int ebNE,ebN,I,J,k,nSpace2=nSpace*nSpace;
   double diffusiveFlux_I=0.0,penaltyFlux = 0.0;
+  double potential_gradient_w=0.0,potential_gradient_n=0.0;
 
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
     {
@@ -10543,8 +10794,27 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP(int nExteriorElementBoundarie
 	    specified*/
 	  diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary+k] = 0.0;
 	  diffusiveFlux_nn[ebNE*nQuadraturePoints_elementBoundary+k] = 0.0;
+	  /*allow outflow where potential gradient is out even if not Dirichlet, 
+	   do not include K_s in calculation for now*/
+	  potential_gradient_w = 0.0; potential_gradient_n = 0.0; 
+	  for (I=0; I < nSpace; I++)
+	    {
+	      potential_gradient_w += grad_phi_w[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	      potential_gradient_n += grad_phi_n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	    }
+	  
 	  /*only allow psi_w setting here?*/
-	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
+	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1 || (potential_gradient_w > 0.0 && fluxBoundaryFlag_uw == 1))
 	    {
 	      /*integration by parts term for diffusive flux wrt phi_w = psi_w - rho_w g . x*/
 	      for (I = 0; I < nSpace; I++)
@@ -10570,17 +10840,20 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP(int nExteriorElementBoundarie
 		      I];
 		}/*I, a_wm grad phi_m term */
 	      /*boundary penalty term*/
-	      penaltyFlux = 
-		penalty_w[ebNE*nQuadraturePoints_elementBoundary + k]
-		*
-		(psi_w[ebNE*nQuadraturePoints_elementBoundary + k]
-		 -
-		 bc_psi_w[ebNE*nQuadraturePoints_elementBoundary + k]);
-	      diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary +k] += 
-		penaltyFlux;
+	      if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
+		{
+		  penaltyFlux = 
+		    penalty_w[ebNE*nQuadraturePoints_elementBoundary + k]
+		    *
+		    (psi_w[ebNE*nQuadraturePoints_elementBoundary + k]
+		     -
+		     bc_psi_w[ebNE*nQuadraturePoints_elementBoundary + k]);
+		  diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary +k] += 
+		    penaltyFlux;
+		}
 	    }/*psi_w boundary*/
 	  /*1 set psi_c, 2 set psi_n*/
-	  if(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] >= 1)
+	  if(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] >= 1 || (potential_gradient_n > 0.0 && fluxBoundaryFlag_un == 1))
 	    {
 	      /*integration by parts term for diffusive flux wrt phi_n = psi_c + psi_w - rho_n g . x*/
 	      for (I = 0; I < nSpace; I++)
@@ -10606,6 +10879,8 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP(int nExteriorElementBoundarie
 		      I];
 		}/*I, a_mw grad phi_n term */
 	      /*boundary penalty term*/
+	      penaltyFlux = 0.0;
+	      //need to enforce psi_c >= 0
 	      if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 2)
 		{
 		  penaltyFlux = 
@@ -10615,9 +10890,8 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP(int nExteriorElementBoundarie
 		     -
 		     bc_psi_n[ebNE*nQuadraturePoints_elementBoundary + k]);
 		}
-	      else
+	      else if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
 		{
-		  assert(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 1);
 		  penaltyFlux = 
 		    penalty_n[ebNE*nQuadraturePoints_elementBoundary + k]
 		    *
@@ -10646,6 +10920,8 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_sd(int nExteriorElementBounda
 						      const int* isDOFBoundary_uw,/*1 set bc for psi_w*/
 						      const int* isDOFBoundary_un,/*1 set bc for psi_c, 
 										    2 set bc for psi_n*/
+						      int fluxBoundaryFlag_uw, /*0 no flow, 1 outflow*/
+						      int fluxBoundaryFlag_un,
 						      const double* n,
 						      const double* bc_a_ww,      
 						      const double* bc_a_nn,      
@@ -10667,7 +10943,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_sd(int nExteriorElementBounda
 						      double * diffusiveFlux_nn)
 {
   int ebNE,ebN,I,k,m,nnz_ww=rowptr_ww[nSpace],nnz_nn=rowptr_nn[nSpace];
-  double diffusiveFlux_I=0.0,penaltyFlux = 0.0;
+  double diffusiveFlux_I=0.0,penaltyFlux = 0.0,potential_gradient_w=0.0,potential_gradient_n=0.0;
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
     {
       ebN = exteriorElementBoundaries[ebNE];
@@ -10678,8 +10954,27 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_sd(int nExteriorElementBounda
 	    specified*/
 	  diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary+k] = 0.0;
 	  diffusiveFlux_nn[ebNE*nQuadraturePoints_elementBoundary+k] = 0.0;
+	  potential_gradient_w = 0.0; potential_gradient_n = 0.0; 
+	  for (I=0; I < nSpace; I++)
+	    {
+	      potential_gradient_w += grad_phi_w[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	      potential_gradient_n += grad_phi_n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	    }
+	  /*mwf hack
+	    potential_gradient_w = 0.0; potential_gradient_n = 0.0;
+	  */
 	  /*only allow psi_w setting here?*/
-	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
+	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1 || (potential_gradient_w > 0.0 && fluxBoundaryFlag_uw == 1))
 	    {
 	      /*integration by parts term for diffusive flux wrt phi_w = psi_w - rho_w g . x*/
 	      for (I = 0; I < nSpace; I++)
@@ -10704,17 +10999,20 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_sd(int nExteriorElementBounda
 		      I];
 		}/*I, a_wm grad phi_m term */
 	      /*boundary penalty term*/
-	      penaltyFlux = 
-		penalty_w[ebNE*nQuadraturePoints_elementBoundary + k]
-		*
-		(psi_w[ebNE*nQuadraturePoints_elementBoundary + k]
-		 -
-		 bc_psi_w[ebNE*nQuadraturePoints_elementBoundary + k]);
-	      diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary +k] += 
-		penaltyFlux;
+	      if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
+		{
+		  penaltyFlux = 
+		    penalty_w[ebNE*nQuadraturePoints_elementBoundary + k]
+		    *
+		    (psi_w[ebNE*nQuadraturePoints_elementBoundary + k]
+		     -
+		     bc_psi_w[ebNE*nQuadraturePoints_elementBoundary + k]);
+		  diffusiveFlux_ww[ebNE*nQuadraturePoints_elementBoundary +k] += 
+		    penaltyFlux;
+		}
 	    }/*psi_w boundary*/
 	  /*1 set psi_c, 2 set psi_n*/
-	  if(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] >= 1)
+	  if(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] >= 1 || (potential_gradient_n > 0.0 && fluxBoundaryFlag_un == 1))
 	    {
 	      /*integration by parts term for diffusive flux wrt phi_n = psi_c + psi_w - rho_n g . x*/
 	      for (I = 0; I < nSpace; I++)
@@ -10739,6 +11037,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_sd(int nExteriorElementBounda
 		      I];
 		}/*I, a_mw grad phi_n term */
 	      /*boundary penalty term*/
+	      penaltyFlux = 0.0;
 	      if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 2)
 		{
 		  penaltyFlux = 
@@ -10748,9 +11047,8 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_sd(int nExteriorElementBounda
 		     -
 		     bc_psi_n[ebNE*nQuadraturePoints_elementBoundary + k]);
 		}
-	      else
+	      else if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
 		{
-		  assert(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary+k] == 1);
 		  penaltyFlux = 
 		    penalty_n[ebNE*nQuadraturePoints_elementBoundary + k]
 		    *
@@ -10777,6 +11075,8 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian(int nEx
 									 const int* isDOFBoundary_uw,/*1 set bc for psi_w*/
 									 const int* isDOFBoundary_un,/*1 set bc for psi_c, 
 												       2 set bc for psi_n*/
+									 int fluxBoundaryFlag_uw, /*0 no flow, 1 outflow*/
+									 int fluxBoundaryFlag_un,
 									 const double* n,
 									 const double* a_ww,         /*lambda_w K_s*/
 									 const double* da_ww_dw,         /* a' wrt S_w*/
@@ -10812,7 +11112,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian(int nEx
     diffusiveVelocityComponent_I_Jacobian2_ww,
     diffusiveVelocityComponent_I_Jacobian2_nw,
     diffusiveVelocityComponent_I_Jacobian2_nn;
-
+  double potential_gradient_w=0.0,potential_gradient_n=0.0;
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
     {
       ebN = exteriorElementBoundaries[ebNE];
@@ -10823,8 +11123,26 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian(int nEx
 	    balance for part of boundary where u_0 (i.e., psi_w) is
 	    specified
 	  */
+	  /*allow outflow where potential gradient is out even if not Dirichlet, 
+	   do not include K_s in calculation for now*/
+	  potential_gradient_w = 0.0; potential_gradient_n = 0.0; 
+	  for (I=0; I < nSpace; I++)
+	    {
+	      potential_gradient_w += grad_phi_w[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	      potential_gradient_n += grad_phi_n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	    }
 	  /*only allow setting psi_w for this equation*/	  
-	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary + k] == 1)
+	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary + k] == 1 || (potential_gradient_w > 0.0 && fluxBoundaryFlag_uw == 1))
 	    {
 	      /*NOTE! assuming u_w, u_n in the same space and nodal interpolant for potential*/
 	      
@@ -10922,12 +11240,15 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian(int nEx
 			  I];
 		    }/*I loop */
 		  /*only diagonal gets penalty term*/
-		  Jacobian_w += 
-		    penalty_w[ebNE*nQuadraturePoints_elementBoundary+k]
-		    * /*should be v_w*/
-		    v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-                      k*nDOF_trial_element+
-                      j];
+		  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
+		    {
+		      Jacobian_w += 
+			penalty_w[ebNE*nQuadraturePoints_elementBoundary+k]
+			* /*should be v_w*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+			  k*nDOF_trial_element+
+			  j];
+		    }
 		  fluxJacobian_ww[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
 				  k*nDOF_trial_element +
 				  j] += 
@@ -10939,7 +11260,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian(int nEx
 		}/* j local dof loop*/
 	    }/*u_w dof boundary loop*/
 	  /*setting psi_w = 1, or psi_n = 2*/
-	  if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] >= 1)
+	  if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] >= 1 || (potential_gradient_n > 0.0 && fluxBoundaryFlag_un == 1))
 	    {
 	      /*NOTE! assuming u_w, u_m in the same space and nodal interpolant for potential*/
 	      
@@ -11060,10 +11381,10 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian(int nEx
 			*
 			dpsi_n_dpsic[ebNE*nQuadraturePoints_elementBoundary + k];
 		    }
-		  else
+		  else if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] == 1)
 		    {
 		      /*only diagonal gets penalty term*/
-		      assert(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] == 1);
+		      
 		      Jacobian_n += 
 			penalty_n[ebNE*nQuadraturePoints_elementBoundary+k]
 			* /*should be v_w*/
@@ -11103,6 +11424,8 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian_sd(int 
 									    const int* isDOFBoundary_uw,/*1 set bc for psi_w*/
 									    const int* isDOFBoundary_un,/*1 set bc for psi_c, 
 													  2 set bc for psi_n*/
+									    int fluxBoundaryFlag_uw, /*0 no flow, 1 outflow*/
+									    int fluxBoundaryFlag_un,
 									    const double* n,
 									    const double* a_ww,         /*lambda_w K_s*/
 									    const double* da_ww_dw,         /* a' wrt S_w*/
@@ -11138,6 +11461,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian_sd(int 
     diffusiveVelocityComponent_I_Jacobian2_ww,
     diffusiveVelocityComponent_I_Jacobian2_nw,
     diffusiveVelocityComponent_I_Jacobian2_nn;
+  double potential_gradient_w=0.0,potential_gradient_n=0.0;
   for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
     {
       ebN = exteriorElementBoundaries[ebNE];
@@ -11149,8 +11473,29 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian_sd(int 
 	    balance for part of boundary where u_0 (i.e., psi_w) is
 	    specified
 	  */
+	  /*allow outflow where potential gradient is out even if not Dirichlet, 
+	   do not include K_s in calculation for now*/
+	  potential_gradient_w = 0.0; potential_gradient_n = 0.0; 
+	  for (I=0; I < nSpace; I++)
+	    {
+	      potential_gradient_w += grad_phi_w[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	      potential_gradient_n += grad_phi_n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+						 k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	    }
+	  /*mwf hack
+	    potential_gradient_w = 0.0; potential_gradient_n = 0.0;
+	  */
 	  /*only allow setting psi_w for this equation*/	  
-	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary + k] == 1)
+	  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary + k] == 1 || (potential_gradient_w > 0.0 && fluxBoundaryFlag_uw == 1))
 	    {
 	      /*NOTE! assuming u_w, u_n in the same space and nodal interpolant for potential*/
 	      
@@ -11244,12 +11589,15 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian_sd(int 
 			  I];
 		    }/*I loop */
 		  /*only diagonal gets penalty term*/
-		  Jacobian_w += 
-		    penalty_w[ebNE*nQuadraturePoints_elementBoundary+k]
-		    * /*should be v_w*/
-		    v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
-                      k*nDOF_trial_element+
-                      j];
+		  if (isDOFBoundary_uw[ebNE*nQuadraturePoints_elementBoundary + k] == 1)
+		    {
+		      Jacobian_w += 
+			penalty_w[ebNE*nQuadraturePoints_elementBoundary+k]
+			* /*should be v_w*/
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+			  k*nDOF_trial_element+
+			  j];
+		    }
 		  fluxJacobian_ww[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element + 
 				  k*nDOF_trial_element +
 				  j] += 
@@ -11261,7 +11609,7 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian_sd(int 
 		}/* j local dof loop*/
 	    }/*u_w dof boundary loop*/
 	  /*setting psi_w = 1, or psi_n = 2*/
-	  if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] >= 1)
+	  if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] >= 1 || (potential_gradient_n > 0.0 && fluxBoundaryFlag_un == 1))
 	    {
 	      /*NOTE! assuming u_w, u_m in the same space and nodal interpolant for potential*/
 	      
@@ -11378,10 +11726,9 @@ void calculateGlobalExteriorNumericalFluxDarcyFCPP_diffusiveFluxJacobian_sd(int 
 			*
 			dpsi_n_dpsic[ebNE*nQuadraturePoints_elementBoundary + k];
 		    }
-		  else
+		  else if (isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] == 1)
 		    {
 		      /*only diagonal gets penalty term*/
-		      assert(isDOFBoundary_un[ebNE*nQuadraturePoints_elementBoundary + k] == 1);
 		      Jacobian_n += 
 			penalty_n[ebNE*nQuadraturePoints_elementBoundary+k]
 			* /*should be v_w*/
