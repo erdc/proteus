@@ -393,6 +393,61 @@ void groundwaterBryantDawsonIonExEvaluateFC(const int nPoints,
 /*       printf("ionExeval k=%d C_m=%g C_h=%g  \n",k,C_m,C_h); */
      }
 }
+void groundwaterTransportCoefficientsEvaluate_hetMat(const int nSimplex,
+						     const int nPointsPerSimplex,
+						     const int nSpace,
+						     const double d,
+						     const int* materialTypes,
+						     const double *omega_types,
+						     const double *alpha_L_types,
+						     const double *alpha_T_types,
+						     const double *v,
+						     const double *u,
+						     double *m,
+						     double *dm,
+						     double *f,
+						     double *df,
+						     double *a)
+{
+  int i,j,k,I,J,matID;
+  const int nSpace2=nSpace*nSpace;
+  double norm_v;
+
+  for (i=0;i<nSimplex;i++)
+    {
+      matID = materialTypes[i];
+      for (j=0; j < nPointsPerSimplex; j++)
+	{
+	  k = i*nPointsPerSimplex+j;
+
+	  m[k]=omega_types[matID]*u[k];
+	  dm[k]=omega_types[matID];
+	  norm_v = 0.0;
+	  for (I=0;I<nSpace;I++)
+	    {
+	      f[k*nSpace+I]=v[k*nSpace+I]*u[k];
+	      df[k*nSpace+I]=v[k*nSpace+I];
+	      norm_v += v[k*nSpace+I]*v[k*nSpace+I];
+	    }
+	  norm_v = sqrt(norm_v);
+	  if (norm_v > 0.0)
+	    {
+	      for (I=0;I<nSpace;I++)
+		{
+		  a[k*nSpace2+I*nSpace+I]=omega_types[matID]*d + alpha_T_types[matID]*norm_v + (alpha_L_types[matID] - alpha_T_types[matID])*v[k*nSpace+I]*v[k*nSpace+I]/norm_v;
+		  for (J=I+1;J<nSpace;J++)
+		    {
+		      a[k*nSpace2+I*nSpace+J]=(alpha_L_types[matID] - alpha_T_types[matID])*v[k*nSpace+I]*v[k*nSpace+J]/norm_v;
+		      a[k*nSpace2+J*nSpace+I]=a[k*nSpace2+I*nSpace+J];
+		    }
+		}
+	    }
+	  else
+	    for (I=0;I<nSpace;I++)
+	      a[k*nSpace2+I*nSpace+I]=omega_types[matID]*d;
+	}
+    }
+}
 
 void nonlinearADR_pqrstEvaluate(const int nPoints,
                                 const int nSpace,
