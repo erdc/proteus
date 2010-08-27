@@ -429,21 +429,19 @@ class KSP_petsc4py(LinearSolver):
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
         self.ksp.atol = self.atol_r; self.ksp.rtol= self.rtol_r ; self.ksp.max_it = self.maxIts
         if convergenceTest == 'r-true':
-            #print "WARNING convergenceTest == 'r-true' does not work for KSP_petsc4py right now"
-            raise NotImplementedError
             self.r_work = self.petsc_L.getVecLeft()
             self.rnorm0 = None
             def converged_trueRes(ksp,its,rnorm):
                 #doesn't work because need access to
                 #ksp's current guess which isn't held in ksp.getSolution
                 #need access to PETSc's KSPBuildResidual or BuildSolution at least
-                ksp.buildResidual(r_work)
+                ksp.buildResidual(self.r_work)
                 #x = ksp.getSolution(); b = ksp.getRhs()
                 #self.petsc_L.mult(x,self.r_work)
                 #self.r_work.axpy(-1.0,b)
                 truenorm = self.r_work.norm()
                 if its == 0: self.rnorm0 = truenorm
-                print "duh_conv its= %s rnorm= %s truenorm= %s self.rnorm0= %s ksp.resnorm= %s " % (its,rnorm,truenorm,self.rnorm0,ksp.getResidualNorm())
+                #print "duh_conv its= %s rnorm= %s truenorm= %s self.rnorm0= %s ksp.resnorm= %s " % (its,rnorm,truenorm,self.rnorm0,ksp.getResidualNorm())
                 return truenorm < self.rnorm0*ksp.rtol + ksp.atol
             self.ksp.setConvergenceTest(converged_trueRes)
         else:
