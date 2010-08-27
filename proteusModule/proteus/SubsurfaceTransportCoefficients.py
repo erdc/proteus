@@ -827,7 +827,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
                                            self.q[('a_lin',0,0)],
                                            self.elementResidual[0])
         #mwf debug
-        pdb.set_trace()
+        #pdb.set_trace()
 
         
     def calculateElementJacobian(self):
@@ -2199,6 +2199,10 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             #    for k in range(c['x'].shape[1]):
             #        if (1.25 <= c['x'][eN,k,0] and c['x'][eN,k,0] <= 2.25 and
             #            1.25 <= c['x'][eN,k,1] and c['x'][eN,k,1] <= 1.5):
+                        #mwf major hack to test initialization
+                        #grad_psic[eN,k,0] = 0.0
+                        #grad_psic[eN,k,1] = 1.0
+            #
             #            print "split press eval inside lens eN=%s k=%s x=%s grad_psiw= %s grad_psic= %s s_w= %s " % (eN,k,c['x'][eN,k],c[('grad(u)',0)][eN,k],grad_psic[eN,k],s_w[eN,k])
             #        else:
             #            print "split press eval outside lens eN=%s k=%s x=%s grad_psiw= %s grad_psic= %s s_w= %s " % (eN,k,c['x'][eN,k],c[('grad(u)',0)][eN,k],grad_psic[eN,k],s_w[eN,k])
@@ -3427,6 +3431,141 @@ class IncompressibleFractionalFlowSaturationSimplePSKs(TwophaseDarcy_incompressi
 ########################################
 #Single-phase species transport
 ########################################
+class GroundwaterTransportCoefficients(TC_base):
+    from proteus.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate_hetMat
+    """
+    groundwater advection-dispersion equation with coefficients varying by material type and variable 
+    velocity 
+    """
+    def __init__(self,nc=1,nd=2,
+                 omega_types=numpy.array([0.3]),
+                 alpha_L_types=numpy.array([1.0]),
+                 alpha_T_types=numpy.array([0.1]),
+                 d=numpy.array([1.3e-9]),
+                 meModelId = 0,
+                 flowModelId = None,
+                 velocityFunctions = None):
+        
+        self.alpha_L_types = alpha_L_types
+        self.alpha_T_types = alpha_T_types
+        self.omega_types   = omega_types
+        self.d = d
+        self.nd = nd
+        self.flowModelId = flowModelId
+        self.flowModel   = None
+        self.meModelId   = meModelId
+        
+        mass = {}
+        advection = {}
+        diffusion = {}
+        potential = {}
+        reaction  = {}
+        hamiltonian = {}
+        for i in range(nc):
+            diffusion[i] = {i : {i:'constant'}}
+            advection[i] = {i : {i:'linear'}}
+            mass[i] = {i : {i:'linear'}}
+            reaction[i] = {i : {i:'constant'}}
+            potential[i] = {i : 'u'}
+        #end i
+        sparseDiffusionTensors = {}
+        for ci in range(nc):
+            sparseDiffusionTensors[(ci,ci)]=(numpy.arange(start=0,stop=nd**2+1,step=nd,dtype='i'),
+                                             numpy.array([range(nd) for row in range(nd)],dtype='i'))
+        names = ['C_%s' % ci for ci in range(nc)]
+        TC_base.__init__(self,
+                         nc,
+                         mass,
+                         advection,
+                         diffusion,
+                         potential,
+                         reaction,
+                         hamiltonian,
+                         sparseDiffusionTensors = sparseDiffusionTensors,
+                         useSparseDiffusion = True)
+
+        self.q={}; self.ebqe={}; self.ebq ={}; self.ebq_global = {}
+        self.velocityFunctions = velocityFunctions
+    def initializeMesh(self,mesh):
+        self.elementMaterialTypes,self.exteriorElementBoundaryTypes,self.elementBoundaryTypes = BlockHeterogeneousCoefficients(mesh).initializeMaterialTypes()
+        self.elementBoundariesArray = mesh.elementBoundariesArray
+    def initializeElementQuadrature(self,t,cq):
+        self.materialTypes_q = self.elementMaterialTypes
+        self.q_shape = cq[('u',0)].shape
+        for ci in range(self.nc):
+            self.q[('velocity',ci)] = numpy.zeros((cq['x'].shape[0],cq['x'].shape[1],self.nd),'d')
+    def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
+        self.materialTypes_ebq = numpy.zeros(cebq[('u',0)].shape[0:2],'i')
+        self.ebq_shape = cebq[('u',0)].shape
+        for ebN_local in range(self.ebq_shape[1]):
+            self.materialTypes_ebq[:,ebN_local] = self.elementMaterialTypes
+        for ci in range(self.nc):
+            self.ebq[('velocity',ci)] = numpy.zeros((cebq['x'].shape[0],cebq['x'].shape[1],cebq['x'].shape[2],self.nd),'d')
+            self.ebq_global[('velocity',ci)] = numpy.zeros((cebq_global['x'].shape[0],cebq_global['x'].shape[1],self.nd),'d')
+    def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
+        self.materialTypes_ebqe = self.exteriorElementBoundaryTypes
+        self.ebqe_shape = cebqe[('u',0)].shape
+        for ci in range(self.nc):
+            self.ebqe[('velocity',ci)] = numpy.zeros((cebqe['x'].shape[0],cebqe['x'].shape[1],self.nd),'d')
+    def attachModels(self,modelList):
+        self.vt = modelList[self.meModelId]
+        if self.flowModelId != None:
+            self.flowModel = modelList[self.flowModelId]
+    def evaluateVelocity(self,t,c):
+        """
+
+        """
+        if self.velocityFunctions != None:
+           for ci in range(self.nc):
+               if len(c['x'].shape) == 3:
+                   for i in range(c['x'].shape[0]):
+                       for j in range(c['x'].shape[1]):
+                           c[('velocity',ci)][i,j,:] = self.velocityFunctions[ci](c['x'][i,j],t)
+               elif len(c['x'].shape) == 4:
+                   for i in range(c['x'].shape[0]):
+                       for j in range(c['x'].shape[1]):
+                           for k in range(c['x'].shape[2]):
+                               c[('velocity',ci)][i,j,k,:] = self.velocityFunctions[ci](c['x'][i,j,k],t)
+
+    def evaluate(self,t,c):
+        """
+        TODO
+          evaluate velocity is currently setting ebqe when c=q but need to make sure this is done
+          before evaluate is called with c=ebqe
+        """
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        if self.velocityFunctions != None:
+            self.evaluateVelocity(t,c)
+        #
+        for ci in range(self.nc):
+            if self.q[('velocity',ci)].shape == c[('df',ci,ci)].shape:
+                v = self.q[('velocity',ci)]
+                materialTypes = self.materialTypes_q
+            elif self.ebqe[('velocity',ci)].shape == c[('df',ci,ci)].shape:
+                v = self.ebqe[('velocity',ci)]
+                materialTypes = self.materialTypes_ebqe
+            elif self.ebq[('velocity',ci)].shape == c[('df',ci,ci)].shape:
+                v = self.ebq[('velocity',ci)]
+                materialTypes = self.materialTypes_ebq
+            else:
+                print c[('df',ci,ci)].shape
+                print "no v---------------------"
+                raise RuntimeError
+           
+            self.groundwaterTransportCoefficientsEvaluate_hetMat(self.d[ci],
+                                                                 materialTypes,
+                                                                 self.omega_types,
+                                                                 self.alpha_L_types,
+                                                                 self.alpha_T_types,
+                                                                 v,
+                                                                 c[('u',ci)],
+                                                                 c[('m',ci)],
+                                                                 c[('dm',ci,ci)],
+                                                                 c[('f',ci)],
+                                                                 c[('df',ci,ci)],
+                                                                 c[('a',ci,ci)])
 
 class GroundwaterTransportCoefficientsELLAM(TC_base):
     from proteus.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate
@@ -3946,8 +4085,8 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
           before evaluate is called with c=ebqe
         """
         #mwf debug
-        #import pdb
-        #pdb.set_trace()
+        import pdb
+        pdb.set_trace()
         self.evaluateReactions(t,c)
         evaluatedVelocity = False
         if self.q[('velocity',0)].shape == c[('df',0,0)].shape:
