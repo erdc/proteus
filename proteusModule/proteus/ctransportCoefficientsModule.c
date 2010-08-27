@@ -355,6 +355,53 @@ static PyObject* ctransportCoefficientsGroundwaterBryantDawsonIonExEvaluateFC(Py
   Py_INCREF(Py_None); 
   return Py_None;
 }
+static PyObject* ctransportCoefficientsGroundwaterTransportCoefficientsEvaluate_hetMat(PyObject* self, 
+										       PyObject* args)
+{
+  int i,nSimplex=1,nPointsPerSimplex=1;
+  double d;
+  PyObject *materialTypes,*omega,*alpha_L,*alpha_T,*v,*u,*m,*dm,*f,*df,*a;
+  if(!PyArg_ParseTuple(args,"dOOOOOOOOOOO",
+		       &d,
+		       &materialTypes,
+                       &omega,
+                       &alpha_L,
+                       &alpha_T,
+                       &v,
+                       &u,
+                       &m,
+                       &dm,
+                       &f,
+                       &df,
+                       &a))
+    return NULL;
+  assert(ND(u) == 2 || ND(u) == 3);
+  if (ND(u) == 2)
+    {
+      nSimplex=SHAPE(u)[0]; nPointsPerSimplex=SHAPE(u)[1];
+    }
+  else
+    {
+      nSimplex=SHAPE(u)[0]*SHAPE(u)[1]; nPointsPerSimplex=SHAPE(u)[2];
+    }
+  groundwaterTransportCoefficientsEvaluate_hetMat(nSimplex,
+						  nPointsPerSimplex,
+						  SHAPE(f)[ND(f)-1],
+						  d,
+						  IDATA(materialTypes),
+						  DDATA(omega),
+						  DDATA(alpha_L),
+						  DDATA(alpha_T),
+						  DDATA(v),
+						  DDATA(u),
+						  DDATA(m),
+						  DDATA(dm),
+						  DDATA(f),
+						  DDATA(df),
+						  DDATA(a));
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
 
 static PyObject* ctransportCoefficientsNonlinearADR_pqrstEvaluate(PyObject* self, 
                                                                  PyObject* args)
@@ -9255,6 +9302,10 @@ static PyMethodDef ctransportCoefficientsMethods[] = {
     ctransportCoefficientsGroundwaterBryantDawsonIonExEvaluateFC,
     METH_VARARGS, 
     "Evaluate  the coefficients of nonlinear advective-diffusion transport in porous media with model ion-exchange system"}, 
+  { "groundwaterTransportCoefficientsEvaluate_hetMat", 
+      ctransportCoefficientsGroundwaterTransportCoefficientsEvaluate_hetMat,
+      METH_VARARGS, 
+      "Evaluate  the coefficients of linear advective-diffusion transport in porous media"}, 
   { "nonlinearADR_pqrstEvaluate", 
     ctransportCoefficientsNonlinearADR_pqrstEvaluate, 
     METH_VARARGS, 
