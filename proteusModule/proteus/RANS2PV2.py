@@ -25,71 +25,23 @@ class OneLevelRANS2PV2(OneLevelTransport):
                  massLumping=False,
                  reactionLumping=False,
                  options=None,
-                 name='defaultName',
+                 name='RANS2PV2',
                  reuse_trial_and_test_quadrature=True,
                  sd = True,
-                 movingDomain=False):#,
-        """
-        Allocate storage and initialize some variables.
-        
-        uDict   -- a dictionary of FiniteElementFunction objects
-        
-        phiDict -- a dictionary of FiniteElementFunction objects
-        
-        testSpaceDict -- a dictionary of FiniteElementSpace objects
-        
-        dofBoundaryConditionsDict -- a dictionary of DOFBoundaryConditions objects for
-        the Dirichlet conditions
-                
-        coefficients -- a TransportCoefficients object
-        
-        elementQuadratureDict -- a dictionary of dictionaries of quadrature rules for each
-        element integral in each component equation
-        
-        elementBoundaryQuadratureDict -- a dictionary of dictionaries of quadrature rules
-        for each element boundary integral in each component equation
-        
-        stabilization
-        
-        shockCapturing
-        
-        numericalFlux
-        
-        The constructor sets the input arguments, calculates
-        dimensions, and allocates storage. The meanings of variable
-        suffixes are
-        
-        _global          -- per physical domain
-        _element         -- per element
-        _elementBoundary -- per element boundary
-        
-        The prefix n means 'number of'.
-        
-        Storage is divided into quantities required at different sets
-        of points or geometric entities. Each type of storage has a
-        dictionary for all the quantities of that type. The names
-        and dimensions of the storage dictionaries are
-        
-        e          -- at element
-        q          -- at element quadrature, unique to elements        
-        ebq        -- at element boundary quadrature, unique to elements
-        ebq_global -- at element boundary quadrature, unique to element boundary
-        ebqe       -- at element boundary quadrature, unique to global, exterior element boundary
-        phi_ip     -- at the generalized interpolation points required to build a nonlinear  phi
-        """
+                 movingDomain=False):
         #
         #set the objects describing the method and boundary conditions
         #
         self.movingDomain=movingDomain
         self.tLast_mesh=None
         #
+        #cek todo clean up these flags in the optimized version
         self.bcsTimeDependent=options.bcsTimeDependent
         self.bcsSet=False
         self.name=name
         self.sd=sd
         self.lowmem=True
         self.timeTerm=True#allow turning off  the  time derivative
-        #self.lowmem=False
         self.testIsTrial=True
         self.phiTrialIsTrial=True            
         self.u = uDict
@@ -268,110 +220,110 @@ class OneLevelRANS2PV2(OneLevelTransport):
         self.ebqe={}
         self.phi_ip={}
         #mesh
-        self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
-        self.q['det(J)'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        self.q['abs(det(J))'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        self.q['J'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global,self.nSpace_global),'d')
-        self.q['inverse(J)'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global,self.nSpace_global),'d')
+        #self.q['x'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+        #self.q['det(J)'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        #self.q['abs(det(J))'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        #self.q['J'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global,self.nSpace_global),'d')
+        #self.q['inverse(J)'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global,self.nSpace_global),'d')
         self.ebqe['x'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-	self.ebqe['g'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
-				       self.nElementBoundaryQuadraturePoints_elementBoundary,
-				       max(1,self.nSpace_global-1),
-				       max(1,self.nSpace_global-1)),
-				      'd')
-        self.ebqe['inverse(J)'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global,self.nSpace_global),'d')
-        self.ebqe['hat(x)'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-        self.ebqe['bar(x)'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-        self.ebqe['sqrt(det(g))'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        self.ebqe[('n')] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
+	#self.ebqe['g'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+	#			       self.nElementBoundaryQuadraturePoints_elementBoundary,
+        #max(1,self.nSpace_global-1),
+        #max(1,self.nSpace_global-1)),
+        #'d')
+        #self.ebqe['inverse(J)'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global,self.nSpace_global),'d')
+        #self.ebqe['hat(x)'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
+        #self.ebqe['bar(x)'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
+        #self.ebqe['sqrt(det(g))'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        #self.ebqe[('n')] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         #ebq for post-processing
-        self.ebq['x'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-	self.ebq['g'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,
-				       self.nElementBoundaryQuadraturePoints_elementBoundary,
-				       max(1,self.nSpace_global-1),
-				       max(1,self.nSpace_global-1)),
-				      'd')
-        self.ebq['inverse(J)'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,
-                                              self.nSpace_global,self.nSpace_global),'d')
-        self.ebq['hat(x)'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-        self.ebq['bar(x)'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-        self.ebq['sqrt(det(g))'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        self.ebq[('n')] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
+        #self.ebq['x'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
+	#self.ebq['g'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,
+				      #  self.nElementBoundaryQuadraturePoints_elementBoundary,
+				      #  max(1,self.nSpace_global-1),
+				      #  max(1,self.nSpace_global-1)),
+				      # 'd')
+        #self.ebq['inverse(J)'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                              # self.nSpace_global,self.nSpace_global),'d')
+        #self.ebq['hat(x)'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
+        #self.ebq['bar(x)'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
+        #self.ebq['sqrt(det(g))'] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        #self.ebq[('n')] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         #ebq_global for post-processing
-        self.ebq_global['x'] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-	self.ebq_global['g'] = numpy.zeros((self.mesh.nElementBoundaries_global,
-                                            self.nElementBoundaryQuadraturePoints_elementBoundary,
-                                            max(1,self.nSpace_global-1),
-                                            max(1,self.nSpace_global-1)),
-                                           'd')
-        self.ebq_global['inverse(J)'] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,
-                                                     self.nSpace_global,self.nSpace_global),'d')
-        self.ebq_global['hat(x)'] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-        self.ebq_global['bar(x)'] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-        self.ebq_global['sqrt(det(g))'] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        self.ebq_global[('n')] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
+        #self.ebq_global['x'] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
+	#self.ebq_global['g'] = numpy.zeros((self.mesh.nElementBoundaries_global,
+        #                                    self.nElementBoundaryQuadraturePoints_elementBoundary,
+        #                                    max(1,self.nSpace_global-1),
+        #                                    max(1,self.nSpace_global-1)),
+        #                                   'd')
+        #self.ebq_global['inverse(J)'] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,
+        #                                             self.nSpace_global,self.nSpace_global),'d')
+        #self.ebq_global['hat(x)'] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
+        #self.ebq_global['bar(x)'] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
+        #self.ebq_global['sqrt(det(g))'] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        #self.ebq_global[('n')] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         #need to calculate
         self.ebq_global[('totalFlux',0)] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.ebq_global[('velocityAverage',0)] = numpy.zeros((self.mesh.nElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         #shape
-        self.q[('v',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[0]),'d')
-        self.q[('grad(v)',0)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[0],self.nSpace_global),'d')
-        self.q[('w*dV_r',0)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1]),'d')
-        self.q[('grad(w)*dV_f',0)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1],self.nSpace_global),'d')
-        self.ebqe[('v',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nDOF_trial_element[0]),'d')
-        self.ebqe[('grad(v)',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nDOF_trial_element[0],self.nSpace_global),'d')
-        self.ebqe[('w*dS_f',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nDOF_trial_element[0]),'d')
-        if self.nDOF_trial_element[1] != self.nDOF_trial_element[0]:
-            self.q[('v',1)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1]),'d')
-            self.q[('grad(v)',1)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1],self.nSpace_global),'d')
-            self.q[('w*dV_r',1)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1]),'d')
-            self.q[('grad(w)*dV_f',1)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1],self.nSpace_global),'d')
-            self.ebqe[('v',1)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nDOF_trial_element[1]),'d')
-            self.ebqe[('grad(v)',1)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nDOF_trial_element[1],self.nSpace_global),'d')
-            self.ebqe[('w*dS_f',1)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nDOF_trial_element[1]),'d')
-        else:
-            self.q[('v',1)] = self.q[('v',0)]
-            self.q[('grad(v)',1)] = self.q[('grad(v)',0)]
-            self.q[('w*dV_r',1)] =  self.q[('w*dV_r',0)]
-            self.q[('grad(w)*dV_f',1)] = self.q[('grad(w)*dV_f',0)] 
-            self.ebqe[('v',1)] = self.ebqe[('v',0)]
-            self.ebqe[('grad(v)',1)] = self.ebqe[('grad(v)',0)]
-            self.ebqe[('w*dS_f',1)] = self.ebqe[('w*dS_f',0)]
-        if self.Hess:
-            self.q[('Hess(w)',1)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1],self.nSpace_global,self.nSpace_global),'d')
-            self.q[('Hess(w)*dV_a',1,1)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1],self.nSpace_global,self.nSpace_global),'d')
-        else:
-            #dummy
-            self.q[('Hess(w)',1)] =  numpy.zeros((1,),'d')
-            self.q[('Hess(w)*dV_a',1,1)] =  self.q[('Hess(w)',1)]
-        self.q[('Hess(v)',1)] =  self.q[('Hess(w)',1)]
-        self.q[('Hess(v)',2)] =  self.q[('Hess(w)',1)]
-        self.q[('Hess(v)',3)] =  self.q[('Hess(w)',1)]
-        self.q[('Hess(w)',2)] =  self.q[('Hess(w)',1)]
-        self.q[('Hess(w)',3)] =  self.q[('Hess(w)',1)]
-        self.q[('Hess(w)*dV_a',2,2)] =  self.q[('Hess(w)*dV_a',1,1)]
-        self.q[('Hess(w)*dV_a',3,3)] =  self.q[('Hess(w)*dV_a',1,1)]
-        self.q[('v',2)] = self.q[('v',1)]
-        self.q[('grad(v)',2)] = self.q[('grad(v)',1)]
-        self.q[('w*dV_r',2)] =  self.q[('w*dV_r',1)]
-        self.q[('grad(w)*dV_f',2)] = self.q[('grad(w)*dV_f',1)] 
-        self.ebqe[('v',2)] = self.ebqe[('v',1)]
-        self.ebqe[('grad(v)',2)] = self.ebqe[('grad(v)',1)]
-        self.ebqe[('w*dS_f',2)] = self.ebqe[('w*dS_f',1)]
-        self.q[('v',3)] = self.q[('v',1)]
-        self.q[('grad(v)',3)] = self.q[('grad(v)',1)]
-        self.q[('w*dV_r',3)] =  self.q[('w*dV_r',1)]
-        self.q[('grad(w)*dV_f',3)] = self.q[('grad(w)*dV_f',1)] 
-        self.ebqe[('v',3)] = self.ebqe[('v',1)]
-        self.ebqe[('grad(v)',3)] = self.ebqe[('grad(v)',1)]
-        self.ebqe[('w*dS_f',3)] = self.ebqe[('w*dS_f',1)]
-        for ci in range(self.nc):
-            self.q[('w*dV_m',ci)] = self.q[('w*dV_r',ci)]
-            self.q[('w',ci)] = self.q[('v',ci)]
-            self.q[('grad(w)',ci)] = self.q[('grad(v)',ci)]
-            self.ebqe[('w',ci)] = self.ebqe[('v',ci)]
-            self.ebqe[('grad(w)',ci)] = self.ebqe[('grad(v)',ci)]
-        self.q[('u',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        #self.q[('v',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[0]),'d')
+        #self.q[('grad(v)',0)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[0],self.nSpace_global),'d')
+        #self.q[('w*dV_r',0)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1]),'d')
+        #self.q[('grad(w)*dV_f',0)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1],self.nSpace_global),'d')
+        #self.ebqe[('v',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nDOF_trial_element[0]),'d')
+        #self.ebqe[('grad(v)',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nDOF_trial_element[0],self.nSpace_global),'d')
+        #self.ebqe[('w*dS_f',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nDOF_trial_element[0]),'d')
+        #if self.nDOF_trial_element[1] != self.nDOF_trial_element[0]:
+        #    self.q[('v',1)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1]),'d')
+        #    self.q[('grad(v)',1)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1],self.nSpace_global),'d')
+        #    self.q[('w*dV_r',1)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1]),'d')
+        #    self.q[('grad(w)*dV_f',1)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1],self.nSpace_global),'d')
+        #    self.ebqe[('v',1)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nDOF_trial_element[1]),'d')
+        #    self.ebqe[('grad(v)',1)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nDOF_trial_element[1],self.nSpace_global),'d')
+        #self.ebqe[('w*dS_f',1)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nDOF_trial_element[1]),'d')
+        #else:
+        #    self.q[('v',1)] = self.q[('v',0)]
+        #    self.q[('grad(v)',1)] = self.q[('grad(v)',0)]
+        #    self.q[('w*dV_r',1)] =  self.q[('w*dV_r',0)]
+        #    self.q[('grad(w)*dV_f',1)] = self.q[('grad(w)*dV_f',0)] 
+        #    self.ebqe[('v',1)] = self.ebqe[('v',0)]
+        #    self.ebqe[('grad(v)',1)] = self.ebqe[('grad(v)',0)]
+        #    self.ebqe[('w*dS_f',1)] = self.ebqe[('w*dS_f',0)]
+        #if self.Hess:
+        #    self.q[('Hess(w)',1)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1],self.nSpace_global,self.nSpace_global),'d')
+        #    self.q[('Hess(w)*dV_a',1,1)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[1],self.nSpace_global,self.nSpace_global),'d')
+        #else:
+        #    #dummy
+        #    self.q[('Hess(w)',1)] =  numpy.zeros((1,),'d')
+        #    self.q[('Hess(w)*dV_a',1,1)] =  self.q[('Hess(w)',1)]
+        #self.q[('Hess(v)',1)] =  self.q[('Hess(w)',1)]
+        #self.q[('Hess(v)',2)] =  self.q[('Hess(w)',1)]
+        #self.q[('Hess(v)',3)] =  self.q[('Hess(w)',1)]
+        #self.q[('Hess(w)',2)] =  self.q[('Hess(w)',1)]
+        #self.q[('Hess(w)',3)] =  self.q[('Hess(w)',1)]
+        #self.q[('Hess(w)*dV_a',2,2)] =  self.q[('Hess(w)*dV_a',1,1)]
+        #self.q[('Hess(w)*dV_a',3,3)] =  self.q[('Hess(w)*dV_a',1,1)]
+        #self.q[('v',2)] = self.q[('v',1)]
+        #self.q[('grad(v)',2)] = self.q[('grad(v)',1)]
+        #self.q[('w*dV_r',2)] =  self.q[('w*dV_r',1)]
+        #self.q[('grad(w)*dV_f',2)] = self.q[('grad(w)*dV_f',1)] 
+        #self.ebqe[('v',2)] = self.ebqe[('v',1)]
+        #self.ebqe[('grad(v)',2)] = self.ebqe[('grad(v)',1)]
+        #self.ebqe[('w*dS_f',2)] = self.ebqe[('w*dS_f',1)]
+        #self.q[('v',3)] = self.q[('v',1)]
+        #self.q[('grad(v)',3)] = self.q[('grad(v)',1)]
+        #self.q[('w*dV_r',3)] =  self.q[('w*dV_r',1)]
+        #self.q[('grad(w)*dV_f',3)] = self.q[('grad(w)*dV_f',1)] 
+        #self.ebqe[('v',3)] = self.ebqe[('v',1)]
+        #self.ebqe[('grad(v)',3)] = self.ebqe[('grad(v)',1)]
+        #self.ebqe[('w*dS_f',3)] = self.ebqe[('w*dS_f',1)]
+        #for ci in range(self.nc):
+        #    self.q[('w*dV_m',ci)] = self.q[('w*dV_r',ci)]
+        #    self.q[('w',ci)] = self.q[('v',ci)]
+        #    self.q[('grad(w)',ci)] = self.q[('grad(v)',ci)]
+        #    self.ebqe[('w',ci)] = self.ebqe[('v',ci)]
+        #    self.ebqe[('grad(w)',ci)] = self.ebqe[('grad(v)',ci)]
+        #self.q[('u',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('u',1)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('u',2)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('u',3)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
@@ -417,11 +369,6 @@ class OneLevelRANS2PV2(OneLevelTransport):
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
         self.tensors_elementBoundaryQuadrature= set()
-        self.ebq[('v',0)] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nDOF_trial_element[0]),'d')
-        self.ebq[('w',0)] = self.ebq[('v',0)]
-        self.ebq[('grad(v)',0)] =  numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nDOF_trial_element[0],self.nSpace_global),'d')
-        self.ebq[('w*dS_u',0)] =  numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nDOF_trial_element[1]),'d')
-        self.ebq[('dS_u',0)] =  numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         #
         #show quadrature
         #
@@ -590,145 +537,123 @@ class OneLevelRANS2PV2(OneLevelTransport):
         self.elementResidual[1].fill(0.0) 
         self.elementResidual[2].fill(0.0) 
         self.elementResidual[3].fill(0.0)
-        psi = self.testSpace[0].psi
-        grad_psi = self.testSpace[1].grad_psi
-        psi_trace = self.testSpace[0].psi_trace
-        grad_psi_trace = self.u[0].femSpace.grad_psi_trace
-        cResidual(#testing
+        self.Ct_sge = 4.0
+        self.Cd_sge = 12.0
+        cResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
             self.mesh.elementNodesArray,
             self.elementQuadratureWeights[('u',0)],
-            # self.u[0].femSpace.psi,
-            # self.u[0].femSpace.grad_psi,
-            # self.u[0].femSpace.psi,
-            # self.u[0].femSpace.grad_psi,
-            # self.u[1].femSpace.psi,
-            # self.u[1].femSpace.grad_psi,
-            # self.u[1].femSpace.psi,
-            # self.u[1].femSpace.grad_psi,
-            psi,
-            grad_psi,
-            psi,
-            grad_psi,
-            psi,
-            grad_psi,
-            psi,
-            grad_psi,
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[1].femSpace.psi,
+            self.u[1].femSpace.grad_psi,
+            self.u[1].femSpace.psi,
+            self.u[1].femSpace.grad_psi,
             #element boundary
             self.u[0].femSpace.elementMaps.psi_trace,
             self.u[0].femSpace.elementMaps.grad_psi_trace,
             self.elementBoundaryQuadratureWeights[('u',0)],
-            psi_trace,
-            grad_psi_trace,
-            psi_trace,
-            grad_psi_trace,
-            psi_trace,
-            grad_psi_trace,
-            psi_trace,
-            grad_psi_trace,
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[1].femSpace.psi_trace,
+            self.u[1].femSpace.grad_psi_trace,
+            self.u[1].femSpace.psi_trace,
+            self.u[1].femSpace.grad_psi_trace,
             self.u[0].femSpace.elementMaps.boundaryNormals,
             self.u[0].femSpace.elementMaps.boundaryJacobians,
-            #testing
+            #physics
             self.mesh.nElements_global,
-                  self.timeIntegration.alpha_bdf,
-                  self.coefficients.epsFact_density,
-                  self.coefficients.epsFact,
-                  self.coefficients.sigma,
-                  self.coefficients.rho_0,
-                  self.coefficients.nu_0,
-                  self.coefficients.rho_1,
-                  self.coefficients.nu_1,
-                  self.stabilization.hFactor,
-                  self.shockCapturing.shockCapturingFactor,
-                  self.u[0].femSpace.dofMap.l2g,
-                  self.u[1].femSpace.dofMap.l2g,
-                  self.mesh.elementDiametersArray,
-                  self.u[0].dof,
-                  self.u[1].dof,
-                  self.u[2].dof,
-                  self.u[3].dof,
-                  self.q[('v',0)], 
-                  self.q[('v',1)], 
-                  self.q[('grad(v)',0)], 
-                  self.q[('grad(v)',1)], 
-                  self.q[('w*dV_r',0)], 
-                  self.q[('w*dV_r',1)], 
-                  self.q[('grad(w)*dV_f',0)], 
-                  self.q[('grad(w)*dV_f',1)], 
-                  self.q[('Hess(w)',1)], 
-                  self.q[('Hess(w)*dV_a',1,1)], 
-                  self.coefficients.g,
-                  self.coefficients.q_phi,
-                  self.coefficients.q_n,
-                  self.coefficients.q_kappa,
-                  self.timeIntegration.m_tmp[1],
-                  self.timeIntegration.m_tmp[2],
-                  self.timeIntegration.m_tmp[3],
-                  self.q[('f',0)],
-                  self.timeIntegration.beta_bdf[1],
-                  self.timeIntegration.beta_bdf[2],
-                  self.timeIntegration.beta_bdf[3],
-                  self.stabilization.v_last,
-                  self.q[('cfl',0)],
-                  self.q[('numDiff',1,1)], 
-                  self.q[('numDiff',2,2)], 
-                  self.q[('numDiff',3,3)],
-                  self.shockCapturing.numDiff_last[1],
-                  self.shockCapturing.numDiff_last[2],
-                  self.shockCapturing.numDiff_last[3],
-                  self.elementResidual[0], 
-                  self.elementResidual[1], 
-                  self.elementResidual[2], 
-                  self.elementResidual[3],
-                  self.coefficients.sdInfo[(1,1)][0],self.coefficients.sdInfo[(1,1)][1],
-                  self.coefficients.sdInfo[(1,2)][0],self.coefficients.sdInfo[(1,2)][1],
-                  self.coefficients.sdInfo[(1,3)][0],self.coefficients.sdInfo[(1,3)][1],
-                  self.coefficients.sdInfo[(2,2)][0],self.coefficients.sdInfo[(2,2)][1],
-                  self.coefficients.sdInfo[(2,1)][0],self.coefficients.sdInfo[(2,1)][1],
-                  self.coefficients.sdInfo[(2,3)][0],self.coefficients.sdInfo[(2,3)][1],
-                  self.coefficients.sdInfo[(3,3)][0],self.coefficients.sdInfo[(3,3)][1],
-                  self.coefficients.sdInfo[(3,1)][0],self.coefficients.sdInfo[(3,1)][1],
-                  self.coefficients.sdInfo[(3,2)][0],self.coefficients.sdInfo[(3,2)][1],
-                  self.offset[0],self.offset[1],self.offset[2],self.offset[3],self.stride[0],self.stride[1],self.stride[2],self.stride[3],r,
-                  self.mesh.nExteriorElementBoundaries_global,
-                  self.mesh.exteriorElementBoundariesArray,
-                  self.mesh.elementBoundaryElementsArray,
-                  self.mesh.elementBoundaryLocalElementBoundariesArray,
-                  self.ebqe[('v',0)],
-                  self.ebqe[('v',1)],
-                  self.ebqe[('grad(v)',0)],
-                  self.ebqe[('grad(v)',1)],
-                  self.coefficients.ebqe_phi,
-                  self.ebqe[('n')],
-                  self.coefficients.ebqe_kappa,
-                  self.numericalFlux.isDOFBoundary[0],
-                  self.numericalFlux.isDOFBoundary[1],
-                  self.numericalFlux.isDOFBoundary[2],
-                  self.numericalFlux.isDOFBoundary[3],
-                  self.ebqe[('advectiveFlux_bc_flag',0)],
-                  self.ebqe[('advectiveFlux_bc_flag',1)],
-                  self.ebqe[('advectiveFlux_bc_flag',2)],
-                  self.ebqe[('advectiveFlux_bc_flag',3)],
-                  self.ebqe[('diffusiveFlux_bc_flag',1,1)],
-                  self.ebqe[('diffusiveFlux_bc_flag',2,2)],
-                  self.ebqe[('diffusiveFlux_bc_flag',3,3)],
-                  self.numericalFlux.ebqe[('u',0)],
-                  self.ebqe[('advectiveFlux_bc',0)],
-                  self.ebqe[('advectiveFlux_bc',1)],
-                  self.ebqe[('advectiveFlux_bc',2)],
-                  self.ebqe[('advectiveFlux_bc',3)],
-                  self.numericalFlux.ebqe[('u',1)],
-                  self.ebqe[('diffusiveFlux_bc',1,1)],
-                  self.ebqe[('penalty')],
-                  self.numericalFlux.ebqe[('u',2)],
-                  self.ebqe[('diffusiveFlux_bc',2,2)],
-                  self.numericalFlux.ebqe[('u',3)],
-                  self.ebqe[('diffusiveFlux_bc',3,3)],
-                  self.ebqe[('w*dS_f',0)],
-                  self.ebqe[('w*dS_f',1)],
-                  self.q[('velocity',0)],self.ebqe[('velocity',0)],self.ebq_global[('totalFlux',0)])
+            self.timeIntegration.alpha_bdf,
+            self.coefficients.epsFact_density,
+            self.coefficients.epsFact,
+            self.coefficients.sigma,
+            self.coefficients.rho_0,
+            self.coefficients.nu_0,
+            self.coefficients.rho_1,
+            self.coefficients.nu_1,
+            self.Ct_sge,
+            self.Cd_sge,
+            self.shockCapturing.shockCapturingFactor,
+            self.u[0].femSpace.dofMap.l2g,
+            self.u[1].femSpace.dofMap.l2g,
+            self.u[0].dof,
+            self.u[1].dof,
+            self.u[2].dof,
+            self.u[3].dof,
+            self.coefficients.g,
+            self.coefficients.q_phi,
+            self.coefficients.q_n,
+            self.coefficients.q_kappa,
+            self.timeIntegration.m_tmp[1],
+            self.timeIntegration.m_tmp[2],
+            self.timeIntegration.m_tmp[3],
+            self.q[('f',0)],
+            self.timeIntegration.beta_bdf[1],
+            self.timeIntegration.beta_bdf[2],
+            self.timeIntegration.beta_bdf[3],
+            self.stabilization.v_last,
+            self.q[('cfl',0)],
+            self.q[('numDiff',1,1)], 
+            self.q[('numDiff',2,2)], 
+            self.q[('numDiff',3,3)],
+            self.shockCapturing.numDiff_last[1],
+            self.shockCapturing.numDiff_last[2],
+            self.shockCapturing.numDiff_last[3],
+            self.elementResidual[0], 
+            self.elementResidual[1], 
+            self.elementResidual[2], 
+            self.elementResidual[3],
+            self.coefficients.sdInfo[(1,1)][0],self.coefficients.sdInfo[(1,1)][1],
+            self.coefficients.sdInfo[(1,2)][0],self.coefficients.sdInfo[(1,2)][1],
+            self.coefficients.sdInfo[(1,3)][0],self.coefficients.sdInfo[(1,3)][1],
+            self.coefficients.sdInfo[(2,2)][0],self.coefficients.sdInfo[(2,2)][1],
+            self.coefficients.sdInfo[(2,1)][0],self.coefficients.sdInfo[(2,1)][1],
+            self.coefficients.sdInfo[(2,3)][0],self.coefficients.sdInfo[(2,3)][1],
+            self.coefficients.sdInfo[(3,3)][0],self.coefficients.sdInfo[(3,3)][1],
+            self.coefficients.sdInfo[(3,1)][0],self.coefficients.sdInfo[(3,1)][1],
+            self.coefficients.sdInfo[(3,2)][0],self.coefficients.sdInfo[(3,2)][1],
+            self.offset[0],self.offset[1],self.offset[2],self.offset[3],
+            self.stride[0],self.stride[1],self.stride[2],self.stride[3],
+            r,
+            self.mesh.nExteriorElementBoundaries_global,
+            self.mesh.exteriorElementBoundariesArray,
+            self.mesh.elementBoundaryElementsArray,
+            self.mesh.elementBoundaryLocalElementBoundariesArray,
+            self.coefficients.ebqe_phi,
+            self.coefficients.ebqe_n,
+            self.coefficients.ebqe_kappa,
+            self.numericalFlux.isDOFBoundary[0],
+            self.numericalFlux.isDOFBoundary[1],
+            self.numericalFlux.isDOFBoundary[2],
+            self.numericalFlux.isDOFBoundary[3],
+            self.ebqe[('advectiveFlux_bc_flag',0)],
+            self.ebqe[('advectiveFlux_bc_flag',1)],
+            self.ebqe[('advectiveFlux_bc_flag',2)],
+            self.ebqe[('advectiveFlux_bc_flag',3)],
+            self.ebqe[('diffusiveFlux_bc_flag',1,1)],
+            self.ebqe[('diffusiveFlux_bc_flag',2,2)],
+            self.ebqe[('diffusiveFlux_bc_flag',3,3)],
+            self.numericalFlux.ebqe[('u',0)],
+            self.ebqe[('advectiveFlux_bc',0)],
+            self.ebqe[('advectiveFlux_bc',1)],
+            self.ebqe[('advectiveFlux_bc',2)],
+            self.ebqe[('advectiveFlux_bc',3)],
+            self.numericalFlux.ebqe[('u',1)],
+            self.ebqe[('diffusiveFlux_bc',1,1)],
+            self.ebqe[('penalty')],
+            self.numericalFlux.ebqe[('u',2)],
+            self.ebqe[('diffusiveFlux_bc',2,2)],
+            self.numericalFlux.ebqe[('u',3)],
+            self.ebqe[('diffusiveFlux_bc',3,3)],
+            self.q[('velocity',0)],
+            self.ebqe[('velocity',0)],
+            self.ebq_global[('totalFlux',0)])
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
         log("Global residual",level=9,data=r)
@@ -747,124 +672,136 @@ class OneLevelRANS2PV2(OneLevelTransport):
             #    cJacobian = cRANS2P2DQ.calculateJacobian
 	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
 				       jacobian)
-        cJacobian(self.mesh.nElements_global,
-                  self.timeIntegration.alpha_bdf,
-                  self.coefficients.epsFact_density,
-                  self.coefficients.epsFact,
-                  self.coefficients.sigma,
-                  self.coefficients.rho_0,
-                  self.coefficients.nu_0,
-                  self.coefficients.rho_1,
-                  self.coefficients.nu_1,
-                  self.stabilization.hFactor,
-                  self.shockCapturing.shockCapturingFactor,
-                  self.u[0].femSpace.dofMap.l2g,
-                  self.u[1].femSpace.dofMap.l2g,
-                  self.mesh.elementDiametersArray,
-                  self.u[0].dof,
-                  self.u[1].dof,
-                  self.u[2].dof,
-                  self.u[3].dof,
-                  self.q[('v',0)], 
-                  self.q[('v',1)], 
-                  self.q[('grad(v)',0)], 
-                  self.q[('grad(v)',1)], 
-                  self.q[('w*dV_r',0)], 
-                  self.q[('w*dV_r',1)], 
-                  self.q[('grad(w)*dV_f',0)], 
-                  self.q[('grad(w)*dV_f',1)], 
-                  self.q[('Hess(w)',1)], 
-                  self.q[('Hess(w)*dV_a',1,1)], 
-                  self.coefficients.g,
-                  self.coefficients.q_phi,
-                  self.coefficients.q_n,
-                  self.coefficients.q_kappa,
-                  self.timeIntegration.beta_bdf[1],
-                  self.timeIntegration.beta_bdf[2],
-                  self.timeIntegration.beta_bdf[3],
-                  self.stabilization.v_last,
-                  self.q[('cfl',0)],
-                  self.shockCapturing.numDiff_last[1],
-                  self.shockCapturing.numDiff_last[2],
-                  self.shockCapturing.numDiff_last[3],
-                  self.coefficients.sdInfo[(1,1)][0],self.coefficients.sdInfo[(1,1)][1],
-                  self.coefficients.sdInfo[(1,2)][0],self.coefficients.sdInfo[(1,2)][1],
-                  self.coefficients.sdInfo[(1,3)][0],self.coefficients.sdInfo[(1,3)][1],
-                  self.coefficients.sdInfo[(2,2)][0],self.coefficients.sdInfo[(2,2)][1],
-                  self.coefficients.sdInfo[(2,1)][0],self.coefficients.sdInfo[(2,1)][1],
-                  self.coefficients.sdInfo[(2,3)][0],self.coefficients.sdInfo[(2,3)][1],
-                  self.coefficients.sdInfo[(3,3)][0],self.coefficients.sdInfo[(3,3)][1],
-                  self.coefficients.sdInfo[(3,1)][0],self.coefficients.sdInfo[(3,1)][1],
-                  self.coefficients.sdInfo[(3,2)][0],self.coefficients.sdInfo[(3,2)][1],
-                  self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
-                  self.csrRowIndeces[(0,1)],self.csrColumnOffsets[(0,1)],
-                  self.csrRowIndeces[(0,2)],self.csrColumnOffsets[(0,2)],
-                  self.csrRowIndeces[(0,3)],self.csrColumnOffsets[(0,3)],
-                  self.csrRowIndeces[(1,0)],self.csrColumnOffsets[(1,0)],
-                  self.csrRowIndeces[(1,1)],self.csrColumnOffsets[(1,1)],
-                  self.csrRowIndeces[(1,2)],self.csrColumnOffsets[(1,2)],
-                  self.csrRowIndeces[(1,3)],self.csrColumnOffsets[(1,3)],
-                  self.csrRowIndeces[(2,0)],self.csrColumnOffsets[(2,0)],
-                  self.csrRowIndeces[(2,1)],self.csrColumnOffsets[(2,1)],
-                  self.csrRowIndeces[(2,2)],self.csrColumnOffsets[(2,2)],
-                  self.csrRowIndeces[(2,3)],self.csrColumnOffsets[(2,3)],
-                  self.csrRowIndeces[(3,0)],self.csrColumnOffsets[(3,0)],
-                  self.csrRowIndeces[(3,1)],self.csrColumnOffsets[(3,1)],
-                  self.csrRowIndeces[(3,2)],self.csrColumnOffsets[(3,2)],
-                  self.csrRowIndeces[(3,3)],self.csrColumnOffsets[(3,3)],
-                  jacobian,
-                  self.mesh.nExteriorElementBoundaries_global,
-                  self.mesh.exteriorElementBoundariesArray,
-                  self.mesh.elementBoundaryElementsArray,
-                  self.mesh.elementBoundaryLocalElementBoundariesArray,
-                  self.ebqe[('v',0)],
-                  self.ebqe[('v',1)],
-                  self.ebqe[('grad(v)',0)],
-                  self.ebqe[('grad(v)',1)],
-                  self.coefficients.ebqe_phi,
-                  self.ebqe[('n')],
-                  self.coefficients.ebqe_kappa,
-                  self.numericalFlux.isDOFBoundary[0],
-                  self.numericalFlux.isDOFBoundary[1],
-                  self.numericalFlux.isDOFBoundary[2],
-                  self.numericalFlux.isDOFBoundary[3],
-                  self.ebqe[('advectiveFlux_bc_flag',0)],
-                  self.ebqe[('advectiveFlux_bc_flag',1)],
-                  self.ebqe[('advectiveFlux_bc_flag',2)],
-                  self.ebqe[('advectiveFlux_bc_flag',3)],
-                  self.ebqe[('diffusiveFlux_bc_flag',1,1)],
-                  self.ebqe[('diffusiveFlux_bc_flag',2,2)],
-                  self.ebqe[('diffusiveFlux_bc_flag',3,3)],
-                  self.numericalFlux.ebqe[('u',0)],
-                  self.ebqe[('advectiveFlux_bc',0)],
-                  self.ebqe[('advectiveFlux_bc',1)],
-                  self.ebqe[('advectiveFlux_bc',2)],
-                  self.ebqe[('advectiveFlux_bc',3)],
-                  self.numericalFlux.ebqe[('u',1)],
-                  self.ebqe[('diffusiveFlux_bc',1,1)],
-                  self.ebqe[('penalty')],
-                  self.numericalFlux.ebqe[('u',2)],
-                  self.ebqe[('diffusiveFlux_bc',2,2)],
-                  self.numericalFlux.ebqe[('u',3)],
-                  self.ebqe[('diffusiveFlux_bc',3,3)],
-                  self.ebqe[('w*dS_f',0)],
-                  self.ebqe[('w*dS_f',1)],
-                  self.csrColumnOffsets_eb[(0,0)],
-                  self.csrColumnOffsets_eb[(0,1)],
-                  self.csrColumnOffsets_eb[(0,2)],
-                  self.csrColumnOffsets_eb[(0,3)],
-                  self.csrColumnOffsets_eb[(1,0)],
-                  self.csrColumnOffsets_eb[(1,1)],
-                  self.csrColumnOffsets_eb[(1,2)],
-                  self.csrColumnOffsets_eb[(1,3)],
-                  self.csrColumnOffsets_eb[(2,0)],
-                  self.csrColumnOffsets_eb[(2,1)],
-                  self.csrColumnOffsets_eb[(2,2)],
-                  self.csrColumnOffsets_eb[(2,3)],
-                  self.csrColumnOffsets_eb[(3,0)],
-                  self.csrColumnOffsets_eb[(3,1)],
-                  self.csrColumnOffsets_eb[(3,2)],
-                  self.csrColumnOffsets_eb[(3,3)])
+        cJacobian(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[1].femSpace.psi,
+            self.u[1].femSpace.grad_psi,
+            self.u[1].femSpace.psi,
+            self.u[1].femSpace.grad_psi,
+            #element boundary
+            self.u[0].femSpace.elementMaps.psi_trace,
+            self.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.elementBoundaryQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[1].femSpace.psi_trace,
+            self.u[1].femSpace.grad_psi_trace,
+            self.u[1].femSpace.psi_trace,
+            self.u[1].femSpace.grad_psi_trace,
+            self.u[0].femSpace.elementMaps.boundaryNormals,
+            self.u[0].femSpace.elementMaps.boundaryJacobians,
+            self.mesh.nElements_global,
+            self.timeIntegration.alpha_bdf,
+            self.coefficients.epsFact_density,
+            self.coefficients.epsFact,
+            self.coefficients.sigma,
+            self.coefficients.rho_0,
+            self.coefficients.nu_0,
+            self.coefficients.rho_1,
+            self.coefficients.nu_1,
+            self.Ct_sge,
+            self.Cd_sge,
+            self.shockCapturing.shockCapturingFactor,
+            self.u[0].femSpace.dofMap.l2g,
+            self.u[1].femSpace.dofMap.l2g,
+            self.u[0].dof,
+            self.u[1].dof,
+            self.u[2].dof,
+            self.u[3].dof,
+            self.coefficients.g,
+            self.coefficients.q_phi,
+            self.coefficients.q_n,
+            self.coefficients.q_kappa,
+            self.timeIntegration.beta_bdf[1],
+            self.timeIntegration.beta_bdf[2],
+            self.timeIntegration.beta_bdf[3],
+            self.stabilization.v_last,
+            self.q[('cfl',0)],
+            self.shockCapturing.numDiff_last[1],
+            self.shockCapturing.numDiff_last[2],
+            self.shockCapturing.numDiff_last[3],
+            self.coefficients.sdInfo[(1,1)][0],self.coefficients.sdInfo[(1,1)][1],
+            self.coefficients.sdInfo[(1,2)][0],self.coefficients.sdInfo[(1,2)][1],
+            self.coefficients.sdInfo[(1,3)][0],self.coefficients.sdInfo[(1,3)][1],
+            self.coefficients.sdInfo[(2,2)][0],self.coefficients.sdInfo[(2,2)][1],
+            self.coefficients.sdInfo[(2,1)][0],self.coefficients.sdInfo[(2,1)][1],
+            self.coefficients.sdInfo[(2,3)][0],self.coefficients.sdInfo[(2,3)][1],
+            self.coefficients.sdInfo[(3,3)][0],self.coefficients.sdInfo[(3,3)][1],
+            self.coefficients.sdInfo[(3,1)][0],self.coefficients.sdInfo[(3,1)][1],
+            self.coefficients.sdInfo[(3,2)][0],self.coefficients.sdInfo[(3,2)][1],
+            self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
+            self.csrRowIndeces[(0,1)],self.csrColumnOffsets[(0,1)],
+            self.csrRowIndeces[(0,2)],self.csrColumnOffsets[(0,2)],
+            self.csrRowIndeces[(0,3)],self.csrColumnOffsets[(0,3)],
+            self.csrRowIndeces[(1,0)],self.csrColumnOffsets[(1,0)],
+            self.csrRowIndeces[(1,1)],self.csrColumnOffsets[(1,1)],
+            self.csrRowIndeces[(1,2)],self.csrColumnOffsets[(1,2)],
+            self.csrRowIndeces[(1,3)],self.csrColumnOffsets[(1,3)],
+            self.csrRowIndeces[(2,0)],self.csrColumnOffsets[(2,0)],
+            self.csrRowIndeces[(2,1)],self.csrColumnOffsets[(2,1)],
+            self.csrRowIndeces[(2,2)],self.csrColumnOffsets[(2,2)],
+            self.csrRowIndeces[(2,3)],self.csrColumnOffsets[(2,3)],
+            self.csrRowIndeces[(3,0)],self.csrColumnOffsets[(3,0)],
+            self.csrRowIndeces[(3,1)],self.csrColumnOffsets[(3,1)],
+            self.csrRowIndeces[(3,2)],self.csrColumnOffsets[(3,2)],
+            self.csrRowIndeces[(3,3)],self.csrColumnOffsets[(3,3)],
+            jacobian,
+            self.mesh.nExteriorElementBoundaries_global,
+            self.mesh.exteriorElementBoundariesArray,
+            self.mesh.elementBoundaryElementsArray,
+            self.mesh.elementBoundaryLocalElementBoundariesArray,
+            self.coefficients.ebqe_phi,
+            self.coefficients.ebqe_n,
+            self.coefficients.ebqe_kappa,
+            self.numericalFlux.isDOFBoundary[0],
+            self.numericalFlux.isDOFBoundary[1],
+            self.numericalFlux.isDOFBoundary[2],
+            self.numericalFlux.isDOFBoundary[3],
+            self.ebqe[('advectiveFlux_bc_flag',0)],
+            self.ebqe[('advectiveFlux_bc_flag',1)],
+            self.ebqe[('advectiveFlux_bc_flag',2)],
+            self.ebqe[('advectiveFlux_bc_flag',3)],
+            self.ebqe[('diffusiveFlux_bc_flag',1,1)],
+            self.ebqe[('diffusiveFlux_bc_flag',2,2)],
+            self.ebqe[('diffusiveFlux_bc_flag',3,3)],
+            self.numericalFlux.ebqe[('u',0)],
+            self.ebqe[('advectiveFlux_bc',0)],
+            self.ebqe[('advectiveFlux_bc',1)],
+            self.ebqe[('advectiveFlux_bc',2)],
+            self.ebqe[('advectiveFlux_bc',3)],
+            self.numericalFlux.ebqe[('u',1)],
+            self.ebqe[('diffusiveFlux_bc',1,1)],
+            self.ebqe[('penalty')],
+            self.numericalFlux.ebqe[('u',2)],
+            self.ebqe[('diffusiveFlux_bc',2,2)],
+            self.numericalFlux.ebqe[('u',3)],
+            self.ebqe[('diffusiveFlux_bc',3,3)],
+            self.csrColumnOffsets_eb[(0,0)],
+            self.csrColumnOffsets_eb[(0,1)],
+            self.csrColumnOffsets_eb[(0,2)],
+            self.csrColumnOffsets_eb[(0,3)],
+            self.csrColumnOffsets_eb[(1,0)],
+            self.csrColumnOffsets_eb[(1,1)],
+            self.csrColumnOffsets_eb[(1,2)],
+            self.csrColumnOffsets_eb[(1,3)],
+            self.csrColumnOffsets_eb[(2,0)],
+            self.csrColumnOffsets_eb[(2,1)],
+            self.csrColumnOffsets_eb[(2,2)],
+            self.csrColumnOffsets_eb[(2,3)],
+            self.csrColumnOffsets_eb[(3,0)],
+            self.csrColumnOffsets_eb[(3,1)],
+            self.csrColumnOffsets_eb[(3,2)],
+            self.csrColumnOffsets_eb[(3,3)])
         log("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
@@ -876,58 +813,64 @@ class OneLevelRANS2PV2(OneLevelTransport):
         
         This function should be called only when the mesh changes.
         """
+        self.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
+        self.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
+        self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
+        self.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
+        self.u[1].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
+        self.u[1].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
 	#
         #get physical locations of quadrature points and jacobian information there
 	#assume all components live on the same mesh
         #
-        self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
-                                                  self.q['x'])
-        if self.movingDomain: 
-            if self.tLast_mesh != None:
-                self.q['xt'][:]=self.q['x']
-                self.q['xt']-=self.q['x_last']
-                alpha = 1.0/(self.t_mesh - self.tLast_mesh)
-                self.q['xt']*=alpha
-            else:
-                self.q['xt'][:]=0.0
-            self.q['x_last'][:]=self.q['x']
-        self.u[0].femSpace.elementMaps.getJacobianValues(self.elementQuadraturePoints,
-                                                         self.q['J'],
-                                                         self.q['inverse(J)'],
-                                                         self.q['det(J)'])
-        self.q['abs(det(J))']=numpy.absolute(self.q['det(J)'])
-        #
-        # get physical space integration weights
-        #
-        self.q['dV'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        cfemIntegrals.calculateIntegrationWeights(self.q['abs(det(J))'],
-                                                  self.elementQuadratureWeights[('u',0)],
-                                                  self.q['dV'])
-        for ci in range(self.nc): self.q[('dV_u',ci)] = self.q['dV']
-        #
-        #get shape information at the quadrature points
-        #
-        self.testSpace[0].getBasisValues(self.elementQuadraturePoints,
-                                         self.q[('w',0)])
-        cfemIntegrals.calculateWeightedShape(self.elementQuadratureWeights[('r',1)],
-                                             self.q['abs(det(J))'],
-                                             self.q[('w',1)],
-                                             self.q[('w*dV_r',1)])
-        self.testSpace[1].getBasisGradientValues(self.elementQuadraturePoints,
-                                                  self.q['inverse(J)'],
-                                                  self.q[('grad(w)',1)])
-        cfemIntegrals.calculateWeightedShapeGradients(self.elementQuadratureWeights[('f',0)],
-                                                      self.q['abs(det(J))'],
-                                                      self.q[('grad(w)',0)],
-                                                      self.q[('grad(w)*dV_f',0)])
-        if self.Hess:
-            self.testSpace[1].getBasisHessianValues(self.elementQuadraturePoints,
-                                                    self.q['inverse(J)'],
-                                                    self.q[('Hess(w)',1)])
-            cfemIntegrals.calculateWeightedShapeGradients(self.elementQuadratureWeights[('a',1,1)],
-                                                          self.q['abs(det(J))'],
-                                                          self.q[('Hess(w)',1)],
-                                                          self.q[('Hess(w)*dV_a',1,1)])
+        # self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
+        #                                           self.q['x'])
+        # if self.movingDomain: 
+        #     if self.tLast_mesh != None:
+        #         self.q['xt'][:]=self.q['x']
+        #         self.q['xt']-=self.q['x_last']
+        #         alpha = 1.0/(self.t_mesh - self.tLast_mesh)
+        #         self.q['xt']*=alpha
+        #     else:
+        #         self.q['xt'][:]=0.0
+        #     self.q['x_last'][:]=self.q['x']
+        # self.u[0].femSpace.elementMaps.getJacobianValues(self.elementQuadraturePoints,
+        #                                                  self.q['J'],
+        #                                                  self.q['inverse(J)'],
+        #                                                  self.q['det(J)'])
+        # self.q['abs(det(J))']=numpy.absolute(self.q['det(J)'])
+        # #
+        # # get physical space integration weights
+        # #
+        # self.q['dV'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        # cfemIntegrals.calculateIntegrationWeights(self.q['abs(det(J))'],
+        #                                           self.elementQuadratureWeights[('u',0)],
+        #                                           self.q['dV'])
+        # for ci in range(self.nc): self.q[('dV_u',ci)] = self.q['dV']
+        # #
+        # #get shape information at the quadrature points
+        # #
+        # self.testSpace[0].getBasisValues(self.elementQuadraturePoints,
+        #                                  self.q[('w',0)])
+        # cfemIntegrals.calculateWeightedShape(self.elementQuadratureWeights[('r',1)],
+        #                                      self.q['abs(det(J))'],
+        #                                      self.q[('w',1)],
+        #                                      self.q[('w*dV_r',1)])
+        # self.testSpace[1].getBasisGradientValues(self.elementQuadraturePoints,
+        #                                           self.q['inverse(J)'],
+        #                                           self.q[('grad(w)',1)])
+        # cfemIntegrals.calculateWeightedShapeGradients(self.elementQuadratureWeights[('f',0)],
+        #                                               self.q['abs(det(J))'],
+        #                                               self.q[('grad(w)',0)],
+        #                                               self.q[('grad(w)*dV_f',0)])
+        # if self.Hess:
+        #     self.testSpace[1].getBasisHessianValues(self.elementQuadraturePoints,
+        #                                             self.q['inverse(J)'],
+        #                                             self.q[('Hess(w)',1)])
+        #     cfemIntegrals.calculateWeightedShapeGradients(self.elementQuadratureWeights[('a',1,1)],
+        #                                                   self.q['abs(det(J))'],
+        #                                                   self.q[('Hess(w)',1)],
+        #                                                   self.q[('Hess(w)*dV_a',1,1)])
         self.coefficients.initializeElementQuadrature(self.timeIntegration.t,self.q)
         if self.stabilization != None:
             self.stabilization.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
@@ -941,55 +884,56 @@ class OneLevelRANS2PV2(OneLevelTransport):
 
         This function should be called only when the mesh changes.
         """
+        #cek todo, a local calculation of the element boundary quadrature permuations
         #
         #get physical locations of element boundary quadrature points
         #
 	#assume all components live on the same mesh
-        self.u[0].femSpace.elementMaps.getValuesTrace(self.elementBoundaryQuadraturePoints,
-						      self.ebq['x'])
+        # self.u[0].femSpace.elementMaps.getValuesTrace(self.elementBoundaryQuadraturePoints,
+	# 					      self.ebq['x'])
         #
         #get metric tensor and unit normals
         #
-        if self.movingDomain:
-            if self.tLast_mesh != None:
-                self.ebq['xt'][:]=self.ebq['x']
-                self.ebq['xt']-=self.ebq['x_last']
-                alpha = 1.0/(self.t_mesh - self.tLast_mesh)
-                self.ebq['xt']*=alpha
-            else:
-                self.ebq['xt'][:]=0.0
-            self.ebq['x_last'][:]=self.ebq['x']
-            self.u[0].femSpace.elementMaps.getJacobianValuesTrace_movingDomain(self.elementBoundaryQuadraturePoints,
-                                                                               self.ebq['xt'],
-                                                                               self.ebq['inverse(J)'],
-                                                                               self.ebq['g'],
-                                                                               self.ebq['sqrt(det(g))'],
-                                                                               self.ebq['n'])
-        else:
-            self.u[0].femSpace.elementMaps.getJacobianValuesTrace(self.elementBoundaryQuadraturePoints,
-                                                                  self.ebq['inverse(J)'],
-                                                                  self.ebq['g'],
-                                                                  self.ebq['sqrt(det(g))'],
-                                                                  self.ebq['n'])
+        # if self.movingDomain:
+        #     if self.tLast_mesh != None:
+        #         self.ebq['xt'][:]=self.ebq['x']
+        #         self.ebq['xt']-=self.ebq['x_last']
+        #         alpha = 1.0/(self.t_mesh - self.tLast_mesh)
+        #         self.ebq['xt']*=alpha
+        #     else:
+        #         self.ebq['xt'][:]=0.0
+        #     self.ebq['x_last'][:]=self.ebq['x']
+        #     self.u[0].femSpace.elementMaps.getJacobianValuesTrace_movingDomain(self.elementBoundaryQuadraturePoints,
+        #                                                                        self.ebq['xt'],
+        #                                                                        self.ebq['inverse(J)'],
+        #                                                                        self.ebq['g'],
+        #                                                                        self.ebq['sqrt(det(g))'],
+        #                                                                        self.ebq['n'])
+        # else:
+        #     self.u[0].femSpace.elementMaps.getJacobianValuesTrace(self.elementBoundaryQuadraturePoints,
+        #                                                           self.ebq['inverse(J)'],
+        #                                                           self.ebq['g'],
+        #                                                           self.ebq['sqrt(det(g))'],
+        #                                                           self.ebq['n'])
 
-        cfemIntegrals.copyLeftElementBoundaryInfo(self.mesh.elementBoundaryElementsArray,
-                                                  self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                  self.mesh.exteriorElementBoundariesArray,
-                                                  self.mesh.interiorElementBoundariesArray,
-                                                  self.ebq['x'],
-                                                  self.ebq['n'],
-                                                  self.ebq_global['x'],
-                                                  self.ebq_global['n'])
-        if self.movingDomain:
-            cfemIntegrals.copyLeftElementBoundaryInfo_movingDomain(self.mesh.elementBoundaryElementsArray,
-                                                                   self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                   self.mesh.exteriorElementBoundariesArray,
-                                                                   self.mesh.interiorElementBoundariesArray,
-                                                                   self.ebq['xt'])
-        #now map the physical points back to the reference element
-        #assume all components live  on same mesh
-        self.u[0].femSpace.elementMaps.getInverseValuesTrace(self.ebq['inverse(J)'],self.ebq['x'],self.ebq['hat(x)'])
-        self.u[0].femSpace.elementMaps.getPermutations(self.ebq['hat(x)'])
+        # cfemIntegrals.copyLeftElementBoundaryInfo(self.mesh.elementBoundaryElementsArray,
+        #                                           self.mesh.elementBoundaryLocalElementBoundariesArray,
+        #                                           self.mesh.exteriorElementBoundariesArray,
+        #                                           self.mesh.interiorElementBoundariesArray,
+        #                                           self.ebq['x'],
+        #                                           self.ebq['n'],
+        #                                           self.ebq_global['x'],
+        #                                           self.ebq_global['n'])
+        # if self.movingDomain:
+        #     cfemIntegrals.copyLeftElementBoundaryInfo_movingDomain(self.mesh.elementBoundaryElementsArray,
+        #                                                            self.mesh.elementBoundaryLocalElementBoundariesArray,
+        #                                                            self.mesh.exteriorElementBoundariesArray,
+        #                                                            self.mesh.interiorElementBoundariesArray,
+        #                                                            self.ebq['xt'])
+        # #now map the physical points back to the reference element
+        # #assume all components live  on same mesh
+        # self.u[0].femSpace.elementMaps.getInverseValuesTrace(self.ebq['inverse(J)'],self.ebq['x'],self.ebq['hat(x)'])
+        # self.u[0].femSpace.elementMaps.getPermutations(self.ebq['hat(x)'])
         #
         #since the points on the reference boundary may be reordered on many right element boundaries, we
         #have to use an array of reference boundary points on all element boundaries
@@ -997,20 +941,20 @@ class OneLevelRANS2PV2(OneLevelTransport):
         #
         #get the shape information at the reference element boundary quadrature points 
 	#
-        self.testSpace[0].getBasisValuesTrace(self.u[0].femSpace.elementMaps.permutations,
-                                               self.ebq['hat(x)'],
-                                               self.ebq[('w',0)])
-        cfemIntegrals.calculateWeightedShapeTrace(self.elementBoundaryQuadratureWeights[('u',0)],
-                                                  self.ebq['sqrt(det(g))'],
-                                                  self.ebq[('w',0)],
-                                                  self.ebq[('w*dS_u',0)])
-        self.u[0].femSpace.getBasisGradientValuesTrace(self.u[0].femSpace.elementMaps.permutations,
-                                                        self.ebq['hat(x)'],
-                                                        self.ebq['inverse(J)'],
-                                                        self.ebq[('grad(v)',0)])
-        cfemIntegrals.calculateElementBoundaryIntegrationWeights(self.ebq['sqrt(det(g))'],
-                                                                self.elementBoundaryQuadratureWeights[('u',0)],
-                                                                self.ebq[('dS_u',0)])
+        # self.testSpace[0].getBasisValuesTrace(self.u[0].femSpace.elementMaps.permutations,
+        #                                        self.ebq['hat(x)'],
+        #                                        self.ebq[('w',0)])
+        # cfemIntegrals.calculateWeightedShapeTrace(self.elementBoundaryQuadratureWeights[('u',0)],
+        #                                           self.ebq['sqrt(det(g))'],
+        #                                           self.ebq[('w',0)],
+        #                                           self.ebq[('w*dS_u',0)])
+        # self.u[0].femSpace.getBasisGradientValuesTrace(self.u[0].femSpace.elementMaps.permutations,
+        #                                                 self.ebq['hat(x)'],
+        #                                                 self.ebq['inverse(J)'],
+        #                                                 self.ebq[('grad(v)',0)])
+        # cfemIntegrals.calculateElementBoundaryIntegrationWeights(self.ebq['sqrt(det(g))'],
+        #                                                         self.elementBoundaryQuadratureWeights[('u',0)],
+        #                                                         self.ebq[('dS_u',0)])
     def calculateExteriorElementBoundaryQuadrature(self):
         """
         Calculate the physical location and weights of the quadrature rules
@@ -1022,65 +966,73 @@ class OneLevelRANS2PV2(OneLevelTransport):
         #get physical locations of element boundary quadrature points
         #
 	#assume all components live on the same mesh
+        self.u[0].femSpace.elementMaps.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
+        self.u[0].femSpace.elementMaps.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
+        self.u[0].femSpace.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
+        self.u[0].femSpace.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
+        self.u[1].femSpace.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
+        self.u[1].femSpace.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
         self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
                                                                     self.ebqe['x'])
-        #
-        #get metric tensor and unit normals
-        #
-        if self.movingDomain:
-            if self.tLast_mesh != None:
-                self.ebqe['xt'][:]=self.ebqe['x']
-                self.ebqe['xt']-=self.ebqe['x_last']
-                alpha = 1.0/(self.t_mesh - self.tLast_mesh)
-                self.ebqe['xt']*=alpha
-            else:
-                self.ebqe['xt'][:]=0.0
-            self.ebqe['x_last'][:]=self.ebqe['x']
-            self.u[0].femSpace.elementMaps.getJacobianValuesGlobalExteriorTrace_movingDomain(self.elementBoundaryQuadraturePoints,
-                                                                                             self.ebqe['xt'],
-                                                                                             self.ebqe['inverse(J)'],
-                                                                                             self.ebqe['g'],
-                                                                                             self.ebqe['sqrt(det(g))'],
-                                                                                             self.ebqe['n'])
-        else:
-            self.u[0].femSpace.elementMaps.getJacobianValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
-                                                                                self.ebqe['inverse(J)'],
-                                                                                self.ebqe['g'],
-                                                                                self.ebqe['sqrt(det(g))'],
-                                                                                self.ebqe['n'])
-        #now map the physical points back to the reference element
-        #assume all components live  on same mesh
-        self.u[0].femSpace.elementMaps.getInverseValuesGlobalExteriorTrace(self.ebqe['inverse(J)'],self.ebqe['x'],self.ebqe['hat(x)'])
-        #
-        #since the points on the reference boundary may be reordered on many right element boundaries, we
-        #have to use an array of reference boundary points on all element boundaries
-        #first copy the left reference element boundary quadrature points from the reference element boundary
-        self.testSpace[0].getBasisValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
-                                                             self.ebqe[('w',0)])
-        cfemIntegrals.calculateWeightedShapeGlobalExteriorTrace(self.mesh.exteriorElementBoundariesArray,
-                                                                self.mesh.elementBoundaryElementsArray,
-                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                self.elementBoundaryQuadratureWeights[('f',0)],
-                                                                self.ebqe['sqrt(det(g))'],
-                                                                self.ebqe[('w',0)],
-                                                                self.ebqe[('w*dS_f',0)])
-        self.u[0].femSpace.getBasisGradientValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
-                                                                      self.ebqe['inverse(J)'],
-                                                                      self.ebqe[('grad(v)',0)])
-        #setup flux boundary conditions
+        # #
+        # #get metric tensor and unit normals
+        # #
+        # if self.movingDomain:
+        #     if self.tLast_mesh != None:
+        #         self.ebqe['xt'][:]=self.ebqe['x']
+        #         self.ebqe['xt']-=self.ebqe['x_last']
+        #         alpha = 1.0/(self.t_mesh - self.tLast_mesh)
+        #         self.ebqe['xt']*=alpha
+        #     else:
+        #         self.ebqe['xt'][:]=0.0
+        #     self.ebqe['x_last'][:]=self.ebqe['x']
+        #     self.u[0].femSpace.elementMaps.getJacobianValuesGlobalExteriorTrace_movingDomain(self.elementBoundaryQuadraturePoints,
+        #                                                                                      self.ebqe['xt'],
+        #                                                                                      self.ebqe['inverse(J)'],
+        #                                                                                      self.ebqe['g'],
+        #                                                                                      self.ebqe['sqrt(det(g))'],
+        #                                                                                      self.ebqe['n'])
+        # else:
+        #     self.u[0].femSpace.elementMaps.getJacobianValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
+        #                                                                         self.ebqe['inverse(J)'],
+        #                                                                         self.ebqe['g'],
+        #                                                                         self.ebqe['sqrt(det(g))'],
+        #                                                                         self.ebqe['n'])
+        # #now map the physical points back to the reference element
+        # #assume all components live  on same mesh
+        # self.u[0].femSpace.elementMaps.getInverseValuesGlobalExteriorTrace(self.ebqe['inverse(J)'],self.ebqe['x'],self.ebqe['hat(x)'])
+        # #
+        # #since the points on the reference boundary may be reordered on many right element boundaries, we
+        # #have to use an array of reference boundary points on all element boundaries
+        # #first copy the left reference element boundary quadrature points from the reference element boundary
+        # self.testSpace[0].getBasisValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
+        #                                                      self.ebqe[('w',0)])
+        # cfemIntegrals.calculateWeightedShapeGlobalExteriorTrace(self.mesh.exteriorElementBoundariesArray,
+        #                                                         self.mesh.elementBoundaryElementsArray,
+        #                                                         self.mesh.elementBoundaryLocalElementBoundariesArray,
+        #                                                         self.elementBoundaryQuadratureWeights[('f',0)],
+        #                                                         self.ebqe['sqrt(det(g))'],
+        #                                                         self.ebqe[('w',0)],
+        #                                                         self.ebqe[('w*dS_f',0)])
+        # self.u[0].femSpace.getBasisGradientValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
+        #                                                               self.ebqe['inverse(J)'],
+        #                                                               self.ebqe[('grad(v)',0)])
+        # #setup flux boundary conditions
         self.fluxBoundaryConditionsObjectsDict = dict([(cj,FluxBoundaryConditions(self.mesh,
                                                                                   self.nElementBoundaryQuadraturePoints_elementBoundary,
                                                                                   self.ebqe[('x')],
                                                                                   self.advectiveFluxBoundaryConditionsSetterDict[cj],
                                                                                   self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
                                                        for cj in self.advectiveFluxBoundaryConditionsSetterDict.keys()])
-        self.ebqe['dS'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        cfemIntegrals.calculateIntegrationWeights(self.ebqe['sqrt(det(g))'],
-                                                  self.elementBoundaryQuadratureWeights[('u',0)],
-                                                  self.ebqe['dS'])
-        for ci in range(self.nc): self.ebqe[('dS_u',ci)] = self.ebqe['dS']
+        # self.ebqe['dS'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        # cfemIntegrals.calculateIntegrationWeights(self.ebqe['sqrt(det(g))'],
+        #                                           self.elementBoundaryQuadratureWeights[('u',0)],
+        #                                           self.ebqe['dS'])
+        # for ci in range(self.nc): self.ebqe[('dS_u',ci)] = self.ebqe['dS']
         self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self.timeIntegration.t,self.ebqe)
     def estimate_mt(self):
+        pass
+    def calculateSolutionAtQuadrature(self):
         pass
     def calculateAuxiliaryQuantitiesAfterStep(self):
         if isinstance(self.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
@@ -1091,18 +1043,19 @@ class OneLevelRANS2PV2(OneLevelTransport):
             cva = cRANS2PQ.calculateVelocityAverage
             #if self.nSpace_global == 2:
             #    cva = cRANS2P2DQ.calculateVelocityAverage
-        cva(self.mesh.nExteriorElementBoundaries_global,
-            self.mesh.exteriorElementBoundariesArray,
-            self.mesh.nInteriorElementBoundaries_global,
-            self.mesh.interiorElementBoundariesArray,
-            self.mesh.elementBoundaryElementsArray,
-            self.mesh.elementBoundaryLocalElementBoundariesArray,
-            self.u[1].femSpace.dofMap.l2g,
-            self.u[1].dof,
-            self.u[2].dof,
-            self.u[3].dof,
-            self.ebq[('v',0)], 
-            self.ebqe[('velocity',0)],
-            self.ebq_global[('velocityAverage',0)])
-        #for v in self.ebq_global[('velocityAverage',0)]: print v
+        #cek todo memory optimized version
+        # cva(self.u[1].femSpace.elementMaps.permutations,
+        #     self.mesh.nExteriorElementBoundaries_global,
+        #     self.mesh.exteriorElementBoundariesArray,
+        #     self.mesh.nInteriorElementBoundaries_global,
+        #     self.mesh.interiorElementBoundariesArray,
+        #     self.mesh.elementBoundaryElementsArray,
+        #     self.mesh.elementBoundaryLocalElementBoundariesArray,
+        #     self.u[1].femSpace.dofMap.l2g,
+        #     self.u[1].dof,
+        #     self.u[2].dof,
+        #     self.u[3].dof,
+        #     self.ebq[('v',0)], 
+        #     self.ebqe[('velocity',0)],
+        #     self.ebq_global[('velocityAverage',0)])
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)

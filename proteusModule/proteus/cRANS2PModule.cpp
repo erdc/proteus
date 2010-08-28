@@ -14,6 +14,7 @@
 #define DDATA(p) ((double *) (((PyArrayObject *)p)->data))
 #define IDATA(p) ((int *) (((PyArrayObject *)p)->data))
 #define CSRVAL(p) ((double*)((SparseMatrix*)p)->A.nzval)
+#define CSRNNZ(p) ((SparseMatrix*)p)->A.nnz
 
 static PyObject* cRANS2P_calculateResidual(PyObject* self,
 					   PyObject* args)
@@ -685,6 +686,9 @@ static PyObject* cRANS2P_calculateJacobian(PyObject* self,
 	      IDATA(csrColumnOffsets_eb_w_u),
 	      IDATA(csrColumnOffsets_eb_w_v),
 	      IDATA(csrColumnOffsets_eb_w_w));
+  // std::cout<<"jacobian"<<std::endl;
+  // for (int n=0;n<CSRNNZ(globalJacobian);n++)
+  //   std::cout<<CSRVAL(globalJacobian)[n]<<std::endl;
   Py_INCREF(Py_None); 
   return Py_None;
 }

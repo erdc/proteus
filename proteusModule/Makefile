@@ -13,7 +13,7 @@ install:
 	${PROTEUS_PYTHON} setup.py install
 
 petsc-config:
-	${PROTEUS_PYTHON} ./setPetscLib.py \'${PETSC_LIB} ${PETSC_INCLUDE}\'
+	${PROTEUS_PYTHON} ./setPetscLib.py ${PETSC_LIB} ${PETSC_INCLUDE}
 
 docs:
 	doxygen proteus-doc.conf

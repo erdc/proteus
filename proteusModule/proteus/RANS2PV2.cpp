@@ -51,8 +51,8 @@ extern "C" void calculateResidual_RANS2PV2(//element
 					   double* w_dof,
 					   double* g,
 					   double* phi,
-					   double* n,
-					   double* kappa,
+					   double* normal_phi,
+					   double* kappa_phi,
 					   double* q_mom_u_acc,
 					   double* q_mom_v_acc,
 					   double* q_mom_w_acc,
@@ -80,8 +80,8 @@ extern "C" void calculateResidual_RANS2PV2(//element
 					   int* elementBoundaryElementsArray,
 					   int* elementBoundaryLocalElementBoundariesArray,
 					   double* ebqe_phi_ext,
-					   double* ebqe_n_ext,
-					   double* ebqe_kappa_ext,
+					   double* ebqe_normal_phi_ext,
+					   double* ebqe_kappa_phi_ext,
 					   int* isDOFBoundary_p,
 					   int* isDOFBoundary_u,
 					   int* isDOFBoundary_v,
@@ -113,13 +113,6 @@ extern "C" void calculateResidual_RANS2PV2(//element
   //
   //loop over elements to compute volume integrals and load them into element and global residual
   //
-  //eN is the element index
-  //eN_k is the quadrature point index for a scalar
-  //eN_k_nSpace is the quadrature point index for a vector
-  //eN_i is the element test function index
-  //eN_j is the element trial function index
-  //eN_k_j is the quadrature point index for a trial function
-  //eN_k_i is the quadrature point index for a trial function
   double globalConservationError=0.0;
   for(int eN=0;eN<nElements_global;eN++)
     {
@@ -136,10 +129,12 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  elementResidual_v[i]=0.0;
 	  elementResidual_w[i]=0.0;
 	}//i
+      //
       //loop over quadrature points and compute integrands
-      for  (int k=0;k<nQuadraturePoints_element;k++)
+      //
+      for(int k=0;k<nQuadraturePoints_element;k++)
         {
-	  //compute indeces and declare local storage
+	  //compute indices and declare local storage
 	  register int eN_k = eN*nQuadraturePoints_element+k,
 	    eN_k_nSpace = eN_k*nSpace,
 	    eN_nDOF_trial_element = eN*nDOF_trial_element;
@@ -231,36 +226,19 @@ extern "C" void calculateResidual_RANS2PV2(//element
 				      x,y,z);
 	  //get the physical integration weight
 	  dV = fabs(jacDet)*dV_ref[k];
-	  //get the metric tensor
-	  //cek todo use symmetry
-	  for (int I=0;I<nSpace;I++)
-	    for (int J=0;J<nSpace;J++)
-	      for (int K=0;K<nSpace;K++)
-	        G[I*nSpace+J] = jacInv[I*nSpace+K]*jacInv[J*nSpace+K];
-	  G_dd_G=0.0;
-	  tr_G = 0.0;
-	  for (int I=0;I<nSpace;I++)
-	    {
-	      tr_G += G[I*nSpace+I];
-	      for (int J=0;J<nSpace;J++)
-		{
-		  G_dd_G += G[I*nSpace+J]*G[I*nSpace+J];
-		}
-	    }
-	  for (int I=0;I<nSpace;I++)
-	    for (int J=0;J<nSpace;J++)
-	      h_phi += n[eN_k_nSpace+I]*G[I*nSpace+J]*n[eN_k_nSpace+J];
-	  h_phi = 1.0/sqrt(h_phi);
+	  ck.calculateG(jacInv,G,G_dd_G,tr_G);
+	  ck.calculateGScale(G,&normal_phi[eN_k_nSpace],h_phi);
 	  eps_rho = epsFact_rho*h_phi;
 	  eps_mu = epsFact_mu*h_phi;
-	  //new
-	  ck.gradTrialFromRef(p_grad_trial_ref,jacInv,p_grad_trial);
-	  ck.gradTrialFromRef(vel_grad_trial_ref,jacInv,vel_grad_trial);
-	  //get the solution and gradients	
-	  ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_trial_ref,p);
-	  ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_trial_ref,u);
-	  ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_trial_ref,v);
-	  ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_trial_ref,w);
+	  //get the trial function gradients
+	  ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial);
+	  ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
+	  //get the solution
+	  ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p);
+	  ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u);
+	  ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
+	  ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],w);
+	  //get the solution gradients
 	  ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p);
 	  ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
 	  ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
@@ -268,8 +246,8 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  //precalculate test function products with integration weights
 	  for (int j=0;j<nDOF_trial_element;j++)
 	    {
-	      p_test_dV[j] = p_test_ref[k*nDOF_test_element+j]*dV;
-	      vel_test_dV[j] = vel_test_ref[k*nDOF_test_element+j]*dV;
+	      p_test_dV[j] = p_test_ref[k*nDOF_trial_element+j]*dV;
+	      vel_test_dV[j] = vel_test_ref[k*nDOF_trial_element+j]*dV;
 	      for (int I=0;I<nSpace;I++)
 		{
 		  p_grad_test_dV[j*nSpace+I]   = p_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
@@ -280,9 +258,46 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  q_velocity[eN_k_nSpace+0]=u;
 	  q_velocity[eN_k_nSpace+1]=v;
 	  q_velocity[eN_k_nSpace+2]=w;
+	  //std::cout<<"velocity "<<u<<'\t'<<v<<'\t'<<w<<std::endl;
+	  // q_velocity_last[eN_k_nSpace+0]=1.0;
+	  // q_velocity_last[eN_k_nSpace+1]=1.0;
+	  // q_velocity_last[eN_k_nSpace+2]=1.0;
+	  // q_velocity_last[eN_k_nSpace+0]=u;
+	  // q_velocity_last[eN_k_nSpace+1]=v;
+	  // q_velocity_last[eN_k_nSpace+2]=w;
+	  // //
+	  // //debugging section for finite element calculations on interior
+	  // //
+	  // std::cout<<"eN = "<<eN<<" k = "<<k<<std::endl;
+	  // for (int j=0;j<nDOF_trial_element;j++)
+	  //   {
+	  //     std::cout<<"p_trial["<<j<<"] "<<p_trial_ref[k*nDOF_trial_element+j]<<std::endl;
+	  //     std::cout<<"vel_trial["<<j<<"] "<<vel_trial_ref[k*nDOF_trial_element+j]<<std::endl;
+	  //     for (int I=0;I<nSpace;I++)
+	  // 	{
+	  // 	  std::cout<<"p_grad_trial["<<j<<","<<I<<"] "<<p_grad_trial[j*nSpace+I]<<std::endl;
+	  // 	  std::cout<<"vel_grad_trial["<<j<<","<<I<<"] "<<vel_grad_trial[j*nSpace+I]<<std::endl;
+	  // 	  std::cout<<"p_grad_test_dV["<<j<<","<<I<<"] "<<p_grad_test_dV[j*nSpace+I]<<std::endl;
+	  // 	  std::cout<<"vel_grad_test_dV["<<j<<","<<I<<"] "<<vel_grad_test_dV[j*nSpace+I]<<std::endl;
+	  // 	}
+	  //   }
+	  // std::cout<<"p "<<p<<std::endl;
+	  // std::cout<<"u "<<u<<std::endl;
+	  // std::cout<<"v "<<v<<std::endl;
+	  // std::cout<<"w "<<w<<std::endl;
+	  // for(int I=0;I<nSpace;I++)
+	  //   {
+	  //     std::cout<<"grad_p["<<I<<"] "<<grad_p[I]<<std::endl;
+	  //     std::cout<<"grad_u["<<I<<"] "<<grad_u[I]<<std::endl;
+	  //     std::cout<<"grad_v["<<I<<"] "<<grad_v[I]<<std::endl;
+	  //     std::cout<<"grad_w["<<I<<"] "<<grad_w[I]<<std::endl;
+	  //   }
           //
           //calculate pde coefficients at quadrature points
           //
+	  //cek debug
+	  //eps_rho=0.1;
+	  //eps_mu=0.1;
 	  RANS2PV2::evaluateCoefficients(eps_rho,
 					 eps_mu,
 					 sigma,
@@ -292,8 +307,8 @@ extern "C" void calculateResidual_RANS2PV2(//element
 					 nu_1,
 					 g,
 					 phi[eN_k],
-					 &n[eN_k_nSpace],
-					 kappa[eN_k],
+					 &normal_phi[eN_k_nSpace],
+					 kappa_phi[eN_k],
 					 p,
 					 grad_p,
 					 u,
@@ -310,7 +325,7 @@ extern "C" void calculateResidual_RANS2PV2(//element
 					 dmass_adv_v,
 					 dmass_adv_w,
 					 mom_u_adv,
-					 dmom_u_adv_u,
+				 	 dmom_u_adv_u,
 					 dmom_u_adv_v,
 					 dmom_u_adv_w,
 					 mom_v_adv,
@@ -424,23 +439,34 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  				      tau_p,
 					      tau_v,
 					      q_cfl[eN_k]);
+	  //cek debug
+	  //std::cout<<"tau_p "<<tau_p<<"tau_v "<<tau_v<<std::endl;
+	  //tau_p = 0.0;
+	  //tau_v = 0.0;
           RANS2PV2::calculateSubgridError_tauRes(tau_p,
-						 tau_v,
-						 pdeResidual_p,
-						 pdeResidual_u,
-						 pdeResidual_v,
-						 pdeResidual_w,
-						 subgridError_p,
-						 subgridError_u,
-						 subgridError_v,
-						 subgridError_w);
-          //
-          //calcualte shock capturing diffusion
-          //
+	  					 tau_v,
+	  					 pdeResidual_p,
+	  					 pdeResidual_u,
+	  					 pdeResidual_v,
+	  					 pdeResidual_w,
+	  					 subgridError_p,
+	  					 subgridError_u,
+	  					 subgridError_v,
+	  					 subgridError_w);
+          
+          //calculate shock capturing diffusion
+          
 	  norm_Rv = sqrt(pdeResidual_u*pdeResidual_u + pdeResidual_v*pdeResidual_v + pdeResidual_w*pdeResidual_w);
 	  q_numDiff_v[eN_k] = C_dc*norm_Rv/sqrt(G_dd_G);
 	  q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
 	  q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
+	  // //cek debug
+	  //q_numDiff_v[eN_k] = 0.0;
+	  //q_numDiff_v[eN_k] = 0.0;
+	  //q_numDiff_w[eN_k] = 0.0;
+	  // q_numDiff_u_last[eN_k] = 0.0;	  
+	  // q_numDiff_v_last[eN_k] = 0.0;	  
+	  // q_numDiff_w_last[eN_k] = 0.0;	  
           // 
           //update element residual 
           // 
@@ -493,7 +519,7 @@ extern "C" void calculateResidual_RANS2PV2(//element
       for(int i=0;i<nDOF_test_element;i++) 
         { 
           register int eN_i=eN*nDOF_test_element+i;
-          
+	  
           q_elementResidual_p[eN_i]+=elementResidual_p[i];
           q_elementResidual_u[eN_i]+=elementResidual_u[i];
           q_elementResidual_v[eN_i]+=elementResidual_v[i];
@@ -504,6 +530,17 @@ extern "C" void calculateResidual_RANS2PV2(//element
           globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=elementResidual_v[i];
           globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i];
         }//i
+      // //
+      // //debug
+      // //
+      // for(int i=0;i<nDOF_test_element;i++) 
+      //   { 
+      // 	  std::cout<<"eN "<<eN<<" i "<<i<<std::endl;
+      // 	  std::cout<<"r_p"<<elementResidual_p[i]<<std::endl;
+      // 	  std::cout<<"r_u"<<elementResidual_u[i]<<std::endl;
+      // 	  std::cout<<"r_v"<<elementResidual_v[i]<<std::endl;
+      // 	  std::cout<<"r_w"<<elementResidual_w[i]<<std::endl;
+      // 	}
     }//elements
   //
   //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals
@@ -645,7 +682,8 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	    metricTensorDetSqrt,
 	    dS,p_test_dS[nDOF_test_element],vel_test_dS[nDOF_test_element],
 	    p_grad_trial_trace[nDOF_trial_element*nSpace],vel_grad_trial_trace[nDOF_trial_element*nSpace],
-	    normal[3],x_ext,y_ext,z_ext;
+	    normal[3],x_ext,y_ext,z_ext,
+	    G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty;
 	  //compute information about mapping from reference element to physical element
 	  ck.calculateMapping_elementBoundary(eN,
 					      ebN_local,
@@ -666,15 +704,21 @@ extern "C" void calculateResidual_RANS2PV2(//element
 					      normal,
 					      x_ext,y_ext,z_ext);
 	  dS = metricTensorDetSqrt*dS_ref[kb];
+	  //get the metric tensor
+	  //cek todo use symmetry
+	  ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
+	  ck.calculateGScale(G,&ebqe_normal_phi_ext[ebNE_kb_nSpace],h_phi);
+	  eps_rho = epsFact_rho*h_phi;
+	  eps_mu = epsFact_mu*h_phi;
 	  //compute shape and solution information
 	  //shape
-	  ck.gradTrialFromRef(&p_grad_trial_trace_ref[ebN_local_kb_nSpace],jacInv_ext,p_grad_trial_trace);
-	  ck.gradTrialFromRef(&vel_grad_trial_trace_ref[ebN_local_kb_nSpace],jacInv_ext,vel_grad_trial_trace);
+	  ck.gradTrialFromRef(&p_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,p_grad_trial_trace);
+	  ck.gradTrialFromRef(&vel_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,vel_grad_trial_trace);
 	  //solution and gradients	
-	  ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_trace_ref[ebN_local_kb],p_ext);
-	  ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb],u_ext);
-	  ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb],v_ext);
-	  ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb],w_ext);
+	  ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_trace_ref[ebN_local_kb*nDOF_test_element],p_ext);
+	  ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+	  ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],v_ext);
+	  ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],w_ext);
 	  ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_ext);
 	  ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_u_ext);
 	  ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_v_ext);
@@ -682,9 +726,36 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  //precalculate test function products with integration weights
 	  for (int j=0;j<nDOF_trial_element;j++)
 	    {
-	      p_test_dS[j] = p_test_trace_ref[ebN_local_kb]*dS;
-	      vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb]*dS;
+	      p_test_dS[j] = p_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+	      vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
 	    }
+	  // //
+	  // //debugging section for finite element calculations on exterior
+	  // //
+	  // std::cout<<"ebNE = "<<ebNE<<" kb = "<<kb<<std::endl;
+	  // for (int j=0;j<nDOF_trial_element;j++)
+	  //   {
+	  //     std::cout<<"p_trial_trace["<<j<<"] "<<p_trial_trace_ref[ebN_local_kb*nDOF_trial_element+j]<<std::endl;
+	  //     std::cout<<"vel_trial_trace["<<j<<"] "<<vel_trial_trace_ref[ebN_local_kb*nDOF_trial_element+j]<<std::endl;
+	  //     std::cout<<"p_test_dS["<<j<<"] "<<p_test_dS[j]<<std::endl;
+	  //     std::cout<<"vel_test_dS["<<j<<"] "<<vel_test_dS[j]<<std::endl;
+	  //     for (int I=0;I<nSpace;I++)
+	  // 	{
+	  // 	  std::cout<<"p_grad_trial_trace["<<j<<","<<I<<"] "<<p_grad_trial_trace[j*nSpace+I]<<std::endl;
+	  // 	  std::cout<<"vel_grad_trial_trace["<<j<<","<<I<<"] "<<vel_grad_trial_trace[j*nSpace+I]<<std::endl;
+	  // 	}
+	  //   }
+	  // std::cout<<"p_ext "<<p_ext<<std::endl;
+	  // std::cout<<"u_ext "<<u_ext<<std::endl;
+	  // std::cout<<"v_ext "<<v_ext<<std::endl;
+	  // std::cout<<"w_ext "<<w_ext<<std::endl;
+	  // for(int I=0;I<nSpace;I++)
+	  //   {
+	  //     std::cout<<"grad_p_ext["<<I<<"] "<<grad_p_ext[I]<<std::endl;
+	  //     std::cout<<"grad_u_ext["<<I<<"] "<<grad_u_ext[I]<<std::endl;
+	  //     std::cout<<"grad_v_ext["<<I<<"] "<<grad_v_ext[I]<<std::endl;
+	  //     std::cout<<"grad_w_ext["<<I<<"] "<<grad_w_ext[I]<<std::endl;
+	  //   }
 	  //
 	  //load the boundary values
 	  //
@@ -695,6 +766,9 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  // 
 	  //calculate the pde coefficients using the solution and the boundary values for the solution 
 	  // 
+	  //cek debug
+	  //eps_rho=0.1;
+	  //eps_mu=0.1;
 	  RANS2PV2::evaluateCoefficients(eps_rho,
 					 eps_mu,
 					 sigma,
@@ -704,8 +778,8 @@ extern "C" void calculateResidual_RANS2PV2(//element
 					 nu_1,
 					 g,
 					 ebqe_phi_ext[ebNE_kb],
-					 &ebqe_n_ext[ebNE_kb_nSpace],
-					 ebqe_kappa_ext[ebNE_kb],
+					 &ebqe_normal_phi_ext[ebNE_kb_nSpace],
+					 ebqe_kappa_phi_ext[ebNE_kb],
 					 p_ext,
 					 grad_p_ext,
 					 u_ext,
@@ -760,8 +834,8 @@ extern "C" void calculateResidual_RANS2PV2(//element
 					 nu_1,
 					 g,
 					 ebqe_phi_ext[ebNE_kb],
-					 &ebqe_n_ext[ebNE_kb_nSpace],
-					 ebqe_kappa_ext[ebNE_kb],
+					 &ebqe_normal_phi_ext[ebNE_kb_nSpace],
+					 ebqe_kappa_phi_ext[ebNE_kb],
 					 bc_p_ext,
 					 grad_p_ext,//cek should't be used
 					 bc_u_ext,
@@ -810,6 +884,13 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  // 
 	  //calculate the numerical fluxes 
 	  // 
+	  //cek debug
+	  //ebqe_penalty_ext[ebNE_kb] = 10.0;
+	  //
+	  ck.calculateGScale(G,normal,h_penalty);
+	  h_penalty = 10.0/h_penalty;
+	  //cek debug
+	  //h_penalty = 10.0/0.1;//he=0.1
 	  RANS2PV2::exteriorNumericalAdvectiveFlux(isDOFBoundary_p[ebNE_kb],
 						   isDOFBoundary_u[ebNE_kb],
 						   isDOFBoundary_v[ebNE_kb],
@@ -818,7 +899,7 @@ extern "C" void calculateResidual_RANS2PV2(//element
 						   isAdvectiveFluxBoundary_u[ebNE_kb],
 						   isAdvectiveFluxBoundary_v[ebNE_kb],
 						   isAdvectiveFluxBoundary_w[ebNE_kb],
-						   &ebqe_n_ext[ebNE_kb_nSpace],
+						   normal,
 						   bc_p_ext,
 						   bc_mass_adv_ext,
 						   bc_mom_u_adv_ext,
@@ -859,14 +940,14 @@ extern "C" void calculateResidual_RANS2PV2(//element
 						   sdInfo_u_u_colind,
 						   isDOFBoundary_u[ebNE_kb],
 						   isDiffusiveFluxBoundary_u[ebNE_kb],
-						   &ebqe_n_ext[ebNE_kb_nSpace],
+						   normal,
 						   bc_mom_u_diff_ten_ext,
 						   bc_u_ext,
 						   ebqe_bc_flux_u_diff_ext[ebNE_kb],
 						   mom_u_diff_ten_ext,
 						   grad_u_ext,
 						   u_ext,
-						   ebqe_penalty_ext[ebNE_kb],
+						   h_penalty,//ebqe_penalty_ext[ebNE_kb],
 						   flux_mom_u_diff_ext);
 	  RANS2PV2::exteriorNumericalDiffusiveFlux(eps_rho,
 						   ebqe_phi_ext[ebNE_kb],
@@ -874,14 +955,14 @@ extern "C" void calculateResidual_RANS2PV2(//element
 						   sdInfo_v_v_colind,
 						   isDOFBoundary_v[ebNE_kb],
 						   isDiffusiveFluxBoundary_v[ebNE_kb],
-						   &ebqe_n_ext[ebNE_kb_nSpace],
+						   normal,
 						   bc_mom_v_diff_ten_ext,
 						   bc_v_ext,
 						   ebqe_bc_flux_v_diff_ext[ebNE_kb],
 						   mom_v_diff_ten_ext,
 						   grad_v_ext,
 						   v_ext,
-						   ebqe_penalty_ext[ebNE_kb],
+						   h_penalty,//ebqe_penalty_ext[ebNE_kb],
 						   flux_mom_v_diff_ext);
 	  RANS2PV2::exteriorNumericalDiffusiveFlux(eps_rho,
 						   ebqe_phi_ext[ebNE_kb],
@@ -889,16 +970,17 @@ extern "C" void calculateResidual_RANS2PV2(//element
 						   sdInfo_w_w_colind,
 						   isDOFBoundary_w[ebNE_kb],
 						   isDiffusiveFluxBoundary_w[ebNE_kb],
-						   &ebqe_n_ext[ebNE_kb_nSpace],
+						   normal,
 						   bc_mom_w_diff_ten_ext,
 						   bc_w_ext,
 						   ebqe_bc_flux_w_diff_ext[ebNE_kb],
 						   mom_w_diff_ten_ext,
 						   grad_w_ext,
 						   w_ext,
-						   ebqe_penalty_ext[ebNE_kb],
+						   h_penalty,//ebqe_penalty_ext[ebNE_kb],
 						   flux_mom_w_diff_ext);
 	  flux[ebN*nQuadraturePoints_elementBoundary+kb] = flux_mass_ext;
+	  //flux[ebN*nQuadraturePoints_elementBoundary+kb] = 0.0;//cek debug
 	  //
 	  //update residuals
 	  //
@@ -933,6 +1015,18 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  globalResidual[offset_v+stride_v*vel_l2g[eN_i]]+=elementResidual_v[i];
 	  globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i];
 	}//i
+      // //
+      // //debug
+      // //
+      // for(int i=0;i<nDOF_test_element;i++) 
+      //   { 
+      // 	  std::cout<<"ebNE "<<ebNE<<" i "<<i<<std::endl;
+      // 	  std::cout<<"r_p"<<elementResidual_p[i]<<std::endl;
+      // 	  std::cout<<"r_u"<<elementResidual_u[i]<<std::endl;
+      // 	  std::cout<<"r_v"<<elementResidual_v[i]<<std::endl;
+      // 	  std::cout<<"r_w"<<elementResidual_w[i]<<std::endl;
+      // 	}
+
     }//ebNE
 }
 
@@ -982,8 +1076,8 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 					   double* p_dof, double* u_dof, double* v_dof, double* w_dof,
 					   double* g,
 					   double* phi,
-					   double* n,
-					   double* kappa,
+					   double* normal_phi,
+					   double* kappa_phi,
 					   double* q_mom_u_acc_beta_bdf, double* q_mom_v_acc_beta_bdf, double* q_mom_w_acc_beta_bdf,
 					   double* q_velocity_last,
 					   double* q_cfl,
@@ -1019,8 +1113,8 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 					   int* elementBoundaryElementsArray,
 					   int* elementBoundaryLocalElementBoundariesArray,
 					   double* ebqe_phi_ext,
-					   double* ebqe_n_ext,
-					   double* ebqe_kappa_ext,
+					   double* ebqe_normal_phi_ext,
+					   double* ebqe_kappa_phi_ext,
 					   int* isDOFBoundary_p,
 					   int* isDOFBoundary_u,
 					   int* isDOFBoundary_v,
@@ -1206,35 +1300,19 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 				      x,y,z);
 	  //get the physical integration weight
 	  dV = fabs(jacDet)*dV_ref[k];
-	  //get the metric tensor
-	  //cek todo use symmetry
-	  for (int I=0;I<nSpace;I++)
-	    for (int J=0;J<nSpace;J++)
-	      G[I*nSpace+J] = jacInv[J*nSpace+I]*jacInv[I*nSpace+J];
-	  G_dd_G=0.0;
-	  tr_G = 0.0;
-	  for (int I=0;I<nSpace;I++)
-	    {
-	      tr_G += G[I*nSpace+I];
-	      for (int J=0;J<nSpace;J++)
-		{
-		  G_dd_G += G[J*nSpace+I]*G[I*nSpace+J];
-		}
-	    }
-	  for (int I=0;I<nSpace;I++)
-	    for (int J=0;J<nSpace;J++)
-	      h_phi += n[eN_k_nSpace+I]*G[I*nSpace+J]*n[eN_k_nSpace+J];
-	  h_phi = sqrt(h_phi);
+	  ck.calculateG(jacInv,G,G_dd_G,tr_G);
+	  ck.calculateGScale(G,&normal_phi[eN_k_nSpace],h_phi);
 	  eps_rho = epsFact_rho*h_phi;
 	  eps_mu = epsFact_mu*h_phi;
-	  //new
-	  ck.gradTrialFromRef(p_grad_trial_ref,jacInv,p_grad_trial);
-	  ck.gradTrialFromRef(vel_grad_trial_ref,jacInv,vel_grad_trial);
-	  //get the solution and gradients	
-	  ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_trial_ref,p);
-	  ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_trial_ref,u);
-	  ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_trial_ref,v);
-	  ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_trial_ref,w);
+	  //get the trial function gradients
+	  ck.gradTrialFromRef(&p_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,p_grad_trial);
+	  ck.gradTrialFromRef(&vel_grad_trial_ref[k*nDOF_trial_element*nSpace],jacInv,vel_grad_trial);
+	  //get the solution 	
+	  ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_ref[k*nDOF_trial_element],p);
+	  ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],u);
+	  ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],v);
+	  ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_ref[k*nDOF_trial_element],w);
+	  //get the solution gradients
 	  ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial,grad_p);
 	  ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
 	  ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
@@ -1242,17 +1320,51 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 	  //precalculate test function products with integration weights
 	  for (int j=0;j<nDOF_trial_element;j++)
 	    {
-	      p_test_dV[j] = p_test_ref[k*nDOF_test_element+j]*dV;
-	      vel_test_dV[j] = vel_test_ref[k*nDOF_test_element+j]*dV;
+	      p_test_dV[j] = p_test_ref[k*nDOF_trial_element+j]*dV;
+	      vel_test_dV[j] = vel_test_ref[k*nDOF_trial_element+j]*dV;
 	      for (int I=0;I<nSpace;I++)
 		{
 		  p_grad_test_dV[j*nSpace+I]   = p_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
-		  vel_grad_test_dV[j*nSpace+I] = vel_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin
+		  vel_grad_test_dV[j*nSpace+I] = vel_grad_trial[j*nSpace+I]*dV;//cek warning won't work for Petrov-Galerkin}
 		}
 	    }
+	  //cek debug
+	  // q_velocity_last[eN_k_nSpace+0]=1.0;
+	  // q_velocity_last[eN_k_nSpace+1]=1.0;
+	  // q_velocity_last[eN_k_nSpace+2]=1.0;
+	  // //
+	  // //debugging section for finite element calculations on interior
+	  // //
+	  // std::cout<<"eN = "<<eN<<" k = "<<k<<std::endl;
+	  // for (int j=0;j<nDOF_trial_element;j++)
+	  //   {
+	  //     std::cout<<"p_trial["<<j<<"] "<<p_trial_ref[k*nDOF_test_element+j]<<std::endl;
+	  //     std::cout<<"vel_trial["<<j<<"] "<<vel_trial_ref[k*nDOF_test_element+j]<<std::endl;
+	  //     for (int I=0;I<nSpace;I++)
+	  // 	{
+	  // 	  std::cout<<"p_grad_trial["<<j<<","<<I<<"] "<<p_grad_trial[j*nSpace+I]<<std::endl;
+	  // 	  std::cout<<"vel_grad_trial["<<j<<","<<I<<"] "<<vel_grad_trial[j*nSpace+I]<<std::endl;
+	  // 	  std::cout<<"p_grad_test_dV["<<j<<","<<I<<"] "<<p_grad_test_dV[j*nSpace+I]<<std::endl;
+	  // 	  std::cout<<"vel_grad_test_dV["<<j<<","<<I<<"] "<<vel_grad_test_dV[j*nSpace+I]<<std::endl;
+	  // 	}
+	  //   }
+	  // std::cout<<"p "<<p<<std::endl;
+	  // std::cout<<"u "<<u<<std::endl;
+	  // std::cout<<"v "<<v<<std::endl;
+	  // std::cout<<"w "<<w<<std::endl;
+	  // for(int I=0;I<nSpace;I++)
+	  //   {
+	  //     std::cout<<"grad_p["<<I<<"] "<<grad_p[I]<<std::endl;
+	  //     std::cout<<"grad_u["<<I<<"] "<<grad_u[I]<<std::endl;
+	  //     std::cout<<"grad_v["<<I<<"] "<<grad_v[I]<<std::endl;
+	  //     std::cout<<"grad_w["<<I<<"] "<<grad_w[I]<<std::endl;
+	  //   }
           //
           //calculate pde coefficients and derivatives at quadrature points
           //
+	  //cek debug
+	  //eps_rho=0.1;
+	  //eps_mu=0.1;
 	  RANS2PV2::evaluateCoefficients(eps_rho,
 					 eps_mu,
 					 sigma,
@@ -1262,8 +1374,8 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 					 nu_1,
 					 g,
 					 phi[eN_k],
-					 &n[eN_k_nSpace],
-					 kappa[eN_k],
+					 &normal_phi[eN_k_nSpace],
+					 kappa_phi[eN_k],
 					 p,
 					 grad_p,
 					 u,
@@ -1361,15 +1473,15 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 	      dpdeResidual_p_w[j]=ck.AdvectionJacobian_strong(dmass_adv_w,&vel_grad_trial[j_nSpace]);
 
 	      dpdeResidual_u_p[j]=ck.HamiltonianJacobian_strong(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace]);
-	      dpdeResidual_u_u[j]=ck.MassJacobian_strong(dmom_u_acc_u_t,vel_trial_ref[j]) +
+	      dpdeResidual_u_u[j]=ck.MassJacobian_strong(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j]) +
 		ck.AdvectionJacobian_strong(&q_velocity_last[eN_k_nSpace],&vel_grad_trial[j_nSpace]);
 	      
 	      dpdeResidual_v_p[j]=ck.HamiltonianJacobian_strong(dmom_v_ham_grad_p,&p_grad_trial[j_nSpace]);
-	      dpdeResidual_v_v[j]=ck.MassJacobian_strong(dmom_v_acc_v_t,vel_trial_ref[j]) +
+	      dpdeResidual_v_v[j]=ck.MassJacobian_strong(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j]) +
 		ck.AdvectionJacobian_strong(&q_velocity_last[eN_k_nSpace],&vel_grad_trial[j_nSpace]);
 	      
 	      dpdeResidual_w_p[j]=ck.HamiltonianJacobian_strong(dmom_w_ham_grad_p,&p_grad_trial[j_nSpace]);
-	      dpdeResidual_w_w[j]=ck.MassJacobian_strong(dmom_w_acc_w_t,vel_trial_ref[j]) + 
+	      dpdeResidual_w_w[j]=ck.MassJacobian_strong(dmom_w_acc_w_t,vel_trial_ref[k*nDOF_trial_element+j]) + 
 		ck.AdvectionJacobian_strong(&q_velocity_last[eN_k_nSpace],&vel_grad_trial[j_nSpace]);
             }
           //calculate tau and tau*Res
@@ -1385,6 +1497,9 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 	  				      tau_p,
 					      tau_v,
 					      q_cfl[eN_k]);
+	  //cek debug
+	  //tau_p = 0.0;
+	  //tau_v = 0.0;
 	  RANS2PV2::calculateSubgridErrorDerivatives_tauRes(tau_p,
 							    tau_v,
 							    dpdeResidual_p_u,
@@ -1415,53 +1530,53 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 		    ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_p[i]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_w_p[j],Lstar_w_p[i]); 
 
-		  elementJacobian_p_u[i][j] += ck.AdvectionJacobian_weak(dmass_adv_u,vel_trial_ref[j],&p_grad_test_dV[i_nSpace]) + 
+		  elementJacobian_p_u[i][j] += ck.AdvectionJacobian_weak(dmass_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_p[i]); 
-		  elementJacobian_p_v[i][j] += ck.AdvectionJacobian_weak(dmass_adv_v,vel_trial_ref[j],&p_grad_test_dV[i_nSpace]) + 
+		  elementJacobian_p_v[i][j] += ck.AdvectionJacobian_weak(dmass_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_p[i]); 
-		  elementJacobian_p_w[i][j] += ck.AdvectionJacobian_weak(dmass_adv_w,vel_trial_ref[j],&p_grad_test_dV[i_nSpace]) + 
+		  elementJacobian_p_w[i][j] += ck.AdvectionJacobian_weak(dmass_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&p_grad_test_dV[i_nSpace]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_w_w[j],Lstar_w_p[i]); 
 
 		  elementJacobian_u_p[i][j] += ck.HamiltonianJacobian_weak(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_u[i]); 
-		  elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dmom_u_acc_u_t,vel_trial_ref[j],vel_test_dV[i]) + 
-		    ck.AdvectionJacobian_weak(dmom_u_adv_u,vel_trial_ref[j],&vel_grad_test_dV[i_nSpace]) +
+		  elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
+		    ck.AdvectionJacobian_weak(dmom_u_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
 		    ck.SimpleDiffusionJacobian_weak(sdInfo_u_u_rowptr,sdInfo_u_u_colind,mom_u_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_u[i]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u_u[i]) + 
 		    ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); 
-		  elementJacobian_u_v[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_v,vel_trial_ref[j],&vel_grad_test_dV[i_nSpace]) + 
+		  elementJacobian_u_v[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
 		    ck.SimpleDiffusionJacobian_weak(sdInfo_u_v_rowptr,sdInfo_u_v_colind,mom_uv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_u[i]); 
-		  elementJacobian_u_w[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_w,vel_trial_ref[j],&vel_grad_test_dV[i_nSpace]) + 
+		  elementJacobian_u_w[i][j] += ck.AdvectionJacobian_weak(dmom_u_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
 		    ck.SimpleDiffusionJacobian_weak(sdInfo_u_w_rowptr,sdInfo_u_w_colind,mom_uw_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_p_w[j],Lstar_p_u[i]); 
 
 		  elementJacobian_v_p[i][j] += ck.HamiltonianJacobian_weak(dmom_v_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_v_p[j],Lstar_v_v[i]); 
-		  elementJacobian_v_u[i][j] += ck.AdvectionJacobian_weak(dmom_v_adv_u,vel_trial_ref[j],&vel_grad_test_dV[i_nSpace]) + 
+		  elementJacobian_v_u[i][j] += ck.AdvectionJacobian_weak(dmom_v_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
 		    ck.SimpleDiffusionJacobian_weak(sdInfo_v_u_rowptr,sdInfo_v_u_colind,mom_vu_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_v[i]);
-		  elementJacobian_v_v[i][j] += ck.MassJacobian_weak(dmom_v_acc_v_t,vel_trial_ref[j],vel_test_dV[i]) + 
-		    ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[j],&vel_grad_test_dV[i_nSpace]) +
+		  elementJacobian_v_v[i][j] += ck.MassJacobian_weak(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
+		    ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
 		    ck.SimpleDiffusionJacobian_weak(sdInfo_v_v_rowptr,sdInfo_v_v_colind,mom_v_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_v[i]) +
 		    ck.SubgridErrorJacobian(dsubgridError_v_v[j],Lstar_v_v[i]) + 
 		    ck.NumericalDiffusionJacobian(q_numDiff_v_last[eN_k],&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]); 
-		  elementJacobian_v_w[i][j] += ck.AdvectionJacobian_weak(dmom_v_adv_w,vel_trial_ref[j],&vel_grad_test_dV[i_nSpace]) +  
+		  elementJacobian_v_w[i][j] += ck.AdvectionJacobian_weak(dmom_v_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +  
 		    ck.SimpleDiffusionJacobian_weak(sdInfo_v_w_rowptr,sdInfo_v_w_colind,mom_vw_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_p_w[j],Lstar_p_v[i]);
 
 		  elementJacobian_w_p[i][j] += ck.HamiltonianJacobian_weak(dmom_w_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_w_p[j],Lstar_w_w[i]); 
-		  elementJacobian_w_u[i][j] += ck.AdvectionJacobian_weak(dmom_w_adv_u,vel_trial_ref[j],&vel_grad_test_dV[i_nSpace]) +  
+		  elementJacobian_w_u[i][j] += ck.AdvectionJacobian_weak(dmom_w_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +  
 		    ck.SimpleDiffusionJacobian_weak(sdInfo_w_u_rowptr,sdInfo_w_u_colind,mom_wu_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_w[i]); 
-		  elementJacobian_w_v[i][j] += ck.AdvectionJacobian_weak(dmom_w_adv_v,vel_trial_ref[j],&vel_grad_test_dV[i_nSpace]) + 
+		  elementJacobian_w_v[i][j] += ck.AdvectionJacobian_weak(dmom_w_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) + 
 		    ck.SimpleDiffusionJacobian_weak(sdInfo_w_v_rowptr,sdInfo_w_v_colind,mom_wv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_w[i]); 
-		  elementJacobian_w_w[i][j] += ck.MassJacobian_weak(dmom_w_acc_w_t,vel_trial_ref[j],vel_test_dV[i]) + 
-		    ck.AdvectionJacobian_weak(dmom_w_adv_w,vel_trial_ref[j],&vel_grad_test_dV[i_nSpace]) +  
+		  elementJacobian_w_w[i][j] += ck.MassJacobian_weak(dmom_w_acc_w_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
+		    ck.AdvectionJacobian_weak(dmom_w_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +  
 		    ck.SimpleDiffusionJacobian_weak(sdInfo_w_w_rowptr,sdInfo_w_w_colind,mom_w_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_p_w[j],Lstar_p_w[i]) + 
 		    ck.SubgridErrorJacobian(dsubgridError_w_w[j],Lstar_w_w[i]) + 
@@ -1499,6 +1614,35 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 	      globalJacobian[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_w_w[eN_i_j]] += elementJacobian_w_w[i][j];
 	    }//j
 	}//i
+      // //
+      // //debug element jacobian
+      // //
+      // std::cout<<"element jacobian"<<std::endl;
+      // for (int i=0;i<nDOF_test_element;i++)
+      // 	{
+      // 	  for (int j=0;j<nDOF_trial_element;j++)
+      // 	    {
+      // 	      std::cout << elementJacobian_p_p[i][j]<<std::endl;
+      // 	      std::cout << elementJacobian_p_u[i][j]<<std::endl;
+      // 	      std::cout << elementJacobian_p_v[i][j]<<std::endl;
+      // 	      std::cout << elementJacobian_p_w[i][j]<<std::endl;
+
+      // 	      std::cout << elementJacobian_u_p[i][j]<<std::endl;
+      // 	      std::cout << elementJacobian_u_u[i][j]<<std::endl;
+      // 	      std::cout << elementJacobian_u_v[i][j]<<std::endl;
+      // 	      std::cout << elementJacobian_u_w[i][j]<<std::endl;
+
+      // 	      std::cout << elementJacobian_v_p[i][j]<<std::endl;
+      // 	      std::cout << elementJacobian_v_u[i][j]<<std::endl;
+      // 	      std::cout << elementJacobian_v_v[i][j]<<std::endl;
+      // 	      std::cout << elementJacobian_v_w[i][j]<<std::endl;
+
+      // 	      std::cout << elementJacobian_w_p[i][j]<<std::endl;
+      // 	      std::cout << elementJacobian_w_u[i][j]<<std::endl;
+      // 	      std::cout << elementJacobian_w_v[i][j]<<std::endl;
+      // 	      std::cout << elementJacobian_w_w[i][j]<<std::endl;
+      // 	    }//j
+      // 	}//i
     }//elements
   //
   //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
@@ -1655,7 +1799,8 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 	    p_test_dS[nDOF_test_element],
 	    vel_test_dS[nDOF_test_element],
 	    normal[3],
-	    x_ext,y_ext,z_ext;
+	    x_ext,y_ext,z_ext,
+	    G[nSpace*nSpace],G_dd_G,tr_G,h_phi,h_penalty;
 	  ck.calculateMapping_elementBoundary(eN,
 					      ebN_local,
 					      kb,
@@ -1675,15 +1820,19 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 					      normal,
 					      x_ext,y_ext,z_ext);
 	  dS = metricTensorDetSqrt*dS_ref[kb];
+	  ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
+	  ck.calculateGScale(G,&ebqe_normal_phi_ext[ebNE_kb_nSpace],h_phi);
+	  eps_rho = epsFact_rho*h_phi;
+	  eps_mu = epsFact_mu*h_phi;
 	  //compute shape and solution information
 	  //shape
-	  ck.gradTrialFromRef(&p_grad_trial_trace_ref[ebN_local_kb_nSpace],jacInv_ext,p_grad_trial_trace);
-	  ck.gradTrialFromRef(&vel_grad_trial_trace_ref[ebN_local_kb_nSpace],jacInv_ext,vel_grad_trial_trace);
+	  ck.gradTrialFromRef(&p_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,p_grad_trial_trace);
+	  ck.gradTrialFromRef(&vel_grad_trial_trace_ref[ebN_local_kb_nSpace*nDOF_trial_element],jacInv_ext,vel_grad_trial_trace);
 	  //solution and gradients	
-	  ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_trace_ref[ebN_local_kb],p_ext);
-	  ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb],u_ext);
-	  ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb],v_ext);
-	  ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb],w_ext);
+	  ck.valFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],&p_trial_trace_ref[ebN_local_kb*nDOF_test_element],p_ext);
+	  ck.valFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],u_ext);
+	  ck.valFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],v_ext);
+	  ck.valFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],&vel_trial_trace_ref[ebN_local_kb*nDOF_test_element],w_ext);
 	  ck.gradFromDOF(p_dof,&p_l2g[eN_nDOF_trial_element],p_grad_trial_trace,grad_p_ext);
 	  ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_u_ext);
 	  ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial_trace,grad_v_ext);
@@ -1691,9 +1840,36 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 	  //precalculate test function products with integration weights
 	  for (int j=0;j<nDOF_trial_element;j++)
 	    {
-	      p_test_dS[j] = p_test_trace_ref[ebN_local_kb]*dS;
-	      vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb]*dS;
+	      p_test_dS[j] = p_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+	      vel_test_dS[j] = vel_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
 	    }
+	  // //
+	  // //debugging section for finite element calculations on exterior
+	  // //
+	  // std::cout<<"ebNE = "<<ebNE<<" kb = "<<kb<<std::endl;
+	  // for (int j=0;j<nDOF_trial_element;j++)
+	  //   {
+	  //     std::cout<<"p_trial_trace["<<j<<"] "<<p_trial_trace_ref[ebN_local_kb*nDOF_trial_element+j]<<std::endl;
+	  //     std::cout<<"vel_trial_trace["<<j<<"] "<<vel_trial_trace_ref[ebN_local_kb*nDOF_trial_element+j]<<std::endl;
+	  //     std::cout<<"p_test_dS["<<j<<"] "<<p_test_dS[j]<<std::endl;
+	  //     std::cout<<"vel_test_dS["<<j<<"] "<<vel_test_dS[j]<<std::endl;
+	  //     for (int I=0;I<nSpace;I++)
+	  // 	{
+	  // 	  std::cout<<"p_grad_trial_trace["<<j<<","<<I<<"] "<<p_grad_trial_trace[j*nSpace+I]<<std::endl;
+	  // 	  std::cout<<"vel_grad_trial_trace["<<j<<","<<I<<"] "<<vel_grad_trial_trace[j*nSpace+I]<<std::endl;
+	  // 	}
+	  //   }
+	  // std::cout<<"p_ext "<<p_ext<<std::endl;
+	  // std::cout<<"u_ext "<<u_ext<<std::endl;
+	  // std::cout<<"v_ext "<<v_ext<<std::endl;
+	  // std::cout<<"w_ext "<<w_ext<<std::endl;
+	  // for(int I=0;I<nSpace;I++)
+	  //   {
+	  //     std::cout<<"grad_p_ext["<<I<<"] "<<grad_p_ext[I]<<std::endl;
+	  //     std::cout<<"grad_u_ext["<<I<<"] "<<grad_u_ext[I]<<std::endl;
+	  //     std::cout<<"grad_v_ext["<<I<<"] "<<grad_v_ext[I]<<std::endl;
+	  //     std::cout<<"grad_w_ext["<<I<<"] "<<grad_w_ext[I]<<std::endl;
+	  //   }
 	  //
 	  //load the boundary values
 	  //
@@ -1704,6 +1880,9 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 	  // 
 	  //calculate the internal and external trace of the pde coefficients 
 	  // 
+	  //cek debug
+	  //eps_rho=0.1;
+	  //eps_mu=0.1;
 	  RANS2PV2::evaluateCoefficients(eps_rho,
 					 eps_mu,
 					 sigma,
@@ -1713,8 +1892,8 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 					 nu_1,
 					 g,
 					 ebqe_phi_ext[ebNE_kb],
-					 &ebqe_n_ext[ebNE_kb_nSpace],
-					 ebqe_kappa_ext[ebNE_kb],
+					 &ebqe_normal_phi_ext[ebNE_kb_nSpace],
+					 ebqe_kappa_phi_ext[ebNE_kb],
 					 p_ext,
 					 grad_p_ext,
 					 u_ext,
@@ -1769,8 +1948,8 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 					 nu_1,
 					 g,
 					 ebqe_phi_ext[ebNE_kb],
-					 &ebqe_n_ext[ebNE_kb_nSpace],
-					 ebqe_kappa_ext[ebNE_kb],
+					 &ebqe_normal_phi_ext[ebNE_kb_nSpace],
+					 ebqe_kappa_phi_ext[ebNE_kb],
 					 bc_p_ext,
 					 grad_p_ext, //cek shouldn't be used
 					 bc_u_ext,
@@ -1827,7 +2006,7 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 							      isAdvectiveFluxBoundary_u[ebNE_kb],
 							      isAdvectiveFluxBoundary_v[ebNE_kb],
 							      isAdvectiveFluxBoundary_w[ebNE_kb],
-							      &ebqe_n_ext[ebNE_kb_nSpace],
+							      normal,
 							      bc_p_ext,
 							      bc_mass_adv_ext,
 							      bc_mom_u_adv_ext,
@@ -1875,10 +2054,18 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 	  //
 	  //calculate the flux jacobian
 	  //
+	  ck.calculateGScale(G,normal,h_penalty);
+	  h_penalty = 10.0/h_penalty;
+	  //cek debug
+	  //h_penalty = 10.0/0.1;//he = 0.1
 	  for (int j=0;j<nDOF_trial_element;j++)
 	    {
 	      register int j_nSpace = j*nSpace,ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
-              
+	      //cek debug
+	      //ebqe_penalty_ext[ebNE_kb] = 10.0;
+	      //
+
+
 	      fluxJacobian_p_p[j]=0.0;
 	      fluxJacobian_p_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mass_u_ext,vel_trial_trace_ref[ebN_local_kb_j]);
 	      fluxJacobian_p_v[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mass_v_ext,vel_trial_trace_ref[ebN_local_kb_j]);
@@ -1891,11 +2078,11 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 								 sdInfo_u_u_rowptr,
 								 sdInfo_u_u_colind,
 								 isDOFBoundary_u[ebNE_kb],
-								 &ebqe_n_ext[ebNE_kb_nSpace],
+								 normal,
 								 mom_u_diff_ten_ext,
 								 vel_trial_trace_ref[ebN_local_kb_j],
 								 &vel_grad_trial_trace[j_nSpace],
-								 ebqe_penalty_ext[ebNE_kb]);
+								 h_penalty);//ebqe_penalty_ext[ebNE_kb]);
 	      fluxJacobian_u_v[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]);
 	      fluxJacobian_u_w[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_w_ext,vel_trial_trace_ref[ebN_local_kb_j]);
 
@@ -1907,11 +2094,11 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 								 sdInfo_v_v_rowptr,
 								 sdInfo_v_v_colind,
 								 isDOFBoundary_v[ebNE_kb],
-								 &ebqe_n_ext[ebNE_kb_nSpace],
+								 normal,
 								 mom_v_diff_ten_ext,
 								 vel_trial_trace_ref[ebN_local_kb_j],
 								 &vel_grad_trial_trace[j_nSpace],
-								 ebqe_penalty_ext[ebNE_kb]);
+						 		 h_penalty);//ebqe_penalty_ext[ebNE_kb]);
 	      fluxJacobian_v_w[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_w_ext,vel_trial_trace_ref[ebN_local_kb_j]);
 
 	      fluxJacobian_w_p[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_w_adv_p_ext,p_trial_trace_ref[ebN_local_kb_j]);
@@ -1923,11 +2110,82 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 								 sdInfo_w_w_rowptr,
 								 sdInfo_w_w_colind,
 								 isDOFBoundary_w[ebNE_kb],
-								 &ebqe_n_ext[ebNE_kb_nSpace],
+								 normal,
 								 mom_w_diff_ten_ext,
 								 vel_trial_trace_ref[ebN_local_kb_j],
 								 &vel_grad_trial_trace[j_nSpace],
-								 ebqe_penalty_ext[ebNE_kb]);
+								 h_penalty);//ebqe_penalty_ext[ebNE_kb]);
+
+	      fluxJacobian_p_p[j]=0.0;
+	      fluxJacobian_p_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mass_u_ext,vel_trial_trace_ref[ebN_local_kb_j]);
+	      fluxJacobian_p_v[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mass_v_ext,vel_trial_trace_ref[ebN_local_kb_j]);
+	      fluxJacobian_p_w[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mass_w_ext,vel_trial_trace_ref[ebN_local_kb_j]);
+
+	      fluxJacobian_u_p[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_p_ext,p_trial_trace_ref[ebN_local_kb_j]);
+	      fluxJacobian_u_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+		RANS2PV2::ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+								 ebqe_phi_ext[ebNE_kb],
+								 sdInfo_u_u_rowptr,
+								 sdInfo_u_u_colind,
+								 isDOFBoundary_u[ebNE_kb],
+								 normal,
+								 mom_u_diff_ten_ext,
+								 vel_trial_trace_ref[ebN_local_kb_j],
+								 &vel_grad_trial_trace[j_nSpace],
+								 h_penalty);//ebqe_penalty_ext[ebNE_kb]);
+	      fluxJacobian_u_v[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]);
+	      fluxJacobian_u_w[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_u_adv_w_ext,vel_trial_trace_ref[ebN_local_kb_j]);
+
+	      fluxJacobian_v_p[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_p_ext,p_trial_trace_ref[ebN_local_kb_j]);
+	      fluxJacobian_v_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]);
+	      fluxJacobian_v_v[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+		RANS2PV2::ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+								 ebqe_phi_ext[ebNE_kb],
+								 sdInfo_v_v_rowptr,
+								 sdInfo_v_v_colind,
+								 isDOFBoundary_v[ebNE_kb],
+								 normal,
+								 mom_v_diff_ten_ext,
+								 vel_trial_trace_ref[ebN_local_kb_j],
+								 &vel_grad_trial_trace[j_nSpace],
+						 		 h_penalty);//ebqe_penalty_ext[ebNE_kb]);
+	      fluxJacobian_v_w[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_v_adv_w_ext,vel_trial_trace_ref[ebN_local_kb_j]);
+
+	      fluxJacobian_w_p[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_w_adv_p_ext,p_trial_trace_ref[ebN_local_kb_j]);
+	      fluxJacobian_w_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_w_adv_u_ext,vel_trial_trace_ref[ebN_local_kb_j]);
+	      fluxJacobian_w_v[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_w_adv_v_ext,vel_trial_trace_ref[ebN_local_kb_j]);
+	      fluxJacobian_w_w[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mom_w_adv_w_ext,vel_trial_trace_ref[ebN_local_kb_j]) +
+		RANS2PV2::ExteriorNumericalDiffusiveFluxJacobian(eps_rho,
+								 ebqe_phi_ext[ebNE_kb],
+								 sdInfo_w_w_rowptr,
+								 sdInfo_w_w_colind,
+								 isDOFBoundary_w[ebNE_kb],
+								 normal,
+								 mom_w_diff_ten_ext,
+								 vel_trial_trace_ref[ebN_local_kb_j],
+								 &vel_grad_trial_trace[j_nSpace],
+								 h_penalty);//ebqe_penalty_ext[ebNE_kb]);
+	      // //cek debug
+	      // fluxJacobian_p_p[j]=0.0;
+	      // fluxJacobian_p_u[j]=0.0;
+	      // fluxJacobian_p_v[j]=0.0;
+	      // fluxJacobian_p_w[j]=0.0;
+
+	      // fluxJacobian_u_p[j]=0.0;
+	      // fluxJacobian_u_u[j]=0.0;
+	      // fluxJacobian_u_v[j]=0.0;
+	      // fluxJacobian_u_w[j]=0.0;
+
+	      // fluxJacobian_v_p[j]=0.0;
+	      // fluxJacobian_v_u[j]=0.0;
+	      // fluxJacobian_v_v[j]=0.0;
+	      // fluxJacobian_v_w[j]=0.0;
+
+	      // fluxJacobian_w_p[j]=0.0;
+	      // fluxJacobian_w_u[j]=0.0;
+	      // fluxJacobian_w_v[j]=0.0;
+	      // fluxJacobian_w_w[j]=0.0;
+	      // //cek debug
 	    }//j
 	  //
 	  //update the global Jacobian from the flux Jacobian
@@ -1960,6 +2218,33 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 		  globalJacobian[csrRowIndeces_w_w[eN_i] + csrColumnOffsets_eb_w_w[ebN_i_j]] += fluxJacobian_w_w[j]*vel_test_dS[i];
 		}//j
 	    }//i
+	  // //debug
+	  // std::cout<<"flux jacobian ebNE "<<ebNE<<" kb "<<kb<<std::endl;
+	  // for (int i=0;i<nDOF_test_element;i++)
+	  //   {
+	  //     for (int j=0;j<nDOF_trial_element;j++)
+	  // 	{
+	  // 	  std::cout<< fluxJacobian_p_p[j]*p_test_dS[i]<<std::endl;
+	  // 	  std::cout<< fluxJacobian_p_u[j]*p_test_dS[i]<<std::endl;
+	  // 	  std::cout<< fluxJacobian_p_v[j]*p_test_dS[i]<<std::endl;
+	  // 	  std::cout<< fluxJacobian_p_w[j]*p_test_dS[i]<<std::endl;
+		  
+	  // 	  std::cout<< fluxJacobian_u_p[j]*vel_test_dS[i]<<std::endl;
+	  // 	  std::cout<< fluxJacobian_u_u[j]*vel_test_dS[i]<<std::endl;
+	  // 	  std::cout<< fluxJacobian_u_v[j]*vel_test_dS[i]<<std::endl;
+	  // 	  std::cout<< fluxJacobian_u_w[j]*vel_test_dS[i]<<std::endl;
+		  
+	  // 	  std::cout<< fluxJacobian_v_p[j]*vel_test_dS[i]<<std::endl;
+	  // 	  std::cout<< fluxJacobian_v_u[j]*vel_test_dS[i]<<std::endl;
+	  // 	  std::cout<< fluxJacobian_v_v[j]*vel_test_dS[i]<<std::endl;
+	  // 	  std::cout<< fluxJacobian_v_w[j]*vel_test_dS[i]<<std::endl;
+		  
+	  // 	  std::cout<< fluxJacobian_w_p[j]*vel_test_dS[i]<<std::endl;
+	  // 	  std::cout<< fluxJacobian_w_u[j]*vel_test_dS[i]<<std::endl;
+	  // 	  std::cout<< fluxJacobian_w_v[j]*vel_test_dS[i]<<std::endl;
+	  // 	  std::cout<< fluxJacobian_w_w[j]*vel_test_dS[i]<<std::endl;
+	  // 	}//j
+	  //   }//i
 	}//kb
     }//ebNE
 }//computeJacobian

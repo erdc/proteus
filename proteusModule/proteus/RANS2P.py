@@ -660,7 +660,7 @@ class OneLevelRANS2P(OneLevelTransport):
                   self.ebqe[('grad(v)',0)],
                   self.ebqe[('grad(v)',1)],
                   self.coefficients.ebqe_phi,
-                  self.ebqe[('n')],
+                  self.ebqe[('n')],#this is right but it's confusing this is the element boundary normal not the level set normal
                   self.coefficients.ebqe_kappa,
                   self.numericalFlux.isDOFBoundary[0],
                   self.numericalFlux.isDOFBoundary[1],

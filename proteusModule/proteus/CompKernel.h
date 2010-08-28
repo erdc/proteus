@@ -88,15 +88,15 @@ public:
 	    Grad_z[I] += mesh_dof[mesh_l2g[eN_j]*3+2]*mesh_grad_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT*3+j*3+I];
 	  }
       }
-    jac[XX] = Grad_x[X];//node[X]*grad[X];
-    jac[XY] = Grad_x[Y];//node[X]*grad[Y];
-    jac[XZ] = Grad_x[Z];//node[X]*grad[Z];
-    jac[YX] = Grad_y[X];//node[Y]*grad[X];
-    jac[YY] = Grad_y[Y];//node[Y]*grad[Y];
-    jac[YZ] = Grad_y[Z];//node[Y]*grad[Z];
-    jac[ZX] = Grad_z[X];//node[Z]*grad[X];
-    jac[ZY] = Grad_z[Y];//node[Z]*grad[Y];
-    jac[ZZ] = Grad_z[Z];//node[Z]*grad[Z];
+    jac[XX] = Grad_x[X];
+    jac[XY] = Grad_x[Y];
+    jac[XZ] = Grad_x[Z];
+    jac[YX] = Grad_y[X];
+    jac[YY] = Grad_y[Y];
+    jac[YZ] = Grad_y[Z];
+    jac[ZX] = Grad_z[X];
+    jac[ZY] = Grad_z[Y];
+    jac[ZZ] = Grad_z[Z];
     jacDet = 
       jac[XX]*(jac[YY]*jac[ZZ] - jac[YZ]*jac[ZY]) -
       jac[XY]*(jac[YX]*jac[ZZ] - jac[YZ]*jac[ZX]) +
@@ -143,7 +143,8 @@ public:
       ZHX=NDOF_MESH_TRIAL_ELEMENT,ZHY=5,
       HXHX=0,HXHY=1,
       HYHX=2,HYHY=3;
-    const int ebN_local_kb_nSpace = ebN_local_kb*3;
+    const int ebN_local_kb_nSpace = ebN_local_kb*3,
+      ebN_local_kb_nSpace_nSpacem1 = ebN_local_kb*3*2;
   
     register double Grad_x_ext[3],Grad_y_ext[3],Grad_z_ext[3],oneOverJacDet,norm_normal=0.0;
     // 
@@ -172,15 +173,15 @@ public:
 	  } 
       }
     //Space Mapping Jacobian
-    jac[XX] = Grad_x_ext[X];//node[X]*grad[X];
-    jac[XY] = Grad_x_ext[Y];//node[X]*grad[Y];
-    jac[XZ] = Grad_x_ext[Z];//node[X]*grad[Z];
-    jac[YX] = Grad_y_ext[X];//node[Y]*grad[X];
-    jac[YY] = Grad_y_ext[Y];//node[Y]*grad[Y];
-    jac[YZ] = Grad_y_ext[Z];//node[Y]*grad[Z];
-    jac[ZX] = Grad_z_ext[X];//node[Z]*grad[X];
-    jac[ZY] = Grad_z_ext[Y];//node[Z]*grad[Y];
-    jac[ZZ] = Grad_z_ext[Z];//node[Z]*grad[Z];
+    jac[XX] = Grad_x_ext[X];
+    jac[XY] = Grad_x_ext[Y];
+    jac[XZ] = Grad_x_ext[Z];
+    jac[YX] = Grad_y_ext[X];
+    jac[YY] = Grad_y_ext[Y];
+    jac[YZ] = Grad_y_ext[Z];
+    jac[ZX] = Grad_z_ext[X];
+    jac[ZY] = Grad_z_ext[Y];
+    jac[ZZ] = Grad_z_ext[Z];
     jacDet = 
       jac[XX]*(jac[YY]*jac[ZZ] - jac[YZ]*jac[ZY]) -
       jac[XY]*(jac[YX]*jac[ZZ] - jac[YZ]*jac[ZX]) +
@@ -202,19 +203,23 @@ public:
     for (int I=0;I<3;I++)
       {
 	for (int J=0;J<3;J++)
-	  normal[I] += jacInv[J*3+I]*normal_ref[ebN_local_kb_nSpace+J];
+	  {
+	    normal[I] += jacInv[J*3+I]*normal_ref[ebN_local_kb_nSpace+J];
+	  }
 	norm_normal+=normal[I]*normal[I];
       }
     norm_normal = sqrt(norm_normal);
     for (int I=0;I<3;I++)
-      normal[I] /= norm_normal;
+      {
+	normal[I] /= norm_normal;
+      }
     //metric tensor and determinant
-    boundaryJac[XHX] = jac[XX]*boundaryJac_ref[ebN_local*6+XHX]+jac[XY]*boundaryJac_ref[ebN_local*6+YHX]+jac[XZ]*boundaryJac_ref[ebN_local*6+ZHX];
-    boundaryJac[XHY] = jac[XX]*boundaryJac_ref[ebN_local*6+XHY]+jac[XY]*boundaryJac_ref[ebN_local*6+YHY]+jac[XZ]*boundaryJac_ref[ebN_local*6+ZHY];
-    boundaryJac[YHX] = jac[YX]*boundaryJac_ref[ebN_local*6+XHX]+jac[YY]*boundaryJac_ref[ebN_local*6+YHX]+jac[YZ]*boundaryJac_ref[ebN_local*6+ZHX];
-    boundaryJac[YHY] = jac[YX]*boundaryJac_ref[ebN_local*6+XHY]+jac[YY]*boundaryJac_ref[ebN_local*6+YHY]+jac[YZ]*boundaryJac_ref[ebN_local*6+ZHY];
-    boundaryJac[ZHX] = jac[ZX]*boundaryJac_ref[ebN_local*6+XHX]+jac[ZY]*boundaryJac_ref[ebN_local*6+YHX]+jac[ZZ]*boundaryJac_ref[ebN_local*6+ZHX];
-    boundaryJac[ZHY] = jac[ZX]*boundaryJac_ref[ebN_local*6+XHY]+jac[ZY]*boundaryJac_ref[ebN_local*6+YHY]+jac[ZZ]*boundaryJac_ref[ebN_local*6+ZHY];
+    boundaryJac[XHX] = jac[XX]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+XHX]+jac[XY]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+YHX]+jac[XZ]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+ZHX];
+    boundaryJac[XHY] = jac[XX]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+XHY]+jac[XY]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+YHY]+jac[XZ]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+ZHY];
+    boundaryJac[YHX] = jac[YX]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+XHX]+jac[YY]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+YHX]+jac[YZ]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+ZHX];
+    boundaryJac[YHY] = jac[YX]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+XHY]+jac[YY]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+YHY]+jac[YZ]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+ZHY];
+    boundaryJac[ZHX] = jac[ZX]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+XHX]+jac[ZY]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+YHX]+jac[ZZ]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+ZHX];
+    boundaryJac[ZHY] = jac[ZX]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+XHY]+jac[ZY]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+YHY]+jac[ZZ]*boundaryJac_ref[ebN_local_kb_nSpace_nSpacem1+ZHY];
   
     metricTensor[HXHX] = boundaryJac[XHX]*boundaryJac[XHX]+boundaryJac[YHX]*boundaryJac[YHX]+boundaryJac[ZHX]*boundaryJac[ZHX];
     metricTensor[HXHY] = boundaryJac[XHX]*boundaryJac[XHY]+boundaryJac[YHX]*boundaryJac[YHY]+boundaryJac[ZHX]*boundaryJac[ZHY];
@@ -231,6 +236,36 @@ class CompKernel
 public:
   CompKernelSpaceMapping<NSPACE,NDOF_MESH_TRIAL_ELEMENT> mapping;
 
+  inline void calculateG(double* jacInv,double* G,double& G_dd_G, double& tr_G)
+    {
+      //get the metric tensor
+      //cek todo use symmetry
+      for (int I=0;I<NSPACE;I++)
+	for (int J=0;J<NSPACE;J++)
+	  {
+	    G[I*NSPACE+J] = 0.0;
+	    for (int K=0;K<NSPACE;K++)
+	      G[I*NSPACE+J] += jacInv[K*NSPACE+I]*jacInv[K*NSPACE+J];
+	  }
+      G_dd_G = 0.0;
+      tr_G = 0.0;
+      for (int I=0;I<NSPACE;I++)
+	{
+	  tr_G += G[I*NSPACE+I];
+	  for (int J=0;J<NSPACE;J++)
+	    {
+	      G_dd_G += G[I*NSPACE+J]*G[I*NSPACE+J];
+	    }
+	}
+    }
+  inline void calculateGScale(double* G,double* v,double& h)
+  {
+    h = 0.0;
+    for (int I=0;I<NSPACE;I++)
+      for (int J=0;J<NSPACE;J++)
+	h += v[I]*G[I*NSPACE+J]*v[J];
+    h = 1.0/sqrt(h);
+  }
   inline void valFromDOF(const double* dof,const int* l2g_element,const double* trial_ref,double& val)
   {
     val=0.0;
