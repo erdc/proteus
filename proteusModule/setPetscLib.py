@@ -4,6 +4,7 @@ lib_dirs=[]
 libs=[]
 include_dirs=[]
 for s in sys.argv:
+    print s
     if '-L' in s:
         lib_dirs.append(s[2:])
     if '-l' in s:

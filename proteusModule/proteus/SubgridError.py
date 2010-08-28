@@ -1055,6 +1055,32 @@ class NavierStokesASGS_velocity_pressure_opt(SGE_base):
             cq[('df_sge',2,2)]=q[('velocity',0)]
             cq[('df_sge',3,3)]=q[('velocity',0)]
 
+class NavierStokesASGS_velocity_pressure_optV2(SGE_base):
+    def __init__(self,coefficients,nd,stabFlag='1',lag=False,delayLagSteps=0,hFactor=1.0,noPressureStabilization=False):
+        self.noPressureStabilization=noPressureStabilization
+        SGE_base.__init__(self,coefficients,nd,lag)
+        self.stabilizationFlag = stabFlag
+        coefficients.stencil[0].add(0)
+        self.nSteps=0
+        self.delayLagSteps=delayLagSteps
+        self.hFactor=hFactor
+    def initializeElementQuadrature(self,mesh,t,cq):
+        import copy
+        self.mesh=mesh
+        self.tau=[]
+        self.tau_last=[]
+        self.df_last={}
+        self.cq=cq
+        if self.lag:
+            self.v_last = copy.deepcopy(self.cq[('velocity',0)])
+        else:
+            self.v_last = self.cq[('velocity',0)]
+    def updateSubgridErrorHistory(self,initializationPhase=False):
+        if self.lag:
+            self.v_last[:] = self.cq[('velocity',0)]
+    def calculateSubgridError(self,q):
+        pass
+
 class NavierStokesWithBodyForceASGS_velocity_pressure(NavierStokesASGS_velocity_pressure):
     def __init__(self,coefficients,nd,stabFlag='1',lag=False,delayLagSteps=5,hFactor=1.0,noPressureStabilization=False):
         NavierStokesASGS_velocity_pressure.__init__(self,coefficients,nd,stabFlag=stabFlag,lag=lag,

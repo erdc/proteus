@@ -1732,12 +1732,26 @@ class ElementMaps:
     def __init__(self,mesh):
         self.mesh = mesh
         pass
+    def getBasisValuesRef(self,
+                          xiArray):
+        """
+        Evaluate the basis of the map at a set of points, xiArray,
+        given on the reference element. Store in member array self.psi
+        """
+        pass
     def getValues(self,
                   xiArray,
                   xArray): 
         """
         Evaluate the set of nElements maps at a set of points, xiArray,
         given on the reference element.
+        """
+        pass
+    def getBasisGradientValuesRef(self,
+                                  xiArray):
+        """
+        Evaluate the basis gradients of the map at a set of points, xiArray.
+        Store in member self.grad_psi
         """
         pass
     def getJacobianValues(self,
@@ -1759,6 +1773,14 @@ class ElementMaps:
         given on the physical elements. Return the value of the inverse map.
         """
         pass
+    def getBasisValuesTraceRef(self,
+                               xiArray):
+        """
+        Evaluate the basis of the maps at a set of points, xiArray, on
+        the boundaries of the reference element. Store in member
+        self.psi_trace
+        """
+        pass
     def getValuesTrace(self,
                        xiArray,
                        xArray):
@@ -1778,6 +1800,13 @@ class ElementMaps:
         Evaluate the metric tensor, square root of the determinant of
         the metric tensor, and the unit normal at the
         nElements x nElementBoundaries_element element boundaries.
+        """
+        pass
+    def getBasisGradientValuesTraceRef(self,
+                                       xiArray):
+        """
+        Evaluate the basis gradients of the map at a set of points,
+        xiArray, on the reference element boundaries.
         """
         pass
 
@@ -1846,6 +1875,16 @@ class ParametricMaps(ElementMaps):
         self.localFunctionSpace = localFunctionSpace
         self.meshDOFMap=NodalDOFMap(mesh)
         self.useC=True
+    def getBasisValuesRef(self,xiArray):
+        n_xi = xiArray.shape[0]
+        range_n_xi = range(n_xi)
+        self.psi = numpy.zeros((n_xi,
+                                self.localFunctionSpace.dim),
+                               'd')
+        for k in range_n_xi:
+            for j in self.localFunctionSpace.range_dim:
+                self.psi[k,j] = self.localFunctionSpace.basis[j](xiArray[k])
+        return self.psi
     def getValues(self,xiArray,
                   xArray):
         xArray.flat[:]=0.0
@@ -1857,7 +1896,6 @@ class ParametricMaps(ElementMaps):
         for k in range_n_xi:
             for j in self.localFunctionSpace.range_dim:
                 psi[k,j] = self.localFunctionSpace.basis[j](xiArray[k])
-        self.psi=psi
         if self.useC==True:
             cfemIntegrals.parametricMaps_getValues(psi,
                                                    self.meshDOFMap.l2g,
@@ -1870,6 +1908,17 @@ class ParametricMaps(ElementMaps):
                         J = self.meshDOFMap.l2g[eN,j]
                         for m in self.referenceElement.range_dim:
                             xArray[eN,k,m] += self.mesh.nodeArray[J,m]*psi[k,j]
+    def getBasisGradientValuesRef(self,xiArray):
+        n_xi = xiArray.shape[0]
+        range_n_xi = range(n_xi)
+        self.grad_psi = numpy.zeros((n_xi,
+                                     self.localFunctionSpace.dim,
+                                     self.referenceElement.dim),
+                                    'd')
+        for k in range_n_xi:
+            for j in self.localFunctionSpace.range_dim:
+                self.grad_psi[k,j,:] = self.localFunctionSpace.basisGradients[j](xiArray[k])
+        return self.grad_psi
     def getJacobianValues(self,xiArray,
                           jacobianArray,
                           jacobianInverseArray,
@@ -1884,7 +1933,6 @@ class ParametricMaps(ElementMaps):
         for k in range_n_xi:
             for j in self.localFunctionSpace.range_dim:
                 grad_psi[k,j,:] = self.localFunctionSpace.basisGradients[j](xiArray[k])
-        self.grad_psi = grad_psi
         if self.useC==True:
             cfemIntegrals.parametricMaps_getJacobianValues(grad_psi,
                                                            self.meshDOFMap.l2g,
@@ -1902,6 +1950,23 @@ class ParametricMaps(ElementMaps):
                                 jacobianArray[eN,k,m,n] += self.mesh.nodeArray[J,m]*grad_psi[k,j,n]
                     jacobianDeterminantArray[eN,k] = det(jacobianArray[eN,k])
                     jacobianInverseArray[eN,k,:,:] = adj(jacobianArray[eN,k])/jacobianDeterminantArray[eN,k]
+    def getBasisValuesTraceRef(self,
+                               xiArray):
+        n_xi = xiArray.shape[0]
+        range_n_xi = range(n_xi)
+        self.psi_trace = numpy.zeros((self.referenceElement.nElementBoundaries,
+                                      n_xi,
+                                      self.localFunctionSpace.dim),
+                                     'd')
+        for ebN in self.referenceElement.range_nElementBoundaries:
+            for k in range_n_xi:
+                for j in self.localFunctionSpace.range_dim:
+                    #mwf now manually map from \bar{x} (reference element boundary quadrature point to reference element space
+                    #and then evaluate using basis, since basisTrace will be deprecated
+                    #psi[ebN,k,j]        = self.localFunctionSpace.basisTrace[ebN][j](xiArray[k])
+                    xiHat_k = self.referenceElement.boundaryMapList[ebN](xiArray[k])
+                    self.psi_trace[ebN,k,j] = self.localFunctionSpace.basis[j](xiHat_k)
+        return self.psi_trace
     def getValuesTrace(self,
                        xiArray,
                        xArray):
@@ -1920,7 +1985,6 @@ class ParametricMaps(ElementMaps):
                     #psi[ebN,k,j]        = self.localFunctionSpace.basisTrace[ebN][j](xiArray[k])
                     xiHat_k = self.referenceElement.boundaryMapList[ebN](xiArray[k])
                     psi[ebN,k,j] = self.localFunctionSpace.basis[j](xiHat_k)
-        self.psi_trace=psi
         if self.useC==True:
             cfemIntegrals.parametricMaps_getValuesTrace(psi,self.meshDOFMap.l2g,self.mesh.nodeArray,xArray)
         else:
@@ -1931,6 +1995,35 @@ class ParametricMaps(ElementMaps):
                             J = self.meshDOFMap.l2g[eN,j]
                             for m in self.referenceElement.range_dim:
                                 xArray[eN,ebN,k,m] += self.mesh.nodeArray[J,m]*psi[ebN,k,j]
+    def getBasisGradientValuesTraceRef(self,
+                                       xiArray):
+        n_xi = xiArray.shape[0]
+        range_n_xi = range(n_xi)
+        self.grad_psi_trace = numpy.zeros((self.referenceElement.nElementBoundaries,
+                                           n_xi,
+                                           self.localFunctionSpace.dim,
+                                           self.referenceElement.dim),
+                                          'd')
+        self.boundaryNormals = numpy.zeros((self.referenceElement.nElementBoundaries,
+                                            n_xi,
+                                            self.referenceElement.dim),
+                                           'd')
+        self.boundaryJacobians = numpy.zeros((self.referenceElement.nElementBoundaries,
+                                              n_xi,
+                                              self.referenceElement.dim,
+                                              self.referenceElement.dim-1),
+                                             'd')
+        for ebN in self.referenceElement.range_nElementBoundaries:
+            for k in range_n_xi:
+                for j in self.localFunctionSpace.range_dim:
+                    #mwf move away from using basisGradientsTrace directly since will be deprecated
+                    #switch to using boundaryMapList directly
+                    #grad_psi[ebN,k,j,:] = self.localFunctionSpace.basisGradientsTrace[ebN][j](xiArray[k])
+                    xiHat_k = self.referenceElement.boundaryMapList[ebN](xiArray[k])
+                    self.grad_psi_trace[ebN,k,j,:] = self.localFunctionSpace.basisGradients[j](xiHat_k)
+                self.boundaryNormals[ebN,k,:] = self.referenceElement.boundaryUnitNormalList[ebN]#planar faces in physical space
+                self.boundaryJacobians[ebN,k,:,:] = self.referenceElement.boundaryJacobianList[ebN]
+        return self.grad_psi_trace
     def getJacobianValuesTrace(self,
                                xiArray,
                                jacobianInverseArray,
@@ -1963,9 +2056,6 @@ class ParametricMaps(ElementMaps):
                     #grad_psi[ebN,k,j,:] = self.localFunctionSpace.basisGradientsTrace[ebN][j](xiArray[k])
                     xiHat_k = self.referenceElement.boundaryMapList[ebN](xiArray[k])
                     grad_psi[ebN,k,j,:] = self.localFunctionSpace.basisGradients[j](xiHat_k)
-        self.grad_psi_trace = grad_psi
-        self.boundaryNormals = boundaryNormals
-        self.boundaryJacobians = boundaryJacobians
         if self.useC == True:
             cfemIntegrals.parametricMaps_getJacobianValuesTrace(grad_psi,
                                                                 boundaryNormals,
@@ -2063,6 +2153,7 @@ class ParametricMaps(ElementMaps):
                                                                          metricTensorDeterminantSqrtArray,
                                                                          unitNormalArray)
     def getPermutations(self,xiArray):
+        #cek todo, figure out how to get the permutations without staring any points
         self.permutations = numpy.zeros(xiArray.shape[:-1],'i')
         cfemIntegrals.parametricMaps_getPermutations(xiArray,self.permutations)
     def getValuesGlobalExteriorTrace(self,
@@ -2086,7 +2177,6 @@ class ParametricMaps(ElementMaps):
                     #psi[ebN,k,j]        = self.localFunctionSpace.basisTrace[ebN][j](xiArray[k])
                     xiHat_k = self.referenceElement.boundaryMapList[ebN](xiArray[k])
                     psi[ebN,k,j]        = self.localFunctionSpace.basis[j](xiHat_k)
-        self.psi_trace = psi
         if self.useC==True:
             cfemIntegrals.parametricMaps_getValuesGlobalExteriorTrace(self.mesh.exteriorElementBoundariesArray,
                                                                       self.mesh.elementBoundaryElementsArray,
@@ -2140,7 +2230,6 @@ class ParametricMaps(ElementMaps):
                     #grad_psi[ebN,k,j,:] = self.localFunctionSpace.basisGradientsTrace[ebN][j](xiArray[k])
                     xiHat_k = self.referenceElement.boundaryMapList[ebN](xiArray[k])
                     grad_psi[ebN,k,j,:] = self.localFunctionSpace.basisGradients[j](xiHat_k)
-        self.grad_psi_trace = grad_psi
         if self.useC == True:
             cfemIntegrals.parametricMaps_getJacobianValuesGlobalExteriorTrace(self.mesh.exteriorElementBoundariesArray,
                                                                               self.mesh.elementBoundaryElementsArray,
@@ -2501,6 +2590,16 @@ class ParametricFiniteElementSpace:
         self.nOutput=0
         self.viewer=None
         self.useC=True
+    def getBasisValuesRef(self,xiArray):
+        n_xi = xiArray.shape[0]
+        range_n_xi = range(n_xi)
+        self.psi = numpy.zeros((n_xi,
+                                self.referenceFiniteElement.localFunctionSpace.dim),
+                               'd')
+        for k in range_n_xi:
+            for j in self.referenceFiniteElement.localFunctionSpace.range_dim:
+                self.psi[k,j] = self.referenceFiniteElement.localFunctionSpace.basis[j](xiArray[k])
+        return self.psi
     def getBasisValues(self,
                        xiArray,
                        vArray):
@@ -2513,7 +2612,6 @@ class ParametricFiniteElementSpace:
         for k in range_n_xi:
             for j in self.referenceFiniteElement.localFunctionSpace.range_dim:
                 psi[k,j] = self.referenceFiniteElement.localFunctionSpace.basis[j](xiArray[k])
-        self.psi=psi
         if self.useC == True:
             cfemIntegrals.parametricFiniteElementSpace_getValues(psi,vArray)
         else:
@@ -2530,6 +2628,18 @@ class ParametricFiniteElementSpace:
             for k in range_n_xi:
                 for j in self.referenceFiniteElement.localFunctionSpace.range_dim:
                     vArray[eN,k,j] = self.referenceFiniteElement.localFunctionSpace.basis[j](xiArrayArray[eN,k,:self.referenceFiniteElement.referenceElement.dim])
+    def getBasisGradientValuesRef(self,
+                                  xiArray):
+        n_xi = xiArray.shape[0]
+        range_n_xi = range(n_xi)
+        self.grad_psi = numpy.zeros((n_xi,
+                                     self.referenceFiniteElement.localFunctionSpace.dim,
+                                     self.referenceFiniteElement.referenceElement.dim),
+                                    'd')
+        for k in range_n_xi:
+            for j in self.referenceFiniteElement.localFunctionSpace.range_dim:
+                self.grad_psi[k,j,:] = self.referenceFiniteElement.localFunctionSpace.basisGradients[j](xiArray[k])
+        return self.grad_psi
     def getBasisGradientValues(self,
                                xiArray,
                                inverseJacobianArray,
@@ -2544,7 +2654,6 @@ class ParametricFiniteElementSpace:
         for k in range_n_xi:
             for j in self.referenceFiniteElement.localFunctionSpace.range_dim:
                 grad_psi[k,j,:] = self.referenceFiniteElement.localFunctionSpace.basisGradients[j](xiArray[k])
-        self.grad_psi=grad_psi
         if self.useC == True:
             cfemIntegrals.parametricFiniteElementSpace_getGradientValues(grad_psi,
                                                                          inverseJacobianArray,
@@ -2556,6 +2665,19 @@ class ParametricFiniteElementSpace:
                         for m in self.referenceFiniteElement.referenceElement.range_dim:
                             for n in self.referenceFiniteElement.referenceElement.range_dim:
                                 grad_vArray[eN,k,j,m] += grad_psi[k,j,n]*inverseJacobianArray[eN,k,n,m]
+    def getBasisHessianValuesRef(self,
+                                 xiArray):
+        n_xi = xiArray.shape[0]
+        range_n_xi = range(n_xi)
+        self.Hessian_psi = numpy.zeros((n_xi,
+                                        self.referenceFiniteElement.localFunctionSpace.dim,
+                                        self.referenceFiniteElement.referenceElement.dim,
+                                        self.referenceFiniteElement.referenceElement.dim),
+                                       'd')
+        for k in range_n_xi:
+            for j in self.referenceFiniteElement.localFunctionSpace.range_dim:
+                self.Hessian_psi[k,j,:] = self.referenceFiniteElement.localFunctionSpace.basisHessians[j](xiArray[k])
+        return self.Hessian_psi
     def getBasisHessianValues(self,
                               xiArray,
                               inverseJacobianArray,
@@ -2602,7 +2724,6 @@ class ParametricFiniteElementSpace:
             for k in range_n_xi:
                 for j in self.referenceFiniteElement.localFunctionSpace.range_dim:
                     psi[ebN*n_xi+k,j] = self.referenceFiniteElement.localFunctionSpace.basis[j](xiArray[0,ebN,k])
-        self.psi_trace=psi
         if self.useC == True:
             cfemIntegrals.parametricFiniteElementSpace_getValuesTrace(psi,
                                                                       permutations,
@@ -2643,7 +2764,6 @@ class ParametricFiniteElementSpace:
             for k in range_n_xi:
                 for j in self.referenceFiniteElement.localFunctionSpace.range_dim:
                     grad_psi[ebN*n_xi+k,j,:] = self.referenceFiniteElement.localFunctionSpace.basisGradients[j](xiArray[0,ebN,k])
-        self.grad_psi_trace = grad_psi
         if self.useC == True:
             cfemIntegrals.parametricFiniteElementSpace_getGradientValuesTrace(grad_psi,
                                                                               permutations,
@@ -2677,6 +2797,22 @@ class ParametricFiniteElementSpace:
                             for n in self.referenceFiniteElement.referenceElement.range_dim:
                                 grad_vArray[eN,ebN,k,j,m] += grad_psi[n]*inverseJacobianTraceArray[eN,ebN,k,n,m]
 
+    def getBasisValuesTraceRef(self,xiArray):
+        n_xi = xiArray.shape[0]
+        range_n_xi = range(n_xi)
+        self.psi_trace = numpy.zeros((self.referenceFiniteElement.referenceElement.nElementBoundaries,
+                           n_xi,
+                           self.referenceFiniteElement.localFunctionSpace.dim),
+                          'd')
+        for ebN in self.referenceFiniteElement.referenceElement.range_nElementBoundaries:
+            for k in range_n_xi:
+                for j in self.referenceFiniteElement.localFunctionSpace.range_dim:
+                    #mwf now manually map from \bar{x} (reference element boundary quadrature point to reference element space
+                    #and then evaluate using basis, since basisTrace will be deprecated
+                    #psi[ebN,k,j] = self.referenceFiniteElement.localFunctionSpace.basisTrace[ebN][j](xiArray[k])
+                    xiHat_k = self.referenceFiniteElement.referenceElement.boundaryMapList[ebN](xiArray[k])
+                    self.psi_trace[ebN,k,j] = self.referenceFiniteElement.localFunctionSpace.basis[j](xiHat_k)
+        return self.psi_trace
     def getBasisValuesGlobalExteriorTrace(self,
                                           xiArray,
                                           vArray):
@@ -2694,7 +2830,6 @@ class ParametricFiniteElementSpace:
                     #psi[ebN,k,j] = self.referenceFiniteElement.localFunctionSpace.basisTrace[ebN][j](xiArray[k])
                     xiHat_k = self.referenceFiniteElement.referenceElement.boundaryMapList[ebN](xiArray[k])
                     psi[ebN,k,j] = self.referenceFiniteElement.localFunctionSpace.basis[j](xiHat_k)
-        self.psi_trace = psi
         if self.useC == True:
             cfemIntegrals.parametricFiniteElementSpace_getValuesGlobalExteriorTrace(self.elementMaps.mesh.exteriorElementBoundariesArray,
                                                                                     self.elementMaps.mesh.elementBoundaryElementsArray,
@@ -2726,6 +2861,20 @@ class ParametricFiniteElementSpace:
                     #vArray[ebNE,k,j] = self.referenceFiniteElement.localFunctionSpace.basisTrace[ebN_local][j](xiArrayArray[ebNE,k,:self.referenceFiniteElement.referenceElement.dim])
                     xiHat_k = self.referenceFiniteElement.referenceElement.boundaryMapList[ebN_local](xiArrayArray[ebNE,k,:self.referenceFiniteElement.referenceElement.dim])
                     vArray[ebNE,k,j] = self.referenceFiniteElement.localFunctionSpace.basis[j](xiHat_k)
+    def getBasisGradientValuesTraceRef(self,
+                                       xiArray):
+        n_xi = xiArray.shape[0]
+        range_n_xi = range(n_xi)
+        self.grad_psi_trace = numpy.zeros((self.referenceFiniteElement.referenceElement.nElementBoundaries,
+                                           n_xi,
+                                           self.referenceFiniteElement.localFunctionSpace.dim,
+                                           self.referenceFiniteElement.referenceElement.dim),
+                                          'd')
+        for ebN in self.referenceFiniteElement.referenceElement.range_nElementBoundaries:
+            for k in range_n_xi:
+                for j in self.referenceFiniteElement.localFunctionSpace.range_dim:
+                    self.grad_psi_trace[ebN,k,j,:] = self.referenceFiniteElement.localFunctionSpace.basisGradients[j](xiArray[k])
+        return self.grad_psi_trace
     def getBasisGradientValuesGlobalExteriorTrace(self,
                                                   xiArray,
                                                   inverseJacobianTraceArray,
@@ -2747,7 +2896,6 @@ class ParametricFiniteElementSpace:
                     #grad_psi[ebN,k,j,:] = self.referenceFiniteElement.localFunctionSpace.basisGradientsTrace[ebN][j](xiArray[k])
                     xiHat_k = self.referenceFiniteElement.referenceElement.boundaryMapList[ebN](xiArray[k])
                     grad_psi[ebN,k,j,:] = self.referenceFiniteElement.localFunctionSpace.basisGradients[j](xiHat_k)
-        self.grad_psi_trace = grad_psi
         if self.useC == True:
             cfemIntegrals.parametricFiniteElementSpace_getGradientValuesGlobalExteriorTrace(self.elementMaps.mesh.exteriorElementBoundariesArray,
                                                                                             self.elementMaps.mesh.elementBoundaryElementsArray,

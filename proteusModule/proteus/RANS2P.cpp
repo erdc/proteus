@@ -217,6 +217,9 @@ extern "C" void calculateResidual_RANS2P(int nElements_global,
 // 	  q_velocity[eN_k_nSpace+0]=u;
 // 	  q_velocity[eN_k_nSpace+1]=v;
 // 	  q_velocity[eN_k_nSpace+2]=w;
+	  // q_velocity_last[eN_k_nSpace+0]=0.0;
+	  // q_velocity_last[eN_k_nSpace+1]=0.0;
+	  // q_velocity_last[eN_k_nSpace+2]=0.0;
           //
           //calculate pde coefficients at quadrature points
           //
@@ -373,6 +376,9 @@ extern "C" void calculateResidual_RANS2P(int nElements_global,
           // 
           //update element residual 
           // 
+	  //q_numDiff_u_last[eN_k] = 0.0;
+	  //q_numDiff_v_last[eN_k] = 0.0;
+	  //q_numDiff_w_last[eN_k] = 0.0;
           for(int i=0;i<nDOF_test_element;i++) 
 	    { 
 	      register int eN_k_i=eN_k*nDOF_test_element+i,
