@@ -1966,6 +1966,7 @@ void calculateSubgridErrorNavierStokes2D_GLS_tau(int nElements_global,
           tau1[eN*nQuadraturePoints_element+k] = 4.0*viscosity +
             2.0*density*nrm_v*h+
             oneByAbsdt*h*h;
+	  printf("nrm_v %12.5e tau_v %12.5e tau_p %12.5e \n",nrm_v,tau0[eN*nQuadraturePoints_element+k],tau1[eN*nQuadraturePoints_element+k]);
 /*           tau0[eN*nQuadraturePoints_element+k] = density/(4.0*viscosity/(h*h) + */
 /*                                                       2.0*density*nrm_v/h + */
 /*                                                       oneByAbsdt); */
@@ -2070,6 +2071,7 @@ void calculateSubgridErrorNavierStokes2D_GLS_tau_sd(int nElements_global,
           tau1[eN*nQuadraturePoints_element+k] = 4.0*viscosity +
             2.0*density*nrm_v*h+
             oneByAbsdt*h*h;
+	  /* printf("nrm_v %12.5e tau_v %12.5e tau_p %12.5e \n",nrm_v,tau0[eN*nQuadraturePoints_element+k],tau1[eN*nQuadraturePoints_element+k]); */
 /*           tau0[eN*nQuadraturePoints_element+k] = density/(4.0*viscosity/(h*h) + */
 /*                                                       2.0*density*nrm_v/h + */
 /*                                                       oneByAbsdt); */

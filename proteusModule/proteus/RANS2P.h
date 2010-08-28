@@ -220,57 +220,58 @@ void evaluateCoefficients_c(const double eps_rho,
   dmass_adv_w[0]=0.0;
   dmass_adv_w[1]=0.0;
   dmass_adv_w[2]=1.0;
+
+  //cek debug, make it stokes  
+  /* //u momentum advective flux */
+  /* mom_u_adv[0]=u*u; */
+  /* mom_u_adv[1]=u*v; */
+  /* mom_u_adv[2]=u*w; */
   
-  //u momentum advective flux
-  mom_u_adv[0]=u*u;
-  mom_u_adv[1]=u*v;
-  mom_u_adv[2]=u*w;
+  /* dmom_u_adv_u[0]=2.0*u; */
+  /* dmom_u_adv_u[1]=v; */
+  /* dmom_u_adv_u[2]=w; */
   
-  dmom_u_adv_u[0]=2.0*u;
-  dmom_u_adv_u[1]=v;
-  dmom_u_adv_u[2]=w;
+  /* dmom_u_adv_v[0]=0.0; */
+  /* dmom_u_adv_v[1]=u; */
+  /* dmom_u_adv_v[2]=0.0; */
   
-  dmom_u_adv_v[0]=0.0;
-  dmom_u_adv_v[1]=u;
-  dmom_u_adv_v[2]=0.0;
+  /* dmom_u_adv_w[0]=0.0; */
+  /* dmom_u_adv_w[1]=0.0; */
+  /* dmom_u_adv_w[2]=u; */
   
-  dmom_u_adv_w[0]=0.0;
-  dmom_u_adv_w[1]=0.0;
-  dmom_u_adv_w[2]=u;
+  /* //v momentum advective_flux */
+  /* mom_v_adv[0]=v*u; */
+  /* mom_v_adv[1]=v*v; */
+  /* mom_v_adv[2]=v*w; */
   
-  //v momentum advective_flux
-  mom_v_adv[0]=v*u;
-  mom_v_adv[1]=v*v;
-  mom_v_adv[2]=v*w;
+  /* dmom_v_adv_u[0]=v; */
+  /* dmom_v_adv_u[1]=0.0; */
+  /* dmom_v_adv_u[2]=0.0; */
   
-  dmom_v_adv_u[0]=v;
-  dmom_v_adv_u[1]=0.0;
-  dmom_v_adv_u[2]=0.0;
+  /* dmom_v_adv_w[0]=0.0; */
+  /* dmom_v_adv_w[1]=0.0; */
+  /* dmom_v_adv_w[2]=v; */
   
-  dmom_v_adv_w[0]=0.0;
-  dmom_v_adv_w[1]=0.0;
-  dmom_v_adv_w[2]=v;
+  /* dmom_v_adv_v[0]=u; */
+  /* dmom_v_adv_v[1]=2.0*v; */
+  /* dmom_v_adv_v[2]=w; */
   
-  dmom_v_adv_v[0]=u;
-  dmom_v_adv_v[1]=2.0*v;
-  dmom_v_adv_v[2]=w;
+  /* //w momentum advective_flux */
+  /* mom_w_adv[0]=w*u; */
+  /* mom_w_adv[1]=w*v; */
+  /* mom_w_adv[2]=w*w; */
   
-  //w momentum advective_flux
-  mom_w_adv[0]=w*u;
-  mom_w_adv[1]=w*v;
-  mom_w_adv[2]=w*w;
+  /* dmom_w_adv_u[0]=w; */
+  /* dmom_w_adv_u[1]=0.0; */
+  /* dmom_w_adv_u[2]=0.0; */
   
-  dmom_w_adv_u[0]=w;
-  dmom_w_adv_u[1]=0.0;
-  dmom_w_adv_u[2]=0.0;
+  /* dmom_w_adv_v[0]=0.0; */
+  /* dmom_w_adv_v[1]=w; */
+  /* dmom_w_adv_v[2]=0.0; */
   
-  dmom_w_adv_v[0]=0.0;
-  dmom_w_adv_v[1]=w;
-  dmom_w_adv_v[2]=0.0;
-  
-  dmom_w_adv_w[0]=u;
-  dmom_w_adv_w[1]=v;
-  dmom_w_adv_w[2]=2.0*w;
+  /* dmom_w_adv_w[0]=u; */
+  /* dmom_w_adv_w[1]=v; */
+  /* dmom_w_adv_w[2]=2.0*w; */
   
   //u momentum diffusion tensor
   mom_u_diff_ten[0] = 2.0*nu;
@@ -1564,6 +1565,11 @@ void exteriorNumericalAdvectiveFlux_c(const int& isDOFBoundary_p,
            flux_wmom+=n[2]*bc_f_wmom[2];
          }
     }
+  //cek debug, make it stokes
+  flux_umom = 0.0;
+  flux_vmom = 0.0;
+  flux_wmom = 0.0;
+  //
   if (isDOFBoundary_p == 1)
     {
       flux_umom+= n[0]*(bc_p-p);
@@ -1793,6 +1799,18 @@ void exteriorNumericalAdvectiveFluxDerivatives_c(const int& isDOFBoundary_p,
       dflux_wmom_dv = 0.0;
       dflux_wmom_dw = 0.0;
     }
+  //cek debug, make it stokes
+  dflux_umom_du = 0.0;
+  dflux_umom_dv = 0.0;
+  dflux_umom_dw = 0.0;
+  
+  dflux_vmom_du = 0.0;
+  dflux_vmom_dv = 0.0;
+  dflux_vmom_dw = 0.0;
+  
+  dflux_wmom_du = 0.0;
+  dflux_wmom_dv = 0.0;
+  dflux_wmom_dw = 0.0;
 }
 
 inline

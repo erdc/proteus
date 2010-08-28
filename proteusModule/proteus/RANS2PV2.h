@@ -158,7 +158,7 @@ namespace RANS2PV2
     dmass_adv_w[0]=0.0;
     dmass_adv_w[1]=0.0;
     dmass_adv_w[2]=1.0;
-  
+
     //u momentum advective flux
     mom_u_adv[0]=u*u;
     mom_u_adv[1]=u*v;
@@ -282,9 +282,20 @@ namespace RANS2PV2
     for(int I=0;I<nSpace;I++)
       for (int J=0;J<nSpace;J++)
 	v_d_Gv += v[I]*G[I*nSpace+J]*v[J];
-    cfl = 0.5*sqrt(v_d_Gv);
+    cfl = 2.0*sqrt(v_d_Gv);
     tau_v = 1.0/sqrt(Ct_sge*rho2*Dt2 + rho2*v_d_Gv + Cd_sge*mu2*G_dd_G);
     tau_p = 1.0/(tr_G*tau_v);
+    //debug
+    /* double tau_v_old = tau_v,tau_p_old = tau_p; */
+    /* double nrm_v=0.0,h=1.0/20.0; */
+    /* double oneByAbsdt =  fabs(Dt); */
+    /* for(int I=0;I<nSpace;I++) */
+    /* 	nrm_v += v[I]*v[I]; */
+    /* nrm_v = sqrt(nrm_v); */
+    /* cfl = nrm_v/h; */
+    /* tau_v = 1.0/(4.0*mu/(h*h) + 2.0*rho*nrm_v/h + oneByAbsdt); */
+    /* tau_p = 4.0*mu + 2.0*rho*nrm_v*h+ oneByAbsdt*h*h; */
+    /* std::cout<<"nrm_v "<<nrm_v<<" tau_v "<<tau_v<<"\t"<<tau_v_old<<" tau_p "<<tau_p<<'\t'<<tau_p_old<<std::endl; */
   }
 
   inline

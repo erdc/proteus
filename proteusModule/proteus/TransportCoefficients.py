@@ -2153,23 +2153,23 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
     #initialize so it can run as single phase
     def initializeElementQuadrature(self,t,cq):
         if self.LS_model == None:
-            self.q_phi = -numpy.ones(cq[('u',0)].shape,'d')
+            self.q_phi = -numpy.ones(cq[('u',1)].shape,'d')
             self.q_n = -numpy.ones(cq[('velocity',0)].shape,'d')
         if self.KN_model == None:
-            self.q_kappa = -numpy.zeros(cq[('u',0)].shape,'d')
+            self.q_kappa = -numpy.zeros(cq[('u',1)].shape,'d')
             
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         if self.LS_model == None:
-            self.ebq_phi = -numpy.ones(cebq[('u',0)].shape,'d')
+            self.ebq_phi = -numpy.ones(cebq[('u',1)].shape,'d')
             self.ebq_n = -numpy.ones(cebq[('velocity',0)].shape,'d')
         if self.KN_model == None:
-            self.ebq_kappa = -numpy.zeros(cebq[('u',0)].shape,'d')
+            self.ebq_kappa = -numpy.zeros(cebq[('u',1)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         if self.LS_model == None:
-            self.ebqe_phi = -numpy.ones(cebqe[('u',0)].shape,'d')
+            self.ebqe_phi = -numpy.ones(cebqe[('u',1)].shape,'d')
             self.ebqe_n = -numpy.ones(cebqe[('velocity',0)].shape,'d')
         if self.KN_model == None:
-            self.ebqe_kappa = -numpy.zeros(cebqe[('u',0)].shape,'d')
+            self.ebqe_kappa = -numpy.zeros(cebqe[('u',1)].shape,'d')
     def updateToMovingDomain(self,t,c):
         import cfemIntegrals
         assert(self.movingDomain)

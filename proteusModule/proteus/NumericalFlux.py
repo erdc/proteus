@@ -73,12 +73,13 @@ class NF_base:
                      self.vt.nSpace_global,
                      self.vt.nSpace_global),
                     'd')
-        self.ebqeTerms.append('g')
-	self.ebqe['g'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
-				       self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
-				       max(1,self.vt.nSpace_global-1),
-				       max(1,self.vt.nSpace_global-1)),
-				      'd')
+        #cek why is g getting added?
+        #self.ebqeTerms.append('g')
+	#self.ebqe['g'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+        #        self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
+        #				       max(1,self.vt.nSpace_global-1),
+	#			       max(1,self.vt.nSpace_global-1)),
+                #'d')
         if self.vt.movingDomain:
             self.ebqe['xt'] = self.vt.ebqe['xt']
             self.ebqe['n'] = self.vt.ebqe['n']
@@ -124,9 +125,9 @@ class NF_base:
             def __ne__(self,other):
                 assert(False)
         for ci in range(self.nc):
-            self.isDOFBoundary[ci] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,vt.ebqe['x'].shape[-2]),'i')
-            self.isDiffusiveFluxBoundary[ci] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,vt.ebqe['x'].shape[-2]),'i')
-            self.isAdvectiveFluxBoundary[ci] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,vt.ebqe['x'].shape[-2]),'i')
+            self.isDOFBoundary[ci] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,vt.nElementBoundaryQuadraturePoints_elementBoundary),'i')
+            self.isDiffusiveFluxBoundary[ci] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,vt.nElementBoundaryQuadraturePoints_elementBoundary),'i')
+            self.isAdvectiveFluxBoundary[ci] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,vt.nElementBoundaryQuadraturePoints_elementBoundary),'i')
             logEvent(memory("isDOF,DiffFlux,AdvFluxBoundary[%s]" % (ci),"NumericalFlux"),level=4)
             self.mixedDiffusion[ci]=False
             self.DOFBoundaryConditionsDictList.append({})
@@ -138,7 +139,7 @@ class NF_base:
                 eN_global = self.mesh.elementBoundaryElementsArray[ebN,0]
                 ebN_element = self.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
                 materialFlag = self.mesh.elementBoundaryMaterialTypes[ebN]
-                for k in range(vt.ebqe['x'].shape[-2]):
+                for k in range(vt.nElementBoundaryQuadraturePoints_elementBoundary):
                     x = vt.ebqe['x'][ebNE,k]
                     try:
                         #mwf now try to have flag for boundary type returned too
