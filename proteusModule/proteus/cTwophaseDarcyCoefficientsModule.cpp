@@ -3114,6 +3114,35 @@ extern "C"
     return Py_None;
   }
 
+  static PyObject *twophaseDarcy_vol_frac(PyObject * self,PyObject * args)
+  {
+    int i,nSimplex=1,nPointsPerSimplex=1;
+    PyObject *matType,*omega,*sw,*vol_frac_w,*vol_frac_n;
+    if(!PyArg_ParseTuple(args,
+                         "OOOOO",
+			 &matType,
+			 &omega,
+			 &sw,
+			 &vol_frac_w,
+			 &vol_frac_n))
+      return NULL;
+
+    for(i=0; i < ND(sw)-1; i++)
+      nSimplex *= SHAPE(sw)[i];
+    for(i=ND(sw)-1;i<ND(sw);i++)
+      nPointsPerSimplex *= SHAPE(sw)[i];    
+
+    twophaseDarcy_vol_frac(nSimplex,
+			   nPointsPerSimplex,
+			   IDATA(matType),
+			   DDATA(omega),
+			   DDATA(sw),
+			   DDATA(vol_frac_w),
+			   DDATA(vol_frac_n));
+
+    Py_INCREF(Py_None);
+    return Py_None;
+  }
 
   //------------------------------ start  deprecated routines --------------------
 
@@ -8548,7 +8577,12 @@ extern "C"
      twophaseDarcy_compressibleN_split_sd_saturation_het_matType,
      METH_VARARGS,
      "Evaluate  the saturation coefficients of the split fractional flow formulation of compressible non-wetting phase, two-phase Darcy flow for a heterogeneous medium, sparse diffusion rep het"},
-    {"twophaseDarcy_fc",
+    {"twophaseDarcy_vol_frac",
+     twophaseDarcy_vol_frac,
+     METH_VARARGS,
+     "compute phase volume fractions from point-vals for sw and zoned material types for porosity (omega)"},
+    /*deprecated routines*/
+   {"twophaseDarcy_fc",
      twophaseDarcy_fc,
      METH_VARARGS,
      "Evaluate  the coefficients of the fully coupled formulation of incompressible, two-phase Darcy flow"},
