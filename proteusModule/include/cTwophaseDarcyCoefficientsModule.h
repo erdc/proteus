@@ -289,6 +289,30 @@ inline int twophaseDarcy_fc_sd_het_matType_nonPotentialForm(int compressibilityF
     }
   return 0;
 }
+
+inline int twophaseDarcy_vol_frac(int nSimplex,
+				  int nPointsPerSimplex,
+				  const int* materialTypes,
+				  const double* omega,
+				  const double* sw,
+				  double * vol_frac_w,
+				  double * vol_frac_n)
+{
+  int matID;
+  for (int eN=0; eN < nSimplex; eN++)
+    {
+      matID = materialTypes[eN];
+      for (int pN=0,i;pN<nPointsPerSimplex;pN++)
+	{    
+	  i = eN*nPointsPerSimplex+pN;
+	  vol_frac_w[i] = omega[matID]*sw[i];
+	  vol_frac_n[i] = omega[matID]*(1.0-sw[i]);
+
+	}  
+    }
+  return 0;
+}
+
 /* fully coupled, phase continuity formulation, wetting phase pressure and capillary pressure are primary dependent
    variables except say u_1 = 1-S for u_1 <= 0
    slight-compressibility assumption is used for densities
