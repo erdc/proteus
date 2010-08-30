@@ -448,6 +448,61 @@ void groundwaterTransportCoefficientsEvaluate_hetMat(const int nSimplex,
 	}
     }
 }
+void variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat(const int nSimplex,
+								      const int nPointsPerSimplex,
+								      const int nSpace,
+								      const double d,
+								      const int* materialTypes,
+								      const double *theta, /*phase volume fraction*/
+								      const double *alpha_L_types,
+								      const double *alpha_T_types,
+								      const double *v,/*phase darcy velocity*/
+								      const double *u,
+								      double *m,
+								      double *dm,
+								      double *f,
+								      double *df,
+								      double *a)
+{
+  int i,j,k,I,J,matID;
+  const int nSpace2=nSpace*nSpace;
+  double norm_v;
+
+  for (i=0;i<nSimplex;i++)
+    {
+      matID = materialTypes[i];
+      for (j=0; j < nPointsPerSimplex; j++)
+	{
+	  k = i*nPointsPerSimplex+j;
+
+	  m[k]=theta[k]*u[k];
+	  dm[k]=theta[k];
+	  norm_v = 0.0;
+	  for (I=0;I<nSpace;I++)
+	    {
+	      f[k*nSpace+I]=v[k*nSpace+I]*u[k];
+	      df[k*nSpace+I]=v[k*nSpace+I];
+	      norm_v += v[k*nSpace+I]*v[k*nSpace+I];
+	    }
+	  norm_v = sqrt(norm_v);
+	  if (norm_v > 0.0)
+	    {
+	      for (I=0;I<nSpace;I++)
+		{
+		  a[k*nSpace2+I*nSpace+I]=theta[k]*d + alpha_T_types[matID]*norm_v + (alpha_L_types[matID] - alpha_T_types[matID])*v[k*nSpace+I]*v[k*nSpace+I]/norm_v;
+		  for (J=I+1;J<nSpace;J++)
+		    {
+		      a[k*nSpace2+I*nSpace+J]=(alpha_L_types[matID] - alpha_T_types[matID])*v[k*nSpace+I]*v[k*nSpace+J]/norm_v;
+		      a[k*nSpace2+J*nSpace+I]=a[k*nSpace2+I*nSpace+J];
+		    }
+		}
+	    }
+	  else
+	    for (I=0;I<nSpace;I++)
+	      a[k*nSpace2+I*nSpace+I]=theta[k]*d;
+	}
+    }
+}
 
 void nonlinearADR_pqrstEvaluate(const int nPoints,
                                 const int nSpace,
@@ -5556,7 +5611,8 @@ void conservativeHeadRichardsMualemVanGenuchten_sd_het(const int nSimplex,
 						       double *f,
 						       double *df,
 						       double *a,
-						       double *da)
+						       double *da,
+						       double* vol_frac)
 {
   int i,j,k,I,matID,ii;
   const int nSpace2=nSpace*nSpace;
@@ -5617,6 +5673,7 @@ void conservativeHeadRichardsMualemVanGenuchten_sd_het(const int nSimplex,
           drhom = beta*rhom;
           mass[k] = rhom*thetaW;
           dmass[k] = -rhom*DthetaW_DpsiC+drhom*thetaW;
+	  vol_frac[k] = thetaW;
 	  //mass[k] = rho*thetaW;
 	  //dmass[k] = -rho*DthetaW_DpsiC;
 	  for (I=0;I<nSpace;I++)
