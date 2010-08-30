@@ -320,6 +320,7 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
         self.materialTypes_ebqe  = None
         self.nd = nd
         self.nMaterialTypes = len(thetaR_types)
+        self.q = {}; self.ebqe = {}; self.ebq = {}; self.ebq_global={}
         #try to allow some flexibility in input of permeability/conductivity tensor
         self.diagonal_conductivity = diagonal_conductivity
         self.Ksw_types_in = Ksw_types
@@ -379,16 +380,18 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
 #        cq['Ks'] = numpy.zeros(self.q_shape,'d')
 #        for k in range(self.q_shape[1]):
 #            cq['Ks'][:,k] = self.Ksw_types[self.elementMaterialTypes,0]
+        self.q[('vol_frac',0)] = numpy.zeros(self.q_shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         self.materialTypes_ebq = numpy.zeros(cebq[('u',0)].shape[0:2],'i')
         self.ebq_shape = cebq[('u',0)].shape
         for ebN_local in range(self.ebq_shape[1]):
             self.materialTypes_ebq[:,ebN_local] = self.elementMaterialTypes
-        #for eN in range(self.elementMaterialTypes.shape[0]):
-        #    self.materialTypes_ebq[eN,:] = self.elementMaterialTypes[eN]
+        self.ebq[('vol_frac',0)] = numpy.zeros(self.ebq_shape,'d')
+
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         self.materialTypes_ebqe = self.exteriorElementBoundaryTypes
         self.ebqe_shape = cebqe[('u',0)].shape
+        self.ebqe[('vol_frac',0)] = numpy.zeros(self.ebqe_shape,'d')
         #
     def evaluate(self,t,c):
         if c[('u',0)].shape == self.q_shape:
@@ -419,7 +422,8 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
                                                                c[('f',0)],
                                                                c[('df',0,0)],
                                                                c[('a',0,0)],
-                                                               c[('da',0,0,0)])
+                                                               c[('da',0,0,0)],
+                                                               c[('vol_frac',0)])
 
 #         self.conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2(materialTypes,
 #                                                                      self.rho,
@@ -871,6 +875,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #Immiscible two-phase flow
 ########################################
 class TwophaseDarcyFlow_base(TC_base):
+    from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_vol_frac
     """
     base class for two-phase flow implementations
     holds information for 
@@ -969,6 +974,7 @@ class TwophaseDarcyFlow_base(TC_base):
         for i,tol in enumerate(self.psk_tolerances[self.psk_model].values()):
             self.rwork_psk_tolerances[i] = tol
         self.diagonal_conductivity=diagonal_conductivity
+        self.q = {}; self.ebqe = {}; self.ebq = {}; self.ebq_global={}; self.ip = {}
     def initializeMesh(self,mesh):
         self.elementMaterialTypes,self.exteriorElementBoundaryTypes,self.elementBoundaryTypes = BlockHeterogeneousCoefficients(mesh).initializeMaterialTypes()
         self.mesh = mesh #for debugging
@@ -983,19 +989,24 @@ class TwophaseDarcyFlow_base(TC_base):
         cq['Ks'] = numpy.zeros(self.q_shape,'d')
         for k in range(self.q_shape[1]):
             cq['Ks'][:,k] = self.Ksw_types[self.elementMaterialTypes,0]
+        for ci in range(self.nc):
+            self.q[('vol_frac',ci)] = numpy.zeros(self.q_shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         self.materialTypes_ebq = numpy.zeros(cebq[('u',0)].shape[0:2],'i')
         self.ebq_shape = cebq[('u',0)].shape
         for ebN_local in range(self.ebq_shape[1]):
             self.materialTypes_ebq[:,ebN_local] = self.elementMaterialTypes
-        if cebq.has_key(('u',0)):
-            cebq['psi_n'] = numpy.zeros(cebq[('u',0)].shape,'d')
-            cebq[('dpsi_n',0)] = numpy.zeros(cebq[('u',0)].shape,'d')
-            cebq[('dpsi_n',1)] = numpy.zeros(cebq[('u',0)].shape,'d')
+        cebq['psi_n'] = numpy.zeros(cebq[('u',0)].shape,'d')
+        cebq[('dpsi_n',0)] = numpy.zeros(cebq[('u',0)].shape,'d')
+        cebq[('dpsi_n',1)] = numpy.zeros(cebq[('u',0)].shape,'d')
+        for ci in range(self.nc):
+            self.ebq[('vol_frac',ci)] = numpy.zeros(self.ebq_shape,'d')
         if cebq_global.has_key(('u',0)):
             cebq_global['psi_n'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
             cebq_global[('dpsi_n',0)] = numpy.zeros(cebq_global[('u',0)].shape,'d')
             cebq_global[('dpsi_n',1)] = numpy.zeros(cebq_global[('u',0)].shape,'d')
+            for ci in range(self.nc):
+                self.ebq_global[('vol_frac',ci)] = numpy.zeros(cebq_global[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         self.materialTypes_ebqe = self.exteriorElementBoundaryTypes
         self.ebqe_shape = cebqe[('u',0)].shape
@@ -1003,6 +1014,8 @@ class TwophaseDarcyFlow_base(TC_base):
         cebqe['psi_n'] = numpy.zeros(cebqe[('u',0)].shape,'d')
         cebqe[('dpsi_n',0)] = numpy.zeros(cebqe[('u',0)].shape,'d')
         cebqe[('dpsi_n',1)] = numpy.zeros(cebqe[('u',0)].shape,'d')
+        for ci in range(self.nc):
+            self.ebqe[('vol_frac',ci)] = numpy.zeros(self.ebqe_shape,'d')
     def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
         self.materialTypes_ip = self.elementMaterialTypes
         self.ip_shape = cip[('u',0)].shape
@@ -1010,6 +1023,8 @@ class TwophaseDarcyFlow_base(TC_base):
         cip['psi_n'] = numpy.zeros(cip[('u',0)].shape,'d')
         cip[('dpsi_n',0)] = numpy.zeros(cip[('u',0)].shape,'d')
         cip[('dpsi_n',1)] = numpy.zeros(cip[('u',0)].shape,'d')
+        for ci in range(self.nc):
+            self.ip[('vol_frac',ci)] = numpy.zeros(self.ip_shape,'d')
     def setMaterialTypes(self,
                          Ksw_types=[1.0],
                          omega_types  = [0.4],
@@ -1202,12 +1217,20 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
     def evaluate(self,t,c):
         if c[('u',0)].shape == self.q_shape:
             materialTypes = self.materialTypes_q
+            vol_frac_w = self.q[('vol_frac',0)]
+            vol_frac_n = self.q[('vol_frac',1)]
         elif c[('u',0)].shape == self.ebqe_shape:
             materialTypes = self.materialTypes_ebqe
+            vol_frac_w = self.ebqe[('vol_frac',0)]
+            vol_frac_n = self.ebqe[('vol_frac',1)]
         elif c[('u',0)].shape == self.ip_shape:
             materialTypes = self.materialTypes_ip
+            vol_frac_w = self.ip[('vol_frac',0)]
+            vol_frac_n = self.ip[('vol_frac',1)]
         elif c[('u',0)].shape == self.ebq_shape:
             materialTypes = self.materialTypes_ebq
+            vol_frac_w = self.ebq[('vol_frac',0)]
+            vol_frac_n = self.ebq[('vol_frac',1)]
         else:
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
         assert self.rwork_psk != None
@@ -1215,52 +1238,7 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
         assert materialTypes.max() < self.nMaterialTypes
         assert materialTypes.min() == 0
         
-#         self.twophaseDarcy_fc_sd_het_matType_nonPotentialForm(self.psk_types[self.psk_model],
-#                                              self.density_types[self.density_w_model],
-#                                              self.density_types[self.density_n_model],
-#                                              self.sdInfo[(0,0)][0],
-#                                              self.sdInfo[(0,0)][1],
-#                                              materialTypes,
-#                                              self.muw,
-#                                              self.mun,
-#                                              self.omega_types,
-#                                              self.Ksw_types,
-#                                              self.b,
-#                                              self.rwork_psk,
-#                                              self.rwork_psk_tolerances,
-#                                              self.rwork_density_w,
-#                                              self.rwork_density_n,
-#                                              self.g[:self.nd],#todo get consistent on dimension setting
-#                                              c['x'],
-#                                              c[('u',0)],
-#                                              c[('u',1)],
-#                                              c[('m',0)],
-#                                              c[('dm',0,0)],
-#                                              c[('dm',0,1)],
-#                                              c[('m',1)],
-#                                              c[('dm',1,0)],
-#                                              c[('dm',1,1)],
-#                                              c['psi_n'],
-#                                              c[('dpsi_n',0)],
-#                                              c[('dpsi_n',1)],
-#                                              c[('phi',0)],
-#                                              c[('dphi',0,1)],
-#                                              c[('phi',1)],
-#                                              c[('dphi',1,1)],
-#                                              c[('dphi',1,0)],
-#                                              c[('f',0)],
-#                                              c[('df',0,0)],
-#                                              c[('df',0,1)],
-#                                              c[('f',1)],
-#                                              c[('df',1,0)],
-#                                              c[('df',1,1)],
-#                                              c[('a',0,0)],
-#                                              c[('da',0,0,0)],
-#                                              c[('da',0,0,1)],
-#                                              c[('a',1,1)],
-#                                              c[('da',1,1,0)],
-#                                              c[('da',1,1,1)],
-#                                              self.spatialCompressibilityFlag)
+
         self.twophaseDarcy_fc_sd_het_matType(self.psk_types[self.psk_model],
                                              self.density_types[self.density_w_model],
                                              self.density_types[self.density_n_model],
@@ -1303,6 +1281,11 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
 
         #mwf hack, need to put this in?
         c[('dphi',0,0)].fill(0.0)
+        self.twophaseDarcy_vol_frac(materialTypes,
+                                    self.omega_types,
+                                    c[('u',0)],
+                                    vol_frac_w,
+                                    vol_frac_n)
 
         #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
@@ -1562,12 +1545,20 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
     def evaluate(self,t,c):
         if c[('u',0)].shape == self.q_shape:
             materialTypes = self.materialTypes_q
+            vol_frac_w = self.q[('vol_frac',0)]
+            vol_frac_n = self.q[('vol_frac',1)]
         elif c[('u',0)].shape == self.ebqe_shape:
             materialTypes = self.materialTypes_ebqe
+            vol_frac_w = self.ebqe[('vol_frac',0)]
+            vol_frac_n = self.ebqe[('vol_frac',1)]
         elif c[('u',0)].shape == self.ip_shape:
             materialTypes = self.materialTypes_ip
+            vol_frac_w = self.ip[('vol_frac',0)]
+            vol_frac_n = self.ip[('vol_frac',1)]
         elif c[('u',0)].shape == self.ebq_shape:
             materialTypes = self.materialTypes_ebq
+            vol_frac_w = self.ebq[('vol_frac',0)]
+            vol_frac_n = self.ebq[('vol_frac',1)]
         else:
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
         assert self.rwork_psk != None
@@ -1621,6 +1612,11 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
         c['psi_n'][:] = c[('phi',1)]
         c[('dpsi_n',0)][:] = c[('dphi',1,0)]
         c[('dpsi_n',1)][:] = c[('dphi',1,1)]
+        self.twophaseDarcy_vol_frac(materialTypes,
+                                    self.omega_types,
+                                    c['sw'],
+                                    vol_frac_w,
+                                    vol_frac_n)
         #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
             numpy.isnan(c[('a',0,0)]).any() or
@@ -2192,6 +2188,8 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             grad_sw   = self.q_grad_sw
             c['psi_n']= numpy.copy(self.q_psic)
             c['psi_n'] += c[('u',0)]
+            vol_frac_w = self.q[('vol_frac',0)]
+            vol_frac_n = self.q[('vol_frac',1)]
             #mwf debug
             #import pdb
             #pdb.set_trace()
@@ -2216,6 +2214,8 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             grad_sw   = self.ebqe_grad_sw
             c['psi_n']= numpy.copy(self.ebqe_psic)
             c['psi_n'] += c[('u',0)]
+            vol_frac_w = self.ebqe[('vol_frac',0)]
+            vol_frac_n = self.ebqe[('vol_frac',1)]
         elif c[('u',0)].shape == self.ip_s_w.shape:
             c['psi_n']= numpy.copy(self.ip_psic)
             c['psi_n'] += c[('u',0)]
@@ -2225,6 +2225,8 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             s_w = self.ip_s_w
             grad_psic = self.ip_grad_psic
             grad_sw   = self.ip_grad_sw
+            vol_frac_w = self.ip[('vol_frac',0)]
+            vol_frac_n = self.ip[('vol_frac',1)]
         else:
             assert c[('u',0)].shape == self.ebq_s_w.shape
             materialTypes = self.materialTypes_ebq
@@ -2233,6 +2235,8 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             grad_sw   = self.ebq_grad_sw
             c['psi_n']= numpy.copy(self.ebq_psic)
             c['psi_n'] += c[('u',0)]
+            vol_frac_w = self.ebq[('vol_frac',0)]
+            vol_frac_n = self.ebq[('vol_frac',1)]
         assert self.rwork_psk != None
 
         self.twophaseDarcy_incompressible_split_sd_pressure_het_matType(self.psk_types[self.psk_model],
@@ -2255,6 +2259,11 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                                         c[('f',0)],
                                                                         c[('a',0,0)])
 
+        self.twophaseDarcy_vol_frac(materialTypes,
+                                    self.omega_types,
+                                    s_w,
+                                    vol_frac_w,
+                                    vol_frac_n)
         #mwf debug
         if (numpy.isnan(c[('a',0,0)]).any() or
             numpy.isnan(c[('f',0)]).any() or
@@ -2400,19 +2409,27 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             materialTypes = self.materialTypes_q
             q_t = self.q_q_t
             psiw = self.q_psiw
+            vol_frac_w = self.q[('vol_frac',0)]
+            vol_frac_n = self.q[('vol_frac',1)]
         elif c[('f',0)].shape == self.ebqe_q_t.shape:
             materialTypes = self.materialTypes_ebqe
             q_t = self.ebqe_q_t
             psiw = self.ebqe_psiw
+            vol_frac_w = self.ebqe[('vol_frac',0)]
+            vol_frac_n = self.ebqe[('vol_frac',1)]
         elif c[('f',0)].shape == self.ip_q_t.shape:
             materialTypes = self.materialTypes_ip
             q_t = self.ip_q_t
             psiw = self.ip_psiw
+            vol_frac_w = self.ip[('vol_frac',0)]
+            vol_frac_n = self.ip[('vol_frac',1)]
         else:
             assert c[('f',0)].shape == self.ebq_q_t.shape
             materialTypes = self.materialTypes_ebq
             q_t = self.ebq_q_t
             psiw = self.ebq_psiw
+            vol_frac_w = self.ebq[('vol_frac',0)]
+            vol_frac_n = self.ebq[('vol_frac',1)]
         assert self.rwork_psk != None
         #mwf debug
         #import pdb
@@ -2443,6 +2460,13 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                                           c[('df',0,0)],
                                                                           c[('a',0,0)],
                                                                           c[('da',0,0,0)])
+
+        self.twophaseDarcy_vol_frac(materialTypes,
+                                    self.omega_types,
+                                    c[('u',0)],
+                                    vol_frac_w,
+                                    vol_frac_n)
+
         #mwf debug
 #         if c[('f',0)].shape == self.ip_q_t.shape:
 #             for eN in range(c['x'].shape[0]):
@@ -2629,12 +2653,16 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             grad_psic = self.q_grad_psic
             c['psi_n']= numpy.copy(self.q_psic)
             c['psi_n'] += c[('u',0)]
+            vol_frac_w = self.q[('vol_frac',0)]
+            vol_frac_n = self.q[('vol_frac',1)]
         elif c[('u',0)].shape == self.ebqe_s_w.shape:
             materialTypes = self.materialTypes_ebqe
             s_w = self.ebqe_s_w
             grad_psic = self.ebqe_grad_psic
             c['psi_n']= numpy.copy(self.ebqe_psic)
             c['psi_n'] += c[('u',0)]
+            vol_frac_w = self.ebqe[('vol_frac',0)]
+            vol_frac_n = self.ebqe[('vol_frac',1)]
         elif c[('u',0)].shape == self.ip_s_w.shape:
             c['psi_n']= numpy.copy(self.ip_psic)
             c['psi_n'] += c[('u',0)]
@@ -2643,6 +2671,8 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             materialTypes = self.materialTypes_ip
             s_w = self.ip_s_w
             grad_psic = self.ip_grad_psic
+            vol_frac_w = self.ip[('vol_frac',0)]
+            vol_frac_n = self.ip[('vol_frac',1)]
         else:
             assert c[('u',0)].shape == self.ebq_s_w.shape
             materialTypes = self.materialTypes_ebq
@@ -2650,6 +2680,8 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             grad_psic = self.ebq_grad_psic
             c['psi_n']= numpy.copy(self.ebq_psic)
             c['psi_n'] += c[('u',0)]
+            vol_frac_w = self.ebq[('vol_frac',0)]
+            vol_frac_n = self.ebq[('vol_frac',1)]
         assert self.rwork_psk != None
         if self.compressibilityFlag == 2:
             self.twophaseDarcy_slightCompressible_split_sd_pressure_het_matType(self.psk_types[self.psk_model],
@@ -2705,6 +2737,11 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                                            c[('f',0)],
                                                                            c[('a',0,0)])
 
+        self.twophaseDarcy_vol_frac(materialTypes,
+                                    self.omega_types,
+                                    s_w,
+                                    vol_frac_w,
+                                    vol_frac_n)
         #mwf debug
         if (numpy.isnan(c[('m',0)]).any() or
             numpy.isnan(c[('dm',0,0)]).any() or
@@ -2871,19 +2908,27 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             materialTypes = self.materialTypes_q
             q_t = self.q_q_t
             psiw = self.q_psiw
+            vol_frac_w = self.q[('vol_frac',0)]
+            vol_frac_n = self.q[('vol_frac',1)]
         elif c[('f',0)].shape == self.ebqe_q_t.shape:
             materialTypes = self.materialTypes_ebqe
             q_t = self.ebqe_q_t
             psiw = self.ebqe_psiw
+            vol_frac_w = self.ebqe[('vol_frac',0)]
+            vol_frac_n = self.ebqe[('vol_frac',1)]
         elif c[('f',0)].shape == self.ip_q_t.shape:
             materialTypes = self.materialTypes_ip
             q_t = self.ip_q_t
             psiw = self.ip_psiw
+            vol_frac_w = self.ip[('vol_frac',0)]
+            vol_frac_n = self.ip[('vol_frac',1)]
         else:
             assert c[('f',0)].shape == self.ebq_q_t.shape
             materialTypes = self.materialTypes_ebq
             q_t = self.ebq_q_t
             psiw = self.ebq_psiw
+            vol_frac_w = self.ebq[('vol_frac',0)]
+            vol_frac_n = self.ebq[('vol_frac',1)]
         assert self.rwork_psk != None
         #mwf debug
         #import pdb
@@ -2949,6 +2994,11 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                                              c[('a',0,0)],
                                                                              c[('da',0,0,0)])
             
+        self.twophaseDarcy_vol_frac(materialTypes,
+                                    self.omega_types,
+                                    c[('u',0)],
+                                    vol_frac_w,
+                                    vol_frac_n)
         #material types fi
         #mwf debug
         if (numpy.isnan(c[('da',0,0,0)]).any() or
@@ -3511,6 +3561,14 @@ class GroundwaterTransportCoefficients(TC_base):
         self.vt = modelList[self.meModelId]
         if self.flowModelId != None:
             self.flowModel = modelList[self.flowModelId]
+            for ci in range(self.nc):
+                self.q[('velocity',ci)]    = self.flowModel.q[('velocity',ci)]
+                self.ebqe[('velocity',ci)] = self.flowModel.ebqe[('velocity',ci)]
+                if self.flowModel.ebq.has_key(('velocity',ci)):
+                    self.ebq[('velocity',ci)] = self.flowModel.ebq[('velocity',ci)]
+                if self.flowModel.ebq_global.has_key(('velocity',ci)):
+                    self.ebq_global[('velocity',ci)] = self.flowModel.ebq_global[('velocity',ci)]
+
     def evaluateVelocity(self,t,c):
         """
 
@@ -3567,6 +3625,165 @@ class GroundwaterTransportCoefficients(TC_base):
                                                                  c[('df',ci,ci)],
                                                                  c[('a',ci,ci)])
 
+########################################
+#multiphase species transport
+########################################
+class MultiphaseGroundwaterTransportCoefficients(TC_base):
+    from proteus.ctransportCoefficients import variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat
+    """
+    groundwater advection-dispersion equation with coefficients varying by material type and variable 
+    velocity 
+    """
+    def __init__(self,nc=1,nd=2,
+                 omega_types=numpy.array([0.3]),
+                 alpha_L_types=numpy.array([1.0]),
+                 alpha_T_types=numpy.array([0.1]),
+                 d=numpy.array([1.3e-9]),
+                 meModelId = 0,
+                 flowModelId = None,
+                 velocityFunctions = None):
+        
+        self.alpha_L_types = alpha_L_types
+        self.alpha_T_types = alpha_T_types
+        self.omega_types   = omega_types
+        self.d = d
+        self.nd = nd
+        self.flowModelId = flowModelId
+        self.flowModel   = None
+        self.meModelId   = meModelId
+        
+        mass = {}
+        advection = {}
+        diffusion = {}
+        potential = {}
+        reaction  = {}
+        hamiltonian = {}
+        for i in range(nc):
+            diffusion[i] = {i : {i:'constant'}}
+            advection[i] = {i : {i:'linear'}}
+            mass[i] = {i : {i:'linear'}}
+            reaction[i] = {i : {i:'constant'}}
+            potential[i] = {i : 'u'}
+        #end i
+        sparseDiffusionTensors = {}
+        for ci in range(nc):
+            sparseDiffusionTensors[(ci,ci)]=(numpy.arange(start=0,stop=nd**2+1,step=nd,dtype='i'),
+                                             numpy.array([range(nd) for row in range(nd)],dtype='i'))
+        names = ['C_%s' % ci for ci in range(nc)]
+        TC_base.__init__(self,
+                         nc,
+                         mass,
+                         advection,
+                         diffusion,
+                         potential,
+                         reaction,
+                         hamiltonian,
+                         sparseDiffusionTensors = sparseDiffusionTensors,
+                         useSparseDiffusion = True)
+
+        self.q={}; self.ebqe={}; self.ebq ={}; self.ebq_global = {}
+        self.velocityFunctions = velocityFunctions
+    def initializeMesh(self,mesh):
+        self.elementMaterialTypes,self.exteriorElementBoundaryTypes,self.elementBoundaryTypes = BlockHeterogeneousCoefficients(mesh).initializeMaterialTypes()
+        self.elementBoundariesArray = mesh.elementBoundariesArray
+    def initializeElementQuadrature(self,t,cq):
+        self.materialTypes_q = self.elementMaterialTypes
+        self.q_shape = cq[('u',0)].shape
+        for ci in range(self.nc):
+            self.q[('velocity',ci)] = numpy.zeros((cq['x'].shape[0],cq['x'].shape[1],self.nd),'d')
+            self.q[('vol_frac',ci)] = numpy.ones((cq['x'].shape[0],cq['x'].shape[1]),'d')
+    def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
+        self.materialTypes_ebq = numpy.zeros(cebq[('u',0)].shape[0:2],'i')
+        self.ebq_shape = cebq[('u',0)].shape
+        for ebN_local in range(self.ebq_shape[1]):
+            self.materialTypes_ebq[:,ebN_local] = self.elementMaterialTypes
+        for ci in range(self.nc):
+            self.ebq[('velocity',ci)] = numpy.zeros((cebq['x'].shape[0],cebq['x'].shape[1],cebq['x'].shape[2],self.nd),'d')
+            self.ebq_global[('velocity',ci)] = numpy.zeros((cebq_global['x'].shape[0],cebq_global['x'].shape[1],self.nd),'d')
+            self.ebq[('vol_frac',ci)] = numpy.ones((cebq['x'].shape[0],cebq['x'].shape[1],cebq['x'].shape[2]),'d')
+            self.ebq_global[('vol_frac',ci)] = numpy.ones((cebq_global['x'].shape[0],cebq_global['x'].shape[1]),'d')
+    def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
+        self.materialTypes_ebqe = self.exteriorElementBoundaryTypes
+        self.ebqe_shape = cebqe[('u',0)].shape
+        for ci in range(self.nc):
+            self.ebqe[('velocity',ci)] = numpy.zeros((cebqe['x'].shape[0],cebqe['x'].shape[1],self.nd),'d')
+            self.ebqe[('vol_frac',ci)] = numpy.ones((cebqe['x'].shape[0],cebqe['x'].shape[1]),'d')
+    def attachModels(self,modelList):
+        self.vt = modelList[self.meModelId]
+        if self.flowModelId != None:
+            self.flowModel = modelList[self.flowModelId]
+            for ci in range(self.nc):
+                self.q[('velocity',ci)]    = self.flowModel.q[('velocity',ci)]
+                self.ebqe[('velocity',ci)] = self.flowModel.ebqe[('velocity',ci)]
+                if self.flowModel.ebq.has_key(('velocity',ci)):
+                    self.ebq[('velocity',ci)] = self.flowModel.ebq[('velocity',ci)]
+                if self.flowModel.ebq_global.has_key(('velocity',ci)):
+                    self.ebq_global[('velocity',ci)] = self.flowModel.ebq_global[('velocity',ci)]
+                self.q[('vol_frac',ci)]    = self.flowModel.coefficients.q[('vol_frac',ci)]
+                self.ebqe[('vol_frac',ci)] = self.flowModel.coefficients.ebqe[('vol_frac',ci)]
+    def evaluateVelocity(self,t,c):
+        """
+
+        """
+        if self.velocityFunctions != None:
+           for ci in range(self.nc):
+               if len(c['x'].shape) == 3:
+                   for i in range(c['x'].shape[0]):
+                       for j in range(c['x'].shape[1]):
+                           c[('velocity',ci)][i,j,:] = self.velocityFunctions[ci](c['x'][i,j],t)
+               elif len(c['x'].shape) == 4:
+                   for i in range(c['x'].shape[0]):
+                       for j in range(c['x'].shape[1]):
+                           for k in range(c['x'].shape[2]):
+                               c[('velocity',ci)][i,j,k,:] = self.velocityFunctions[ci](c['x'][i,j,k],t)
+
+    def evaluate(self,t,c):
+        """
+        TODO
+          evaluate velocity is currently setting ebqe when c=q but need to make sure this is done
+          before evaluate is called with c=ebqe
+        """
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        if self.velocityFunctions != None:
+            self.evaluateVelocity(t,c)
+        #
+        for ci in range(self.nc):
+            if self.q[('velocity',ci)].shape == c[('df',ci,ci)].shape:
+                v = self.q[('velocity',ci)]
+                materialTypes = self.materialTypes_q
+                vol_frac = self.q[('vol_frac',ci)]
+            elif self.ebqe[('velocity',ci)].shape == c[('df',ci,ci)].shape:
+                v = self.ebqe[('velocity',ci)]
+                materialTypes = self.materialTypes_ebqe
+                vol_frac = self.ebqe[('vol_frac',ci)]
+            elif self.ebq[('velocity',ci)].shape == c[('df',ci,ci)].shape:
+                v = self.ebq[('velocity',ci)]
+                materialTypes = self.materialTypes_ebq
+                vol_frac = self.ebq[('vol_frac',ci)]
+            else:
+                print c[('df',ci,ci)].shape
+                print "no v---------------------"
+                raise RuntimeError
+           
+            self.variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat(self.d[ci],
+                                                                                  materialTypes,
+                                                                                  vol_frac,
+                                                                                  self.alpha_L_types,
+                                                                                  self.alpha_T_types,
+                                                                                  v,
+                                                                                  c[('u',ci)],
+                                                                                  c[('m',ci)],
+                                                                                  c[('dm',ci,ci)],
+                                                                                  c[('f',ci)],
+                                                                                  c[('df',ci,ci)],
+                                                                                  c[('a',ci,ci)])
+
+
+####################
+#ELLAM
+####################
 class GroundwaterTransportCoefficientsELLAM(TC_base):
     from proteus.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate
     """
