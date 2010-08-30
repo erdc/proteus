@@ -402,6 +402,53 @@ static PyObject* ctransportCoefficientsGroundwaterTransportCoefficientsEvaluate_
   Py_INCREF(Py_None); 
   return Py_None;
 }
+static PyObject* ctransportCoefficientsVariablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat(PyObject* self, 
+													PyObject* args)
+{
+  int i,nSimplex=1,nPointsPerSimplex=1;
+  double d;
+  PyObject *materialTypes,*theta,*alpha_L,*alpha_T,*v,*u,*m,*dm,*f,*df,*a;
+  if(!PyArg_ParseTuple(args,"dOOOOOOOOOOO",
+		       &d,
+		       &materialTypes,
+                       &theta,
+                       &alpha_L,
+                       &alpha_T,
+                       &v,
+                       &u,
+                       &m,
+                       &dm,
+                       &f,
+                       &df,
+                       &a))
+    return NULL;
+  assert(ND(u) == 2 || ND(u) == 3);
+  if (ND(u) == 2)
+    {
+      nSimplex=SHAPE(u)[0]; nPointsPerSimplex=SHAPE(u)[1];
+    }
+  else
+    {
+      nSimplex=SHAPE(u)[0]*SHAPE(u)[1]; nPointsPerSimplex=SHAPE(u)[2];
+    }
+  groundwaterTransportCoefficientsEvaluate_hetMat(nSimplex,
+						  nPointsPerSimplex,
+						  SHAPE(f)[ND(f)-1],
+						  d,
+						  IDATA(materialTypes),
+						  DDATA(theta),
+						  DDATA(alpha_L),
+						  DDATA(alpha_T),
+						  DDATA(v),
+						  DDATA(u),
+						  DDATA(m),
+						  DDATA(dm),
+						  DDATA(f),
+						  DDATA(df),
+						  DDATA(a));
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
 
 static PyObject* ctransportCoefficientsNonlinearADR_pqrstEvaluate(PyObject* self, 
                                                                  PyObject* args)
@@ -1798,8 +1845,8 @@ static PyObject* ctransportCoefficientsConservativeHeadRichardsMualemVanGenuchte
   int i,nSimplex=1,nPointsPerSimplex=1;
   double rho,beta;
   PyObject *rowptr,*colind,*materialTypes,*gravity,*u,*mass,*dmass,*a,*da,*f,*df,*KWs,
-    *alpha,*n,*thetaR,*thetaSR;
-  if(!PyArg_ParseTuple(args,"OOOddOOOOOOOOOOOOO",
+    *alpha,*n,*thetaR,*thetaSR,*vol_frac;
+  if(!PyArg_ParseTuple(args,"OOOddOOOOOOOOOOOOOO",
 		       &rowptr,
 		       &colind,
 		       &materialTypes,
@@ -1817,7 +1864,8 @@ static PyObject* ctransportCoefficientsConservativeHeadRichardsMualemVanGenuchte
                        &f,
                        &df,
                        &a,
-                       &da))
+                       &da,
+		       &vol_frac))
     return NULL;
   for(i=0; i < ND(f)-2; i++)
     nSimplex *= SHAPE(f)[i];
@@ -1843,7 +1891,8 @@ static PyObject* ctransportCoefficientsConservativeHeadRichardsMualemVanGenuchte
 						    DDATA(f),
 						    DDATA(df),
 						    DDATA(a),
-						    DDATA(da));
+						    DDATA(da),
+						    DDATA(vol_frac));
   Py_INCREF(Py_None); 
   return Py_None;
 }
@@ -9306,6 +9355,10 @@ static PyMethodDef ctransportCoefficientsMethods[] = {
       ctransportCoefficientsGroundwaterTransportCoefficientsEvaluate_hetMat,
       METH_VARARGS, 
       "Evaluate  the coefficients of linear advective-diffusion transport in porous media"}, 
+  { "variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat", 
+      ctransportCoefficientsVariablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat,
+      METH_VARARGS, 
+      "Evaluate  the coefficients of linear advective-diffusion transport in variably saturated porous media"}, 
   { "nonlinearADR_pqrstEvaluate", 
     ctransportCoefficientsNonlinearADR_pqrstEvaluate, 
     METH_VARARGS, 
