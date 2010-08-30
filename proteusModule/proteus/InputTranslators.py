@@ -685,3 +685,40 @@ class Ipars:
         pf.close()
         self.values=values
         self.L=(Lx*0.3048,Ly*0.3048,Lz*0.3048)
+
+
+class ADH_metfile:
+    """
+    read an ADH met file for boundary conditions etc
+    """
+    def __init__(self,fileprefix,directory='.'):
+        self.fileprefix=fileprefix
+        self.directory = directory
+        
+        import os,numpy
+        
+        filename = os.path.join(directory,fileprefix+'.met')
+        assert os.path.exists(filename), "%s not found" % filename
+
+        fh = open(filename,'r')
+        self.full_file = fh.readlines()
+        fh.close()
+
+        #
+        latitude = float(self.full_file[2].split()[0]); longitude=float(self.full_file[2].split()[1]); zone=float(self.full_file[2].split()[2]); 
+        
+        self.npoints = len(self.full_file[5:])
+        self.data = {}
+        self.data['latitude']=latitude; self.data['longitude']=longitude; self.data['zone']=zone
+        #default things to look at
+        #Time is in separate day,hour,min
+        self.entries = {'day':0,'hour':1,'min':2}
+        for  i,label in enumerate(self.full_file[3].split()[2:]):
+            self.entries[label] = i+3
+        for entry in self.entries.keys():
+            self.data[entry] = numpy.zeros((self.npoints),'d')
+
+        for i,line in enumerate(self.full_file[5:]):
+            for entry,column in self.entries.iteritems():
+                self.data[entry][i] = float(line.split()[column])
+
