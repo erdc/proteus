@@ -431,21 +431,86 @@ static PyObject* ctransportCoefficientsVariablySaturatedGroundwaterTransportCoef
     {
       nSimplex=SHAPE(u)[0]*SHAPE(u)[1]; nPointsPerSimplex=SHAPE(u)[2];
     }
-  groundwaterTransportCoefficientsEvaluate_hetMat(nSimplex,
-						  nPointsPerSimplex,
-						  SHAPE(f)[ND(f)-1],
-						  d,
-						  IDATA(materialTypes),
-						  DDATA(theta),
-						  DDATA(alpha_L),
-						  DDATA(alpha_T),
-						  DDATA(v),
-						  DDATA(u),
-						  DDATA(m),
-						  DDATA(dm),
-						  DDATA(f),
-						  DDATA(df),
-						  DDATA(a));
+  variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat(nSimplex,
+								   nPointsPerSimplex,
+								   SHAPE(f)[ND(f)-1],
+								   d,
+								   IDATA(materialTypes),
+								   DDATA(theta),
+								   DDATA(alpha_L),
+								   DDATA(alpha_T),
+								   DDATA(v),
+								   DDATA(u),
+								   DDATA(m),
+								   DDATA(dm),
+								   DDATA(f),
+								   DDATA(df),
+								   DDATA(a));
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+static PyObject* ctransportCoefficientsVariablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat(PyObject* self, 
+													      PyObject* args)
+{
+  int i,nSimplex=1,nPointsPerSimplex=1;
+  double density_w,density_n,specificHeat_w,specificHeat_n;
+  PyObject *materialTypes,*theta,*omega,*alpha_L,*alpha_T,*density_s,*specificHeat_s,*lambda_sat,*lambda_dry,*lambda_ani,*v,*u,*m,*dm,*f,*df,*a;
+  if(!PyArg_ParseTuple(args,"ddddOOOOOOOOOOOOOOOOO",
+		       &density_w,
+		       &density_n,
+		       &specificHeat_w,
+		       &specificHeat_n,
+		       &materialTypes,
+                       &theta,
+		       &omega,
+                       &alpha_L,
+                       &alpha_T,
+		       &density_s,
+		       &specificHeat_s,
+		       &lambda_sat,
+		       &lambda_dry,
+		       &lambda_ani,
+                       &v,
+                       &u,
+                       &m,
+                       &dm,
+                       &f,
+                       &df,
+                       &a))
+    return NULL;
+  assert(ND(u) == 2 || ND(u) == 3);
+  if (ND(u) == 2)
+    {
+      nSimplex=SHAPE(u)[0]; nPointsPerSimplex=SHAPE(u)[1];
+    }
+  else
+    {
+      nSimplex=SHAPE(u)[0]*SHAPE(u)[1]; nPointsPerSimplex=SHAPE(u)[2];
+    }
+  variablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat(nSimplex,
+									 nPointsPerSimplex,
+									 SHAPE(f)[ND(f)-1],
+									 density_w,
+									 density_n,
+									 specificHeat_w,
+									 specificHeat_n,
+									 IDATA(materialTypes),
+									 DDATA(theta),
+									 DDATA(omega),
+									 DDATA(alpha_L),
+									 DDATA(alpha_T),
+									 DDATA(density_s),
+									 DDATA(specificHeat_s),
+									 DDATA(lambda_sat),
+									 DDATA(lambda_dry),
+									 DDATA(lambda_ani),
+									 DDATA(v),
+									 DDATA(u),
+									 DDATA(m),
+									 DDATA(dm),
+									 DDATA(f),
+									 DDATA(df),
+									 DDATA(a));
   Py_INCREF(Py_None); 
   return Py_None;
 }
@@ -9334,6 +9399,26 @@ static PyObject* ctransportCoefficientsDiffusiveWave2DCoefficientsEvaluate(PyObj
   return Py_None; 
 }
 
+static PyObject* ctransportCoefficientsPiecewiseLinearTableLookup(PyObject* self, PyObject* args)
+
+{
+  int start=0;
+  double x,y;
+  PyObject *xv,*yv;
+  if(!PyArg_ParseTuple(args,"dOO|i",
+		       &x,
+		       &xv,
+		       &yv,
+		       &start))
+    return NULL;
+  y = piecewiseLinearTableLookup(SHAPE(xv)[0],
+				 start,
+				 x,
+				 DDATA(xv),
+				 DDATA(yv));
+  return Py_BuildValue("d",y);
+}
+
 static PyMethodDef ctransportCoefficientsMethods[] = {
   { "linearADR_ConstantCoefficientsEvaluate", 
     ctransportCoefficientsLinearADR_ConstatCoefficientsEvaluate, 
@@ -9357,6 +9442,10 @@ static PyMethodDef ctransportCoefficientsMethods[] = {
       "Evaluate  the coefficients of linear advective-diffusion transport in porous media"}, 
   { "variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat", 
       ctransportCoefficientsVariablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat,
+      METH_VARARGS, 
+      "Evaluate  the coefficients of linear advective-diffusion transport in variably saturated porous media"}, 
+  { "variablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat", 
+      ctransportCoefficientsVariablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat,
       METH_VARARGS, 
       "Evaluate  the coefficients of linear advective-diffusion transport in variably saturated porous media"}, 
   { "nonlinearADR_pqrstEvaluate", 
@@ -9879,6 +9968,10 @@ static PyMethodDef ctransportCoefficientsMethods[] = {
     ctransportCoefficientsDiffusiveWave2DCoefficientsEvaluate,
     METH_VARARGS, 
     "Evaluate the coefficients of the 2D diffusive wave equation"},
+  { "piecewiseLinearTableLookup", 
+    ctransportCoefficientsPiecewiseLinearTableLookup, 
+    METH_VARARGS, 
+    "linear table lookup routine for scalar values"},
   { NULL,NULL,0,NULL}
 };
 

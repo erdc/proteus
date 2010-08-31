@@ -3781,6 +3781,101 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
                                                                                   c[('a',ci,ci)])
 
 
+class VariablySaturatedGroundwaterEnergyTransportCoefficients(MultiphaseGroundwaterTransportCoefficients):
+    from proteus.ctransportCoefficients import variablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat
+    """
+    groundwater heat equation with coefficients varying by material type and variable 
+    velocity 
+    """
+    def __init__(self,nc=1,nd=2,
+                 density_w=998.2, #kg/m^3
+                 density_n=1.205, #kg/m^3
+                 specificHeat_w=0.04882, #W d / (kg K), 0.001172 W hr/g-C
+                 specificHeat_n=0.01446, #W d / (kg K), 0.000347 W hr/g-C need to convert
+                 omega_types=numpy.array([0.3]),
+                 alpha_L_types=numpy.array([1.0]),
+                 alpha_T_types=numpy.array([0.1]),
+                 d=numpy.array([1.3e-9]),
+                 density_s_types=numpy.array([2.73*998.2]), #kg/m^3
+                 specificHeat_s_types=numpy.array([0.004167]), #W d / (kg K) 1.0e-4, W hr/g-C need to convert
+                 lambda_sat_types=numpy.array([0.58]),#W/m-K need to convert
+                 lambda_dry_types=numpy.array([0.3]),#W/m-K need to convert
+                 lambda_ani_types=numpy.array([1.0,1.0,1.0]), 
+                 meModelId = 0,
+                 flowModelId = None,
+                 velocityFunctions = None):
+        MultiphaseGroundwaterTransportCoefficients.__init__(self,nc=nc,nd=nd,
+                                                            omega_types=omega_types,
+                                                            alpha_L_types=alpha_L_types,
+                                                            alpha_T_types=alpha_T_types,
+                                                            d=d,
+                                                            meModelId = meModelId,
+                                                            flowModelId = flowModelId,
+                                                            velocityFunctions = velocityFunctions)
+        self.density_w = density_w
+        self.density_n = density_n
+        self.specificHeat_w = specificHeat_w
+        self.specificHeat_n = specificHeat_n
+        self.density_s_types = density_s_types
+        self.specificHeat_s_types = specificHeat_s_types
+        self.lambda_sat_types = lambda_sat_types
+        self.lambda_dry_types = lambda_dry_types
+        self.lambda_ani_types = lambda_ani_types
+        self.nd = nd
+        
+    def evaluate(self,t,c):
+        """
+        TODO
+          evaluate velocity is currently setting ebqe when c=q but need to make sure this is done
+          before evaluate is called with c=ebqe
+        """
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        if self.velocityFunctions != None:
+            self.evaluateVelocity(t,c)
+        #
+        for ci in range(self.nc):
+            if self.q[('velocity',ci)].shape == c[('df',ci,ci)].shape:
+                v = self.q[('velocity',ci)]
+                materialTypes = self.materialTypes_q
+                vol_frac = self.q[('vol_frac',ci)]
+            elif self.ebqe[('velocity',ci)].shape == c[('df',ci,ci)].shape:
+                v = self.ebqe[('velocity',ci)]
+                materialTypes = self.materialTypes_ebqe
+                vol_frac = self.ebqe[('vol_frac',ci)]
+            elif self.ebq[('velocity',ci)].shape == c[('df',ci,ci)].shape:
+                v = self.ebq[('velocity',ci)]
+                materialTypes = self.materialTypes_ebq
+                vol_frac = self.ebq[('vol_frac',ci)]
+            else:
+                print c[('df',ci,ci)].shape
+                print "no v---------------------"
+                raise RuntimeError
+           
+            self.variablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat(self.density_w,
+                                                                                        self.density_n,
+                                                                                        self.specificHeat_w,
+                                                                                        self.specificHeat_n,
+                                                                                        materialTypes,
+                                                                                        vol_frac,
+                                                                                        self.omega_types,
+                                                                                        self.alpha_L_types,
+                                                                                        self.alpha_T_types,
+                                                                                        self.density_s_types,
+                                                                                        self.specificHeat_s_types,
+                                                                                        self.lambda_sat_types,
+                                                                                        self.lambda_dry_types,
+                                                                                        self.lambda_ani_types,
+                                                                                        v,
+                                                                                        c[('u',ci)],
+                                                                                        c[('m',ci)],
+                                                                                        c[('dm',ci,ci)],
+                                                                                        c[('f',ci)],
+                                                                                        c[('df',ci,ci)],
+                                                                                        c[('a',ci,ci)])
+
+
 ####################
 #ELLAM
 ####################
