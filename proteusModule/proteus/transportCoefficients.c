@@ -503,6 +503,79 @@ void variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat(const int 
 	}
     }
 }
+void variablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat(const int nSimplex,
+									    const int nPointsPerSimplex,
+									    const int nSpace,
+									    const double rho_w,
+									    const double rho_n,
+									    const double specificHeat_w,
+									    const double specificHeat_n,
+									    const int* materialTypes,
+									    const double *theta, /*phase volume fraction*/
+									    const double *thetaS_types,
+									    const double *alpha_L_types,
+									    const double *alpha_T_types,
+									    const double *rho_s_types,
+									    const double *specificHeat_s_types,
+									    const double *lambda_sat_types,
+									    const double *lambda_dry_types,
+									    const double *lambda_aniso_types,
+									    const double *v,/*phase darcy velocity*/
+									    const double *u,
+									    double *m,
+									    double *dm,
+									    double *f,
+									    double *df,
+									    double *a)
+{
+  int i,j,k,I,J,matID;
+  const int nSpace2=nSpace*nSpace;
+  double norm_v,tmp,sw,Ke,lambda;
+
+  for (i=0;i<nSimplex;i++)
+    {
+      matID = materialTypes[i];
+      for (j=0; j < nPointsPerSimplex; j++)
+	{
+	  k = i*nPointsPerSimplex+j;
+	  tmp = theta[k]*rho_w*specificHeat_w + (thetaS_types[matID]-theta[k])*rho_n*specificHeat_n + 
+	    (1.0-thetaS_types[matID])*rho_s_types[matID]*specificHeat_s_types[matID];
+	  m[k]=tmp*u[k];
+	  dm[k]=tmp;
+	  norm_v = 0.0;
+	  for (I=0;I<nSpace;I++)
+	    {
+	      f[k*nSpace+I]=v[k*nSpace+I]*rho_w*specificHeat_w*u[k];
+	      df[k*nSpace+I]=v[k*nSpace+I]*rho_w*specificHeat_w;
+	      norm_v += v[k*nSpace+I]*v[k*nSpace+I];
+	    }
+	  norm_v = sqrt(norm_v);
+	  sw = theta[k]/thetaS_types[matID];
+	  if (norm_v > 0.0)
+	    {
+	      for (I=0;I<nSpace;I++)
+		{
+		  a[k*nSpace2+I*nSpace+I]= rho_w*specificHeat_w*alpha_T_types[matID]*norm_v + rho_w*specificHeat_w*(alpha_L_types[matID] - alpha_T_types[matID])*v[k*nSpace+I]*v[k*nSpace+I]/norm_v;
+		  for (J=I+1;J<nSpace;J++)
+		    {
+		      a[k*nSpace2+I*nSpace+J]=rho_w*specificHeat_w*(alpha_L_types[matID] - alpha_T_types[matID])*v[k*nSpace+I]*v[k*nSpace+J]/norm_v;
+		      a[k*nSpace2+J*nSpace+I]=a[k*nSpace2+I*nSpace+J];
+		    }
+		}
+	    }
+
+	  /*todo check with Stacy for right form*/
+	  if (sw > 0.05)
+	    Ke = 0.7*log(sw) + 1.0;
+	  lambda = (lambda_sat_types[matID]-lambda_dry_types[matID])*Ke + lambda_dry_types[matID];
+	  for (I=0;I<nSpace;I++)
+	    {
+	      a[k*nSpace2+I*nSpace+I] += lambda*lambda_aniso_types[matID*nSpace+I];
+	    }
+
+	}
+    }
+}
 
 void nonlinearADR_pqrstEvaluate(const int nPoints,
                                 const int nSpace,
@@ -12154,4 +12227,89 @@ void eddyViscosity_3D_Update_sd(const int nPoints,
       mom_wv_diff_ten[k]+=nu_t[k];
 
     }
+}
+/*simple piecewise linear interpolation from a table
+  assumes xv are increasing
+ */
+int findInterval(const double* vertices, int nv, double x, int* ival, double tol)
+{
+  int leftInt=0,rightInt=nv-2,failed=1,mid=0;
+  assert(rightInt >= leftInt);
+  /*take care of easy cases first*/
+  if (fabs(x-vertices[leftInt]) < tol)
+    {
+      *ival=leftInt;
+      failed=0;
+      return failed;
+    }
+  if (x <= vertices[leftInt]-tol)
+    {
+      *ival=-1;
+      failed=1;
+      return failed;
+    }
+  if (fabs(x-vertices[rightInt+1]) < tol)
+    {
+      *ival=rightInt;
+      failed=0;
+      return failed;
+    }
+  if (x >= vertices[rightInt+1]+tol)
+    {
+      *ival = nv;
+      failed=1;
+      return failed;
+    }
+  /*otherwise, should have x in (left,right)*/
+  while (leftInt <= rightInt)
+    {
+      mid = (int)(floor(0.5*(leftInt+rightInt)));
+      if (vertices[mid] <= x && x < vertices[mid+1])/*x in interval mid*/
+	{
+	  *ival = mid;
+	  failed = 0;
+	  return failed;
+	}
+      else if (x < vertices[mid])/*x to the left of mid*/
+	rightInt = mid-1;
+      else if (x >= vertices[mid+1]) /*x to the right of mid*/
+	leftInt = mid+1;
+      else
+	{
+	  printf("findInterval shouldn't be here leftInt=%d rightInt=%d \n",leftInt,rightInt);
+	  assert(0);
+	  failed = 1;
+	  return failed;
+	}
+    }
+  failed = 1;
+  return failed;
+} 
+double piecewiseLinearTableLookup(int nv,
+				  int start,
+				  double x,
+				  const double* xv,
+				  const double* yv)
+{
+  int index=start,findFailed=0;
+  double val,tol=1.0e-8;
+  findFailed = findInterval(xv,nv,x,&index,tol);
+  if (findFailed && index == -1)
+    {
+      /*extrapolate off left, could use endpoint instead*/
+      index=0;
+    }
+  else if (findFailed && index == nv)
+    {
+      /*extrapolate off right, could use endpoint instead*/
+      index = nv-2;
+    }
+  else
+    {
+      assert(0 <= index && index < nv-1);
+      assert(xv[index]-tol <= x && x<= xv[index+1]+tol);
+    }
+  assert(0 <= index && index < nv-1);
+  val =  yv[index] +  (yv[index+1]-yv[index])/(xv[index+1]-xv[index])*(x-xv[index]);
+  return val;
 }

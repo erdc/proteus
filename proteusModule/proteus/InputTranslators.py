@@ -691,6 +691,8 @@ class ADH_metfile:
     """
     read an ADH met file for boundary conditions etc
     """
+    from proteus.ctransportCoefficients import piecewiseLinearTableLookup
+    allowed_time_units = ['day','hour','sec']
     def __init__(self,fileprefix,directory='.'):
         self.fileprefix=fileprefix
         self.directory = directory
@@ -722,3 +724,19 @@ class ADH_metfile:
             for entry,column in self.entries.iteritems():
                 self.data[entry][i] = float(line.split()[column])
 
+        #generate a time entry out of hours days minutes
+        self.time_unit = 'day' #hour, sec
+        self.data['time'] = numpy.zeros((self.npoints),'d')
+        self.data['time'] = self.data['day']+self.data['hour']/24.0 + self.data['min']/(24.*60.)
+    def getValue(self,entry,t):
+        """
+        lookup value of entry at time t
+        """
+        if entry not in self.data.keys():
+            print "ADH_metfile entry= %s not found " % entry
+            return None
+        if entry in ['latitude','longitude','zone']:
+            return self.data[entry]
+        index = 0
+        interp = self.piecewiseLinearTableLookup(t,self.data['time'],self.data[entry],index)
+        return interp
