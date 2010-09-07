@@ -13287,63 +13287,54 @@ void applySeepageFaceJacobian(int nExteriorElementBoundaries_global,
     }
 }
 
-void calculateGlobalExteriorNumericalStressTrace(int nExteriorElementBoundaries_global,
-						 int nQuadraturePoints_elementBoundary,
-						 int nSpace,
-						 int* exteriorElementBoundaries,
-						 int* elementBoundaryElements,
-						 int* elementBoundaryLocalElementBoundaries,
-						 int *isDOFBoundary_u,
-						 int *isDOFBoundary_v,
-						 int *isDOFBoundary_w,
-						 double* n,
-						 double* bc_u,
-						 double* bc_v,
-						 double* bc_w,
-						 double* sigma,
-						 double* u,
-						 double* v,
-						 double* w,
-						 double* penalty,
-						 double* stressTrace_u,
-						 double* stressTrace_v,
-						 double* stressTrace_w)
+void calculateGlobalExteriorNumericalStressFlux(int nExteriorElementBoundaries_global,
+						int nQuadraturePoints_elementBoundary,
+						int nSpace,
+						int* exteriorElementBoundaries,
+						int* elementBoundaryElements,
+						int* elementBoundaryLocalElementBoundaries,
+						int *isDOFBoundary_u,
+						int *isDOFBoundary_v,
+						int *isDOFBoundary_w,
+						double* n,
+						double* bc_u,
+						double* bc_v,
+						double* bc_w,
+						double* sigma,
+						double* u,
+						double* v,
+						double* w,
+						double* penalty,
+						double* stressFlux_u,
+						double* stressFlux_v,
+						double* stressFlux_w)
 {
   int ebNE,k,nSpace2=nSpace*nSpace;
-  memset(stressTrace_u,0,sizeof(double)*nExteriorElementBoundaries_global*nQuadraturePoints_elementBoundary*nSpace);
-  memset(stressTrace_v,0,sizeof(double)*nExteriorElementBoundaries_global*nQuadraturePoints_elementBoundary*nSpace);
-  memset(stressTrace_w,0,sizeof(double)*nExteriorElementBoundaries_global*nQuadraturePoints_elementBoundary*nSpace);
   for(ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
     {
       for(k=0;k<nQuadraturePoints_elementBoundary;k++)
         {
+	  //cek hack debug
+	  penalty[ebNE*nQuadraturePoints_elementBoundary+k] = 1.0e5;
+	  //
 	  double *normal = n + ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace;
 	  double *stress = sigma + ebNE*nQuadraturePoints_elementBoundary*nSpace2+k*nSpace2;
-	  //double stress[6];
-	  /* stress[0] = 0.0; */
-	  /* stress[1] = 0.0; */
-	  /* stress[2] = 0.0; */
-	  /* stress[3] = 0.0; */
-	  /* stress[4] = 0.0; */
-	  /* stress[5] = 0.0; */
 	  if (isDOFBoundary_u[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
 	    {
 	      double u_jump = -penalty[ebNE*nQuadraturePoints_elementBoundary+k]
 		*
 		(u[ebNE*nQuadraturePoints_elementBoundary+k]
 		 - bc_u[ebNE*nQuadraturePoints_elementBoundary+k]);
-	      stressTrace_u[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+0] = stress[0] + u_jump*normal[0];
-	      stressTrace_u[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+1] = stress[1] + u_jump*normal[1];
-	      stressTrace_u[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+2] = stress[2] + u_jump*normal[2];
+	      stressFlux_u[ebNE*nQuadraturePoints_elementBoundary+k] = -(stress[0]*normal[0] + stress[1]*normal[1] + stress[2]*normal[2] + u_jump);
+	      //stressFlux_u[ebNE*nQuadraturePoints_elementBoundary+k] = -(u_jump);
 	    }
 	  if (isDOFBoundary_v[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
 	    {
 	      double v_jump = -penalty[ebNE*nQuadraturePoints_elementBoundary+k]*
 		(v[ebNE*nQuadraturePoints_elementBoundary+k]
 		 - bc_v[ebNE*nQuadraturePoints_elementBoundary+k]);
-	      stressTrace_v[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+0] = stress[3] + v_jump*normal[0];
-	      stressTrace_v[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+1] = stress[4] + v_jump*normal[1];
-	      stressTrace_v[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+2] = stress[5] + v_jump*normal[2];
+	      stressFlux_v[ebNE*nQuadraturePoints_elementBoundary+k] = -(stress[3]*normal[0] + stress[4]*normal[1] + stress[5]*normal[2] + v_jump);
+	      //stressFlux_v[ebNE*nQuadraturePoints_elementBoundary+k] = -(v_jump);
 	    }
 	  if (isDOFBoundary_w[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
 	    {
@@ -13351,12 +13342,8 @@ void calculateGlobalExteriorNumericalStressTrace(int nExteriorElementBoundaries_
 		*
 		(w[ebNE*nQuadraturePoints_elementBoundary+k]
 		 - bc_w[ebNE*nQuadraturePoints_elementBoundary+k]);
-	      stressTrace_w[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+0] = stress[6] + w_jump*normal[0];
-	      stressTrace_w[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+1] = stress[7] + w_jump*normal[1];
-	      stressTrace_w[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+2] = stress[8] + w_jump*normal[2];
-	      /* printf("stress trace w x %12.5e\n",stressTrace_w[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+0]); */
-	      /* printf("stress trace w y %12.5e\n",stressTrace_w[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+1]); */
-	      /* printf("stress trace w z %12.5e\n",stressTrace_w[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+2]); */
+	      stressFlux_w[ebNE*nQuadraturePoints_elementBoundary+k] = -(stress[6]*normal[0] + stress[7]*normal[1] + stress[8]*normal[2] + w_jump);
+	      //stressFlux_w[ebNE*nQuadraturePoints_elementBoundary+k] = -(w_jump);
 	    }
 	}
     }
@@ -13424,34 +13411,55 @@ void updateExteriorNumericalStressFluxJacobian(int nExteriorElementBoundaries_gl
 		      {
 		  	fluxJacobian_u_u[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 		  			 k*nDOF_trial_element+
-		  			 j] -= dstress_u_u[ebNE*nQuadraturePoints_elementBoundary*nSpace2+k*nSpace2+I*nSpace+J]
+		  			 j]
+		  	  -=
+		  	  dstress_u_u[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
+				      k*nSpace2+
+				      I*nSpace+
+				      J]
 		  	  *
 		  	  grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
 		  		 k*nDOF_trial_element*nSpace+
 		  		 j*nSpace+
-                                   J]
+		  		 J]
 		  	  *
-		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+I];
+		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+			    k*nSpace+
+			    I];
 		  	fluxJacobian_u_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 		  			 k*nDOF_trial_element+
-		  			 j] -= dstress_u_v[ebNE*nQuadraturePoints_elementBoundary*nSpace2+k*nSpace2+I*nSpace+J]
+		  			 j]
+		  	  -=
+		  	  dstress_u_v[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
+				      k*nSpace2+
+				      I*nSpace+
+				      J]
 		  	  *
 		  	  grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
 		  		 k*nDOF_trial_element*nSpace+
 		  		 j*nSpace+
 		  		 J]
 		  	  *
-		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+I];
+		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+			    k*nSpace+
+			    I];
 		  	fluxJacobian_u_w[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 		  			 k*nDOF_trial_element+
-		  			 j] -= dstress_u_w[ebNE*nQuadraturePoints_elementBoundary*nSpace2+k*nSpace2+I*nSpace+J]
+		  			 j]
+		  	  -=
+		  	  dstress_u_w[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
+				      k*nSpace2+
+				      I*nSpace+
+				      J]
 		  	  *
 		  	  grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
 		  		 k*nDOF_trial_element*nSpace+
 		  		 j*nSpace+
 		  		 J]
 		  	  *
-		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+I];
+		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+			    k*nSpace+
+			    I];
 		      }
 		}
 	    }
@@ -13473,34 +13481,55 @@ void updateExteriorNumericalStressFluxJacobian(int nExteriorElementBoundaries_gl
 		      {
 		  	fluxJacobian_v_u[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 		  			 k*nDOF_trial_element+
-		  			 j] -= dstress_v_u[ebNE*nQuadraturePoints_elementBoundary*nSpace2+k*nSpace2+I*nSpace+J]
+		  			 j]
+		  	  -=
+		  	  dstress_v_u[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
+				      k*nSpace2+
+				      I*nSpace+
+				      J]
 		  	  *
 		  	  grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
 		  		 k*nDOF_trial_element*nSpace+
 		  		 j*nSpace+
 		  		 J]
 		  	  *
-		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+I];
+		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+			    k*nSpace+
+			    I];
 		  	fluxJacobian_v_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 		  			 k*nDOF_trial_element+
-		  			 j] -= dstress_v_v[ebNE*nQuadraturePoints_elementBoundary*nSpace2+k*nSpace2+I*nSpace+J]
+		  			 j]
+		  	  -=
+		  	  dstress_v_v[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
+				      k*nSpace2+
+				      I*nSpace+
+				      J]
 		  	  *
 		  	  grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
 		  		 k*nDOF_trial_element*nSpace+
 		  		 j*nSpace+
 		  		 J]
 		  	  *
-		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+I];
+		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+			    k*nSpace+
+			    I];
 		  	fluxJacobian_v_w[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 		  			 k*nDOF_trial_element+
-		  			 j] -= dstress_v_w[ebNE*nQuadraturePoints_elementBoundary*nSpace2+k*nSpace2+I*nSpace+J]
+		  			 j]
+		  	  -=
+		  	  dstress_v_w[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
+				      k*nSpace2+
+				      I*nSpace+
+				      J]
 		  	  *
 		  	  grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
 		  		 k*nDOF_trial_element*nSpace+
 		  		 j*nSpace+
 		  		 J]
 		  	  *
-		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+I];
+		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+			    k*nSpace+
+			    I];
 		      }
 		}
 	    }
@@ -13523,34 +13552,55 @@ void updateExteriorNumericalStressFluxJacobian(int nExteriorElementBoundaries_gl
 		      {
 		  	fluxJacobian_w_u[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 		  			 k*nDOF_trial_element+
-		  			 j] -= dstress_w_u[ebNE*nQuadraturePoints_elementBoundary*nSpace2+k*nSpace2+I*nSpace+J]
+		  			 j]
+		  	  -=
+		  	  dstress_w_u[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
+				      k*nSpace2+
+				      I*nSpace+
+				      J]
 		  	  *
 		  	  grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
 		  		 k*nDOF_trial_element*nSpace+
 		  		 j*nSpace+
 		  		 J]
 		  	  *
-		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+I];
+		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+			    k*nSpace+
+			    I];
 		  	fluxJacobian_w_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 		  			 k*nDOF_trial_element+
-		  			 j] -= dstress_w_v[ebNE*nQuadraturePoints_elementBoundary*nSpace2+k*nSpace2+I*nSpace+J]
+		  			 j]
+		  	  -=
+		  	  dstress_w_v[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
+				      k*nSpace2+
+				      I*nSpace+
+				      J]
 		  	  *
 		  	  grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
 		  		 k*nDOF_trial_element*nSpace+
 		  		 j*nSpace+
 		  		 J]
 		  	  *
-		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+I];
+		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+			    k*nSpace+
+			    I];
 		  	fluxJacobian_w_w[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
 		  			 k*nDOF_trial_element+
-		  			 j] -= dstress_w_w[ebNE*nQuadraturePoints_elementBoundary*nSpace2+k*nSpace2+I*nSpace+J]
+		  			 j]
+		  	  -=
+		  	  dstress_w_w[ebNE*nQuadraturePoints_elementBoundary*nSpace2+
+				      k*nSpace2+
+				      I*nSpace+
+				      J]
 		  	  *
 		  	  grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
 		  		 k*nDOF_trial_element*nSpace+
 		  		 j*nSpace+
 		  		 J]
 		  	  *
-		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+I];
+		  	  n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+			    k*nSpace+
+			    I];
 		      }
 		}
 	    }

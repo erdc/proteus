@@ -130,16 +130,16 @@ namespace RANS2PV2
     mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
   
     //u momentum accumulation
-    mom_u_acc=u;
-    dmom_u_acc_u=1.0;
+    mom_u_acc=rho*u;
+    dmom_u_acc_u=rho;
   
     //v momentum accumulation
-    mom_v_acc=v;
-    dmom_v_acc_v=1.0;
+    mom_v_acc=rho*v;
+    dmom_v_acc_v=rho;
   
     //w momentum accumulation
-    mom_w_acc=w;
-    dmom_w_acc_w=1.0;
+    mom_w_acc=rho*w;
+    dmom_w_acc_w=rho;
   
   
     //mass advective flux
@@ -160,106 +160,106 @@ namespace RANS2PV2
     dmass_adv_w[2]=1.0;
 
     //u momentum advective flux
-    mom_u_adv[0]=u*u;
-    mom_u_adv[1]=u*v;
-    mom_u_adv[2]=u*w;
+    mom_u_adv[0]=rho*u*u;
+    mom_u_adv[1]=rho*u*v;
+    mom_u_adv[2]=rho*u*w;
   
-    dmom_u_adv_u[0]=2.0*u;
-    dmom_u_adv_u[1]=v;
-    dmom_u_adv_u[2]=w;
+    dmom_u_adv_u[0]=rho*2.0*u;
+    dmom_u_adv_u[1]=rho*v;
+    dmom_u_adv_u[2]=rho*w;
   
     dmom_u_adv_v[0]=0.0;
-    dmom_u_adv_v[1]=u;
+    dmom_u_adv_v[1]=rho*u;
     dmom_u_adv_v[2]=0.0;
   
     dmom_u_adv_w[0]=0.0;
     dmom_u_adv_w[1]=0.0;
-    dmom_u_adv_w[2]=u;
+    dmom_u_adv_w[2]=rho*u;
   
     //v momentum advective_flux
-    mom_v_adv[0]=v*u;
-    mom_v_adv[1]=v*v;
-    mom_v_adv[2]=v*w;
+    mom_v_adv[0]=rho*v*u;
+    mom_v_adv[1]=rho*v*v;
+    mom_v_adv[2]=rho*v*w;
   
-    dmom_v_adv_u[0]=v;
+    dmom_v_adv_u[0]=rho*v;
     dmom_v_adv_u[1]=0.0;
     dmom_v_adv_u[2]=0.0;
   
     dmom_v_adv_w[0]=0.0;
     dmom_v_adv_w[1]=0.0;
-    dmom_v_adv_w[2]=v;
+    dmom_v_adv_w[2]=rho*v;
   
-    dmom_v_adv_v[0]=u;
-    dmom_v_adv_v[1]=2.0*v;
-    dmom_v_adv_v[2]=w;
+    dmom_v_adv_v[0]=rho*u;
+    dmom_v_adv_v[1]=rho*2.0*v;
+    dmom_v_adv_v[2]=rho*w;
   
     //w momentum advective_flux
-    mom_w_adv[0]=w*u;
-    mom_w_adv[1]=w*v;
-    mom_w_adv[2]=w*w;
+    mom_w_adv[0]=rho*w*u;
+    mom_w_adv[1]=rho*w*v;
+    mom_w_adv[2]=rho*w*w;
   
-    dmom_w_adv_u[0]=w;
+    dmom_w_adv_u[0]=rho*w;
     dmom_w_adv_u[1]=0.0;
     dmom_w_adv_u[2]=0.0;
   
     dmom_w_adv_v[0]=0.0;
-    dmom_w_adv_v[1]=w;
+    dmom_w_adv_v[1]=rho*w;
     dmom_w_adv_v[2]=0.0;
   
-    dmom_w_adv_w[0]=u;
-    dmom_w_adv_w[1]=v;
-    dmom_w_adv_w[2]=2.0*w;
+    dmom_w_adv_w[0]=rho*u;
+    dmom_w_adv_w[1]=rho*v;
+    dmom_w_adv_w[2]=rho*2.0*w;
   
     //u momentum diffusion tensor
-    mom_u_diff_ten[0] = 2.0*nu;
-    mom_u_diff_ten[1] = nu;
-    mom_u_diff_ten[2] = nu;
+    mom_u_diff_ten[0] = 2.0*mu;
+    mom_u_diff_ten[1] = mu;
+    mom_u_diff_ten[2] = mu;
   
-    mom_uv_diff_ten[0]=nu;
+    mom_uv_diff_ten[0]=mu;
   
-    mom_uw_diff_ten[0]=nu;
+    mom_uw_diff_ten[0]=mu;
   
     //v momentum diffusion tensor
-    mom_v_diff_ten[0] = nu;
-    mom_v_diff_ten[1] = 2.0*nu;
-    mom_v_diff_ten[2] = nu;
+    mom_v_diff_ten[0] = mu;
+    mom_v_diff_ten[1] = 2.0*mu;
+    mom_v_diff_ten[2] = mu;
   
-    mom_vu_diff_ten[0]=nu;
+    mom_vu_diff_ten[0]=mu;
   
-    mom_vw_diff_ten[0]=nu;
+    mom_vw_diff_ten[0]=mu;
   
     //w momentum diffusion tensor
-    mom_w_diff_ten[0] = nu;
-    mom_w_diff_ten[1] = nu;
-    mom_w_diff_ten[2] = 2.0*nu;
+    mom_w_diff_ten[0] = mu;
+    mom_w_diff_ten[1] = mu;
+    mom_w_diff_ten[2] = 2.0*mu;
   
-    mom_wu_diff_ten[0]=nu;
+    mom_wu_diff_ten[0]=mu;
   
-    mom_wv_diff_ten[0]=nu;
+    mom_wv_diff_ten[0]=mu;
   
     //momentum sources
     norm_n = sqrt(n[0]*n[0]+n[1]*n[1]+n[2]*n[2]);
-    mom_u_source = -g[0] - d_mu*sigma*kappa*n[0]/(rho*(norm_n+1.0e-8));
-    mom_v_source = -g[1] - d_mu*sigma*kappa*n[1]/(rho*(norm_n+1.0e-8));
-    mom_w_source = -g[2] - d_mu*sigma*kappa*n[2]/(rho*(norm_n+1.0e-8));
+    mom_u_source = -rho*g[0] - d_mu*sigma*kappa*n[0];
+    mom_v_source = -rho*g[1] - d_mu*sigma*kappa*n[1];
+    mom_w_source = -rho*g[2] - d_mu*sigma*kappa*n[2];
    
     //u momentum Hamiltonian (pressure)
-    mom_u_ham = grad_p[0]/rho;
-    dmom_u_ham_grad_p[0]=1.0/rho;
+    mom_u_ham = grad_p[0];
+    dmom_u_ham_grad_p[0]=1.0;
     dmom_u_ham_grad_p[1]=0.0;
     dmom_u_ham_grad_p[2]=0.0;
   
     //v momentum Hamiltonian (pressure)
-    mom_v_ham = grad_p[1]/rho;
+    mom_v_ham = grad_p[1];
     dmom_v_ham_grad_p[0]=0.0;
-    dmom_v_ham_grad_p[1]=1.0/rho;
+    dmom_v_ham_grad_p[1]=1.0;
     dmom_v_ham_grad_p[2]=0.0;
   
     //w momentum Hamiltonian (pressure)
-    mom_w_ham = grad_p[2]/rho;
+    mom_w_ham = grad_p[2];
     dmom_w_ham_grad_p[0]=0.0;
     dmom_w_ham_grad_p[1]=0.0;
-    dmom_w_ham_grad_p[2]=1.0/rho;
+    dmom_w_ham_grad_p[2]=1.0;
   }
   
 

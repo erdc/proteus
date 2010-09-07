@@ -3518,29 +3518,25 @@ cfemIntegralsUpdateExteriorElementBoundaryStressFlux(PyObject* self,
   PyObject *exteriorElementBoundaries,
     *elementBoundaryElements,
     *elementBoundaryLocalElementBoundaries,
-    *stressVector,
+    *stressFlux,
     *w,
-    *n,
     *residual;
-  if(!PyArg_ParseTuple(args,"OOOOOOO",
+  if(!PyArg_ParseTuple(args,"OOOOOO",
                        &exteriorElementBoundaries,
                        &elementBoundaryElements,
                        &elementBoundaryLocalElementBoundaries,
-                       &stressVector,
+                       &stressFlux,
                        &w,
-		       &n,
                        &residual))
     return NULL;
   updateGlobalExteriorElementBoundaryStressFlux(SHAPE(exteriorElementBoundaries)[0],
 						SHAPE(w)[1],
 						SHAPE(w)[2],
-						SHAPE(n)[2],
 						IDATA(exteriorElementBoundaries),
 						IDATA(elementBoundaryElements),
 						IDATA(elementBoundaryLocalElementBoundaries),
-						DDATA(stressVector),
+						DDATA(stressFlux),
 						DDATA(w),
-						DDATA(n),
 						DDATA(residual));
   
   Py_INCREF(Py_None);
