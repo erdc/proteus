@@ -2,7 +2,47 @@
 #define COMPKERNEL_H
 #include <cmath>
 
-//I separated the space mapping part of the kernel so I could partially specializethe template on NSPACE
+template<const int NSPACE>
+class EIndex
+{
+};
+
+template<>
+class EIndex<3>
+{
+public:
+  const int X,Y,Z,
+    XX,XY,XZ,
+    YX,YY,YZ,
+    ZX,ZY,ZZ,
+    sXX,sXY,sXZ,
+    sYX,sYY,sYZ,
+    sZX,sZY,sZZ,
+    nSymTen,
+    XHX,XHY,
+    YHX,YHY,
+    ZHX,ZHY,
+    HXHX,HXHY,
+    HYHX,HYHY;
+  EIndex():
+    X(0),
+    Y(1),
+    Z(2),
+    XX(0),XY(1),XZ(2),
+    YX(3),YY(4),YZ(5),
+    ZX(6),ZY(7),ZZ(8),
+    sXX(0),sXY(5),sXZ(4),
+    sYX(5),sYY(1),sYZ(3),
+    sZX(4),sZY(3),sZZ(2),
+    nSymTen(6),
+    XHX(0),XHY(1),
+    YHX(2),YHY(3),
+    ZHX(4),ZHY(5),
+    HXHX(0),HXHY(1),
+    HYHX(2),HYHY(3)
+  {}
+};
+//I separated the space mapping part of the kernel so I could partially specialize the template on NSPACE
 template<const int NSPACE, const int NDOF_MESH_TRIAL_ELEMENT>
 class CompKernelSpaceMapping
 {
@@ -47,6 +87,37 @@ template<const int NDOF_MESH_TRIAL_ELEMENT>
 class CompKernelSpaceMapping<3,NDOF_MESH_TRIAL_ELEMENT>
 {
 public:
+  const int X,Y,Z,
+    XX,XY,XZ,
+    YX,YY,YZ,
+    ZX,ZY,ZZ,
+    sXX,sXY,sXZ,
+    sYX,sYY,sYZ,
+    sZX,sZY,sZZ,
+    nSymTen,
+    XHX,XHY,
+    YHX,YHY,
+    ZHX,ZHY,
+    HXHX,HXHY,
+    HYHX,HYHY;
+  ;
+  CompKernelSpaceMapping():
+    X(0),
+    Y(1),
+    Z(2),
+    XX(0),XY(1),XZ(2),
+    YX(3),YY(4),YZ(5),
+    ZX(6),ZY(7),ZZ(8),
+    sXX(0),sXY(5),sXZ(4),
+    sYX(5),sYY(1),sYZ(3),
+    sZX(4),sZY(3),sZZ(2),
+    nSymTen(6),
+    XHX(0),XHY(1),
+    YHX(2),YHY(3),
+    ZHX(4),ZHY(5),
+    HXHX(0),HXHY(1),
+    HYHX(2),HYHY(3)
+  {}
   inline void calculateMapping_element(const int eN,
 				       const int k,
 				       double* mesh_dof,
@@ -60,11 +131,6 @@ public:
 				       double& y,
 				       double& z)
   {
-    const int X=0,Y=1,Z=2,
-      XX=0,XY=1,XZ=2,
-      YX=3,YY=NDOF_MESH_TRIAL_ELEMENT,YZ=5,
-      ZX=6,ZY=7,ZZ=8;
-    
     register double Grad_x[3],Grad_y[3],Grad_z[3],oneOverJacDet;
     
     //
@@ -134,15 +200,6 @@ public:
 					       double& y,
 					       double& z)
   {
-    const int X=0,Y=1,Z=2,
-      XX=0,XY=1,XZ=2,
-      YX=3,YY=NDOF_MESH_TRIAL_ELEMENT,YZ=5,
-      ZX=6,ZY=7,ZZ=8,
-      XHX=0,XHY=1,
-      YHX=2,YHY=3,
-      ZHX=NDOF_MESH_TRIAL_ELEMENT,ZHY=5,
-      HXHX=0,HXHY=1,
-      HYHX=2,HYHY=3;
     const int ebN_local_kb_nSpace = ebN_local_kb*3,
       ebN_local_kb_nSpace_nSpacem1 = ebN_local_kb*3*2;
   
@@ -235,7 +292,38 @@ class CompKernel
 {
 public:
   CompKernelSpaceMapping<NSPACE,NDOF_MESH_TRIAL_ELEMENT> mapping;
-
+  const int X,
+    Y,
+    Z,
+    XX,XY,XZ,
+    YX,YY,YZ,
+    ZX,ZY,ZZ,
+    sXX,sXY,sXZ,
+    sYX,sYY,sYZ,
+    sZX,sZY,sZZ,
+    nSymTen,
+    XHX,XHY,
+    YHX,YHY,
+    ZHX,ZHY,
+    HXHX,HXHY,
+    HYHX,HYHY;
+  CompKernel():
+    X(mapping.X),
+    Y(mapping.Y),
+    Z(mapping.Z),
+    XX(mapping.XX),XY(mapping.XY),XZ(mapping.XZ),
+    YX(mapping.YX),YY(mapping.YY),YZ(mapping.YZ),
+    ZX(mapping.ZX),ZY(mapping.ZY),ZZ(mapping.ZZ),
+    sXX(mapping.sXX),sXY(mapping.sXY),sXZ(mapping.sXZ),
+    sYX(mapping.sYX),sYY(mapping.sYY),sYZ(mapping.sYZ),
+    sZX(mapping.sZX),sZY(mapping.sZY),sZZ(mapping.sZZ),
+    nSymTen(mapping.nSymTen),
+    XHX(mapping.XHX),XHY(mapping.XHY),
+    YHX(mapping.YHX),YHY(mapping.YHY),
+    ZHX(mapping.ZHX),ZHY(mapping.ZHY),
+    HXHX(mapping.HXHX),HXHY(mapping.HXHY),
+    HYHX(mapping.HYHX),HYHY(mapping.HYHY)
+  {}
   inline void calculateG(double* jacInv,double* G,double& G_dd_G, double& tr_G)
     {
       //get the metric tensor
@@ -635,6 +723,89 @@ public:
 					     x,
 					     y,
 					     z);
+  }
+  double Stress_u_weak(double* stress, double* grad_test_dV)
+  {
+    return stress[sXX]*grad_test_dV[X] + stress[sXY]*grad_test_dV[Y] + stress[sXZ]*grad_test_dV[Z];
+  }
+  double StressJacobian_u_u_weak(double* dstress, double* grad_trial, double* grad_test_dV)
+  {
+    return 
+      (dstress[sXX*nSymTen+sXX]*grad_trial[X]+dstress[sXX*nSymTen+sXY]*grad_trial[Y]+dstress[sXX*nSymTen+sXZ]*grad_trial[Z])*grad_test_dV[X] +
+      (dstress[sXY*nSymTen+sXX]*grad_trial[X]+dstress[sXY*nSymTen+sXY]*grad_trial[Y]+dstress[sXY*nSymTen+sXZ]*grad_trial[Z])*grad_test_dV[Y] +
+      (dstress[sXZ*nSymTen+sXX]*grad_trial[X]+dstress[sXZ*nSymTen+sXY]*grad_trial[Y]+dstress[sXZ*nSymTen+sXZ]*grad_trial[Z])*grad_test_dV[Z];
+  }
+  double StressJacobian_u_v_weak(double* dstress, double* grad_trial, double* grad_test_dV)
+  {
+    return 
+      (dstress[sXX*nSymTen+sYX]*grad_trial[X]+dstress[sXX*nSymTen+sYY]*grad_trial[Y]+dstress[sXX*nSymTen+sYZ]*grad_trial[Z])*grad_test_dV[X] +
+      (dstress[sXY*nSymTen+sYX]*grad_trial[X]+dstress[sXY*nSymTen+sYY]*grad_trial[Y]+dstress[sXY*nSymTen+sYZ]*grad_trial[Z])*grad_test_dV[Y] +
+      (dstress[sXZ*nSymTen+sYX]*grad_trial[X]+dstress[sXZ*nSymTen+sYY]*grad_trial[Y]+dstress[sXZ*nSymTen+sYZ]*grad_trial[Z])*grad_test_dV[Z];
+  }
+  double StressJacobian_u_w_weak(double* dstress, double* grad_trial, double* grad_test_dV)
+  {
+    return 
+      (dstress[sXX*nSymTen+sZX]*grad_trial[X]+dstress[sXX*nSymTen+sZY]*grad_trial[Y]+dstress[sXX*nSymTen+sZZ]*grad_trial[Z])*grad_test_dV[X] +
+      (dstress[sXY*nSymTen+sZX]*grad_trial[X]+dstress[sXY*nSymTen+sZY]*grad_trial[Y]+dstress[sXY*nSymTen+sZZ]*grad_trial[Z])*grad_test_dV[Y] +
+      (dstress[sXZ*nSymTen+sZX]*grad_trial[X]+dstress[sXZ*nSymTen+sZY]*grad_trial[Y]+dstress[sXZ*nSymTen+sZZ]*grad_trial[Z])*grad_test_dV[Z];
+  }
+  double Stress_v_weak(double* stress, double* grad_test_dV)
+  {
+    return stress[sYX]*grad_test_dV[X] + stress[sYY]*grad_test_dV[Y] + stress[sYZ]*grad_test_dV[Z];
+  }
+  double StressJacobian_v_u_weak(double* dstress, double* grad_trial,double* grad_test_dV)
+  {
+    return 
+      (dstress[sYX*nSymTen+sXX]*grad_trial[X]+dstress[sYX*nSymTen+sXY]*grad_trial[Y]+dstress[sYX*nSymTen+sXZ]*grad_trial[Z])*grad_test_dV[X] + 
+      (dstress[sYY*nSymTen+sXX]*grad_trial[X]+dstress[sYY*nSymTen+sXY]*grad_trial[Y]+dstress[sYY*nSymTen+sXZ]*grad_trial[Z])*grad_test_dV[Y] + 
+      (dstress[sYZ*nSymTen+sXX]*grad_trial[X]+dstress[sYZ*nSymTen+sXY]*grad_trial[Y]+dstress[sYZ*nSymTen+sXZ]*grad_trial[Z])*grad_test_dV[Z];
+  }
+  double StressJacobian_v_v_weak(double* dstress, double* grad_trial,double* grad_test_dV)
+  {
+    return 
+      (dstress[sYX*nSymTen+sYX]*grad_trial[X]+dstress[sYX*nSymTen+sYY]*grad_trial[Y]+dstress[sYX*nSymTen+sYZ]*grad_trial[Z])*grad_test_dV[X] + 
+      (dstress[sYY*nSymTen+sYX]*grad_trial[X]+dstress[sYY*nSymTen+sYY]*grad_trial[Y]+dstress[sYY*nSymTen+sYZ]*grad_trial[Z])*grad_test_dV[Y] + 
+      (dstress[sYZ*nSymTen+sYX]*grad_trial[X]+dstress[sYZ*nSymTen+sYY]*grad_trial[Y]+dstress[sYZ*nSymTen+sYZ]*grad_trial[Z])*grad_test_dV[Z];
+  }
+  double StressJacobian_v_w_weak(double* dstress, double* grad_trial,double* grad_test_dV)
+  {
+    return 
+      (dstress[sYX*nSymTen+sZX]*grad_trial[X]+dstress[sYX*nSymTen+sZY]*grad_trial[Y]+dstress[sYX*nSymTen+sZZ]*grad_trial[Z])*grad_test_dV[X] + 
+      (dstress[sYY*nSymTen+sZX]*grad_trial[X]+dstress[sYY*nSymTen+sZY]*grad_trial[Y]+dstress[sYY*nSymTen+sZZ]*grad_trial[Z])*grad_test_dV[Y] + 
+      (dstress[sYZ*nSymTen+sZX]*grad_trial[X]+dstress[sYZ*nSymTen+sZY]*grad_trial[Y]+dstress[sYZ*nSymTen+sZZ]*grad_trial[Z])*grad_test_dV[Z];
+  }
+  double Stress_w_weak(double* stress, double* grad_test_dV)
+  {
+    return stress[sZX]*grad_test_dV[X] + stress[sZY]*grad_test_dV[Y] + stress[sZZ]*grad_test_dV[Z];
+  }
+  double StressJacobian_w_u_weak(double* dstress, double* grad_trial, double* grad_test_dV)
+  {
+    return 
+      (dstress[sZX*nSymTen+sXX]*grad_trial[X]+dstress[sZX*nSymTen+sXY]*grad_trial[Y]+dstress[sZX*nSymTen+sXZ]*grad_trial[Z])*grad_test_dV[X] + 
+      (dstress[sZY*nSymTen+sXX]*grad_trial[X]+dstress[sZY*nSymTen+sXY]*grad_trial[Y]+dstress[sZY*nSymTen+sXZ]*grad_trial[Z])*grad_test_dV[Y] + 
+      (dstress[sZZ*nSymTen+sXX]*grad_trial[X]+dstress[sZZ*nSymTen+sXY]*grad_trial[Y]+dstress[sZZ*nSymTen+sXZ]*grad_trial[Z])*grad_test_dV[Z];
+  }
+  double StressJacobian_w_v_weak(double* dstress, double* grad_trial, double* grad_test_dV)
+  {
+    return 
+      (dstress[sZX*nSymTen+sYX]*grad_trial[X]+dstress[sZX*nSymTen+sYY]*grad_trial[Y]+dstress[sZX*nSymTen+sYZ]*grad_trial[Z])*grad_test_dV[X] + 
+      (dstress[sZY*nSymTen+sYX]*grad_trial[X]+dstress[sZY*nSymTen+sYY]*grad_trial[Y]+dstress[sZY*nSymTen+sYZ]*grad_trial[Z])*grad_test_dV[Y] + 
+      (dstress[sZZ*nSymTen+sYX]*grad_trial[X]+dstress[sZZ*nSymTen+sYY]*grad_trial[Y]+dstress[sZZ*nSymTen+sYZ]*grad_trial[Z])*grad_test_dV[Z];
+  }
+  double StressJacobian_w_w_weak(double* dstress, double* grad_trial, double* grad_test_dV)
+  {
+    return 
+      (dstress[sZX*nSymTen+sZX]*grad_trial[X]+dstress[sZX*nSymTen+sZY]*grad_trial[Y]+dstress[sZX*nSymTen+sZZ]*grad_trial[Z])*grad_test_dV[X] + 
+      (dstress[sZY*nSymTen+sZX]*grad_trial[X]+dstress[sZY*nSymTen+sZY]*grad_trial[Y]+dstress[sZY*nSymTen+sZZ]*grad_trial[Z])*grad_test_dV[Y] + 
+      (dstress[sZZ*nSymTen+sZX]*grad_trial[X]+dstress[sZZ*nSymTen+sZY]*grad_trial[Y]+dstress[sZZ*nSymTen+sZZ]*grad_trial[Z])*grad_test_dV[Z];
+  }
+  double ExteriorElementBoundaryStressFlux(const double& stressFlux,const double& disp_test_dS)
+  {
+    return stressFlux*disp_test_dS;
+  }
+  double ExteriorElementBoundaryStressFluxJacobian(const double& dstressFlux,const double& disp_test_dS)
+  {
+    return dstressFlux*disp_test_dS;
   }
 };
 

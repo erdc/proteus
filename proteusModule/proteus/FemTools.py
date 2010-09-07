@@ -5487,19 +5487,28 @@ class DOFBoundaryConditions:
 class FluxBoundaryConditions:
     """
     A class for generating the list of element boundaries
-    where values are specified.
+    where flux values are specified.
     """
-    def __init__(self,mesh,nElementBoundaryQuadraturePoints_elementBoundary,x,getAdvectiveFluxBoundaryConditions=None,getDiffusiveFluxBoundaryConditions={}):
+    def __init__(self,mesh,nElementBoundaryQuadraturePoints_elementBoundary,x,
+                 getAdvectiveFluxBoundaryConditions=None,
+                 getDiffusiveFluxBoundaryConditions={},
+                 getStressFluxBoundaryConditions=None):
         self.advectiveFluxBoundaryConditionsDict={}
+        self.stressFluxBoundaryConditionsDict={}
         self.diffusiveFluxBoundaryConditionsDictDict=dict([(ck,{}) for ck in getDiffusiveFluxBoundaryConditions.keys()])
         for ebNE in range(mesh.nExteriorElementBoundaries_global):
             ebN = mesh.exteriorElementBoundariesArray[ebNE]
             materialFlag = mesh.elementBoundaryMaterialTypes[ebN]
             for k in range(nElementBoundaryQuadraturePoints_elementBoundary):
                 try:
-                    g = getAdvectiveFluxBoundaryConditions(x[ebNE,k],materialFlag)
-                    if g:
-                        self.advectiveFluxBoundaryConditionsDict[(ebNE,k)] = g
+                    if getAdvectiveFluxBoundaryConditions != None:
+                        g = getAdvectiveFluxBoundaryConditions(x[ebNE,k],materialFlag)
+                        if g:
+                            self.advectiveFluxBoundaryConditionsDict[(ebNE,k)] = g
+                    if getStressFluxBoundaryConditions != None:
+                        g = getStressFluxBoundaryConditions(x[ebNE,k],materialFlag)
+                        if g:
+                            self.stressFluxBoundaryConditionsDict[(ebNE,k)] = g
                     for ck in getDiffusiveFluxBoundaryConditions.keys():
                         g = getDiffusiveFluxBoundaryConditions[ck](x[ebNE,k],materialFlag)
                         if g:
