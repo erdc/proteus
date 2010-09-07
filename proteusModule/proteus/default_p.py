@@ -65,8 +65,8 @@ advectiveFluxBoundaryConditions =  {}
 diffusiveFluxBoundaryConditions = {}
 """Dictionary of diffusive flux boundary conditions setter functions"""
 
-stressTraceBoundaryConditions = {}
-"""Dictionary of stress tensor trace boundary conditions setter functions"""
+stressFluxBoundaryConditions = {}
+"""Dictionary of stress tensor flux boundary conditions setter functions"""
 
 initialConditions = None
 """Dictionary of initial condition function objects"""

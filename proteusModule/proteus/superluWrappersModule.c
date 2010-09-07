@@ -61,7 +61,7 @@ SparseMatrix_fwrite(SparseMatrix *self,
   for (i = 0; i < self->dim[0]; i ++) 
     {
       for (k=rowptr[i]; k<rowptr[i+1]; k++)
-	fprintf(file,"%d %d %21.16e\n",i+1,colind[k]+1,a[k]);
+	fprintf(file,"%d %d %13.8e\n",i+1,colind[k]+1,a[k]);
 	/* printf("%d %d %10.3g\n",i+1,colind[k]+1,a[k]); */
     }
   fclose(file);

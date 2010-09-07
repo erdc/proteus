@@ -4392,13 +4392,11 @@ void updateGlobalExteriorElementBoundaryFlux(int nExteriorElementBoundaries_glob
 void updateGlobalExteriorElementBoundaryStressFlux(int nExteriorElementBoundaries_global,
 						   int nQuadraturePoints_elementBoundary,
 						   int nDOF_test_element,
-						   int nSpace,
 						   int* exteriorElementBoundaries,
 						   int* elementBoundaryElements,
 						   int* elementBoundaryLocalElementBoundaries,
-						   double* stressVector,
+						   double* stressFlux,
 						   double* w_dS,
-						   double* n,
 						   double* residual)
 {
   int ebNE,ebN,eN_global,ebN_element,i,k,I;
@@ -4409,23 +4407,15 @@ void updateGlobalExteriorElementBoundaryStressFlux(int nExteriorElementBoundarie
       ebN_element = elementBoundaryLocalElementBoundaries[ebN*2+0];
       for(i=0;i<nDOF_test_element;i++)
         for(k=0;k<nQuadraturePoints_elementBoundary;k++)
-	  for(I=0;I<nSpace;I++)
-	    {
-	      residual[eN_global*nDOF_test_element+
-		       i]
-		-=
-		stressVector[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-			     k*nSpace+
-			     I]
-		*
-		n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
-		  k*nSpace+
-		  I]
-		*
-		w_dS[ebNE*nQuadraturePoints_elementBoundary*nDOF_test_element+
-		     k*nDOF_test_element+
-		     i];
-	    }
+	  residual[eN_global*nDOF_test_element+
+		   i]
+	    +=
+	    stressFlux[ebNE*nQuadraturePoints_elementBoundary+
+		       k]
+	    *
+	    w_dS[ebNE*nQuadraturePoints_elementBoundary*nDOF_test_element+
+		 k*nDOF_test_element+
+		 i];
     }
 }
 /**
