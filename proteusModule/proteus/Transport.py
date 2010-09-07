@@ -76,7 +76,7 @@ class OneLevelTransport(NonlinearEquation):
                  fluxBoundaryConditionsDict=None,
                  advectiveFluxBoundaryConditionsSetterDict=None,
                  diffusiveFluxBoundaryConditionsSetterDictDict=None,
-                 stressTraceBoundaryConditionsSetterDict=None,
+                 stressFluxBoundaryConditionsSetterDict=None,
                  stabilization=None,
                  shockCapturing=None,
                  conservativeFluxDict=None,
@@ -202,7 +202,7 @@ class OneLevelTransport(NonlinearEquation):
         self.fluxBoundaryConditions=fluxBoundaryConditionsDict
         self.advectiveFluxBoundaryConditionsSetterDict=advectiveFluxBoundaryConditionsSetterDict
         self.diffusiveFluxBoundaryConditionsSetterDictDict = diffusiveFluxBoundaryConditionsSetterDictDict
-        self.stressTraceBoundaryConditionsSetterDict = stressTraceBoundaryConditionsSetterDict
+        self.stressFluxBoundaryConditionsSetterDict = stressFluxBoundaryConditionsSetterDict
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
 	if self.stabilization != None:
@@ -688,7 +688,7 @@ class OneLevelTransport(NonlinearEquation):
                 self.vectors_elementBoundaryQuadrature_global |= set([(qk,ci)])
         for ci in self.coefficients.stress.keys():
             self.scalars_elementBoundaryQuadrature_global |= set(['penalty'])
-            self.vectors_elementBoundaryQuadrature_global |= set([('stressTrace',ci)])
+            self.scalars_elementBoundaryQuadrature_global |= set([('stressFlux',ci)])
         #mesh
         self.scalars_quadrature |= set(['det(J)',
                                         'abs(det(J))'])
@@ -1669,6 +1669,8 @@ class OneLevelTransport(NonlinearEquation):
         """
         Calculate the element residuals and add in to the global residual
         """
+        #cek debug
+        #u.tofile("u"+`self.nonlinear_function_evaluations`,sep="\n")
         r.fill(0.0)
         #Load the Dirichlet conditions
         for cj in range(self.nc):
@@ -1699,6 +1701,8 @@ class OneLevelTransport(NonlinearEquation):
         log("Global residual",level=9,data=r)
         #for keeping solver statistics
         self.nonlinear_function_evaluations += 1
+        #cek debug
+        #r.tofile("residual"+`self.nonlinear_function_evaluations`,sep="\n")
         #mwf debug
         imax = numpy.argmax(r); imin = numpy.argmin(r)
         print "getResidual max,index r[%s]= %s min,index= r[%s] r= %s " % (imax,r[imax],imin,r[imin])
@@ -1741,6 +1745,8 @@ class OneLevelTransport(NonlinearEquation):
         log("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
+        #cek debug
+        #jacobian.fwrite("jacobian"+`self.nonlinear_function_jacobian_evaluations`)
         #don't leave this uncommented when you check it in
         #jacobian.fwrite("jacdebug_p%s_%s.txt" % (self.comm.rank(),self.nonlinear_function_jacobian_evaluations))
         return jacobian
@@ -2393,6 +2399,12 @@ class OneLevelTransport(NonlinearEquation):
                     cfemIntegrals.updateNumericalDiffusion(self.q[('numDiff',ci,ci)],
                                                            self.q[('grad(u)Xgrad(w)*dV_numDiff',ci,ci)],
                                                            self.elementResidual[ci])
+        # for eN in range(self.mesh.nElements_global):
+        #     for i in range(self.nDOF_test_element[0]):
+        #         print "element residual "+`eN`+'\t'+`i`
+        #         print self.elementResidual[0][eN,i]
+        #         print self.elementResidual[1][eN,i]
+        #         print self.elementResidual[2][eN,i]
         if self.numericalFlux != None:
             for ci in range(self.nc):
                 self.ebq_global[('totalFlux',ci)].fill(0.0)
@@ -2549,9 +2561,8 @@ class OneLevelTransport(NonlinearEquation):
                 cfemIntegrals.updateExteriorElementBoundaryStressFlux(self.mesh.exteriorElementBoundariesArray,
                                                                       self.mesh.elementBoundaryElementsArray,
                                                                       self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                      self.ebqe[('stressTrace',ci)],
+                                                                      self.ebqe[('stressFlux',ci)],
                                                                       self.ebqe[('w*dS_sigma',ci)],
-                                                                      self.ebqe['n'],
                                                                       self.elementResidual[ci])
         else:
             #cek this will go away
@@ -2795,6 +2806,20 @@ class OneLevelTransport(NonlinearEquation):
                         self.elementJacobian[cj][cj][eN,j,:]=0.0
                         self.elementJacobian[cj][cj][eN,j,j]=self.weakFactor*self.mesh.elementDiametersArray[eN]
                         #self.elementJacobian[cj][cj][eN,j,j]=1.0
+        #cek debug
+        # for eN in range(self.mesh.nElements_global):
+        #     for i in range(self.nDOF_test_element[0]):
+        #         for j in range(self.nDOF_trial_element[0]):
+        #             print "element jacobian "+`eN`+'\t'+`i`+','+`j`
+        #             print self.elementJacobian[0][0][eN,i,j]
+        #             print self.elementJacobian[0][1][eN,i,j]
+        #             print self.elementJacobian[0][2][eN,i,j]
+        #             print self.elementJacobian[1][0][eN,i,j]
+        #             print self.elementJacobian[1][1][eN,i,j]
+        #             print self.elementJacobian[1][2][eN,i,j]
+        #             print self.elementJacobian[2][0][eN,i,j]
+        #             print self.elementJacobian[2][1][eN,i,j]
+        #             print self.elementJacobian[2][2][eN,i,j]
     def calculateElementBoundaryJacobian(self):
         evalElementBoundaryJacobian = False; evalElementBoundaryJacobian_hj = False
         for jDict in self.fluxJacobian.values():
@@ -3442,9 +3467,9 @@ class OneLevelTransport(NonlinearEquation):
                 for t,g in diffusiveFluxBoundaryConditionsDict.iteritems():
                     #
                     self.ebqe[('diffusiveFlux',ck,ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
-        for ci,sbcObject  in self.stressBoundaryConditionsObjectsDict.iteritems():
-            for t,g in sbcObject.stressTraceBoundaryConditionsDict.iteritems():
-                self.ebqe[('stressTrace',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
+        for ci,sbcObject  in self.stressFluxBoundaryConditionsObjectsDict.iteritems():
+            for t,g in sbcObject.stressFluxBoundaryConditionsDict.iteritems():
+                self.ebqe[('stressFlux',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
     def calculateQuadrature(self):
         log("Element Quadrature",level=3)
         self.calculateElementQuadrature()
@@ -4004,11 +4029,11 @@ class OneLevelTransport(NonlinearEquation):
                                                                                   self.advectiveFluxBoundaryConditionsSetterDict[cj],
                                                                                   self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
                                                        for cj in self.advectiveFluxBoundaryConditionsSetterDict.keys()])
-        self.stressBoundaryConditionsObjectsDict = dict([(cj,StressBoundaryConditions(self.mesh,
-                                                                                      self.nElementBoundaryQuadraturePoints_elementBoundary,
-                                                                                      self.ebqe[('x')],
-                                                                                      self.stressTraceBoundaryConditionsSetterDict[cj]))
-                                                         for cj in self.stressTraceBoundaryConditionsSetterDict.keys()])
+        self.stressFluxBoundaryConditionsObjectsDict = dict([(cj,FluxBoundaryConditions(self.mesh,
+                                                                                        self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                                                                        self.ebqe[('x')],
+                                                                                        getStressFluxBoundaryConditions=self.stressFluxBoundaryConditionsSetterDict[cj]))
+                                                         for cj in self.stressFluxBoundaryConditionsSetterDict.keys()])
         #mwf what do I need for getting raw weights in physical space on elements?
         #
         for ci in range(self.nc):
@@ -5385,7 +5410,7 @@ class MultilevelTransport:
             problem.fluxBoundaryConditions,
             problem.advectiveFluxBoundaryConditions,
             problem.diffusiveFluxBoundaryConditions,
-            problem.stressTraceBoundaryConditions,
+            problem.stressFluxBoundaryConditions,
             numerics.subgridError,
             numerics.shockCapturing,
             numerics.conservativeFlux,
@@ -5411,7 +5436,7 @@ class MultilevelTransport:
                    fluxBoundaryConditionsDict='noFlow',#'outFlow',
                    advectiveFluxBoundaryConditionsSetterDict={},
                    diffusiveFluxBoundaryConditionsSetterDictDict={},
-                   stressTraceBoundaryConditionsSetterDict={},
+                   stressFluxBoundaryConditionsSetterDict={},
                    stabilization=None,
                    shockCapturing=None,
                    conservativeFlux=None,
@@ -5604,7 +5629,7 @@ class MultilevelTransport:
                                             fluxBoundaryConditionsDict,
                                             advectiveFluxBoundaryConditionsSetterDict,
                                             diffusiveFluxBoundaryConditionsSetterDictDict,
-                                            stressTraceBoundaryConditionsSetterDict,
+                                            stressFluxBoundaryConditionsSetterDict,
                                             copy.deepcopy(stabilization),
                                             copy.deepcopy(shockCapturing),
                                             conservativeFlux,
