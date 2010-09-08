@@ -1426,6 +1426,7 @@ void redistanceLevelSetCoefficientsEvaluate(int nPoints,
 void redistanceLevelSetCoefficientsWithWeakPenaltyEvaluate(int nPoints,
 							   int nSpace,
 							   double eps,
+							   double lambda_penalty,
 							   double* u_levelSet,
 							   double* u,
 							   double* grad_u,
@@ -1482,8 +1483,8 @@ void redistanceLevelSetCoefficientsWithWeakPenaltyEvaluate(int nPoints,
           dH[i*nSpace+I] = Si*grad_u[i*nSpace+I]/(normGradU+1.0e-12);
         }/*I*/
       /*add in weak penalty*/
-      r[i] += (u[i]-u_levelSet[i])*(u[i]-u_levelSet[i])*smoothedDirac(eps,u_levelSet[i]);
-      dr[i] = 2.0*(u[i]-u_levelSet[i])*smoothedDirac(eps,u_levelSet[i]);
+      r[i] += (u[i]-u_levelSet[i])*lambda_penalty*smoothedDirac(eps,u_levelSet[i]);
+      dr[i] = lambda_penalty*smoothedDirac(eps,u_levelSet[i]);
     }/*i*/
 }
 
@@ -12228,88 +12229,92 @@ void eddyViscosity_3D_Update_sd(const int nPoints,
 
     }
 }
-/*simple piecewise linear interpolation from a table
-  assumes xv are increasing
- */
-int findInterval(const double* vertices, int nv, double x, int* ival, double tol)
-{
-  int leftInt=0,rightInt=nv-2,failed=1,mid=0;
-  assert(rightInt >= leftInt);
-  /*take care of easy cases first*/
-  if (fabs(x-vertices[leftInt]) < tol)
-    {
-      *ival=leftInt;
-      failed=0;
-      return failed;
-    }
-  if (x <= vertices[leftInt]-tol)
-    {
-      *ival=-1;
-      failed=1;
-      return failed;
-    }
-  if (fabs(x-vertices[rightInt+1]) < tol)
-    {
-      *ival=rightInt;
-      failed=0;
-      return failed;
-    }
-  if (x >= vertices[rightInt+1]+tol)
-    {
-      *ival = nv;
-      failed=1;
-      return failed;
-    }
-  /*otherwise, should have x in (left,right)*/
-  while (leftInt <= rightInt)
-    {
-      mid = (int)(floor(0.5*(leftInt+rightInt)));
-      if (vertices[mid] <= x && x < vertices[mid+1])/*x in interval mid*/
-	{
-	  *ival = mid;
-	  failed = 0;
-	  return failed;
-	}
-      else if (x < vertices[mid])/*x to the left of mid*/
-	rightInt = mid-1;
-      else if (x >= vertices[mid+1]) /*x to the right of mid*/
-	leftInt = mid+1;
-      else
-	{
-	  printf("findInterval shouldn't be here leftInt=%d rightInt=%d \n",leftInt,rightInt);
-	  assert(0);
-	  failed = 1;
-	  return failed;
-	}
-    }
-  failed = 1;
-  return failed;
-} 
-double piecewiseLinearTableLookup(int nv,
-				  int start,
-				  double x,
-				  const double* xv,
-				  const double* yv)
-{
-  int index=start,findFailed=0;
-  double val,tol=1.0e-8;
-  findFailed = findInterval(xv,nv,x,&index,tol);
-  if (findFailed && index == -1)
-    {
-      /*extrapolate off left, could use endpoint instead*/
-      index=0;
-    }
-  else if (findFailed && index == nv)
-    {
-      /*extrapolate off right, could use endpoint instead*/
-      index = nv-2;
-    }
-  else
-    {
-      assert(0 <= index && index < nv-1);
-      assert(xv[index]-tol <= x && x<= xv[index+1]+tol);
-    }
-  assert(0 <= index && index < nv-1);
-  val =  yv[index] +  (yv[index+1]-yv[index])/(xv[index+1]-xv[index])*(x-xv[index]);
-  return val;
-}
+/* /\*simple piecewise linear interpolation from a table */
+/*   assumes xv are increasing */
+/*  *\/ */
+/* int findInterval(const double* vertices, int nv, double x, int* ival, double tol) */
+/* { */
+/*   int leftInt=0,rightInt=nv-2,failed=1,mid=0; */
+/*   assert(rightInt >= leftInt); */
+/*   /\*take care of easy cases first*\/ */
+/*   if (fabs(x-vertices[leftInt]) < tol) */
+/*     { */
+/*       *ival=leftInt; */
+/*       failed=0; */
+/*       return failed; */
+/*     } */
+/*   if (x <= vertices[leftInt]-tol) */
+/*     { */
+/*       *ival=-1; */
+/*       failed=1; */
+/*       return failed; */
+/*     } */
+/*   if (fabs(x-vertices[rightInt+1]) < tol) */
+/*     { */
+/*       *ival=rightInt; */
+/*       failed=0; */
+/*       return failed; */
+/*     } */
+/*   if (x >= vertices[rightInt+1]+tol) */
+/*     { */
+/*       *ival = nv; */
+/*       failed=1; */
+/*       return failed; */
+/*     } */
+/*   /\*otherwise, should have x in (left,right)*\/ */
+/*   while (leftInt <= rightInt) */
+/*     { */
+/*       mid = (int)(floor(0.5*(leftInt+rightInt))); */
+/*       if (vertices[mid] <= x && x < vertices[mid+1])/\*x in interval mid*\/ */
+/* 	{ */
+/* 	  *ival = mid; */
+/* 	  failed = 0; */
+/* 	  return failed; */
+/* 	} */
+/*       else if (x < vertices[mid])/\*x to the left of mid*\/ */
+/* 	rightInt = mid-1; */
+/*       else if (x >= vertices[mid+1]) /\*x to the right of mid*\/ */
+/* 	leftInt = mid+1; */
+/*       else */
+/* 	{ */
+/* 	  printf("findInterval shouldn't be here leftInt=%d rightInt=%d \n",leftInt,rightInt); */
+/* 	  assert(0); */
+/* 	  failed = 1; */
+/* 	  return failed; */
+/* 	} */
+/*     } */
+/*   failed = 1; */
+/*   return failed; */
+/* }  */
+/* void piecewiseLinearTableLookup(double x, */
+/* 				int nv, */
+/* 				int* start, */
+/* 				double* y, */
+/* 				double* dy, */
+/* 				const double* xv, */
+/* 				const double* yv) */
+/* { */
+/*   int index=*start,findFailed=0; */
+/*   double val,tol=1.0e-8; */
+/*   findFailed = findInterval(xv,nv,x,&index,tol); */
+/*   if (findFailed && index == -1) */
+/*     { */
+/*       /\*extrapolate off left, could use endpoint instead*\/ */
+/*       index=0; */
+/*     } */
+/*   else if (findFailed && index == nv) */
+/*     { */
+/*       /\*extrapolate off right, could use endpoint instead*\/ */
+/*       index = nv-2; */
+/*     } */
+/*   else */
+/*     { */
+/*       assert(0 <= index && index < nv-1); */
+/*       assert(xv[index]-tol <= x && x<= xv[index+1]+tol); */
+/*     } */
+/*   assert(0 <= index && index < nv-1); */
+/*   val =  yv[index] +  (yv[index+1]-yv[index])/(xv[index+1]-xv[index])*(x-xv[index]); */
+/*   *y = val;  */
+/*   *dy = (yv[index+1]-yv[index])/(xv[index+1]-xv[index]);  */
+/*   *start = index; */
+/* } */
