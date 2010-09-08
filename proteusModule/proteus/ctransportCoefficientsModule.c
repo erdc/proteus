@@ -1245,10 +1245,11 @@ static PyObject* ctransportCoefficients_redistanceLevelSetCoefficientsWithWeakPe
 											      PyObject* args)
 {
   int nPoints=1,i;
-  double eps;
+  double eps,lambda_penalty;
   PyObject *u0,*u,*grad_u,*m,*dm,*H,*dH,*r,*dr;
-  if(!PyArg_ParseTuple(args,"dOOOOOOOOO",
+  if(!PyArg_ParseTuple(args,"ddOOOOOOOOO",
 		       &eps,
+		       &lambda_penalty,
                        &u0,
                        &u,
                        &grad_u,
@@ -1264,6 +1265,7 @@ static PyObject* ctransportCoefficients_redistanceLevelSetCoefficientsWithWeakPe
   redistanceLevelSetCoefficientsWithWeakPenaltyEvaluate(nPoints,
 							SHAPE(dH)[ND(dH)-1],
 							eps,
+							lambda_penalty,
 							DDATA(u0),
 							DDATA(u),
 							DDATA(grad_u),
@@ -9399,25 +9401,27 @@ static PyObject* ctransportCoefficientsDiffusiveWave2DCoefficientsEvaluate(PyObj
   return Py_None; 
 }
 
-static PyObject* ctransportCoefficientsPiecewiseLinearTableLookup(PyObject* self, PyObject* args)
+/* static PyObject* ctransportCoefficientsPiecewiseLinearTableLookup(PyObject* self, PyObject* args) */
 
-{
-  int start=0;
-  double x,y;
-  PyObject *xv,*yv;
-  if(!PyArg_ParseTuple(args,"dOO|i",
-		       &x,
-		       &xv,
-		       &yv,
-		       &start))
-    return NULL;
-  y = piecewiseLinearTableLookup(SHAPE(xv)[0],
-				 start,
-				 x,
-				 DDATA(xv),
-				 DDATA(yv));
-  return Py_BuildValue("d",y);
-}
+/* { */
+/*   int start=0; */
+/*   double x,y,dy; */
+/*   PyObject *xv,*yv; */
+/*   if(!PyArg_ParseTuple(args,"dOO|i", */
+/* 		       &x, */
+/* 		       &xv, */
+/* 		       &yv, */
+/* 		       &start)) */
+/*     return NULL; */
+/*   piecewiseLinearTableLookup(x, */
+/* 			     SHAPE(xv)[0], */
+/* 			     &start, */
+/* 			     &y, */
+/* 			     &dy, */
+/* 			     DDATA(xv), */
+/* 			     DDATA(yv)); */
+/*   return Py_BuildValue("ddi",y,dy,start); */
+/* } */
 
 static PyMethodDef ctransportCoefficientsMethods[] = {
   { "linearADR_ConstantCoefficientsEvaluate", 
@@ -9968,10 +9972,10 @@ static PyMethodDef ctransportCoefficientsMethods[] = {
     ctransportCoefficientsDiffusiveWave2DCoefficientsEvaluate,
     METH_VARARGS, 
     "Evaluate the coefficients of the 2D diffusive wave equation"},
-  { "piecewiseLinearTableLookup", 
-    ctransportCoefficientsPiecewiseLinearTableLookup, 
-    METH_VARARGS, 
-    "linear table lookup routine for scalar values"},
+  /* { "piecewiseLinearTableLookup",  */
+  /*   ctransportCoefficientsPiecewiseLinearTableLookup,  */
+  /*   METH_VARARGS,  */
+  /*   "linear table lookup routine for scalar values"}, */
   { NULL,NULL,0,NULL}
 };
 
