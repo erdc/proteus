@@ -691,7 +691,7 @@ class ADH_metfile:
     """
     read an ADH met file for boundary conditions etc
     """
-    from proteus.ctransportCoefficients import piecewiseLinearTableLookup
+    from proteus.cSubsurfaceTransportCoefficients import piecewiseLinearTableLookup
     allowed_time_units = ['day','hour','sec']
     def __init__(self,fileprefix,directory='.'):
         self.fileprefix=fileprefix
@@ -738,5 +738,5 @@ class ADH_metfile:
         if entry in ['latitude','longitude','zone']:
             return self.data[entry]
         index = 0
-        interp = self.piecewiseLinearTableLookup(t,self.data['time'],self.data[entry],index)
+        interp,dinterp,index = self.piecewiseLinearTableLookup(t,self.data['time'],self.data[entry],index)
         return interp
