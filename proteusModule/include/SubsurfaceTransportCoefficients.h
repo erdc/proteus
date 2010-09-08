@@ -1,6 +1,16 @@
 #ifndef SUBSURFACE_TRANSPORT_COEFFICIENTS_H
 #define SUBSURFACE_TRANSPORT_COEFFICIENTS_H
 
+int findInterval(const double* vertices, int nv, double x, int* ival, double tol);
+
+void piecewiseLinearTableLookup(double x,
+				int nv,
+				int* start,
+				double* y,
+				double* dy,
+				const double* xv,
+				const double* yv);
+
 int calculateRusanovFluxSaturationEquationIncomp_PWC(double safetyFactor,
 						     int nSpace,
 						      //physical information
