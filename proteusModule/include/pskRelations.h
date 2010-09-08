@@ -2,8 +2,9 @@
 #define PSKRELATIONS_H
 #include <cmath>
 #include <iostream>
+#include <cassert>
 #include "densityRelations.h"
-
+#include "SubsurfaceTransportCoefficients.h"
 /** \file pskrelations.h
     \defgroup pskrelations pskrelations
     \brief A library of pressure-saturation-permeability relations.
@@ -31,7 +32,7 @@ public:
     //in case need psic--> Se form
     dSe_dpsic;
   
- PskRelation(const double* rwork):
+  PskRelation(const double* rwork, const int* iwork = 0):
   Se(1.0),dSe_dSw(1.0),
     Sw_min(rwork[0]),
     Sw_max(rwork[1]),
@@ -39,7 +40,15 @@ public:
     krn(0.0),dkrn(0.0),psic(0.0),
     dpsic(0.0),dSe_dpsic(0.0)
   {}
-  virtual inline void setParams(const double* rwork)
+  PskRelation():
+    Se(1.0),dSe_dSw(1.0),
+    Sw_min(0.0),
+    Sw_max(1),
+    krw(1.0),dkrw(0.0),
+    krn(0.0),dkrn(0.0),psic(0.0),
+    dpsic(0.0),dSe_dpsic(0.0)
+  {}
+  virtual inline void setParams(const double* rwork, const int* iwork = 0)
   {
     Sw_min = rwork[0];
     Sw_max = rwork[1];
@@ -97,7 +106,7 @@ public:
 class SimplePSK : public PskRelation
 {
 public:
-  SimplePSK(const double* rwork):
+  SimplePSK(const double* rwork, const int* iwork = 0):
     PskRelation(rwork)
   {}
 
@@ -140,7 +149,7 @@ public:
     n,
     Se_eps;
   double Se_eps_const;
-  VGMorig(const double* rwork):
+  VGMorig(const double* rwork, const int* iwork = 0):
     PskRelation(rwork),
     alpha(rwork[2]),
     m(rwork[3])
@@ -156,7 +165,7 @@ public:
     Se_eps_const = rwork_tol[0];
   }
   
-  inline void setParams(const double* rwork)
+  inline void setParams(const double* rwork, const int* iwork = 0)
   {
     Sw_min = rwork[0];
     Sw_max = rwork[1];
@@ -210,8 +219,8 @@ class VGM : public VGMorig
 {
  public:
   double ns_del,eps_small,sqrt_eps_small;
- VGM(const double* rwork):
-  VGMorig(rwork),
+  VGM(const double* rwork, const int* iwork = 0):
+    VGMorig(rwork,iwork),
     ns_del(1.0e-8),
     eps_small(1.0e-16),
     sqrt_eps_small(1.0e-8)
@@ -445,8 +454,8 @@ class VGM : public VGMorig
 class VGB : public  VGM
 {
 public:
-  VGB(const double* rwork):
-    VGM(rwork)
+  VGB(const double* rwork, const int* iwork = 0):
+    VGM(rwork,iwork)
   {}
 
   inline void calc(const double& Sw)
@@ -484,13 +493,13 @@ class BCM : public PskRelation
  public:
   double pd,lambda;
 
-  BCM(const double* rwork):
-    PskRelation(rwork),
+  BCM(const double* rwork, const int* iwork = 0):
+    PskRelation(rwork,iwork),
     pd(rwork[2]),
     lambda(rwork[3])
   {}
   
-  inline void setParams(const double* rwork)
+  inline void setParams(const double* rwork, const int* iwork = 0)
   {
     Sw_min = rwork[0];
     Sw_max = rwork[1];
@@ -525,7 +534,7 @@ class BCM : public PskRelation
 class BCB : public BCM
 {
 public:
-  BCB(const double* rwork):BCM(rwork)
+  BCB(const double* rwork, const int* iwork = 0):BCM(rwork,iwork)
   {}
 
   inline void calc(const double& Sw)
@@ -646,5 +655,105 @@ public:
   }
 };
 
+
+class PskSpline: public PskRelation
+{
+  /*************************************************************
+     spline psk relations. tables of values are held (externally) 
+     in splineArray in the order
+     
+     u (sw, or psic), u^-1 (either sw or psic), krw,krn
+
+     force dSe_dSw = 1.0, so that will be consistent with analytical evaluations
+      where dkrw, etc are wrt to se
+
+   ************************************************************/
+public:
+  PskSpline(const double* rworkIn, const int* iworkIn=0):
+    PskRelation(),
+    nknots(2),
+    lastIndex(0),
+    uinvOffset(1),
+    krwOffset(2),
+    krnOffset(3),
+    splineArray(rworkIn)
+  {
+    assert(iworkIn);
+    nknots = iworkIn[0];
+  }
+  virtual ~PskSpline() {}
+  virtual inline void calc(const double& Sw)
+  {
+    assert(splineArray);
+    //
+    Se = Sw; //note force Se = Sw since splines are evaluated directly
+    dSe_dSw = 1.0;
+    piecewiseLinearTableLookup(Sw,
+			       nknots,
+			       &lastIndex,
+			       &psic,
+			       &dpsic,
+			       splineArray,
+			       splineArray+uinvOffset*nknots);
+    
+    //
+    piecewiseLinearTableLookup(Sw,
+			       nknots,
+			       &lastIndex,
+			       &krw,
+			       &dkrw,
+			       splineArray,
+			       splineArray+krwOffset*nknots);
+    //
+    piecewiseLinearTableLookup(Sw,
+			       nknots,
+			       &lastIndex,
+			       &krn,
+			       &dkrn,
+			       splineArray,
+			       splineArray+krnOffset*nknots);
+
+  }
+  virtual inline void calc_from_psic(const double& psicIn)
+  {
+    assert(splineArray);
+    //
+    psic = psicIn;
+    piecewiseLinearTableLookup(psic,
+			       nknots,
+			       &lastIndex,
+			       &Se, //same as Sw
+			       &dSe_dpsic, //same as dSw_dpsic
+			       splineArray,
+			       splineArray+uinvOffset*nknots);
+    
+    //
+    piecewiseLinearTableLookup(psic,
+			       nknots,
+			       &lastIndex,
+			       &krw,
+			       &dkrw,
+			       splineArray,
+			       splineArray+krwOffset*nknots);
+    //
+    piecewiseLinearTableLookup(psic,
+			       nknots,
+			       &lastIndex,
+			       &krn,
+			       &dkrn,
+			       splineArray,
+			       splineArray+krnOffset*nknots);
+
+  }
+  virtual inline void setParams(const double* rwork, const int* iwork = 0)
+  {
+    splineArray = rwork;
+    if (iwork)
+      nknots = iwork[0];
+  }
+public:
+  int nknots,lastIndex,uinvOffset,krwOffset,krnOffset;
+  const double* splineArray; 
+};
 /** @} */
 #endif
