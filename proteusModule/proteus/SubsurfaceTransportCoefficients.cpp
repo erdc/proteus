@@ -1,6 +1,97 @@
 #include "SubsurfaceTransportCoefficients.h"
 #include "pskRelations.h"
 #include "densityRelations.h"
+
+/*simple piecewise linear interpolation from a table
+  assumes xv are increasing
+ */
+int findInterval(const double* vertices, int nv, double x, int* ival, double tol)
+{
+  int leftInt=0,rightInt=nv-2,failed=1,mid=0;
+  assert(rightInt >= leftInt);
+  /*take care of easy cases first*/
+  if (fabs(x-vertices[leftInt]) < tol)
+    {
+      *ival=leftInt;
+      failed=0;
+      return failed;
+    }
+  if (x <= vertices[leftInt]-tol)
+    {
+      *ival=-1;
+      failed=1;
+      return failed;
+    }
+  if (fabs(x-vertices[rightInt+1]) < tol)
+    {
+      *ival=rightInt;
+      failed=0;
+      return failed;
+    }
+  if (x >= vertices[rightInt+1]+tol)
+    {
+      *ival = nv;
+      failed=1;
+      return failed;
+    }
+  /*otherwise, should have x in (left,right)*/
+  while (leftInt <= rightInt)
+    {
+      mid = (int)(floor(0.5*(leftInt+rightInt)));
+      if (vertices[mid] <= x && x < vertices[mid+1])/*x in interval mid*/
+	{
+	  *ival = mid;
+	  failed = 0;
+	  return failed;
+	}
+      else if (x < vertices[mid])/*x to the left of mid*/
+	rightInt = mid-1;
+      else if (x >= vertices[mid+1]) /*x to the right of mid*/
+	leftInt = mid+1;
+      else
+	{
+	  printf("findInterval shouldn't be here leftInt=%d rightInt=%d \n",leftInt,rightInt);
+	  assert(0);
+	  failed = 1;
+	  return failed;
+	}
+    }
+  failed = 1;
+  return failed;
+} 
+void piecewiseLinearTableLookup(double x,
+				int nv,
+				int* start,
+				double* y,
+				double* dy,
+				const double* xv,
+				const double* yv)
+{
+  int index=*start,findFailed=0;
+  double val,tol=1.0e-8;
+  findFailed = findInterval(xv,nv,x,&index,tol);
+  if (findFailed && index == -1)
+    {
+      /*extrapolate off left, could use endpoint instead*/
+      index=0;
+    }
+  else if (findFailed && index == nv)
+    {
+      /*extrapolate off right, could use endpoint instead*/
+      index = nv-2;
+    }
+  else
+    {
+      assert(0 <= index && index < nv-1);
+      assert(xv[index]-tol <= x && x<= xv[index+1]+tol);
+    }
+  assert(0 <= index && index < nv-1);
+  val =  yv[index] +  (yv[index+1]-yv[index])/(xv[index+1]-xv[index])*(x-xv[index]);
+  *y = val; 
+  *dy = (yv[index+1]-yv[index])/(xv[index+1]-xv[index]); 
+  *start = index;
+}
+
 #ifdef TRY_RE_NCP1
 extern "C" int RE_NCP1_getResidual_VGM(double rho, //physical coefficients
 				       double beta,
@@ -281,15 +372,15 @@ int calculateRusanovFluxSaturationEquationIncomp_PWC(double safetyFactor,
 						      int nExteriorElementBoundaries_global,
 						      int nQuadraturePoints_element, 
 						      int nQuadraturePoints_elementBoundary,
-						      const int* interiorElementBoundaries,
-						      const int* exteriorElementBoundaries,
-						      const int* elementBoundaryElements,
-						      const int* elementBoundaryLocalElementBoundaries,
+						      const int* interiorElementBoundariesArray,
+						      const int* exteriorElementBoundariesArray,
+						      const int* elementBoundaryElementsArray,
+						      const int* elementBoundaryLocalElementBoundariesArray,
 						      const double* n,
 						      //solution information
 						      const double * q_u,
 						      //element quadrature
-						      const double* q_dV,
+						      const double* dV,
 						      //int nDOF_trial_element,
 						      //const int* u_l2g,
 						      //const double* u_dof,
@@ -316,7 +407,7 @@ int calculateRusanovFluxSaturationEquationIncomp_PWC(double safetyFactor,
   switch (pskModelFlag)
     {
     case 0:
-      psk = new SimplePsk(rwork_psk);
+      psk = new SimplePSK(rwork_psk);
       break;
     case 1:
       psk = new VGM(rwork_psk);
@@ -378,14 +469,14 @@ int calculateRusanovFluxSaturationEquationIncomp_PWC(double safetyFactor,
       //left
       const int matID_left = materialTypes[eN_left];
       psk->setParams(&rwork_psk[matID_left*nParams]);
-      psk.calc(u_left);
+      psk->calc(u_left);
       fracFlow.calc(*psk,density_w_x,density_n_x);
       const double fw_left=fracFlow.fw; const double fn_left=fracFlow.fn; const double law_left=fracFlow.lambdaw;
       const double rho_n_left=density_n_x.rho; const double rho_w_left = density_w_x.rho;
       //right
       const int matID_right = materialTypes[eN_right];
       psk->setParams(&rwork_psk[matID_right*nParams]);
-      psk.calc(u_right);
+      psk->calc(u_right);
       fracFlow.calc(*psk,density_w_x,density_n_x);
       const double fw_right=fracFlow.fw; const double fn_right=fracFlow.fn; const double law_right=fracFlow.lambdaw;
       const double rho_n_right=density_n_x.rho; const double rho_w_right = density_w_x.rho;
@@ -414,14 +505,14 @@ int calculateRusanovFluxSaturationEquationIncomp_PWC(double safetyFactor,
 			     ebN_left*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+I]
 		*
 		f_left[I];
-	      right_flux += n[eN_right*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-			      ebN_right*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+I]
+	      right_flux += n[eN_left*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+			      ebN_left*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+I]
 		*
 		f_right[I];
 	    }
 
 	  const double maxSpeed =maxSpeed_element*safetyFactor;
-	  flux[ebN*nQuadraturePoints_elementBoundary+k] = 0.5*(left_flux+right_flux) -0.5*maxSpeed(u_right-u_left);
+	  flux[ebN*nQuadraturePoints_elementBoundary+k] = 0.5*(left_flux+right_flux) -0.5*maxSpeed*(u_right-u_left);
 	}//k
 
     }//ebNI
@@ -456,7 +547,7 @@ int calculateRusanovFluxSaturationEquationIncomp_PWC(double safetyFactor,
       //left
       const int matID_left = materialTypes[eN_left];
       psk->setParams(&rwork_psk[matID_left*nParams]);
-      psk.calc(u_left);
+      psk->calc(u_left);
       fracFlow.calc(*psk,density_w_x,density_n_x);
       const double fw_left=fracFlow.fw; const double fn_left=fracFlow.fn; const double law_left=fracFlow.lambdaw;
       const double rho_n_left=density_n_x.rho; const double rho_w_left = density_w_x.rho;
@@ -482,7 +573,7 @@ int calculateRusanovFluxSaturationEquationIncomp_PWC(double safetyFactor,
 	  if (isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k])
 	    {
 	      u_right = bc_u[ebNE*nQuadraturePoints_elementBoundary+k];
-	      psk.calc(u_right);
+	      psk->calc(u_right);
 	      fracFlow.calc(*psk,density_w_x,density_n_x);
 	      const double fw_right=fracFlow.fw; const double fn_right=fracFlow.fn; const double law_right=fracFlow.lambdaw;
 	      const double rho_n_right=density_n_x.rho; const double rho_w_right = density_w_x.rho;
@@ -512,14 +603,14 @@ int calculateRusanovFluxSaturationEquationIncomp_PWC(double safetyFactor,
 			     ebN_left*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+I]
 		*
 		f_left[I];
-	      right_flux += n[eN_right*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
-			      ebN_right*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+I]
+	      right_flux += n[eN_left*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace+
+			      ebN_left*nQuadraturePoints_elementBoundary*nSpace+k*nSpace+I]
 		*
 		f_right[I];
 	    }
 
 	  const double maxSpeed =maxSpeed_element*safetyFactor;
-	  flux[ebN*nQuadraturePoints_elementBoundary+k] = 0.5*(left_flux+right_flux) -0.5*maxSpeed(u_right-u_left);
+	  flux[ebN*nQuadraturePoints_elementBoundary+k] = 0.5*(left_flux+right_flux) -0.5*maxSpeed*(u_right-u_left);
 	}//k
 
     }//ebNE

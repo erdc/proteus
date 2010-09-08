@@ -119,4 +119,45 @@ extern "C"
     Py_INCREF(Py_None);
     return Py_None;
   }
+
+  static PyObject* SubSurfTransCoef_piecewiseLinearTableLookup(PyObject* self, PyObject* args)
+
+  {
+    int start=0;
+    double x,y,dy;
+    PyObject *xv,*yv;
+    if(!PyArg_ParseTuple(args,"dOO|i",
+			 &x,
+			 &xv,
+			 &yv,
+			 &start))
+      return NULL;
+    piecewiseLinearTableLookup(x,
+			       SHAPE(xv)[0],
+			       &start,
+			       &y,
+			       &dy,
+			       DDATA(xv),
+			       DDATA(yv));
+    return Py_BuildValue("ddi",y,dy,start);
+  }
+
+  static PyMethodDef cSubsurfaceTransportCoefficientsMethods[] = {
+    {"calculateRusanovFluxSaturationEquationIncomp_PWC",
+     SubSurfTransCoef_calculateRusanovFluxSaturationEquationIncomp_PWC,
+     METH_VARARGS,
+     ""},
+    { "piecewiseLinearTableLookup", 
+      SubSurfTransCoef_piecewiseLinearTableLookup, 
+      METH_VARARGS, 
+      "linear table lookup routine for scalar values"},
+    {NULL, NULL, 0, NULL}
+  };
+  PyMODINIT_FUNC initcSubsurfaceTransportCoefficients(void)
+  {
+    PyObject *m, *d;
+    m = Py_InitModule("cSubsurfaceTransportCoefficients", cSubsurfaceTransportCoefficientsMethods);
+    d = PyModule_GetDict(m);
+    import_array();
+  }
 }//extern C
