@@ -5815,7 +5815,7 @@ class EikonalEquationCoefficients(TC_base):
 
 class RedistanceLevelSet(TC_base):
     from proteus.ctransportCoefficients import redistanceLevelSetCoefficientsEvaluate
-    def __init__(self,applyRedistancing=True,epsFact=2.0,nModelId=None,u0=None,rdModelId=0):
+    def __init__(self,applyRedistancing=True,epsFact=2.0,nModelId=None,u0=None,rdModelId=0,penaltyParameter=0.0):
         variableNames=['phid']
         nc=1
         mass={0:{0:'linear'}}
@@ -5843,6 +5843,7 @@ class RedistanceLevelSet(TC_base):
         self.u0 = u0
         self.applyRedistancing = applyRedistancing
         self.weakBC_on=True#False
+        self.penaltyParameter=penaltyParameter
     def attachModels(self,modelList):
         if self.nModelId != None:
             self.nModel = modelList[self.nModelId]
@@ -6067,7 +6068,7 @@ class RedistanceLevelSet(TC_base):
 #end class
 class RedistanceLevelSetWithWeakPenalty(RedistanceLevelSet):
     from proteus.ctransportCoefficients import redistanceLevelSetCoefficientsWithWeakPenaltyEvaluate
-    def __init__(self,applyRedistancing=True,epsFact=2.0,nModelId=None,u0=None,rdModelId=0):
+    def __init__(self,applyRedistancing=True,epsFact=2.0,penaltyParameter=1.0,nModelId=None,u0=None,rdModelId=0):
         variableNames=['phid']
         nc=1
         mass={0:{0:'linear'}}
@@ -6088,6 +6089,7 @@ class RedistanceLevelSetWithWeakPenalty(RedistanceLevelSet):
         self.nModelId = nModelId
         self.rdModelId= rdModelId
         self.epsFact=epsFact
+        self.penaltyParameter=penaltyParameter
         self.q_u0   = None
         self.ebq_u0 = None
         self.ebqe_u0= None
@@ -6107,6 +6109,7 @@ class RedistanceLevelSetWithWeakPenalty(RedistanceLevelSet):
         assert u0 != None
         ##\todo make redistancing epsilon depend on local element diamater instead of global max
         self.redistanceLevelSetCoefficientsWithWeakPenaltyEvaluate(self.eps,
+                                                                   self.penaltyParameter,
                                                                    u0,
                                                                    c[('u',0)],
                                                                    c[('grad(u)',0)],
@@ -6115,7 +6118,7 @@ class RedistanceLevelSetWithWeakPenalty(RedistanceLevelSet):
                                                                    c[('H',0)],
                                                                    c[('dH',0,0)],
                                                                    c[('r',0)],
-                                                                   c[('dr',0)])
+                                                                   c[('dr',0,0)])
     
 class RedistanceLevelSetSandF(RedistanceLevelSet):
     from proteus.ctransportCoefficients import redistanceLevelSetSandFCoefficientsEvaluate
@@ -6149,47 +6152,47 @@ class RedistanceLevelSetSandF(RedistanceLevelSet):
                                                          c[('r',0)])
 
  
-class RedistanceLevelSetWithWeakPenalty(RedistanceLevelSet):
-    def __init__(self,applyRedistancing=True,epsFact=2.0,nModelId=None,u0=None,rdModelId=0):
-        variableNames=['phid']
-        nc=1
-        mass={0:{0:'linear'}}
-        hamiltonian={0:{0:'nonlinear'}}
-        advection={}
-        diffusion={}
-        potential={}
-        reaction={0:{0:'linear'}}#only difference with RedistanceLevelSet
-        TC_base.__init__(self,
-                         nc,
-                         mass,
-                         advection,
-                         diffusion,
-                         potential,
-                         reaction,
-                         hamiltonian,
-                         variableNames)
-        self.nModelId = nModelId
-        self.rdModelId= rdModelId
-        self.epsFact=epsFact
-        self.q_u0   = None
-        self.ebq_u0 = None
-        self.ebqe_u0= None
-        self.dof_u0 = None
-        self.u0 = u0
-        self.applyRedistancing = applyRedistancing
-        self.weakBC_on=False#off by default
+# class RedistanceLevelSetWithWeakPenalty(RedistanceLevelSet):
+#     def __init__(self,applyRedistancing=True,epsFact=2.0,nModelId=None,u0=None,rdModelId=0):
+#         variableNames=['phid']
+#         nc=1
+#         mass={0:{0:'linear'}}
+#         hamiltonian={0:{0:'nonlinear'}}
+#         advection={}
+#         diffusion={}
+#         potential={}
+#         reaction={0:{0:'linear'}}#only difference with RedistanceLevelSet
+#         TC_base.__init__(self,
+#                          nc,
+#                          mass,
+#                          advection,
+#                          diffusion,
+#                          potential,
+#                          reaction,
+#                          hamiltonian,
+#                          variableNames)
+#         self.nModelId = nModelId
+#         self.rdModelId= rdModelId
+#         self.epsFact=epsFact
+#         self.q_u0   = None
+#         self.ebq_u0 = None
+#         self.ebqe_u0= None
+#         self.dof_u0 = None
+#         self.u0 = u0
+#         self.applyRedistancing = applyRedistancing
+#         self.weakBC_on=False#off by default
 
-        def evaluate(self,t,c):
-            self.redistanceLevelSetCoefficientsWithWeakPenaltyEvaluate(self.eps,
-                                                                       u0,
-                                                                       c[('u',0)],
-                                                                       c[('grad(u)',0)],
-                                                                       c[('m',0)],
-                                                                       c[('dm',0,0)],
-                                                                       c[('H',0)],
-                                                                       c[('dH',0,0)],
-                                                                       c[('r',0)],
-                                                                       c[('dr',0)])
+#         def evaluate(self,t,c):
+#             self.redistanceLevelSetCoefficientsWithWeakPenaltyEvaluate(self.eps,
+#                                                                        u0,
+#                                                                        c[('u',0)],
+#                                                                        c[('grad(u)',0)],
+#                                                                        c[('m',0)],
+#                                                                        c[('dm',0,0)],
+#                                                                        c[('H',0)],
+#                                                                        c[('dH',0,0)],
+#                                                                        c[('r',0)],
+#                                                                        c[('dr',0)])
 
 class ConservativeHead2PMualemVanGenuchten(TC_base):
     from proteus.ctransportCoefficients import  conservativeHeadRichardsMualemVanGenuchtenHomEvaluate
