@@ -2010,13 +2010,15 @@ void ThreephaseNavierStokes_ST_LS_SO_3D_Evaluate(const int nPoints,
 						 double *mom_w_ham,
 						 double *dmom_w_ham_grad_p);
 
-int findInterval(const double* vertices, int nv, double x, int* ival, double tol);
+/* int findInterval(const double* vertices, int nv, double x, int* ival, double tol); */
 
-double piecewiseLinearTableLookup(int nv,
-				  int start,
-				  double x,
-				  const double* xv,
-				  const double* yv);
+/* void piecewiseLinearTableLookup(double x, */
+/* 				int nv, */
+/* 				int* start, */
+/* 				double* y, */
+/* 				double* dy, */
+/* 				const double* xv, */
+/* 				const double* yv); */
 
 /** @} */
 #endif

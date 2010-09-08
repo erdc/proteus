@@ -21,7 +21,7 @@ inline int twophaseDarcy_fc_sd_het_matType(int nSimplex,
 					   const double* omega,
 					   const double* Kbar, /*now has to be tensor*/
 					   double b,
-					   const double* rwork_psk,
+					   const double* rwork_psk, const int* iwork_psk,
 					   const double* rwork_psk_tol,
 					   const double* rwork_density_w,
 					   const double* rwork_density_n,
@@ -51,7 +51,7 @@ inline int twophaseDarcy_fc_sd_het_matType(int nSimplex,
 					   double* dan_dpsiw)
 {
   int matID;
-  PSK psk(rwork_psk);  psk.setTolerances(rwork_psk_tol);
+  PSK psk(rwork_psk,iwork_psk);  psk.setTolerances(rwork_psk_tol);
   DENSITY_W density_w(rwork_density_w);
   DENSITY_N density_n(rwork_density_n);
   double drhow_dsw,drhon_dsw,drhow_dpsiw,drhon_dpsiw;
@@ -139,7 +139,7 @@ inline int twophaseDarcy_fc_sd_het_matType_nonPotentialForm(int compressibilityF
 							    const double* omega,
 							    const double* Kbar, /*now has to be tensor*/
 							    double b,
-							    const double* rwork_psk,
+							    const double* rwork_psk, const int* iwork_psk,
 							    const double* rwork_psk_tol,
 							    const double* rwork_density_w,
 							    const double* rwork_density_n,
@@ -175,7 +175,7 @@ inline int twophaseDarcy_fc_sd_het_matType_nonPotentialForm(int compressibilityF
 							    double* dan_dpsiw)
 {
   int matID;
-  PSK psk(rwork_psk);  psk.setTolerances(rwork_psk_tol);
+  PSK psk(rwork_psk,iwork_psk);  psk.setTolerances(rwork_psk_tol);
   DENSITY_W density_w(rwork_density_w);
   DENSITY_N density_n(rwork_density_n);
   double drhow_dsw,drhon_dsw,drhow_dpsiw,drhon_dpsiw;
@@ -332,7 +332,7 @@ inline int twophaseDarcy_fc_pp_sd_het_matType(int nSimplex,
 					      const double* omega,
 					      const double* Kbar, /*now has to be tensor*/
 					      double b,
-					      const double* rwork_psk,
+					      const double* rwork_psk, const int* iwork_psk,
 					      const double* rwork_psk_tol,
 					      const double* rwork_density_w,
 					      const double* rwork_density_n,
@@ -360,7 +360,7 @@ inline int twophaseDarcy_fc_pp_sd_het_matType(int nSimplex,
 					      double* dan_dpsic)
 {
   int matID;
-  PSK psk(rwork_psk);  psk.setTolerances(rwork_psk_tol);
+  PSK psk(rwork_psk,iwork_psk);  psk.setTolerances(rwork_psk_tol);
   DENSITY_W density_w(rwork_density_w);
   DENSITY_N density_n(rwork_density_n);
   double drhow_dpsiw,drhow_dpsic,drhon_dpsiw,drhon_dpsic,
@@ -489,7 +489,7 @@ static inline int twophaseDarcy_incompressible_split_sd_saturation_het_matType(i
 									       double b,
 									       double capillaryDiffusionScaling,
 									       double advectionScaling,
-									       const double* rwork_psk,
+									       const double* rwork_psk, const int* iwork_psk,
 									       const double* rwork_psk_tol,
 									       const double* rwork_density_w,
 									       const double* rwork_density_n,
@@ -506,7 +506,7 @@ static inline int twophaseDarcy_incompressible_split_sd_saturation_het_matType(i
 									       double* da)
 {
   int matID;
-  PSK psk(rwork_psk);  psk.setTolerances(rwork_psk_tol);
+  PSK psk(rwork_psk,iwork_psk);  psk.setTolerances(rwork_psk_tol);
   FractionalFlowVariables fracFlow(muw,mun);
   ConstantDensity density_w(rwork_density_w),density_n(rwork_density_n);
   const int nnz = rowptr[nSpace];
@@ -577,7 +577,7 @@ static inline int twophaseDarcy_slightCompressible_split_sd_saturation_het_matTy
 										   double b,
 										   double capillaryDiffusionScaling,
 										   double advectionScaling,
-										   const double* rwork_psk,
+										   const double* rwork_psk, const int* iwork_psk,
 										   const double* rwork_psk_tol,
 										   const double* rwork_density_w,
 										   const double* rwork_density_n,
@@ -595,7 +595,7 @@ static inline int twophaseDarcy_slightCompressible_split_sd_saturation_het_matTy
 										   double* da)
 {
   int matID;
-  PSK psk(rwork_psk);  psk.setTolerances(rwork_psk_tol);
+  PSK psk(rwork_psk,iwork_psk);  psk.setTolerances(rwork_psk_tol);
   FractionalFlowVariables fracFlow(muw,mun);
   /*normalized densities \rho_{\alpha} = \varrho_{\alpha}/\varrho_{\alpha,0}
     for spatial term, assuming slight compressiblity so assume \rho_{\alpha} = 1
@@ -674,19 +674,18 @@ static inline int twophaseDarcy_incompressible_split_sd_pressure_het_matType(int
 									     const double* Kbar,
 									     double b,
 									     double capillaryDiffusionScaling,
-									     const double* rwork_psk,
+									     const double* rwork_psk, const int* iwork_psk,
 									     const double* rwork_psk_tol,
 									     const double* rwork_density_w,
 									     const double* rwork_density_n,
 									     const double* g,
 									     const double* sw,
 									     const double* grad_psic,
-									     //const double* grad_sw,
 									     double* f,
 									     double* a)
 {
   int matID;
-  PSK psk(rwork_psk); psk.setTolerances(rwork_psk_tol);
+  PSK psk(rwork_psk,iwork_psk); psk.setTolerances(rwork_psk_tol);
   FractionalFlowVariables fracFlow(muw,mun);
   ConstantDensity density_w(rwork_density_w),density_n(rwork_density_n);
   const int nnz = rowptr[nSpace];
@@ -712,7 +711,7 @@ static inline int twophaseDarcy_incompressible_split_sd_pressure_het_matType(int
 		      f[i*nSpace+I]  = - capillaryDiffusionScaling*Kbar[matID*nnz+m]*fracFlow.lambdat*(fracFlow.fn*grad_psic[i*nSpace+I]) + 
 			Kbar[matID*nnz+m]*fracFlow.lambdat*(density_w.rho + fracFlow.fn*(b*density_n.rho-density_w.rho))*g[I];
 		      //f[i*nSpace+I]  = - capillaryDiffusionScaling*Kbar[matID*nnz+m]*fracFlow.lambdat*(fracFlow.fn*psk.dpsic*grad_sw[i*nSpace+I]) + 
-		      //Kbar[matID*nnz+m]*fracFlow.lambdat*(density_w.rho + fracFlow.fn*(b*density_n.rho-density_w.rho))*g[I];
+		      //	Kbar[matID*nnz+m]*fracFlow.lambdat*(density_w.rho + fracFlow.fn*(b*density_n.rho-density_w.rho))*g[I];
 		    }
 		  a[i*nnz+m]  = Kbar[matID*nnz+m]*fracFlow.lambdat;
 		}
@@ -739,7 +738,7 @@ static inline int twophaseDarcy_slightCompressible_split_sd_pressure_het_matType
 										   const double* Kbar,
 										   double b,
 										   double capillaryDiffusionScaling,
-										   const double* rwork_psk,
+										   const double* rwork_psk, const int* iwork_psk,
 										   const double* rwork_psk_tol,
 										   const double* rwork_density_w,
 										   const double* rwork_density_n,
@@ -754,7 +753,7 @@ static inline int twophaseDarcy_slightCompressible_split_sd_pressure_het_matType
 										   double* a)
 {
   int matID;
-  PSK psk(rwork_psk); psk.setTolerances(rwork_psk_tol);
+  PSK psk(rwork_psk,iwork_psk); psk.setTolerances(rwork_psk_tol);
   FractionalFlowVariables fracFlow(muw,mun);
   /*normalized densities \rho_{\alpha} = \varrho_{\alpha}/\varrho_{\alpha,0}
     for spatial term, assuming slight compressiblity so assume \rho_{\alpha} = 1
@@ -825,7 +824,7 @@ static inline int twophaseDarcy_compressibleN_split_sd_saturation_het_matType(in
 									      double b,
 									      double capillaryDiffusionScaling,
 									      double advectionScaling,
-									      const double* rwork_psk,
+									      const double* rwork_psk, const int* iwork_psk,
 									      const double* rwork_psk_tol,
 									      const double* rwork_density_w,
 									      const double* rwork_density_n,
@@ -843,7 +842,7 @@ static inline int twophaseDarcy_compressibleN_split_sd_saturation_het_matType(in
 									      double* da)
 {
   int matID;
-  PSK psk(rwork_psk);  psk.setTolerances(rwork_psk_tol);
+  PSK psk(rwork_psk,iwork_psk);  psk.setTolerances(rwork_psk_tol);
   CompressibleN_FractionalFlowVariables fracFlow(muw,mun);
   ConstantDensity density_w(rwork_density_w);
   DENSITY_N density_n(rwork_density_n);
@@ -921,7 +920,7 @@ static inline int twophaseDarcy_compressibleN_split_sd_pressure_het_matType(int 
 									    const double* Kbar,
 									    double b,
 									    double capillaryDiffusionScaling,
-									    const double* rwork_psk,
+									    const double* rwork_psk, const int* iwork_psk,
 									    const double* rwork_psk_tol,
 									    const double* rwork_density_w,
 									    const double* rwork_density_n,
@@ -936,7 +935,7 @@ static inline int twophaseDarcy_compressibleN_split_sd_pressure_het_matType(int 
 									    double* a)
 {
   int matID;
-  PSK psk(rwork_psk); psk.setTolerances(rwork_psk_tol);
+  PSK psk(rwork_psk,iwork_psk); psk.setTolerances(rwork_psk_tol);
   CompressibleN_FractionalFlowVariables fracFlow(muw,mun);
   ConstantDensity density_w(rwork_density_w);
   DENSITY_N density_n(rwork_density_n);
@@ -982,7 +981,164 @@ static inline int twophaseDarcy_compressibleN_split_sd_pressure_het_matType(int 
   return 0.0;
 }
 
+template<class PSK>
+static inline int twophaseDarcy_incompressible_split_pp_sd_saturation_het_matType(int nSimplex,
+										  int nPointsPerSimplex,
+										  int nSpace,
+										  int nParams,
+										  const int* rowptr,
+										  const int* colind,
+										  const int* materialTypes,
+										  double muw,
+										  double mun,
+										  const double* omega,
+										  const double* Kbar,
+										  double b,
+										  double capillaryDiffusionScaling,
+										  double advectionScaling,
+										  const double* rwork_psk, const int* iwork_psk,
+										  const double* rwork_psk_tol,
+										  const double* rwork_density_w,
+										  const double* rwork_density_n,
+										  const double* g,
+										  const double* qt,
+										  const double* u,//psic u >= 0, sn u < 0
+										  double* sw,
+										  double* m,
+										  double* dm,
+										  double* phi,
+										  double* dphi,
+										  double* f,
+										  double* df,
+										  double* a,
+										  double* da)
+{
+  int matID;
+  PSK psk(rwork_psk,iwork_psk);  psk.setTolerances(rwork_psk_tol);
+  FractionalFlowVariables fracFlow(muw,mun);
+  ConstantDensity density_w(rwork_density_w),density_n(rwork_density_n);
+  const int nnz = rowptr[nSpace];
+  double psic_eval(0.),dpsic_eval(0.),dsw_du(0.);
+  //mwf debug
+  //std::cout<<"entering twpffinc rhow= "<<density_w.rho<<" rhon= "<<density_n.rho<<" b= "<<b<<" ";
+  //for (int I=0; I < nSpace; I++)
+  //  {
+  //    std::cout<<"g["<<I<<"]= "<<g[I]<<" ";
+  //  }
+  for (int eN=0;eN<nSimplex;eN++)
+    {
+      matID = materialTypes[eN];
+      psk.setParams(&rwork_psk[matID*nParams]);
+      for(int pN=0,i;pN<nPointsPerSimplex;pN++)
+        {
+          i = eN*nPointsPerSimplex+pN;
+	  if (u[i] < 0.0)
+	    {
+	      sw[i] = psk.Sw_max;
+	      psic_eval = 0.0;
+	      dsw_du = -1.0;
+	      psk.calc(sw[i]); //calculate psk as function of sw=1-u
+	      dpsic_eval=psk.dpsic;
+	    }
+	  else
+	    {
+	      psic_eval = u[i]; dpsic_eval=1.0;
+	      psk.calc_from_psic(psic_eval);
+	      sw[i] = psk.Se*(psk.Sw_max-psk.Sw_min) + psk.Sw_min;
+	      dsw_du = psk.dSe_dpsic/psk.dSe_dSw;
+	    }
+	  fracFlow.calc(psk,density_w,density_n);
+	  
+	  /* wetting phase  mass */
+	  m[i]   = omega[matID]*density_w.rho*sw[i]; 
+	  dm[i]  = omega[matID]*density_w.rho*dsw_du; 
+	  
+	  /* capillary potential */
+	  phi[i] = psic_eval; 
+	  dphi[i]= dpsic_eval; 
+	  
+	  for (int I=0;I<nSpace;I++)
+	    {
+	      /* wetting phase advection */
+	      /* todo, remove diagonal assumption on K*/
+	      for (int m=rowptr[I]; m < rowptr[I+1]; m++)
+		{
+		  const int J = colind[m];
+		  if (I==J)
+		    {
+		      f[i*nSpace+I]  = advectionScaling*(qt[i*nSpace+I]*fracFlow.fw
+							 - Kbar[matID*nnz+m]*fracFlow.lambdaw*fracFlow.fn*(b*density_n.rho-density_w.rho)*g[I]) ;
+		      df[i*nSpace+I] = advectionScaling*(qt[i*nSpace+I]*fracFlow.dfw
+							 - (Kbar[matID*nnz+m]*g[I]*(b*density_n.rho-density_w.rho))*(fracFlow.lambdaw*fracFlow.dfn + fracFlow.fn*fracFlow.dlambdaw));
+		    } 
+		  /* wetting phase  capillary diffusion */
+		  /*include scaling factor in case want to turn of capillary diffusion to test hyperbolic approximations*/
+		  a[i*nnz+m]  = -capillaryDiffusionScaling*Kbar[matID*nnz+m]*fracFlow.lambdaw*fracFlow.fn;
+		  da[i*nnz+m] = -capillaryDiffusionScaling*Kbar[matID*nnz+m]*(fracFlow.dlambdaw*fracFlow.fn + fracFlow.lambdaw*fracFlow.dfn);
+		}
+	    }
+        }
+    }
+  return 0;
+}
 
+//loop through and generate a spline table using nknots points given in array domain
+//insert values into splineTable in the order
+//u_0,..u_{nk-1},uinv_0,...,uinv_{nk-1},krw_0,...,krw_{nk-1},krn_0,...,krn_{nk-1}
+//where uinv = psic if u=Sw and vice versa
+//assumes all for one media type
+template <class PSK>
+inline void generateSplineTables(int nknots,
+				 int startIndex,
+				 int calcFlag, //0 --- genate tables for f(S_w), 1, generate tables for f(psi_c)
+				 const double* domain,
+				 const double* rwork_psk,
+				 const int* iwork_psk,
+				 const double* rwork_psk_tol,
+				 double* splineTable)
+{
+  PSK psk(rwork_psk,iwork_psk);
+  psk.setTolerances(rwork_psk_tol);
+
+  if (calcFlag == 0)
+    {
+      for (int i=0; i < nknots; i++)
+	{
+	  double sw = domain[i];
+	  psk.calc(sw);
+	  //mwf debug
+	  std::cout<<"generate splineTable calcFlag=0 startIndex= "<<startIndex<<" nknots= "<<nknots<<" sw["<<i<<"]= "<<sw<<" psic= "<<psk.psic<<" krw= "<<psk.krw<<" krn= "<<psk.krn<<std::endl;
+	  splineTable[startIndex+i] =sw;
+	  splineTable[startIndex + nknots  +i]=psk.psic;
+	  splineTable[startIndex + nknots*2+i]=psk.krw;
+	  splineTable[startIndex + nknots*3+i]=psk.krn;
+	}
+      //go ahead and fix enpoints manually 
+      //capillary pressure at dry end
+      splineTable[startIndex + nknots] = splineTable[startIndex + nknots+1]+1.0;
+    }
+  else
+    {
+      for (int i=0; i < nknots; i++)
+	{
+	  double psic = domain[i];
+	  psk.calc_from_psic(psic);
+	  splineTable[startIndex+i] =psic;
+	  splineTable[startIndex + nknots  +i]=psk.Se*(psk.Sw_max-psk.Sw_min) + psk.Sw_min;
+	  splineTable[startIndex + nknots*2+i]=psk.krw;
+	  splineTable[startIndex + nknots*3+i]=psk.krn;
+	}
+      //fix capillary pressure at wet end
+      splineTable[startIndex + nknots] = splineTable[startIndex + nknots+1]*(1.0+1.e-8);
+      //krw at wet end
+      splineTable[startIndex + nknots*2] = splineTable[startIndex + nknots*2+1];
+      //krn at wet end
+      splineTable[startIndex + nknots*3] = splineTable[startIndex + nknots*3+1];
+
+
+    }
+  
+}
 /********************************** begin deprecated routines ********************/
 /* homogeneous coefficients */
 template<class PSK>
