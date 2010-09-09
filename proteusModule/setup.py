@@ -16,9 +16,9 @@ except:
 from distutils import sysconfig
 cv = sysconfig.get_config_vars()
 cv["OPT"] = cv["OPT"].replace("-DNDEBUG","-DDEBUG")
-cv["OPT"] = cv["OPT"].replace("-O3","")
+cv["OPT"] = cv["OPT"].replace("-O3","-g")
 cv["CFLAGS"] = cv["CFLAGS"].replace("-DNDEBUG","-DDEBUG")
-cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","")
+cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","-g")
 
 setup(name='proteus',
       version='0.9.0',
@@ -473,6 +473,12 @@ setup(name='proteus',
                              libraries=['m'],
                              extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS,
                              extra_link_args=PROTEUS_EXTRA_LINK_ARGS),
+                   Extension('cSubsurfaceTransportCoefficients',
+                             ['proteus/cSubsurfaceTransportCoefficientsModule.cpp'],
+                             libraries=['m'],
+                             include_dirs=[numpy.get_include(),'include'],
+                             extra_link_args=PROTEUS_EXTRA_LINK_ARGS,
+                             extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS),
                    #Cython generated modules with just c code
                    Extension("waveFunctions",['proteus/waveFunctions.c','proteus/transportCoefficients.c'],
                              include_dirs=[numpy.get_include(),'include'])                
