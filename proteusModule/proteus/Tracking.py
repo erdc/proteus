@@ -1477,8 +1477,11 @@ class LinearAdvection_RT0Velocity_PT123(SteadyState_LinearAdvection_RT0Velocity_
 class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity_PT123A):
     """
     analytical element by element tracking for a RT0 velocity field (on simplices)
-     V = V_0 + v_x (X-X_0) + V_t (t-t_0) 
-      using Pearce's PT123A framework and Russell, Healy 00 approach (sort of)
+      V = V_0 + v_x (X-X_0) + V_t (t-t_0) + v_xt (X-X_0)(t-t_0)
+      
+    using Pearce's PT123A framework and Russell, Healy 00 approach (sort of)
+    idvt = 1 --> v_xt = 0
+    
     Note that the velocity and times dictionaries are shallow copies
     TODO
     
@@ -1494,7 +1497,8 @@ class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity
                          ('rtol_tracking',0):0.0,
                          ('sf_tracking',0):0.9,     #safety factor for RK integration
                          ('dn_safe_tracking',0):1.0e-7,#tolerance for traking in-element tests
-                         ('localVelocityRepresentationFlag',0):2}):#RT0 velocity representation, 2 -- flux based rep, 1 \vec a + b\vec x
+                         ('localVelocityRepresentationFlag',0):2,
+                         ('temporalVariationFlag',0):1}):#RT0 velocity representation, 2 -- flux based rep, 1 \vec a + b\vec x
         SteadyState_LinearAdvection_RT0Velocity_PT123A.__init__(self,mesh,nd,
                                                                component_velocity_l2g,
                                                                component_velocity_dofs_0,
@@ -1532,10 +1536,15 @@ class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity
             maxeq = 3;
             nVDOF_element=self.mesh.nNodes_element
             nVDOF_total  =len(self.component_velocity_dofs[ci].flat)
+            #how is local velocity represented?
             assert self.params[('localVelocityRepresentationFlag',ci)] in [1,2], "self.params[('localVelocityRepresentationFlag',ci)]= %s not supported " % (self.params[('localVelocityRepresentationFlag',ci)])
             idve = 3
             if self.params[('localVelocityRepresentationFlag',ci)] == 1:
                 idve = 4
+            #what type of temporal variation is assumed, 0 -- steady state, 1 -- linear in x-t, 2 -- bilinear in x-t
+            assert self.params[('temporalVariationFlag',ci)] in [0,1,2], "self.params[('temporalVariationFlag',ci)]= %s must be in [0,1,2] " % (self.params[('temporalVariationFlag',ci)])
+            idvt = self.params[('temporalVariationFlag',ci)]
+            
             t_velocity_0 = self.component_velocity_times_0[ci]
             t_velocity_1 = self.component_velocity_times_1[ci]
             #mwf debug
@@ -1581,7 +1590,7 @@ class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity
                              flag_track[ci].reshape(nPoints[ci]),
                              x_track[ci].reshape(nPoints[ci]*maxeq),
                              idve=idve,
-                             idvt=1,
+                             idvt=idvt,
                              maxeq=3,
                              iverbose=0)
 
@@ -1624,6 +1633,9 @@ class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity
             idve = 3
             if self.params[('localVelocityRepresentationFlag',ci)] == 1:
                 idve = 4
+            #what type of temporal variation is assumed, 0 -- steady state, 1 -- linear in x-t, 2 -- bilinear in x-t
+            assert self.params[('temporalVariationFlag',ci)] in [0,1,2], "self.params[('temporalVariationFlag',ci)]= %s must be in [0,1,2] " % (self.params[('temporalVariationFlag',ci)])
+            idvt = self.params[('temporalVariationFlag',ci)]
             t_velocity_0 = self.component_velocity_times_0[ci]
             t_velocity_1 = self.component_velocity_times_1[ci]
 
@@ -1665,7 +1677,7 @@ class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity
                              flag_track[ci].reshape(nPoints[ci]),
                              x_track[ci].reshape(nPoints[ci]*maxeq),
                              idve=idve,
-                             idvt=1,
+                             idvt=idvt,
                              maxeq=3,
                              iverbose=0)
 
@@ -1687,7 +1699,6 @@ class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity
         else:
             self.component_velocity_dofs_0[component] = trackingVelocity_dofs
             self.component_velocity_times_0[component]= time
-
 
 
 class LinearAdvection_C0P1Velocity_PT123A(SteadyState_LinearAdvection_C0P1Velocity_PT123):
@@ -1721,7 +1732,7 @@ class LinearAdvection_C0P1Velocity_PT123A(SteadyState_LinearAdvection_C0P1Veloci
         #
         self.component_velocity_dofs_0  = self.component_velocity_dofs
         self.component_velocity_dofs_1  = component_velocity_dofs_1
-
+ 
     def forwardTrack(self,
                      t_depart,           #point departure times
                      t_track,            #target end time
@@ -1924,6 +1935,8 @@ class LinearAdvection_C0P1Velocity_PT123A(SteadyState_LinearAdvection_C0P1Veloci
             for ebN in range(self.mesh.nElementBoundaries_element):
                 ebN_global = self.mesh.elementBoundariesArray[eN,ebN]
                 self.elementBoundaryBarycentersArray[eN,ebN,:] = self.mesh.elementBoundaryBarycentersArray[ebN_global,:]
+
+
 
 ######################################################################
 #routines for testing tracking
