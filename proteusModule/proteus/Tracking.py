@@ -1497,8 +1497,8 @@ class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity
                          ('rtol_tracking',0):0.0,
                          ('sf_tracking',0):0.9,     #safety factor for RK integration
                          ('dn_safe_tracking',0):1.0e-7,#tolerance for traking in-element tests
-                         ('localVelocityRepresentationFlag',0):2,
-                         ('temporalVariationFlag',0):1}):#RT0 velocity representation, 2 -- flux based rep, 1 \vec a + b\vec x
+                         ('localVelocityRepresentationFlag',0):2,#RT0 velocity representation, 2 -- flux based rep, 1 \vec a + b\vec x
+                         ('temporalVariationFlag',0):1}):
         SteadyState_LinearAdvection_RT0Velocity_PT123A.__init__(self,mesh,nd,
                                                                component_velocity_l2g,
                                                                component_velocity_dofs_0,
@@ -2105,6 +2105,44 @@ def setupTrackingDataArrays(t_start,t_target,mesh,q,nq_per_element):
     #1 : point exited domain
     #-1: did not track
     q['flag_track']= numpy.zeros((mesh.nElements_global,nq_per_element),'i')
+    #on input -1 means try, it's an interior point
+    q['flag_track'].fill(-1)
+def setupArbitraryTrackingDataArrays(t_start,t_target,mesh,elementBoundaryNormals,q):
+    """
+    setup arrays assuming user has given specific points to track
+    """
+    #input/arrays
+    #in/out -- element where point is located
+    q['element_track'] = numpy.zeros(q['x_track'].shape[0],'i')
+    nd = elementBoundaryNormals.shape[-1]
+    for i in range(q['x_track'].shape[0]):#find where the points are with brute force
+        eN = 0; foundElement = False
+        while eN < mesh.nElements_global and not foundElement:
+            outside = False
+            for ebN in range(mesh.nElementBoundaries_element):
+                ebN_global = mesh.elementBoundariesArray[eN,ebN]
+                dxf = numpy.dot((q['x_track'][i,:nd]-mesh.elementBoundaryBarycentersArray[ebN_global,:nd]),elementBoundaryNormals[eN,ebN])
+                outside = outside or dxf > 1.0e-8
+            if not outside: foundElement = True
+            eN += 1
+        assert foundElement
+        q['element_track'][i]=eN-1
+    #mwf debug
+    import pdb
+    pdb.set_trace()
+    #in/out -- departure, arrival times for points
+    q['t_depart'] = numpy.zeros(q['x_track'].shape[0],'d')
+    q['t_track'] = numpy.zeros(q['x_track'].shape[0],'d')
+    q['t_depart'].fill(t_start)
+    q['t_track'].fill(t_target)
+    #in/out --- status of point
+    #in
+    #0 : track point, later can make >= 0 track, 1 --> vertex 
+    #out
+    #0 : point in interior
+    #1 : point exited domain
+    #-1: did not track
+    q['flag_track']= numpy.zeros(q['x_track'].shape[0],'i')
     #on input -1 means try, it's an interior point
     q['flag_track'].fill(-1)
 
@@ -3542,6 +3580,14 @@ def Lu1Dex(opts,tryPT123A=True):
             self.theta=0.5
             self.initialConditions = {0:LuProblem.LuIC(H=self.H)}
             self.analyticalSolutionParticleVelocity={0:LuProblem.LuParticleVelocity1d(H=self.H,K=self.K,S=self.S,theta=self.theta)}
+        def getInitialTrackingLocations(self,q):
+            """
+            return points that need to be tracked
+            """
+            nPoints = 1
+            x = numpy.zeros((1,3),'d')
+            x[0,0] = 500.0
+            return x
     p = LuProblem()
 
     assert opts.nnq > 0, "nnq = %s not ok must be > 1" % opts.nnq
@@ -3593,20 +3639,23 @@ def Lu1Dex(opts,tryPT123A=True):
     #evaluate velocity degrees of freedom from its interpolation conditions
     velocity_new.projectFromInterpolationConditions(q['velocity_interpolation_values'])
 
-    setupTrackingDataArrays(opts.t_start,tnList[istart+1],sdmesh,q,nq_per_element)
+    #get points actually going to track
+    q['J']            = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd,p.nd),'d')
+    q['inverse(J)']   = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd,p.nd),'d')
+    q['det(J)']       = numpy.zeros((q['x'].shape[0],q['x'].shape[1]),'d')
+    trialSpace.elementMaps.getJacobianValues(q['x_hat'],q['J'],q['inverse(J)'],q['det(J)'])
+
+    elementBoundaryOuterNormalsArray = numpy.zeros((sdmesh.nElements_global,sdmesh.nElementBoundaries_element,p.nd),'d')
+    boundaryNormals = numpy.array(trialSpace.elementMaps.referenceElement.boundaryUnitNormalList,dtype='d')
+    ctracking.getOuterNormals_affineSimplex(boundaryNormals,
+                                            q['inverse(J)'],
+                                            elementBoundaryOuterNormalsArray)
+    q['x_track']  = p.getInitialTrackingLocations(q)#q['x']; 
+    q['x_depart'] = numpy.copy(q['x_track'])
+
+    setupArbitraryTrackingDataArrays(opts.t_start,tnList[istart+1],sdmesh,elementBoundaryOuterNormalsArray,q)
 
     if tryPT123A:
-        #also try analytical tracking algorithm since RT0 and C0P1 same locally in 1d
-        q['J']            = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd,p.nd),'d')
-        q['inverse(J)']   = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd,p.nd),'d')
-        q['det(J)']       = numpy.zeros((q['x'].shape[0],q['x'].shape[1]),'d')
-        trialSpace.elementMaps.getJacobianValues(q['x_hat'],q['J'],q['inverse(J)'],q['det(J)'])
-
-        elementBoundaryOuterNormalsArray = numpy.zeros((sdmesh.nElements_global,sdmesh.nElementBoundaries_element,p.nd),'d')
-        boundaryNormals = numpy.array(trialSpace.elementMaps.referenceElement.boundaryUnitNormalList,dtype='d')
-        ctracking.getOuterNormals_affineSimplex(boundaryNormals,
-                                                q['inverse(J)'],
-                                                elementBoundaryOuterNormalsArray)
 
         class Transport_dummy:
             def __init__(self,elementBoundaryOuterNormalsArray):
@@ -3626,7 +3675,6 @@ def Lu1Dex(opts,tryPT123A=True):
     particle_tracker.setFromOptions(opts)
 
 
-
     ########## visualization and output stuff
     #save velocity field for visualization
     q['velocity_depart'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
@@ -3643,21 +3691,19 @@ def Lu1Dex(opts,tryPT123A=True):
     writer   = Archiver.XdmfWriter()
 
     #
-    arGrid = writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x'],tnList[istart],init=True,tCount=0)
+    arGrid = writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_depart'],tnList[istart],init=True,tCount=0)
     writer.writeScalarXdmf_particles(archive,q['t_depart'],"t_particle",tCount=0)
     writer.writeVectorXdmf_particles(archive,q['velocity_depart'],"velocity",tCount=0)
 
     #to accomodate updating pardigm for visualization copy _track info to be consistent
     #with start locations
-    q['x_track'].flat[:] = q['x']; q['t_viz'] = numpy.copy(q['t_depart'])
-    q['x_depart'] = numpy.copy(q['x'])
-
+    q['t_viz'] = numpy.copy(q['t_depart'])
+ 
     #which way to track (1. forward, -1. backward)
     direction = 1.0
 
-    #the last point in the domain is the one we'll compare (x=500.0)
-    #mwf debug
-    print """t= %s x_depart[-1][-1][0]= %s """ % (t,q['x_depart'][-1][-1][0])
+    #print out point we want to track
+    print """t= %s x_depart[0][0]= %s """ % (t,q['x_depart'][0][0])
     #time value for 'old' velocity
     tvelOld = tnList[istart]
 
@@ -3684,16 +3730,16 @@ def Lu1Dex(opts,tryPT123A=True):
         if direction > 0.0:
             particle_tracker.forwardTrack({0:q['t_depart']},    
                                           {0:q['t_track']},                          #target end time
-                                          {0:sdmesh.nElements_global*nq_per_element},#total number of points
-                                          {0:q['x']},                                #departure points
+                                          {0:q['x_depart'].shape[0]},                #total number of points
+                                          {0:q['x_depart']},                         #departure points
                                           {0:q['element_track']},                    #in/out element locations
                                           {0:q['x_track']},                          #arrival points
                                           {0:q['flag_track']})                       
         else:
             particle_tracker.backwardTrack({0:q['t_depart']},    
                                            {0:q['t_track']},                          #target end time
-                                           {0:sdmesh.nElements_global*nq_per_element},#total number of points
-                                           {0:q['x']},                                #departure points
+                                           {0:q['x_depart'].shape[0]},                #total number of points
+                                           {0:q['x_depart']},                         #departure points
                                            {0:q['element_track']},                    #in/out element locations
                                            {0:q['x_track']},                          #arrival points
                                            {0:q['flag_track']})                       
@@ -3705,15 +3751,15 @@ def Lu1Dex(opts,tryPT123A=True):
 
 
         q['t_depart'].flat[:] = q['t_track'].flat
-        q['x'].flat[:] = q['x_track'].flat
+        q['x_depart'].flat[:] = q['x_track'].flat
         tvelOld = t
 
-        print """t= %s t_track[-1][-1]= %s x_track[-1][-1][0] = %s  """ % (t,q['t_track'][-1][-1],q['x_track'][-1][-1][0])
+        print """t= %s t_track[0]= %s x_track[0][0] = %s  """ % (t,q['t_track'][0],q['x_track'][0][0])
         
     #output step loop
 
     #
-    print "Lu Done, t= %s t_track[-1][-1]= %s [s],  %s [d], x_track[-1][-1][0] = %s  """ % (t,q['t_track'][-1][-1],q['t_track'][-1][-1]/(60.0*60.0*24.0),q['x_track'][-1][-1][0])
+    print "Lu Done, t= %s t_track[0]= %s [s],  %s [d], x_track[0][0] = %s  """ % (t,q['t_track'][0],q['t_track'][0]/(60.0*60.0*24.0),q['x_track'][0][0])
 
     #close out archives and visualization
     archive.close()
