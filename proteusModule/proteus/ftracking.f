@@ -2640,7 +2640,7 @@ C
       IF (DT0.LT.0.D0) THEN 
          DIR = -1.D0
       ENDIF
-      IDEBUG = 0
+      IDEBUG = 2
       IF (IDEBUG.GT.0) THEN
 CMWF DEBUG
          WRITE(6,*)'ELTRAK123A CALLING STEP IVFLAG= ',IVFLAG,
@@ -2771,7 +2771,8 @@ C MWF DEBUG
 C
 C A1. WHEN THERE IS NO TRACKIING THROUGH THIS ELEMENT
 C
-            IF(DABS(D1).LT.DN_SAFE)THEN
+CMWF PYADH HAD            IF(DABS(D1).LT.DN_SAFE)THEN
+            IF(DABS(D1*DL).LT.ZEROTOL)THEN
                IF (IDEBUG.GT.0) THEN
 C MWF DEBUG
                   WRITE(6,*)' ELTRAK CASE A1 D1= ',D1,' D2= ',D2,
@@ -2782,11 +2783,18 @@ C IF THE PT IS LEAVING THE ELEMENT
 C ==> SET IDSDT TO 0, AND IDENTIFY I1, I2, I3 TO
 C     CONDUCT PT IN AN ADJACENT ELEMENT
 C
-               IF(DABS(D2).GT.DN_SAFE)THEN
+C PYADH HAD               IF(DABS(D2).GT.DN_SAFE)THEN
+C                  CALL DN_CHECK
+C     I                 (MAXND,NODE,NEQ, 1.D0,DN_SAFE,
+C     I                 DN_S,
+C     O                 I1,I2,I3)
+               IF(DABS(D2*DL).GT.ZEROTOL)THEN
                   CALL DN_CHECK
-     I                 (MAXND,NODE,NEQ, 1.D0,DN_SAFE,
+     I                 (MAXND,NODE,NEQ, DL,ZEROTOL,
      I                 DN_S,
      O                 I1,I2,I3)
+                  IDSDT=0
+
                   IDSDT=0
                   IF (IDEBUG.GT.0) THEN
 C MWF DEBUG
@@ -2809,7 +2817,8 @@ C
 C IF THE ENDING LOCATION CAN BE CONSIDERED ON THE ELEMENT BOUNDARY
 C ==> NO NEED TO REDUCE TIMESTEP
 C
-               IF(DABS(D2).LE.DN_SAFE) THEN
+C PYADH HAD               IF(DABS(D2).LE.DN_SAFE) THEN
+               IF(DABS(D2*DL).LE.ZEROTOL) THEN
                   IF (IDEBUG.GT.0) THEN
 C MWF DEBUG
                      WRITE(6,*)'D2*DL.LE.ZEROTOL GOTO 150'
@@ -2887,9 +2896,14 @@ CMWF DEBUG
             WRITE(6,*)'ELTRAK AFTER 150 DN(',I,')= ',DN(I),
      &           ' DABS(DN*DL) < ZEROTOL= ',DABS(DN(I)*DL).LT.ZEROTOL
          ENDIF
-         IF(DABS(DN(I)).LT.DN_SAFE)THEN
+C PYADH HAD         IF(DABS(DN(I)).LT.DN_SAFE)THEN
+C            CALL DN_CHECK
+C     I           (MAXND,NODE,NEQ, 1.D0,DN_SAFE,
+C     I           DN,
+C     O           I1,I2,I3)
+         IF(DABS(DN(I)*DL).LT.ZEROTOL)THEN
             CALL DN_CHECK
-     I           (MAXND,NODE,NEQ, 1.D0,DN_SAFE,
+     I           (MAXND,NODE,NEQ, DL,ZEROTOL,
      I           DN,
      O           I1,I2,I3)
             IF (IDEBUG.GT.0) THEN
