@@ -453,15 +453,22 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  					 subgridError_u,
 	  					 subgridError_v,
 	  					 subgridError_w);
-          
+     
+	  //cek todo
+	  // mom_u_adv[0] = (u + subgridError_u)*(u + subgridError_u)
+	  // mom_u_adv[1] = (u + subgridError_u)*(v + subgridError_v)
+	  // mom_u_adv[2] = (u + subgridError_u)*(w + subgridError_w)
+	  //and so on for mom_v_adv and mom_w_adv
+	  //BUT THEN FIX SUBGRIDERROR or add a new term (e.g. RBLES_TERM)
+	  //end todo
           //calculate shock capturing diffusion
           
 	  norm_Rv = sqrt(pdeResidual_u*pdeResidual_u + pdeResidual_v*pdeResidual_v + pdeResidual_w*pdeResidual_w);
-	  q_numDiff_v[eN_k] = C_dc*norm_Rv/sqrt(G_dd_G);
+	  q_numDiff_u[eN_k] = C_dc*norm_Rv/sqrt(G_dd_G);
 	  q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
 	  q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
 	  // //cek debug
-	  //q_numDiff_v[eN_k] = 0.0;
+	  //q_numDiff_u[eN_k] = 0.0;
 	  //q_numDiff_v[eN_k] = 0.0;
 	  //q_numDiff_w[eN_k] = 0.0;
 	  // q_numDiff_u_last[eN_k] = 0.0;	  
@@ -934,6 +941,7 @@ extern "C" void calculateResidual_RANS2PV2(//element
 						   flux_mom_v_adv_ext,
 						   flux_mom_w_adv_ext,
 						   &ebqe_velocity[ebNE_kb_nSpace]);
+	  //cek todo need to switch to full stress and add adjoint consistency
 	  RANS2PV2::exteriorNumericalDiffusiveFlux(eps_rho,
 						   ebqe_phi_ext[ebNE_kb],
 						   sdInfo_u_u_rowptr,
@@ -1520,6 +1528,7 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 							    dsubgridError_v_v,
 							    dsubgridError_w_p,
 							    dsubgridError_w_w);
+	  //cek todo add RBLES terms consistent to residual modifications or ignore them partials w.r.t the additional RBLES terms
   	  for(int i=0;i<nDOF_test_element;i++)
 	    {
 	      register int i_nSpace = i*nSpace;
@@ -2064,7 +2073,7 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 	      //cek debug
 	      //ebqe_penalty_ext[ebNE_kb] = 10.0;
 	      //
-
+	      //cek todo add full stress on boundaries
 
 	      fluxJacobian_p_p[j]=0.0;
 	      fluxJacobian_p_u[j]=ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_mass_u_ext,vel_trial_trace_ref[ebN_local_kb_j]);
