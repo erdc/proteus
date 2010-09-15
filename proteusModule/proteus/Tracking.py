@@ -1992,7 +1992,7 @@ def setupVelocity_C0P1(opts,p,mesh,t):
     velocity.projectFromInterpolationConditions(velocity_interpolation_values)
     
     return velocitySpace,velocity,velocity_interpolation_values
-def setupVelocity_RT0(opts,p,mesh,geometricSpace,t):
+def setupVelocity_RT0(opts,p,mesh,geometricSpace,t,nd=2):
     """
     initially returns just a l2g mapping and dof map for an RT0 velocity representation on 
     simplexes because we don't have a fem function or space for this yet
@@ -2014,7 +2014,12 @@ def setupVelocity_RT0(opts,p,mesh,geometricSpace,t):
     velocity_interpolation_values = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element),'d')
     
     #setup information for boundary integrals
-    boundaryQuadrature = Quadrature.GaussEdge(4)
+    if nd == 1:
+        boundaryQuadrature = Quadrature.GaussPoint()
+    elif nd == 3:
+        boundaryQuadrature = Quadrature.GaussTriangle(4)
+    else:
+        boundaryQuadrature = Quadrature.GaussEdge(4)
     elementBoundaryQuadraturePoints = numpy.array([pt for pt in boundaryQuadrature.points],dtype='d')
     elementBoundaryQuadratureWeights= numpy.array([wt for wt in boundaryQuadrature.weights],dtype='d')
     
@@ -2445,7 +2450,7 @@ def test2(opts):
     #velocity representation
     #RT0 in 2d
     #since don't have a full FEM representation for vector spaces this requires more work
-    q['velocity_dof'],q['velocity_l2g'],q['velocity_interpolation_values'],ebq,q['elementBoundaryQuadraturePoints'],q['elementBoundaryQuadratureWeights'] = setupVelocity_RT0(opts,p,sdmesh,trialSpace,opts.t_start)
+    q['velocity_dof'],q['velocity_l2g'],q['velocity_interpolation_values'],ebq,q['elementBoundaryQuadraturePoints'],q['elementBoundaryQuadratureWeights'] = setupVelocity_RT0(opts,p,sdmesh,trialSpace,opts.t_start,nd=2)
     #uses flux rep
     localVelocityRepresentationFlag = 2
 
@@ -2733,7 +2738,7 @@ def test3(opts):
     #velocity representation
     #RT0 in 2d
     #since don't have a full FEM representation for vector spaces this requires more work
-    q['velocity_dof'],q['velocity_l2g'],q['velocity_interpolation_values'],ebq,q['elementBoundaryQuadraturePoints'],q['elementBoundaryQuadratureWeights'] = setupVelocity_RT0(opts,p,sdmesh,trialSpace,opts.t_start)
+    q['velocity_dof'],q['velocity_l2g'],q['velocity_interpolation_values'],ebq,q['elementBoundaryQuadraturePoints'],q['elementBoundaryQuadratureWeights'] = setupVelocity_RT0(opts,p,sdmesh,trialSpace,opts.t_start,nd=2)
 
     q['x_hat'] = setupTrackingPointsInReferenceSpace(opts,p)
     nq_per_element = q['x_hat'].shape[0]
@@ -3798,7 +3803,7 @@ def Lu1Dex(opts,tryPT123A=True):
     except:
         pass
 
-def test8(opts,tryPT123A=True):
+def test8(opts,tryPT123A=False):
     """
     transient, C0P1 in space. Computes error by comparing starting and ending location for points in a specified
       interval
@@ -3807,11 +3812,14 @@ def test8(opts,tryPT123A=True):
 
     assert p.nd in [1,2,3]
     assert "analyticalSolutionParticleVelocity" in dir(p), "need p.analyticalSolutionParticleVelocity to test tracking"
+    #need separate nnq for velocity eval and tracking points now
+    nPointsToTrack = opts.nnq
+    opts.nnq = 1
     assert opts.nnq > 0, "nnq = %s not ok must be > 1" % opts.nnq
     if opts.t_target == None:
         opts.t_target = p.T
     dtout = (opts.t_target - opts.t_start)/opts.nnt
-    tnList = [opts.t_start + i*dtout for i in range(opts.nnt+1)]
+    tnList = [opts.t_start + i*dtout for i in range(int(opts.nnt)+1)]
     #to collect integration points etc
     q = {}
     #spatial mesh on 1 level for now, 
@@ -3874,13 +3882,17 @@ def test8(opts,tryPT123A=True):
     ctracking.getOuterNormals_affineSimplex(boundaryNormals,
                                             q['inverse(J)'],
                                             elementBoundaryOuterNormalsArray)
+    q['nPointsToTrack'] = nPointsToTrack
     q['x_track']  = p.getInitialTrackingLocations(q)#q['x']; 
     q['x_depart'] = numpy.copy(q['x_track'])
 
 
     setupArbitraryTrackingDataArrays(opts.t_start,tnList[istart+1],sdmesh,elementBoundaryOuterNormalsArray,q)
 
+
+    label = "PT123"
     if tryPT123A:
+        label = "PT123A"
 
         class Transport_dummy:
             def __init__(self,elementBoundaryOuterNormalsArray):
@@ -3910,7 +3922,7 @@ def test8(opts,tryPT123A=True):
 
     #mwf debug
     #pdb.set_trace()
-    archive = Archiver.XdmfArchive(".","test8",useTextArchive=False)
+    archive = Archiver.XdmfArchive(".","test8_"+label,useTextArchive=False)
     import xml.etree.ElementTree as ElementTree
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     writer   = Archiver.XdmfWriter()
@@ -3927,8 +3939,12 @@ def test8(opts,tryPT123A=True):
     #which way to track (1. forward, -1. backward)
     direction = 1.0
 
+    xfile = open('x_track_test8_'+label+'.dat','w')
+    tfile = open('t_track_test8_'+label+'.dat','w')
     #print out point we want to track
-    print """t= %s x_depart= %s """ % (t,q['x_depart'])
+    #print """t= %s x_depart= %s """ % (t,q['x_depart'])
+    numpy.savetxt(tfile,q['t_track'])
+    numpy.savetxt(xfile,q['x_depart'])
     #time value for 'old' velocity
     tvelOld = tnList[istart]
 
@@ -3975,16 +3991,21 @@ def test8(opts,tryPT123A=True):
         #writer.writeVectorXdmf_particles(archive,q['velocity_track'],"velocity",tCount=i+1)
 
 
+        numpy.savetxt(tfile,q['t_track'])
+        numpy.savetxt(xfile,q['x_track'])
+
         q['t_depart'].flat[:] = q['t_track'].flat
         q['x_depart'].flat[:] = q['x_track'].flat
         tvelOld = t
 
-        print """t= %s t_track= %s x_track = %s  """ % (t,q['t_track'],q['x_track'])
+        #print """t= %s t_track= %s x_track = %s  """ % (t,q['t_track'],q['x_track'])
         
     #output step loop
 
+    xfile.close()
+    tfile.close()
     #
-    print "Done, t= %s t_track= %s [s],  x_track = %s  """ % (t,q['t_track'],q['x_track'])
+    #print "Done, t= %s t_track= %s [s],  x_track = %s  """ % (t,q['t_track'],q['x_track'])
 
     #close out archives and visualization
     archive.close()
@@ -4003,11 +4024,14 @@ def test9(opts,tryPT123A=False):
 
     assert p.nd in [1,2,3]
     assert "analyticalSolutionParticleVelocity" in dir(p), "need p.analyticalSolutionParticleVelocity to test tracking"
+    #need separate nnq for velocity eval and tracking points now
+    nPointsToTrack = opts.nnq
+    opts.nnq = 1
     assert opts.nnq > 0, "nnq = %s not ok must be > 1" % opts.nnq
     if opts.t_target == None:
         opts.t_target = p.T
     dtout = (opts.t_target - opts.t_start)/opts.nnt
-    tnList = [opts.t_start + i*dtout for i in range(opts.nnt+1)]
+    tnList = [opts.t_start + i*dtout for i in range(int(opts.nnt)+1)]
     #to collect integration points etc
     q = {}
     #spatial mesh on 1 level for now, 
@@ -4024,9 +4048,8 @@ def test9(opts,tryPT123A=False):
     trialSpace,u,q['u_interpolation_values'] = setupSolution_C0P1(opts,p,sdmesh,tnList[0])
 
     #velocity representation
-    #RT0 in 2d
     #since don't have a full FEM representation for vector spaces this requires more work
-    q['velocity_dof'],q['velocity_l2g'],q['velocity_interpolation_values'],ebq,q['elementBoundaryQuadraturePoints'],q['elementBoundaryQuadratureWeights'] = setupVelocity_RT0(opts,p,sdmesh,trialSpace,opts.t_start)
+    q['velocity_dof'],q['velocity_l2g'],q['velocity_interpolation_values'],ebq,q['elementBoundaryQuadraturePoints'],q['elementBoundaryQuadratureWeights'] = setupVelocity_RT0(opts,p,sdmesh,trialSpace,opts.t_start,nd=p.nd)
     #uses flux rep
     localVelocityRepresentationFlag = 2
     q['velocity_new_dof'] = numpy.copy(q['velocity_dof'])
@@ -4065,6 +4088,7 @@ def test9(opts,tryPT123A=False):
     ctracking.getOuterNormals_affineSimplex(boundaryNormals,
                                             q['inverse(J)'],
                                             elementBoundaryOuterNormalsArray)
+    q['nPointsToTrack'] = nPointsToTrack
     q['x_track']  = p.getInitialTrackingLocations(q)#q['x']; 
     q['x_depart'] = numpy.copy(q['x_track'])
 
@@ -4090,9 +4114,9 @@ def test9(opts,tryPT123A=False):
                                                              {0:q['velocity_l2g']},
                                                              {0:q['velocity_dof']},
                                                              activeComponentList=[0])
+    #setting tolerances in opts here is not very convenient because doesn't have numerics file loaded
     particle_tracker.setFromOptions(opts)
-
-
+    particle_tracker.params[('dn_safe_tracking',0)]=1.0e-7
     ########## visualization and output stuff
 
     #mwf debug
@@ -4113,8 +4137,13 @@ def test9(opts,tryPT123A=False):
     #which way to track (1. forward, -1. backward)
     direction = 1.0
 
+    xfile = open('x_track_test9_'+label+'.dat','w')
+    tfile = open('t_track_test9_'+label+'.dat','w')
     #print out point we want to track
-    print """t= %s x_depart= %s """ % (t,q['x_depart'])
+    #print """t= %s x_depart= %s """ % (t,q['x_depart'])
+    numpy.savetxt(tfile,q['t_track'])
+    numpy.savetxt(xfile,q['x_depart'])
+
     #time value for 'old' velocity
     tvelOld = tnList[istart]
 
@@ -4153,21 +4182,25 @@ def test9(opts,tryPT123A=False):
         writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track'],t,init=False,meshChanged=True,arGrid=arGrid,tCount=i+1)
         writer.writeScalarXdmf_particles(archive,q['t_track'],"t_particle",tCount=i+1)
 
+        numpy.savetxt(tfile,q['t_track'])
+        numpy.savetxt(xfile,q['x_track'])
 
         q['t_depart'].flat[:] = q['t_track'].flat
         q['x_depart'].flat[:] = q['x_track'].flat
         tvelOld = t
 
-        print """t= %s t_track= %s x_track = %s  """ % (t,q['t_track'],q['x_track'])
+        #print """t= %s t_track= %s x_track = %s  """ % (t,q['t_track'],q['x_track'])
         
     #output step loop
 
     #
-    print "Done, t= %s t_track= %s [s],  x_track = %s  """ % (t,q['t_track'],q['x_track'])
-
+    #print "Done, t= %s t_track= %s [s],  x_track = %s  """ % (t,q['t_track'],q['x_track'])
+    xfile.close()
+    tfile.close()
     #close out archives and visualization
     archive.close()
 
+    
     try:#run time visualization?
         sys.exit(vtkViewers.g.app.exec_())
     except:
@@ -4182,6 +4215,11 @@ if __name__=='__main__':
     import optparse
     import sys
     import pdb
+    try:
+        import cProfile as profiler
+    except:
+        import profile as profiler
+    import pstats
 
     usage  = "usage: %prog [options] "
     parser = optparse.OptionParser(usage=usage)
@@ -4254,6 +4292,11 @@ if __name__=='__main__':
                       action="store_true",
                       dest="wait",
                       default=False)
+    parser.add_option("--profile",
+                      help="profile entire tracking example",
+                      action="store_true",
+                      dest="profile",
+                      default=False)
     
                       
     (opts,args) = parser.parse_args()
@@ -4267,26 +4310,42 @@ if __name__=='__main__':
     if probDir not in sys.path:
         sys.path.insert(0,probDir)
 
-    if opts.test_id == 0:
-        test0(opts)
-    elif opts.test_id == 1:
-        test1(opts)
-    elif opts.test_id == 2:
-        test2(opts)
-    elif opts.test_id == 3:
-        test3(opts)
-    elif opts.test_id == 4:
-        test4(opts)
-    elif opts.test_id == 5:
-        test5(opts)
-    elif opts.test_id == 6:
-        test6(opts)
-    elif opts.test_id == 7:
-        Lu1Dex(opts)
-    elif opts.test_id == 8:
-        test8(opts)
-    elif opts.test_id == 9:
-        test9(opts)
+    testDict = {0:test0,1:test1,2:test2,3:test3,4:test4,5:test5,6:test6,7:Lu1Dex,8:test8,9:test9}
+    test = None
+    assert opts.test_id in testDict.keys(), "test_id= %s not supported yet " % opts.test_id
+    
+    if opts.profile:
+        name = 'Tracking_test_id_%s' % opts.test_id
+        profiler.run('testDict[opts.test_id](opts)',name+'_prof')
+        stats = pstats.Stats(name+'_prof')
+        stats.strip_dirs()
+        stats.dump_stats(name+'_prof_c')
+        stats.sort_stats('cumulative')
+        stats.print_stats(30)
+        stats.sort_stats('time')
+        stats.print_stats(30)
     else:
-        print "test_id= %s not supported yet " % opts.test_id
+        testDict[opts.test_id](opts)
+#     if opts.test_id == 0:
+#         test0(opts)
+#     elif opts.test_id == 1:
+#         test1(opts)
+#     elif opts.test_id == 2:
+#         test2(opts)
+#     elif opts.test_id == 3:
+#         test3(opts)
+#     elif opts.test_id == 4:
+#         test4(opts)
+#     elif opts.test_id == 5:
+#         test5(opts)
+#     elif opts.test_id == 6:
+#         test6(opts)
+#     elif opts.test_id == 7:
+#         Lu1Dex(opts)
+#     elif opts.test_id == 8:
+#         test8(opts)
+#     elif opts.test_id == 9:
+#         test9(opts)
+#     else:
+#         print "test_id= %s not supported yet " % opts.test_id
 
