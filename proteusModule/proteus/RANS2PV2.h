@@ -283,6 +283,10 @@ namespace RANS2PV2
       for (int J=0;J<nSpace;J++)
 	v_d_Gv += v[I]*G[I*nSpace+J]*v[J];
     cfl = 2.0*sqrt(v_d_Gv);
+    //cek 1.0/sqrt(rho2*Dt2 + 4*v_d_Gv + 144*mu2*G_dd_G); ?
+    /* tau_v = 1.0/sqrt(rho2*Dt2 + 4*v_d_Gv + 144*mu2*G_dd_G); */
+    /* tau_p = 1.0/(tr_G*tau_v);  */
+    //cek "correct" tau
     tau_v = 1.0/sqrt(Ct_sge*rho2*Dt2 + rho2*v_d_Gv + Cd_sge*mu2*G_dd_G);
     tau_p = 1.0/(tr_G*tau_v);
     //debug

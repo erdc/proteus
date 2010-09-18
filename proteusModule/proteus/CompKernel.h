@@ -352,7 +352,7 @@ public:
     for (int I=0;I<NSPACE;I++)
       for (int J=0;J<NSPACE;J++)
 	h += v[I]*G[I*NSPACE+J]*v[J];
-    h = 1.0/sqrt(h);
+    h = 1.0/sqrt(h+1.0e-16);//cek hack
   }
   inline void valFromDOF(const double* dof,const int* l2g_element,const double* trial_ref,double& val)
   {
@@ -616,6 +616,7 @@ public:
       n_grad_u += grad_u[I]*grad_u[I];
     num = shockCapturingDiffusion*0.5*h*fabs(strong_residual);
     den = sqrt(n_grad_u) + 1.0e-8;
+    //cek hack shockCapturingDiffusion*fabs(strong_residual)*grad_phi_G_grad_phi
     numDiff = num/den;
   }
 
