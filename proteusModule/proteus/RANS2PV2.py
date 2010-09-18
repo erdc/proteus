@@ -538,7 +538,7 @@ class OneLevelRANS2PV2(OneLevelTransport):
         self.elementResidual[2].fill(0.0) 
         self.elementResidual[3].fill(0.0)
         self.Ct_sge = 4.0
-        self.Cd_sge = 12.0
+        self.Cd_sge = 144.0
         cResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
