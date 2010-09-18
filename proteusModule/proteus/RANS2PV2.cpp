@@ -468,9 +468,9 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  q_numDiff_v[eN_k] = q_numDiff_u[eN_k];
 	  q_numDiff_w[eN_k] = q_numDiff_u[eN_k];
 	  // //cek debug
-	  //q_numDiff_u[eN_k] = 0.0;
-	  //q_numDiff_v[eN_k] = 0.0;
-	  //q_numDiff_w[eN_k] = 0.0;
+	  // q_numDiff_u[eN_k] = 0.0;
+	  // q_numDiff_v[eN_k] = 0.0;
+	  // q_numDiff_w[eN_k] = 0.0;
 	  // q_numDiff_u_last[eN_k] = 0.0;	  
 	  // q_numDiff_v_last[eN_k] = 0.0;	  
 	  // q_numDiff_w_last[eN_k] = 0.0;	  
