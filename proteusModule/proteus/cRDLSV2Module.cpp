@@ -1,6 +1,6 @@
 #include "Python.h"
 #include "numpy/arrayobject.h"
-#include "RDLS.h"
+#include "RDLSV2.h"
 #include "superluWrappersModule.h"
 
 #define ND(p) ((PyArrayObject *)p)->nd
@@ -15,7 +15,7 @@
 #define IDATA(p) ((int *) (((PyArrayObject *)p)->data))
 #define CSRVAL(p) ((double*)((SparseMatrix*)p)->A.nzval)
 
-static PyObject* cRDLS_calculateResidual(PyObject* self,
+static PyObject* cRDLSV2_calculateResidual(PyObject* self,
 					   PyObject* args)
 {
   int nElements_global,
@@ -52,7 +52,27 @@ static PyObject* cRDLS_calculateResidual(PyObject* self,
     *weakDirichletConditionFlags,
     *globalResidual;
   int nExteriorElementBoundaries_global;
-  PyObject *exteriorElementBoundariesArray,
+  PyObject //testing
+    *mesh_trial_ref,
+    *mesh_grad_trial_ref,
+    *mesh_dof,
+    *mesh_l2g,
+    *dV_ref,
+    *u_trial_ref,
+    *u_grad_trial_ref,
+    *u_test_ref,
+    *u_grad_test_ref,
+    *mesh_trial_trace_ref,
+    *mesh_grad_trial_trace_ref,
+    *dS_ref,
+    *u_trial_trace_ref,
+    *u_grad_trial_trace_ref,
+    *u_test_trace_ref,
+    *u_grad_test_trace_ref,
+    *normal_ref,
+    *boundaryJac_ref,
+    //testing
+    *exteriorElementBoundariesArray,
     *elementBoundaryElementsArray,
     *elementBoundaryLocalElementBoundariesArray,
     *u_trial_ext,
@@ -64,7 +84,26 @@ static PyObject* cRDLS_calculateResidual(PyObject* self,
     *u_test_dS_ext,
     *u_ext;
   if (!PyArg_ParseTuple(args,
-                        "iddiiiidOOOOOOOOOOOOOOOOOOOOOOOOiiOiOOOOOOOOOOO",//added 4*O for debugging
+                        "OOOOOOOOOOOOOOOOOOiddiiiidOOOOOOOOOOOOOOOOOOOOOOOOiiOiOOOOOOOOOOO",//added 4*O for debugging
+                        //testing
+			&mesh_trial_ref,
+			&mesh_grad_trial_ref,
+			&mesh_dof,
+			&mesh_l2g,
+			&dV_ref,
+			&u_trial_ref,
+			&u_grad_trial_ref,
+			&u_test_ref,
+			&u_grad_test_ref,
+			&mesh_trial_trace_ref,
+			&mesh_grad_trial_trace_ref,
+			&dS_ref,
+			&u_trial_trace_ref,
+			&u_grad_trial_trace_ref,
+			&u_test_trace_ref,
+			&u_grad_test_trace_ref,
+			&normal_ref,
+			&boundaryJac_ref,
                         &nElements_global,
 			&dt,
 			&eps,
@@ -115,8 +154,28 @@ static PyObject* cRDLS_calculateResidual(PyObject* self,
 			&u_ext))
     return NULL;
   
-//   calculateResidual_RDLS(nElements_global,
-  RDLS_RES (nElements_global,
+//   calculateResidual_RDLSV2(nElements_global,
+  RDLSV2_RES (//testing mesh replacement
+			   DDATA(mesh_trial_ref),
+			   DDATA(mesh_grad_trial_ref),
+			   DDATA(mesh_dof),
+			   IDATA(mesh_l2g),
+			   DDATA(dV_ref),
+			   DDATA(u_trial_ref),
+			   DDATA(u_grad_trial_ref),
+			   DDATA(u_test_ref),
+			   DDATA(u_grad_test_ref),
+			   DDATA(mesh_trial_trace_ref),
+			   DDATA(mesh_grad_trial_trace_ref),
+			   DDATA(dS_ref),
+			   DDATA(u_trial_trace_ref),
+			   DDATA(u_grad_trial_trace_ref),
+			   DDATA(u_test_trace_ref),
+			   DDATA(u_grad_test_trace_ref),
+			   DDATA(normal_ref),
+			   DDATA(boundaryJac_ref),
+			   //end testing meshreplacement
+			   nElements_global,
 			 dt,
 			 eps,
 			 freezeLevelSet,
@@ -168,7 +227,7 @@ static PyObject* cRDLS_calculateResidual(PyObject* self,
   return Py_None;
 }
 
-static PyObject* cRDLS_calculateJacobian(PyObject* self,
+static PyObject* cRDLSV2_calculateJacobian(PyObject* self,
 					 PyObject* args)
 {
   int nElements_global;
@@ -193,7 +252,27 @@ static PyObject* cRDLS_calculateJacobian(PyObject* self,
   PyObject *csrRowIndeces_u_u,*csrColumnOffsets_u_u;
   PyObject* globalJacobian;
   int nExteriorElementBoundaries_global;
-  PyObject *exteriorElementBoundariesArray,
+  PyObject //testing
+    *mesh_trial_ref,
+    *mesh_grad_trial_ref,
+    *mesh_dof,
+    *mesh_l2g,
+    *dV_ref,
+    * u_trial_ref,
+    * u_grad_trial_ref,
+    * u_test_ref,
+    * u_grad_test_ref,
+    *mesh_trial_trace_ref,
+    *mesh_grad_trial_trace_ref,
+    *dS_ref,
+    *u_trial_trace_ref,
+    *u_grad_trial_trace_ref,
+    *u_test_trace_ref,
+    *u_grad_test_trace_ref,
+    *normal_ref,
+    *boundaryJac_ref,
+    //testing
+    *exteriorElementBoundariesArray,
     *elementBoundaryElementsArray,
     *elementBoundaryLocalElementBoundariesArray,
     *u_trial_ext,
@@ -205,8 +284,28 @@ static PyObject* cRDLS_calculateJacobian(PyObject* self,
     *u_test_dS_ext;
   PyObject *csrColumnOffsets_eb_u_u;
   if (!PyArg_ParseTuple(args,
-                        "iddiiiidOOOOOOOOOOOOOOOOOiOOOOOOOOOOO",
-                        &nElements_global,
+                        "OOOOOOOOOOOOOOOOOOiddiiiidOOOOOOOOOOOOOOOOOiOOOOOOOOOOO",
+                        //testing
+			&mesh_trial_ref,
+			&mesh_grad_trial_ref,
+			&mesh_dof,
+			&mesh_l2g,
+			&dV_ref,
+			&u_trial_ref,
+			&u_grad_trial_ref,
+			&u_test_ref,
+			&u_grad_test_ref,
+			&mesh_trial_trace_ref,
+			&mesh_grad_trial_trace_ref,
+			&dS_ref,
+			&u_trial_trace_ref,
+			&u_grad_trial_trace_ref,
+			&u_test_trace_ref,
+			&u_grad_test_trace_ref,
+			&normal_ref,
+			&boundaryJac_ref,
+			//testing
+                         &nElements_global,
 			&dt,
 			&eps,
 			&freezeLevelSet,
@@ -244,8 +343,28 @@ static PyObject* cRDLS_calculateJacobian(PyObject* self,
                         &u_test_dS_ext,
 			&csrColumnOffsets_eb_u_u))
     return NULL;
-  //  calculateJacobian_RDLS(nElements_global, 
-  RDLS_JAC (nElements_global, 
+  //  calculateJacobian_RDLSV2(nElements_global, 
+  RDLSV2_JAC (//testing mesh replacement
+  			     DDATA(mesh_trial_ref),
+  			     DDATA(mesh_grad_trial_ref),
+  			     DDATA(mesh_dof),
+  			     IDATA(mesh_l2g),
+  			     DDATA(dV_ref),
+  			     DDATA(u_trial_ref),
+  			     DDATA(u_grad_trial_ref),
+  			     DDATA(u_test_ref),
+  			     DDATA(u_grad_test_ref),
+  			     DDATA(mesh_trial_trace_ref),
+  			     DDATA(mesh_grad_trial_trace_ref),
+  			     DDATA(dS_ref),
+  			     DDATA(u_trial_trace_ref),
+  			     DDATA(u_grad_trial_trace_ref),
+  			     DDATA(u_test_trace_ref),
+  			     DDATA(u_grad_test_trace_ref),
+  			     DDATA(normal_ref),
+  			     DDATA(boundaryJac_ref),
+  			     //end testing meshreplacement
+  			     nElements_global, 
 			 dt,
 			 eps,
 			 freezeLevelSet,
@@ -285,13 +404,13 @@ static PyObject* cRDLS_calculateJacobian(PyObject* self,
   Py_INCREF(Py_None); 
   return Py_None;
 }
-static PyMethodDef cRDLSMethods[] = {
+static PyMethodDef cRDLSV2Methods[] = {
  { "calculateResidual",
-    cRDLS_calculateResidual,
+    cRDLSV2_calculateResidual,
    METH_VARARGS, 
    "Calculate the global residual for redistancing the level set equation"},
  { "calculateJacobian",
-    cRDLS_calculateJacobian,
+    cRDLSV2_calculateJacobian,
    METH_VARARGS, 
    "Calculate the global Jacobian for redistancing the level set equation"},
  { NULL,NULL,0,NULL}
@@ -299,10 +418,10 @@ static PyMethodDef cRDLSMethods[] = {
 
 extern "C"
 {
-PyMODINIT_FUNC initcRDLS(void)
+PyMODINIT_FUNC initcRDLSV2(void)
 {
   PyObject *m,*d;
-  m = Py_InitModule("cRDLS", cRDLSMethods);
+  m = Py_InitModule("cRDLSV2", cRDLSV2Methods);
   d = PyModule_GetDict(m);
   import_array();
 }
