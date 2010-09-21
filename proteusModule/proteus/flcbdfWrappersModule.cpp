@@ -1138,7 +1138,7 @@ DaetkPetscSys_size(DaetkPetscSys *self,
     //6. Build the subdomain mesh from the
     //subdomain elements 
     //
-    //**To be more general we could get all the support (i.e. faces
+    // **To be more general we could get all the support (i.e. faces
     //and edges) and partitiong them, but the main reason for
     //partitioning is to keep track of a global numbering for degrees
     //of freedom that live on each type of geometric entity. We only
@@ -1248,7 +1248,7 @@ DaetkPetscSys_size(DaetkPetscSys *self,
     //now get the new element numbers for the whole mesh so that we
     //can just read this processors elements, reorder, and renumber**
     //
-    //**We could do this in parallel by scattering all the element
+    // **We could do this in parallel by scattering all the element
     //information
     IS elementNumberingIS_global_old2new;
     ISAllGather(elementNumberingIS_subdomain_old2new,&elementNumberingIS_global_old2new);
@@ -2074,7 +2074,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 // 	      //mwf debug
 // 	      std::cout<<"partitionNode default overlap rank= "<<rank<<" nN_new= "<<nN<<" eN_star_new= "<<eN_star_new<<" ebN= "<<ebN
 // 		       <<" ebN_global= "<<ebN_global<<" ghost= "<<(ebN_global < elementBoundaryOffsets_new[rank] || ebN_global >= elementBoundaryOffsets_new[rank+1])
-// 		       <<" offsets= ["<<elementBoundaryOffsets_new[rank]<<","<<elementBoundaryOffsets_new[rank+1]<<std::endl;
+// 		       <<" offsets= ["<<elementBoundaryOffsets_new[rank]<<","<<elementBoundaryOffsets_new[rank+1]<<"]"<<std::endl;
 	      if (ebN_global < elementBoundaryOffsets_new[rank] || ebN_global >= elementBoundaryOffsets_new[rank+1])
 		{
 		  elementBoundaries_overlap.insert(ebN_global);
@@ -2103,12 +2103,16 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 		      edges_overlap.insert(edge_global);
 		  }
 		//mwf debug
-		if (!foundEdge)
-		  {
-		    std::cout<<"partitionElementsWithFaces eN_new= "<<eN_star_new<<" nN0= "<<nN0<<" nN1= "<<nN1<<" nN0_global= "<<nN0_global
-			     <<" nN1_global= "<<nN1_global<<" nodesEdgeMap_global_new.size()= "<<nodesEdgeMap_global_new.size()<<std::endl;
-		  }
-		assert(foundEdge);
+		    if (mesh.nNodes_element<8)
+		      {
+		      if (!foundEdge)
+		        {
+			    std::cout<<"partitionElementsWithFaces eN_new= "<<eN_star_new<<" nN0= "<<nN0<<" nN1= "<<nN1<<" nN0_global= "<<nN0_global
+				 <<" nN1_global= "<<nN1_global<<" nodesEdgeMap_global_new.size()= "<<nodesEdgeMap_global_new.size()<<"  "<<mesh.nNodes_element<<std::endl;
+		        }
+		      assert(foundEdge);
+		      }
+		//assert(foundEdge);
 	      }//edges
 	}//elements in node star
     }//nodes on this processor
@@ -2192,12 +2196,15 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 			  new_edges_overlap.insert(edge_global);
 		      }
 		    //mwf debug
-		    if (!foundEdge)
+		    if (mesh.nNodes_element<8)
 		      {
-			std::cout<<"partitionElementsWithFaces eN_new= "<<eN_star_new<<" nN0= "<<nN0<<" nN1= "<<nN1<<" nN0_global= "<<nN0_global
-				 <<" nN1_global= "<<nN1_global<<" nodesEdgeMap_global_new.size()= "<<nodesEdgeMap_global_new.size()<<std::endl;
+		      if (!foundEdge)
+		        {
+			    std::cout<<"partitionElementsWithFaces eN_new= "<<eN_star_new<<" nN0= "<<nN0<<" nN1= "<<nN1<<" nN0_global= "<<nN0_global
+				 <<" nN1_global= "<<nN1_global<<" nodesEdgeMap_global_new.size()= "<<nodesEdgeMap_global_new.size()<<"  "<<mesh.nNodes_element<<std::endl;
+		        }
+		      assert(foundEdge);
 		      }
-		    assert(foundEdge);
 		  }//edges
 	      
 	    }//elements in node star
@@ -2414,6 +2421,17 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       allocateGeometricInfo_tetrahedron(*mesh.subdomainp);
       computeGeometricInfo_tetrahedron(*mesh.subdomainp);
     }
+
+  else if (mesh.subdomainp->nNodes_element == 8)
+    {
+      //constructElementBoundaryElementsArray_tetrahedron(*mesh.subdomainp);
+      //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
+      constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_hexahedron(*mesh.subdomainp);
+      //allocateGeometricInfo_hexahedron(*mesh.subdomainp);
+      //computeGeometricInfo_hexahedron(*mesh.subdomainp);
+    }
+
+
   if (mesh.elementBoundaryMaterialTypes != NULL)
     {
       assert(mesh.elementBoundariesArray != NULL);
@@ -2426,6 +2444,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 	      {
 		int ebN_global_old = mesh.elementBoundariesArray[eN_global_old*mesh.nElementBoundaries_element+ebN_element];
 		int ebN_subdomain = mesh.subdomainp->elementBoundariesArray[eN*mesh.nElementBoundaries_element+ebN_element];
+	
 		mesh.subdomainp->elementBoundaryMaterialTypes[ebN_subdomain] = mesh.elementBoundaryMaterialTypes[ebN_global_old];
 	      }
 	}
@@ -2544,7 +2563,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     //6. Build the subdomain mesh from the
     //subdomain elements 
     //
-    //**To be more general we could get all the support (i.e. faces
+    // **To be more general we could get all the support (i.e. faces
     //and edges) and partitiong them, but the main reason for
     //partitioning is to keep track of a global numbering for degrees
     //of freedom that live on each type of geometric entity. We only
@@ -2654,7 +2673,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     //now get the new element numbers for the whole mesh so that we
     //can just read this processors elements, reorder, and renumber**
     //
-    //**We could do this in parallel by scattering all the element
+    // **We could do this in parallel by scattering all the element
     //information
     IS elementNumberingIS_global_old2new;
     ISAllGather(elementNumberingIS_subdomain_old2new,&elementNumberingIS_global_old2new);
@@ -3057,12 +3076,16 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 		    edges_overlap.insert(edge_global);
 		}
 	      //mwf debug
+	      if (mesh.nNodes_element<8)
+	      {
 	      if (!foundEdge)
 		{
 		  std::cout<<"partitionElementsWithFaces eN_new= "<<eN<<" nN0= "<<nN0<<" nN1= "<<nN1<<" nN0_global= "<<nN0_global
 			   <<" nN1_global= "<<nN1_global<<" nodesEdgeMap_global_new.size()= "<<nodesEdgeMap_global_new.size()<<std::endl;
 		}
 	      assert(foundEdge);
+	    }
+	      
 	    }//edges
       }
 
@@ -3381,6 +3404,15 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
         allocateGeometricInfo_tetrahedron(*mesh.subdomainp);
         computeGeometricInfo_tetrahedron(*mesh.subdomainp);
       }
+    else if (mesh.subdomainp->nNodes_element == 8)
+      {
+        //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
+        constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_hexahedron(*mesh.subdomainp);
+        //allocateGeometricInfo_tetrahedron(*mesh.subdomainp);
+        //computeGeometricInfo_tetrahedron(*mesh.subdomainp);
+      }
+
+
     if (mesh.elementBoundaryMaterialTypes != NULL)
       {
 	assert(mesh.elementBoundariesArray != NULL);
