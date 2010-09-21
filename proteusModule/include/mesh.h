@@ -54,7 +54,8 @@ extern "C"
       *nodeStarOffsets,
       *elementMaterialTypes,           //ids for classifying elements,element boundaries,nodes
       *elementBoundaryMaterialTypes,
-      *nodeMaterialTypes;
+      *nodeMaterialTypes,
+      *elementIJK;      // Cartesian indices of element 
       
     double *nodeArray,*elementDiametersArray,*elementInnerDiametersArray,*elementBoundaryDiametersArray;
     double *elementBarycentersArray, *elementBoundaryBarycentersArray;
@@ -236,19 +237,33 @@ extern "C"
   int regularRectangularToTriangularMeshNodes(const int& nx, const int& ny, const double& Lx, const double& Ly, Mesh& mesh);
   int globallyRefineTriangularMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh);
 
-  int regularHexahedralToTetrahedralMeshElements(const int& nx,const int& ny,const int& nz,Mesh& mesh);
+
+  int regularMeshNodes(const int& nx,const int& ny,const int& nz, const double& Lx, const double& Ly, const double& Lz, Mesh& mesh);
   int regularHexahedralToTetrahedralMeshNodes(const int& nx,const int& ny,const int& nz, const double& Lx, const double& Ly, const double& Lz, Mesh& mesh);
+  int regularHexahedralToTetrahedralMeshElements(const int& nx,const int& ny,const int& nz,Mesh& mesh);
+  int regularHexahedralMeshElements(const int& nx,const int& ny,const int& nz, Mesh& mesh);
+  
   int globallyRefineTetrahedralMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh);
 
   int constructElementBoundaryElementsArray_edge(Mesh& mesh);
   int constructElementBoundaryElementsArray_triangle(Mesh& mesh);
   int constructElementBoundaryElementsArray_tetrahedron(Mesh& mesh);
+  int constructElementBoundaryElementsArray_hexahedron(Mesh& mesh);
+  
+
+      ///allocateGeometricInfo_hexahedron(*mesh.subdomainp);
+      //computeGeometricInfo_hexahedron(*mesh.subdomainp);  
+
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_edge(Mesh& mesh);
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_triangle(Mesh& mesh);
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(Mesh& mesh);
+  
+  
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_edge(Mesh& mesh);
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_triangle(Mesh& mesh);
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_tetrahedron(Mesh& mesh);
+  int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_hexahedron(Mesh& mesh);
+
   int writeElements(std::ostream& meshFile, const Mesh& mesh);
   int writeNodes(std::ostream& meshFile, const Mesh& mesh);
   int readElements(std::istream& meshFile, Mesh& mesh);
@@ -398,6 +413,20 @@ inline int newTetrahedron(int eN,int* nodes,int n0,int n1,int n2,int n3)
   nodes[eN*4+1] = n1;
   nodes[eN*4+2] = n2;
   nodes[eN*4+3] = n3;
+  eN++;
+  return eN;
+}
+
+inline int newHexahedron(int eN,int* nodes,int n0,int n1,int n2,int n3,int n4,int n5,int n6,int n7)
+{
+  nodes[eN*8+0] = n0;
+  nodes[eN*8+1] = n1;
+  nodes[eN*8+2] = n2;
+  nodes[eN*8+3] = n3;
+  nodes[eN*8+4] = n4;
+  nodes[eN*8+5] = n5;
+  nodes[eN*8+6] = n6;
+  nodes[eN*8+7] = n7;
   eN++;
   return eN;
 }

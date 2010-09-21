@@ -2322,6 +2322,155 @@ min(h_k)             : %d\n""" % (self.nElements_global,
             info = "*** Global ***\n" + minfo + "\n*** Local ***\n" + sinfo
             return info
         return minfo
+
+class HexahedralMesh(Mesh):
+    """A mesh of hexahedra.
+    
+    """
+    
+    def __init__(self):
+        Mesh.__init__(self)
+        self.nodeDict={}
+        self.edgeDict={}
+        self.faceDict={}
+        self.faceList=[]
+        self.elemDict={}
+        self.elemList=[]
+        self.oldToNewNode=[]
+        self.boundaryMesh=TriangularMesh()
+    def computeGeometricInfo(self):
+        import cmeshTools
+        print "no info jet for hexahedral mesh"
+        #cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
+    def generateHexahedralMeshFromRectangularGrid(self,nx,ny,nz,Lx,Ly,Lz):
+        import cmeshTools
+        self.cmesh = cmeshTools.CMesh()
+        cmeshTools.generateHexahedralMeshFromRectangularGrid(nx,ny,nz,Lx,Ly,Lz,self.cmesh)
+        #cmeshTools.allocateGeometricInfo_hexahedron(self.cmesh)
+        #cmeshTools.computeGeometricInfo_hexahedron(self.cmesh)
+        self.buildFromC(self.cmesh)
+    
+    def finalize(self):
+        self.buildLists()
+        #self.fixLocalNumbering()
+        self.buildBoundaryMaps()
+        self.buildArraysFromLists()
+        self.hMax = 0.0
+        self.hMin = 1.0e16
+        self.sigmaMax = 0.0
+        self.totalVolume = 0.0
+        for T in self.tetrahedronList:
+            T.computeGeometricInfo()
+            self.hMax = max(T.diameter,self.hMax)
+            self.hMin = min(T.diameter,self.hMin)
+            self.sigmaMax = max(T.diameter/T.innerDiameter,self.sigmaMax)
+            self.totalVolume += T.volume
+            
+    def buildLists(self):
+        self.buildListsNodes()
+        self.buildListsEdges()
+        self.buildListsFaces()
+        self.buildListsElems()
+        self.elementList = self.elemList
+        self.elementBoundaryList = self.faceList
+    def buildListsNodes(self):
+        keyList = self.nodeDict.keys()
+        keyList.sort()
+        self.nodeList=[]
+        self.oldToNewNode=range(len(self.nodeDict))
+        for nN,k in enumerate(keyList):
+            self.oldToNewNode[self.nodeDict[k].N]=nN
+            self.nodeDict[k].N = nN
+            self.nodeList.append(self.nodeDict[k])
+            
+    def buildListsEdges(self):
+        keyList = self.edgeDict.keys()
+        keyList.sort()
+        self.edgeList=[]
+        for eN,k in enumerate(keyList):
+            self.edgeDict[k].N = eN
+            self.edgeList.append(self.edgeDict[k])
+    
+    def buildListsFaces(self):
+        keyList = self.faceDict.keys()
+        keyList.sort()
+        self.triangleList=[]
+        for tN,k in enumerate(keyList):
+            self.triangleDict[k].N = tN
+            self.triangleList.append(self.faceDict[k])
+        self.polygonList = self.faceList
+    
+    def buildListsElems(self):
+        keyList = self.elemDict.keys()
+        keyList.sort()
+        self.elemList=[]
+        for TN,k in enumerate(keyList):
+            self.elemDict[k].N = TN
+            self.elemList.append(self.elemDict[k])
+        self.polyhedronList = self.elemList
+    
+    def buildBoundaryMaps(self):
+        """
+        Extract a mapping tn -> list((TN,tnLocal)) that
+        provides all elements with the boundary face  tn
+        and the local triangle number for that face
+        Likewise build mappings for edges and nodes
+        Also extract a list of the triangles with only one associate
+        element; these are the external boundary triangles. Then extract
+        the edges and nodes from the boundary triangles.
+        """
+        print "buildBoundaryMaps not implemented for hex mesh"
+    
+    
+    def registerEdges(self,t):
+        for en,e in enumerate(t.edges):
+            if self.edgeDict.has_key(e.nodes):
+                t.edges[en]=self.edgeDict[e.nodes]
+            else:
+                eN=len(self.edgeDict)
+                e.N=eN
+                self.edgeDict[e.nodes]=e
+    
+    def registerFaces(self,T):
+        for tn,t in enumerate(T.faces):
+            if self.faceDict.has_key(t.nodes):
+                T.faces[tn]=self.faceDict[t.nodes]
+            else:
+                t.N=len(self.faceDict)
+                self.faceDict[t.nodes]=t
+                self.registerEdges(t)
+    
+    def registerNode(self,node):
+        if self.nodeDict.has_key(node):
+            node = self.nodeDict[node]
+        else:
+            node.N = len(self.nodeDict)
+            self.nodeDict[node] = node
+        return node
+   
+#    def refine(self,oldMesh):
+#        return self.refineFreudenthalBey(oldMesh)
+    
+    def meshInfo(self):
+        minfo = """Number of tetrahedra : %d 
+Number of triangles  : %d
+Number of edges      : %d
+Number of nodes      : %d
+max(sigma_k)         : %d
+min(h_k)             : %d\n""" % (self.nElements_global,
+                                  self.nElementBoundaries_global,
+                                  self.nEdges_global,
+                                  self.nNodes_global,
+                                  self.sigmaMax,
+                                  self.hMin)
+        if self.subdomainMesh != self:
+            sinfo = self.subdomainMesh.meshInfo()
+            info = "*** Global ***\n" + minfo + "\n*** Local ***\n" + sinfo
+            return info
+        return minfo
+        
+    def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0):
+        Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Hexahedron",tCount)
         
    
 class Mesh2DM(Mesh):
@@ -2869,6 +3018,58 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
     def computeGeometricInfo(self):
         for m in self.meshList:
             m.computeGeometricInfo()
+
+class MultilevelHexahedralMesh(MultilevelMesh):
+    def __init__(self,nx,ny,nz,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
+                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
+        import cmeshTools
+        import Comm
+        MultilevelMesh.__init__(self)
+        self.useC = True
+        self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
+        log("Generating hexahedral mesh")
+        if not skipInit:
+            self.meshList.append(HexahedralMesh())
+            self.meshList[0].generateHexahedralMeshFromRectangularGrid(nx,ny,nz,Lx,Ly,Lz)
+            self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+            self.buildFromC(self.cmultilevelMesh)
+            self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+            for l in range(1,refinementLevels):
+                self.meshList.append(HexahedralMesh())
+                self.meshList[l].cmesh = self.cmeshList[l]
+                self.meshList[l].buildFromC(self.cmeshList[l])
+                self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+
+    def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
+                                       parallelPartitioningType=MeshParallelPartitioningTypes.element):
+        import cmeshTools
+        #blow away or just trust garbage collection
+        self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
+        self.meshList = []
+        self.elementParents = None
+        self.cmultilevelMesh = None
+
+        self.meshList.append(mesh0)
+        self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+        self.buildFromC(self.cmultilevelMesh)
+        self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+        for l in range(1,refinementLevels):
+            self.meshList.append(HexahedralMesh())                
+            self.meshList[l].cmesh = self.cmeshList[l]
+            self.meshList[l].buildFromC(self.meshList[l].cmesh)
+            self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+
+
+    def refine(self):
+        self.meshList.append(TetrahedralMesh())
+        childrenDict = self.meshList[-1].refine(self.meshList[-2])
+        self.elementChildren.append(childrenDict)
+    def computeGeometricInfo(self):
+        for m in self.meshList:
+            m.computeGeometricInfo()
+
+
+
 
 class TriangularMesh(Mesh):
     """A mesh of triangles
