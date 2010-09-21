@@ -1,7 +1,7 @@
 from Transport import *
-import cMCorr,cMCorr2D,cMCorrQ,cMCorr2DQ
+import cMCorrV2,cMCorr2D,cMCorrQ,cMCorr2DQ
 
-class OneLevelMCorr(OneLevelTransport):
+class OneLevelMCorrV2(OneLevelTransport):
     nCalls=0
     def __init__(self,
                  uDict,
@@ -465,7 +465,7 @@ class OneLevelMCorr(OneLevelTransport):
         #no flux boundary conditions
         self.elementResidual[0].fill(0.0)
         if isinstance(self.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
-            cResidual = cMCorr.calculateResidual
+            cResidual = cMCorrV2.calculateResidual
             if self.nSpace_global == 2:
                 cResidual = cMCorr2D.calculateResidual
             elif self.nSpace_global == 1:
@@ -478,7 +478,28 @@ class OneLevelMCorr(OneLevelTransport):
                 cResidual = cMCorr1DQ.calculateResidual
 
         #cMCorr.calculateResidual(self.mesh.nElements_global,
-        cResidual(self.mesh.nElements_global,
+        cResidual(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            #element boundary
+            self.u[0].femSpace.elementMaps.psi_trace,
+            self.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.elementBoundaryQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.elementMaps.boundaryNormals,
+            self.u[0].femSpace.elementMaps.boundaryJacobians,
+            #physics
+            self.mesh.nElements_global,
                                  self.coefficients.epsFactHeaviside,
                                  self.coefficients.epsFactDirac,
                                  self.coefficients.epsFactDiffusion,
@@ -507,7 +528,7 @@ class OneLevelMCorr(OneLevelTransport):
 	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,jacobian)
 
         if isinstance(self.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
-            cJacobian = cMCorr.calculateJacobian
+            cJacobian = cMCorrV2.calculateJacobian
             if self.nSpace_global == 2:
                 cJacobian = cMCorr2D.calculateJacobian
             elif self.nSpace_global == 1:
@@ -520,7 +541,27 @@ class OneLevelMCorr(OneLevelTransport):
                 cJacobian = cMCorr1DQ.calculateJacobian
 				      
         #cMCorr.calculateJacobian(self.mesh.nElements_global,
-        cJacobian(self.mesh.nElements_global,
+        cJacobian(#element
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
+            self.mesh.nodeArray,
+            self.mesh.elementNodesArray,
+            self.elementQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.psi,
+            self.u[0].femSpace.grad_psi,
+            #element boundary
+            self.u[0].femSpace.elementMaps.psi_trace,
+            self.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.elementBoundaryQuadratureWeights[('u',0)],
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.psi_trace,
+            self.u[0].femSpace.grad_psi_trace,
+            self.u[0].femSpace.elementMaps.boundaryNormals,
+            self.u[0].femSpace.elementMaps.boundaryJacobians,
+            self.mesh.nElements_global,
                                  self.coefficients.epsFactHeaviside,
                                  self.coefficients.epsFactDirac,
                                  self.coefficients.epsFactDiffusion,
@@ -547,6 +588,10 @@ class OneLevelMCorr(OneLevelTransport):
         
         This function should be called only when the mesh changes.
         """
+        self.u[0].femSpace.elementMaps.getBasisValuesRef(self.elementQuadraturePoints)
+        self.u[0].femSpace.elementMaps.getBasisGradientValuesRef(self.elementQuadraturePoints)
+        self.u[0].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
+        self.u[0].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
 	#
         #get physical locations of quadrature points and jacobian information there
 	#assume all components live on the same mesh
@@ -600,6 +645,11 @@ class OneLevelMCorr(OneLevelTransport):
     def calculateElementBoundaryQuadrature(self):
         pass
     def calculateExteriorElementBoundaryQuadrature(self):
-        pass
+        self.u[0].femSpace.elementMaps.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
+        self.u[0].femSpace.elementMaps.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
+        self.u[0].femSpace.getBasisValuesTraceRef(self.elementBoundaryQuadraturePoints)
+        self.u[0].femSpace.getBasisGradientValuesTraceRef(self.elementBoundaryQuadraturePoints)
+        self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
+                                                                    self.ebqe['x'])
     def estimate_mt(self):
         pass
