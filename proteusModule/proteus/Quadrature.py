@@ -678,7 +678,43 @@ class SimplexGaussQuadrature(Q_base):
         self.quadrature.setOrder(k)
         self.points = self.quadrature.points
         self.weights = self.quadrature.weights
+
+
+class CubeGaussQuadrature(Q_base):
+    """
+    A class for all quadrature on unit simplices.
+    """
+    def __init__(self,nd=3,order=1):
+        Q_base.__init__(self,order)
+        self.nd=nd
+        self.quadrature = GaussEdge(order=order)
+        self.setOrder(order)
         
+        
+    def setOrder(self,order):
+        self.quadrature.setOrder(order)
+        if self.nd == 1:
+            self.points = self.quadrature.points
+            self.weights = self.quadrature.weights
+        if self.nd == 2:
+            self.points = []
+            self.weights = []
+            for i in range(order):
+               for j in range(order): 
+                       
+                  self.points.append(EVec(self.quadrature.points[i][0],self.quadrature.points[j][0]))
+                  self.weights.append(self.quadrature.weights[i]*self.quadrature.weights[j])
+          
+        if self.nd == 3:
+            self.points =[]
+            self.weights = []
+            for i in range(order):
+               for j in range(order): 
+                  for k in range(order):         
+                     self.points.append(EVec(self.quadrature.points[i][0],self.quadrature.points[j][0],self.quadrature.points[k][0]))
+                     self.weights.append(self.quadrature.weights[i]*self.quadrature.weights[j]*self.quadrature.weights[k])
+
+                
 class SimplexLobattoQuadrature(Q_base):
     """
     A class for quadrature on unit simplices.
