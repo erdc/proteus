@@ -713,6 +713,29 @@ static PyObject* cmeshToolsGenerateTriangularMeshFromRectangularGrid(PyObject* s
   return Py_None;
 }
 
+static PyObject* cmeshToolsGenerateHexahedralMeshFromRectangularGrid(PyObject* self,
+                                                                     PyObject* args)
+{
+  int nx,ny,nz;
+  double Lx,Ly,Lz;
+  PyObject *cmesh;
+  if (!PyArg_ParseTuple(args,
+                        "iiidddO",
+                        &nx,
+                        &ny,
+                        &nz,
+                        &Lx,
+                        &Ly,
+                        &Lz,
+                        &cmesh))
+    return NULL;
+  regularHexahedralMeshElements(nx,ny,nz,MESH(cmesh));
+  regularMeshNodes(nx,ny,nz,Lx,Ly,Lz,MESH(cmesh));
+  constructElementBoundaryElementsArray_hexahedron(MESH(cmesh));
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
 #define TRIANGULATEIO(p) ((triangulateio*) p)
 
 static PyObject* 
@@ -1714,7 +1737,11 @@ static PyMethodDef cmeshToolsMethods[] = {
   { "buildLevel0PythonMeshInterface",
     cmeshToolsBuildLevel0PythonMeshInterface,
     METH_VARARGS, 
-    "Provide handles to the simplest 'level 0' mesh representation in C "},
+    "Provide handles to the simplest 'level 0' mesh representation in C "},   
+  { "generateHexahedralMeshFromRectangularGrid",
+    cmeshToolsGenerateHexahedralMeshFromRectangularGrid,
+    METH_VARARGS, 
+    "Generates a structured hexahedral"},            
   { NULL,NULL,0,NULL}
 };
 
