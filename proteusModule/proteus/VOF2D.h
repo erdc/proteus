@@ -492,7 +492,7 @@ namespace VOF_NAME
 					const double& pdeResidual,
 					double& subgridError)
   {
-    subgridError = tau*pdeResidual;
+    subgridError = -tau*pdeResidual;
   }
 
   inline
@@ -502,7 +502,7 @@ namespace VOF_NAME
   {
     for (int j=0;j<nDOF_trial_element;j++)
       {
-	dsubgridError_du[j] = tau*dpdeResidual_du[j];
+	dsubgridError_du[j] = -tau*dpdeResidual_du[j];
       }
   }
 

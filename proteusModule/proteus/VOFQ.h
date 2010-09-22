@@ -492,7 +492,7 @@ void calculateSubgridError_tauRes_c(const double& tau,
 				    const double& pdeResidual,
 				    double& subgridError)
 {
-  subgridError = tau*pdeResidual;
+  subgridError = -tau*pdeResidual;
 }
 
 inline
@@ -502,7 +502,7 @@ void calculateSubgridErrorDerivatives_tauRes_c(const double& tau,
 {
   for (int j=0;j<nDOF_trial_element;j++)
     {
-      dsubgridError_du[j] = tau*dpdeResidual_du[j];
+      dsubgridError_du[j] = -tau*dpdeResidual_du[j];
     }
 }
 
@@ -563,7 +563,7 @@ inline
 double SubgridError_c(const double& error,
 		      const double& Lstar_w_dV)
 {
-  return -error*Lstar_w_dV;
+  return error*Lstar_w_dV;
 }
 
 inline
@@ -585,7 +585,7 @@ inline
 double SubgridErrorJacobian_c(const double& derror,
 			      const double& Lstar_w_dV)
 {
-  return -derror*Lstar_w_dV;
+  return derror*Lstar_w_dV;
 }
 
 inline
