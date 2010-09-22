@@ -623,13 +623,13 @@ public:
   inline double SubgridError(const double& error,
 			     const double& Lstar_w_dV)
   {
-    return -error*Lstar_w_dV;
+    return error*Lstar_w_dV;
   }
 
   inline double SubgridErrorJacobian(const double& derror,
 				     const double& Lstar_w_dV)
   {
-    return -derror*Lstar_w_dV;
+    return derror*Lstar_w_dV;
   }
 
   inline double NumericalDiffusion(const double& numDiff,
