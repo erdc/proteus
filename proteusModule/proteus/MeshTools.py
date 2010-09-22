@@ -2337,7 +2337,10 @@ class HexahedralMesh(Mesh):
         self.elemDict={}
         self.elemList=[]
         self.oldToNewNode=[]
-        self.boundaryMesh=TriangularMesh()
+        self.boundaryMesh=QuadrilateralMesh()
+        
+        print "HEX mesh"
+        
     def computeGeometricInfo(self):
         import cmeshTools
         print "no info jet for hexahedral mesh"
@@ -2396,8 +2399,8 @@ class HexahedralMesh(Mesh):
         keyList.sort()
         self.triangleList=[]
         for tN,k in enumerate(keyList):
-            self.triangleDict[k].N = tN
-            self.triangleList.append(self.faceDict[k])
+            self.faceDict[k].N = tN
+            self.faceList.append(self.faceDict[k])
         self.polygonList = self.faceList
     
     def buildListsElems(self):
@@ -2419,8 +2422,39 @@ class HexahedralMesh(Mesh):
         element; these are the external boundary triangles. Then extract
         the edges and nodes from the boundary triangles.
         """
-        print "buildBoundaryMaps not implemented for hex mesh"
-    
+        self.faceMap=[[] for t in self.faceList]
+        self.edgeMap=[[] for e in self.edgeList]
+        self.nodeMap=[[] for n in self.nodeList]
+        self.boundaryTriangles=set()
+        self.interiorTriangles=set()
+        self.boundaryEdges=set()
+        self.boundaryNodes=set()
+        self.interiorEdges=set()
+        self.interiorNodes=set()
+        log("Building triangle,edge, and node maps")
+        for T in self.elemList:
+            for localFaceNumber,t in enumerate(T.faces):
+                self.faceMap[t.N].append((T.N,localFaceNumber))
+            for localEdgeNumber,e in enumerate(T.edges):
+                self.edgeMap[e.N].append((T.N,localEdgeNumber))
+            for localNodeNumber,n in enumerate(T.nodes):
+                self.nodeMap[n.N].append((T.N,localNodeNumber))
+        log("Extracting boundary and interior triangles")
+        for tN,etList in enumerate(self.faceMap):
+            if len(etList) == 1:
+                self.boundaryFaces.add(self.faceList[tN])
+            else:
+                self.interiorFaces.add(self.faceList[tN])
+        log("Extracting boundary edges and nodes")
+        for t in self.boundaryTriangles:
+            self.boundaryEdges.update(t.edges)
+            self.boundaryNodes.update(t.nodes)
+        log("Extracting interior edges and nodes")
+        for t in self.interiorTriangles:
+            self.interiorEdges.update(t.edges)
+            self.interiorNodes.update(t.nodes)
+        self.boundaryMesh.buildFromSets(self.boundaryFaces,
+                                        self.boundaryEdges,self.boundaryNodes)  
     
     def registerEdges(self,t):
         for en,e in enumerate(t.edges):
@@ -2452,8 +2486,8 @@ class HexahedralMesh(Mesh):
 #        return self.refineFreudenthalBey(oldMesh)
     
     def meshInfo(self):
-        minfo = """Number of tetrahedra : %d 
-Number of triangles  : %d
+        minfo = """Number of hexahedra  : %d 
+Number of faces      : %d
 Number of edges      : %d
 Number of nodes      : %d
 max(sigma_k)         : %d
@@ -3733,6 +3767,136 @@ pen[] boundaryPens = Rainbow(NColors=%(nBoundaryFlags)d);
 #         if writeToFile:
 #             mfile.write(']; \n');
 #             mfile.write("t = t\';\n") #need transpose for matlab
+
+
+
+class QuadrilateralMesh(Mesh):
+    """A mesh of quads
+    
+    The nodes, edges, and triangles are indexed by their
+    node tuples. The corresponding lists are derived from the dictionaries, and
+    sorted lexicographically. The global node numbers are redefined to
+    give a lexicographic ordering.
+    
+    The mesh can be generated from a rectangular grid and refined using either
+    3t or Freudenthal-Bey global refinement.
+    """
+    
+    def __init__(self):
+        Mesh.__init__(self)
+        self.nodeDict={}
+        self.edgeDict={}
+        self.quadDict={}
+        self.quadList=[]
+        self.oldToNewNode=[]
+    
+    def buildFromSets(self,faceSet,edgeSet,nodeSet):
+        self.nodeList = list(nodeSet)
+        self.nodeDict = dict([(n,n) for n in self.nodeList])
+        self.edgeList = list(edgeSet)
+        self.edgeDict = dict([(e.nodes,e) for e in self.edgeList])
+        self.quadList = list(faceSet)
+        self.quadDict = dict([(t.nodes,t) for t in self.faceList])
+        self.elementList = self.triangleList
+        self.elementBoundaryList = self.edgeList
+        
+
+class MultilevelTriangularMesh(MultilevelMesh):
+    import cmeshTools
+    def __init__(self,nx,ny,nz,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
+                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
+        import cmeshTools
+        MultilevelMesh.__init__(self)
+        self.useC = True
+        self.nLayersOfOverlap=nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
+        #self.useC = False
+        if not skipInit:
+            if self.useC:
+                self.meshList.append(TriangularMesh())
+                self.meshList[0].generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly)
+                self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+                self.buildFromC(self.cmultilevelMesh)
+                self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+                for l in range(1,refinementLevels):
+                    self.meshList.append(TriangularMesh())                
+                    self.meshList[l].cmesh = self.cmeshList[l]
+                    self.meshList[l].buildFromC(self.meshList[l].cmesh)
+                    self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+            else:
+                grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
+                self.meshList.append(TriangularMesh())
+                self.meshList[0].rectangularToTriangular(grid)
+                self.meshList[0].subdomainMesh = self.meshList[0]
+                self.elementChildren=[]
+                log(self.meshList[0].meshInfo())
+                for l in range(1,refinementLevels):
+                    self.refine()
+                    self.meshList[l].subdomainMesh = self.meshList[l]
+                    log(self.meshList[-1].meshInfo())
+                self.buildArrayLists()
+    #
+    #mwf what's the best way to build from an existing mesh
+    def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
+                                       parallelPartitioningType=MeshParallelPartitioningTypes.element):
+        import cmeshTools
+        #blow away or just trust garbage collection
+        self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
+        self.meshList = []
+        self.elementParents = None
+        self.cmultilevelMesh = None
+        if self.useC:
+            self.meshList.append(mesh0)
+            self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+            self.buildFromC(self.cmultilevelMesh)
+            self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+            for l in range(1,refinementLevels):
+                self.meshList.append(TriangularMesh())                
+                self.meshList[l].cmesh = self.cmeshList[l]
+                self.meshList[l].buildFromC(self.meshList[l].cmesh)
+                self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+        else:
+            grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
+            self.meshList.append(TriangularMesh())
+            self.meshList[0].rectangularToTriangular(grid)
+            self.meshList[0].subdomainMesh = self.meshList[0]
+            self.elementChildren=[]
+            log(self.meshList[0].meshInfo())
+            for l in range(1,refinementLevels):
+                self.refine()
+                self.meshList[l].subdomainMesh = self.meshList[l]
+                log(self.meshList[-1].meshInfo())
+            self.buildArrayLists()
+
+    def refine(self):
+        self.meshList.append(TriangularMesh())
+        childrenDict = self.meshList[-1].refine(self.meshList[-2])
+        self.elementChildren.append(childrenDict)
+    def computeGeometricInfo(self):
+        for m in self.meshList:
+            m.computeGeometricInfo()
+    def locallyRefine(self,elementTagArray):
+        """
+        simple local refinement assuming elementTagArray[eN]=1 --> bisect
+        """
+        flagForRefineType = 0 #0 -- newest node, 1 -- 4T, 2 -- U4T
+        if flagForRefineType == 0:
+            #doesn't do anything if bases already set on finest level
+            self.cmeshTools.setNewestNodeBases(2,self.cmultilevelMesh)
+        if self.useC:
+            self.cmeshTools.locallyRefineMultilevelMesh(2,self.cmultilevelMesh,elementTagArray,flagForRefineType)
+            self.buildFromC(self.cmultilevelMesh)
+            self.meshList.append(TriangularMesh())
+            self.meshList[self.nLevels-1].cmesh = self.cmeshList[self.nLevels-1]
+            self.meshList[self.nLevels-1].buildFromC(self.meshList[self.nLevels-1].cmesh)
+            self.meshList[self.nLevels-1].partitionMesh(nLayersOfOverlap=self.nLayersOfOverlap,parallelPartitioningType=self.parallelPartitioningType)
+        else:
+            print """locallyRefine not implemented for self.useC= %s """ % (self.useC)
+        #
+       
+
+
+
+
         
         
 #         mfile.close()
