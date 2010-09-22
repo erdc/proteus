@@ -268,7 +268,7 @@ void calculateSubgridError_tauRes_c(const double& tau,
 				    const double& pdeResidual,
 				    double& subgridError)
 {
-  subgridError = tau*pdeResidual;
+  subgridError = -tau*pdeResidual;
 }
 
 inline
@@ -278,7 +278,7 @@ void calculateSubgridErrorDerivatives_tauRes_c(const double& tau,
 {
   for (int j=0;j<nDOF_trial_element;j++)
     {
-      dsubgridError_du[j] = tau*dpdeResidual_du[j];
+      dsubgridError_du[j] = -tau*dpdeResidual_du[j];
      }
 }
 

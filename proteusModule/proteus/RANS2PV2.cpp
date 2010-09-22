@@ -129,7 +129,7 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  elementResidual_v[i]=0.0;
 	  elementResidual_w[i]=0.0;
 	}//i
-      //
+      // 
       //loop over quadrature points and compute integrands
       //
       for(int k=0;k<nQuadraturePoints_element;k++)
@@ -212,7 +212,7 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	    p_test_dV[nDOF_trial_element],vel_test_dV[nDOF_trial_element],
 	    p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
 	    dV,x,y,z,
-	    G[nSpace*nSpace],G_dd_G,tr_G,norm_Rv,h_phi;
+	    G[nSpace*nSpace],G_dd_G,tr_G,norm_Rv,h_phi, vel[nSpace];
 	  //get jacobian, etc for mapping reference element
 	  ck.calculateMapping_element(eN,
 				      k,
@@ -411,23 +411,9 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	    ck.Advection_strong(&q_velocity_last[eN_k_nSpace],grad_w) +
 	    ck.Hamiltonian_strong(dmom_w_ham_grad_p,grad_p) +
 	    ck.Reaction_strong(mom_w_source);
-	  
-          //calculate adjoint
-          for (int i=0;i<nDOF_test_element;i++)
-            {
-	      register int i_nSpace = i*nSpace;
-	      Lstar_u_p[i]=ck.Advection_adjoint(dmass_adv_u,&p_grad_test_dV[i_nSpace]);
-	      Lstar_v_p[i]=ck.Advection_adjoint(dmass_adv_v,&p_grad_test_dV[i_nSpace]);
-	      Lstar_w_p[i]=ck.Advection_adjoint(dmass_adv_w,&p_grad_test_dV[i_nSpace]);
-	      Lstar_u_u[i]=ck.Advection_adjoint(&q_velocity_last[eN_k_nSpace],&vel_grad_test_dV[i_nSpace]);
-	      Lstar_v_v[i]=ck.Advection_adjoint(&q_velocity_last[eN_k_nSpace],&vel_grad_test_dV[i_nSpace]);
-	      Lstar_w_w[i]=ck.Advection_adjoint(&q_velocity_last[eN_k_nSpace],&vel_grad_test_dV[i_nSpace]);
-	      Lstar_p_u[i]=ck.Hamiltonian_adjoint(dmom_u_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
-	      Lstar_p_v[i]=ck.Hamiltonian_adjoint(dmom_v_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
-	      Lstar_p_w[i]=ck.Hamiltonian_adjoint(dmom_w_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
-            }
+	
           //calculate tau and tau*Res
-	  RANS2PV2::calculateSubgridError_tau(Ct_sge,
+	    RANS2PV2::calculateSubgridError_tau(Ct_sge,
 					      Cd_sge,
 					      G,
 					      G_dd_G,
@@ -439,11 +425,8 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  				      tau_p,
 					      tau_v,
 					      q_cfl[eN_k]);
-	  //cek debug
-	  //std::cout<<"tau_p "<<tau_p<<"tau_v "<<tau_v<<std::endl;
-	  //tau_p = 0.0;
-	  //tau_v = 0.0;
-          RANS2PV2::calculateSubgridError_tauRes(tau_p,
+
+        RANS2PV2::calculateSubgridError_tauRes(tau_p,
 	  					 tau_v,
 	  					 pdeResidual_p,
 	  					 pdeResidual_u,
@@ -453,7 +436,33 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  					 subgridError_u,
 	  					 subgridError_v,
 	  					 subgridError_w);
-     
+     	
+	  
+         // Velocity  ==> SUPG   
+	    //vel[0] = u;
+	    //vel[1] = v;
+	    //vel[2] = w;
+ 
+        // Velocity + subgrid ==> RBLES
+	    vel[0] = u + subgridError_u;
+	    vel[1] = v + subgridError_v;
+	    vel[2] = w + subgridError_w;
+
+        // adjoint times the test functions 
+          for (int i=0;i<nDOF_test_element;i++)
+            {
+	      register int i_nSpace = i*nSpace;
+	      Lstar_u_p[i]=ck.Advection_adjoint(dmass_adv_u,&p_grad_test_dV[i_nSpace]);
+	      Lstar_v_p[i]=ck.Advection_adjoint(dmass_adv_v,&p_grad_test_dV[i_nSpace]);
+	      Lstar_w_p[i]=ck.Advection_adjoint(dmass_adv_w,&p_grad_test_dV[i_nSpace]);
+	      Lstar_u_u[i]=ck.Advection_adjoint(vel,&vel_grad_test_dV[i_nSpace]);
+	      Lstar_v_v[i]=ck.Advection_adjoint(vel,&vel_grad_test_dV[i_nSpace]);
+	      Lstar_w_w[i]=ck.Advection_adjoint(vel,&vel_grad_test_dV[i_nSpace]);
+	      Lstar_p_u[i]=ck.Hamiltonian_adjoint(dmom_u_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
+	      Lstar_p_v[i]=ck.Hamiltonian_adjoint(dmom_v_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
+	      Lstar_p_w[i]=ck.Hamiltonian_adjoint(dmom_w_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
+            }
+
 	  //cek todo
 	  // mom_u_adv[0] = (u + subgridError_u)*(u + subgridError_u)
 	  // mom_u_adv[1] = (u + subgridError_u)*(v + subgridError_v)
@@ -775,7 +784,7 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  // 
 	  //cek debug
 	  //eps_rho=0.1;
-	  //eps_mu=0.1;
+	  //eps_mu=0.1; 
 	  RANS2PV2::evaluateCoefficients(eps_rho,
 					 eps_mu,
 					 sigma,
@@ -783,7 +792,7 @@ extern "C" void calculateResidual_RANS2PV2(//element
 					 nu_0,
 					 rho_1,
 					 nu_1,
-					 g,
+					 g, 
 					 ebqe_phi_ext[ebNE_kb],
 					 &ebqe_normal_phi_ext[ebNE_kb_nSpace],
 					 ebqe_kappa_phi_ext[ebNE_kb],
@@ -1244,7 +1253,7 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 	    mom_uv_diff_ten[1],
 	    mom_uw_diff_ten[1],
 	    mom_vu_diff_ten[1],
-	    mom_vw_diff_ten[1],
+	    mom_vw_diff_ten[1], 
 	    mom_wu_diff_ten[1],
 	    mom_wv_diff_ten[1],
 	    mom_u_source=0.0,
@@ -1262,6 +1271,10 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 	    dmom_v_acc_v_t=0.0,
 	    mom_w_acc_t=0.0,
 	    dmom_w_acc_w_t=0.0,
+	    pdeResidual_p=0.0,
+	    pdeResidual_u=0.0,
+	    pdeResidual_v=0.0,
+	    pdeResidual_w=0.0,	    
 	    dpdeResidual_p_u[nDOF_trial_element],dpdeResidual_p_v[nDOF_trial_element],dpdeResidual_p_w[nDOF_trial_element],
 	    dpdeResidual_u_p[nDOF_trial_element],dpdeResidual_u_u[nDOF_trial_element],
 	    dpdeResidual_v_p[nDOF_trial_element],dpdeResidual_v_v[nDOF_trial_element],
@@ -1275,6 +1288,10 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 	    Lstar_p_u[nDOF_test_element],
 	    Lstar_p_v[nDOF_test_element],
 	    Lstar_p_w[nDOF_test_element],
+	    subgridError_p=0.0,
+	    subgridError_u=0.0,
+	    subgridError_v=0.0,
+	    subgridError_w=0.0,	    
 	    dsubgridError_p_u[nDOF_trial_element],
 	    dsubgridError_p_v[nDOF_trial_element],
 	    dsubgridError_p_w[nDOF_trial_element],
@@ -1294,7 +1311,7 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 	    p_test_dV[nDOF_test_element],vel_test_dV[nDOF_test_element],
 	    p_grad_test_dV[nDOF_test_element*nSpace],vel_grad_test_dV[nDOF_test_element*nSpace],
 	    x,y,z,
-	    G[nSpace*nSpace],G_dd_G,tr_G,h_phi;
+	    G[nSpace*nSpace],G_dd_G,tr_G,h_phi, vel[nSpace];
 	  //get jacobian, etc for mapping reference element
 	  ck.calculateMapping_element(eN,
 				      k,
@@ -1457,21 +1474,7 @@ extern "C" void calculateJacobian_RANS2PV2(//element
           //
           //calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
           //
-          //calculate the adjoint times the test functions
-          for (int i=0;i<nDOF_test_element;i++)
-            {
-	      register int i_nSpace = i*nSpace;
 
-	      Lstar_u_p[i]=ck.Advection_adjoint(dmass_adv_u,&p_grad_test_dV[i_nSpace]);
-	      Lstar_v_p[i]=ck.Advection_adjoint(dmass_adv_v,&p_grad_test_dV[i_nSpace]);
-	      Lstar_w_p[i]=ck.Advection_adjoint(dmass_adv_w,&p_grad_test_dV[i_nSpace]);
-	      Lstar_u_u[i]=ck.Advection_adjoint(&q_velocity_last[eN_k_nSpace],&vel_grad_test_dV[i_nSpace]);
-	      Lstar_v_v[i]=ck.Advection_adjoint(&q_velocity_last[eN_k_nSpace],&vel_grad_test_dV[i_nSpace]);
-	      Lstar_w_w[i]=ck.Advection_adjoint(&q_velocity_last[eN_k_nSpace],&vel_grad_test_dV[i_nSpace]);
-	      Lstar_p_u[i]=ck.Hamiltonian_adjoint(dmom_u_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
-	      Lstar_p_v[i]=ck.Hamiltonian_adjoint(dmom_v_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
-	      Lstar_p_w[i]=ck.Hamiltonian_adjoint(dmom_w_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
-            }
           //calculate the Jacobian of strong residual
           for (int j=0;j<nDOF_trial_element;j++)
             {
@@ -1528,6 +1531,33 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 							    dsubgridError_v_v,
 							    dsubgridError_w_p,
 							    dsubgridError_w_w);
+
+         // Velocity  ==> SUPG   
+	    //vel[0] = u;
+	    //vel[1] = v;
+	    //vel[2] = w;
+ 
+        // Velocity + subgrid ==> RBLES
+	    vel[0] = u + subgridError_u;
+	    vel[1] = v + subgridError_v;
+	    vel[2] = w + subgridError_w;
+
+          //calculate the adjoint times the test functions
+          for (int i=0;i<nDOF_test_element;i++)
+            {
+	      register int i_nSpace = i*nSpace;
+	      Lstar_u_p[i]=ck.Advection_adjoint(dmass_adv_u,&p_grad_test_dV[i_nSpace]);
+	      Lstar_v_p[i]=ck.Advection_adjoint(dmass_adv_v,&p_grad_test_dV[i_nSpace]);
+	      Lstar_w_p[i]=ck.Advection_adjoint(dmass_adv_w,&p_grad_test_dV[i_nSpace]);
+	      Lstar_u_u[i]=ck.Advection_adjoint(vel,&vel_grad_test_dV[i_nSpace]);
+	      Lstar_v_v[i]=ck.Advection_adjoint(vel,&vel_grad_test_dV[i_nSpace]);
+	      Lstar_w_w[i]=ck.Advection_adjoint(vel,&vel_grad_test_dV[i_nSpace]);
+	      Lstar_p_u[i]=ck.Hamiltonian_adjoint(dmom_u_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
+	      Lstar_p_v[i]=ck.Hamiltonian_adjoint(dmom_v_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
+	      Lstar_p_w[i]=ck.Hamiltonian_adjoint(dmom_w_ham_grad_p,&vel_grad_test_dV[i_nSpace]);
+            }
+
+
 	  //cek todo add RBLES terms consistent to residual modifications or ignore them partials w.r.t the additional RBLES terms
   	  for(int i=0;i<nDOF_test_element;i++)
 	    {

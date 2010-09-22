@@ -1311,11 +1311,11 @@ void calculateSubgridError_tauRes_c(const double& tau0,
 				    double& subgridErrorW)
 {
   /* GLS momentum */
-  subgridErrorU = tau0*pdeResidualU;
-  subgridErrorV = tau0*pdeResidualV;
-  subgridErrorW = tau0*pdeResidualW;
+  subgridErrorU = -tau0*pdeResidualU;
+  subgridErrorV = -tau0*pdeResidualV;
+  subgridErrorW = -tau0*pdeResidualW;
   /* GLS pressure */
-  subgridErrorP = tau1*pdeResidualP;
+  subgridErrorP = -tau1*pdeResidualP;
 }
 
 inline
@@ -1355,25 +1355,25 @@ void calculateSubgridErrorDerivatives_tauRes_c(const double& tau0,
   for (int j=0;j<nDOF_trial_element;j++)
     {
       /* GLS pressure */
-      dsubgridErrorP_du[j] = tau1*dpdeResidualP_du[j];
-      dsubgridErrorP_dv[j] = tau1*dpdeResidualP_dv[j];
-      dsubgridErrorP_dw[j] = tau1*dpdeResidualP_dw[j];
+      dsubgridErrorP_du[j] = -tau1*dpdeResidualP_du[j];
+      dsubgridErrorP_dv[j] = -tau1*dpdeResidualP_dv[j];
+      dsubgridErrorP_dw[j] = -tau1*dpdeResidualP_dw[j];
       /* GLS  momentum*/
       /* u */
-      dsubgridErrorU_dp[j] = tau0*dpdeResidualU_dp[j];
-      dsubgridErrorU_du[j] = tau0*dpdeResidualU_du[j];
-      dsubgridErrorU_dv[j] = tau0*dpdeResidualU_dv[j];
-      dsubgridErrorU_dw[j] = tau0*dpdeResidualU_dw[j];
+      dsubgridErrorU_dp[j] = -tau0*dpdeResidualU_dp[j];
+      dsubgridErrorU_du[j] = -tau0*dpdeResidualU_du[j];
+      dsubgridErrorU_dv[j] = -tau0*dpdeResidualU_dv[j];
+      dsubgridErrorU_dw[j] = -tau0*dpdeResidualU_dw[j];
       /* v */
-      dsubgridErrorV_dp[j] = tau0*dpdeResidualV_dp[j];
-      dsubgridErrorV_dv[j] = tau0*dpdeResidualV_dv[j];
-      dsubgridErrorV_du[j] = tau0*dpdeResidualV_du[j];
-      dsubgridErrorV_dw[j] = tau0*dpdeResidualV_dw[j];
+      dsubgridErrorV_dp[j] = -tau0*dpdeResidualV_dp[j];
+      dsubgridErrorV_dv[j] = -tau0*dpdeResidualV_dv[j];
+      dsubgridErrorV_du[j] = -tau0*dpdeResidualV_du[j];
+      dsubgridErrorV_dw[j] = -tau0*dpdeResidualV_dw[j];
       /* w */
-      dsubgridErrorW_dp[j] = tau0*dpdeResidualW_dp[j];
-      dsubgridErrorW_dw[j] = tau0*dpdeResidualW_dw[j];
-      dsubgridErrorW_du[j] = tau0*dpdeResidualW_du[j];
-      dsubgridErrorW_dv[j] = tau0*dpdeResidualW_dv[j];
+      dsubgridErrorW_dp[j] = -tau0*dpdeResidualW_dp[j];
+      dsubgridErrorW_dw[j] = -tau0*dpdeResidualW_dw[j];
+      dsubgridErrorW_du[j] = -tau0*dpdeResidualW_du[j];
+      dsubgridErrorW_dv[j] = -tau0*dpdeResidualW_dv[j];
     }
 }
 
