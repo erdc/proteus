@@ -3411,6 +3411,13 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
         //allocateGeometricInfo_tetrahedron(*mesh.subdomainp);
         //computeGeometricInfo_tetrahedron(*mesh.subdomainp);
       }
+    else
+      {
+        //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
+        constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_NURBS(*mesh.subdomainp);
+        //allocateGeometricInfo_tetrahedron(*mesh.subdomainp);
+        //computeGeometricInfo_tetrahedron(*mesh.subdomainp);
+      }     
 
 
     if (mesh.elementBoundaryMaterialTypes != NULL)
