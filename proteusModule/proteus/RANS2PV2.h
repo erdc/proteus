@@ -12,6 +12,18 @@
 #define nDOF_test_X_trial_element 16
 #define nQuadraturePoints_elementBoundary 4
 #define nElementBoundaries_element 4
+
+/*
+#define nSpace 3
+#define nQuadraturePoints_element 8
+#define nDOF_trial_element 8
+#define nDOF_mesh_trial_element 8
+#define nDOF_test_element 8
+#define nDOF_test_X_trial_element 64
+#define nQuadraturePoints_elementBoundary 4
+#define nElementBoundaries_element 6
+*/
+
 namespace RANS2PV2
 {
   inline double smoothedHeaviside(double eps, double phi)
@@ -315,11 +327,11 @@ namespace RANS2PV2
 				      double& subgridErrorW)
   {
     /* GLS pressure */
-    subgridErrorP = tau_p*pdeResidualP;
+    subgridErrorP = -tau_p*pdeResidualP;
     /* GLS momentum */
-    subgridErrorU = tau_v*pdeResidualU;
-    subgridErrorV = tau_v*pdeResidualV;
-    subgridErrorW = tau_v*pdeResidualW;
+    subgridErrorU = -tau_v*pdeResidualU;
+    subgridErrorV = -tau_v*pdeResidualV;
+    subgridErrorW = -tau_v*pdeResidualW;
   }
 
   inline
@@ -347,19 +359,19 @@ namespace RANS2PV2
     for (int j=0;j<nDOF_trial_element;j++)
       {
 	/* GLS pressure */
-	dsubgridErrorP_du[j] = tau_p*dpdeResidualP_du[j];
-	dsubgridErrorP_dv[j] = tau_p*dpdeResidualP_dv[j];
-	dsubgridErrorP_dw[j] = tau_p*dpdeResidualP_dw[j];
+	dsubgridErrorP_du[j] = -tau_p*dpdeResidualP_du[j];
+	dsubgridErrorP_dv[j] = -tau_p*dpdeResidualP_dv[j];
+	dsubgridErrorP_dw[j] = -tau_p*dpdeResidualP_dw[j];
 	/* GLS  momentum*/
 	/* u */
-	dsubgridErrorU_dp[j] = tau_v*dpdeResidualU_dp[j];
-	dsubgridErrorU_du[j] = tau_v*dpdeResidualU_du[j];
+	dsubgridErrorU_dp[j] = -tau_v*dpdeResidualU_dp[j];
+	dsubgridErrorU_du[j] = -tau_v*dpdeResidualU_du[j];
 	/* v */
-	dsubgridErrorV_dp[j] = tau_v*dpdeResidualV_dp[j];
-	dsubgridErrorV_dv[j] = tau_v*dpdeResidualV_dv[j];
+	dsubgridErrorV_dp[j] = -tau_v*dpdeResidualV_dp[j];
+	dsubgridErrorV_dv[j] = -tau_v*dpdeResidualV_dv[j];
 	/* w */
-	dsubgridErrorW_dp[j] = tau_v*dpdeResidualW_dp[j];
-	dsubgridErrorW_dw[j] = tau_v*dpdeResidualW_dw[j];
+	dsubgridErrorW_dp[j] = -tau_v*dpdeResidualW_dp[j];
+	dsubgridErrorW_dw[j] = -tau_v*dpdeResidualW_dw[j];
       }
   }
 
