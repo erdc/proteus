@@ -501,32 +501,24 @@ class OneLevelRANS2PV2(OneLevelTransport):
                     self.ebqe[('diffusiveFlux_bc_flag',ck,ci)][t[0],t[1]] = 1
         self.numericalFlux.setDirichletValues(self.ebqe)
 
-
-########%%%%%%%%%
+        //cek/ido todo replace python loops in modules with optimized code if possible/necessary
         self.forceStrongConditions=True ##False
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
                 self.dirichletConditionsForceDOF[cj] = DOFBoundaryConditions(self.u[cj].femSpace,dofBoundaryConditionsSetterDict[cj],weakDirichletConditions=False)
-########%%%%%%%%%
-
-
 
     def getResidual(self,u,r):
         """
         Calculate the element residuals and add in to the global residual
         """
-        
-
         if isinstance(self.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
             cResidual = cRANS2PV2.calculateResidual
             if self.nSpace_global == 2:
                 cResidual = cRANS2P2D.calculateResidual
         elif isinstance(self.u[0].femSpace,C0_AffineQuadraticOnSimplexWithNodalBasis):
             cResidual = cRANS2PQ.calculateResidual
-        else:
-            cResidual = cRANS2PV2.calculateResidual    
-            
+        #ido todo add cases for hex's and nurbs
             #if self.nSpace_global == 2:
             #    cResidual = cRANS2P2DQ.calculateResidual
         #Load the unknowns into the finite element dof
@@ -557,13 +549,10 @@ class OneLevelRANS2PV2(OneLevelTransport):
         self.Ct_sge = 4.0
         self.Cd_sge = 144.0
  
- ########%%%%%%%%%
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
-    
-########%%%%%%%%%	 
  
         cResidual(#element
             self.u[0].femSpace.elementMaps.psi,
@@ -681,14 +670,10 @@ class OneLevelRANS2PV2(OneLevelTransport):
             self.ebqe[('velocity',0)],
             self.ebq_global[('totalFlux',0)])
 
-########%%%%%%%%%
 	if self.forceStrongConditions:#
 	    for cj in range(len(self.dirichletConditionsForceDOF)):#
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                      r[self.offset[cj]+self.stride[cj]*dofN] = 0
-
-########%%%%%%%%%
-
 
         if self.stabilization:
             self.stabilization.accumulateSubgridMassHistory(self.q)
@@ -706,9 +691,7 @@ class OneLevelRANS2PV2(OneLevelTransport):
             cJacobian = cRANS2PQ.calculateJacobian
             #if self.nSpace_global == 2:
             #    cJacobian = cRANS2P2DQ.calculateJacobian
-        else:
-            cJacobian = cRANS2PV2.calculateJacobian      
-            
+        #ido todo add cases for hex/nurbs
 	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
 				       jacobian)
         cJacobian(#element
@@ -841,7 +824,6 @@ class OneLevelRANS2PV2(OneLevelTransport):
             self.csrColumnOffsets_eb[(3,1)],
             self.csrColumnOffsets_eb[(3,2)],
             self.csrColumnOffsets_eb[(3,3)])
-########%%%%%%%%%
 
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
@@ -856,10 +838,6 @@ class OneLevelRANS2PV2(OneLevelTransport):
                         else:
                             self.nzval[i] = 0.0
                             #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
-########%%%%%%%%%
-
- 
-
         log("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1

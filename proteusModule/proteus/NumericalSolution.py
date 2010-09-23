@@ -160,9 +160,8 @@ class  NS_base:
                         nnx = n.nnx
                         nny = n.nny
                         nnz = n.nnz
-		    print 	nnx,nny,nnz,p.name
                     log("Building %i x %i x %i rectangular mesh for %s" % (nnx,nny,nnz,p.name))
-                    
+                    #ido todo add a mesh flag variable to default_n for choosing between mesh types
                     if (n.hex == None ):
                         n.hex = False
                     
@@ -514,19 +513,19 @@ class  NS_base:
                                 m.rList):
                 #calculate the coefficients, any explicit terms will be wrong
                 lm.timeTerm=False
-                lm.getResidual(lu,lr)            
+                lm.getResidual(lu,lr)
                 #post-process velocity
                 #lm.calculateAuxiliaryQuantitiesAfterStep()
                 #load in the initial conditions into time integration history to get explict terms right
                 lm.initializeTimeHistory()
                 lm.timeIntegration.initializeSpaceHistory()
-                #recalculate  coefficients with the explicit terms correct 
-                lm.getResidual(lu,lr)                
+                #recalculate  coefficients with the explicit terms correct
+                lm.getResidual(lu,lr)
                 #post-process velocity
                 #lm.calculateAuxiliaryQuantitiesAfterStep()
                 lm.timeTerm=True
                 #calculate consistent 
-                lm.estimate_mt()                
+                lm.estimate_mt()
                 #
             log("Choosing initial time step for model "+p.name)
             m.stepController.initialize_dt_model(self.tnList[0],self.tnList[1])
@@ -565,26 +564,23 @@ class  NS_base:
         import pdb
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             #
-            log("==============================================================",level=0)
             log("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
-            log("==============================================================",level=0)
             #
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                self.systemStepController.stepExact_system(self.tn)
             while self.systemStepController.t_system_last < self.tn: 
                 #
                 log("System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,
-                                                              self.systemStepController.dt_system),level=3)
+                                                              self.systemStepController.dt_system))
                 #
                 while (not self.systemStepController.converged() and
                        not systemStepFailed):
                     #
-                    log("Split operator iteration %i" % (self.systemStepController.its,),level=3)
+                    log("Split operator iteration %i" % (self.systemStepController.its,))
                     #
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
                         #
-                        log("%s" % (model.name),level=1)
-                        log("Fractional step %12.5e for model %s" % (self.t_stepSequence,model.name),level=3)
+                        log("Fractional step %12.5e for model %s" % (self.t_stepSequence,model.name))
                         #
                         for m in model.levelModelList:
                             if m.movingDomain and m.tLast_mesh != self.systemStepController.t_system_last:
@@ -596,7 +592,7 @@ class  NS_base:
                         #
                         stepFailed = False
                         if model.stepController.stepExact and model.stepController.t_model_last != self.t_stepSequence:
-                            log("Step exact called for model %s" % (model.name,),level=3)
+                            log("Step exact called for model %s" % (model.name,))
                             model.stepController.stepExact_model(self.t_stepSequence)
                         while (model.stepController.t_model_last < self.t_stepSequence and
                                not stepFailed and
@@ -604,13 +600,13 @@ class  NS_base:
                             #
                             log("Model step t=%12.5e, dt=%12.5e for model %s" % (model.stepController.t_model,
                                                                                  model.stepController.dt_model,
-                                                                                 model.name),level=3)
+                                                                                 model.name))
                             #
                             for self.tSubstep in model.stepController.substeps:
                                 #
-                                log("Model substep t=%12.5e for model %s" % (self.tSubstep,model.name),level=3)
+                                log("Model substep t=%12.5e for model %s" % (self.tSubstep,model.name))
                                 #TODO: model.stepController.substeps doesn't seem to be updated after a solver failure unless model.stepController.stepExact is true
-                                log("Model substep t=%12.5e for model %s model.timeIntegration.t= %12.5e" % (self.tSubstep,model.name,model.levelModelList[-1].timeIntegration.t),level=3)
+                                log("Model substep t=%12.5e for model %s model.timeIntegration.t= %12.5e" % (self.tSubstep,model.name,model.levelModelList[-1].timeIntegration.t))
                                 #
                                 model.stepController.setInitialGuess(model.uList,model.rList)
                                 solverFailed = model.solver.solveMultilevel(uList=model.uList,
@@ -646,7 +642,7 @@ class  NS_base:
                                 log("Step Taken, t_stepSequence= %s Model step t=%12.5e, dt=%12.5e for model %s" % (self.t_stepSequence,
                                                                                                                     model.stepController.t_model,
                                                                                                                     model.stepController.dt_model,
-                                                                                                                    model.name),level=3)
+                                                                                                                    model.name))
                                 for av in self.auxiliaryVariables[model.name]:
                                     av.calculate()
                         #end model step
@@ -694,12 +690,12 @@ class  NS_base:
                     self.systemStepController.updateTimeHistory()
                     self.systemStepController.choose_dt_system()
                     log("Step Taken, System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,
-                                                                              self.systemStepController.dt_system),level=3)
+                                                                              self.systemStepController.dt_system))
                     if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                         self.systemStepController.stepExact_system(self.tn)
                     log("Step Taken, Model step t=%12.5e, dt=%12.5e for model %s" % (model.stepController.t_model,
                                                                                      model.stepController.dt_model,
-                                                                                     model.name),level=3)
+                                                                                     model.name))
             
                 #
                 if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
@@ -767,8 +763,8 @@ class  NS_base:
         import xml.etree.ElementTree as ElementTree
         if self.archiveFlag == ArchiveFlags.UNDEFINED:
             return
-        log("Writing initial mesh for  model = "+model.name,level=3)
-        log("Writing initial conditions for  model = "+model.name,level=3)
+        log("Writing initial mesh for  model = "+model.name)
+        log("Writing initial conditions for  model = "+model.name)
         if not self.so.useOneArchive or index==0:
             self.ar[index].domain = ElementTree.SubElement(self.ar[index].tree.getroot(),"Domain")
         self.writeVectors=True
@@ -812,8 +808,8 @@ class  NS_base:
         if t == None:
             t = self.systemStepController.t_system
 
-        log("Writing mesh header for  model = "+model.name+" at time t="+str(t),level=3)
-        log("Writing solution for  model = "+model.name, level=3)
+        log("Writing mesh header for  model = "+model.name+" at time t="+str(t))
+        log("Writing solution for  model = "+model.name)
         if self.so.useOneArchive:
             if index==0:
                 self.femSpaceWritten={}

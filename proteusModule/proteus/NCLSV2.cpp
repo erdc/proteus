@@ -195,7 +195,7 @@ extern "C" void NCLSV2_RES (//element
                                                  dH,
                                                  cfl[eN_k],
                                                  tau);
-          subgridError_u = tau*pdeResidual_u;
+          subgridError_u = -tau*pdeResidual_u;
           //
           //calcualte shock capturing diffusion
           //
@@ -582,7 +582,7 @@ extern "C" void NCLSV2_JAC(//element
                                             cfl[eN_k],
                                             tau);
           for(int j=0;j<nDOF_trial_element;j++) 
-            dsubgridError_u_u[j] = tau*dpdeResidual_u_u[j];
+            dsubgridError_u_u[j] = -tau*dpdeResidual_u_u[j];
 	  //mwf debug
 // 	  if (k == 0)
 // 	    {
