@@ -294,7 +294,7 @@ class LocalFunctionSpace:
                 self.basisTrace[fi].append(lambda xBar: 
                                         self.basis[si](self.referenceElement.boundaryMapList[fi](xBar)))
                 self.basisGradientsTrace[fi].append(lambda xBar:
-                                        self.gradientList[si](self.referenceElement.boundaryMapList[fi](xBar)))        
+                                        self.basisGradients[si](self.referenceElement.boundaryMapList[fi](xBar)))        
 
 class LinearOnSimplexWithNodalBasis(LocalFunctionSpace):
     """
