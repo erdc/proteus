@@ -231,6 +231,7 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
                                       dims,
                                       PyArray_DOUBLE,
                                       (char*)MESH(cmesh).elementDiametersArray);
+
   dims[0] = MESH(cmesh).nElements_global;
   elementInnerDiametersArray = PyArray_FromDimsAndData(1,
                                       dims,
@@ -936,6 +937,34 @@ static PyObject* cmeshToolsAllocateGeometricInfo_edge(PyObject* self,
   Py_INCREF(Py_None); 
   return Py_None;
 }
+
+
+static PyObject* cmeshToolsComputeGeometricInfo_hexahedron(PyObject* self,
+                                                     PyObject* args)
+{
+  PyObject *cmesh;
+  if (!PyArg_ParseTuple(args,
+                        "O",
+                        &cmesh))
+    return NULL;
+  computeGeometricInfo_hexahedron(MESH(cmesh));
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
+static PyObject* cmeshToolsAllocateGeometricInfo_hexahedron(PyObject* self,
+                                                     PyObject* args)
+{
+  PyObject *cmesh;
+  if (!PyArg_ParseTuple(args,
+                        "O",
+                        &cmesh))
+    return NULL;
+  allocateGeometricInfo_hexahedron(MESH(cmesh));
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
 
 
 typedef struct
@@ -1741,7 +1770,15 @@ static PyMethodDef cmeshToolsMethods[] = {
   { "generateHexahedralMeshFromRectangularGrid",
     cmeshToolsGenerateHexahedralMeshFromRectangularGrid,
     METH_VARARGS, 
-    "Generates a structured hexahedral"},            
+    "Generates a structured hexahedron"},            
+  { "computeGeometricInfo_hexahedron",
+    cmeshToolsComputeGeometricInfo_hexahedron,
+    METH_VARARGS, 
+    "Compute h, etc."},
+  { "allocateGeometricInfo_hexahedron",
+    cmeshToolsAllocateGeometricInfo_hexahedron,
+    METH_VARARGS, 
+    "Allocate h, etc."},
   { NULL,NULL,0,NULL}
 };
 

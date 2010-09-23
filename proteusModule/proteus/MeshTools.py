@@ -2349,8 +2349,8 @@ class HexahedralMesh(Mesh):
         import cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateHexahedralMeshFromRectangularGrid(nx,ny,nz,Lx,Ly,Lz,self.cmesh)
-        #cmeshTools.allocateGeometricInfo_hexahedron(self.cmesh)
-        #cmeshTools.computeGeometricInfo_hexahedron(self.cmesh)
+        cmeshTools.allocateGeometricInfo_hexahedron(self.cmesh)
+        cmeshTools.computeGeometricInfo_hexahedron(self.cmesh)
         self.buildFromC(self.cmesh)
     
     def finalize(self):
@@ -3063,17 +3063,27 @@ class MultilevelHexahedralMesh(MultilevelMesh):
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
         log("Generating hexahedral mesh")
         if not skipInit:
-            self.meshList.append(HexahedralMesh())
-            self.meshList[0].generateHexahedralMeshFromRectangularGrid(nx,ny,nz,Lx,Ly,Lz)
-            self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
-            self.buildFromC(self.cmultilevelMesh)
-            self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
-            for l in range(1,refinementLevels):
+            if self.useC:
+               self.meshList.append(HexahedralMesh())
+               self.meshList[0].generateHexahedralMeshFromRectangularGrid(nx,ny,nz,Lx,Ly,Lz)
+               self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+               self.buildFromC(self.cmultilevelMesh)
+               self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+               for l in range(1,refinementLevels):
+                  self.meshList.append(HexahedralMesh())
+                  self.meshList[l].cmesh = self.cmeshList[l]
+                  self.meshList[l].buildFromC(self.cmeshList[l])
+                  self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+            else:
+                grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
                 self.meshList.append(HexahedralMesh())
-                self.meshList[l].cmesh = self.cmeshList[l]
-                self.meshList[l].buildFromC(self.cmeshList[l])
-                self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
-
+                self.meshList[0].rectangularToTetrahedral(grid)
+                self.elementChildren=[]
+                log(self.meshList[0].meshInfo())
+                for l in range(1,refinementLevels):
+                    self.refine()
+                    log(self.meshList[-1].meshInfo())
+                self.buildArrayLists()
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
                                        parallelPartitioningType=MeshParallelPartitioningTypes.element):
         import cmeshTools
