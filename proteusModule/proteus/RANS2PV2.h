@@ -13,17 +13,6 @@
 #define nQuadraturePoints_elementBoundary 4
 #define nElementBoundaries_element 4
 
-/*
-#define nSpace 3
-#define nQuadraturePoints_element 8
-#define nDOF_trial_element 8
-#define nDOF_mesh_trial_element 8
-#define nDOF_test_element 8
-#define nDOF_test_X_trial_element 64
-#define nQuadraturePoints_elementBoundary 4
-#define nElementBoundaries_element 6
-*/
-
 namespace RANS2PV2
 {
   inline double smoothedHeaviside(double eps, double phi)
