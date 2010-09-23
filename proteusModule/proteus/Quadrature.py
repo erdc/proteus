@@ -83,6 +83,17 @@ class GaussEdge(Q_base):
              0.5*(322.0-13.0*sqrt(70.0))/900.0)
             )
         self.setOrder(order)
+
+    def setOrder(self,order,domain=[0.0,1.0]):
+        Q_base.setOrder(self,order)
+
+        points = self.points
+        weights = self.weights       
+        self.points = []
+        self.weights = []
+        for i in range(order):
+           self.points.append(EVec((domain[1]-domain[0])*points[i][0] +domain[0]))
+           self.weights.append((domain[1]-domain[0])*weights[i])
         
 class LobattoEdge(Q_base):
     """
@@ -692,7 +703,8 @@ class CubeGaussQuadrature(Q_base):
         
         
     def setOrder(self,order):
-        self.quadrature.setOrder(order)
+        self.quadrature.setOrder(order,[-1.0,1.0])
+
         if self.nd == 1:
             self.points = self.quadrature.points
             self.weights = self.quadrature.weights
