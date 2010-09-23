@@ -275,7 +275,7 @@ extern "C" void RDLSV2_RES (//element
                                                  dm_t,dH_tau,
                                                  q_cfl[eN_k],
                                                  tau);
-          subgridError_u = tau*pdeResidual_u;
+          subgridError_u = -tau*pdeResidual_u;
           //
           //calcualte shock capturing diffusion
           //
@@ -772,7 +772,7 @@ extern "C" void RDLSV2_JAC (//element
                                             q_cfl[eN_k],
                                             tau);
           for (int j=0;j<nDOF_trial_element;j++)
-            dsubgridError_u_u[j] =  tau*dpdeResidual_u_u[j];
+            dsubgridError_u_u[j] =  -tau*dpdeResidual_u_u[j];
 
 	  nu_sc = q_numDiff_u[eN_k]*(1.0-lag_shockCapturingScale) + q_numDiff_u_last[eN_k]*lag_shockCapturingScale;
 

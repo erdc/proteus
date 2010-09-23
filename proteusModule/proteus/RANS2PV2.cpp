@@ -129,7 +129,7 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  elementResidual_v[i]=0.0;
 	  elementResidual_w[i]=0.0;
 	}//i
-      // 
+      //
       //loop over quadrature points and compute integrands
       //
       for(int k=0;k<nQuadraturePoints_element;k++)
@@ -436,7 +436,7 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  					 subgridError_u,
 	  					 subgridError_v,
 	  					 subgridError_w);
-     	
+     	//cek/ido todo use add options for lagging velocity and turning of RBLES terms
 	  
          // Velocity  ==> SUPG   
 	    //vel[0] = u;
@@ -784,7 +784,7 @@ extern "C" void calculateResidual_RANS2PV2(//element
 	  // 
 	  //cek debug
 	  //eps_rho=0.1;
-	  //eps_mu=0.1; 
+	  //eps_mu=0.1;
 	  RANS2PV2::evaluateCoefficients(eps_rho,
 					 eps_mu,
 					 sigma,
@@ -792,7 +792,7 @@ extern "C" void calculateResidual_RANS2PV2(//element
 					 nu_0,
 					 rho_1,
 					 nu_1,
-					 g, 
+					 g,
 					 ebqe_phi_ext[ebNE_kb],
 					 &ebqe_normal_phi_ext[ebNE_kb_nSpace],
 					 ebqe_kappa_phi_ext[ebNE_kb],
@@ -1253,7 +1253,7 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 	    mom_uv_diff_ten[1],
 	    mom_uw_diff_ten[1],
 	    mom_vu_diff_ten[1],
-	    mom_vw_diff_ten[1], 
+	    mom_vw_diff_ten[1],
 	    mom_wu_diff_ten[1],
 	    mom_wv_diff_ten[1],
 	    mom_u_source=0.0,
@@ -1474,7 +1474,6 @@ extern "C" void calculateJacobian_RANS2PV2(//element
           //
           //calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
           //
-
           //calculate the Jacobian of strong residual
           for (int j=0;j<nDOF_trial_element;j++)
             {
@@ -1531,7 +1530,7 @@ extern "C" void calculateJacobian_RANS2PV2(//element
 							    dsubgridError_v_v,
 							    dsubgridError_w_p,
 							    dsubgridError_w_w);
-
+	  //cek/ido todo add options for lagging velocity and turning off RBLES terms
          // Velocity  ==> SUPG   
 	    //vel[0] = u;
 	    //vel[1] = v;
