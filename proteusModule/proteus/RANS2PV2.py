@@ -501,7 +501,7 @@ class OneLevelRANS2PV2(OneLevelTransport):
                     self.ebqe[('diffusiveFlux_bc_flag',ck,ci)][t[0],t[1]] = 1
         self.numericalFlux.setDirichletValues(self.ebqe)
 
-        //cek/ido todo replace python loops in modules with optimized code if possible/necessary
+        #cek/ido todo replace python loops in modules with optimized code if possible/necessary
         self.forceStrongConditions=True ##False
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
@@ -513,6 +513,7 @@ class OneLevelRANS2PV2(OneLevelTransport):
         Calculate the element residuals and add in to the global residual
         """
         if isinstance(self.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
+        #if isinstance(self.u[0].femSpace,C0_AffineLinearOnCubeWithNodalBasis):
             cResidual = cRANS2PV2.calculateResidual
             if self.nSpace_global == 2:
                 cResidual = cRANS2P2D.calculateResidual
@@ -684,6 +685,7 @@ class OneLevelRANS2PV2(OneLevelTransport):
         import superluWrappers
         import numpy
         if isinstance(self.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
+        #if isinstance(self.u[0].femSpace,C0_AffineLinearOnCubeWithNodalBasis):
             cJacobian = cRANS2PV2.calculateJacobian
             if self.nSpace_global == 2:
                 cJacobian = cRANS2P2D.calculateJacobian
