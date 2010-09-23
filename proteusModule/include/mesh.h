@@ -48,14 +48,21 @@ extern "C"
       *elementBoundaryElementsArray, //the element numbers for each element boundary
       *elementBoundaryLocalElementBoundariesArray, //the local element boundary number for the left and right neighbors of the element boundary
       *interiorElementBoundariesArray, //the element boundary numbers of the interior element boundaries
-      *exteriorElementBoundariesArray, //the elemetn boundary numbers of the exterior element boundaries
+      *exteriorElementBoundariesArray, //the element boundary numbers of the exterior element boundaries
       *edgeNodesArray,
       *nodeStarArray,
       *nodeStarOffsets,
       *elementMaterialTypes,           //ids for classifying elements,element boundaries,nodes
       *elementBoundaryMaterialTypes,
-      *nodeMaterialTypes,
-      *elementIJK;      // Cartesian indices of element 
+      *nodeMaterialTypes;
+    
+    // NURBS
+    int    *elementIJK;                // Cartesian indices of element 
+    double *weights;                   // NURBS weight
+    double *U_KNOT,*V_KNOT,*W_KNOT;    // Knot vectors 
+    int    nx,ny,nz;
+    int    px,py,pz;           
+    // NURBS  
       
     double *nodeArray,*elementDiametersArray,*elementInnerDiametersArray,*elementBoundaryDiametersArray;
     double *elementBarycentersArray, *elementBoundaryBarycentersArray;
@@ -114,16 +121,30 @@ extern "C"
     mesh.elementBarycentersArray=NULL;
     mesh.elementBoundaryBarycentersArray=NULL;
     mesh.newestNodeBases=NULL;
+
+    // NURBS
+    mesh.nx=mesh.ny=mesh.nz=0;
+    mesh.px=mesh.py=mesh.pz=0;    
+    mesh.elementIJK=NULL;              
+    mesh.weights=NULL;               
+    mesh.U_KNOT=NULL;
+    mesh.V_KNOT=NULL;
+    mesh.W_KNOT=NULL;     
+    // NURBS 
+
     //geometry
     mesh.elementDiametersArray=NULL;
     mesh.h=0.0;
     mesh.hMin=0.0;
     mesh.sigmaMax=0.0;
     mesh.volume=0.0;
+    
+    
   }
 
   inline void deleteMesh(Mesh& mesh)
   {
+  	 	
     //dimensions
     mesh.nElements_global=0;
     mesh.nNodes_global=0;
@@ -135,6 +156,7 @@ extern "C"
     mesh.nExteriorElementBoundaries_global=0;
     mesh.max_nElements_node=0;
     mesh.nEdges_global=0;
+    
     //arrays
     if(mesh.elementNodesArray!=NULL) delete [] mesh.elementNodesArray;
     if(mesh.nodeElementsArray!=NULL) delete [] mesh.nodeElementsArray;
@@ -157,6 +179,18 @@ extern "C"
     if(mesh.elementBarycentersArray!=NULL) delete [] mesh.elementBarycentersArray;
     if(mesh.elementBoundaryBarycentersArray!=NULL) delete [] mesh.elementBoundaryBarycentersArray;
     if(mesh.newestNodeBases!=NULL) delete [] mesh.newestNodeBases;
+   
+    // NURBS
+    mesh.nx=mesh.ny=mesh.nz=0;
+    mesh.px=mesh.py=mesh.pz=0;     
+    if(mesh.elementIJK!=NULL) delete [] mesh.elementIJK;              
+    if(mesh.weights!=NULL) delete [] mesh.weights;               
+    if(mesh.U_KNOT!=NULL) delete [] mesh.U_KNOT;
+    if(mesh.V_KNOT!=NULL) delete [] mesh.V_KNOT;
+    if(mesh.W_KNOT!=NULL) delete [] mesh.W_KNOT;     
+    // NURBS 
+   
+   
     mesh.elementNodesArray=NULL;
     mesh.nodeElementsArray=NULL;
     mesh.nodeElementOffsets=NULL;
@@ -242,6 +276,7 @@ extern "C"
   int regularHexahedralToTetrahedralMeshNodes(const int& nx,const int& ny,const int& nz, const double& Lx, const double& Ly, const double& Lz, Mesh& mesh);
   int regularHexahedralToTetrahedralMeshElements(const int& nx,const int& ny,const int& nz,Mesh& mesh);
   int regularHexahedralMeshElements(const int& nx,const int& ny,const int& nz, Mesh& mesh);
+  int regularNURBSMeshElements(const int& nx,const int& ny,const int& nz,const int& px,const int& py,const int& pz,Mesh& mesh);
   
   int globallyRefineTetrahedralMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh);
 
@@ -249,20 +284,17 @@ extern "C"
   int constructElementBoundaryElementsArray_triangle(Mesh& mesh);
   int constructElementBoundaryElementsArray_tetrahedron(Mesh& mesh);
   int constructElementBoundaryElementsArray_hexahedron(Mesh& mesh);
-  
-
-      ///allocateGeometricInfo_hexahedron(*mesh.subdomainp);
-      //computeGeometricInfo_hexahedron(*mesh.subdomainp);  
+  int constructElementBoundaryElementsArray_NURBS(Mesh& mesh);
 
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_edge(Mesh& mesh);
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_triangle(Mesh& mesh);
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(Mesh& mesh);
-  
-  
+    
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_edge(Mesh& mesh);
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_triangle(Mesh& mesh);
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_tetrahedron(Mesh& mesh);
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_hexahedron(Mesh& mesh);
+  int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_NURBS(Mesh& mesh);
 
   int writeElements(std::ostream& meshFile, const Mesh& mesh);
   int writeNodes(std::ostream& meshFile, const Mesh& mesh);
@@ -271,9 +303,12 @@ extern "C"
   int allocateGeometricInfo_tetrahedron(Mesh& mesh);
   int allocateGeometricInfo_triangle(Mesh& mesh);
   int allocateGeometricInfo_edge(Mesh& mesh);
+  int allocateGeometricInfo_hexahedron(Mesh& mesh);
   int computeGeometricInfo_tetrahedron(Mesh& mesh);
   int computeGeometricInfo_triangle(Mesh& mesh);
   int computeGeometricInfo_edge(Mesh& mesh);
+  int computeGeometricInfo_hexahedron(Mesh& mesh);   
+
   int partitionElements(Mesh& mesh, int nElements_overlap=0);
 
   int assignElementBoundaryMaterialTypesFromParent(Mesh& parentMesh, Mesh& childMesh, const int* levelElementParentsArray,

@@ -2427,8 +2427,8 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       //constructElementBoundaryElementsArray_tetrahedron(*mesh.subdomainp);
       //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
       constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_hexahedron(*mesh.subdomainp);
-      //allocateGeometricInfo_hexahedron(*mesh.subdomainp);
-      //computeGeometricInfo_hexahedron(*mesh.subdomainp);
+      allocateGeometricInfo_hexahedron(*mesh.subdomainp);
+      computeGeometricInfo_hexahedron(*mesh.subdomainp);
     }
 
 
@@ -3408,15 +3408,15 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       {
         //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
         constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_hexahedron(*mesh.subdomainp);
-        //allocateGeometricInfo_tetrahedron(*mesh.subdomainp);
-        //computeGeometricInfo_tetrahedron(*mesh.subdomainp);
+        allocateGeometricInfo_hexahedron(*mesh.subdomainp);
+        computeGeometricInfo_hexahedron(*mesh.subdomainp);
       }
     else
       {
         //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
         constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_NURBS(*mesh.subdomainp);
-        //allocateGeometricInfo_tetrahedron(*mesh.subdomainp);
-        //computeGeometricInfo_tetrahedron(*mesh.subdomainp);
+        //??allocateGeometricInfo_tetrahedron(*mesh.subdomainp);
+        //??computeGeometricInfo_tetrahedron(*mesh.subdomainp);
       }     
 
 
