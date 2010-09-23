@@ -3918,7 +3918,7 @@ void updateSubgridError(int nElements_global,
     for (i=0;i<nDOF_test_element;i++)
       for (k=0;k<nQuadraturePoints_element;k++)
         weak_residual[eN*nDOF_test_element + i] 
-          -= 
+          += 
           error[eN*nQuadraturePoints_element + 
 		k]
           *
@@ -3982,7 +3982,7 @@ void updateSubgridErrorJacobian(int nElements_global,
           jacobian_weak_residual[eN*nDOF_test_X_trial_element + 
                    i*nDOF_trial_element + 
                    j] 
-            -= 
+            += 
             derror[eN*nQuadraturePoints_element*nDOF_trial_element+
 		   k*nDOF_trial_element+
 		   j]

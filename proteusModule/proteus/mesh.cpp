@@ -4,24 +4,24 @@
    \ingroup mesh mesh
    @{
 */
-// ****************************************************
+//****************************************************
 #pragma mark -
 #pragma mark * local ( static ) function prototypes *
 //----------------------------------------------------
 static double CurrentTime(void)
 {
-//     static double scale = 0.0;
+  //     static double scale = 0.0;
         
-//     if (0.0 == scale) {
-//         mach_timebase_info_data_t info;
-//         mach_timebase_info(&info);
-//         scale = info.numer / info.denom * 1e-9;
-//     }
+  //     if (0.0 == scale) {
+  //         mach_timebase_info_data_t info;
+  //         mach_timebase_info(&info);
+  //         scale = info.numer / info.denom * 1e-9;
+  //     }
         
-//     return mach_absolute_time() * scale;
+  //     return mach_absolute_time() * scale;
   return 0.0;
 }       // CurrentTime
-// ****************************************************
+//****************************************************
 #pragma mark -
 #pragma mark * exported function implementations *
 //----------------------------------------------------
@@ -98,31 +98,31 @@ extern "C"
 
     for(int i=0,eN=0;i<ny-1;i++)
       for(int j=0;j<nx-1;j++)
-          {
-            int 
-              n0 =(j+0) + (i+0)*nx,
-              n1 =(j+1) + (i+0)*nx,
-              n2 =(j+0) + (i+1)*nx,
-              n3 =(j+1) + (i+1)*nx;
-	    //uncomment for "right leaning" diagonal
-	    //eN=newTriangle(eN,mesh.elementNodesArray,n0,n3,n1);
-	    //eN=newTriangle(eN,mesh.elementNodesArray,n0,n2,n3);
-	    //uncomment for union jack
-	    if (i%2 + j%2 == 0 || i%2 + j%2 == 2)
-	      {
-	    	eN=newTriangle(eN,mesh.elementNodesArray,n0,n3,n1);
-	    	eN=newTriangle(eN,mesh.elementNodesArray,n0,n2,n3);
-	      }
-	    else
-	      {
-	    	eN=newTriangle(eN,mesh.elementNodesArray,n0,n2,n1);
-	    	eN=newTriangle(eN,mesh.elementNodesArray,n2,n3,n1);
-	      }
-	    //NW element is (n0,n3,n1), SE element is (n0,n2,n3)
-	    //eN was incremented twice just now
-	    mesh.newestNodeBases[eN-2] = 2; //SE across from node n1
-	    mesh.newestNodeBases[eN-1] = 1; //NW is across from node n2
-          }
+	{
+	  int 
+	    n0 =(j+0) + (i+0)*nx,
+	    n1 =(j+1) + (i+0)*nx,
+	    n2 =(j+0) + (i+1)*nx,
+	    n3 =(j+1) + (i+1)*nx;
+	  //uncomment for "right leaning" diagonal
+	  //eN=newTriangle(eN,mesh.elementNodesArray,n0,n3,n1);
+	  //eN=newTriangle(eN,mesh.elementNodesArray,n0,n2,n3);
+	  //uncomment for union jack
+	  if (i%2 + j%2 == 0 || i%2 + j%2 == 2)
+	    {
+	      eN=newTriangle(eN,mesh.elementNodesArray,n0,n3,n1);
+	      eN=newTriangle(eN,mesh.elementNodesArray,n0,n2,n3);
+	    }
+	  else
+	    {
+	      eN=newTriangle(eN,mesh.elementNodesArray,n0,n2,n1);
+	      eN=newTriangle(eN,mesh.elementNodesArray,n2,n3,n1);
+	    }
+	  //NW element is (n0,n3,n1), SE element is (n0,n2,n3)
+	  //eN was incremented twice just now
+	  mesh.newestNodeBases[eN-2] = 2; //SE across from node n1
+	  mesh.newestNodeBases[eN-1] = 1; //NW is across from node n2
+	}
     return 0;
   }
   
@@ -146,53 +146,6 @@ extern "C"
         }
     return 0;
   }
-
-  int regularMeshNodes(const int& nx, 
-                       const int& ny, 
-                       const int& nz,
-                       const double& Lx, 
-                       const double& Ly, 
-                       const double& Lz,
-                       Mesh& mesh)
-  {
-    const int nxy=nx*ny;
-    const double hx=Lx/(nx-1.0),
-      hy=Ly/(ny-1.0),
-      hz=Lz/(nz-1.0);
-    mesh.nNodes_global=nx*ny*nz;   
-    mesh.nodeArray = new double[mesh.nNodes_global*3];
-    memset(mesh.nodeArray,0,mesh.nNodes_global*3*sizeof(double));
-    mesh.nodeMaterialTypes = new int[mesh.nNodes_global];
-    //set interior and exterior node material flags after get boundary info in
-    //constructElementBoundaryElementsArray_edge 
-    //if nodeMaterialTypes left as DEFAULT_NODE_MATERIAL
-    memset(mesh.nodeMaterialTypes,DEFAULT_NODE_MATERIAL,mesh.nNodes_global*sizeof(int));
-    int nN;
-    for(int i=0;i<nz;i++)
-      for(int j=0;j<ny;j++)
-        for(int k=0;k<nx;k++)
-        {
-          nN = k + j*nx + i*nxy;
-          mesh.nodeArray[3*nN+0]=k*hx;
-          mesh.nodeArray[3*nN+1]=j*hy;
-          mesh.nodeArray[3*nN+2]=i*hz;
-        }
-    return 0;
-  }
-
-
-  int regularHexahedralToTetrahedralMeshNodes(const int& nx, 
-                                              const int& ny, 
-                                              const int& nz,
-                                              const double& Lx, 
-                                              const double& Ly, 
-                                              const double& Lz,
-                                              Mesh& mesh)
-  {
-    regularMeshNodes(nx,ny,nz,Lx,Ly,Lz,mesh);  	   
-    std::cout<<"regularHexahedralToTetrahedralMeshNodes is Deprecated\n";    
-    return 0;                                     
-  }                                            
   
   int regularHexahedralToTetrahedralMeshElements(const int& nx, 
                                                  const int& ny, 
@@ -228,8 +181,53 @@ extern "C"
           }
     return 0;
   }
-
   
+  int regularMeshNodes(const int& nx, 
+                       const int& ny, 
+                       const int& nz,
+                       const double& Lx, 
+                       const double& Ly, 
+                       const double& Lz,
+                       Mesh& mesh)
+  {
+    const int nxy=nx*ny;
+    const double hx=Lx/(nx-1.0),
+      hy=Ly/(ny-1.0),
+      hz=Lz/(nz-1.0);
+    mesh.nNodes_global=nx*ny*nz;   
+    mesh.nodeArray = new double[mesh.nNodes_global*3];
+    memset(mesh.nodeArray,0,mesh.nNodes_global*3*sizeof(double));
+    mesh.nodeMaterialTypes = new int[mesh.nNodes_global];
+    //set interior and exterior node material flags after get boundary info in
+    //constructElementBoundaryElementsArray_edge 
+    //if nodeMaterialTypes left as DEFAULT_NODE_MATERIAL
+    memset(mesh.nodeMaterialTypes,DEFAULT_NODE_MATERIAL,mesh.nNodes_global*sizeof(int));
+    int nN;
+    for(int i=0;i<nz;i++)
+      for(int j=0;j<ny;j++)
+        for(int k=0;k<nx;k++)
+	  {
+	    nN = k + j*nx + i*nxy;
+	    mesh.nodeArray[3*nN+0]=k*hx;
+	    mesh.nodeArray[3*nN+1]=j*hy;
+	    mesh.nodeArray[3*nN+2]=i*hz;
+	  }
+    return 0;
+  }
+
+  int regularHexahedralToTetrahedralMeshNodes(const int& nx, 
+                                              const int& ny, 
+                                              const int& nz,
+                                              const double& Lx, 
+                                              const double& Ly, 
+                                              const double& Lz,
+                                              Mesh& mesh)
+  {
+    regularMeshNodes(nx,ny,nz,Lx,Ly,Lz,mesh);  	   
+    std::cout<<"regularHexahedralToTetrahedralMeshNodes is Deprecated\n";    
+    return 0;                                     
+  }                                            
+    
   int regularHexahedralMeshElements(const int& nx, 
                                     const int& ny, 
                                     const int& nz, 
@@ -248,25 +246,25 @@ extern "C"
         for(int k=0;k<nx-1;k++)
           {
             eN=newHexahedron(eN,mesh.elementNodesArray,
-                   (k+0) + (j+0)*nx + (i+0)*nxy,
-                   (k+1) + (j+0)*nx + (i+0)*nxy,
-                   (k+1) + (j+1)*nx + (i+0)*nxy,
-                   (k+0) + (j+1)*nx + (i+0)*nxy,
-                   (k+0) + (j+0)*nx + (i+1)*nxy,
-                   (k+1) + (j+0)*nx + (i+1)*nxy,
-                   (k+1) + (j+1)*nx + (i+1)*nxy,
-                   (k+0) + (j+1)*nx + (i+1)*nxy);
+			     (k+0) + (j+0)*nx + (i+0)*nxy,
+			     (k+1) + (j+0)*nx + (i+0)*nxy,
+			     (k+1) + (j+1)*nx + (i+0)*nxy,
+			     (k+0) + (j+1)*nx + (i+0)*nxy,
+			     (k+0) + (j+0)*nx + (i+1)*nxy,
+			     (k+1) + (j+0)*nx + (i+1)*nxy,
+			     (k+1) + (j+1)*nx + (i+1)*nxy,
+			     (k+0) + (j+1)*nx + (i+1)*nxy);
           }
     return 0;
   }
   
-  int regularNURBSMeshElements     (const int& nx, 
-                                    const int& ny, 
-                                    const int& nz, 
-                                    const int& px, 
-                                    const int& py, 
-                                    const int& pz, 
-                                    Mesh& mesh)
+  int regularNURBSMeshElements(const int& nx, 
+			       const int& ny, 
+			       const int& nz, 
+			       const int& px, 
+			       const int& py, 
+			       const int& pz, 
+			       Mesh& mesh)
   {
 
     mesh.nNodes_element = (px+1)*(py+1)*(pz+1);
@@ -292,19 +290,19 @@ extern "C"
       for(int j=0;j<ny-py;j++)
         for(int k=0;k<nx-pz;k++)
           {
-          mesh.elementIJK[eN*3+0] = i;
-          mesh.elementIJK[eN*3+1] = j;
-          mesh.elementIJK[eN*3+2] = k;
+	    mesh.elementIJK[eN*3+0] = i;
+	    mesh.elementIJK[eN*3+1] = j;
+	    mesh.elementIJK[eN*3+2] = k;
 
-          int sN = 0;
-          for(int ii=0;ii<px+1;ii++)
-            for(int jj=0;jj<py+1;jj++)
-              for(int kk=0;kk<pz+1;kk++)
-                {          	
-          	        mesh.elementNodesArray[eN*mesh.nNodes_element+sN] = (k+kk) + (j+jj)*nx + (i+ii)*nxy;                    
+	    int sN = 0;
+	    for(int ii=0;ii<px+1;ii++)
+	      for(int jj=0;jj<py+1;jj++)
+		for(int kk=0;kk<pz+1;kk++)
+		  {          	
+		    mesh.elementNodesArray[eN*mesh.nNodes_element+sN] = (k+kk) + (j+jj)*nx + (i+ii)*nxy;                    
                     sN++;
-                }    
-                eN++;          	
+		  }    
+	    eN++;          	
 
           } 
                       
@@ -313,37 +311,34 @@ extern "C"
     mesh.W_KNOT = new double[nz+pz+1];
 
     for(int i=0;i<px+1;i++)
-       mesh.U_KNOT[i] = 0.0;
-   for(int i=px+1;i<nx;i++)
-       mesh.U_KNOT[i] = double(i-px-1);       
+      mesh.U_KNOT[i] = 0.0;
+    for(int i=px+1;i<nx;i++)
+      mesh.U_KNOT[i] = double(i-px-1);       
     for(int i=nx;i<nx+px+1;i++)
-       mesh.U_KNOT[i] = double(nx);
+      mesh.U_KNOT[i] = double(nx);
 
     for(int i=0;i<py+1;i++)
-       mesh.V_KNOT[i] = 0.0;
+      mesh.V_KNOT[i] = 0.0;
     for(int i=py+1;i<ny;i++)
-       mesh.V_KNOT[i] = double(i-py-1);       
+      mesh.V_KNOT[i] = double(i-py-1);       
     for(int i=ny;i<ny+py+1;i++)
-       mesh.V_KNOT[i] = double(ny);
+      mesh.V_KNOT[i] = double(ny);
        
     for(int i=0;i<pz+1;i++)
-       mesh.W_KNOT[i] = 0.0;
+      mesh.W_KNOT[i] = 0.0;
     for(int i=pz+1;i<pz;i++)
-       mesh.W_KNOT[i] = double(i-pz-1);       
+      mesh.W_KNOT[i] = double(i-pz-1);       
     for(int i=nz;i<nz+pz+1;i++)
-       mesh.W_KNOT[i] = double(nz);           
+      mesh.W_KNOT[i] = double(nz);           
 
 
     mesh.weights = new double[mesh.nNodes_global];
 
     for(int i=0;i<mesh.nNodes_global;i++)
-       mesh.weights[i] = 1.0;
+      mesh.weights[i] = 1.0;
                  
     return 0;
   }
-  
-
-  
 
   int constructElementBoundaryElementsArray_edge(Mesh& mesh)
   {
@@ -365,7 +360,7 @@ extern "C"
             {
               elementBoundaryElements[ebt].right=eN;
               elementBoundaryElements[ebt].right_ebN_element=ebN;
-            } 
+            }
           else
             {
               elementBoundaryElements.insert(elementBoundaryElements.end(),make_pair(ebt,ElementNeighbors(eN,ebN)));
@@ -734,10 +729,10 @@ extern "C"
         mesh.elementBoundaryLocalElementBoundariesArray[ebN*2 + 1] = eb->second.right_ebN_element;
         mesh.elementNeighborsArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] = eb->second.right; 
         if(eb->second.right != -1)
-            {
-              interiorElementBoundaries.insert(ebN);
-              mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
-            }
+	  {
+	    interiorElementBoundaries.insert(ebN);
+	    mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
+	  }
         else
           exteriorElementBoundaries.insert(ebN);          
 	//mwf added
@@ -922,10 +917,10 @@ extern "C"
         mesh.elementBoundaryLocalElementBoundariesArray[ebN*2 + 1] = eb->second.right_ebN_element;
         mesh.elementNeighborsArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] = eb->second.right; 
         if(eb->second.right != -1)
-            {
-              interiorElementBoundaries.insert(ebN);
-              mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
-            }
+	  {
+	    interiorElementBoundaries.insert(ebN);
+	    mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
+	  }
         else
           exteriorElementBoundaries.insert(ebN);    
           //mwf added
@@ -956,15 +951,15 @@ extern "C"
     std::cout<<"extracting edges"<<std::endl;
     for (int eN=0;eN<mesh.nElements_global;eN++)
       {
-       int nodes[2];
-       for (int e=0;e<12;e++)
-         {
+	int nodes[2];
+	for (int e=0;e<12;e++)
+	  {
            	
-           nodes[0] = mesh.elementNodesArray[eN*8+ledge[e][0]];
-           nodes[1] = mesh.elementNodesArray[eN*8+ledge[e][1]];
+	    nodes[0] = mesh.elementNodesArray[eN*8+ledge[e][0]];
+	    nodes[1] = mesh.elementNodesArray[eN*8+ledge[e][1]];
                      
-           edges.insert(NodeTuple<2>(nodes));
-         }   
+	    edges.insert(NodeTuple<2>(nodes));
+	  }   
       }
       
       
@@ -1054,7 +1049,7 @@ extern "C"
 
   int constructElementBoundaryElementsArray_NURBS(Mesh& mesh)
   {
-   using namespace std;
+    using namespace std;
 
     int n0 = 0;
     int n1 = mesh.px ;
@@ -1142,10 +1137,10 @@ extern "C"
         mesh.elementBoundaryLocalElementBoundariesArray[ebN*2 + 1] = eb->second.right_ebN_element;
         mesh.elementNeighborsArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] = eb->second.right; 
         if(eb->second.right != -1)
-            {
-              interiorElementBoundaries.insert(ebN);
-              mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
-            }
+	  {
+	    interiorElementBoundaries.insert(ebN);
+	    mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
+	  }
         else
           exteriorElementBoundaries.insert(ebN);          
 	//mwf added
@@ -1179,15 +1174,15 @@ extern "C"
     std::cout<<"extracting edges"<<std::endl;
     for (int eN=0;eN<mesh.nElements_global;eN++)
       {
-       int nodes[2];
-       for (int e=0;e<12;e++)
-         {
+	int nodes[2];
+	for (int e=0;e<12;e++)
+	  {
            	
-           nodes[0] = mesh.elementNodesArray[eN*8+ledge[e][0]];
-           nodes[1] = mesh.elementNodesArray[eN*8+ledge[e][1]];
+	    nodes[0] = mesh.elementNodesArray[eN*8+ledge[e][0]];
+	    nodes[1] = mesh.elementNodesArray[eN*8+ledge[e][1]];
                      
-           edges.insert(NodeTuple<2>(nodes));
-         }   
+	    edges.insert(NodeTuple<2>(nodes));
+	  }   
       }
       
       
@@ -1277,7 +1272,7 @@ extern "C"
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_NURBS(Mesh& mesh)
   {
  
-     int n0 = 0;
+    int n0 = 0;
     int n1 = mesh.px ;
     int n2 = (mesh.px+1)*(mesh.py+1)-1 ;
     int n3 = (mesh.px+1)*mesh.py;
@@ -1310,7 +1305,7 @@ extern "C"
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
-	      register int ebN_global = mesh.elementBoundariesArray[eN*mesh.nElementBoundaries_element+ebN];
+	  register int ebN_global = mesh.elementBoundariesArray[eN*mesh.nElementBoundaries_element+ebN];
           register int nodes[4];
           nodes[0] = mesh.elementNodesArray[eN*8+lface[ebN][0]];
           nodes[1] = mesh.elementNodesArray[eN*8+lface[ebN][1]];
@@ -1323,12 +1318,12 @@ extern "C"
               elementBoundaryElements[ebt].right_ebN_element=ebN;
               
               cout<<elementBoundaryIds[ebt] <<"  "<<ebN_global<<endl;
-	          //assert(elementBoundaryIds[ebt] == ebN_global);
+	      //assert(elementBoundaryIds[ebt] == ebN_global);
             }
           else
             {
               elementBoundaryElements.insert(elementBoundaryElements.end(),make_pair(ebt,ElementNeighbors(eN,ebN)));
-	          elementBoundaryIds.insert(elementBoundaryIds.end(),make_pair(ebt,ebN_global));
+	      elementBoundaryIds.insert(elementBoundaryIds.end(),make_pair(ebt,ebN_global));
             }
         }
    
@@ -1354,8 +1349,6 @@ extern "C"
               elementBoundaryElements.insert(elementBoundaryElements.end(),make_pair(ebt,ElementNeighbors(eN,ebN)));
             }
         }
-   
-   
     stop = CurrentTime();
     cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
@@ -1389,16 +1382,16 @@ extern "C"
         mesh.elementBoundaryLocalElementBoundariesArray[ebN*2 + 1] = eb->second.right_ebN_element;
         mesh.elementNeighborsArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] = eb->second.right; 
         if(eb->second.right != -1)
-            {
-              interiorElementBoundaries.insert(ebN);
-              mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
-            }
+	  {
+	    interiorElementBoundaries.insert(ebN);
+	    mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
+	  }
         else
           exteriorElementBoundaries.insert(ebN);          
 	//assert(mesh.elementBoundariesArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] == ebN);
 	if (eb->second.right != -1)
 	  {
-	  //  assert(mesh.elementBoundariesArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] == ebN);
+	    //  assert(mesh.elementBoundariesArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] == ebN);
  	  }
       }
     mesh.nInteriorElementBoundaries_global = interiorElementBoundaries.size();
@@ -1410,30 +1403,31 @@ extern "C"
       mesh.interiorElementBoundariesArray[ebNI] = *ebN;
     for (set<int>::iterator ebN=exteriorElementBoundaries.begin();ebN != exteriorElementBoundaries.end(); ebN++,ebNE++)
       mesh.exteriorElementBoundariesArray[ebNE] = *ebN;
-//    assert(mesh.edgeNodesArray);
+    //cek/ido todo figure out how to do this or if it's necessary
+    //    assert(mesh.edgeNodesArray);
 
-//     set<NodeTuple<2> > edges;
-//     std::cout<<"extracting edges"<<std::endl;
-//     for (int eN=0;eN<mesh.nElements_global;eN++)
-//       {
-//         int nodes[2];
-//         for (int nN_L=0;nN_L<mesh.nNodes_element;nN_L++)
-//           for (int nN_R=nN_L+1;nN_R<mesh.nNodes_element;nN_R++)
-//             {
-//               nodes[0] = mesh.elementNodesArray[eN*4+nN_L];
-//               nodes[1] = mesh.elementNodesArray[eN*4+nN_R];
-//               edges.insert(NodeTuple<2>(nodes));
-//             }
-//       }
-//     mesh.nEdges_global = edges.size();
-//     mesh.edgeNodesArray = new int[mesh.nEdges_global*2];
-//     set<NodeTuple<2> >::iterator edge_p=edges.begin();
-//     for (int edgeN=0;edgeN<int(edges.size());edgeN++)
-//       {
-//         mesh.edgeNodesArray[edgeN*2+0] = edge_p->nodes[0];
-//         mesh.edgeNodesArray[edgeN*2+1] = edge_p->nodes[1];
-//         edge_p++;
-//       }
+    //     set<NodeTuple<2> > edges;
+    //     std::cout<<"extracting edges"<<std::endl;
+    //     for (int eN=0;eN<mesh.nElements_global;eN++)
+    //       {
+    //         int nodes[2];
+    //         for (int nN_L=0;nN_L<mesh.nNodes_element;nN_L++)
+    //           for (int nN_R=nN_L+1;nN_R<mesh.nNodes_element;nN_R++)
+    //             {
+    //               nodes[0] = mesh.elementNodesArray[eN*4+nN_L];
+    //               nodes[1] = mesh.elementNodesArray[eN*4+nN_R];
+    //               edges.insert(NodeTuple<2>(nodes));
+    //             }
+    //       }
+    //     mesh.nEdges_global = edges.size();
+    //     mesh.edgeNodesArray = new int[mesh.nEdges_global*2];
+    //     set<NodeTuple<2> >::iterator edge_p=edges.begin();
+    //     for (int edgeN=0;edgeN<int(edges.size());edgeN++)
+    //       {
+    //         mesh.edgeNodesArray[edgeN*2+0] = edge_p->nodes[0];
+    //         mesh.edgeNodesArray[edgeN*2+1] = edge_p->nodes[1];
+    //         edge_p++;
+    //       }
 
     vector<set<int> > nodeStar(mesh.nNodes_global);
     for (int edgeN=0;edgeN<mesh.nEdges_global;edgeN++)
@@ -1496,12 +1490,12 @@ extern "C"
 	for (int nN_local = 0; nN_local < mesh.nNodes_elementBoundary; nN_local++)
 	  {
 	    int nN = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary+nN_local];
-	   // if (mesh.nodeMaterialTypes[nN] == DEFAULT_NODE_MATERIAL)
-	      //mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
+	    if (mesh.nodeMaterialTypes[nN] == DEFAULT_NODE_MATERIAL)
+	      mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
 	  }
       }
+    cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     return 0;
-
   }
 
   int constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_edge(Mesh& mesh)
@@ -1905,10 +1899,10 @@ extern "C"
         mesh.elementBoundaryLocalElementBoundariesArray[ebN*2 + 1] = eb->second.right_ebN_element;
         mesh.elementNeighborsArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] = eb->second.right; 
         if(eb->second.right != -1)
-            {
-              interiorElementBoundaries.insert(ebN);
-              mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
-            }
+	  {
+	    interiorElementBoundaries.insert(ebN);
+	    mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
+	  }
         else
           exteriorElementBoundaries.insert(ebN);          
 	assert(mesh.elementBoundariesArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] == ebN);
@@ -2259,26 +2253,26 @@ extern "C"
     for (set<int>::iterator ebN=exteriorElementBoundaries.begin();ebN != exteriorElementBoundaries.end(); ebN++,ebNE++)
       mesh.exteriorElementBoundariesArray[ebNE] = *ebN;
     assert(mesh.edgeNodesArray);
- //    set<NodeTuple<2> > edges;
-//     for (int eN=0;eN<mesh.nElements_global;eN++)
-//       {
-//         int nodes[2];
-//         for (int nN_L=0;nN_L<mesh.nNodes_element;nN_L++)
-//           for (int nN_R=nN_L+1;nN_R<mesh.nNodes_element;nN_R++)
-//             {
-//               nodes[0] = mesh.elementNodesArray[eN*3+nN_L];
-//               nodes[1] = mesh.elementNodesArray[eN*3+nN_R];
-//               edges.insert(NodeTuple<2>(nodes));
-//             }
-//       }
-//     mesh.nEdges_global = edges.size();
-//     mesh.edgeNodesArray = new int[mesh.nEdges_global*2];
-//     int edgeN=0;
-//     for (set<NodeTuple<2> >::iterator edgeTuple_p=edges.begin();edgeTuple_p != edges.end();edgeTuple_p++,edgeN++)
-//       {
-//         mesh.edgeNodesArray[edgeN*2+0] = edgeTuple_p->nodes[0];
-//         mesh.edgeNodesArray[edgeN*2+1] = edgeTuple_p->nodes[1];
-//       }
+    //    set<NodeTuple<2> > edges;
+    //     for (int eN=0;eN<mesh.nElements_global;eN++)
+    //       {
+    //         int nodes[2];
+    //         for (int nN_L=0;nN_L<mesh.nNodes_element;nN_L++)
+    //           for (int nN_R=nN_L+1;nN_R<mesh.nNodes_element;nN_R++)
+    //             {
+    //               nodes[0] = mesh.elementNodesArray[eN*3+nN_L];
+    //               nodes[1] = mesh.elementNodesArray[eN*3+nN_R];
+    //               edges.insert(NodeTuple<2>(nodes));
+    //             }
+    //       }
+    //     mesh.nEdges_global = edges.size();
+    //     mesh.edgeNodesArray = new int[mesh.nEdges_global*2];
+    //     int edgeN=0;
+    //     for (set<NodeTuple<2> >::iterator edgeTuple_p=edges.begin();edgeTuple_p != edges.end();edgeTuple_p++,edgeN++)
+    //       {
+    //         mesh.edgeNodesArray[edgeN*2+0] = edgeTuple_p->nodes[0];
+    //         mesh.edgeNodesArray[edgeN*2+1] = edgeTuple_p->nodes[1];
+    //       }
     vector<set<int> > nodeStar(mesh.nNodes_global);
     for (int edgeN=0;edgeN<mesh.nEdges_global;edgeN++)
       {
@@ -2415,10 +2409,10 @@ extern "C"
         mesh.elementBoundaryLocalElementBoundariesArray[ebN*2 + 1] = eb->second.right_ebN_element;
         mesh.elementNeighborsArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] = eb->second.right; 
         if(eb->second.right != -1)
-            {
-              interiorElementBoundaries.insert(ebN);
-              mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
-            }
+	  {
+	    interiorElementBoundaries.insert(ebN);
+	    mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
+	  }
         else
           exteriorElementBoundaries.insert(ebN);          
 	assert(mesh.elementBoundariesArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] == ebN);
@@ -2437,28 +2431,28 @@ extern "C"
     for (set<int>::iterator ebN=exteriorElementBoundaries.begin();ebN != exteriorElementBoundaries.end(); ebN++,ebNE++)
       mesh.exteriorElementBoundariesArray[ebNE] = *ebN;
     assert(mesh.edgeNodesArray);
-//     set<NodeTuple<2> > edges;
-//     std::cout<<"extracting edges"<<std::endl;
-//     for (int eN=0;eN<mesh.nElements_global;eN++)
-//       {
-//         int nodes[2];
-//         for (int nN_L=0;nN_L<mesh.nNodes_element;nN_L++)
-//           for (int nN_R=nN_L+1;nN_R<mesh.nNodes_element;nN_R++)
-//             {
-//               nodes[0] = mesh.elementNodesArray[eN*4+nN_L];
-//               nodes[1] = mesh.elementNodesArray[eN*4+nN_R];
-//               edges.insert(NodeTuple<2>(nodes));
-//             }
-//       }
-//     mesh.nEdges_global = edges.size();
-//     mesh.edgeNodesArray = new int[mesh.nEdges_global*2];
-//     set<NodeTuple<2> >::iterator edge_p=edges.begin();
-//     for (int edgeN=0;edgeN<int(edges.size());edgeN++)
-//       {
-//         mesh.edgeNodesArray[edgeN*2+0] = edge_p->nodes[0];
-//         mesh.edgeNodesArray[edgeN*2+1] = edge_p->nodes[1];
-//         edge_p++;
-//       }
+    //     set<NodeTuple<2> > edges;
+    //     std::cout<<"extracting edges"<<std::endl;
+    //     for (int eN=0;eN<mesh.nElements_global;eN++)
+    //       {
+    //         int nodes[2];
+    //         for (int nN_L=0;nN_L<mesh.nNodes_element;nN_L++)
+    //           for (int nN_R=nN_L+1;nN_R<mesh.nNodes_element;nN_R++)
+    //             {
+    //               nodes[0] = mesh.elementNodesArray[eN*4+nN_L];
+    //               nodes[1] = mesh.elementNodesArray[eN*4+nN_R];
+    //               edges.insert(NodeTuple<2>(nodes));
+    //             }
+    //       }
+    //     mesh.nEdges_global = edges.size();
+    //     mesh.edgeNodesArray = new int[mesh.nEdges_global*2];
+    //     set<NodeTuple<2> >::iterator edge_p=edges.begin();
+    //     for (int edgeN=0;edgeN<int(edges.size());edgeN++)
+    //       {
+    //         mesh.edgeNodesArray[edgeN*2+0] = edge_p->nodes[0];
+    //         mesh.edgeNodesArray[edgeN*2+1] = edge_p->nodes[1];
+    //         edge_p++;
+    //       }
     vector<set<int> > nodeStar(mesh.nNodes_global);
     for (int edgeN=0;edgeN<mesh.nEdges_global;edgeN++)
       {
@@ -2604,10 +2598,10 @@ extern "C"
         mesh.elementBoundaryLocalElementBoundariesArray[ebN*2 + 1] = eb->second.right_ebN_element;
         mesh.elementNeighborsArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] = eb->second.right; 
         if(eb->second.right != -1)
-            {
-              interiorElementBoundaries.insert(ebN);
-              mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
-            }
+	  {
+	    interiorElementBoundaries.insert(ebN);
+	    mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
+	  }
         else
           exteriorElementBoundaries.insert(ebN);          
 	assert(mesh.elementBoundariesArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] == ebN);
@@ -2626,28 +2620,28 @@ extern "C"
     for (set<int>::iterator ebN=exteriorElementBoundaries.begin();ebN != exteriorElementBoundaries.end(); ebN++,ebNE++)
       mesh.exteriorElementBoundariesArray[ebNE] = *ebN;
     assert(mesh.edgeNodesArray);
-//     set<NodeTuple<2> > edges;
-//     std::cout<<"extracting edges"<<std::endl;
-//     for (int eN=0;eN<mesh.nElements_global;eN++)
-//       {
-//         int nodes[2];
-//         for (int nN_L=0;nN_L<mesh.nNodes_element;nN_L++)
-//           for (int nN_R=nN_L+1;nN_R<mesh.nNodes_element;nN_R++)
-//             {
-//               nodes[0] = mesh.elementNodesArray[eN*4+nN_L];
-//               nodes[1] = mesh.elementNodesArray[eN*4+nN_R];
-//               edges.insert(NodeTuple<2>(nodes));
-//             }
-//       }
-//     mesh.nEdges_global = edges.size();
-//     mesh.edgeNodesArray = new int[mesh.nEdges_global*2];
-//     set<NodeTuple<2> >::iterator edge_p=edges.begin();
-//     for (int edgeN=0;edgeN<int(edges.size());edgeN++)
-//       {
-//         mesh.edgeNodesArray[edgeN*2+0] = edge_p->nodes[0];
-//         mesh.edgeNodesArray[edgeN*2+1] = edge_p->nodes[1];
-//         edge_p++;
-//       }
+    //     set<NodeTuple<2> > edges;
+    //     std::cout<<"extracting edges"<<std::endl;
+    //     for (int eN=0;eN<mesh.nElements_global;eN++)
+    //       {
+    //         int nodes[2];
+    //         for (int nN_L=0;nN_L<mesh.nNodes_element;nN_L++)
+    //           for (int nN_R=nN_L+1;nN_R<mesh.nNodes_element;nN_R++)
+    //             {
+    //               nodes[0] = mesh.elementNodesArray[eN*4+nN_L];
+    //               nodes[1] = mesh.elementNodesArray[eN*4+nN_R];
+    //               edges.insert(NodeTuple<2>(nodes));
+    //             }
+    //       }
+    //     mesh.nEdges_global = edges.size();
+    //     mesh.edgeNodesArray = new int[mesh.nEdges_global*2];
+    //     set<NodeTuple<2> >::iterator edge_p=edges.begin();
+    //     for (int edgeN=0;edgeN<int(edges.size());edgeN++)
+    //       {
+    //         mesh.edgeNodesArray[edgeN*2+0] = edge_p->nodes[0];
+    //         mesh.edgeNodesArray[edgeN*2+1] = edge_p->nodes[1];
+    //         edge_p++;
+    //       }
 
     vector<set<int> > nodeStar(mesh.nNodes_global);
     for (int edgeN=0;edgeN<mesh.nEdges_global;edgeN++)
@@ -3255,21 +3249,21 @@ extern "C"
                 }
             //the triangles formed by chopping the points off the parent
             eN = newTriangle(eN,multilevelMesh.meshArray[i].elementNodesArray,
-                                multilevelMesh.meshArray[i-1].elementNodesArray[3*eN_parent+0],
-                                midpoints[0].nN,
-                                midpoints[1].nN);
+			     multilevelMesh.meshArray[i-1].elementNodesArray[3*eN_parent+0],
+			     midpoints[0].nN,
+			     midpoints[1].nN);
             eN = newTriangle(eN,multilevelMesh.meshArray[i].elementNodesArray,
-                                multilevelMesh.meshArray[i-1].elementNodesArray[3*eN_parent+1],
-                                midpoints[0].nN,
-                                midpoints[2].nN);
+			     multilevelMesh.meshArray[i-1].elementNodesArray[3*eN_parent+1],
+			     midpoints[0].nN,
+			     midpoints[2].nN);
             eN = newTriangle(eN,multilevelMesh.meshArray[i].elementNodesArray,
-                                multilevelMesh.meshArray[i-1].elementNodesArray[3*eN_parent+2],
-                                midpoints[1].nN,
-                                midpoints[2].nN);
+			     multilevelMesh.meshArray[i-1].elementNodesArray[3*eN_parent+2],
+			     midpoints[1].nN,
+			     midpoints[2].nN);
             eN = newTriangle(eN,multilevelMesh.meshArray[i].elementNodesArray,
-                                midpoints[0].nN,
-                                midpoints[1].nN,
-                                midpoints[2].nN);
+			     midpoints[0].nN,
+			     midpoints[1].nN,
+			     midpoints[2].nN);
           }
         multilevelMesh.elementChildrenOffsets[i-1][multilevelMesh.meshArray[i-1].nElements_global] = multilevelMesh.elementChildrenOffsets[i-1][multilevelMesh.meshArray[i-1].nElements_global-1]+4;
         assert(nN_new == (newNodeSet.size()+multilevelMesh.meshArray[i-1].nNodes_global));
@@ -3506,61 +3500,61 @@ extern "C"
             multilevelMesh.meshArray[i].nodeArray[nodeItr->nN*3+2] = nodeItr->z;
           }
         /** \todo Add option to re-order mesh nodes on elements to make determinant positive? */
-//         cout<<"re-ordeing nodes llllllllllllllllllll"<<endl;
-//         for (int eN=0;eN<multilevelMesh.meshArray[i].nElements_global;eN++)
-//           {
-//             register int n0,n1,n2,n3;
-//             register double t[3][3],det;
+	//         cout<<"re-ordeing nodes llllllllllllllllllll"<<endl;
+	//         for (int eN=0;eN<multilevelMesh.meshArray[i].nElements_global;eN++)
+	//           {
+	//             register int n0,n1,n2,n3;
+	//             register double t[3][3],det;
             
-//             n0 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+0];
-//             n1 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+1];
-//             n2 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+2];
-//             n3 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+3];
+	//             n0 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+0];
+	//             n1 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+1];
+	//             n2 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+2];
+	//             n3 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+3];
             
-//             t[0][0] = multilevelMesh.meshArray[i].nodeArray[n1*3+0] - multilevelMesh.meshArray[i].nodeArray[n0*3+0];
-//             t[0][1] = multilevelMesh.meshArray[i].nodeArray[n1*3+1] - multilevelMesh.meshArray[i].nodeArray[n0*3+1];
-//             t[0][2] = multilevelMesh.meshArray[i].nodeArray[n1*3+2] - multilevelMesh.meshArray[i].nodeArray[n0*3+2];
+	//             t[0][0] = multilevelMesh.meshArray[i].nodeArray[n1*3+0] - multilevelMesh.meshArray[i].nodeArray[n0*3+0];
+	//             t[0][1] = multilevelMesh.meshArray[i].nodeArray[n1*3+1] - multilevelMesh.meshArray[i].nodeArray[n0*3+1];
+	//             t[0][2] = multilevelMesh.meshArray[i].nodeArray[n1*3+2] - multilevelMesh.meshArray[i].nodeArray[n0*3+2];
             
-//             t[1][0] = multilevelMesh.meshArray[i].nodeArray[n2*3+0] - multilevelMesh.meshArray[i].nodeArray[n0*3+0];
-//             t[1][1] = multilevelMesh.meshArray[i].nodeArray[n2*3+1] - multilevelMesh.meshArray[i].nodeArray[n0*3+1];
-//             t[1][2] = multilevelMesh.meshArray[i].nodeArray[n2*3+2] - multilevelMesh.meshArray[i].nodeArray[n0*3+2];
+	//             t[1][0] = multilevelMesh.meshArray[i].nodeArray[n2*3+0] - multilevelMesh.meshArray[i].nodeArray[n0*3+0];
+	//             t[1][1] = multilevelMesh.meshArray[i].nodeArray[n2*3+1] - multilevelMesh.meshArray[i].nodeArray[n0*3+1];
+	//             t[1][2] = multilevelMesh.meshArray[i].nodeArray[n2*3+2] - multilevelMesh.meshArray[i].nodeArray[n0*3+2];
             
-//             t[2][0] = multilevelMesh.meshArray[i].nodeArray[n3*3+0] - multilevelMesh.meshArray[i].nodeArray[n0*3+0];
-//             t[2][1] = multilevelMesh.meshArray[i].nodeArray[n3*3+1] - multilevelMesh.meshArray[i].nodeArray[n0*3+1];
-//             t[2][2] = multilevelMesh.meshArray[i].nodeArray[n3*3+2] - multilevelMesh.meshArray[i].nodeArray[n0*3+2];
+	//             t[2][0] = multilevelMesh.meshArray[i].nodeArray[n3*3+0] - multilevelMesh.meshArray[i].nodeArray[n0*3+0];
+	//             t[2][1] = multilevelMesh.meshArray[i].nodeArray[n3*3+1] - multilevelMesh.meshArray[i].nodeArray[n0*3+1];
+	//             t[2][2] = multilevelMesh.meshArray[i].nodeArray[n3*3+2] - multilevelMesh.meshArray[i].nodeArray[n0*3+2];
             
-//             det = t[0][0]*(t[1][1]*t[2][2] - t[1][2]*t[2][1]) -   \
-//               t[0][1]*(t[1][0]*t[2][2] - t[1][2]*t[2][0]) +       \
-//               t[0][2]*(t[1][0]*t[2][1] - t[1][1]*t[2][0]);
+	//             det = t[0][0]*(t[1][1]*t[2][2] - t[1][2]*t[2][1]) -   \
+	//               t[0][1]*(t[1][0]*t[2][2] - t[1][2]*t[2][0]) +       \
+	//               t[0][2]*(t[1][0]*t[2][1] - t[1][1]*t[2][0]);
             
-//             if(det < 0.0)
-//               {
-//                 multilevelMesh.meshArray[i].elementNodesArray[eN*4+2] = n3;
-//                 multilevelMesh.meshArray[i].elementNodesArray[eN*4+3] = n2;
-//               }
-//             n0 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+0];
-//             n1 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+1];
-//             n2 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+2];
-//             n3 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+3];
+	//             if(det < 0.0)
+	//               {
+	//                 multilevelMesh.meshArray[i].elementNodesArray[eN*4+2] = n3;
+	//                 multilevelMesh.meshArray[i].elementNodesArray[eN*4+3] = n2;
+	//               }
+	//             n0 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+0];
+	//             n1 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+1];
+	//             n2 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+2];
+	//             n3 = multilevelMesh.meshArray[i].elementNodesArray[eN*4+3];
             
-//             t[0][0] = multilevelMesh.meshArray[i].nodeArray[n1*3+0] - multilevelMesh.meshArray[i].nodeArray[n0*3+0];
-//             t[0][1] = multilevelMesh.meshArray[i].nodeArray[n1*3+1] - multilevelMesh.meshArray[i].nodeArray[n0*3+1];
-//             t[0][2] = multilevelMesh.meshArray[i].nodeArray[n1*3+2] - multilevelMesh.meshArray[i].nodeArray[n0*3+2];
+	//             t[0][0] = multilevelMesh.meshArray[i].nodeArray[n1*3+0] - multilevelMesh.meshArray[i].nodeArray[n0*3+0];
+	//             t[0][1] = multilevelMesh.meshArray[i].nodeArray[n1*3+1] - multilevelMesh.meshArray[i].nodeArray[n0*3+1];
+	//             t[0][2] = multilevelMesh.meshArray[i].nodeArray[n1*3+2] - multilevelMesh.meshArray[i].nodeArray[n0*3+2];
             
-//             t[1][0] = multilevelMesh.meshArray[i].nodeArray[n2*3+0] - multilevelMesh.meshArray[i].nodeArray[n0*3+0];
-//             t[1][1] = multilevelMesh.meshArray[i].nodeArray[n2*3+1] - multilevelMesh.meshArray[i].nodeArray[n0*3+1];
-//             t[1][2] = multilevelMesh.meshArray[i].nodeArray[n2*3+2] - multilevelMesh.meshArray[i].nodeArray[n0*3+2];
+	//             t[1][0] = multilevelMesh.meshArray[i].nodeArray[n2*3+0] - multilevelMesh.meshArray[i].nodeArray[n0*3+0];
+	//             t[1][1] = multilevelMesh.meshArray[i].nodeArray[n2*3+1] - multilevelMesh.meshArray[i].nodeArray[n0*3+1];
+	//             t[1][2] = multilevelMesh.meshArray[i].nodeArray[n2*3+2] - multilevelMesh.meshArray[i].nodeArray[n0*3+2];
             
-//             t[2][0] = multilevelMesh.meshArray[i].nodeArray[n3*3+0] - multilevelMesh.meshArray[i].nodeArray[n0*3+0];
-//             t[2][1] = multilevelMesh.meshArray[i].nodeArray[n3*3+1] - multilevelMesh.meshArray[i].nodeArray[n0*3+1];
-//             t[2][2] = multilevelMesh.meshArray[i].nodeArray[n3*3+2] - multilevelMesh.meshArray[i].nodeArray[n0*3+2];
+	//             t[2][0] = multilevelMesh.meshArray[i].nodeArray[n3*3+0] - multilevelMesh.meshArray[i].nodeArray[n0*3+0];
+	//             t[2][1] = multilevelMesh.meshArray[i].nodeArray[n3*3+1] - multilevelMesh.meshArray[i].nodeArray[n0*3+1];
+	//             t[2][2] = multilevelMesh.meshArray[i].nodeArray[n3*3+2] - multilevelMesh.meshArray[i].nodeArray[n0*3+2];
             
-//             det = fabs(t[0][0]*(t[1][1]*t[2][2] - t[1][2]*t[2][1]) -   \
-//                        t[0][1]*(t[1][0]*t[2][2] - t[1][2]*t[2][0]) +   \
-//                        t[0][2]*(t[1][0]*t[2][1] - t[1][1]*t[2][0]));
-//             cout<<"det "<<det<<endl;
+	//             det = fabs(t[0][0]*(t[1][1]*t[2][2] - t[1][2]*t[2][1]) -   \
+	//                        t[0][1]*(t[1][0]*t[2][2] - t[1][2]*t[2][0]) +   \
+	//                        t[0][2]*(t[1][0]*t[2][1] - t[1][1]*t[2][0]));
+	//             cout<<"det "<<det<<endl;
             
-//           }
+	//           }
 	//mwftodo need to come up with convention for assigning new node ids
 	multilevelMesh.meshArray[i].nodeMaterialTypes = new int[multilevelMesh.meshArray[i].nNodes_global];
 	std::copy(multilevelMesh.meshArray[i-1].nodeMaterialTypes,
@@ -3874,7 +3868,7 @@ int writeElements(std::ostream& meshFile, const Mesh& mesh)
       meshFile<<elementType;
       meshFile<<setw(width)<<eN+1;
       for (int nN=0;nN<mesh.nNodes_element;nN++)
-          meshFile<<setw(width)<<(mesh.elementNodesArray[eN*mesh.nNodes_element+nN]+1);
+	meshFile<<setw(width)<<(mesh.elementNodesArray[eN*mesh.nNodes_element+nN]+1);
       //mwftodo decide if have convention about material types and base 0
       meshFile<<setw(width)<<mesh.elementMaterialTypes[eN]+1;
       meshFile<<endl;
@@ -3945,9 +3939,9 @@ int setFromTriangleNodes(triangulateio* trimesh, Mesh& mesh, int base)
     {
       
       mesh.nodeArray[nN*3 + 0] = 
-	    trimesh->pointlist[nN*2+0];
+	trimesh->pointlist[nN*2+0];
       mesh.nodeArray[nN*3 + 1] = 
-	    trimesh->pointlist[nN*2+1];
+	trimesh->pointlist[nN*2+1];
       mesh.nodeArray[nN*3 + 2] = 0.0;//any better idea?
 
     }
@@ -3997,7 +3991,7 @@ int readTriangleMesh(Mesh& mesh, const char* filebase, int triangleIndexBase)
      formatted mesh assuming base name in filebase
     triangle vertex numbering base as input
 
-   **************************************************/
+  **************************************************/
   using namespace std;
   using namespace meshIO;
   assert(filebase);
@@ -4055,7 +4049,7 @@ int writeTriangleMesh(Mesh& mesh, const char* filebase, int triangleIndexBase)
   /***************************************************
     write nodes and element information in triangle format
 
-   **************************************************/
+  **************************************************/
   using namespace std;
   using namespace meshIO;
   assert(filebase);
@@ -4089,7 +4083,7 @@ int readTriangleElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, i
    in mesh and triangle so have to translate outside 
  
    if material types not found, revert to convention on interior and exterior label
-   **************************************************/
+  **************************************************/
   using namespace std;
   using namespace meshIO;
   assert(filebase);
@@ -4145,7 +4139,7 @@ int readTetgenMesh(Mesh& mesh, const char* filebase, int tetgenIndexBase)
      formatted mesh assuming base name in filebase
     tetgen vertex numbering base as input
 
-   **************************************************/
+  **************************************************/
   using namespace std;
   using namespace meshIO;
   assert(filebase);
@@ -4206,7 +4200,7 @@ int readTetgenElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, int
    in mesh and triangle so have to translate outside 
  
    if material types not found, revert to convention on interior and exterior label
-   **************************************************/
+  **************************************************/
   using namespace std;
   using namespace meshIO;
   assert(filebase);
@@ -4299,7 +4293,7 @@ int writeTetgenMesh(Mesh& mesh, const char* filebase, int tetgenIndexBase)
   /***************************************************
     write nodes and element information in triangle format
 
-   **************************************************/
+  **************************************************/
   using namespace std;
   using namespace meshIO;
   assert(filebase);
@@ -4337,7 +4331,7 @@ int read3DM(Mesh& mesh, const char* filebase, int indexBase)
      formatted mesh assuming base name in filebase
     tetgen vertex numbering base as input
 
-   **************************************************/
+  **************************************************/
   using namespace std;
   assert(filebase);
   bool failed=true;
@@ -4346,7 +4340,7 @@ int read3DM(Mesh& mesh, const char* filebase, int indexBase)
   if (!meshFile.good())
     {
       std::cerr<<"read3DM cannot open file "
-	  <<meshFilename<<std::endl;
+	       <<meshFilename<<std::endl;
       failed = true;
       return failed;
     }
@@ -4421,7 +4415,7 @@ int readBC(Mesh& mesh, const char* filebase, int indexBase)
      formatted mesh assuming base name in filebase
     tetgen vertex numbering base as input
 
-   **************************************************/
+  **************************************************/
   using namespace std;
   assert(filebase);
   bool failed=true;
@@ -4430,7 +4424,7 @@ int readBC(Mesh& mesh, const char* filebase, int indexBase)
   if (!bcFile.good())
     {
       std::cerr<<"readBC cannot open file "
-	  <<bcFilename<<std::endl;
+	       <<bcFilename<<std::endl;
       failed = true;
       return failed;
     }
@@ -4721,8 +4715,7 @@ extern "C"
       {
 	//every element is its own parent to start off with
 	elementParentsArray_tmp.push_back(eN); 
-      }    
-      
+      }
     for (int eN_parent = 0; 
 	 eN_parent < multilevelMesh.meshArray[nLevelsPrev-1].nElements_global; eN_parent++)
       {
@@ -4848,7 +4841,7 @@ extern "C"
       {
 	int ebN_longest_local = findLocalLongestEdge2d(eN,
 						       multilevelMesh.meshArray[nLevels-1].elementNodesArray,
-						        multilevelMesh.meshArray[nLevels-1].nodeArray);
+						       multilevelMesh.meshArray[nLevels-1].nodeArray);
 	multilevelMesh.meshArray[nLevels-1].newestNodeBases[eN] = ebN_longest_local;
       }
     return 0;
@@ -5224,35 +5217,35 @@ extern "C"
         int eN_parent = eN_bisect_itr->first;
         //longestEdge_element = eN_bisect_itr->second;
         //fix  later to use the longest edge info instead of searching again
-//         int longestEdge = multilevelMesh.meshArray[i-1].elementBoundaryElementsArray[eN_parent*3 + longestEdge_element],
-//           longestEdge_leftNode = multilevelMesh.meshArray[i-1].edgeNodesArray[longestEdge*2 + 0],
-//           longestEdge_rightNode = multilevelMesh.meshArray[i-1].edgeNodesArray[longestEdge*2 + 1],
-//           n0,n1,n2;
+	//         int longestEdge = multilevelMesh.meshArray[i-1].elementBoundaryElementsArray[eN_parent*3 + longestEdge_element],
+	//           longestEdge_leftNode = multilevelMesh.meshArray[i-1].edgeNodesArray[longestEdge*2 + 0],
+	//           longestEdge_rightNode = multilevelMesh.meshArray[i-1].edgeNodesArray[longestEdge*2 + 1],
+	//           n0,n1,n2;
 
-//         if (otherEdge_rightNode == longestEdge_leftNode)
-//           {
-//             n0 = otherEdge_rightNode;
-//             n1 = otherEdge_leftNode;
-//             n2 = longestEdge_rightNode;
-//           }
-//         else if (otherEdge_rightNode == longestEdge_rightNode)
-//           {
-//             n0 = otherEdge_rightNode;
-//             n1 = otherEdge_leftNode;
-//             n2 = longestEdge_leftNode;
-//           }
-//         else if (otherEdge_leftNode == longestEdge_leftNode)
-//           {
-//             n0 = otherEdge_leftNode;
-//             n1 = otherEdge_rightNode;
-//             n2 = longestEdge_rightNode;
-//           }
-//         else
-//           {
-//             n0 = otherEdge_leftNode;
-//             n1 = otherEdge_rightNode;
-//             n2 = longestEdge_leftNode;
-//           }
+	//         if (otherEdge_rightNode == longestEdge_leftNode)
+	//           {
+	//             n0 = otherEdge_rightNode;
+	//             n1 = otherEdge_leftNode;
+	//             n2 = longestEdge_rightNode;
+	//           }
+	//         else if (otherEdge_rightNode == longestEdge_rightNode)
+	//           {
+	//             n0 = otherEdge_rightNode;
+	//             n1 = otherEdge_leftNode;
+	//             n2 = longestEdge_leftNode;
+	//           }
+	//         else if (otherEdge_leftNode == longestEdge_leftNode)
+	//           {
+	//             n0 = otherEdge_leftNode;
+	//             n1 = otherEdge_rightNode;
+	//             n2 = longestEdge_rightNode;
+	//           }
+	//         else
+	//           {
+	//             n0 = otherEdge_leftNode;
+	//             n1 = otherEdge_rightNode;
+	//             n2 = longestEdge_leftNode;
+	//           }
         oldElements.erase(eN_parent);
         //elementsForBisection.erase(eN_parent);
         elementChildren[eN_parent].push_back(eN_new);
@@ -5421,7 +5414,7 @@ extern "C"
  
          3). 1 element boundary has been bisected(2T)
            
-     ***********************************************************************/
+    ***********************************************************************/
     for (int eN_parent = 0; 
 	 eN_parent < multilevelMesh.meshArray[nLevelsPrev-1].nElements_global; eN_parent++)
       {
@@ -5485,7 +5478,7 @@ extern "C"
 	 3*multilevelMesh.meshArray[nLevelsPrev-1].nNodes_global,
 	 multilevelMesh.meshArray[nLevelsPrev].nodeArray);
 
-     //now go through and create nodes
+    //now go through and create nodes
     for (int ebN_parent = 0; ebN_parent < multilevelMesh.meshArray[nLevelsPrev-1].nElementBoundaries_global; ebN_parent++)
       {
 	if (edgeMidNodesArray[ebN_parent] >= 0)
@@ -5563,7 +5556,7 @@ bool newestNodeBisect(int eN,
     ie --> eN, ibase --> ebN_base, simplexDim->nElementBoundaries_element
     nNodes--> nNodes_global, nElements--> nElements_global
     spaceDim --> nSpace
-   ********************/  
+  ********************/  
   double x[3] = {0.0,0.0,0.0}; //node coordinates
   int ib[3];   //local node numbers starting with base
   int ibn[3];  //local node numbers starting with base for neigbhor
@@ -5705,7 +5698,7 @@ bool newestNodeBisect(int eN,
       /***************************************************
         neighboring element shares the same base
         so refine them both
-       **************************************************/
+      **************************************************/
       assert(eN_neig < nElements_global);
 
       //create new node at center of base
@@ -5991,7 +5984,7 @@ bool add4TnodesForConformity2d(int eN, int ebN_longest,
   /***********************************************************************
      here eN has been looked at, eN_longest is its longest edge and
      eN_neig is the neighbor across from ebN_neig
-   ***********************************************************************/
+  ***********************************************************************/
   bool failed = false;
   //hardwire for 2d
   const int nElementBoundaries_element = 3;
@@ -6391,7 +6384,7 @@ int findGlueNeighbor2d(int eN,
 {
   /*****************************************
      glue neighbor is neighbor that has same parent
-   ****************************************/
+  ****************************************/
   const int nElementBoundaries_element = 3;
   int eN_glue = -1;
   for (int ebN = 0; ebN < nElementBoundaries_element; ebN++)
@@ -6414,7 +6407,7 @@ int findT2Neighbor(int eN, int eN_base,
        the base node but is not the glue neighbor
        That is, t2 is not across the from the base and is not the glue 
        neighbor 
-   ****************************************/
+  ****************************************/
   int eN_t2 = -1;
   for (int ebN = 0; ebN < nElementBoundaries_element; ebN++)
     {
@@ -6587,7 +6580,7 @@ bool glueElements(int eN, int eN_glue,
        (eN_base+1,eN_base+2,eN_glue_base+1)
     assuming elements were originally in 
     clockwise order
-   ****************************************/
+  ****************************************/
   int base_parent; 
   base_parent = (bases[eN]+1) % nElementBoundaries_element;
   int nN_global_gone = elementNodesArray[eN*nElementBoundaries_element+bases[eN]];

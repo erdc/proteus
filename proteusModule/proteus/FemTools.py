@@ -1294,7 +1294,6 @@ class InterpolationConditions:
         return None
     #optimized projection routine 
     projectFiniteElementFunctionFromInterpolationConditions_opt = None
-    
 class NodalInterpolationConditions(InterpolationConditions):
     """
     Obtains the DOF from the function values at the nodes
@@ -1688,7 +1687,6 @@ class NodalDOFMap(DOFMap):
     def __init__(self,mesh):
         DOFMap.__init__(self,mesh.nNodes_global)
         self.l2g=mesh.elementNodesArray
-
         #save for parallel now
         if mesh == mesh.subdomainMesh:
             self.updateAfterParallelPartitioning(mesh.globalMesh)
@@ -2097,7 +2095,6 @@ class ParametricMaps(ElementMaps):
                           jacobianArray,
                           jacobianInverseArray,
                           jacobianDeterminantArray):
-                   
         jacobianArray.flat[:]=0.0
         n_xi = xiArray.shape[0]
         range_n_xi = range(n_xi)
@@ -2105,12 +2102,9 @@ class ParametricMaps(ElementMaps):
                                   self.localFunctionSpace.dim,
                                   self.referenceElement.dim),
                                  'd')
-        
-     
         for k in range_n_xi:
             for j in self.localFunctionSpace.range_dim:
                 grad_psi[k,j,:] = self.localFunctionSpace.basisGradients[j](xiArray[k])
-       
         if self.useC==True:
             cfemIntegrals.parametricMaps_getJacobianValues(grad_psi,
                                                            self.meshDOFMap.l2g,
@@ -2161,7 +2155,6 @@ class ParametricMaps(ElementMaps):
                     #mwf now manually map from \bar{x} (reference element boundary quadrature point to reference element space
                     #and then evaluate using basis, since basisTrace will be deprecated
                     #psi[ebN,k,j]        = self.localFunctionSpace.basisTrace[ebN][j](xiArray[k])
-          
                     xiHat_k = self.referenceElement.boundaryMapList[ebN](xiArray[k])
                     psi[ebN,k,j] = self.localFunctionSpace.basis[j](xiHat_k)
         if self.useC==True:
@@ -2844,8 +2837,6 @@ class ParametricFiniteElementSpace:
                         for m in self.referenceFiniteElement.referenceElement.range_dim:
                             for n in self.referenceFiniteElement.referenceElement.range_dim:
                                 grad_vArray[eN,k,j,m] += grad_psi[k,j,n]*inverseJacobianArray[eN,k,n,m]
-
-  
     def getBasisHessianValuesRef(self,
                                  xiArray):
         n_xi = xiArray.shape[0]

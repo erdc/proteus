@@ -27,7 +27,7 @@ void calculateSubgridError_tauRes(int nElements_global,
        {
          subgridError[eN*nQuadraturePoints_element+
                       k] = 
-           tau[eN*nQuadraturePoints_element+
+           -tau[eN*nQuadraturePoints_element+
                k]
            *
            pdeResidual[eN*nQuadraturePoints_element+
@@ -37,7 +37,7 @@ void calculateSubgridError_tauRes(int nElements_global,
                          k*nDOF_trial_element+
                          j]
              =
-             tau[eN*nQuadraturePoints_element+
+             -tau[eN*nQuadraturePoints_element+
                  k]
              *
              dpdeResidual[eN*nQuadraturePoints_element*nDOF_trial_element+
@@ -2536,20 +2536,20 @@ void calculateSubgridErrorNavierStokes2D_GLS_tauRes(int nElements_global,
            /* GLS momentum */
           subgridErrorU[eN*nQuadraturePoints_element+
                        k] =
-            tau0[eN*nQuadraturePoints_element+k]
+            -tau0[eN*nQuadraturePoints_element+k]
             *
             pdeResidualU[eN*nQuadraturePoints_element+
                          k];
           subgridErrorV[eN*nQuadraturePoints_element+
                        k] = 
-            tau0[eN*nQuadraturePoints_element+k]
+            -tau0[eN*nQuadraturePoints_element+k]
             *
             pdeResidualV[eN*nQuadraturePoints_element+
                          k];
           /* GLS pressure */
           subgridErrorP[eN*nQuadraturePoints_element+
                        k] =
-            tau1[eN*nQuadraturePoints_element+k]
+            -tau1[eN*nQuadraturePoints_element+k]
             *pdeResidualP[eN*nQuadraturePoints_element+
                           k];
           for (j=0;j<nDOF_trial_element;j++)
@@ -2559,7 +2559,7 @@ void calculateSubgridErrorNavierStokes2D_GLS_tauRes(int nElements_global,
               dsubgridErrorU_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] =
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualU_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2567,7 +2567,7 @@ void calculateSubgridErrorNavierStokes2D_GLS_tauRes(int nElements_global,
               dsubgridErrorU_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualU_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2575,7 +2575,7 @@ void calculateSubgridErrorNavierStokes2D_GLS_tauRes(int nElements_global,
               dsubgridErrorU_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualU_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2584,7 +2584,7 @@ void calculateSubgridErrorNavierStokes2D_GLS_tauRes(int nElements_global,
               dsubgridErrorV_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualV_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2592,7 +2592,7 @@ void calculateSubgridErrorNavierStokes2D_GLS_tauRes(int nElements_global,
               dsubgridErrorV_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualV_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2600,7 +2600,7 @@ void calculateSubgridErrorNavierStokes2D_GLS_tauRes(int nElements_global,
               dsubgridErrorV_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualV_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2610,7 +2610,7 @@ void calculateSubgridErrorNavierStokes2D_GLS_tauRes(int nElements_global,
                                 k*nDOF_trial_element+
                                 j]
                 =
-                tau1[eN*nQuadraturePoints_element+k]
+                -tau1[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualP_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2619,7 +2619,7 @@ void calculateSubgridErrorNavierStokes2D_GLS_tauRes(int nElements_global,
                                 k*nDOF_trial_element+
                                 j]
                 =
-                tau1[eN*nQuadraturePoints_element+k]
+                -tau1[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualP_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2720,20 +2720,20 @@ void calculateSubgridErrorStokes2D_GLS_tauRes(int nElements_global,
            /* GLS momentum */
           subgridErrorU[eN*nQuadraturePoints_element+
                        k] =
-            tau0[eN*nQuadraturePoints_element+k]
+            -tau0[eN*nQuadraturePoints_element+k]
             *
             pdeResidualU[eN*nQuadraturePoints_element+
                          k];
           subgridErrorV[eN*nQuadraturePoints_element+
                        k] = 
-            tau0[eN*nQuadraturePoints_element+k]
+            -tau0[eN*nQuadraturePoints_element+k]
             *
             pdeResidualV[eN*nQuadraturePoints_element+
                          k];
           /* GLS pressure */
           subgridErrorP[eN*nQuadraturePoints_element+
                        k] =
-            tau1[eN*nQuadraturePoints_element+k]
+            -tau1[eN*nQuadraturePoints_element+k]
             *pdeResidualP[eN*nQuadraturePoints_element+
                           k];
           for (j=0;j<nDOF_trial_element;j++)
@@ -2743,7 +2743,7 @@ void calculateSubgridErrorStokes2D_GLS_tauRes(int nElements_global,
               dsubgridErrorU_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] =
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualU_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2751,7 +2751,7 @@ void calculateSubgridErrorStokes2D_GLS_tauRes(int nElements_global,
               dsubgridErrorU_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualU_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2760,7 +2760,7 @@ void calculateSubgridErrorStokes2D_GLS_tauRes(int nElements_global,
               dsubgridErrorV_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualV_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2768,7 +2768,7 @@ void calculateSubgridErrorStokes2D_GLS_tauRes(int nElements_global,
               dsubgridErrorV_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualV_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2778,7 +2778,7 @@ void calculateSubgridErrorStokes2D_GLS_tauRes(int nElements_global,
                                 k*nDOF_trial_element+
                                 j]
                 =
-                tau1[eN*nQuadraturePoints_element+k]
+                -tau1[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualP_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2787,7 +2787,7 @@ void calculateSubgridErrorStokes2D_GLS_tauRes(int nElements_global,
                                 k*nDOF_trial_element+
                                 j]
                 =
-                tau1[eN*nQuadraturePoints_element+k]
+                -tau1[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualP_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2840,26 +2840,26 @@ void calculateSubgridErrorStokes3D_GLS_tauRes(int nElements_global,
            /* GLS momentum */
           subgridErrorU[eN*nQuadraturePoints_element+
                        k] =
-            tau0[eN*nQuadraturePoints_element+k]
+            -tau0[eN*nQuadraturePoints_element+k]
             *
             pdeResidualU[eN*nQuadraturePoints_element+
                          k];
           subgridErrorV[eN*nQuadraturePoints_element+
                        k] = 
-            tau0[eN*nQuadraturePoints_element+k]
+            -tau0[eN*nQuadraturePoints_element+k]
             *
             pdeResidualV[eN*nQuadraturePoints_element+
                          k];
           subgridErrorW[eN*nQuadraturePoints_element+
                        k] = 
-            tau0[eN*nQuadraturePoints_element+k]
+            -tau0[eN*nQuadraturePoints_element+k]
             *
             pdeResidualW[eN*nQuadraturePoints_element+
                          k];
           /* GLS pressure */
           subgridErrorP[eN*nQuadraturePoints_element+
                        k] =
-            tau1[eN*nQuadraturePoints_element+k]
+            -tau1[eN*nQuadraturePoints_element+k]
             *pdeResidualP[eN*nQuadraturePoints_element+
                           k];
           for (j=0;j<nDOF_trial_element;j++)
@@ -2869,7 +2869,7 @@ void calculateSubgridErrorStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorU_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] =
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualU_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2877,7 +2877,7 @@ void calculateSubgridErrorStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorU_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualU_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2886,7 +2886,7 @@ void calculateSubgridErrorStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorV_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualV_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2894,7 +2894,7 @@ void calculateSubgridErrorStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorV_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualV_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2903,7 +2903,7 @@ void calculateSubgridErrorStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorW_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualW_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2911,7 +2911,7 @@ void calculateSubgridErrorStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorW_dw[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualW_dw[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2921,7 +2921,7 @@ void calculateSubgridErrorStokes3D_GLS_tauRes(int nElements_global,
                                 k*nDOF_trial_element+
                                 j]
                 =
-                tau1[eN*nQuadraturePoints_element+k]
+                -tau1[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualP_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2930,7 +2930,7 @@ void calculateSubgridErrorStokes3D_GLS_tauRes(int nElements_global,
                                 k*nDOF_trial_element+
                                 j]
                 =
-                tau1[eN*nQuadraturePoints_element+k]
+                -tau1[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualP_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -2939,7 +2939,7 @@ void calculateSubgridErrorStokes3D_GLS_tauRes(int nElements_global,
                                 k*nDOF_trial_element+
                                 j]
                 =
-                tau1[eN*nQuadraturePoints_element+k]
+                -tau1[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualP_dw[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -3005,26 +3005,26 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
           /* GLS momentum */
           subgridErrorU[eN*nQuadraturePoints_element+
                         k] =
-            tau0[eN*nQuadraturePoints_element+k]
+            -tau0[eN*nQuadraturePoints_element+k]
             *
             pdeResidualU[eN*nQuadraturePoints_element+
                          k];
           subgridErrorV[eN*nQuadraturePoints_element+
                         k] = 
-            tau0[eN*nQuadraturePoints_element+k]
+            -tau0[eN*nQuadraturePoints_element+k]
             *
             pdeResidualV[eN*nQuadraturePoints_element+
                          k];
           subgridErrorW[eN*nQuadraturePoints_element+
                         k] = 
-            tau0[eN*nQuadraturePoints_element+k]
+            -tau0[eN*nQuadraturePoints_element+k]
             *
             pdeResidualW[eN*nQuadraturePoints_element+
                          k];
           /* GLS pressure */
           subgridErrorP[eN*nQuadraturePoints_element+
                         k] =
-            tau1[eN*nQuadraturePoints_element+k]
+            -tau1[eN*nQuadraturePoints_element+k]
             *pdeResidualP[eN*nQuadraturePoints_element+
                           k];
           for (j=0;j<nDOF_trial_element;j++)
@@ -3034,7 +3034,7 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorU_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] =
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualU_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -3042,7 +3042,7 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorU_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualU_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -3050,7 +3050,7 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorU_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualU_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -3058,7 +3058,7 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorU_dw[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualU_dw[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -3067,7 +3067,7 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorV_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualV_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -3075,7 +3075,7 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorV_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualV_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -3083,7 +3083,7 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorV_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualV_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -3091,7 +3091,7 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorV_dw[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualV_dw[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -3100,7 +3100,7 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorW_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualW_dp[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -3108,7 +3108,7 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorW_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualW_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -3116,7 +3116,7 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorW_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualW_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -3124,7 +3124,7 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
               dsubgridErrorW_dw[eN*nQuadraturePoints_element*nDOF_trial_element+
                                 k*nDOF_trial_element+
                                 j] = 
-                tau0[eN*nQuadraturePoints_element+k]
+                -tau0[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualW_dw[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -3134,7 +3134,7 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
                                 k*nDOF_trial_element+
                                 j]
                 =
-                tau1[eN*nQuadraturePoints_element+k]
+                -tau1[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualP_du[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -3143,7 +3143,7 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
                                 k*nDOF_trial_element+
                                 j]
                 =
-                tau1[eN*nQuadraturePoints_element+k]
+                -tau1[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualP_dv[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
@@ -3152,7 +3152,7 @@ void calculateSubgridErrorNavierStokes3D_GLS_tauRes(int nElements_global,
                                 k*nDOF_trial_element+
                                 j]
                 =
-                tau1[eN*nQuadraturePoints_element+k]
+                -tau1[eN*nQuadraturePoints_element+k]
                 *
                 dpdeResidualP_dw[eN*nQuadraturePoints_element*nDOF_trial_element+
                                  k*nDOF_trial_element+
