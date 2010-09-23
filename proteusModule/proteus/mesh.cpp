@@ -861,7 +861,7 @@ extern "C"
                        {0,1,5,4},
                        {1,2,6,5},
                        {2,3,7,6},
-                       {3,4,4,7},
+                       {3,0,4,7},
                        {4,5,6,7}};
     
     
@@ -871,10 +871,10 @@ extern "C"
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
           register int nodes[4];
-          nodes[0] = mesh.elementNodesArray[eN*6+lface[ebN][0]];
-          nodes[1] = mesh.elementNodesArray[eN*6+lface[ebN][1]];
-          nodes[2] = mesh.elementNodesArray[eN*6+lface[ebN][2]];      
-          nodes[3] = mesh.elementNodesArray[eN*6+lface[ebN][3]];
+          nodes[0] = mesh.elementNodesArray[eN*8+lface[ebN][0]];
+          nodes[1] = mesh.elementNodesArray[eN*8+lface[ebN][1]];
+          nodes[2] = mesh.elementNodesArray[eN*8+lface[ebN][2]];      
+          nodes[3] = mesh.elementNodesArray[eN*8+lface[ebN][3]];
                     
           NodeTuple<4> ebt(nodes);
           if(elementBoundaryElements.find(ebt) != elementBoundaryElements.end())
@@ -886,7 +886,7 @@ extern "C"
             {
               elementBoundaryElements.insert(elementBoundaryElements.end(),make_pair(ebt,ElementNeighbors(eN,ebN)));
             }
-        }
+        }        
     stop = CurrentTime();
     cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
@@ -927,14 +927,14 @@ extern "C"
               mesh.elementNeighborsArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = eb->second.left; 
             }
         else
-          exteriorElementBoundaries.insert(ebN);          
-	//mwf added
-	mesh.elementBoundariesArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] = ebN;
-	if (eb->second.right != -1)
-	  {
-	    mesh.elementBoundariesArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = ebN;
- 	  }
-      }
+          exteriorElementBoundaries.insert(ebN);    
+          //mwf added
+	    mesh.elementBoundariesArray[eb->second.left*mesh.nElementBoundaries_element + eb->second.left_ebN_element] = ebN;
+	    if (eb->second.right != -1)
+	    {
+	       mesh.elementBoundariesArray[eb->second.right*mesh.nElementBoundaries_element + eb->second.right_ebN_element] = ebN;
+ 	    }
+      }    
     mesh.nInteriorElementBoundaries_global = interiorElementBoundaries.size();
     mesh.interiorElementBoundariesArray = new int[mesh.nInteriorElementBoundaries_global];
     mesh.nExteriorElementBoundaries_global = exteriorElementBoundaries.size();
@@ -1312,10 +1312,10 @@ extern "C"
         {
 	      register int ebN_global = mesh.elementBoundariesArray[eN*mesh.nElementBoundaries_element+ebN];
           register int nodes[4];
-          nodes[0] = mesh.elementNodesArray[eN*6+lface[ebN][0]];
-          nodes[1] = mesh.elementNodesArray[eN*6+lface[ebN][1]];
-          nodes[2] = mesh.elementNodesArray[eN*6+lface[ebN][2]];      
-          nodes[3] = mesh.elementNodesArray[eN*6+lface[ebN][3]];
+          nodes[0] = mesh.elementNodesArray[eN*8+lface[ebN][0]];
+          nodes[1] = mesh.elementNodesArray[eN*8+lface[ebN][1]];
+          nodes[2] = mesh.elementNodesArray[eN*8+lface[ebN][2]];      
+          nodes[3] = mesh.elementNodesArray[eN*8+lface[ebN][3]];
           NodeTuple<4> ebt(nodes);
           if(elementBoundaryElements.find(ebt) != elementBoundaryElements.end())
             {
@@ -2545,7 +2545,7 @@ extern "C"
                        {0,1,5,4},
                        {1,2,6,5},
                        {2,3,7,6},
-                       {3,4,4,7},
+                       {3,0,4,7},
                        {4,5,6,7}};    
     
     cout<<"Extracting boundary elements"<<endl;
@@ -2554,10 +2554,10 @@ extern "C"
         {
 	  register int ebN_global = mesh.elementBoundariesArray[eN*mesh.nElementBoundaries_element+ebN];
           register int nodes[4];
-          nodes[0] = mesh.elementNodesArray[eN*6+lface[ebN][0]];
-          nodes[1] = mesh.elementNodesArray[eN*6+lface[ebN][1]];
-          nodes[2] = mesh.elementNodesArray[eN*6+lface[ebN][2]];      
-          nodes[3] = mesh.elementNodesArray[eN*6+lface[ebN][3]];
+          nodes[0] = mesh.elementNodesArray[eN*8+lface[ebN][0]];
+          nodes[1] = mesh.elementNodesArray[eN*8+lface[ebN][1]];
+          nodes[2] = mesh.elementNodesArray[eN*8+lface[ebN][2]];      
+          nodes[3] = mesh.elementNodesArray[eN*8+lface[ebN][3]];
           NodeTuple<4> ebt(nodes);
           if(elementBoundaryElements.find(ebt) != elementBoundaryElements.end())
             {
@@ -2853,6 +2853,81 @@ extern "C"
     printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
     return 0;
   }
+
+  int allocateGeometricInfo_hexahedron(Mesh& mesh)
+  {
+    mesh.elementDiametersArray = new double[mesh.nElements_global];
+    mesh.elementInnerDiametersArray = new double[mesh.nElements_global];
+    mesh.elementBoundaryDiametersArray = new double[mesh.nElementBoundaries_global];
+    mesh.elementBarycentersArray  = new double[mesh.nElements_global*3];
+    mesh.elementBoundaryBarycentersArray = new double[mesh.nElementBoundaries_global*3];
+    return 0;
+  }
+
+  int computeGeometricInfo_hexahedron(Mesh& mesh)
+  {
+    memset(mesh.elementDiametersArray,0,mesh.nElements_global*sizeof(double));
+    memset(mesh.elementInnerDiametersArray,0,mesh.nElements_global*sizeof(double));
+    memset(mesh.elementBoundaryDiametersArray,0,mesh.nElementBoundaries_global*sizeof(double));
+
+    mesh.hMin = edgeLength(mesh.elementNodesArray[0],
+                           mesh.elementNodesArray[1],
+                           mesh.nodeArray);
+    const double nNperElemInv = 1.0/double(mesh.nNodes_element);
+    const double nNperElemBInv= 1.0/double(mesh.nNodes_elementBoundary);
+    for (int ebN=0;ebN<mesh.nElementBoundaries_global;ebN++)
+      {
+
+
+        for (int nN_L=0;nN_L<mesh.nNodes_elementBoundary;nN_L++)
+          {
+	    for (int nN_R=nN_L+1;nN_R<mesh.nNodes_elementBoundary;nN_R++)
+	      mesh.elementBoundaryDiametersArray[ebN] = fmax(mesh.elementBoundaryDiametersArray[ebN],
+							     edgeLength(mesh.elementBoundaryNodesArray[ebN*4+nN_L],
+									        mesh.elementBoundaryNodesArray[ebN*4+nN_R],
+									        mesh.nodeArray));
+	    }
+	  	  
+      } 
+    for (int eN=0;eN<mesh.nElements_global;eN++)
+      {
+        double volume, surfaceArea=0.0, hMin=0.0,hMax=0.0;
+        volume = abs((mesh.elementNodesArray[eN*8+0]-mesh.elementNodesArray[eN*8+1])*
+                     (mesh.elementNodesArray[eN*8+0]-mesh.elementNodesArray[eN*8+3])*
+                     (mesh.elementNodesArray[eN*8+0]-mesh.elementNodesArray[eN*8+4]));
+        
+        //hMax
+        hMax = 0.0;
+        hMin = 9e99;
+        for (int nN_L=0;nN_L<mesh.nNodes_element;nN_L++)
+          for (int nN_R=nN_L+1;nN_R<mesh.nNodes_element;nN_R++)
+          {
+            hMax = fmax(hMax,
+                        edgeLength(mesh.elementNodesArray[eN*8+nN_L],
+                                   mesh.elementNodesArray[eN*8+nN_R],
+                                   mesh.nodeArray));
+            hMin = fmin(hMin,
+                        edgeLength(mesh.elementNodesArray[eN*8+nN_L],
+                                   mesh.elementNodesArray[eN*8+nN_R],
+                                   mesh.nodeArray));
+        }
+        mesh.elementInnerDiametersArray[eN] = hMin;
+        mesh.elementDiametersArray[eN] = hMax;
+        mesh.volume += volume;
+        mesh.sigmaMax = fmax(hMax/hMin,mesh.sigmaMax);
+        mesh.h = fmax(hMax,mesh.h);
+        mesh.hMin = fmin(hMin,mesh.hMin);
+
+
+      }
+
+    printf("volume = %12.5e \n",mesh.volume);
+    printf("h = %12.5e \n",mesh.h);
+    printf("hMin = %12.5e \n",mesh.hMin);
+    printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
+    return 0;
+  }
+
 
   int allocateGeometricInfo_triangle(Mesh& mesh)
   {
