@@ -275,7 +275,7 @@ extern "C"
   int regularMeshNodes(const int& nx,const int& ny,const int& nz, const double& Lx, const double& Ly, const double& Lz, Mesh& mesh);
   int regularHexahedralToTetrahedralMeshNodes(const int& nx,const int& ny,const int& nz, const double& Lx, const double& Ly, const double& Lz, Mesh& mesh);
   int regularHexahedralToTetrahedralMeshElements(const int& nx,const int& ny,const int& nz,Mesh& mesh);
-  int regularHexahedralMeshElements(const int& nx,const int& ny,const int& nz, Mesh& mesh);
+  int regularHexahedralMeshElements(const int& nx,const int& ny,const int& nz,const int& px,const int& py,const int& pz, Mesh& mesh);
   int regularNURBSMeshElements(const int& nx,const int& ny,const int& nz,const int& px,const int& py,const int& pz,Mesh& mesh);
   
   int globallyRefineTetrahedralMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh);
@@ -304,10 +304,13 @@ extern "C"
   int allocateGeometricInfo_triangle(Mesh& mesh);
   int allocateGeometricInfo_edge(Mesh& mesh);
   int allocateGeometricInfo_hexahedron(Mesh& mesh);
+  int allocateGeometricInfo_NURBS(Mesh& mesh);
+
   int computeGeometricInfo_tetrahedron(Mesh& mesh);
   int computeGeometricInfo_triangle(Mesh& mesh);
   int computeGeometricInfo_edge(Mesh& mesh);
   int computeGeometricInfo_hexahedron(Mesh& mesh);   
+  int computeGeometricInfo_NURBS(Mesh& mesh);
 
   int partitionElements(Mesh& mesh, int nElements_overlap=0);
 

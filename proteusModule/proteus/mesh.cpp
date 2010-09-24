@@ -231,12 +231,24 @@ extern "C"
   int regularHexahedralMeshElements(const int& nx, 
                                     const int& ny, 
                                     const int& nz, 
+                                    const int& px, 
+                                    const int& py, 
+                                    const int& pz, 
                                     Mesh& mesh)
   {
     mesh.nNodes_element = 8;
     mesh.nNodes_global=nx*ny*nz;
     mesh.nElements_global = (nx-1)*(ny-1)*(nz-1);
     int nxy=nx*ny;
+
+    mesh.nx=nx;
+    mesh.ny=ny;
+    mesh.nz=nz;
+
+    //mesh.px=px;
+    //mesh.py=py;
+    //mesh.pz=pz;
+
     mesh.elementNodesArray = new int[mesh.nElements_global*mesh.nNodes_element];
     mesh.elementMaterialTypes = new int[mesh.nElements_global];
     memset(mesh.elementMaterialTypes,DEFAULT_ELEMENT_MATERIAL,mesh.nElements_global*sizeof(int));
@@ -274,7 +286,6 @@ extern "C"
     mesh.nx=nx;
     mesh.ny=ny;
     mesh.nz=nz;
-    
     mesh.px=px;
     mesh.py=py;
     mesh.pz=pz;
@@ -336,7 +347,7 @@ extern "C"
 
     for(int i=0;i<mesh.nNodes_global;i++)
       mesh.weights[i] = 1.0;
-                 
+    std::cout<<"NURBS MESH BUILD"<<std::endl;             
     return 0;
   }
 
@@ -1076,7 +1087,7 @@ extern "C"
                        {n0,n1,n5,n4},
                        {n1,n2,n6,n5},
                        {n2,n3,n7,n6},
-                       {n3,n4,n4,n7},
+                       {n3,n0,n4,n7},
                        {n4,n5,n6,n7}};
     
     
@@ -1086,10 +1097,10 @@ extern "C"
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
           register int nodes[4];
-          nodes[0] = mesh.elementNodesArray[eN*6+lface[ebN][0]];
-          nodes[1] = mesh.elementNodesArray[eN*6+lface[ebN][1]];
-          nodes[2] = mesh.elementNodesArray[eN*6+lface[ebN][2]];      
-          nodes[3] = mesh.elementNodesArray[eN*6+lface[ebN][3]];
+          nodes[0] = mesh.elementNodesArray[eN*8+lface[ebN][0]];
+          nodes[1] = mesh.elementNodesArray[eN*8+lface[ebN][1]];
+          nodes[2] = mesh.elementNodesArray[eN*8+lface[ebN][2]];      
+          nodes[3] = mesh.elementNodesArray[eN*8+lface[ebN][3]];
                     
           NodeTuple<4> ebt(nodes);
           if(elementBoundaryElements.find(ebt) != elementBoundaryElements.end())
@@ -1298,7 +1309,7 @@ extern "C"
                        {n0,n1,n5,n4},
                        {n1,n2,n6,n5},
                        {n2,n3,n7,n6},
-                       {n3,n4,n4,n7},
+                       {n3,n0,n4,n7},
                        {n4,n5,n6,n7}};
     
     cout<<"Extracting boundary elements"<<endl;
@@ -1316,9 +1327,8 @@ extern "C"
             {
               elementBoundaryElements[ebt].right=eN;
               elementBoundaryElements[ebt].right_ebN_element=ebN;
-              
-              cout<<elementBoundaryIds[ebt] <<"  "<<ebN_global<<endl;
-	      //assert(elementBoundaryIds[ebt] == ebN_global);
+ 
+	      // assert(elementBoundaryIds[ebt] == ebN_global);
             }
           else
             {
@@ -1326,30 +1336,7 @@ extern "C"
 	      elementBoundaryIds.insert(elementBoundaryIds.end(),make_pair(ebt,ebN_global));
             }
         }
-   
-       
-    cout<<"Extracting boundary elements"<<endl;
-    for(int eN=0;eN<mesh.nElements_global;eN++)
-      for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
-        {
-          register int nodes[4];
-          nodes[0] = mesh.elementNodesArray[eN*6+lface[ebN][0]];
-          nodes[1] = mesh.elementNodesArray[eN*6+lface[ebN][1]];
-          nodes[2] = mesh.elementNodesArray[eN*6+lface[ebN][2]];      
-          nodes[3] = mesh.elementNodesArray[eN*6+lface[ebN][3]];
-                    
-          NodeTuple<4> ebt(nodes);
-          if(elementBoundaryElements.find(ebt) != elementBoundaryElements.end())
-            {
-              elementBoundaryElements[ebt].right=eN;
-              elementBoundaryElements[ebt].right_ebN_element=ebN;
-            }
-          else
-            {
-              elementBoundaryElements.insert(elementBoundaryElements.end(),make_pair(ebt,ElementNeighbors(eN,ebN)));
-            }
-        }
-    stop = CurrentTime();
+     stop = CurrentTime();
     cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
     cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
@@ -1469,6 +1456,7 @@ extern "C"
       }
     //mwf end node-->elements construction
     mesh.elementBoundaryMaterialTypes = new int[mesh.nElementBoundaries_global];
+
     //if nodeMaterial is DEFAULT, go ahead and set to interior or exterior
     //depending on which boundary node belongs to. 
     //If node on at least one exterior boundary then it's exterior
@@ -2557,6 +2545,7 @@ extern "C"
             {
               elementBoundaryElements[ebt].right=eN;
               elementBoundaryElements[ebt].right_ebN_element=ebN;
+      
 	      assert(elementBoundaryIds[ebt] == ebN_global);
             }
           else
@@ -2919,6 +2908,18 @@ extern "C"
     printf("h = %12.5e \n",mesh.h);
     printf("hMin = %12.5e \n",mesh.hMin);
     printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
+    return 0;
+  }
+
+  int allocateGeometricInfo_NURBS(Mesh& mesh)
+  {
+    allocateGeometricInfo_hexahedron(mesh);
+    return 0;
+  }
+   
+  int computeGeometricInfo_NURBS(Mesh& mesh)
+  {
+    computeGeometricInfo_hexahedron(mesh);
     return 0;
   }
 

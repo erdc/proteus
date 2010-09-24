@@ -126,7 +126,10 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
     *elementBoundaryDiametersArray,
     *elementBarycentersArray,
     *elementBoundaryBarycentersArray,
-    *newestNodeBases;
+    *newestNodeBases,
+    *elementIJK,             //NURBS
+    *weights,                 //NURBS
+    *U_KNOT, *V_KNOT,*W_KNOT; //NURBS
   if (!PyArg_ParseTuple(args,
                         "O",
                         &cmesh))
@@ -255,7 +258,41 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
 							    PyArray_DOUBLE,
 							    (char*)MESH(cmesh).elementBoundaryBarycentersArray);
 
-  return Py_BuildValue("iiiiiiiiiiiOOOOOOOOOOOOOOOOOOOOOOdddd",
+// NURBS
+  dims[0] = 0;
+  if (elementIJK != NULL) dims[0] = MESH(cmesh).nElements_global*3;
+  elementIJK = PyArray_FromDimsAndData(1,
+							    dims,
+							    PyArray_DOUBLE,
+							    (char*)MESH(cmesh).elementIJK);
+  dims[0] = 0;
+  if (weights != NULL) dims[0] = MESH(cmesh).nElements_global;
+  weights = PyArray_FromDimsAndData(1,
+							    dims,
+							    PyArray_DOUBLE,
+							    (char*)MESH(cmesh).weights);
+
+  dims[0] = 0;
+  if (U_KNOT != NULL) dims[0] = MESH(cmesh).nx+MESH(cmesh).px+1;
+  U_KNOT = PyArray_FromDimsAndData(1,
+							    dims,
+							    PyArray_DOUBLE,
+							    (char*)MESH(cmesh).U_KNOT);
+  dims[0] = 0;
+  if (V_KNOT != NULL) dims[0] = MESH(cmesh).ny+MESH(cmesh).py+1;
+  V_KNOT = PyArray_FromDimsAndData(1,
+							    dims,
+							    PyArray_DOUBLE,
+							    (char*)MESH(cmesh).V_KNOT);
+  dims[0] = 0;
+  if (W_KNOT != NULL) dims[0] = MESH(cmesh).nz+MESH(cmesh).pz+1;
+  W_KNOT = PyArray_FromDimsAndData(1,
+							    dims,
+							    PyArray_DOUBLE,
+							    (char*)MESH(cmesh).W_KNOT);							    
+// NURBS
+
+  return Py_BuildValue("iiiiiiiiiiiOOOOOOOOOOOOOOOOOiiiiiiOOOOOOOOOOdddd",
                        MESH(cmesh).nElements_global,
                        MESH(cmesh).nNodes_global,
                        MESH(cmesh).nNodes_element,
@@ -284,6 +321,13 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
                        elementBoundaryMaterialTypes,
                        nodeMaterialTypes,
                        nodeArray,
+                       MESH(cmesh).nx,MESH(cmesh).ny,MESH(cmesh).nz,        //NURBS 
+                       MESH(cmesh).px,MESH(cmesh).py,MESH(cmesh).pz,        //NURBS                       
+                       elementIJK, //NURBS                 
+                       weights,    //NURBS                   
+                       U_KNOT,     //NURBS    
+                       V_KNOT,     //NURBS    
+                       W_KNOT,     //NURBS   
                        elementDiametersArray,
                        elementInnerDiametersArray,
                        elementBoundaryDiametersArray,
@@ -717,20 +761,23 @@ static PyObject* cmeshToolsGenerateTriangularMeshFromRectangularGrid(PyObject* s
 static PyObject* cmeshToolsGenerateHexahedralMeshFromRectangularGrid(PyObject* self,
                                                                      PyObject* args)
 {
-  int nx,ny,nz;
+  int nx,ny,nz,px,py,pz;
   double Lx,Ly,Lz;
   PyObject *cmesh;
   if (!PyArg_ParseTuple(args,
-                        "iiidddO",
+                        "iiiiiidddO",
                         &nx,
                         &ny,
                         &nz,
+			&px,
+			&py,
+			&pz,
                         &Lx,
                         &Ly,
                         &Lz,
                         &cmesh))
     return NULL;
-  regularHexahedralMeshElements(nx,ny,nz,MESH(cmesh));
+  regularHexahedralMeshElements(nx,ny,nz,px,py,pz,MESH(cmesh));
   regularMeshNodes(nx,ny,nz,Lx,Ly,Lz,MESH(cmesh));
   constructElementBoundaryElementsArray_hexahedron(MESH(cmesh));
   Py_INCREF(Py_None); 
@@ -965,6 +1012,31 @@ static PyObject* cmeshToolsAllocateGeometricInfo_hexahedron(PyObject* self,
   return Py_None;
 }
 
+static PyObject* cmeshToolsComputeGeometricInfo_NURBS(PyObject* self,
+                                                     PyObject* args)
+{
+  PyObject *cmesh;
+  if (!PyArg_ParseTuple(args,
+                        "O",
+                        &cmesh))
+    return NULL;
+  computeGeometricInfo_NURBS(MESH(cmesh));
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
+static PyObject* cmeshToolsAllocateGeometricInfo_NURBS(PyObject* self,
+                                                      PyObject* args)
+{
+  PyObject *cmesh;
+  if (!PyArg_ParseTuple(args,
+                        "O",
+                        &cmesh))
+    return NULL;
+  allocateGeometricInfo_NURBS(MESH(cmesh));
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
 
 
 typedef struct
@@ -1556,6 +1628,36 @@ static PyObject* SparsityInfo_getCSR(SparsityInfo *self,
   return Py_BuildValue("(O,O,i,O)",PyArray_Return(rowptr),PyArray_Return(colind),nnz,PyArray_Return(nzval));
 }
 
+
+static PyObject* cmeshToolsGenerateNURBSMeshFromRectangularGrid(PyObject* self,
+                                                                PyObject* args)
+{
+  int nx,ny,nz;
+  int px,py,pz;
+  double Lx,Ly,Lz;
+  PyObject *cmesh;
+  if (!PyArg_ParseTuple(args,
+                        "iiiiiidddO",
+                        &nx,
+                        &ny,
+                        &nz,
+                        &px,
+                        &py,
+                        &pz,
+                        &Lx,
+                        &Ly,
+                        &Lz,
+                        &cmesh))
+    return NULL;
+  regularNURBSMeshElements(nx+px+1,ny+py+1,nz+pz+1,px,py,pz,MESH(cmesh));
+  regularMeshNodes(nx+px+1,ny+py+1,nz+pz+1,Lx,Ly,Lz,MESH(cmesh));
+
+  constructElementBoundaryElementsArray_NURBS(MESH(cmesh));
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
+
 static PyMethodDef SparsityInfo_methods[] = {
   {"findNonzeros", 
    (PyCFunction)SparsityInfo_findNonzeros,
@@ -1777,6 +1879,18 @@ static PyMethodDef cmeshToolsMethods[] = {
     "Compute h, etc."},
   { "allocateGeometricInfo_hexahedron",
     cmeshToolsAllocateGeometricInfo_hexahedron,
+    METH_VARARGS, 
+    "Allocate h, etc."},
+  { "generateNURBSMeshFromRectangularGrid",
+    cmeshToolsGenerateNURBSMeshFromRectangularGrid,
+    METH_VARARGS, 
+    "Generates a structured NURBS"},  
+  { "computeGeometricInfo_NURBS",
+    cmeshToolsComputeGeometricInfo_NURBS,
+    METH_VARARGS, 
+    "Compute h, etc."},
+  { "allocateGeometricInfo_NURBS",
+    cmeshToolsAllocateGeometricInfo_NURBS,
     METH_VARARGS, 
     "Allocate h, etc."},
   { NULL,NULL,0,NULL}
