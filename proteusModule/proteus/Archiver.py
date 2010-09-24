@@ -684,6 +684,114 @@ class XdmfWriter:
         #need to write a grid
         return self.arGrid
 
+    def writeMeshXdmf_C0Q2Lagrange(self,ar,name,mesh,spaceDim,dofMap,t=0.0,init=False,meshChanged=False,arGrid=None,tCount=0):
+        """
+        TODO: test new lagrangeNodes convention for 2d,3d, and concatNow=False
+        """
+        #write out basic geometry if not already done?
+        mesh.writeMeshXdmf(ar,"Spatial_Domain",t,init,meshChanged,tCount=tCount)
+        spaceSuffix = "_c0p2_Lagrange"
+        gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
+        if self.arGrid == None or self.arTime.get('Value') != str(t):
+            if spaceDim == 1:
+                 print "No writeMeshXdmf_C0Q2Lagrange for 1D" 
+            elif spaceDim == 2:
+                 print "No writeMeshXdmf_C0Q2Lagrange for 1D" 
+            elif spaceDim == 3:
+                Xdmf_ElementTopology = "Hex"
+            self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+
+
+            lagrangeNodesArray = dofMap.lagrangeNodesArray[:mesh.nElements_global,:]
+            l2g = dofMap.l2g[:,:8]
+
+
+            topology = SubElement(self.arGrid,"Topology",
+                                  {"Type":Xdmf_ElementTopology,
+                                   "NumberOfElements":str(mesh.nElements_global)})
+            elements = SubElement(topology,"DataItem",
+                                  {"Format":ar.dataItemFormat,
+                                   "DataType":"Int",
+                                   "Dimensions":"%i %i" % lagrangeNodesArray.shape})
+            geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
+
+            concatNow = True
+            if concatNow:
+
+                allNodes = SubElement(geometry,"DataItem",
+                                         {"Format":ar.dataItemFormat,
+                                          "DataType":"Float",
+                                          "Precision":"8",
+                                          "Dimensions":"%i %i" % lagrangeNodesArray.shape})
+            else:
+                allNodes    = SubElement(geometry,"DataItem",
+                                         {"Function":"JOIN( $0 ; $1 )",
+                                          "DataType":"Float",
+                                          "Precision":"8",
+                                          "Dimensions":"%i %i" % lagrangeNodesArray.shape})
+                #nodes    = SubElement(allNodes,"DataItem",
+                #                      {"Format":ar.dataItemFormat,
+                #                       "DataType":"Float",
+                #                       "Precision":"8",
+                #                       "Dimensions":"%i %i" % mesh.elementNodesArray.shape})
+                lagrangeNodes    = SubElement(allNodes,"DataItem",
+                                              {"Format":ar.dataItemFormat,
+                                               "DataType":"Float",
+                                               "Precision":"8",
+                                               "Dimensions":"%i %i" % lagrangeNodesArray.shape}) 
+
+            if ar.hdfFile != None:
+                elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
+                if concatNow:
+                    allNodes.text = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
+                    import copy
+                    if init or meshChanged:
+                        ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,l2g)
+                        #print "element nodes",elements
+                        #mwf orig ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,numpy.concatenate((mesh.nodeArray,lagrangeNodesArray)))
+                        #ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,numpy.concatenate((mesh.nodeArray.flat[:3*mesh.nNodes_owned],
+                        #                                                                           lagrangeNodesArray.flat[:3*mesh.nElements_owned],
+                        #                                                                           mesh.nodeArray.flat[3*mesh.nNodes_owned:3*mesh.nNodes_global],
+                        #                                                                           lagrangeNodesArray.flat[3*mesh.nElements_owned:3*mesh.nElements_global])))
+                        ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,lagrangeNodesArray)
+                        #mwf debug 
+                        #print "nodes ",numpy.concatenate((mesh.nodeArray,lagrangeNodesArray))
+                        #print "nodes ",numpy.concatenate((mesh.nodeArray.flat[:3*mesh.nNodes_owned],
+                        #                                  lagrangeNodesArray.flat[:3*mesh.nElements_owned],
+                        #                                  mesh.nodeArray.flat[3*mesh.nNodes_owned:3*mesh.nNodes_global],
+                        #                                  lagrangeNodesArray.flat[3*mesh.nElements_owned:3*mesh.nElements_global]))
+                else:
+                    nodes.text = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
+                    lagrangeNodes.text = ar.hdfFilename+":/lagrangeNodes"+spaceSuffix+`tCount`
+                    if init or meshChanged:
+                        ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,dofMap.l2g)
+                        #ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,mesh.nodeArray)
+                        ar.hdfFile.createArray("/",'lagrangeNodes'+spaceSuffix+`tCount`,lagrangeNodesArray)
+
+            else:
+                SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt"})
+                if concatNow:
+                    SubElement(allNodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt"})
+                    if init or meshChanged:
+                        numpy.savetxt(ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt",dofMap.l2g,fmt='%d')
+                        numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",lagrangeNodesArray)
+                else:
+                    #SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt"})
+                    SubElement(lagrangeNodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/lagrangeNodes"+spaceSuffix+`tCount`+".txt"})
+                    if init or meshChanged:
+                        numpy.savetxt(ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt",dofMap.l2g,fmt='%d')
+                        #numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",mesh.nodeArray)
+                        numpy.savetxt(ar.textDataDir+"/lagrangeNodes"+spaceSuffix+`tCount`+".txt",lagrangeNodesArray)
+                    #
+
+                #
+            #
+        #need to write a grid
+        return self.arGrid
+
+
+    
     def writeMeshXdmf_CrouzeixRaviartP1(self,ar,mesh,spaceDim,dofMap,t=0.0,
                                         init=False,meshChanged=False,arGrid=None,tCount=0):
         """

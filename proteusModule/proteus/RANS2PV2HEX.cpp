@@ -117,10 +117,16 @@ extern "C" void calculateResidual_RANS2PV2HEX(//element
   for(int eN=0;eN<nElements_global;eN++)
     {
       //declare local storage for element residual and initialize
+     
+	  register int  eN_nDOF_trial_element = eN*nDOF_trial_element;
       register double elementResidual_p[nDOF_test_element],
 	elementResidual_u[nDOF_test_element],
 	elementResidual_v[nDOF_test_element],
 	elementResidual_w[nDOF_test_element],
+	p_ldof[nDOF_trial_element],
+	u_ldof[nDOF_trial_element],
+	v_ldof[nDOF_trial_element],
+	w_ldof[nDOF_trial_element],			
 	eps_rho,eps_mu;
       for (int i=0;i<nDOF_test_element;i++)
 	{
@@ -129,6 +135,15 @@ extern "C" void calculateResidual_RANS2PV2HEX(//element
 	  elementResidual_v[i]=0.0;
 	  elementResidual_w[i]=0.0;
 	}//i
+	  
+      for (int i=0;i<nDOF_trial_element;i++)
+	{	  
+      p_ldof[i]=p_dof[p_l2g[eN_nDOF_trial_element + i]];
+      u_ldof[i]=u_dof[vel_l2g[eN_nDOF_trial_element + i]];  
+      v_ldof[i]=v_dof[vel_l2g[eN_nDOF_trial_element + i]];
+      w_ldof[i]=w_dof[vel_l2g[eN_nDOF_trial_element + i]];	  
+	}//i
+	
       // 
       //loop over quadrature points and compute integrands
       //
@@ -136,8 +151,7 @@ extern "C" void calculateResidual_RANS2PV2HEX(//element
         {
 	  //compute indices and declare local storage
 	  register int eN_k = eN*nQuadraturePoints_element+k,
-	    eN_k_nSpace = eN_k*nSpace,
-	    eN_nDOF_trial_element = eN*nDOF_trial_element;
+	    eN_k_nSpace = eN_k*nSpace;
 	  register double p=0.0,u=0.0,v=0.0,w=0.0,
 	    grad_p[nSpace],grad_u[nSpace],grad_v[nSpace],grad_w[nSpace],
 	    mom_u_acc=0.0,
@@ -243,6 +257,30 @@ extern "C" void calculateResidual_RANS2PV2HEX(//element
 	  ck.gradFromDOF(u_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_u);
 	  ck.gradFromDOF(v_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_v);
 	  ck.gradFromDOF(w_dof,&vel_l2g[eN_nDOF_trial_element],vel_grad_trial,grad_w);
+	  /*
+	  p = u = v = w = 0.0;
+      for (int I=0;I<nSpace;I++)
+      {
+         grad_p[I] = grad_u[I] = grad_v[I] = grad_w[I] = 0.0;                  
+   	  }
+
+	  for (int i=0;i<nDOF_trial_element;i++)
+   	  {	  
+         p += p_ldof[i]*p_trial_ref[k*nDOF_trial_element+i];
+         u += u_ldof[i]*p_trial_ref[k*nDOF_trial_element+i];  
+         v += v_ldof[i]*p_trial_ref[k*nDOF_trial_element+i];
+         w += w_ldof[i]*p_trial_ref[k*nDOF_trial_element+i];
+         for (int I=0;I<nSpace;I++)
+         {
+            grad_p[I] += p_ldof[i]*p_trial_ref[k*nDOF_trial_element+i];
+            grad_u[I] += u_ldof[i]*p_trial_ref[k*nDOF_trial_element+i];  
+            grad_v[I] += v_ldof[i]*p_trial_ref[k*nDOF_trial_element+i];
+            grad_w[I] += w_ldof[i]*p_trial_ref[k*nDOF_trial_element+i];                  
+   	     }         
+	  }//i*/
+	  
+	  
+
 	  //precalculate test function products with integration weights
 	  for (int j=0;j<nDOF_trial_element;j++)
 	    {
@@ -411,7 +449,7 @@ extern "C" void calculateResidual_RANS2PV2HEX(//element
 	    ck.Advection_strong(&q_velocity_last[eN_k_nSpace],grad_w) +
 	    ck.Hamiltonian_strong(dmom_w_ham_grad_p,grad_p) +
 	    ck.Reaction_strong(mom_w_source);
-	
+
           //calculate tau and tau*Res
 	    RANS2PV2HEX::calculateSubgridError_tau(Ct_sge,
 					      Cd_sge,
@@ -1475,6 +1513,28 @@ extern "C" void calculateJacobian_RANS2PV2HEX(//element
           //calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
           //
 
+          //calculate strong residual
+	  pdeResidual_p = ck.Advection_strong(dmass_adv_u,grad_u) +
+	    ck.Advection_strong(dmass_adv_v,grad_v) +
+	    ck.Advection_strong(dmass_adv_w,grad_w);
+	  
+	  pdeResidual_u = ck.Mass_strong(mom_u_acc_t) +
+	    ck.Advection_strong(&q_velocity_last[eN_k_nSpace],grad_u) +
+	    ck.Hamiltonian_strong(dmom_u_ham_grad_p,grad_p) +
+	    ck.Reaction_strong(mom_u_source);
+	  
+	  pdeResidual_v = ck.Mass_strong(mom_v_acc_t) +
+	    ck.Advection_strong(&q_velocity_last[eN_k_nSpace],grad_v) +
+	    ck.Hamiltonian_strong(dmom_v_ham_grad_p,grad_p) + 
+	    ck.Reaction_strong(mom_v_source);
+	  
+	  pdeResidual_w = ck.Mass_strong(mom_w_acc_t) + 
+	    ck.Advection_strong(&q_velocity_last[eN_k_nSpace],grad_w) +
+	    ck.Hamiltonian_strong(dmom_w_ham_grad_p,grad_p) +
+	    ck.Reaction_strong(mom_w_source);
+
+
+
           //calculate the Jacobian of strong residual
           for (int j=0;j<nDOF_trial_element;j++)
             {
@@ -1508,9 +1568,17 @@ extern "C" void calculateJacobian_RANS2PV2HEX(//element
 	  				      tau_p,
 					      tau_v,
 					      q_cfl[eN_k]);
-	  //cek debug
-	  //tau_p = 0.0;
-	  //tau_v = 0.0;
+	  RANS2PV2HEX::calculateSubgridError_tauRes(tau_p,
+	  					 tau_v,
+	  					 pdeResidual_p,
+	  					 pdeResidual_u,
+	  					 pdeResidual_v,
+	  					 pdeResidual_w,
+	  					 subgridError_p,
+	  					 subgridError_u,
+	  					 subgridError_v,
+	  					 subgridError_w);
+	  					 
 	  RANS2PV2HEX::calculateSubgridErrorDerivatives_tauRes(tau_p,
 							    tau_v,
 							    dpdeResidual_p_u,
@@ -1686,6 +1754,9 @@ extern "C" void calculateJacobian_RANS2PV2HEX(//element
   //
   //loop over exterior element boundaries to compute the surface integrals and load them into the global Jacobian
   //
+  
+
+  
   for (int ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++) 
     { 
       register int ebN = exteriorElementBoundariesArray[ebNE],

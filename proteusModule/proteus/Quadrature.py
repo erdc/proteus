@@ -111,6 +111,28 @@ class LobattoEdge(Q_base):
         self.order = 1
         self.points = self.pointsAll[0]
         self.weights = self.weightsAll[0]
+
+class LobattoEdgeAlt(Q_base):
+    """
+    Gauss-Lobatto quadrature on the [-1:1] interval.
+    """
+    def __init__(self,order=1):
+        Q_base.__init__(self,order)
+        a1 = 0.2*sqrt(5.0)
+        a2 = sqrt(21)/7.0
+        self.pointsAll=(
+            (EVec(-1.0),EVec(1.0)),
+            (EVec(-1.0),EVec(0.0),EVec(1.0)),
+            (EVec(-1.0),EVec(-a1),EVec(a1) ,EVec(1.0)),
+            (EVec(-1.0),EVec(-a2),EVec(0.0),EVec(a2),EVec(1.0)),)
+        self.weightsAll=(
+            (1.0,1.0),
+            (1.0/3.0, 4.0/3.0, 1.0/3.0),
+            (1.0/6.0, 5.0/6.0,5.0/6.0,1.0/6.0),
+            (1.0/10.0,49.0/90.0,32.0/45.0,49.0/90.0,1.0/10.0),)
+        self.setOrder(order)
+
+
 class CompositeTrapezoidalEdge(Q_base):
     """
     Composite trapezoidal rule on the unit interval.

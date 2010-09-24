@@ -4,9 +4,11 @@ Class hierarchies for constructing and working with finite element spaces
 from EGeometry import *
 from MeshTools import *
 from LinearAlgebraTools import *
+from Quadrature import *
 import cfemIntegrals
 import RefUtils 
 from Profiling import logEvent
+
 
 class ReferenceElement:
     """
@@ -281,19 +283,14 @@ class LocalFunctionSpace:
         self.basisGradientsTrace=[]
         
     def defineTraceFunctions(self):    
-        #if nonzeroHessians:
-        #  for fi in self.referenceElement.range_nElementBoundaries:    
-        #     for si in  self.dim:
-        #        self.basisTrace[fi].append(lambda xBar: 
-        #                                self.basis[si](self.referenceElement.boundaryMapList[fi](xBar)))
-        #        self.basisGradientsTrace[fi].append(lambda xBar:
-        #                                self.gradientList[si](self.referenceElement.boundaryMapList[fi](xBar)))      
-        #else:
-          for fi in self.referenceElement.range_nElementBoundaries:    
-             for si in  range(self.dim):
-                self.basisTrace[fi].append(lambda xBar: 
+        for ebN in self.referenceElement.range_nElementBoundaries:
+            self.basisTrace.append([])
+            self.basisGradientsTrace.append([])
+        for fi in self.referenceElement.range_nElementBoundaries:    
+           for si in  range(self.dim):
+              self.basisTrace[fi].append(lambda xBar: 
                                         self.basis[si](self.referenceElement.boundaryMapList[fi](xBar)))
-                self.basisGradientsTrace[fi].append(lambda xBar:
+              self.basisGradientsTrace[fi].append(lambda xBar:
                                         self.basisGradients[si](self.referenceElement.boundaryMapList[fi](xBar)))        
 
 class LinearOnSimplexWithNodalBasis(LocalFunctionSpace):
@@ -432,10 +429,7 @@ class LinearOnCubeWithNodalBasis(LocalFunctionSpace):
         self.gradientList=[]
         
         print "  Init LinearOnCubeWithNodalBasis"
-        
-        for ebN in self.referenceElement.range_nElementBoundaries:
-            self.basisTrace.append([])
-            self.basisGradientsTrace.append([])
+
         if nd == 1:
             #0
             self.basis.append(lambda xi: 0.5*(1.0 - xi[0]))
@@ -458,6 +452,94 @@ class LinearOnCubeWithNodalBasis(LocalFunctionSpace):
                                                                                                    0.125*(1.0+n0*xi[0])*(1.0+n1*xi[1])*     n2       ]))  
 
         self.defineTraceFunctions()   
+
+
+
+
+
+class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
+    """
+    Lagrange polynomials on the unit nd-cube with the nodal basis.
+    
+    Nodal basis functions on the reference nd-cube  (nd <=3) with
+    coordinates xi[0],xi[1],and xi[2]. The basis functions are numbered according to
+    the nodes.
+    """
+    def __init__(self,nd=3, order=2):
+        self.referenceElement = ReferenceCube(nd)
+        LocalFunctionSpace.__init__(self,(order+1)**nd,self.referenceElement)
+        self.gradientList=[]
+        self.order = order
+
+        
+        print "  Init LagrangeOnCubeWithNodalBasis" 
+        # Generate equi distance nodes for generation of lagrange basis     
+        # Should use Gauss Labatto points
+        
+        self.nodes=[]
+        #for i in range(order+1):
+        #    self.nodes.append(2.0*float(i)/float(order)-1.0)
+        
+        self.quadrature = LobattoEdgeAlt(order=order)
+        for i in range(order+1): 
+            self.nodes.append(self.quadrature.points[i][0] )       
+
+        print "Lagrange nodes = ",self.nodes
+        
+        
+        # Define 1D functions using recursion formulas
+        self.fun=[]
+        self.dfun=[]
+        fun  = []
+        dfun = []
+        dfun2= []
+        fc=-1
+        fc2=-1
+        for a in range(order+1):
+            fun .append(lambda xi: 1.0)
+            dfun.append(lambda xi: 0.0)
+            fc=fc+1
+            den  = 1.0           
+            for b in range(order+1):
+                if a!=b: 
+                  dfun2.append(lambda xi: 1.0)
+                  fc2=fc2+1
+                  for c in range(order+1):
+                     if  a!=c and b!=c:         
+                       dfun2.append(lambda xi, xb=self.nodes[c],fc2=fc2: dfun2[fc2](xi)*(xi - xb))
+                       fc2=fc2+1
+           
+                  dfun.append(lambda xi,fc=fc,fc2=fc2: dfun[fc](xi) + dfun2[fc2](xi)) 
+                      
+                  fun.append(lambda xi, xb=self.nodes[b],fc=fc:  fun[fc](xi)*(xi - xb))
+                  den   = den*(self.nodes[a]-self.nodes[b])
+                  fc=fc+1
+            self. fun.append(lambda xi,fc=fc, den=den:   fun[fc](xi)/den)
+            self.dfun.append(lambda xi,fc=fc, den=den:  dfun[fc](xi)/den)
+
+
+        # Define multi-dimensional stuff  
+        if nd == 1:
+            self.basis = self.fun 
+            self.basisGradients = self.dfun
+
+        elif nd == 2:
+            for j in range(order+1):
+              for i in range(order+1):
+                self.basis.append(lambda xi,i=1,j=j:self.fun[i](xi[0])*self.fun[j](xi[1]))
+                self.basisGradients.append(lambda xi,i=i,j=j:numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
+                                                                          self. fun[i](xi[0])*self.dfun[j](xi[1])]))       
+        elif nd == 3:
+            for k in range(order+1):
+              for j in range(order+1):
+                for i in range(order+1):
+                  self.basis.append(lambda xi,i=1,j=j,k=k:self.fun[i](xi[0])*self.fun[j](xi[1])*self.fun[k](xi[2]))
+                  self.basisGradients.append(lambda xi,i=i,j=j,k=k:numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1])*self. fun[k](xi[2]),
+                                                                                self. fun[i](xi[0])*self.dfun[j](xi[1])*self. fun[k](xi[2]),
+                                                                                self. fun[i](xi[0])*self. fun[j](xi[1])*self.dfun[k](xi[2])]))
+        self.defineTraceFunctions()   
+
+
 
 
 class QuadraticOnSimplexWithNodalBasis(LocalFunctionSpace):
@@ -1766,6 +1848,78 @@ class ElementBoundaryDOFMap(DOFMap):
         self.max_dof_neighbors = 2*(mesh.nElementBoundaries_element-1)+1
     #end init
 #end ElementBoundaryDOFMap
+class QuadraticLagrangeCubeDOFMap(DOFMap):
+    """
+
+    DOF mapping for quadratic lagrange finite element functions on
+    unit cubes
+    
+    The mapping associates local degree of freedom with
+       global vertex number for iloc 0<= iloc<= space dim
+       global edge number for  spacedim < iloc 
+
+    total dimension is number of vertices + number of edges
+    TODO fix lagrangeNodesArray to hold all the nodes for parallel in 3d
+         determine if really need to call updateAfterParallelPartitioning after __init__ or not
+    """
+    def __init__(self,mesh,localFunctionSpace,nd):
+        if nd == 1:
+            print "QuadraticLagrangeCubeDOFMap not supported for nd = 1"
+            #ndof += mesh.nElements_global
+        elif nd == 2:
+            print "QuadraticLagrangeCubeDOFMap not supported for nd = 2"
+            #ndof += mesh.nElementBoundaries_global
+        else:
+            ndof = mesh.nNodes_global
+            ndof += mesh.nEdges_global
+            ndof += mesh.nElementBoundaries_global
+            ndof += mesh.nElements_global
+        
+        DOFMap.__init__(self,ndof)
+        #holds lagrange nodes for all points 
+	self.lagrangeNodesArray = numpy.zeros((ndof,3),'d')
+        self.l2g = numpy.zeros((mesh.nElements_global,
+                                localFunctionSpace.dim),
+                               'i')
+        self.nd = nd
+        #do simplest numbering first, which is to assign first d+1
+        #unknowns the corresponding global node number.
+        #
+        #In 1d, extra unknown can be associated with global element number
+        #In 2d, extra unknowns can be associated with element boundaries array (edges)
+        #In 3d, extra unknowns have to be associated with edge
+        self.updateAfterParallelPartitioning(mesh.globalMesh)
+
+        maxSeen = max(self.l2g.flat)
+        assert maxSeen < self.nDOF,('QuadDOF max(l2g)= %d ndof= %d' % (maxSeen,self.nDOF))
+        #save for parallel mappings
+        self.nd = nd
+    #end init
+    def updateAfterParallelPartitioning(self,globalMesh):
+        """
+        """
+        self.dof_offsets_subdomain_owned = numpy.zeros(globalMesh.nodeOffsets_subdomain_owned.shape,'i')
+        self.nDOF_all_processes = 0; self.nDOF_subdomain = 0; self.max_dof_neighbors = 0
+        self.subdomain2global = numpy.zeros((self.nDOF),'i')
+        (self.nDOF_all_processes,self.nDOF_subdomain, 
+         self.max_dof_neighbors) = flcbdfWrappers.buildQuadraticCubeLocal2GlobalMappings(self.nd,
+                                                                                     globalMesh.cmesh,
+                                                                                     globalMesh.subdomainMesh.cmesh,
+                                                                                     globalMesh.elementOffsets_subdomain_owned,
+                                                                                     globalMesh.nodeOffsets_subdomain_owned,
+                                                                                     globalMesh.elementBoundaryOffsets_subdomain_owned,
+                                                                                     globalMesh.edgeOffsets_subdomain_owned,
+                                                                                     globalMesh.elementNumbering_subdomain2global,
+                                                                                     globalMesh.nodeNumbering_subdomain2global,
+                                                                                     globalMesh.elementBoundaryNumbering_subdomain2global,
+                                                                                     globalMesh.edgeNumbering_subdomain2global,
+                                                                                     self.dof_offsets_subdomain_owned,
+                                                                                     self.l2g,
+                                                                                     self.subdomain2global,
+                                                                                     self.lagrangeNodesArray)
+        assert self.nDOF == self.nDOF_subdomain
+#QuadraticDOFMap
+
 class QuadraticLagrangeDOFMap(DOFMap):
     """
 
@@ -1833,6 +1987,7 @@ class QuadraticLagrangeDOFMap(DOFMap):
                                                                                      self.lagrangeNodesArray)
         assert self.nDOF == self.nDOF_subdomain
 #QuadraticDOFMap
+
 class p0DOFMap(DOFMap):
     def __init__(self,mesh):
         DOFMap.__init__(self,mesh.nElements_global)
@@ -3495,6 +3650,64 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                 ReferenceString="/Xdmf/Domain/Grid/Grid[%i]/Attribute[%i]/DataItem" % (tCount+1,ci+1)
                 component = SubElement(values,"DataItem",{"Reference":ReferenceString})
 
+class C0_LagrangeOnCubeWithNodalBasis(C0_AffineLinearOnSimplexWithNodalBasis):
+    """
+    The standard linear CG space.
+
+    Globally C0
+    Each geometric element is the image of the reference cube under
+    a n-linear(non-affine) mapping. The nodal basis is used on the reference cube.
+    """
+    def __init__(self,mesh,nd=3,order=2):
+        localFunctionSpace = LagrangeOnCubeWithNodalBasis(nd,order=2)
+        #todo fix these interpolation conditions to work on Cube
+        interpolationConditions = QuadraticLagrangeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        ParametricFiniteElementSpace.__init__(self, 
+                                              ReferenceFiniteElement(localFunctionSpace,
+                                                                     interpolationConditions),
+                                              ParametricMaps(mesh,
+                                                         localFunctionSpace.referenceElement,
+                                                         LagrangeOnCubeWithNodalBasis(nd,order=mesh.px)),
+                                              QuadraticLagrangeCubeDOFMap(mesh))
+        
+        print "C0_LagrangeOnCubeWithNodalBasis"
+        print mesh.px
+
+class C0_AffineLagrangeOnCubeWithNodalBasis(ParametricFiniteElementSpace):
+    """
+    The standard linear CG space.
+
+    Globally C0
+    Each geometric element is the image of the reference simplex under
+    a linear affine mapping. The nodal basis is used on the reference simplex.
+    """
+    def __init__(self,mesh,nd=3,order=2):
+        localFunctionSpace = LagrangeOnCubeWithNodalBasis(nd,order=2)
+        localGeometricSpace= LinearOnCubeWithNodalBasis(nd)
+        #todo fix these interpolation conditions to work on Cube
+        interpolationConditions = QuadraticLagrangeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        ParametricFiniteElementSpace.__init__(self,
+                                              ReferenceFiniteElement(localFunctionSpace,
+                                                                     interpolationConditions),
+                                              AffineMaps(mesh,
+                                                         localGeometricSpace.referenceElement,
+                                                         LinearOnCubeWithNodalBasis(nd)),
+                                              QuadraticLagrangeCubeDOFMap(mesh,localFunctionSpace,nd))
+        #for archiving
+        import Archiver
+        self.XdmfWriter=Archiver.XdmfWriter()
+
+    def writeMeshXdmf(self,ar,name,t=0.0,init=False,meshChanged=False,arGrid=None,tCount=0):
+        print "Write mesh"
+        return self.XdmfWriter.writeMeshXdmf_C0Q2Lagrange(ar,name,mesh=self.mesh,spaceDim=self.nSpace_global,
+                                                          dofMap=self.dofMap,t=t,init=init,meshChanged=meshChanged,
+                                                          arGrid=arGrid,tCount=tCount)
+    def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
+        print "no writeFunctionXdmf"
+        ##self.XdmfWriter.writeFunctionXdmf_C0Q2Lagrange(ar,u,tCount=tCount,init=init)
+    def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
+        ##self.XdmfWriter.writeVectorFunctionXdmf_C0Q2Lagrange(ar,uList,components,vectorName,"c0p2_Lagrange",tCount=tCount,init=init)
+        print "no writeVectorrFunctionXdmf"
 
 class DG_AffinePolynomialsOnSimplexWithMonomialBasis(ParametricFiniteElementSpace):
     def __init__(self,mesh,nd=3,k=0):
