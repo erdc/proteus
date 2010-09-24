@@ -2397,7 +2397,18 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     }
 
   //now build rest of subdomain mesh connectivity information etc
-  if (mesh.subdomainp->nNodes_element == 2)
+  mesh.subdomainp->px = mesh.px;
+  mesh.subdomainp->py = mesh.py;
+  mesh.subdomainp->pz = mesh.pz;
+  if (mesh.subdomainp->px != 0)
+    {
+      //constructElementBoundaryElementsArray_tetrahedron(*mesh.subdomainp);
+      //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
+      constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_NURBS(*mesh.subdomainp);
+      allocateGeometricInfo_NURBS(*mesh.subdomainp);
+      computeGeometricInfo_NURBS(*mesh.subdomainp);
+    }
+  else if (mesh.subdomainp->nNodes_element == 2)
     {
       //constructElementBoundaryElementsArray_edge(*mesh.subdomainp);
       //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_edge(*mesh.subdomainp);
@@ -2852,7 +2863,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 		}
 	    }
         }
-    std::cout<<"Done marking element boundares"<<elementBoundaries_subdomain_owned.size()<<std::endl;
+    std::cout<<"Done marking element boundares "<<elementBoundaries_subdomain_owned.size()<<std::endl;
     //ship off the mask
     if (rank < size-1)
       MPI_Send(elementBoundaryMask,PetscBTLength(mesh.nElementBoundaries_global),MPI_CHAR,rank+1,0,Py_PETSC_COMM_WORLD);
@@ -3379,7 +3390,18 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 	
       }
     //now fill in rest of boundary information, etc
-    if (mesh.subdomainp->nNodes_element == 2)
+   mesh.subdomainp->px = mesh.px;
+   mesh.subdomainp->py = mesh.py;
+   mesh.subdomainp->pz = mesh.pz; 
+  if (mesh.px != 0)    
+      {  
+        //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
+        constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_NURBS(*mesh.subdomainp);
+        allocateGeometricInfo_NURBS(*mesh.subdomainp);
+        computeGeometricInfo_NURBS(*mesh.subdomainp);
+
+      }   
+    else if (mesh.subdomainp->nNodes_element == 2)
       {
         //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_edge(*mesh.subdomainp);
         constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_edge(*mesh.subdomainp);
@@ -3407,15 +3429,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
         allocateGeometricInfo_hexahedron(*mesh.subdomainp);
         computeGeometricInfo_hexahedron(*mesh.subdomainp);
       }
-    else
-      {
-        //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);
-        constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_NURBS(*mesh.subdomainp);
-        //??allocateGeometricInfo_tetrahedron(*mesh.subdomainp);
-        //??computeGeometricInfo_tetrahedron(*mesh.subdomainp);
-      }     
-
-
+ 
     if (mesh.elementBoundaryMaterialTypes != NULL)
       {
 	assert(mesh.elementBoundariesArray != NULL);
@@ -3429,7 +3443,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 	      {
 		int ebN_global_old = mesh.elementBoundariesArray[eN_global_old*mesh.nElementBoundaries_element+ebN_element];
 		int ebN_subdomain = mesh.subdomainp->elementBoundariesArray[eN*mesh.nElementBoundaries_element+ebN_element];
-		mesh.subdomainp->elementBoundaryMaterialTypes[ebN_subdomain] = mesh.elementBoundaryMaterialTypes[ebN_global_old];
+                mesh.subdomainp->elementBoundaryMaterialTypes[ebN_subdomain] = mesh.elementBoundaryMaterialTypes[ebN_global_old];
 	      }
 	  }
       }
@@ -4137,6 +4151,392 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
 
   return 0;
 }
+
+int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh, 
+					      const int *edgeOffsets_subdomain_owned,
+					      const int *nodeOffsets_subdomain_owned,
+					      const int *edgeNumbering_subdomain2global,
+					      const int *nodeNumbering_subdomain2global,
+					      int& nDOF_all_processes,//total number of dofs in whole domain
+					      int& nDOF_subdomain,//total number of dofs in sub-domain
+					      int& max_dof_neighbors,//maximum number of neighbors for connectivity of dofs
+					      int *offsets_subdomain_owned, //starting point of local dofs on each processor (nProcs+1)
+					      int *subdomain_l2g, //local to global dof mapping on subdomain
+					      int *subdomain2global,//subdomain dof to global (parallel) numbering
+					      double * lagrangeNodesArray)//location of nodes corresponding to dofs
+{
+  using namespace std;
+  int ierr,size,rank;
+  ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);
+  ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);
+
+  //In 2d the quadratic dofs can be associated with nodes and element Boundaries
+  //assuming have ownership info and consistent local/global mappings for nodes, elementBoundaries
+  //build a mapping from local quadratic dofs to global quadratic dofs for petsc
+  //assume a processor owns a dof if it owns that node or element
+  assert(edgeOffsets_subdomain_owned);
+  assert(nodeOffsets_subdomain_owned);
+  assert(edgeNumbering_subdomain2global);
+  assert(nodeNumbering_subdomain2global);
+  assert(mesh.subdomainp);
+
+  const int *elementBoundaryOffsets_subdomain_owned=mesh.elementBoundaryOffsets_subdomain_owned; 
+  const int *elementOffsets_subdomain_owned=mesh.elementOffsets_subdomain_owned; 
+  const int *elementBoundaryNumbering_subdomain2global=mesh.elementBoundaryNumbering_subdomain2global;
+  const int *elementNumbering_subdomain2global=mesh.elementNumbering_subdomain2global;
+
+  const int nNodes_owned = nodeOffsets_subdomain_owned[rank+1]-nodeOffsets_subdomain_owned[rank];
+  const int nEdges_owned = edgeOffsets_subdomain_owned[rank+1]-edgeOffsets_subdomain_owned[rank];
+
+  const int nBoundaries_owned = elementBoundaryOffsets_subdomain_owned[rank+1]-elementBoundaryOffsets_subdomain_owned[rank];
+  const int nElements_owned   = elementOffsets_subdomain_owned[rank+1]-elementOffsets_subdomain_owned[rank];
+
+  const int nDOFs_owned = nNodes_owned + nEdges_owned + nBoundaries_owned + nElements_owned;
+  const int nDOFs_global= mesh.nNodes_global + mesh.nEdges_global + mesh.nElementBoundaries_global + mesh.nElements_global;
+
+  //start with a logical global ordering of dofs as
+  //[global nodes, global edges]
+  //want to create global numbering
+  //[nodes proc 0,edges proc 0,nodes proc 1, edges proc 1,...]
+  valarray<int> quadraticNumbering_new2old(nDOFs_owned);
+  for (int nN = 0; nN < nNodes_owned; nN++)
+    {
+      int dof_global = nodeNumbering_subdomain2global[nN];
+      quadraticNumbering_new2old[nN] = dof_global;
+    }
+  for (int i = 0; i < nEdges_owned; i++)
+    {
+      int dof_global = mesh.nNodes_global + edgeNumbering_subdomain2global[i];
+      quadraticNumbering_new2old[nNodes_owned + i] = dof_global;
+    }
+
+//-------------------
+  for (int i = 0; i < nBoundaries_owned; i++)
+    {
+      int dof_global =  mesh.nNodes_global + mesh.nEdges_global + elementBoundaryNumbering_subdomain2global[i];
+      quadraticNumbering_new2old[nNodes_owned + nEdges_owned + i] = dof_global;
+    }
+  for (int i = 0; i < nElements_owned; i++)
+    {
+      int dof_global = mesh.nNodes_global + mesh.nEdges_global + mesh.nElementBoundaries_global  + elementNumbering_subdomain2global[i];
+      quadraticNumbering_new2old[nNodes_owned + nEdges_owned + nElements_owned + i] = dof_global;
+    }  
+//-------------------
+
+
+  //build an index set for new numbering
+  IS quadraticNumberingIS_new2old;
+  ISCreateGeneral(Py_PETSC_COMM_WORLD,nDOFs_owned,&quadraticNumbering_new2old[0],&quadraticNumberingIS_new2old);
+  IS quadraticNumberingIS_global_new2old;
+  ISAllGather(quadraticNumberingIS_new2old,&quadraticNumberingIS_global_new2old);
+  //get old 2 new mapping for dofs
+  const PetscInt *quadraticNumbering_global_new2old;
+  valarray<int> quadraticNumbering_old2new_global(nDOFs_global);
+  ISGetIndices(quadraticNumberingIS_global_new2old,&quadraticNumbering_global_new2old);
+  for (int id = 0; id < nDOFs_global; id++)
+    quadraticNumbering_old2new_global[quadraticNumbering_global_new2old[id]] = id;
+  //mwf debug
+//   if (rank == 0)
+//     {
+//       for (int id = 0; id < nDOFs_global; id++)
+// 	{
+// 	  std::cout<<" rank= "<<rank<<" build 2d c0p2 mappings new2old["<<id<<"]= "<<quadraticNumbering_global_new2old[id]
+// 		   <<" old2new["<<quadraticNumbering_global_new2old[id]<<"]= "<<quadraticNumbering_old2new_global[quadraticNumbering_global_new2old[id]]
+// 		   <<std::endl;
+// 	}
+//     }
+  assert(offsets_subdomain_owned);
+  assert(subdomain2global);
+  assert(subdomain_l2g);
+  assert(lagrangeNodesArray);
+  for (int sdN=0; sdN < size+1; sdN++)
+    offsets_subdomain_owned[sdN] = nodeOffsets_subdomain_owned[sdN]+edgeOffsets_subdomain_owned[sdN];
+  nDOF_all_processes = mesh.nNodes_global+mesh.nEdges_global;
+  nDOF_subdomain = mesh.subdomainp->nNodes_global+mesh.subdomainp->nEdges_global+mesh.subdomainp->nElementBoundaries_global+mesh.subdomainp->nElements_global;
+  max_dof_neighbors = 2*mesh.max_nNodeNeighbors_node;
+
+  //loop through owned and ghost dofs build subdomain mapping by 
+  //going from old --> new
+  int localOffset = 0;
+  for (int nN = 0; nN < nNodes_owned; nN++)
+    {
+      int dof_global_old = nodeNumbering_subdomain2global[nN];
+      int dof_global_new = quadraticNumbering_old2new_global[dof_global_old];
+      subdomain2global[localOffset + nN] = dof_global_new;
+      //mwf debug
+ //      if (rank == 0)
+// 	std::cout<<" rank= "<<rank<<" nN= "<<nN<<" local dof= "<<localOffset+nN<<" nNodes_owned= "<<nNodes_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+    }
+  localOffset += nNodes_owned;
+  for (int i = 0; i < nEdges_owned; i++)
+    {
+      int dof_global_old = mesh.nNodes_global + edgeNumbering_subdomain2global[i];
+      int dof_global_new = quadraticNumbering_old2new_global[dof_global_old];
+      subdomain2global[localOffset + i] = dof_global_new;
+      //mwf debug
+//       if (rank == 0)
+// 	  std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i<<" nEdges_owned= "<<nEdges_owned
+// 		   <<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+    }
+
+
+  localOffset += nEdges_owned;
+  for (int i = 0; i < nBoundaries_owned; i++)
+    {
+      int dof_global_old = mesh.nNodes_global + mesh.nEdges_global +  elementBoundaryNumbering_subdomain2global[i];
+      int dof_global_new = quadraticNumbering_old2new_global[dof_global_old];
+      subdomain2global[localOffset + i] = dof_global_new;
+      //mwf debug
+//       if (rank == 0)
+// 	  std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i<<" nEdges_owned= "<<nEdges_owned
+// 		   <<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+    }
+
+  localOffset += nBoundaries_owned;
+  for (int i = 0; i < nElements_owned; i++)
+    {
+      int dof_global_old = mesh.nNodes_global + mesh.nEdges_global +  mesh.nElementBoundaries_global + elementNumbering_subdomain2global[i];
+      int dof_global_new = quadraticNumbering_old2new_global[dof_global_old];
+      subdomain2global[localOffset + i] = dof_global_new;
+      //mwf debug
+//       if (rank == 0)
+// 	  std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i<<" nEdges_owned= "<<nEdges_owned
+// 		   <<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+    }
+
+
+
+
+  localOffset += nEdges_owned;
+  for (int nN = nNodes_owned; nN < mesh.subdomainp->nNodes_global; nN++)
+    {
+      int dof_global_old = nodeNumbering_subdomain2global[nN];
+      int dof_global_new = quadraticNumbering_old2new_global[dof_global_old];
+      subdomain2global[localOffset + nN -nNodes_owned] = dof_global_new;
+      //mwf debug
+//       if (rank == 0)
+// 	std::cout<<" rank= "<<rank<<" nN= "<<nN<<" local dof= "<<localOffset+nN-nNodes_owned<<" nNodes_owned= "<<nNodes_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+    }
+  localOffset += mesh.subdomainp->nNodes_global - nNodes_owned;
+  for (int i = nEdges_owned; i < mesh.subdomainp->nEdges_global; i++)
+    {
+      int dof_global_old = mesh.nNodes_global + edgeNumbering_subdomain2global[i];
+      int dof_global_new = quadraticNumbering_old2new_global[dof_global_old];
+      subdomain2global[localOffset + i-nEdges_owned] = dof_global_new;
+//       //mwf debug
+//       if (rank == 0)
+// 	std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i-nEdges_owned<<" nEdges_owned= "<<nEdges_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+    }
+  localOffset += mesh.subdomainp->nEdges_global - nEdges_owned;
+  for (int i = nBoundaries_owned; i < mesh.subdomainp->nElementBoundaries_global; i++)
+    {
+      int dof_global_old = mesh.nNodes_global + mesh.nEdges_global + elementBoundaryNumbering_subdomain2global[i];
+      int dof_global_new = quadraticNumbering_old2new_global[dof_global_old];
+      subdomain2global[localOffset + i-nEdges_owned] = dof_global_new;
+//       //mwf debug
+//       if (rank == 0)
+// 	std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i-nEdges_owned<<" nEdges_owned= "<<nEdges_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+    }
+  localOffset += mesh.subdomainp->nElementBoundaries_global - nBoundaries_owned;
+  for (int i = nElements_owned; i < mesh.subdomainp->nElements_global; i++)
+    {
+      int dof_global_old = mesh.nNodes_global + mesh.nEdges_global + mesh.nElementBoundaries_global + elementNumbering_subdomain2global[i];
+      int dof_global_new = quadraticNumbering_old2new_global[dof_global_old];
+      subdomain2global[localOffset + i-nEdges_owned] = dof_global_new;
+//       //mwf debug
+//       if (rank == 0)
+// 	std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i-nEdges_owned<<" nEdges_owned= "<<nEdges_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
+    }
+
+
+
+
+
+  //setup local to global mapping on the subdomain for finite elements
+  const int nDOF_element = 27;
+  const int ghostNodeOffset = nNodes_owned + nEdges_owned + nBoundaries_owned + nElements_owned;
+  const int ghostEdgeOffset = ghostNodeOffset + mesh.subdomainp->nNodes_global-nNodes_owned;
+  const int ghostBoundaryOffset = ghostEdgeOffset + mesh.subdomainp->nEdges_global-nEdges_owned;
+  const int ghostElementOffset = ghostBoundaryOffset + mesh.subdomainp->nElementBoundaries_global-nBoundaries_owned;
+
+   int ledge[12][2] = {{0,1},{1,2},{0,2},{3,0},
+                       {0,4},{1,5},{2,6},{3,7},
+                       {4,5},{5,6},{6,7},{7,4}};
+   int nEdges_element = 12;
+
+    int lface[6][4] = {{0,1,2,3},
+                       {0,1,5,4},
+                       {1,2,6,5},
+                       {2,3,7,6},
+                       {3,0,4,7},
+                       {4,5,6,7}};
+
+  //need mapping from nodes to edge to setup element based relationship
+  map<pair<int,int>, int> nodesEdgeMap_subdomain;
+  for (int i=0; i < mesh.subdomainp->nEdges_global; i++)
+    {
+      const int nN0 = mesh.subdomainp->edgeNodesArray[2*i];
+      const int nN1 = mesh.subdomainp->edgeNodesArray[2*i+1];
+      nodesEdgeMap_subdomain[make_pair(nN0,nN1)] = i;
+    }
+
+  map<NodeTuple<4>, int> nodesBoundaryMap_subdomain;
+  for (int i=0; i < mesh.subdomainp->nElementBoundaries_global; i++)
+    {
+
+      register int nodes[4];
+      nodes[0] = mesh.subdomainp->elementBoundaryNodesArray[i*4+0];//#elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[i][0]];
+      nodes[1] = mesh.subdomainp->elementBoundaryNodesArray[i*4+1];//#elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[i][1]];
+      nodes[2] = mesh.subdomainp->elementBoundaryNodesArray[i*4+2];//#elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[i][2]];      
+      nodes[3] = mesh.subdomainp->elementBoundaryNodesArray[i*4+3];//#elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[i][3]];
+      NodeTuple<4> ebt(nodes);
+      nodesBoundaryMap_subdomain[ebt] = i;
+    }
+
+  for (int eN=0; eN < mesh.subdomainp->nElements_global; eN++)
+    {
+      int local_offset = 0;
+      for (int nN=0; nN < mesh.subdomainp->nNodes_element; nN++)
+	{
+	  //node_i --> unique subdomain node  0 <= i <= 3
+	  const int nN_global_subdomain = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + nN];
+	  //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges| 
+	  if (nN_global_subdomain < nNodes_owned)
+	    {
+	      subdomain_l2g[eN*nDOF_element + local_offset + nN] = nN_global_subdomain;
+	    }
+	  else
+	    {
+	      subdomain_l2g[eN*nDOF_element + local_offset + nN] = ghostNodeOffset + nN_global_subdomain - nNodes_owned;
+	    }
+	  //unique subdomain id --> unique cross processor id
+	  //subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]] = nodeNumbering_subdomain2global[nN_global_subdomain];
+	  //mwf debug
+// 	  if (rank == 0)
+// 	    {
+// 	      std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" node= "<<nN<<" sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
+// 		       <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
+// 	    }
+	  for (int I=0; I < 3; I++)
+	    lagrangeNodesArray[subdomain_l2g[eN*nDOF_element + local_offset +nN]*3+I] = mesh.subdomainp->nodeArray[nN_global_subdomain*3+I];
+	}
+      local_offset += mesh.subdomainp->nNodes_element;
+
+
+     for (int nN = 0; nN < nEdges_element; nN++)
+	{
+	  const int nN_global_subdomain     = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + ledge[nN][0]];
+	  const int nN_neig_global_subdomain= mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + ledge[nN][1]];
+	  //unique edge subdomain id and global id
+	  int edge_subdomain = -1,edge_global=-1; 
+	  //see if edge is (nN,nN_neig) or vice versa
+	  if (nodesEdgeMap_subdomain.count(make_pair(nN_global_subdomain,nN_neig_global_subdomain)))
+	    {
+	      edge_subdomain = nodesEdgeMap_subdomain[make_pair(nN_global_subdomain,nN_neig_global_subdomain)];
+	      edge_global    = edgeNumbering_subdomain2global[edge_subdomain];
+	    }
+	  else
+	    {
+	      edge_subdomain = nodesEdgeMap_subdomain[make_pair(nN_neig_global_subdomain,nN_global_subdomain)];
+	      edge_global    = edgeNumbering_subdomain2global[edge_subdomain];
+	    }
+	  assert(edge_subdomain >= 0 && edge_global >= 0);
+	  
+	  //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges| 
+	  if (edge_subdomain < nEdges_owned)
+	    subdomain_l2g[eN*nDOF_element + local_offset + nN] = nNodes_owned + edge_subdomain;
+	  else
+	    subdomain_l2g[eN*nDOF_element + local_offset + nN] = ghostEdgeOffset + edge_subdomain - nEdges_owned;
+	  //unique subdomain id --> unique cross processor id
+	  //set above could do here subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]] = mesh.nNodes_global + edge_global;
+	  //mwf debug
+// 	  if (rank == 0)
+// 	    {
+// 	      std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" edge("<<nN<<","<<nN_neig<<") sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
+// 		       <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
+// 	    }  
+	  for (int I=0; I < 3; I++)
+	    lagrangeNodesArray[subdomain_l2g[eN*nDOF_element+local_offset+nN]*3+I] = 0.5*(mesh.subdomainp->nodeArray[nN_global_subdomain*3+I]+
+											  mesh.subdomainp->nodeArray[nN_neig_global_subdomain*3+I]);
+	}
+ 
+     local_offset += nEdges_element;
+     for (int nN = 0; nN <  mesh.subdomainp->nElementBoundaries_element; nN++)
+	{
+
+          register int nodes[4];
+          nodes[0] = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[nN][0]];
+          nodes[1] = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[nN][1]];
+          nodes[2] = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[nN][2]];      
+          nodes[3] = mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+lface[nN][3]];
+          NodeTuple<4> ebt(nodes);
+
+
+	  int boundary_subdomain = nodesBoundaryMap_subdomain[ebt];
+	  int boundary_global    = elementBoundaryNumbering_subdomain2global[boundary_subdomain];
+
+	  assert(boundary_subdomain >= 0 && boundary_global >= 0);
+	  
+	  //assign unique subdomain id based on |owned nodes|owned edges|ghost nodes|ghost edges| 
+	  if (boundary_subdomain < nBoundaries_owned)
+	    subdomain_l2g[eN*nDOF_element + local_offset + nN] = nNodes_owned + nEdges_owned + boundary_subdomain;
+	  else
+	    subdomain_l2g[eN*nDOF_element + local_offset + nN] = ghostBoundaryOffset + boundary_subdomain - nBoundaries_owned;
+	  //unique subdomain id --> unique cross processor id
+	  //set above could do here subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]] = mesh.nNodes_global + edge_global;
+	  //mwf debug
+// 	  if (rank == 0)
+// 	    {
+// 	      std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" edge("<<nN<<","<<nN_neig<<") sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
+// 		       <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
+// 	    }  
+	  for (int I=0; I < 3; I++)
+	    lagrangeNodesArray[subdomain_l2g[eN*nDOF_element+local_offset+nN]*3+I] = 0.25*(mesh.subdomainp->nodeArray[nodes[0]*3+I]+
+											   mesh.subdomainp->nodeArray[nodes[1]*3+I]+
+											   mesh.subdomainp->nodeArray[nodes[2]*3+I]+
+											   mesh.subdomainp->nodeArray[nodes[3]*3+I]);
+	}
+
+	    local_offset += mesh.subdomainp->nElementBoundaries_element;
+
+	    // Interior node!!!
+
+	  if (eN < nElements_owned)
+	    subdomain_l2g[eN*nDOF_element + local_offset] = nNodes_owned + nEdges_owned + nBoundaries_owned + eN;
+	  else
+	    subdomain_l2g[eN*nDOF_element + local_offset] = ghostElementOffset + eN - nElements_owned;
+	  //unique subdomain id --> unique cross processor id
+	  //set above could do here subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]] = mesh.nNodes_global + edge_global;
+	  //mwf debug
+// 	  if (rank == 0)
+// 	    {
+// 	      std::cout<<"build loc2glob c0p2 3d eN= "<<eN<<" edge("<<nN<<","<<nN_neig<<") sub_dof= "<< subdomain_l2g[eN*nDOF_element + local_offset + nN]
+// 		       <<" glob_dof= "<<subdomain2global[subdomain_l2g[eN*nDOF_element + local_offset + nN]]<<std::endl;
+// 	    }  
+	  for (int I=0; I < 3; I++)
+	    lagrangeNodesArray[subdomain_l2g[eN*nDOF_element+local_offset]*3+I] = 0.125*(mesh.subdomainp->nodeArray[mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + 0]*3+I]+
+											 mesh.subdomainp->nodeArray[mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + 1]*3+I]+
+											 mesh.subdomainp->nodeArray[mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + 2]*3+I]+
+										         mesh.subdomainp->nodeArray[mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + 3]*3+I]+
+                                                                                         mesh.subdomainp->nodeArray[mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + 4]*3+I]+
+											 mesh.subdomainp->nodeArray[mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + 5]*3+I]+
+										         mesh.subdomainp->nodeArray[mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + 6]*3+I]+
+										         mesh.subdomainp->nodeArray[mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element + 7]*3+I]);
+
+
+    }//eN
+
+  ISRestoreIndices(quadraticNumberingIS_global_new2old,&quadraticNumbering_global_new2old);
+  ISDestroy(quadraticNumberingIS_new2old);
+  ISDestroy(quadraticNumberingIS_global_new2old);
+
+  return 0;
+}
+
+
+
+
+
 int buildDiscontinuousGalerkinSubdomain2GlobalMappings(Mesh& mesh, 
 						       const int *elementOffsets_subdomain_owned,
 						       const int *elementNumbering_subdomain2global,
@@ -4590,6 +4990,114 @@ static PyObject* flcbdfWrappersBuildQuadraticLocal2GlobalMappings(PyObject* self
 
 }
 
+
+static PyObject* flcbdfWrappersBuildQuadraticCubeLocal2GlobalMappings(PyObject* self,
+								     PyObject* args)
+{
+  using namespace std;
+  int nSpace;
+  int nDOF_all_processes=0, nDOF_subdomain=0, max_dof_neighbors=0;
+  PyObject *cmesh,*subdomain_cmesh,
+    *elementOffsets_subdomain_owned,
+    *nodeOffsets_subdomain_owned,
+    *elementBoundaryOffsets_subdomain_owned,
+    *edgeOffsets_subdomain_owned,
+    *elementNumbering_subdomain2global,
+    *nodeNumbering_subdomain2global,
+    *elementBoundaryNumbering_subdomain2global,
+    *edgeNumbering_subdomain2global,
+    *quadratic_dof_offsets_subdomain_owned,
+    *quadraticNumbering_subdomain2global,
+    *quadratic_subdomain_l2g,
+    *quadratic_lagrangeNodes;
+  if (!PyArg_ParseTuple(args,
+                        "iOOOOOOOOOOOOOO",
+                        &nSpace,
+                        &cmesh,
+                        &subdomain_cmesh,
+			&elementOffsets_subdomain_owned,
+			&nodeOffsets_subdomain_owned,
+			&elementBoundaryOffsets_subdomain_owned,
+			&edgeOffsets_subdomain_owned,
+			&elementNumbering_subdomain2global,
+			&nodeNumbering_subdomain2global,
+			&elementBoundaryNumbering_subdomain2global,
+			&edgeNumbering_subdomain2global,
+			&quadratic_dof_offsets_subdomain_owned,
+			&quadratic_subdomain_l2g,
+			&quadraticNumbering_subdomain2global,
+			&quadratic_lagrangeNodes))
+    return NULL;
+  //MESH(cmesh).subdomainp=&MESH(subdomain_cmesh);
+  if (nSpace == 1)
+    {
+      /*buildQuadraticCubeSubdomain2GlobalMappings_1d(MESH(cmesh),
+						IDATA(elementOffsets_subdomain_owned),
+						IDATA(nodeOffsets_subdomain_owned),
+						IDATA(elementNumbering_subdomain2global),
+						IDATA(nodeNumbering_subdomain2global),
+						nDOF_all_processes,
+						nDOF_subdomain,
+						max_dof_neighbors,
+						IDATA(quadratic_dof_offsets_subdomain_owned),
+						IDATA(quadratic_subdomain_l2g),
+						IDATA(quadraticNumbering_subdomain2global),
+						DDATA(quadratic_lagrangeNodes));*/
+      std::cout<<"buildQuadraticCubeSubdomain2GlobalMappings_1d not implemented!!"<<std::endl;
+    }
+  else if (nSpace == 2)
+    {
+      /* buildQuadraticCubeSubdomain2GlobalMappings_2d(MESH(cmesh),
+						IDATA(elementBoundaryOffsets_subdomain_owned),
+						IDATA(nodeOffsets_subdomain_owned),
+						IDATA(elementBoundaryNumbering_subdomain2global),
+						IDATA(nodeNumbering_subdomain2global),
+						nDOF_all_processes,
+						nDOF_subdomain,
+						max_dof_neighbors,
+						IDATA(quadratic_dof_offsets_subdomain_owned),
+						IDATA(quadratic_subdomain_l2g),
+						IDATA(quadraticNumbering_subdomain2global),
+						DDATA(quadratic_lagrangeNodes));*/
+      std::cout<<"buildQuadraticCubeSubdomain2GlobalMappings_2d not implemented!!"<<std::endl;
+    }
+  else
+    {
+      buildQuadraticCubeSubdomain2GlobalMappings_3d(MESH(cmesh),
+						IDATA(edgeOffsets_subdomain_owned),
+						IDATA(nodeOffsets_subdomain_owned),
+						IDATA(edgeNumbering_subdomain2global),
+						IDATA(nodeNumbering_subdomain2global),
+						nDOF_all_processes,
+						nDOF_subdomain,
+						max_dof_neighbors,
+						IDATA(quadratic_dof_offsets_subdomain_owned),
+						IDATA(quadratic_subdomain_l2g),
+						IDATA(quadraticNumbering_subdomain2global),
+						DDATA(quadratic_lagrangeNodes));
+//       buildQuadraticSubdomain2GlobalMappings_3d(MESH(cmesh),
+// 						IDATA(nodeOffsets_subdomain_owned),
+// 						IDATA(nodeNumbering_subdomain2global),
+// 						nDOF_all_processes,
+// 						nDOF_subdomain,
+// 						max_dof_neighbors,
+// 						IDATA(quadratic_dof_offsets_subdomain_owned),
+// 						IDATA(quadratic_subdomain_l2g),
+// 						IDATA(quadraticNumbering_subdomain2global),
+// 						DDATA(quadratic_lagrangeNodes));
+    }
+  
+
+  return Py_BuildValue("iii",
+		       nDOF_all_processes,
+		       nDOF_subdomain,
+		       max_dof_neighbors);
+
+}
+
+
+
+
 static PyObject* flcbdfWrappersBuildDiscontinuousGalerkinLocal2GlobalMappings(PyObject* self,
 									      PyObject* args)
 {
@@ -4791,6 +5299,10 @@ static PyMethodDef flcbdfWrappersMethods[] = {
     flcbdfWrappersBuildQuadraticLocal2GlobalMappings,
     METH_VARARGS, 
     "create quadratic C0 finite element local to global mapping and subdomain 2 global mapping"},
+  { "buildQuadraticCubeLocal2GlobalMappings",
+    flcbdfWrappersBuildQuadraticCubeLocal2GlobalMappings,
+    METH_VARARGS, 
+    "create quadratic C0 finite element local to global mapping and subdomain 2 global mapping for cubes"},
   { "buildDiscontinuousGalerkinLocal2GlobalMappings",
     flcbdfWrappersBuildDiscontinuousGalerkinLocal2GlobalMappings,
     METH_VARARGS, 

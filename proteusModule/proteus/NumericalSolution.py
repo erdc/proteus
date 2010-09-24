@@ -161,12 +161,27 @@ class  NS_base:
                         nny = n.nny
                         nnz = n.nnz
                     log("Building %i x %i x %i rectangular mesh for %s" % (nnx,nny,nnz,p.name))
-                    #ido todo add a mesh flag variable to default_n for choosing between mesh types
-                    if (n.hex == None ):
+
+                    if not hasattr(n,'hex'):
                         n.hex = False
-                    
-                    if (n.hex):
+
+                    if not hasattr(n,'NURBS'):
+                        n.NURBS = False
+
+                    if (n.NURBS):
+                        mlMesh = MeshTools.MultilevelNURBSMesh(nnx,nny,nnz,
+                                                               n.px,n.py,n.pz,
+                                                                   p.L[0],p.L[1],p.L[2],
+                                                                   refinementLevels=n.nLevels,
+                                                                   nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                   parallelPartitioningType=n.parallelPartitioningType)        
+                    elif (n.hex):
+                        if not hasattr(n,'px'):
+                           n.px=0
+                           n.py=0
+                           n.pz=0
                         mlMesh = MeshTools.MultilevelHexahedralMesh(nnx,nny,nnz,
+                                                                   n.px,n.py,n.pz,
                                                                    p.L[0],p.L[1],p.L[2],
                                                                    refinementLevels=n.nLevels,
                                                                    nLayersOfOverlap=n.nLayersOfOverlapForParallel,

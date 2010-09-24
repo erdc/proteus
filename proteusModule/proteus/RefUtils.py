@@ -66,6 +66,29 @@ p2refNodes.append(numpy.array([[0.0,   0.0,   0.0],
                                  [0.0,   0.5,   0.0],  #(0,2)
                                  [0.5,   0.0,   0.5],  #(1,3)
                                  [0.0,   0.0,   0.5]]))#(0,3)
+#todo generate these for use in interpolation conditions
+# q2refNodes.append(numpy.array([[0.0,   0.0,   0.0],#nodes on bottom
+#                                [1.0,   0.0,   0.0],
+#                                [0.0,   1.0,   0.0],
+#                                [1.0,   1.0,   0.0],
+#                                [0.0,   0.0,   1.0],#nodes on top
+#                                [1.0,   0.0,   1.0],
+#                                [0.0,   1.0,   1.0],
+#                                [1.0,   1.0,   1.0],
+#                                [0.5,   0.0,   0.0],#nodes on bottom edges
+#                                [0.0,   0.5,   0.0], 
+#                                [0.5,   1.0,   0.0],
+#                                [1.0,   0.5,   0.0],
+#                                [0.5,   0.0,   1.0],#nodes on top edges
+#                                [0.0,   0.5,   1.0], 
+#                                [0.5,   1.0,   1.0],
+#                                [1.0,   0.5,   1.0],
+#                                [0.0,   0.0,   0.5],#nodes on side edges
+#                                [1.0,   0.0,   0.5], 
+#                                [0.0,   1.0,   0.5],
+#                                [1.0,   1.0,   0.5],
+#                                [0.5,   0.0,   0.5],#nodes on face centers
+#                                [0.0,   0.0,   0.5]]))
 
 #which local boundaries are ref nodes "on"
 p2tetrahedronLocalBoundaryLookup = {0:[1,2,3],
