@@ -1993,7 +1993,9 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
                  epsFact_density=None,
                  stokes=False,
                  sd=True,
-                 movingDomain=False):
+                 movingDomain=False,
+                 useRBLES=0.0):
+        self.useRBLES=useRBLES
         self.sd=sd
         if epsFact_density != None:
             self.epsFact_density = epsFact_density
