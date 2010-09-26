@@ -689,8 +689,8 @@ class XdmfWriter:
         TODO: test new lagrangeNodes convention for 2d,3d, and concatNow=False
         """
         #write out basic geometry if not already done?
-        mesh.writeMeshXdmf(ar,"Spatial_Domain",t,init,meshChanged,tCount=tCount)
-        spaceSuffix = "_c0p2_Lagrange"
+        #mesh.writeMeshXdmf(ar,"Spatial_Domain",t,init,meshChanged,tCount=tCount)
+        spaceSuffix = "_c0q2_Lagrange"
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
         if self.arGrid == None or self.arTime.get('Value') != str(t):
             if spaceDim == 1:
