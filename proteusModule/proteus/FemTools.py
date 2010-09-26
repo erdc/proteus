@@ -536,7 +536,7 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
             for k in range(order+1):
               for j in range(order+1):
                 for i in range(order+1):
-                  basis.append(lambda xi,i=1,j=j,k=k:self.fun[i](xi[0])*self.fun[j](xi[1])*self.fun[k](xi[2]))
+                  basis.append(lambda xi,i=i,j=j,k=k:self.fun[i](xi[0])*self.fun[j](xi[1])*self.fun[k](xi[2]))
                   basisGradients.append(lambda xi,i=i,j=j,k=k:numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1])*self. fun[k](xi[2]),
                                                                                 self. fun[i](xi[0])*self.dfun[j](xi[1])*self. fun[k](xi[2]),
                                                                                 self. fun[i](xi[0])*self. fun[j](xi[1])*self.dfun[k](xi[2])]))
