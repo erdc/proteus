@@ -695,25 +695,35 @@ class XdmfWriter:
         if self.arGrid == None or self.arTime.get('Value') != str(t):
             if spaceDim == 1:
                  print "No writeMeshXdmf_C0Q2Lagrange for 1D" 
+                 return 0
             elif spaceDim == 2:
-                 print "No writeMeshXdmf_C0Q2Lagrange for 1D" 
+                 print "No writeMeshXdmf_C0Q2Lagrange for 2D" 
+                 return 0
             elif spaceDim == 3:
-                Xdmf_ElementTopology = "Hex"
+                Xdmf_ElementTopology = "Hexahedron"
+
+                e2s=[[0,8,20,11,12,21,26,24], [8,1,9,20,21,13,22,26], [11,20,10,3,24,26,23,15], [20,9,2,10,26,22,14,23],
+                     [12,21,26,24,4,16,25,19], [21,13,22,26,16,5,17,25], [24,26,23,15,19,25,18,7], [26,22,14,23,25,17,6,18] ]
+
+                l2g = numpy.zeros((8*mesh.nElements_global,8),'i')
+                for eN in range(mesh.nElements_global):
+                   dofs=dofMap.l2g[eN,:]
+                   for i in range(8): #loop over subelements
+                      for j in range(8): # loop over nodes of subelement
+                         l2g[8*eN+i,j] = dofs[e2s[i][j]]
+
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
             self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
 
-
-            lagrangeNodesArray = dofMap.lagrangeNodesArray[:mesh.nElements_global,:]
-            l2g = dofMap.l2g[:,:8]
-
+            lagrangeNodesArray = dofMap.lagrangeNodesArray      
 
             topology = SubElement(self.arGrid,"Topology",
                                   {"Type":Xdmf_ElementTopology,
-                                   "NumberOfElements":str(mesh.nElements_global)})
+                                   "NumberOfElements":str(l2g.shape[0])})
             elements = SubElement(topology,"DataItem",
                                   {"Format":ar.dataItemFormat,
                                    "DataType":"Int",
-                                   "Dimensions":"%i %i" % lagrangeNodesArray.shape})
+                                   "Dimensions":"%i %i" % l2g.shape})
             geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
 
             concatNow = True
@@ -765,7 +775,7 @@ class XdmfWriter:
                     nodes.text = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
                     lagrangeNodes.text = ar.hdfFilename+":/lagrangeNodes"+spaceSuffix+`tCount`
                     if init or meshChanged:
-                        ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,dofMap.l2g)
+                        ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,l2g)
                         #ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,mesh.nodeArray)
                         ar.hdfFile.createArray("/",'lagrangeNodes'+spaceSuffix+`tCount`,lagrangeNodesArray)
 
@@ -774,13 +784,13 @@ class XdmfWriter:
                 if concatNow:
                     SubElement(allNodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt"})
                     if init or meshChanged:
-                        numpy.savetxt(ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt",dofMap.l2g,fmt='%d')
+                        numpy.savetxt(ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt",l2g,fmt='%d')
                         numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",lagrangeNodesArray)
                 else:
                     #SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt"})
                     SubElement(lagrangeNodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/lagrangeNodes"+spaceSuffix+`tCount`+".txt"})
                     if init or meshChanged:
-                        numpy.savetxt(ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt",dofMap.l2g,fmt='%d')
+                        numpy.savetxt(ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt",l2g,fmt='%d')
                         #numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",mesh.nodeArray)
                         numpy.savetxt(ar.textDataDir+"/lagrangeNodes"+spaceSuffix+`tCount`+".txt",lagrangeNodesArray)
                     #
