@@ -519,24 +519,49 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
 
 
         # Define multi-dimensional stuff  
+        basis= []
+        basisGradients = []
         if nd == 1:
-            self.basis = self.fun 
-            self.basisGradients = self.dfun
-
+            basis = self.fun 
+            basisGradients = self.dfun
+            funMap=[0,2,1]
         elif nd == 2:
             for j in range(order+1):
               for i in range(order+1):
-                self.basis.append(lambda xi,i=1,j=j:self.fun[i](xi[0])*self.fun[j](xi[1]))
-                self.basisGradients.append(lambda xi,i=i,j=j:numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
-                                                                          self. fun[i](xi[0])*self.dfun[j](xi[1])]))       
+                basis.append(lambda xi,i=1,j=j:self.fun[i](xi[0])*self.fun[j](xi[1]))
+                basisGradients.append(lambda xi,i=i,j=j:numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
+                                                                          self. fun[i](xi[0])*self.dfun[j](xi[1])]))  
+            funMap=[0,4,1,  7,8,5,   3,6,2]     
         elif nd == 3:
             for k in range(order+1):
               for j in range(order+1):
                 for i in range(order+1):
-                  self.basis.append(lambda xi,i=1,j=j,k=k:self.fun[i](xi[0])*self.fun[j](xi[1])*self.fun[k](xi[2]))
-                  self.basisGradients.append(lambda xi,i=i,j=j,k=k:numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1])*self. fun[k](xi[2]),
+                  basis.append(lambda xi,i=1,j=j,k=k:self.fun[i](xi[0])*self.fun[j](xi[1])*self.fun[k](xi[2]))
+                  basisGradients.append(lambda xi,i=i,j=j,k=k:numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1])*self. fun[k](xi[2]),
                                                                                 self. fun[i](xi[0])*self.dfun[j](xi[1])*self. fun[k](xi[2]),
                                                                                 self. fun[i](xi[0])*self. fun[j](xi[1])*self.dfun[k](xi[2])]))
+
+            #funMap=numpy.array([0,3,6,8,18,19,24,26])
+            funMap = [ 0, 8, 1,
+                      11,20, 9,
+                       3,10, 2,
+                      12,21,13,
+                      24,26,22,
+                      15,23,14,
+                       4,16, 5,
+                      19,25,17,
+                       7,18, 6] 
+
+        # Reorder local functions 
+        invMap=numpy.zeros((self.dim),'i')
+        for i in range(self.dim):
+            invMap[funMap[i]] = i
+
+        for i in range(self.dim):
+           self.basis.append(basis[invMap[i]])  
+           self.basisGradients.append(basisGradients[invMap[i]])  
+
+        # Get boundary data
         self.defineTraceFunctions()   
 
 
@@ -3693,21 +3718,22 @@ class C0_AffineLagrangeOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                                                          localGeometricSpace.referenceElement,
                                                          LinearOnCubeWithNodalBasis(nd)),
                                               QuadraticLagrangeCubeDOFMap(mesh,localFunctionSpace,nd))
+
+
         #for archiving
         import Archiver
         self.XdmfWriter=Archiver.XdmfWriter()
 
     def writeMeshXdmf(self,ar,name,t=0.0,init=False,meshChanged=False,arGrid=None,tCount=0):
-        print "Write mesh"
         return self.XdmfWriter.writeMeshXdmf_C0Q2Lagrange(ar,name,mesh=self.mesh,spaceDim=self.nSpace_global,
                                                           dofMap=self.dofMap,t=t,init=init,meshChanged=meshChanged,
                                                           arGrid=arGrid,tCount=tCount)
+
     def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
-        print "no writeFunctionXdmf"
-        ##self.XdmfWriter.writeFunctionXdmf_C0Q2Lagrange(ar,u,tCount=tCount,init=init)
+        self.XdmfWriter.writeFunctionXdmf_C0P2Lagrange(ar,u,tCount=tCount,init=init)
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
-        ##self.XdmfWriter.writeVectorFunctionXdmf_C0Q2Lagrange(ar,uList,components,vectorName,"c0p2_Lagrange",tCount=tCount,init=init)
-        print "no writeVectorrFunctionXdmf"
+        self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"c0p2_Lagrange",tCount=tCount,init=init)
+
 
 class DG_AffinePolynomialsOnSimplexWithMonomialBasis(ParametricFiniteElementSpace):
     def __init__(self,mesh,nd=3,k=0):
