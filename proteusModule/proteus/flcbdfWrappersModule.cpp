@@ -4359,7 +4359,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
   const int ghostBoundaryOffset = ghostEdgeOffset + mesh.subdomainp->nEdges_global-nEdges_owned;
   const int ghostElementOffset = ghostBoundaryOffset + mesh.subdomainp->nElementBoundaries_global-nBoundaries_owned;
 
-   int ledge[12][2] = {{0,1},{1,2},{0,2},{3,0},
+   int ledge[12][2] = {{0,1},{1,2},{2,3},{3,0},
                        {0,4},{1,5},{2,6},{3,7},
                        {4,5},{5,6},{6,7},{7,4}};
    int nEdges_element = 12;
