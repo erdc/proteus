@@ -1497,6 +1497,62 @@ class QuadraticLagrangeNodalInterpolationConditions(InterpolationConditions):
                                                               interpolationValues,
                                                               finiteElementFunction.dof)
 
+
+class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions):
+    """
+    Obtains the DOF from the function values at vertices and
+    midpoints of edges (whole element is considered an edge in 1d)
+    """
+    #from RefUtils import p2tetrahedronLocalBoundaryLookup
+    from math import fmod
+    def __init__(self,referenceElement):
+        from RefUtils import fact
+        from RefUtils import q2refNodes
+        sdim  = referenceElement.dim
+        self.nInterpNodes = 27
+        InterpolationConditions.__init__(self,self.nInterpNodes,referenceElement)
+        self.quadraturePointArray = numpy.zeros((self.nInterpNodes,3),'d')
+        for k in range(self.nInterpNodes):
+            for I in range(sdim):
+                self.quadraturePointArray[k,I] = q2refNodes[0][k,I]
+        
+        #self.nQuadraturePoints = len(self.quadraturePointArray)
+        self.nQuadraturePoints = self.quadraturePointArray.shape[0]
+        for i in range(self.nQuadraturePoints):
+            self.functionals.append(lambda f,i=i: f(self.quadraturePointArray[i,:]))
+            self.functionalsQuadrature.append(lambda fList, i=i: fList[i])
+        #end for
+        #for c based projection from interpolation conditions
+        self.functionals_quadrature_map = numpy.arange(len(self.functionalsQuadrature),dtype='i')
+   #end init
+    def definedOnLocalElementBoundary(self,k,ebN_local):
+        print "definedOnLocalElementBoundary not defined for QuadraticLagrangeCubeNodalInterpolationConditions"
+	#if k <= self.referenceElement.dim:
+        #    return k != ebN_local
+        #if self.referenceElement.dim == 2:
+        #    i = int(fmod(k-3 + 2,3))
+        #    return i == ebN_local
+        #if self.referenceElement.dim == 3:
+        #    return ebN_local in self.p2tetrahedronLocalBoundaryLookup[k]
+        #return False
+    def quadrature2Node_element(self,k):
+        print "quadrature2Node_element not defined for QuadraticLagrangeCubeNodalInterpolationConditions"	
+	#i#f k <= self.referenceElement.dim:
+        # #   return k
+        #return None
+    def projectFiniteElementFunctionFromInterpolationConditions_opt(self,finiteElementFunction,interpolationValues):
+        """
+        Allow the interpolation conditions to control projection of a (global) finite element function from 
+        an array of interpolation values in order to take advantage of specific structure, otherwise
+        can just use functionals interface
+        
+        """
+        cfemIntegrals.projectFromNodalInterpolationConditions(finiteElementFunction.dim_dof,
+                                                              finiteElementFunction.femSpace.dofMap.l2g,
+                                                              self.functionals_quadrature_map,
+                                                              interpolationValues,
+                                                              finiteElementFunction.dof)
+
 #end interp conditions
 
 class FaceBarycenterInterpolationConditions(InterpolationConditions):
@@ -3686,7 +3742,7 @@ class C0_LagrangeOnCubeWithNodalBasis(C0_AffineLinearOnSimplexWithNodalBasis):
     def __init__(self,mesh,nd=3,order=2):
         localFunctionSpace = LagrangeOnCubeWithNodalBasis(nd,order=2)
         #todo fix these interpolation conditions to work on Cube
-        interpolationConditions = QuadraticLagrangeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        interpolationConditions = QuadraticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
         ParametricFiniteElementSpace.__init__(self, 
                                               ReferenceFiniteElement(localFunctionSpace,
                                                                      interpolationConditions),
@@ -3710,7 +3766,7 @@ class C0_AffineLagrangeOnCubeWithNodalBasis(ParametricFiniteElementSpace):
         localFunctionSpace = LagrangeOnCubeWithNodalBasis(nd,order=2)
         localGeometricSpace= LinearOnCubeWithNodalBasis(nd)
         #todo fix these interpolation conditions to work on Cube
-        interpolationConditions = QuadraticLagrangeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        interpolationConditions = QuadraticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
         ParametricFiniteElementSpace.__init__(self,
                                               ReferenceFiniteElement(localFunctionSpace,
                                                                      interpolationConditions),
