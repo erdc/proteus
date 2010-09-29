@@ -1547,11 +1547,12 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
         can just use functionals interface
         
         """
-        cfemIntegrals.projectFromNodalInterpolationConditions(finiteElementFunction.dim_dof,
-                                                              finiteElementFunction.femSpace.dofMap.l2g,
-                                                              self.functionals_quadrature_map,
-                                                              interpolationValues,
-                                                              finiteElementFunction.dof)
+#        cfemIntegrals.projectFromNodalInterpolationConditions(finiteElementFunction.dim_dof,
+#                                                              finiteElementFunction.femSpace.dofMap.l2g,
+#                                                              self.functionals_quadrature_map,
+#                                                              interpolationValues,
+#                                                              finiteElementFunction.dof)
+        interpolationValues = finiteElementFunction.dof
 
 #end interp conditions
 
