@@ -599,7 +599,7 @@ public:
   {
     return dr*w_dV;
   }
-
+  
   inline void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
 					  const double& elementDiameter,
 					  const double& strong_residual,
@@ -618,6 +618,27 @@ public:
     den = sqrt(n_grad_u) + 1.0e-8;
     //cek hack shockCapturingDiffusion*fabs(strong_residual)*grad_phi_G_grad_phi
     numDiff = num/den;
+  }
+  inline void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
+					  const double& elementDiameter,
+					  const double& strong_residual,
+					  const double grad_u[NSPACE],
+					  double& gradNorm,
+					  double& gradNorm_last,
+					  double& numDiff)
+  {
+    double h,
+      num,
+      den,
+      n_grad_u;
+    h = elementDiameter;
+    n_grad_u = 0.0;
+    for (int I=0;I<NSPACE;I++)
+      n_grad_u += grad_u[I]*grad_u[I];
+    num = shockCapturingDiffusion*0.5*h*fabs(strong_residual);
+    gradNorm = sqrt(n_grad_u) + 1.0e-8;
+    //cek hack shockCapturingDiffusion*fabs(strong_residual)*grad_phi_G_grad_phi    
+    numDiff = num/gradNorm_last;
   }
 
   inline double SubgridError(const double& error,
