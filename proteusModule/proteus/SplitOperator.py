@@ -80,7 +80,7 @@ class SO_base:
         log("SO_base modelStepTaken for model= %s t_system_last= %s t_model_last= %s  setting to t_stepSequence= %s " % (model.name,
                                                                                                                          self.t_system_last,
                                                                                                                          model.stepController.t_model_last,
-                                                                                                                         t_stepSequence),1)
+                                                                                                                         t_stepSequence),level=3)
         self.stepFailures=0
         model.calculateAuxiliaryQuantitiesAfterStep()
         model.stepController.t_model_last = t_stepSequence
@@ -95,6 +95,65 @@ class SO_base:
             model.stepController.choose_dt_model()
 
 Sequential_FixedStep = SO_base
+
+
+class Sequential_FixedStep_Simple(SO_base):
+    """
+    Base class for operating splitting methods for systems.
+
+    The base class implements sequential splitting with a fixed time
+    step based on the list of time intervals.
+
+    Here each model take the same fixed time step
+    """
+    def __init__(self,modelList,system=defaultSystem,stepExact=True):
+        SO_base.__init__(self,modelList,system,stepExact)
+    def converged(self):
+        #no iteration
+        if self.its > 0:
+            self.its=0
+            return True
+        else:
+            return False
+    def stepExact_system(self,tExact):
+        self.dt_system = tExact - self.t_system_last
+        self.t_system = self.t_system_last + self.dt_system
+        self.stepSequence=[(self.t_system,m) for m in self.modelList]
+        for model in self.modelList:
+            model.stepController.dt_model = self.dt_system
+            model.stepController.set_dt_allLevels()
+            model.stepController.t_model = self.t_system
+            model.stepController.setSubsteps([self.t_system])
+    def choose_dt_system(self):
+        #fixed step
+        self.t_system = self.t_system_last+self.dt_system
+        self.stepSequence=[(self.t_system,m) for m in self.modelList]
+        for model in self.modelList:
+            model.stepController.dt_model = self.dt_system
+            model.stepController.set_dt_allLevels()
+            model.stepController.t_model = self.t_system
+    def initialize_dt_system(self,t0,tOut):
+        self.its=0
+        self.t_system_last = t0
+        self.dt_system = tOut - self.t_system_last
+        self.t_system = self.t_system_last + self.dt_system
+        self.stepSequence=[(self.t_system,m) for m in self.modelList]
+        log("Initializing time step on system %s to dt = %12.5e" %
+            (self.system.name,self.dt_system),level=1)
+        log("Initializing step sequence  for system %s to %s" %
+            (self.system.name,self.stepSequence),level=1)
+    def updateTimeHistory(self):
+        #update step
+        self.t_system_last = self.t_system
+    def retryModelStep_solverFailure(self,model):
+        return False#don't try to recover
+    def retryModelStep_errorFailure(self,model):
+        return False#don't try to recover
+    def ignoreSequenceStepFailure(self,model):
+        return False#don't try to recover
+    def retrySequence_modelStepFailure(self):
+        return False#don't try to recover
+
 
 class Sequential_NonUniformFixedStep(SO_base):
     """
