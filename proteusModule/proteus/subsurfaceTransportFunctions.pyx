@@ -5,6 +5,7 @@ cdef extern from "math.h":
    double sqrt(double x)
    double pow(double x, double y)
    double exp(double x)
+   double M_PI
 cdef inline double double_max(double a, double b): return a if a >= b else b
 cdef inline double double_min(double a, double b): return a if a <= b else b
 
@@ -663,9 +664,10 @@ def RE_NCP1_getElementJacobian(numpy.ndarray[DTYPE_t,ndim=1] gravity,#physical q
                 #j picard
         #i
     #eN
-########################################################################
-#
-########################################################################
+##################################################
+#methods for optimized saturation equation 
+##################################################
+
 def updateMass_weakAvg(numpy.ndarray[DTYPE_t,ndim=2] mt,
                        numpy.ndarray[DTYPE_t,ndim=3] w,
                        numpy.ndarray[DTYPE_t,ndim=2] dV,
@@ -693,7 +695,7 @@ def updateMassJacobian_weakAvg(numpy.ndarray[DTYPE_t,ndim=2] dmt,
    approximate element mass Jacobian term as (\pd{\bar{c}_e}{u_j},w_{h,i})_e
    """
    cdef int eN,i,j,k
-   cdef dmtj_avg,vol
+   cdef double dmtj_avg,vol
    for eN in range(dmt.shape[0]):
       vol = 0.0 #should I save a loop? 
       for k in range(dmt.shape[1]):
@@ -705,3 +707,112 @@ def updateMassJacobian_weakAvg(numpy.ndarray[DTYPE_t,ndim=2] dmt,
                dmtj_avg += dV[eN,k]*dmt[eN,k]*v[eN,k,j]
             dmtj_avg /= vol
             jacobian_weak_residual[eN,i,j] += dmtj_avg*w[eN,k,i]*dV[eN,k]
+
+########################################################################
+#ELLAM
+########################################################################
+def calculateNormalFlux(numpy.ndarray[DTYPE_t,ndim=4] v,
+                        numpy.ndarray[DTYPE_t,ndim=4] n,
+                        numpy.ndarray[DTYPE_t,ndim=3] dS,
+                        numpy.ndarray[DTYPE_t,ndim=2] flux):
+   
+   cdef int eN,ebN,kb
+   cdef double integral
+   for eN in range(n.shape[0]):
+      for ebN in range(n.shape[1]):
+         integral = 0.0
+         for kb in range(n.shape[2]):
+            for I in range(n.shape[3]):
+               integral += v[eN,ebN,kb,I]*n[eN,ebN,kb,I]*dS[eN,ebN,kb]
+         flux[eN,ebN] = integral
+
+def computeSimpleCharacteristicVelocityFromElementVelocity(numpy.ndarray[DTYPE_t,ndim=3] df,
+                                                           numpy.ndarray[DTYPE_t,ndim=3] characteristic_velocity,
+                                                           numpy.ndarray[DTYPE_t,ndim=2] dm,
+                                                           numpy.ndarray[DTYPE_t,ndim=2] dV):
+
+   """
+   simple approximation for \lambda = df/\bar{dm} using \bar{dm} = \frac{1}{\Omega_e} \int_{\Omega_e} dm dV
+   """
+   cdef int eN,k,I
+   cdef double omega_e, vol_e
+
+   for eN in range(dm.shape[0]):
+      omega_e = 0.0
+      vol_e = 0.0
+      for k in range(dm.shape[1]):
+         vol_e   += dV[eN,k]
+         omega_e += dV[eN,k]*dm[eN,k]
+      for k in range(df.shape[1]):
+         for I in range(df.shape[2]):
+            characteristic_velocity[eN,k,I] = df[eN,k,I]*vol_e/(omega_e+1.0e-12)
+            
+def computeSimpleCharacteristicVelocityFromVelocityDOFs(numpy.ndarray[DTYPE_t,ndim=1] df_dofs,
+                                                        numpy.ndarray[DTYPE_t,ndim=1] characteristic_velocity_dofs,
+                                                        numpy.ndarray[ITYPE_t,ndim=2] l2g,
+                                                        numpy.ndarray[DTYPE_t,ndim=2] dm,
+                                                        numpy.ndarray[DTYPE_t,ndim=2] dV):
+
+   """
+   simple approximation for \lambda = df/\bar{dm} using \bar{dm} = \frac{1}{\Omega_e} \int_{\Omega_e} dm dV
+   """
+   cdef int eN,k,j,J
+   cdef double omega_e, vol_e
+
+   for eN in range(dm.shape[0]):
+      omega_e = 0.0
+      vol_e = 0.0
+      for k in range(dm.shape[1]):
+         vol_e   += dV[eN,k]
+         omega_e += dV[eN,k]*dm[eN,k]
+      for j in range(l2g.shape[1]):
+         J = l2g[eN,j]
+         characteristic_velocity_dofs[J] = df_dofs[J]*vol_e/(omega_e+1.0e-12)
+
+#problem specific velocity evaluation
+def rotatingGaussianElementVelocityEval3(int transient,
+                                         double t,
+                                         double tForReversal,
+                                         double clock,
+                                         double xc, double yc,
+                                         numpy.ndarray[DTYPE_t,ndim=3] x,
+                                         numpy.ndarray[DTYPE_t,ndim=3] v):
+   cdef int eN,k
+   cdef double pi
+   pi = M_PI
+   if transient == 1:
+      for eN in range(x.shape[0]):
+         for k in range(x.shape[1]):
+            v[eN,k,0]=2.0*pi*(x[eN,k,1]-xc)
+            v[eN,k,1]=2.0*pi*(yc-x[eN,k,0])
+            v[eN,k,:]*=(tForReversal-t)/(tForReversal-0.0)*clock
+   else:
+      for eN in range(x.shape[0]):
+         for k in range(x.shape[1]):
+            v[eN,k,0]=2.0*pi*(x[eN,k,1]-xc)
+            v[eN,k,1]=2.0*pi*(yc-x[eN,k,0])
+      
+def rotatingGaussianElementVelocityEval4(int transient,
+                                         double t,
+                                         double tForReversal,
+                                         double clock,
+                                         double xc, double yc,
+                                         numpy.ndarray[DTYPE_t,ndim=4] x,
+                                         numpy.ndarray[DTYPE_t,ndim=4] v):
+   cdef int eN,ebN,k
+   cdef double pi
+   pi = M_PI
+   if transient == 1:
+      for eN in range(x.shape[0]):
+         for ebN in range(x.shape[1]):
+            for k in range(x.shape[2]):
+               v[eN,ebN,k,0]=2.0*pi*(x[eN,ebN,k,1]-xc)
+               v[eN,ebN,k,1]=2.0*pi*(yc-x[eN,ebN,k,0])
+               v[eN,ebN,k,:]*=(tForReversal-t)/(tForReversal-0.0)*clock
+   else:
+      for eN in range(x.shape[0]):
+         for ebN in range(x.shape[1]):
+            for k in range(x.shape[2]):
+               v[eN,ebN,k,0]=2.0*pi*(x[eN,ebN,k,1]-xc)
+               v[eN,ebN,k,1]=2.0*pi*(yc-x[eN,ebN,k,0])
+      
