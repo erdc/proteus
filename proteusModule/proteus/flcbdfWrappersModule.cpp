@@ -432,7 +432,7 @@ int converged_true_residual(KSP ksp, int it, double rnorm, KSPConvergedReason *r
 typedef struct
 {
   PyObject_HEAD
-  KSP ksp;
+  KSP ksp; 
   TrueResidualTestCtx tres_ctx;
 } CKSP;
 
@@ -477,6 +477,16 @@ CKSP_init(CKSP *self, PyObject *args, PyObject *kwds)
   self->tres_ctx.rtol = 0.0;
   self->tres_ctx.divtol= 1.0e50;
   self->tres_ctx.max_it= 10000;
+
+
+  PetscReal  *res;
+  int its;
+  
+  its = 250; // Ido HACK ...
+  PetscMalloc(its*sizeof(PetscReal),&res); 
+
+  KSPSetResidualHistory(self->ksp, res, its, PETSC_TRUE);
+
   return 0;
 }
 
@@ -626,6 +636,34 @@ CKSP_solve(CKSP *self, PyObject* args)
   return Py_None;
 }
 
+static PyObject*
+CKSP_info(CKSP *self, PyObject* args)
+{
+  PetscInt     its;
+  PetscReal*   res;
+  double       first,last,rel_res; 
+
+
+  KSPGetResidualHistory(self->ksp, &res, &its);
+
+  first = *res;
+  for (int i=0; i<its; ++i)
+    {
+      last = *res;
+      res++;
+    } 
+
+  rel_res = 100.0*last/first;
+  PetscPrintf(Py_PETSC_COMM_WORLD,"\n       Iterations: %D    Error reduction: %g (%%)\n\n", its,rel_res);
+ 
+  
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
+
+
+ 
 static PyMethodDef CKSP_methods[] = {
   {"prepare", 
    (PyCFunction)CKSP_prepare, 
@@ -635,6 +673,10 @@ static PyMethodDef CKSP_methods[] = {
    (PyCFunction)CKSP_solve, 
    METH_VARARGS, 
    "solve the problem"},
+  {"info", 
+   (PyCFunction)CKSP_info, 
+   METH_VARARGS, 
+   "print solver performance info"},
   {"useTrueResidualConvergence", 
    (PyCFunction)CKSP_useTrueResidualConvergence, 
    METH_VARARGS, 
