@@ -2032,6 +2032,8 @@ def setupVelocity_RT0(opts,p,mesh,geometricSpace,t,nd=2):
     ebq['n'] = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,nElementBoundaryQuadraturePoints_elementBoundary,p.nd),'d')
     ebq['dS'] = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,nElementBoundaryQuadraturePoints_elementBoundary),'d')
 
+    ebq['velocity'] = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,nElementBoundaryQuadraturePoints_elementBoundary,p.nd),'d')
+    
     geometricSpace.elementMaps.getValuesTrace(elementBoundaryQuadraturePoints,
                                               ebq['x'])
     geometricSpace.elementMaps.getJacobianValuesTrace(elementBoundaryQuadraturePoints,
@@ -2074,17 +2076,25 @@ def evaluateVelocity_RT0(opts,p,mesh,t,ebq,velocity_dofs,velocity_l2g,velocity_i
     """
 
     #manually evaluate velocity degrees of freedom from its interpolation conditions
-    for eN in range(mesh.nElements_global):
-        for ebN in range(mesh.nElementBoundaries_element):
-            integral = 0.0
-            for kb in range(ebq['x'].shape[-2]):
-                v = p.analyticalSolutionParticleVelocity[0].uOfXT(ebq['x'][eN,ebN,kb],t)
-                for I in range(p.nd):
-                    integral += v[I]*ebq['n'][eN,ebN,kb,I]*ebq['dS'][eN,ebN,kb]
-                #mwf debug
-                #print "setup RT0 eN= %s ebN= %s kb=%s v=[%s,%s] n=[%s,%s] integral=%s " % (eN,ebN,kb,v[0],v[1],ebq['n'][eN,ebN,kb,0],ebq['n'][eN,ebN,kb,1],integral)
-            velocity_interpolation_values[eN,ebN] = integral
-            velocity_dofs[velocity_l2g[eN,ebN]] = velocity_interpolation_values[eN,ebN]
+    #todo move this from python
+    from subsurfaceTransportFunctions import calculateNormalFlux
+    try:
+        p.analyticalSolutionParticleVelocity[0].uOfXTv(ebq['x'],t,ebq['velocity'])
+        calculateNormalFlux(ebq['velocity'],ebq['n'],ebq['dS'],velocity_interpolation_values)
+        velocity_dofs[velocity_l2g] = velocity_interpolation_values
+    except:
+        print "WARNING Tracking.evaluateVelocity_RT0 try uOfXTv failed"
+        for eN in range(mesh.nElements_global):
+            for ebN in range(mesh.nElementBoundaries_element):
+                integral = 0.0
+                for kb in range(ebq['x'].shape[-2]):
+                    v = p.analyticalSolutionParticleVelocity[0].uOfXT(ebq['x'][eN,ebN,kb],t)
+                    for I in range(p.nd):
+                        integral += v[I]*ebq['n'][eN,ebN,kb,I]*ebq['dS'][eN,ebN,kb]
+                    #mwf debug
+                    #print "setup RT0 eN= %s ebN= %s kb=%s v=[%s,%s] n=[%s,%s] integral=%s " % (eN,ebN,kb,v[0],v[1],ebq['n'][eN,ebN,kb,0],ebq['n'][eN,ebN,kb,1],integral)
+                velocity_interpolation_values[eN,ebN] = integral
+                velocity_dofs[velocity_l2g[eN,ebN]] = velocity_interpolation_values[eN,ebN]
     
 def setupTrackingPointsInReferenceSpace(opts,p,useGaussianQuadrature=False):
     """
@@ -2822,6 +2832,7 @@ def test3(opts):
     elementBoundaryOuterNormals = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,p.nd),'d')
     elementBoundaryOuterNormalsOrig = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,p.nd),'d')
     #mwf orig
+    #\todo move out of python
     for eN in range(mesh.nElements_global):
         for ebN in range(mesh.nElementBoundaries_element):
             elementBoundaryOuterNormalsOrig[eN,ebN,:] = ebq['n'][eN,ebN,0,:]
@@ -2979,6 +2990,7 @@ def test3(opts):
     arGridExact = writerExact.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track_exact'],toutput,init=True,tCount=0,spaceSuffix="_particles_exact")
     writerExact.writeScalarXdmf_particles(archive,q['t_track_exact'],"t_particle_exact",tCount=0)
 
+    #\todo get rid of?
     #crude error calculation
     fdep = open('x_depart.grf','w')
     farr = open('x_arrive.grf','w')
@@ -3292,9 +3304,13 @@ def test5(opts):
         t += dtout
 
         #evaluate velocity
-        for eN in range(mesh.nElements_global):
-            for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
-                q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
+        #\todo move out of python
+        try:
+            p.analyticalSolutionParticleVelocity[0].uOfXTv(velocitySpace.interpolationPoints,t,q['velocity_interpolation_values'])
+        except TypeError:
+            for eN in range(mesh.nElements_global):
+                for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                    q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -3478,9 +3494,13 @@ def test6(opts):
         t += dtout
 
         #evaluate velocity
-        for eN in range(mesh.nElements_global):
-            for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
-                q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
+        #\todo move out of python
+        try:
+            p.analyticalSolutionParticleVelocity[0].uOfXTv(velocitySpace.interpolationPoints,t,q['velocity_interpolation_values'])
+        except TypeError:
+            for eN in range(mesh.nElements_global):
+                for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                    q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -3667,9 +3687,13 @@ def Lu1Dex(opts,tryPT123A=True):
     assert tnList[istart] <= t and t < tnList[istart+1] 
     #this will get cycled through and set as value at tnList[istart] in loop
     #evaluate velocity
-    for eN in range(mesh.nElements_global):
-        for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
-            q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],tnList[istart])
+    #\todo move out of python
+    try:
+        p.analyticalSolutionParticleVelocity[0].uOfXTv(velocitySpace.interpolationPoints,t,q['velocity_interpolation_values'])
+    except TypeError:
+        for eN in range(mesh.nElements_global):
+            for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],tnList[istart])
     #evaluate velocity degrees of freedom from its interpolation conditions
     velocity_new.projectFromInterpolationConditions(q['velocity_interpolation_values'])
 
@@ -3751,9 +3775,13 @@ def Lu1Dex(opts,tryPT123A=True):
         t += dtout
 
         #evaluate velocity
-        for eN in range(mesh.nElements_global):
-            for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
-                q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
+        #\todo move out of python
+        try:
+            p.analyticalSolutionParticleVelocity[0].uOfXTv(velocitySpace.interpolationPoints,t,q['velocity_interpolation_values'])
+        except TypeError:
+            for eN in range(mesh.nElements_global):
+                for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                    q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
         #evaluate velocity degrees of freedom from its interpolation conditions
         velocity_new.projectFromInterpolationConditions(q['velocity_interpolation_values'])
         particle_tracker.setTrackingVelocity(velocity_new.dof,0,t,timeLevel=1)
@@ -3865,9 +3893,13 @@ def test8(opts,tryPT123A=False):
     assert tnList[istart] <= t and t < tnList[istart+1] 
     #this will get cycled through and set as value at tnList[istart] in loop
     #evaluate velocity
-    for eN in range(mesh.nElements_global):
-        for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
-            q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],tnList[istart])
+    #\todo move out of python 
+    try:
+        p.analyticalSolutionParticleVelocity[0].uOfXTv(velocitySpace.interpolationPoints,t,q['velocity_interpolation_values'])
+    except TypeError:
+        for eN in range(mesh.nElements_global):
+            for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],tnList[istart])
     #evaluate velocity degrees of freedom from its interpolation conditions
     velocity_new.projectFromInterpolationConditions(q['velocity_interpolation_values'])
 
@@ -3958,9 +3990,13 @@ def test8(opts,tryPT123A=False):
         t += dtout
 
         #evaluate velocity
-        for eN in range(mesh.nElements_global):
-            for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
-                q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
+        #\todo move out of python 
+        try:
+            p.analyticalSolutionParticleVelocity[0].uOfXTv(velocitySpace.interpolationPoints,t,q['velocity_interpolation_values'])
+        except TypeError:
+            for eN in range(mesh.nElements_global):
+                for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                    q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
         #evaluate velocity degrees of freedom from its interpolation conditions
         velocity_new.projectFromInterpolationConditions(q['velocity_interpolation_values'])
         particle_tracker.setTrackingVelocity(velocity_new.dof,0,t,timeLevel=1)
@@ -4092,7 +4128,6 @@ def test9(opts,tryPT123A=False):
     q['x_track']  = p.getInitialTrackingLocations(q)#q['x']; 
     q['x_depart'] = numpy.copy(q['x_track'])
 
-
     setupArbitraryTrackingDataArrays(opts.t_start,tnList[istart+1],sdmesh,elementBoundaryOuterNormalsArray,q)
 
     label = "PT123"
@@ -4120,7 +4155,7 @@ def test9(opts,tryPT123A=False):
     ########## visualization and output stuff
 
     #mwf debug
-    #pdb.set_trace()
+    pdb.set_trace()
     archive = Archiver.XdmfArchive(".","test9_"+label,useTextArchive=False)
     import xml.etree.ElementTree as ElementTree
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")

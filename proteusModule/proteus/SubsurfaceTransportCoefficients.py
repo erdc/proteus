@@ -4851,9 +4851,13 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
             tEval = t
             for ci in range(self.nc):
                 if self.velocitySpace[ci] != None:
-                    for eN in range(self.mesh.nElements_global):
-                        for k in range(self.velocitySpace[ci].referenceFiniteElement.interpolationConditions.nQuadraturePoints):
-                            self.velocity_interpolation_values[ci][eN,k,:] = self.velocityFunctions[ci](self.velocitySpace[ci].interpolationPoints[eN,k],t)
+                    try:
+                        self.velocityFunctions[ci](self.velocitySpace[ci].interpolationPoints,t,self.velocity_interpolation_values[ci])
+
+                    except TypeError:
+                        for eN in range(self.mesh.nElements_global):
+                            for k in range(self.velocitySpace[ci].referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                                self.velocity_interpolation_values[ci][eN,k,:] = self.velocityFunctions[ci](self.velocitySpace[ci].interpolationPoints[eN,k],t)
                     #
                     #evaluate velocity degrees of freedom from its interpolation conditions
                     self.velocity[ci].projectFromInterpolationConditions(self.velocity_interpolation_values[ci])
@@ -4865,17 +4869,22 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
                     if self.velocitySpaceFlag == 'rt0':
                         #rt0 just use element integrals as nodal unknowns
                         #\todo move this loop out of python
-                        for eN in range(self.mesh.nElements_global):
-                            for ebN in range(self.mesh.nElementBoundaries_element):
-                                integral = 0.0
-                                for kb in range(self.ebq['x'].shape[-2]):#nElementBoundaryQuadraturePoints_elementBoundary):
-                                    v = self.velocityFunctions[ci](self.ebq['x'][eN,ebN,kb],t)
-                                    for I in range(self.ebq['n'].shape[-1]):#.nd):
-                                        integral += v[I]*self.ebq['n'][eN,ebN,kb,I]*self.ebq['dS'][eN,ebN,kb]
-                                    #mwf debug
-                                    #print "setup RT0 eN= %s ebN= %s kb=%s v=[%s,%s] n=[%s,%s] integral=%s " % (eN,ebN,kb,v[0],v[1],ebq['n'][eN,ebN,kb,0],ebq['n'][eN,ebN,kb,1],integral)
-                                self.velocity_interpolation_values[ci][eN,ebN] = integral
-                                self.velocity_dofs[ci][self.velocity_l2g[ci][eN,ebN]] = self.velocity_interpolation_values[ci][eN,ebN]
+                        try:
+                            self.velocityFunctions[ci](self.ebq['x'],t,self.ebq[('velocity',ci)])
+                            stfuncs.calculateNormalFlux(self.ebq[('velocity',ci)],self.ebq['n'],self.ebq['dS'],self.velocity_interpolation_values[ci])
+                            self.velocity_dofs[ci][self.velocity_l2g[ci]] = self.velocity_interpolation_values[ci]
+                        except TypeError:
+                            for eN in range(self.mesh.nElements_global):
+                                for ebN in range(self.mesh.nElementBoundaries_element):
+                                    integral = 0.0
+                                    for kb in range(self.ebq['x'].shape[-2]):#nElementBoundaryQuadraturePoints_elementBoundary):
+                                        v = self.velocityFunctions[ci](self.ebq['x'][eN,ebN,kb],t)
+                                        for I in range(self.ebq['n'].shape[-1]):#.nd):
+                                            integral += v[I]*self.ebq['n'][eN,ebN,kb,I]*self.ebq['dS'][eN,ebN,kb]
+                                        #mwf debug
+                                        #print "setup RT0 eN= %s ebN= %s kb=%s v=[%s,%s] n=[%s,%s] integral=%s " % (eN,ebN,kb,v[0],v[1],ebq['n'][eN,ebN,kb,0],ebq['n'][eN,ebN,kb,1],integral)
+                                    self.velocity_interpolation_values[ci][eN,ebN] = integral
+                                    self.velocity_dofs[ci][self.velocity_l2g[ci][eN,ebN]] = self.velocity_interpolation_values[ci][eN,ebN]
                         #
                         cpostprocessing.getElementRT0velocityValuesFluxRep(self.vt.mesh.nodeArray,
                                                                            self.vt.mesh.elementNodesArray,
@@ -4893,13 +4902,16 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
                                                                                                  self.ebqe[('velocity',ci)])
 
                     elif self.velocitySpaceFlag == 'bdm1':
-                       #bdm1 have to use projection
-                       #<(\vec v - \vec \hat{v})\cdot \vec n_f,z>_{f} = 0 for faces gamma_f in each element, z in P^1(\gamma_f)
+                        #bdm1 have to use projection
+                        #<(\vec v - \vec \hat{v})\cdot \vec n_f,z>_{f} = 0 for faces gamma_f in each element, z in P^1(\gamma_f)
                         #\todo move this loop out of python
-                        for eN in range(self.mesh.nElements_global):
-                            for ebN in range(self.mesh.nElementBoundaries_element):
-                                for kb in range(self.ebq['x'].shape[-2]):#nElementBoundaryQuadraturePoints_elementBoundary):
-                                    self.ebq[('velocity',ci)][eN,ebN,kb,:] = self.velocityFunctions[ci](self.ebq['x'][eN,ebN,kb],t)
+                        try:
+                            self.velocityFunctions[ci](self.ebq['x'],t,self.ebq[('velocity',ci)])
+                        except TypeError:
+                            for eN in range(self.mesh.nElements_global):
+                                for ebN in range(self.mesh.nElementBoundaries_element):
+                                    for kb in range(self.ebq['x'].shape[-2]):#nElementBoundaryQuadraturePoints_elementBoundary):
+                                        self.ebq[('velocity',ci)][eN,ebN,kb,:] = self.velocityFunctions[ci](self.ebq['x'][eN,ebN,kb],t)
                         #
                         #mwf debug
                         #import pdb
@@ -4951,18 +4963,26 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
                 self.adjoint_velocity_dofs_last[ci].flat[:] = self.adjoint_velocity_dofs[ci]
                 self.adjoint_velocity_times[ci]      = tEval
             if self.velocitySpace[ci] != None:
-                #now get adjoint/characateristic velocity using average volume fraction over an element
-                #assumes spaces are compatible locally, just allowing discontinuity for adjoint velocity
-                self.adjoint_velocity_interpolation_values[ci].flat[:] = self.velocity_interpolation_values[ci].flat
-                #\todo move this out of python
-                for eN in range(self.mesh.nElements_global):
-                    omega_e = 0.0
-                    vol_e   = 0.0
-                    for k in range(q['dV'].shape[1]):
-                        omega_e += q['dV'][eN,k]*q[('dm',0,0)][eN,k]
-                        vol_e   += q['dV'][eN,k]
-                    self.adjoint_velocity_interpolation_values[ci][eN] *= vol_e/(omega_e+1.e-12) 
-                #
+                try:
+                    #characteristic velocity same as adjoint velocity for simple linear case
+                    stfuncs.computeSimpleCharacteristicVelocityFromElementVelocity(self.velocity_interpolation_values[ci],
+                                                                                   self.adjoint_velocity_interpolation_values[ci],
+                                                                                   q[('dm',0,0)],
+                                                                                   q['dV'])
+                except:
+                    print "WARNING cython computation in ELLAM evaluateAdjointVelocity failed using slower version"
+                    #now get adjoint/characateristic velocity using average volume fraction over an element
+                    #assumes spaces are compatible locally, just allowing discontinuity for adjoint velocity
+                    self.adjoint_velocity_interpolation_values[ci].flat[:] = self.velocity_interpolation_values[ci].flat
+                    #\todo move this out of python
+                    for eN in range(self.mesh.nElements_global):
+                        omega_e = 0.0
+                        vol_e   = 0.0
+                        for k in range(q['dV'].shape[1]):
+                            omega_e += q['dV'][eN,k]*q[('dm',0,0)][eN,k]
+                            vol_e   += q['dV'][eN,k]
+                        self.adjoint_velocity_interpolation_values[ci][eN] *= vol_e/(omega_e+1.e-12) 
+                    #
                 #evaluate velocity degrees of freedom from its interpolation conditions
                 self.adjoint_velocity[ci].projectFromInterpolationConditions(self.adjoint_velocity_interpolation_values[ci])
                 self.adjoint_velocity[ci].getValues(self.q[('adjoint_velocity_v',ci)],self.q[('adjoint_velocity',ci)])
@@ -4974,19 +4994,27 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
                 #mwf debug
                 #import pdb
                 #pdb.set_trace()
-                #
-                #\todo move this out of python
                 #Warning only works because RT0 velocity dofs stored on each element without any interelement flux continuity assumes
                 #can't modify adjoint_velocity_interpolation_values to be consistent with this for now
-                self.adjoint_velocity_dofs[ci].flat[:] = self.velocity_dofs[ci].flat
-                for eN in range(self.mesh.nElements_global):
-                    omega_e = 0.0
-                    vol_e   = 0.0
-                    for k in range(q['dV'].shape[1]):
-                        omega_e += q['dV'][eN,k]*q[('dm',0,0)][eN,k]
-                        vol_e   += q['dV'][eN,k]
-                    for i in range(self.nVDOFs_element):
-                        self.adjoint_velocity_dofs[ci][self.adjoint_velocity_l2g[ci][eN,i]] *= vol_e/(omega_e + 1.0e-12)
+                #
+                try:
+                    stfuncs.computeSimpleCharacteristicVelocityFromVelocityDOFs(self.velocity_dofs[ci],
+                                                                                self.adjoint_velocity_dofs[ci],
+                                                                                self.adjoint_velocity_l2g[ci],
+                                                                                q[('dm',0,0)],
+                                                                                q['dV'])
+                except:
+                    print "WARNING cython computation in ELLAM evaluateAdjointVelocity failed using slower version"
+                    #\todo move this out of python
+                    self.adjoint_velocity_dofs[ci].flat[:] = self.velocity_dofs[ci].flat
+                    for eN in range(self.mesh.nElements_global):
+                        omega_e = 0.0
+                        vol_e   = 0.0
+                        for k in range(q['dV'].shape[1]):
+                            omega_e += q['dV'][eN,k]*q[('dm',0,0)][eN,k]
+                            vol_e   += q['dV'][eN,k]
+                        for i in range(self.nVDOFs_element):
+                            self.adjoint_velocity_dofs[ci][self.adjoint_velocity_l2g[ci][eN,i]] *= vol_e/(omega_e + 1.0e-12)
                 if self.velocityFunctions != None:
                     tEval = t
                     if self.velocitySpaceFlag == 'rt0':
