@@ -3624,17 +3624,18 @@ class NCLevelSetCoefficients(TC_base):
                                                     frontTolerance=1.0e-8,#default 1.0e-4
                                                     frontInitType='frontIntersection')
 #,#'frontIntersection',#or 'magnitudeOnly'
-        self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
-                                                                 self.model.mesh.elementDiametersArray,
-                                                                 self.model.q['dV'],
-                                                                 self.model.q[('u',0)],
-                                                                 self.model.mesh.nElements_owned)
-        log("Attach Models NCLS: Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
-        self.totalFluxGlobal=0.0
-        self.lsGlobalMassArray = [self.m_pre]
-        self.lsGlobalMassErrorArray = [0.0]
-        self.fluxArray = [0.0]
-        self.timeArray = [self.model.timeIntegration.t]
+        if self.checkMass:
+            self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
+                                                                     self.model.mesh.elementDiametersArray,
+                                                                     self.model.q['dV'],
+                                                                     self.model.q[('u',0)],
+                                                                     self.model.mesh.nElements_owned)
+            log("Attach Models NCLS: Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
+            self.totalFluxGlobal=0.0
+            self.lsGlobalMassArray = [self.m_pre]
+            self.lsGlobalMassErrorArray = [0.0]
+            self.fluxArray = [0.0]
+            self.timeArray = [self.model.timeIntegration.t]
     def initializeElementQuadrature(self,t,cq):
         if self.flowModelIndex == None:
             self.q_v = numpy.zeros(cq[('grad(u)',0)].shape,'d')
