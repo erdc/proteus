@@ -92,35 +92,24 @@ class ResGradQuad_SC(ShockCapturing_base):
                     import pdb
                     print "NaN's in numDiff"
                     pdb.set_trace()
+    #todo ido, fix this so it doesn't break models that don't have a 'gradNorm'
+    # def initializeElementQuadrature(self,mesh,t,cq):
+    #     ShockCapturing_base.initializeElementQuadrature(self,mesh,t,cq)
+    #     self.gradNorm=[]
+    #     self.gradNorm_last=[]
+    #     for ci in range(self.nc):
+    #         if self.gradLag:
+    #             self.gradNorm_last.append(cq[('gradNorm',ci,ci)])
+    #             self.gradNorm.append(numpy.zeros(cq[('u',ci)].shape,'d'))
+    #         else:
+    #             self.gradNorm_last.append(cq[('gradNorm',ci,ci)])
+    #             self.gradNorm.append(cq[('gradNorm',ci,ci)])
 
-
-
-
-
-
-    def initializeElementQuadrature(self,mesh,t,cq):
-        ShockCapturing_base.initializeElementQuadrature(self,mesh,t,cq)
-        self.gradNorm=[]
-        self.gradNorm_last=[]
-        for ci in range(self.nc):
-            if self.gradLag:
-                self.gradNorm_last.append(cq[('gradNorm',ci,ci)])
-                self.gradNorm     .append(numpy.zeros(cq[('u',ci)].shape,'d'))
-            else:
-                self.gradNorm_last.append(cq[('gradNorm',ci,ci)])
-                self.gradNorm     .append(cq[('gradNorm',ci,ci)])
-
-
-    def updateShockCapturingHistory(self):
-        ShockCapturing_base.updateShockCapturingHistory(self)
-        if self.gradLag:
-            for ci in range(self.nc):
-                self.gradNorm_last[ci][:] = self.gradNorm[ci]
-
-
-
-
-
+    # def updateShockCapturingHistory(self):
+    #     ShockCapturing_base.updateShockCapturingHistory(self)
+    #     if self.gradLag:
+    #         for ci in range(self.nc):
+    #             self.gradNorm_last[ci][:] = self.gradNorm[ci]
 
 class Eikonal_SC(ShockCapturing_base):
     def __init__(self,coefficients,nd,shockCapturingFactor=0.25,lag=True):
