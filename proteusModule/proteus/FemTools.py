@@ -1443,7 +1443,7 @@ class NodalInterpolationConditions(InterpolationConditions):
                                                               self.functionals_quadrature_map,
                                                               interpolationValues,
                                                               finiteElementFunction.dof)
-    
+
 class QuadraticLagrangeNodalInterpolationConditions(InterpolationConditions):
     """
     Obtains the DOF from the function values at vertices and
@@ -1497,7 +1497,6 @@ class QuadraticLagrangeNodalInterpolationConditions(InterpolationConditions):
                                                               interpolationValues,
                                                               finiteElementFunction.dof)
 
-
 class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions):
     """
     Obtains the DOF from the function values at vertices and
@@ -1547,11 +1546,11 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
         can just use functionals interface
         
         """
-#        cfemIntegrals.projectFromNodalInterpolationConditions(finiteElementFunction.dim_dof,
-#                                                              finiteElementFunction.femSpace.dofMap.l2g,
-#                                                              self.functionals_quadrature_map,
-#                                                              interpolationValues,
-#                                                              finiteElementFunction.dof)
+        cfemIntegrals.projectFromNodalInterpolationConditions(finiteElementFunction.dim_dof,
+                                                              finiteElementFunction.femSpace.dofMap.l2g,
+                                                              self.functionals_quadrature_map,
+                                                              interpolationValues,
+                                                              finiteElementFunction.dof)
         interpolationValues = finiteElementFunction.dof
 
 #end interp conditions
