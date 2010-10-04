@@ -9400,6 +9400,54 @@ static PyObject* ctransportCoefficientsDiffusiveWave2DCoefficientsEvaluate(PyObj
   Py_INCREF(Py_None);
   return Py_None; 
 }
+static PyObject*
+ctransportCoefficientsCalculateWaveFunction3d_ref(PyObject* self, 
+						  PyObject* args)
+{
+  double t,epsFact,waveHeight,waveCelerity,waveFrequency,waveNumber,waterDepth;
+  int waveFlag;
+  PyObject *mesh_trial_ref,*mesh_dof,*mesh_l2g,*elementDiametersArray,
+    *omega_s_x,*omega_s_y,*omega_s_z,*source;
+  if(!PyArg_ParseTuple(args,"OOOOOOOdiddddddO",
+		       &mesh_trial_ref,
+		       &mesh_dof,
+		       &mesh_l2g,
+		       &elementDiametersArray,
+		       &omega_s_x,
+		       &omega_s_y,
+		       &omega_s_z,
+                       &t,
+                       &waveFlag,
+                       &epsFact,
+		       &waveHeight,
+		       &waveCelerity,
+		       &waveFrequency,
+		       &waveNumber,
+		       &waterDepth,
+                       &source))
+    return NULL;
+  calculateWaveFunction3d_ref(SHAPE(mesh_l2g)[0],
+			      SHAPE(mesh_l2g)[1],
+			      SHAPE(mesh_trial_ref)[0],
+			      DDATA(mesh_trial_ref),
+			      DDATA(mesh_dof),
+			      IDATA(mesh_l2g),
+			      DDATA(elementDiametersArray),
+			      DDATA(omega_s_x),
+			      DDATA(omega_s_y),
+			      DDATA(omega_s_z),
+			      t,
+			      waveFlag,
+			      epsFact,
+			      waveHeight,
+			      waveCelerity,
+			      waveFrequency,
+			      waveNumber,
+			      waterDepth,
+			      DDATA(source));
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
 
 /* static PyObject* ctransportCoefficientsPiecewiseLinearTableLookup(PyObject* self, PyObject* args) */
 
@@ -9972,10 +10020,10 @@ static PyMethodDef ctransportCoefficientsMethods[] = {
     ctransportCoefficientsDiffusiveWave2DCoefficientsEvaluate,
     METH_VARARGS, 
     "Evaluate the coefficients of the 2D diffusive wave equation"},
-  /* { "piecewiseLinearTableLookup",  */
-  /*   ctransportCoefficientsPiecewiseLinearTableLookup,  */
-  /*   METH_VARARGS,  */
-  /*   "linear table lookup routine for scalar values"}, */
+  { "calculateWaveFunction3d_ref",
+    ctransportCoefficientsCalculateWaveFunction3d_ref,
+    METH_VARARGS,
+    "generate continuity source term for driving waves following Liu etal"},
   { NULL,NULL,0,NULL}
 };
 

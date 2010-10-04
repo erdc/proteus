@@ -12229,6 +12229,91 @@ void eddyViscosity_3D_Update_sd(const int nPoints,
 
     }
 }
+
+void calculateWaveFunction3d_ref(//mesh rep 
+				 int nElements_global,
+				 int nDOF_element_mesh,
+				 int nQuadraturePoints_element,
+				 const double* mesh_trial_ref,
+				 const double* mesh_dof,
+				 const int* mesh_l2g,
+				 const double* elementDiametersArray,
+				 //
+				 const double* omega_s_x, //source region (rectangular)
+				 const double* omega_s_y,
+				 const double* omega_s_z,
+				 double t,
+				 int waveFlag, //1 secondOrderStokes
+				               //2 solitaryWave
+                                               //0 monochromaticWave
+				 double epsFact,
+				 double waveHeight,
+				 double waveCelerity,
+				 double waveFrequency,
+				 double waveNumber,
+				 double waterDepth,
+				 double* source)
+{
+  int eN,k,j,eN_j;
+  double x,y,z,factor,dx_source,dy_source,dz_source,source_volume,N_j,
+    distance_x,distance_y,distance_z,delta,eps;
+  /*stokes wave parameters*/
+  double p_s,a_s,b_s,kd,term1,term2,term3,sinhkd;
+  dx_source=omega_s_x[1]-omega_s_x[0]; dy_source=omega_s_y[1]-omega_s_y[0]; dz_source=omega_s_z[1]-omega_s_z[0];
+  source_volume = dx_source*dy_source*dz_source;
+  if (waveFlag == 1)
+    {
+      kd  = waveNumber*waterDepth;
+      a_s = waveHeight*0.5;
+      sinhkd = sinh(kd);
+      b_s = waveHeight*waveHeight*waveNumber*cosh(kd)*(2.0 + cosh(2.*kd)/(16.0+sinhkd*sinhkd*sinhkd));
+      term1 = -a_s + sqrt(a_s*a_s + 8.0*b_s*b_s)/(4.0*b_s);
+      p_s = asin(term1);
+      term1 = waveCelerity*waveHeight*cos(M_PI*0.5 - waveFrequency*t - p_s);
+      term2 = waveCelerity*waveHeight*waveHeight*cosh(kd)/(8.0*sinhkd*sinhkd*sinhkd);
+      term3 = 2.0 + cosh(2.0*kd)*cos(2.0*(M_PI*0.5 - waveFrequency*t - p_s));
+      factor = (term1 + term2*term3)/source_volume;
+      
+    }
+  else if (waveFlag == 2)
+    {
+      term1 = 4.0*waveHeight/sqrt(waveHeight/waterDepth);/*x_s*/
+      term2= sqrt(3.0*waveHeight/(4.0*waterDepth*waterDepth*waterDepth))*(term1 - waveCelerity*t);
+      term2= fmax(term2,-80.0);
+      term2= fmin(term2, 80.0);
+      term3= 1.0/(cosh(term2)+1.0e-12);
+      factor = waveHeight*waveCelerity*term3*term3/source_volume;
+    }
+  else
+    {
+      factor = waveHeight/source_volume*waveCelerity*sin(waveFrequency*t);
+    }
+  for (eN = 0; eN < nElements_global; eN++)
+    {
+      eps = epsFact*elementDiametersArray[eN];
+      for (k = 0; k < nQuadraturePoints_element; k++)
+	{
+	  x=0.; y=0.; z=0.;
+	  for (j=0; j < nDOF_element_mesh; j++)
+	    {
+	      eN_j= eN*nDOF_element_mesh+j;
+	      N_j = mesh_trial_ref[k*nDOF_element_mesh+j];
+
+	      x += mesh_dof[mesh_l2g[eN_j]*3+0]*N_j;
+	      y += mesh_dof[mesh_l2g[eN_j]*3+1]*N_j;
+	      z += mesh_dof[mesh_l2g[eN_j]*3+2]*N_j;
+
+	    }
+	  distance_x = fabs(x-0.5*(omega_s_x[1]+omega_s_x[0])) - 0.5*dx_source;
+	  distance_y = fabs(y-0.5*(omega_s_y[1]+omega_s_y[0])) - 0.5*dy_source;
+	  distance_z = fabs(z-0.5*(omega_s_z[1]+omega_s_z[0])) - 0.5*dz_source;
+	  delta = (1.0-smoothedHeaviside(eps,distance_x))*(1.0-smoothedHeaviside(eps,distance_y))*(1.0-smoothedHeaviside(eps,distance_z));
+	  source[eN*nQuadraturePoints_element+k] = -factor*delta;
+	  
+	}
+    }
+
+}
 /* /\*simple piecewise linear interpolation from a table */
 /*   assumes xv are increasing */
 /*  *\/ */
