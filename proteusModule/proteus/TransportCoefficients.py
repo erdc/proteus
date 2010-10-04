@@ -2016,7 +2016,10 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
         self.nu_1 = nu_1
         self.g = numpy.array(g)
         self.nd=nd
-        
+        #VRANS
+        self.linearDragFactor    = 0.0
+        self.nonlinearDragFactor = 0.0
+        #end VRANS
         mass={}
         advection={}
         diffusion={}
@@ -2048,9 +2051,9 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
                               numpy.array([1],dtype='i'))}
             potential= {1:{1:'u'},
                         2:{2:'u'}}
-            reaction = {0:{0:'constant'},#added for Lin, Liu wave forcing
-                        1:{1:'constant'},
-                        2:{2:'constant'}}
+            reaction = {0:{0:'constant'},
+                        1:{1:'nonlinear',2:'nonlinear'},
+                        2:{1:'nonlinear',2:'nonlinear'}}
             hamiltonian = {1:{0:'linear'},
                            2:{0:'linear'}}
             TC_base.__init__(self,
@@ -2103,9 +2106,9 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
                         2:{2:'u'},
                         3:{3:'u'}}
             reaction = {0:{0:'constant'},#added for Lin, Liu wave forcing,
-                        1:{1:'constant'},
-                        2:{2:'constant'},
-                        3:{3:'constant'}}
+                        1:{1:'nonlinear',2:'nonlinear',3:'nonlinear'},
+                        2:{1:'nonlinear',2:'nonlinear',3:'nonlinear'},
+                        3:{1:'nonlinear',2:'nonlinear',3:'nonlinear'}}
             hamiltonian = {1:{0:'linear'},
                            2:{0:'linear'},
                            3:{0:'linear'}}
@@ -2159,19 +2162,27 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
             self.q_n = -numpy.ones(cq[('velocity',0)].shape,'d')
         if self.KN_model == None:
             self.q_kappa = -numpy.zeros(cq[('u',1)].shape,'d')
-            
+        #VRANS
+        self.q_porosity = numpy.ones(cq[('u',1)].shape,'d')
+        self.q_meanGrain= numpy.ones(cq[('u',1)].shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         if self.LS_model == None:
             self.ebq_phi = -numpy.ones(cebq[('u',1)].shape,'d')
             self.ebq_n = -numpy.ones(cebq[('velocity',0)].shape,'d')
         if self.KN_model == None:
             self.ebq_kappa = -numpy.zeros(cebq[('u',1)].shape,'d')
+        #VRANS
+        self.ebq_porosity = numpy.ones(cebq[('u',1)].shape,'d')
+        self.ebq_meanGrain= numpy.ones(cebq[('u',1)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         if self.LS_model == None:
             self.ebqe_phi = -numpy.ones(cebqe[('u',1)].shape,'d')
             self.ebqe_n = -numpy.ones(cebqe[('velocity',0)].shape,'d')
         if self.KN_model == None:
             self.ebqe_kappa = -numpy.zeros(cebqe[('u',1)].shape,'d')
+        #VRANS
+        self.ebqe_porosity = numpy.ones(cebqe[('u',1)].shape,'d')
+        self.ebqe_meanGrain = numpy.ones(cebqe[('u',1)].shape,'d')
     def updateToMovingDomain(self,t,c):
         import cfemIntegrals
         assert(self.movingDomain)
@@ -3942,12 +3953,18 @@ class VOFCoefficients(TC_base):
     def initializeElementQuadrature(self,t,cq):
         if self.flowModelIndex == None:
             self.q_v = numpy.ones(cq[('f',0)].shape,'d')
+        #VRANS
+        self.q_porosity = numpy.ones(cq[('u',0)].shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         if self.flowModelIndex == None:
             self.ebq_v = numpy.ones(cebq[('f',0)].shape,'d')
+        #VRANS
+        self.ebq_porosity = numpy.ones(cebq[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         if self.flowModelIndex == None:
             self.ebqe_v = numpy.ones(cebqe[('f',0)].shape,'d')
+        #VRANS
+        self.ebqe_porosity = numpy.ones(cebqe[('u',0)].shape,'d')
     def preStep(self,t,firstStep=False):
         if self.checkMass:
             self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV'],
@@ -7814,7 +7831,7 @@ class TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure(TwophaseNavierStokes
     def initializeElementQuadrature(self,t,cq):
         TwophaseNavierStokes_ST_LS_SO.initializeElementQuadrature(self,t,cq)
         if self.turbulenceClosureFlag != None:
-            self.q_nu_t = numpy.zeros(cq[('u',0)].shape,'d')
+            self.q_nu_t = numpy.zeros(cq[('u',1)].shape,'d')
             self.q      = cq
             
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
@@ -8485,6 +8502,7 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
     from ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_2D_Evaluate_sd
     from ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate
     from ctransportCoefficients import VolumeAveragedTwophaseNavierStokes_ST_LS_SO_3D_Evaluate_sd
+    from ctransportCoefficients import calculateWaveFunction3d_ref
     def __init__(self,
                  epsFact=1.5,
                  sigma=72.8,
@@ -8493,7 +8511,7 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                  g=[0.0,-9.8],
                  nd=2,
                  LS_model=3,
-                 KN_model=0,
+                 KN_model=None,
                  epsFact_density=None,
                  meanGrainSize=0.01,
                  setParamsFunc=None,      #uses setParamsFunc if given
@@ -8562,15 +8580,17 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
         self.waterDepth=waterDepth
         self.Omega_s=Omega_s
         self.epsFact_source=epsFact_source
-
+        self.linearDragFactor = 1.0; self.nonlinearDragFactor = 1.0
+        if self.killNonlinearDrag:
+            self.nonlinearDragFactor = 0.0
     def initializeMesh(self,mesh):
         TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure.initializeMesh(self,mesh)
         self.elementMaterialTypes = mesh.elementMaterialTypes
         self.eps_source=self.epsFact_source*mesh.h
     def initializeElementQuadrature(self,t,cq):
         TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure.initializeElementQuadrature(self,t,cq)
-        self.q_porosity = numpy.ones(cq[('u',0)].shape,'d')
-        self.q_meanGrain= numpy.ones(cq[('u',0)].shape,'d')
+        self.q_porosity = numpy.ones(cq[('u',1)].shape,'d')
+        self.q_meanGrain= numpy.ones(cq[('u',1)].shape,'d')
         self.q_meanGrain.fill(self.meanGrainSize)
         if self.setParamsFunc != None:
             self.setParamsFunc(cq['x'],self.q_porosity,self.q_meanGrain)
@@ -8585,8 +8605,8 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
         #
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure.initializeElementBoundaryQuadrature(self,t,cebq,cebq_global)
-        self.ebq_porosity = numpy.ones(cebq[('u',0)].shape,'d')
-        self.ebq_meanGrain = numpy.ones(cebq[('u',0)].shape,'d')
+        self.ebq_porosity = numpy.ones(cebq[('u',1)].shape,'d')
+        self.ebq_meanGrain = numpy.ones(cebq[('u',1)].shape,'d')
         self.ebq_meanGrain.fill(self.meanGrainSize)
         if self.setParamsFunc != None:
             self.setParamsFunc(cebq['x'],self.ebq_porosity,self.ebq_meanGrain)
@@ -8627,8 +8647,8 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
          #
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure.initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe)
-        self.ebqe_porosity = numpy.ones(cebqe[('u',0)].shape,'d')
-        self.ebqe_meanGrain = numpy.ones(cebqe[('u',0)].shape,'d')
+        self.ebqe_porosity = numpy.ones(cebqe[('u',1)].shape,'d')
+        self.ebqe_meanGrain = numpy.ones(cebqe[('u',1)].shape,'d')
         self.ebqe_meanGrain.fill(self.meanGrainSize)
         #TODO make loops faster
         if self.setParamsFunc != None:
@@ -8650,6 +8670,145 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
         #TODO really need to modify turbulence model in porous region, account for mean grain size etc
         if self.turbulenceClosureFlag != None:
             self.q_nu_t *= self.q_porosity
+    def evaluateForcingTerms(self,t,c,mesh=None,mesh_trial_ref=None,mesh_l2g=None):
+        if c.has_key('x') and len(c['x'].shape) == 3:
+            if self.nd == 2:
+                #mwf debug
+                #import pdb
+                #pdb.set_trace()
+                c[('r',0)].fill(0.0)
+                eps_source=self.eps_source
+                if self.waveFlag == 1:#secondOrderStokes:
+                    waveFunctions.secondOrderStokesWave(c[('r',0)].shape[0],
+                                                        c[('r',0)].shape[1],
+                                                        self.waveHeight,
+                                                        self.waveCelerity,
+                                                        self.waveFrequency,
+                                                        self.waveNumber,
+                                                        self.waterDepth,
+                                                        self.Omega_s[0][0],
+                                                        self.Omega_s[0][1],
+                                                        self.Omega_s[1][0],
+                                                        self.Omega_s[1][1],
+                                                        eps_source,
+                                                        c['x'],
+                                                        c[('r',0)],
+                                                        t)
+                elif self.waveFlag == 2:#solitary wave
+                    waveFunctions.solitaryWave(c[('r',0)].shape[0],
+                                               c[('r',0)].shape[1],
+                                               self.waveHeight,
+                                               self.waveCelerity,
+                                               self.waveFrequency,
+                                               self.waterDepth,
+                                               self.Omega_s[0][0],
+                                               self.Omega_s[0][1],
+                                               self.Omega_s[1][0],
+                                               self.Omega_s[1][1],
+                                               eps_source,
+                                               c['x'],
+                                               c[('r',0)],
+                                               t)
+
+                elif self.waveFlag == 0:
+                    waveFunctions.monochromaticWave(c[('r',0)].shape[0],
+                                                    c[('r',0)].shape[1],
+                                                    self.waveHeight,
+                                                    self.waveCelerity,
+                                                    self.waveFrequency,
+                                                    self.Omega_s[0][0],
+                                                    self.Omega_s[0][1],
+                                                    self.Omega_s[1][0],
+                                                    self.Omega_s[1][1],
+                                                    eps_source,
+                                                    c['x'],
+                                                    c[('r',0)],
+                                                    t)
+
+                #mwf debug
+                if numpy.isnan(c[('r',0)].any()):
+                    import pdb
+                    pdb.set_trace()
+            else:
+                #mwf debug
+                #import pdb
+                #pdb.set_trace()
+                c[('r',0)].fill(0.0)
+                eps_source=self.eps_source
+                if self.waveFlag == 1:#secondOrderStokes:
+                    waveFunctions.secondOrderStokesWave3d(c[('r',0)].shape[0],
+                                                          c[('r',0)].shape[1],
+                                                          self.waveHeight,
+                                                          self.waveCelerity,
+                                                          self.waveFrequency,
+                                                          self.waveNumber,
+                                                          self.waterDepth,
+                                                          self.Omega_s[0][0],
+                                                          self.Omega_s[0][1],
+                                                          self.Omega_s[1][0],
+                                                          self.Omega_s[1][1],
+                                                          self.Omega_s[2][0],
+                                                          self.Omega_s[2][1],
+                                                          eps_source,
+                                                          c['x'],
+                                                          c[('r',0)],
+                                                          t)
+                elif self.waveFlag == 2:#solitary wave
+                    waveFunctions.solitaryWave3d(c[('r',0)].shape[0],
+                                                 c[('r',0)].shape[1],
+                                                 self.waveHeight,
+                                                 self.waveCelerity,
+                                                 self.waveFrequency,
+                                                 self.waterDepth,
+                                                 self.Omega_s[0][0],
+                                                 self.Omega_s[0][1],
+                                                 self.Omega_s[1][0],
+                                                 self.Omega_s[1][1],
+                                                 self.Omega_s[2][0],
+                                                 self.Omega_s[2][1],
+                                                 eps_source,
+                                                 c['x'],
+                                                 c[('r',0)],
+                                                 t)
+
+                elif self.waveFlag == 0:
+                    waveFunctions.monochromaticWave3d(c[('r',0)].shape[0],
+                                                      c[('r',0)].shape[1],
+                                                      self.waveHeight,
+                                                      self.waveCelerity,
+                                                      self.waveFrequency,
+                                                      self.Omega_s[0][0],
+                                                      self.Omega_s[0][1],
+                                                      self.Omega_s[1][0],
+                                                      self.Omega_s[1][1],
+                                                      self.Omega_s[2][0],
+                                                      self.Omega_s[2][1],
+                                                      eps_source,
+                                                      c['x'],
+                                                      c[('r',0)],
+                                                      t)
+
+        else:
+            assert mesh != None
+            assert mesh_trial_ref != None
+            assert mesh_l2g != None
+            self.calculateWaveFunction3d_ref(mesh_trial_ref,
+                                             mesh.nodeArray,
+                                             mesh_l2g,
+                                             mesh.elementDiametersArray,
+                                             numpy.array(self.Omega_s[0]),
+                                             numpy.array(self.Omega_s[1]),
+                                             numpy.array(self.Omega_s[2]),
+                                             t,
+                                             self.waveFlag,
+                                             self.epsFact_source,
+                                             self.waveHeight,
+                                             self.waveCelerity,
+                                             self.waveFrequency,
+                                             self.waveNumber,
+                                             self.waterDepth,
+                                             c[('r',0)])
+
     def evaluate(self,t,c):
         import pdb
         phi = None; n = None; kappa = None; porosity = None; meanGrain = None
