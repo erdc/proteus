@@ -306,8 +306,15 @@ class  NS_base:
             for l in range(n.nLevels):
                 if mlMesh.meshList[l].hasGeometricInfo != True:
                     mlMesh.meshList[l].computeGeometricInfo()
-                tolList.append(n.tolFac*(mlMesh.meshList[l].h**2))
-                linTolList.append(n.linTolFac*(mlMesh.meshList[l].h**2))
+
+		tolList.append(n.tolFac)
+                linTolList.append(n.linTolFac)
+		# IDO HACK
+		# Input should be able to have direct control
+		# The fact that multilevel solvers need to modify tol should be handled by if statement (or other logic...)                
+		#tolList.append(n.tolFac*(mlMesh.meshList[l].h**2))
+                #linTolList.append(n.linTolFac*(mlMesh.meshList[l].h**2))
+		
             log("Setting up MultilevelTransport for "+p.name)
             #pdb.set_trace()
             model = Transport.MultilevelTransport(p,n,mlMesh,OneLevelTransportType=p.LevelModelType)
@@ -497,7 +504,7 @@ class  NS_base:
                 #import pdb
                 #pdb.set_trace()
                 if m.stepController.stepExact and m.stepController.t_model_last != self.tnList[1]:
-                    log("Spin-up step exact called for model %s" % (m.name,))
+                    log("Spin-up step exact called for model %s" % (m.name,),level=3)
                     m.stepController.stepExact_model(self.tnList[1])
                 log("Spin-Up Initializing time history for model step controller")
                 m.stepController.initializeTimeHistory()
@@ -578,24 +585,27 @@ class  NS_base:
         #a loop for substeps(stages).
         import pdb
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
-            #
+            log("==============================================================",level=0)
             log("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
+	    log("==============================================================",level=0)
             #
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                self.systemStepController.stepExact_system(self.tn)
             while self.systemStepController.t_system_last < self.tn: 
                 #
                 log("System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,
-                                                              self.systemStepController.dt_system))
+                                                              self.systemStepController.dt_system),level=3)
                 #
                 while (not self.systemStepController.converged() and
                        not systemStepFailed):
                     #
-                    log("Split operator iteration %i" % (self.systemStepController.its,))
+                    log("Split operator iteration %i" % (self.systemStepController.its,),level=3)
+		     
                     #
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
                         #
-                        log("Fractional step %12.5e for model %s" % (self.t_stepSequence,model.name))
+			log("Model: %s" % (model.name),level=1)
+                        log("Fractional step %12.5e for model %s" % (self.t_stepSequence,model.name),level=3)
                         #
                         for m in model.levelModelList:
                             if m.movingDomain and m.tLast_mesh != self.systemStepController.t_system_last:
@@ -607,7 +617,7 @@ class  NS_base:
                         #
                         stepFailed = False
                         if model.stepController.stepExact and model.stepController.t_model_last != self.t_stepSequence:
-                            log("Step exact called for model %s" % (model.name,))
+                            log("Step exact called for model %s" % (model.name,),level=3)
                             model.stepController.stepExact_model(self.t_stepSequence)
                         while (model.stepController.t_model_last < self.t_stepSequence and
                                not stepFailed and
@@ -615,13 +625,13 @@ class  NS_base:
                             #
                             log("Model step t=%12.5e, dt=%12.5e for model %s" % (model.stepController.t_model,
                                                                                  model.stepController.dt_model,
-                                                                                 model.name))
+                                                                                 model.name),level=3)
                             #
                             for self.tSubstep in model.stepController.substeps:
                                 #
-                                log("Model substep t=%12.5e for model %s" % (self.tSubstep,model.name))
+                                log("Model substep t=%12.5e for model %s" % (self.tSubstep,model.name),level=3)
                                 #TODO: model.stepController.substeps doesn't seem to be updated after a solver failure unless model.stepController.stepExact is true
-                                log("Model substep t=%12.5e for model %s model.timeIntegration.t= %12.5e" % (self.tSubstep,model.name,model.levelModelList[-1].timeIntegration.t))
+                                log("Model substep t=%12.5e for model %s model.timeIntegration.t= %12.5e" % (self.tSubstep,model.name,model.levelModelList[-1].timeIntegration.t),level=3)
                                 #
                                 model.stepController.setInitialGuess(model.uList,model.rList)
                                 solverFailed = model.solver.solveMultilevel(uList=model.uList,
@@ -657,7 +667,7 @@ class  NS_base:
                                 log("Step Taken, t_stepSequence= %s Model step t=%12.5e, dt=%12.5e for model %s" % (self.t_stepSequence,
                                                                                                                     model.stepController.t_model,
                                                                                                                     model.stepController.dt_model,
-                                                                                                                    model.name))
+                                                                                                                    model.name),level=3)
                                 for av in self.auxiliaryVariables[model.name]:
                                     av.calculate()
                         #end model step
@@ -728,7 +738,7 @@ class  NS_base:
                     self.ar[index].sync()
             if systemStepFailed:
                 break
-        log("Finished calculating solution",level=0)
+        log("Finished calculating solution",level=3)
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)
             self.closeArchive(model,index)
@@ -778,8 +788,8 @@ class  NS_base:
         import xml.etree.ElementTree as ElementTree
         if self.archiveFlag == ArchiveFlags.UNDEFINED:
             return
-        log("Writing initial mesh for  model = "+model.name)
-        log("Writing initial conditions for  model = "+model.name)
+        log("Writing initial mesh for  model = "+model.name,level=3)
+        log("Writing initial conditions for  model = "+model.name,level=3)
         if not self.so.useOneArchive or index==0:
             self.ar[index].domain = ElementTree.SubElement(self.ar[index].tree.getroot(),"Domain")
         self.writeVectors=True
@@ -823,8 +833,8 @@ class  NS_base:
         if t == None:
             t = self.systemStepController.t_system
 
-        log("Writing mesh header for  model = "+model.name+" at time t="+str(t))
-        log("Writing solution for  model = "+model.name)
+        log("Writing mesh header for  model = "+model.name+" at time t="+str(t),level=3)
+        log("Writing solution for  model = "+model.name,level=3)
         if self.so.useOneArchive:
             if index==0:
                 self.femSpaceWritten={}
