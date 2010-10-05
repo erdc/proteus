@@ -430,7 +430,7 @@ class Osher_PsiTC_controller(SC_base):
             #physical time step
             self.t_model = self.substeps[0]
             self.substeps.append(self.substeps[0])
-            log("Osher-PsiTC iteratioin %d |res| = %12.5e" %(self.nSteps,res))
+            log("Osher-PsiTC iteration %d |res| = %12.5e" %(self.nSteps,res),level=1)
         elif self.nSteps >= self.nStepsMax:
 #             for m in self.model.levelModelList:
 #                 if self.nStepsOsher > 0:

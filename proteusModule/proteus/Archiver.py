@@ -154,7 +154,7 @@ class AR_base:
             self.tree.write(f)
             f.close()
     def sync(self):
-        log("Syncing Archive")
+        log("Syncing Archive",level=3)
         self.clear_xml()
         self.xmlFile.write(self.xmlHeader)
         indentXML(self.tree.getroot())

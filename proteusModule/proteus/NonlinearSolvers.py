@@ -248,16 +248,15 @@ class NonlinearSolver:
         self.norm_du = self.unorm(self.du)
         if self.computeRates ==  True:
             self.computeConvergenceRates()
-        if self.convergenceTest == 'its':
+        if self.convergenceTest == 'its' or self.convergenceTest == 'rits':
             if self.its == self.maxIts:
                 self.convergedFlag = True
-        elif self.convergenceTest == 'r' or self.convergenceTest == 'rits':
-            if self.its == self.maxIts and self.convergenceTest == 'rits':
-                self.convergedFlag = True
+        #print self.atol_r, self.rtol_r         
+        if self.convergenceTest == 'r' or self.convergenceTest == 'rits': 
             if (self.its != 0 and
-                self.norm_r < self.rtol_r*self.norm_r0 + self.atol_r):
+                self.norm_r < self.rtol_r*self.norm_r0 + self.atol_r):                
                 self.convergedFlag = True
-        elif self.convergenceTest == 'u':
+        if self.convergenceTest == 'u':
             if (self.convergingIts != 0 and
                 self.s * self.norm_du < self.tol_du):
                 self.convergedFlag = True
@@ -265,6 +264,7 @@ class NonlinearSolver:
             self.computeAverages()
         if self.printInfo == True:
             print self.info()
+        #print self.convergedFlag    
         return self.convergedFlag
     def failed(self):
         self.failedFlag = False
@@ -425,7 +425,8 @@ class Newton(NonlinearSolver):
         self.gammaK_max=0.0
         while (not self.converged(r) and
                not self.failed()):
-            log("Newton it %d norm(r)=%12.5e" % (self.its-1,self.norm_r))
+            if self.maxIts>1:
+	      log("   Newton it %d norm(r) = %12.5e   %g" % (self.its-1,self.norm_r,100*self.norm_r/self.norm_r0),level=1)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
                 self.F.getJacobian(self.J)
@@ -613,8 +614,323 @@ class Newton(NonlinearSolver):
                     Viewers.newPlot()
                     Viewers.newWindow()
                 #raw_input("wait")
-            log("Newton it %d norm(r)=%12.5e (converged)" % (self.its,self.norm_r))
+            if self.maxIts>1:
+               log("   Final     %d norm(r) = %12.5e   %g" % (self.its-1,self.norm_r,100*self.norm_r/self.norm_r0),level=1)
+
             return self.failedFlag
+        if self.maxIts>1:
+            log("   Final     %d norm(r) = %12.5e   %g" % (self.its-1,self.norm_r,100*self.norm_r/self.norm_r0),level=1)
+class NewtonNS(NonlinearSolver):
+    """
+    A simple iterative solver that is Newton's method
+    if you give it the right Jacobian
+    """
+    def __init__(self,
+                 linearSolver,
+                 F,J=None,du=None,par_du=None,
+                 rtol_r  = 1.0e-4,
+                 atol_r  = 1.0e-16,
+                 rtol_du = 1.0e-4,
+                 atol_du = 1.0e-16,
+                 maxIts  = 100,
+                 norm = l2Norm,
+                 convergenceTest = 'r',
+                 computeRates = True,
+                 printInfo = True,
+                 fullNewton=True,
+                 directSolver=False,
+                 EWtol=True,
+                 maxLSits = 100):
+        import copy
+        self.par_du = par_du
+        if par_du != None:
+            F.dim_proc = par_du.dim_proc
+        NonlinearSolver.__init__(self,F,J,du,
+                                 rtol_r,
+                                 atol_r,
+                                 rtol_du,
+                                 atol_du,
+                                 maxIts,
+                                 norm,
+                                 convergenceTest,
+                                 computeRates,
+                                 printInfo)
+        self.updateJacobian=True
+        self.fullNewton=fullNewton
+        self.linearSolver = linearSolver
+        self.directSolver = directSolver
+        self.lineSearch = True
+        #mwf turned back on self.lineSearch = False
+        self.EWtol=EWtol
+        #mwf added
+        self.maxLSits = maxLSits
+        if self.linearSolver.computeEigenvalues:
+            self.JLast = copy.deepcopy(self.J)
+            self.J_t_J = copy.deepcopy(self.J)
+            self.dJ_t_dJ = copy.deepcopy(self.J)
+            self.JLsolver=LU(self.J_t_J,computeEigenvalues=True)
+            self.dJLsolver=LU(self.dJ_t_dJ,computeEigenvalues=True)
+            self.u0 = numpy.zeros(self.F.dim,'d')
+    def setLinearSolverTolerance(self,r):
+        self.norm_r = self.norm(r)
+        gamma  = 0.9
+        etaMax = 0.9999
+        if self.norm_r == 0.0:
+            etaMin = 0.1*self.atol_r
+        else:
+            etaMin = 0.1*(self.rtol_r*self.norm_r0 + self.atol_r)/self.norm_r
+        if self.its > 1:
+            etaA = gamma * self.norm_r**2/self.norm_r_last**2
+            if self.its > 2:
+                if gamma*self.etaLast**2 < 0.1:
+                    etaC = min(etaMax,etaA)
+                else:
+                    etaC = min(etaMax,max(etaA,gamma*self.etaLast**2))
+            else:
+                etaC = min(etaMax,etaA)
+        else:
+            etaC = etaMax
+        eta = min(etaMax,max(etaC,etaMin))
+        self.etaLast = eta
+        self.norm_r_last = self.norm_r
+        self.linearSolver.setResTol(rtol=eta,atol=0.0)
+    def solveInitialize(self,u,r,b):
+        if r == None:
+            if self.r == None:
+                self.r = Vec(self.F.dim)
+            r=self.r
+        else:
+            self.r=r
+        self.computeResidual(u,r,b)
+        self.its = 0
+
+        self.norm_cont_r0 = self.norm(r[:r.shape[0]/4])
+        self.norm_mom_r0  = self.norm(r[r.shape[0]/4:])	
+	self.norm_r0=sqrt(self.norm_cont_r0**2 + self.norm_mom_r0**2)  
+		
+        self.norm_r = self.norm_r0
+        self.ratio_r_solve = 1.0
+        self.ratio_du_solve = 1.0
+        self.last_log_ratio_r = 1.0
+        self.last_log_ratior_du = 1.0
+        #self.convergenceHistoryIsCorrupt=False
+        self.convergingIts = 0
+        #mwf begin hack for conv. rate
+        self.gustafsson_alpha = -12345.0
+        self.gustafsson_norm_du_last = -12345.0
+        #mwf end hack for conv. rate
+        return r
+
+    def converged(self,r):
+        self.convergedFlag = False
+        self.norm_r = self.norm(r)
+        self.norm_cont_r = self.norm(r[:r.shape[0]/4])
+        self.norm_mom_r  = self.norm(r[r.shape[0]/4:])	
+	self.norm_du= 1.0/float(self.its+2)
+        if self.computeRates ==  True:
+            self.computeConvergenceRates()
+        if self.convergenceTest == 'its' or self.convergenceTest == 'rits':
+            if self.its == self.maxIts:
+                self.convergedFlag = True
+        #print self.atol_r, self.rtol_r         
+        if self.convergenceTest == 'r' or self.convergenceTest == 'rits': 
+            if (self.its != 0 and
+                self.norm_cont_r < self.rtol_r*self.norm_cont_r0 + self.atol_r and
+                self.norm_mom_r  < self.rtol_r*self.norm_mom_r0  + self.atol_r):                  
+                self.convergedFlag = True
+
+        if self.convergedFlag == True and self.computeRates == True:
+            self.computeAverages()
+        if self.printInfo == True:
+            print self.info()
+        #print self.convergedFlag    
+        return self.convergedFlag
+
+
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        import Viewers
+        """
+        Solve F(u) = b
+
+        b -- right hand side
+        u -- solution
+        r -- F(u) - b
+        """
+        import sys
+        if self.linearSolver.computeEigenvalues:
+            self.u0[:]=u
+        r=self.solveInitialize(u,r,b)
+
+        if par_u != None:
+            #allow linear solver to know what type of assembly to use
+            self.linearSolver.par_fullOverlap = self.par_fullOverlap
+            #no overlap
+            if not self.par_fullOverlap:
+                par_r.scatter_reverse_add()
+            else:
+                #no overlap or overlap (until we compute norms over only owned dof)
+                par_r.scatter_forward_insert()
+        self.norm_r_hist = []
+        self.norm_du_hist = []
+        self.gammaK_max=0.0
+        while (not self.converged(r) and
+               not self.failed()):
+            log("   Newton it %d Mom.  norm(r) = %12.5e   %g" % (self.its,self.norm_mom_r,100*self.norm_mom_r/self.norm_mom_r0),level=1)
+            log("   Newton it %d Cont. norm(r) = %12.5e   %g" % (self.its,self.norm_cont_r,100*self.norm_cont_r/self.norm_cont_r0),level=1)
+
+            if self.updateJacobian or self.fullNewton:
+                self.updateJacobian = False
+                self.F.getJacobian(self.J)
+                #mwf commented out print numpy.transpose(self.J)
+                if self.linearSolver.computeEigenvalues:
+                    self.JLast[:]=self.J
+                    self.J_t_J[:]=self.J
+                    self.J_t_J *= numpy.transpose(self.J)
+                    self.JLsolver.prepare()
+                    self.JLsolver.calculateEigenvalues()
+                    self.norm_2_J_current = sqrt(max(self.JLsolver.eigenvalues_r))
+                    self.norm_2_Jinv_current = 1.0/sqrt(min(self.JLsolver.eigenvalues_r))
+                    self.kappa_current = self.norm_2_J_current*self.norm_2_Jinv_current
+                    self.betaK_current = self.norm_2_Jinv_current
+                self.linearSolver.prepare(b=r)
+            self.du[:]=0.0
+            if not self.directSolver:
+                if self.EWtol:
+                    self.setLinearSolverTolerance(r)
+            self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+	    self.linearSolver.printPerformance()
+            #print self.du
+            u-=self.du
+            if par_u != None:
+                par_u.scatter_forward_insert()
+            self.computeResidual(u,r,b)
+            #no overlap
+            #print "local r",r
+            if par_r != None:
+                #no overlap
+                if not self.par_fullOverlap:
+                    par_r.scatter_reverse_add()
+                else:
+                    par_r.scatter_forward_insert()
+            #print "global r",r
+            if self.linearSolver.computeEigenvalues:
+                #approximate Lipschitz constant of J
+                self.F.getJacobian(self.dJ_t_dJ)
+                self.dJ_t_dJ-=self.JLast
+                self.dJ_t_dJ *= numpy.transpose(self.dJ_t_dJ)
+                self.dJLsolver.prepare()
+                self.dJLsolver.calculateEigenvalues()
+                self.norm_2_dJ_current = sqrt(max(self.dJLsolver.eigenvalues_r))
+                self.etaK_current = self.W*self.norm(self.du)
+                self.gammaK_current = self.norm_2_dJ_current/self.etaK_current
+                self.gammaK_max = max(self.gammaK_current,self.gammaK_max)
+                self.norm_r_hist.append(self.W*self.norm(r))
+                self.norm_du_hist.append(self.W*self.unorm(self.du))
+                if self.its  == 1:
+#                     print "max(|du|) ",max(numpy.absolute(self.du))
+#                     print self.du[0]
+#                     print self.du[-1]
+                    self.betaK_0 = self.betaK_current
+                    self.etaK_0 = self.etaK_current
+                if self.its  == 2:
+                    self.betaK_1 = self.betaK_current
+                    self.etaK_1 = self.etaK_current
+                print "it = ",self.its
+                print "beta(|Jinv|)  ",self.betaK_current
+                print "eta(|du|)     ",self.etaK_current
+                print "gamma(Lip J') ",self.gammaK_current
+                print "gammaM(Lip J')",self.gammaK_max
+                print "kappa(cond(J))",self.kappa_current
+                if self.betaK_current*self.etaK_current*self.gammaK_current <= 0.5:
+                    print "r         ",(1.0+sqrt(1.0-2.0*self.betaK_current*self.etaK_current*self.gammaK_current))/(self.betaK_current*self.gammaK_current)
+                if self.betaK_current*self.etaK_current*self.gammaK_max <= 0.5:
+                    print "r_max     ",(1.0+sqrt(1.0-2.0*self.betaK_current*self.etaK_current*self.gammaK_max))/(self.betaK_current*self.gammaK_max)
+                print "lambda_max",max(self.linearSolver.eigenvalues_r)
+                print "lambda_i_max",max(self.linearSolver.eigenvalues_i)
+                print "norm_J",self.norm_2_J_current
+                print "lambda_min",min(self.linearSolver.eigenvalues_r)
+                print "lambda_i_min",min(self.linearSolver.eigenvalues_i)
+            if self.lineSearch:
+                norm_r_cur = self.norm(r)
+                norm_r_last = 2.0*norm_r_cur
+                ls_its = 0
+                #print norm_r_cur,self.atol_r,self.rtol_r
+#                 while ( (norm_r_cur >= 0.99 * self.norm_r + self.atol_r) and
+#                         (ls_its < self.maxLSits) and
+#                         norm_r_cur/norm_r_last < 1.0):
+                while ( (norm_r_cur >= 0.9999 * self.norm_r) and
+                        (ls_its < self.maxLSits)):
+                    self.convergingIts = 0
+                    ls_its +=1
+                    self.du *= 0.5
+                    u += self.du
+                    if par_u != None:
+                        par_u.scatter_forward_insert()
+                    self.computeResidual(u,r,b)
+                    #no overlap
+                    if par_r != None:
+                        #no overlap
+                        if not self.par_fullOverlap:
+                            par_r.scatter_reverse_add()
+                        else:
+                            par_r.scatter_forward_insert()
+                    norm_r_last = norm_r_cur
+                    norm_r_cur = self.norm(r)
+                    log("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
+                                                                           norm_r_cur,
+                                                                           self.atol_r,
+                                                                           self.rtol_r))
+                if ls_its > 0:
+                    log("Linesearches = %i" % ls_its,level=3)
+        else:
+            if self.linearSolver.computeEigenvalues:
+                if self.betaK_0*self.etaK_0*self.gammaK_max <= 0.5:
+                    print "r_{-,0}     ",(1.0+sqrt(1.0-2.0*self.betaK_0*self.etaK_0*self.gammaK_max))/(self.betaK_0*self.gammaK_max)
+                if self.betaK_1*self.etaK_1*self.gammaK_max <= 0.5 and self.its > 1:
+                    print "r_{-,1}     ",(1.0+sqrt(1.0-2.0*self.betaK_1*self.etaK_1*self.gammaK_max))/(self.betaK_1*self.gammaK_max)
+                print "beta0*eta0*gamma ",self.betaK_0*self.etaK_0*self.gammaK_max
+                if Viewers.viewerType == 'gnuplot':
+                    max_r = max(1.0,max(self.linearSolver.eigenvalues_r))
+                    max_i = max(1.0,max(self.linearSolver.eigenvalues_i))
+                    for lambda_r,lambda_i in zip(self.linearSolver.eigenvalues_r,self.linearSolver.eigenvalues_i):
+                        Viewers.datFile.write("%12.5e %12.5e \n" % (lambda_r/max_r,lambda_i/max_i))
+                    Viewers.datFile.write("\n \n")
+                    cmd = "set term x11 %i; plot \'%s\' index %i with points title \"%s\" \n" % (Viewers.windowNumber,
+                                                                                                      Viewers.datFilename,
+                                                                                                      Viewers.plotNumber,
+                                                                                                      'scaled eigenvalues')
+                    Viewers.cmdFile.write(cmd)
+                    Viewers.viewerPipe.write(cmd)
+                    Viewers.newPlot()
+                    Viewers.newWindow()
+                    for it,r in zip(range(len(self.norm_r_hist)),self.norm_r_hist):
+                        Viewers.datFile.write("%12.5e %12.5e \n" % (it,math.log(r/self.norm_r_hist[0])))
+                    Viewers.datFile.write("\n \n")
+                    cmd = "set term x11 %i; plot \'%s\' index %i with linespoints title \"%s\" \n" % (Viewers.windowNumber,
+                                                                                                      Viewers.datFilename,
+                                                                                                      Viewers.plotNumber,
+                                                                                                      'log(r)/log(r0) history')
+                    Viewers.cmdFile.write(cmd)
+                    Viewers.viewerPipe.write(cmd)
+                    Viewers.newPlot()
+                    Viewers.newWindow()
+                    for it,du in zip(range(len(self.norm_du_hist)),self.norm_du_hist):
+                        Viewers.datFile.write("%12.5e %12.5e \n" % (it,math.log(du/self.norm_du_hist[0])))
+                    Viewers.datFile.write("\n \n")
+                    cmd = "set term x11 %i; plot \'%s\' index %i with linespoints title \"%s\" \n" % (Viewers.windowNumber,
+                                                                                                      Viewers.datFilename,
+                                                                                                      Viewers.plotNumber,
+                                                                                                      'log(du) history')
+                    Viewers.cmdFile.write(cmd)
+                    Viewers.viewerPipe.write(cmd)
+                    Viewers.newPlot()
+                    Viewers.newWindow()
+                #raw_input("wait")
+            # return self.failedFlag
+        log("   Final       Mom.  norm(r) = %12.5e   %g" % (self.norm_mom_r,100*self.norm_mom_r/self.norm_mom_r0),level=1)
+        log("   FInal       Cont. norm(r) = %12.5e   %g" % (self.norm_cont_r,100*self.norm_cont_r/self.norm_cont_r0),level=1)
+        #return self.failedFlag
+  
 
 class SSPRKNewton(Newton):
     """
@@ -1859,6 +2175,28 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
             else:
                 par_du=None
 	    levelNonlinearSolverList.append(Newton(linearSolver=linearSolverList[l],
+						   F=nonlinearOperatorList[l],
+						   J=jacobianList[l],
+                                                   du=duList[l],
+                                                   par_du=par_du,
+						   rtol_r=relativeToleranceList[l],
+						   atol_r=absoluteTolerance,
+						   maxIts=maxSolverIts,
+                                                   norm = nonlinearSolverNorm,
+						   convergenceTest = levelSolverConvergenceTest,
+                                                   computeRates = computeLevelSolverRates,
+						   printInfo=printLevelSolverInfo,
+						   fullNewton=levelSolverFullNewtonFlag,
+						   directSolver=linearDirectSolverFlag,
+                                                   EWtol=EWtol,
+                                                   maxLSits=maxLSits ))
+    elif levelNonlinearSolverType == NewtonNS:
+	for l in range(nLevels):
+            if par_duList != None and len(par_duList) > 0:
+                par_du=par_duList[l]
+            else:
+                par_du=None
+	    levelNonlinearSolverList.append(NewtonNS(linearSolver=linearSolverList[l],
 						   F=nonlinearOperatorList[l],
 						   J=jacobianList[l],
                                                    du=duList[l],
