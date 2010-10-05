@@ -306,14 +306,11 @@ class  NS_base:
             for l in range(n.nLevels):
                 if mlMesh.meshList[l].hasGeometricInfo != True:
                     mlMesh.meshList[l].computeGeometricInfo()
-
-		tolList.append(n.tolFac)
-                linTolList.append(n.linTolFac)
-		# IDO HACK
-		# Input should be able to have direct control
-		# The fact that multilevel solvers need to modify tol should be handled by if statement (or other logic...)                
-		#tolList.append(n.tolFac*(mlMesh.meshList[l].h**2))
-                #linTolList.append(n.linTolFac*(mlMesh.meshList[l].h**2))
+   
+		fac = (mlMesh.meshList[l].h/mlMesh.meshList[0].h)**2
+		            
+		tolList.append(n.tolFac*fac)
+                linTolList.append(n.linTolFac*fac)
 		
             log("Setting up MultilevelTransport for "+p.name)
             #pdb.set_trace()
