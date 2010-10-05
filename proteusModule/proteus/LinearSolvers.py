@@ -226,6 +226,9 @@ class LinearSolver:
             self.infoString += "HISTORY IS CORRUPT!!! \n"
         self.infoString += "************End Linear Solver Info************\n"
         return self.infoString
+    def printPerformance(self):
+        pass
+	
     #petsc preconditioner interface
     def setUp(self, pc):
         print "===========preparing preconditioner============="
@@ -337,6 +340,10 @@ class PETSc(LinearSolver):
     def useTrueResidualTest(self,par_u):
         if par_u != None:
             self.ksp.useTrueResidualConvergence(par_u.cparVec)
+    def printPerformance(self):
+        self.ksp.info()
+	 
+ 
         
 class KSP_petsc4py(LinearSolver):
     def __init__(self,L,par_L,
