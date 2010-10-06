@@ -31,6 +31,7 @@ class SO_base:
         self.stepExact = stepExact
         self.updateAfterModelStep=True
         self.stepExactEps = 1.0e-12
+        self.stepFailures = 0
     def converged(self):
         #no iteration
         if self.its > 0:
@@ -69,13 +70,30 @@ class SO_base:
         #update step
         self.t_system_last = self.t_system
     def retryModelStep_solverFailure(self,model):
-        return model.stepController.retryStep_solverFailure()
+        self.retry = model.stepController.retryStep_solverFailure()
+        self.maxFailures = model.stepController.maxSolverFailures
+        return False#kick out to sequence level
     def retryModelStep_errorFailure(self,model):
-        return model.stepController.retryStep_errorFailure()
+        self.retry = model.stepController.retryStep_errorFailure()
+        return False
     def ignoreSequenceStepFailure(self,model):
-        return False#don't try to recover
+        return False#kick out to sequence level
     def retrySequence_modelStepFailure(self):
-        return False#don't try to recover
+        #retry whole sequence with new min time step
+        self.stepFailures +=1
+        if (self.stepFailures < self.maxFailures and self.retry):
+            self.choose_dt_system()
+            return True
+        else:
+            return False
+    # def retryModelStep_solverFailure(self,model):
+    #     return model.stepController.retryStep_solverFailure()
+    # def retryModelStep_errorFailure(self,model):
+    #     return model.stepController.retryStep_errorFailure()
+    # def ignoreSequenceStepFailure(self,model):
+    #     return False#don't try to recover
+    # def retrySequence_modelStepFailure(self):
+    #     return False#don't try to recover
     def modelStepTaken(self,model,t_stepSequence):
         log("SO_base modelStepTaken for model= %s t_system_last= %s t_model_last= %s  setting to t_stepSequence= %s " % (model.name,
                                                                                                                          self.t_system_last,
