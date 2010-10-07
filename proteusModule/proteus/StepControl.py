@@ -366,8 +366,8 @@ class Osher_PsiTC_controller(SC_base):
         for m in model.levelModelList:
             m.timeIntegration.isAdaptive=False
         self.nSteps=0
-        self.nStepsOsher=3
-        self.nStepsMax=100#0
+        self.nStepsOsher=nOptions.psitc['nStepsForce']
+        self.nStepsMax=nOptions.psitc['nStepsMax']
     def stepExact_model(self,tOut):
         #pseudo time step
         for m in self.model.levelModelList:
@@ -410,43 +410,25 @@ class Osher_PsiTC_controller(SC_base):
         for m in self.model.levelModelList:
             m.updateTimeHistory(self.t_model)
             m.timeIntegration.updateTimeHistory()
-        #print "ssError",ssError
         if ((self.nSteps < self.nStepsOsher or
              ssError >= 1.0) and
             self.nSteps < self.nStepsMax):
             self.nSteps+=1
-            #pseudo time step
-#            for m in self.model.levelModelList:
-#                m.timeIntegration.choose_dt()
             self.dt_model = m.timeIntegration.dt
-            if self.nSteps >= self.nStepsOsher:
-#                 if self.nSteps == self.nStepsOsher:
-#                     for m in self.model.levelModelList:
-#                         m.coefficients.weakBC_on=True
-#                         m.coefficients.setZeroLSweakDirichletBCs3(m)
-                self.dt_model = m.timeIntegration.dt*1.5**(self.nSteps-self.nStepsOsher)
-            self.dt_model = m.timeIntegration.dt*2.0**(self.nSteps-self.nStepsOsher)
+            if self.nSteps >= self.nStepsOsher:#start ramping up the time step
+                self.dt_model = m.timeIntegration.dt*2.0**(self.nSteps-self.nStepsOsher)
+            log("Osher-PsiTC dt %12.5e" %(self.dt_model),level=1)
             self.set_dt_allLevels()
             #physical time step
             self.t_model = self.substeps[0]
             self.substeps.append(self.substeps[0])
             log("Osher-PsiTC iteration %d |res| = %12.5e" %(self.nSteps,res),level=1)
         elif self.nSteps >= self.nStepsMax:
-#             for m in self.model.levelModelList:
-#                 if self.nStepsOsher > 0:
-#                     m.coefficients.weakBC_on=False
-#                 #m.coefficients.setZeroLSweakDirichletBCs3(m)
             log("Osher-PsiTC DID NOT Converge |res| = %12.5e but quitting anyway" %(res,))
             self.nSteps=0
         else:
-#             for m in self.model.levelModelList:
-#                 if self.nStepsOsher > 0:
-#                     m.coefficients.weakBC_on=False
-#                 #m.coefficients.setZeroLSweakDirichletBCs3(m)
             log("Osher-PsiTC converged |res| = %12.5e" %(res,))
             self.nSteps=0
-            #self.t_model_last = self.t_model
-#        m.coefficients.weakBC_on=True
     def choose_dt_model(self):
         #don't modify dt_model
         self.solverFailures=0
