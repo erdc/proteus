@@ -493,9 +493,10 @@ class Mesh:
             self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
                                                                "GridType":"Collection",
                                                                "CollectionType":"Temporal"})
-            self.arEBGridCollection = SubElement(ar.domain,"Grid",{"Name":"EBMesh "+name,
-                                                                         "GridType":"Collection",
-                                                                         "CollectionType":"Temporal"})
+            if EB:
+                self.arEBGridCollection = SubElement(ar.domain,"Grid",{"Name":"EBMesh "+name,
+                                                                       "GridType":"Collection",
+                                                                       "CollectionType":"Temporal"})
         if self.arGrid == None or self.arTime.get('Value') != str(t):
             #
             #topology and geometry
