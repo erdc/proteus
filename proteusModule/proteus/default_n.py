@@ -135,6 +135,8 @@ maxNonlinearIts =10
 
 maxLineSearches =10
 
+psitc = {'nStepsForce':3,'nStepsMax':100}
+
 matrix = SparseMatrix
 
 multilevelLinearSolver = LU
