@@ -443,6 +443,100 @@ class Osher_PsiTC_controller(SC_base):
         self.t_model = self.substeps[0]
         self.setSubsteps([self.substeps[0]])
 
+
+class Osher_PsiTC_controller2(SC_base):
+    def __init__(self,model,nOptions):
+        SC_base.__init__(self,model,nOptions)
+        for ci in nOptions.atol_res.keys():
+            self.atol = nOptions.atol_res[ci]
+            self.rtol = nOptions.rtol_res[ci]
+        self.stepExact = True
+        for m in model.levelModelList:
+            m.timeIntegration.isAdaptive=False
+        self.nSteps=0
+        self.nStepsOsher=nOptions.psitc['nStepsForce']
+        self.nStepsMax=nOptions.psitc['nStepsMax']
+		
+    def stepExact_model(self,tOut):
+        #pseudo time step
+        for m in self.model.levelModelList:
+            m.timeIntegration.choose_dt()
+        self.dt_model = m.timeIntegration.dt
+        self.set_dt_allLevels()
+        #physical time step
+        self.t_model=tOut
+        self.setSubsteps([tOut])
+    def initialize_dt_model(self,t0,tOut):
+        self.saveSolution()
+        self.t_model_last = t0
+        self.t_model = tOut
+        #pseudo time step
+        for m in self.model.levelModelList:
+            m.timeIntegration.initialize_dt(t0,tOut,m.q)
+        #set the starting time steps
+        self.dt_model = m.timeIntegration.dt
+        self.set_dt_allLevels()
+        #physical time step
+        self.t = tOut
+        self.setSubsteps([tOut])
+        self.nSteps=0
+	
+
+	
+        log("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
+                                                                   self.dt_model),
+            level=1)
+    def updateSubstep(self):
+        #choose  a new dt and add a substep without increasing t
+        #if the steady state has been reached then append the new  t to the  substeps
+        self.solverFailures=0
+        self.errorFailures=0
+        self.saveSolution()
+        #here we just need to test the error and set to tOut if steady state
+        if self.nSteps == 0:
+            self.res0 = self.model.solver.solverList[-1].norm_r0
+            for m in self.model.levelModelList:
+                m.timeIntegration.choose_dt()
+        res = self.model.solver.solverList[-1].norm_r0
+        ssError = res/(self.res0*self.rtol + self.atol)
+        for m in self.model.levelModelList:
+            m.updateTimeHistory(self.t_model)
+            m.timeIntegration.updateTimeHistory()
+        if ((self.nSteps < self.nStepsOsher or
+             ssError >= 1.0) and
+            self.nSteps < self.nStepsMax):
+            self.nSteps+=1
+            self.dt_model = m.timeIntegration.dt
+            if self.nSteps >= self.nStepsOsher:#start ramping up the time step
+                self.dt_model = m.timeIntegration.dt*1.5 #**(self.nSteps-self.nStepsOsher)
+            #log("Osher-PsiTC dt %12.5e" %(self.dt_model),level=1)
+            self.set_dt_allLevels()
+            #physical time step
+            self.t_model = self.substeps[0]
+            self.substeps.append(self.substeps[0])
+          
+
+            log("Osher-PsiTC iteration %d  dt = %12.5e  |res| = %12.5e %g  " %(self.nSteps,self.dt_model,res,(res/self.res0)*100.0),level=1)
+        elif self.nSteps >= self.nStepsMax:
+            log("Osher-PsiTC DID NOT Converge |res| = %12.5e but quitting anyway" %(res,))
+            self.nSteps=0
+        else:
+            log("Osher-PsiTC converged |res| = %12.5e %12.5e" %(res,ssError*100.0))
+            self.nSteps=0
+    def choose_dt_model(self):
+        #don't modify dt_model
+        self.solverFailures=0
+        self.errorFailures=0
+        self.saveSolution()
+        #pseudo time step
+        for m in self.model.levelModelList:
+            m.timeIntegration.choose_dt()
+        self.dt_model = m.timeIntegration.dt
+        self.set_dt_allLevels()
+        #physical time step
+        self.t_model = self.substeps[0]
+        self.setSubsteps([self.substeps[0]])
+
 class Osher_FMM_controller(Osher_controller):
     """
     TODO 
