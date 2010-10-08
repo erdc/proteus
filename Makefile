@@ -1,6 +1,10 @@
 all: install_externalPackages install_proteusModule
 
 clean: clean_externalPackages clean_proteusModule
+    
+cleaner:
+	make clean
+	rm -rf $PROTEUS_PREFIX    
 
 install_externalPackages:
 	cd externalPackages && make all
