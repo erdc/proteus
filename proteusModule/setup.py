@@ -492,6 +492,6 @@ setup(name='proteus',
                              include_dirs=[numpy.get_include(),'include'])                
                    ],
       data_files=[('proteusConfig',['config.py'])],
-      scripts = ['scripts/parun','scripts/gf2poly'],
+      scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py'],
       requires=['numpy']
       )
