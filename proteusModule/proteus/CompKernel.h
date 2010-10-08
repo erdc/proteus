@@ -619,6 +619,23 @@ public:
     //cek hack shockCapturingDiffusion*fabs(strong_residual)*grad_phi_G_grad_phi
     numDiff = num/den;
   }
+
+
+  inline void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
+					  const double  G[NSPACE*NSPACE],
+					  const double& strong_residual,
+					  const double grad_u[NSPACE],
+					  double& numDiff)
+  {
+    double  den = 0.0;
+    for (int I=0;I<NSPACE;I++)
+      for (int J=0;J<NSPACE;J++)
+        den += grad_u[I]*G[I*NSPACE+J]*grad_u[J];
+
+    numDiff = shockCapturingDiffusion*fabs(strong_residual)/(sqrt(den) + 1.0e-8);
+  }
+
+
   inline void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
 					  const double& elementDiameter,
 					  const double& strong_residual,
