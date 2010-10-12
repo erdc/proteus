@@ -2516,7 +2516,7 @@ min(h_k)             : %d\n""" % (self.nElements_global,
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0):
         Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Hexahedron",tCount)
         
-    def generateFromHexFile(self,filebase,base=1):
+    def generateFromHexFile(self,filebase,base=0):
         import cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateFromHexFile(self.cmesh,filebase,base)
