@@ -253,6 +253,17 @@ class  NS_base:
                 mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                       parallelPartitioningType=n.parallelPartitioningType)
+            elif isinstance(p.domain,Domain.MeshHexDomain):
+                mesh=MeshTools.HexahedralMesh()
+                log("Reading coarse mesh from file")
+                mesh.generateFromHexFile(p.domain.meshfile)
+                mlMesh = MeshTools.MultilevelHexahedralMesh(0,0,0,skipInit=True,
+                                                             nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                             parallelPartitioningType=n.parallelPartitioningType)
+                log("Generating %i-level mesh from coarse mesh" % (n.nLevels,))
+                mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                      parallelPartitioningType=n.parallelPartitioningType)
             mlMesh_nList.append(mlMesh)
             if opts.viewMesh:
                 log("Attempting to visualize mesh")
