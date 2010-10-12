@@ -894,6 +894,27 @@ cmeshToolsWriteTetgenFiles(PyObject* self,
 }
 
 static PyObject* 
+cmeshToolsGenerateFromHexFile(PyObject* self,
+			      PyObject* args)
+{
+  PyObject *cmesh;
+  const char *filebase;
+  int base,failed;
+  if (!PyArg_ParseTuple(args,
+                        "Osi",
+                        &cmesh,
+                        &filebase,
+			&base))
+    return NULL;
+
+  failed = readHex(MESH(cmesh),filebase,base);
+  constructElementBoundaryElementsArray_hexahedron(MESH(cmesh));
+  //failed = readBC(MESH(cmesh),filebase,base);
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
+static PyObject* 
 cmeshToolsGenerateFrom3DMFile(PyObject* self,
 			      PyObject* args)
 {
@@ -913,6 +934,7 @@ cmeshToolsGenerateFrom3DMFile(PyObject* self,
   Py_INCREF(Py_None); 
   return Py_None;
 }
+
 
 static PyObject* cmeshToolsComputeGeometricInfo_triangle(PyObject* self,
                                                          PyObject* args)
@@ -1857,6 +1879,10 @@ static PyMethodDef cmeshToolsMethods[] = {
    cmeshToolsGenerateFrom3DMFile,       
    METH_VARARGS,                        
    "just read from 3DM files directly"},  /*doc string for method*/
+   {"generateFromHexFile",            
+   cmeshToolsGenerateFromHexFile,       
+   METH_VARARGS,                        
+   "just read from Hex files directly"},  /*doc string for method*/
    {"allocateNodeAndElementNodeDataStructures",            
    cmeshToolsAllocateNodeAndElementNodeDataStructures,       
    METH_VARARGS,                        
