@@ -4409,6 +4409,81 @@ int read3DM(Mesh& mesh, const char* filebase, int indexBase)
   return 0;
 }
 
+int readHex(Mesh& mesh, const char* filebase, int indexBase)
+{
+  /***************************************************
+    read nodes and element information from 
+     formatted mesh assuming base name in filebase
+     vertex numbering base as input
+
+  **************************************************/
+  using namespace std;
+  assert(filebase);
+  bool failed=true;
+  std::string meshFilename= std::string(filebase)+".mesh";
+  std::ifstream meshFile(meshFilename.c_str());
+
+  std::cout<<"Reading hex mesh: "<<meshFilename<<std::endl;
+
+  if (!meshFile.good())
+    {
+      std::cerr<<"readHex cannot open file "
+	       <<meshFilename<<std::endl;
+      failed = true;
+      return failed;
+    }
+  //read element type
+  std::string fileType;
+  meshFile>>fileType;
+  if (fileType != "HEX")
+    {
+      std::cerr<<"readHex does not recognize filetype "
+	       <<fileType<<std::endl;
+      failed = true;
+      return failed;
+    }
+  
+  //read mesh size 
+  meshFile>>mesh.nNodes_global>>mesh.nElements_global; 
+
+  //read nodes
+  mesh.nodeArray         = new double[mesh.nNodes_global*3];
+  mesh.nodeMaterialTypes = new int   [mesh.nNodes_global];
+  for (int nN=0;nN<mesh.nNodes_global;nN++) 
+    {
+        meshFile>>mesh.nodeArray[nN*3+0]>>
+                  mesh.nodeArray[nN*3+1]>>
+                  mesh.nodeArray[nN*3+2];
+        
+	mesh.nodeMaterialTypes[nN] = 0;    
+    }
+
+  //read elements 
+  mesh.nNodes_element = 8;
+  mesh.elementNodesArray    = new int[mesh.nElements_global*mesh.nNodes_element];
+  mesh.elementMaterialTypes = new int[mesh.nElements_global];
+
+  int n0,n1,n2,n3,n4,n5,n6,n7,emt;
+  for (int eN=0;eN<mesh.nNodes_global;eN++) 
+    {
+       int eNne = eN*mesh.nNodes_element;
+       meshFile>>n0>>n1>>n2>>n3>>n4>>n5>>n6>>n7>>emt;
+
+       mesh.elementNodesArray[eNne+0] = n0-indexBase;
+       mesh.elementNodesArray[eNne+1] = n1-indexBase;
+       mesh.elementNodesArray[eNne+2] = n2-indexBase;
+       mesh.elementNodesArray[eNne+3] = n3-indexBase;
+       mesh.elementNodesArray[eNne+4] = n4-indexBase;
+       mesh.elementNodesArray[eNne+5] = n5-indexBase;
+       mesh.elementNodesArray[eNne+6] = n6-indexBase;
+       mesh.elementNodesArray[eNne+7] = n7-indexBase;
+
+       mesh.elementMaterialTypes[eN] = emt-indexBase;
+    }
+ 
+  return 0;
+}
+
 int readBC(Mesh& mesh, const char* filebase, int indexBase)
 {
   /***************************************************

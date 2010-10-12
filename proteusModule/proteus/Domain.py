@@ -534,6 +534,14 @@ class Mesh3DMDomain(D_base):
         D_base.__init__(self,3,name=fileprefix)
         self.meshfile=fileprefix
 
+class MeshHexDomain(D_base):
+    """
+    3D domains from Hex mesh files
+    """
+    def __init__(self,fileprefix):
+        D_base.__init__(self,3,name=fileprefix)
+        self.meshfile=fileprefix
+	
 class PiecewiseLinearComplexDomain(D_base):
     """
     3D domains desribed by closed surfaces made up of general polygonal facets.
