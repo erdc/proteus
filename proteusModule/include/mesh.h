@@ -329,6 +329,7 @@ extern "C"
   int readTetgenElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, int base);
   int writeTetgenMesh(Mesh& mesh, const char* filebase, int base);
   int read3DM(Mesh& mesh, const char* filebase, int indexBase);
+  int readHex(Mesh& mesh, const char* filebase, int indexBase);
   int readBC(Mesh& mesh, const char* filebase, int indexBase);
   int copyElementBoundaryMaterialTypesFromTriangle(triangulateio* trimesh, 
 						   Mesh& mesh, int base);
