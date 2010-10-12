@@ -942,7 +942,7 @@ extern "C"
  	    }
       }    
     mesh.nInteriorElementBoundaries_global = interiorElementBoundaries.size();
-    mesh.interiorElementBoundariesArray = new int[mesh.nInteriorElementBoundaries_global];
+    mesh.interiorElementBoundariesArray  =  new int[mesh.nInteriorElementBoundaries_global];
     mesh.nExteriorElementBoundaries_global = exteriorElementBoundaries.size();
     mesh.exteriorElementBoundariesArray = new int[mesh.nExteriorElementBoundaries_global];
     int ebNI=0,ebNE=0;
@@ -951,7 +951,7 @@ extern "C"
     for (set<int>::iterator ebN=exteriorElementBoundaries.begin();ebN != exteriorElementBoundaries.end(); ebN++,ebNE++)
       mesh.exteriorElementBoundariesArray[ebNE] = *ebN;
     set<NodeTuple<2> > edges;
-    
+     
     int ledge[12][2] = {{0,1},{1,2},{2,3},{3,0},
                         {0,4},{1,5},{2,6},{3,7},
                         {4,5},{5,6},{6,7},{7,4}};
@@ -959,17 +959,17 @@ extern "C"
     
     
     
-    std::cout<<"extracting edges"<<std::endl;
+    std::cout<<"Extracting edges"<<std::endl;
     for (int eN=0;eN<mesh.nElements_global;eN++)
       {
 	int nodes[2];
 	for (int e=0;e<12;e++)
 	  {
-           	
+    	
 	    nodes[0] = mesh.elementNodesArray[eN*8+ledge[e][0]];
 	    nodes[1] = mesh.elementNodesArray[eN*8+ledge[e][1]];
-                     
-	    edges.insert(NodeTuple<2>(nodes));
+                  
+            edges.insert(NodeTuple<2>(nodes));
 	  }   
       }
       
@@ -983,7 +983,8 @@ extern "C"
         mesh.edgeNodesArray[edgeN*2+1] = edge_p->nodes[1];
         edge_p++;
       }
-      
+
+    std::cout<<"Extracting nodeStar"<<std::endl;      
     vector<set<int> > nodeStar(mesh.nNodes_global);
     for (int edgeN=0;edgeN<mesh.nEdges_global;edgeN++)
       {
@@ -994,7 +995,9 @@ extern "C"
     mesh.nodeStarOffsets = new int[mesh.nNodes_global+1];
     mesh.nodeStarOffsets[0] = 0;
     for (int nN=1;nN<mesh.nNodes_global+1;nN++)
-      mesh.nodeStarOffsets[nN] = mesh.nodeStarOffsets[nN-1] + nodeStar[nN-1].size();
+      {
+        mesh.nodeStarOffsets[nN] = mesh.nodeStarOffsets[nN-1] + nodeStar[nN-1].size();
+      }  
     mesh.nodeStarArray = new int[mesh.nodeStarOffsets[mesh.nNodes_global]];
     for (int nN=0,offset=0;nN<mesh.nNodes_global;nN++)
       for (set<int>::iterator nN_star=nodeStar[nN].begin();nN_star!=nodeStar[nN].end();nN_star++,offset++)
@@ -1004,7 +1007,8 @@ extern "C"
     for (int nN=0;nN<mesh.nNodes_global;nN++)
       mesh.max_nNodeNeighbors_node=max(mesh.max_nNodeNeighbors_node,mesh.nodeStarOffsets[nN+1]-mesh.nodeStarOffsets[nN]);
     //mwf repeat for node-->elements arrays
-  
+
+    std::cout<<"Extracting nodeElementsStar"<<std::endl;   
     vector<set<int> > nodeElementsStar(mesh.nNodes_global);
     for (int eN = 0; eN < mesh.nElements_global; eN++)
       {
@@ -1024,7 +1028,8 @@ extern "C"
 	    mesh.nodeElementsArray[offset] = *eN_star;
 	  }
       }
-    
+
+    std::cout<<"Set material types"<<std::endl;     
     //mwf end node-->elements construction
     mesh.elementBoundaryMaterialTypes = new int[mesh.nElementBoundaries_global];
     //if nodeMaterial is DEFAULT, go ahead and set to interior or exterior
@@ -4464,7 +4469,7 @@ int readHex(Mesh& mesh, const char* filebase, int indexBase)
   mesh.elementMaterialTypes = new int[mesh.nElements_global];
 
   int n0,n1,n2,n3,n4,n5,n6,n7,emt;
-  for (int eN=0;eN<mesh.nNodes_global;eN++) 
+  for (int eN=0;eN<mesh.nElements_global;eN++) 
     {
        int eNne = eN*mesh.nNodes_element;
        meshFile>>n0>>n1>>n2>>n3>>n4>>n5>>n6>>n7>>emt;
