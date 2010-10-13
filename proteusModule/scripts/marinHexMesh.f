@@ -11,7 +11,10 @@
       real*8  xs(4),ys(4),zs(3)  
       real*8  dx(3),dy(3),dz(2)  
       integer xn(3),yn(3),zn(2) 
-      integer xnn,ynn,znn
+      integer xnn,ynn,znn 
+      
+      integer meshf
+      logical ex
 
       real*8, allocatable :: x(:),y(:),z(:)
 
@@ -40,9 +43,23 @@
       zs(2)=0.161d0
       zs(3)=1.0d0
 
-      dx(:) = 0.15d0
-      dy(:) = 0.15d0
-      dz(:) = 0.15d0
+
+      meshf=11
+      inquire(file='size.mesh', exist=ex) 
+
+      
+      if (ex) then
+        open(meshf, file='size.mesh', status='unknown')  
+	read(meshf,*) dx
+	read(meshf,*) dy
+	read(meshf,*) dz	
+	close(meshf)
+      else
+        dx(:) = 0.15d0
+        dy(:) = 0.15d0
+        dz(:) = 0.15d0
+      endif
+
 
       write(*,*) "Get Refinement"
       call getrefine(xs,dx,xsn,xn)
@@ -204,21 +221,21 @@
          else
            NNODZ2 = NNODZ2+1           
            xg2(NNODZ2,:) = xg(i,:)
-           o2n(i)=NNODZ2
+           o2n(i)=NNODZ2-1
          endif    
   
       end do
 
       NEL2 = 0
       do i = 1, NEL
-        if ( (o2n(IEN(i,1)).ge.0).and.(o2n(IEN(i,2)).ge.0).and.
-     &       (o2n(IEN(i,3)).ge.0).and.(o2n(IEN(i,4)).ge.0).and.
-     &       (o2n(IEN(i,5)).ge.0).and.(o2n(IEN(i,6)).ge.0).and.
-     &       (o2n(IEN(i,7)).ge.0).and.(o2n(IEN(i,8)).ge.0)) then
-          xn = (xg(IEN(i,1),:) + xg(IEN(i,2),:)
-     &       +  xg(IEN(i,3),:) + xg(IEN(i,4),:)   
-     &       +  xg(IEN(i,5),:) + xg(IEN(i,6),:) 
-     &       +  xg(IEN(i,7),:) + xg(IEN(i,8),:))/8d0   
+        if ( (o2n(IEN(i,1)+1).ge.0).and.(o2n(IEN(i,2)+1).ge.0).and.
+     &       (o2n(IEN(i,3)+1).ge.0).and.(o2n(IEN(i,4)+1).ge.0).and.
+     &       (o2n(IEN(i,5)+1).ge.0).and.(o2n(IEN(i,6)+1).ge.0).and.
+     &       (o2n(IEN(i,7)+1).ge.0).and.(o2n(IEN(i,8)+1).ge.0)) then
+          xn = (xg(IEN(i,1)+1,:) + xg(IEN(i,2)+1,:)
+     &       +  xg(IEN(i,3)+1,:) + xg(IEN(i,4)+1,:)   
+     &       +  xg(IEN(i,5)+1,:) + xg(IEN(i,6)+1,:) 
+     &       +  xg(IEN(i,7)+1,:) + xg(IEN(i,8)+1,:))/8d0   
          
           if ((xn(1).gt.x0).and.(xn(1).lt.x1).and.
      &        (xn(2).gt.y0).and.(xn(2).lt.y1).and.
@@ -226,14 +243,14 @@
            write(*,*) "  Removing Element ", i, " (based on coord!)"        
           else
             NEL2 = NEL2 + 1
-            IEN2(NEL2,1)=o2n(IEN(i,1))
-            IEN2(NEL2,2)=o2n(IEN(i,2))
-            IEN2(NEL2,3)=o2n(IEN(i,3))
-            IEN2(NEL2,4)=o2n(IEN(i,4))
-            IEN2(NEL2,5)=o2n(IEN(i,5))
-            IEN2(NEL2,6)=o2n(IEN(i,6))
-            IEN2(NEL2,7)=o2n(IEN(i,7))
-            IEN2(NEL2,8)=o2n(IEN(i,8))
+            IEN2(NEL2,1)=o2n(IEN(i,1)+1)
+            IEN2(NEL2,2)=o2n(IEN(i,2)+1)
+            IEN2(NEL2,3)=o2n(IEN(i,3)+1)
+            IEN2(NEL2,4)=o2n(IEN(i,4)+1)
+            IEN2(NEL2,5)=o2n(IEN(i,5)+1)
+            IEN2(NEL2,6)=o2n(IEN(i,6)+1)
+            IEN2(NEL2,7)=o2n(IEN(i,7)+1)
+            IEN2(NEL2,8)=o2n(IEN(i,8)+1)
          endif
         else
           write(*,*) "  Removing Element", i
