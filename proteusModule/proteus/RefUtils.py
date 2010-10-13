@@ -68,39 +68,39 @@ p2refNodes.append(numpy.array([[0.0,   0.0,   0.0],
                                  [0.0,   0.0,   0.5]]))#(0,3)
 #todo generate these for use in interpolation conditions
 q2refNodes = []
-q2refNodes.append(numpy.array([[0.0,   0.0,   0.0],#nodes on bottom
-                               [1.0,   0.0,   0.0],
-                               [1.0,   1.0,   0.0],
-                               [0.0,   1.0,   0.0],
+q2refNodes.append(numpy.array([[-1.0,   -1.0,   -1.0],#nodes on bottom
+                               [ 1.0,   -1.0,   -1.0],
+                               [ 1.0,    1.0,   -1.0],
+                               [-1.0,    1.0,   -1.0],
                                
-			       [0.0,   0.0,   1.0],#nodes on top
-                               [1.0,   0.0,   1.0],
-                               [1.0,   1.0,   1.0],
-                               [0.0,   1.0,   1.0],
+			       [-1.0,   -1.0,    1.0],#nodes on top
+                               [ 1.0,   -1.0,    1.0],
+                               [ 1.0,    1.0,    1.0],
+                               [-1.0,    1.0,    1.0],
 			       
-                               [0.5,   0.0,   0.0],#nodes on bottom edges
-                               [1.0,   0.5,   0.0], 
-                               [0.5,   1.0,   0.0],
-                               [0.0,   0.5,   0.0],
+                               [ 0.0,   -1.0,   -1.0],#nodes on bottom edges
+                               [ 1.0,    0.0,   -1.0], 
+                               [ 0.0,   -1.0,   -1.0],
+                               [-1.0,    0.0,   -1.0],
 			          
-                               [0.0,   0.0,   0.5],#nodes on side edges
-                               [1.0,   0.0,   0.5], 
-                               [1.0,   1.0,   0.5],
-                               [0.0,   1.0,   0.5],
+                               [-1.0,   -1.0,    0.0],#nodes on side edges
+                               [ 1.0,   -1.0,    0.0], 
+                               [ 1.0,    1.0,    0.0],
+                               [-1.0,    1.0,    0.0],
                          
-			       [0.5,   0.0,   1.0],#nodes on top edges
-                               [1.0,   0.5,   1.0], 
-                               [0.5,   1.0,   1.0],
-                               [0.0,   0.5,   1.0],			       			       			       
+			       [ 0.0,   -1.0,    1.0],#nodes on top edges
+                               [ 1.0,    0.0,    1.0], 
+                               [ 0.0,    1.0,    1.0],
+                               [-1.0,    0.0,    1.0],			       			       			       
                                
-			       [0.5,   0.5,   0.0],#nodes on face centers
-			       [0.5,   0.0,   0.5],
-			       [1.0,   0.5,   0.5],
-			       [0.5,   1.0,   0.5],
-			       [0.0,   0.5,   0.5],
-			       [0.5,   0.5,   1.0],
+			       [ 0.0,    0.0,   -1.0],#nodes on face centers
+			       [ 0.0,   -1.0,    0.0],
+			       [ 1.0,    0.0,    0.0],
+			       [ 0.0,    1.0,    0.0],
+			       [-1.0,    0.0,    0.5],
+			       [ 0.0,    0.0,    1.0],
 			       
-                               [0.5,   0.5,   0.5]])) #node on element center 
+                               [ 0.0,    0.0,    0.0]])) #node on element center 
 
 #which local boundaries are ref nodes "on"
 p2tetrahedronLocalBoundaryLookup = {0:[1,2,3],
