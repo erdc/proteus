@@ -3204,7 +3204,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 			      if (edge_global < edgeOffsets_new[rank] || edge_global >= edgeOffsets_new[rank+1])
 				edges_overlap.insert(edge_global);
 			    }
-			  assert(foundEdge);
+			  //assert(foundEdge);
 			}//edges
 		  }
               }
@@ -3251,7 +3251,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 			    if (edge_global < edgeOffsets_new[rank] || edge_global >= edgeOffsets_new[rank+1])
 			      edges_overlap.insert(edge_global);
 			  }
-			assert(foundEdge);
+			//assert(foundEdge);
 		      }//edges
                 }
           }
@@ -4261,7 +4261,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
   for (int i = 0; i < nElements_owned; i++)
     {
       int dof_global = mesh.nNodes_global + mesh.nEdges_global + mesh.nElementBoundaries_global  + elementNumbering_subdomain2global[i];
-      quadraticNumbering_new2old[nNodes_owned + nEdges_owned + nElements_owned + i] = dof_global;
+      quadraticNumbering_new2old[nNodes_owned + nEdges_owned + nBoundaries_owned + i] = dof_global;
     }  
 //-------------------
 
@@ -4292,8 +4292,8 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
   assert(subdomain_l2g);
   assert(lagrangeNodesArray);
   for (int sdN=0; sdN < size+1; sdN++)
-    offsets_subdomain_owned[sdN] = nodeOffsets_subdomain_owned[sdN]+edgeOffsets_subdomain_owned[sdN];
-  nDOF_all_processes = mesh.nNodes_global+mesh.nEdges_global;
+    offsets_subdomain_owned[sdN] = nodeOffsets_subdomain_owned[sdN]+edgeOffsets_subdomain_owned[sdN]+elementBoundaryOffsets_subdomain_owned[sdN]+elementOffsets_subdomain_owned[sdN];
+  nDOF_all_processes = mesh.nNodes_global+mesh.nEdges_global+ mesh.nElementBoundaries_global+mesh.nElements_global;
   nDOF_subdomain = mesh.subdomainp->nNodes_global+mesh.subdomainp->nEdges_global+mesh.subdomainp->nElementBoundaries_global+mesh.subdomainp->nElements_global;
   max_dof_neighbors = 2*mesh.max_nNodeNeighbors_node;
 
@@ -4349,7 +4349,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
 
 
 
-  localOffset += nEdges_owned;
+  localOffset += nElements_owned;
   for (int nN = nNodes_owned; nN < mesh.subdomainp->nNodes_global; nN++)
     {
       int dof_global_old = nodeNumbering_subdomain2global[nN];
@@ -4374,7 +4374,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
     {
       int dof_global_old = mesh.nNodes_global + mesh.nEdges_global + elementBoundaryNumbering_subdomain2global[i];
       int dof_global_new = quadraticNumbering_old2new_global[dof_global_old];
-      subdomain2global[localOffset + i-nEdges_owned] = dof_global_new;
+      subdomain2global[localOffset + i-nBoundaries_owned] = dof_global_new;
 //       //mwf debug
 //       if (rank == 0)
 // 	std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i-nEdges_owned<<" nEdges_owned= "<<nEdges_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
@@ -4384,7 +4384,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
     {
       int dof_global_old = mesh.nNodes_global + mesh.nEdges_global + mesh.nElementBoundaries_global + elementNumbering_subdomain2global[i];
       int dof_global_new = quadraticNumbering_old2new_global[dof_global_old];
-      subdomain2global[localOffset + i-nEdges_owned] = dof_global_new;
+      subdomain2global[localOffset + i-nElements_owned] = dof_global_new;
 //       //mwf debug
 //       if (rank == 0)
 // 	std::cout<<" rank= "<<rank<<" i= "<<i<<" local dof= "<<localOffset+i-nEdges_owned<<" nEdges_owned= "<<nEdges_owned<<" dof_old= "<<dof_global_old<<" new= "<<dof_global_new<<std::endl;
