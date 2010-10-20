@@ -80,7 +80,7 @@ q2refNodes.append(numpy.array([[-1.0,   -1.0,   -1.0],#nodes on bottom
 			       
                                [ 0.0,   -1.0,   -1.0],#nodes on bottom edges
                                [ 1.0,    0.0,   -1.0], 
-                               [ 0.0,   -1.0,   -1.0],
+                               [ 0.0,    1.0,   -1.0],
                                [-1.0,    0.0,   -1.0],
 			          
                                [-1.0,   -1.0,    0.0],#nodes on side edges
@@ -97,7 +97,7 @@ q2refNodes.append(numpy.array([[-1.0,   -1.0,   -1.0],#nodes on bottom
 			       [ 0.0,   -1.0,    0.0],
 			       [ 1.0,    0.0,    0.0],
 			       [ 0.0,    1.0,    0.0],
-			       [-1.0,    0.0,    0.5],
+			       [-1.0,    0.0,    0.0],
 			       [ 0.0,    0.0,    1.0],
 			       
                                [ 0.0,    0.0,    0.0]])) #node on element center 
