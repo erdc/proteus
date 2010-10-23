@@ -704,8 +704,6 @@ class NewtonNS(NonlinearSolver):
         self.computeResidual(u,r,b)
         self.its = 0
 
-        self.norm_function(u[:self.F.dim_proc])
-
         self.norm_cont_r0 = self.norm_function(r[:self.F.dim_proc/4])
         self.norm_mom_r0  = self.norm_function(r[self.F.dim_proc/4:self.F.dim_proc])
 
