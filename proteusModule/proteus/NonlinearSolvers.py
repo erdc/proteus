@@ -704,8 +704,13 @@ class NewtonNS(NonlinearSolver):
         self.computeResidual(u,r,b)
         self.its = 0
 
-        self.norm_cont_r0 = self.norm(r[:r.shape[0]/4])
-        self.norm_mom_r0  = self.norm(r[r.shape[0]/4:])	
+        self.norm_function(u[:self.F.dim_proc])
+
+        self.norm_cont_r0 = self.norm_function(r[:self.F.dim_proc/4])
+        self.norm_mom_r0  = self.norm_function(r[self.F.dim_proc/4:self.F.dim_proc])
+
+        #self.norm_cont_r0 = self.norm(r[:r.shape[0]/4])
+        #self.norm_mom_r0  = self.norm(r[r.shape[0]/4:])	
 	self.norm_r0=sqrt(self.norm_cont_r0**2 + self.norm_mom_r0**2)  
 		
         self.norm_r = self.norm_r0
@@ -724,8 +729,11 @@ class NewtonNS(NonlinearSolver):
     def converged(self,r):
         self.convergedFlag = False
         self.norm_r = self.norm(r)
-        self.norm_cont_r = self.norm(r[:r.shape[0]/4])
-        self.norm_mom_r  = self.norm(r[r.shape[0]/4:])	
+        self.norm_cont_r = self.norm_function(r[:self.F.dim_proc/4])
+        self.norm_mom_r  = self.norm_function(r[self.F.dim_proc/4:self.F.dim_proc])
+
+        #self.norm_cont_r = self.norm(r[:r.shape[0]/4])
+        #self.norm_mom_r  = self.norm(r[r.shape[0]/4:])	
 	self.norm_du= 1.0/float(self.its+2)
         if self.computeRates ==  True:
             self.computeConvergenceRates()
