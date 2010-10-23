@@ -216,7 +216,7 @@
          if ((xg(i,1).gt.x0).and.(xg(i,1).lt.x1).and.
      &       (xg(i,2).gt.y0).and.(xg(i,2).lt.y1).and.
      &       (xg(i,3).gt.z0).and.(xg(i,3).lt.z1)) then
-           write(*,*) "Removing point = ", xg(i,:)
+           !write(*,*) "Removing point = ", xg(i,:)
            o2n(i) = -1
          else
            NNODZ2 = NNODZ2+1           
@@ -252,8 +252,8 @@
             IEN2(NEL2,7)=o2n(IEN(i,7)+1)
             IEN2(NEL2,8)=o2n(IEN(i,8)+1)
          endif
-        else
-          write(*,*) "  Removing Element", i
+        !else
+        !  write(*,*) "  Removing Element", i
         endif
       end do
 
