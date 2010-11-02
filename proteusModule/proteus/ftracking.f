@@ -748,6 +748,8 @@ CMWF NOW HAVE TO REFERENCE XPT AS FLAT ARRAY
       DIMENSION VT1W(MAXEQ,MAXND),VT2W(MAXEQ,MAXND)
       DIMENSION DN_S(MAXND),DN(MAXND)
       DIMENSION ICHECK(8)
+CMWF LOCAL VARIABLES
+      INTEGER IDEBUG,II,KK,ISTEPOUTSIDE
 C
 C =================== START PT USING ADAPTIVE RK ====================
 C
@@ -756,19 +758,43 @@ C
       ICOUNT=0
       IDSDT=1
       DT=DT0
-C
+      IDEBUG = 4
+C MWF ADD SANITY CHECK TO MAKE SURE POINT IS IN ELEMENT?
+      
+      CALL INTRP123(MAXEQ,MAXND,NEQ,NODE,XS,XW,DN_S,DJAC)
+      DO I=1,NODE
+         IF (DN_S(I).LT.-DN_SAFE.OR.DN_S(I).GT.1.0+DN_SAFE) THEN
+            WRITE(6,*)'***PROBLEM ENTERING ELTRAK123  T= ',T,' DT= ',DT,
+     &           ' I1= ',I1,' I2= ',I2,' I3= ',I3
+            WRITE(6,*)'XS= ',(XS(II),II=1,NEQ)
+            WRITE(6,*)'DN_S= ',(DN_S(II),II=1,NODE)
+            DO II=1,NODE
+               DO KK=1,NEQ
+                  WRITE(6,*)'XW(',KK,',',II,')= ',XW(KK,II)
+               ENDDO
+            ENDDO
+C            CALL EXIT(1)
+         ENDIF
+      ENDDO
   100 CONTINUE
+C MWF DEBUG CATCH TOO SMALL TIME STEP
+      IF (DABS(DT).LT.1.0D-10) THEN
+         WRITE(6,*)'ELTRAK123 DT= ',DT,' TOO SMALL QUITTING'
+         CALL EXIT(1)
+      ENDIF
       ICOUNT=ICOUNT+1
       CALL RKCK_PT
      I    (MAXEQ,MAXND,NEQ,NODE, T,DT,T1,T2,
      I     XW,VT1W,VT2W,XS,
      M     AK1,AK2,AK3,AK4,AK5,AK6,XTEMP,
      O     XOUT5,XOUT4,XERR,DN_S)
+      IF (IDEBUG.GT.1) THEN
 CMWF DEBUG
-C      WRITE(6,*)'ELTRAK AFTER RKCK_PT T= ',T,' DT= ',DT,
-C     &     ' T1= ',T1,' T2= ',T2
-C      WRITE(6,*)'XS= ',(XS(I),I=1,NEQ)
-C      WRITE(6,*)'DN_S= ',(DN_S(I),I=1,NODE)
+         WRITE(6,*)'ELTRAK AFTER RKCK_PT T= ',T,' DT= ',DT,
+     &     ' T1= ',T1,' T2= ',T2
+         WRITE(6,*)'XS= ',(XS(I),I=1,NEQ)
+         WRITE(6,*)'DN_S= ',(DN_S(I),I=1,NODE)
+      ENDIF
 C
 C CHECK ERROR IN ALL THREE DIRECTIONS 
 C
@@ -788,9 +814,11 @@ C      ==> DESIRED ACCURACY IS NOT REACHED
 C      ==> TIMESTEP NEEDS TO BE REDUCED
 C
       IF(RATIO.GT.1.0E0)THEN
+         IF (IDEBUG.GT.2) THEN
 CMWF DEBUG
-C        WRITE(6,*)'ELTRAK AFTER ERROR FAILURE T= ',T,' RATIO= ',RATIO,
-C     &       ' DT= ',DT,' DTT= ',DT*SF*((RR)**(0.25E0)) 
+            WRITE(6,*)'ELTRAK AFTER ERROR FAILURE T= ',T,' RATIO= ',
+     &           RATIO,' DT= ',DT,' DTT= ',DT*SF*((RR)**(0.25E0)) 
+         ENDIF
         DTT=DT*SF*((RR)**(0.25E0)) 
         DT=DTT
         GOTO 100
@@ -801,12 +829,17 @@ C      ==> TIMESTEP CAN BE INCREASED
 C        
       ELSEIF(RATIO.LE.1.0E0)THEN
 CMWF DEBUG
-C        WRITE(6,*)'ELTRAK AFTER ERROR SUCCESS T= ',T,' RATIO= ',RATIO
-
+         IF (IDEBUG.GT.2) THEN
+            WRITE(6,*)'ELTRAK AFTER ERROR SUCCESS T= ',T,' RATIO= ',
+     &           RATIO
+         ENDIF
 C
 C === EXAMINE THE COMPUTED ENDING LOCATION
 C
-        XSI=0.0D0
+C MWF WHAT IF FORCE SOME REDUCTION IF STEP OUTSIDE
+CMWF ORIG        
+         XSI=0.0D0
+         
         CALL INTRP123
      I      (MAXEQ,MAXND,NEQ,NODE, XOUT5, XW,
      O       DN,DJAC)
@@ -814,9 +847,10 @@ C MWF WHAT IF NEGATIVE?
 C        DL=(DJAC)**(DEQ)
         DL=DABS(DJAC)**(DEQ)
 CMWF DEBUG
-C        WRITE(6,*)'XOUT5= ',(XOUT5(I),I=1,NEQ)
-C        WRITE(6,*)'DJAC= ',DJAC, 'DN= ',(DN(I),I=1,NODE)
-
+        IF (IDEBUG.GT.1) THEN
+           WRITE(6,*)'XOUT5= ',(XOUT5(I),I=1,NEQ)
+           WRITE(6,*)'DJAC= ',DJAC, 'DN= ',(DN(I),I=1,NODE)
+        ENDIF
 C
 C === ADJUST DN AND XOUT5 WHEN THE END LOCATION IS VERY CLOSE TO 
 C     ELEMENT BOUNDARY
@@ -871,9 +905,15 @@ C
 C === EXAMINE THE VALUES OF DN
 C
 CMWF DEBUG
-C        WRITE(6,*)' ELTRAK EXAMINE DN, DN_S VALUES'
-C        WRITE(6,*)'DN= ',(DN(II),II=1,NODE)
-C        WRITE(6,*)'DN_S= ',(DN_S(II),II=1,NODE)
+        IF (IDEBUG.GT.2) THEN
+           WRITE(6,*)' ELTRAK EXAMINE DN, DN_S VALUES'
+           WRITE(6,*)'DN= ',(DN(II),II=1,NODE)
+           WRITE(6,*)'DN_S= ',(DN_S(II),II=1,NODE)
+        ENDIF
+
+CMWF FLAG TO SAY THAT STEPPED THROUGH ELEMENT, MAKE 
+C     SURE RESTEP EVEN IF 
+        ISTEPOUTSIDE = 0
         DO 150 I=1,NODE
 
 C
@@ -881,31 +921,40 @@ C A. WHEN THE ENDING LOCATION IS OUTSIDE OF ELEMENT M
 C    ===> COMPUTE XSI
 C
           IF(DN(I).LT.0.0E0)THEN
+             ISTEPOUTSIDE = 1
+             IF (IDEBUG.GT.0) THEN
 C MWF DEBUG
-C            WRITE(6,*)' DN(',I,')= ',DN(I),' OUTSIDE ELEMENT'
-
+                WRITE(6,*)' DN(',I,')= ',DN(I),' OUTSIDE ELEMENT'
+             ENDIF
             D1=DN_S(I)
             D2=DN(I)
             D12=DN_S(I)-DN(I)
 C
 C A1. WHEN THERE IS NO TRACKIING THROUGH THIS ELEMENT
 C
-            IF(DABS(D1*DL).LT.ATOL)THEN
-C
+C MWF 9/30/10           
+C            IF(DABS(D1*DL).LT.ATOL)THEN
+            IF (DABS(D1).LT.DN_SAFE)THEN
+C     
 C IF THE PT IS LEAVING THE ELEMENT
 C ==> SET IDSDT TO 0, AND IDENTIFY I1, I2, I3 TO
 C     CONDUCT PT IN AN ADJACENT ELEMENT
 C
-              IF(DABS(D2*DL).GT.ATOL)THEN
+CMWF 9/30/10
+C              IF(DABS(D2*DL).GT.ATOL)THEN
+C ALSO HAD ATOL IN DN_CHECK
+               IF(DABS(D2).GT.DN_SAFE)THEN
                 CALL DN_CHECK
-     I              (MAXND,NODE,NEQ, DL,ATOL,
+     I              (MAXND,NODE,NEQ, DL,DN_SAFE,
      I               DN_S,
      O               I1,I2,I3)
                 IDSDT=0
 C MWF DEBUG
-C                WRITE(6,*)' ELTRAK DN_CHECK LEAVING IDSDT= ',IDSDT, 
-C     &               ' I1= ',I1,' I2= ',I2,' I3= ',I3, 
-C     &               ' D1= ',D1, ' D2= ',D2,' D12= ',D12
+                IF (IDEBUG.GT.0) THEN
+                   WRITE(6,*)' ELTRAK DN_CHECK LEAVING IDSDT= ',IDSDT, 
+     &                  ' I1= ',I1,' I2= ',I2,' I3= ',I3, 
+     &                  ' D1= ',D1, ' D2= ',D2,' D12= ',D12
+                ENDIF
                 RETURN
               ENDIF
 C
@@ -916,12 +965,27 @@ C
 C IF THE ENDING LOCATION CAN BE CONSIDERED ON THE ELEMENT BOUNDARY
 C ==> NO NEED TO REDUCE TIMESTEP
 C
-              IF(DABS(D2*DL).LE.ATOL)GOTO 150
-C
+C MWF 9/30/10
+C              IF(DABS(D2*DL).LE.ATOL) THEN
+               IF(DABS(D2).LE.DN_SAFE) THEN
+                 IF (IDEBUG.GT.2) THEN
+                    WRITE(6,*)'D2*DL.LE.DN_SAFE GOTO 150'
+                 ENDIF
+                 GOTO 150
+              ENDIF
+C     
 C IF THE ENDING LOCATION IS TRULY OUTSIDE OF THE ELEMENT
 C ==> COMPUTE AN INTERPOLATION FACTOR
 C
-              XSI=DMAX1(XSI,D12/D1)
+C MWF WHAT HAPPENS IF D12/D1 NEGATIVE?
+C E.G. D1=DN_S SMALL, NEGATIVE BELOW TOL 
+C ORIG              XSI=DMAX1(XSI,D12/D1)
+              XSI=DMAX1(XSI,DABS(D12/D1))
+              IF(IDEBUG.GT.1) THEN 
+                 WRITE(6,*)'DN(',I,') OUTSIDE ELEMENT CUTTING TIME STEP'
+                 WRITE(6,*)' XSI=', XSI,' D12= ',D12,' D1= ',D1
+              ENDIF
+
             ENDIF
           ENDIF
   150   CONTINUE
@@ -932,6 +996,16 @@ C
           DTT=DT/XSI
           DT=DTT
           GOTO 100
+        ENDIF
+CMWF WHAT HAPPENS IF STEP THROUGH ELEMENT BUT XSI NOT > 1?
+        IF(ISTEPOUTSIDE.EQ.1)THEN
+           DTT=DT/2.000D0
+           DT=DTT
+           IF(IDEBUG.GT.0)THEN
+              WRITE(6,*)'WARNING ELTRAK12 ISTEPOUTSIDE= ',ISTEPOUTSIDE,
+     &             ' XSI= ',XSI, ' RESTEP DT= ',DT
+           ENDIF
+           GOTO 100
         ENDIF
 C
 C B. WHEN THE ENDING LOCATION IS EITHER WITHIN THE ELEMENT OR 
@@ -968,15 +1042,22 @@ C IF THE ENDING LOCATION IS ON THE ELEMENT BOUNDARY
 C ==> EXIT PT IN THIS ELEMENT
 C
         DO I=1,NODE
-          IF(DABS(DN(I)*DL).LT.ATOL)THEN
+CMWF 9/30/10
+C          IF(DABS(DN(I)*DL).LT.ATOL)THEN
+C ALSO HAD ATOL IN DN_CHECK
+           IF(DABS(DN(I)).LT.DN_SAFE)THEN
             CALL DN_CHECK
-     I          (MAXND,NODE,NEQ, DL,ATOL,
+     I          (MAXND,NODE,NEQ, DL,DN_SAFE,
      I           DN,
      O           I1,I2,I3)
+            IF (IDEBUG.GT.1) THEN
 C MWF DEBUG
-C            WRITE(6,*)' ELTRAK DN_CHECK ON BNDY STAYING IDSDT= ',IDSDT, 
-C     &           ' I1= ',I1,' I2= ',I2,' I3= ',I3, 
-C     &           ' DN_S= ',(DN_S(II),II=1,NODE)
+               WRITE(6,*)' ELTRAK DN_CHECK ON BNDY STAYING IDSDT= ',
+     &              IDSDT,' I1= ',I1,' I2= ',I2,' I3= ',I3 
+               WRITE(6,*)'   DN_S= ',(DN_S(II),II=1,NODE)
+               WRITE(6,*)'   DN= ',(DN(II),II=1,NODE)
+               WRITE(6,*)'   XS= ',(XS(II),II=1,NEQ)
+            ENDIF
             RETURN
           ENDIF
         ENDDO
@@ -988,10 +1069,13 @@ CMWF ORIG
 C        IF(IDSDT.EQ.-1)RETURN
 C MWF DEBUG
         IF(IDSDT.EQ.-1) THEN
+           IF (IDEBUG.GT.1) THEN
 C MWF DEBUG
-C            WRITE(6,*)' ELTRAK DN_CHECK ON BNDY STAYING IDSDT= ',IDSDT, 
-C     &           ' I1= ',I1,' I2= ',I2,' I3= ',I3, 
-C     &           ' DN_S= ',(DN_S(II),II=1,NODE)
+              WRITE(6,*)' ELTRAK DN_CHECK ON BNDY STAYING IDSDT= ',
+     &             IDSDT,' I1= ',I1,' I2= ',I2,' I3= ',I3, 
+     &             ' DN_S= ',(DN_S(II),II=1,NODE),
+     &             ' DN= ',(DN(II),II=1,NODE)
+           ENDIF
            RETURN
         ENDIF
 C MWF END DEBUG
