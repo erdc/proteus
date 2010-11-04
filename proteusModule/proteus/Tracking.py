@@ -344,7 +344,10 @@ class SteadyState_LinearAdvection_C0P1Velocity_PT123(Tracking_Base):
                  params={('atol_tracking',0):1.0e-7,#RK time integration tolerances
                          ('rtol_tracking',0):0.0,
                          ('sf_tracking',0):0.9,     #safety factor for RK integration
-                         ('dn_safe_tracking',0):1.0e-7}):#tolerance for traking in-element tests
+                         ('dn_safe_tracking',0):1.0e-7,#tolerance for traking in-element tests
+                         ('dt_init',0):0.001, #initial time step estimate if using constant value
+                         ('dt_init_flag',0):1, #how to pick initial time step (0 --> const, 1 --> CFL=1)
+                         ('rk_flag',0):45}):#RK type 
         Tracking_Base.__init__(self,mesh,nd,activeComponentList=activeComponentList,params=params)
         #build lookup array for indicating which nodes are on the boundary
         self.nodeOnBoundaryArray = numpy.zeros((self.mesh.nNodes_global,),'i')
@@ -427,8 +430,11 @@ class SteadyState_LinearAdvection_C0P1Velocity_PT123(Tracking_Base):
                             self.params[('rtol_tracking',ci)],
                             self.params[('sf_tracking',ci)],
                             self.params[('dn_safe_tracking',ci)],
+                            self.params[('dt_init',ci)],
+                            self.params[('dt_init_flag',ci)],self.params[('rk_flag',ci)],
                             self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
                             self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.elementDiametersArray,
                             self.mesh.nodeElementOffsets,
                             self.mesh.nodeElementsArray,
                             self.nodeOnBoundaryArray,
@@ -506,8 +512,11 @@ class SteadyState_LinearAdvection_C0P1Velocity_PT123(Tracking_Base):
                             self.params[('rtol_tracking',ci)],
                             self.params[('sf_tracking',ci)],
                             self.params[('dn_safe_tracking',ci)],
+                            self.params[('dt_init',ci)],
+                            self.params[('dt_init_flag',ci)],self.params[('rk_flag',ci)],
                             self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
                             self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.elementDiametersArray,
                             self.mesh.nodeElementOffsets,
                             self.mesh.nodeElementsArray,
                             self.nodeOnBoundaryArray,
@@ -567,7 +576,10 @@ class SteadyState_LinearAdvection_BDM1Velocity_PT123(SteadyState_LinearAdvection
                  params={('atol_tracking',0):1.0e-7,
                          ('rtol_tracking',0):0.0,
                          ('sf_tracking',0):0.9,
-                         ('dn_safe_tracking',0):1.0e-7}):
+                         ('dn_safe_tracking',0):1.0e-7,#tolerance for traking in-element tests
+                         ('dt_init',0):0.001, #initial time step estimate if using constant value
+                         ('dt_init_flag',0):1, #how to pick initial time step (0 --> const, 1 --> CFL=1)
+                         ('rk_flag',0):45}):
         Tracking_Base.__init__(self,mesh,nd,activeComponentList=activeComponentList,params=params)
         #build lookup array for indicating which nodes are on the boundary
         self.nodeOnBoundaryArray = numpy.zeros((self.mesh.nNodes_global,),'i')
@@ -603,7 +615,10 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123(Tracking_Base):
                          ('rtol_tracking',0):0.0,
                          ('sf_tracking',0):0.9,     #safety factor for RK integration
                          ('dn_safe_tracking',0):1.0e-7,#tolerance for traking in-element tests
-                         ('localVelocityRepresentationFlag',0):2}):#RT0 velocity representation, 2 -- flux based rep, 1 \vec a + b\vec x
+                         ('localVelocityRepresentationFlag',0):2,#RT0 velocity representation, 2 -- flux based rep, 1 \vec a + b\vec x
+                         ('dt_init',0):0.001, #initial time step estimate if using constant value
+                         ('dt_init_flag',0):1, #how to pick initial time step (0 --> const, 1 --> CFL=1)
+                         ('rk_flag',0):45}):
         Tracking_Base.__init__(self,mesh,nd,activeComponentList=activeComponentList,params=params)
         #build lookup array for indicating which nodes are on the boundary
         self.nodeOnBoundaryArray = numpy.zeros((self.mesh.nNodes_global,),'i')
@@ -673,8 +688,11 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123(Tracking_Base):
                             self.params[('rtol_tracking',ci)],
                             self.params[('sf_tracking',ci)],
                             self.params[('dn_safe_tracking',ci)],
+                            self.params[('dt_init',ci)],
+                            self.params[('dt_init_flag',ci)],self.params[('rk_flag',ci)],
                             self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
                             self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.elementDiametersArray,
                             self.mesh.nodeElementOffsets,
                             self.mesh.nodeElementsArray,
                             self.nodeOnBoundaryArray,
@@ -755,8 +773,11 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123(Tracking_Base):
                             self.params[('rtol_tracking',ci)],
                             self.params[('sf_tracking',ci)],
                             self.params[('dn_safe_tracking',ci)],
+                            self.params[('dt_init',ci)],
+                            self.params[('dt_init_flag',ci)],self.params[('rk_flag',ci)],
                             self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
                             self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.elementDiametersArray,
                             self.mesh.nodeElementOffsets,
                             self.mesh.nodeElementsArray,
                             self.nodeOnBoundaryArray,
@@ -807,7 +828,10 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123A(Tracking_Base):
                          ('rtol_tracking',0):0.0,
                          ('sf_tracking',0):0.9,     #safety factor for RK integration
                          ('dn_safe_tracking',0):1.0e-7,#tolerance for traking in-element tests
-                         ('localVelocityRepresentationFlag',0):2}):#RT0 velocity representation, 2 -- flux based rep, 1 \vec a + b\vec x
+                         ('localVelocityRepresentationFlag',0):2,#RT0 velocity representation, 2 -- flux based rep, 1 \vec a + b\vec x
+                         ('dt_init',0):0.001, #initial time step estimate if using constant value
+                         ('dt_init_flag',0):1, #how to pick initial time step (0 --> const, 1 --> CFL=1)
+                         ('rk_flag',0):45}):
         Tracking_Base.__init__(self,mesh,nd,activeComponentList=activeComponentList,params=params)
         #build lookup array for indicating which nodes are on the boundary
         self.nodeOnBoundaryArray = numpy.zeros((self.mesh.nNodes_global,),'i')
@@ -1034,7 +1058,10 @@ class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocit
                  params={('atol_tracking',0):1.0e-7,#RK time integration tolerances
                          ('rtol_tracking',0):0.0,
                          ('sf_tracking',0):0.9,     #safety factor for RK integration
-                         ('dn_safe_tracking',0):1.0e-7}):#tolerance for traking in-element tests
+                         ('dn_safe_tracking',0):1.0e-7,#tolerance for traking in-element tests
+                         ('dt_init',0):0.001, #initial time step estimate if using constant value
+                         ('dt_init_flag',0):1, #how to pick initial time step (0 --> const, 1 --> CFL=1)
+                         ('rk_flag',0):45}):
         SteadyState_LinearAdvection_C0P1Velocity_PT123.__init__(self,mesh,nd,
                                                                 component_velocity_l2g,
                                                                 component_velocity_dofs_0,
@@ -1100,8 +1127,11 @@ class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocit
                             self.params[('rtol_tracking',ci)],
                             self.params[('sf_tracking',ci)],
                             self.params[('dn_safe_tracking',ci)],
+                            self.params[('dt_init',ci)],
+                            self.params[('dt_init_flag',ci)],self.params[('rk_flag',ci)],
                             self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
                             self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.elementDiametersArray,
                             self.mesh.nodeElementOffsets,
                             self.mesh.nodeElementsArray,
                             self.nodeOnBoundaryArray,
@@ -1178,8 +1208,11 @@ class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocit
                             self.params[('rtol_tracking',ci)],
                             self.params[('sf_tracking',ci)],
                             self.params[('dn_safe_tracking',ci)],
+                            self.params[('dt_init',ci)],
+                            self.params[('dt_init_flag',ci)],self.params[('rk_flag',ci)],
                             self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
                             self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.elementDiametersArray,
                             self.mesh.nodeElementOffsets,
                             self.mesh.nodeElementsArray,
                             self.nodeOnBoundaryArray,
@@ -1248,7 +1281,10 @@ class LinearAdvection_BDM1Velocity_PT123(LinearAdvection_C0P1Velocity_PT123):
                  params={('atol_tracking',0):1.0e-7,#RK time integration tolerances
                          ('rtol_tracking',0):0.0,
                          ('sf_tracking',0):0.9,     #safety factor for RK integration
-                         ('dn_safe_tracking',0):1.0e-7}):#tolerance for traking in-element tests
+                         ('dn_safe_tracking',0):1.0e-7,#tolerance for traking in-element tests
+                         ('dt_init',0):0.001, #initial time step estimate if using constant value
+                         ('dt_init_flag',0):1, #how to pick initial time step (0 --> const, 1 --> CFL=1)
+                         ('rk_flag',0):45}):#RK type 
         Tracking_Base.__init__(self,mesh,nd,activeComponentList=activeComponentList,params=params)
         #build lookup array for indicating which nodes are on the boundary
         self.nodeOnBoundaryArray = numpy.zeros((self.mesh.nNodes_global,),'i')
@@ -1285,7 +1321,10 @@ class LinearAdvection_RT0Velocity_PT123(SteadyState_LinearAdvection_RT0Velocity_
                          ('rtol_tracking',0):0.0,
                          ('sf_tracking',0):0.9,     #safety factor for RK integration
                          ('dn_safe_tracking',0):1.0e-7,#tolerance for traking in-element tests
-                         ('localVelocityRepresentationFlag',0):2}):#RT0 velocity representation, 2 -- flux based rep, 1 \vec a + b\vec x
+                         ('localVelocityRepresentationFlag',0):2,#RT0 velocity representation, 2 -- flux based rep, 1 \vec a + b\vec x
+                         ('dt_init',0):0.001, #initial time step estimate if using constant value
+                         ('dt_init_flag',0):1, #how to pick initial time step (0 --> const, 1 --> CFL=1)
+                         ('rk_flag',0):45}):#RK type
         SteadyState_LinearAdvection_RT0Velocity_PT123.__init__(self,mesh,nd,
                                                                component_velocity_l2g,
                                                                component_velocity_dofs_0,
@@ -1353,8 +1392,11 @@ class LinearAdvection_RT0Velocity_PT123(SteadyState_LinearAdvection_RT0Velocity_
                             self.params[('rtol_tracking',ci)],
                             self.params[('sf_tracking',ci)],
                             self.params[('dn_safe_tracking',ci)],
+                            self.params[('dt_init',ci)],
+                            self.params[('dt_init_flag',ci)],self.params[('rk_flag',ci)],
                             self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
                             self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.elementDiametersArray,
                             self.mesh.nodeElementOffsets,
                             self.mesh.nodeElementsArray,
                             self.nodeOnBoundaryArray,
@@ -1434,8 +1476,11 @@ class LinearAdvection_RT0Velocity_PT123(SteadyState_LinearAdvection_RT0Velocity_
                             self.params[('rtol_tracking',ci)],
                             self.params[('sf_tracking',ci)],
                             self.params[('dn_safe_tracking',ci)],
+                            self.params[('dt_init',ci)],
+                            self.params[('dt_init_flag',ci)],self.params[('rk_flag',ci)],
                             self.mesh.nodeArray.reshape(self.mesh.nNodes_global*maxeq),
                             self.mesh.elementNodesArray.reshape(self.mesh.nElements_global*self.mesh.nNodes_element),
+                            self.mesh.elementDiametersArray,
                             self.mesh.nodeElementOffsets,
                             self.mesh.nodeElementsArray,
                             self.nodeOnBoundaryArray,
@@ -3859,6 +3904,19 @@ def test8(opts,tryPT123A=False):
         mesh = setupMesh_1d(opts,p)
 
     sdmesh = mesh.subdomainMesh
+    #options for tracking
+    particleTracking_params = {}
+    particleTracking_params[('dn_safe_tracking',0)]=1.0e-7
+    particleTracking_params[('temporalVariationFlag',0)]=2
+    particleTracking_params[('atol_tracking',0)]=1.0e-7
+    particleTracking_params[('rtol_tracking',0)]=0.0
+    particleTracking_params[('sf_tracking',0)]=0.9
+    if not tryPT123A:
+        particleTracking_params[('dt_init',0)]= 0.001
+        particleTracking_params[('dt_init_flag',0)] = 1 #how to pick initial time step (0 --> const, 1 --> CFL=1)
+        particleTracking_params[('rk_flag',0)] = 45 #RK type 
+
+    opts.particleTracking_params = particleTracking_params
     #solution representation, not used for linear problems
 
     trialSpace,u,q['u_interpolation_values'] = setupSolution_C0P1(opts,p,sdmesh,tnList[0])
@@ -4079,6 +4137,20 @@ def test9(opts,tryPT123A=False):
         mesh = setupMesh_1d(opts,p)
 
     sdmesh = mesh.subdomainMesh
+
+    #options for tracking
+    particleTracking_params = {}
+    particleTracking_params[('dn_safe_tracking',0)]=1.0e-7
+    particleTracking_params[('temporalVariationFlag',0)]=2
+    particleTracking_params[('atol_tracking',0)]=1.0e-7
+    particleTracking_params[('rtol_tracking',0)]=0.0
+    particleTracking_params[('sf_tracking',0)]=0.9
+    if not tryPT123A:
+        particleTracking_params[('dt_init',0)]= 0.001
+        particleTracking_params[('dt_init_flag',0)] = 1 #how to pick initial time step (0 --> const, 1 --> CFL=1)
+        particleTracking_params[('rk_flag',0)] = 45 #RK type 
+
+    opts.particleTracking_params = particleTracking_params
     #solution representation, not used for linear problems
 
     trialSpace,u,q['u_interpolation_values'] = setupSolution_C0P1(opts,p,sdmesh,tnList[0])
@@ -4155,7 +4227,7 @@ def test9(opts,tryPT123A=False):
     ########## visualization and output stuff
 
     #mwf debug
-    pdb.set_trace()
+    #pdb.set_trace()
     archive = Archiver.XdmfArchive(".","test9_"+label,useTextArchive=False)
     import xml.etree.ElementTree as ElementTree
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
@@ -4361,26 +4433,4 @@ if __name__=='__main__':
         stats.print_stats(30)
     else:
         testDict[opts.test_id](opts)
-#     if opts.test_id == 0:
-#         test0(opts)
-#     elif opts.test_id == 1:
-#         test1(opts)
-#     elif opts.test_id == 2:
-#         test2(opts)
-#     elif opts.test_id == 3:
-#         test3(opts)
-#     elif opts.test_id == 4:
-#         test4(opts)
-#     elif opts.test_id == 5:
-#         test5(opts)
-#     elif opts.test_id == 6:
-#         test6(opts)
-#     elif opts.test_id == 7:
-#         Lu1Dex(opts)
-#     elif opts.test_id == 8:
-#         test8(opts)
-#     elif opts.test_id == 9:
-#         test9(opts)
-#     else:
-#         print "test_id= %s not supported yet " % opts.test_id
 

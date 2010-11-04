@@ -591,11 +591,59 @@ class OneLevelLADR(OneLevelTransport):
             self.ebqe[('advectiveFlux_bc_flag',ci)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
             self.ebqe[('advectiveFlux_bc',ci)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         #
-        self.needEBQ = False
+        self.needEBQ = options.needEBQ #could need for analytical velocity evaluation with RT0,BDM
         self.points_elementBoundaryQuadrature= set()
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
         self.tensors_elementBoundaryQuadrature= set()
+
+        if self.needEBQ:
+            for k in ['x','hat(x)']:
+                self.ebq[k] = numpy.zeros((self.mesh.nElements_global,
+                                           self.mesh.nElementBoundaries_element,
+                                           self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                           3),'d')
+            self.ebq['n'] = numpy.zeros((self.mesh.nElements_global,
+                                         self.mesh.nElementBoundaries_element,
+                                         self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                         self.nSpace_global),'d')
+            self.ebq['inverse(J)'] = numpy.zeros((self.mesh.nElements_global,
+                                                  self.mesh.nElementBoundaries_element,
+                                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                                  self.nSpace_global,
+                                                  self.nSpace_global),'d')
+            #allocate the metric tensor
+            self.ebq['g'] = numpy.zeros((self.mesh.nElements_global,
+                                           self.mesh.nElementBoundaries_element,
+                                           self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                           max(1,self.nSpace_global-1),
+                                           max(1,self.nSpace_global-1)),
+                                          'd')
+            log(memory("element boundary quadrature","LADRellam"),level=4)
+            ebq_keys = ['sqrt(det(g))']
+            ebq_keys.extend([('u',ci) for ci in range(self.nc)])
+            for k in ebq_keys:
+                self.ebq[k] = numpy.zeros((self.mesh.nElements_global,
+                                           self.mesh.nElementBoundaries_element,
+                                           self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+
+            #test and trial info
+            self.ebq[('w',0)] = numpy.zeros((self.mesh.nElements_global,
+                                             self.mesh.nElementBoundaries_element,
+                                             self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                             self.nDOF_trial_element[0]),'d')
+            for ci in range(1,self.nc):
+                self.ebq[('w',ci)] = self.ebq[('w',0)]
+            for ci in range(self.nc):
+                self.ebq[('v',ci)] = self.ebq[('w',0)]
+                
+            #ebq_global info
+            self.ebq_global['x'] = numpy.zeros((self.mesh.nElementBoundaries_global,
+                                                self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                                3),'d')
+            self.ebq_global['n'] = numpy.zeros((self.mesh.nElementBoundaries_global,
+                                                self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                                self.nSpace_global),'d')
         #
         # allocate residual and Jacobian storage
         #
@@ -1491,7 +1539,39 @@ class OneLevelLADR(OneLevelTransport):
         self.coefficients.initializeElementQuadrature(self.timeIntegration.t,self.q)
 
     def calculateElementBoundaryQuadrature(self):
-        pass
+        if self.needEBQ:
+            #
+            #get physical locations of element boundary quadrature points
+            #
+	    #assume all components live on the same mesh
+            self.u[0].femSpace.elementMaps.getValuesTrace(self.elementBoundaryQuadraturePoints,
+                                                          self.ebq['x'])
+
+            self.u[0].femSpace.elementMaps.getJacobianValuesTrace(self.elementBoundaryQuadraturePoints,
+                                                                  self.ebq['inverse(J)'],
+                                                                  self.ebq['g'],
+                                                                  self.ebq['sqrt(det(g))'],
+                                                                  self.ebq['n'])
+            useC=True
+            cfemIntegrals.copyLeftElementBoundaryInfo(self.mesh.elementBoundaryElementsArray,
+                                                      self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                      self.mesh.exteriorElementBoundariesArray,
+                                                      self.mesh.interiorElementBoundariesArray,
+                                                      self.ebq['x'],
+                                                      self.ebq['n'],
+                                                      self.ebq_global['x'],
+                                                      self.ebq_global['n'])
+            self.u[0].femSpace.elementMaps.getInverseValuesTrace(self.ebq['inverse(J)'],self.ebq['x'],self.ebq['hat(x)'])
+            self.u[0].femSpace.elementMaps.getPermutations(self.ebq['hat(x)'])
+
+            for ci in range(self.nc):
+                if self.ebq.has_key(('dS_u',ci)):
+                    cfemIntegrals.calculateElementBoundaryIntegrationWeights(self.ebq['sqrt(det(g))'],
+                                                                             self.elementBoundaryQuadratureWeights[('u',ci)],
+                                                                             self.ebq[('dS_u',ci)])
+            self.coefficients.initializeElementBoundaryQuadrature(self.timeIntegration.t,self.ebq,self.ebq_global)
+
+
     def calculateExteriorElementBoundaryQuadrature(self):
         """
         Calculate the physical location and weights of the quadrature rules
@@ -1567,3 +1647,8 @@ class OneLevelLADR(OneLevelTransport):
     def estimate_mt(self):
         pass
 
+    def calculateElementBoundaryCoefficients(self):
+        """
+        Calculate the nonlinear coefficients at the element boundary quadrature points
+        """
+        pass
