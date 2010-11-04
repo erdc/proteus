@@ -135,6 +135,7 @@ C T_END   -- replaced by TPT (x_arrive_times) (dimensioned for each point)
 C DT_PT   -- replaced by T_I, TPT information
 C XG      -- nodeArray,
 C IE      -- elementNodesArray
+C CL      -- elementDiametersArray
 C IB      -- nodeOnBoundaryArray
 C NLRL    -- nodeElementOffsets
 C LRL     -- nodeElementsArray
@@ -142,12 +143,16 @@ C IDPT    -- flag, a little confusing because combines node id and flag values
 C XPT     -- x_out
 C TPT     -- x_arrive_times
 C MPT     -- element_track
+C DT_INIT0-- target intial time step
+C IDVE    -- form of velocity
+C ID_DT   -- flag for initial time step choice (0 DT_INIT0, 1 TRY CFL=1)
 
       SUBROUTINE PT123
      I     (IDVE,IVERBOSE,MAXEQ,
      I      NNP,NEL,NNDE,NEQ,NPT,IBF,LU_O,
-     I      ATOL,RTOL,SF, DN_SAFE,
-     I      XG,IE,NLRL,LRL,IB,
+     I      ATOL,RTOL,SF,DN_SAFE,
+     I      DT_INIT0,ID_DT,ID_RK,
+     I      XG,IE,CL,NLRL,LRL,IB,
      I      VTL2G,VT1E,VT2E,T1,T2,
      I      X_I,T_I,
      M      TPT,MPT,IDPT,
@@ -194,6 +199,9 @@ Cf2py  double precision, intent (c), intent (in) :: XG(MAXEQ*NNP)
 C ELEMENT NODE LOOKUP (elementNodesArray)
       INTEGER IE(NNDE*NEL)
 Cf2py integer, intent (in) :: IE(NNDE*NEL)
+C ELEMENT DIAMETERS ARRAY
+      DOUBLE PRECISION CL(NEL)
+Cf2py double precision, intent (in) :: CL(NEL) 
 C NODE - ELEMENTS IN NODE STAR LOOKUP (nodeElementOffsets,nodeElementsArray)
       INTEGER LRL(*),NLRL(*)
 Cf2py integer, intent (in)  :: LRL(*),NLRL(*)
@@ -201,8 +209,15 @@ C FLAG ARRAY TO MARK NODES THAT ARE ON EXTERIOR BOUNDARY
       INTEGER IB(NNP)
 Cf2py integer, intent (in)  :: IB(NNP)
 C --TRACKING PARAMETERS--
-      DOUBLE PRECISION ATOL,RTOL,SF,DN_SAFE
-Cf2py double precision, intent (in) :: ATOL,RTOL,SF,DN_SAFE
+      DOUBLE PRECISION ATOL,RTOL,SF,DN_SAFE,DT_INIT0
+Cf2py double precision, intent (in) :: ATOL,RTOL,SF,DN_SAFE,DT_INIT0
+C HOW TO PICK INITIAL TIME STEP ON EACH ELEMENT 0 --> CONSTANT, 1 --> CFL=1
+      INTEGER ID_DT
+Cf2py integer, intent (in) :: ID_DT
+C TYPE OF RK TO USE, 45, 24,  
+      INTEGER ID_RK
+Cf2py integer, intent (in) :: ID_RK
+
 C --TRACKING VELOCITY REPRESENTATION--
 C TYPE OF LOCAL VELOCITY REPRESENTATION
 C 1 -- 2 LOCAL SPACE IS C^0, P^1 
@@ -256,20 +271,23 @@ C LOCATION OF TRACKED POINTS AT END OF TRACKING CALL
       DOUBLE PRECISION XPT(MAXEQ*NPT)
 Cf2py double precision, intent (inplace) :: XPT(MAXEQ*NPT)
 C
+CMWF TODO
+C
+C 
 C -- LOCAL VARIABLES --
       DOUBLE PRECISION XW(MAXEQ,MAXND),VT1W(MAXEQ,MAXND),
      &     VT2W(MAXEQ,MAXND)
       DOUBLE PRECISION DN_S(MAXND),DN(MAXND)
 C
-      DOUBLE PRECISION XOUT5(MAXEQ),XOUT4(MAXEQ),XERR(MAXEQ)
+      DOUBLE PRECISION XOUTB(MAXEQ),XOUTA(MAXEQ),XERR(MAXEQ)
       DOUBLE PRECISION AK1(MAXEQ),AK2(MAXEQ),AK3(MAXEQ)
       DOUBLE PRECISION AK4(MAXEQ),AK5(MAXEQ),AK6(MAXEQ)
 C 
       DOUBLE PRECISION XS(MAXEQ),XTEMP(MAXEQ)
-      DOUBLE PRECISION DEQ,TS,DTS,T,SDT,DT0
-      DOUBLE PRECISION DIR
+      DOUBLE PRECISION DEQ,TS,DTS,T,TT,SDT,DT0
+      DOUBLE PRECISION DIR,DL,DT_INIT
 C     
-      INTEGER I,IPT,NODE,NP,M,K
+      INTEGER I,IPT,NODE,NP,M,K,ID_RK0,IPROJ,ID_ETA
       INTEGER IDSDT,I1,I2,I3,M2,M3,N1,N2,N3,J1,J2,J3
 C
 C
@@ -280,12 +298,15 @@ C
      &        MAXEQ
          RETURN
       ENDIF
+CMWF PROTEUS STILL ASSUMES NODE = NSPACE+1 FOR NOW
       NODE = NNDE
-      DEQ  = 1.0E0/DBLE(NEQ)
       DIR = 1.D0
       IF (IBF.EQ.-1) THEN
          DIR = -1.D0
       ENDIF
+CMWF ALWAYS TIME INTERPOLATE FOR NOW
+      ID_ETA = 1
+      ID_RK0 = ID_RK
 C MWF COPY X_I INTO XPT
 C     HAVE TO TREAT AS FLAT ARRAY, SINCE MAY BE DIFFERENT SHAPES IN PYTHON (q, versus ebqe)
 C     ASSUME MPT,TPT SET BY CALLING CODE 
@@ -334,6 +355,7 @@ C        KPATH=NPATH(IPT)
         I1=-1
         I2=-1
         I3=-1
+        ID_RK=ID_RK0
 C MWF DEBUG
         IF (IVERBOSE.GE.2) THEN
            WRITE(LU_O,*)'START OF STEP 2 IPT= ',IPT,' T1= ',T1,' T2= ',
@@ -347,7 +369,10 @@ C MWF DEBUG
           ENDIF
         ENDDO
         
+        IPROJ=0
+CMWF DIFFERENT THAN PIERCE'S CONVENTION, IF NP==0 PROTEUS POINT IS IN THE INTERIOR, OTHERWISE IT'S A NODE
         IF(NP.EQ.0)GOTO 200
+
 C
 C ===== FOR THE CASE THAT MPT(IPT)=0, I.E., THE VERY FIRST
 C     TRACKING: LOOP OVER ALL CONNECTED ELEMENTS
@@ -356,42 +381,69 @@ C
 C MWF DEBUG
            WRITE(LU_O,*)' ENTERING NODE TRACKING STEP IPT= ', IPT
         ENDIF
+CMWF IB CONVENTION DIFFERENT FROM PEARCE, 1 --> ON BOUNDARY HERE, -1 ON BOUNDARY FOR PEARCE
+        IF(IB(NP).EQ.1)IPROJ=1
+  149   CONTINUE
         DO 150 I=NLRL(NP)+1,NLRL(NP+1)
           M=LRL(I)
 C ELENOD IN GENERAL SELECTS THE NUMBER OF NODES PER ELEMENT USING IE
 C FOR NOW WE KNOW THIS AS INPUT
 C
           CALL EL_VEL_PREP(MAXND,MAXEQ,NNDE,
-     &         NNP,NEL,NODE,NEQ,M,IDVE,DIR,
-     &         XG,IE,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
+     &         NNP,NEL,NODE,NEQ,M,IDVE,DIR,IPROJ,
+     &         XG,IE,IB,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
 C
 C CONDUCT TRACKING WITHIN ELEMENT M
 C
+CMWF NEW 
+          DL=CL(M)
+          IF(ID_DT.EQ.0)THEN
+            DT_INIT=DT_INIT0
+          ELSE
+            CALL DT_ETRACK
+     I          (MAXND,MAXEQ,NODE,NEQ, 
+     I           DL,VT1W,VT2W,
+     O           DT_INIT)
+          ENDIF
+          
 C MWF REMOVE NPATH DIMENSIONS, CALL WITH MAXPT=NPT
           CALL ELTRAK123
-     I        (MAXEQ,MAXND,NPT,NEQ,NODE,
-     I         IPT, T1,T2, DEQ, ATOL,RTOL,SF, DN_SAFE,
+     I        (MAXEQ,MAXND,NPT,NEQ,NODE,M, ID_ETA,
+     I         IPT, ID_RK,ID_RK0,T1,T2, DL, ATOL,RTOL,SF, DN_SAFE,
      I         XW,VT1W,VT2W,
-     M         T,DT0,SDT,XS,
+     M         T,DT0,SDT,DT_INIT,XS,
      M         AK1,AK2,AK3,AK4,AK5,AK6,XTEMP,
-     M         XOUT5,XOUT4,XERR,DN_S,DN,
+     M         XOUTB,XOUTA,XERR,DN_S,DN,
      O         IDSDT,XPT,TPT,I1,I2,I3)
-C        NPATH(IPT)=KPATH
+C          NPATH(IPT)=KPATH
 C
           IF(IDSDT.EQ.-1)THEN
             MPT(IPT)=M
 C
 C 0 -- INTERIOR
             IDPT(IPT)=0
+CMWF SKIP PATH OUTPUT
+C            DO IEQ=1,NEQ
+C              XPTW(IEQ,IPT)=XOUTB(IEQ)
+C            ENDDO
             GOTO 600
           ENDIF
           IF(IDSDT.EQ.1)GOTO 250
- 150    CONTINUE
+  150   CONTINUE
+C
+C === SET ID_RK TO 1 TO CONTINUE PT
+C
+        IF(ID_RK.NE.1)THEN
+          ID_RK=1
+          GOTO 149
+        ENDIF
 C
 C === NO TRACKING WAS PERFORMED, PRINT PARTICLE INFORMATION
 C
 C -1 -- EXITED DOMAIN
 C -2 -- FAILED
+C NOTE PEARCE CHECKS IF IB(NP) == 1 MEANING OPEN BOUNDARY, HERE WE SAY SUCCESS IF 
+C JUST ON BOUNDARY AND DON'T DISTINGUISH OPEN OR CLOSED
         IF (IB(NP).EQ.1) THEN
            IDPT(IPT) = -1
         ELSE
@@ -427,29 +479,39 @@ C MWF DEBUG
            WRITE(LU_O,*)' XS= ',(XS(I),I=1,NEQ)
         ENDIF
         CALL EL_VEL_PREP(MAXND,MAXEQ,NNDE,
-     &         NNP,NEL,NODE,NEQ,M,IDVE,DIR,
-     &         XG,IE,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
+     &         NNP,NEL,NODE,NEQ,M,IDVE,DIR,IPROJ,
+     &         XG,IE,IB,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
 
 C
 C CONDUCT TRACKING WITHIN ELEMENT M
 C
-C MWF REMOVE MAXPATH, KPATH ARGS
+        DL=CL(M)
+        IF(ID_DT.EQ.0)THEN
+          DT_INIT=DT_INIT0
+        ELSE
+          CALL DT_ETRACK
+     I        (MAXND,MAXEQ,NODE,NEQ, 
+     I         DL,VT1W,VT2W,
+     O         DT_INIT)
+        ENDIF
+C
         CALL ELTRAK123
-     I      (MAXEQ,MAXND,NPT,NEQ,NODE,
-     I       IPT, T1,T2, DEQ, ATOL,RTOL,SF, DN_SAFE,
+     I      (MAXEQ,MAXND,NPT,NEQ,NODE,M,ID_ETA,
+     I       IPT, ID_RK, ID_RK0, T1,T2, DL, ATOL,RTOL,SF, DN_SAFE,
      I       XW,VT1W,VT2W,
-     M       T,DT0,SDT,XS,
+     M       T,DT0,SDT,DT_INIT,XS,
      M       AK1,AK2,AK3,AK4,AK5,AK6,XTEMP,
-     M       XOUT5,XOUT4,XERR,DN_S,DN,
+     M       XOUTB,XOUTA,XERR,DN_S,DN,
      O       IDSDT,XPT,TPT,I1,I2,I3)
-CMWF        NPATH(IPT)=KPATH
         IF (IVERBOSE.GE.5) THEN
 C MWF DEBUG
-           WRITE(LU_O,*)' AFTER ELTRACK ELEMENT LOOP T= ',T,
-     &          ' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),' IPT= ',IPT,' M= ',M
+           WRITE(LU_O,*)' AFTER ELTRACK ELEMENT LOOP T= ',T,' SDT= ',
+     &          SDT,' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),' IPT= ',IPT,
+     &          ' M= ',M
            WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
            DO K=1,NEQ
-              WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',XPT(K + IPT*MAXEQ)
+              WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',
+     &             XPT(K + (IPT-1)*MAXEQ)
            ENDDO
         ENDIF
 C
@@ -463,6 +525,8 @@ C
 C ===== CONTINUE PT WITHIN A NEW ELEMENT 
 C  
   250   CONTINUE
+        ID_RK=ID_RK0
+        TT=T+SDT
 C MWF TRY TO CATCH SOMETHING WRONG WITH ELTRAK123
         IF (I1.EQ.-1.OR.I2.EQ.-1.OR.I3.EQ.-1) THEN
 C
@@ -487,6 +551,9 @@ C
           N1=IE(I1 + NNDE*(M-1))
           N2=IE(I2 + NNDE*(M-1))
           N3=IE(I3 + NNDE*(M-1))
+          IPROJ=0
+          IF(IB(N1).EQ.1 .AND. IB(N2).EQ.1 .AND. IB(N3).EQ.1)IPROJ=1
+  299     CONTINUE
           DO J1=NLRL(N1)+1,NLRL(N1+1)          
             M=LRL(J1)
             DO J2=NLRL(N2)+1,NLRL(N2+1)          
@@ -498,19 +565,28 @@ C ELENOD IN GENERAL SELECTS THE NUMBER OF NODES PER ELEMENT USING IE
 C FOR NOW WE KNOW THIS AS INPUT
 C
                    CALL EL_VEL_PREP(MAXND,MAXEQ,NNDE,
-     &                  NNP,NEL,NODE,NEQ,M,IDVE,DIR,
-     &                  XG,IE,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
+     &                  NNP,NEL,NODE,NEQ,M,IDVE,DIR,IPROJ,
+     &                  XG,IE,IB,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
 C
 C CONDUCT TRACKING WITHIN ELEMENT M
 C
-C MWF GET RID OF MAXPT,KPATH ARGS
+                  DL=CL(M)
+                  IF(ID_DT.EQ.0)THEN
+                    DT_INIT=DT_INIT0
+                  ELSE
+                    CALL DT_ETRACK
+     I                  (MAXND,MAXEQ,NODE,NEQ, 
+     I                   DL,VT1W,VT2W,
+     O                   DT_INIT)
+                  ENDIF
+C
                   CALL ELTRAK123
-     I                (MAXEQ,MAXND,NPT,NEQ,NODE,
-     I                 IPT, T1,T2, DEQ, ATOL,RTOL,SF, DN_SAFE,
-     I                 XW,VT1W,VT2W,
-     M                 T,DT0,SDT,XS,
+     I                (MAXEQ,MAXND,NPT,NEQ,NODE,M, ID_ETA,
+     I                 IPT, ID_RK,ID_RK0, T1,T2, DL, ATOL,RTOL,SF,
+     I                 DN_SAFE, XW,VT1W,VT2W,
+     M                 T,DT0,SDT,DT_INIT,XS,
      M                 AK1,AK2,AK3,AK4,AK5,AK6,XTEMP,
-     M                 XOUT5,XOUT4,XERR,DN_S,DN,
+     M                 XOUTB,XOUTA,XERR,DN_S,DN,
      O                 IDSDT,XPT,TPT,I1,I2,I3)
 C MWF                   NPATH(IPT)=KPATH
 C
@@ -522,7 +598,7 @@ C MWF DEBUG
                      WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
                      DO K=1,NEQ
                         WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',
-     &                       XPT(K + IPT*MAXEQ)
+     &                       XPT(K + (IPT-1)*MAXEQ)
                      ENDDO
                   ENDIF
                   IF(IDSDT.EQ.-1)THEN
@@ -536,6 +612,13 @@ C 0 -- INTERIOR
               ENDDO
             ENDDO
           ENDDO
+C
+C === SET ID_RK TO 1 TO CONTINUE PT
+C
+          IF(ID_RK.NE.1)THEN
+            ID_RK=1
+            GOTO 299
+          ENDIF
 C
 C === NO TRACKING WAS PERFORMED, PRINT PARTICLE INFORMATION
 C
@@ -567,6 +650,9 @@ C
         IF(I2.NE.0)THEN
           N1=IE(I1 + NNDE*(M-1))
           N2=IE(I2 + NNDE*(M-1))
+          IPROJ=0
+          IF(IB(N1).EQ.1 .AND. IB(N2).EQ.1)IPROJ=1
+  399     CONTINUE
           DO J1=NLRL(N1)+1,NLRL(N1+1)          
             M=LRL(J1)
             DO J2=NLRL(N2)+1,NLRL(N2+1)          
@@ -576,19 +662,28 @@ C ELENOD IN GENERAL SELECTS THE NUMBER OF NODES PER ELEMENT USING IE
 C FOR NOW WE KNOW THIS AS INPUT
 C
                  CALL EL_VEL_PREP(MAXND,MAXEQ,NNDE,
-     &                NNP,NEL,NODE,NEQ,M,IDVE,DIR,
-     &                XG,IE,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
+     &                NNP,NEL,NODE,NEQ,M,IDVE,DIR,IPROJ,
+     &                XG,IE,IB,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
 C
 C CONDUCT TRACKING WITHIN ELEMENT M
 C
-C REMOVE MAXPT,MAXPATH,KPATH ARGS
+                DL=CL(M)
+                IF(ID_DT.EQ.0)THEN
+                  DT_INIT=DT_INIT0
+                ELSE
+                  CALL DT_ETRACK
+     I                (MAXND,MAXEQ,NODE,NEQ, 
+     I                 DL,VT1W,VT2W,
+     O                 DT_INIT)
+                ENDIF
+C
                 CALL ELTRAK123
-     I              (MAXEQ,MAXND,NPT,NEQ,NODE,
-     I               IPT, T1,T2, DEQ, ATOL,RTOL,SF, DN_SAFE,
-     I               XW,VT1W,VT2W,
-     M               T,DT0,SDT,XS,
+     I              (MAXEQ,MAXND,NPT,NEQ,NODE,M, ID_ETA,
+     I               IPT, ID_RK, ID_RK0, T1,T2, DL, ATOL,RTOL,SF,
+     I               DN_SAFE, XW,VT1W,VT2W,
+     M               T,DT0,SDT,DT_INIT,XS,
      M               AK1,AK2,AK3,AK4,AK5,AK6,XTEMP,
-     M               XOUT5,XOUT4,XERR,DN_S,DN,
+     M               XOUTB,XOUTA,XERR,DN_S,DN,
      O               IDSDT,XPT,TPT,I1,I2,I3)
 CMWF SKIP NPATH FOR NOW
 C                NPATH(IPT)=KPATH
@@ -601,7 +696,7 @@ C MWF DEBUG
                    WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
                    DO K=1,NEQ
                       WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',
-     &                     XPT(K + IPT*MAXEQ)
+     &                     XPT(K + (IPT-1)*MAXEQ)
                    ENDDO
                 ENDIF
 C
@@ -615,6 +710,13 @@ C 0 -- INTERIOR
               ENDIF
             ENDDO
           ENDDO
+C
+C === SET ID_RK TO 1 TO CONTINUE PT
+C
+          IF(ID_RK.NE.1)THEN
+            ID_RK=1
+            GOTO 399
+          ENDIF
 C
 C === NO TRACKING WAS PERFORMED, PRINT PARTICLE INFORMATION
 C
@@ -646,25 +748,37 @@ C
 C === LOOP OVER ALL CONNECTED ELEMENTS
 C
         N1=IE(I1 + NNDE*(M-1))
+        IPROJ=0
+        IF(IB(N1).EQ.1)IPROJ=1
+  499   CONTINUE
         DO J1=NLRL(N1)+1,NLRL(N1+1)          
           M=LRL(J1)
 C ELENOD IN GENERAL SELECTS THE NUMBER OF NODES PER ELEMENT USING IE
 C FOR NOW WE KNOW THIS AS INPUT
 C
           CALL EL_VEL_PREP(MAXND,MAXEQ,NNDE,
-     &         NNP,NEL,NODE,NEQ,M,IDVE,DIR,
-     &         XG,IE,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
+     &         NNP,NEL,NODE,NEQ,M,IDVE,DIR,IPROJ,
+     &         XG,IE,IB,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
 C
 C CONDUCT TRACKING WITHIN ELEMENT M
 C
-CMWF REMOVE MAXPT, MAXPATH ARGS, KPATH
+          DL=CL(M)
+          IF(ID_DT.EQ.0)THEN
+            DT_INIT=DT_INIT0
+          ELSE
+            CALL DT_ETRACK
+     I          (MAXND,MAXEQ,NODE,NEQ, 
+     I           DL,VT1W,VT2W,
+     O           DT_INIT)
+          ENDIF
+C
           CALL ELTRAK123
-     I        (MAXEQ,MAXND,NPT,NEQ,NODE,
-     I         IPT, T1,T2, DEQ, ATOL,RTOL,SF, DN_SAFE,
+     I        (MAXEQ,MAXND,NPT,NEQ,NODE,M, ID_ETA,
+     I         IPT, ID_RK, ID_RK0, T1,T2, DL, ATOL,RTOL,SF, DN_SAFE,
      I         XW,VT1W,VT2W,
-     M         T,DT0,SDT,XS,
+     M         T,DT0,SDT,DT_INIT,XS,
      M         AK1,AK2,AK3,AK4,AK5,AK6,XTEMP,
-     M         XOUT5,XOUT4,XERR,DN_S,DN,
+     M         XOUTB,XOUTA,XERR,DN_S,DN,
      O         IDSDT,XPT,TPT,I1,I2,I3)
 CMWF          NPATH(IPT)=KPATH
 C
@@ -675,7 +789,8 @@ C MWF DEBUG
      &            ,' M= ',M
              WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
              DO K=1,NEQ
-                WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',XPT(K + IPT*MAXEQ)
+                WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',
+     &               XPT(K + (IPT-1)*MAXEQ)
              ENDDO
           ENDIF
 C
@@ -687,6 +802,13 @@ C 0 -- INTERIOR
           ENDIF
           IF(IDSDT.EQ.1)GOTO 250
         ENDDO  
+C
+C === SET ID_RK TO 1 TO CONTINUE PT
+C
+        IF(ID_RK.NE.1)THEN
+          ID_RK=1
+          GOTO 499
+        ENDIF
 C
 C === NO TRACKING WAS PERFORMED, PRINT PARTICLE INFORMATION
 C
@@ -714,19 +836,20 @@ C
         
       RETURN
       END
+
 C
 C 
 C
       SUBROUTINE ELTRAK123
-     I    (MAXEQ,MAXND,MAXPT,NEQ,NODE,
-     I     IPT, T1,T2, DEQ, ATOL,RTOL,SF, DN_SAFE,
+     I    (MAXEQ,MAXND,MAXPT,NEQ,NODE,M, ID_ETA,
+     I     IPT, ID_RK, ID_RK0, T1,T2,DL, ATOL,RTOL,SF, DN_SAFE,
      I     XW,VT1W,VT2W,
-     M     T,DT0,SDT,XS,
+     M     T,DT0,SDT,DT_INIT, XS, 
      M     AK1,AK2,AK3,AK4,AK5,AK6,XTEMP,
-     M     XOUT5,XOUT4,XERR,DN_S,DN,
+     M     XOUTB,XOUTA,XERR,DN_S,DN,
      O     IDSDT,XPT,TPT,I1,I2,I3)
 C 
-C 02/08/2010 (HPC)
+C 07/14/2010 (HPC)
 C ======================================================================
 C < PURPOSE > 
 C IMPLEMENT PARTICLE TRACKING USING ADAPTIVE RK WITHIN AN ELEMENT
@@ -740,7 +863,7 @@ C
 CMWF NOW HAVE TO REFERENCE XPT AS FLAT ARRAY 
       DIMENSION XPT(MAXEQ*MAXPT),TPT(MAXPT)
       DIMENSION XS(MAXEQ)
-      DIMENSION XOUT5(MAXEQ),XOUT4(MAXEQ),XERR(MAXEQ)
+      DIMENSION XOUTB(MAXEQ),XOUTA(MAXEQ),XERR(MAXEQ)
       DIMENSION AK1(MAXEQ),AK2(MAXEQ),AK3(MAXEQ),
      >          AK4(MAXEQ),AK5(MAXEQ),AK6(MAXEQ),
      >          XTEMP(MAXEQ)
@@ -748,6 +871,8 @@ CMWF NOW HAVE TO REFERENCE XPT AS FLAT ARRAY
       DIMENSION VT1W(MAXEQ,MAXND),VT2W(MAXEQ,MAXND)
       DIMENSION DN_S(MAXND),DN(MAXND)
       DIMENSION ICHECK(8)
+      DIMENSION XI(3),DI(3),XI_S(3),DI_S(3)
+      DIMENSION IXI(3),IDI(4),IXI_S(3),IDI_S(4)
 CMWF LOCAL VARIABLES
       INTEGER IDEBUG,II,KK,ISTEPOUTSIDE
 C
@@ -755,71 +880,87 @@ C =================== START PT USING ADAPTIVE RK ====================
 C
 C TRACKING IN ELEMENT M
 C
+      IDEBUG=0
       ICOUNT=0
       IDSDT=1
-      DT=DT0
-      IDEBUG = 4
-C MWF ADD SANITY CHECK TO MAKE SURE POINT IS IN ELEMENT?
-      
-      CALL INTRP123(MAXEQ,MAXND,NEQ,NODE,XS,XW,DN_S,DJAC)
-      DO I=1,NODE
-         IF (DN_S(I).LT.-DN_SAFE.OR.DN_S(I).GT.1.0+DN_SAFE) THEN
-            WRITE(6,*)'***PROBLEM ENTERING ELTRAK123  T= ',T,' DT= ',DT,
-     &           ' I1= ',I1,' I2= ',I2,' I3= ',I3
-            WRITE(6,*)'XS= ',(XS(II),II=1,NEQ)
-            WRITE(6,*)'DN_S= ',(DN_S(II),II=1,NODE)
-            DO II=1,NODE
-               DO KK=1,NEQ
-                  WRITE(6,*)'XW(',KK,',',II,')= ',XW(KK,II)
-               ENDDO
-            ENDDO
-C            CALL EXIT(1)
-         ENDIF
-      ENDDO
-  100 CONTINUE
-C MWF DEBUG CATCH TOO SMALL TIME STEP
-      IF (DABS(DT).LT.1.0D-10) THEN
-         WRITE(6,*)'ELTRAK123 DT= ',DT,' TOO SMALL QUITTING'
-         CALL EXIT(1)
+      DT=DT_INIT*DSIGN(1.D0,DT0)
+      IF (IDEBUG.GT.1) THEN
+CMWF DEBUG
+         WRITE(6,*)'ENTERING ELTRAK T= ',T,'DT0= ',DT0,' DT= ',DT,
+     &     ' SDT= ',SDT,' T1= ',T1,' T2= ',T2,' ID_RK= ',ID_RK,
+     &     ' ID_RK0= ',ID_RK0,' DN_SAFE= ',DN_SAFE
+         WRITE(6,*)'XS= ',(XS(I),I=1,NEQ)
       ENDIF
+CMWF DEBUG
+
+      IF(ID_RK.NE.ID_RK0)THEN
+        DT1=1.0E-3*DT
+        DT2=1.0E1*DN_SAFE*DL*DSIGN(1.D0,DT0)
+CMWF        DT=DMAX1(DT1,DT2)
+        DT = DT1
+        IF (DABS(DT2).GT.DABS(DT1)) THEN 
+           DT = DT2
+        ENDIF
+      ENDIF
+C
+  100 CONTINUE
       ICOUNT=ICOUNT+1
-      CALL RKCK_PT
-     I    (MAXEQ,MAXND,NEQ,NODE, T,DT,T1,T2,
-     I     XW,VT1W,VT2W,XS,
-     M     AK1,AK2,AK3,AK4,AK5,AK6,XTEMP,
-     O     XOUT5,XOUT4,XERR,DN_S)
+      IF(ID_RK.EQ.45)THEN
+        CALL RKCK_PT
+     I      (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, T,DT,T1,T2,
+     I       XW,VT1W,VT2W,XS, ID_ETA,
+     M       AK1,AK2,AK3,AK4,AK5,AK6,XTEMP,
+     O       IDSDT,IREDUCE,I1,I2,I3,
+     O       XOUTB,XOUTA,XERR,DN_S,XI_S,DI_S,IXI_S,IDI_S)
+        P1=0.2E0
+        P2=0.25E0
+      ELSEIF(ID_RK.LE.24)THEN
+        CALL RK24_PT
+     I      (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, T,DT, T1,T2,
+     I       XW,VT1W,VT2W, XS, ID_ETA, ID_RK,
+     M       AK1,AK2,AK3,AK4,XTEMP,
+     O       IDSDT,IREDUCE,I1,I2,I3,
+     O       XOUTB,XOUTA,XERR,DN_S,XI_S,DI_S,IXI_S,IDI_S)
+        P1=0.35E0
+        P2=0.40E0
+      ENDIF
+C
       IF (IDEBUG.GT.1) THEN
 CMWF DEBUG
          WRITE(6,*)'ELTRAK AFTER RKCK_PT T= ',T,' DT= ',DT,
-     &     ' T1= ',T1,' T2= ',T2
-         WRITE(6,*)'XS= ',(XS(I),I=1,NEQ)
+     &     ' IDSDT= ',IDSDT,' IREDUCE= ',IREDUCE
+         WRITE(6,*)'XOUTB= ',(XOUTB(I),I=1,NEQ)
          WRITE(6,*)'DN_S= ',(DN_S(I),I=1,NODE)
       ENDIF
+CMWF DEBUG
+      IF(IDSDT.EQ.0)RETURN
+      IF(IREDUCE.EQ.1)GOTO 100
 C
 C CHECK ERROR IN ALL THREE DIRECTIONS 
 C
       RATIO=0.0D0
       DO I=1,NEQ
         XERRABS=DABS(XERR(I))
-        XOUT5ABS=DABS(XOUT5(I)-XS(I))
-        XOUT4ABS=DABS(XOUT4(I)-XS(I))
-        XOUTMAX=DMAX1(XOUT5ABS,XOUT4ABS)
+        XOUTBABS=DABS(XOUTB(I)-XS(I))
+        XOUTAABS=DABS(XOUTA(I)-XS(I))
+        XOUTMAX=DMAX1(XOUTBABS,XOUTAABS)
         RATIOI=XERRABS/(RTOL*XOUTMAX+ATOL)
         RATIO=DMAX1(RATIO,RATIOI)
       ENDDO
-      RR=1.0E0/RATIO
 C
 C CASE 1: WHEN RATIO IS GREATER THAN 1
 C      ==> DESIRED ACCURACY IS NOT REACHED
 C      ==> TIMESTEP NEEDS TO BE REDUCED
 C
       IF(RATIO.GT.1.0E0)THEN
-         IF (IDEBUG.GT.2) THEN
+        RR=1.0E0/RATIO
+        DTT=DT*SF*((RR)**P2) 
+        IF (IDEBUG.GT.2) THEN
 CMWF DEBUG
             WRITE(6,*)'ELTRAK AFTER ERROR FAILURE T= ',T,' RATIO= ',
      &           RATIO,' DT= ',DT,' DTT= ',DT*SF*((RR)**(0.25E0)) 
-         ENDIF
-        DTT=DT*SF*((RR)**(0.25E0)) 
+        ENDIF
+CMWF DEBUG
         DT=DTT
         GOTO 100
 C
@@ -829,202 +970,124 @@ C      ==> TIMESTEP CAN BE INCREASED
 C        
       ELSEIF(RATIO.LE.1.0E0)THEN
 CMWF DEBUG
-         IF (IDEBUG.GT.2) THEN
+         IF(IDEBUG.GT.2) THEN
             WRITE(6,*)'ELTRAK AFTER ERROR SUCCESS T= ',T,' RATIO= ',
-     &           RATIO
+     &           RATIO,' DT= ',DT,' DT0= ',DT0
          ENDIF
+CMWF DEBUG
+C DT CANNOT BE GREATER THAN DT0
+C
+CMWF ORIG        IF(DT.GT.DT0)THEN
+        IF(DABS(DT).GT.DABS(DT0)) THEN
+          DT=DT0
+          GOTO 100
+        ENDIF
 C
 C === EXAMINE THE COMPUTED ENDING LOCATION
 C
-C MWF WHAT IF FORCE SOME REDUCTION IF STEP OUTSIDE
-CMWF ORIG        
-         XSI=0.0D0
-         
+        PHI=0.0D0
         CALL INTRP123
-     I      (MAXEQ,MAXND,NEQ,NODE, XOUT5, XW,
-     O       DN,DJAC)
-C MWF WHAT IF NEGATIVE?
-C        DL=(DJAC)**(DEQ)
-        DL=DABS(DJAC)**(DEQ)
-CMWF DEBUG
-        IF (IDEBUG.GT.1) THEN
-           WRITE(6,*)'XOUT5= ',(XOUT5(I),I=1,NEQ)
-           WRITE(6,*)'DJAC= ',DJAC, 'DN= ',(DN(I),I=1,NODE)
+     I      (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XOUTB, XW,
+     O       DN,IADJUST,XI,DI,IXI,IDI)
+C
+C < NOTE > ADJUST XOUTB WHEN NECESSARY (I.E., IADJUST = 1)
+C
+        IF (IDEBUG.GT.2) THEN 
+           WRITE(6,*)'AFTER SUCCESS INTRP123 IADJUST= ',IADJUST
+           WRITE(6,*)'DN= ',(DN(I),I=1,NODE)
         ENDIF
-C
-C === ADJUST DN AND XOUT5 WHEN THE END LOCATION IS VERY CLOSE TO 
-C     ELEMENT BOUNDARY
-C
-        JCOUNT=0
-        JOUTSIDE=0
-        DD=0.0E0
-        DO J=1,NODE
-          ICHECK(J)=0
-          IF(DN(J).LT.0.0E0)THEN
-            IF(DABS(DN(J)).LE.DN_SAFE)THEN
-              DD=DD+DABS(DN(J))
-              DN(J)=0.0E0
-              ICHECK(J)=1
-              JCOUNT=JCOUNT+1
-            ELSE
-              JOUTSIDE=JOUTSIDE+1
-            ENDIF 
-          ELSEIF(DN(J).GT.1.0E0)THEN
-            IF(DABS(DN(J)-1.0E0).LE.DN_SAFE)THEN
-              DD=DD+DABS(DN(J)-1.0E0)
-              DN(J)=1.0E0
-              ICHECK(J)=1
-              JCOUNT=JCOUNT+1
-            ELSE
-              JOUTSIDE=JOUTSIDE+1
-            ENDIF
-          ENDIF
-        ENDDO
-C
-        IF(JCOUNT.NE.0 .AND. JOUTSIDE.EQ.0)THEN
-          DO J=1,NODE
-            IF(ICHECK(J).EQ.0)THEN
-              DN(J)=DN(J)-DD
-              IF(DN(J).LT.0.0E0)THEN
-                DD=-DN(J)
-                DN(J)=0.0E0
-              ELSEIF(DN(J).GT.1.0E0)THEN
-                DD=DN(J)-1.0E0
-                DN(J)=1.0E0
-              ENDIF
-            ENDIF
-          ENDDO
+        IF(IADJUST.EQ.1)THEN
           DO I=1,NEQ
-            XOUT5(I)=0.0E0
+            XOUTB(I)=0.0E0
             DO J=1,NODE
-              XOUT5(I)=XOUT5(I)+DN(J)*XW(I,J)
+              XOUTB(I)=XOUTB(I)+DN(J)*XW(I,J)
             ENDDO
           ENDDO
         ENDIF                 
 C
-C === EXAMINE THE VALUES OF DN
+C === COMPUTE PHI
 C
-CMWF DEBUG
-        IF (IDEBUG.GT.2) THEN
-           WRITE(6,*)' ELTRAK EXAMINE DN, DN_S VALUES'
-           WRITE(6,*)'DN= ',(DN(II),II=1,NODE)
-           WRITE(6,*)'DN_S= ',(DN_S(II),II=1,NODE)
+        CALL PHI_COMP
+     I      (MAXND,NODE,NEQ, 
+     I       DN_SAFE, 
+     I       DN_S,DN,XI,XI_S,DI,DI_S, IXI_S,IDI_S,
+     O       IDSDT,I1,I2,I3,PHI)
+CMWF
+        IF(IDEBUG.GT.2) THEN
+           WRITE(6,*)'AFTER ERROR SUCCESS PHI_COMP IDSDT= ',IDSDT,
+     &          ' PHI= ',PHI
         ENDIF
 
-CMWF FLAG TO SAY THAT STEPPED THROUGH ELEMENT, MAKE 
-C     SURE RESTEP EVEN IF 
-        ISTEPOUTSIDE = 0
-        DO 150 I=1,NODE
-
+        IF(IDSDT.EQ.0)RETURN
 C
-C A. WHEN THE ENDING LOCATION IS OUTSIDE OF ELEMENT M
-C    ===> COMPUTE XSI
+C === IF PHI IS GREATER THAN 1 ==> REDUCE TIMESTEP
 C
-          IF(DN(I).LT.0.0E0)THEN
-             ISTEPOUTSIDE = 1
-             IF (IDEBUG.GT.0) THEN
-C MWF DEBUG
-                WRITE(6,*)' DN(',I,')= ',DN(I),' OUTSIDE ELEMENT'
-             ENDIF
-            D1=DN_S(I)
-            D2=DN(I)
-            D12=DN_S(I)-DN(I)
-C
-C A1. WHEN THERE IS NO TRACKIING THROUGH THIS ELEMENT
-C
-C MWF 9/30/10           
-C            IF(DABS(D1*DL).LT.ATOL)THEN
-            IF (DABS(D1).LT.DN_SAFE)THEN
-C     
-C IF THE PT IS LEAVING THE ELEMENT
-C ==> SET IDSDT TO 0, AND IDENTIFY I1, I2, I3 TO
-C     CONDUCT PT IN AN ADJACENT ELEMENT
-C
-CMWF 9/30/10
-C              IF(DABS(D2*DL).GT.ATOL)THEN
-C ALSO HAD ATOL IN DN_CHECK
-               IF(DABS(D2).GT.DN_SAFE)THEN
-                CALL DN_CHECK
-     I              (MAXND,NODE,NEQ, DL,DN_SAFE,
-     I               DN_S,
-     O               I1,I2,I3)
-                IDSDT=0
-C MWF DEBUG
-                IF (IDEBUG.GT.0) THEN
-                   WRITE(6,*)' ELTRAK DN_CHECK LEAVING IDSDT= ',IDSDT, 
-     &                  ' I1= ',I1,' I2= ',I2,' I3= ',I3, 
-     &                  ' D1= ',D1, ' D2= ',D2,' D12= ',D12
-                ENDIF
-                RETURN
-              ENDIF
-C
-C A2. WHEN THERE IS A TRACKING THROUGH THIS ELEMENT
-C
-            ELSE
-C
-C IF THE ENDING LOCATION CAN BE CONSIDERED ON THE ELEMENT BOUNDARY
-C ==> NO NEED TO REDUCE TIMESTEP
-C
-C MWF 9/30/10
-C              IF(DABS(D2*DL).LE.ATOL) THEN
-               IF(DABS(D2).LE.DN_SAFE) THEN
-                 IF (IDEBUG.GT.2) THEN
-                    WRITE(6,*)'D2*DL.LE.DN_SAFE GOTO 150'
-                 ENDIF
-                 GOTO 150
-              ENDIF
-C     
-C IF THE ENDING LOCATION IS TRULY OUTSIDE OF THE ELEMENT
-C ==> COMPUTE AN INTERPOLATION FACTOR
-C
-C MWF WHAT HAPPENS IF D12/D1 NEGATIVE?
-C E.G. D1=DN_S SMALL, NEGATIVE BELOW TOL 
-C ORIG              XSI=DMAX1(XSI,D12/D1)
-              XSI=DMAX1(XSI,DABS(D12/D1))
-              IF(IDEBUG.GT.1) THEN 
-                 WRITE(6,*)'DN(',I,') OUTSIDE ELEMENT CUTTING TIME STEP'
-                 WRITE(6,*)' XSI=', XSI,' D12= ',D12,' D1= ',D1
-              ENDIF
-
-            ENDIF
-          ENDIF
-  150   CONTINUE
-C
-C === IF XSI IS GREATER THAN 1 ==> REDUCE TIMESTEP
-C
-        IF(XSI.GT.1.0E0)THEN
-          DTT=DT/XSI
+        IF(PHI.GT.1.0E0)THEN
+          DTT=DT/PHI
           DT=DTT
           GOTO 100
-        ENDIF
-CMWF WHAT HAPPENS IF STEP THROUGH ELEMENT BUT XSI NOT > 1?
-        IF(ISTEPOUTSIDE.EQ.1)THEN
-           DTT=DT/2.000D0
-           DT=DTT
-           IF(IDEBUG.GT.0)THEN
-              WRITE(6,*)'WARNING ELTRAK12 ISTEPOUTSIDE= ',ISTEPOUTSIDE,
-     &             ' XSI= ',XSI, ' RESTEP DT= ',DT
-           ENDIF
-           GOTO 100
         ENDIF
 C
 C B. WHEN THE ENDING LOCATION IS EITHER WITHIN THE ELEMENT OR 
 C    ON THE ELEMENT BOUDNARY
-C ==> UPDATE INFORMATION FOR THE SUCCESSIVE PT
 C
         T=T+DT
-CMWF        KPATH=KPATH+1
-CMWF        TPT(KPATH,IPT)=T
-        TPT(IPT)=T
-        DO I=1,NEQ
-          XS(I)=XOUT5(I)
-CMWF          XPT(KPATH,I,IPT)=XOUT5(I)
-CMWF NOW FLATTEN INDEXING
-          XPT(I + MAXEQ*(IPT-1))=XOUT5(I)
-        ENDDO   
-        DTT=DT*SF*((RR)**(0.2E0))
         SDT=SDT-DT
         DT0=DT0-DT
+        IF(RATIO.LT.1.0E-6)THEN
+          DTT=DT
+        ELSE
+          RR=1.0E0/RATIO
+          DTT=DT*SF*((RR)**P1)
+        ENDIF
+CMWF DEBUG
+        IF(IDEBUG.GT.2) THEN
+           WRITE(6,*)'AFTER FULL STEP T= ',T,' SDT= ',SDT,
+     &          ' DT0= ',DT0
+           WRITE(6,*)'XOUTB= ',(XOUTB(I),I=1,NEQ)
+        ENDIF
+C
+C ... IF THE LOCATION CHANGE OF PARTICLE IS NEGLIGIBLE
+C     ===> SET IDSDT = 0
+C
+c        DIFF=0.0E0
+c        DO I=1,NEQ
+c          DD=XOUTB(I)-XS(I)
+c          DIFF=DIFF+DD*DD
+c        ENDDO
+c        IF(DSQRT(DIFF).LT.ATOL)IDSDT=0
+C
+C ... STORE TRACKING LOCATIONS AT THE SPECIFIED FREQUENCY
+C
+C       print *,'t, id_rk =',t,id_rk
+C
+CMWF remove storage
+C        NTPATH(IPT)=NTPATH(IPT)+1
+C        CALL PT_STORE
+C     I    (MAXEQ,MAXPATH,MAXPT, NEQ, ID_RK,
+C     I     IPT,T,DT,DT_OUTPUT,T_OUTPUT,
+C     I     XOUTB,XS,
+C     M     KPATH,XPT,TPT,ID_RKPT)
+C
+C =======================================
+C FOR DEBUGGING ONLY
+C
+c        if(kpath.ge.515)then
+c           print *,'kpath=',kpath
+c        endif
+C
+C =======================================
+C
+C ... UPDATE INFORMATION FOR THE SUCCESSIVE PT
+C
+        DO I=1,NEQ
+          XS(I)=XOUTB(I)
+CMWF CHANGED XPT TO TAKE CARE OF INPUT OUTPUT OF POINTS
+          XPT(I + MAXEQ*(IPT-1))=XS(I)
+          
+        ENDDO  
+CMWF ADDED
+        TPT(IPT) = T
 C
 C IF THE TRACKING TIME IS COMPLETELY CONSUMED
 C ==> SET IDSDT TO -1
@@ -1041,46 +1104,25 @@ C
 C IF THE ENDING LOCATION IS ON THE ELEMENT BOUNDARY
 C ==> EXIT PT IN THIS ELEMENT
 C
-        DO I=1,NODE
-CMWF 9/30/10
-C          IF(DABS(DN(I)*DL).LT.ATOL)THEN
-C ALSO HAD ATOL IN DN_CHECK
-           IF(DABS(DN(I)).LT.DN_SAFE)THEN
-            CALL DN_CHECK
-     I          (MAXND,NODE,NEQ, DL,DN_SAFE,
-     I           DN,
-     O           I1,I2,I3)
-            IF (IDEBUG.GT.1) THEN
-C MWF DEBUG
-               WRITE(6,*)' ELTRAK DN_CHECK ON BNDY STAYING IDSDT= ',
-     &              IDSDT,' I1= ',I1,' I2= ',I2,' I3= ',I3 
-               WRITE(6,*)'   DN_S= ',(DN_S(II),II=1,NODE)
-               WRITE(6,*)'   DN= ',(DN(II),II=1,NODE)
-               WRITE(6,*)'   XS= ',(XS(II),II=1,NEQ)
-            ENDIF
-            RETURN
-          ENDIF
-        ENDDO
+        CALL EB_CHECK
+     I      (NEQ,NODE, IDI,IXI, 
+     O       I1,I2,I3)
+        IF(I1.NE.0)RETURN
 C
 C UPDATE THE TRACKING TIMESTEP (I.E., DT) FOR THE SUCCESSIVE TRACKING
 C WITHIN THIS SAME ELEMENT
 C
-CMWF ORIG
-C        IF(IDSDT.EQ.-1)RETURN
-C MWF DEBUG
-        IF(IDSDT.EQ.-1) THEN
-           IF (IDEBUG.GT.1) THEN
-C MWF DEBUG
-              WRITE(6,*)' ELTRAK DN_CHECK ON BNDY STAYING IDSDT= ',
-     &             IDSDT,' I1= ',I1,' I2= ',I2,' I3= ',I3, 
-     &             ' DN_S= ',(DN_S(II),II=1,NODE),
-     &             ' DN= ',(DN(II),II=1,NODE)
-           ENDIF
-           RETURN
+        IF(IDSDT.EQ.-1)RETURN
+        IF(ID_RK.EQ.24 .OR. ID_RK.EQ.45)THEN
+          DT=DT0
+CMWF ORIG          DT=DMIN1(DT,DTT)
+          IF(DABS(DTT).LT.DABS(DT)) THEN
+             DT=DTT
+          ENDIF
+        ELSE
+          DT=DT_INIT*DSIGN(1.D0,DT0)
         ENDIF
-C MWF END DEBUG
-        DT=DT0
-        DT=DMIN1(DT,DTT)
+        ID_RK=ID_RK0
         ICOUNT=0
         GOTO 100
 C
@@ -1089,167 +1131,17 @@ C
 C  999 CONTINUE
       RETURN
       END
-
 C
 C 
 C
-      SUBROUTINE DN_CHECK
-     I    (MAXND,NODE,NEQ, DL,ATOL,
-     I     DN,
-     O     I1,I2,I3)
-C 
-C 02/03/2010 (HPC)
-C ======================================================================
-C < PURPOSE > 
-C PREPARE I1, I2, I3 FOR THE SUCCESSIVE PT WHEN THE TRACKED NODE IS
-C ON THE ELEMENT BOUNDARY
-C ======================================================================
-C
-      IMPLICIT REAL*8(A-H,O-Z)
-C
-      DIMENSION DN(MAXND)
-C
-C === CHECK IF THE PT ENDS ON ANY SIDE OF THE ELEMENT
-C
-      I1=0
-      I2=0
-      I3=0
-      DO I=1,NODE
-        DD=DN(I)*DL
-        IF(DABS(DD).LE.ATOL)THEN
-          IF(I1.EQ.0)THEN
-            I1=I
-          ELSE
-            IF(I2.EQ.0)THEN
-              I2=I
-            ELSE
-              I3=I
-            ENDIF
-          ENDIF
-        ENDIF                
-      ENDDO
-C
-C === IF THREE INTERPOLATION FUNCTIONS ARE COMPUTED TO BE
-C     ZERO 
-C
-C THIS WILL OCCUR ONLY IN 3-D: THE TRACKED NODE COINCIDES WITH
-C                              AN ELEMENT NODE (I.E., I1)
-C
-      IF(I3.NE.0)THEN
-        DO I=1,NODE
-          IF(I.NE.I1 .AND. I.NE.I2 .AND. I.NE.I3)THEN
-            I1=I
-            I2=0
-            I3=0
-            GOTO 999
-          ENDIF
-        ENDDO         
-      ENDIF
-C
-C === IF TWO INTERPOLATION FUNCTIONS ARE COMPUTED TO BE
-C     ZERO 
-C
-      IF(I2.NE.0)THEN
-C
-C FOR THE CASE OF 2-D: THE TRACKED NODE COINCIDES WITH
-C                      AN ELEMENT NODE (I.E., I1)
-C
-        IF(NEQ.EQ.2)THEN
-          DO I=1,NODE
-            IF(I.NE.I1 .AND. I.NE.I2)THEN
-              I1=I
-              I2=0
-              I3=0
-              GOTO 999
-            ENDIF
-          ENDDO
-C
-C FOR THE CASE OF 3-D: THE TRACKED NODE FALL ON AN
-C                      ELEMENT EDGE (I.E., I1-I2)
-C
-        ELSEIF(NEQ.EQ.3)THEN
-          DO I=1,NODE
-            IF(I.NE.I1 .AND. I.NE.I2)THEN           
-              IF(I3.EQ.0)THEN
-                I3=I
-              ELSE
-                I1=I3
-                I2=I
-                I3=0
-                GOTO 999
-              ENDIF
-            ENDIF
-          ENDDO
-        ENDIF
-      ENDIF
-C
-C === IF ONE INTERPOLATION FUNCTIONS ARE COMPUTED TO BE
-C     ZERO 
-C
-      IF(I1.NE.0)THEN
-C
-C FOR THE CASE OF 1-D: THE TRACKED NODE COINCIDES WITH
-C                      AN ELEMENT NODE (I.E., I1)
-C
-        IF(NEQ.EQ.1)THEN
-          DO I=1,NODE
-            IF(I.NE.I1)THEN
-              I1=I
-              I2=0
-              I3=0
-              GOTO 999
-            ENDIF
-          ENDDO
-C
-C FOR THE CASE OF 2-D: THE TRACKED NODE FALL ON AN
-C                      ELEMENT EDGE (I.E., I1-I2)
-C
-        ELSEIF(NEQ.EQ.2)THEN
-          DO I=1,NODE
-            IF(I.NE.I1)THEN           
-              IF(I3.EQ.0)THEN
-                I3=I
-              ELSE
-                I1=I3
-                I2=I
-                I3=0
-                GOTO 999
-              ENDIF
-            ENDIF
-          ENDDO
-C
-C FOR THE CASE OF 3-D: THE TRACKED NODE FALL ON AN
-C                      ELEMENT FACE (I.E., I1-I2-I3)
-C
-        ELSEIF(NEQ.EQ.3)THEN
-          DO I=1,NODE
-            IF(I.NE.I1)THEN           
-              IF(I3.EQ.0)THEN
-                I3=I
-              ELSE
-                IF(I2.EQ.0)THEN
-                  I2=I
-                ELSE
-                  I1=I
-                  GOTO 999
-                ENDIF
-              ENDIF
-            ENDIF
-          ENDDO
-        ENDIF           
-      ENDIF  
-C
-  999 CONTINUE
-      RETURN
-      END 
-
       SUBROUTINE RKCK_PT
-     I    (MAXEQ,MAXND,NEQ,NODE, T,DT, T1,T2,
-     I     XW,VT1W,VT2W, XS,
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL,T,DT, T1,T2,
+     I     XW,VT1W,VT2W, XS,ID_ETA,
      M     AK1,AK2,AK3,AK4,AK5,AK6,XTEMP,
-     O     XOUT5,XOUT4,XERR,DN_S)
+     O     IDSDT,IREDUCE,I1,I2,I3,
+     O     XOUTB,XOUTA,XERR,DN_S,XI_S,DI_S,IXI_S,IDI_S)
 C 
-C 02/08/2010 (HPC)
+C 07/14/2010 (HPC)
 C ======================================================================
 C < PURPOSE > 
 C   ESTIMATE ERRORS BETWEEN 4TH- AND 5TH-ORDER RUNGE-KUTTA (RK) USING
@@ -1268,21 +1160,27 @@ C               NODE AT TIME T1
 C   VT2W(I,J) = THE I-TH VELOCITY COMPONENT ASSOCAITED WITH THE J-TH 
 C               NODE AT TIME T2
 C < OUTPUT >
-C   XOUT5  = ESTIMATE FROM 5TH-ORDER RK
-C   XOUT4  = ESTIMATE FROM 4TH-ORDER RK
+C   XOUTB  = ESTIMATE FROM 5TH-ORDER RK
+C   XOUTA  = ESTIMATE FROM 4TH-ORDER RK
 C   XERR   = ERROR ESTIMATE BETWEEN 4TH- AND 5TH-ORDER RK
 C ======================================================================
 C
       IMPLICIT REAL*8(A-H,O-Z)
 C
       DIMENSION XS(MAXEQ)
-      DIMENSION XOUT5(MAXEQ),XOUT4(MAXEQ),XERR(MAXEQ)
+      DIMENSION XOUTB(MAXEQ),XOUTA(MAXEQ),XERR(MAXEQ)
       DIMENSION AK1(MAXEQ),AK2(MAXEQ),AK3(MAXEQ),
      >          AK4(MAXEQ),AK5(MAXEQ),AK6(MAXEQ),
      >          XTEMP(MAXEQ)
       DIMENSION XW(MAXEQ,MAXND)
       DIMENSION VT1W(MAXEQ,MAXND),VT2W(MAXEQ,MAXND)
       DIMENSION DN_S(MAXND),DN(MAXND)
+      DIMENSION XI(3),DI(3),XI_S(3),DI_S(3)
+      DIMENSION IXI(3),IDI(4),IXI_S(3),IDI_S(4)
+CMWF FOR DEBUGGING
+      INTEGER IDEBUG
+C
+      IDEBUG = 0
 C
 C ===== DEFINE THE PARAMETERS USED FOR CASH-KARP RK
 C
@@ -1329,15 +1227,189 @@ C
       E5  = C5-D5
       E6  = C6-D6
 C
-C INITIALIZE AK2, AK3, AK4, AK5, AK6
+C COMPUTE TIME DERIVATIVE FUNCTIONAL VALUES NEEDED FOR CASH-KARP RK
+C THESE FUNCTIONS ARE AK2, AK3, AK4, AK5, AND AK6
+C
+C STEP 0:
 C
       DO I=1,NEQ
-        AK2(I)=0.0E0
-        AK3(I)=0.0E0
-        AK4(I)=0.0E0
-        AK5(I)=0.0E0
-        AK6(I)=0.0E0
+        XTEMP(I)=XS(I)
       ENDDO
+      TT=T
+      CALL VEL123
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XTEMP,TT, T1,T2,
+     I     XW,VT1W,VT2W, ID_ETA,
+     O     AK1,DN_S,XI_S,DI_S,IXI_S,IDI_S)
+C
+C === EXAMINE THE COMPUTED ENDING LOCATION TO DETERMINE WHETHER THIS IS THE 
+C     ELEMENT THE PARTICLE WILL TRAVEL WITHIN IT
+C
+      DO I=1,NEQ
+        XOUTA(I)=XS(I)+DT*AK1(I)
+      ENDDO
+      IREDUCE=0
+      PHI=0.0D0
+      CALL INTRP123
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XOUTA, XW,
+     O     DN,IADJUST,XI,DI,IXI,IDI)
+      CALL PHI_COMP
+     I    (MAXND,NODE,NEQ, 
+     I     DN_SAFE,  
+     I     DN_S,DN,XI,XI_S,DI,DI_S, IXI_S,IDI_S,
+     O     IDSDT,I1,I2,I3,PHI)
+C
+CMWF DEBUG
+      IF(IDEBUG.GT.1) THEN
+         WRITE(6,*)'RKCK_PT T= ',T,' TT= ',TT,' DT= ',DT,
+     &        ' IDSDT= ',IDSDT,' I1= ',I1,' I2= ',I2,' I3= ',I3,
+     &        ' PHI= ',PHI
+         WRITE(6,*)'AK1= ',(AK1(I),I=1,NEQ)
+         WRITE(6,*)'XOUTA= ',(XOUTA(I),I=1,NEQ)
+         WRITE(6,*)'DN= ',(DN(I),I=1,NODE)
+      ENDIF
+      IF(IDSDT.EQ.0)RETURN
+C
+C === IF PHI IS GREATER THAN 1 ==> REDUCE TIMESTEP
+C
+      IF(PHI.GT.1.0E0)THEN
+        DTT=DT/PHI
+        DT=DTT
+        IREDUCE=1
+        IF(IDEBUG.GT.1) THEN
+         WRITE(6,*)'RKCK_PT REDUCING, PHI= ',PHI,
+     &        ' DTT= ',DTT,' IREDUCE= ',IREDUCE
+
+      ENDIF
+
+        RETURN
+      ENDIF
+C
+C STEP 1:
+C
+      DO I=1,NEQ
+        XTEMP(I)=XS(I)+DT*B21*AK1(I)
+      ENDDO
+      TT=T+A2*DT
+      CALL VEL123
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XTEMP,TT, T1,T2,
+     I     XW,VT1W,VT2W, ID_ETA,
+     O     AK2,DN,XI,DI,IXI,IDI)
+C
+C STEP 2:
+C
+      DO I=1,NEQ
+        XTEMP(I)=XS(I)+DT*(B31*AK1(I)+B32*AK2(I))
+      ENDDO
+      TT=T+A3*DT
+      CALL VEL123
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XTEMP,TT, T1,T2,
+     I     XW,VT1W,VT2W, ID_ETA,
+     O     AK3,DN,XI,DI,IXI,IDI)
+C
+C STEP 3:
+C
+      DO I=1,NEQ
+        XTEMP(I)=XS(I)+DT*(B41*AK1(I)+B42*AK2(I)+B43*AK3(I))
+      ENDDO
+      TT=T+A4*DT
+      CALL VEL123
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XTEMP,TT, T1,T2,
+     I     XW,VT1W,VT2W, ID_ETA,
+     O     AK4,DN,XI,DI,IXI,IDI)
+C
+C STEP 4:
+C
+      DO I=1,NEQ
+        XTEMP(I)=XS(I)+DT*(B51*AK1(I)+B52*AK2(I)+B53*AK3(I)+
+     >                     B54*AK4(I))
+      ENDDO
+      TT=T+A5*DT
+      CALL VEL123
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XTEMP,TT, T1,T2,
+     I     XW,VT1W,VT2W, ID_ETA,
+     O     AK5,DN,XI,DI,IXI,IDI)
+C
+C STEP 5:
+C
+      DO I=1,NEQ
+        XTEMP(I)=XS(I)+DT*(B61*AK1(I)+B62*AK2(I)+B63*AK3(I)+
+     >                     B64*AK4(I)+B65*AK5(I))
+      ENDDO
+      TT=T+A6*DT
+      CALL VEL123
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XTEMP,TT, T1,T2,
+     I     XW,VT1W,VT2W, ID_ETA,
+     O     AK6,DN,XI,DI,IXI,IDI)
+C
+C ESTIMATE ERROR USING 5TH- AND 4TH-ORDER RK
+C
+      DO I=1,NEQ
+        XOUTB(I)=XS(I)+DT*(C1*AK1(I)+C2*AK2(I)+C3*AK3(I)+
+     >                     C4*AK4(I)+C5*AK5(I)+C6*AK6(I))
+        XOUTA(I)=XS(I)+DT*(D1*AK1(I)+D2*AK2(I)+D3*AK3(I)+
+     >                     D4*AK4(I)+D5*AK5(I)+D6*AK6(I))
+        XERR(I)=DT*(E1*AK1(I)+E2*AK2(I)+E3*AK3(I)+
+     >              E4*AK4(I)+E5*AK5(I)+E6*AK6(I))
+      ENDDO
+C
+C ===== RETURN TO THE CALLING ROUTINE
+C
+  999 CONTINUE
+      RETURN
+      END
+C
+C 
+C
+      SUBROUTINE RK24_PT
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, T,DT, T1,T2,
+     I     XW,VT1W,VT2W, XS, ID_ETA, ID_RK,
+     M     AK1,AK2,AK3,AK4,XTEMP,
+     O     IDSDT,IREDUCE,I1,I2,I3,
+     O     XOUTB,XOUTA,XERR,DN_S,XI_S,DI_S,IXI_S,IDI_S)
+C
+C 07/14/2010 (HPC)
+C ======================================================================
+C < PURPOSE > 
+C   ESTIMATE ERRORS BETWEEN 2ND- AND 4TH-ORDER RUNGE-KUTTA (RK) METHOD 
+C   CONCERNING PARTICLE TRACKING (PK)
+C < INPUT > 
+C   MAXEQ  = MAX. NO. OF 1ST-ORDER ODE
+C   NEQ    = NO. OF 1ST-ORDER ODE
+C   T      = STARTING TIME FOR PK
+C   DT     = AVAILABLE TRACKING TIME
+C   XS     = START LOCATION 
+C   T1, T2 = TIMES WHERE VELOCITIES (TIME DERIVATIVES) ARE GIVEN
+C   XW(I,J) = THE I-TH COORDINATE OF THE J-TH NODE OF A SPECIFIC 
+C             ELEMENT
+C   VT1W(I,J) = THE I-TH VELOCITY COMPONENT ASSOCAITED WITH THE J-TH 
+C               NODE AT TIME T1
+C   VT2W(I,J) = THE I-TH VELOCITY COMPONENT ASSOCAITED WITH THE J-TH 
+C               NODE AT TIME T2
+C < OUTPUT >
+C   XOUTB  = ESTIMATE FROM 2ND-ORDER RK
+C   XOUTA  = ESTIMATE FROM 4TH-ORDER RK
+C   XERR   = ERROR ESTIMATE BETWEEN 4TH- AND 5TH-ORDER RK
+C ======================================================================
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      DIMENSION XS(MAXEQ)
+      DIMENSION XOUTB(MAXEQ),XOUTA(MAXEQ),XERR(MAXEQ)
+      DIMENSION AK1(MAXEQ),AK2(MAXEQ),AK3(MAXEQ),
+     >          AK4(MAXEQ),XTEMP(MAXEQ)
+      DIMENSION XW(MAXEQ,MAXND)
+      DIMENSION VT1W(MAXEQ,MAXND),VT2W(MAXEQ,MAXND)
+      DIMENSION DN_S(MAXND),DN(MAXND)
+      DIMENSION XI(3),DI(3),XI_S(3),DI_S(3)
+      DIMENSION IXI(3),IDI(4),IXI_S(3),IDI_S(4)
+C
+C ===== DEFINE THE PARAMETERS USED FOR 2ND- AND 4-TH
+C       ORDER RK
+C
+      D1  = 1.0E0/6.0E0
+      D2  = 1.0E0/3.0E0
+      D3  = D2
+      D4  = D1
 C
 C COMPUTE TIME DERIVATIVE FUNCTIONAL VALUES NEEDED FOR CASH-KARP RK
 C THESE FUNCTIONS ARE AK2, AK3, AK4, AK5, AND AK6
@@ -1349,91 +1421,127 @@ C
       ENDDO
       TT=T
       CALL VEL123
-     I    (MAXEQ,MAXND,NEQ,NODE, XTEMP,TT, T1,T2,
-     I     XW,VT1W,VT2W,
-     O     AK1,DN_S)
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XTEMP,TT, T1,T2,
+     I     XW,VT1W,VT2W, ID_ETA,
+     O     AK1,DN_S,XI_S,DI_S,IXI_S,IDI_S)
+C
+C === EXAMINE THE COMPUTED ENDING LOCATION TO DETERMINE WHETHER THIS IS THE 
+C     ELEMENT THE PARTICLE WILL TRAVEL WITHIN IT
+C
+      DO I=1,NEQ
+        XOUTA(I)=XS(I)+DT*AK1(I)
+      ENDDO
+      IREDUCE=0
+      PHI=0.0D0
+      CALL INTRP123
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XOUTA, XW,
+     O     DN,IADJUST,XI,DI,IXI,IDI)
+      CALL PHI_COMP
+     I    (MAXND,NODE,NEQ, 
+     I     DN_SAFE,  
+     I     DN_S,DN,XI,XI_S,DI,DI_S, IXI_S,IDI_S,
+     O     IDSDT,I1,I2,I3,PHI)
+C
+      IF(IDSDT.EQ.0)RETURN
+C
+C === IF PHI IS GREATER THAN 1 ==> REDUCE TIMESTEP
+C
+      IF(PHI.GT.1.0E0)THEN
+        DTT=DT/PHI
+        DT=DTT
+        IREDUCE=1
+        RETURN
+      ENDIF
+C
+C WHEN 1ST-ORDER RK IS DESIRED
+C
+      IF(ID_RK.EQ.1)THEN
+        DO I=1,NEQ
+          XOUTB(I)=XOUTA(I)
+          XERR(I)=0.0E0
+        ENDDO
+        RETURN
+      ENDIF
 C
 C STEP 1:
 C
       DO I=1,NEQ
-        XTEMP(I)=XS(I)+DT*B21*AK1(I)
+        XTEMP(I)=XS(I)+DT*0.5E0*AK1(I)
       ENDDO
-      TT=T+A2*DT
+      TT=T+0.5E0*DT
       CALL VEL123
-     I    (MAXEQ,MAXND,NEQ,NODE, XTEMP,TT, T1,T2,
-     I     XW,VT1W,VT2W,
-     O     AK2,DN)
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XTEMP,TT, T1,T2,
+     I     XW,VT1W,VT2W, ID_ETA,
+     O     AK2,DN,XI,DI,IXI,IDI)
+C
+C WHEN 2ND-ORDER RK IS DESIRED
+C
+      IF(ID_RK.EQ.2)THEN
+        DO I=1,NEQ
+          XOUTA(I)=XS(I)+DT*AK2(I)
+          XOUTB(I)=XOUTA(I)
+          XERR(I)=0.0E0
+        ENDDO
+        RETURN
+      ENDIF
 C
 C STEP 2:
 C
       DO I=1,NEQ
-        XTEMP(I)=XS(I)+DT*(B31*AK1(I)+B32*AK2(I))
+        XTEMP(I)=XS(I)+DT*0.5E0*AK2(I)
       ENDDO
-      TT=T+A3*DT
+      TT=T+0.5E0*DT
       CALL VEL123
-     I    (MAXEQ,MAXND,NEQ,NODE, XTEMP,TT, T1,T2,
-     I     XW,VT1W,VT2W,
-     O     AK3,DN)
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XTEMP,TT, T1,T2,
+     I     XW,VT1W,VT2W, ID_ETA,
+     O     AK3,DN,XI,DI,IXI,IDI)
 C
 C STEP 3:
 C
       DO I=1,NEQ
-        XTEMP(I)=XS(I)+DT*(B41*AK1(I)+B42*AK2(I)+B43*AK3(I))
+        XTEMP(I)=XS(I)+DT*AK3(I)
       ENDDO
-      TT=T+A4*DT
+      TT=T+DT
       CALL VEL123
-     I    (MAXEQ,MAXND,NEQ,NODE, XTEMP,TT, T1,T2,
-     I     XW,VT1W,VT2W,
-     O     AK4,DN)
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XTEMP,TT, T1,T2,
+     I     XW,VT1W,VT2W, ID_ETA,
+     O     AK4,DN,XI,DI,IXI,IDI)
 C
-C STEP 4:
+C WHEN 4ND-ORDER RK IS DESIRED
+C
+      IF(ID_RK.EQ.4)THEN
+        DO I=1,NEQ
+          XOUTA(I)=XS(I)+DT*(D1*AK1(I)+D2*AK2(I)+
+     >                     D3*AK3(I)+D4*AK4(I))
+          XOUTB(I)=XOUTA(I)
+          XERR(I)=0.0E0
+        ENDDO
+        RETURN
+      ENDIF
+C
+C ESTIMATE ERROR USING 2ND- AND 4TH-ORDER RK
 C
       DO I=1,NEQ
-        XTEMP(I)=XS(I)+DT*(B51*AK1(I)+B52*AK2(I)+B53*AK3(I)+
-     >                     B54*AK4(I))
-      ENDDO
-      TT=T+A5*DT
-      CALL VEL123
-     I    (MAXEQ,MAXND,NEQ,NODE, XTEMP,TT, T1,T2,
-     I     XW,VT1W,VT2W,
-     O     AK5,DN)
-C
-C STEP 5:
-C
-      DO I=1,NEQ
-        XTEMP(I)=XS(I)+DT*(B61*AK1(I)+B62*AK2(I)+B63*AK3(I)+
-     >                     B64*AK4(I)+B65*AK5(I))
-      ENDDO
-      TT=T+A6*DT
-      CALL VEL123
-     I    (MAXEQ,MAXND,NEQ,NODE, XTEMP,TT, T1,T2,
-     I     XW,VT1W,VT2W,
-     O     AK6,DN)
-C
-C ESTIMATE ERROR USING 5TH- AND 4TH-ORDER RK
-C
-      DO I=1,NEQ
-        XOUT5(I)=XS(I)+DT*(C1*AK1(I)+C2*AK2(I)+C3*AK3(I)+
-     >                     C4*AK4(I)+C5*AK5(I)+C6*AK6(I))
-        XOUT4(I)=XS(I)+DT*(D1*AK1(I)+D2*AK2(I)+D3*AK3(I)+
-     >                     D4*AK4(I)+D5*AK5(I)+D6*AK6(I))
-        XERR(I)=DT*(E1*AK1(I)+E2*AK2(I)+E3*AK3(I)+
-     >              E4*AK4(I)+E5*AK5(I)+E6*AK6(I))
+        XOUTA(I)=XS(I)+DT*AK2(I)
+        XOUTB(I)=XS(I)+DT*(D1*AK1(I)+D2*AK2(I)+
+     >                     D3*AK3(I)+D4*AK4(I))
+        XERR(I)=XOUTA(I)-XOUTB(I)
       ENDDO
 C
 C ===== RETURN TO THE CALLING ROUTINE
 C
+  999 CONTINUE
       RETURN
       END
 C
 C
 C
       SUBROUTINE VEL123
-     I    (MAXEQ,MAXND,NEQ,NODE, XTEMP,TT, T1,T2,
-     I     XW,VT1W,VT2W,
-     O     AK,DN)
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XTEMP,TT, T1,T2,
+     I     XW,VT1W,VT2W, ID_ETA,
+     O     AK,DN,XI,DI,IXI,IDI)
 C 
-C 02/08/2010 (HPC)
+C 06/22/2010 (HPC)
 C ======================================================================
 C < PURPOSE > 
 C   COMPUTE TIME DERIVATIVE FUNCTIONAL VALUES NEEDED FOR CASH-KARP RK
@@ -1458,6 +1566,7 @@ C
       DIMENSION VT1W(MAXEQ,MAXND),VT2W(MAXEQ,MAXND)
       DIMENSION DN(MAXND)
       DIMENSION VT1(3),VT2(3)
+      DIMENSION XI(3),DI(3),IXI(3),IDI(4)
 C
 C
 C === COMPUTE THE INTERPOLATION FUNCTIONAL VALUES
@@ -1465,8 +1574,8 @@ C
 C IN SPACE:
 C
       CALL INTRP123
-     I    (MAXEQ,MAXND,NEQ,NODE, XTEMP, XW,
-     O     DN,DJAC)
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XTEMP, XW,
+     O     DN,IADJUST,XI,DI,IXI,IDI)
 C
 C IN TIME:
 C
@@ -1507,10 +1616,10 @@ C
 C
 C
       SUBROUTINE INTRP123
-     I    (MAXEQ,MAXND,NEQ,NODE, XTEMP, XW,
-     O     DN,DJAC)
+     I    (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ATOL,DL, XTEMP, XW,
+     O     DN,IADJUST,XI,DI,IXI,IDI)
 C
-C 02/01/2010 (HPC) 
+C 06/22/2010 (HPC) 
 C ======================================================================
 C < PURPOSE > 
 C   COMPUTE THE VALUES OF INTERPOLATION FUNCTIONS
@@ -1521,27 +1630,45 @@ C             ELEMENT
 C < OUTPUT >
 C   DN(I) = VALUE ASSCIATED WITH THE INTERPOLATION FUNCTION ASSOCIATED
 C           WITH THE I-TH NODE
+C
+C < NOTE >
+C NEQ = 1    ==> 1-D LINE ELEMENT
+C NEQ = 2
+C   NODE = 3 ==> 2-D TRIANGULAR ELEMENT
+C   NODE = 4 ==> 2-D QUADRILATERAL ELEMENT
+C NEQ = 3  
+C   NODE = 4 ==> 3-D TETRAHEDRAL ELEMENT
+C   NODE = 6 ==> 3-D TRIANGULAR PRISM ELEMENT
+C   NODE = 8 ==> 3-D HEXAHEDRAL ELEMENT
 C ======================================================================
 C
       IMPLICIT REAL*8(A-H,O-Z)
 C
       DIMENSION XTEMP(MAXEQ),XW(MAXEQ,MAXND)
-      DIMENSION DN(MAXND)
+      DIMENSION DN(MAXND),XI(3),DI(3),IXI(3),IDI(4)
       DIMENSION A(4),B(4),C(4),D(4)
+      DIMENSION K21(3,3),K31(4,4),K32(4,6)
+      DATA K21 /1,2,3, 2,3,1, 3,1,2/
+      DATA K31 /1,2,3,4, 2,3,4,1, 3,4,1,2, 4,1,2,3/
+      DATA K32 /1,2,3,4, 1,3,2,4, 1,4,2,3, 2,3,1,4, 2,4,1,3, 3,4,1,2/    
 C
 C
 C ===== FOR THE CASE OF A 1-D LINE ELEMENT
 C
       IF(NEQ.EQ.1)THEN
-C MWF REPLACE WITH ABS IN CASE HAVE NEGATIVE JACOBIANS?
-        DJAC=XW(1,2)-XW(1,1)
-        DN(2)=(XTEMP(1)-XW(1,1))/DJAC
-        DN(1)=1.0E0-DN(2)
+        XSI=(XTEMP(1)-XW(1,1))/(XW(1,2)-XW(1,1))
+        DN(1)=1.0E0-XSI
+        DN(2)=XSI
+C
+        CALL ADJUST123
+     I      (MAXND,NEQ,NODE,DN_SAFE,
+     M       DN,XI,DI,
+     O       IADJUST,IXI,IDI)
 C
 C
 C ===== FOR THE CASE OF A 2-D TRIANGULAR ELEMENT
 C
-      ELSEIF(NEQ.EQ.2)THEN
+      ELSEIF(NEQ.EQ.2 .AND. NODE.EQ.3)THEN
         X12=XW(1,1)-XW(1,2)
         X23=XW(1,2)-XW(1,3)
         X31=XW(1,3)-XW(1,1)  
@@ -1549,19 +1676,37 @@ C
         Y23=XW(2,2)-XW(2,3)
         Y31=XW(2,3)-XW(2,1)
         DJAC=XW(1,1)*Y23+XW(1,2)*Y31+XW(1,3)*Y12
-C MWF REPLACE WITH ABS IN CASE HAVE NEGATIVE JACOBIANS?
-C        DJAC=DABS(DJAC)
-        DN(1)=Y23*XTEMP(1)-X23*XTEMP(2)+XW(1,2)*XW(2,3)-XW(1,3)*XW(2,2)
-        DN(2)=Y31*XTEMP(1)-X31*XTEMP(2)+XW(1,3)*XW(2,1)-XW(1,1)*XW(2,3)
-        DN(3)=Y12*XTEMP(1)-X12*XTEMP(2)+XW(1,1)*XW(2,2)-XW(1,2)*XW(2,1)
-        DO I=1,NODE
-          DN(I)=DN(I)/DJAC
-        ENDDO
+C
+        DN(1)=(Y23*XTEMP(1)-X23*XTEMP(2)+XW(1,2)*XW(2,3)-
+     >                                   XW(1,3)*XW(2,2))/DJAC
+        DN(2)=(Y31*XTEMP(1)-X31*XTEMP(2)+XW(1,3)*XW(2,1)-
+     >                                   XW(1,1)*XW(2,3))/DJAC
+        DN(3)=1.0E0-DN(1)-DN(2)
+C
+        CALL ADJUST123
+     I      (MAXND,NEQ,NODE,DN_SAFE,
+     M       DN,XI,DI,
+     O       IADJUST,IXI,IDI)         
+C
+C
+C ===== FOR THE CASE OF A 2-D QUADRILATERL ELEMENT
+C
+      ELSEIF(NEQ.EQ.2 .AND. NODE.EQ.4)THEN
+        CALL XSI_2 
+     I      (MAXEQ,MAXND,XTEMP,XW,DL,ATOL,
+     O       XSI,ETA)
+        XI(1)=XSI
+        XI(2)=ETA
+C
+        CALL ADJUST123
+     I      (MAXND,NEQ,NODE,DN_SAFE,
+     M       DN,XI,DI,
+     O       IADJUST,IXI,IDI)
 C
 C
 C ===== FOR THE CASE OF A 3-D TETRAHEDRAL ELEMENT
 C
-      ELSEIF(NEQ.EQ.3)THEN
+      ELSEIF(NEQ.EQ.3 .AND. NODE.EQ.4)THEN
         DJAC=0.0D0
         DO KK=1,4
           IF(KK.EQ.1)THEN
@@ -1610,6 +1755,45 @@ C        DJAC=DABS(DJAC)
         DO KK=1,4
           DN(KK)=DN(KK)/DJAC
         ENDDO
+C
+        CALL ADJUST123
+     I      (MAXND,NEQ,NODE,DN_SAFE,
+     M       DN,XI,DI,
+     O       IADJUST,IXI,IDI)
+C
+C
+C ===== FOR THE CASE OF A 3-D TRIANGULAR PRISM ELEMENT
+C
+      ELSEIF(NEQ.EQ.3 .AND. NODE.EQ.6)THEN
+        CALL XSI_3P
+     I      (MAXEQ,MAXND,XTEMP,XW,DL,ATOL,
+     O       XSI,DL1,DL2,DL3)
+        XI(1)=XSI
+        DI(1)=DL1
+        DI(2)=DL2
+        DI(3)=DL3
+C
+        CALL ADJUST123
+     I      (MAXND,NEQ,NODE,DN_SAFE,
+     M       DN,XI,DI,
+     O       IADJUST,IXI,IDI)
+C
+C
+C ===== FOR THE CASE OF A 3-D HEXAHEDRAL ELEMENT
+C
+      ELSEIF(NEQ.EQ.3 .AND. NODE.EQ.8)THEN
+        CALL XSI_3
+     I      (MAXEQ,MAXND,XTEMP,XW,DL,ATOL,
+     O       XSI,ETA,ZTA)
+        XI(1)=XSI
+        XI(2)=ETA
+        XI(3)=ZTA
+C
+        CALL ADJUST123
+     I      (MAXND,NEQ,NODE,DN_SAFE,
+     M       DN,XI,DI,
+     O       IADJUST,IXI,IDI)
+C
       ENDIF
 C
       RETURN
@@ -1617,162 +1801,1527 @@ C
 C
 C
 C
-
-      SUBROUTINE EL_VEL_PREP
-     I    (MAXND,MAXEQ,NNDE,
-     I     NNP,NEL,NODE,NEQ, M,IDVE,DIR,
-     I     XG,IE,VTL2G,VT1E,VT2E,
-     O     XW,VT1W,VT2W)
-C 
-C 02/23/2010 (HPC)
-C 05/10/2010 (MWF)
+      SUBROUTINE ADJUST123
+     I    (MAXND,NEQ,NODE,DN_SAFE,
+     M     DN,XI,DI,
+     O     IADJUST,IXI,IDI)
+C
+C 06/22/2010 (HPC)
 C ======================================================================
 C < PURPOSE > 
-C PREPARE ELEMENT NODAL VELOCITY FOR PT WITHIN THE ELEMENT
-C MWF MODIFIED PEARCE'S ORIGINAL ROUTINE TO TAKE A LOCAL TO GLOBAL DOF
-C     MAP AND ALLOW RT0 (ON SIMPLICES) AS WELL
+C (1) DETERMINE IADJUST, IXI, AND IDI FOR NECESSARY LOCATION SHIFT WHEN
+C     THE PARTICLE IS SUFFICIENTLY CLOSE TO THE ELEMENT BOUNDARY
+C (2) ADJUST DN, XI, AND DI AS NECESSARY 
+C
+C < NOTE >
+C NEQ = 1    ==> 1-D LINE ELEMENT
+C NEQ = 2
+C   NODE = 3 ==> 2-D TRIANGULAR ELEMENT
+C   NODE = 4 ==> 2-D QUADRILATERAL ELEMENT
+C NEQ = 3  
+C   NODE = 4 ==> 3-D TETRAHEDRAL ELEMENT
+C   NODE = 6 ==> 3-D TRIANGULAR PRISM ELEMENT
+C   NODE = 8 ==> 3-D HEXAHEDRAL ELEMENT
+C
+C   DI(I) = NATURAL COORDINATE ASSOCAITED THE I-TH ELEMENT NODE [0,1]
+C   IDI(I) = -1, WHEN XI(I) = 0
+C             1, WHEN XI(I) = 1
+C             0, OTHERWISE
+C   XI(I) = THE I-TH LOCAL COORDINATE [-1,1]
+C   IXI(I) = -1, WHEN XI(I) = -1
+C             1, WHEN XI(I) = 1
+C             0, OTHERWISE
 C ======================================================================
 C
-C      IMPLICIT REAL*8(A-H,O-Z)
+      IMPLICIT REAL*8(A-H,O-Z)
 C
-C      DIMENSION XG(MAXEQ,MAXNP),IE(MAXND,MAXEL)
-C      DIMENSION VT1N(MAXEQ,MAXNP),VT2N(MAXEQ,MAXNP)
-C      DIMENSION VT1E(MAXEQ,MAXND,MAXEL),VT2E(MAXEQ,MAXND,MAXEL)
-C      DIMENSION XW(MAXEQ,MAXND)
-C      DIMENSION VT1W(MAXEQ,MAXND),VT2W(MAXEQ,MAXND)
-C  
-      IMPLICIT NONE
-C DIMENSIONS FOR MAXIMUM 
-C  MAXIMUM NUMBER OF NODES PER ELEMENT (8)
-C  MAXIMUM NUMBER OF EQUATIONS FOR VELOCITY (3)   
-      INTEGER MAXND,MAXEQ
-C ACTUAL DIMENSIONS FOR NUMBER OF NODES, NUMBER OF ELEMENTS, 
-C NUMBER OF NODES PER ELEMENT (MAX FOR THIS MESH ...) 
-C NUMBER OF NODES FOR THIS ELEMENT, AND NUMBER OF EQUATIONS TO 
-C INTEGRATE FOR VELOCITY (SPACE DIMENSION)
-C THIS ELEMENT IF HAVE MIXED TYPES
-      INTEGER NNP,NEL,NNDE,NODE,NEQ
-C CURRENT ELEMENT
-      INTEGER M
-C FLAG FOR VELOCITY TYPE
-C 1 -- 2 LOCAL SPACE IS C^0, P^1 
-C 1 -- ASSUMED GLOBALLY CONTINUOUS (NODAL REPRESENTATION)
-C 2 -- MAY BE DISCONTINUOUS (ELEMENT-BASED REPRESENTATION)
-C      THIS VERSION DOES'T REALLY DISTINGUSIH SINCE 
-C      VTL2G SHOULD ACCOUNT FOR THIS
-C 3 -- RT0 WITH LOCAL BASIS \vec N_i = \frac{1}{d|\Omega_e|}(\vec x - x_{n,i}),
-C 4 -- RT0 WITH LOCAL BASIS \vec N_i = \vec e_i i=0,...,d-1 and \vec N_d = \vec x
-      INTEGER IDVE
-C DIRECTION IN TIME FOR SCALING VELOCITY
-      DOUBLE PRECISION DIR
- 
-C NODAL COORDINATES
-      DOUBLE PRECISION XG(MAXEQ,NNP)
-C ELEMENT -- NODES CONNECTIVITY
-      INTEGER IE(NNDE,NEL)
-C LOCAL TO GLOBAL DOF MAPPING
-C      INTEGER VTL2G(NEQ,NNDE,NEL)
-      INTEGER VTL2G(*)
-C DEGREES OF FREEDOM AT TIME LEVELS 1 AND 2
-      DOUBLE PRECISION VT1E(*),VT2E(*)
-C WORK ARRAY FOR NODES AND VELOCITIES AT TIME LEVEL 1 AND 2
-      DOUBLE PRECISION XW(MAXEQ,MAXND),VT1W(MAXEQ,MAXND),
-     &     VT2W(MAXEQ,MAXND)
-
-C LOCAL VARIABLES
-      INTEGER I,J,K,IVDOF,IEM
-      DOUBLE PRECISION DVOL,DRT0FACT
+      DIMENSION DN(MAXND),XI(3),DI(3),IXI(3),IDI(4)
+      DIMENSION K21(3,3),K31(4,4),K32(4,6)
+      DATA K21 /1,2,3, 2,3,1, 3,1,2/
+      DATA K31 /1,2,3,4, 2,3,4,1, 3,4,1,2, 4,1,2,3/
+      DATA K32 /1,2,3,4, 1,3,2,4, 1,4,2,3, 2,3,1,4, 2,4,1,3, 3,4,1,2/    
 C
-C 
-C WHEN IDVE = 1,2 USE C0P1 VELOCITY 
+      IADJUST=0
+      DN_SAFE2=2.0E0*DN_SAFE
 C
-      IF(IDVE.EQ.1.OR.IDVE.EQ.2)THEN
-        DO J=1,NODE
-          IEM = IE(J,M)
-          DO K=1,NEQ
-            XW(K,J)=XG(K,IEM)
-C            IVDOF = VTL2G(K,J,M)
-            IVDOF = VTL2G(K + NEQ*(J-1) + NEQ*NNDE*(M-1))
-            VT1W(K,J)=VT1E(IVDOF)*DIR
-            VT2W(K,J)=VT2E(IVDOF)*DIR
-C MWF DEBUG
-C            WRITE(6,*)'EL_VEL_PREP IDVE.EQ.2 M= ',M,' J= ',J,
-C     &           ' IEM= ',IEM,' XW(',K,',',J,')= ',XW(K,J),
-C     &           ' IVDOF= ',IVDOF,' VT1W(',K,',',J,')= ',VT1W(K,J),
-C     &           ' VT2W(',K,',',J,')= ',VT2W(K,J)
-C MWF DEBUG            
-          ENDDO
+C
+C ===== FOR THE CASE OF A 1-D LINE ELEMENT
+C
+      IF(NEQ.EQ.1)THEN
+        IF(DABS(DN(1)).LE.DN_SAFE)THEN
+          IADJUST=1
+          DN(1)=0.0E0
+          DN(2)=1.0E0
+          IDI(1)=-1
+          IDI(2)=1
+        ELSEIF(DABS(DN(1)-1.0E0).LE.DN_SAFE)THEN
+          IADJUST=1
+          DN(1)=1.0E0
+          DN(2)=0.0E0
+          IDI(1)=1
+          IDI(2)=-1
+        ELSE
+          IDI(1)=0
+          IDI(2)=0
+        ENDIF
+C
+C
+C ===== FOR THE CASE OF A 2-D TRIANGULAR ELEMENT
+C
+      ELSEIF(NEQ.EQ.2 .AND. NODE.EQ.3)THEN
+        ICOUNT=0
+        DO I=1,3
+          IDI(I)=0
+          IF(DABS(DN(I)).LE.DN_SAFE)THEN
+            DN(I)=0.0E0
+            IDI(I)=-1
+            ICOUNT=ICOUNT+1
+          ELSEIF(DABS(DN(I)-1.0E0).LE.DN_SAFE)THEN
+            DN(I)=1.0E0
+            IDI(I)=1
+            ICOUNT=ICOUNT+1
+          ENDIF
         ENDDO
-      ELSE IF (IDVE.EQ.3) THEN
-C RT0 VELOCITY ON A SIMPLEX WITH REPRESENTATION
-C \vec N_i = \frac{1}{d|\Omega_e|}(\vec x - x_{n,i}), i=0,...,d
-C  d IS THE SPACE DIMENSION, |\Omege_e| IS THE ELEMENT VOLUMNE
-C AND \vec x_{n,i} IS THE NODE ACROSS FROM FACE i
-C LOAD LOCAL NODAL COORDS FIRST
-        DO J=1,NODE
-          IEM = IE(J,M)
-          DO K=1,NEQ
-            XW(K,J)=XG(K,IEM)
+        IF(ICOUNT.EQ.3)THEN
+          IADJUST=1
+        ELSEIF(ICOUNT.EQ.2)THEN
+          IADJUST=1
+          DO I=1,3
+            K1=K21(1,I)
+            K2=K21(2,I)
+            K3=K21(3,I)
+            IF(IDI(K1).NE.-1 .AND. IDI(K1).NE.1)THEN
+              DN(K1)=1.0E0-DN(K2)-DN(K3)
+              IDI(K1)=1
+              IF(DABS(DN(K1)).LE.DN_SAFE)IDI(K1)=-1
+              RETURN
+            ENDIF
           ENDDO
+        ELSEIF(ICOUNT.EQ.1)THEN
+          IADJUST=1
+          DO I=1,3
+            K1=K21(1,I)
+            K2=K21(2,I)
+            K3=K21(3,I)
+            IF(IDI(K1).EQ.-1 .OR. IDI(K1).EQ.1)THEN
+              DIFF=1.0E0-DN(K1)-DN(K2)-DN(K3)
+              DN(K2)=DN(K2)+DIFF
+              IF(DABS(DN(K2)).LE.DN_SAFE)THEN
+                DN(K2)=0.0E0
+                IDI(K2)=-1
+                DN(K3)=1.0E0-DN(K1)-DN(K2)
+                IDI(K3)=1
+                IF(DABS(DN(K3)).LE.DN_SAFE)IDI(K3)=-1
+                RETURN
+              ELSEIF(DABS(DN(K2)-1.0E0).LE.DN_SAFE)THEN
+                DN(K2)=1.0E0
+                IDI(K2)=1
+                DN(K3)=0.0E0
+                IDI(K3)=-1
+                RETURN
+              ENDIF
+            ENDIF
+          ENDDO
+        ENDIF          
+C
+C
+C ===== FOR THE CASE OF A 2-D QUADRILATERL ELEMENT
+C
+      ELSEIF(NEQ.EQ.2 .AND. NODE.EQ.4)THEN
+        IXI(1)=0
+        IF(DABS(XI(1)-1.0E0).LE.DN_SAFE2)THEN
+          IADJUST=1
+          XI(1)=1.0E0
+          IXI(1)=1
+        ELSEIF(DABS(XI(1)+1.0E0).LE.DN_SAFE2)THEN
+          IADJUST=1
+          XI(1)=-1.0E0
+          IXI(1)=-1
+        ENDIF
+        IXI(2)=0
+        IF(DABS(XI(2)-1.0E0).LE.DN_SAFE2)THEN
+          IADJUST=1
+          XI(2)=1.0E0
+          IXI(2)=1
+        ELSEIF(DABS(XI(2)+1.0E0).LE.DN_SAFE2)THEN
+          IADJUST=1
+          XI(2)=-1.0E0
+          IXI(2)=-1
+        ENDIF
+        DN(1)=0.25E0*(1.0E0-XI(1))*(1.0E0-XI(2))
+        DN(2)=0.25E0*(1.0E0+XI(1))*(1.0E0-XI(2))
+        DN(3)=0.25E0*(1.0E0+XI(1))*(1.0E0+XI(2))
+        DN(4)=0.25E0*(1.0E0-XI(1))*(1.0E0+XI(2))
+C
+C
+C ===== FOR THE CASE OF A 3-D TETRAHEDRAL ELEMENT
+C
+      ELSEIF(NEQ.EQ.3 .AND. NODE.EQ.4)THEN
+        ICOUNT=0
+        DO I=1,4
+          IDI(I)=0
+          IF(DABS(DN(I)).LE.DN_SAFE)THEN
+            DN(I)=0.0E0
+            IDI(I)=-1
+            ICOUNT=ICOUNT+1
+          ELSEIF(DABS(DN(I)-1.0E0).LE.DN_SAFE)THEN
+            DN(I)=1.0E0
+            IDI(I)=1
+            ICOUNT=ICOUNT+1
+          ENDIF
         ENDDO
-        CALL ELEMENT_VOLUME(MAXEQ,MAXND,NEQ,NODE,XW,DVOL)
-        DRT0FACT = 1.D0/(DBLE(NEQ)*DVOL)
-        DO J=1,NODE
-          DO K=1,NEQ
-            VT1W(K,J)=0.D0
-            VT2W(K,J)=0.D0
-            DO I=1,NODE
-C TODO TRY TO USE A SUBSET OF VTL2G MEMORY FOR VECTOR VALUED SPACES
-C      OR JUST MAKE SIZING CONSISTENT WITH NLOCAL_DOF X NELEMENTS?
-              IVDOF = VTL2G(I + NNDE*(M-1))
-              VT1W(K,J) = VT1W(K,J) + VT1E(IVDOF)*
-     &             DRT0FACT*(XW(K,J)-XW(K,I))*DIR
-              VT2W(K,J) = VT2W(K,J) + VT2E(IVDOF)*
-     &             DRT0FACT*(XW(K,J)-XW(K,I))*DIR
-            ENDDO
+C
+        IF(ICOUNT.EQ.4)THEN
+          IADJUST=1
+        ELSEIF(ICOUNT.EQ.3)THEN
+          IADJUST=1
+          DO I=1,4
+            K1=K31(1,I)
+            K2=K31(2,I)
+            K3=K31(3,I)
+            K4=K31(4,I)
+            IF(IDI(K1).NE.-1 .AND. IDI(K1).NE.1)THEN
+              DN(K1)=1.0E0-DN(K2)-DN(K3)-DN(K4)
+              IDI(K1)=1
+              IF(DABS(DN(K1)).LE.DN_SAFE)IDI(K1)=-1
+              RETURN
+            ENDIF
           ENDDO
-        ENDDO     
-      ELSE IF (IDVE.EQ.4) THEN
-C RT0 VELOCITY ON A SIMPLEX WITH REPRESENTATION
-C \vec v_e = \vec a_e + b_e \vec x
-C WITH BASIS NUMBERING CONVENTION
-C \vec N_i = \vec e_i i=0,...,d-1 and \vec N_d = \vec x
-C WHERE d IS THE SPACE DIMENSION, e IS THE LOCAL ELEMENT
-C LOAD LOCAL COORDINATES FIRST
-        DO J=1,NODE
-          IEM = IE(J,M)
-          DO K=1,NEQ
-            XW(K,J)=XG(K,IEM)
+        ELSEIF(ICOUNT.EQ.2)THEN
+          IADJUST=1
+          DO I=1,6
+            K1=K32(1,I)
+            K2=K32(2,I)
+            K3=K32(3,I)
+            K4=K32(4,I)
+            IF(IDI(K1).EQ.-1 .AND. IDI(K1).EQ.1)THEN
+              IF(IDI(K2).EQ.-1 .AND. IDI(K2).EQ.1)THEN
+                DIFF=1.0E0-DN(K1)-DN(K2)-DN(K3)-DN(K4)
+                DN(K3)=DN(K3)+DIFF
+                IF(DABS(DN(K3)).LE.DN_SAFE)THEN
+                  DN(K3)=0.0E0
+                  IDI(K3)=-1
+                  DN(K4)=1.0E0-DN(K1)-DN(K2)-DN(K3)
+                  IDI(K4)=1
+                  IF(DABS(DN(K4)).LE.DN_SAFE)IDI(K4)=-1
+                  RETURN
+                ELSEIF(DABS(DN(K3)-1.0E0).LE.DN_SAFE)THEN
+                  DN(K3)=1.0E0
+                  IDI(K3)=1
+                  DN(K4)=0.0E0
+                  IDI(K4)=-1
+                  RETURN
+                ENDIF
+              ENDIF
+            ENDIF
           ENDDO
+        ELSEIF(ICOUNT.EQ.1)THEN
+          IADJUST=1
+          DO I=1,4
+            K1=K31(1,I)
+            K2=K31(2,I)
+            K3=K31(3,I)
+            K4=K31(4,I)
+            IF(IDI(K1).EQ.-1 .OR. IDI(K1).EQ.1)THEN
+              DIFF=1.0E0-DN(K1)-DN(K2)-DN(K3)-DN(K4)
+              DN(K2)=DN(K2)+DIFF
+              ICHECK=0
+              IF(DABS(DN(K2)).LE.DN_SAFE)THEN
+                DN(K2)=0.0E0
+                IDI(K2)=-1
+                ICHECK=1
+              ELSEIF(DABS(DN(K2)-1.0E0).LE.DN_SAFE)THEN
+                DN(K2)=1.0E0
+                IDI(K2)=1
+                ICHECK=1
+              ENDIF
+              IF(ICHECK.EQ.1)THEN
+                DIFF=1.0E0-DN(K1)-DN(K2)-DN(K3)-DN(K4)
+                DN(K3)=DN(K3)+DIFF
+                IF(DABS(DN(K3)).LE.DN_SAFE)THEN
+                  DN(K3)=0.0E0
+                  IDI(K3)=-1
+                  DN(K4)=1.0E0-DN(K1)-DN(K2)-DN(K3)
+                  IDI(K4)=1
+                  IF(DABS(DN(K4)).LE.DN_SAFE)IDI(K4)=-1
+                  RETURN
+                ELSEIF(DABS(DN(K3)-1.0E0).LE.DN_SAFE)THEN
+                  DN(K3)=1.0E0
+                  IDI(K3)=1
+                  DN(K4)=0.0E0
+                  IDI(K4)=-1
+                  RETURN
+                ENDIF
+              ENDIF
+            ENDIF
+          ENDDO
+        ENDIF
+C
+C
+C ===== FOR THE CASE OF A 3-D TRIANGULAR PRISM ELEMENT
+C
+      ELSEIF(NEQ.EQ.3 .AND. NODE.EQ.6)THEN
+        IXI(1)=0
+        IF(DABS(XI(1)-1.0E0).LE.DN_SAFE2)THEN
+          IADJUST=1
+          XI(1)=1.0E0
+          IXI(1)=1
+        ELSEIF(DABS(XI(1)+1.0E0).LE.DN_SAFE2)THEN
+          IADJUST=1
+          XI(1)=-1.0E0
+          IXI(1)=-1
+        ENDIF
+C
+        ICOUNT=0
+        DO I=1,3
+          IDI(I)=0
+          IF(DABS(DI(I)).LE.DN_SAFE)THEN
+            DI(I)=0.0E0
+            IDI(I)=-1
+            ICOUNT=ICOUNT+1
+          ELSEIF(DABS(DI(I)-1.0E0).LE.DN_SAFE)THEN
+            DI(I)=1.0E0
+            IDI(I)=1
+            ICOUNT=ICOUNT+1
+          ENDIF
         ENDDO
-        DO J=1,NODE
-          DO K=1,NEQ
-            VT1W(K,J)=0.D0
-            VT2W(K,J)=0.D0
-            DO I=1,NODE-1
-C TODO TRY TO USE A SUBSET OF VTL2G MEMORY FOR VECTOR VALUED SPACES
-C      OR JUST MAKE SIZING CONSISTENT WITH NLOCAL_DOF X NELEMENTS?
-C              IVDOF = VTL2G(1,I,M)
-              IVDOF = VTL2G(I + NNDE*(M-1))
-              VT1W(K,J)=VT1W(K,J) + VT1E(IVDOF)*DIR
-              VT2W(K,J)=VT2W(K,J) + VT2E(IVDOF)*DIR
-            ENDDO
-            I = NODE
-C            IVDOF = VTL2G(1,I,M)
-            IVDOF = VTL2G(I + NNDE*(M-1))
-            VT1W(K,J)=VT1W(K,J) + VT1E(IVDOF)*XW(K,J)*DIR
-            VT2W(K,J)=VT2W(K,J) + VT2E(IVDOF)*XW(K,J)*DIR
+        IF(ICOUNT.EQ.3)THEN
+          IADJUST=1
+        ELSEIF(ICOUNT.EQ.2)THEN
+          IADJUST=1
+          DO I=1,3
+            K1=K21(1,I)
+            K2=K21(2,I)
+            K3=K21(3,I)
+            IF(IDI(K1).NE.-1 .AND. IDI(K1).NE.1)THEN
+              DI(K1)=1.0E0-DI(K2)-DI(K3)
+              IDI(K1)=1
+              IF(DABS(DI(K1)).LE.DN_SAFE)IDI(K1)=-1
+              GOTO 350
+            ENDIF
           ENDDO
-        ENDDO
-      ELSE
-        WRITE(6,*)'EL_VEL_PREP IDVE= ',IDVE,'NOT VALID QUITTING'
-        CALL EXIT(1)
+        ELSEIF(ICOUNT.EQ.1)THEN
+          IADJUST=1
+          DO I=1,3
+            K1=K21(1,I)
+            K2=K21(2,I)
+            K3=K21(3,I)
+            IF(IDI(K1).EQ.-1 .OR. IDI(K1).EQ.1)THEN
+              DIFF=1.0E0-DI(K1)-DI(K2)-DI(K3)
+              DI(K2)=DI(K2)+DIFF
+              IF(DABS(DI(K2)).LE.DN_SAFE)THEN
+                DI(K2)=0.0E0
+                IDI(K2)=-1
+                DI(K3)=1.0E0-DI(K1)-DI(K2)
+                IDI(K3)=1
+                IF(DABS(DI(K3)).LE.DN_SAFE)IDI(K3)=-1
+                GOTO 350
+              ELSEIF(DABS(DI(K2)-1.0E0).LE.DN_SAFE)THEN
+                DI(K2)=1.0E0
+                IDI(K2)=1
+                DI(K3)=0.0E0
+                IDI(K3)=-1
+                GOTO 350
+              ENDIF
+            ENDIF
+          ENDDO
+        ENDIF               
+C
+  350   CONTINUE
+        DN(1)=0.5E0*(1.0E0-XI(1))*DI(1)
+        DN(2)=0.5E0*(1.0E0-XI(1))*DI(2)
+        DN(3)=0.5E0*(1.0E0-XI(1))*DI(3)
+        DN(4)=0.5E0*(1.0E0+XI(1))*DI(1)
+        DN(5)=0.5E0*(1.0E0+XI(1))*DI(2)
+        DN(6)=0.5E0*(1.0E0+XI(1))*DI(3)
+C
+C
+C ===== FOR THE CASE OF A 3-D HEXAHEDRAL ELEMENT
+C
+      ELSEIF(NEQ.EQ.3 .AND. NODE.EQ.8)THEN
+        IXI(1)=0
+        IF(DABS(XI(1)-1.0E0).LE.DN_SAFE2)THEN
+          IADJUST=1
+          XI(1)=1.0E0
+          IXI(1)=1
+        ELSEIF(DABS(XI(1)+1.0E0).LE.DN_SAFE2)THEN
+          IADJUST=1
+          XI(1)=-1.0E0
+          IXI(1)=-1
+        ENDIF
+        IXI(2)=0
+        IF(DABS(XI(2)-1.0E0).LE.DN_SAFE2)THEN
+          IADJUST=1
+          XI(2)=1.0E0
+          IXI(2)=1
+        ELSEIF(DABS(XI(2)+1.0E0).LE.DN_SAFE2)THEN
+          IADJUST=1
+          XI(2)=-1.0E0
+          IXI(2)=-1
+        ENDIF
+        IXI(3)=0
+        IF(DABS(XI(3)-1.0E0).LE.DN_SAFE2)THEN
+          IADJUST=1
+          XI(3)=1.0E0
+          IXI(3)=1
+        ELSEIF(DABS(XI(3)+1.0E0).LE.DN_SAFE2)THEN
+          IADJUST=1
+          XI(3)=-1.0E0
+          IXI(3)=-1
+        ENDIF
+        DN(1)=0.125E0*(1.0E0-XI(1))*(1.0E0-XI(2))*(1.0E0-XI(3))
+        DN(2)=0.125E0*(1.0E0+XI(1))*(1.0E0-XI(2))*(1.0E0-XI(3))
+        DN(3)=0.125E0*(1.0E0+XI(1))*(1.0E0+XI(2))*(1.0E0-XI(3))
+        DN(4)=0.125E0*(1.0E0-XI(1))*(1.0E0+XI(2))*(1.0E0-XI(3))
+        DN(5)=0.125E0*(1.0E0-XI(1))*(1.0E0-XI(2))*(1.0E0+XI(3))
+        DN(6)=0.125E0*(1.0E0+XI(1))*(1.0E0-XI(2))*(1.0E0+XI(3))
+        DN(7)=0.125E0*(1.0E0+XI(1))*(1.0E0+XI(2))*(1.0E0+XI(3))
+        DN(8)=0.125E0*(1.0E0-XI(1))*(1.0E0+XI(2))*(1.0E0+XI(3))
       ENDIF
 C
-
+  999 CONTINUE
+      RETURN
+      END
+C      
+C
+C
+      SUBROUTINE XSI_2 
+     I    (MAXEQ,MAXND,XTEMP,XW,DL,ATOL,
+     O     XSI,ETA)
+C
+C 06/22/2010 (HPC)
+C ======================================================================
+C < PURPOSE >
+C COMPUTE THE LOCAL COORDINATES BASED ON THE GIVEN CARTESIAN 
+C COORDINATES
+C ======================================================================
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      DIMENSION XTEMP(MAXEQ),XW(MAXEQ,MAXND)
+C
+      DATA NITER /100/
+C
+      A1=(XW(1,1)+XW(1,2)+XW(1,3)+XW(1,4))*0.25D0
+      A2=(-XW(1,1)+XW(1,2)+XW(1,3)-XW(1,4))*0.25D0
+      A3=(-XW(1,1)+XW(1,4)-XW(1,2)+XW(1,3))*0.25D0
+      A4=(XW(1,1)-XW(1,4)-XW(1,2)+XW(1,3))*0.25D0
+      B1=(XW(2,1)+XW(2,2)+XW(2,3)+XW(2,4))*0.25D0
+      B2=(-XW(2,1)+XW(2,2)+XW(2,3)-XW(2,4))*0.25D0
+      B3=(-XW(2,1)+XW(2,4)-XW(2,2)+XW(2,3))*0.25D0
+      B4=(XW(2,1)-XW(2,4)-XW(2,2)+XW(2,3))*0.25D0
+C
+C MAKE THE INITIAL GUESS OF XSI AND ETA
+C
+      XSIO=0.0E0
+      ETAO=0.0E0
+C
+C START NEWTON RALSON ITERATION LOOP
+C
+      DO 590 ITER=1,NITER
+C
+C === COMPUTE RIGHT HAND SIDE AND THE JACOBIAN
+C
+        F1=XTEMP(1)-A1-A2*XSIO-A3*ETAO-A4*XSIO*ETAO
+        F2=XTEMP(2)-B1-B2*XSIO-B3*ETAO-B4*XSIO*ETAO
+        Z11=-A2-A4*ETAO
+        Z12=-A3-A4*XSIO
+        Z21=-B2-B4*ETAO
+        Z22=-B3-B4*XSIO
+C
+C === SOLVE FOR DELXSI AND DELETA
+C
+        DJAC=Z11*Z22 - Z21*Z12
+        DELXSI=(F1*Z22-F2*Z12)/DJAC
+        DELETA=(-F1*Z21+F2*Z11)/DJAC
+C
+C === COMPUTE FOR NEW XSI AND ETA
+C
+        XSI=XSIO-DELXSI
+        ETA=ETAO-DELETA
+C
+C === TEST CONVERGENCE
+C
+        D1=DELXSI*0.5E0*DL
+        D2=DELETA*0.5E0*DL
+        IF(DABS(D1).LE.ATOL .AND. DABS(D2).LE.ATOL)THEN
+          RETURN
+        ENDIF
+C
+C === UPDATE XSIO AND ETAO
+C
+        XSIO=XSI
+        ETAO=ETA
+  590 CONTINUE
+C
+C === CONVERGENCE FAILS, STOP EXECUTION
+C
+      WRITE(*,*)'WARNING IN XSI_2'
+      WRITE(*,2000)ITER,NITER,D1,D2,DL,ATOL
+ 2000 FORMAT('1','* FAIL TO CONVERGE IN COMPUTING XSI, ETA:',/1X,
+     >       'ITER =',I3,',  NITER =',I3,',  D1 =',E15.6/1X,
+     >       'D2 =',E15.6,',  DL=',E15.6,',   ATOL =',E15.6)
+      WRITE(*,*)'XSI,ETA=',XSI,ETA
+      WRITE(*,*)'XTEMP(1:2)=',XTEMP(1),XTEMP(2)
+      WRITE(*,*)'XW(1:2,1:4) ='
+      WRITE(*,*)((XW(I,J),I=1,2),J=1,4)
+      STOP
+C
+C ===== CONVERGENT SOLUTION FOR XSI AND ETA HAS BEEN ACHIEVED.
+C
+  999 CONTINUE
       RETURN
       END
 C
+C
+C
+      SUBROUTINE XSI_3
+     I   (MAXEQ,MAXND,XTEMP,XW,DL,ATOL,
+     O    XSI,ETA,ZTA)
+C
+C 06/22/2010 (HPC)
+C ======================================================================
+C < PURPOSE >
+C COMPUTE THE LOCAL COORDINATES BASED ON THE GIVEN CARTESIAN 
+C COORDINATES
+C ======================================================================
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      DIMENSION XTEMP(MAXEQ),XW(MAXEQ,MAXND)
+C
+      DATA NITER/100/
+C
+C
+C MAKE AN INITIAL GUESS OF XSI, ETA, AND ZTA
+C
+      XSIO=0.0E0
+      ETAO=0.0E0
+      ZTAO=0.0E0
+C
+      A1=(XW(1,1)+XW(1,2)+XW(1,3)+XW(1,4)+XW(1,5)+XW(1,6)+
+     >    XW(1,7)+XW(1,8))*0.125E0
+      A2=(-XW(1,1)+XW(1,2)+XW(1,3)-XW(1,4)-XW(1,5)+XW(1,6)+
+     >    XW(1,7)-XW(1,8))*0.125E0
+      A3=(-XW(1,1)+XW(1,4)-XW(1,2)+XW(1,3)-XW(1,5)-XW(1,6)+
+     >    XW(1,7)+XW(1,8))*0.125E0
+      A4=(XW(1,1)-XW(1,4)-XW(1,2)+XW(1,3)+XW(1,5)-XW(1,6)+
+     >    XW(1,7)-XW(1,8))*0.125E0
+      A5=(-XW(1,1)-XW(1,2)-XW(1,3)-XW(1,4)+XW(1,5)+XW(1,6)+
+     >    XW(1,7)+XW(1,8))*0.125E0
+      A6=(XW(1,1)+XW(1,2)-XW(1,3)-XW(1,4)-XW(1,5)-XW(1,6)+
+     >    XW(1,7)+XW(1,8))*0.125E0
+      A7=(XW(1,1)-XW(1,2)-XW(1,3)+XW(1,4)-XW(1,5)+XW(1,6)+
+     >    XW(1,7)-XW(1,8))*0.125E0
+      A8=(-XW(1,1)+XW(1,2)-XW(1,3)+XW(1,4)+XW(1,5)-XW(1,6)+
+     >    XW(1,7)-XW(1,8))*0.125E0
+      B1=(XW(2,1)+XW(2,2)+XW(2,3)+XW(2,4)+XW(2,5)+XW(2,6)+
+     >    XW(2,7)+XW(2,8))*0.125E0
+      B2=(-XW(2,1)+XW(2,2)+XW(2,3)-XW(2,4)-XW(2,5)+XW(2,6)+
+     >    XW(2,7)-XW(2,8))*0.125E0
+      B3=(-XW(2,1)+XW(2,4)-XW(2,2)+XW(2,3)-XW(2,5)-XW(2,6)+
+     >    XW(2,7)+XW(2,8))*0.125E0
+      B4=(XW(2,1)-XW(2,4)-XW(2,2)+XW(2,3)+XW(2,5)-XW(2,6)+
+     >    XW(2,7)-XW(2,8))*0.125E0
+      B5=(-XW(2,1)-XW(2,2)-XW(2,3)-XW(2,4)+XW(2,5)+XW(2,6)+
+     >    XW(2,7)+XW(2,8))*0.125E0
+      B6=(XW(2,1)+XW(2,2)-XW(2,3)-XW(2,4)-XW(2,5)-XW(2,6)+
+     >    XW(2,7)+XW(2,8))*0.125E0
+      B7=(XW(2,1)-XW(2,2)-XW(2,3)+XW(2,4)-XW(2,5)+XW(2,6)+
+     >    XW(2,7)-XW(2,8))*0.125E0
+      B8=(-XW(2,1)+XW(2,2)-XW(2,3)+XW(2,4)+XW(2,5)-XW(2,6)+
+     >    XW(2,7)-XW(2,8))*0.125E0
+      C1=(XW(3,1)+XW(3,2)+XW(3,3)+XW(3,4)+XW(3,5)+XW(3,6)+
+     >    XW(3,7)+XW(3,8))*0.125E0
+      C2=(-XW(3,1)+XW(3,2)+XW(3,3)-XW(3,4)-XW(3,5)+XW(3,6)+
+     >    XW(3,7)-XW(3,8))*0.125E0
+      C3=(-XW(3,1)+XW(3,4)-XW(3,2)+XW(3,3)-XW(3,5)-XW(3,6)+
+     >    XW(3,7)+XW(3,8))*0.125E0
+      C4=(XW(3,1)-XW(3,4)-XW(3,2)+XW(3,3)+XW(3,5)-XW(3,6)+
+     >    XW(3,7)-XW(3,8))*0.125E0
+      C5=(-XW(3,1)-XW(3,2)-XW(3,3)-XW(3,4)+XW(3,5)+XW(3,6)+
+     >    XW(3,7)+XW(3,8))*0.125E0
+      C6=(XW(3,1)+XW(3,2)-XW(3,3)-XW(3,4)-XW(3,5)-XW(3,6)+
+     >    XW(3,7)+XW(3,8))*0.125E0
+      C7=(XW(3,1)-XW(3,2)-XW(3,3)+XW(3,4)-XW(3,5)+XW(3,6)+
+     >    XW(3,7)-XW(3,8))*0.125E0
+      C8=(-XW(3,1)+XW(3,2)-XW(3,3)+XW(3,4)+XW(3,5)-XW(3,6)+
+     >    XW(3,7)-XW(3,8))*0.125E0
+C
+C
+C START NEWTON RALSON ITERATION LOOP
+C
+      DO 590 ITER=1,NITER
+C
+C === COMPUTE RIGHT HAND SIDE AND THE JACOBIAN
+C
+        F1=XTEMP(1)-A1-A2*XSIO-A3*ETAO-A4*XSIO*ETAO-A5*ZTAO-
+     >              A6*ETAO*ZTAO-A7*ZTAO*XSIO-A8*XSIO*ETAO*ZTAO
+        F2=XTEMP(2)-B1-B2*XSIO-B3*ETAO-B4*XSIO*ETAO-B5*ZTAO-
+     >              B6*ETAO*ZTAO-B7*ZTAO*XSIO-B8*XSIO*ETAO*ZTAO
+        F3=XTEMP(3)-C1-C2*XSIO-C3*ETAO-C4*XSIO*ETAO-C5*ZTAO-
+     >              C6*ETAO*ZTAO-C7*ZTAO*XSIO-C8*XSIO*ETAO*ZTAO
+        Z11=-A2-A4*ETAO-A7*ZTAO-A8*ETAO*ZTAO
+        Z12=-A3-A4*XSIO-A6*ZTAO-A8*ZTAO*XSIO
+        Z13=-A5-A6*ETAO-A7*XSIO-A8*XSIO*ETAO
+        Z21=-B2-B4*ETAO-B7*ZTAO-B8*ETAO*ZTAO
+        Z22=-B3-B4*XSIO-B6*ZTAO-B8*ZTAO*XSIO
+        Z23=-B5-B6*ETAO-B7*XSIO-B8*XSIO*ETAO
+        Z31=-C2-C4*ETAO-C7*ZTAO-C8*ETAO*ZTAO
+        Z32=-C3-C4*XSIO-C6*ZTAO-C8*ZTAO*XSIO
+        Z33=-C5-C6*ETAO-C7*XSIO-C8*XSIO*ETAO
+C
+C === SOLVE FOR DELXSI, DELETA, AND DELZT
+C
+        DJAC = Z11*(Z22*Z33-Z23*Z32)-Z21*(Z12*Z33-Z32*Z13)+
+     1         Z31*(Z12*Z23-Z22*Z13)
+        DELXSI=(F1*(Z22*Z33-Z32*Z23)-F2*(Z12*Z33-Z32*Z13)+
+     1         F3*(Z12*Z23-Z22*Z13))/DJAC
+        DELETA=(-F1*(Z21*Z33-Z31*Z23)+F2*(Z11*Z33-Z31*Z13)-
+     1         F3*(Z11*Z23-Z21*Z13))/DJAC
+        DELZTA=(F1*(Z21*Z32-Z31*Z22)-F2*(Z11*Z32-Z31*Z12)+
+     1         F3*(Z11*Z22-Z21*Z12))/DJAC
+C
+C === COMPUTE FOR NEW XSI, ETA, AND ZTA
+C
+        XSI=XSIO-DELXSI
+        ETA=ETAO-DELETA
+        ZTA=ZTAO-DELZTA
+C
+C === EXAMINE CONVERGENCE
+C
+        D1=DELXSI*0.5E0*DL
+        D2=DELETA*0.5E0*DL
+        D3=DELZTA*0.5E0*DL
+        IF(DABS(D1).LE.ATOL .AND. DABS(D2).LE.ATOL .AND. 
+     >     DABS(D3).LE.ATOL)THEN
+          RETURN
+        ENDIF
+C
+C === UPDATE XSIO, ETAO, AND ZTAO
+C
+        XSIO=XSI
+        ETAO=ETA
+        ZTAO=ZTA
+C
+  590 CONTINUE
+C
+C
+C CONVERGENCE FAILS, STOP EXECUTION
+C
+      WRITE(*,*)'WARNING IN XSI_3'
+      WRITE(*,2000)ITER,NITER,D1,D2,D3,DL,ATOL
+ 2000 FORMAT('1','* FAIL TO CONVERGE IN COMPUTING DL1, DL2, XSI:',/1X,
+     >       'ITER =',I3,',  NITER =',I3,/1X,
+     >       'D1 =',E15.6/1X,'  D2 =',E15.6,',  DL3 =',E15.6,1X,
+     >       'DL=',E15.6,',  ATOL =',E15.6)
+      WRITE(*,*)'XSI,ETA,ZTA=',XSI,ETA,ZTA
+      WRITE(*,*)'XTEMP(1:3)=',XTEMP(1),XTEMP(2),XTEMP(3)
+      WRITE(*,*)'XW(1:3,1:8) ='
+      DO J=1,8
+        WRITE(*,*)(XW(I,J),I=1,3)
+      ENDDO
+      STOP
+C
+C CONVERGENT SOLUTION FOR XSI, ETA, AND ZTA HAS BEEN ACHIEVED.
+C
+  999 CONTINUE
+      RETURN
+      END
+C
+C
+C 
+      SUBROUTINE XSI_3P
+     I   (MAXEQ,MAXND,XTEMP,XW,DL,ATOL,
+     O    XSI,DL1,DL2,DL3)
+C
+C 06/22/2010 (HPC)
+C ======================================================================
+C < PURPOSE >
+C COMPUTE THE LOCAL COORDINATES BASED ON THE GIVEN CARTESIAN 
+C COORDINATES
+C ======================================================================
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      DIMENSION XTEMP(MAXEQ),XW(MAXEQ,MAXND)
+C
+      DATA NITER/100/
+C
+C
+C MAKE AN INITIAL GUESS OF XSIO, L1O, L2O
+C
+      XSIO=0.0E0
+      DL1O=0.33333333E0
+      DL2O=0.33333333E0
+C
+C COMPUTE COOEFFICIENTS TO BE USED IN NEWTON-RALPHSON METHOD
+C
+      A1=XW(1,4)+XW(1,1)
+      A2=XW(1,5)+XW(1,2)
+      A3=XW(1,6)+XW(1,3)
+      A4=XW(1,4)-XW(1,1)
+      A5=XW(1,5)-XW(1,2)
+      A6=XW(1,6)-XW(1,3)
+      B1=XW(2,4)+XW(2,1)
+      B2=XW(2,5)+XW(2,2)
+      B3=XW(2,6)+XW(2,3)
+      B4=XW(2,4)-XW(2,1)
+      B5=XW(2,5)-XW(2,2)
+      B6=XW(2,6)-XW(2,3)
+      C1=XW(3,4)+XW(3,1)
+      C2=XW(3,5)+XW(3,2)
+      C3=XW(3,6)+XW(3,3)
+      C4=XW(3,4)-XW(3,1)
+      C5=XW(3,5)-XW(3,2)
+      C6=XW(3,6)-XW(3,3)
+C
+C
+C START NEWTON RALSON ITERATION LOOP
+C
+      DO 590 ITER=1,NITER
+C
+C === COMPUTE RIGHT HAND SIDE AND THE JACOBIAN
+C
+        F1=0.5E0*((A1-A3)*DL1O+(A2-A3)*DL2O)+
+     >     0.5E0*((A4-A6)*DL1O+(A5-A6)*DL2O)*XSIO+
+     >     0.5E0*A6*XSIO-(XTEMP(1)-0.5E0*A3)
+        F2=0.5E0*((B1-B3)*DL1O+(B2-B3)*DL2O)+
+     >     0.5E0*((B4-B6)*DL1O+(B5-B6)*DL2O)*XSIO+
+     >     0.5E0*B6*XSIO-(XTEMP(2)-0.5E0*B3)
+        F3=0.5E0*((C1-C3)*DL1O+(C2-C3)*DL2O)+
+     >     0.5E0*((C4-C6)*DL1O+(C5-C6)*DL2O)*XSIO+
+     >     0.5E0*C6*XSIO-(XTEMP(3)-0.5E0*C3)
+C
+        Z11=0.5E0*(A1-A3)+0.5E0*(A4-A6)*XSIO
+        Z12=0.5E0*(A2-A3)+0.5E0*(A5-A6)*XSIO
+        Z13=0.5E0*((A4-A6)*DL1O+(A5-A6)*DL2O)+0.5E0*A6
+        Z21=0.5E0*(B1-B3)+0.5E0*(B4-B6)*XSIO
+        Z22=0.5E0*(B2-B3)+0.5E0*(B5-B6)*XSIO
+        Z23=0.5E0*((B4-B6)*DL1O+(B5-B6)*DL2O)+0.5E0*B6
+        Z31=0.5E0*(C1-C3)+0.5E0*(C4-C6)*XSIO
+        Z32=0.5E0*(C2-C3)+0.5E0*(C5-C6)*XSIO
+        Z33=0.5E0*((C4-C6)*DL1O+(C5-C6)*DL2O)+0.5E0*C6
+C
+C === SOLVE FOR DELXSI, DELETA, AND DELZT
+C
+        DJAC=Z11*(Z22*Z33-Z23*Z32)-Z21*(Z12*Z33-Z32*Z13) +
+     >       Z31*(Z12*Z23-Z22*Z13)
+        DELDL1=(F1*(Z22*Z33-Z32*Z23)-F2*(Z12*Z33-Z32*Z13)+
+     >          F3*(Z12*Z23-Z22*Z13))/DJAC
+        DELDL2=(-F1*(Z21*Z33-Z31*Z23)+F2*(Z11*Z33-Z31*Z13)-
+     >          F3*(Z11*Z23-Z21*Z13))/DJAC
+        DELXSI=(F1*(Z21*Z32-Z31*Z22)-F2*(Z11*Z32-Z31*Z12)+
+     >          F3*(Z11*Z22-Z21*Z12))/DJAC
+C
+C === COMPUTE FOR NEW XSI, ETA, AND ZTA
+C
+        DL1=DL1O-DELDL1
+        DL2=DL2O-DELDL2
+        XSI=XSIO-DELXSI
+C
+C === EXAMINE CONVERGENCE
+C
+        D1=DELDL1*DL
+        D2=DELDL2*DL
+        D3=DELXSI*0.5E0*DL
+        IF(DABS(D1).LE.ATOL .AND. DABS(D2).LE.ATOL .AND. 
+     >     DABS(D3).LE.ATOL)THEN
+          GOTO 999
+        ENDIF
+C
+C === UPDATE DL1O, DL2O, AND XSIO
+C
+        DL1O=DL1
+        DL2O=DL2
+        XSIO=XSI
+C
+  590 CONTINUE
+C
+C
+C CONVERGENCE FAILS, STOP EXECUTION
+C
+      WRITE(*,*)'WARNING IN XSI_3P'
+      WRITE(*,2000)ITER,NITER,D1,D2,D3,DL,ATOL
+ 2000 FORMAT('1','* FAIL TO CONVERGE IN COMPUTING DL1, DL2, XSI:',/1X,
+     >       'ITER =',I3,',  NITER =',I3,/1X,
+     >       'D1 =',E15.6/1X,'  D2 =',E15.6,',  DL3 =',E15.6,1X,
+     >       'DL=',E15.6,',  ATOL =',E15.6)
+      WRITE(*,*)'DL1,DL2,XSI=',DL1,DL2,XSI
+      WRITE(*,*)'XTEMP(1:3)=',XTEMP(1),XTEMP(2),XTEMP(3)
+      WRITE(*,*)'XW(1:3,1:6) ='
+      DO J=1,6
+        WRITE(*,*)(XW(I,J),I=1,3)
+      ENDDO
+      STOP
+C
+C
+C CONVERGENT SOLUTION FOR XSI, ETA, AND ZTA HAS BEEN ACHIEVED.
+C
+  999 CONTINUE
+      DL3=1.0E0-DL1-DL2
+C
+      RETURN
+      END
+C
+C
+C
+      SUBROUTINE CL123
+     I    (MAXEQ,MAXND,NEQ,NODE,XW,
+     O     DL)
+C
+C 06/22/2010 (HPC)
+C ======================================================================
+C < PURPOSE > 
+C   COMPUTE THE CHARACTERISTIC LENGTH OF A GIVEN ELEMENT
+C ======================================================================
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      DIMENSION XW(MAXEQ,MAXND)
+      DIMENSION KVB3(4,6,3),KVB2(3,2,2)
+      DIMENSION XX(4),YY(4),ZZ(4)
+      DATA KVB3 /5,1,2,4, 6,5,2,4, 8,5,6,4, 7,2,3,4, 8,6,7,4, 6,7,4,2,
+     >           4,1,2,3, 5,4,2,3, 6,4,5,3, 0,0,0,0, 0,0,0,0, 0,0,0,0,
+     >           4,1,2,3, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0/
+      DATA KVB2 /1,2,3, 1,3,4,
+     >           1,2,3, 0,0,0/
+C
+C
+C ===== FOR THE CASE OF A 1-D LINE ELEMENT
+C
+      IF(NEQ.EQ.1)THEN
+        DL=DABS(XW(1,2)-XW(1,1))
+C
+C
+C ===== FOR THE CASE OF A 2-D ELEMENT
+C
+      ELSEIF(NEQ.EQ.2)THEN
+C
+C ... FOR A TRIANGULAR ELEMENT
+C
+        IF(NODE.EQ.3)THEN
+          ID=2
+          NA=1
+C
+C ... FOR A QUADRILATER ELEMENT
+C
+        ELSE
+          ID=1
+          NA=2
+        ENDIF
+C
+        DJAC=0.0D0
+        DO IA=1,NA
+          DO I=1,3
+            II=KVB2(I,IA,ID)
+            XX(I)=XW(1,II)
+            YY(I)=XW(2,II)
+          ENDDO
+          X12=XX(1)-XX(2)
+          X23=XX(2)-XX(3)
+          X31=XX(3)-XX(1)  
+          Y12=YY(1)-YY(2)
+          Y23=YY(2)-YY(3)
+          Y31=YY(3)-YY(1)
+          DJAC=DJAC+XX(1)*Y23+XX(2)*Y31+XX(3)*Y12
+        ENDDO
+        DJAC=DABS(DJAC)/DBLE(NA)
+        DL=DSQRT(DJAC)
+C
+C
+C ===== FOR THE CASE OF A 3-D ELEMENT
+C
+      ELSEIF(NEQ.EQ.3)THEN
+C
+C ... FOR A TETRAHEDRAL ELEMENT
+C
+        IF(NODE.EQ.4)THEN
+          ID=3
+          NV=1
+C
+C ... FOR A TRIANGULAR PRISM ELEMENT
+C
+        ELSEIF(NODE.EQ.6)THEN
+          ID=2
+          NV=3
+C
+C ... FOR A HEXAHEDRAL ELEMENT
+C
+        ELSE
+          ID=1
+          NV=6
+        ENDIF
+C
+        DJAC=0.0D0
+        DO IV=1,NV
+          DO I=1,4
+            II=KVB3(I,IV,ID)
+            XX(I)=XW(1,II)
+            YY(I)=XW(2,II)
+            ZZ(I)=XW(3,II)
+          ENDDO
+          DO KK=1,4
+            IF(KK.EQ.1)THEN
+              K1=2
+              K2=3
+              K3=4
+            ELSEIF(KK.EQ.2)THEN
+              K1=1
+              K2=3
+              K3=4
+            ELSEIF(KK.EQ.3)THEN
+              K1=1
+              K2=2
+              K3=4
+            ELSE
+              K1=1
+              K2=2
+              K3=3
+            ENDIF
+            DJAC=DJAC+
+     >           (-1.0D0)**(KK+1)*(XX(K1)*YY(K2)*ZZ(K3)+
+     >            YY(K1)*ZZ(K2)*XX(K3)+ZZ(K1)*XX(K2)*YY(K3)-
+     >            XX(K3)*YY(K2)*ZZ(K1)-YY(K3)*ZZ(K2)*XX(K1)-
+     >            ZZ(K3)*XX(K2)*YY(K1))
+          ENDDO
+        ENDDO
+        DJAC=DABS(DJAC)/DBLE(NV)
+        DL=DJAC**(1.0E0/3.0E0)
+      ENDIF
+C
+  999 CONTINUE
+      RETURN
+      END
+C
+C
+C
+      SUBROUTINE PHI_COMP
+     I    (MAXND,NODE,NEQ, 
+     I     DN_SAFE,  
+     I     DN_S,DN,XI,XI_S,DI,DI_S, IXI_S,IDI_S,
+     O     IDSDT,I1,I2,I3,PHI)
+C
+C 07/14/2010 (HPC)
+C ======================================================================
+C < PURPOSE > 
+C LOOP OVER ALL POSSIBLE SCENARIOS TO (1) DETERMINE PHI IF THE PT PASSES 
+C THROUGH THE ELEMENT AND ENDS AT A LOCATION OUTSIDE OF THE ELEMENT
+C AND (2) LOCATE I1, I2, I3 TO CONTINUE PARTICLE TRACKING WHEN THE PT
+C DOES NOT PASS THROUGH THIS ELEMENT
+C ======================================================================
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      DIMENSION DN_S(MAXND),DN(MAXND)
+      DIMENSION XI(3),XI_S(3),DI(3),DI_S(3)
+      DIMENSION IXI_S(3),IDI_S(4)
+C
+      DN_SAFE2=2.0E0*DN_SAFE
+      IF(NEQ.EQ.2 .AND. NODE.NE.3)GOTO 200
+      IF(NEQ.EQ.3 .AND. NODE.NE.4)GOTO 300
+C
+C === COMPUTE PHI
+C
+C (1) WHEN 1-D LINE ELEMENT, 2-D TRIANGULAR ELEMENT, 
+C     OR 3-D TETRAHEDRAL ELEMENT IS CONSIDERED
+C
+  100 CONTINUE
+C
+      DO 150 I=1,NODE
+C
+C ... WHEN THE ENDING LOCATION IS OUTSIDE OF ELEMENT M
+C
+        IF(DN(I).LT.0.0E0)THEN
+          D1=DN_S(I)
+          D2=DN(I)
+          D12=D1-D2
+          CALL PHI123
+     I        (NEQ,NODE, IXI_S,IDI_S, 
+     I         D1,D2,D12, DN_SAFE,  
+     O         IDSDT,I1,I2,I3,PHI)
+          IF(IDSDT.EQ.0)RETURN
+        ENDIF
+  150 CONTINUE
+      RETURN
+C
+C (2) WHEN 2-D QUADRILATERAL ELEMENT IS CONSIDERED
+C
+  200 CONTINUE
+C
+      DO 250 I=1,2
+C
+C ... WHEN THE ENDING LOCATION IS OUTSIDE OF ELEMENT M
+C
+        IF(XI(I).LT.-1.0E0)THEN
+          D1=XI_S(I)+1.0E0
+          D2=XI(I)+1.0E0
+          D12=D1-D2
+          CALL PHI123
+     I        (NEQ,NODE, IXI_S,IDI_S, 
+     I         D1,D2,D12, DN_SAFE2,  
+     O         IDSDT,I1,I2,I3,PHI)
+          IF(IDSDT.EQ.0)RETURN
+        ENDIF
+        IF(XI(I).GT.1.0E0)THEN
+          D1=1.0E0-XI_S(I)
+          D2=1.0E0-XI(I)
+          D12=D1-D2
+          CALL PHI123
+     I        (NEQ,NODE, IXI_S,IDI_S, 
+     I         D1,D2,D12, DN_SAFE2, 
+     O         IDSDT,I1,I2,I3,PHI)
+          IF(IDSDT.EQ.0)RETURN
+        ENDIF
+  250 CONTINUE
+      RETURN
+C
+C (3) WHEN 3-D TRIANGULAR PRISM OR HEXAHETRAL ELEMENT
+C     IS CONSIDERED
+C
+  300 CONTINUE
+C
+C (3.1) FOR THE CASE OF TRIANGULAR PRISM ELEMENT
+C
+      IF(NODE.EQ.6)THEN
+C
+C ... WHEN THE ENDING LOCATION IS OUTSIDE OF ELEMENT M
+C
+        IF(XI(1).LT.-1.0E0)THEN
+          D1=XI_S(1)+1.0E0
+          D2=XI(1)+1.0E0
+          D12=D1-D2
+          CALL PHI123
+     I        (NEQ,NODE, IXI_S,IDI_S, 
+     I         D1,D2,D12, DN_SAFE2, 
+     O         IDSDT,I1,I2,I3,PHI)
+          IF(IDSDT.EQ.0)RETURN
+        ENDIF
+        IF(XI(1).GT.1.0E0)THEN
+          D1=1.0E0-XI_S(1)
+          D2=1.0E0-XI(1)
+          D12=D1-D2
+          CALL PHI123
+     I        (NEQ,NODE, IXI_S,IDI_S, 
+     I         D1,D2,D12, DN_SAFE2, 
+     O         IDSDT,I1,I2,I3,PHI)
+          IF(IDSDT.EQ.0)RETURN
+        ENDIF
+C
+        DO 350 I=1,3
+C
+C ... WHEN THE ENDING LOCATION IS OUTSIDE OF ELEMENT M
+C
+          IF(DI(I).LT.0.0E0)THEN
+            D1=DI_S(I)
+            D2=DI(I)
+            D12=D1-D2
+            CALL PHI123
+     I          (NEQ,NODE, IXI_S,IDI_S, 
+     I           D1,D2,D12, DN_SAFE, 
+     O           IDSDT,I1,I2,I3,PHI)
+            IF(IDSDT.EQ.0)RETURN
+          ENDIF
+  350   CONTINUE
+C
+C (3.2) FOR THE CASE OF HEXAHEDRAL ELEMENT
+C
+      ELSE
+        DO 370 I=1,3
+C
+C ... WHEN THE ENDING LOCATION IS OUTSIDE OF ELEMENT M
+C
+          IF(XI(I).LT.-1.0E0)THEN
+            D1=XI_S(I)+1.0E0
+            D2=XI(I)+1.0E0
+            D12=D1-D2
+            CALL PHI123
+     I          (NEQ,NODE, IXI_S,IDI_S, 
+     I           D1,D2,D12, DN_SAFE2, 
+     O           IDSDT,I1,I2,I3,PHI)
+            IF(IDSDT.EQ.0)RETURN
+          ENDIF
+          IF(XI(I).GT.1.0E0)THEN
+            D1=1.0E0-XI_S(I)
+            D2=1.0E0-XI(I)
+            D12=D1-D2
+            CALL PHI123
+     I          (NEQ,NODE, IXI_S,IDI_S, 
+     I           D1,D2,D12, DN_SAFE2, 
+     O           IDSDT,I1,I2,I3,PHI)
+            IF(IDSDT.EQ.0)RETURN
+          ENDIF
+  370   CONTINUE
+      ENDIF
+C
+  999 CONTINUE
+      RETURN
+      END
+C
+C
+C
+      SUBROUTINE PHI123
+     I    (NEQ,NODE, IXI_S,IDI_S,
+     I     D1,D2,D12, D_SAFE, 
+     O     IDSDT,I1,I2,I3,PHI)
+C 
+C 07/14/2010 (HPC)
+C ======================================================================
+C < PURPOSE > 
+C COMPUTE PHI BASED ON THE GIVEN D1, D2, AND D12
+C LOCATE I1, I2, I3 IF THE PARTICLE DOES NOT PASS THROUGH THE ELEMENT
+C < NOTE >
+C D1 = THE DISTANCE OF THE STARTING LOCATION FROM A SPECIFIED ELEMENT 
+C      BOUNDARY
+C D2 = THE DISTANCE OF THE ENDING LOCATION FROM THE SAME SPECIFIED 
+C      ELEMENT BOUNDARY
+C D12 = THE DISTANCE BETWEEN THE STARTING AND THE ENDING LOCATIONS 
+C ======================================================================
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      DIMENSION IXI_S(3),IDI_S(4)
+C
+C (1) FOR THE CASE WHEN PT IS NOT THROUGH THIS ELEMENT
+C
+      IF(DABS(D1).LT.D_SAFE)THEN
+C
+C IF THE TRACKING IS LEAVING THE ELEMENT
+C ==> SET IDSDT TO 0
+C     IDENTIFY I1, I2, I3 FOR FINDING AN ADJACENT ELEMENT TO CONTINUE PT
+C
+C < NOTE > IF THE TRACKING IS ALONG AN ELEMENT BOUNDARY 
+C          ==> NO ACTION IS NEEDED
+C
+        IF(DABS(D2).GT.D_SAFE)THEN
+          IDSDT=0
+          CALL EB_CHECK
+     I        (NEQ,NODE, IDI_S,IXI_S, 
+     O         I1,I2,I3)
+
+          RETURN
+        ENDIF
+C
+C (2) FOR THE CASE WHEN PT IS THROUGH THIS ELEMENT
+C
+      ELSE
+C
+C IF THE ENDING LOCATION CAN BE CONSIDERED ON THE ELEMENT BOUNDARY
+C ==> NO NEED TO REDUCE TIMESTEP
+C
+        IF(DABS(D2).LE.D_SAFE)RETURN
+C
+C ... IF THE ENDING LOCATION IS TRULY OUTSIDE OF THE ELEMENT
+C     ==> COMPUTE AN INTERPOLATION FACTOR
+C
+        PHI=DMAX1(PHI,D12/D1)
+      ENDIF
+C
+  999 CONTINUE
+      RETURN
+      END
+C
+C 
+C
+      SUBROUTINE EB_CHECK
+     I    (NEQ,NODE, IDI_S,IXI_S, 
+     O     I1,I2,I3)
+C 
+C 07/14/2010 (HPC)
+C ======================================================================
+C < PURPOSE > 
+C PREPARE I1, I2, I3 FOR THE SUCCESSIVE PT WHEN THE TRACKED NODE IS
+C ON THE ELEMENT BOUNDARY
+C ======================================================================
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      DIMENSION IXI_S(3),IDI_S(4)
+C
+C ===== INITIALIZATION
+C
+      I1=0
+      I2=0
+      I3=0
+C
+C ===== IDENTIFY I1, I2, I3
+C
+C (1) 1-D LINE ELEMENT
+C
+      IF(NEQ.EQ.1)THEN
+        IF(IDI_S(1).EQ.1)THEN
+          I1=1
+          RETURN
+        ELSEIF(IDI_S(2).EQ.1)THEN
+          I1=2
+          RETURN
+        ENDIF
+C
+C (2) 2-D ELEMENT
+C
+      ELSEIF(NEQ.EQ.2)THEN
+C
+C ... FOR TRIANGULAR ELEMENT
+C
+        IF(NODE.EQ.3)THEN
+          DO I=1,NODE
+            IF(IDI_S(I).EQ.1)THEN
+              I1=I
+              RETURN
+            ENDIF
+          ENDDO
+C
+          IF(IDI_S(1).EQ.-1)THEN
+            I1=2
+            I2=3
+            RETURN
+          ELSEIF(IDI_S(2).EQ.-1)THEN
+            I1=1
+            I2=3
+            RETURN
+          ELSEIF(IDI_S(3).EQ.-1)THEN
+            I1=1
+            I2=2
+            RETURN
+          ENDIF
+C
+C ... FOR QUADRILATERAL ELEMENT
+C
+        ELSEIF(NODE.EQ.4)THEN
+          IF(IXI_S(1).EQ.-1)THEN
+            IF(IXI_S(2).EQ.-1)THEN
+              I1=1
+              RETURN
+            ELSEIF(IXI_S(2).EQ.1)THEN
+              I1=4
+              RETURN
+            ELSE
+              I1=1
+              I2=4
+              RETURN
+            ENDIF
+          ELSEIF(IXI_S(1).EQ.1)THEN
+            IF(IXI_S(2).EQ.-1)THEN
+              I1=2
+              RETURN
+            ELSEIF(IXI_S(2).EQ.1)THEN
+              I1=3
+              RETURN
+            ELSE
+              I1=2
+              I2=3
+              RETURN
+            ENDIF
+          ELSE
+            IF(IXI_S(2).EQ.-1)THEN
+              I1=1
+              I2=2
+              RETURN
+            ELSEIF(IXI_S(2).EQ.1)THEN
+              I1=3
+              I2=4
+              RETURN
+            ENDIF
+          ENDIF  
+        ENDIF 
+C
+C (3) 3-D ELEMENT
+C  
+      ELSEIF(NEQ.EQ.3)THEN
+C
+C ... FOR TETRAHEDRAL ELEMENT
+C
+        IF(NODE.EQ.4)THEN  
+          DO I=1,NODE
+            IF(IDI_S(I).EQ.1)THEN
+              I1=I
+              RETURN
+            ENDIF
+          ENDDO
+C
+          IF(IDI_S(1).EQ.-1)THEN
+            IF(IDI_S(2).EQ.-1)THEN
+              I1=3
+              I2=4
+              RETURN
+            ELSEIF(IDI_S(3).EQ.-1)THEN
+              I1=2
+              I2=4
+              RETURN
+            ELSEIF(IDI_S(4).EQ.-1)THEN
+              I1=2
+              I2=3
+              RETURN
+            ELSE
+              I1=2
+              I2=3
+              I3=4
+              RETURN
+            ENDIF
+          ELSEIF(IDI_S(2).EQ.-1)THEN
+            IF(IDI_S(3).EQ.-1)THEN
+              I1=1
+              I2=4
+              RETURN
+            ELSEIF(IDI_S(4).EQ.-1)THEN
+              I1=1
+              I2=3
+              RETURN
+            ELSE
+              I1=1
+              I2=3
+              I3=4
+              RETURN
+            ENDIF            
+          ELSEIF(IDI_S(3).EQ.-1)THEN
+            IF(IDI_S(4).EQ.-1)THEN
+              I1=1
+              I2=2
+              RETURN
+            ELSE
+              I1=1
+              I2=2
+              I3=4
+              RETURN
+            ENDIF
+          ELSEIF(IDI_S(4).EQ.-1)THEN
+            I1=1
+            I2=2
+            I3=3
+            RETURN
+          ENDIF              
+C
+C ... FOR TRIANGULAR PRISM ELEMENT
+C
+        ELSEIF(NODE.EQ.6)THEN 
+          IF(IXI_S(1).EQ.-1)THEN
+            DO I=1,3
+              IF(IDI_S(I).EQ.1)THEN
+                I1=I
+                RETURN
+              ENDIF
+            ENDDO
+            IF(IDI_S(1).EQ.-1)THEN
+              I1=2
+              I2=3
+            ELSEIF(IDI_S(2).EQ.-1)THEN
+              I1=1
+              I2=3
+            ELSEIF(IDI_S(3).EQ.-1)THEN
+              I1=1
+              I2=2
+            ELSE
+              I1=1
+              I2=2
+              I3=3
+            ENDIF
+            RETURN
+          ELSEIF(IXI_S(1).EQ.1)THEN
+            DO I=1,3
+              IF(IDI_S(I).EQ.1)THEN
+                I1=I+3
+                RETURN
+              ENDIF
+            ENDDO
+            IF(IDI_S(1).EQ.-1)THEN
+              I1=5
+              I2=6
+            ELSEIF(IDI_S(2).EQ.-1)THEN
+              I1=4
+              I2=6
+            ELSEIF(IDI_S(3).EQ.-1)THEN
+              I1=4
+              I2=5
+            ELSE
+              I1=4
+              I2=5
+              I3=6
+            ENDIF
+            RETURN
+          ELSE
+            DO I=1,3
+              IF(IDI_S(I).EQ.1)THEN
+                I1=I
+                I2=I+3
+                RETURN
+              ENDIF
+            ENDDO
+            IF(IDI_S(1).EQ.-1)THEN
+              I1=2
+              I2=3
+              I3=5
+              RETURN
+            ELSEIF(IDI_S(2).EQ.-1)THEN
+              I1=1
+              I2=3
+              I3=6
+              RETURN
+            ELSEIF(IDI_S(3).EQ.-1)THEN
+              I1=1
+              I2=2
+              I3=4
+              RETURN
+            ENDIF
+          ENDIF
+C
+C ... FOR HEXAHEDRAL ELEMENT
+C
+        ELSEIF(NODE.EQ.8)THEN  
+          IF(IXI_S(1).EQ.-1)THEN
+            IF(IXI_S(2).EQ.-1)THEN
+              IF(IXI_S(3).EQ.-1)THEN
+                I1=1
+                RETURN
+              ELSEIF(IXI_S(3).EQ.1)THEN
+                I1=5
+                RETURN
+              ELSE
+                I1=1
+                I2=5
+              ENDIF
+            ELSEIF(IXI_S(2).EQ.1)THEN
+              IF(IXI_S(3).EQ.-1)THEN
+                I1=4
+                RETURN
+              ELSEIF(IXI_S(3).EQ.1)THEN
+                I1=8
+                RETURN
+              ELSE
+                I1=4
+                I2=8
+              ENDIF
+            ELSEIF(IXI_S(3).EQ.-1)THEN
+              I1=1
+              I2=4
+              RETURN
+            ELSEIF(IXI_S(3).EQ.1)THEN
+              I1=5
+              I2=8
+              RETURN
+            ELSE
+              I1=1
+              I2=4
+              I3=5
+            ENDIF
+          ELSEIF(IXI_S(1).EQ.1)THEN
+            IF(IXI_S(2).EQ.-1)THEN
+              IF(IXI_S(3).EQ.-1)THEN
+                I1=2
+                RETURN
+              ELSEIF(IXI_S(3).EQ.1)THEN
+                I1=6
+                RETURN
+              ELSE
+                I1=2
+                I2=6
+              ENDIF
+            ELSEIF(IXI_S(2).EQ.1)THEN
+              IF(IXI_S(3).EQ.-1)THEN
+                I1=3
+                RETURN
+              ELSEIF(IXI_S(3).EQ.1)THEN
+                I1=7
+                RETURN
+              ELSE
+                I1=3
+                I2=7
+              ENDIF
+            ELSEIF(IXI_S(3).EQ.-1)THEN
+              I1=2
+              I2=3
+              RETURN
+            ELSEIF(IXI_S(3).EQ.1)THEN
+              I1=6
+              I2=7
+              RETURN
+            ELSE
+              I1=2
+              I2=3
+              I3=6
+            ENDIF
+          ELSEIF(IXI_S(2).EQ.-1)THEN
+            IF(IXI_S(3).EQ.-1)THEN
+              I1=1
+              I2=2
+              RETURN
+            ELSEIF(IXI_S(3).EQ.1)THEN
+              I1=5
+              I2=6
+              RETURN
+            ELSE
+              I1=1
+              I2=2
+              I3=5
+            ENDIF
+          ELSEIF(IXI_S(2).EQ.1)THEN
+            IF(IXI_S(3).EQ.-1)THEN
+              I1=3
+              I2=4
+              RETURN
+            ELSEIF(IXI_S(3).EQ.1)THEN
+              I1=7
+              I2=8
+              RETURN
+            ELSE
+              I1=3
+              I2=4
+              I3=7
+            ENDIF
+          ELSEIF(IXI_S(3).EQ.-1)THEN
+            I1=1
+            I2=2
+            I3=3
+            RETURN
+          ELSEIF(IXI_S(3).EQ.1)THEN
+            I1=5
+            I2=6
+            I3=7
+            RETURN
+          ENDIF  
+        ENDIF
+C
+      ENDIF
+C
+  999 CONTINUE
+      RETURN
+      END 
+C
+C 
+C
+      SUBROUTINE DT_ETRACK
+     I    (MAXND,MAXEQ,NODE,NEQ, 
+     I     DL,VT1W,VT2W,
+     O     DT_INIT)
+C 
+C 09/09/2010 (HPC)
+C ======================================================================
+C < PURPOSE > 
+C ESTIMATE  ELEMENT NODAL VELOCITY FOR PT WITHIN THE ELEMENT
+C ======================================================================
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      DIMENSION VT1W(MAXEQ,MAXND),VT2W(MAXEQ,MAXND)
+C 
+      VABS=0.0D0
+      NCOUNT=NODE*NEQ*2
+      DO I=1,NODE
+        DO J=1,NEQ   
+          VABS=VABS+DABS(VT1W(J,I)) 
+          VABS=VABS+DABS(VT2W(J,I))
+        ENDDO
+      ENDDO
+      VABS=VABS/DBLE(NCOUNT)
+      IF(VABS.LT.1.0E-10)VABS=1.0E-10
+      DT_INIT=DL/VABS 
+C
+  999 CONTINUE
+      RETURN
+      END
+
+C ======================================================================
+CMWF ADD ROUTINES FOR RT0 WITH NUMERICAL TRACKING
+C ======================================================================
 C
 C
       SUBROUTINE ELEMENT_VOLUME
@@ -1998,9 +3547,350 @@ C
 C
 C
 C
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+      SUBROUTINE EL_VEL_PREP
+     I    (MAXND,MAXEQ,NNDE,
+     I     NNP,NEL,NODE,NEQ, M,IDVE,DIR,IPROJ,
+     I     XG,IE,IB,VTL2G,VT1E,VT2E,
+     O     XW,VT1W,VT2W)
+C 
+C 02/23/2010 (HPC)
+C 05/10/2010 (MWF)
+C ======================================================================
+C < PURPOSE > 
+C PREPARE ELEMENT NODAL VELOCITY FOR PT WITHIN THE ELEMENT
+C MWF MODIFIED PEARCE'S ORIGINAL ROUTINE TO TAKE A LOCAL TO GLOBAL DOF
+C     MAP AND ALLOW RT0 (ON SIMPLICES) AS WELL
+C ======================================================================
+C
+C      IMPLICIT REAL*8(A-H,O-Z)
+C
+C      DIMENSION XG(MAXEQ,MAXNP),IE(MAXND,MAXEL)
+C      DIMENSION VT1N(MAXEQ,MAXNP),VT2N(MAXEQ,MAXNP)
+C      DIMENSION VT1E(MAXEQ,MAXND,MAXEL),VT2E(MAXEQ,MAXND,MAXEL)
+C      DIMENSION XW(MAXEQ,MAXND)
+C      DIMENSION VT1W(MAXEQ,MAXND),VT2W(MAXEQ,MAXND)
+C  
+      IMPLICIT NONE
+C DIMENSIONS FOR MAXIMUM 
+C  MAXIMUM NUMBER OF NODES PER ELEMENT (8)
+C  MAXIMUM NUMBER OF EQUATIONS FOR VELOCITY (3)   
+      INTEGER MAXND,MAXEQ
+C ACTUAL DIMENSIONS FOR NUMBER OF NODES, NUMBER OF ELEMENTS, 
+C NUMBER OF NODES PER ELEMENT (MAX FOR THIS MESH ...) 
+C NUMBER OF NODES FOR THIS ELEMENT, AND NUMBER OF EQUATIONS TO 
+C INTEGRATE FOR VELOCITY (SPACE DIMENSION)
+C THIS ELEMENT IF HAVE MIXED TYPES
+      INTEGER NNP,NEL,NNDE,NODE,NEQ
+C CURRENT ELEMENT
+      INTEGER M
+C FLAG FOR VELOCITY TYPE
+C 1 -- 2 LOCAL SPACE IS C^0, P^1 
+C 1 -- ASSUMED GLOBALLY CONTINUOUS (NODAL REPRESENTATION)
+C 2 -- MAY BE DISCONTINUOUS (ELEMENT-BASED REPRESENTATION)
+C      THIS VERSION DOES'T REALLY DISTINGUSIH SINCE 
+C      VTL2G SHOULD ACCOUNT FOR THIS
+C 3 -- RT0 WITH LOCAL BASIS \vec N_i = \frac{1}{d|\Omega_e|}(\vec x - x_{n,i}),
+C 4 -- RT0 WITH LOCAL BASIS \vec N_i = \vec e_i i=0,...,d-1 and \vec N_d = \vec x
+      INTEGER IDVE
+C DIRECTION IN TIME FOR SCALING VELOCITY
+      DOUBLE PRECISION DIR
+C TRY TO PROJECT ON BOUNDARY OR NOT
+      INTEGER IPROJ
+C NODAL COORDINATES
+      DOUBLE PRECISION XG(MAXEQ,NNP)
+C ELEMENT -- NODES CONNECTIVITY
+      INTEGER IE(NNDE,NEL)
+C BOUNDARY NODE INFORMATION: 1 --> ON BOUNDARY, 0 --> INTERIOR
+      INTEGER IB(*)
+C LOCAL TO GLOBAL DOF MAPPING
+C      INTEGER VTL2G(NEQ,NNDE,NEL)
+      INTEGER VTL2G(*)
+C DEGREES OF FREEDOM AT TIME LEVELS 1 AND 2
+      DOUBLE PRECISION VT1E(*),VT2E(*)
+C WORK ARRAY FOR NODES AND VELOCITIES AT TIME LEVEL 1 AND 2
+      DOUBLE PRECISION XW(MAXEQ,MAXND),VT1W(MAXEQ,MAXND),
+     &     VT2W(MAXEQ,MAXND)
+C LOCAL VARIABLES
+      INTEGER I,J,K,IVDOF,IEM,ID,NS,KS,NCOUNT,N1,N2,N3,N4,K1,K2,K3,K4
+      DOUBLE PRECISION DVOL,DRT0FACT
+C WORK ARRAYS FOR LOCAL PROJECTION
+      INTEGER KGB3(4,6,3),KGB2(2,4,2)
+C
+      DATA KGB3 /1,4,8,5, 1,2,6,5, 2,3,7,6, 4,3,7,8, 1,2,3,4, 5,6,7,8,
+     >           1,3,6,4, 1,4,5,2, 2,5,6,3, 1,2,3,0, 4,5,6,0, 0,0,0,0,
+     >           4,3,2,0, 4,1,3,0, 4,2,1,0, 1,2,3,0, 0,0,0,0, 0,0,0,0/
+      DATA KGB2 /1,2, 2,3, 3,4, 4,1,
+     >           1,2, 2,3, 3,1, 0,0/
+C
+C 
+C WHEN IDVE = 1,2 USE C0P1 VELOCITY 
+C
+      IF(IDVE.EQ.1.OR.IDVE.EQ.2)THEN
+        DO J=1,NODE
+          IEM = IE(J,M)
+          DO K=1,NEQ
+            XW(K,J)=XG(K,IEM)
+C            IVDOF = VTL2G(K,J,M)
+            IVDOF = VTL2G(K + NEQ*(J-1) + NEQ*NNDE*(M-1))
+            VT1W(K,J)=VT1E(IVDOF)*DIR
+            VT2W(K,J)=VT2E(IVDOF)*DIR
+C MWF DEBUG
+C            WRITE(6,*)'EL_VEL_PREP IDVE.EQ.2 M= ',M,' J= ',J,
+C     &           ' IEM= ',IEM,' XW(',K,',',J,')= ',XW(K,J),
+C     &           ' IVDOF= ',IVDOF,' VT1W(',K,',',J,')= ',VT1W(K,J),
+C     &           ' VT2W(',K,',',J,')= ',VT2W(K,J)
+C MWF DEBUG            
+          ENDDO
+        ENDDO
+      ELSE IF (IDVE.EQ.3) THEN
+C RT0 VELOCITY ON A SIMPLEX WITH REPRESENTATION
+C \vec N_i = \frac{1}{d|\Omega_e|}(\vec x - x_{n,i}), i=0,...,d
+C  d IS THE SPACE DIMENSION, |\Omege_e| IS THE ELEMENT VOLUMNE
+C AND \vec x_{n,i} IS THE NODE ACROSS FROM FACE i
+C LOAD LOCAL NODAL COORDS FIRST
+        DO J=1,NODE
+          IEM = IE(J,M)
+          DO K=1,NEQ
+            XW(K,J)=XG(K,IEM)
+          ENDDO
+        ENDDO
+        CALL ELEMENT_VOLUME(MAXEQ,MAXND,NEQ,NODE,XW,DVOL)
+        DRT0FACT = 1.D0/(DBLE(NEQ)*DVOL)
+        DO J=1,NODE
+          DO K=1,NEQ
+            VT1W(K,J)=0.D0
+            VT2W(K,J)=0.D0
+            DO I=1,NODE
+C TODO TRY TO USE A SUBSET OF VTL2G MEMORY FOR VECTOR VALUED SPACES
+C      OR JUST MAKE SIZING CONSISTENT WITH NLOCAL_DOF X NELEMENTS?
+              IVDOF = VTL2G(I + NNDE*(M-1))
+              VT1W(K,J) = VT1W(K,J) + VT1E(IVDOF)*
+     &             DRT0FACT*(XW(K,J)-XW(K,I))*DIR
+              VT2W(K,J) = VT2W(K,J) + VT2E(IVDOF)*
+     &             DRT0FACT*(XW(K,J)-XW(K,I))*DIR
+            ENDDO
+          ENDDO
+        ENDDO     
+      ELSE IF (IDVE.EQ.4) THEN
+C RT0 VELOCITY ON A SIMPLEX WITH REPRESENTATION
+C \vec v_e = \vec a_e + b_e \vec x
+C WITH BASIS NUMBERING CONVENTION
+C \vec N_i = \vec e_i i=0,...,d-1 and \vec N_d = \vec x
+C WHERE d IS THE SPACE DIMENSION, e IS THE LOCAL ELEMENT
+C LOAD LOCAL COORDINATES FIRST
+        DO J=1,NODE
+          IEM = IE(J,M)
+          DO K=1,NEQ
+            XW(K,J)=XG(K,IEM)
+          ENDDO
+        ENDDO
+        DO J=1,NODE
+          DO K=1,NEQ
+            VT1W(K,J)=0.D0
+            VT2W(K,J)=0.D0
+            DO I=1,NODE-1
+C TODO TRY TO USE A SUBSET OF VTL2G MEMORY FOR VECTOR VALUED SPACES
+C      OR JUST MAKE SIZING CONSISTENT WITH NLOCAL_DOF X NELEMENTS?
+C              IVDOF = VTL2G(1,I,M)
+              IVDOF = VTL2G(I + NNDE*(M-1))
+              VT1W(K,J)=VT1W(K,J) + VT1E(IVDOF)*DIR
+              VT2W(K,J)=VT2W(K,J) + VT2E(IVDOF)*DIR
+            ENDDO
+            I = NODE
+C            IVDOF = VTL2G(1,I,M)
+            IVDOF = VTL2G(I + NNDE*(M-1))
+            VT1W(K,J)=VT1W(K,J) + VT1E(IVDOF)*XW(K,J)*DIR
+            VT2W(K,J)=VT2W(K,J) + VT2E(IVDOF)*XW(K,J)*DIR
+          ENDDO
+        ENDDO
+      ELSE
+        WRITE(6,*)'EL_VEL_PREP IDVE= ',IDVE,'NOT VALID QUITTING'
+        CALL EXIT(1)
+      ENDIF
+C
+C
+      IF(IPROJ.EQ.0)RETURN
+C
+C === CONDUCT VELOCITY PROJECTION ONTO CLOSED BOUNDARY WHEN NECESSARY
+C
+C 2-D PROJECTION
+C
+      IF(NEQ.EQ.2)THEN
+C
+C FOR A TRIANGULAR ELEMENT
+        IF(NODE.EQ.3)THEN
+          ID=2
+          NS=3
+C FOR A QUADRILATERAL ELEMENT
+        ELSE
+          ID=1
+          NS=4
+        ENDIF    
+C
+        DO 100 KS=1,NS
+          K1=KGB2(1,KS,ID)
+          K2=KGB2(2,KS,ID)
+          N1=IE(K1,M)
+          N2=IE(K2,M)
+          NCOUNT=0
+CMWF CONVENTION 1 --> BOUNDARY, PEARCE'S IS -1 --> BOUNDARY
+          IF(IB(N1).EQ.1 .AND. IB(N2).EQ.1)THEN
+            CALL V_PROJTN23
+     I          (MAXND,MAXEQ,
+     I           NEQ,K1,K2,K3,K4,
+     M           XW,VT1W,VT2W)
+          ENDIF
+  100   CONTINUE
+C
+C 3-D PROJECTION
+C
+      ELSE
+C
+C FOR A TETRAHEDRAL ELEMENT
+        IF(NODE.EQ.4)THEN
+          ID=3
+          NS=4
+C FOR A TRIANGULAR PRISM ELEMENT
+        ELSEIF(NODE.EQ.6)THEN
+          ID=2
+          NS=5
+C FOR A HEXAHEDRAL ELEMENT
+        ELSE
+          ID=1
+          NS=6
+        ENDIF
+C 
+        DO 200 KS=1,NS
+          K1=KGB3(1,KS,ID)
+          K2=KGB3(2,KS,ID)
+          K3=KGB3(3,KS,ID)
+          K4=KGB3(4,KS,ID)
+          N1=IE(K1,M)
+          N2=IE(K2,M)
+          N3=IE(K3,M)
+CMWF CONVENTION 1 --> BOUNDARY, PEARCE'S IS -1 --> BOUNDARY
+          IF(IB(N1).EQ.1 .AND. IB(N2).EQ.1 .AND. IB(N3).EQ.1)THEN
+            IF(K4.NE.0)THEN
+              N4=IE(K4,M)
+              IF(IB(N4).NE.-1)GOTO 200
+            ENDIF
+            CALL V_PROJTN23
+     I          (MAXND,MAXEQ,
+     I           NEQ,K1,K2,K3,K4,
+     M           XW,VT1W,VT2W)
+          ENDIF
+  200   CONTINUE
+C
+      ENDIF      
+C
+
+      RETURN
+      END
+C
+C
+C
+      SUBROUTINE V_PROJTN23
+     I    (MAXND,MAXEQ,
+     I     NEQ,K1,K2,K3,K4,
+     M     XW,VT1W,VT2W)
+C 
+C 06/22/2010 (HPC)
+C ======================================================================
+C < PURPOSE > 
+C CONDUCT VELOCITY PROJECT ONTO A 2-D ELEMENT EDGE OR A 3-D ELEMENT FACE
+C IF IT IS ASSOCIATED WITH CLOSED BOUNDARY
+C ======================================================================
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      DIMENSION XW(MAXEQ,MAXND)
+      DIMENSION VT1W(MAXEQ,MAXND),VT2W(MAXEQ,MAXND)
+C
+C ===== FOR PROJECTION ONTO A 2-D ELEMENET EDGE COMPOSED OF 
+C       ELEMENT NODES K1 AND K2
+C
+      IF(NEQ.EQ.2)THEN
+        DX=XW(1,K2)-XW(1,K1)
+        DY=XW(2,K2)-XW(2,K1)
+        DL=DSQRT(DX*DX+DY*DY)
+        DL2=DL*DL
+C NODE K1:
+        PK1T1=(VT1W(1,K1)*DX+VT1W(2,K1)*DY)/DL2
+        VT1W(1,K1)=PK1T1*DX
+        VT1W(2,K1)=PK1T1*DY  
+        PK1T2=(VT2W(1,K1)*DX+VT2W(2,K1)*DY)/DL2
+        VT2W(1,K1)=PK1T2*DX
+        VT2W(2,K1)=PK1T2*DY
+C NODE K2:   
+        PK2T1=(VT1W(1,K2)*DX+VT1W(2,K2)*DY)/DL2
+        VT1W(1,K2)=PK2T1*DX
+        VT1W(2,K2)=PK2T1*DY  
+        PK2T2=(VT2W(1,K2)*DX+VT2W(2,K2)*DY)/DL2
+        VT2W(1,K2)=PK2T2*DX
+        VT2W(2,K2)=PK2T2*DY     
+C
+C ===== FOR PROJECTION UNTO A 3-D ELEMENET FACE COMPOSED OF 
+C       ELEMENT NODES K1, K2, K3
+C
+      ELSEIF(NEQ.EQ.3)THEN
+        DX12=XW(1,K2)-XW(1,K1)
+        DY12=XW(2,K2)-XW(2,K1)
+        DZ12=XW(3,K2)-XW(3,K1)
+        DX13=XW(1,K3)-XW(1,K1)
+        DY13=XW(2,K3)-XW(2,K1)
+        DZ13=XW(3,K3)-XW(3,K1)
+        DNX=DY12*DZ13-DY13*DZ12
+        DNY=DZ12*DX13-DZ13*DX12
+        DNZ=DX12*DY13-DX13*DY12
+        DLN=DSQRT(DNX*DNX+DNY*DNY+DNZ*DNZ)
+        DLN2=DLN*DLN
+C NODE K1:
+        PK1T1N=(VT1W(1,K1)*DNX+VT1W(2,K1)*DNY+VT1W(3,K1)*DNZ)/DLN2
+        VT1W(1,K1)=VT1W(1,K1)-PK1T1N*DNX   
+        VT1W(2,K1)=VT1W(2,K1)-PK1T1N*DNY  
+        VT1W(3,K1)=VT1W(3,K1)-PK1T1N*DNZ  
+        PK1T2N=(VT2W(1,K1)*DNX+VT2W(2,K1)*DNY+VT2W(3,K1)*DNZ)/DLN2
+        VT2W(1,K1)=VT2W(1,K1)-PK1T2N*DNX   
+        VT2W(2,K1)=VT2W(2,K1)-PK1T2N*DNY  
+        VT2W(3,K1)=VT2W(3,K1)-PK1T2N*DNZ
+C NODE K2:
+        PK2T1N=(VT1W(1,K2)*DNX+VT1W(2,K2)*DNY+VT1W(3,K2)*DNZ)/DLN2
+        VT1W(1,K2)=VT1W(1,K2)-PK2T1N*DNX   
+        VT1W(2,K2)=VT1W(2,K2)-PK2T1N*DNY  
+        VT1W(3,K2)=VT1W(3,K2)-PK2T1N*DNZ  
+        PK2T2N=(VT2W(1,K2)*DNX+VT2W(2,K2)*DNY+VT2W(3,K2)*DNZ)/DLN2
+        VT2W(1,K2)=VT2W(1,K2)-PK2T2N*DNX   
+        VT2W(2,K2)=VT2W(2,K2)-PK2T2N*DNY  
+        VT2W(3,K2)=VT2W(3,K2)-PK2T2N*DNZ    
+C NODE K3:
+        PK3T1N=(VT1W(1,K3)*DNX+VT1W(2,K3)*DNY+VT1W(3,K3)*DNZ)/DLN2
+        VT1W(1,K3)=VT1W(1,K3)-PK3T1N*DNX   
+        VT1W(2,K3)=VT1W(2,K3)-PK3T1N*DNY  
+        VT1W(3,K3)=VT1W(3,K3)-PK3T1N*DNZ  
+        PK3T2N=(VT2W(1,K3)*DNX+VT2W(2,K3)*DNY+VT2W(3,K3)*DNZ)/DLN2
+        VT2W(1,K3)=VT2W(1,K3)-PK3T2N*DNX   
+        VT2W(2,K3)=VT2W(2,K3)-PK3T2N*DNY  
+        VT2W(3,K3)=VT2W(3,K3)-PK3T2N*DNZ  
+C NODE K4:
+        IF(K4.NE.0)THEN
+          PK4T1N=(VT1W(1,K4)*DNX+VT1W(2,K4)*DNY+VT1W(3,K4)*DNZ)/DLN2
+          VT1W(1,K4)=VT1W(1,K4)-PK4T1N*DNX   
+          VT1W(2,K4)=VT1W(2,K4)-PK4T1N*DNY  
+          VT1W(3,K4)=VT1W(3,K4)-PK4T1N*DNZ  
+          PK4T2N=(VT2W(1,K4)*DNX+VT2W(2,K4)*DNY+VT2W(3,K4)*DNZ)/DLN2
+          VT2W(1,K4)=VT2W(1,K4)-PK4T2N*DNX   
+          VT2W(2,K4)=VT2W(2,K4)-PK4T2N*DNY  
+          VT2W(3,K4)=VT2W(3,K4)-PK4T2N*DNZ 
+        ENDIF
+      ENDIF
+C
+  999 CONTINUE
+      RETURN
+      END
+
+C ======================================================================
 C Start working on analytical tracking in separate routine, then merge
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C ======================================================================
 
       SUBROUTINE PT123A
      I     (IDVE,IDVT,IVERBOSE,MAXEQ,
@@ -2236,7 +4126,7 @@ C        WRITE(LU_O,*)' ENTERING NODE TRACKING STEP IPT= ', IPT
 C ELENOD IN GENERAL SELECTS THE NUMBER OF NODES PER ELEMENT USING IE
 C FOR NOW WE KNOW THIS AS INPUT
 C
-          CALL EL_VEL_PREP(MAXND,MAXEQ,NNDE,
+          CALL EL_VEL_PREPA(MAXND,MAXEQ,NNDE,
      &         NNP,NEL,NODE,NEQ,M,IDVE,DIR,
      &         XG,IE,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
 
@@ -2301,7 +4191,7 @@ C MWF DEBUG
 C        WRITE(LU_O,*)' B4 ELTRACK ELEMENT LOOP T= ',T,' TPT= ',TPT(IPT),
 C     &       ' IPT= ',IPT,' M= ',M
 C        WRITE(LU_O,*)' XS= ',(XS(I),I=1,NEQ)
-        CALL EL_VEL_PREP(MAXND,MAXEQ,NNDE,
+        CALL EL_VEL_PREPA(MAXND,MAXEQ,NNDE,
      &         NNP,NEL,NODE,NEQ,M,IDVE,DIR,
      &         XG,IE,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
 C$$$        DO J=1,NODE
@@ -2391,7 +4281,7 @@ C FOR NOW WE KNOW THIS AS INPUT
 C
 C ALSO, WHEN USING IDVE=2, KNOW LOCAL VELOCITY IS ELEMENT BASED
 C IN SOME CASES WE MAY HAVE TO USE VELOCITY SPACE L2G HERE
-                   CALL EL_VEL_PREP(MAXND,MAXEQ,NNDE,
+                   CALL EL_VEL_PREPA(MAXND,MAXEQ,NNDE,
      &                  NNP,NEL,NODE,NEQ,M,IDVE,DIR,
      &                  XG,IE,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
 C$$$                   DO J=1,NODE
@@ -2479,7 +4369,7 @@ C
 C ELENOD IN GENERAL SELECTS THE NUMBER OF NODES PER ELEMENT USING IE
 C FOR NOW WE KNOW THIS AS INPUT
 C
-                 CALL EL_VEL_PREP(MAXND,MAXEQ,NNDE,
+                 CALL EL_VEL_PREPA(MAXND,MAXEQ,NNDE,
      &                NNP,NEL,NODE,NEQ,M,IDVE,DIR,
      &                XG,IE,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
 C$$$                 DO J=1,NODE
@@ -2566,7 +4456,7 @@ C FOR NOW WE KNOW THIS AS INPUT
 C
 C ALSO, WHEN USING IDVE=2, KNOW LOCAL VELOCITY IS ELEMENT BASED
 C IN SOME CASES WE MAY HAVE TO USE VELOCITY SPACE L2G HERE
-          CALL EL_VEL_PREP(MAXND,MAXEQ,NNDE,
+          CALL EL_VEL_PREPA(MAXND,MAXEQ,NNDE,
      &         NNP,NEL,NODE,NEQ,M,IDVE,DIR,
      &         XG,IE,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
 C$$$          DO J=1,NODE
@@ -2638,9 +4528,6 @@ C
         
       RETURN
       END
-C
-C 
-C
 C
 C 
 C
@@ -2724,7 +4611,7 @@ C
       IF (DT0.LT.0.D0) THEN 
          DIR = -1.D0
       ENDIF
-      IDEBUG = 2
+      IDEBUG = 0
       IF (IDEBUG.GT.0) THEN
 CMWF DEBUG
          WRITE(6,*)'ELTRAK123A CALLING STEP IVFLAG= ',IVFLAG,
@@ -2770,7 +4657,7 @@ C
 C === EXAMINE THE COMPUTED ENDING LOCATION
 C
       XSI=0.0D0
-      CALL INTRP123
+      CALL INTRP123A
      I     (MAXEQ,MAXND,NEQ,NODE, XOUT5, XW,
      O     DN,DJAC)
       DL=DABS(DJAC)**(DEQ)
@@ -2868,12 +4755,12 @@ C ==> SET IDSDT TO 0, AND IDENTIFY I1, I2, I3 TO
 C     CONDUCT PT IN AN ADJACENT ELEMENT
 C
 C PYADH HAD               IF(DABS(D2).GT.DN_SAFE)THEN
-C                  CALL DN_CHECK
+C                  CALL DN_CHECKA
 C     I                 (MAXND,NODE,NEQ, 1.D0,DN_SAFE,
 C     I                 DN_S,
 C     O                 I1,I2,I3)
                IF(DABS(D2*DL).GT.ZEROTOL)THEN
-                  CALL DN_CHECK
+                  CALL DN_CHECKA
      I                 (MAXND,NODE,NEQ, DL,ZEROTOL,
      I                 DN_S,
      O                 I1,I2,I3)
@@ -2882,8 +4769,8 @@ C     O                 I1,I2,I3)
                   IDSDT=0
                   IF (IDEBUG.GT.0) THEN
 C MWF DEBUG
-                     WRITE(6,*)' ELTRAK DN_CHECK LEAVING IDSDT= ',IDSDT,
-     &                    ' I1= ',I1,' I2= ',I2,' I3= ',I3, 
+                     WRITE(6,*)' ELTRAK DN_CHECKA LEAVING IDSDT= ',
+     &                    IDSDT,' I1= ',I1,' I2= ',I2,' I3= ',I3, 
      &                    ' D1= ',D1, ' D2= ',D2,' D12= ',D12
                   ENDIF
                   RETURN
@@ -2981,19 +4868,19 @@ CMWF DEBUG
      &           ' DABS(DN*DL) < ZEROTOL= ',DABS(DN(I)*DL).LT.ZEROTOL
          ENDIF
 C PYADH HAD         IF(DABS(DN(I)).LT.DN_SAFE)THEN
-C            CALL DN_CHECK
+C            CALL DN_CHECKA
 C     I           (MAXND,NODE,NEQ, 1.D0,DN_SAFE,
 C     I           DN,
 C     O           I1,I2,I3)
          IF(DABS(DN(I)*DL).LT.ZEROTOL)THEN
-            CALL DN_CHECK
+            CALL DN_CHECKA
      I           (MAXND,NODE,NEQ, DL,ZEROTOL,
      I           DN,
      O           I1,I2,I3)
             IF (IDEBUG.GT.0) THEN
 C MWF DEBUG
-               WRITE(6,*)' ELTRAK DN_CHECK ON BNDY RETUR IDSDT= ',IDSDT, 
-     &              ' I1= ',I1,' I2= ',I2,' I3= ',I3, 
+               WRITE(6,*)' ELTRAK DN_CHECKA ON BNDY RETUR IDSDT= ',
+     &              IDSDT,' I1= ',I1,' I2= ',I2,' I3= ',I3, 
      &              ' DN_S= ',(DN_S(II),II=1,NODE)
             ENDIF
             RETURN
@@ -3009,7 +4896,7 @@ C MWF DEBUG
       IF(IDSDT.EQ.-1) THEN
          IF (IDEBUG.GT.0) THEN
 C MWF DEBUG
-            WRITE(6,*)' ELTRAK DN_CHECK ON BNDY RETURN IDSDT= ',IDSDT, 
+            WRITE(6,*)' ELTRAK DN_CHECKA ON BNDY RETURN IDSDT= ',IDSDT, 
      &           ' I1= ',I1,' I2= ',I2,' I3= ',I3, 
      &           ' DN_S= ',(DN_S(II),II=1,NODE)
          ENDIF
@@ -3033,6 +4920,434 @@ C  999 CONTINUE
       RETURN
       END
 
+C
+C
+C
+CMWF ORIGINAL VERSION OF INTRP123 ROUTINE
+      SUBROUTINE INTRP123A
+     I    (MAXEQ,MAXND,NEQ,NODE, XTEMP, XW,
+     O     DN,DJAC)
+C
+C 02/01/2010 (HPC) 
+C ======================================================================
+C < PURPOSE > 
+C   COMPUTE THE VALUES OF INTERPOLATION FUNCTIONS
+C < INPUT > 
+C   XTEMP(I) = THE I-TH COORDINATE THE THE LOCATION USED FOR COMPUTATION
+C   XW(I,J) = THE I-TH COORDINATE OF THE J-TH NODE OF A SPECIFIC 
+C             ELEMENT
+C < OUTPUT >
+C   DN(I) = VALUE ASSCIATED WITH THE INTERPOLATION FUNCTION ASSOCIATED
+C           WITH THE I-TH NODE
+C ======================================================================
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      DIMENSION XTEMP(MAXEQ),XW(MAXEQ,MAXND)
+      DIMENSION DN(MAXND)
+      DIMENSION A(4),B(4),C(4),D(4)
+C
+C
+C ===== FOR THE CASE OF A 1-D LINE ELEMENT
+C
+      IF(NEQ.EQ.1)THEN
+C MWF REPLACE WITH ABS IN CASE HAVE NEGATIVE JACOBIANS?
+        DJAC=XW(1,2)-XW(1,1)
+        DN(2)=(XTEMP(1)-XW(1,1))/DJAC
+        DN(1)=1.0E0-DN(2)
+C
+C
+C ===== FOR THE CASE OF A 2-D TRIANGULAR ELEMENT
+C
+      ELSEIF(NEQ.EQ.2)THEN
+        X12=XW(1,1)-XW(1,2)
+        X23=XW(1,2)-XW(1,3)
+        X31=XW(1,3)-XW(1,1)  
+        Y12=XW(2,1)-XW(2,2)
+        Y23=XW(2,2)-XW(2,3)
+        Y31=XW(2,3)-XW(2,1)
+        DJAC=XW(1,1)*Y23+XW(1,2)*Y31+XW(1,3)*Y12
+C MWF REPLACE WITH ABS IN CASE HAVE NEGATIVE JACOBIANS?
+C        DJAC=DABS(DJAC)
+        DN(1)=Y23*XTEMP(1)-X23*XTEMP(2)+XW(1,2)*XW(2,3)-XW(1,3)*XW(2,2)
+        DN(2)=Y31*XTEMP(1)-X31*XTEMP(2)+XW(1,3)*XW(2,1)-XW(1,1)*XW(2,3)
+        DN(3)=Y12*XTEMP(1)-X12*XTEMP(2)+XW(1,1)*XW(2,2)-XW(1,2)*XW(2,1)
+        DO I=1,NODE
+          DN(I)=DN(I)/DJAC
+        ENDDO
+C
+C
+C ===== FOR THE CASE OF A 3-D TETRAHEDRAL ELEMENT
+C
+      ELSEIF(NEQ.EQ.3)THEN
+        DJAC=0.0D0
+        DO KK=1,4
+          IF(KK.EQ.1)THEN
+            K1=2
+            K2=3
+            K3=4
+          ELSEIF(KK.EQ.2)THEN
+            K1=1
+            K2=3
+            K3=4
+          ELSEIF(KK.EQ.3)THEN
+            K1=1
+            K2=2
+            K3=4
+          ELSE
+            K1=1
+            K2=2
+            K3=3
+          ENDIF
+C
+          A(KK)=(-1.0D0)**(KK+1)*(XW(1,K1)*XW(2,K2)*XW(3,K3)+
+     >          XW(2,K1)*XW(3,K2)*XW(1,K3)+XW(3,K1)*XW(1,K2)*XW(2,K3)-
+     >          XW(1,K3)*XW(2,K2)*XW(3,K1)-XW(2,K3)*XW(3,K2)*XW(1,K1)-
+     >          XW(3,K3)*XW(1,K2)*XW(2,K1))
+C
+          B(KK)=(-1.0D0)**KK*(XW(2,K1)*XW(3,K2)+
+     >          XW(2,K2)*XW(3,K3)+XW(2,K3)*XW(3,K1)-
+     >          XW(2,K3)*XW(3,K2)-XW(2,K2)*XW(3,K1)-
+     >          XW(2,K1)*XW(3,K3))
+C
+          C(KK)=(-1.0D0)**(KK+1)*(XW(1,K1)*XW(3,K2)+
+     >          XW(1,K2)*XW(3,K3)+XW(1,K3)*XW(3,K1)-
+     >          XW(1,K3)*XW(3,K2)-XW(1,K2)*XW(3,K1)-
+     >          XW(1,K1)*XW(3,K3))
+C
+          D(KK)=(-1.0D0)**KK*(XW(1,K1)*XW(2,K2)+
+     >          XW(1,K2)*XW(2,K3)+XW(1,K3)*XW(2,K1)-
+     >          XW(1,K3)*XW(2,K2)-XW(1,K2)*XW(2,K1)-
+     >          XW(1,K1)*XW(2,K3))
+C
+          DJAC=DJAC+A(KK)
+          DN(KK)=A(KK)+B(KK)*XTEMP(1)+C(KK)*XTEMP(2)+D(KK)*XTEMP(3)
+        ENDDO
+C MWF REPLACE WITH ABS IN CASE HAVE NEGATIVE JACOBIANS?
+C        DJAC=DABS(DJAC)
+        DO KK=1,4
+          DN(KK)=DN(KK)/DJAC
+        ENDDO
+      ENDIF
+C
+      RETURN
+      END
+C
+C
+C
+CMWF PREVIOUS VERSION OF EL_VEL_PREP USED RIGHT NOW IN ELTRAK123A
+      SUBROUTINE EL_VEL_PREPA
+     I    (MAXND,MAXEQ,NNDE,
+     I     NNP,NEL,NODE,NEQ, M,IDVE,DIR,
+     I     XG,IE,VTL2G,VT1E,VT2E,
+     O     XW,VT1W,VT2W)
+C 
+C 02/23/2010 (HPC)
+C 05/10/2010 (MWF)
+C ======================================================================
+C < PURPOSE > 
+C PREPARE ELEMENT NODAL VELOCITY FOR PT WITHIN THE ELEMENT
+C MWF MODIFIED PEARCE'S ORIGINAL ROUTINE TO TAKE A LOCAL TO GLOBAL DOF
+C     MAP AND ALLOW RT0 (ON SIMPLICES) AS WELL
+C ======================================================================
+C
+C      IMPLICIT REAL*8(A-H,O-Z)
+C
+C      DIMENSION XG(MAXEQ,MAXNP),IE(MAXND,MAXEL)
+C      DIMENSION VT1N(MAXEQ,MAXNP),VT2N(MAXEQ,MAXNP)
+C      DIMENSION VT1E(MAXEQ,MAXND,MAXEL),VT2E(MAXEQ,MAXND,MAXEL)
+C      DIMENSION XW(MAXEQ,MAXND)
+C      DIMENSION VT1W(MAXEQ,MAXND),VT2W(MAXEQ,MAXND)
+C  
+      IMPLICIT NONE
+C DIMENSIONS FOR MAXIMUM 
+C  MAXIMUM NUMBER OF NODES PER ELEMENT (8)
+C  MAXIMUM NUMBER OF EQUATIONS FOR VELOCITY (3)   
+      INTEGER MAXND,MAXEQ
+C ACTUAL DIMENSIONS FOR NUMBER OF NODES, NUMBER OF ELEMENTS, 
+C NUMBER OF NODES PER ELEMENT (MAX FOR THIS MESH ...) 
+C NUMBER OF NODES FOR THIS ELEMENT, AND NUMBER OF EQUATIONS TO 
+C INTEGRATE FOR VELOCITY (SPACE DIMENSION)
+C THIS ELEMENT IF HAVE MIXED TYPES
+      INTEGER NNP,NEL,NNDE,NODE,NEQ
+C CURRENT ELEMENT
+      INTEGER M
+C FLAG FOR VELOCITY TYPE
+C 1 -- 2 LOCAL SPACE IS C^0, P^1 
+C 1 -- ASSUMED GLOBALLY CONTINUOUS (NODAL REPRESENTATION)
+C 2 -- MAY BE DISCONTINUOUS (ELEMENT-BASED REPRESENTATION)
+C      THIS VERSION DOES'T REALLY DISTINGUSIH SINCE 
+C      VTL2G SHOULD ACCOUNT FOR THIS
+C 3 -- RT0 WITH LOCAL BASIS \vec N_i = \frac{1}{d|\Omega_e|}(\vec x - x_{n,i}),
+C 4 -- RT0 WITH LOCAL BASIS \vec N_i = \vec e_i i=0,...,d-1 and \vec N_d = \vec x
+      INTEGER IDVE
+C DIRECTION IN TIME FOR SCALING VELOCITY
+      DOUBLE PRECISION DIR
+ 
+C NODAL COORDINATES
+      DOUBLE PRECISION XG(MAXEQ,NNP)
+C ELEMENT -- NODES CONNECTIVITY
+      INTEGER IE(NNDE,NEL)
+C LOCAL TO GLOBAL DOF MAPPING
+C      INTEGER VTL2G(NEQ,NNDE,NEL)
+      INTEGER VTL2G(*)
+C DEGREES OF FREEDOM AT TIME LEVELS 1 AND 2
+      DOUBLE PRECISION VT1E(*),VT2E(*)
+C WORK ARRAY FOR NODES AND VELOCITIES AT TIME LEVEL 1 AND 2
+      DOUBLE PRECISION XW(MAXEQ,MAXND),VT1W(MAXEQ,MAXND),
+     &     VT2W(MAXEQ,MAXND)
+
+C LOCAL VARIABLES
+      INTEGER I,J,K,IVDOF,IEM
+      DOUBLE PRECISION DVOL,DRT0FACT
+C
+C 
+C WHEN IDVE = 1,2 USE C0P1 VELOCITY 
+C
+      IF(IDVE.EQ.1.OR.IDVE.EQ.2)THEN
+        DO J=1,NODE
+          IEM = IE(J,M)
+          DO K=1,NEQ
+            XW(K,J)=XG(K,IEM)
+C            IVDOF = VTL2G(K,J,M)
+            IVDOF = VTL2G(K + NEQ*(J-1) + NEQ*NNDE*(M-1))
+            VT1W(K,J)=VT1E(IVDOF)*DIR
+            VT2W(K,J)=VT2E(IVDOF)*DIR
+C MWF DEBUG
+C            WRITE(6,*)'EL_VEL_PREP IDVE.EQ.2 M= ',M,' J= ',J,
+C     &           ' IEM= ',IEM,' XW(',K,',',J,')= ',XW(K,J),
+C     &           ' IVDOF= ',IVDOF,' VT1W(',K,',',J,')= ',VT1W(K,J),
+C     &           ' VT2W(',K,',',J,')= ',VT2W(K,J)
+C MWF DEBUG            
+          ENDDO
+        ENDDO
+      ELSE IF (IDVE.EQ.3) THEN
+C RT0 VELOCITY ON A SIMPLEX WITH REPRESENTATION
+C \vec N_i = \frac{1}{d|\Omega_e|}(\vec x - x_{n,i}), i=0,...,d
+C  d IS THE SPACE DIMENSION, |\Omege_e| IS THE ELEMENT VOLUMNE
+C AND \vec x_{n,i} IS THE NODE ACROSS FROM FACE i
+C LOAD LOCAL NODAL COORDS FIRST
+        DO J=1,NODE
+          IEM = IE(J,M)
+          DO K=1,NEQ
+            XW(K,J)=XG(K,IEM)
+          ENDDO
+        ENDDO
+        CALL ELEMENT_VOLUME(MAXEQ,MAXND,NEQ,NODE,XW,DVOL)
+        DRT0FACT = 1.D0/(DBLE(NEQ)*DVOL)
+        DO J=1,NODE
+          DO K=1,NEQ
+            VT1W(K,J)=0.D0
+            VT2W(K,J)=0.D0
+            DO I=1,NODE
+C TODO TRY TO USE A SUBSET OF VTL2G MEMORY FOR VECTOR VALUED SPACES
+C      OR JUST MAKE SIZING CONSISTENT WITH NLOCAL_DOF X NELEMENTS?
+              IVDOF = VTL2G(I + NNDE*(M-1))
+              VT1W(K,J) = VT1W(K,J) + VT1E(IVDOF)*
+     &             DRT0FACT*(XW(K,J)-XW(K,I))*DIR
+              VT2W(K,J) = VT2W(K,J) + VT2E(IVDOF)*
+     &             DRT0FACT*(XW(K,J)-XW(K,I))*DIR
+            ENDDO
+          ENDDO
+        ENDDO     
+      ELSE IF (IDVE.EQ.4) THEN
+C RT0 VELOCITY ON A SIMPLEX WITH REPRESENTATION
+C \vec v_e = \vec a_e + b_e \vec x
+C WITH BASIS NUMBERING CONVENTION
+C \vec N_i = \vec e_i i=0,...,d-1 and \vec N_d = \vec x
+C WHERE d IS THE SPACE DIMENSION, e IS THE LOCAL ELEMENT
+C LOAD LOCAL COORDINATES FIRST
+        DO J=1,NODE
+          IEM = IE(J,M)
+          DO K=1,NEQ
+            XW(K,J)=XG(K,IEM)
+          ENDDO
+        ENDDO
+        DO J=1,NODE
+          DO K=1,NEQ
+            VT1W(K,J)=0.D0
+            VT2W(K,J)=0.D0
+            DO I=1,NODE-1
+C TODO TRY TO USE A SUBSET OF VTL2G MEMORY FOR VECTOR VALUED SPACES
+C      OR JUST MAKE SIZING CONSISTENT WITH NLOCAL_DOF X NELEMENTS?
+C              IVDOF = VTL2G(1,I,M)
+              IVDOF = VTL2G(I + NNDE*(M-1))
+              VT1W(K,J)=VT1W(K,J) + VT1E(IVDOF)*DIR
+              VT2W(K,J)=VT2W(K,J) + VT2E(IVDOF)*DIR
+            ENDDO
+            I = NODE
+C            IVDOF = VTL2G(1,I,M)
+            IVDOF = VTL2G(I + NNDE*(M-1))
+            VT1W(K,J)=VT1W(K,J) + VT1E(IVDOF)*XW(K,J)*DIR
+            VT2W(K,J)=VT2W(K,J) + VT2E(IVDOF)*XW(K,J)*DIR
+          ENDDO
+        ENDDO
+      ELSE
+        WRITE(6,*)'EL_VEL_PREP IDVE= ',IDVE,'NOT VALID QUITTING'
+        CALL EXIT(1)
+      ENDIF
+C
+
+      RETURN
+      END
+C
+C
+C
+C
+C 
+C
+      SUBROUTINE DN_CHECKA
+     I    (MAXND,NODE,NEQ, DL,ATOL,
+     I     DN,
+     O     I1,I2,I3)
+C 
+C 02/03/2010 (HPC)
+C ======================================================================
+C < PURPOSE > 
+C PREPARE I1, I2, I3 FOR THE SUCCESSIVE PT WHEN THE TRACKED NODE IS
+C ON THE ELEMENT BOUNDARY
+C ======================================================================
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+      DIMENSION DN(MAXND)
+C
+C === CHECK IF THE PT ENDS ON ANY SIDE OF THE ELEMENT
+C
+      I1=0
+      I2=0
+      I3=0
+      DO I=1,NODE
+        DD=DN(I)*DL
+        IF(DABS(DD).LE.ATOL)THEN
+          IF(I1.EQ.0)THEN
+            I1=I
+          ELSE
+            IF(I2.EQ.0)THEN
+              I2=I
+            ELSE
+              I3=I
+            ENDIF
+          ENDIF
+        ENDIF                
+      ENDDO
+C
+C === IF THREE INTERPOLATION FUNCTIONS ARE COMPUTED TO BE
+C     ZERO 
+C
+C THIS WILL OCCUR ONLY IN 3-D: THE TRACKED NODE COINCIDES WITH
+C                              AN ELEMENT NODE (I.E., I1)
+C
+      IF(I3.NE.0)THEN
+        DO I=1,NODE
+          IF(I.NE.I1 .AND. I.NE.I2 .AND. I.NE.I3)THEN
+            I1=I
+            I2=0
+            I3=0
+            GOTO 999
+          ENDIF
+        ENDDO         
+      ENDIF
+C
+C === IF TWO INTERPOLATION FUNCTIONS ARE COMPUTED TO BE
+C     ZERO 
+C
+      IF(I2.NE.0)THEN
+C
+C FOR THE CASE OF 2-D: THE TRACKED NODE COINCIDES WITH
+C                      AN ELEMENT NODE (I.E., I1)
+C
+        IF(NEQ.EQ.2)THEN
+          DO I=1,NODE
+            IF(I.NE.I1 .AND. I.NE.I2)THEN
+              I1=I
+              I2=0
+              I3=0
+              GOTO 999
+            ENDIF
+          ENDDO
+C
+C FOR THE CASE OF 3-D: THE TRACKED NODE FALL ON AN
+C                      ELEMENT EDGE (I.E., I1-I2)
+C
+        ELSEIF(NEQ.EQ.3)THEN
+          DO I=1,NODE
+            IF(I.NE.I1 .AND. I.NE.I2)THEN           
+              IF(I3.EQ.0)THEN
+                I3=I
+              ELSE
+                I1=I3
+                I2=I
+                I3=0
+                GOTO 999
+              ENDIF
+            ENDIF
+          ENDDO
+        ENDIF
+      ENDIF
+C
+C === IF ONE INTERPOLATION FUNCTIONS ARE COMPUTED TO BE
+C     ZERO 
+C
+      IF(I1.NE.0)THEN
+C
+C FOR THE CASE OF 1-D: THE TRACKED NODE COINCIDES WITH
+C                      AN ELEMENT NODE (I.E., I1)
+C
+        IF(NEQ.EQ.1)THEN
+          DO I=1,NODE
+            IF(I.NE.I1)THEN
+              I1=I
+              I2=0
+              I3=0
+              GOTO 999
+            ENDIF
+          ENDDO
+C
+C FOR THE CASE OF 2-D: THE TRACKED NODE FALL ON AN
+C                      ELEMENT EDGE (I.E., I1-I2)
+C
+        ELSEIF(NEQ.EQ.2)THEN
+          DO I=1,NODE
+            IF(I.NE.I1)THEN           
+              IF(I3.EQ.0)THEN
+                I3=I
+              ELSE
+                I1=I3
+                I2=I
+                I3=0
+                GOTO 999
+              ENDIF
+            ENDIF
+          ENDDO
+C
+C FOR THE CASE OF 3-D: THE TRACKED NODE FALL ON AN
+C                      ELEMENT FACE (I.E., I1-I2-I3)
+C
+        ELSEIF(NEQ.EQ.3)THEN
+          DO I=1,NODE
+            IF(I.NE.I1)THEN           
+              IF(I3.EQ.0)THEN
+                I3=I
+              ELSE
+                IF(I2.EQ.0)THEN
+                  I2=I
+                ELSE
+                  I1=I
+                  GOTO 999
+                ENDIF
+              ENDIF
+            ENDIF
+          ENDDO
+        ENDIF           
+      ENDIF  
+C
+  999 CONTINUE
+      RETURN
+      END 
+C
+C
+C 
       SUBROUTINE STEPDTSSRT0
      I    (MAXEQ,MAXND,NEQ,NODE,
      I     DEQ, DN_SAFE,
@@ -3135,7 +5450,7 @@ C COULD USE T OR T+DT TOO
       ELSE
          ETA=(TVEVAL-TV1)/(TV2-TV1)
       ENDIF
-      CALL INTRP123
+      CALL INTRP123A
      I     (MAXEQ,MAXND,NEQ,NODE,XS,XW,
      O     DN,DJAC)
 C USE DL TO SCALE TOLERANCES FOR BOUNDARIES
@@ -3671,7 +5986,7 @@ C T AND T+DT
          ETAT1 = (T+DT-TV1)/(TV2-TV1)
          ETATVX= (T+DT*0.5D0-TV1)/(TV2-TV1)
       ENDIF
-      CALL INTRP123
+      CALL INTRP123A
      I     (MAXEQ,MAXND,NEQ,NODE,XS,XW,
      O     DN,DJAC)
 C USE DL TO SCALE TOLERANCES FOR BOUNDARIES
@@ -4199,7 +6514,7 @@ C T AND T+DT
          ETAT0 = (T-TV1)/(TV2-TV1)
          ETAT1 = (T+DT-TV1)/(TV2-TV1)
       ENDIF
-      CALL INTRP123
+      CALL INTRP123A
      I     (MAXEQ,MAXND,NEQ,NODE,XS,XW,
      O     DN,DJAC)
 C USE DL TO SCALE TOLERANCES FOR BOUNDARIES
@@ -5028,7 +7343,7 @@ C number of iterations
      &     (fl.lt.(-facc).and.fh.lt.(-facc))) then
          write(6,*) 'root must  be bracketed in rtsafe'
          write(6,*) 'x1= ',x1,' x2= ',x2, 
-     &        ' fl= ',fl,' fh= ',fh 
+     &        ' fl= ',fl,' fh= ',fh,' facc= ',facc 
          call exit(1)
       endif
 
