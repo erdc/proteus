@@ -4052,23 +4052,28 @@ C MWF COPY X_I INTO XPT
 C     HAVE TO TREAT AS FLAT ARRAY, SINCE MAY BE DIFFERENT SHAPES IN PYTHON (q, versus ebqe)
 C     ASSUME MPT,TPT SET BY CALLING CODE 
 CMWF DEBUG
-C      WRITE(LU_O,*)'ENTERING PT123A'
-C      WRITE(LU_O,*)'NNP= ',NNP,' NEL= ',NEL,' NNDE= ',NNDE,' NEQ= ',NEQ,
-C     &     ' NPT= ',NPT,' IBF= ',IBF,' LU_O= ',LU_O, ' ATOL= ',ATOL,
-C     &     ' RTOL= ',RTOL, ' SF= ',SF, 'DN_SAFE= ',DN_SAFE
-
+      IF (IVERBOSE.GT.0) THEN
+         WRITE(LU_O,*)'ENTERING PT123A'
+         WRITE(LU_O,*)'NNP= ',NNP,' NEL= ',NEL,' NNDE= ',NNDE,' NEQ= ',
+     &     NEQ,' NPT= ',NPT,' IBF= ',IBF,' LU_O= ',LU_O, ' ATOL= ',
+     &     ATOL,' RTOL= ',RTOL, ' SF= ',SF, 'DN_SAFE= ',DN_SAFE
+      ENDIF
       DO IPT=1,NPT
+
+         IF(IVERBOSE.GT.1) THEN
 CMWF DEBUG
-C         WRITE(LU_O,*)'T_I(',IPT,')= ',T_I(IPT),
-C     &        ' TPT(',IPT,')= ',TPT(IPT)
+            WRITE(LU_O,*)'T_I(',IPT,')= ',T_I(IPT),
+     &           ' TPT(',IPT,')= ',TPT(IPT)
+         ENDIF
          DO I=1,NEQ
             XS(I)=X_I(I + MAXEQ*(IPT-1))
             XPT(I + MAXEQ*(IPT-1))=XS(I)
+            IF(IVERBOSE.GT.1) THEN
 CMWF DEBUG
-C            WRITE(LU_O,*)'X_I(',I,',',IPT,')= ',X_I(I+MAXEQ*(IPT-1)),
-C     &           ' XPT(',I,',',IPT,')= ',XPT(I + MAXEQ*(IPT-1))
-
-        ENDDO
+               WRITE(LU_O,*)'X_I(',I,',',IPT,')= ',X_I(I+MAXEQ*(IPT-1)),
+     &              ' XPT(',I,',',IPT,')= ',XPT(I + MAXEQ*(IPT-1))
+            ENDIF
+         ENDDO
       ENDDO
 C
 C =================== START PT USING ADAPTIVE RK ====================
@@ -4133,7 +4138,7 @@ C
 C
 C CONDUCT TRACKING WITHIN ELEMENT M
 C
-          CALL ELTRAK123A
+          CALL ELTRAK123ANEW
      I        (MAXEQ,MAXND,NPT,NEQ,NODE,
      I         IPT, T1,T2, DEQ, DN_SAFE,
      I         ZEROTOL,IDVT,
@@ -4187,10 +4192,12 @@ C
 C ELENOD IN GENERAL SELECTS THE NUMBER OF NODES PER ELEMENT USING IE
 C FOR NOW WE KNOW THIS AS INPUT
 C
+        IF(IVERBOSE.GT.1) THEN
 C MWF DEBUG
-C        WRITE(LU_O,*)' B4 ELTRACK ELEMENT LOOP T= ',T,' TPT= ',TPT(IPT),
-C     &       ' IPT= ',IPT,' M= ',M
-C        WRITE(LU_O,*)' XS= ',(XS(I),I=1,NEQ)
+           WRITE(LU_O,*)' B4 ELTRACK ELEMENT LOOP T= ',T,' TPT= ',
+     &          TPT(IPT),' IPT= ',IPT,' M= ',M
+           WRITE(LU_O,*)' XS= ',(XS(I),I=1,NEQ)
+        ENDIF
         CALL EL_VEL_PREPA(MAXND,MAXEQ,NNDE,
      &         NNP,NEL,NODE,NEQ,M,IDVE,DIR,
      &         XG,IE,VTL2G,VT1E,VT2E,XW,VT1W,VT2W)
@@ -4215,7 +4222,7 @@ C
 C CONDUCT TRACKING WITHIN ELEMENT M
 C
 C MWF REMOVE MAXPATH, KPATH ARGS
-        CALL ELTRAK123A
+        CALL ELTRAK123ANEW
      I      (MAXEQ,MAXND,NPT,NEQ,NODE,
      I       IPT, T1,T2, DEQ, DN_SAFE,
      I       ZEROTOL,IDVT,
@@ -4226,13 +4233,15 @@ C MWF REMOVE MAXPATH, KPATH ARGS
      M       DN_S,DN,DDN,
      O       IDSDT,XPT,TPT,I1,I2,I3)
 CMWF        NPATH(IPT)=KPATH
+        IF(IVERBOSE.GT.1) THEN
 C MWF DEBUG
-C        WRITE(LU_O,*)' AFTER ELTRACK ELEMENT LOOP T= ',T,
-C     &       ' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),' IPT= ',IPT,' M= ',M
-C        WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
-C        DO K=1,NEQ
-C           WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',XPT(K + IPT*MAXEQ)
-C        ENDDO
+           WRITE(LU_O,*)' AFTER ELTRACK ELEMENT LOOP T= ',T,
+     &          ' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),' IPT= ',IPT,' M= ',M
+           WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
+           DO K=1,NEQ
+              WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',XPT(K+(IPT-1)*MAXEQ)
+           ENDDO
+        ENDIF
 C
         IF(IDSDT.EQ.-1)THEN
           MPT(IPT)=M
@@ -4298,7 +4307,7 @@ C
 C CONDUCT TRACKING WITHIN ELEMENT M
 C
 C MWF GET RID OF MAXPT,KPATH ARGS
-                  CALL ELTRAK123A
+                  CALL ELTRAK123ANEW
      I             (MAXEQ,MAXND,NPT,NEQ,NODE,
      I              IPT, T1,T2, DEQ,DN_SAFE,
      I              ZEROTOL,IDVT,
@@ -4310,15 +4319,17 @@ C MWF GET RID OF MAXPT,KPATH ARGS
      O              IDSDT,XPT,TPT,I1,I2,I3)
 C MWF                   NPATH(IPT)=KPATH
 C
+                  IF(IVERBOSE.GT.2) THEN
 C MWF DEBUG
-C                  WRITE(LU_O,*)' AFTER I3.NE.0 ELTRACK ELEMENT LOOP T= '
-C     &                 ,T,' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),' IPT= '
-C     &                 ,IPT,' M= ',M
-C                  WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
-C                  DO K=1,NEQ
-C                     WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',
-C     &                    XPT(K + IPT*MAXEQ)
-C                  ENDDO
+                     WRITE(LU_O,*)'AFTER I3.NE.0 ELTRACK ELEMENT LOOP',
+     &                    ' T= ',T,' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),
+     &                    ' IPT= ',IPT,' M= ',M
+                     WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
+                     DO K=1,NEQ
+                        WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',
+     &                       XPT(K+(IPT-1)*MAXEQ)
+                     ENDDO
+                  ENDIF
                   IF(IDSDT.EQ.-1)THEN
                     MPT(IPT)=M
 C 0 -- INTERIOR
@@ -4386,7 +4397,7 @@ C
 C CONDUCT TRACKING WITHIN ELEMENT M
 C
 C REMOVE MAXPT,MAXPATH,KPATH ARGS
-                CALL ELTRAK123A
+                CALL ELTRAK123ANEW
      I            (MAXEQ,MAXND,NPT,NEQ,NODE,
      I             IPT, T1,T2, DEQ, DN_SAFE,
      I             ZEROTOL,IDVT,
@@ -4399,15 +4410,17 @@ C REMOVE MAXPT,MAXPATH,KPATH ARGS
 CMWF SKIP NPATH FOR NOW
 C                NPATH(IPT)=KPATH
 C
+                IF(IVERBOSE.GT.2) THEN
 C MWF DEBUG
-C                WRITE(LU_O,*)' AFTER I2.NE.0 ELTRACK ELEMENT LOOP T= '
-C     &               ,T,' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),' IPT= ',IPT
-C     &               ,' M= ',M
-C                WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
-C                DO K=1,NEQ
-C                   WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',
-C     &                  XPT(K + IPT*MAXEQ)
-C                ENDDO
+                   WRITE(LU_O,*)' AFTER I2.NE.0 ELTRACK ELEMENT LOOP',
+     &               ' T= ',T,' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),
+     &               ' IPT= ',IPT,' M= ',M
+                   WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
+                   DO K=1,NEQ
+                      WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',
+     &                     XPT(K+(IPT-1)*MAXEQ)
+                   ENDDO
+                ENDIF
                 IF(IDSDT.EQ.-1)THEN
                   MPT(IPT)=M
 C 0 -- INTERIOR
@@ -4473,7 +4486,7 @@ C
 C CONDUCT TRACKING WITHIN ELEMENT M
 C
 CMWF REMOVE MAXPT, MAXPATH ARGS, KPATH
-          CALL ELTRAK123A
+          CALL ELTRAK123ANEW
      I        (MAXEQ,MAXND,NPT,NEQ,NODE,
      I         IPT, T1,T2, DEQ, DN_SAFE,
      I         ZEROTOL,IDVT,
@@ -4485,14 +4498,17 @@ CMWF REMOVE MAXPT, MAXPATH ARGS, KPATH
      O         IDSDT,XPT,TPT,I1,I2,I3)
 CMWF          NPATH(IPT)=KPATH
 C
+          IF(IVERBOSE.GT.2) THEN
 C MWF DEBUG
-C          WRITE(LU_O,*)' AFTER I1.NE.0 ELTRACK ELEMENT LOOP T= '
-C     &         ,T,' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),' IPT= ',IPT
-C     &         ,' M= ',M
-C          WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
-C          DO K=1,NEQ
-C             WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',XPT(K + IPT*MAXEQ)
-C          ENDDO
+             WRITE(LU_O,*)' AFTER I1.NE.0 ELTRACK ELEMENT LOOP T= '
+     &            ,T,' IDSDT= ',IDSDT,' TPT= ',TPT(IPT),' IPT= ',IPT
+     &         ,' M= ',M
+             WRITE(LU_O,*)' I1= ',I1,' I2= ',I2,' I3= ',I3
+             DO K=1,NEQ
+                WRITE(LU_O,*)' XPT(',K,',',IPT,')= ',
+     &               XPT(K+(IPT-1)*MAXEQ)
+             ENDDO
+          ENDIF
           IF(IDSDT.EQ.-1)THEN
             MPT(IPT)=M
 C 0 -- INTERIOR
@@ -7713,3 +7729,265 @@ C
 
       RETURN
       END
+
+C ======================================================================
+C CONVERT TO PEARCE'S LATEST VERSION
+C ======================================================================
+C
+C 
+C
+      SUBROUTINE ELTRAK123ANEW
+     I    (MAXEQ,MAXND,MAXPT,NEQ,NODE,
+     I     IPT, T1,T2, DEQ, DN_SAFE,
+     I     ZEROTOL,IVFLAG,
+     I     XW,VT1W,VT2W,
+     I     FNORMALS,XFBAR,
+     M     T,DT0,SDT,XS,
+     M     XTEMP,XOUT5,VTEMP,DN_S,DN,DDN,
+     O     IDSDT,XPT,TPT,I1,I2,I3)
+C 
+C 02/08/2010 (MWF)
+C ======================================================================
+C < PURPOSE > 
+C IMPLEMENT ANALYTICAL PARTICLE TRACKING WITHIN AN ELEMENT 
+C TRACKING IN DIRECTION DIR
+C IVFLAG = 1 RT0 VELOCITY, STRICTLY LINEAR VELOCITY DEPENDENCE
+C
+C IVFLAG = 0 (DEFAULT) STEADY-STATE RT0 VELOCITY ON A SIMPLEX
+C 
+C RT0 VELOCITY CAN BE REPRESENTED AS (CAPITAL LETTERS ARE VECTORS DIM=NEQ)
+C
+C V = V_0 + vx (X-X_0)
+C
+C WHERE X_0 IS THE STARTING POSITION WITH VELOCITY V_0=V(X_0)
+C THE ANALYTICAL SOLUTION FOR THE POSITION IS
+C 
+C X(t) = X_0 + a(t)V_0
+C
+C  a(t)= (exp(vx * dt) - 1)/vx, if vx != 0
+C      = dt,                     otherwise
+C
+C POINT X IS IN SIMPLEX M IFF (X_F-X).N_F <= 0 FOR ALL F IN FACES(M)
+C WHERE 
+C  X_F IS THE BARYCENTER OF FACE F, WITH UNIT OUTER NORMAL N_F
+C 
+C TO PERFORM TRACKING, WE CALCULATE TIMES TO INTERSECT BOUNDARIES OF M
+C  
+C (X_F - X(t)).N_F = 0
+C (X_F - X_0 - a(t)V_0).N_F = 0
+C (X_F - X_0).N_F  = a(t)V_0.N_F
+C
+C THEN IF V_0 != 0
+C  dt = dx_F/v_F,  IF vx = 0
+C     = ln(vx*dx_F/v_F + 1.0)/vx, IF vx != 0 and vx*dx_F/v_F + 1.0 > 0
+C     = infty, OTHERWISE (NO INTERSECTION)
+C WHERE
+C  dx_F = (X_F-X_0).N_F,  v_F= V_0.N_F 
+C
+C IF V_0 = 0, THEN THERE IS NO INTERSECTION
+C ======================================================================
+C
+      IMPLICIT REAL*8(A-H,O-Z)
+C
+CMWF NOW HAVE TO REFERENCE XPT AS FLAT ARRAY 
+      DIMENSION XPT(MAXEQ*MAXPT),TPT(MAXPT)
+      DIMENSION FNORMALS(NEQ,NODE),XFBAR(MAXEQ,NODE)
+      DIMENSION XS(MAXEQ)
+      DIMENSION XTEMP(MAXEQ),XOUT5(MAXEQ),VTEMP(MAXEQ)
+      DIMENSION XW(MAXEQ,MAXND)
+      DIMENSION VT1W(MAXEQ,MAXND),VT2W(MAXEQ,MAXND)
+      DIMENSION DN_S(MAXND),DN(MAXND),DDN(MAXEQ,MAXND)
+      DIMENSION ICHECK(8)
+C
+      DIMENSION XI(3),DI(3),XI_S(3),DI_S(3)
+      DIMENSION IXI(3),IDI(4),IXI_S(3),IDI_S(4)
+      
+C--- LOCAL VARIABLES ---
+C TIME STEP TO TAKE, TIME TO INTERSECT BOUNDARY,
+C   V.N_F, (X-X_0).N_F, vx
+      DOUBLE PRECISION DT,DIR
+      INTEGER IDEBUG
+C
+C =================== START TRACKING ====================
+C
+C TRACKING IN ELEMENT M
+C
+      ICOUNT=0
+      IDSDT=1
+      DT=DT0
+      DIR = 1.D0
+      IF (DT0.LT.0.D0) THEN 
+         DIR = -1.D0
+      ENDIF
+      IDEBUG = 0
+CMWF HACK TEMPORARILY COMPUTE DL HERE
+      CALL INTRP123A
+     I     (MAXEQ,MAXND,NEQ,NODE, XS, XW,
+     O     DN_S,DJAC)
+      DL=DABS(DJAC)**(DEQ)
+
+CMWF NEED TO COMPUTE DN_S IDI_S,IXI_S,XI_S,DI_S FOR PHI CALCS
+      CALL INTRP123
+     I      (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ZEROTOL,DL, XS, XW,
+     O       DN_S,IADJUST,XI_S,DI_S,IXI_S,IDI_S)
+CMWF IGNORE IADJST
+      IF (IDEBUG.GT.0) THEN
+CMWF DEBUG
+         WRITE(6,*)'ELTRAK123ANEW CALLING STEP IVFLAG= ',IVFLAG,
+     &        ' DT= ',DT,' DL= ',DL,' XS= ',(XS(I),I=1,NEQ)
+         WRITE(6,*)' DN_S= ',(DN_S(I),I=1,NODE)
+         DO J=1,NODE
+            WRITE(6,*)' ',J,' XW= ',(XW(II,J),II=1,NEQ)
+         ENDDO
+      ENDIF
+
+      IF (IVFLAG.EQ.1) THEN
+C RT0, LINEAR DEPENDENCE IN TIME
+         CALL STEPDTRT0V1
+     I        (MAXEQ,MAXND,NEQ,NODE,
+     I        DEQ, DN_SAFE,
+     I        ZEROTOL,DIR,T1,T2,
+     I        XW,VT1W,VT2W,
+     I        FNORMALS,XFBAR,
+     M        T,DT,XS,XOUT5,XTEMP,
+     M        VTEMP,DN_S,DN,DDN)
+      ELSE IF (IVFLAG.EQ.2) THEN
+C RT0, BILINEAR IN X-T
+         CALL STEPDTRT0V2
+     I        (MAXEQ,MAXND,NEQ,NODE,
+     I        DEQ, DN_SAFE,
+     I        ZEROTOL,DIR,T1,T2,
+     I        XW,VT1W,VT2W,
+     I        FNORMALS,XFBAR,
+     M        T,DT,XS,XOUT5,XTEMP,
+     M        VTEMP,DN_S,DN,DDN)
+      ELSE
+C STEADY-STATE RT0
+         CALL STEPDTSSRT0
+     I        (MAXEQ,MAXND,NEQ,NODE,
+     I        DEQ, DN_SAFE,
+     I        ZEROTOL,DIR,T1,T2,
+     I        XW,VT1W,VT2W,
+     I        FNORMALS,XFBAR,
+     M        T,DT,XS,XOUT5,XTEMP,
+     M        VTEMP,DN_S,DN,DDN)
+      ENDIF
+
+C
+C === EXAMINE THE COMPUTED ENDING LOCATION
+C
+
+      PHI=0.0D0
+      CALL INTRP123
+     I      (MAXEQ,MAXND,NEQ,NODE,DN_SAFE,ZEROTOL,DL, XOUT5, XW,
+     O       DN,IADJUST,XI,DI,IXI,IDI)
+C
+C < NOTE > ADJUST XOUT5 WHEN NECESSARY (I.E., IADJUST = 1)
+C
+      IF (IDEBUG.GT.2) THEN 
+         WRITE(6,*)'AFTER STEP INTRP123 IADJUST= ',IADJUST,
+     &        ' DL= ',DL
+         WRITE(6,*)'DN_S= ',(DN_S(I),I=1,NODE)
+         WRITE(6,*)' XOUT5= ',(XOUT5(I),I=1,NEQ)
+         WRITE(6,*)'DN= ',(DN(I),I=1,NODE)
+      ENDIF
+      IF(IADJUST.EQ.1)THEN
+         DO I=1,NEQ
+            XOUT5(I)=0.0E0
+            DO J=1,NODE
+               XOUT5(I)=XOUT5(I)+DN(J)*XW(I,J)
+            ENDDO
+         ENDDO
+      ENDIF                 
+
+C
+C === COMPUTE PHI
+C
+      CALL PHI_COMP
+     I      (MAXND,NODE,NEQ, 
+     I       DN_SAFE, 
+     I       DN_S,DN,XI,XI_S,DI,DI_S, IXI_S,IDI_S,
+     O       IDSDT,I1,I2,I3,PHI)
+CMWF
+      IF(IDEBUG.GT.2) THEN
+         WRITE(6,*)'AFTER STEP PHI_COMP IDSDT= ',IDSDT,
+     &        ' PHI= ',PHI,' I1= ',I1,' I2= ',I2,' I3 ',I3
+      ENDIF
+
+CMWF NO TRACKING THROUGH ELEMENT
+      IF(IDSDT.EQ.0)RETURN
+C
+C === IF PHI IS GREATER THAN 1 ==> REDUCE TIMESTEP
+C
+      IF(PHI.GT.1.0E0)THEN
+         WRITE(6,*)' PROBLEM IN ELTRAK123ANEW IDSDT= ',IDSDT,
+     &        ' PHI= ',PHI, 'SHOULDNT HAPPEN'
+         WRITE(6,*)' DT= ',DT,' XS= ',(XS(I),I=1,NEQ)
+         WRITE(6,*)' XOUT5= ',(XOUT5(I),I=1,NEQ)
+         WRITE(6,*)' DN= ',(DN(I),I=1,NODE)
+         CALL EXIT(1)
+      ENDIF
+C
+C B. WHEN THE ENDING LOCATION IS EITHER WITHIN THE ELEMENT OR 
+C    ON THE ELEMENT BOUDNARY
+C ==> UPDATE INFORMATION FOR THE SUCCESSIVE PT
+C
+      T=T+DT
+      TPT(IPT)=T
+      DO I=1,NEQ
+         XS(I)=XOUT5(I)
+CMWF NOW FLATTEN INDEXING
+         XPT(I + MAXEQ*(IPT-1))=XOUT5(I)
+      ENDDO   
+      SDT=SDT-DT
+      DT0=DT0-DT
+C
+C IF THE TRACKING TIME IS COMPLETELY CONSUMED
+C ==> SET IDSDT TO -1
+C
+      IF(DABS(SDT).LE.1.0E-10)THEN
+         IDSDT=-1
+         SDT=0.0E0
+      ENDIF
+      IF(DABS(DT0).LE.1.0E-10)THEN
+         IDSDT=-1
+         DT0=0.0E0
+      ENDIF
+C
+C IF THE ENDING LOCATION IS ON THE ELEMENT BOUNDARY
+C ==> EXIT PT IN THIS ELEMENT
+C
+      CALL EB_CHECK
+     I     (NEQ,NODE, IDI,IXI, 
+     O     I1,I2,I3)
+      IF(I1.NE.0) THEN 
+         IF (IDEBUG.GT.2) THEN
+            WRITE(6,*)' ELTRAK123ANEW LEAVING ON BOUNDARY IDSDT= ',
+     &             IDSDT,' I1= ',I1,' I2= ',I2,' I3= ',I3
+         ENDIF
+         RETURN
+      ENDIF
+
+C MWF DEBUG
+      IF(IDSDT.EQ.-1) THEN
+         IF (IDEBUG.GT.0) THEN
+C MWF DEBUG
+            WRITE(6,*)' ELTRAK123A INSIDE ELE RETURN IDSDT= ',IDSDT, 
+     &           ' I1= ',I1,' I2= ',I2,' I3= ',I3, 
+     &           ' DN= ',(DN(II),II=1,NODE)
+         ENDIF
+         RETURN
+      ENDIF
+C MWF END DEBUG
+C MWF THIS SHOULD NOT HAPPEN WITH ANALYTICAL TRACKING?
+      WRITE(6,*)'PROBLEM ELTRAK123ANEW END WITHOUT CONCLUSION= ',
+     &     ' T= ',T,' DT= ',DT
+      WRITE(6,*)'XS= ',(XS(II),II=1,NEQ)
+      WRITE(6,*)'XOUT5= ',(XOUT5(II),II=1,NEQ)
+      CALL EXIT(1)
+      
+C 
+C  999 CONTINUE
+      RETURN
+      END
+
