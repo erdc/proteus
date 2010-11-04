@@ -6,6 +6,7 @@ cdef extern from "math.h":
    double pow(double x, double y)
    double exp(double x)
    double cos(double x)
+   double sin(double x)
    double M_PI
 cdef inline double double_max(double a, double b): return a if a >= b else b
 cdef inline double double_min(double a, double b): return a if a <= b else b
@@ -868,4 +869,31 @@ def helicalElementVelocityEval4(int transient,
                v[eN,ebN,k,0]=2.0*pi*(x[eN,ebN,k,1]-xc)
                v[eN,ebN,k,1]=2.0*pi*(yc-x[eN,ebN,k,0])
                v[eN,ebN,k,2]=zVelocity
+      
+def vortexElementVelocityEval3(double t,
+                               numpy.ndarray[DTYPE_t,ndim=3] x,
+                               numpy.ndarray[DTYPE_t,ndim=3] v):
+   cdef int eN,k
+   cdef double pi,one8
+   pi = M_PI
+   one8 = 1.0/8.0
+   for eN in range(x.shape[0]):
+      for k in range(x.shape[1]):
+         v[eN,k,0]= cos(pi*one8*t)*sin(2.0*pi*x[eN,k,1])*sin(pi*x[eN,k,0])*sin(pi*x[eN,k,0]);
+         v[eN,k,1]=-cos(pi*one8*t)*sin(2.0*pi*x[eN,k,0])*sin(pi*x[eN,k,1])*sin(pi*x[eN,k,1]);
+
+      
+def vortexElementVelocityEval4(double t,
+                               numpy.ndarray[DTYPE_t,ndim=3] x,
+                               numpy.ndarray[DTYPE_t,ndim=3] v):
+   cdef int eN,k,ebN
+   cdef double pi,one8
+   pi = M_PI
+   one8 = 1.0/8.0
+   for eN in range(x.shape[0]):
+      for ebN in range(x.shape[1]):
+         for k in range(x.shape[1]):
+            v[eN,ebN,k,0]= cos(pi*one8*t)*sin(2.0*pi*x[eN,ebN,k,1])*sin(pi*x[eN,ebN,k,0])*sin(pi*x[eN,ebN,k,0]);
+            v[eN,ebN,k,1]=-cos(pi*one8*t)*sin(2.0*pi*x[eN,ebN,k,0])*sin(pi*x[eN,ebN,k,1])*sin(pi*x[eN,ebN,k,1]);
+
       
