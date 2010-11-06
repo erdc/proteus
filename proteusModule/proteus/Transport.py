@@ -3925,17 +3925,17 @@ class OneLevelTransport(NonlinearEquation):
 #                 self.ebqe['xt'][:]=0.0
         #now map the physical points back to the reference element
         #assume all components live  on same mesh
-        self.u[0].femSpace.elementMaps.getInverseValuesGlobalExteriorTrace(self.ebqe['inverse(J)'],self.ebqe['x'],self.ebqe['hat(x)'])
+        #self.u[0].femSpace.elementMaps.getInverseValuesGlobalExteriorTrace(self.ebqe['inverse(J)'],self.ebqe['x'],self.ebqe['hat(x)'])
         #
         #since the points on the reference boundary may be reordered on many right element boundaries, we
         #have to use an array of reference boundary points on all element boundaries
         #first copy the left reference element boundary quadrature points from the reference element boundary
         #mwf I think it's safe to get rid of bar(x) for ebqe ... 
         useC = True
-        if useC == False:
-            for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
-                for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
-                    self.ebqe['bar(x)'][ebNE,k,:] = self.elementBoundaryQuadraturePoints[k]
+        #if useC == False:
+        #    for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
+        #        for k in range(self.nElementBoundaryQuadraturePoints_elementBoundary):
+        #            self.ebqe['bar(x)'][ebNE,k,:] = self.elementBoundaryQuadraturePoints[k]
         #
         #get the shape information at the reference element boundary quadrature points 
 	#
@@ -5712,6 +5712,7 @@ class MultilevelTransport:
                 par_nghost = 0
                 subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
                 max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
+                print "Here"
                 log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                 par_u = ParVec(u,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
                 par_r = ParVec(r,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])

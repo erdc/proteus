@@ -30,7 +30,7 @@ class ReferenceElement:
 
 class ReferenceSimplex(ReferenceElement):
     """
-    The unit simplex in R^n, n<3
+    The unit simplex in R^n, n<=3
     """ 
     def __init__(self,nd=3):
         ReferenceElement.__init__(self,nd,nd+1,nd+1)
@@ -145,7 +145,7 @@ class ReferenceSimplex(ReferenceElement):
                                                               -1.0]))
 class ReferenceCube(ReferenceElement):
     """
-    The unit cube in R^n, n<3
+    The unit cube in R^n, n<=3
     """ 
     def __init__(self,nd=3):
         ReferenceElement.__init__(self,nd,2**nd,2*nd)
@@ -560,7 +560,6 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
         for i in range(self.dim):
            self.basis.append(basis[invMap[i]])  
            self.basisGradients.append(basisGradients[invMap[i]])  
-
         # Get boundary data
         self.defineTraceFunctions()   
 
@@ -3645,7 +3644,7 @@ class C0_LinearOnCubeWithNodalBasis(C0_AffineLinearOnSimplexWithNodalBasis):
                                                                      interpolationConditions),
                                               ParametricMaps(mesh,
                                                          localFunctionSpace.referenceElement,
-                                                         LinearOnSimplexWithNodalBasis(nd)),
+                                                         LinearOnCubeWithNodalBasis(nd)),
                                               NodalDOFMap(mesh))
 
 class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
@@ -3774,8 +3773,16 @@ class C0_AffineLagrangeOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                                                          localGeometricSpace.referenceElement,
                                                          LinearOnCubeWithNodalBasis(nd)),
                                               QuadraticLagrangeCubeDOFMap(mesh,localFunctionSpace,nd))
-
-
+        
+        for i in range(localFunctionSpace.dim):
+            for j in range(localFunctionSpace.dim):
+                x_j = interpolationConditions.quadraturePointArray[j]
+                psi_ij = localFunctionSpace.basis[i](x_j)
+                print i,j,x_j,psi_ij
+                if i==j:
+                    assert(abs(1.0-psi_ij) < 1.0e-8)
+                else:
+                    assert(abs(psi_ij) < 1.0e-8)
         #for archiving
         import Archiver
         self.XdmfWriter=Archiver.XdmfWriter()
