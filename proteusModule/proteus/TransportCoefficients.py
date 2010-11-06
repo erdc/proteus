@@ -3636,6 +3636,7 @@ class NCLevelSetCoefficients(TC_base):
             self.lsGlobalMassErrorArray = [0.0]
             self.fluxArray = [0.0]
             self.timeArray = [self.model.timeIntegration.t]
+            self.ebqe_dS = self.model.ebqe['dS']
     def initializeElementQuadrature(self,t,cq):
         if self.flowModelIndex == None:
             self.q_v = numpy.zeros(cq[('grad(u)',0)].shape,'d')
@@ -3650,15 +3651,16 @@ class NCLevelSetCoefficients(TC_base):
             self.m_pre = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
                                                                      self.model.mesh.elementDiametersArray,
                                                                      self.model.q['dV'],
-                                                                     self.model.q[('m',0)],
+                                                                     self.model.q[('u',0)],
                                                                      self.model.mesh.nElements_owned)
             log("Phase  0 mass before NCLS step = %12.5e" % (self.m_pre,),level=2)
-            self.m_last = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
-                                                                      self.model.mesh.elementDiametersArray,
-                                                                      self.model.q['dV'],
-                                                                      self.model.timeIntegration.m_last[0],
-                                                                      self.model.mesh.nElements_owned)
-            log("Phase  0 mass before NCLS step (m_last) = %12.5e" % (self.m_last,),level=2)
+            self.m_last = self.m_pre
+            # self.m_last = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
+            #                                                           self.model.mesh.elementDiametersArray,
+            #                                                           self.model.q['dV'],
+            #                                                           self.model.timeIntegration.m_last[0],
+            #                                                           self.model.mesh.nElements_owned)
+            # log("Phase  0 mass before NCLS step (m_last) = %12.5e" % (self.m_last,),level=2)
         #cek todo why is this here
         if self.flowModelIndex >= 0 and self.flowModel.ebq.has_key(('v',1)):
             self.model.u[0].getValuesTrace(self.flowModel.ebq[('v',1)],self.model.ebq[('u',0)])
@@ -3674,9 +3676,9 @@ class NCLevelSetCoefficients(TC_base):
                                                                       self.model.mesh.nElements_owned)
             log("Phase  0 mass after NCLS step = %12.5e" % (self.m_post,),level=2)
             #need a flux here not a velocity
-            self.fluxIntegral = Norms.fluxDomainBoundaryIntegralFromVector(self.flowModel.ebqe['dS'],
-                                                                           self.flowModel.ebqe[('velocity',0)],
-                                                                           self.flowModel.ebqe['n'],
+            self.fluxIntegral = Norms.fluxDomainBoundaryIntegralFromVector(self.ebqe_dS,
+                                                                           self.ebqe_v,
+                                                                           self.model.ebqe['n'],
                                                                            self.model.mesh)
             log("Flux integral = %12.5e" % (self.fluxIntegral,),level=2)
             log("Phase  0 mass conservation after NCLS step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)

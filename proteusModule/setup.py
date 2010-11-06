@@ -437,7 +437,7 @@ setup(name='proteus',
                              include_dirs=['include',numpy.get_include(),PROTEUS_SUPERLU_INCLUDE_DIR,PROTEUS_TRIANGLE_INCLUDE_DIR]+PROTEUS_DAETK_INCLUDE_DIR+PROTEUS_PETSC_INCLUDE_DIRS+
                                            [PROTEUS_MPI_INCLUDE_DIR],
                              library_dirs=[PROTEUS_DAETK_LIB_DIR]+PROTEUS_PETSC_LIB_DIRS+[PROTEUS_MPI_LIB_DIR],
-                             libraries=['m',PROTEUS_DAETK_LIB,'metis']+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS,
+                             libraries=['m',PROTEUS_DAETK_LIB]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS,
                              extra_link_args=PROTEUS_EXTRA_LINK_ARGS,
                              extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS),
                    Extension('cpostprocessing',
@@ -492,6 +492,6 @@ setup(name='proteus',
                              include_dirs=[numpy.get_include(),'include'])                
                    ],
       data_files=[('proteusConfig',['config.py'])],
-      scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py'],
+      scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm'],
       requires=['numpy']
       )
