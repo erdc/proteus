@@ -231,10 +231,8 @@ class LinearSolver:
 	
     #petsc preconditioner interface
     def setUp(self, pc):
-        print "===========preparing preconditioner============="
         self.prepare()
     def apply(self,pc,x,y):
-        print "+++++++++++applying preconditioner++++++++++++++"
         if self.xGhosted == None:
             self.xGhosted = self.par_b.duplicate()
             self.yGhosted = self.par_b.duplicate()
