@@ -15,7 +15,7 @@ import pdb
 from proteus import flcbdfWrappers
 #cek todo
 #put back in hard copy capability
-#improve 3D views (cut and slide planes with plane widget)
+#improve 3D views (cut and slice planes with plane widget)
 #do viewMesh and viewDomain
 #clean up interfaces, connect with, domain-mesh-model-variable names, move some redundant code into functions
 #see if vtk memory leak complaints need addressing
