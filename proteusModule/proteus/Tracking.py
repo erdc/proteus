@@ -2235,6 +2235,179 @@ def setupArbitraryTrackingDataArrays(t_start,t_target,mesh,elementBoundaryNormal
     #on input -1 means try, it's an interior point
     q['flag_track'].fill(-1)
 
+
+def writePT123inputMesh(opts,p,mesh,filebase="test_pt123"):
+    """
+    create input mesh file for running actual PT123 code 
+    """
+    base = 1 #base 1 numbering
+    #write out mesh
+    mesh_prefix = '1dm'; ele_label   = 'GE2'; node_label = 'GN'
+    if p.nd == 2:
+        mesh_prefix = '2dm'; ele_label   = 'GE3'; 
+    elif p.nd == 3:
+        mesh_prefix = '3dm'; ele_label   = 'GE4';
+    
+    fmesh = open(filebase+'.'+mesh_prefix,'w')
+    fmesh.write('MESH \n')
+    for eN in range(mesh.nElements_global):
+        fmesh.write("%s   %d " % (ele_label,eN+base))
+        for nN in range(mesh.nNodes_element):
+            fmesh.write("   %d " % (mesh.elementNodesArray[eN,nN]+base))
+        fmesh.write("\n")
+    #
+    for nN in range(mesh.nNodes_global):
+        fmesh.write("%s   %d " % (node_label,nN+base))
+        for I in range(p.nd):
+            fmesh.write("   %g " % (mesh.nodeArray[nN,I]))
+        fmesh.write("\n")
+    #
+    fmesh.write("ENDR\n")
+    fmesh.close()
+#
+def writePT123nodalVelocity(opts,p,mesh,tnList,q,velocitySpace,velocityFEFunction,
+                            filebase="test_pt123"):
+    #write out velocity file (have to loop through time steps)
+    vel_prefix = 'vn1'; 
+    if p.nd == 2:
+        vel_prefix = 'vn2'; 
+    elif p.nd == 3:
+        vel_prefix = 'vn3'; 
+    
+    fvel = open(filebase+'.'+vel_prefix,'w')
+    fvel.write("     %d     %d    %d \n" % (mesh.nNodes_global,p.nd,len(tnList)))
+
+    for i,t in enumerate(tnList):
+        fvel.write("TS    %g \n" % t)
+        
+        try:
+            p.analyticalSolutionParticleVelocity[0].uOfXTv(velocitySpace.interpolationPoints,t,q['velocity_interpolation_values'])
+        except TypeError:
+            for eN in range(mesh.nElements_global):
+                for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                    q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
+        #evaluate velocity degrees of freedom from its interpolation conditions
+        velocityFEFunction.projectFromInterpolationConditions(q['velocity_interpolation_values'])
+        for i in range(mesh.nNodes_global):
+            for j in range(p.nd):
+                fvel.write("  %g  " % velocityFEFunction.dof[i*p.nd+j])
+            for j in range(p.nd,3):
+                fvel.write("  %g  " % 0.0)
+            fvel.write("\n")
+    #
+    fvel.write("ENDR")
+    fvel.close()
+def writePT123elementVelocity(opts,p,mesh,params,tnList,q,velocitySpace,velocityFEFunction,
+                              filebase="test_pt123"):
+    #write out velocity file (have to loop through time steps)
+    vel_prefix = 've1'; 
+    if p.nd == 2:
+        vel_prefix = 've2'; 
+    elif p.nd == 3:
+        vel_prefix = 've3'; 
+    
+    fvel = open(filebase+'.'+vel_prefix,'w')
+    fvel.write("     %d     %d    %d \n" % (mesh.nElements_global,p.nd,len(tnList)))
+
+    for i,t in enumerate(tnList):
+        fvel.write("TS    %g \n" % t)
+        
+        try:
+            p.analyticalSolutionParticleVelocity[0].uOfXTv(velocitySpace.interpolationPoints,t,q['velocity_interpolation_values'])
+        except TypeError:
+            for eN in range(mesh.nElements_global):
+                for k in range(velocitySpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                    q['velocity_interpolation_values'][eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
+        #evaluate velocity degrees of freedom from its interpolation conditions
+        velocityFEFunction.projectFromInterpolationConditions(q['velocity_interpolation_values'])
+        for eN in range(mesh.nElements_global):
+            for nN in range(mesh.nNodes_element):
+                I = velocitySpace.dofMap.l2g[eN,nN]
+                for j in range(p.nd):
+                    fvel.write("  %g  " % velocityFEFunction.dof[I*p.nd+j])
+                for j in range(p.nd,3):
+                    fvel.write("  %g " % 0.0)
+            fvel.write("\n")
+    #
+    fvel.write("ENDR")
+    fvel.close()
+
+def writePT123nodalVolumeFraction(opts,p,mesh,params,tnList,q,
+                                  filebase="test_pt123"):
+    #write out element volume fraction file (have to loop through time steps)
+    emc_prefix = 'nemc%d' % p.nd; 
+    
+    femc = open(filebase+'.'+emc_prefix,'w')
+    femc.write("     %d     %d  \n" % (mesh.nNodes_global,len(tnList))) #constant for now
+
+    for i,t in enumerate(tnList):
+        femc.write("TS    %f \n" % t)
+        
+        for eN in range(mesh.nNodes_global):
+            femc.write("%f \n" % 1.0)
+    #
+    femc.write("ENDR")
+    femc.close()
+
+def writePT123elementVolumeFraction(opts,p,mesh,params,tnList,q,
+                              filebase="test_pt123"):
+    #write out element volume fraction file (have to loop through time steps)
+    emc_prefix = 'nemc%d' % p.nd; 
+    
+    femc = open(filebase+'.'+emc_prefix,'w')
+    femc.write("     %d     %d  \n" % (mesh.nElements_global,len(tnList))) #constant for now
+
+    for i,t in enumerate(tnList):
+        femc.write("TS    %f \n" % t)
+        
+        for eN in range(mesh.nElements_global):
+            femc.write("%f \n" % 1.0)
+    #
+    femc.write("ENDR")
+    femc.close()
+
+def writePT123particleFile(opts,p,mesh,params,tnList,q,analyticalTracking,filebase="test_pt123",base=1):
+
+    part_suffix = "pt%d" % p.nd
+    fpart = open(filebase+"."+part_suffix,'w')
+    if analyticalTracking:
+        fpart.write("-1    ID_RK\n")
+    else:
+        fpart.write("45    ID_RK\n")
+
+    fpart.write("%d  NP\n" % q['x_depart'].shape[0])
+    for i in range(q['x_depart'].shape[0]):
+         fpart.write("%d  %g  %g  %g \n" % (q['element_track'][i]+base,
+                                           q['x_track'][i,0],
+                                           q['x_track'][i,1],
+                                           q['x_track'][i,2]))
+
+    #
+    ibf = 1 #forward
+    if tnList[-1] < tnList[0]:
+        ibf = -1
+    fpart.write("%d   IBF (1 = forward 2 = backward) \n" % ibf)
+    fpart.write("%g   T_START \n" % tnList[0])
+    fpart.write("%g  %g  %d     DT_PT, DT_INPUT, ID_DT\n" % (tnList[-1],
+                                                             params[('dt_init',0)],
+                                                             params[('dt_init_flag',0)]))
+    fpart.write("0   NT_PT_OUTPUT \n") #output every step for now
+    fpart.write("%g %g %g     ATOL,RTOL,SF \n" % (params[('atol_tracking',0)],params[('rtol_tracking',0)],params[('sf_tracking',0)]))
+
+    fpart.write("ENDR\n")
+    fpart.close()
+
+    #write sup file for post processing
+    fsup = open(filebase+"_pv.sup",'w')
+    fsup.write("%d  %d  %d    NPT  NEQ  NTSTEP\n" % (q['x_depart'].shape[0],p.nd,len(tnList)))
+    for t in tnList:
+        fsup.write("%f \n" % t)
+    #
+    fsup.close()
+########################################################################
+#begin actual tests
+########################################################################
+
 def test0(opts):
     """
     1d, constant velocity in space and time
@@ -3667,6 +3840,15 @@ def Lu1Dex(opts,tryPT123A=True):
                 term1 = -self.K*self.H/(self.theta*sqrt(pi*self.K*t/self.S))
                 term2 = exp(-self.S*x[0]*x[0]/(4.0*self.K*t))
                 return term1*term2
+            def uOfXTv(self,x,t,v):
+                v.fill(0.0)
+                if t < 1.0e-12:
+                    return
+                for i in range(len(v.flat)):#1d
+                    term1 = -self.K*self.H/(self.theta*sqrt(pi*self.K*t/self.S))
+                    term2 = exp(-self.S*x.flat[i*3+0]*x.flat[i*3+0]/(4.0*self.K*t))
+                    v.flat[i] = term1*term2
+
         def __init__(self):
             self.nd = 1
             #time intervals for velocity evaluation from Lu in days
@@ -4104,12 +4286,22 @@ def test8(opts,tryPT123A=False):
     #close out archives and visualization
     archive.close()
 
+    #try to write out PT123 files
+    writePT123files = True
+    if writePT123files:
+        writePT123inputMesh(opts,p,sdmesh,filebase="test8_pt123")
+        writePT123nodalVelocity(opts,p,sdmesh,tnList,q,velocitySpace,velocity_new,
+                                filebase="test8_pt123")
+        writePT123nodalVolumeFraction(opts,p,mesh,particleTracking_params,tnList,q,
+                                      filebase="test8_pt123")
+        writePT123particleFile(opts,p,sdmesh,particleTracking_params,tnList,q,tryPT123A,filebase="test8_pt123")
+        
     try:#run time visualization?
         sys.exit(vtkViewers.g.app.exec_())
     except:
         pass
 
-def test9(opts,tryPT123A=False):
+def test9(opts,tryPT123A=True):
     """
     transient, RT0 in space. Computes error by comparing starting and ending location for points in a specified
       interval
@@ -4223,7 +4415,7 @@ def test9(opts,tryPT123A=False):
                                                              activeComponentList=[0])
     #setting tolerances in opts here is not very convenient because doesn't have numerics file loaded
     particle_tracker.setFromOptions(opts)
-    particle_tracker.params[('dn_safe_tracking',0)]=1.0e-7
+
     ########## visualization and output stuff
 
     #mwf debug
