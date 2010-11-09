@@ -2291,8 +2291,9 @@ def writePT123nodalVelocity(opts,p,mesh,tnList,q,velocitySpace,velocityFEFunctio
         for i in range(mesh.nNodes_global):
             for j in range(p.nd):
                 fvel.write("  %g  " % velocityFEFunction.dof[i*p.nd+j])
-            for j in range(p.nd,3):
-                fvel.write("  %g  " % 0.0)
+            #mwf PT123 doc incorrect, only reads up to neq
+            #for j in range(p.nd,3):
+            #    fvel.write("  %g  " % 0.0)
             fvel.write("\n")
     #
     fvel.write("ENDR")
@@ -2325,8 +2326,58 @@ def writePT123elementVelocity(opts,p,mesh,params,tnList,q,velocitySpace,velocity
                 I = velocitySpace.dofMap.l2g[eN,nN]
                 for j in range(p.nd):
                     fvel.write("  %g  " % velocityFEFunction.dof[I*p.nd+j])
-                for j in range(p.nd,3):
-                    fvel.write("  %g " % 0.0)
+                #mwf PT123 doc incorrect, only reads up to neq
+                #for j in range(p.nd,3):
+                #    fvel.write("  %g " % 0.0)
+            fvel.write("\n")
+    #
+    fvel.write("ENDR")
+    fvel.close()
+def writePT123RT0velocityAsElementVelocity(opts,p,mesh,params,tnList,q,ebq,
+                                           filebase="test_pt123"):
+    #write out velocity file (have to loop through time steps)
+    vel_prefix = 've1'; 
+    if p.nd == 2:
+        vel_prefix = 've2'; 
+    elif p.nd == 3:
+        vel_prefix = 've3'; 
+    
+    fvel = open(filebase+'.'+vel_prefix,'w')
+    fvel.write("     %d     %d    %d \n" % (mesh.nElements_global,p.nd,len(tnList)))
+
+    local_nodes_array = numpy.zeros((mesh.nNodes_element,3),'d')
+    local_velocity_array = numpy.zeros((mesh.nNodes_element,p.nd),'d')
+    local_element_array  = numpy.zeros((mesh.nNodes_element,),'i')
+    #mwf debug
+    #import pdb
+    #pdb.set_trace()
+    for i,t in enumerate(tnList):
+        fvel.write("TS    %g \n" % t)
+        
+        evaluateVelocity_RT0(opts,p,mesh,t,ebq,q['velocity_new_dof'],q['velocity_l2g'],q['velocity_interpolation_values'])
+
+        #evaluate RT0 velocity at nodes
+        from proteus import cpostprocessing
+        for eN in range(mesh.nElements_global):
+            local_element_array.fill(eN)
+            local_velocity_array.fill(0.0)
+            local_nodes_array.fill(0.0)
+            for nN in range(mesh.nNodes_element):
+                local_nodes_array[nN,:] = mesh.nodeArray[mesh.elementNodesArray[eN,nN],:]
+            #
+            cpostprocessing.getRT0velocityValuesFluxRep_arbitraryElementMembership(mesh.nodeArray,
+                                                                                   mesh.elementNodesArray,
+                                                                                   q['abs(det(J))'],
+                                                                                   local_nodes_array,
+                                                                                   local_element_array,
+                                                                                   q['velocity_new_dof'],
+                                                                                   local_velocity_array)
+            for nN in range(mesh.nNodes_element):
+                for j in range(p.nd):
+                    fvel.write("  %g  " % local_velocity_array[nN,j])
+                #mwf PT123 doc incorrect, only reads up to neq
+                #for j in range(p.nd,3):
+                #    fvel.write("  %g " % 0.0)
             fvel.write("\n")
     #
     fvel.write("ENDR")
@@ -2375,12 +2426,12 @@ def writePT123particleFile(opts,p,mesh,params,tnList,q,analyticalTracking,fileba
     else:
         fpart.write("45    ID_RK\n")
 
-    fpart.write("%d  NP\n" % q['x_depart'].shape[0])
-    for i in range(q['x_depart'].shape[0]):
-         fpart.write("%d  %g  %g  %g \n" % (q['element_track'][i]+base,
-                                           q['x_track'][i,0],
-                                           q['x_track'][i,1],
-                                           q['x_track'][i,2]))
+    fpart.write("%d  NP\n" % q['x_depart_start'].shape[0])
+    for i in range(q['x_depart_start'].shape[0]):
+         fpart.write("%d  %g  %g  %g \n" % (q['element_depart_start'][i]+base,
+                                           q['x_depart_start'][i,0],
+                                           q['x_depart_start'][i,1],
+                                           q['x_depart_start'][i,2]))
 
     #
     ibf = 1 #forward
@@ -4058,7 +4109,7 @@ def Lu1Dex(opts,tryPT123A=True):
     except:
         pass
 
-def test8(opts,tryPT123A=False):
+def test8(opts,tryPT123A=False,writePT123files=True):
     """
     transient, C0P1 in space. Computes error by comparing starting and ending location for points in a specified
       interval
@@ -4158,10 +4209,14 @@ def test8(opts,tryPT123A=False):
     q['x_track']  = p.getInitialTrackingLocations(q)#q['x']; 
     q['x_depart'] = numpy.copy(q['x_track'])
 
+    #save initial elements for output pt123 input files
 
     setupArbitraryTrackingDataArrays(opts.t_start,tnList[istart+1],sdmesh,elementBoundaryOuterNormalsArray,q)
 
-
+    if writePT123files:
+        q['element_depart_start'] = numpy.copy(q['element_track'])
+        q['x_depart_start'] = numpy.copy(q['x_depart'])
+        
     label = "PT123"
     if tryPT123A:
         label = "PT123A"
@@ -4287,7 +4342,6 @@ def test8(opts,tryPT123A=False):
     archive.close()
 
     #try to write out PT123 files
-    writePT123files = True
     if writePT123files:
         writePT123inputMesh(opts,p,sdmesh,filebase="test8_pt123")
         writePT123nodalVelocity(opts,p,sdmesh,tnList,q,velocitySpace,velocity_new,
@@ -4301,7 +4355,7 @@ def test8(opts,tryPT123A=False):
     except:
         pass
 
-def test9(opts,tryPT123A=True):
+def test9(opts,tryPT123A=True,writePT123files=True):
     """
     transient, RT0 in space. Computes error by comparing starting and ending location for points in a specified
       interval
@@ -4337,11 +4391,11 @@ def test9(opts,tryPT123A=True):
     particleTracking_params[('atol_tracking',0)]=1.0e-7
     particleTracking_params[('rtol_tracking',0)]=0.0
     particleTracking_params[('sf_tracking',0)]=0.9
-    if not tryPT123A:
+    if not tryPT123A or writePT123files:
         particleTracking_params[('dt_init',0)]= 0.001
         particleTracking_params[('dt_init_flag',0)] = 1 #how to pick initial time step (0 --> const, 1 --> CFL=1)
         particleTracking_params[('rk_flag',0)] = 45 #RK type 
-
+    
     opts.particleTracking_params = particleTracking_params
     #solution representation, not used for linear problems
 
@@ -4393,6 +4447,11 @@ def test9(opts,tryPT123A=True):
     q['x_depart'] = numpy.copy(q['x_track'])
 
     setupArbitraryTrackingDataArrays(opts.t_start,tnList[istart+1],sdmesh,elementBoundaryOuterNormalsArray,q)
+
+    if writePT123files:
+        q['abs(det(J))']  = numpy.absolute(q['det(J)'])
+        q['element_depart_start'] = numpy.copy(q['element_track'])
+        q['x_depart_start'] = numpy.copy(q['x_depart'])
 
     label = "PT123"
     if tryPT123A:
@@ -4499,6 +4558,19 @@ def test9(opts,tryPT123A=True):
     #close out archives and visualization
     archive.close()
 
+    #try to write out PT123 files
+    if writePT123files:
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        writePT123inputMesh(opts,p,sdmesh,filebase="test9_pt123")
+        writePT123RT0velocityAsElementVelocity(opts,p,sdmesh,particleTracking_params,
+                                               tnList,q,ebq,
+                                               filebase="test9_pt123")
+        writePT123elementVolumeFraction(opts,p,mesh,particleTracking_params,tnList,q,
+                                        filebase="test9_pt123")
+        writePT123particleFile(opts,p,sdmesh,particleTracking_params,tnList,q,tryPT123A,filebase="test9_pt123")
+        
     
     try:#run time visualization?
         sys.exit(vtkViewers.g.app.exec_())
