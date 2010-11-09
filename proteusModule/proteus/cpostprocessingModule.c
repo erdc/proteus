@@ -834,10 +834,10 @@ cpostprocessingGetRT0velocityValuesFluxRep_arbitraryElementMembership(PyObject* 
     return NULL;
   for (i=0; i < ND(x)-1; i++)
     nPoints *= SHAPE(x)[i];
-  getRT0velocityValuesFluxRep_arbitraryElementMembership(SHAPE(v_element)[0],
+  getRT0velocityValuesFluxRep_arbitraryElementMembership(SHAPE(elementNodesArray)[0],
 							 SHAPE(elementNodesArray)[1],
 							 nPoints,
-							 SHAPE(v_element)[2],
+							 SHAPE(v_element)[1],
 							 SHAPE(abs_det_J)[1],
 							 DDATA(nodeArray),
 							 IDATA(elementNodesArray),
