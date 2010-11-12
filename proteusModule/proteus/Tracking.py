@@ -2278,7 +2278,7 @@ def writePT123nodalVelocity(opts,p,mesh,tnList,q,velocitySpace,velocityFEFunctio
     fvel.write("     %d     %d    %d \n" % (mesh.nNodes_global,p.nd,len(tnList)))
 
     for i,t in enumerate(tnList):
-        fvel.write("TS    %g \n" % t)
+        fvel.write("TS    %f \n" % t)
         
         try:
             p.analyticalSolutionParticleVelocity[0].uOfXTv(velocitySpace.interpolationPoints,t,q['velocity_interpolation_values'])
@@ -2290,7 +2290,7 @@ def writePT123nodalVelocity(opts,p,mesh,tnList,q,velocitySpace,velocityFEFunctio
         velocityFEFunction.projectFromInterpolationConditions(q['velocity_interpolation_values'])
         for i in range(mesh.nNodes_global):
             for j in range(p.nd):
-                fvel.write("  %g  " % velocityFEFunction.dof[i*p.nd+j])
+                fvel.write("  %f  " % velocityFEFunction.dof[i*p.nd+j])
             #mwf PT123 doc incorrect, only reads up to neq
             #for j in range(p.nd,3):
             #    fvel.write("  %g  " % 0.0)
@@ -2311,7 +2311,7 @@ def writePT123elementVelocity(opts,p,mesh,params,tnList,q,velocitySpace,velocity
     fvel.write("     %d     %d    %d \n" % (mesh.nElements_global,p.nd,len(tnList)))
 
     for i,t in enumerate(tnList):
-        fvel.write("TS    %g \n" % t)
+        fvel.write("TS    %f \n" % t)
         
         try:
             p.analyticalSolutionParticleVelocity[0].uOfXTv(velocitySpace.interpolationPoints,t,q['velocity_interpolation_values'])
@@ -2325,7 +2325,7 @@ def writePT123elementVelocity(opts,p,mesh,params,tnList,q,velocitySpace,velocity
             for nN in range(mesh.nNodes_element):
                 I = velocitySpace.dofMap.l2g[eN,nN]
                 for j in range(p.nd):
-                    fvel.write("  %g  " % velocityFEFunction.dof[I*p.nd+j])
+                    fvel.write("  %f  " % velocityFEFunction.dof[I*p.nd+j])
                 #mwf PT123 doc incorrect, only reads up to neq
                 #for j in range(p.nd,3):
                 #    fvel.write("  %g " % 0.0)
@@ -2352,7 +2352,7 @@ def writePT123RT0velocityAsElementVelocity(opts,p,mesh,params,tnList,q,ebq,
     #import pdb
     #pdb.set_trace()
     for i,t in enumerate(tnList):
-        fvel.write("TS    %g \n" % t)
+        fvel.write("TS    %f \n" % t)
         
         evaluateVelocity_RT0(opts,p,mesh,t,ebq,q['velocity_new_dof'],q['velocity_l2g'],q['velocity_interpolation_values'])
 
@@ -2417,7 +2417,7 @@ def writePT123elementVolumeFraction(opts,p,mesh,params,tnList,q,
     femc.write("ENDR")
     femc.close()
 
-def writePT123particleFile(opts,p,mesh,params,tnList,q,analyticalTracking,filebase="test_pt123",base=1):
+def writePT123particleFile(opts,p,t,mesh,params,tnList,q,analyticalTracking,filebase="test_pt123",base=1):
 
     part_suffix = "pt%d" % p.nd
     fpart = open(filebase+"."+part_suffix,'w')
@@ -2438,8 +2438,8 @@ def writePT123particleFile(opts,p,mesh,params,tnList,q,analyticalTracking,fileba
     if tnList[-1] < tnList[0]:
         ibf = -1
     fpart.write("%d   IBF (1 = forward 2 = backward) \n" % ibf)
-    fpart.write("%g   T_START \n" % tnList[0])
-    fpart.write("%g  %g  %d     DT_PT, DT_INPUT, ID_DT\n" % (tnList[-1],
+    fpart.write("%f   T_START \n" % t)
+    fpart.write("%f  %f  %d     DT_PT, DT_INPUT, ID_DT\n" % (tnList[-1],
                                                              params[('dt_init',0)],
                                                              params[('dt_init_flag',0)]))
     fpart.write("0   NT_PT_OUTPUT \n") #output every step for now
@@ -3839,7 +3839,7 @@ def test6(opts):
         pass
 
 
-def Lu1Dex(opts,tryPT123A=True):
+def Lu1Dex(opts,tryPT123A=True,writePT123files=True):
     """
     1D example from Lu 94. Single-phase flow in a semi-infinite 1d
     domain. Aquifer is b=10 m thick with Transmissivity T=20 cm^2/s,
@@ -3957,6 +3957,20 @@ def Lu1Dex(opts,tryPT123A=True):
     q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
     trialSpace.getBasisValues(q['x_hat'],q['u_shape_functions'])
 
+    #options for tracking
+    particleTracking_params = {}
+    particleTracking_params[('dn_safe_tracking',0)]=1.0e-7
+    particleTracking_params[('temporalVariationFlag',0)]=2
+    particleTracking_params[('atol_tracking',0)]=1.0e-7
+    particleTracking_params[('rtol_tracking',0)]=0.0
+    particleTracking_params[('sf_tracking',0)]=0.9
+    if not tryPT123A or writePT123files:
+        particleTracking_params[('dt_init',0)]= 0.001
+        particleTracking_params[('dt_init_flag',0)] = 1 #how to pick initial time step (0 --> const, 1 --> CFL=1)
+        particleTracking_params[('rk_flag',0)] = 45 #RK type 
+
+    opts.particleTracking_params = particleTracking_params
+
     #find the interval where start time lies
     t = opts.t_start
     istart = 0
@@ -3990,6 +4004,10 @@ def Lu1Dex(opts,tryPT123A=True):
     q['x_depart'] = numpy.copy(q['x_track'])
 
     setupArbitraryTrackingDataArrays(opts.t_start,tnList[istart+1],sdmesh,elementBoundaryOuterNormalsArray,q)
+
+    if writePT123files:
+        q['element_depart_start'] = numpy.copy(q['element_track'])
+        q['x_depart_start'] = numpy.copy(q['x_depart'])
 
     if tryPT123A:
 
@@ -4104,6 +4122,16 @@ def Lu1Dex(opts,tryPT123A=True):
     #close out archives and visualization
     archive.close()
 
+    #try to write out PT123 files
+    if writePT123files:
+        writePT123inputMesh(opts,p,sdmesh,filebase="testLu1D_pt123")
+        writePT123nodalVelocity(opts,p,sdmesh,tnList,q,velocitySpace,velocity_new,
+                                filebase="testLu1D_pt123")
+        writePT123nodalVolumeFraction(opts,p,mesh,particleTracking_params,tnList,q,
+                                      filebase="testLu1D_pt123")
+        writePT123particleFile(opts,p,opts.t_start,sdmesh,particleTracking_params,tnList,q,tryPT123A,filebase="testLu1D_pt123")
+        
+
     try:#run time visualization?
         sys.exit(vtkViewers.g.app.exec_())
     except:
@@ -4144,7 +4172,7 @@ def test8(opts,tryPT123A=False,writePT123files=True):
     particleTracking_params[('atol_tracking',0)]=1.0e-7
     particleTracking_params[('rtol_tracking',0)]=0.0
     particleTracking_params[('sf_tracking',0)]=0.9
-    if not tryPT123A:
+    if not tryPT123A or writePT123files:
         particleTracking_params[('dt_init',0)]= 0.001
         particleTracking_params[('dt_init_flag',0)] = 1 #how to pick initial time step (0 --> const, 1 --> CFL=1)
         particleTracking_params[('rk_flag',0)] = 45 #RK type 
@@ -4348,7 +4376,7 @@ def test8(opts,tryPT123A=False,writePT123files=True):
                                 filebase="test8_pt123")
         writePT123nodalVolumeFraction(opts,p,mesh,particleTracking_params,tnList,q,
                                       filebase="test8_pt123")
-        writePT123particleFile(opts,p,sdmesh,particleTracking_params,tnList,q,tryPT123A,filebase="test8_pt123")
+        writePT123particleFile(opts,p,opts.t_start,sdmesh,particleTracking_params,tnList,q,tryPT123A,filebase="test8_pt123")
         
     try:#run time visualization?
         sys.exit(vtkViewers.g.app.exec_())
@@ -4386,9 +4414,9 @@ def test9(opts,tryPT123A=True,writePT123files=True):
 
     #options for tracking
     particleTracking_params = {}
-    particleTracking_params[('dn_safe_tracking',0)]=1.0e-7
+    particleTracking_params[('dn_safe_tracking',0)]=1.0e-6
     particleTracking_params[('temporalVariationFlag',0)]=2
-    particleTracking_params[('atol_tracking',0)]=1.0e-7
+    particleTracking_params[('atol_tracking',0)]=1.0e-6
     particleTracking_params[('rtol_tracking',0)]=0.0
     particleTracking_params[('sf_tracking',0)]=0.9
     if not tryPT123A or writePT123files:
@@ -4569,9 +4597,268 @@ def test9(opts,tryPT123A=True,writePT123files=True):
                                                filebase="test9_pt123")
         writePT123elementVolumeFraction(opts,p,mesh,particleTracking_params,tnList,q,
                                         filebase="test9_pt123")
-        writePT123particleFile(opts,p,sdmesh,particleTracking_params,tnList,q,tryPT123A,filebase="test9_pt123")
+        writePT123particleFile(opts,p,opts.t_start,sdmesh,particleTracking_params,tnList,q,tryPT123A,filebase="test9_pt123")
         
     
+    try:#run time visualization?
+        sys.exit(vtkViewers.g.app.exec_())
+    except:
+        pass
+
+def Pearce_Ex7_non_uniform(opts,tryPT123A=False,writePT123files=False):
+    """
+    1D example from Pearce with transient velocity
+
+    Domain is [-100,100], domain discretized with 21 nodes
+    
+    """
+    from math import pi,sqrt,exp
+    #dummy p module
+    class Problem:
+        class IC:
+            def __init__(self,val=0.0):
+                self.val=val
+            def uOfXT(self,x,t):
+                return self.val
+        def __init__(self,filebase="test_nu"):
+            #time intervals for velocity evaluation 
+            #self.tnList = [0.0,200.0,400.0,600.0,800.0,1000.0,1200.0]
+            self.L=(200.0,1.0,1.0) 
+            self.x0=numpy.array([-100.0,0.0,0.0])
+            self.filebase=filebase
+            vnfile = open(filebase+".vn1",'r')
+            line = vnfile.readline()
+            self.nn,self.nd,self.nt=map(int,line.split())
+            self.tnList=[]
+            self.velocity_dofs=[]
+            for it in range(self.nt):
+                line = vnfile.readline()
+                assert 'TS' in line, "line= %s" % line
+                self.tnList.append(float(line.split()[1]))
+                self.velocity_dofs.append(numpy.zeros((self.nn,),'d'))
+                for jn in range(self.nn):
+                    line=vnfile.readline()
+                    self.velocity_dofs[-1][jn]=float(line)
+            line=vnfile.readline()
+            assert 'ENDR' in line, " line= %s " % line
+            #create mesh on unit interval then transform output as pt123 does
+            self.mlMesh = MeshTools.MultilevelEdgeMesh(self.nn,1,1,self.L[0],refinementLevels=1)
+            self.mesh = self.mlMesh.meshList[-1]
+            self.initialConditions = {0:Problem.IC()}
+
+        def getInitialTrackingLocations(self,q):
+            """
+            return points that need to be tracked
+            """
+            nPoints = self.nn
+            x = numpy.copy(self.mesh.nodeArray)
+            return x
+    p = Problem()
+
+    #mwf debug
+    #import pdb
+    #pdb.set_trace()
+
+    tnList = p.tnList
+        
+    #to collect integration points etc
+    q = {}
+    mesh = p.mesh
+
+    sdmesh = mesh.subdomainMesh
+    #solution representation, not used for linear problems
+
+    trialSpace,u,q['u_interpolation_values'] = setupSolution_C0P1(opts,p,sdmesh,tnList[0])
+
+    #velocity representation
+    #
+    velocitySpace= FemTools.C0_AffineLinearOnSimplexWithNodalBasis(sdmesh,p.nd)
+    velocity = FemTools.FiniteElementFunction(velocitySpace,dim_dof=p.nd,isVector=True,name="velocity")
+    velocity.dof[:] = p.velocity_dofs[0]
+
+    component_velocity_times={0:tnList[0]}
+
+    velocity_new = FemTools.FiniteElementFunction(velocitySpace,dim_dof=p.nd,isVector=True,name="velocity_new")
+    velocity_new.dof[:] = velocity.dof
+    component_velocity_times_new={0:tnList[0]}
+
+    q['x_hat'] = setupTrackingPointsInReferenceSpace(opts,p,useGaussianQuadrature=False)
+    nq_per_element = q['x_hat'].shape[0]
+
+    #map points to physical space
+    q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
+    trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
+    
+    #go ahead and get shape functions at initial points to evaluate solution, may not want to use
+    #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
+    q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
+    trialSpace.getBasisValues(q['x_hat'],q['u_shape_functions'])
+
+    #options for tracking
+    particleTracking_params = {}
+    particleTracking_params[('dn_safe_tracking',0)]=1.0e-7
+    particleTracking_params[('temporalVariationFlag',0)]=2
+    particleTracking_params[('atol_tracking',0)]=1.0e-7
+    particleTracking_params[('rtol_tracking',0)]=0.0
+    particleTracking_params[('sf_tracking',0)]=0.9
+    if not tryPT123A or writePT123files:
+        particleTracking_params[('dt_init',0)]= 0.001
+        particleTracking_params[('dt_init_flag',0)] = 1 #how to pick initial time step (0 --> const, 1 --> CFL=1)
+        particleTracking_params[('rk_flag',0)] = 45 #RK type 
+
+    opts.particleTracking_params = particleTracking_params
+
+    #find the interval where start time lies
+    t = opts.t_start
+    istart = 0
+    while istart < len(tnList)-2 and tnList[istart+1] <= t:
+        istart+=1
+    assert tnList[istart] <= t and t < tnList[istart+1]
+    
+    #this will get cycled through and set as value at tnList[istart] in loop
+    velocity_new.dof[:]=p.velocity_dofs[istart]
+
+    #get points actually going to track
+    q['J']            = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd,p.nd),'d')
+    q['inverse(J)']   = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd,p.nd),'d')
+    q['det(J)']       = numpy.zeros((q['x'].shape[0],q['x'].shape[1]),'d')
+    trialSpace.elementMaps.getJacobianValues(q['x_hat'],q['J'],q['inverse(J)'],q['det(J)'])
+
+    elementBoundaryOuterNormalsArray = numpy.zeros((sdmesh.nElements_global,sdmesh.nElementBoundaries_element,p.nd),'d')
+    boundaryNormals = numpy.array(trialSpace.elementMaps.referenceElement.boundaryUnitNormalList,dtype='d')
+    ctracking.getOuterNormals_affineSimplex(boundaryNormals,
+                                            q['inverse(J)'],
+                                            elementBoundaryOuterNormalsArray)
+    q['x_track']  = p.getInitialTrackingLocations(q)#q['x']; 
+    q['x_depart'] = numpy.copy(q['x_track'])
+
+    setupArbitraryTrackingDataArrays(opts.t_start,tnList[istart+1],sdmesh,elementBoundaryOuterNormalsArray,q)
+
+    if writePT123files:
+        q['element_depart_start'] = numpy.copy(q['element_track'])
+        q['x_depart_start'] = numpy.copy(q['x_depart'])
+
+    if tryPT123A:
+
+        class Transport_dummy:
+            def __init__(self,elementBoundaryOuterNormalsArray):
+                self.elementBoundaryOuterNormalsArray = elementBoundaryOuterNormalsArray
+        #
+        particle_tracker = LinearAdvection_C0P1Velocity_PT123A(sdmesh,p.nd,
+                                                               {0:velocitySpace.dofMap.l2g},
+                                                               {0:velocity.dof},
+                                                               activeComponentList=[0])
+
+        particle_tracker.updateTransportInformation(Transport_dummy(elementBoundaryOuterNormalsArray))
+    else:
+        particle_tracker = LinearAdvection_C0P1Velocity_PT123(sdmesh,p.nd,
+                                                              {0:velocitySpace.dofMap.l2g},
+                                                              {0:velocity.dof},
+                                                              activeComponentList=[0])
+    particle_tracker.setFromOptions(opts)
+
+
+    ########## visualization and output stuff
+    #save velocity field for visualization
+    q['velocity_depart'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
+    q['velocity_track'] = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd),'d')
+
+    velocity_new.getValues(q[('u_shape_functions')],q['velocity_depart'])
+    q['velocity_track'] = q['velocity_depart'][:]
+
+    #mwf debug
+    #pdb.set_trace()
+    archive = Archiver.XdmfArchive(".","testEx7_1d_non-uniform",useTextArchive=False)
+    import xml.etree.ElementTree as ElementTree
+    archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
+    writer   = Archiver.XdmfWriter()
+
+    #
+    arGrid = writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_depart'],tnList[istart],init=True,tCount=0)
+    writer.writeScalarXdmf_particles(archive,q['t_depart'],"t_particle",tCount=0)
+    #writer.writeVectorXdmf_particles(archive,q['velocity_depart'],"velocity",tCount=0)
+
+    #to accomodate updating pardigm for visualization copy _track info to be consistent
+    #with start locations
+    q['t_viz'] = numpy.copy(q['t_depart'])
+ 
+    #which way to track (1. forward, -1. backward)
+    direction = 1.0
+
+    #print out point we want to track
+    print """t= %s x_depart[0][0]= %s """ % (t,q['x_depart'][0][0])
+    #time value for 'old' velocity
+    tvelOld = tnList[istart]
+
+    for i,tout in enumerate(tnList[istart+1:]):
+        lastStep = False
+        if tout > opts.t_target:
+            lastStep = True
+        dtout = tout-t
+        #update for next step
+        velocity.dof[:]=velocity_new.dof[:]
+
+        particle_tracker.setTrackingVelocity(velocity.dof,0,tvelOld,timeLevel=0)
+        #time tracking to
+        t += dtout
+        #evaluate velocity
+        velocity_new.dof[:]=p.velocity_dofs[istart+1+i]
+        particle_tracker.setTrackingVelocity(velocity_new.dof,0,t,timeLevel=1)
+        #mwf debug
+        print "Pearce non-uniform 1d t= %s velocity_new= %s " %(t,velocity_new.dof)
+        #only update times for points that are going to be tracked
+        q['t_track'][q['flag_track'] >= -1] = min(t,opts.t_target)
+
+        if direction > 0.0:
+            particle_tracker.forwardTrack({0:q['t_depart']},    
+                                          {0:q['t_track']},                          #target end time
+                                          {0:q['x_depart'].shape[0]},                #total number of points
+                                          {0:q['x_depart']},                         #departure points
+                                          {0:q['element_track']},                    #in/out element locations
+                                          {0:q['x_track']},                          #arrival points
+                                          {0:q['flag_track']})                       
+        else:
+            particle_tracker.backwardTrack({0:q['t_depart']},    
+                                           {0:q['t_track']},                          #target end time
+                                           {0:q['x_depart'].shape[0]},                #total number of points
+                                           {0:q['x_depart']},                         #departure points
+                                           {0:q['element_track']},                    #in/out element locations
+                                           {0:q['x_track']},                          #arrival points
+                                           {0:q['flag_track']})                       
+            
+        velocity_new.getValues(q[('u_shape_functions')],q['velocity_track'])
+        #mwf scale by domain offset for output
+        q['x_track'][:,0] += p.x0[0]
+        writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track'],t,init=False,meshChanged=True,arGrid=arGrid,tCount=i+1)
+        writer.writeScalarXdmf_particles(archive,q['t_track'],"t_particle",tCount=i+1)
+        #writer.writeVectorXdmf_particles(archive,q['velocity_track'],"velocity",tCount=i+1)
+        #convert back to normalized domain
+        q['x_track'][:,0] -= p.x0[0]
+
+        q['t_depart'].flat[:] = q['t_track'].flat
+        q['x_depart'].flat[:] = q['x_track'].flat
+        tvelOld = t
+
+        print """t= %s t_track[0]= %s x_track[0][0] = %s  """ % (t,q['t_track'][0],q['x_track'][0][0])
+        if lastStep: break
+    #output step loop
+
+    #
+    print "Pearce's Ex7 Done, t= %s t_track[0]= %s,  x_track[0][0] = %s  """ % (t,q['t_track'][0],q['x_track'][0][0])
+
+    #close out archives and visualization
+    archive.close()
+
+    #try to write out PT123 files
+    if writePT123files:
+        writePT123inputMesh(opts,p,sdmesh,filebase="testEx7_1d_non-uniform_pt123")
+        writePT123nodalVelocity(opts,p,sdmesh,tnList,q,velocitySpace,velocity_new,
+                                filebase="testEx7_1d_non-uniform_pt123")
+        writePT123nodalVolumeFraction(opts,p,mesh,particleTracking_params,tnList,q,
+                                      filebase="testEx7_1d_non-uniform_pt123")
+        writePT123particleFile(opts,p,opts.t_start,sdmesh,particleTracking_params,tnList,q,tryPT123A,filebase="testEx7_1d_non-uniform_pt123")
+        
+
     try:#run time visualization?
         sys.exit(vtkViewers.g.app.exec_())
     except:
@@ -4681,7 +4968,8 @@ if __name__=='__main__':
     if probDir not in sys.path:
         sys.path.insert(0,probDir)
 
-    testDict = {0:test0,1:test1,2:test2,3:test3,4:test4,5:test5,6:test6,7:Lu1Dex,8:test8,9:test9}
+    testDict = {0:test0,1:test1,2:test2,3:test3,4:test4,5:test5,6:test6,7:Lu1Dex,8:test8,9:test9,
+                10:Pearce_Ex7_non_uniform}
     test = None
     assert opts.test_id in testDict.keys(), "test_id= %s not supported yet " % opts.test_id
     
