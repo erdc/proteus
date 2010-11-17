@@ -376,5 +376,24 @@ void tagNegligibleIntegrationPoints(int nPoints,
 				    const double* x,
 				    const double* u,
 				    int* flag_track);
+
+
+void calculateSlumpedMassApproximation1d(int nElements_global,
+					 int nElementBoundaries_element,
+					 int nQuadraturePoints_element,
+					 int nDOF_trial_element,
+					 int nDOF_test_element,
+					 const int* l2g,
+					 const int* elementNeighborsArray,
+					 const double* u_dof,
+					 const double* dm,
+					 const double* w,
+					 const double* v,
+					 const double* dV,
+					 const double* rhs,
+					 double* elementResidual,
+					 double* theta,
+					 double* slumpedMassMatrix);
+
 }//extern C
 #endif 
