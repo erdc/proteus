@@ -1,6 +1,6 @@
 #include "ellam.h"
 #include "tracking.h"
-
+#include <cmath>
 /***********************************************************************
 
   TODO:
@@ -732,7 +732,124 @@ void accumulateInflowFlux(int nSpace,
 	    
 	}//integration point per element boundary
     }//element boundaries
-  
 }
 
 
+extern "C"
+void calculateSlumpedMassApproximation1d(int nElements_global,
+					 int nElementBoundaries_element,
+					 int nQuadraturePoints_element,
+					 int nDOF_trial_element,
+					 int nDOF_test_element,
+					 const int* l2g,
+					 const int* elementNeighborsArray,
+					 const double* u_dof,
+					 const double* dm,
+					 const double* w,
+					 const double* v,
+					 const double* dV,
+					 const double* rhs,
+					 double* elementResidual,
+					 double* theta,
+					 double* slumpedMassMatrix)
+{
+  int eN,i,j,k,I,nDOF_test_X_trial_element=nDOF_trial_element*nDOF_test_element;
+  int stencilWidth=5;
+  int I0,Im1,Ip1,Ip2;
+  double drm1,dr0,drp1,a,b,tmp1,tmp2,tmp3,tmp4;
+  int eN_neighbor0,eN_neighbor1;
+  assert(nDOF_test_element == 2);
+  for (eN=0; eN<nElements_global; eN++)
+    {
+      I0 = l2g[eN*nDOF_test_element + 0];
+      Ip1= l2g[eN*nDOF_test_element + 1];
+      dr0 = fabs(rhs[Ip1]-rhs[I0]);
+      
+      /*local stencil relative to node I*/
+      /*I0 neighbor across from node I1 and vice versa*/
+      eN_neighbor0 =elementNeighborsArray[eN*nElementBoundaries_element+1];
+      eN_neighbor1 =elementNeighborsArray[eN*nElementBoundaries_element+0];
+
+      
+      drm1 = 0.0; Im1 = -1;
+      if (eN_neighbor0 >= 0)
+	{
+	  for (j=0; j < nDOF_test_element; j++)
+	    {
+	      if (l2g[eN_neighbor0*nDOF_test_element + j] != I0)
+		{
+		  Im1 = l2g[eN_neighbor0*nDOF_test_element + j];
+		  drm1 = fabs(rhs[I0]-rhs[Im1]);
+		  break;
+		}
+	    }
+	}
+	  
+      drp1 = 0.0; Ip2 = -1;
+      if (eN_neighbor1 >= 0)
+	{
+	  for (j=0; j < nDOF_test_element; j++)
+	    {
+	      if (l2g[eN_neighbor1*nDOF_test_element + j] != Ip1)
+		{
+		  Ip2 = l2g[eN_neighbor1*nDOF_test_element + j];
+		  drp1 = fabs(rhs[Ip2]-rhs[Ip1]);
+		  break;
+		}
+	    }
+	  
+	}
+      
+      /*calculate local mass matrix, approximation isn't exactly right
+	for now, since assumes matrix same on both elements*/
+      for (i=0; i < nDOF_test_element; i++)
+	for (j=0; j < nDOF_trial_element; j++)
+	  {
+	    slumpedMassMatrix[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = 0.0;
+	    for (k=0; k < nQuadraturePoints_element; k++)
+	      {
+		slumpedMassMatrix[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] +=  
+		  dm[eN*nQuadraturePoints_element+k]
+		  *
+		  v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    k*nDOF_trial_element + 
+		    j]
+		  *
+		  w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    k*nDOF_test_element + 
+		    i]
+		  *
+		  dV[eN*nQuadraturePoints_element+k];
+	      }
+	  }
+      a = slumpedMassMatrix[eN*nDOF_test_X_trial_element + 0*nDOF_trial_element + 0];
+      b = slumpedMassMatrix[eN*nDOF_test_X_trial_element + 0*nDOF_trial_element + 1];
+
+      tmp1 = dr0/(drm1+dr0+drp1+1.0e-12);
+      tmp2 = fmin(drm1,dr0)/(drm1+dr0+1.0e-12);
+      tmp3 = fmin(drp1,dr0)/(drp1+dr0+1.0e-12);
+      tmp4 = fmin(fmin(tmp1,tmp2),tmp3);
+      theta[eN] = b - tmp4*(a+b);
+      theta[eN] = fmax(theta[eN],0.0);
+
+      /*update mass matrix and element residual*/
+      for (i=0; i < nDOF_test_element; i++)
+	{
+	  slumpedMassMatrix[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] += theta[eN];
+	  elementResidual[eN*nDOF_test_element + i] += theta[eN]*u_dof[l2g[eN*nDOF_trial_element+i]];
+
+	  for (j=0; j < i; j++)
+	    {
+	      slumpedMassMatrix[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] -= theta[eN];
+	      elementResidual[eN*nDOF_test_element + i] -= theta[eN]*u_dof[l2g[eN*nDOF_trial_element+j]];
+	    }
+	  for (j=i+1; j < nDOF_trial_element; j++)
+	    {
+	      slumpedMassMatrix[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] -= theta[eN];
+	      elementResidual[eN*nDOF_test_element + i] -= theta[eN]*u_dof[l2g[eN*nDOF_trial_element+j]];
+	    }
+	}  
+    }/*eN*/
+
+
+}
