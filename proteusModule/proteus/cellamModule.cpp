@@ -724,6 +724,53 @@ static PyObject* cellam_tagNegligibleIntegrationPoints(PyObject* self,
   return Py_None;
  
 }
+static PyObject* cellam_calculateSlumpedMassApproximation1d(PyObject* self,
+							    PyObject* args)
+{
+  PyObject *u_l2g,
+    *elementNeighborsArray,
+    *u_dof,
+    *dm,*w,*v,
+    *dV,*rhs,
+    *theta,
+    *slumpedMassMatrix,
+    *elementResidual; 
+
+  if (!PyArg_ParseTuple(args,
+                        "OOOOOOOOOOO",
+			&u_l2g,
+			&elementNeighborsArray,
+			&u_dof,
+			&dm,
+			&w,
+			&v,
+			&dV,
+			&rhs,
+			&elementResidual,
+			&theta,
+			&slumpedMassMatrix))
+    return NULL;
+  
+  calculateSlumpedMassApproximation1d(SHAPE(u_l2g)[0],
+				      SHAPE(elementNeighborsArray)[1],
+				      SHAPE(dm)[1],
+				      SHAPE(v)[2],
+				      SHAPE(w)[2],
+				      IDATA(u_l2g),
+				      IDATA(elementNeighborsArray),
+				      DDATA(u_dof),
+				      DDATA(dm),
+				      DDATA(w),
+				      DDATA(v),
+				      DDATA(dV),
+				      DDATA(rhs),
+				      DDATA(elementResidual),
+				      DDATA(theta),
+				      DDATA(slumpedMassMatrix));
+
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
 
 static PyMethodDef cellamMethods[] = {
  { "updateOldMass_weak",
@@ -766,6 +813,10 @@ static PyMethodDef cellamMethods[] = {
    cellam_tagNegligibleIntegrationPoints,
    METH_VARARGS, 
    "tag integration points with magnitude less than tolerance "},
+ { "calculateSlumpedMassApproximation1d",
+    cellam_calculateSlumpedMassApproximation1d,
+   METH_VARARGS, 
+   "calculate 1d slumping approximation from Russell and Binning and apply to residual"},
  { NULL,NULL,0,NULL}
 };
 
