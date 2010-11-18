@@ -687,7 +687,8 @@ def updateMass_weakAvg(numpy.ndarray[DTYPE_t,ndim=2] mt,
          vol += dV[eN,k]
       mt_avg /= vol
       for i in range(weak_residual.shape[1]):
-         weak_residual[eN,i] += mt_avg*w[eN,k,i]*dV[eN,k]
+          #cek hack, seems like cython needed some help figuring out that the rvalue was a float
+          weak_residual[eN,i] += float(mt_avg*w[eN,k,i]*dV[eN,k])
 def updateMassJacobian_weakAvg(numpy.ndarray[DTYPE_t,ndim=2] dmt,
                                numpy.ndarray[DTYPE_t,ndim=3] w,
                                numpy.ndarray[DTYPE_t,ndim=3] v,
