@@ -1380,6 +1380,7 @@ class NavierStokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
                          getDiffusiveFluxBoundaryConditions,
                          getPeriodicBoundaryConditions,
                          parallelPeriodic=True)
+        self.penalty_constant=100.0
         self.hasInterior=False
     def setDirichletValues(self,ebqe):
         for ci in range(self.nc):
