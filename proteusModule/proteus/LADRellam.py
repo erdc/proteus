@@ -1007,7 +1007,8 @@ class OneLevelLADR(OneLevelTransport):
                                                                       self.l2g[ci]['freeGlobal'],
                                                                       self.elementResidualTmp[ci],
                                                                       self.rightHandSideForLimiting[ci]);
-            #calculate element level lumping parameters
+            #calculate element level lumping parameters and
+            #subtract off element level mass correction from residual
             if self.nSpace_global == 1:
                 cellam.calculateSlumpedMassApproximation1d(self.u[ci].femSpace.dofMap.l2g,
                                                            self.mesh.elementNeighborsArray,
@@ -1021,7 +1022,19 @@ class OneLevelLADR(OneLevelTransport):
                                                            self.elementSlumpingParameter[ci],
                                                            self.elementModifiedMassMatrix[ci])
                 
-            #subtract off element level mass correction from residual
+            elif self.nSpace_global == 2:
+                cellam.calculateSlumpedMassApproximation2d(self.u[ci].femSpace.dofMap.l2g,
+                                                           self.mesh.elementNeighborsArray,
+                                                           self.u[ci].dof,
+                                                           self.q[('dm',ci,ci)],
+                                                           self.q[('w',ci)],
+                                                           self.q[('v',ci)],
+                                                           self.q[('dV_u',ci)],
+                                                           self.rightHandSideForLimiting[ci],
+                                                           self.elementResidual[ci],
+                                                           self.elementSlumpingParameter[ci],
+                                                           self.elementModifiedMassMatrix[ci])
+                
     def calculateElementJacobian(self):
         for ci in range(self.nc):
             for cj in self.coefficients.stencil[ci]:
@@ -1072,15 +1085,20 @@ class OneLevelLADR(OneLevelTransport):
             #mwf debug
             #import pdb
             #pdb.set_trace()
+            useC = False
             for ci,cjDict in self.coefficients.mass.iteritems():
                 for cj in cjDict:
-                    for eN in range(self.mesh.nElements_global):
-                        for i in range(self.nDOF_test_element[ci]):
-                            self.elementJacobian[ci][cj][eN,i,i] += self.elementSlumpingParameter[ci][eN]
-                            for j in range(i):
-                                self.elementJacobian[ci][cj][eN,i,j] -= self.elementSlumpingParameter[ci][eN]
-                            for j in range(i+1,self.nDOF_trial_element[cj]):
-                                self.elementJacobian[ci][cj][eN,i,j] -= self.elementSlumpingParameter[ci][eN]
+                    if useC:
+                        cellam.updateElementJacobianWithSlumpedMassApproximation(self.elementSlumpingParameter[ci],
+                                                                                 self.elementJacobian[ci][cj])
+                    else:
+                        for eN in range(self.mesh.nElements_global):
+                            for i in range(self.nDOF_test_element[ci]):
+                                self.elementJacobian[ci][cj][eN,i,i] += (self.nDOF_trial_element[ci]-1)*self.elementSlumpingParameter[ci][eN]
+                                for j in range(i):
+                                    self.elementJacobian[ci][cj][eN,i,j] -= self.elementSlumpingParameter[ci][eN]
+                                for j in range(i+1,self.nDOF_trial_element[cj]):
+                                    self.elementJacobian[ci][cj][eN,i,j] -= self.elementSlumpingParameter[ci][eN]
 
     def calculateExteriorElementBoundaryJacobian(self):
         for jDict in self.fluxJacobian_exterior.values():
