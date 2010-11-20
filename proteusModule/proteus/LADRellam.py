@@ -592,6 +592,19 @@ class OneLevelLADR(OneLevelTransport):
             self.ebqe[('advectiveFlux_bc',ci)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         #
         self.needEBQ = options.needEBQ #could need for analytical velocity evaluation with RT0,BDM
+
+        #data structures for slumping
+        self.slumpingFlag =0
+        self.rightHandSideForLimiting = {}; self.elementResidualTmp = {}; self.elementModifiedMassMatrix = {}; self.elementSlumpingParameter = {}
+        for ci in range(self.nc):
+            self.rightHandSideForLimiting[ci]= numpy.zeros((self.nFreeDOF_global[ci],),'d')
+            self.elementResidualTmp[ci] = numpy.zeros((self.mesh.nElements_global,self.nDOF_test_element[ci]),'d')
+            self.elementModifiedMassMatrix[ci] = numpy.zeros((self.mesh.nElements_global,self.nDOF_test_element[ci],self.nDOF_test_element[ci]),'d')
+            self.elementSlumpingParameter[ci] = numpy.zeros((self.mesh.nElements_global,),'d')
+        #
+        if 'slumpingFlag' in dir(options):
+            self.slumpingFlag = options.slumpingFlag
+        #beg normal stuff allocating things
         self.points_elementBoundaryQuadrature= set()
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
         self.vectors_elementBoundaryQuadrature= set()
@@ -862,7 +875,7 @@ class OneLevelLADR(OneLevelTransport):
                 self.ebqe[('advectiveFlux_bc_flag',ci)][t[0],t[1]] = 1
 
 
-    def calculateElementResidual(self):
+    def calculateElementResidualOriginalWorks(self):
         """Calculate standard element residuals needed for ellam approximation to linear ADR example"""
         import pdb
         for ci in range(self.nc):
@@ -876,8 +889,7 @@ class OneLevelLADR(OneLevelTransport):
                 #todo need faster loop
                 for j in range(self.nDOF_trial_element[0]):
                     for I in range(self.nSpace_global):
-                        self.q[('dt*grad(w)*dV_a',ck,ci)][:,:,j,I] *= self.dt_track[0]
-                
+                        self.q[('dt*grad(w)*dV_a',ck,ci)][:,:,j,I] *= self.dt_track[ci]
                 if self.sd:
                     cfemIntegrals.updateDiffusion_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                           self.q[('a',ci,ck)],
@@ -912,11 +924,104 @@ class OneLevelLADR(OneLevelTransport):
 
         #
         # (m^{n},w^{n+1})
-        self.approximateOldMassIntegral()
+        self.approximateOldMassIntegral(self.elementResidual)
         #inflow
-        self.approximateInflowBoundaryIntegral()
+        self.approximateInflowBoundaryIntegral(self.elementResidual)
         #outflow
         self.approximateOutflowBoundaryIntegral()
+    def calculateElementResidual(self):
+        """
+        Calculate standard element residuals needed for ellam approximation to linear ADR example
+        Switch order around to facilitate slumping/limiting, compute explicit/rhs parts first
+        """
+        import pdb
+       
+        for ci in range(self.nc):
+            self.elementResidual[ci].fill(0.0)
+        if self.slumpingFlag == 1:
+            for ci in range(self.nc):
+                self.elementResidualTmp[ci].fill(0.0)
+        for ci in self.coefficients.reaction.keys():
+            #weight by time step size
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            #print "LADRellam evalres rxn= %s " % (self.q[('r',0)])
+            self.q[('dt*w*dV_r',ci)][:] = self.q[('w*dV_r',ci)]
+            #todo need faster loop
+            for j in range(self.nDOF_trial_element[0]):
+                self.q[('dt*w*dV_r',ci)][:,:,j]   *= self.dt_track[ci]
+            cfemIntegrals.updateReaction_weak(self.q[('r',ci)],
+                                              self.q[('dt*w*dV_r',ci)],
+                                              self.elementResidual[ci])
+        
+        #
+        # (m^{n},w^{n+1})
+        self.approximateOldMassIntegral(self.elementResidual)
+        #inflow
+        self.approximateInflowBoundaryIntegral(self.elementResidual)
+        #outflow
+        self.approximateOutflowBoundaryIntegral()
+        if self.slumpingFlag == 1:
+            for ci in range(self.nc):
+                self.elementResidualTmp[ci] -= self.elementResidual[ci]
+        
+        # (m^{n+1,w^{n+1}) + (\Delta t(x) a\grad u, grad w^{n+1}) + (\Delta t(x) r,w^{n+1}) 
+        for ci,ckDict in self.coefficients.diffusion.iteritems():
+            for ck in ckDict.keys():
+                #weight by time step size
+                self.q[('dt*grad(w)*dV_a',ck,ci)][:] = self.q[('grad(w)*dV_a',ck,ci)]
+                #todo need faster loop
+                for j in range(self.nDOF_trial_element[0]):
+                    for I in range(self.nSpace_global):
+                        self.q[('dt*grad(w)*dV_a',ck,ci)][:,:,j,I] *= self.dt_track[ci]
+                if self.sd:
+                    cfemIntegrals.updateDiffusion_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                          self.q[('a',ci,ck)],
+                                                          self.q[('grad(phi)',ck)],
+                                                          self.q[('dt*grad(w)*dV_a',ck,ci)],
+                                                          self.elementResidual[ci])
+                else:
+                    cfemIntegrals.updateDiffusion_weak_lowmem(self.q[('a',ci,ck)],
+                                                              self.q[('grad(phi)',ck)],
+                                                              self.q[('dt*grad(w)*dV_a',ck,ci)],
+                                                              self.elementResidual[ci])
+                        
+
+        for ci in self.coefficients.mass.keys():
+            #note not dm/dt but just m
+            cfemIntegrals.updateMass_weak(self.q[('m',ci)],
+                                          self.q[('w*dV_m',ci)],
+                                          self.elementResidual[ci])
+
+        #mwf debug
+        #pdb.set_trace()
+        if self.slumpingFlag == 1:
+            for ci in range(self.nc):
+                #assemble right hand side vector
+                self.rightHandSideForLimiting[ci].fill(0.)
+                cfemIntegrals.updateGlobalResidualFromElementResidual(self.offset[ci],
+                                                                      self.stride[ci],
+                                                                      self.l2g[ci]['nFreeDOF'],
+                                                                      self.l2g[ci]['freeLocal'],
+                                                                      self.l2g[ci]['freeGlobal'],
+                                                                      self.elementResidualTmp[ci],
+                                                                      self.rightHandSideForLimiting[ci]);
+            #calculate element level lumping parameters
+            if self.nSpace_global == 1:
+                cellam.calculateSlumpedMassApproximation1d(self.u[ci].femSpace.dofMap.l2g,
+                                                           self.mesh.elementNeighborsArray,
+                                                           self.u[ci].dof,
+                                                           self.q[('dm',ci,ci)],
+                                                           self.q[('w',ci)],
+                                                           self.q[('v',ci)],
+                                                           self.q[('dV_u',ci)],
+                                                           self.rightHandSideForLimiting[ci],
+                                                           self.elementResidual[ci],
+                                                           self.elementSlumpingParameter[ci],
+                                                           self.elementModifiedMassMatrix[ci])
+                
+            #subtract off element level mass correction from residual
     def calculateElementJacobian(self):
         for ci in range(self.nc):
             for cj in self.coefficients.stencil[ci]:
@@ -963,7 +1068,19 @@ class OneLevelLADR(OneLevelTransport):
                                                              self.q[('w*dV_m',ci)],
                                                              self.elementJacobian[ci][cj])
                 
-
+        if self.slumpingFlag == 1:
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            for ci,cjDict in self.coefficients.mass.iteritems():
+                for cj in cjDict:
+                    for eN in range(self.mesh.nElements_global):
+                        for i in range(self.nDOF_test_element[ci]):
+                            self.elementJacobian[ci][cj][eN,i,i] += self.elementSlumpingParameter[ci][eN]
+                            for j in range(i):
+                                self.elementJacobian[ci][cj][eN,i,j] -= self.elementSlumpingParameter[ci][eN]
+                            for j in range(i+1,self.nDOF_trial_element[cj]):
+                                self.elementJacobian[ci][cj][eN,i,j] -= self.elementSlumpingParameter[ci][eN]
 
     def calculateExteriorElementBoundaryJacobian(self):
         for jDict in self.fluxJacobian_exterior.values():
@@ -1133,7 +1250,7 @@ class OneLevelLADR(OneLevelTransport):
             self.tForLastTrackingStep=self.timeIntegration.t
             #mwf debug
             #pdb.set_trace()
-    def approximateOldMassIntegral(self):
+    def approximateOldMassIntegral(self,elementRes):
         """
         approximate weak integral
         \int_{\Omega} m^{n} w^{n+1} \dV using forward tracking
@@ -1173,7 +1290,7 @@ class OneLevelLADR(OneLevelTransport):
                 self.q_track[('m',ci)] *= -1.
                 cfemIntegrals.updateMass_weak(self.q_track[('m',ci)],
                                               self.q[('w*dV_m',ci)],
-                                              self.elementResidual[ci])
+                                              elementRes[ci])
                 self.q_track[('m',ci)] *= -1.
             #mwf debug
             #import pdb
@@ -1202,9 +1319,9 @@ class OneLevelLADR(OneLevelTransport):
                                           self.flag_track[ci],
                                           self.u[ci].femSpace.dofMap.l2g,
                                           self.timeIntegration.m_last[ci],
-                                          self.elementResidual[ci])
+                                          elementRes[ci])
 
-    def approximateInflowBoundaryIntegral(self):
+    def approximateInflowBoundaryIntegral(self,elementRes):
         """
         approximate term
 
@@ -1315,7 +1432,7 @@ class OneLevelLADR(OneLevelTransport):
                                                     self.ebqe_flag_track[ci],
                                                     self.u[ci].femSpace.dofMap.l2g,
                                                     self.u[ci].dof,
-                                                    self.elementResidual[ci], 
+                                                    elementRes[ci], 
                                                     self.coefficients.sdInfo[(ci,ci)][0], #todo fix
                                                     self.coefficients.sdInfo[(ci,ci)][1],
                                                     self.ebqe[('advectiveFlux_bc_flag',ci)],
