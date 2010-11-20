@@ -1,6 +1,7 @@
 #include "ellam.h"
 #include "tracking.h"
 #include <cmath>
+#include <iostream>
 /***********************************************************************
 
   TODO:
@@ -851,5 +852,124 @@ void calculateSlumpedMassApproximation1d(int nElements_global,
 	}  
     }/*eN*/
 
+
+}
+extern "C"
+void calculateSlumpedMassApproximation2d(int nElements_global,
+					 int nElementBoundaries_element,
+					 int nQuadraturePoints_element,
+					 int nDOF_trial_element,
+					 int nDOF_test_element,
+					 const int* l2g,
+					 const int* elementNeighborsArray,
+					 const double* u_dof,
+					 const double* dm,
+					 const double* w,
+					 const double* v,
+					 const double* dV,
+					 const double* rhs,
+					 double* elementResidual,
+					 double* theta,
+					 double* slumpedMassMatrix)
+{
+  /*
+    try stupid approach where just slump local element mass matrix
+   */
+  int eN,i,j,k,I,nDOF_test_X_trial_element=nDOF_trial_element*nDOF_test_element;
+  
+  int I0,I1,I2;
+  double dr0,dr1,dr2,a,b,tmp1,tmp2,tmp3,tmp4;
+  
+  assert(nDOF_test_element == 3);
+  for (eN=0; eN<nElements_global; eN++)
+    {
+      I0 = l2g[eN*nDOF_test_element + 0];
+      I1 = l2g[eN*nDOF_test_element + 1];
+      I2 = l2g[eN*nDOF_test_element + 2];
+      dr0 = fabs(rhs[I1]-rhs[I0]);
+      dr1 = fabs(rhs[I2]-rhs[I1]);
+      dr2 = fabs(rhs[I0]-rhs[I2]);
+      /*calculate local mass matrix */
+      for (i=0; i < nDOF_test_element; i++)
+	for (j=0; j < nDOF_trial_element; j++)
+	  {
+	    slumpedMassMatrix[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = 0.0;
+	    for (k=0; k < nQuadraturePoints_element; k++)
+	      {
+		slumpedMassMatrix[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] +=  
+		  dm[eN*nQuadraturePoints_element+k]
+		  *
+		  v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    k*nDOF_trial_element + 
+		    j]
+		  *
+		  w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    k*nDOF_test_element + 
+		    i]
+		  *
+		  dV[eN*nQuadraturePoints_element+k];
+	      }
+	  }
+      a = 0.0; b=123456.0; /*take max,min to make sure don't have some small roundoff?*/
+      for (i=0; i < nDOF_test_element; i++)
+	{
+	  a = fmax(a,slumpedMassMatrix[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i]);
+	  for (j=0; j < nDOF_trial_element; j++)
+	    {
+	      b = fmin(b,slumpedMassMatrix[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j]);
+	    }
+	}
+
+      b = fmax(b,0.0); a = fmax(a,0.0);
+      tmp1 = fmin(dr0,dr1); tmp1 = fmin(tmp1,dr2);
+      tmp2 = tmp1*(a+b)/(dr0+dr1+dr2+1.0e-12);
+      tmp3 = b-tmp2;
+      theta[eN] = fmax(tmp3,0.0);
+      /*mwf debug*/
+      if (tmp1 > 1.0e-5)
+	{
+	  std::cout<<"slump2d eN="<<eN<<" a="<<a<<" b="<<b<<"dr=["<<dr0<<","<<dr1<<","<<dr2<<"]"<<std::endl;
+	  /*mwf debug*/
+	  std::cout<<"\t min(dr)="<<tmp1<<" min(dr)*(a+b)/(r0+r1+r2)="<<tmp2<<" b-tmp2="<<tmp3<<" theta="<<theta[eN]<<std::endl;
+	}
+      /*update mass matrix and element residual*/
+      for (i=0; i < nDOF_test_element; i++)
+	{
+	  slumpedMassMatrix[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] += (nDOF_trial_element-1)*theta[eN];
+	  elementResidual[eN*nDOF_test_element + i] += (nDOF_trial_element-1)*theta[eN]*u_dof[l2g[eN*nDOF_trial_element+i]];
+
+	  for (j=0; j < i; j++)
+	    {
+	      slumpedMassMatrix[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] -= theta[eN];
+	      elementResidual[eN*nDOF_test_element + i] -= theta[eN]*u_dof[l2g[eN*nDOF_trial_element+j]];
+	    }
+	  for (j=i+1; j < nDOF_trial_element; j++)
+	    {
+	      slumpedMassMatrix[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] -= theta[eN];
+	      elementResidual[eN*nDOF_test_element + i] -= theta[eN]*u_dof[l2g[eN*nDOF_trial_element+j]];
+	    }
+	}  
+    }/*eN*/
+}
+
+extern "C"
+void updateElementJacobianWithSlumpedMassApproximation(int nElements_global,
+						       int nDOF_trial_element,
+						       int nDOF_test_element,
+						       const double* theta,
+						       double* elementJacobianMatrix)
+{
+  int eN,i,j,nDOF_test_X_trial_element=nDOF_trial_element*nDOF_test_element;
+  for (eN = 0; eN < nElements_global; eN++)
+    {
+      for (i=0; i < nDOF_test_element; i++)
+	{
+	  for (j=0; j < i; j++)
+	    elementJacobianMatrix[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] -= theta[eN];
+	  elementJacobianMatrix[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] += (nDOF_trial_element-1)*theta[eN];
+	  for (j=i+1; j < nDOF_trial_element; j++)
+	    elementJacobianMatrix[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] -= theta[eN];
+	}
+    }
 
 }
