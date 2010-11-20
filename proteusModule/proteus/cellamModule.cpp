@@ -771,6 +771,74 @@ static PyObject* cellam_calculateSlumpedMassApproximation1d(PyObject* self,
   Py_INCREF(Py_None); 
   return Py_None;
 }
+static PyObject* cellam_calculateSlumpedMassApproximation2d(PyObject* self,
+							    PyObject* args)
+{
+  PyObject *u_l2g,
+    *elementNeighborsArray,
+    *u_dof,
+    *dm,*w,*v,
+    *dV,*rhs,
+    *theta,
+    *slumpedMassMatrix,
+    *elementResidual; 
+
+  if (!PyArg_ParseTuple(args,
+                        "OOOOOOOOOOO",
+			&u_l2g,
+			&elementNeighborsArray,
+			&u_dof,
+			&dm,
+			&w,
+			&v,
+			&dV,
+			&rhs,
+			&elementResidual,
+			&theta,
+			&slumpedMassMatrix))
+    return NULL;
+  
+  calculateSlumpedMassApproximation2d(SHAPE(u_l2g)[0],
+				      SHAPE(elementNeighborsArray)[1],
+				      SHAPE(dm)[1],
+				      SHAPE(v)[2],
+				      SHAPE(w)[2],
+				      IDATA(u_l2g),
+				      IDATA(elementNeighborsArray),
+				      DDATA(u_dof),
+				      DDATA(dm),
+				      DDATA(w),
+				      DDATA(v),
+				      DDATA(dV),
+				      DDATA(rhs),
+				      DDATA(elementResidual),
+				      DDATA(theta),
+				      DDATA(slumpedMassMatrix));
+
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+static PyObject* cellam_updateElementJacobianWithSlumpedMassApproximation(PyObject* self,
+									  PyObject* args)
+{
+  PyObject *theta,
+    *elementJacobian; 
+
+  if (!PyArg_ParseTuple(args,
+                        "OO",
+			&theta,
+			&elementJacobian))
+    return NULL;
+  
+  updateElementJacobianWithSlumpedMassApproximation(SHAPE(elementJacobian)[0],
+						    SHAPE(elementJacobian)[2],
+						    SHAPE(elementJacobian)[1],
+						    DDATA(theta),
+						    DDATA(elementJacobian));
+
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
 
 static PyMethodDef cellamMethods[] = {
  { "updateOldMass_weak",
@@ -817,6 +885,14 @@ static PyMethodDef cellamMethods[] = {
     cellam_calculateSlumpedMassApproximation1d,
    METH_VARARGS, 
    "calculate 1d slumping approximation from Russell and Binning and apply to residual"},
+ { "calculateSlumpedMassApproximation2d",
+    cellam_calculateSlumpedMassApproximation2d,
+   METH_VARARGS, 
+   "calculate 2d slumping approximation for just local mass matrix and apply to residual"},
+ { "updateElementJacobianWithSlumpedMassApproximation",
+    cellam_updateElementJacobianWithSlumpedMassApproximation,
+   METH_VARARGS, 
+   "update jacobian matrix to account for slumping"},
  { NULL,NULL,0,NULL}
 };
 
