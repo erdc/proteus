@@ -86,7 +86,7 @@
         deallocate(x,y,z,xg,IEN)
       else
         allocate( xg2(NNODZ,3), IEN2(NEL,8))
-        call removeObstacle(xs(2),xs(3),ys(2),ys(3),zs(1),zs(2),
+        call removeObstacle(xs(2),xs(3),ys(2),ys(3),zs(1)-1d0,zs(2),
      &                      xg,NNODZ,IEN,NEL,
      &                      xg2,NNODZ2,IEN2,NEL2)
   
@@ -216,7 +216,7 @@
          if ((xg(i,1).gt.x0).and.(xg(i,1).lt.x1).and.
      &       (xg(i,2).gt.y0).and.(xg(i,2).lt.y1).and.
      &       (xg(i,3).gt.z0).and.(xg(i,3).lt.z1)) then
-           !write(*,*) "Removing point = ", xg(i,:)
+           write(*,*) "Removing point = ", xg(i,:)
            o2n(i) = -1
          else
            NNODZ2 = NNODZ2+1           
