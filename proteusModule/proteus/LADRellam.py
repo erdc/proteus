@@ -505,7 +505,8 @@ class OneLevelLADR(OneLevelTransport):
             for cj in cjDict.keys():
                 self.ebqe[('dm',ci,cj)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
 
-        #for tracking
+        ###for tracking
+        #quadrature points
         self.x_track = {}; self.t_track={}; self.t_depart={}; self.dt_track={}; self.flag_track={}; self.element_track={}
         for ci in range(self.nc):
             self.x_track[ci] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
@@ -515,7 +516,21 @@ class OneLevelLADR(OneLevelTransport):
             self.flag_track[ci]   = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'i')
             self.flag_track[ci].fill(-1)
             self.element_track[ci]   = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'i')
-
+        #interpolation points for solution values
+        self.x_track_ip = {}; self.t_track_ip={}; self.t_depart_ip={}; self.u_track_ip={}; self.flag_track_ip={}; self.element_track_ip={}
+        self.u_dof_lim = {}; self.u_dof_lim_tmp = {} ; self.u_dof_lim_last = {}
+        for ci in range(self.nc):
+            self.x_track_ip[ci] = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci],3),'d')
+            self.t_track_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'d')
+            self.t_depart_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'d')
+            self.u_track_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'d')
+            self.flag_track_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'i')
+            self.flag_track_ip[ci].fill(-1)
+            self.element_track_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'i')
+            self.u_dof_lim[ci] = numpy.copy(self.u[ci].dof)
+            self.u_dof_lim_tmp[ci] = numpy.copy(self.u[ci].dof)
+            self.u_dof_lim_last[ci] = numpy.copy(self.u[ci].dof)
+            
         self.elementBoundaryOuterNormalsArray = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nSpace_global),'d')
         #todo clean this up, add set from options for zeroTol etc
         assert 'particleTracking' in dir(options), "ELLAM requires particleTracking type to be set in n file"
@@ -595,11 +610,11 @@ class OneLevelLADR(OneLevelTransport):
 
         #data structures for slumping
         self.slumpingFlag =0
-        self.rightHandSideForLimiting = {}; self.elementResidualTmp = {}; self.elementModifiedMassMatrix = {}; self.elementSlumpingParameter = {}
+        self.rightHandSideForLimiting = {}; self.elementResidualTmp = {}; self.elementModifiedMassMatrixCorrection = {}; self.elementSlumpingParameter = {}
         for ci in range(self.nc):
             self.rightHandSideForLimiting[ci]= numpy.zeros((self.nFreeDOF_global[ci],),'d')
             self.elementResidualTmp[ci] = numpy.zeros((self.mesh.nElements_global,self.nDOF_test_element[ci]),'d')
-            self.elementModifiedMassMatrix[ci] = numpy.zeros((self.mesh.nElements_global,self.nDOF_test_element[ci],self.nDOF_test_element[ci]),'d')
+            self.elementModifiedMassMatrixCorrection[ci] = numpy.zeros((self.mesh.nElements_global,self.nDOF_test_element[ci],self.nDOF_test_element[ci]),'d')
             self.elementSlumpingParameter[ci] = numpy.zeros((self.mesh.nElements_global,),'d')
         #
         if 'slumpingFlag' in dir(options):
@@ -1012,7 +1027,7 @@ class OneLevelLADR(OneLevelTransport):
             if self.nSpace_global == 1:
                 cellam.calculateSlumpedMassApproximation1d(self.u[ci].femSpace.dofMap.l2g,
                                                            self.mesh.elementNeighborsArray,
-                                                           self.u[ci].dof,
+                                                           self.u[ci].dof,self.u[ci].dof,
                                                            self.q[('dm',ci,ci)],
                                                            self.q[('w',ci)],
                                                            self.q[('v',ci)],
@@ -1020,12 +1035,12 @@ class OneLevelLADR(OneLevelTransport):
                                                            self.rightHandSideForLimiting[ci],
                                                            self.elementResidual[ci],
                                                            self.elementSlumpingParameter[ci],
-                                                           self.elementModifiedMassMatrix[ci])
+                                                           self.elementModifiedMassMatrixCorrection[ci])
                 
             elif self.nSpace_global == 2:
                 cellam.calculateSlumpedMassApproximation2d(self.u[ci].femSpace.dofMap.l2g,
                                                            self.mesh.elementNeighborsArray,
-                                                           self.u[ci].dof,
+                                                           self.u[ci].dof,self.u[ci].dof,
                                                            self.q[('dm',ci,ci)],
                                                            self.q[('w',ci)],
                                                            self.q[('v',ci)],
@@ -1033,7 +1048,24 @@ class OneLevelLADR(OneLevelTransport):
                                                            self.rightHandSideForLimiting[ci],
                                                            self.elementResidual[ci],
                                                            self.elementSlumpingParameter[ci],
-                                                           self.elementModifiedMassMatrix[ci])
+                                                           self.elementModifiedMassMatrixCorrection[ci])
+                
+        elif self.slumpingFlag == 2:
+            #start by using current solution to do limiting, then try back tracking
+            if self.nSpace_global == 1:
+                #mwf debug
+                #import pdb
+                #pdb.set_trace()
+                cellam.calculateBerzinsSlumpedMassApproximation1d(self.u[ci].femSpace.dofMap.l2g,
+                                                                  self.mesh.elementNeighborsArray,
+                                                                  self.u[ci].dof,self.u_dof_lim[ci],
+                                                                  self.q[('dm',ci,ci)],
+                                                                  self.q[('w',ci)],
+                                                                  self.q[('v',ci)],
+                                                                  self.q[('dV_u',ci)],
+                                                                  self.rightHandSideForLimiting[ci],
+                                                                  self.elementResidual[ci],
+                                                                  self.elementModifiedMassMatrixCorrection[ci])
                 
     def calculateElementJacobian(self):
         for ci in range(self.nc):
@@ -1085,7 +1117,7 @@ class OneLevelLADR(OneLevelTransport):
             #mwf debug
             #import pdb
             #pdb.set_trace()
-            useC = False
+            useC = True
             for ci,cjDict in self.coefficients.mass.iteritems():
                 for cj in cjDict:
                     if useC:
@@ -1094,11 +1126,27 @@ class OneLevelLADR(OneLevelTransport):
                     else:
                         for eN in range(self.mesh.nElements_global):
                             for i in range(self.nDOF_test_element[ci]):
-                                self.elementJacobian[ci][cj][eN,i,i] += (self.nDOF_trial_element[ci]-1)*self.elementSlumpingParameter[ci][eN]
+                                self.elementJacobian[ci][cj][eN,i,i] += (self.nDOF_trial_element[cj]-1)*self.elementSlumpingParameter[ci][eN]
                                 for j in range(i):
                                     self.elementJacobian[ci][cj][eN,i,j] -= self.elementSlumpingParameter[ci][eN]
                                 for j in range(i+1,self.nDOF_trial_element[cj]):
                                     self.elementJacobian[ci][cj][eN,i,j] -= self.elementSlumpingParameter[ci][eN]
+
+        elif self.slumpingFlag == 2:
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            useC = False
+            for ci,cjDict in self.coefficients.mass.iteritems():
+                for cj in cjDict:
+                    if useC:
+                        cellam.updateElementJacobianWithSlumpedMassCorrection(self.elementModifiedMassMatrixCorrection[ci],
+                                                                              self.elementJacobian[ci][cj])
+                    else:
+                        for eN in range(self.mesh.nElements_global):
+                            for i in range(self.nDOF_test_element[ci]):
+                                for j in range(self.nDOF_trial_element[cj]):
+                                    self.elementJacobian[ci][cj][eN,i,j] += self.elementModifiedMassMatrixCorrection[ci][eN,i,j]
 
     def calculateExteriorElementBoundaryJacobian(self):
         for jDict in self.fluxJacobian_exterior.values():
@@ -1121,6 +1169,10 @@ class OneLevelLADR(OneLevelTransport):
         if self.useBackwardTrackingForOldMass:
             for ci in range(self.nc):
                 self.u_dof_track[ci].flat[:] = self.u[ci].dof.flat
+        if self.slumpingFlag == 2:
+            for ci in range(self.nc):
+                self.u_dof_lim_last[ci].flat[:] = self.u[ci].dof.flat
+            
         log("ELLAM t= %s Global conservation= %s " % (self.timeIntegration.t,numpy.sum(self.elementResidual[0].flat)),level=0)
     def setInitialConditions(self,getInitialConditionsDict,T=0.0):
         OneLevelTransport.setInitialConditions(self,getInitialConditionsDict,T=T)
@@ -1264,10 +1316,86 @@ class OneLevelLADR(OneLevelTransport):
                     #            self.x_track[0][eN,k][0] > max(x0,x1)+1.0e-8):
                     #            pdb.set_trace()
 
+            needToTrackInterpolationPoints = (self.slumpingFlag == 2)
+            if needToTrackInterpolationPoints:
+                x_depart_ip = {}
+                nPoints_track_ip  = {}
+                for ci in range(self.nc):
+                    #todo switch this to characteristic velocity, need _last values!
+                    self.particle_tracker.setTrackingVelocity(self.coefficients.adjoint_velocity_dofs_last[ci],ci,
+                                                              self.coefficients.adjoint_velocity_times_last[ci],
+                                                              timeLevel=0,
+                                                              trackingVelocity_l2g=self.coefficients.adjoint_velocity_l2g[ci])
+                    self.particle_tracker.setTrackingVelocity(self.coefficients.adjoint_velocity_dofs[ci],ci,
+                                                              self.coefficients.adjoint_velocity_times[ci],
+                                                              timeLevel=1)
+
+
+                    log(" LADRellam tracking integration points backward ci=%s" % ci,level=2) 
+                    self.t_depart_ip[ci].fill(self.timeIntegration.t)
+                    #in desired output time, out actual time
+                    self.t_track_ip[ci].fill(self.timeIntegration.tLast)
+                    #try all points, now set to -1 to try, -3 to skip, 0 or greater if a node of the mesh
+                    self.flag_track_ip[ci].fill(-1)
+                    #don't skip points with small concentration when going backwards in case near a point with nonzero grad?
+                    skipPointsWithZeroSolution = 0
+
+                    for k in range(self.element_track_ip[ci].shape[1]):
+                        self.element_track_ip[ci][:,k] = numpy.arange(self.mesh.nElements_global,dtype='i')
+
+                    x_depart_ip[ci] = self.u[ci].femSpace.interpolationPoints
+                    nPoints_track_ip[ci] = self.mesh.nElements_global*x_depart_ip[ci].shape[1]
+                    if skipPointsWithZeroSolution:
+                        assert False, "todo need u array that's the same shape as interpolation points array"
+                        #cellam.tagNegligibleIntegrationPoints(nPoints_track_ip[ci],
+                        #                                      self.zeroSolutionTol_track[ci],
+                        #                                      x_depart_ip[ci],
+                        #                                      self.q[('u',ci)],
+                        #                                      self.flag_track_ip[ci])
+
+                #todo make sure activeComponents set explicitly?
+
+                self.particle_tracker.backwardTrack(self.t_depart_ip,
+                                                    self.t_track_ip,
+                                                    nPoints_track_ip,
+                                                    x_depart_ip,
+                                                    self.element_track_ip,
+                                                    self.x_track_ip,
+                                                    self.flag_track_ip)
+
+                for ci in range(self.nc):
+                    #evaluate solution at tracked interpolation points using old time level dofs
+                    cellam.evaluateSolutionAtTrackedPoints(self.nSpace_global,
+                                                           self.nDOF_trial_element[ci],
+                                                           nPoints_track_ip[ci],
+                                                           self.mesh.nElements_global,
+                                                           self.mesh.nNodes_global,
+                                                           self.mesh.nNodes_element,
+                                                           self.mesh.nElementBoundaries_element,
+                                                           self.mesh.nodeArray,
+                                                           self.mesh.elementNodesArray,
+                                                           self.mesh.elementNeighborsArray,
+                                                           self.elementBoundaryOuterNormalsArray,
+                                                           self.x_track_ip[ci],
+                                                           self.t_track_ip[ci],
+                                                           self.element_track_ip[ci],
+                                                           self.flag_track_ip[ci],
+                                                           self.u[ci].femSpace.dofMap.l2g,
+                                                           self.u_dof_lim_last[ci],#todo put this in time integration?
+                                                           self.u_track_ip[ci])
+                    #use finite element machinery to project solution at new time level
+                    self.u_dof_lim_tmp[ci][:] = self.u[ci].dof
+                    self.u[ci].projectFromInterpolationConditions(self.u_track_ip[ci])
+                    self.u_dof_lim[ci][:] = self.u[ci].dof
+                    self.u[ci].dof[:] = self.u_dof_lim_tmp[ci]
+                
+            #end tracking interpolation points
             self.needToTrackPoints = False
             self.tForLastTrackingStep=self.timeIntegration.t
             #mwf debug
             #pdb.set_trace()
+        #
+
     def approximateOldMassIntegral(self,elementRes):
         """
         approximate weak integral
@@ -1292,7 +1420,7 @@ class OneLevelLADR(OneLevelTransport):
                                                       self.t_track[ci],
                                                       self.element_track[ci],
                                                       self.flag_track[ci],
-                                                      self.u[0].femSpace.dofMap.l2g,
+                                                      self.u[ci].femSpace.dofMap.l2g,
                                                       self.u_dof_track[ci],#todo put this in time integration?
                                                       self.q_track[('u',ci)])
 
