@@ -729,18 +729,19 @@ static PyObject* cellam_calculateSlumpedMassApproximation1d(PyObject* self,
 {
   PyObject *u_l2g,
     *elementNeighborsArray,
-    *u_dof,
+    *u_dof,*u_dof_limit,
     *dm,*w,*v,
     *dV,*rhs,
     *theta,
-    *slumpedMassMatrix,
+    *slumpedMassMatrixCorrection,
     *elementResidual; 
 
   if (!PyArg_ParseTuple(args,
-                        "OOOOOOOOOOO",
+                        "OOOOOOOOOOOO",
 			&u_l2g,
 			&elementNeighborsArray,
 			&u_dof,
+			&u_dof_limit,
 			&dm,
 			&w,
 			&v,
@@ -748,7 +749,7 @@ static PyObject* cellam_calculateSlumpedMassApproximation1d(PyObject* self,
 			&rhs,
 			&elementResidual,
 			&theta,
-			&slumpedMassMatrix))
+			&slumpedMassMatrixCorrection))
     return NULL;
   
   calculateSlumpedMassApproximation1d(SHAPE(u_l2g)[0],
@@ -759,6 +760,7 @@ static PyObject* cellam_calculateSlumpedMassApproximation1d(PyObject* self,
 				      IDATA(u_l2g),
 				      IDATA(elementNeighborsArray),
 				      DDATA(u_dof),
+				      DDATA(u_dof_limit),
 				      DDATA(dm),
 				      DDATA(w),
 				      DDATA(v),
@@ -766,7 +768,7 @@ static PyObject* cellam_calculateSlumpedMassApproximation1d(PyObject* self,
 				      DDATA(rhs),
 				      DDATA(elementResidual),
 				      DDATA(theta),
-				      DDATA(slumpedMassMatrix));
+				      DDATA(slumpedMassMatrixCorrection));
 
   Py_INCREF(Py_None); 
   return Py_None;
@@ -776,18 +778,19 @@ static PyObject* cellam_calculateSlumpedMassApproximation2d(PyObject* self,
 {
   PyObject *u_l2g,
     *elementNeighborsArray,
-    *u_dof,
+    *u_dof,*u_dof_limit,
     *dm,*w,*v,
     *dV,*rhs,
     *theta,
-    *slumpedMassMatrix,
+    *slumpedMassMatrixCorrection,
     *elementResidual; 
 
   if (!PyArg_ParseTuple(args,
-                        "OOOOOOOOOOO",
+                        "OOOOOOOOOOOO",
 			&u_l2g,
 			&elementNeighborsArray,
 			&u_dof,
+			&u_dof_limit,
 			&dm,
 			&w,
 			&v,
@@ -795,7 +798,7 @@ static PyObject* cellam_calculateSlumpedMassApproximation2d(PyObject* self,
 			&rhs,
 			&elementResidual,
 			&theta,
-			&slumpedMassMatrix))
+			&slumpedMassMatrixCorrection))
     return NULL;
   
   calculateSlumpedMassApproximation2d(SHAPE(u_l2g)[0],
@@ -806,6 +809,7 @@ static PyObject* cellam_calculateSlumpedMassApproximation2d(PyObject* self,
 				      IDATA(u_l2g),
 				      IDATA(elementNeighborsArray),
 				      DDATA(u_dof),
+				      DDATA(u_dof_limit),
 				      DDATA(dm),
 				      DDATA(w),
 				      DDATA(v),
@@ -813,7 +817,7 @@ static PyObject* cellam_calculateSlumpedMassApproximation2d(PyObject* self,
 				      DDATA(rhs),
 				      DDATA(elementResidual),
 				      DDATA(theta),
-				      DDATA(slumpedMassMatrix));
+				      DDATA(slumpedMassMatrixCorrection));
 
   Py_INCREF(Py_None); 
   return Py_None;
@@ -835,6 +839,75 @@ static PyObject* cellam_updateElementJacobianWithSlumpedMassApproximation(PyObje
 						    SHAPE(elementJacobian)[1],
 						    DDATA(theta),
 						    DDATA(elementJacobian));
+
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
+static PyObject* cellam_calculateBerzinsSlumpedMassApproximation1d(PyObject* self,
+								  PyObject* args)
+{
+  PyObject *u_l2g,
+    *elementNeighborsArray,
+    *u_dof,*u_dof_limit,
+    *dm,*w,*v,
+    *dV,*rhs,
+    *slumpedMassMatrixCorrection,
+    *elementResidual; 
+
+  if (!PyArg_ParseTuple(args,
+                        "OOOOOOOOOOO",
+			&u_l2g,
+			&elementNeighborsArray,
+			&u_dof,
+			&u_dof_limit,
+			&dm,
+			&w,
+			&v,
+			&dV,
+			&rhs,
+			&elementResidual,
+			&slumpedMassMatrixCorrection))
+    return NULL;
+  
+  calculateBerzinsSlumpedMassApproximation1d(SHAPE(u_l2g)[0],
+					    SHAPE(elementNeighborsArray)[1],
+					    SHAPE(dm)[1],
+					    SHAPE(v)[2],
+					    SHAPE(w)[2],
+					    IDATA(u_l2g),
+					    IDATA(elementNeighborsArray),
+					    DDATA(u_dof),
+					    DDATA(u_dof_limit),
+					    DDATA(dm),
+					    DDATA(w),
+					    DDATA(v),
+					    DDATA(dV),
+					    DDATA(rhs),
+					    DDATA(elementResidual),
+					    DDATA(slumpedMassMatrixCorrection));
+
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
+static PyObject* cellam_updateElementJacobianWithSlumpedMassCorrection(PyObject* self,
+								       PyObject* args)
+{
+  PyObject *elementMassMatrixCorrection,
+    *elementJacobian; 
+
+  if (!PyArg_ParseTuple(args,
+                        "OO",
+			&elementMassMatrixCorrection,
+			&elementJacobian))
+    return NULL;
+  
+  updateElementJacobianWithSlumpedMassCorrection(SHAPE(elementJacobian)[0],
+						 SHAPE(elementJacobian)[2],
+						 SHAPE(elementJacobian)[1],
+						 DDATA(elementMassMatrixCorrection),
+						 DDATA(elementJacobian));
 
   Py_INCREF(Py_None); 
   return Py_None;
@@ -889,8 +962,16 @@ static PyMethodDef cellamMethods[] = {
     cellam_calculateSlumpedMassApproximation2d,
    METH_VARARGS, 
    "calculate 2d slumping approximation for just local mass matrix and apply to residual"},
+ { "calculateBerzinsSlumpedMassApproximation1d",
+    cellam_calculateBerzinsSlumpedMassApproximation1d,
+   METH_VARARGS, 
+   "calculate 1d slumping approximation from Berzins and apply to residual"},
  { "updateElementJacobianWithSlumpedMassApproximation",
     cellam_updateElementJacobianWithSlumpedMassApproximation,
+   METH_VARARGS, 
+   "update jacobian matrix to account for slumping"},
+ { "updateElementJacobianWithSlumpedMassCorrection",
+    cellam_updateElementJacobianWithSlumpedMassCorrection,
    METH_VARARGS, 
    "update jacobian matrix to account for slumping"},
  { NULL,NULL,0,NULL}
