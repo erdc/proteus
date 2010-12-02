@@ -2811,6 +2811,9 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     nodeOffsets_new[0] = 0;
     for (int sdN=0;sdN<size;sdN++)
       nodeOffsets_new[sdN+1] = nodeOffsets_new[sdN]+nNodes_subdomain_new[sdN];
+      
+    assert(nodeOffsets_new[size]==mesh.nNodes_global);
+      
     //Now as with elements build a global node numbering, sort node
     //based information, and renumber references to node numbers
     valarray<int> nodeNumbering_new2old(nodes_subdomain_owned.size());
