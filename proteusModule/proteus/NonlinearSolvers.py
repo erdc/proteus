@@ -410,7 +410,7 @@ class Newton(NonlinearSolver):
         import sys
         if self.linearSolver.computeEigenvalues:
             self.u0[:]=u
-        r=self.solveInitialize(u,r,b)
+        #r=self.solveInitialize(u,r,b)
         if par_u != None:
             #allow linear solver to know what type of assembly to use
             self.linearSolver.par_fullOverlap = self.par_fullOverlap
@@ -420,6 +420,9 @@ class Newton(NonlinearSolver):
             else:
                 #no overlap or overlap (until we compute norms over only owned dof)
                 par_r.scatter_forward_insert()
+
+        r=self.solveInitialize(u,r,b)
+
         self.norm_r_hist = []
         self.norm_du_hist = []
         self.gammaK_max=0.0
@@ -451,7 +454,6 @@ class Newton(NonlinearSolver):
             u-=self.du
             if par_u != None:
                 par_u.scatter_forward_insert()
-            self.computeResidual(u,r,b)
             #no overlap
             #print "local r",r
             if par_r != None:
@@ -460,6 +462,8 @@ class Newton(NonlinearSolver):
                     par_r.scatter_reverse_add()
                 else:
                     par_r.scatter_forward_insert()
+
+            self.computeResidual(u,r,b)
             #print "global r",r
             if self.linearSolver.computeEigenvalues:
                 #approximate Lipschitz constant of J
@@ -765,7 +769,7 @@ class NewtonNS(NonlinearSolver):
         import sys
         if self.linearSolver.computeEigenvalues:
             self.u0[:]=u
-        r=self.solveInitialize(u,r,b)
+        ###r=self.solveInitialize(u,r,b)
 
         if par_u != None:
             #allow linear solver to know what type of assembly to use
@@ -776,6 +780,10 @@ class NewtonNS(NonlinearSolver):
             else:
                 #no overlap or overlap (until we compute norms over only owned dof)
                 par_r.scatter_forward_insert()
+		
+		
+        r=self.solveInitialize(u,r,b) 		
+		
         self.norm_r_hist = []
         self.norm_du_hist = []
         self.gammaK_max=0.0
@@ -934,7 +942,7 @@ class NewtonNS(NonlinearSolver):
                 #raw_input("wait")
             # return self.failedFlag
         log("   Final       Mom.  norm(r) = %12.5e   %g" % (self.norm_mom_r,100*self.norm_mom_r/self.norm_mom_r0),level=1)
-        log("   FInal       Cont. norm(r) = %12.5e   %g" % (self.norm_cont_r,100*self.norm_cont_r/self.norm_cont_r0),level=1)
+        log("   Final       Cont. norm(r) = %12.5e   %g" % (self.norm_cont_r,100*self.norm_cont_r/self.norm_cont_r0),level=1)
         #return self.failedFlag
   
 
