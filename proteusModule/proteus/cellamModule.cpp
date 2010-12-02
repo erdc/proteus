@@ -870,7 +870,7 @@ static PyObject* cellam_calculateBerzinsSlumpedMassApproximation1d(PyObject* sel
 			&slumpedMassMatrixCorrection))
     return NULL;
   
-  calculateBerzinsSlumpedMassApproximation1d(SHAPE(u_l2g)[0],
+  calculateBerzinsSlumpedMassApproximation1dv2(SHAPE(u_l2g)[0],
 					    SHAPE(elementNeighborsArray)[1],
 					    SHAPE(dm)[1],
 					    SHAPE(v)[2],
