@@ -2841,7 +2841,15 @@ extern "C"
     printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
     return 0;
   }
-
+  inline double hexahedronVolume(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, const double* nodeArray)
+  {
+    register double t[3];
+    t[0] = nodeArray[n0*3+0] - nodeArray[n1*3+0];
+    t[1] = nodeArray[n0*3+1] - nodeArray[n3*3+1];
+    t[2] = nodeArray[n0*3+2] - nodeArray[n4*3+2];
+    
+    return fabs(t[0]*t[1]*t[2]);
+  }
   int allocateGeometricInfo_hexahedron(Mesh& mesh)
   {
     mesh.elementDiametersArray = new double[mesh.nElements_global];
@@ -2880,9 +2888,15 @@ extern "C"
     for (int eN=0;eN<mesh.nElements_global;eN++)
       {
         double volume, surfaceArea=0.0, hMin=0.0,hMax=0.0;
-        volume = abs((mesh.elementNodesArray[eN*8+0]-mesh.elementNodesArray[eN*8+1])*
-                     (mesh.elementNodesArray[eN*8+0]-mesh.elementNodesArray[eN*8+3])*
-                     (mesh.elementNodesArray[eN*8+0]-mesh.elementNodesArray[eN*8+4]));
+        volume = hexahedronVolume(mesh.elementNodesArray[eN*8+0],
+	                          mesh.elementNodesArray[eN*8+1],
+     	                          mesh.elementNodesArray[eN*8+2],
+	                          mesh.elementNodesArray[eN*8+3],
+				  mesh.elementNodesArray[eN*8+4],
+	                          mesh.elementNodesArray[eN*8+5],
+     	                          mesh.elementNodesArray[eN*8+6],
+	                          mesh.elementNodesArray[eN*8+7],
+	                          mesh.nodeArray);
         
         //hMax
         hMax = 0.0;
