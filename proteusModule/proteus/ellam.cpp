@@ -861,7 +861,7 @@ void calculateSlumpedMassApproximation1d(int nElements_global,
 
 }
 extern "C"
-void calculateSlumpedMassApproximation2d(int nElements_global,
+void calculateSlumpedMassApproximation2dOrig(int nElements_global,
 					 int nElementBoundaries_element,
 					 int nQuadraturePoints_element,
 					 int nDOF_trial_element,
@@ -930,6 +930,113 @@ void calculateSlumpedMassApproximation2d(int nElements_global,
       tmp1 = fmin(dr0,dr1); tmp1 = fmin(tmp1,dr2);
       tmp2 = tmp1*(a+b)/(dr0+dr1+dr2+1.0e-12);
       tmp3 = b-tmp2;
+      theta[eN] = fmax(tmp3,0.0);
+      /*mwf debug*/
+      if (tmp1 > 1.0e-5)
+	{
+	  std::cout<<"slump2d eN="<<eN<<" a="<<a<<" b="<<b<<"dr=["<<dr0<<","<<dr1<<","<<dr2<<"]"<<std::endl;
+	  /*mwf debug*/
+	  std::cout<<"\t min(dr)="<<tmp1<<" min(dr)*(a+b)/(r0+r1+r2)="<<tmp2<<" b-tmp2="<<tmp3<<" theta="<<theta[eN]<<std::endl;
+	}
+      /*update mass matrix, storing only correction and element residual*/
+      for (i=0; i < nDOF_test_element; i++)
+	{
+	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = (nDOF_trial_element-1)*theta[eN];
+	  elementResidual[eN*nDOF_test_element + i] += (nDOF_trial_element-1)*theta[eN]*u_dof[l2g[eN*nDOF_trial_element+i]];
+
+	  for (j=0; j < i; j++)
+	    {
+	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -theta[eN];
+	      elementResidual[eN*nDOF_test_element + i] -= theta[eN]*u_dof[l2g[eN*nDOF_trial_element+j]];
+	    }
+	  for (j=i+1; j < nDOF_trial_element; j++)
+	    {
+	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -theta[eN];
+	      elementResidual[eN*nDOF_test_element + i] -= theta[eN]*u_dof[l2g[eN*nDOF_trial_element+j]];
+	    }
+	}  
+    }/*eN*/
+}
+extern "C"
+void calculateSlumpedMassApproximation2d(int nElements_global,
+					 int nElementBoundaries_element,
+					 int nQuadraturePoints_element,
+					 int nDOF_trial_element,
+					 int nDOF_test_element,
+					 const int* l2g,
+					 const int* elementNeighborsArray,
+					 const double* u_dof,
+					 const double* u_dof_limit,
+					 const double* dm,
+					 const double* w,
+					 const double* v,
+					 const double* dV,
+					 const double* rhs,
+					 double* elementResidual,
+					 double* theta,
+					 double* slumpedMassMatrixCorrection)
+{
+  /*
+    try stupid approach where just slump local element mass matrix
+   */
+  int eN,i,j,k,nDOF_test_X_trial_element=nDOF_trial_element*nDOF_test_element;
+  int I0,I1,I2;
+  double dr0,dr1,dr2,a,b,tmp0,tmp1,tmp2,tmp3,tmp4;
+  
+  assert(nDOF_test_element == 3);
+  for (eN=0; eN<nElements_global; eN++)
+    {
+      I0 = l2g[eN*nDOF_test_element + 0];
+      I1 = l2g[eN*nDOF_test_element + 1];
+      I2 = l2g[eN*nDOF_test_element + 2];
+      dr0 = fabs(rhs[I1]-rhs[I0]);
+      dr1 = fabs(rhs[I2]-rhs[I1]);
+      dr2 = fabs(rhs[I0]-rhs[I2]);
+      /*calculate local mass matrix, and store in correction for now */
+      for (i=0; i < nDOF_test_element; i++)
+	for (j=0; j < nDOF_trial_element; j++)
+	  {
+	    slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = 0.0;
+	    for (k=0; k < nQuadraturePoints_element; k++)
+	      {
+		slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] +=  
+		  dm[eN*nQuadraturePoints_element+k]
+		  *
+		  v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    k*nDOF_trial_element + 
+		    j]
+		  *
+		  w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    k*nDOF_test_element + 
+		    i]
+		  *
+		  dV[eN*nQuadraturePoints_element+k];
+	      }
+	  }
+      a = 0.0; b=123456.0; /*take max,min to make sure don't have some small roundoff?*/
+      for (i=0; i < nDOF_test_element; i++)
+	{
+	  a = fmax(a,slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i]);
+	  for (j=0; j < nDOF_trial_element; j++)
+	    {
+	      b = fmin(b,slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j]);
+	    }
+	}
+
+      b = fmax(b,0.0); a = fmax(a,0.0);
+      /*mwf original
+      tmp1 = fmin(dr0,dr1); tmp1 = fmin(tmp1,dr2);
+      tmp2 = tmp1*(a+b)/(dr0+dr1+dr2+1.0e-12);
+      tmp3 = b-tmp2;
+      */
+      /*mwf hack works pretty well for slug and gauss
+      tmp3 *= 0.3;
+      */
+      /*works a little better than original (less diffusive?)*/
+      tmp0 = (b*(dr1+dr2) - (a+b)*dr0)/(dr0+dr1+dr2+1.0e-12);
+      tmp1 = (b*(dr0+dr2) - (a+b)*dr1)/(dr0+dr1+dr2+1.0e-12);
+      tmp2 = (b*(dr0+dr1) - (a+b)*dr2)/(dr0+dr1+dr2+1.0e-12);
+      tmp3 = fmax(tmp0,tmp1); tmp3 = fmax(tmp2,tmp3);
       theta[eN] = fmax(tmp3,0.0);
       /*mwf debug*/
       if (tmp1 > 1.0e-5)
@@ -1093,6 +1200,240 @@ void calculateBerzinsSlumpedMassApproximation1d(int nElements_global,
     }/*eN*/
 
 }
+double modifiedVanLeer(double r)
+{
+  return (fabs(r)+r)/(1. + fmax(1.,fabs(r)));
+}
+extern "C"
+void calculateBerzinsSlumpedMassApproximation1dv2(int nElements_global,
+						  int nElementBoundaries_element,
+						  int nQuadraturePoints_element,
+						  int nDOF_trial_element,
+						  int nDOF_test_element,
+						  const int* l2g,
+						  const int* elementNeighborsArray,
+						  const double* u_dof,
+						  const double* u_dof_limit,
+						  const double* dm,
+						  const double* w,
+						  const double* v,
+						  const double* dV,
+						  const double* rhs,
+						  double* elementResidual,
+						  double* slumpedMassMatrixCorrection)
+{
+  int eN,i,j,k,kk,I,nDOF_test_X_trial_element=nDOF_trial_element*nDOF_test_element;
+  int J,K,eN_neighbor;
+  double mii,mij,mik,sei,theij,theijmax;
+  assert(nDOF_test_element == 2);
+  for (eN=0; eN<nElements_global; eN++)
+    {
+      /*compute only one lumping parameter per element */
+      theijmax = 0.0;
+      for (i=0; i < nDOF_test_element; i++)
+	{
+	  j = (i+1) % nDOF_test_element;
+	  I = l2g[eN*nDOF_test_element + i];
+	  J = l2g[eN*nDOF_test_element + j];
+	  /*compute local element mass matrix contributions*/
+	  mii = 0.0; mij=0.0;
+	  for (kk=0; kk < nQuadraturePoints_element; kk++)
+	      {
+		mii += 
+		  dm[eN*nQuadraturePoints_element+kk]
+		  *
+		  v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    kk*nDOF_trial_element + 
+		    i]
+		  *
+		  w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    kk*nDOF_test_element + 
+		    i]
+		  *
+		  dV[eN*nQuadraturePoints_element+kk];
+		mij += 
+		  dm[eN*nQuadraturePoints_element+kk]
+		  *
+		  v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    kk*nDOF_trial_element + 
+		    j]
+		  *
+		  w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    kk*nDOF_test_element + 
+		    i]
+		  *
+		  dV[eN*nQuadraturePoints_element+kk];
+	      }
+
+	  eN_neighbor = elementNeighborsArray[eN*nElementBoundaries_element+j]; /*across from j*/
+      
+	  K=-1;theij=0.0; /*lump by default*/
+	  if (eN_neighbor >= 0)
+	    {
+	      for (k=0; k < nDOF_test_element; k++)
+		{
+		  if (l2g[eN_neighbor*nDOF_test_element + k] != I)
+		    {
+		      K = l2g[eN_neighbor*nDOF_test_element + k];
+		      break;
+		    }
+		}
+	      assert(K >= 0); mik = 0.0;
+	      for (kk=0; kk < nQuadraturePoints_element; kk++)
+		{
+		mik += 
+		  dm[eN_neighbor*nQuadraturePoints_element+kk]
+		  *
+		  v[eN_neighbor*nQuadraturePoints_element*nDOF_trial_element + 
+		    kk*nDOF_trial_element + 
+		    k]
+		  *
+		  w[eN_neighbor*nQuadraturePoints_element*nDOF_trial_element + 
+		    kk*nDOF_test_element + 
+		    i]
+		  *
+		  dV[eN_neighbor*nQuadraturePoints_element+kk];
+		}
+	      sei = 0.0;
+	      if (fabs(u_dof_limit[I]-u_dof_limit[K]) > 1.0e-6)
+		sei = (u_dof_limit[J]-u_dof_limit[I])/(u_dof_limit[I]-u_dof_limit[K]);
+	      if (sei > 0.0 && fabs(sei) > 1.0e-6)
+		{
+		  theij = mik/sei - mij;
+		  theij = modifiedVanLeer(theij);/*fmax(theij,0.0);*/
+		}
+	    }
+	  theijmax = fmax(theijmax,theij);/* += theij/nDOF_test_element;*/ /*fmax(theijmax,theij);*/
+	}/*first loop to pick theta*/
+      i = 0; j = 1;
+      I = l2g[eN*nDOF_test_element + i];
+      J = l2g[eN*nDOF_test_element + j];
+      
+      /*update residual and modified mass matrix*/
+      elementResidual[eN*nDOF_test_element + i] += (mij + theij)*u_dof[I] - (mij+theij)*u_dof[J];
+      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = mij + theij;
+      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -(mij + theij);
+      elementResidual[eN*nDOF_test_element + j] += (mij + theij)*u_dof[J] - (mij+theij)*u_dof[I];
+      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + j*nDOF_trial_element + j] = mij + theij;
+      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + j*nDOF_trial_element + i] = -(mij + theij);
+      /*mwf hack try lumped mass matrix as approximate jacobian?
+	slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] =  mij;
+	slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -mij;
+      */
+    }/*eN*/
+
+}
+
+
+extern "C"
+void calculateBerzinsSlumpedMassApproximation2d(int nElements_global,
+					       int nElementBoundaries_element,
+					       int nQuadraturePoints_element,
+					       int nDOF_trial_element,
+					       int nDOF_test_element,
+					       const int* l2g,
+					       const int* elementNeighborsArray,
+					       const double* u_dof,
+					       const double* u_dof_limit,
+					       const double* dm,
+					       const double* w,
+					       const double* v,
+					       const double* dV,
+					       const double* rhs,
+					       double* elementResidual,
+					       double* slumpedMassMatrixCorrection)
+{
+  int eN,i,j,k,kk,I,nDOF_test_X_trial_element=nDOF_trial_element*nDOF_test_element;
+  int J,K,eN_neighbor;
+  double mii,mij,mik,sei,rei,theij,theik;
+  assert(nDOF_test_element == 3);
+  for (eN=0; eN<nElements_global; eN++)
+    {
+      for (i=0; i < nDOF_test_element; i++)
+	{
+	  j = (i+1) % nDOF_test_element;
+	  k = (i-1) % nDOF_test_element;
+	  I = l2g[eN*nDOF_test_element + i];
+	  J = l2g[eN*nDOF_test_element + j];
+	  K = l2g[eN*nDOF_test_element + k];
+	  /*compute local element mass matrix contributions*/
+	  mii = 0.0; mij=0.0; mik=0.0;
+	  for (kk=0; kk < nQuadraturePoints_element; kk++)
+	      {
+		mii += 
+		  dm[eN*nQuadraturePoints_element+kk]
+		  *
+		  v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    kk*nDOF_trial_element + 
+		    i]
+		  *
+		  w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    kk*nDOF_test_element + 
+		    i]
+		  *
+		  dV[eN*nQuadraturePoints_element+kk];
+		mij += 
+		  dm[eN*nQuadraturePoints_element+kk]
+		  *
+		  v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    kk*nDOF_trial_element + 
+		    j]
+		  *
+		  w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    kk*nDOF_test_element + 
+		    i]
+		  *
+		  dV[eN*nQuadraturePoints_element+kk];
+		mik += 
+		  dm[eN*nQuadraturePoints_element+kk]
+		  *
+		  v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    kk*nDOF_trial_element + 
+		    k]
+		  *
+		  w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    kk*nDOF_test_element + 
+		    i]
+		  *
+		  dV[eN*nQuadraturePoints_element+kk];
+	      }
+
+      
+	  theij=0.0; theik=0.0;/*lump by default*/
+
+	  sei = 0.0; rei = 0.0;
+	  if (fabs(u_dof_limit[J]-u_dof_limit[I]) > 1.0e-6)
+	    sei = (u_dof_limit[I]-u_dof_limit[K])/(u_dof_limit[J]-u_dof_limit[I]);
+	  if (fabs(sei) > 1.0e-6)
+	    rei = 1.0/sei;
+	  if (sei > 0.0)
+	    {
+	      theij = mik*sei - mij;
+	      theij = fmax(theij,0.0);
+	    }
+	  if (rei > 0.0)
+	    {
+	      theik = mij*rei - mik;
+	      theik = fmax(theik,0.0);
+	    }
+	    
+	  /*mwf hack force lumping
+	    theij = 0.0; theik = 0.0;
+	  */
+	  /*update residual and modified mass matrix*/
+	  elementResidual[eN*nDOF_test_element + i] += (mij + mik + theij + theik)*u_dof[I] - (mij+theij)*u_dof[J] - (mik + theik)*u_dof[K];
+	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = mij + theij + mik + theik;
+	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -(mij + theij);
+	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + k] = -(mik + theik);
+	  /*mwf hack try lumped mass matrix as approximate jacobian?
+	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] =  mij;
+	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -mij;
+	  */
+	}/*i loop*/
+    }/*eN*/
+
+}
+
 extern "C"
 void updateElementJacobianWithSlumpedMassCorrection(int nElements_global,
 						    int nDOF_trial_element,
