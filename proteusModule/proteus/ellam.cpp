@@ -963,6 +963,7 @@ void calculateSlumpedMassApproximation2d(int nElements_global,
 					 int nQuadraturePoints_element,
 					 int nDOF_trial_element,
 					 int nDOF_test_element,
+					 double adjustFactor,
 					 const int* l2g,
 					 const int* elementNeighborsArray,
 					 const double* u_dof,
@@ -1037,6 +1038,7 @@ void calculateSlumpedMassApproximation2d(int nElements_global,
       tmp1 = (b*(dr0+dr2) - (a+b)*dr1)/(dr0+dr1+dr2+1.0e-12);
       tmp2 = (b*(dr0+dr1) - (a+b)*dr2)/(dr0+dr1+dr2+1.0e-12);
       tmp3 = fmax(tmp0,tmp1); tmp3 = fmax(tmp2,tmp3);
+      tmp3 *= adjustFactor;/*add a safety or sharpening factor?*/
       theta[eN] = fmax(tmp3,0.0);
       /*mwf debug*/
       if (tmp1 > 1.0e-5)
