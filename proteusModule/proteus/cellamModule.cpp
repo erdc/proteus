@@ -784,9 +784,9 @@ static PyObject* cellam_calculateSlumpedMassApproximation2d(PyObject* self,
     *theta,
     *slumpedMassMatrixCorrection,
     *elementResidual; 
-
+  double adjustFactor=1.0;
   if (!PyArg_ParseTuple(args,
-                        "OOOOOOOOOOOO",
+                        "OOOOOOOOOOOO|d",
 			&u_l2g,
 			&elementNeighborsArray,
 			&u_dof,
@@ -798,7 +798,8 @@ static PyObject* cellam_calculateSlumpedMassApproximation2d(PyObject* self,
 			&rhs,
 			&elementResidual,
 			&theta,
-			&slumpedMassMatrixCorrection))
+			&slumpedMassMatrixCorrection,
+			&adjustFactor))
     return NULL;
   
   calculateSlumpedMassApproximation2d(SHAPE(u_l2g)[0],
@@ -806,6 +807,7 @@ static PyObject* cellam_calculateSlumpedMassApproximation2d(PyObject* self,
 				      SHAPE(dm)[1],
 				      SHAPE(v)[2],
 				      SHAPE(w)[2],
+				      adjustFactor,
 				      IDATA(u_l2g),
 				      IDATA(elementNeighborsArray),
 				      DDATA(u_dof),
