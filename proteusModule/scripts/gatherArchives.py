@@ -112,6 +112,62 @@ def gatherXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nStepsOnly=None,
 </Xdmf>
 """)
     fAll.close()
+
+
+def gatherSplitTimeStepXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nStepsOnly=None,stride=1):
+    """
+    in case archiving failed to collect results from various processors in parallel simulation
+
+    size -- nprocessors
+    
+    """
+    #mwf debug
+    #import pdb
+    #pdb.set_trace()
+    xmlFile = open(filename+str(0)+".xmf","r")
+    tree = ElementTree(file=xmlFile)
+    xmlFile.close()
+    nSteps = len(tree.getroot()[-1][-1])
+    if nStepsOnly != None:
+        nSteps = nStepsOnly
+    print "nSteps",nSteps
+    stepsToGather=[i*stride for i in range(nSteps/stride)]
+    for tn  in stepsToGather:
+        fAll = open(os.path.join(dataDir,filename+"_t"+str(tn) + addname+str(size)+".xmf"),"w")
+        fAll.write(r"""<?xml version="1.0" ?>
+<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
+<Xdmf Version="2.0" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <Domain>
+    <Grid CollectionType="Temporal" GridType="Collection" Name="Mesh Spatial_Domain">
+""")
+
+        print "time step",tn
+        print "subdomain",0
+        fAll.write(r"""      <Grid CollectionType="Spatial" GridType="Collection">
+        """)
+        xmlFile = open(os.path.join(dataDir,filename+str(0)+".xmf"),"r")
+        tree = ElementTree(file=xmlFile)
+        xmlFile.close()
+        Grid=tree.getroot()[-1][-1][tn]
+        fAll.write(tostring(Grid[0]))
+        del Grid[0]
+        fAll.write(tostring(Grid))
+        for i in range(1,size):
+            print "subdomain",i
+            xmlFile = open(os.path.join(dataDir,filename+str(i)+".xmf"),"r")
+            tree = ElementTree(file=xmlFile)
+            xmlFile.close()
+            Grid=tree.getroot()[-1][-1][tn]
+            del Grid[0]
+            fAll.write(tostring(Grid))
+        fAll.write(r"""      </Grid>
+""")
+        fAll.write(r"""    </Grid>
+  </Domain>
+</Xdmf>
+""")
+        fAll.close()
+    
 if __name__ == '__main__':
     from optparse import OptionParser
     usage = ""
@@ -161,11 +217,19 @@ if __name__ == '__main__':
                       action="store_true",
                       dest="lotsOfMemory",
                       default=False)
+    parser.add_option("-i","--splitTimeSteps",
+                      help="don't worry about memory usage",
+                      action="store_true",
+                      dest="splitTimeSteps",
+                      default=False)
+
 
     (opts,args) = parser.parse_args()
 
     if opts.lotsOfMemory:
         gatherXDMFfiles(opts.size,opts.filebase,opts.dataDir,opts.append)
+    if opts.splitTimeSteps:
+        gatherSplitTimeStepXDMFfilesOpt(opts.size,opts.filebase,opts.dataDir,opts.append,opts.nStepsOnly,opts.mStride)
     else:
         gatherXDMFfilesOpt(opts.size,opts.filebase,opts.dataDir,opts.append,opts.nStepsOnly,opts.mStride)
 
