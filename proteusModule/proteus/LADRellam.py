@@ -1038,6 +1038,8 @@ class OneLevelLADR(OneLevelTransport):
                                                            self.elementModifiedMassMatrixCorrection[ci])
                 
             elif self.nSpace_global == 2:
+                #test adjusting local slumping criterion?
+                adjustFactor = 1.0#some overshoot, looks pretty good over long term 1.0/3.0
                 cellam.calculateSlumpedMassApproximation2d(self.u[ci].femSpace.dofMap.l2g,
                                                            self.mesh.elementNeighborsArray,
                                                            self.u[ci].dof,self.u[ci].dof,
@@ -1048,7 +1050,9 @@ class OneLevelLADR(OneLevelTransport):
                                                            self.rightHandSideForLimiting[ci],
                                                            self.elementResidual[ci],
                                                            self.elementSlumpingParameter[ci],
-                                                           self.elementModifiedMassMatrixCorrection[ci])
+                                                           self.elementModifiedMassMatrixCorrection[ci],
+                                                           adjustFactor)
+                                                           
                 
         elif self.slumpingFlag == 2:
             #start by using current solution to do limiting, then try back tracking
