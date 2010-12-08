@@ -944,7 +944,8 @@ class NewtonNS(NonlinearSolver):
         log("   Final       Mom.  norm(r) = %12.5e   %g" % (self.norm_mom_r,100*self.norm_mom_r/self.norm_mom_r0),level=1)
         log("   Final       Cont. norm(r) = %12.5e   %g" % (self.norm_cont_r,100*self.norm_cont_r/self.norm_cont_r0),level=1)
         #return self.failedFlag
-  
+        #memory()
+	log(memory("NSNewton","NSNewton"),level=4)
 
 class SSPRKNewton(Newton):
     """
@@ -2324,6 +2325,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                          computeRates = computeSolverRates,
 					 printInfo=printSolverInfo)
     elif (multilevelNonlinearSolverType == Newton or
+          multilevelNonlinearSolverType == NewtonNS or
 	  multilevelNonlinearSolverType == NLJacobi or
 	  multilevelNonlinearSolverType == NLGaussSeidel or
 	  multilevelNonlinearSolverType == NLStarILU):
