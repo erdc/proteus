@@ -637,6 +637,25 @@ public:
 
 
   inline void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
+					  const double  G[NSPACE*NSPACE],
+					  const double& strong_residual,
+					  const double  vel[NSPACE],
+					  const double  grad_u[NSPACE],
+					  double& numDiff)
+  {
+    double  den1 = 0.0,den2=0.0, nom=0.0;
+    for (int I=0;I<NSPACE;I++)
+      {
+      nom += vel[I]*vel[I];
+      den2+= grad_u[I]*grad_u[I]; 
+      for (int J=0;J<NSPACE;J++)
+        den1 += vel[I]*G[I*NSPACE+J]*vel[J];
+      }
+    numDiff = shockCapturingDiffusion*fabs(strong_residual)*(sqrt(nom/(den1*den2 + 1.0e-12)));
+  }
+
+
+  inline void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
 					  const double& elementDiameter,
 					  const double& strong_residual,
 					  const double grad_u[NSPACE],
