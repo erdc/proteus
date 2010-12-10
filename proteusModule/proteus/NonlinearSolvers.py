@@ -794,9 +794,14 @@ class NewtonNS(NonlinearSolver):
 
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
-                self.F.getJacobian(self.J)
-                #mwf commented out print numpy.transpose(self.J)
+		log("Start assembeling jacobian",level=4)
+                self.F.getJacobian(self.J)                
+		log("Done  assembeling jacobian",level=4)
+				
+		#mwf commented out print numpy.transpose(self.J)
                 if self.linearSolver.computeEigenvalues:
+		       
+		    log("Performing eigen analyses",level=4)
                     self.JLast[:]=self.J
                     self.J_t_J[:]=self.J
                     self.J_t_J *= numpy.transpose(self.J)
@@ -811,6 +816,8 @@ class NewtonNS(NonlinearSolver):
             if not self.directSolver:
                 if self.EWtol:
                     self.setLinearSolverTolerance(r)
+		            
+            log("Start linear solve",level=4)
             self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
 	    self.linearSolver.printPerformance()
             #print self.du
