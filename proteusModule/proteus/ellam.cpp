@@ -1302,22 +1302,26 @@ void calculateBerzinsSlumpedMassApproximation1dv2(int nElements_global,
 	      if (sei > 0.0 && fabs(sei) > 1.0e-6)
 		{
 		  theij = mik/sei - mij;
-		  theij = modifiedVanLeer(theij);/*fmax(theij,0.0);*/
+		  /*theij = fmax(theij,0.0);*//*modifiedVanLeer(theij);fmax(theij,0.0);*/
 		}
 	    }
-	  theijmax = fmax(theijmax,theij);/* += theij/nDOF_test_element;*/ /*fmax(theijmax,theij);*/
+	  //theijmax += theij/nDOF_test_element; /*fmax(theijmax,theij);*/
+	  theijmax = fmin(theij,theijmax);
+	  //symetric, monotone but too diffusive by far
+	  //theijmax = fmax(theijmax,0.0);
+	  theijmax = fmax(theijmax,-mij);
 	}/*first loop to pick theta*/
       i = 0; j = 1;
       I = l2g[eN*nDOF_test_element + i];
       J = l2g[eN*nDOF_test_element + j];
       
       /*update residual and modified mass matrix*/
-      elementResidual[eN*nDOF_test_element + i] += (mij + theij)*u_dof[I] - (mij+theij)*u_dof[J];
-      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = mij + theij;
-      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -(mij + theij);
-      elementResidual[eN*nDOF_test_element + j] += (mij + theij)*u_dof[J] - (mij+theij)*u_dof[I];
-      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + j*nDOF_trial_element + j] = mij + theij;
-      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + j*nDOF_trial_element + i] = -(mij + theij);
+      elementResidual[eN*nDOF_test_element + i] += (mij + theijmax)*u_dof[I] - (mij+theijmax)*u_dof[J];
+      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = mij + theijmax;
+      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -(mij + theijmax);
+      elementResidual[eN*nDOF_test_element + j] += (mij + theijmax)*u_dof[J] - (mij+theijmax)*u_dof[I];
+      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + j*nDOF_trial_element + j] = mij + theijmax;
+      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + j*nDOF_trial_element + i] = -(mij + theijmax);
       /*mwf hack try lumped mass matrix as approximate jacobian?
 	slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] =  mij;
 	slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -mij;
