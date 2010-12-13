@@ -3304,7 +3304,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 			      if (edge_global < edgeOffsets_new[rank] || edge_global >= edgeOffsets_new[rank+1])
 				edges_overlap.insert(edge_global);
 			    }
-			  assert(foundEdge);
+			  //assert(foundEdge);
 			}//edges
                   }
               }
