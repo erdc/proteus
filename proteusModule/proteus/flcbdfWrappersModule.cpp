@@ -1934,6 +1934,52 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   //mark the unmarked faces on this subdomain and store the global face numbers
   //going through owned elements can pick up owned elementBoundaries on "outside" of owned nodes nodeStars 
   set<int> elementBoundaries_subdomain_owned;
+  if (mesh.nNodes_element == 8)
+  {
+
+    int lface[6][4] = {{0,1,2,3},
+                       {0,1,5,4},
+                       {1,2,6,5},
+                       {2,3,7,6},
+                       {3,0,4,7},
+                       {4,5,6,7}};
+		       
+
+    for (int nN = nodeOffsets_new[rank]; nN < nodeOffsets_new[rank+1]; nN++)
+      {
+        int nN_global_old = nodeNumbering_global_new2old[nN];
+        //now get elements in node star
+        for (int offset_old = mesh.nodeElementOffsets[nN_global_old]; 
+	     offset_old < mesh.nodeElementOffsets[nN_global_old+1]; offset_old++)
+	  {
+	    int eN_star_old = mesh.nodeElementsArray[offset_old];
+	    int eN_star_new = elementNumbering_global_old2new[eN_star_old];
+
+	    //loop through element boundaries on each element, want but want to skip
+	    //the element boundary across from the owned node
+	    for (int ebN=0; ebN<mesh.nElementBoundaries_element;ebN++)
+	      {	      
+	        bool foundNode = false;
+	        for (int nNl=0; nNl<mesh.nNodes_elementBoundary ;nNl++)
+	          {		  	 		 		    
+	            int nN_global_old_across = mesh.elementNodesArray[eN_star_old*mesh.nNodes_element + lface[ebN][nNl]];
+	            if (nN_global_old_across == nN_global_old) foundNode = true;		  
+                  } 
+	        if (foundNode)
+	          { 
+                    int ebN_global=elementBoundariesArray_new[eN_star_new*mesh.nElementBoundaries_element+ebN];
+		    if (!PetscBTLookupSet(elementBoundaryMask,ebN_global))
+		      elementBoundaries_subdomain_owned.insert(ebN_global);
+		  }
+	       }
+	      	
+	   } 
+	}
+      
+  }  
+  else 
+  {
+
   for (int nN = nodeOffsets_new[rank]; nN < nodeOffsets_new[rank+1]; nN++)
     {
       int nN_global_old = nodeNumbering_global_new2old[nN];
@@ -1958,7 +2004,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 	    }
 	}
     }
-
+  }
 
   //ship off the mask
   if (rank < size-1)
