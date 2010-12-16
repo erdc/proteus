@@ -632,8 +632,28 @@ public:
       for (int J=0;J<NSPACE;J++)
         den += grad_u[I]*G[I*NSPACE+J]*grad_u[J];
 
-    numDiff = shockCapturingDiffusion*fabs(strong_residual)/(sqrt(den) + 1.0e-8);
+    numDiff = shockCapturingDiffusion*fabs(strong_residual)/(sqrt(den) + 1.0e-6);
   }
+
+  inline void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
+                                          const double& uref, const double& beta,
+					  const double  G[NSPACE*NSPACE],
+					  const double& G_dd_G,
+					  const double& strong_residual,
+					  const double grad_u[NSPACE],
+					  double& numDiff)
+  {
+    double  den = 0.0;    
+    for (int I=0;I<NSPACE;I++)
+      for (int J=0;J<NSPACE;J++)
+        den += grad_u[I]*G[I*NSPACE+J]*grad_u[J];
+
+    double h2_uref_1 = 1.0/(sqrt(den) + 1.0e-6);
+    double h2_uref_2 = 1.0/(uref*sqrt(G_dd_G));
+
+    numDiff = shockCapturingDiffusion*fabs(strong_residual)*pow(h2_uref_1, 2.0-beta)*pow(h2_uref_2,beta-1.0);
+  }
+
 
 
   inline void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
