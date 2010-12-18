@@ -4286,21 +4286,34 @@ class OneLevelTransport(NonlinearEquation):
 	self.csrColumnOffsets_eb_eNebN = {}
 	for ci in range(self.nc):
             for cj in self.coefficients.stencil[ci]:
+                hasNumericalFlux = int(self.numericalFlux != None)
+                hasDiffusionInMixedForm = int(self.numericalFlux != None and  self.numericalFlux.mixedDiffusion[ci] == True)
+                needNumericalFluxJacobian_int = int(needNumericalFluxJacobian)
+                hasOutflowBoundary = int(self.fluxBoundaryConditions[ci] == 'outFlow')
+                needsOutflowJacobian_int = int(needOutflowJacobian == True)
+                print hasNumericalFlux,hasDiffusionInMixedForm,needNumericalFluxJacobian_int,
+                memory()
                 self.csrRowIndeces[(ci,cj)] = numpy.zeros((self.mesh.nElements_global,
                                                              self.nDOF_test_element[ci]),'i')
+                log(memory("csrRowIndeces","OneLevelTransport"),level=4)
                 self.csrColumnOffsets[(ci,cj)] = numpy.zeros((self.mesh.nElements_global,
                                                                 self.nDOF_test_element[ci],self.nDOF_trial_element[cj]),'i')
-                self.csrColumnOffsets_eNebN[(ci,cj)] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,
-                                                                      self.nDOF_test_element[ci],self.nDOF_trial_element[cj]),'i')
+                log(memory("csrColumnOffsets","OneLevelTransport"),level=4)
+                if hasDiffusionInMixedForm:
+                    self.csrColumnOffsets_eNebN[(ci,cj)] = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,
+                                                                        self.nDOF_test_element[ci],self.nDOF_trial_element[cj]),'i')
+                else:
+                    self.csrColumnOffsets_eNebN[(ci,cj)] = numpy.zeros((0,),'i')
+                log(memory("csrColumnOffsets_eNebN","OneLevelTransport"),level=4)
                 self.csrColumnOffsets_eb[(ci,cj)] = numpy.zeros((self.mesh.nElementBoundaries_global,2,2,self.nDOF_test_element[ci],self.nDOF_trial_element[cj]),'i')
-                self.csrColumnOffsets_eb_eNebN[(ci,cj)] = numpy.zeros((self.mesh.nElementBoundaries_global,2,2,self.mesh.nElementBoundaries_element,
-                                                                         self.nDOF_test_element[ci],self.nDOF_trial_element[cj]),'i')
+                log(memory("csrColumnOffsets_eb","OneLevelTransport"),level=4)
+                if hasDiffusionInMixedForm:
+                    self.csrColumnOffsets_eb_eNebN[(ci,cj)] = numpy.zeros((self.mesh.nElementBoundaries_global,2,2,self.mesh.nElementBoundaries_element,
+                                                                           self.nDOF_test_element[ci],self.nDOF_trial_element[cj]),'i')
+                else:
+                    self.csrColumnOffsets_eb_eNebN[(ci,cj)] = numpy.zeros((0,),'i')
+                log(memory("csrColumnOffsets_eb_eNebN","OneLevelTransport"),level=4)
                 if useC:
-                    hasNumericalFlux = int(self.numericalFlux != None)
-                    hasDiffusionInMixedForm = int(self.numericalFlux != None and  self.numericalFlux.mixedDiffusion[ci] == True)
-                    needNumericalFluxJacobian_int = int(needNumericalFluxJacobian)
-                    hasOutflowBoundary = int(self.fluxBoundaryConditions[ci] == 'outFlow')
-                    needsOutflowJacobian_int = int(needOutflowJacobian == True)
                     self.sparsityInfo.setOffsets_CSR(self.mesh.nElements_global,
                                                      self.nDOF_test_element[ci],
                                                      self.nDOF_trial_element[cj],
