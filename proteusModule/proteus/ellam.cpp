@@ -33,8 +33,6 @@ void updateOldMass_weak(int nSpace,
 			const int* u_l2g,             //solution representation
 			const double* q_m_last,
 			double* q_elementResidual_u) 
-//			int offset_u, int stride_u, 
-//			double* globalResidual)
 {
   using namespace ELLAM;
   /***********************************************************************
@@ -47,7 +45,7 @@ void updateOldMass_weak(int nSpace,
            b. use physical space definition in terms of barycentric coords,
                \lambda_0 = (x-x_1)/(x_0-x_1), \lambda_1 = 1-\lambda_0
               and assume w_i = \lambda_i on eN^{n+1}_k, i=0,...nDOF_test_element-1
-       5. accumulate m^{n+1}_k*W_k*w_i(x^{n+1}_{k}) to global residual I(i) 
+       5. accumulate m^{n+1}_k*W_k*w_i(x^{n+1}_{k}) to element residual 
   **********************************************************************/
   //for now just assume a max dim
   register double w[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
@@ -113,6 +111,77 @@ void updateOldMass_weak(int nSpace,
 	}//integration point per element
     }//nElements loop
 }//updateOldMass
+void updateOldMass_weak_arbitraryQuadrature(int nSpace,            
+					    int nDOF_test_element, //dim for test function eval
+					    int nElements_global,  //mesh representation
+					    int nNodes_global,
+					    int nNodes_element,
+					    int nElementBoundaries_element,
+					    int nQuadraturePoints_track,     //element quadrature point data structures
+					    const double * nodeArray,          //mesh representation
+					    const int * elementNodesArray,
+					    const int * elementNeighborsArray, //local boundary id is associated with node across from boundary 
+					    const double * elementBoundaryOuterNormalsArray, //local element boundary outer normal constant on face
+					    const double* dV_track,             //integration weights at tracked points
+					    const double* x_track,        //location of forward tracked integration points
+					    const double* t_track,        //time forward tracked points stopped (t^{n+1} or earlier if exited domain)
+					    const int* element_track,     //element each forward tracked point ended up in
+					    const int* flag_track,        //id for each point, -1 -- interior, -2 exited domain, -3 didn't track for some reason
+					    const int* u_l2g,             //solution representation
+					    const double* q_m_track,     //mass from old time level evaluated at tracked points
+					    double* q_elementResidual_u) 
+{
+  using namespace ELLAM;
+  /***********************************************************************
+    for current integration point x_k
+       1. get mass at old time level, m^{n}_k
+       2. get integration weight W_k
+       3. get forward tracked integration point x^{n+1}_k
+       4. evaluate test functions with non-zero support at x^{n+1}_k
+           a. get element eN^{n+1}_k from element_track[k]
+           b. use physical space definition in terms of barycentric coords,
+               \lambda_0 = (x-x_1)/(x_0-x_1), \lambda_1 = 1-\lambda_0
+              and assume w_i = \lambda_i on eN^{n+1}_k, i=0,...nDOF_test_element-1
+       5. accumulate m^{n+1}_k*W_k*w_i(x^{n+1}_{k}) to element residual 
+  **********************************************************************/
+  //for now just assume a max dim
+  register double w[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  assert(nDOF_test_element <= 10);
+  for(int k=0; k < nQuadraturePoints_track; k++)
+    {
+      for (int i=0;i<nDOF_test_element;i++)
+	{
+	  w[i] = 0.0;
+	}
+      //todo decide if ignoring outflow mass is a better idea
+      if (flag_track[k] >= -1)
+	{
+	  register int eN_track = element_track[k];
+	  //m_k^{n+1},W_k
+	  register double m_old = q_m_track[k],
+	    weight = dV_track[k];
+
+	  evaluateTestFunctionsOnElement(nSpace,
+					 nDOF_test_element,
+					 eN_track,
+					 nNodes_element,
+					 nElementBoundaries_element,
+					 nodeArray,
+					 elementNodesArray,
+					 elementBoundaryOuterNormalsArray,
+					 &x_track[k*3],
+					 w);
+	      
+	  for(int i=0;i<nDOF_test_element;i++) 
+	    { 
+	      register int eN_track_i=eN_track*nDOF_test_element+i;
+	      q_elementResidual_u[eN_track_i] -= m_old*w[i]*weight;
+	    }//i
+	      
+	}//needed to track point
+	    
+    }//integration points
+}//updateOldMass_weak_arbitraryQuadrature
 extern "C" 
 void evaluateSolutionAtTrackedPoints(int nSpace,
 				     int nDOF_trial_element,
