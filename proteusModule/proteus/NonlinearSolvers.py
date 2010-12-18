@@ -410,7 +410,7 @@ class Newton(NonlinearSolver):
         import sys
         if self.linearSolver.computeEigenvalues:
             self.u0[:]=u
-        #r=self.solveInitialize(u,r,b)
+        r=self.solveInitialize(u,r,b)
         if par_u != None:
             #allow linear solver to know what type of assembly to use
             self.linearSolver.par_fullOverlap = self.par_fullOverlap
@@ -420,9 +420,8 @@ class Newton(NonlinearSolver):
             else:
                 #no overlap or overlap (until we compute norms over only owned dof)
                 par_r.scatter_forward_insert()
-
-        r=self.solveInitialize(u,r,b)
-
+    
+        self.norm_r0 = self.norm(r)	
         self.norm_r_hist = []
         self.norm_du_hist = []
         self.gammaK_max=0.0
@@ -454,6 +453,7 @@ class Newton(NonlinearSolver):
             u-=self.du
             if par_u != None:
                 par_u.scatter_forward_insert()
+	    self.computeResidual(u,r,b)
             #no overlap
             #print "local r",r
             if par_r != None:
@@ -463,7 +463,6 @@ class Newton(NonlinearSolver):
                 else:
                     par_r.scatter_forward_insert()
 
-            self.computeResidual(u,r,b)
             #print "global r",r
             if self.linearSolver.computeEigenvalues:
                 #approximate Lipschitz constant of J
@@ -698,35 +697,7 @@ class NewtonNS(NonlinearSolver):
         self.etaLast = eta
         self.norm_r_last = self.norm_r
         self.linearSolver.setResTol(rtol=eta,atol=0.0)
-    def solveInitialize(self,u,r,b):
-        if r == None:
-            if self.r == None:
-                self.r = Vec(self.F.dim)
-            r=self.r
-        else:
-            self.r=r
-        self.computeResidual(u,r,b)
-        self.its = 0
 
-        self.norm_cont_r0 = self.norm_function(r[:self.F.dim_proc/4])
-        self.norm_mom_r0  = self.norm_function(r[self.F.dim_proc/4:self.F.dim_proc])
-
-        #self.norm_cont_r0 = self.norm(r[:r.shape[0]/4])
-        #self.norm_mom_r0  = self.norm(r[r.shape[0]/4:])	
-	self.norm_r0=sqrt(self.norm_cont_r0**2 + self.norm_mom_r0**2)  
-		
-        self.norm_r = self.norm_r0
-        self.ratio_r_solve = 1.0
-        self.ratio_du_solve = 1.0
-        self.last_log_ratio_r = 1.0
-        self.last_log_ratior_du = 1.0
-        #self.convergenceHistoryIsCorrupt=False
-        self.convergingIts = 0
-        #mwf begin hack for conv. rate
-        self.gustafsson_alpha = -12345.0
-        self.gustafsson_norm_du_last = -12345.0
-        #mwf end hack for conv. rate
-        return r
 
     def converged(self,r):
         self.convergedFlag = False
@@ -769,7 +740,7 @@ class NewtonNS(NonlinearSolver):
         import sys
         if self.linearSolver.computeEigenvalues:
             self.u0[:]=u
-        ###r=self.solveInitialize(u,r,b)
+        r=self.solveInitialize(u,r,b)
 
         if par_u != None:
             #allow linear solver to know what type of assembly to use
@@ -782,8 +753,9 @@ class NewtonNS(NonlinearSolver):
                 par_r.scatter_forward_insert()
 		
 		
-        r=self.solveInitialize(u,r,b) 		
-		
+        self.norm_cont_r0 = self.norm_function(r[:self.F.dim_proc/4])
+        self.norm_mom_r0  = self.norm_function(r[self.F.dim_proc/4:self.F.dim_proc])
+
         self.norm_r_hist = []
         self.norm_du_hist = []
         self.gammaK_max=0.0
