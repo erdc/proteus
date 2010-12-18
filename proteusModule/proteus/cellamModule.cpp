@@ -85,6 +85,76 @@ static PyObject* cellam_updateOldMass_weak(PyObject* self,
   Py_INCREF(Py_None); 
   return Py_None;
 }
+static PyObject* cellam_updateOldMass_weak_arbitraryQuadrature(PyObject* self,
+							       PyObject* args)
+{
+  int nSpace,            
+    nDOF_test_element, 
+    nElements_global,  
+    nNodes_global,
+    nNodes_element,
+    nElementBoundaries_element,
+    nQuadraturePoints_track;
+  PyObject *nodeArray,
+    *elementNodesArray,
+    *elementNeighborsArray,
+    *elementBoundaryOuterNormalsArray,
+    *dV_track,
+    *x_track,
+    *t_track,
+    *element_track,
+    *flag_track,
+    *u_l2g, 
+    *q_m_track,
+    *elementResidual_u; 
+
+  if (!PyArg_ParseTuple(args,
+                        "iiiiiiiOOOOOOOOOOOO",/*iiO",*/
+			&nSpace,
+			&nDOF_test_element,
+			&nElements_global,
+			&nNodes_global,
+			&nNodes_element,
+			&nElementBoundaries_element,
+			&nQuadraturePoints_track,
+			&nodeArray,
+			&elementNodesArray,
+			&elementNeighborsArray,
+			&elementBoundaryOuterNormalsArray,
+			&dV_track,
+			&x_track,
+			&t_track,
+			&element_track,
+			&flag_track,
+			&u_l2g, 
+			&q_m_track,
+			&elementResidual_u))
+
+    return NULL;
+  
+  updateOldMass_weak_arbitraryQuadrature(nSpace,
+					 nDOF_test_element,
+					 nElements_global,
+					 nNodes_global,
+					 nNodes_element,
+					 nElementBoundaries_element,
+					 nQuadraturePoints_track,
+					 DDATA(nodeArray),
+					 IDATA(elementNodesArray),
+					 IDATA(elementNeighborsArray),
+					 DDATA(elementBoundaryOuterNormalsArray),
+					 DDATA(dV_track),
+					 DDATA(x_track),
+					 DDATA(t_track),
+					 IDATA(element_track),
+					 IDATA(flag_track),
+					 IDATA(u_l2g), 
+					 DDATA(q_m_track),
+					 DDATA(elementResidual_u));
+  
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
 
 static PyObject* cellam_evaluateSolutionAtTrackedPoints(PyObject* self,
 							PyObject* args)
@@ -920,6 +990,10 @@ static PyMethodDef cellamMethods[] = {
     cellam_updateOldMass_weak,
    METH_VARARGS, 
    "update ellam element residual with mass accumulation from previous time level"},
+ { "updateOldMass_weak_arbitraryQuadrature",
+    cellam_updateOldMass_weak_arbitraryQuadrature,
+   METH_VARARGS, 
+   "update ellam element residual with mass accumulation from previous time level using genera set of quadrature points"},
  { "evaluateSolutionAtTrackedPoints",
     cellam_evaluateSolutionAtTrackedPoints,
    METH_VARARGS, 

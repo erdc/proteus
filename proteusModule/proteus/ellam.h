@@ -187,6 +187,25 @@ void updateOldMass_weak(int nSpace,
 			double* q_elementResidual_u); 
   //int offset_u, int stride_u, 
   //		double* globalResidual);
+void updateOldMass_weak_arbitraryQuadrature(int nSpace,            
+					    int nDOF_test_element, //dim for test function eval
+					    int nElements_global,  //mesh representation
+					    int nNodes_global,
+					    int nNodes_element,
+					    int nElementBoundaries_element,
+					    int nQuadraturePoints_track,     //element quadrature point data structures
+					    const double * nodeArray,          //mesh representation
+					    const int * elementNodesArray,
+					    const int * elementNeighborsArray, //local boundary id is associated with node across from boundary 
+					    const double * elementBoundaryOuterNormalsArray, //local element boundary outer normal constant on face
+					    const double* dV_track,             //integration weights at tracked points
+					    const double* x_track,        //location of forward tracked integration points
+					    const double* t_track,        //time forward tracked points stopped (t^{n+1} or earlier if exited domain)
+					    const int* element_track,     //element each forward tracked point ended up in
+					    const int* flag_track,        //id for each point, -1 -- interior, -2 exited domain, -3 didn't track for some reason
+					    const int* u_l2g,             //solution representation
+					    const double* q_m_track,     //mass from old time level evaluated at tracked points
+					    double* q_elementResidual_u); 
 
 void evaluateSolutionAtTrackedPoints(int nSpace,
 				     int nDOF_trial_element,
