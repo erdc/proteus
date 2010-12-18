@@ -428,7 +428,6 @@ class LinearOnCubeWithNodalBasis(LocalFunctionSpace):
         LocalFunctionSpace.__init__(self,2**nd,self.referenceElement)
         self.gradientList=[]
         
-        print "  Init LinearOnCubeWithNodalBasis"
 
         if nd == 1:
             #0
@@ -472,7 +471,6 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
         self.order = order
 
         
-        print "  Init LagrangeOnCubeWithNodalBasis" 
         # Generate equi distance nodes for generation of lagrange basis     
         # Should use Gauss Labatto points
         
@@ -3657,7 +3655,6 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
     """
     def __init__(self,mesh,nd=3):
     
-        print "  Init C0_AffineLinearOnCubeWithNodalBasis"
         localFunctionSpace = LinearOnCubeWithNodalBasis(nd)
         interpolationConditions = NodalInterpolationConditions(localFunctionSpace.referenceElement)
         ParametricFiniteElementSpace.__init__(self,
