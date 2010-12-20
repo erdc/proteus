@@ -843,6 +843,55 @@ static PyObject* cellam_calculateSlumpedMassApproximation1d(PyObject* self,
   Py_INCREF(Py_None); 
   return Py_None;
 }
+static PyObject* cellam_calculateSlumpedMassApproximation1d_local(PyObject* self,
+								  PyObject* args)
+{
+  PyObject *u_l2g,
+    *elementNeighborsArray,
+    *u_dof,*u_dof_limit,
+    *dm,*w,*v,
+    *dV,*rhs,
+    *theta,
+    *slumpedMassMatrixCorrection,
+    *elementResidual; 
+
+  if (!PyArg_ParseTuple(args,
+                        "OOOOOOOOOOOO",
+			&u_l2g,
+			&elementNeighborsArray,
+			&u_dof,
+			&u_dof_limit,
+			&dm,
+			&w,
+			&v,
+			&dV,
+			&rhs,
+			&elementResidual,
+			&theta,
+			&slumpedMassMatrixCorrection))
+    return NULL;
+  
+  calculateSlumpedMassApproximation1d_local(SHAPE(u_l2g)[0],
+					    SHAPE(elementNeighborsArray)[1],
+					    SHAPE(dm)[1],
+					    SHAPE(v)[2],
+					    SHAPE(w)[2],
+					    IDATA(u_l2g),
+					    IDATA(elementNeighborsArray),
+					    DDATA(u_dof),
+					    DDATA(u_dof_limit),
+					    DDATA(dm),
+					    DDATA(w),
+					    DDATA(v),
+					    DDATA(dV),
+					    DDATA(rhs),
+					    DDATA(elementResidual),
+					    DDATA(theta),
+					    DDATA(slumpedMassMatrixCorrection));
+
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
 static PyObject* cellam_calculateSlumpedMassApproximation2d(PyObject* self,
 							    PyObject* args)
 {
@@ -1034,6 +1083,10 @@ static PyMethodDef cellamMethods[] = {
     cellam_calculateSlumpedMassApproximation1d,
    METH_VARARGS, 
    "calculate 1d slumping approximation from Russell and Binning and apply to residual"},
+ { "calculateSlumpedMassApproximation1d_local",
+    cellam_calculateSlumpedMassApproximation1d_local,
+   METH_VARARGS, 
+   "calculate 1d slumping approximation from Russell and Binning just looking at local element condition and apply to residual"},
  { "calculateSlumpedMassApproximation2d",
     cellam_calculateSlumpedMassApproximation2d,
    METH_VARARGS, 
