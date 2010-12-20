@@ -5,6 +5,10 @@ import cellam,ctracking,Quadrature
 """
 TODO
   high:
+   switch flags on backwardTrackingForMass etc to be more clear
+     when they are triggering backwards tracking etc
+  try Berzins slumping in 2d
+  what about local slumping with r instead of dr?
   med:
     need better way to set ellam specific options?
   low:
@@ -17,11 +21,28 @@ TODO
   3D
   
   General
-     
+     try some strategic integration point approximations in 1d, 2d, 3d
+     slumping in 2d,3d
+     Kuzmin Turek approach 1d,2d,3d
+    
      look at extra unknowns at outflow boundary for large time step
       and debug small oscillations
      worth trying something to get smoother inflow boundary approx. for
      step function  (e.g. add strategic time integration points)?
+
+
+For SSIPs type approach ...
+
+   element assembly with global integration points array element
+
+   coefficients evaluate with global integration points size store old
+
+   mass at global integration points or (more likely) re-evaluate at
+     new SSIPs using stored degrees of freedom from last step. This would
+     mean having the time integration keep track of u_dof_last or something
+     equivalent
+
+   creating a composite trapezoid rule type quadrature in 1d (ok know how), 2d, 3d?
    
 """
 class OneLevelLADR(OneLevelTransport):
@@ -532,6 +553,11 @@ class OneLevelLADR(OneLevelTransport):
             self.u_dof_lim_last[ci] = numpy.copy(self.u[ci].dof)
             
         self.elementBoundaryOuterNormalsArray = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nSpace_global),'d')
+
+        #ellam specific options with defauls here
+        self.particleTrackingType = None
+        self.useBackwardTrackingForOldMass = False
+        self.slumpingFlag = 0 #0 -- none, 1 -- Russell, Binning (1d any way), 2 -- Berzins (or something close)
         #todo clean this up, add set from options for zeroTol etc
         assert 'particleTracking' in dir(options), "ELLAM requires particleTracking type to be set in n file"
         self.particleTrackingType = options.particleTracking
@@ -548,13 +574,13 @@ class OneLevelLADR(OneLevelTransport):
             for ci in range(self.nc):
                 self.zeroSolutionTol_track[ci]=1.0e-8
             
-        self.useBackwardTrackingForOldMass = False
+
         if 'useBackwardTrackingForOldMass' in dir(options):
             self.useBackwardTrackingForOldMass = options.useBackwardTrackingForOldMass
-
+        
         if self.useBackwardTrackingForOldMass:
             #need this to evaluate coefficients at tracked points
-            self.q_track = {}
+            self.q_backtrack = {}
             #deep_keys = [('u',0),('m',0),('dm',0,0),('f',0),('df',0,0),('a',0,0),('velocity',0)]
             deep_keys = set([('u',ci) for ci in range(self.nc)])
             deep_keys |= set([('m',ci) for ci in self.coefficients.mass.keys()])
@@ -570,14 +596,14 @@ class OneLevelLADR(OneLevelTransport):
             shallow_keys=set(['x'])
             for k in self.q.keys():
                 if k in deep_keys:
-                    self.q_track[k] = numpy.copy(self.q[k])
+                    self.q_backtrack[k] = numpy.copy(self.q[k])
                 elif k in shallow_keys:
-                    self.q_track[k] = self.q[k]
+                    self.q_backtrack[k] = self.q[k]
             self.u_dof_track = {}
             for ci in range(self.nc):
                 self.u_dof_track[ci] = numpy.copy(self.u[ci].dof)    
         else:
-            self.q_track=self.q #could only grab shallow copies of specific keys
+            self.q_backtrack=self.q #could only grab shallow copies of specific keys
             self.u_dof_track = {}
             for ci in range(self.nc):
                 self.u_dof_track[ci] = self.u[ci].dof
@@ -609,7 +635,6 @@ class OneLevelLADR(OneLevelTransport):
         self.needEBQ = options.needEBQ #could need for analytical velocity evaluation with RT0,BDM
 
         #data structures for slumping
-        self.slumpingFlag =0
         self.rightHandSideForLimiting = {}; self.elementResidualTmp = {}; self.elementModifiedMassMatrixCorrection = {}; self.elementSlumpingParameter = {}
         for ci in range(self.nc):
             self.rightHandSideForLimiting[ci]= numpy.zeros((self.nFreeDOF_global[ci],),'d')
@@ -619,6 +644,7 @@ class OneLevelLADR(OneLevelTransport):
         #
         if 'slumpingFlag' in dir(options):
             self.slumpingFlag = options.slumpingFlag
+
         #beg normal stuff allocating things
         self.points_elementBoundaryQuadrature= set()
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
@@ -1024,22 +1050,38 @@ class OneLevelLADR(OneLevelTransport):
                                                                       self.rightHandSideForLimiting[ci]);
             #calculate element level lumping parameters and
             #subtract off element level mass correction from residual
+            #mwf hack test what happens in 1d with a local slumping condition
             if self.nSpace_global == 1:
-                cellam.calculateSlumpedMassApproximation1d(self.u[ci].femSpace.dofMap.l2g,
-                                                           self.mesh.elementNeighborsArray,
-                                                           self.u[ci].dof,self.u[ci].dof,
-                                                           self.q[('dm',ci,ci)],
-                                                           self.q[('w',ci)],
-                                                           self.q[('v',ci)],
-                                                           self.q[('dV_u',ci)],
-                                                           self.rightHandSideForLimiting[ci],
-                                                           self.elementResidual[ci],
-                                                           self.elementSlumpingParameter[ci],
-                                                           self.elementModifiedMassMatrixCorrection[ci])
+                testLocalApproximation = False
+                if testLocalApproximation:
+                    #gives i-1 biased solution that has overshoot (i-) side and under shoot (i+) side
+                    cellam.calculateSlumpedMassApproximation1d_local(self.u[ci].femSpace.dofMap.l2g,
+                                                                     self.mesh.elementNeighborsArray,
+                                                                     self.u[ci].dof,self.u[ci].dof,
+                                                                     self.q[('dm',ci,ci)],
+                                                                     self.q[('w',ci)],
+                                                                     self.q[('v',ci)],
+                                                                     self.q[('dV_u',ci)],
+                                                                     self.rightHandSideForLimiting[ci],
+                                                                     self.elementResidual[ci],
+                                                                     self.elementSlumpingParameter[ci],
+                                                                     self.elementModifiedMassMatrixCorrection[ci])
+                else:
+                    cellam.calculateSlumpedMassApproximation1d(self.u[ci].femSpace.dofMap.l2g,
+                                                               self.mesh.elementNeighborsArray,
+                                                               self.u[ci].dof,self.u[ci].dof,
+                                                               self.q[('dm',ci,ci)],
+                                                               self.q[('w',ci)],
+                                                               self.q[('v',ci)],
+                                                               self.q[('dV_u',ci)],
+                                                               self.rightHandSideForLimiting[ci],
+                                                               self.elementResidual[ci],
+                                                               self.elementSlumpingParameter[ci],
+                                                               self.elementModifiedMassMatrixCorrection[ci])
                 
             elif self.nSpace_global == 2:
                 #test adjusting local slumping criterion?
-                adjustFactor = 1.0#some overshoot, looks pretty good over long term 1.0/3.0
+                adjustFactor = 1.0#some overshoot, looks pretty good over long term? 1.0/2.0
                 cellam.calculateSlumpedMassApproximation2d(self.u[ci].femSpace.dofMap.l2g,
                                                            self.mesh.elementNeighborsArray,
                                                            self.u[ci].dof,self.u[ci].dof,
@@ -1426,22 +1468,22 @@ class OneLevelLADR(OneLevelTransport):
                                                       self.flag_track[ci],
                                                       self.u[ci].femSpace.dofMap.l2g,
                                                       self.u_dof_track[ci],#todo put this in time integration?
-                                                      self.q_track[('u',ci)])
+                                                      self.q_backtrack[('u',ci)])
 
             #now evaluate as a standard mass integral
             #todo get rid of all of this, just want mass 
-            self.q_track['dV']= self.q['dV']
+            self.q_backtrack['dV']= self.q['dV']
             #mwf debug
             #import pdb
             #pdb.set_trace()
-            self.coefficients.evaluate(self.timeIntegration.tLast,self.q_track)
+            self.coefficients.evaluate(self.timeIntegration.tLast,self.q_backtrack)
             for ci in range(self.nc):
                 #have to scale by -1
-                self.q_track[('m',ci)] *= -1.
-                cfemIntegrals.updateMass_weak(self.q_track[('m',ci)],
+                self.q_backtrack[('m',ci)] *= -1.
+                cfemIntegrals.updateMass_weak(self.q_backtrack[('m',ci)],
                                               self.q[('w*dV_m',ci)],
                                               elementRes[ci])
-                self.q_track[('m',ci)] *= -1.
+                self.q_backtrack[('m',ci)] *= -1.
             #mwf debug
             #import pdb
             #pdb.set_trace()

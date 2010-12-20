@@ -2,6 +2,7 @@
 #include "tracking.h"
 #include <cmath>
 #include <iostream>
+#include PROTEUS_LAPACK_H
 /***********************************************************************
 
   TODO:
@@ -930,6 +931,118 @@ void calculateSlumpedMassApproximation1d(int nElements_global,
 
 }
 extern "C"
+void calculateSlumpedMassApproximation1d_local(int nElements_global,
+					       int nElementBoundaries_element,
+					       int nQuadraturePoints_element,
+					       int nDOF_trial_element,
+					       int nDOF_test_element,
+					       const int* l2g,
+					       const int* elementNeighborsArray,
+					       const double* u_dof,
+					       const double* u_dof_limit,
+					       const double* dm,
+					       const double* w,
+					       const double* v,
+					       const double* dV,
+					       const double* rhs,
+					       double* elementResidual,
+					       double* theta,
+					       double* slumpedMassMatrixCorrection)
+{
+  /*compute slumping in 1d assuming only monotinicity constraints on local element but
+    some global coupling through delta R (use dr_i = r_i - r_i-1, for rhs)*/
+  int eN,i,j,k,nDOF_test_X_trial_element=nDOF_trial_element*nDOF_test_element;
+  int I0,Im1,Ip1;
+  double drm1,dr0,a,b,tmp1,tmp2,tmp3,tmp4;
+  int eN_neighbor0;
+  assert(nDOF_test_element == 2);
+  for (eN=0; eN<nElements_global; eN++)
+    {
+      I0 = l2g[eN*nDOF_test_element + 0];
+      Ip1= l2g[eN*nDOF_test_element + 1];
+      dr0 = fabs(rhs[Ip1]-rhs[I0]);
+      
+      /*local stencil relative to node I*/
+      /*I0 neighbor across from node I1 and vice versa*/
+      eN_neighbor0 =elementNeighborsArray[eN*nElementBoundaries_element+1];
+      
+
+      
+      drm1 = 0.0; Im1 = -1;
+      if (eN_neighbor0 >= 0)
+	{
+	  for (j=0; j < nDOF_test_element; j++)
+	    {
+	      if (l2g[eN_neighbor0*nDOF_test_element + j] != I0)
+		{
+		  Im1 = l2g[eN_neighbor0*nDOF_test_element + j];
+		  drm1 = fabs(rhs[I0]-rhs[Im1]);
+		  break;
+		}
+	    }
+	}
+      /*calculate local mass matrix entries isn't exactly right
+	for now, since assumes matrix same on both elements*/
+      a = 0.0; b = 0.0; i = 0; j = 1;
+      for (k=0; k < nQuadraturePoints_element; k++)
+	{
+	  a += 
+	    dm[eN*nQuadraturePoints_element+k]
+	    *
+	    v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    k*nDOF_trial_element + 
+	      i]
+	    *
+	    w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+	      k*nDOF_test_element + 
+	      i]
+	    *
+	    dV[eN*nQuadraturePoints_element+k];
+	  b += 
+	    dm[eN*nQuadraturePoints_element+k]
+	    *
+	    v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    k*nDOF_trial_element + 
+	      j]
+	    *
+	    w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+	      k*nDOF_test_element + 
+	      i]
+	    *
+	    dV[eN*nQuadraturePoints_element+k];
+	}
+      /*mwf what if account for coupling in mass matrix entries only?
+	a *= 2.0;
+      */
+      tmp1 = fmin(dr0,drm1);
+      tmp2 = tmp1/(dr0+drm1+1.0e-12);
+      tmp3 = b-(a+b)*tmp2;
+      tmp4 = fmax(tmp3,0.0);
+      theta[eN] = tmp4;
+
+      /*overwrite mass matrix with just correction and element residual*/
+      for (i=0; i < nDOF_test_element; i++)
+	{
+	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = theta[eN];
+	  elementResidual[eN*nDOF_test_element + i] += theta[eN]*u_dof[l2g[eN*nDOF_trial_element+i]];
+
+	  for (j=0; j < i; j++)
+	    {
+	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -theta[eN];
+	      elementResidual[eN*nDOF_test_element + i] -= theta[eN]*u_dof[l2g[eN*nDOF_trial_element+j]];
+	    }
+	  for (j=i+1; j < nDOF_trial_element; j++)
+	    {
+	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -theta[eN];
+	      elementResidual[eN*nDOF_test_element + i] -= theta[eN]*u_dof[l2g[eN*nDOF_trial_element+j]];
+	    }
+	}  
+    }/*eN*/
+
+
+}
+
+extern "C"
 void calculateSlumpedMassApproximation2dOrig(int nElements_global,
 					 int nElementBoundaries_element,
 					 int nQuadraturePoints_element,
@@ -1052,16 +1165,18 @@ void calculateSlumpedMassApproximation2d(int nElements_global,
   int eN,i,j,k,nDOF_test_X_trial_element=nDOF_trial_element*nDOF_test_element;
   int I0,I1,I2;
   double dr0,dr1,dr2,a,b,tmp0,tmp1,tmp2,tmp3,tmp4;
-  
   assert(nDOF_test_element == 3);
+  int debugLocalMassMatrix = 0;
   for (eN=0; eN<nElements_global; eN++)
     {
       I0 = l2g[eN*nDOF_test_element + 0];
       I1 = l2g[eN*nDOF_test_element + 1];
       I2 = l2g[eN*nDOF_test_element + 2];
+
       dr0 = fabs(rhs[I1]-rhs[I0]);
       dr1 = fabs(rhs[I2]-rhs[I1]);
       dr2 = fabs(rhs[I0]-rhs[I2]);
+
       /*calculate local mass matrix, and store in correction for now */
       for (i=0; i < nDOF_test_element; i++)
 	for (j=0; j < nDOF_trial_element; j++)
@@ -1094,15 +1209,9 @@ void calculateSlumpedMassApproximation2d(int nElements_global,
 	}
 
       b = fmax(b,0.0); a = fmax(a,0.0);
-      /*mwf original
-      tmp1 = fmin(dr0,dr1); tmp1 = fmin(tmp1,dr2);
-      tmp2 = tmp1*(a+b)/(dr0+dr1+dr2+1.0e-12);
-      tmp3 = b-tmp2;
+      /*arbitrarily scaling matrices to account for coupling in mass matrix entries doesn't seem to make a big difference?
+	eg in a structured 2d mesh b *= 2.0; a *= 6.0;
       */
-      /*mwf hack works pretty well for slug and gauss
-      tmp3 *= 0.3;
-      */
-      /*works a little better than original (less diffusive?)*/
       tmp0 = (b*(dr1+dr2) - (a+b)*dr0)/(dr0+dr1+dr2+1.0e-12);
       tmp1 = (b*(dr0+dr2) - (a+b)*dr1)/(dr0+dr1+dr2+1.0e-12);
       tmp2 = (b*(dr0+dr1) - (a+b)*dr2)/(dr0+dr1+dr2+1.0e-12);
@@ -1110,11 +1219,71 @@ void calculateSlumpedMassApproximation2d(int nElements_global,
       tmp3 *= adjustFactor;/*add a safety or sharpening factor?*/
       theta[eN] = fmax(tmp3,0.0);
       /*mwf debug*/
-      if (tmp1 > 1.0e-5)
+      if (tmp1 > 1.0e-5 && false)
 	{
 	  std::cout<<"slump2d eN="<<eN<<" a="<<a<<" b="<<b<<"dr=["<<dr0<<","<<dr1<<","<<dr2<<"]"<<std::endl;
 	  /*mwf debug*/
 	  std::cout<<"\t min(dr)="<<tmp1<<" min(dr)*(a+b)/(r0+r1+r2)="<<tmp2<<" b-tmp2="<<tmp3<<" theta="<<theta[eN]<<std::endl;
+	}
+      /*mwf debug test that I am getting a positive lhs?*/
+      if (debugLocalMassMatrix)
+	{
+	  /*build actual matrix*/
+	  for (i=0; i < nDOF_test_element; i++)
+	    {
+	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = a + (nDOF_trial_element-1)*theta[eN];
+	      for (j=0; j < i; j++)
+		{
+		  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = b-theta[eN];
+		}
+	      for (j=i+1; j < nDOF_trial_element; j++)
+		{
+		  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = b-theta[eN];
+		}
+	    }
+	  double rhs_test[3] = {dr0,dr1,dr2}; double scale=1.0;
+	  PROTEUS_LAPACK_INTEGER pivots[3] = {0,0,0}; PROTEUS_LAPACK_INTEGER pivotsCol[3] = {0,0,0};
+	  PROTEUS_LAPACK_INTEGER info=0;PROTEUS_LAPACK_INTEGER nsys=3;
+	  //std::cout<<"in Slump2d rhs = [";
+	  //for (i=0; i < 3; i++)
+	  //{
+	  //std::cout<<" "<<rhs_test[i];
+	  //}
+	  //std::cout<<"]"<<std::endl;
+	  dgetc2_(&nsys,
+		  &slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element],
+		  &nsys,
+		  pivots,
+		  pivotsCol,
+		  &info);
+	  dgesc2_(&nsys,
+		  &slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element],
+		  &nsys,
+		  rhs_test,
+		  pivots,
+		  pivotsCol,
+		  &scale);
+	  //std::cout<<"solution = [";
+	  for (i=0; i < 3; i++)
+	    {
+	      //std::cout<<" "<<rhs_test[i];
+	      assert(rhs_test[i] > -1.0e-6);
+	    }
+	  //std::cout<<"]"<<std::endl;
+	  /*cleanup*/
+	  for (i=0; i < nDOF_test_element; i++)
+	    {
+	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = 0.0;
+	      for (j=0; j < i; j++)
+		{
+		  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = 0.0;
+		}
+	      for (j=i+1; j < nDOF_trial_element; j++)
+		{
+		  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = 0.0;
+		}
+	    }
+
 	}
       /*update mass matrix, storing only correction and element residual*/
       for (i=0; i < nDOF_test_element; i++)
