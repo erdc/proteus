@@ -990,8 +990,54 @@ static PyObject* cellam_calculateBerzinsSlumpedMassApproximation1d(PyObject* sel
 			&elementResidual,
 			&slumpedMassMatrixCorrection))
     return NULL;
-  
+  //1dv2 is mass conservative attempt
   calculateBerzinsSlumpedMassApproximation1dv2(SHAPE(u_l2g)[0],
+					    SHAPE(elementNeighborsArray)[1],
+					    SHAPE(dm)[1],
+					    SHAPE(v)[2],
+					    SHAPE(w)[2],
+					    IDATA(u_l2g),
+					    IDATA(elementNeighborsArray),
+					    DDATA(u_dof),
+					    DDATA(u_dof_limit),
+					    DDATA(dm),
+					    DDATA(w),
+					    DDATA(v),
+					    DDATA(dV),
+					    DDATA(rhs),
+					    DDATA(elementResidual),
+					    DDATA(slumpedMassMatrixCorrection));
+
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+static PyObject* cellam_calculateBerzinsSlumpedMassApproximation2d(PyObject* self,
+								  PyObject* args)
+{
+  PyObject *u_l2g,
+    *elementNeighborsArray,
+    *u_dof,*u_dof_limit,
+    *dm,*w,*v,
+    *dV,*rhs,
+    *slumpedMassMatrixCorrection,
+    *elementResidual; 
+
+  if (!PyArg_ParseTuple(args,
+                        "OOOOOOOOOOO",
+			&u_l2g,
+			&elementNeighborsArray,
+			&u_dof,
+			&u_dof_limit,
+			&dm,
+			&w,
+			&v,
+			&dV,
+			&rhs,
+			&elementResidual,
+			&slumpedMassMatrixCorrection))
+    return NULL;
+  
+  calculateBerzinsSlumpedMassApproximation2d(SHAPE(u_l2g)[0],
 					    SHAPE(elementNeighborsArray)[1],
 					    SHAPE(dm)[1],
 					    SHAPE(v)[2],
@@ -1095,6 +1141,10 @@ static PyMethodDef cellamMethods[] = {
     cellam_calculateBerzinsSlumpedMassApproximation1d,
    METH_VARARGS, 
    "calculate 1d slumping approximation from Berzins and apply to residual"},
+ { "calculateBerzinsSlumpedMassApproximation2d",
+    cellam_calculateBerzinsSlumpedMassApproximation2d,
+   METH_VARARGS, 
+   "calculate 2d slumping approximation from Berzins and apply to residual"},
  { "updateElementJacobianWithSlumpedMassApproximation",
     cellam_updateElementJacobianWithSlumpedMassApproximation,
    METH_VARARGS, 

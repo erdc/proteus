@@ -1469,7 +1469,6 @@ void calculateBerzinsSlumpedMassApproximation1dv2(int nElements_global,
   for (eN=0; eN<nElements_global; eN++)
     {
       /*compute only one lumping parameter per element */
-      theijmax = 0.0;
       for (i=0; i < nDOF_test_element; i++)
 	{
 	  j = (i+1) % nDOF_test_element;
@@ -1540,14 +1539,16 @@ void calculateBerzinsSlumpedMassApproximation1dv2(int nElements_global,
 	      if (sei > 0.0 && fabs(sei) > 1.0e-6)
 		{
 		  theij = mik/sei - mij;
-		  /*theij = fmax(theij,0.0);*//*modifiedVanLeer(theij);fmax(theij,0.0);*/
+		  theij = fmax(theij,0.0);/*modifiedVanLeer(theij);fmax(theij,0.0);*/
 		}
 	    }
 	  //theijmax += theij/nDOF_test_element; /*fmax(theijmax,theij);*/
-	  theijmax = fmin(theij,theijmax);
-	  //symetric, monotone but too diffusive by far
-	  //theijmax = fmax(theijmax,0.0);
-	  theijmax = fmax(theijmax,-mij);
+	  if (i == 0) 
+	    theijmax = theij;
+	  else
+	    theijmax = fmin(theij,theijmax);
+	  //try to put a lower bound on the diffusion?
+	  theijmax = fmin(theijmax,mij);
 	}/*first loop to pick theta*/
       i = 0; j = 1;
       I = l2g[eN*nDOF_test_element + i];
@@ -1596,15 +1597,15 @@ void calculateBerzinsSlumpedMassApproximation2d(int nElements_global,
       for (i=0; i < nDOF_test_element; i++)
 	{
 	  j = (i+1) % nDOF_test_element;
-	  k = (i-1) % nDOF_test_element;
+	  k = (i+2) % nDOF_test_element;
 	  I = l2g[eN*nDOF_test_element + i];
 	  J = l2g[eN*nDOF_test_element + j];
 	  K = l2g[eN*nDOF_test_element + k];
 	  /*compute local element mass matrix contributions*/
 	  mii = 0.0; mij=0.0; mik=0.0;
 	  for (kk=0; kk < nQuadraturePoints_element; kk++)
-	      {
-		mii += 
+	    {
+	      mii += 
 		  dm[eN*nQuadraturePoints_element+kk]
 		  *
 		  v[eN*nQuadraturePoints_element*nDOF_trial_element + 
@@ -1616,33 +1617,33 @@ void calculateBerzinsSlumpedMassApproximation2d(int nElements_global,
 		    i]
 		  *
 		  dV[eN*nQuadraturePoints_element+kk];
-		mij += 
-		  dm[eN*nQuadraturePoints_element+kk]
-		  *
-		  v[eN*nQuadraturePoints_element*nDOF_trial_element + 
-		    kk*nDOF_trial_element + 
-		    j]
-		  *
-		  w[eN*nQuadraturePoints_element*nDOF_trial_element + 
-		    kk*nDOF_test_element + 
-		    i]
-		  *
-		  dV[eN*nQuadraturePoints_element+kk];
-		mik += 
-		  dm[eN*nQuadraturePoints_element+kk]
-		  *
-		  v[eN*nQuadraturePoints_element*nDOF_trial_element + 
-		    kk*nDOF_trial_element + 
-		    k]
-		  *
-		  w[eN*nQuadraturePoints_element*nDOF_trial_element + 
-		    kk*nDOF_test_element + 
-		    i]
-		  *
-		  dV[eN*nQuadraturePoints_element+kk];
-	      }
+	      mij += 
+		dm[eN*nQuadraturePoints_element+kk]
+		*
+		v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		  kk*nDOF_trial_element + 
+		  j]
+		*
+		w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		  kk*nDOF_test_element + 
+		  i]
+		*
+		dV[eN*nQuadraturePoints_element+kk];
+	      mik += 
+		dm[eN*nQuadraturePoints_element+kk]
+		*
+		v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		  kk*nDOF_trial_element + 
+		  k]
+		*
+		w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		  kk*nDOF_test_element + 
+		  i]
+		*
+		dV[eN*nQuadraturePoints_element+kk];
+	    }
 
-      
+	      
 	  theij=0.0; theik=0.0;/*lump by default*/
 
 	  sei = 0.0; rei = 0.0;
@@ -1662,17 +1663,14 @@ void calculateBerzinsSlumpedMassApproximation2d(int nElements_global,
 	    }
 	    
 	  /*mwf hack force lumping
-	    theij = 0.0; theik = 0.0;
+	  theij = 0.0; theik = 0.0;
 	  */
+
 	  /*update residual and modified mass matrix*/
 	  elementResidual[eN*nDOF_test_element + i] += (mij + mik + theij + theik)*u_dof[I] - (mij+theij)*u_dof[J] - (mik + theik)*u_dof[K];
 	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = mij + theij + mik + theik;
 	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -(mij + theij);
 	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + k] = -(mik + theik);
-	  /*mwf hack try lumped mass matrix as approximate jacobian?
-	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] =  mij;
-	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -mij;
-	  */
 	}/*i loop*/
     }/*eN*/
 
