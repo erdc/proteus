@@ -159,8 +159,10 @@ void tagInflowPointForTracking_c(int nSpace,
       inflow = -1;
     }
 }
+double modifiedVanLeer(double r);
 
 };//namespace ELLAM
+
 
 
 extern "C"
