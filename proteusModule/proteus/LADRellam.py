@@ -5,10 +5,7 @@ import cellam,ctracking,Quadrature
 """
 TODO
   high:
-   switch flags on backwardTrackingForMass etc to be more clear
-     when they are triggering backwards tracking etc
-  try Berzins slumping in 2d
-  what about local slumping with r instead of dr?
+
   med:
     need better way to set ellam specific options?
   low:
@@ -550,7 +547,9 @@ class OneLevelLADR(OneLevelTransport):
             self.element_track_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'i')
             self.u_dof_track[ci] = numpy.copy(self.u[ci].dof)
             self.u_dof_track_tmp[ci] = numpy.copy(self.u[ci].dof)
-            
+            #manually insert value in phi_ip for now
+            if not self.phi_ip.has_key(('u',ci)):
+                self.phi_ip[('u',ci)] = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'d')
         self.elementBoundaryOuterNormalsArray = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nSpace_global),'d')
 
         ###ellam specific options with defauls here
@@ -604,14 +603,15 @@ class OneLevelLADR(OneLevelTransport):
             #deep_keys = [('u',0),('m',0),('dm',0,0),('f',0),('df',0,0),('a',0,0),('velocity',0)]
             deep_keys = set([('u',ci) for ci in range(self.nc)])
             deep_keys |= set([('m',ci) for ci in self.coefficients.mass.keys()])
-            deep_keys |= set([('f',ci) for ci in self.coefficients.advection.keys()])
-            deep_keys |= set([('velocity',ci) for ci in range(self.nc)])
+            #no longer need to evaluate these if calling evaluateMassOnly
+            #deep_keys |= set([('f',ci) for ci in self.coefficients.advection.keys()])
+            #deep_keys |= set([('velocity',ci) for ci in range(self.nc)])
             for ci,cjDict in self.coefficients.mass.iteritems():
                 deep_keys |= set([('dm',ci,cj) for cj in cjDict.keys()])
-            for ci,cjDict in self.coefficients.advection.iteritems():
-                deep_keys |= set([('df',ci,cj) for cj in cjDict.keys()])
-            for ci,ckDict in self.coefficients.diffusion.iteritems():
-                deep_keys |= set([('a',ci,ck) for ck in ckDict.keys()])
+            #for ci,cjDict in self.coefficients.advection.iteritems():
+            #    deep_keys |= set([('df',ci,cj) for cj in cjDict.keys()])
+            #for ci,ckDict in self.coefficients.diffusion.iteritems():
+            #    deep_keys |= set([('a',ci,ck) for ck in ckDict.keys()])
                 
             shallow_keys=set(['x'])
             for k in self.q.keys():
@@ -1267,7 +1267,7 @@ class OneLevelLADR(OneLevelTransport):
         Then
         track quadrature points in q['x'] forward from t^n --> t^{n+1}, 
           save 
-             q[('x_track',0)]     : location of point at end of tracking
+             'x_track[0]     : location of point at end of tracking
              t_track[0]      : time tracking ended
              flag_track[0]   : -1  -- point in interior at tOut
 			       -2  -- point exited domain somewhere in (tIn,tOut)
@@ -1276,9 +1276,20 @@ class OneLevelLADR(OneLevelTransport):
              
         """
         import pdb
-        #backward
-        if (self.needToTrackPoints and self.timeIntegration.t > self.timeIntegration.tLast + 1.0e-8 or
-            abs(self.tForLastTrackingStep-self.timeIntegration.t) > 1.0e-8):
+        timeToTrackPoints = (self.timeIntegration.t > self.timeIntegration.tLast + 1.0e-8 or
+                             abs(self.tForLastTrackingStep-self.timeIntegration.t) > 1.0e-8)
+
+        #first generate SSIPs if needed
+        #todo this could be turned into a data member
+        #0 -- not backtracked at all
+        #1 -- backtracked only nonzero solution points
+        #2 -- backtracked everything
+        solutionBackTrackedFlag = 0
+        if self.needToTrackPoints and timeToTrackPoints and self.SSIPflag > 0:
+            self.trackSolutionBackwards(skipPointsWithZeroSolution=True)
+            self.generateSSIPs()
+            solutionBackTrackedFlag = 1
+        if self.needToTrackPoints and timeToTrackPoints:
             #mwf debug
             #pdb.set_trace()
             #update velocity fields for particle tracking
@@ -1316,7 +1327,7 @@ class OneLevelLADR(OneLevelTransport):
                                                           self.flag_track[ci])
                     
             #todo make sure activeComponents set explicitly?
-            
+            #mwf debug just play with forwardTrack call, normally backward tracking
             self.particle_tracker.backwardTrack(self.t_depart,
                                                 self.t_track,
                                                 nPoints_track,
@@ -1331,15 +1342,6 @@ class OneLevelLADR(OneLevelTransport):
             for ci in range(self.nc):
                 self.dt_track[ci]  = numpy.copy(self.t_depart[ci])
                 self.dt_track[ci] -= self.t_track[ci]
-                #mwf debug tracked locations
-                #for eN in range(self.mesh.nElements_global):
-                #    for k in range(self.nQuadraturePoints_element):
-                #        eN_track = self.element_track[0][eN,k]
-                #        x0=self.mesh.nodeArray[self.mesh.elementNodesArray[eN_track,0],0]
-                #        x1=self.mesh.nodeArray[self.mesh.elementNodesArray[eN_track,1],0]
-                #        if (self.x_track[0][eN,k][0] < min(x0,x1)-1.0e-8 or 
-                #            self.x_track[0][eN,k][0] > max(x0,x1)+1.0e-8):
-                #            pdb.set_trace()
                         
             if not self.useBackwardTrackingForOldMass:
                 for ci in range(self.nc):
@@ -1388,15 +1390,15 @@ class OneLevelLADR(OneLevelTransport):
                     #            self.x_track[0][eN,k][0] > max(x0,x1)+1.0e-8):
                     #            pdb.set_trace()
 
-            if self.needToBackTrackSolution:
-                self.trackSolutionBackwards()
+            if self.needToBackTrackSolution and solutionBackTrackedFlag < 1:
+                self.trackSolutionBackwards(skipPointsWithZeroSolution=True)
                
             #end tracking interpolation points
             self.needToTrackPoints = False
             self.tForLastTrackingStep=self.timeIntegration.t
             #mwf debug
             #pdb.set_trace()
-        #
+        #end need to track integration points
 
     def approximateOldMassIntegral(self,elementRes):
         """
@@ -1432,7 +1434,9 @@ class OneLevelLADR(OneLevelTransport):
             #mwf debug
             #import pdb
             #pdb.set_trace()
-            self.coefficients.evaluate(self.timeIntegration.tLast,self.q_backtrack)
+            #if call full evaluate here, need to 'undo' to get velocity straight
+            self.coefficients.evaluateMassOnly(self.timeIntegration.tLast,self.q_backtrack)
+            
             for ci in range(self.nc):
                 #have to scale by -1
                 self.q_backtrack[('m',ci)] *= -1.
@@ -1917,7 +1921,7 @@ class OneLevelLADR(OneLevelTransport):
         Calculate the nonlinear coefficients at the element boundary quadrature points
         """
         pass
-    def trackSolutionBackwards(self):
+    def trackSolutionBackwards(self,skipPointsWithZeroSolution=False):
         """
         track interpolation points backwards to get an approximate solution at new time level
         """
@@ -1940,8 +1944,6 @@ class OneLevelLADR(OneLevelTransport):
             self.t_track_ip[ci].fill(self.timeIntegration.tLast)
             #try all points, now set to -1 to try, -3 to skip, 0 or greater if a node of the mesh
             self.flag_track_ip[ci].fill(-1)
-            #don't skip points with small concentration when going backwards in case near a point with nonzero grad?
-            skipPointsWithZeroSolution = 0
 
             for k in range(self.element_track_ip[ci].shape[1]):
                 self.element_track_ip[ci][:,k] = numpy.arange(self.mesh.nElements_global,dtype='i')
@@ -1949,13 +1951,33 @@ class OneLevelLADR(OneLevelTransport):
             x_depart_ip[ci] = self.u[ci].femSpace.interpolationPoints
             nPoints_track_ip[ci] = self.mesh.nElements_global*x_depart_ip[ci].shape[1]
             if skipPointsWithZeroSolution:
-                assert False, "todo need u array that's the same shape as interpolation points array"
-                #cellam.tagNegligibleIntegrationPoints(nPoints_track_ip[ci],
-                #                                      self.zeroSolutionTol_track[ci],
-                #                                      x_depart_ip[ci],
-                #                                      self.q[('u',ci)],
-                #                                      self.flag_track_ip[ci])
-
+                #could use normal FemSpace machinery if all of the trial functions have been built etc
+                cellam.evaluateSolutionAtTrackedPoints(self.nSpace_global,
+                                                       self.nDOF_trial_element[ci],
+                                                       nPoints_track_ip[ci],
+                                                       self.mesh.nElements_global,
+                                                       self.mesh.nNodes_global,
+                                                       self.mesh.nNodes_element,
+                                                       self.mesh.nElementBoundaries_element,
+                                                       self.mesh.nodeArray,
+                                                       self.mesh.elementNodesArray,
+                                                       self.mesh.elementNeighborsArray,
+                                                       self.elementBoundaryOuterNormalsArray,
+                                                       x_depart_ip[ci],
+                                                       self.t_depart_ip[ci],
+                                                       self.element_track_ip[ci],
+                                                       self.flag_track_ip[ci],
+                                                       self.u[ci].femSpace.dofMap.l2g,
+                                                       self.u[ci].dof,
+                                                       self.phi_ip[('u',ci)])
+                cellam.tagNegligibleIntegrationPoints(nPoints_track_ip[ci],
+                                                      self.zeroSolutionTol_track[ci],
+                                                      x_depart_ip[ci],
+                                                      self.phi_ip[('u',ci)],
+                                                      self.flag_track_ip[ci])
+                #mwf debug
+                #import pdb
+                #pdb.set_trace()
         #todo make sure activeComponents set explicitly?
 
         self.particle_tracker.backwardTrack(self.t_depart_ip,
@@ -1994,3 +2016,49 @@ class OneLevelLADR(OneLevelTransport):
             self.u[ci].projectFromInterpolationConditions(self.u_track_ip[ci])
             self.u_dof_track[ci][:] = self.u[ci].dof
             self.u[ci].dof[:] = self.u_dof_track_tmp[ci]
+        #ci
+    #def
+
+    def generateSSIPs(self):
+        """
+        The general idea is to track interpolation points back to old time level and create quadrature rules
+        that include the backtracked images of the interpolation points
+        ** assumes solution already backtracked**
+        todo: make sure can skip points with 'zero' solution in the backtracking step
+
+        After tracking solution backwards, generate lookup table to determine points that are contained in each
+        element (inverse of element_track). In this step, we should take care of the duplicate entries in the interpolation points
+
+        Then call dimension specific routines to create quadrature points
+        on each element that contain the tracked points. 
+
+        """
+
+        #start by allocating memory on the fly and then make smarter
+        elementsToTrackedPoints = {}
+        x_track_gq_offsets = {}
+        x_track_gq         = {}
+        dV_track_gq        = {}
+        
+        #todo treat each coordinate separately
+        componentsForSSIPs = [0]
+        for ci in componentsForSSIPs:
+             elementsToTrackedPoints[ci] = {}
+             for k in range(self.element_track_ip[ci].shape[0]):
+                 eN = element_track_ip[ci][k]
+                 if eN >= 0:
+                     if elementsToTrackedPoints[ci].has_key(eN):
+                         elementsToTrackedPoints[ci][eN].add((self.x_track_ip[ci][k,0],self.x_track_ip[ci][k,1],self.x_track_ip[k,2]))
+                     else:
+                         elementsToTrackedPoints[ci][eN] = set([(self.x_track_ip[ci][k,0],self.x_track_ip[ci][k,1],self.x_track_ip[k,2])])
+             #
+             x_track_gq_offsets = numpy.zeros((self.mesh.nElements_global+1,),'i')
+             
+             if self.nSpace_global == 1:
+                 #count number of points
+                 for eN in range(self.mesh.nElements_global):
+                     if not elementsToTrackedPoints[ci].has_key(eN):
+                         x_track_gq_offsets[ci][eN+1] = x_track_gq_offsets[eN]+len(self.q['dV'][eN])
+                         #copy over q's integration points and weights
+                         
+                     
