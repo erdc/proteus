@@ -5188,13 +5188,17 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
           before evaluate is called with c=ebqe
         """
         #mwf debug
-        import pdb
-        pdb.set_trace()
+        #import pdb
+        #pdb.set_trace()
         self.evaluateReactions(t,c)
         evaluatedVelocity = False
+        if not c.has_key(('df',0,0)):
+            print "Warning SubsurfaceTransportCoefficients ellam coefs not evaluating c doesn't have df keys = %s " % (c.keys())
+            return
         if self.q[('velocity',0)].shape == c[('df',0,0)].shape:
             if self.needToEvaluateVelocity:
                 evaluatedVelocity = self.evaluateVelocity(t,c)
+                
         for ci in range(self.nc):
             if self.q[('velocity',ci)].shape == c[('df',ci,ci)].shape:
                 v = self.q[('velocity',ci)]
@@ -5223,3 +5227,13 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
 
         if evaluatedVelocity:
             self.evaluateAdjointVelocity(t,c)
+
+    def evaluateMassOnly(self,t,c):
+        """
+        just evaluate mass terms in case doing something 'exotic' in ellam approximations
+        like using SSIPs or backtracking mass
+        """
+        for ci in range(self.nc):
+            c[('m',ci)][:]=c[('u',ci)]
+            c[('m',ci)] *= self.omega
+            c[('dm',ci,ci)].fill(self.omega)
