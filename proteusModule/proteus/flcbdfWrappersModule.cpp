@@ -305,10 +305,6 @@ ParMat_init(ParMat *self, PyObject *args, PyObject *kwds)
       }
   ISLocalToGlobalMappingCreate(Py_PETSC_COMM_WORLD,bs*SHAPE(subdomain2global)[0],&indices[0],&self->subdomain2globalIS);
   MatSetLocalToGlobalMapping(self->m,self->subdomain2globalIS);
-  //printf("MatSetOptions\n");
-  //  MatSetOption(self->m,MAT_IGNORE_OFF_PROC_ENTRIES,PETSC_TRUE);
-  //MatSetOption(self->m,MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);//the preallocation does an initial assembly so I think this should be safe
-  //  MatSetLocalToGlobalMapping(self->m2,self->subdomain2globalIS);
   return 0;
 }
 
