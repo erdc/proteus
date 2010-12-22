@@ -275,6 +275,13 @@ ParMat_init(ParMat *self, PyObject *args, PyObject *kwds)
 		       &L))
     
     return -1;
+  //set up a local 2 global mapping
+  std::vector<int> indices(bs*SHAPE(subdomain2global)[0]);
+  for (int i=0;i<SHAPE(subdomain2global)[0];i++)
+    for (int I=0;I<bs;I++)
+      {
+        indices[i*bs+I] = IDATA(subdomain2global)[i]*bs+I;
+      }
   if (bs==1)
     {
       //        MatCreateMPIAIJ(Py_PETSC_COMM_WORLD,n,n,N,N,1,PETSC_NULL,max_nNeighbors,PETSC_NULL,&self->m2);
@@ -282,8 +289,15 @@ ParMat_init(ParMat *self, PyObject *args, PyObject *kwds)
         MatCreate(Py_PETSC_COMM_WORLD,&self->m);
         MatSetSizes(self->m,n,n,N,N);
         MatSetFromOptions(self->m);
-	MatSeqAIJSetPreallocationCSR(self->m,SMP(L)->A.rowptr,SMP(L)->A.colind,(double*)(SMP(L)->A.nzval));
-	MatMPIAIJSetPreallocationCSR(self->m,SMP(L)->A.rowptr,SMP(L)->A.colind,(double*)(SMP(L)->A.nzval));
+        //try putting indeces in global numbering
+        std::vector<int> j(SMP(L)->A.rowptr[n]);
+        for (int i=0;i<n;i++)
+          for (int k=SMP(L)->A.rowptr[i];k<SMP(L)->A.rowptr[i+1];k++)
+            {
+              j[k] = indices[SMP(L)->A.colind[k]];
+            }
+	MatSeqAIJSetPreallocationCSR(self->m,SMP(L)->A.rowptr,&j[0],(double*)(SMP(L)->A.nzval));
+	MatMPIAIJSetPreallocationCSR(self->m,SMP(L)->A.rowptr,&j[0],(double*)(SMP(L)->A.nzval));
     }
   else
     {
@@ -292,17 +306,16 @@ ParMat_init(ParMat *self, PyObject *args, PyObject *kwds)
       MatCreate(Py_PETSC_COMM_WORLD,&self->m);
       MatSetSizes(self->m,bs*n,bs*n,bs*N,bs*N);
       MatSetFromOptions(self->m);
-      MatSeqAIJSetPreallocationCSR(self->m,SMP(L)->A.rowptr,SMP(L)->A.colind,(double*)(SMP(L)->A.nzval));
-      MatMPIAIJSetPreallocationCSR(self->m,SMP(L)->A.rowptr,SMP(L)->A.colind,(double*)(SMP(L)->A.nzval));
+      std::vector<int> j(SMP(L)->A.rowptr[bs*n]);
+      for (int i=0;i<bs*n;i++)
+        for (int k=SMP(L)->A.rowptr[i];k<SMP(L)->A.rowptr[i+1];k++)
+          {
+            j[k] = indices[SMP(L)->A.colind[k]];
+          }
+      MatSeqAIJSetPreallocationCSR(self->m,SMP(L)->A.rowptr,&j[0],(double*)(SMP(L)->A.nzval));
+      MatMPIAIJSetPreallocationCSR(self->m,SMP(L)->A.rowptr,&j[0],(double*)(SMP(L)->A.nzval));
     }
   PetscOptionsPrint(stdout);
-  //set up a local 2 global mapping
-  std::vector<int> indices(bs*SHAPE(subdomain2global)[0]);
-  for (int i=0;i<SHAPE(subdomain2global)[0];i++)
-    for (int I=0;I<bs;I++)
-      {
-        indices[i*bs+I] = IDATA(subdomain2global)[i]*bs+I;
-      }
   ISLocalToGlobalMappingCreate(Py_PETSC_COMM_WORLD,bs*SHAPE(subdomain2global)[0],&indices[0],&self->subdomain2globalIS);
   MatSetLocalToGlobalMapping(self->m,self->subdomain2globalIS);
   return 0;
