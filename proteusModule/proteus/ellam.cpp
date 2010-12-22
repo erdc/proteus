@@ -231,6 +231,8 @@ void evaluateSolutionAtTrackedPoints(int nSpace,
       if (flag_track[k] == -1) //do not evaluate points that go out of domain, let inflow boundary approx take care of this?
 	{
 	  register int eN_track = element_track[k];
+	  assert(eN_track >= 0 && eN_track < nElements_global);
+
 	  //same as trial
 	  evaluateTestFunctionsOnElement(nSpace,
 					 nDOF_trial_element,
@@ -1444,6 +1446,7 @@ double modifiedVanLeer(double r)
 {
   return (fabs(r)+r)/(1. + fmax(1.,fabs(r)));
 }
+
 extern "C"
 void calculateBerzinsSlumpedMassApproximation1dv2(int nElements_global,
 						  int nElementBoundaries_element,
