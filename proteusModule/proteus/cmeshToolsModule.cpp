@@ -1679,6 +1679,19 @@ static PyObject* cmeshToolsGenerateNURBSMeshFromRectangularGrid(PyObject* self,
   return Py_None;
 }
 
+static PyObject* cmeshToolsDeleteMeshDataStructures(PyObject* self,
+						    PyObject* args)
+{
+  PyObject *cmesh;
+  if (!PyArg_ParseTuple(args,
+                        "O",
+                        &cmesh))
+    return NULL;
+  deleteMesh(MESH(cmesh));
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
 
 static PyMethodDef SparsityInfo_methods[] = {
   {"findNonzeros", 
@@ -1917,6 +1930,10 @@ static PyMethodDef cmeshToolsMethods[] = {
     "Compute h, etc."},
   { "allocateGeometricInfo_NURBS",
     cmeshToolsAllocateGeometricInfo_NURBS,
+    METH_VARARGS, 
+    "Allocate h, etc."},
+  { "deleteMeshDataStructures",
+    cmeshToolsDeleteMeshDataStructures,
     METH_VARARGS, 
     "Allocate h, etc."},
   { NULL,NULL,0,NULL}

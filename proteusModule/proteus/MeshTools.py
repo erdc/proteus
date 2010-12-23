@@ -5,7 +5,6 @@ from EGeometry import *
 import numpy
 import array
 from Archiver import *
-
     
 class Node:
     xUnitVector = EVec(1.0,0.0,0.0)
@@ -436,7 +435,7 @@ class Mesh:
         import flcbdfWrappers
         comm = Comm.get()
         self.comm=comm
-        log("Partitioning mesh among %d processors using partitioningType = %d" % (comm.size(),parallelPartitioningType))
+        log("Partitioning mesh among %d processors using partitioningType = %d" % (comm.size(),parallelPartitioningType)) 
         self.subdomainMesh=self.__class__()
         self.subdomainMesh.globalMesh = self
         self.subdomainMesh.cmesh=cmeshTools.CMesh()
@@ -486,6 +485,14 @@ class Mesh:
         log("Number of Subdomain Edges = "+str(self.subdomainMesh.nEdges_global))
         comm.barrier()
         log("Finished partitioning")
+        comm.beginSequential()
+        from Profiling import memory
+        memory()
+        log(memory("Partitioning Mesh","Mesh"),level=1)
+        del self.cmesh
+        #cmeshTools.deleteMeshDataStructures(self.cmesh)
+        log(memory("Without global mesh","Mesh"),level=1)
+        comm.endSequential()
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0, EB=False):
         if self.arGridCollection != None:
             init = False
