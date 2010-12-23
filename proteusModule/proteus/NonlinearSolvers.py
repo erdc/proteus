@@ -428,7 +428,7 @@ class Newton(NonlinearSolver):
         while (not self.converged(r) and
                not self.failed()):
             if self.maxIts>1:
-	      log("   Newton it %d norm(r) = %12.5e   %g" % (self.its-1,self.norm_r,100*self.norm_r/self.norm_r0),level=1)
+                log("   Newton it %d norm(r) = %12.5e norm(r)/(rtol*norm(r0)+atol) = %g" % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
                 self.F.getJacobian(self.J)
@@ -618,11 +618,11 @@ class Newton(NonlinearSolver):
                     Viewers.newWindow()
                 #raw_input("wait")
             if self.maxIts>1:
-               log("   Final     %d norm(r) = %12.5e   %g" % (self.its-1,self.norm_r,100*self.norm_r/self.norm_r0),level=1)
+               log("   Final     %d norm(r) = %12.5e norm(r)/(rtol*norm(r0)+atol) = %g" % (self.its-1,self.norm_r,self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),level=1)
 
             return self.failedFlag
         if self.maxIts>1:
-            log("   Final     %d norm(r) = %12.5e   %g" % (self.its-1,self.norm_r,100*self.norm_r/self.norm_r0),level=1)
+            log("   Final     %d norm(r) = %12.5e norm(r)/(rtol*norm(r0)+atol) = %g" % (self.its-1,self.norm_r,self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),level=1)
 class NewtonNS(NonlinearSolver):
     """
     A simple iterative solver that is Newton's method
@@ -2291,7 +2291,30 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                         maxLSits=maxLSits ))
             
     else:
-	raise RuntimeError,"Unknown level nonlinear solver "+ levelNonlinearSolverType
+        try:
+            for l in range(nLevels):
+                if par_duList != None and len(par_duList) > 0:
+                    par_du=par_duList[l]
+                else:
+                    par_du=None
+                levelNonlinearSolverList.append(levelNonlinearSolverType(linearSolver=linearSolverList[l],
+                                                       F=nonlinearOperatorList[l],
+                                                       J=jacobianList[l],
+                                                       du=duList[l],
+                                                       par_du=par_du,
+                                                       rtol_r=relativeToleranceList[l],
+                                                       atol_r=absoluteTolerance,
+                                                       maxIts=maxSolverIts,
+                                                       norm = nonlinearSolverNorm,
+                                                       convergenceTest = levelSolverConvergenceTest,
+                                                       computeRates = computeLevelSolverRates,
+                                                       printInfo=printLevelSolverInfo,
+                                                       fullNewton=levelSolverFullNewtonFlag,
+                                                       directSolver=linearDirectSolverFlag,
+                                                       EWtol=EWtol,
+                                                       maxLSits=maxLSits ))
+        except:
+            raise RuntimeError,"Unknown level nonlinear solver "+ levelNonlinearSolverType
     if multilevelNonlinearSolverType == NLNI:
 	multilevelNonlinearSolver = NLNI(fList = nonlinearOperatorList,
 					 solverList = levelNonlinearSolverList,
