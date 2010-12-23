@@ -369,6 +369,21 @@ public:
       for(int I=0;I<NSPACE;I++)
 	grad[I] += dof[l2g_element[j]]*grad_trial[j*NSPACE+I];
   }
+  inline void valFromElementDOF(const double* dof,const double* trial_ref,double& val)
+  {
+    val=0.0;
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      val+=dof[j]*trial_ref[j];
+  }
+
+  inline void gradFromElementDOF(const double* dof,const double* grad_trial,double* grad)
+  {
+    for(int I=0;I<NSPACE;I++)
+      grad[I] = 0.0;
+    for (int j=0;j<NDOF_TRIAL_ELEMENT;j++)
+      for(int I=0;I<NSPACE;I++)
+	grad[I] += dof[j]*grad_trial[j*NSPACE+I];
+  }
 
   inline void gradTrialFromRef(const double* grad_trial_ref, const double* jacInv, double* grad_trial)
   {

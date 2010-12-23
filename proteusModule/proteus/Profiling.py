@@ -67,7 +67,7 @@ def memory(message=None,className='',memSaved=None):
     if memLog:
         gc.collect()
         try:
-            mem = int(os.popen('ps -p %d -o vsz|tail -1' % os.getpid()).read())
+            mem = int(os.popen('ps -p %d -o rss|tail -1' % os.getpid()).read())
         except:
             try:
                 #CLE doesn't have full ps functionality
