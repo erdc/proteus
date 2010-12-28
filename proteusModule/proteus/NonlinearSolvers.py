@@ -428,7 +428,8 @@ class Newton(NonlinearSolver):
         while (not self.converged(r) and
                not self.failed()):
             if self.maxIts>1:
-                log("   Newton it %d norm(r) = %12.5e norm(r)/(rtol*norm(r0)+atol) = %g" % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                log("   Newton it %d norm(r) = %12.5e  %12.5g \t\t norm(r)/(rtol*norm(r0)+atol) = %g" 
+		            % (self.its-1,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
                 self.F.getJacobian(self.J)
@@ -618,11 +619,12 @@ class Newton(NonlinearSolver):
                     Viewers.newWindow()
                 #raw_input("wait")
             if self.maxIts>1:
-               log("   Final     %d norm(r) = %12.5e norm(r)/(rtol*norm(r0)+atol) = %g" % (self.its-1,self.norm_r,self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),level=1)
-
+               log("   Newton it %d norm(r) = %12.5e  %12.5g \t\t norm(r)/(rtol*norm(r0)+atol) = %g" 
+		            % (self.its-1,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             return self.failedFlag
         if self.maxIts>1:
-            log("   Final     %d norm(r) = %12.5e norm(r)/(rtol*norm(r0)+atol) = %g" % (self.its-1,self.norm_r,self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),level=1)
+            log("   Newton it %d norm(r) = %12.5e  %12.5g \t\t norm(r)/(rtol*norm(r0)+atol) = %g" 
+		           % (self.its-1,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
 class NewtonNS(NonlinearSolver):
     """
     A simple iterative solver that is Newton's method
