@@ -8,6 +8,7 @@ TODO
 
   med:
     need better way to set ellam specific options?
+    move setupInitialElementLocations to c, allow for different types of tracking points
   low:
     add coupling between components 
     decide if should get rid of numerical flux use or keep?
@@ -40,7 +41,7 @@ For SSIPs type approach ...
      equivalent
 
    creating a composite trapezoid rule type quadrature in 1d (ok know how), 2d, 3d?
-   
+
 """
 class OneLevelLADR(OneLevelTransport):
     nCalls=0
@@ -368,9 +369,7 @@ class OneLevelLADR(OneLevelTransport):
                 self.ebqe[('df',ci,cj)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         
         #a, linear dispersion single component
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
+       
         for ci,ckDict in self.coefficients.diffusion.iteritems():
             for ck,cjDict in ckDict.iteritems():
                 for flag in cjDict.values():
@@ -523,34 +522,6 @@ class OneLevelLADR(OneLevelTransport):
             for cj in cjDict.keys():
                 self.ebqe[('dm',ci,cj)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
 
-        ###for tracking
-        #quadrature points
-        self.x_track = {}; self.t_track={}; self.t_depart={}; self.dt_track={}; self.flag_track={}; self.element_track={}
-        for ci in range(self.nc):
-            self.x_track[ci] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
-            self.t_track[ci]   = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-            self.t_depart[ci]   = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-            self.dt_track[ci]   = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-            self.flag_track[ci]   = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'i')
-            self.flag_track[ci].fill(-1)
-            self.element_track[ci]   = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'i')
-        #interpolation points for solution values
-        self.x_track_ip = {}; self.t_track_ip={}; self.t_depart_ip={}; self.u_track_ip={}; self.flag_track_ip={}; self.element_track_ip={}
-        self.u_dof_track = {}; self.u_dof_track_tmp = {} ; 
-        for ci in range(self.nc):
-            self.x_track_ip[ci] = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci],3),'d')
-            self.t_track_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'d')
-            self.t_depart_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'d')
-            self.u_track_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'d')
-            self.flag_track_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'i')
-            self.flag_track_ip[ci].fill(-1)
-            self.element_track_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'i')
-            self.u_dof_track[ci] = numpy.copy(self.u[ci].dof)
-            self.u_dof_track_tmp[ci] = numpy.copy(self.u[ci].dof)
-            #manually insert value in phi_ip for now
-            if not self.phi_ip.has_key(('u',ci)):
-                self.phi_ip[('u',ci)] = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'d')
-        self.elementBoundaryOuterNormalsArray = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nSpace_global),'d')
 
         ###ellam specific options with defauls here
         self.particleTrackingType = None
@@ -576,6 +547,47 @@ class OneLevelLADR(OneLevelTransport):
         self.needToBackTrackSolution = False
         if self.slumpingFlag == 2 or self.SSIPflag > 0:
             self.needToBackTrackSolution = True
+
+        ###for tracking
+        #quadrature points
+        self.q_x_track = {}; self.q_t_track={}; self.q_t_depart={}; self.q_dt_track={}; self.q_flag_track={}; self.q_element_track={}
+        for ci in range(self.nc):
+            self.q_x_track[ci] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,3),'d')
+            self.q_t_track[ci]   = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+            self.q_t_depart[ci]   = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+            self.q_dt_track[ci]   = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+            self.q_flag_track[ci]   = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'i')
+            self.q_flag_track[ci].fill(-1)
+            self.q_element_track[ci]   = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'i')
+        #interpolation points for solution values
+        self.x_track_ip = {}; self.t_track_ip={}; self.t_depart_ip={}; self.u_track_ip={}; self.flag_track_ip={}; self.element_track_ip={}
+        self.u_dof_track = {}; self.u_dof_track_tmp = {} ; 
+        for ci in range(self.nc):
+            self.x_track_ip[ci] = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci],3),'d')
+            self.t_track_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'d')
+            self.t_depart_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'d')
+            self.u_track_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'d')
+            self.flag_track_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'i')
+            self.flag_track_ip[ci].fill(-1)
+            self.element_track_ip[ci]   = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'i')
+            self.u_dof_track[ci] = numpy.copy(self.u[ci].dof)
+            self.u_dof_track_tmp[ci] = numpy.copy(self.u[ci].dof)
+            #manually insert value in phi_ip for now
+            if not self.phi_ip.has_key(('u',ci)):
+                self.phi_ip[('u',ci)] = numpy.zeros((self.mesh.nElements_global,self.n_phi_ip_element[ci]),'d')
+
+
+        ##'global tracked points arrays' when have variable quadrature rules (e.g., SSIPs)
+        self.gq_x_track_offsets=None; self.gq_x_track=None; self.gq_t_track=None; self.gq_t_depart=None; self.gq_dt_track=None;
+        self.gq_flag_track=None; self.gq_element_track=None; self.gq_dV=None; self.gq=None; self.gq_last=None
+        self.gq_x_depart=None; self.gq_element_depart=None;
+        #not really needed except for evaluateSolutionAtTrackedPoints convention
+        #todo get rid of
+        self.gq_flag_depart=None; 
+        
+        
+        self.elementBoundaryOuterNormalsArray = numpy.zeros((self.mesh.nElements_global,self.mesh.nElementBoundaries_element,self.nSpace_global),'d')
+
         ##particle tracker setup
         self.particle_tracker = options.particleTracking(self.mesh,self.nSpace_global,
                                                          activeComponentList=range(self.nc))
@@ -942,7 +954,7 @@ class OneLevelLADR(OneLevelTransport):
                 #todo need faster loop
                 for j in range(self.nDOF_trial_element[0]):
                     for I in range(self.nSpace_global):
-                        self.q[('dt*grad(w)*dV_a',ck,ci)][:,:,j,I] *= self.dt_track[ci]
+                        self.q[('dt*grad(w)*dV_a',ck,ci)][:,:,j,I] *= self.q_dt_track[ci]
                 if self.sd:
                     cfemIntegrals.updateDiffusion_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                           self.q[('a',ci,ck)],
@@ -958,14 +970,11 @@ class OneLevelLADR(OneLevelTransport):
 
         for ci in self.coefficients.reaction.keys():
             #weight by time step size
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             #print "LADRellam evalres rxn= %s " % (self.q[('r',0)])
             self.q[('dt*w*dV_r',ci)][:] = self.q[('w*dV_r',ci)]
             #todo need faster loop
             for j in range(self.nDOF_trial_element[0]):
-                self.q[('dt*w*dV_r',ci)][:,:,j]   *= self.dt_track[ci]
+                self.q[('dt*w*dV_r',ci)][:,:,j]   *= self.q_dt_track[ci]
             cfemIntegrals.updateReaction_weak(self.q[('r',ci)],
                                               self.q[('dt*w*dV_r',ci)],
                                               self.elementResidual[ci])
@@ -996,14 +1005,10 @@ class OneLevelLADR(OneLevelTransport):
                 self.elementResidualTmp[ci].fill(0.0)
         for ci in self.coefficients.reaction.keys():
             #weight by time step size
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
-            #print "LADRellam evalres rxn= %s " % (self.q[('r',0)])
             self.q[('dt*w*dV_r',ci)][:] = self.q[('w*dV_r',ci)]
             #todo need faster loop
             for j in range(self.nDOF_trial_element[0]):
-                self.q[('dt*w*dV_r',ci)][:,:,j]   *= self.dt_track[ci]
+                self.q[('dt*w*dV_r',ci)][:,:,j]   *= self.q_dt_track[ci]
             cfemIntegrals.updateReaction_weak(self.q[('r',ci)],
                                               self.q[('dt*w*dV_r',ci)],
                                               self.elementResidual[ci])
@@ -1027,7 +1032,7 @@ class OneLevelLADR(OneLevelTransport):
                 #todo need faster loop
                 for j in range(self.nDOF_trial_element[0]):
                     for I in range(self.nSpace_global):
-                        self.q[('dt*grad(w)*dV_a',ck,ci)][:,:,j,I] *= self.dt_track[ci]
+                        self.q[('dt*grad(w)*dV_a',ck,ci)][:,:,j,I] *= self.q_dt_track[ci]
                 if self.sd:
                     cfemIntegrals.updateDiffusion_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                           self.q[('a',ci,ck)],
@@ -1041,11 +1046,14 @@ class OneLevelLADR(OneLevelTransport):
                                                               self.elementResidual[ci])
                         
 
-        for ci in self.coefficients.mass.keys():
-            #note not dm/dt but just m
-            cfemIntegrals.updateMass_weak(self.q[('m',ci)],
-                                          self.q[('w*dV_m',ci)],
-                                          self.elementResidual[ci])
+        if False and self.SSIPflag > 0 and self.gq_x_depart != None:#todo come up with a better way to handle uninitialized cases (first step)
+            self.approximateNewMassIntegralUsingSSIPs(self.elementResidual)
+        else:
+            for ci in self.coefficients.mass.keys():
+                #note not dm/dt but just m
+                cfemIntegrals.updateMass_weak(self.q[('m',ci)],
+                                              self.q[('w*dV_m',ci)],
+                                              self.elementResidual[ci])
 
         #mwf debug
         #pdb.set_trace()
@@ -1177,7 +1185,7 @@ class OneLevelLADR(OneLevelTransport):
                                                                  self.q[('v',cj)],
                                                                  self.q[('dt*w*dV_r',ci)],
                                                                  self.elementJacobian[ci][cj])
-                    
+        #todo handle Jacobian when using SSIPs even though shouldn't matter really for linear problem?
         for ci,cjDict in self.coefficients.mass.iteritems():
             for cj in cjDict:
                 cfemIntegrals.updateMassJacobian_weak_lowmem(self.q[('dm',ci,cj)],
@@ -1235,9 +1243,6 @@ class OneLevelLADR(OneLevelTransport):
         for ci in range(self.nc):
             self.ebqe[('outflow_flux_last',ci)].flat[:] = self.ebqe[('outflow_flux',ci)].flat
         #todo put this in time integration
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
         #don't always need deep copy but go ahead and keep for now
         for ci in range(self.nc):
             self.u_dof_last[ci].flat[:] = self.u[ci].dof.flat
@@ -1279,6 +1284,18 @@ class OneLevelLADR(OneLevelTransport):
         timeToTrackPoints = (self.timeIntegration.t > self.timeIntegration.tLast + 1.0e-8 or
                              abs(self.tForLastTrackingStep-self.timeIntegration.t) > 1.0e-8)
 
+        #by default, tracking element quadrature points only (q array)
+        x_depart = {}
+        nPoints_track  = {}
+        for ci in range(self.nc):
+            x_depart[ci] = self.q['x']
+            nPoints_track[ci] = self.mesh.nElements_global*self.nQuadraturePoints_element
+
+        def setupInitialElementLocations(ci,q_e):
+            for k in range(q_e[ci].shape[1]):
+                q_e[ci][:,k] = numpy.arange(self.mesh.nElements_global,dtype='i')
+        #todo need to allow skipping nonzero points with q or gq
+        
         #first generate SSIPs if needed
         #todo this could be turned into a data member
         #0 -- not backtracked at all
@@ -1289,12 +1306,11 @@ class OneLevelLADR(OneLevelTransport):
             self.trackSolutionBackwards(skipPointsWithZeroSolution=True)
             self.generateSSIPs()
             solutionBackTrackedFlag = 1
+            self.trackSSIPs()
         if self.needToTrackPoints and timeToTrackPoints:
             #mwf debug
             #pdb.set_trace()
             #update velocity fields for particle tracking
-            x_depart = {}
-            nPoints_track  = {}
             for ci in range(self.nc):
                 self.particle_tracker.setTrackingVelocity(self.coefficients.adjoint_velocity_dofs_last[ci],ci,
                                                           self.coefficients.adjoint_velocity_times_last[ci],
@@ -1306,89 +1322,53 @@ class OneLevelLADR(OneLevelTransport):
 
 
                 log(" LADRellam tracking integration points backward ci=%s" % ci,level=2) 
-                self.t_depart[ci].fill(self.timeIntegration.t)
+                self.q_t_depart[ci].fill(self.timeIntegration.t)
                 #in desired output time, out actual time
-                self.t_track[ci].fill(self.timeIntegration.tLast)
+                self.q_t_track[ci].fill(self.timeIntegration.tLast)
                 #try all points, now set to -1 to try, -3 to skip, 0 or greater if a node of the mesh
-                self.flag_track[ci].fill(-1)
-                #don't skip points with small concentration when going backwards in case near a point with nonzero grad?
-                skipPointsWithZeroSolution = 0
-                
-                for k in range(self.element_track[ci].shape[1]):
-                    self.element_track[ci][:,k] = numpy.arange(self.mesh.nElements_global,dtype='i')
-
-                x_depart[ci] = self.q['x']
-                nPoints_track[ci] = self.mesh.nElements_global*self.nQuadraturePoints_element
-                if skipPointsWithZeroSolution:
-                    cellam.tagNegligibleIntegrationPoints(nPoints_track[ci],
-                                                          self.zeroSolutionTol_track[ci],
-                                                          x_depart[ci],
-                                                          self.q[('u',ci)],
-                                                          self.flag_track[ci])
+                self.q_flag_track[ci].fill(-1)
+                #assign ownership of quadrature points to elements
+                setupInitialElementLocations(ci,self.q_element_track)
                     
             #todo make sure activeComponents set explicitly?
             #mwf debug just play with forwardTrack call, normally backward tracking
-            self.particle_tracker.backwardTrack(self.t_depart,
-                                                self.t_track,
+            self.particle_tracker.backwardTrack(self.q_t_depart,
+                                                self.q_t_track,
                                                 nPoints_track,
                                                 x_depart,
-                                                self.element_track,
-                                                self.x_track,
-                                                self.flag_track)
+                                                self.q_element_track,
+                                                self.q_x_track,
+                                                self.q_flag_track)
 
 
             #mwf debug
             #pdb.set_trace()
             for ci in range(self.nc):
-                self.dt_track[ci]  = numpy.copy(self.t_depart[ci])
-                self.dt_track[ci] -= self.t_track[ci]
+                self.q_dt_track[ci]  = numpy.copy(self.q_t_depart[ci])
+                self.q_dt_track[ci] -= self.q_t_track[ci]
                         
             if not self.useBackwardTrackingForOldMass:
                 for ci in range(self.nc):
                     log(" LADRellam tracking integration points forward ci=%s " % ci,level=2) 
                     #forward
-                    self.t_depart[ci].fill(self.timeIntegration.tLast)
-                    self.t_track[ci].fill(self.timeIntegration.t)
-                    #todo this doesn't have any effect now
-                    #do skip points with small concentration when going forwards
-                    skipPointsWithZeroSolution = 1
+                    self.q_t_depart[ci].fill(self.timeIntegration.tLast)
+                    self.q_t_track[ci].fill(self.timeIntegration.t)
+                    #todo setup so can skip points with zero solution using q or gq, need to evaluate u at gq
                     #try all points, now set to -1 to try, -3 to skip, 0 or greater if a node of the mesh
-                    self.flag_track[ci].fill(-1)
-                    #todo get rid of this loop
-                    #for eN in range(self.mesh.nElements_global):
-                    #    self.element_track[0][eN,:] = eN
-                    #self.element_track[0].flat[:] = numpy.arange(self.mesh.nElements_global,dtype='i').repeat(self.element_track[0].shape[1],axis=None)
-                    for k in range(self.element_track[ci].shape[1]):
-                        self.element_track[ci][:,k] = numpy.arange(self.mesh.nElements_global,dtype='i')
-                    #todo set zero tol in initialization
-                    if skipPointsWithZeroSolution:
-                        #mwf debug
-                        #import pdb
-                        #pdb.set_trace()
-                        cellam.tagNegligibleIntegrationPoints(nPoints_track[ci],
-                                                              self.zeroSolutionTol_track[ci],
-                                                              x_depart[ci],
-                                                              self.q[('u',ci)],
-                                                              self.flag_track[ci])
+                    self.q_flag_track[ci].fill(-1)
+                    #assign ownership of quadrature points to elements
+                    setupInitialElementLocations(ci,self.q_element_track)
+                    
+
                 #todo make sure activeComponents set explicitly?
-                self.particle_tracker.forwardTrack(self.t_depart,
-                                                   self.t_track,
+                self.particle_tracker.forwardTrack(self.q_t_depart,
+                                                   self.q_t_track,
                                                    nPoints_track,
                                                    x_depart,
-                                                   self.element_track,
-                                                   self.x_track,
-                                                   self.flag_track)
+                                                   self.q_element_track,
+                                                   self.q_x_track,
+                                                   self.q_flag_track)
 
-
-                    #mwf debug tracked locations
-                    #for eN in range(self.mesh.nElements_global):
-                    #    for k in range(self.nQuadraturePoints_element):
-                    #        eN_track = self.element_track[0][eN,k]
-                    #        x0=self.mesh.nodeArray[self.mesh.elementNodesArray[eN_track,0],0]
-                    #        x1=self.mesh.nodeArray[self.mesh.elementNodesArray[eN_track,1],0]
-                    #        if (self.x_track[0][eN,k][0] < min(x0,x1)-1.0e-8 or 
-                    #            self.x_track[0][eN,k][0] > max(x0,x1)+1.0e-8):
-                    #            pdb.set_trace()
 
             if self.needToBackTrackSolution and solutionBackTrackedFlag < 1:
                 self.trackSolutionBackwards(skipPointsWithZeroSolution=True)
@@ -1400,55 +1380,21 @@ class OneLevelLADR(OneLevelTransport):
             #pdb.set_trace()
         #end need to track integration points
 
+
+        
     def approximateOldMassIntegral(self,elementRes):
         """
         approximate weak integral
-        \int_{\Omega} m^{n} w^{n+1} \dV using forward tracking
+        \int_{\Omega} m^{n} w^{n+1} \dV 
         """
-        if self.useBackwardTrackingForOldMass:
-            log("LADRellam evaluating old mass integral with backtracking",level=2)
-            #assumes that x_track, t_track etc correctly set from backtracking step in trackQuadraturePoints
-            for ci in range(self.nc):
-                cellam.evaluateSolutionAtTrackedPoints(self.nSpace_global,
-                                                      self.nDOF_trial_element[ci],
-                                                      self.mesh.nElements_global*self.nQuadraturePoints_element,
-                                                      self.mesh.nElements_global,
-                                                      self.mesh.nNodes_global,
-                                                      self.mesh.nNodes_element,
-                                                      self.mesh.nElementBoundaries_element,
-                                                      self.mesh.nodeArray,
-                                                      self.mesh.elementNodesArray,
-                                                      self.mesh.elementNeighborsArray,
-                                                      self.elementBoundaryOuterNormalsArray,
-                                                      self.x_track[ci],
-                                                      self.t_track[ci],
-                                                      self.element_track[ci],
-                                                      self.flag_track[ci],
-                                                      self.u[ci].femSpace.dofMap.l2g,
-                                                      self.u_dof_last[ci],#todo put this in time integration?
-                                                      self.q_backtrack[('u',ci)])
-
-            #now evaluate as a standard mass integral
-            #todo get rid of all of this, just want mass 
-            self.q_backtrack['dV']= self.q['dV']
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
-            #if call full evaluate here, need to 'undo' to get velocity straight
-            self.coefficients.evaluateMassOnly(self.timeIntegration.tLast,self.q_backtrack)
+        #by default, using just element quadrature array points (g)
             
-            for ci in range(self.nc):
-                #have to scale by -1
-                self.q_backtrack[('m',ci)] *= -1.
-                cfemIntegrals.updateMass_weak(self.q_backtrack[('m',ci)],
-                                              self.q[('w*dV_m',ci)],
-                                              elementRes[ci])
-                self.q_backtrack[('m',ci)] *= -1.
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
+        if self.useBackwardTrackingForOldMass:
+            return self.approximateOldMassIntegralWithBackwardTracking(elementRes)
+        if self.SSIPflag > 0 and self.gq_x_depart != None: #todo come up with a better way to avoid unitialized cases (first step)
+            return self.approximateOldMassIntegralUsingSSIPs(elementRes)
         else:
-            log("LADRellam evaluating old mass integral with forwardtracking",level=2)
+            log("LADRellam evaluating old mass integral with q and forwardtracking",level=2)
             #mwf debug
             #import pdb
             #pdb.set_trace()
@@ -1465,14 +1411,64 @@ class OneLevelLADR(OneLevelTransport):
                                           self.mesh.elementNeighborsArray,
                                           self.elementBoundaryOuterNormalsArray,
                                           self.q['dV'],
-                                          self.x_track[ci],
-                                          self.t_track[ci],
-                                          self.element_track[ci],
-                                          self.flag_track[ci],
+                                          self.q_x_track[ci],
+                                          self.q_t_track[ci],
+                                          self.q_element_track[ci],
+                                          self.q_flag_track[ci],
                                           self.u[ci].femSpace.dofMap.l2g,
                                           self.timeIntegration.m_last[ci],
                                           elementRes[ci])
 
+
+    def approximateOldMassIntegralWithBackwardTracking(self,elementRes):
+        """
+        approximate weak integral
+        \int_{\Omega} m^{n} w^{n+1} \dV using backward tracking
+        """
+        assert self.useBackwardTrackingForOldMass
+        log("LADRellam evaluating old mass integral with backtracking",level=2)
+        if self.SSIPflag > 0:
+            assert False, "need to handle backtracking for old mass with SSIPs"
+        #assumes that x_track, t_track etc correctly set from backtracking step in trackQuadraturePoints
+        for ci in range(self.nc):
+            cellam.evaluateSolutionAtTrackedPoints(self.nSpace_global,
+                                                  self.nDOF_trial_element[ci],
+                                                  self.mesh.nElements_global*self.nQuadraturePoints_element,
+                                                  self.mesh.nElements_global,
+                                                  self.mesh.nNodes_global,
+                                                  self.mesh.nNodes_element,
+                                                  self.mesh.nElementBoundaries_element,
+                                                  self.mesh.nodeArray,
+                                                  self.mesh.elementNodesArray,
+                                                  self.mesh.elementNeighborsArray,
+                                                  self.elementBoundaryOuterNormalsArray,
+                                                  self.q_x_track[ci],
+                                                  self.q_t_track[ci],
+                                                  self.q_element_track[ci],
+                                                  self.q_flag_track[ci],
+                                                  self.u[ci].femSpace.dofMap.l2g,
+                                                  self.u_dof_last[ci],#todo put this in time integration?
+                                                  self.q_backtrack[('u',ci)])
+
+        #now evaluate as a standard mass integral
+        #todo get rid of all of this, just want mass 
+        self.q_backtrack['dV']= self.q['dV']
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        #if call full evaluate here, need to 'undo' to get velocity straight
+        self.coefficients.evaluateMassOnly(self.timeIntegration.tLast,self.q_backtrack)
+
+        for ci in range(self.nc):
+            #have to scale by -1
+            self.q_backtrack[('m',ci)] *= -1.
+            cfemIntegrals.updateMass_weak(self.q_backtrack[('m',ci)],
+                                          self.q[('w*dV_m',ci)],
+                                          elementRes[ci])
+            self.q_backtrack[('m',ci)] *= -1.
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
     def approximateInflowBoundaryIntegral(self,elementRes):
         """
         approximate term
@@ -2036,14 +2032,16 @@ class OneLevelLADR(OneLevelTransport):
         """
 
         #start by allocating memory on the fly and then make smarter
+        #temporaries
         elementsToTrackedPoints = {}
         x_track_gq_offsets = {}
         x_track_gq         = {}
         dV_track_gq        = {}
-        
-        #todo treat each coordinate separately
-        componentsForSSIPs = [0]
-        for ci in componentsForSSIPs:
+        #have to redimension tracking arrays
+        self.gq_x_track_offsets={}; self.gq_x_track={}; self.gq_t_track={}; self.gq_t_depart={}; self.gq_dt_track={}; self.gq_flag_track={}; self.gq_element_track={};
+        self.gq_dV={}; self.gq={}; self.gq_last={}; self.gq_x_depart={}; self.gq_element_depart={}; self.gq_flag_depart={}; 
+        #todo allow for using only 1 component to determine SSIPs
+        for ci in range(self.nc):
              elementsToTrackedPoints[ci] = {}
              #mwf debug
              #import pdb
@@ -2066,6 +2064,8 @@ class OneLevelLADR(OneLevelTransport):
              #these will have to be converted to arrays
              x_track_gq_tmp = {}; dV_track_gq_tmp = {}
              if self.nSpace_global == 1:
+                 subQuadratureOrder = 2
+                 subQuadratureType  = Quadrature.GaussEdge#Quadrature.CompositeTrapezoidalEdge#Quadrature.GaussEdge
                  #count number of points
                  for eN in range(self.mesh.nElements_global):
                      if not elementsToTrackedPoints[ci].has_key(eN):
@@ -2079,7 +2079,7 @@ class OneLevelLADR(OneLevelTransport):
                          #import pdb
                          #pdb.set_trace()
                          #subdivide element according to SSIPs then generate
-                         #uniform composite trapezoidal rule on each interval
+                         #Gaussian quadrature on each sub-interval
                          #do manipulations in physical space first since that's
                          #how triangle would handle it I believe
                          #manually grab the points, sort, and subdivide
@@ -2087,43 +2087,240 @@ class OneLevelLADR(OneLevelTransport):
                          tmpEdgeMesh = sorted(elementsToTrackedPoints[ci][eN])
                          #number of elements in sub-triangulation
                          nElements_base= len(tmpEdgeMesh)-1
-                         nSubIntervals=2
-                         nIntervals = nElements_base*nSubIntervals
-                         nQuadraturePointsNew = nIntervals+1
+                         subElementQuadrature = subQuadratureType()
+                         subElementQuadrature.setOrder(subQuadratureOrder)
+                         nSubElementPoints = len(subElementQuadrature.points)
+                         nQuadraturePointsNew = nElements_base*nSubElementPoints
                          x_track_gq_offsets[ci][eN+1] = x_track_gq_offsets[ci][eN]+nQuadraturePointsNew
                          dV_track_gq_tmp[eN] = numpy.zeros((nQuadraturePointsNew,),'d')
                          x_track_gq_tmp[eN]  = numpy.zeros((nQuadraturePointsNew,3),'d')
-                         #start with left most point
-                         #then loop through sub intervals generating right most point
-                         x_track_gq_tmp[eN][0][:] = tmpEdgeMesh[0]
-                         np_last=0
-                         #mwf debug
-                         #import pdb
-                         #pdb.set_trace()
+                         #loop through each 'base' element in sub element triangulation and
+                         #allocate the quadrature points and weights from the quadrature rule
+                         #short-cut that may or may not be ok is to generate affine mapping on the fly
+                         np_last = 0
                          for nE_local in range(nElements_base):
                              d = numpy.zeros((3,),'d')
                              for I in range(3):
                                  d[I]=tmpEdgeMesh[nE_local+1][I]-tmpEdgeMesh[nE_local][I]
                              volume = numpy.sqrt(numpy.dot(d,d))
-                             frac = 1.0/float(nSubIntervals)
-                             for i in range(1,nSubIntervals+1):
-                                 p = tmpEdgeMesh[nE_local]+d*(i*frac)
-                                 x_track_gq_tmp[eN][np_last+1][:] = p
-                                 dV_track_gq_tmp[eN][np_last]  += frac*volume
-                                 dV_track_gq_tmp[eN][np_last+1]+= frac*volume 
+                             for p,w in zip(subElementQuadrature.points,subElementQuadrature.weights):
+                                 for I in range(3):
+                                     x_track_gq_tmp[eN][np_last,I] = tmpEdgeMesh[nE_local][I]*(1.0-p[0]) + tmpEdgeMesh[nE_local+1][I]*p[0]
+                                 dV_track_gq_tmp[eN][np_last]  = w*volume
                                  np_last += 1
                      #else has tracked points
                  #eN
-                 x_track_gq[ci] = numpy.zeros((x_track_gq_offsets[ci][-1],3),'d')
-                 dV_track_gq[ci]= numpy.zeros((x_track_gq_offsets[ci][-1],),'d')
+                 nPoints_global = x_track_gq_offsets[ci][-1]
+                 self.gq_x_track[ci] = numpy.zeros((nPoints_global,3),'d')
+                 self.gq_dV[ci]= numpy.zeros((nPoints_global,),'d')
                  for eN in range(self.mesh.nElements_global):
-                     x_track_gq[ci][x_track_gq_offsets[ci][eN]:x_track_gq_offsets[ci][eN+1],:] =x_track_gq_tmp[eN][:,:]
-                     dV_track_gq[ci][x_track_gq_offsets[ci][eN]:x_track_gq_offsets[ci][eN+1]]=dV_track_gq_tmp[eN][:]
+                     self.gq_x_track[ci][x_track_gq_offsets[ci][eN]:x_track_gq_offsets[ci][eN+1],:] =x_track_gq_tmp[eN][:,:]
+                     self.gq_dV[ci][x_track_gq_offsets[ci][eN]:x_track_gq_offsets[ci][eN+1]]=dV_track_gq_tmp[eN][:]
                  #
-                 self.x_track_gq_offsets=x_track_gq_offsets
-                 self.x_track_gq        =x_track_gq
-                 self.dV_track_gq       =dV_track_gq
+                 self.gq_x_track_offsets[ci]= numpy.copy(x_track_gq_offsets[ci])
+                 self.gq_x_depart[ci]       = numpy.copy(self.gq_x_track[ci])
+                 #for now have to resize everthing here
+                 self.gq_t_track[ci]        = numpy.zeros((nPoints_global,),'d')
+                 self.gq_t_depart[ci]       = numpy.zeros((nPoints_global,),'d')
+                 self.gq_dt_track[ci]       = numpy.zeros((nPoints_global,),'d')
+                 self.gq_flag_track[ci]     = numpy.zeros((nPoints_global,),'i')
+                 self.gq_flag_depart[ci]     = numpy.zeros((nPoints_global,),'i')
+                 self.gq_element_track[ci]  = numpy.zeros((nPoints_global,),'i')
+                 self.gq_element_depart[ci]  = numpy.zeros((nPoints_global,),'i')
+                 self.gq[('u',ci)]          = numpy.zeros((nPoints_global,),'d')
+                 self.gq[('m',ci)]          = numpy.zeros((nPoints_global,),'d')
+                 self.gq_last[('u',ci)]     = numpy.zeros((nPoints_global,),'d')
+                 self.gq_last[('m',ci)]     = numpy.zeros((nPoints_global,),'d')
+                 for cj in self.coefficients.mass[ci].keys():
+                     self.gq[('dm',ci,cj)]      = numpy.zeros((nPoints_global,),'d')
+                     self.gq_last[('dm',ci,cj)] = numpy.zeros((nPoints_global,),'d')
+                     
+                 self.gq[('x',ci)]          = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
+                 self.gq_last[('x',ci)]     = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
              #1d
              #mwf debug
              #import pdb
              #pdb.set_trace()
+        #ci loop for generating SSIPs
+        #todo what about allowing x to be consistent with usual approach
+        self.gq['x']          = self.gq_x_depart[0] #simple alias for coeffficient evaluation
+        self.gq_last['x']     = self.gq_x_depart[0] #simple alias for coeffficient evaluation
+ 
+        #have to evaluate old time solution and mass at SSIPs as well as new time solution
+        def setupInitialElementLocations(ci,q_e):
+            for eN in range(self.mesh.nElements_global):
+                start = self.gq_x_track_offsets[ci][eN]; finish = self.gq_x_track_offsets[ci][eN+1]
+                q_e[ci][start:finish] = eN
+        for ci in range(self.nc):
+            self.gq_flag_depart[ci].fill(-1); self.gq_t_depart[ci].fill(self.timeIntegration.tLast)
+            setupInitialElementLocations(ci,self.gq_element_depart)
+
+            cellam.evaluateSolutionAtTrackedPoints(self.nSpace_global,
+                                                   self.nDOF_trial_element[ci],
+                                                   self.gq_x_depart[ci].shape[0],
+                                                   self.mesh.nElements_global,
+                                                   self.mesh.nNodes_global,
+                                                   self.mesh.nNodes_element,
+                                                   self.mesh.nElementBoundaries_element,
+                                                   self.mesh.nodeArray,
+                                                   self.mesh.elementNodesArray,
+                                                   self.mesh.elementNeighborsArray,
+                                                   self.elementBoundaryOuterNormalsArray,
+                                                   self.gq_x_depart[ci],
+                                                   self.gq_t_depart[ci],
+                                                   self.gq_element_depart[ci],
+                                                   self.gq_flag_depart[ci],
+                                                   self.u[ci].femSpace.dofMap.l2g,
+                                                   self.u_dof_last[ci],#todo put this in time integration?
+                                                   self.gq_last[('u',ci)])
+
+        self.coefficients.evaluateMassOnly(self.timeIntegration.tLast,self.gq_last)
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        
+    def trackSSIPs(self):
+        """
+        track special integration points
+        """
+        x_depart = {}
+        nPoints_track  = {}
+        #todo get this loop out of python
+        def setupInitialElementLocations(ci,q_e):
+            for eN in range(self.mesh.nElements_global):
+                start = self.gq_x_track_offsets[ci][eN]; finish = self.gq_x_track_offsets[ci][eN+1]
+                q_e[ci][start:finish] = eN
+            
+        #only forward track SSIPs
+        assert not self.useBackwardTrackingForOldMass, "no need to use SSIPs with backtracking for mass"
+        for ci in range(self.nc):
+            log(" LADRellam tracking SSIP  points forward ci=%s " % ci,level=2) 
+            nPoints_track[ci] = self.gq_x_track[ci].shape[0]
+
+            self.gq_t_depart[ci].fill(self.timeIntegration.tLast)
+            self.gq_t_track[ci].fill(self.timeIntegration.t)
+            #todo setup so can skip points with zero solution using q or gq, need to evaluate u at gq
+            #try all points, now set to -1 to try, -3 to skip, 0 or greater if a node of the mesh
+            self.gq_flag_track[ci].fill(-1)
+            #assign ownership of quadrature points to elements
+            setupInitialElementLocations(ci,self.gq_element_track)
+
+
+        #todo make sure activeComponents set explicitly?
+        self.particle_tracker.forwardTrack(self.gq_t_depart,
+                                           self.gq_t_track,
+                                           nPoints_track,
+                                           self.gq_x_depart,
+                                           self.gq_element_track,
+                                           self.gq_x_track,
+                                           self.gq_flag_track)
+
+
+    def approximateNewMassIntegralUsingSSIPs(self,elementRes):
+        """
+        approximate weak integral
+        \int_{\Omega} m^{n+1} w^{n+1} \dV using variable quadrature based on SSIPs
+        """
+        log("LADRellam evaluating new mass integral with SSIPs and forwardtracking",level=2)
+            
+        assert not self.useBackwardTrackingForOldMass, "no need to use SSIPs and backward tracking for mass"
+
+        #evaluate time solution at SSIPs
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        def setupInitialElementLocations(ci,q_e):
+            for eN in range(self.mesh.nElements_global):
+                start = self.gq_x_track_offsets[ci][eN]; finish = self.gq_x_track_offsets[ci][eN+1]
+                q_e[ci][start:finish] = eN
+
+        #have to evaluate new time solution and mass at SSIPs 
+        for ci in range(self.nc):
+            self.gq_t_depart[ci].fill(self.timeIntegration.t)
+            self.gq_flag_depart[ci].fill(-1)
+            setupInitialElementLocations(ci,self.gq_element_depart)
+            
+            cellam.evaluateSolutionAtTrackedPoints(self.nSpace_global,
+                                                   self.nDOF_trial_element[ci],
+                                                   self.gq_x_depart[ci].shape[0],
+                                                   self.mesh.nElements_global,
+                                                   self.mesh.nNodes_global,
+                                                   self.mesh.nNodes_element,
+                                                   self.mesh.nElementBoundaries_element,
+                                                   self.mesh.nodeArray,
+                                                   self.mesh.elementNodesArray,
+                                                   self.mesh.elementNeighborsArray,
+                                                   self.elementBoundaryOuterNormalsArray,
+                                                   self.gq_x_depart[ci],
+                                                   self.gq_t_depart[ci],
+                                                   self.gq_element_depart[ci],
+                                                   self.gq_flag_depart[ci],
+                                                   self.u[ci].femSpace.dofMap.l2g,
+                                                   self.u[ci].dof,
+                                                   self.gq[('u',ci)])
+
+        self.coefficients.evaluateMassOnly(self.timeIntegration.t,self.gq)
+
+        for ci in range(self.nc):
+            #todo do away with scaling
+            #for now just use old mass routine
+            self.gq[('m',ci)] *= -1.0
+            cellam.updateOldMass_weak_arbitraryQuadrature(self.nSpace_global,
+                                                          self.nDOF_test_element[ci],
+                                                          self.mesh.nElements_global,
+                                                          self.mesh.nNodes_global,
+                                                          self.mesh.nNodes_element,
+                                                          self.mesh.nElementBoundaries_element,
+                                                          self.gq_x_depart[ci].shape[0],
+                                                          self.mesh.nodeArray,
+                                                          self.mesh.elementNodesArray,
+                                                          self.mesh.elementNeighborsArray,
+                                                          self.elementBoundaryOuterNormalsArray,
+                                                          self.gq_dV[ci],
+                                                          self.gq_x_depart[ci],
+                                                          self.gq_t_depart[ci],
+                                                          self.gq_element_depart[ci],
+                                                          self.gq_flag_depart[ci],
+                                                          self.u[ci].femSpace.dofMap.l2g,
+                                                          self.gq[('m',ci)],
+                                                          elementRes[ci])
+            self.gq[('m',ci)] *= -1.0
+
+    def approximateOldMassIntegralUsingSSIPs(self,elementRes):
+        """
+        approximate weak integral
+        \int_{\Omega} m^{n} w^{n+1} \dV using variable quadrature based on SSIPs
+        """
+        #todo need to figure out how to handle case like initial step where points
+        #may not be tracked backwards yet
+        
+        #by default, using just element quadrature array points (g)
+        log("LADRellam evaluating old mass integral with SSIPs and forwardtracking",level=2)
+            
+        assert not self.useBackwardTrackingForOldMass, "no need to use SSIPs and backward tracking for mass"
+
+        #assume old time solution already evaluated at SSIPs
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        for ci in range(self.nc):
+            cellam.updateOldMass_weak_arbitraryQuadrature(self.nSpace_global,
+                                                          self.nDOF_test_element[ci],
+                                                          self.mesh.nElements_global,
+                                                          self.mesh.nNodes_global,
+                                                          self.mesh.nNodes_element,
+                                                          self.mesh.nElementBoundaries_element,
+                                                          self.gq_x_track[ci].shape[0],
+                                                          self.mesh.nodeArray,
+                                                          self.mesh.elementNodesArray,
+                                                          self.mesh.elementNeighborsArray,
+                                                          self.elementBoundaryOuterNormalsArray,
+                                                          self.gq_dV[ci],
+                                                          self.gq_x_track[ci],
+                                                          self.gq_t_track[ci],
+                                                          self.gq_element_track[ci],
+                                                          self.gq_flag_track[ci],
+                                                          self.u[ci].femSpace.dofMap.l2g,
+                                                          self.gq_last[('m',ci)],
+                                                          elementRes[ci])
+
