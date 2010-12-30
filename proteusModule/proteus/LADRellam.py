@@ -2023,11 +2023,12 @@ class OneLevelLADR(OneLevelTransport):
         """
         The general idea is to track interpolation points back to old time level and create quadrature rules
         that include the backtracked images of the interpolation points
-        ** assumes solution already backtracked**
-        todo: make sure can skip points with 'zero' solution in the backtracking step
+        ** assumes solution already backtracked **
+
 
         After tracking solution backwards, generate lookup table to determine points that are contained in each
-        element (inverse of element_track). In this step, we should take care of the duplicate entries in the interpolation points
+        element (inverse of element_track). In this step, we should take care of the duplicate entries in the interpolation points.
+        We also need to make sure that 
 
         Then call dimension specific routines to create quadrature points
         on each element that contain the tracked points. 
@@ -2044,21 +2045,85 @@ class OneLevelLADR(OneLevelTransport):
         componentsForSSIPs = [0]
         for ci in componentsForSSIPs:
              elementsToTrackedPoints[ci] = {}
-             for k in range(self.element_track_ip[ci].shape[0]):
-                 eN = element_track_ip[ci][k]
-                 if eN >= 0:
+             #mwf debug
+             #import pdb
+             #pdb.set_trace()
+             for k in range(len(self.element_track_ip[ci].flat)):
+                 eN = self.element_track_ip[ci].flat[k]
+                 if eN >= 0 and self.flag_track_ip[ci].flat[k] >= -1:
                      if elementsToTrackedPoints[ci].has_key(eN):
-                         elementsToTrackedPoints[ci][eN].add((self.x_track_ip[ci][k,0],self.x_track_ip[ci][k,1],self.x_track_ip[k,2]))
+                         #todo: make sure only add points that are far enough away from existing points using a tolerance
+                         elementsToTrackedPoints[ci][eN].add((self.x_track_ip[ci].flat[k*3+0],self.x_track_ip[ci].flat[k*3+1],self.x_track_ip[ci].flat[k*3+2]))
                      else:
-                         elementsToTrackedPoints[ci][eN] = set([(self.x_track_ip[ci][k,0],self.x_track_ip[ci][k,1],self.x_track_ip[k,2])])
+                         #start with nodal points then add those that are tracked
+                         elementsToTrackedPoints[ci][eN] = set([(self.mesh.nodeArray[nN,0],self.mesh.nodeArray[nN,1],self.mesh.nodeArray[nN,2]) for nN in self.mesh.elementNodesArray[eN]])
+                         #todo: make sure only add points that are far enough away from existing points using a tolerance and
+                         #      if the point is too close to a boundary, the project to the boundary and check that point is not too close
+                         #      to an existing point
+                         elementsToTrackedPoints[ci][eN] |= set([(self.x_track_ip[ci].flat[3*k+0],self.x_track_ip[ci].flat[3*k+1],self.x_track_ip[ci].flat[k*3+2])])
              #
-             x_track_gq_offsets = numpy.zeros((self.mesh.nElements_global+1,),'i')
-             
+             x_track_gq_offsets[ci] = numpy.zeros((self.mesh.nElements_global+1,),'i')
+             #these will have to be converted to arrays
+             x_track_gq_tmp = {}; dV_track_gq_tmp = {}
              if self.nSpace_global == 1:
                  #count number of points
                  for eN in range(self.mesh.nElements_global):
                      if not elementsToTrackedPoints[ci].has_key(eN):
-                         x_track_gq_offsets[ci][eN+1] = x_track_gq_offsets[eN]+len(self.q['dV'][eN])
-                         #copy over q's integration points and weights
-                         
-                     
+                         x_track_gq_offsets[ci][eN+1] = x_track_gq_offsets[ci][eN]+len(self.q['dV'][eN])
+                         #copy over q's integration points and weights to temporary data structures
+                         dV_track_gq_tmp[eN] = numpy.copy(self.q['dV'][eN])
+                         x_track_gq_tmp[eN]  = numpy.copy(self.q['x'][eN])
+                     else:
+                         #options are to generate quadrature physical directly or map back to reference
+                         #mwf debug
+                         #import pdb
+                         #pdb.set_trace()
+                         #subdivide element according to SSIPs then generate
+                         #uniform composite trapezoidal rule on each interval
+                         #do manipulations in physical space first since that's
+                         #how triangle would handle it I believe
+                         #manually grab the points, sort, and subdivide
+                         #generate a triangulation of element
+                         tmpEdgeMesh = sorted(elementsToTrackedPoints[ci][eN])
+                         #number of elements in sub-triangulation
+                         nElements_base= len(tmpEdgeMesh)-1
+                         nSubIntervals=2
+                         nIntervals = nElements_base*nSubIntervals
+                         nQuadraturePointsNew = nIntervals+1
+                         x_track_gq_offsets[ci][eN+1] = x_track_gq_offsets[ci][eN]+nQuadraturePointsNew
+                         dV_track_gq_tmp[eN] = numpy.zeros((nQuadraturePointsNew,),'d')
+                         x_track_gq_tmp[eN]  = numpy.zeros((nQuadraturePointsNew,3),'d')
+                         #start with left most point
+                         #then loop through sub intervals generating right most point
+                         x_track_gq_tmp[eN][0][:] = tmpEdgeMesh[0]
+                         np_last=0
+                         #mwf debug
+                         #import pdb
+                         #pdb.set_trace()
+                         for nE_local in range(nElements_base):
+                             d = numpy.zeros((3,),'d')
+                             for I in range(3):
+                                 d[I]=tmpEdgeMesh[nE_local+1][I]-tmpEdgeMesh[nE_local][I]
+                             volume = numpy.sqrt(numpy.dot(d,d))
+                             frac = 1.0/float(nSubIntervals)
+                             for i in range(1,nSubIntervals+1):
+                                 p = tmpEdgeMesh[nE_local]+d*(i*frac)
+                                 x_track_gq_tmp[eN][np_last+1][:] = p
+                                 dV_track_gq_tmp[eN][np_last]  += frac*volume
+                                 dV_track_gq_tmp[eN][np_last+1]+= frac*volume 
+                                 np_last += 1
+                     #else has tracked points
+                 #eN
+                 x_track_gq[ci] = numpy.zeros((x_track_gq_offsets[ci][-1],3),'d')
+                 dV_track_gq[ci]= numpy.zeros((x_track_gq_offsets[ci][-1],),'d')
+                 for eN in range(self.mesh.nElements_global):
+                     x_track_gq[ci][x_track_gq_offsets[ci][eN]:x_track_gq_offsets[ci][eN+1],:] =x_track_gq_tmp[eN][:,:]
+                     dV_track_gq[ci][x_track_gq_offsets[ci][eN]:x_track_gq_offsets[ci][eN+1]]=dV_track_gq_tmp[eN][:]
+                 #
+                 self.x_track_gq_offsets=x_track_gq_offsets
+                 self.x_track_gq        =x_track_gq
+                 self.dV_track_gq       =dV_track_gq
+             #1d
+             #mwf debug
+             #import pdb
+             #pdb.set_trace()
