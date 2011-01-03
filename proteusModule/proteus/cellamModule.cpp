@@ -2,6 +2,8 @@
 #include "numpy/arrayobject.h"
 #include "ellam.h"
 #include "superluWrappersModule.h"
+#include <vector>
+#include <iostream>
 
 #define ND(p) ((PyArrayObject *)p)->nd
 #define SHAPE(p) ((PyArrayObject *)p)->dimensions
@@ -1080,6 +1082,106 @@ static PyObject* cellam_updateElementJacobianWithSlumpedMassCorrection(PyObject*
   return Py_None;
 }
 
+static PyObject* cellam_generateArraysForSSIPs(PyObject* self,
+					       PyObject* args)
+
+{
+  //input 
+  PyObject *nodeArray,
+    *elementNodesArray,
+    *elementBoundariesArray,
+    *elementBoundaryLocalOuterNormalsArray,
+    *elementBoundaryBarycentersArray,
+    *element_track,
+    *flag_track,
+    *x_track,
+    *q_x,
+    *q_dV;
+  double boundaryTolerance,
+    neighborTolerance;
+  //output
+  PyObject *x_gq,*dV_gq,*elements_gq;
+  int nPointsTracked = 1;
+  if(!PyArg_ParseTuple(args,
+                       "ddOOOOOOOOOO",
+                       &boundaryTolerance,
+		       &neighborTolerance,
+		       &nodeArray,
+		       &elementNodesArray,
+		       &elementBoundariesArray,
+		       &elementBoundaryLocalOuterNormalsArray,
+		       &elementBoundaryBarycentersArray,
+		       &element_track,
+		       &flag_track,
+		       &x_track,
+		       &q_x,
+		       &q_dV))
+    return NULL;
+  for (int i = 0; i < ND(element_track); i++)
+    nPointsTracked *= SHAPE(element_track)[i];
+  //since just working through algorithm,
+  //use stl containers to build points and copy over
+  //rather than try to reuse memory etc
+  std::vector<int> elements_gq_tmp;
+  std::vector<double> x_gq_tmp;
+  std::vector<double> dV_gq_tmp; 
+
+  generateArraysForSSIPs(SHAPE(elementNodesArray)[0],
+			 SHAPE(elementNodesArray)[1],
+			 SHAPE(elementBoundariesArray)[1],
+			 SHAPE(elementBoundaryLocalOuterNormalsArray)[2],
+			 nPointsTracked,
+			 SHAPE(q_dV)[1],
+			 boundaryTolerance,
+			 neighborTolerance,
+			 DDATA(nodeArray),
+			 IDATA(elementNodesArray),
+			 IDATA(elementBoundariesArray),
+			 DDATA(elementBoundaryLocalOuterNormalsArray),
+			 DDATA(elementBoundaryBarycentersArray),
+			 IDATA(element_track),
+			 IDATA(flag_track),
+			 DDATA(x_track),
+			 DDATA(q_x),
+			 DDATA(q_dV),
+			 elements_gq_tmp,
+			 x_gq_tmp,
+			 dV_gq_tmp);
+
+  npy_intp nPoints_global = elements_gq_tmp.size();
+  npy_intp dims[2];
+
+  dims[0] = nPoints_global; dims[1] = 3;
+  elements_gq = PyArray_SimpleNew(1,dims,NPY_INT);
+  dV_gq       = PyArray_SimpleNew(1,dims,NPY_DOUBLE);
+  x_gq        = PyArray_SimpleNew(2,dims,NPY_DOUBLE);
+
+  //manually copy
+  int* elements_gq_p = IDATA(elements_gq);
+  double* dV_gq_p    = DDATA(dV_gq);
+  double* x_gq_p     = DDATA(x_gq);
+
+  for (int k=0; k < nPoints_global; k++)
+    {
+      //std::cout<<"cellam generateArraysForSSIPs k= "<<k;
+      elements_gq_p[k] = elements_gq_tmp[k];
+      dV_gq_p[k]       = dV_gq_tmp[k];
+      //std::cout<<" ele tmp= "<<elements_gq_tmp[k] <<" ele_p= "<<elements_gq_p[k];
+      //std::cout<<" dV tmp= "<<dV_gq_tmp[k] <<" dV_p= "<<dV_gq_p[k];
+      for (int I=0; I < 3; I++)
+  	{
+  	  x_gq_p[k*3+I]        = x_gq_tmp[k*3+I];
+  	  //std::cout<<" I= "<<I<<"  x tmp= "<<x_gq_tmp[k*3+I] <<" x_p= "<<x_gq_p[k*3+I];
+  	}
+      //std::cout<<std::endl;
+    }
+
+  return Py_BuildValue("OOO",
+		       elements_gq,
+		       dV_gq,
+		       x_gq);
+}
+
 static PyMethodDef cellamMethods[] = {
  { "updateOldMass_weak",
     cellam_updateOldMass_weak,
@@ -1153,6 +1255,10 @@ static PyMethodDef cellamMethods[] = {
     cellam_updateElementJacobianWithSlumpedMassCorrection,
    METH_VARARGS, 
    "update jacobian matrix to account for slumping"},
+ { "generateArraysForSSIPs",
+   cellam_generateArraysForSSIPs,
+   METH_VARARGS, 
+   "return point to element look up array, quadrature weight array, and quadrature point array for SSIPs"},
  { NULL,NULL,0,NULL}
 };
 

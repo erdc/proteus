@@ -2,6 +2,10 @@
 #include "tracking.h"
 #include <cmath>
 #include <iostream>
+#include <cassert>
+#include <list>
+#include <map>
+
 #include PROTEUS_LAPACK_H
 /***********************************************************************
 
@@ -1695,3 +1699,307 @@ void updateElementJacobianWithSlumpedMassCorrection(int nElements_global,
 	    elementMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j];
     }
 }
+
+void generateArraysForSSIPs(int nElements_global,
+			    int nNodes_element,
+			    int nElementBoundaries_element,
+			    int nSpace,
+			    int nPoints_tracked,
+			    int nPointsPerElement_default,
+			    double boundaryTolerance,
+			    double neighborTolerance,
+			    const double* nodeArray,
+			    const int* elementNodesArray,
+			    const int* elementBoundariesArray,
+			    const double* elementBoundaryLocalOuterNormalsArray,
+			    const double* elementBoundaryBarycentersArray,
+			    const int* element_track,
+			    const int* flag_track,
+			    const double* x_track,
+			    const double* q_x_default,
+			    const double* q_dV_default,
+			    std::vector<int>& elements_gq,
+			    std::vector<double>& x_gq,
+			    std::vector<double>& dV_gq)
+{
+  std::map<int,std::list<double> > elementsToTrackedPoints;
+
+  //determine which elements contain SSIPs
+  ELLAM::assignTrackedPointsToElements(nElements_global,
+				       nNodes_element,
+				       nElementBoundaries_element,
+				       nSpace,
+				       nPoints_tracked,
+				       boundaryTolerance,
+				       neighborTolerance,
+				       nodeArray,
+				       elementNodesArray,
+				       elementBoundariesArray,
+				       elementBoundaryLocalOuterNormalsArray,
+				       elementBoundaryBarycentersArray,
+				       element_track,
+				       flag_track,
+				       x_track,
+				       elementsToTrackedPoints);
+
+  //reset these 
+  elements_gq.clear(); x_gq.clear(); dV_gq.clear();
+  //conservative enough guess on memory needed?
+  elements_gq.reserve(nElements_global*nPointsPerElement_default*2);
+  dV_gq.reserve(nElements_global*nPointsPerElement_default*2);
+  x_gq.reserve(nElements_global*nPointsPerElement_default*2*3);
+  
+  //loop through elements, 
+  //if element has SSIPs, then triangulate element and
+  // create new quadrature points on each sub-element
+  //if now SSIPs in element, just copy over default element quadrature points
+  if (nSpace == 1)
+    {
+      std::vector<double> x_element,w_element;
+      for (int eN=0; eN < nElements_global; eN++)
+	{
+	  unsigned int nPoints_eN = 0;
+	  if (elementsToTrackedPoints.find(eN) != elementsToTrackedPoints.end())
+	    {
+	      ELLAM::createElementSSIPs_1d(elementsToTrackedPoints[eN],
+					   x_element,
+					   w_element);
+	      nPoints_eN = w_element.size();
+	      for (int k=0; k < nPoints_eN; k++)
+		{
+		  dV_gq.push_back(w_element[k]);
+		  for (int I=0; I < 3; I++)
+		    x_gq.push_back(x_element[k*3+I]);
+		}
+	    }
+	  else
+	    {
+	      nPoints_eN = nPointsPerElement_default;
+	      for (int k=0; k < nPointsPerElement_default; k++)
+		{
+		  const double wk = q_dV_default[eN*nPointsPerElement_default +k];
+		  dV_gq.push_back(wk);
+		  for (int I=0; I < 3; I++)
+		    {
+		      const double xkI=q_x_default[eN*nPointsPerElement_default*3 +k*3 +I];
+		      x_gq.push_back(xkI);
+		    }
+		}
+	    }//generating points for eN
+	  assert(nPoints_eN > 0);
+	  for (int k=0; k < nPoints_eN; k++)
+	    {
+	      elements_gq.push_back(eN);
+	    }
+	}//eN
+    }//1d
+  else
+    {
+      std::cout<<"generateArraysForSSIPs nSpace= "<<nSpace<<" not implemented! "<<std::endl;
+      assert(0);
+    }
+
+}
+namespace ELLAM
+{
+void assignTrackedPointsToElements(int nElements_global,
+				   int nNodes_element,
+				   int nElementBoundaries_element,
+				   int nSpace,
+				   int nPoints_tracked,
+				   double boundaryTolerance,
+				   double neighborTolerance,
+				   const double* nodeArray,
+				   const int* elementNodesArray,
+				   const int* elementBoundariesArray,
+				   const double* elementBoundaryLocalOuterNormalsArray,
+				   const double* elementBoundaryBarycentersArray,
+				   const int* element_track,
+				   const int* flag_track,
+				   const double* x_track,
+				   std::map<int,std::list<double> >& elementsToTrackedPoints)
+{
+
+  /***********************************************************************
+     loop through points, and assign them to element containing them
+     if the point is within boundaryTolerance of boundary, project to
+     the boundary first. Then add to the element if the point is not 
+     too close to another point (using neighborTolerance)
+     in the element, including vertices of the mesh
+
+   ***********************************************************************/
+  double x[3] = {0.0,0.0,0.0};
+  //
+  elementsToTrackedPoints.clear();
+
+  for (int k=0; k < nPoints_tracked; k++)
+    {
+      //copy over for some local manipulations
+      x[0] = x_track[k*3+0]; x[1] = x_track[k*3+1]; x[2] = x_track[k*3+2];
+      const int eN = element_track[k];
+      if (eN >= 0 && flag_track[k] >= -1)
+	{
+	  //is point too close to the boundary?
+	  for (int ebN = 0; ebN < nElementBoundaries_element; ebN++)
+	    {
+	      const int ebN_global = elementBoundariesArray[eN*nElementBoundaries_element+ebN];
+	      double dxf = 0.0;
+	      for (int I = 0; I < nSpace; I++)
+		{
+		  dxf += (elementBoundaryBarycentersArray[ebN_global*3+I]-x[I])*elementBoundaryLocalOuterNormalsArray[eN*nElementBoundaries_element*nSpace+ ebN*nSpace + I];
+		}
+	      if (std::abs(dxf) <= boundaryTolerance)
+		{
+		  for (int I=0; I < nSpace; I++)
+		    x[I] += dxf*elementBoundaryLocalOuterNormalsArray[eN*nElementBoundaries_element*nSpace+ ebN*nSpace + I];
+		}
+	    }//ebN close to boundary
+	  bool needToAdd = true;
+	  //check points in the element to see if the point is too close
+	  if (elementsToTrackedPoints.find(eN) != elementsToTrackedPoints.end())
+	    {
+	      std::list<double>::iterator eN_it = elementsToTrackedPoints[eN].begin();
+	      while (eN_it != elementsToTrackedPoints[eN].end())
+		{
+		  double dxp = 0.0;
+		  for (int I = 0; I < 3; I++)
+		    {
+		      assert(eN_it != elementsToTrackedPoints[eN].end());
+		      const double yI = *eN_it;
+		      dxp += (x[I]-yI)*(x[I]-yI);
+		      eN_it++;
+		    }
+		  dxp = std::sqrt(dxp);
+		  if (dxp <= neighborTolerance)
+		    {
+		      needToAdd = false;
+		      //mwf debug
+		      //std::cout<<"assignTrackedPoints rejecting tracked point ";
+		      //for (int I = 0; I < 3; I++)
+			//std::cout<<" "<<x[I]<<" ";
+		      //std::cout<<std::endl;
+		      break;
+		    }
+		}
+	    }
+	  else //check to see if the point is too close to one of the vertices
+	    {
+	      for (int nN_local = 0; nN_local < nNodes_element; nN_local++)
+		{
+		  const int nN_global = elementNodesArray[eN*nNodes_element+nN_local];
+		  double dxp=0.0;
+		  for (int I=0; I < 3; I++)
+		    {
+		      const double yI = nodeArray[nN_global*3+I];
+		      dxp += (x[I]-yI)*(x[I]-yI);
+		    }
+		  dxp = std::sqrt(dxp);
+		  if (dxp <= neighborTolerance)
+		    {
+		      needToAdd = false;
+		      break;
+		    }
+		}
+	    }
+	  //still need to add
+	  if (needToAdd && elementsToTrackedPoints.find(eN) != elementsToTrackedPoints.end())
+	    {
+	      for (int I=0; I < 3; I++)
+		elementsToTrackedPoints[eN].push_back(x[I]);
+	    }
+	  else if (needToAdd)
+	    {
+	      std::list<double> tmp; 
+	      //add point
+	      for (int I=0; I < 3; I++)
+		tmp.push_back(x[I]);
+	      elementsToTrackedPoints[eN] = tmp;
+	      //and the vertices of the element
+	      for (int nN=0; nN < nNodes_element; nN++)
+		{
+		  const int nN_global = elementNodesArray[eN*nNodes_element+nN];
+		  for (int I=0; I < 3; I++)
+		    elementsToTrackedPoints[eN].push_back(nodeArray[nN_global*3+I]);
+		}
+	    }
+	}//end adding a valid point
+    }//k loop over points
+}
+
+void createElementSSIPs_1d(const std::list<double>& elementTrackedPoints,
+			   std::vector<double>& x_element, 
+			   std::vector<double>& w_element)
+{
+  /***********************************************************************
+    assume input is a list of coordinates for a 1d element with SSIPs 
+      (and vertices) 
+    determine triangulation of element with SSIPs as vertices
+    then generate 2nd order gaussian quadrature points and weights on each 
+      sub-interval/element of triangulation 
+      
+   ***********************************************************************/
+
+  unsigned int nPointsIn = elementTrackedPoints.size()/3;
+  assert(nPointsIn > 0);
+
+  x_element.clear(); w_element.clear();
+
+  //sort points 
+  //if size is a problem could use a fancy comp operator to compare x entries
+  std::vector<std::vector<double> > tmpEdgeMesh(nPointsIn);
+  std::list<double>::const_iterator it = elementTrackedPoints.begin();
+  int ip=0;
+  while (it != elementTrackedPoints.end())
+    {
+      tmpEdgeMesh[ip].resize(3);
+      for (int I=0; I < 3; I++)
+	{
+	  tmpEdgeMesh[ip][I] = *it;
+	  it++;
+	}
+      ip++;
+    }
+  //I believe default should work
+  std::sort(tmpEdgeMesh.begin(),tmpEdgeMesh.end());
+
+  const int nElementsBase = nPointsIn-1;
+  const int nSubElementPoints = 2;
+  //hardwire 2nd order Gaussian quadrature for now
+  double subElementPointsRef[nSubElementPoints] = {(sqrt(3.0)-1.0)/(2.0*sqrt(3.0)),
+						   (sqrt(3.0)+1.0)/(2.0*sqrt(3.0))};
+  double subElementWeightsRef[nSubElementPoints]= {0.5,0.5};
+
+  const int nQuadraturePointsNew = nElementsBase*nSubElementPoints;
+
+  double d[3] = {0.0,0.0,0.0}; 
+
+  for (int eN_local=0; eN_local < nElementsBase; eN_local++)
+    {
+      double volume = 0.0;
+      for (int I=0; I < 3; I++)
+	{
+	  d[I] = tmpEdgeMesh[eN_local+1][I]-tmpEdgeMesh[eN_local][I];
+	  //mwf debug
+	  //if (I==0)
+	  // assert(d[I] > 0.0);
+	  volume += d[I]*d[I];
+	}
+      volume = std::sqrt(volume);
+      for (int k=0; k < nSubElementPoints; k++)
+	{
+	  for (int I=0; I < 3; I++)
+	    {
+	      const double xk = tmpEdgeMesh[eN_local][I]*(1.0-subElementPointsRef[k]) + tmpEdgeMesh[eN_local+1][I]*subElementPointsRef[k];
+	      x_element.push_back(xk);
+	    }
+	  w_element.push_back(volume*subElementWeightsRef[k]);
+	}//sub-quadrature points
+    }//eN_local loop over element triangulation
+  assert(x_element.size() == unsigned(nQuadraturePointsNew*3));
+  assert(w_element.size() == unsigned(nQuadraturePointsNew));
+  for (int i=0; i < nQuadraturePointsNew-1; i++)
+    {
+      assert(x_element[(i+1)*3] > x_element[i*3]);
+    }
+}
+}//namespace ELLAM
