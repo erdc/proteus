@@ -5,7 +5,7 @@ import cellam,ctracking,Quadrature
 """
 TODO
   high:
-
+    translate 1d SSIP code to c/c++
   med:
     need better way to set ellam specific options?
     move setupInitialElementLocations to c, allow for different types of tracking points
@@ -31,13 +31,12 @@ TODO
 
 For SSIPs type approach ...
 
-   element assembly with global integration points array 
+   element assembly with global integration points array [1d done]
 
-   coefficients evaluate with global integration points size store old
+   coefficients evaluate with global integration points array [done]
 
    mass at global integration points or (more likely) re-evaluate at
-     new SSIPs using stored degrees of freedom from last step. This would
-     mean having the time integration keep track of u_dof_last or something
+     new SSIPs using stored degrees of freedom from last step. [done]
      equivalent
 
    creating a composite trapezoid rule type quadrature in 1d (ok know how), 2d, 3d?
@@ -2030,130 +2029,184 @@ class OneLevelLADR(OneLevelTransport):
         on each element that contain the tracked points. 
 
         """
-
-        #start by allocating memory on the fly and then make smarter
-        #temporaries
-        elementsToTrackedPoints = {}
-        x_track_gq_offsets = {}
-        x_track_gq         = {}
-        dV_track_gq        = {}
         #have to redimension tracking arrays
         self.gq_x_track_offsets={}; self.gq_x_track={}; self.gq_t_track={}; self.gq_t_depart={}; self.gq_dt_track={}; self.gq_flag_track={}; self.gq_element_track={};
         self.gq_dV={}; self.gq={}; self.gq_last={}; self.gq_x_depart={}; self.gq_element_depart={}; self.gq_flag_depart={}; 
-        #todo allow for using only 1 component to determine SSIPs
-        for ci in range(self.nc):
-             elementsToTrackedPoints[ci] = {}
-             #mwf debug
-             #import pdb
-             #pdb.set_trace()
-             for k in range(len(self.element_track_ip[ci].flat)):
-                 eN = self.element_track_ip[ci].flat[k]
-                 if eN >= 0 and self.flag_track_ip[ci].flat[k] >= -1:
-                     if elementsToTrackedPoints[ci].has_key(eN):
-                         #todo: make sure only add points that are far enough away from existing points using a tolerance
-                         elementsToTrackedPoints[ci][eN].add((self.x_track_ip[ci].flat[k*3+0],self.x_track_ip[ci].flat[k*3+1],self.x_track_ip[ci].flat[k*3+2]))
-                     else:
-                         #start with nodal points then add those that are tracked
-                         elementsToTrackedPoints[ci][eN] = set([(self.mesh.nodeArray[nN,0],self.mesh.nodeArray[nN,1],self.mesh.nodeArray[nN,2]) for nN in self.mesh.elementNodesArray[eN]])
-                         #todo: make sure only add points that are far enough away from existing points using a tolerance and
-                         #      if the point is too close to a boundary, the project to the boundary and check that point is not too close
-                         #      to an existing point
-                         elementsToTrackedPoints[ci][eN] |= set([(self.x_track_ip[ci].flat[3*k+0],self.x_track_ip[ci].flat[3*k+1],self.x_track_ip[ci].flat[k*3+2])])
-             #
-             x_track_gq_offsets[ci] = numpy.zeros((self.mesh.nElements_global+1,),'i')
-             #these will have to be converted to arrays
-             x_track_gq_tmp = {}; dV_track_gq_tmp = {}
-             if self.nSpace_global == 1:
-                 subQuadratureOrder = 2
-                 subQuadratureType  = Quadrature.GaussEdge#Quadrature.CompositeTrapezoidalEdge#Quadrature.GaussEdge
-                 #count number of points
-                 for eN in range(self.mesh.nElements_global):
-                     if not elementsToTrackedPoints[ci].has_key(eN):
-                         x_track_gq_offsets[ci][eN+1] = x_track_gq_offsets[ci][eN]+len(self.q['dV'][eN])
-                         #copy over q's integration points and weights to temporary data structures
-                         dV_track_gq_tmp[eN] = numpy.copy(self.q['dV'][eN])
-                         x_track_gq_tmp[eN]  = numpy.copy(self.q['x'][eN])
-                     else:
-                         #options are to generate quadrature physical directly or map back to reference
-                         #mwf debug
-                         #import pdb
-                         #pdb.set_trace()
-                         #subdivide element according to SSIPs then generate
-                         #Gaussian quadrature on each sub-interval
-                         #do manipulations in physical space first since that's
-                         #how triangle would handle it I believe
-                         #manually grab the points, sort, and subdivide
-                         #generate a triangulation of element
-                         tmpEdgeMesh = sorted(elementsToTrackedPoints[ci][eN])
-                         #number of elements in sub-triangulation
-                         nElements_base= len(tmpEdgeMesh)-1
-                         subElementQuadrature = subQuadratureType()
-                         subElementQuadrature.setOrder(subQuadratureOrder)
-                         nSubElementPoints = len(subElementQuadrature.points)
-                         nQuadraturePointsNew = nElements_base*nSubElementPoints
-                         x_track_gq_offsets[ci][eN+1] = x_track_gq_offsets[ci][eN]+nQuadraturePointsNew
-                         dV_track_gq_tmp[eN] = numpy.zeros((nQuadraturePointsNew,),'d')
-                         x_track_gq_tmp[eN]  = numpy.zeros((nQuadraturePointsNew,3),'d')
-                         #loop through each 'base' element in sub element triangulation and
-                         #allocate the quadrature points and weights from the quadrature rule
-                         #short-cut that may or may not be ok is to generate affine mapping on the fly
-                         np_last = 0
-                         for nE_local in range(nElements_base):
-                             d = numpy.zeros((3,),'d')
-                             for I in range(3):
-                                 d[I]=tmpEdgeMesh[nE_local+1][I]-tmpEdgeMesh[nE_local][I]
-                             volume = numpy.sqrt(numpy.dot(d,d))
-                             for p,w in zip(subElementQuadrature.points,subElementQuadrature.weights):
-                                 for I in range(3):
-                                     x_track_gq_tmp[eN][np_last,I] = tmpEdgeMesh[nE_local][I]*(1.0-p[0]) + tmpEdgeMesh[nE_local+1][I]*p[0]
-                                 dV_track_gq_tmp[eN][np_last]  = w*volume
-                                 np_last += 1
-                     #else has tracked points
-                 #eN
-                 nPoints_global = x_track_gq_offsets[ci][-1]
-                 self.gq_x_track[ci] = numpy.zeros((nPoints_global,3),'d')
-                 self.gq_dV[ci]= numpy.zeros((nPoints_global,),'d')
-                 for eN in range(self.mesh.nElements_global):
-                     self.gq_x_track[ci][x_track_gq_offsets[ci][eN]:x_track_gq_offsets[ci][eN+1],:] =x_track_gq_tmp[eN][:,:]
-                     self.gq_dV[ci][x_track_gq_offsets[ci][eN]:x_track_gq_offsets[ci][eN+1]]=dV_track_gq_tmp[eN][:]
-                 #
-                 self.gq_x_track_offsets[ci]= numpy.copy(x_track_gq_offsets[ci])
-                 self.gq_x_depart[ci]       = numpy.copy(self.gq_x_track[ci])
-                 #for now have to resize everthing here
-                 self.gq_t_track[ci]        = numpy.zeros((nPoints_global,),'d')
-                 self.gq_t_depart[ci]       = numpy.zeros((nPoints_global,),'d')
-                 self.gq_dt_track[ci]       = numpy.zeros((nPoints_global,),'d')
-                 self.gq_flag_track[ci]     = numpy.zeros((nPoints_global,),'i')
-                 self.gq_flag_depart[ci]     = numpy.zeros((nPoints_global,),'i')
-                 self.gq_element_track[ci]  = numpy.zeros((nPoints_global,),'i')
-                 self.gq_element_depart[ci]  = numpy.zeros((nPoints_global,),'i')
-                 self.gq[('u',ci)]          = numpy.zeros((nPoints_global,),'d')
-                 self.gq[('m',ci)]          = numpy.zeros((nPoints_global,),'d')
-                 self.gq_last[('u',ci)]     = numpy.zeros((nPoints_global,),'d')
-                 self.gq_last[('m',ci)]     = numpy.zeros((nPoints_global,),'d')
-                 for cj in self.coefficients.mass[ci].keys():
-                     self.gq[('dm',ci,cj)]      = numpy.zeros((nPoints_global,),'d')
-                     self.gq_last[('dm',ci,cj)] = numpy.zeros((nPoints_global,),'d')
+        useC = True
+        if useC:
+            #TODO make these user options
+            boundaryTolerance = 1.0e-6#1.0e-4;
+            neighborTolerance = 1.0e-8#1.0e-4
+            for ci in range(self.nc):
+                #mwf debug
+                #import pdb
+                #pdb.set_trace()
+                self.gq_element_depart[ci],self.gq_dV[ci],self.gq_x_depart[ci] = cellam.generateArraysForSSIPs(boundaryTolerance,
+                                                                                                               neighborTolerance,
+                                                                                                               self.mesh.nodeArray,
+                                                                                                               self.mesh.elementNodesArray,
+                                                                                                               self.mesh.elementBoundariesArray,
+                                                                                                               self.elementBoundaryOuterNormalsArray,
+                                                                                                               self.mesh.elementBoundaryBarycentersArray,
+                                                                                                               self.element_track_ip[ci],
+                                                                                                               self.flag_track_ip[ci],
+                                                                                                               self.x_track_ip[ci],
+                                                                                                               self.q['x'],
+                                                                                                               self.q['dV'])
+
+                nPoints_global = self.gq_element_depart[ci].shape[0]
+
+                #for now have to resize everthing here
+                self.gq_x_track[ci]        = numpy.copy(self.gq_x_depart[ci])
+                self.gq_t_track[ci]        = numpy.zeros((nPoints_global,),'d')
+                self.gq_t_depart[ci]       = numpy.zeros((nPoints_global,),'d')
+                self.gq_dt_track[ci]       = numpy.zeros((nPoints_global,),'d')
+                self.gq_flag_track[ci]     = numpy.zeros((nPoints_global,),'i')
+                self.gq_flag_depart[ci]     = numpy.zeros((nPoints_global,),'i')
+                self.gq_element_track[ci]  = numpy.zeros((nPoints_global,),'i')
+                self.gq[('u',ci)]          = numpy.zeros((nPoints_global,),'d')
+                self.gq[('m',ci)]          = numpy.zeros((nPoints_global,),'d')
+                self.gq_last[('u',ci)]     = numpy.zeros((nPoints_global,),'d')
+                self.gq_last[('m',ci)]     = numpy.zeros((nPoints_global,),'d')
+                for cj in self.coefficients.mass[ci].keys():
+                    self.gq[('dm',ci,cj)]      = numpy.zeros((nPoints_global,),'d')
+                    self.gq_last[('dm',ci,cj)] = numpy.zeros((nPoints_global,),'d')
                      
-                 self.gq[('x',ci)]          = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
-                 self.gq_last[('x',ci)]     = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
-             #1d
-             #mwf debug
-             #import pdb
-             #pdb.set_trace()
-        #ci loop for generating SSIPs
+                self.gq[('x',ci)]          = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
+                self.gq_last[('x',ci)]     = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
+
+            #ci
+        else:
+            #start by allocating memory on the fly and then make smarter
+            #temporaries
+            elementsToTrackedPoints = {}
+            x_track_gq_offsets = {}
+            x_track_gq         = {}
+            dV_track_gq        = {}
+            #todo allow for using only 1 component to determine SSIPs
+            for ci in range(self.nc):
+                 elementsToTrackedPoints[ci] = {}
+                 #mwf debug
+                 #import pdb
+                 #pdb.set_trace()
+                 for k in range(len(self.element_track_ip[ci].flat)):
+                     eN = self.element_track_ip[ci].flat[k]
+                     if eN >= 0 and self.flag_track_ip[ci].flat[k] >= -1:
+                         if elementsToTrackedPoints[ci].has_key(eN):
+                             #todo: make sure only add points that are far enough away from existing points using a tolerance
+                             elementsToTrackedPoints[ci][eN].add((self.x_track_ip[ci].flat[k*3+0],self.x_track_ip[ci].flat[k*3+1],self.x_track_ip[ci].flat[k*3+2]))
+                         else:
+                             #start with nodal points then add those that are tracked
+                             elementsToTrackedPoints[ci][eN] = set([(self.mesh.nodeArray[nN,0],self.mesh.nodeArray[nN,1],self.mesh.nodeArray[nN,2]) for nN in self.mesh.elementNodesArray[eN]])
+                             #todo: make sure only add points that are far enough away from existing points using a tolerance and
+                             #      if the point is too close to a boundary, the project to the boundary and check that point is not too close
+                             #      to an existing point
+                             elementsToTrackedPoints[ci][eN] |= set([(self.x_track_ip[ci].flat[3*k+0],self.x_track_ip[ci].flat[3*k+1],self.x_track_ip[ci].flat[k*3+2])])
+                 #
+                 x_track_gq_offsets[ci] = numpy.zeros((self.mesh.nElements_global+1,),'i')
+                 #these will have to be converted to arrays
+                 x_track_gq_tmp = {}; dV_track_gq_tmp = {}
+                 if self.nSpace_global == 1:
+                     subQuadratureOrder = 2
+                     subQuadratureType  = Quadrature.GaussEdge#Quadrature.CompositeTrapezoidalEdge#Quadrature.GaussEdge
+                     #count number of points
+                     for eN in range(self.mesh.nElements_global):
+                         if not elementsToTrackedPoints[ci].has_key(eN):
+                             x_track_gq_offsets[ci][eN+1] = x_track_gq_offsets[ci][eN]+len(self.q['dV'][eN])
+                             #copy over q's integration points and weights to temporary data structures
+                             dV_track_gq_tmp[eN] = numpy.copy(self.q['dV'][eN])
+                             x_track_gq_tmp[eN]  = numpy.copy(self.q['x'][eN])
+                         else:
+                             #options are to generate quadrature physical directly or map back to reference
+                             #mwf debug
+                             #import pdb
+                             #pdb.set_trace()
+                             #subdivide element according to SSIPs then generate
+                             #Gaussian quadrature on each sub-interval
+                             #do manipulations in physical space first since that's
+                             #how triangle would handle it I believe
+                             #manually grab the points, sort, and subdivide
+                             #generate a triangulation of element
+                             tmpEdgeMesh = sorted(elementsToTrackedPoints[ci][eN])
+                             #number of elements in sub-triangulation
+                             nElements_base= len(tmpEdgeMesh)-1
+                             subElementQuadrature = subQuadratureType()
+                             subElementQuadrature.setOrder(subQuadratureOrder)
+                             nSubElementPoints = len(subElementQuadrature.points)
+                             nQuadraturePointsNew = nElements_base*nSubElementPoints
+                             x_track_gq_offsets[ci][eN+1] = x_track_gq_offsets[ci][eN]+nQuadraturePointsNew
+                             dV_track_gq_tmp[eN] = numpy.zeros((nQuadraturePointsNew,),'d')
+                             x_track_gq_tmp[eN]  = numpy.zeros((nQuadraturePointsNew,3),'d')
+                             #loop through each 'base' element in sub element triangulation and
+                             #allocate the quadrature points and weights from the quadrature rule
+                             #short-cut that may or may not be ok is to generate affine mapping on the fly
+                             np_last = 0
+                             for eN_local in range(nElements_base):
+                                 d = numpy.zeros((3,),'d')
+                                 for I in range(3):
+                                     d[I]=tmpEdgeMesh[eN_local+1][I]-tmpEdgeMesh[eN_local][I]
+                                 volume = numpy.sqrt(numpy.dot(d,d))
+                                 for p,w in zip(subElementQuadrature.points,subElementQuadrature.weights):
+                                     for I in range(3):
+                                         x_track_gq_tmp[eN][np_last,I] = tmpEdgeMesh[eN_local][I]*(1.0-p[0]) + tmpEdgeMesh[eN_local+1][I]*p[0]
+                                     dV_track_gq_tmp[eN][np_last]  = w*volume
+                                     np_last += 1
+                         #else has tracked points
+                     #eN
+                     nPoints_global = x_track_gq_offsets[ci][-1]
+                     self.gq_x_track[ci] = numpy.zeros((nPoints_global,3),'d')
+                     self.gq_dV[ci]= numpy.zeros((nPoints_global,),'d')
+                     for eN in range(self.mesh.nElements_global):
+                         self.gq_x_track[ci][x_track_gq_offsets[ci][eN]:x_track_gq_offsets[ci][eN+1],:] =x_track_gq_tmp[eN][:,:]
+                         self.gq_dV[ci][x_track_gq_offsets[ci][eN]:x_track_gq_offsets[ci][eN+1]]=dV_track_gq_tmp[eN][:]
+                     #
+                     self.gq_x_track_offsets[ci]= numpy.copy(x_track_gq_offsets[ci])
+                     self.gq_x_depart[ci]       = numpy.copy(self.gq_x_track[ci])
+                     #for now have to resize everthing here
+                     self.gq_t_track[ci]        = numpy.zeros((nPoints_global,),'d')
+                     self.gq_t_depart[ci]       = numpy.zeros((nPoints_global,),'d')
+                     self.gq_dt_track[ci]       = numpy.zeros((nPoints_global,),'d')
+                     self.gq_flag_track[ci]     = numpy.zeros((nPoints_global,),'i')
+                     self.gq_flag_depart[ci]     = numpy.zeros((nPoints_global,),'i')
+                     self.gq_element_track[ci]  = numpy.zeros((nPoints_global,),'i')
+                     self.gq_element_depart[ci]  = numpy.zeros((nPoints_global,),'i')
+                     self.gq[('u',ci)]          = numpy.zeros((nPoints_global,),'d')
+                     self.gq[('m',ci)]          = numpy.zeros((nPoints_global,),'d')
+                     self.gq_last[('u',ci)]     = numpy.zeros((nPoints_global,),'d')
+                     self.gq_last[('m',ci)]     = numpy.zeros((nPoints_global,),'d')
+                     for cj in self.coefficients.mass[ci].keys():
+                         self.gq[('dm',ci,cj)]      = numpy.zeros((nPoints_global,),'d')
+                         self.gq_last[('dm',ci,cj)] = numpy.zeros((nPoints_global,),'d')
+
+                     self.gq[('x',ci)]          = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
+                     self.gq_last[('x',ci)]     = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
+                     #go ahead and assign element_depart
+                     for eN in range(self.mesh.nElements_global):
+                         start = self.gq_x_track_offsets[ci][eN]; finish = self.gq_x_track_offsets[ci][eN+1]
+                         self.gq_element_depart[ci][start:finish] = eN
+
+                 #1d
+                 #mwf debug
+                 #import pdb
+                 #pdb.set_trace()
+            #ci loop for generating SSIPs
+        #not useC
         #todo what about allowing x to be consistent with usual approach
         self.gq['x']          = self.gq_x_depart[0] #simple alias for coeffficient evaluation
         self.gq_last['x']     = self.gq_x_depart[0] #simple alias for coeffficient evaluation
- 
-        #have to evaluate old time solution and mass at SSIPs as well as new time solution
-        def setupInitialElementLocations(ci,q_e):
-            for eN in range(self.mesh.nElements_global):
-                start = self.gq_x_track_offsets[ci][eN]; finish = self.gq_x_track_offsets[ci][eN+1]
-                q_e[ci][start:finish] = eN
+
+        #mwf debug
+        #print "generateSSIPs t= %g useC= %g sum(self.gq_dV[0].flat)= %g " % (self.timeIntegration.t,useC,sum(self.gq_dV[0]))
+        #print "eN el_track_ip[0] flag track[0] x_track_ip[0]"
+        #for eN in range(self.x_track_ip[0].shape[0]):
+        #    print "%d %s %s %s " % (eN,self.element_track_ip[0][eN],self.flag_track_ip[0][eN],self.x_track_ip[0][eN])
+        #print "i x dV ele"
+        #for i in range(self.gq_x_depart[0].shape[0]):
+        #    print "%g %g %g %g" % (i,self.gq_x_depart[0][i,0],self.gq_dV[0][i],self.gq_element_depart[0][i])
+        #
+        
         for ci in range(self.nc):
             self.gq_flag_depart[ci].fill(-1); self.gq_t_depart[ci].fill(self.timeIntegration.tLast)
-            setupInitialElementLocations(ci,self.gq_element_depart)
 
             cellam.evaluateSolutionAtTrackedPoints(self.nSpace_global,
                                                    self.nDOF_trial_element[ci],
@@ -2186,10 +2239,10 @@ class OneLevelLADR(OneLevelTransport):
         x_depart = {}
         nPoints_track  = {}
         #todo get this loop out of python
-        def setupInitialElementLocations(ci,q_e):
-            for eN in range(self.mesh.nElements_global):
-                start = self.gq_x_track_offsets[ci][eN]; finish = self.gq_x_track_offsets[ci][eN+1]
-                q_e[ci][start:finish] = eN
+        #def setupInitialElementLocations(ci,q_e):
+        #    for eN in range(self.mesh.nElements_global):
+        #        start = self.gq_x_track_offsets[ci][eN]; finish = self.gq_x_track_offsets[ci][eN+1]
+        #        q_e[ci][start:finish] = eN
             
         #only forward track SSIPs
         assert not self.useBackwardTrackingForOldMass, "no need to use SSIPs with backtracking for mass"
@@ -2203,7 +2256,7 @@ class OneLevelLADR(OneLevelTransport):
             #try all points, now set to -1 to try, -3 to skip, 0 or greater if a node of the mesh
             self.gq_flag_track[ci].fill(-1)
             #assign ownership of quadrature points to elements
-            setupInitialElementLocations(ci,self.gq_element_track)
+            self.gq_element_track[ci][:] = self.gq_element_depart[ci]
 
 
         #todo make sure activeComponents set explicitly?
@@ -2229,16 +2282,16 @@ class OneLevelLADR(OneLevelTransport):
         #mwf debug
         #import pdb
         #pdb.set_trace()
-        def setupInitialElementLocations(ci,q_e):
-            for eN in range(self.mesh.nElements_global):
-                start = self.gq_x_track_offsets[ci][eN]; finish = self.gq_x_track_offsets[ci][eN+1]
-                q_e[ci][start:finish] = eN
+        #def setupInitialElementLocations(ci,q_e):
+        #    for eN in range(self.mesh.nElements_global):
+        #        start = self.gq_x_track_offsets[ci][eN]; finish = self.gq_x_track_offsets[ci][eN+1]
+        #        q_e[ci][start:finish] = eN
 
         #have to evaluate new time solution and mass at SSIPs 
         for ci in range(self.nc):
             self.gq_t_depart[ci].fill(self.timeIntegration.t)
             self.gq_flag_depart[ci].fill(-1)
-            setupInitialElementLocations(ci,self.gq_element_depart)
+            #should be already set setupInitialElementLocations(ci,self.gq_element_depart)
             
             cellam.evaluateSolutionAtTrackedPoints(self.nSpace_global,
                                                    self.nDOF_trial_element[ci],

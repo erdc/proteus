@@ -2,6 +2,9 @@
 #define ELLAM_H
 
 #include <cassert>
+#include <map>
+#include <list>
+#include <vector>
 namespace ELLAM
 {
 inline
@@ -160,6 +163,27 @@ void tagInflowPointForTracking_c(int nSpace,
     }
 }
 double modifiedVanLeer(double r);
+void assignTrackedPointsToElements(int nElements_global,
+				   int nNodes_element,
+				   int nElementBoundaries_element,
+				   int nSpace,
+				   int nPoints_tracked,
+				   double boundaryTolerance,
+				   double neighborTolerance,
+				   const double* nodeArray,
+				   const int* elementNodesArray,
+				   const int* elementBoundariesArray,
+				   const double* elementBoundaryLocalOuterNormalsArray,
+				   const double* elementBoundaryBarycentersArray,
+				   const int* element_track,
+				   const int* flag_track,
+				   const double* x_track,
+				   std::map<int,std::list<double> >& elementsToTrackedPoints);
+
+
+void createElementSSIPs_1d(const std::list<double>& elementTrackedPoints,
+			   std::vector<double>& x_element, 
+			   std::vector<double>& w_element);
 
 };//namespace ELLAM
 
@@ -528,5 +552,28 @@ void updateElementJacobianWithSlumpedMassCorrection(int nElements_global,
 						    int nDOF_test_element,
 						    const double* elementMassMatrixCorrection,
 						    double* elementJacobianMatrix);
+
+void generateArraysForSSIPs(int nElements_global,
+			    int nNodes_element,
+			    int nElementBoundaries_element,
+			    int nSpace,
+			    int nPoints_tracked,
+			    int nPointsPerElement_default,
+			    double boundaryTolerance,
+			    double neighborTolerance,
+			    const double* nodeArray,
+			    const int* elementNodesArray,
+			    const int* elementBoundariesArray,
+			    const double* elementBoundaryLocalOuterNormalsArray,
+			    const double* elementBoundaryBarycentersArray,
+			    const int* element_track,
+			    const int* flag_track,
+			    const double* x_track,
+			    const double* q_x_default,
+			    const double* q_dV_default,
+			    std::vector<int>& elements_gq,
+			    std::vector<double>& x_qg,
+			    std::vector<double>& dV_gq);
+
 }//extern C
 #endif 
