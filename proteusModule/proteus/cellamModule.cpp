@@ -945,6 +945,73 @@ static PyObject* cellam_calculateSlumpedMassApproximation2d(PyObject* self,
   Py_INCREF(Py_None); 
   return Py_None;
 }
+static PyObject* cellam_calculateSlumpedMassApproximation2d_upwind(PyObject* self,
+								   PyObject* args)
+{
+  PyObject *nodeArray,
+    *elementNodesArray,
+    *elementNeighborsArray,
+    *nodeStarOffsets,
+    *nodeStarArray,
+    *elementBoundaryLocalOuterNormalsArray,
+    *u_l2g,*u_dof,*u_dof_limit,
+    *dm,*df,*w,*v,
+    *dV,*rhs,
+    *theta,
+    *slumpedMassMatrixCorrection,
+    *elementResidual; 
+
+  if (!PyArg_ParseTuple(args,
+                        "OOOOOOOOOOOOOOOOOO",
+			&nodeArray,
+			&elementNodesArray,
+			&elementNeighborsArray,
+			&nodeStarOffsets,
+			&nodeStarArray,
+			&elementBoundaryLocalOuterNormalsArray,
+			&u_l2g,
+			&u_dof,
+			&u_dof_limit,
+			&dm,
+			&df,
+			&w,
+			&v,
+			&dV,
+			&rhs,
+			&elementResidual,
+			&theta,
+			&slumpedMassMatrixCorrection))
+    return NULL;
+  
+  calculateSlumpedMassApproximation2d_upwind(SHAPE(u_l2g)[0],
+					     SHAPE(nodeArray)[0],
+					     SHAPE(elementNeighborsArray)[1],
+					     SHAPE(elementNodesArray)[1],
+					     SHAPE(dm)[1],
+					     SHAPE(v)[2],
+					     SHAPE(w)[2],
+					     DDATA(nodeArray),
+					     IDATA(elementNodesArray),
+					     IDATA(elementNeighborsArray),
+					     IDATA(nodeStarOffsets),
+					     IDATA(nodeStarArray),
+					     DDATA(elementBoundaryLocalOuterNormalsArray),
+					     IDATA(u_l2g),
+					     DDATA(u_dof),
+					     DDATA(u_dof_limit),
+					     DDATA(dm),
+					     DDATA(df),
+					     DDATA(w),
+					     DDATA(v),
+					     DDATA(dV),
+					     DDATA(rhs),
+					     DDATA(elementResidual),
+					     DDATA(theta),
+					     DDATA(slumpedMassMatrixCorrection));
+
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
 static PyObject* cellam_updateElementJacobianWithSlumpedMassApproximation(PyObject* self,
 									  PyObject* args)
 {
@@ -1239,6 +1306,10 @@ static PyMethodDef cellamMethods[] = {
     cellam_calculateSlumpedMassApproximation2d,
    METH_VARARGS, 
    "calculate 2d slumping approximation for just local mass matrix and apply to residual"},
+ { "calculateSlumpedMassApproximation2d_upwind",
+    cellam_calculateSlumpedMassApproximation2d_upwind,
+   METH_VARARGS, 
+   "calculate 2d slumping approximation following 1d paradigm in upwind direction and apply to residual"},
  { "calculateBerzinsSlumpedMassApproximation1d",
     cellam_calculateBerzinsSlumpedMassApproximation1d,
    METH_VARARGS, 
