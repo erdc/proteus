@@ -918,8 +918,8 @@ void calculateSlumpedMassApproximation1d(int nElements_global,
       /*overwrite mass matrix with just correction and element residual*/
       for (i=0; i < nDOF_test_element; i++)
 	{
-	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = theta[eN];
-	  elementResidual[eN*nDOF_test_element + i] += theta[eN]*u_dof[l2g[eN*nDOF_trial_element+i]];
+	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = (nDOF_trial_element-1)*theta[eN];
+	  elementResidual[eN*nDOF_test_element + i] += (nDOF_trial_element-1)*theta[eN]*u_dof[l2g[eN*nDOF_trial_element+i]];
 
 	  for (j=0; j < i; j++)
 	    {
@@ -1311,6 +1311,218 @@ void calculateSlumpedMassApproximation2d(int nElements_global,
     }/*eN*/
 }
 
+/*attempt to extend Tom's approach to 2d by looking at a 1d tri-diagonal system in the 'upwind' direction?*/
+extern "C"
+void calculateSlumpedMassApproximation2d_upwind(int nElements_global,
+						int nNodes_global,
+						int nElementBoundaries_element,
+						int nNodes_element,
+						int nQuadraturePoints_element,
+						int nDOF_trial_element,
+						int nDOF_test_element,
+						const double* nodeArray,
+						const int* elementNodesArray,
+						const int* elementNeighborsArray,
+						const int* nodeStarOffsets,
+						const int* nodeStarArray,
+						const double* elementBoundaryLocalOuterNormalsArray,
+						const int* l2g,
+						const double* u_dof,
+						const double* u_dof_limit,
+						const double* dm,
+						const double* df,
+						const double* w,
+						const double* v,
+						const double* dV,
+						const double* rhs,
+						double* elementResidual,
+						double* theta,
+						double* slumpedMassMatrixCorrection)
+{
+  int nDOF_test_X_trial_element=nDOF_trial_element*nDOF_test_element;
+  const int nSpace = 2;
+  double volume,df_avg[3] = {0.0,0.0,0.0}, edge_IJ[3] = {0.,0.0,.0,}, edge_Ip1J[3] = {0.,0.,0.};
+  assert(nDOF_test_element == 3);
+  for (int eN=0; eN<nElements_global; eN++)
+    {
+
+      //compute average 'velocity' for upwinding
+      for (int J=0; J < nSpace; J++)
+	  df_avg[J] = 0.0;
+      volume = 0.0;
+      for (int k=0; k < nQuadraturePoints_element; k++)
+	{
+	  volume += dV[eN*nQuadraturePoints_element + k];
+	  for (int J=0; J < nSpace; J++)
+	    {
+	      df_avg[J] += df[eN*nQuadraturePoints_element*nSpace + k*nSpace +J]*
+		dV[eN*nQuadraturePoints_element + k];
+	    }
+	}
+      for (int J=0; J < nSpace; J++)
+	  df_avg[J] /= volume;
+      
+      //find the most 'upwind' node and call it I0
+      double max_df_ni = 0.0; int i_max_df_ni=0;
+      for (int i=0; i < nNodes_element; i++)
+	{
+	  double df_ni = 0.0;
+	  //dot product with outer normal across from i
+	  for (int J=0; J < nSpace; J++)
+	    df_ni += df_avg[J]*elementBoundaryLocalOuterNormalsArray[eN*nElementBoundaries_element*nSpace + i*nSpace + J];
+	  if (df_ni > max_df_ni)
+	    {
+	      i_max_df_ni = i; max_df_ni = df_ni;
+	    } 
+	}
+      int I0 = l2g[eN*nDOF_test_element + i_max_df_ni];
+
+      //would like to extract a local tridiagonal system centered around I0 that is as aligned as possible with the
+      //dominant flow direction
+
+      //loop through nodes {J} in I0 node star and pick out the most 'upwind' and 'downwind' neighboring nodes
+      // call the most upwind node Im1, and the most downwind one Ip1
+      //To determine alignment with velocity, look at edge (normalized by edge length) dotted with df_avg
+      
+      double max_delta_IJ = 0.0; double min_delta_IJ = 0.0;
+      assert(nodeStarOffsets[I0+1] - nodeStarOffsets[I0] > 1);
+      int offset_max_delta_IJ  = nodeStarOffsets[I0]; int offset_min_delta_IJ = nodeStarOffsets[I0]+1; 
+      for (int offset = nodeStarOffsets[I0]; offset < nodeStarOffsets[I0+1]; offset++)
+	{
+	  const int J = nodeStarArray[offset];
+	  assert(J >= 0);
+	  assert(J < nNodes_global);
+
+	  double length = 0.0;
+	  for (int l = 0; l < nSpace; l++)
+	    {
+	      edge_IJ[l] = (nodeArray[J*3+l]-nodeArray[I0*3+l]);
+	      length += (nodeArray[J*3+l]-nodeArray[I0*3+l])*(nodeArray[J*3+l]-nodeArray[I0*3+l]);
+	    }
+	  length = sqrt(length);
+	  assert(length  > 0.0);
+	  for (int l = 0; l < nSpace; l++)
+	    edge_IJ[l] /= length;
+	  double delta_IJ = 0.0;
+	  for (int l = 0; l < nSpace; l++)
+	    delta_IJ += edge_IJ[l]*df_avg[l];
+	  if (delta_IJ > max_delta_IJ)
+	    {
+	      offset_max_delta_IJ = offset;
+	      max_delta_IJ = delta_IJ;
+	    }
+	  if (delta_IJ < min_delta_IJ)
+	    {
+	      offset_min_delta_IJ = offset;
+	      min_delta_IJ = delta_IJ;
+	    }
+	}
+      //neighbor with most 'aligned' edge is downwind since edge defined as J-I0
+      //at a corner, say might get right angled configuration here if just take raw min/max
+      int Ip1= nodeStarArray[offset_max_delta_IJ];
+      int Im1= nodeStarArray[offset_min_delta_IJ];
+      assert(Ip1 != Im1);
+      double dr0  = fabs(rhs[Ip1]-rhs[I0]);
+      double drm1 = fabs(rhs[I0]-rhs[Im1]);
+ 
+     //now need to find most downwind neighbor in Ip1's node star (down-down wind)
+      double max_delta_Ip1J = 0.0;
+      assert(nodeStarOffsets[Ip1+1] - nodeStarOffsets[Ip1]> 1);
+      int offset_max_delta_Ip1J = nodeStarOffsets[Ip1];
+      for (int offset = nodeStarOffsets[Ip1]; offset < nodeStarOffsets[Ip1+1]; offset++)
+	{
+	  const int J = nodeStarArray[offset];
+	  assert(J >= 0);
+	  assert(J < nNodes_global);
+	  
+	  double length = 0.0;
+	  for (int l = 0; l < nSpace; l++)
+	    {
+	      edge_Ip1J[l] = (nodeArray[J*3+l]-nodeArray[Ip1*3+l]);
+	      length += (nodeArray[J*3+l]-nodeArray[Ip1*3+l])*(nodeArray[J*3+l]-nodeArray[Ip1*3+l]);
+	    }
+	  length = sqrt(length);
+	  assert(length  > 0.0);
+	  for (int l = 0; l < nSpace; l++)
+	    edge_Ip1J[l] /= length;
+	  double delta_Ip1J = 0.0;
+	  for (int l = 0; l < nSpace; l++)
+	    delta_Ip1J += edge_Ip1J[l]*df_avg[l];
+	  if (delta_Ip1J > max_delta_Ip1J)
+	    {
+	      offset_max_delta_Ip1J = offset;
+	      max_delta_Ip1J = delta_Ip1J;
+	    }
+	}
+      int Ip2 = -1; double drp1 = 0.0; 
+      if (nodeStarArray[offset_max_delta_Ip1J] != I0 && 
+	  nodeStarArray[offset_max_delta_Ip1J] != Im1)
+	Ip2 = nodeStarArray[offset_max_delta_Ip1J];
+	  	  
+     
+      if (Ip2 >= 0)
+	drp1 = fabs(rhs[Ip2]-rhs[Ip1]);
+      
+      /*calculate local mass matrix entries isn't exactly right
+	for now, since assumes matrix same on all elements*/
+      double a = 0.0; double b = 0.0; int i = 0; int j = 1;
+      for (int k=0; k < nQuadraturePoints_element; k++)
+	{
+	  a += 
+	    dm[eN*nQuadraturePoints_element+k]
+	    *
+	    v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    k*nDOF_trial_element + 
+	      i]
+	    *
+	    w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+	      k*nDOF_test_element + 
+	      i]
+	    *
+	    dV[eN*nQuadraturePoints_element+k];
+	  b += 
+	    dm[eN*nQuadraturePoints_element+k]
+	    *
+	    v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    k*nDOF_trial_element + 
+	      j]
+	    *
+	    w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+	      k*nDOF_test_element + 
+	      i]
+	    *
+	    dV[eN*nQuadraturePoints_element+k];
+	}
+      
+      double tmp1 = dr0/(drm1+dr0+drp1+1.0e-12);
+      double tmp2 = fmin(drm1,dr0)/(drm1+dr0+1.0e-12);
+      double tmp3 = fmin(drp1,dr0)/(drp1+dr0+1.0e-12);
+      double tmp4 = fmin(fmin(tmp1,tmp2),tmp3);
+      theta[eN] = b - tmp4*(a+b);
+      theta[eN] = fmax(theta[eN],0.0);
+
+      /*overwrite mass matrix with just correction and element residual*/
+      for (int i=0; i < nDOF_test_element; i++)
+	{
+	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = (nDOF_trial_element-1)*theta[eN];
+	  elementResidual[eN*nDOF_test_element + i] += (nDOF_trial_element-1)*theta[eN]*u_dof[l2g[eN*nDOF_trial_element+i]];
+
+	  for (int j=0; j < i; j++)
+	    {
+	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -theta[eN];
+	      elementResidual[eN*nDOF_test_element + i] -= theta[eN]*u_dof[l2g[eN*nDOF_trial_element+j]];
+	    }
+	  for (int j=i+1; j < nDOF_trial_element; j++)
+	    {
+	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -theta[eN];
+	      elementResidual[eN*nDOF_test_element + i] -= theta[eN]*u_dof[l2g[eN*nDOF_trial_element+j]];
+	    }
+	}  
+    }/*eN*/
+
+
+}
+
 extern "C"
 void updateElementJacobianWithSlumpedMassApproximation(int nElements_global,
 						       int nDOF_trial_element,
@@ -1682,6 +1894,7 @@ void calculateBerzinsSlumpedMassApproximation2d(int nElements_global,
     }/*eN*/
 
 }
+
 
 extern "C"
 void updateElementJacobianWithSlumpedMassCorrection(int nElements_global,
