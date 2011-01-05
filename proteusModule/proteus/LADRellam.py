@@ -1099,21 +1099,42 @@ class OneLevelLADR(OneLevelTransport):
                                                                self.elementModifiedMassMatrixCorrection[ci])
                 
             elif self.nSpace_global == 2:
-                #test adjusting local slumping criterion?
-                adjustFactor = 1.0#some overshoot, looks pretty good over long term? 1.0/2.0
-                cellam.calculateSlumpedMassApproximation2d(self.u[ci].femSpace.dofMap.l2g,
-                                                           self.mesh.elementNeighborsArray,
-                                                           self.u[ci].dof,self.u[ci].dof,
-                                                           self.q[('dm',ci,ci)],
-                                                           self.q[('w',ci)],
-                                                           self.q[('v',ci)],
-                                                           self.q[('dV_u',ci)],
-                                                           self.rightHandSideForLimiting[ci],
-                                                           self.elementResidual[ci],
-                                                           self.elementSlumpingParameter[ci],
-                                                           self.elementModifiedMassMatrixCorrection[ci],
-                                                           adjustFactor)
-                                                           
+                tryLocalUpwind = False
+                if tryLocalUpwind:
+                    cellam.calculateSlumpedMassApproximation2d_upwind(self.mesh.nodeArray,
+                                                                      self.mesh.elementNodesArray,
+                                                                      self.mesh.elementNeighborsArray,
+                                                                      self.mesh.nodeStarOffsets,
+                                                                      self.mesh.nodeStarArray,
+                                                                      self.elementBoundaryOuterNormalsArray,
+                                                                      self.u[ci].femSpace.dofMap.l2g,
+                                                                      self.u[ci].dof,self.u[ci].dof,
+                                                                      self.q[('dm',ci,ci)],
+                                                                      self.q[('df',ci,ci)],
+                                                                      self.q[('w',ci)],
+                                                                      self.q[('v',ci)],
+                                                                      self.q[('dV_u',ci)],
+                                                                      self.rightHandSideForLimiting[ci],
+                                                                      self.elementResidual[ci],
+                                                                      self.elementSlumpingParameter[ci],
+                                                                      self.elementModifiedMassMatrixCorrection[ci])
+
+                else:
+                    #test adjusting local slumping criterion?
+                    adjustFactor = 1.0#some overshoot, looks pretty good over long term? 1.0/2.0
+                    cellam.calculateSlumpedMassApproximation2d(self.u[ci].femSpace.dofMap.l2g,
+                                                               self.mesh.elementNeighborsArray,
+                                                               self.u[ci].dof,self.u[ci].dof,
+                                                               self.q[('dm',ci,ci)],
+                                                               self.q[('w',ci)],
+                                                               self.q[('v',ci)],
+                                                               self.q[('dV_u',ci)],
+                                                               self.rightHandSideForLimiting[ci],
+                                                               self.elementResidual[ci],
+                                                               self.elementSlumpingParameter[ci],
+                                                               self.elementModifiedMassMatrixCorrection[ci],
+                                                               adjustFactor)
+                                                            
                 
         elif self.slumpingFlag == 2:
             #start by using current solution to do limiting, then try back tracking
