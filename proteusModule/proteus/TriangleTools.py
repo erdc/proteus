@@ -1125,3 +1125,41 @@ if __name__ == '__main__':
     else:
         print 'PROBLEM testNum= ',testNum,' not recognized'
     #end if
+
+def testGenerateSSIPtriangulation(points):
+    """
+    input: vertices and SSIP points belonging to a single element
+
+    generate triangle representation of the points
+    
+    output: an array contaning the points, and element to Node connectivity 
+    """
+    #mwf debug
+    import pdb
+    pdb.set_trace()
+    #default representation for holding input points
+    tri0 = triangleWrappers.new()
+    
+    triangleWrappers.setPoints(tri0,points[:,:2])
+
+    flags = "qz" #just use simple quality mesh generation, number from zero
+
+    #default representation for holding output points
+    tri1 = triangleWrappers.new()
+
+    triangleWrappers.applyTriangulateNoVoronoi(flags,tri0,tri1)
+
+    #if returning nodeArray and elementNodesArray outside of routine
+    #use getPointsCopy, getTrianglesCopy
+    #otherwise if doing all the necessary generation of quadrature points
+    #and weights internally don't need deep copy
+    nodeArray2d = triangleWrappers.getPointsCopy(tri1)
+    elementNodesArray = triangleWrappers.getTrianglesCopy(tri1)
+
+    
+    
+    #clean up
+    del tri0
+    del tri1
+
+    return nodeArray2d,elementNodesArray
