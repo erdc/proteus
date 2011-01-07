@@ -1126,17 +1126,17 @@ if __name__ == '__main__':
         print 'PROBLEM testNum= ',testNum,' not recognized'
     #end if
 
-def testGenerateSSIPtriangulation(points):
+def testGenerateTriangulationFromPointSet(points):
     """
-    input: vertices and SSIP points belonging to a single element
+    input: point-set
 
     generate triangle representation of the points
     
     output: an array contaning the points, and element to Node connectivity 
     """
     #mwf debug
-    import pdb
-    pdb.set_trace()
+    #import pdb
+    #pdb.set_trace()
     #default representation for holding input points
     tri0 = triangleWrappers.new()
     
@@ -1163,3 +1163,106 @@ def testGenerateSSIPtriangulation(points):
     del tri1
 
     return nodeArray2d,elementNodesArray
+
+def testGenerateSSIPtriangulation(points):
+    """
+    input: vertices and SSIP points belonging to a single element
+
+    generate triangle representation of the points
+    
+    output: an array contaning the points, and element quadrature weights for the points
+
+    test with input
+import numpy
+from proteus import TriangleTools
+points = numpy.array([[0.0,0.0,0.0],[0.5,0.4,0.],[1.0,0.0,0.0],[0.2,0.3,0.0],[0.0,1.0,0.0]])
+dV,x = TriangleTools.testGenerateSSIPtriangulation(points)
+    
+    """
+    #mwf debug
+    import pdb
+    pdb.set_trace()
+    #default representation for holding input points
+    tri0 = triangleWrappers.new()
+    
+    triangleWrappers.setPoints(tri0,points[:,:2])
+
+    flags = "qz" #just use simple quality mesh generation, number from zero
+
+    #default representation for holding output points
+    tri1 = triangleWrappers.new()
+
+    triangleWrappers.applyTriangulateNoVoronoi(flags,tri0,tri1)
+
+    #doing all the necessary generation of quadrature points
+    #and weights internally don't need deep copy
+    nodeArray2d = triangleWrappers.getPoints(tri1)
+    elementNodesArray = triangleWrappers.getTriangles(tri1)
+
+    import Quadrature,cfemIntegrals
+    subElementQuadrature = Quadrature.GaussTriangle()
+    subElementQuadrature.setOrder(2)
+    nSubQuadraturePoints = len(subElementQuadrature.weights)
+    nElements = elementNodesArray.shape[0]
+    nQuadraturePoints = nElements*nSubQuadraturePoints
+    nSpace = 2
+    nDOF_element = 3
+    #mwf stopped here need to turn into correct shape
+    weights_ref = numpy.array(subElementQuadrature.weights)
+    points_ref  = numpy.array(subElementQuadrature.points)
+    #loop through elements, compute area, map reference points to physical space,
+    #and compute physical space weights
+
+    #to be consistent need to have nodes be 3d
+    nodeArray = numpy.zeros((nodeArray2d.shape[0],3),'d')
+    nodeArray[:,0:2] = nodeArray2d
+    #need to store psi and grad_psi to avoid recalculating across a lot of elements?
+    #shape functions  are 1-x-y, x, y
+    psi = numpy.zeros((nSubQuadraturePoints,nDOF_element),'d')
+    psi[:,0] = 1.0-points_ref[:,0]-points_ref[:,1]
+    psi[:,1] = points_ref[:,0]
+    psi[:,2] = points_ref[:,1]
+    #for k in range(nSubQuadraturePoints):
+    #    psi[k,0] = 1.0-subElementQuadrature.points[k][0]-subElementQuadrature.points[k][1]
+    #    psi[k,1] = subElementQuadrature.points[k][0]
+    #    psi[k,2] = subElementQuadrature.points[k][1]
+    grad_psi = numpy.zeros((nSubQuadraturePoints,nDOF_element,nSpace),'d')
+    #shape functions  are 1-x-y, x, y
+    grad_psi[:,0,0].fill(-1.); grad_psi[:,0,1].fill(-1.)
+    grad_psi[:,1,0].fill(1.0);
+    grad_psi[:,2,1].fill(1.0)
+    #waste space to reuse code
+    jacobianArray    = numpy.zeros((nElements,nSubQuadraturePoints,nSpace,nSpace),'d')
+    jacobianDetArray = numpy.zeros((nElements,nSubQuadraturePoints),'d')
+    jacobianInvArray = numpy.zeros((nElements,nSubQuadraturePoints,nSpace,nSpace),'d')
+ 
+    cfemIntegrals.parametricMaps_getJacobianValues(grad_psi,
+                                                   elementNodesArray,
+                                                   nodeArray,
+                                                   jacobianArray,
+                                                   jacobianDetArray,
+                                                   jacobianInvArray)
+    
+
+    jacobianDetArrayAbs = numpy.absolute(jacobianDetArray)
+    #weights and points shaped like nSubElements x nQuadraturePointsSubElement
+    q_sub_dV = numpy.zeros((nElements,nSubQuadraturePoints),'d')
+    q_sub_x  = numpy.zeros((nElements,nSubQuadraturePoints,3),'d')
+    
+    cfemIntegrals.calculateIntegrationWeights(jacobianDetArrayAbs,
+                                              weights_ref,
+                                              q_sub_dV)
+
+    cfemIntegrals.parametricMaps_getValues(psi,
+                                           elementNodesArray,
+                                           nodeArray,
+                                           q_sub_x)
+    
+        
+    #clean up
+    del tri0
+    del tri1
+
+    #exit 
+    return q_sub_dV,q_sub_x
+
