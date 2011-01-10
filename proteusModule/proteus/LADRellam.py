@@ -1045,7 +1045,7 @@ class OneLevelLADR(OneLevelTransport):
                                                               self.elementResidual[ci])
                         
 
-        if False and self.SSIPflag > 0 and self.gq_x_depart != None:#todo come up with a better way to handle uninitialized cases (first step)
+        if True and self.SSIPflag > 0 and self.gq_x_depart != None:#todo come up with a better way to handle uninitialized cases (first step)
             self.approximateNewMassIntegralUsingSSIPs(self.elementResidual)
         else:
             for ci in self.coefficients.mass.keys():
@@ -1767,7 +1767,7 @@ class OneLevelLADR(OneLevelTransport):
 	#assume all components live on the same mesh
         #
         #mwf debug
-        import pdb
+        #import pdb
         #pdb.set_trace()
         self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
                                                   self.q['x'])
@@ -2053,16 +2053,19 @@ class OneLevelLADR(OneLevelTransport):
         #have to redimension tracking arrays
         self.gq_x_track_offsets={}; self.gq_x_track={}; self.gq_t_track={}; self.gq_t_depart={}; self.gq_dt_track={}; self.gq_flag_track={}; self.gq_element_track={};
         self.gq_dV={}; self.gq={}; self.gq_last={}; self.gq_x_depart={}; self.gq_element_depart={}; self.gq_flag_depart={}; 
-        useC = True
+        #TODO make these user options
+        #TODO make sub element quadrature type an option
+        boundaryTolerance = 1.0e-6#1.0e-4;
+        neighborTolerance = 1.0e-8#1.0e-4
+        #mwf debug
+        x_ssip = {}; x_ssip_offsets= {}
+        useC = False
         if useC:
-            #TODO make these user options
-            boundaryTolerance = 1.0e-6#1.0e-4;
-            neighborTolerance = 1.0e-8#1.0e-4
             for ci in range(self.nc):
                 #mwf debug
                 #import pdb
                 #pdb.set_trace()
-                self.gq_element_depart[ci],self.gq_dV[ci],self.gq_x_depart[ci] = cellam.generateArraysForSSIPs(boundaryTolerance,
+                self.gq_element_depart[ci],self.gq_dV[ci],self.gq_x_depart[ci] = cellam.generateQuadratureArraysForSSIPs(boundaryTolerance,
                                                                                                                neighborTolerance,
                                                                                                                self.mesh.nodeArray,
                                                                                                                self.mesh.elementNodesArray,
@@ -2095,7 +2098,86 @@ class OneLevelLADR(OneLevelTransport):
                      
                 self.gq[('x',ci)]          = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
                 self.gq_last[('x',ci)]     = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
+          #ci
+        elif self.nSpace_global == 2:
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            for ci in range(self.nc):
+                #determine which elements have SSIPs in them (remove duplicates and project to boundaries)
+                x_ssip_offsets[ci],x_ssip[ci] = cellam.generateArraysForTrackedSSIPs(boundaryTolerance,
+                                                                                     neighborTolerance,
+                                                                                     self.mesh.nodeArray,
+                                                                                     self.mesh.elementNodesArray,
+                                                                                     self.mesh.elementBoundariesArray,
+                                                                                     self.elementBoundaryOuterNormalsArray,
+                                                                                     self.mesh.elementBoundaryBarycentersArray,
+                                                                                     self.element_track_ip[ci],
+                                                                                     self.flag_track_ip[ci],
+                                                                                     self.x_track_ip[ci])
+                
+                #for debugging, loop through elements extract points and get back local quadrature points and weights
+                import TriangleTools
+                gq_dV_tmp = {}; gq_x_depart_tmp = {}; gq_element_depart = {}
+                nPoints_global = 0
+                for eN in range(self.mesh.nElements_global):
+                    if x_ssip_offsets[0][eN+1] > x_ssip_offsets[0][eN]:
+                        #mwf debug
+                        #import pdb
+                        #pdb.set_trace()
 
+                        points = x_ssip[ci][x_ssip_offsets[0][eN]:x_ssip_offsets[0][eN+1]]
+                        #the arrays are returned as nSubElement x nQuadraturePoints_subElement
+                        gq_dV_tmp[eN],gq_x_depart_tmp[eN] = TriangleTools.testGenerateSSIPtriangulation(points)
+                        nPoints_global += gq_dV_tmp[eN].shape[0]*gq_dV_tmp[eN].shape[1]
+                    else:
+                        nPoints_global += self.q['dV'][eN].shape[0]
+                #build actual arrays
+                self.gq_element_depart[ci] = numpy.zeros((nPoints_global,),'i')
+                self.gq_dV[ci]             = numpy.zeros((nPoints_global,),'d')
+                self.gq_x_depart[ci]       = numpy.zeros((nPoints_global,3),'d')
+                nSoFar = 0
+                for eN in range(self.mesh.nElements_global):
+                    if gq_dV_tmp.has_key(eN):
+                        #mwf debug
+                        #import pdb
+                        #pdb.set_trace()
+                        nPoints_eN = gq_dV_tmp[eN].shape[0]*gq_dV_tmp[eN].shape[1]
+                        self.gq_dV[ci][nSoFar:nSoFar+nPoints_eN] = gq_dV_tmp[eN].flat[:]
+                        self.gq_x_depart[ci][nSoFar:nSoFar+nPoints_eN].flat[:] = gq_x_depart_tmp[eN].flat[:]
+                        self.gq_element_depart[ci][nSoFar:nSoFar+nPoints_eN] = eN
+                        nSoFar += nPoints_eN
+                    else: #copy over default quadrature
+                        #mwf debug
+                        #import pdb
+                        #pdb.set_trace()
+
+                        nPoints_eN = self.q['dV'][eN].shape[0]
+                        self.gq_dV[ci][nSoFar:nSoFar+nPoints_eN] = self.q['dV'][eN].flat[:]
+                        self.gq_x_depart[ci][nSoFar:nSoFar+nPoints_eN].flat[:] = self.q['x'][eN].flat[:]
+                        self.gq_element_depart[ci][nSoFar:nSoFar+nPoints_eN] = eN
+                        nSoFar += nPoints_eN
+                        
+                #
+                #generate other arrays that are needed
+                #for now have to resize everthing here
+                self.gq_x_track[ci]        = numpy.copy(self.gq_x_depart[ci])
+                self.gq_t_track[ci]        = numpy.zeros((nPoints_global,),'d')
+                self.gq_t_depart[ci]       = numpy.zeros((nPoints_global,),'d')
+                self.gq_dt_track[ci]       = numpy.zeros((nPoints_global,),'d')
+                self.gq_flag_track[ci]     = numpy.zeros((nPoints_global,),'i')
+                self.gq_flag_depart[ci]     = numpy.zeros((nPoints_global,),'i')
+                self.gq_element_track[ci]  = numpy.zeros((nPoints_global,),'i')
+                self.gq[('u',ci)]          = numpy.zeros((nPoints_global,),'d')
+                self.gq[('m',ci)]          = numpy.zeros((nPoints_global,),'d')
+                self.gq_last[('u',ci)]     = numpy.zeros((nPoints_global,),'d')
+                self.gq_last[('m',ci)]     = numpy.zeros((nPoints_global,),'d')
+                for cj in self.coefficients.mass[ci].keys():
+                    self.gq[('dm',ci,cj)]      = numpy.zeros((nPoints_global,),'d')
+                    self.gq_last[('dm',ci,cj)] = numpy.zeros((nPoints_global,),'d')
+                     
+                self.gq[('x',ci)]          = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
+                self.gq_last[('x',ci)]     = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
             #ci
         else:
             #start by allocating memory on the fly and then make smarter
