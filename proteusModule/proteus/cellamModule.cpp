@@ -1149,8 +1149,8 @@ static PyObject* cellam_updateElementJacobianWithSlumpedMassCorrection(PyObject*
   return Py_None;
 }
 
-static PyObject* cellam_generateArraysForSSIPs(PyObject* self,
-					       PyObject* args)
+static PyObject* cellam_generateQuadratureArraysForSSIPs(PyObject* self,
+							 PyObject* args)
 
 {
   //input 
@@ -1193,27 +1193,27 @@ static PyObject* cellam_generateArraysForSSIPs(PyObject* self,
   std::vector<double> x_gq_tmp;
   std::vector<double> dV_gq_tmp; 
 
-  generateArraysForSSIPs(SHAPE(elementNodesArray)[0],
-			 SHAPE(elementNodesArray)[1],
-			 SHAPE(elementBoundariesArray)[1],
-			 SHAPE(elementBoundaryLocalOuterNormalsArray)[2],
-			 nPointsTracked,
-			 SHAPE(q_dV)[1],
-			 boundaryTolerance,
-			 neighborTolerance,
-			 DDATA(nodeArray),
-			 IDATA(elementNodesArray),
-			 IDATA(elementBoundariesArray),
-			 DDATA(elementBoundaryLocalOuterNormalsArray),
-			 DDATA(elementBoundaryBarycentersArray),
-			 IDATA(element_track),
-			 IDATA(flag_track),
-			 DDATA(x_track),
-			 DDATA(q_x),
-			 DDATA(q_dV),
-			 elements_gq_tmp,
-			 x_gq_tmp,
-			 dV_gq_tmp);
+  generateQuadratureArraysForSSIPs(SHAPE(elementNodesArray)[0],
+				   SHAPE(elementNodesArray)[1],
+				   SHAPE(elementBoundariesArray)[1],
+				   SHAPE(elementBoundaryLocalOuterNormalsArray)[2],
+				   nPointsTracked,
+				   SHAPE(q_dV)[1],
+				   boundaryTolerance,
+				   neighborTolerance,
+				   DDATA(nodeArray),
+				   IDATA(elementNodesArray),
+				   IDATA(elementBoundariesArray),
+				   DDATA(elementBoundaryLocalOuterNormalsArray),
+				   DDATA(elementBoundaryBarycentersArray),
+				   IDATA(element_track),
+				   IDATA(flag_track),
+				   DDATA(x_track),
+				   DDATA(q_x),
+				   DDATA(q_dV),
+				   elements_gq_tmp,
+				   x_gq_tmp,
+				   dV_gq_tmp);
 
   npy_intp nPoints_global = elements_gq_tmp.size();
   npy_intp dims[2];
@@ -1247,6 +1247,98 @@ static PyObject* cellam_generateArraysForSSIPs(PyObject* self,
 		       elements_gq,
 		       dV_gq,
 		       x_gq);
+}
+
+static PyObject* cellam_generateArraysForTrackedSSIPs(PyObject* self,
+						      PyObject* args)
+
+{
+  //input 
+  PyObject *nodeArray,
+    *elementNodesArray,
+    *elementBoundariesArray,
+    *elementBoundaryLocalOuterNormalsArray,
+    *elementBoundaryBarycentersArray,
+    *element_track,
+    *flag_track,
+    *x_track;
+  double boundaryTolerance,
+    neighborTolerance;
+  //output
+  PyObject *x_ssip,*element_offsets_ssip;
+  int nPointsTracked = 1;
+  if(!PyArg_ParseTuple(args,
+                       "ddOOOOOOOO",
+                       &boundaryTolerance,
+		       &neighborTolerance,
+		       &nodeArray,
+		       &elementNodesArray,
+		       &elementBoundariesArray,
+		       &elementBoundaryLocalOuterNormalsArray,
+		       &elementBoundaryBarycentersArray,
+		       &element_track,
+		       &flag_track,
+		       &x_track))
+    return NULL;
+  for (int i = 0; i < ND(element_track); i++)
+    nPointsTracked *= SHAPE(element_track)[i];
+  //since just working through algorithm,
+  //use stl containers to build points and copy over
+  //rather than try to reuse memory etc
+  
+  std::vector<int> element_offsets_ssip_tmp(SHAPE(elementNodesArray)[0]+1);
+  std::vector<double> x_ssip_tmp;
+
+  generateArraysForTrackedSSIPs(SHAPE(elementNodesArray)[0],
+				SHAPE(elementNodesArray)[1],
+				SHAPE(elementBoundariesArray)[1],
+				SHAPE(elementBoundaryLocalOuterNormalsArray)[2],
+				nPointsTracked,
+				boundaryTolerance,
+				neighborTolerance,
+				DDATA(nodeArray),
+				IDATA(elementNodesArray),
+				IDATA(elementBoundariesArray),
+				DDATA(elementBoundaryLocalOuterNormalsArray),
+				DDATA(elementBoundaryBarycentersArray),
+				IDATA(element_track),
+				IDATA(flag_track),
+				DDATA(x_track),
+				element_offsets_ssip_tmp,
+				x_ssip_tmp);
+
+  npy_intp nPoints_global = x_ssip_tmp.size()/3;
+  npy_intp nElement_offsets = element_offsets_ssip_tmp.size();
+  npy_intp dims[2];
+
+  dims[0] = nElement_offsets; dims[1] = 0;
+  element_offsets_ssip = PyArray_SimpleNew(1,dims,NPY_INT);
+  dims[0] = nPoints_global; dims[1] = 3;
+  x_ssip     = PyArray_SimpleNew(2,dims,NPY_DOUBLE);
+
+  //manually copy
+  int* element_offsets_ssip_p = IDATA(element_offsets_ssip);
+  double* x_ssip_p     = DDATA(x_ssip);
+
+  for (int k = 0; k < nElement_offsets; k++)
+    {
+      //std::cout<<"cellam generateArraysForSSIPs k= "<<k;
+      element_offsets_ssip_p[k] = element_offsets_ssip_tmp[k];
+    }
+  for (int k=0; k < nPoints_global; k++)
+    {
+      //std::cout<<"cellam generateArraysForSSIPs k= "<<k;
+      for (int I=0; I < 3; I++)
+  	{
+  	  x_ssip_p[k*3+I]        = x_ssip_tmp[k*3+I];
+  	  //std::cout<<" I= "<<I<<"  x tmp= "<<x_gq_tmp[k*3+I] <<" x_p= "<<x_gq_p[k*3+I];
+  	}
+      //std::cout<<std::endl;
+    }
+
+  return Py_BuildValue("OO",
+		       element_offsets_ssip,
+		       x_ssip);
 }
 
 static PyMethodDef cellamMethods[] = {
@@ -1326,10 +1418,14 @@ static PyMethodDef cellamMethods[] = {
     cellam_updateElementJacobianWithSlumpedMassCorrection,
    METH_VARARGS, 
    "update jacobian matrix to account for slumping"},
- { "generateArraysForSSIPs",
-   cellam_generateArraysForSSIPs,
+ { "generateQuadratureArraysForSSIPs",
+   cellam_generateQuadratureArraysForSSIPs,
    METH_VARARGS, 
    "return point to element look up array, quadrature weight array, and quadrature point array for SSIPs"},
+ { "generateArraysForTrackedSSIPs",
+   cellam_generateArraysForTrackedSSIPs,
+   METH_VARARGS, 
+   "return element offsets array and point array for subset of SSIPs that actually get tracked to an element"},
  { NULL,NULL,0,NULL}
 };
 
