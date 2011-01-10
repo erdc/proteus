@@ -1384,9 +1384,9 @@ void calculateSlumpedMassApproximation2d_upwind(int nElements_global,
       // call the most upwind node Im1, and the most downwind one Ip1
       //To determine alignment with velocity, look at edge (normalized by edge length) dotted with df_avg
       
-      double max_delta_IJ = 0.0; double min_delta_IJ = 0.0;
+      double max_delta_IJ = 0.0;
       assert(nodeStarOffsets[I0+1] - nodeStarOffsets[I0] > 1);
-      int offset_max_delta_IJ  = nodeStarOffsets[I0]; int offset_min_delta_IJ = nodeStarOffsets[I0]+1; 
+      int offset_max_delta_IJ  = nodeStarOffsets[I0]; 
       for (int offset = nodeStarOffsets[I0]; offset < nodeStarOffsets[I0+1]; offset++)
 	{
 	  const int J = nodeStarArray[offset];
@@ -1406,12 +1406,34 @@ void calculateSlumpedMassApproximation2d_upwind(int nElements_global,
 	  double delta_IJ = 0.0;
 	  for (int l = 0; l < nSpace; l++)
 	    delta_IJ += edge_IJ[l]*df_avg[l];
-	  if (delta_IJ > max_delta_IJ)
+	  if (delta_IJ > max_delta_IJ || offset == nodeStarOffsets[I0])
 	    {
 	      offset_max_delta_IJ = offset;
 	      max_delta_IJ = delta_IJ;
 	    }
-	  if (delta_IJ < min_delta_IJ)
+	}
+
+      double min_delta_IJ = 0.0; int offset_min_delta_IJ = nodeStarOffsets[I0+1]-1; 
+      for (int offset = nodeStarOffsets[I0+1]-1; offset >= nodeStarOffsets[I0]; offset--)
+	{
+	  const int J = nodeStarArray[offset];
+	  assert(J >= 0);
+	  assert(J < nNodes_global);
+
+	  double length = 0.0;
+	  for (int l = 0; l < nSpace; l++)
+	    {
+	      edge_IJ[l] = (nodeArray[J*3+l]-nodeArray[I0*3+l]);
+	      length += (nodeArray[J*3+l]-nodeArray[I0*3+l])*(nodeArray[J*3+l]-nodeArray[I0*3+l]);
+	    }
+	  length = sqrt(length);
+	  assert(length  > 0.0);
+	  for (int l = 0; l < nSpace; l++)
+	    edge_IJ[l] /= length;
+	  double delta_IJ = 0.0;
+	  for (int l = 0; l < nSpace; l++)
+	    delta_IJ += edge_IJ[l]*df_avg[l];
+	  if (delta_IJ < min_delta_IJ || offset == nodeStarOffsets[I0+1]-1)
 	    {
 	      offset_min_delta_IJ = offset;
 	      min_delta_IJ = delta_IJ;
@@ -1425,7 +1447,7 @@ void calculateSlumpedMassApproximation2d_upwind(int nElements_global,
       double dr0  = fabs(rhs[Ip1]-rhs[I0]);
       double drm1 = fabs(rhs[I0]-rhs[Im1]);
  
-     //now need to find most downwind neighbor in Ip1's node star (down-down wind)
+      //now need to find most downwind neighbor in Ip1's node star (down-down wind)
       double max_delta_Ip1J = 0.0;
       assert(nodeStarOffsets[Ip1+1] - nodeStarOffsets[Ip1]> 1);
       int offset_max_delta_Ip1J = nodeStarOffsets[Ip1];
@@ -1448,7 +1470,7 @@ void calculateSlumpedMassApproximation2d_upwind(int nElements_global,
 	  double delta_Ip1J = 0.0;
 	  for (int l = 0; l < nSpace; l++)
 	    delta_Ip1J += edge_Ip1J[l]*df_avg[l];
-	  if (delta_Ip1J > max_delta_Ip1J)
+	  if (delta_Ip1J > max_delta_Ip1J || offset == nodeStarOffsets[Ip1])
 	    {
 	      offset_max_delta_Ip1J = offset;
 	      max_delta_Ip1J = delta_Ip1J;
@@ -1913,7 +1935,8 @@ void updateElementJacobianWithSlumpedMassCorrection(int nElements_global,
     }
 }
 
-void generateArraysForSSIPs(int nElements_global,
+extern "C"
+void generateQuadratureArraysForSSIPs(int nElements_global,
 			    int nNodes_element,
 			    int nElementBoundaries_element,
 			    int nSpace,
@@ -1938,7 +1961,7 @@ void generateArraysForSSIPs(int nElements_global,
   std::map<int,std::list<double> > elementsToTrackedPoints;
 
   //determine which elements contain SSIPs
-  ELLAM::assignTrackedPointsToElements(nElements_global,
+  ELLAM::collectTrackedPointsInElements(nElements_global,
 				       nNodes_element,
 				       nElementBoundaries_element,
 				       nSpace,
@@ -1971,13 +1994,13 @@ void generateArraysForSSIPs(int nElements_global,
       std::vector<double> x_element,w_element;
       for (int eN=0; eN < nElements_global; eN++)
 	{
-	  unsigned int nPoints_eN = 0;
+	  int nPoints_eN = 0;
 	  if (elementsToTrackedPoints.find(eN) != elementsToTrackedPoints.end())
 	    {
 	      ELLAM::createElementSSIPs_1d(elementsToTrackedPoints[eN],
 					   x_element,
 					   w_element);
-	      nPoints_eN = w_element.size();
+	      nPoints_eN = int(w_element.size());
 	      for (int k=0; k < nPoints_eN; k++)
 		{
 		  dV_gq.push_back(w_element[k]);
@@ -2008,14 +2031,81 @@ void generateArraysForSSIPs(int nElements_global,
     }//1d
   else
     {
-      std::cout<<"generateArraysForSSIPs nSpace= "<<nSpace<<" not implemented! "<<std::endl;
+      std::cout<<"generateQuadratureArraysForSSIPs nSpace= "<<nSpace<<" not implemented! "<<std::endl;
       assert(0);
+    }
+
+}
+
+extern "C"
+void generateArraysForTrackedSSIPs(int nElements_global,
+				   int nNodes_element,
+				   int nElementBoundaries_element,
+				   int nSpace,
+				   int nPoints_tracked,
+				   double boundaryTolerance,
+				   double neighborTolerance,
+				   const double* nodeArray,
+				   const int* elementNodesArray,
+				   const int* elementBoundariesArray,
+				   const double* elementBoundaryLocalOuterNormalsArray,
+				   const double* elementBoundaryBarycentersArray,
+				   const int* element_track,
+				   const int* flag_track,
+				   const double* x_track,
+				   std::vector<int>& element_offsets_ssip,
+				   std::vector<double>& x_ssip)
+
+{
+  std::map<int,std::list<double> > elementsToTrackedPoints;
+  assert(element_offsets_ssip.size() == unsigned(nElements_global+1));
+  //determine which elements contain SSIPs
+  ELLAM::collectTrackedPointsInElements(nElements_global,
+				       nNodes_element,
+				       nElementBoundaries_element,
+				       nSpace,
+				       nPoints_tracked,
+				       boundaryTolerance,
+				       neighborTolerance,
+				       nodeArray,
+				       elementNodesArray,
+				       elementBoundariesArray,
+				       elementBoundaryLocalOuterNormalsArray,
+				       elementBoundaryBarycentersArray,
+				       element_track,
+				       flag_track,
+				       x_track,
+				       elementsToTrackedPoints);
+
+  //reset these 
+  x_ssip.clear(); 
+  //conservative enough guess on memory needed?
+  x_ssip.reserve(nPoints_tracked*3);
+  
+  //loop through elements, 
+  element_offsets_ssip[0] = 0;
+
+  std::vector<double> x_element;
+  for (int eN=0; eN < nElements_global; eN++)
+    {
+      int nPoints_eN = 0;
+      if (elementsToTrackedPoints.find(eN) != elementsToTrackedPoints.end())
+	{
+	  nPoints_eN = int(elementsToTrackedPoints[eN].size()/3);
+	  std::list<double>::iterator eN_it = elementsToTrackedPoints[eN].begin();
+	  while (eN_it != elementsToTrackedPoints[eN].end())
+	    {
+	      x_ssip.push_back(*eN_it); 
+	      eN_it++;
+	    }
+	}
+      element_offsets_ssip[eN+1] = element_offsets_ssip[eN]+nPoints_eN;
     }
 
 }
 namespace ELLAM
 {
-void assignTrackedPointsToElements(int nElements_global,
+void collectTrackedPointsInElements(int nElements_global,
 				   int nNodes_element,
 				   int nElementBoundaries_element,
 				   int nSpace,
@@ -2215,4 +2305,6 @@ void createElementSSIPs_1d(const std::list<double>& elementTrackedPoints,
       assert(x_element[(i+1)*3] > x_element[i*3]);
     }
 }
+
+
 }//namespace ELLAM

@@ -238,17 +238,39 @@ class LobattoTriangle(Q_base):
     Gauss-Lobatto quadrature on the unit triangle.
     """
     def __init__(self,order=1):
-        order=1
+        #mwf allow higher order now
+        #order=1
         Q_base.__init__(self,order)
+        #for third order Fekete rule (see Taylor etal SINUM 2000)
+        #10 points below are classes of points orbit is number of permuations
+        #orbit, 1st two barycentric coordinates, weight to be multiplied by area of triangle
+        #1, (1/3,1/3), 0.9
+        #3, (0,0),     0.0333333333
+        #6, (0,a),     0.1666666667
+        #where a = 0.2763932023
+        
+        a = 0.2763932023; b = 1.0-a; wv = 0.03333333333333*0.25; wab = 0.16666666666667*0.25
         self.pointsAll=(
-            ( EVec(0.0,0.0),EVec(1.0,0.0),EVec(0.0,1.0)),)
+            ( EVec(0.0,0.0),EVec(1.0,0.0),EVec(0.0,1.0)),
+            ( EVec(1.0/3.0,1.0/3.0),
+              EVec(0.,0.),EVec(1.0,0.0),EVec(0.0,1.0),
+              EVec(0,a),EVec(b,0),EVec(a,b),EVec(a,0.),EVec(b,a),EVec(0,b)),
+            )
         self.weightsAll=(
-            (1.0/6.0,1.0/6.0,1.0/6.0),)
+            (1.0/6.0,1.0/6.0,1.0/6.0),
+            (0.5-3.0*wv-6*wab,
+             wv,wv,wv,
+             wab,wab,wab,wab,wab,wab),
+            )
         self.setOrder(order)
     def setOrder(self,k):
         self.order = 1
         self.points = self.pointsAll[0]
         self.weights = self.weightsAll[0]
+        if k > 1:
+            self.order = 2
+            self.points = self.pointsAll[1]
+            self.weights = self.weightsAll[1]
 
 class CompositeTrapezoidalTriangle(Q_base):
     """
@@ -754,7 +776,8 @@ class SimplexLobattoQuadrature(Q_base):
     A class for quadrature on unit simplices.
     """
     def __init__(self,nd=3,order=1):
-        order=1
+        #mwf allow for higher order now
+        #order=1
         Q_base.__init__(self,order)
         if nd == 0:
             self.quadrature = LobattoPoint(order)
@@ -769,9 +792,11 @@ class SimplexLobattoQuadrature(Q_base):
         self.points = self.quadrature.points
         self.weights = self.quadrature.weights
     def setOrder(self,k):
-        order=1
-        self.quadrature.points = self.quadrature.pointsAll[0]
-        self.quadrature.weights = self.quadrature.weightsAll[0]
+        #mwf allow variable order now
+        #order=1
+        #self.quadrature.points = self.quadrature.pointsAll[0]
+        #self.quadrature.weights = self.quadrature.weightsAll[0]
+        self.quadrature.setOrder(k)
         self.points = self.quadrature.points
         self.weights = self.quadrature.weights
 
