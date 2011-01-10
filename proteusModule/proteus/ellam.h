@@ -163,7 +163,7 @@ void tagInflowPointForTracking_c(int nSpace,
     }
 }
 double modifiedVanLeer(double r);
-void assignTrackedPointsToElements(int nElements_global,
+void collectTrackedPointsInElements(int nElements_global,
 				   int nNodes_element,
 				   int nElementBoundaries_element,
 				   int nSpace,
@@ -580,7 +580,7 @@ void updateElementJacobianWithSlumpedMassCorrection(int nElements_global,
 						    const double* elementMassMatrixCorrection,
 						    double* elementJacobianMatrix);
 
-void generateArraysForSSIPs(int nElements_global,
+void generateQuadratureArraysForSSIPs(int nElements_global,
 			    int nNodes_element,
 			    int nElementBoundaries_element,
 			    int nSpace,
@@ -602,5 +602,22 @@ void generateArraysForSSIPs(int nElements_global,
 			    std::vector<double>& x_qg,
 			    std::vector<double>& dV_gq);
 
+void generateArraysForTrackedSSIPs(int nElements_global,
+				   int nNodes_element,
+				   int nElementBoundaries_element,
+				   int nSpace,
+				   int nPoints_tracked,
+				   double boundaryTolerance,
+				   double neighborTolerance,
+				   const double* nodeArray,
+				   const int* elementNodesArray,
+				   const int* elementBoundariesArray,
+				   const double* elementBoundaryLocalOuterNormalsArray,
+				   const double* elementBoundaryBarycentersArray,
+				   const int* element_track,
+				   const int* flag_track,
+				   const double* x_track,
+				   std::vector<int>& element_offsets_ssip,
+				   std::vector<double>& x_ssip);
 }//extern C
 #endif 
