@@ -100,17 +100,22 @@ class LobattoEdge(Q_base):
     Gauss-Lobatto quadrature on the unit interval.
     """
     def __init__(self,order=1):
-        order=1
         Q_base.__init__(self,order)
+        a1 = 0.2*sqrt(5.0)
+        a2 = sqrt(21.0)/7.0
         self.pointsAll=(
-            (EVec(0.0),EVec(1.0)),)
+            (EVec(0.0),EVec(1.0)),
+            (EVec(0.0),EVec(0.5),EVec(1.0)),
+            (EVec(0.0),EVec(0.5*(1.-a1)),EVec(0.5*(1.+a1)),EVec(1.0)),
+            (EVec(0.0),EVec(0.5*(1.-a2)),EVec(0.5),EVec(0.5*(1.+a2)),EVec(1.0)),
+            )
         self.weightsAll=(
-            (0.5,0.5),)
+            (0.5,0.5),
+            (1.0/6.0, 4.0/6.0, 1.0/6.0),
+            (1.0/12.0, 5.0/12.0,5.0/12.0,1.0/12.0),
+            (1.0/20.0,49.0/180.0,32.0/90.0,49.0/180.0,1.0/20.0)
+            )
         self.setOrder(order)
-    def setOrder(self,k):
-        self.order = 1
-        self.points = self.pointsAll[0]
-        self.weights = self.weightsAll[0]
 
 class LobattoEdgeAlt(Q_base):
     """
