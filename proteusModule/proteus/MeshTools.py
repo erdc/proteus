@@ -485,14 +485,14 @@ class Mesh:
         log("Number of Subdomain Edges = "+str(self.subdomainMesh.nEdges_global))
         comm.barrier()
         log("Finished partitioning")
-        comm.beginSequential()
-        from Profiling import memory
-        memory()
-        log(memory("Partitioning Mesh","Mesh"),level=1)
-        del self.cmesh
-        #cmeshTools.deleteMeshDataStructures(self.cmesh)
-        log(memory("Without global mesh","Mesh"),level=1)
-        comm.endSequential()
+        # comm.beginSequential()
+        # from Profiling import memory
+        # memory()
+        # log(memory("Partitioning Mesh","Mesh"),level=1)
+        # del self.cmesh
+        # #cmeshTools.deleteMeshDataStructures(self.cmesh)
+        # log(memory("Without global mesh","Mesh"),level=1)
+        # comm.endSequential()
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0, EB=False):
         if self.arGridCollection != None:
             init = False
@@ -3161,10 +3161,10 @@ class TriangularMesh(Mesh):
     def computeGeometricInfo(self):
         import cmeshTools
         cmeshTools.computeGeometricInfo_triangle(self.cmesh)
-    def generateTriangularMeshFromRectangularGrid(self,nx,ny,Lx,Ly):
+    def generateTriangularMeshFromRectangularGrid(self,nx,ny,Lx,Ly,unionJack=1):
         import cmeshTools
         self.cmesh = cmeshTools.CMesh()
-        cmeshTools.generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly,self.cmesh)
+        cmeshTools.generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly,self.cmesh,unionJack)
         cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
         cmeshTools.computeGeometricInfo_triangle(self.cmesh)
         self.buildFromC(self.cmesh)
@@ -3838,7 +3838,7 @@ class QuadrilateralMesh(Mesh):
 class MultilevelTriangularMesh(MultilevelMesh):
     import cmeshTools
     def __init__(self,nx,ny,nz,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.element,unionJack=0):
         import cmeshTools
         MultilevelMesh.__init__(self)
         self.useC = True
@@ -3847,7 +3847,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
         if not skipInit:
             if self.useC:
                 self.meshList.append(TriangularMesh())
-                self.meshList[0].generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly)
+                self.meshList[0].generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly,unionJack=unionJack)
                 self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
                 self.buildFromC(self.cmultilevelMesh)
                 self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
@@ -3933,99 +3933,99 @@ class MultilevelTriangularMesh(MultilevelMesh):
 
         
         
-#         mfile.close()
-#         return p,e,t
-class MultilevelTriangularMesh(MultilevelMesh):
-    import cmeshTools
-    def __init__(self,nx,ny,nz,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element):
-        import cmeshTools
-        MultilevelMesh.__init__(self)
-        self.useC = True
-        self.nLayersOfOverlap=nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
-        #self.useC = False
-        if not skipInit:
-            if self.useC:
-                self.meshList.append(TriangularMesh())
-                self.meshList[0].generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly)
-                self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
-                self.buildFromC(self.cmultilevelMesh)
-                self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
-                for l in range(1,refinementLevels):
-                    self.meshList.append(TriangularMesh())                
-                    self.meshList[l].cmesh = self.cmeshList[l]
-                    self.meshList[l].buildFromC(self.meshList[l].cmesh)
-                    self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
-            else:
-                grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
-                self.meshList.append(TriangularMesh())
-                self.meshList[0].rectangularToTriangular(grid)
-                self.meshList[0].subdomainMesh = self.meshList[0]
-                self.elementChildren=[]
-                log(self.meshList[0].meshInfo())
-                for l in range(1,refinementLevels):
-                    self.refine()
-                    self.meshList[l].subdomainMesh = self.meshList[l]
-                    log(self.meshList[-1].meshInfo())
-                self.buildArrayLists()
-    #
-    #mwf what's the best way to build from an existing mesh
-    def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
-                                       parallelPartitioningType=MeshParallelPartitioningTypes.element):
-        import cmeshTools
-        #blow away or just trust garbage collection
-        self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
-        self.meshList = []
-        self.elementParents = None
-        self.cmultilevelMesh = None
-        if self.useC:
-            self.meshList.append(mesh0)
-            self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
-            self.buildFromC(self.cmultilevelMesh)
-            self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
-            for l in range(1,refinementLevels):
-                self.meshList.append(TriangularMesh())                
-                self.meshList[l].cmesh = self.cmeshList[l]
-                self.meshList[l].buildFromC(self.meshList[l].cmesh)
-                self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
-        else:
-            grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
-            self.meshList.append(TriangularMesh())
-            self.meshList[0].rectangularToTriangular(grid)
-            self.meshList[0].subdomainMesh = self.meshList[0]
-            self.elementChildren=[]
-            log(self.meshList[0].meshInfo())
-            for l in range(1,refinementLevels):
-                self.refine()
-                self.meshList[l].subdomainMesh = self.meshList[l]
-                log(self.meshList[-1].meshInfo())
-            self.buildArrayLists()
+# #         mfile.close()
+# #         return p,e,t
+# class MultilevelTriangularMesh(MultilevelMesh):
+#     import cmeshTools
+#     def __init__(self,nx,ny,nz,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
+#                  parallelPartitioningType=MeshParallelPartitioningTypes.element):
+#         import cmeshTools
+#         MultilevelMesh.__init__(self)
+#         self.useC = True
+#         self.nLayersOfOverlap=nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
+#         #self.useC = False
+#         if not skipInit:
+#             if self.useC:
+#                 self.meshList.append(TriangularMesh())
+#                 self.meshList[0].generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly)
+#                 self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+#                 self.buildFromC(self.cmultilevelMesh)
+#                 self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+#                 for l in range(1,refinementLevels):
+#                     self.meshList.append(TriangularMesh())                
+#                     self.meshList[l].cmesh = self.cmeshList[l]
+#                     self.meshList[l].buildFromC(self.meshList[l].cmesh)
+#                     self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+#             else:
+#                 grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
+#                 self.meshList.append(TriangularMesh())
+#                 self.meshList[0].rectangularToTriangular(grid)
+#                 self.meshList[0].subdomainMesh = self.meshList[0]
+#                 self.elementChildren=[]
+#                 log(self.meshList[0].meshInfo())
+#                 for l in range(1,refinementLevels):
+#                     self.refine()
+#                     self.meshList[l].subdomainMesh = self.meshList[l]
+#                     log(self.meshList[-1].meshInfo())
+#                 self.buildArrayLists()
+#     #
+#     #mwf what's the best way to build from an existing mesh
+#     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
+#                                        parallelPartitioningType=MeshParallelPartitioningTypes.element):
+#         import cmeshTools
+#         #blow away or just trust garbage collection
+#         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
+#         self.meshList = []
+#         self.elementParents = None
+#         self.cmultilevelMesh = None
+#         if self.useC:
+#             self.meshList.append(mesh0)
+#             self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+#             self.buildFromC(self.cmultilevelMesh)
+#             self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+#             for l in range(1,refinementLevels):
+#                 self.meshList.append(TriangularMesh())                
+#                 self.meshList[l].cmesh = self.cmeshList[l]
+#                 self.meshList[l].buildFromC(self.meshList[l].cmesh)
+#                 self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
+#         else:
+#             grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
+#             self.meshList.append(TriangularMesh())
+#             self.meshList[0].rectangularToTriangular(grid)
+#             self.meshList[0].subdomainMesh = self.meshList[0]
+#             self.elementChildren=[]
+#             log(self.meshList[0].meshInfo())
+#             for l in range(1,refinementLevels):
+#                 self.refine()
+#                 self.meshList[l].subdomainMesh = self.meshList[l]
+#                 log(self.meshList[-1].meshInfo())
+#             self.buildArrayLists()
 
-    def refine(self):
-        self.meshList.append(TriangularMesh())
-        childrenDict = self.meshList[-1].refine(self.meshList[-2])
-        self.elementChildren.append(childrenDict)
-    def computeGeometricInfo(self):
-        for m in self.meshList:
-            m.computeGeometricInfo()
-    def locallyRefine(self,elementTagArray):
-        """
-        simple local refinement assuming elementTagArray[eN]=1 --> bisect
-        """
-        flagForRefineType = 0 #0 -- newest node, 1 -- 4T, 2 -- U4T
-        if flagForRefineType == 0:
-            #doesn't do anything if bases already set on finest level
-            self.cmeshTools.setNewestNodeBases(2,self.cmultilevelMesh)
-        if self.useC:
-            self.cmeshTools.locallyRefineMultilevelMesh(2,self.cmultilevelMesh,elementTagArray,flagForRefineType)
-            self.buildFromC(self.cmultilevelMesh)
-            self.meshList.append(TriangularMesh())
-            self.meshList[self.nLevels-1].cmesh = self.cmeshList[self.nLevels-1]
-            self.meshList[self.nLevels-1].buildFromC(self.meshList[self.nLevels-1].cmesh)
-            self.meshList[self.nLevels-1].partitionMesh(nLayersOfOverlap=self.nLayersOfOverlap,parallelPartitioningType=self.parallelPartitioningType)
-        else:
-            print """locallyRefine not implemented for self.useC= %s """ % (self.useC)
-        #
+#     def refine(self):
+#         self.meshList.append(TriangularMesh())
+#         childrenDict = self.meshList[-1].refine(self.meshList[-2])
+#         self.elementChildren.append(childrenDict)
+#     def computeGeometricInfo(self):
+#         for m in self.meshList:
+#             m.computeGeometricInfo()
+#     def locallyRefine(self,elementTagArray):
+#         """
+#         simple local refinement assuming elementTagArray[eN]=1 --> bisect
+#         """
+#         flagForRefineType = 0 #0 -- newest node, 1 -- 4T, 2 -- U4T
+#         if flagForRefineType == 0:
+#             #doesn't do anything if bases already set on finest level
+#             self.cmeshTools.setNewestNodeBases(2,self.cmultilevelMesh)
+#         if self.useC:
+#             self.cmeshTools.locallyRefineMultilevelMesh(2,self.cmultilevelMesh,elementTagArray,flagForRefineType)
+#             self.buildFromC(self.cmultilevelMesh)
+#             self.meshList.append(TriangularMesh())
+#             self.meshList[self.nLevels-1].cmesh = self.cmeshList[self.nLevels-1]
+#             self.meshList[self.nLevels-1].buildFromC(self.meshList[self.nLevels-1].cmesh)
+#             self.meshList[self.nLevels-1].partitionMesh(nLayersOfOverlap=self.nLayersOfOverlap,parallelPartitioningType=self.parallelPartitioningType)
+#         else:
+#             print """locallyRefine not implemented for self.useC= %s """ % (self.useC)
+#         #
         
 class EdgeMesh(Mesh):
     """A mesh of edges

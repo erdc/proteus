@@ -364,9 +364,7 @@ class Newton(NonlinearSolver):
         self.linearSolver = linearSolver
         self.directSolver = directSolver
         self.lineSearch = True
-        #mwf turned back on self.lineSearch = False
         self.EWtol=EWtol
-        #mwf added
         self.maxLSits = maxLSits
         if self.linearSolver.computeEigenvalues:
             self.JLast = copy.deepcopy(self.J)
