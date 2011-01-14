@@ -779,21 +779,39 @@ def rotatingGaussianElementVelocityEval3(int transient,
                                          double clock,
                                          double xc, double yc,
                                          numpy.ndarray[DTYPE_t,ndim=3] x,
-                                         numpy.ndarray[DTYPE_t,ndim=3] v):
+                                         numpy.ndarray[DTYPE_t,ndim=3] v,
+                                         double zvelocity=0.0):
    cdef int eN,k
    cdef double pi
    pi = M_PI
-   if transient == 1:
-      for eN in range(x.shape[0]):
-         for k in range(x.shape[1]):
-            v[eN,k,0]=2.0*pi*(x[eN,k,1]-xc)
-            v[eN,k,1]=2.0*pi*(yc-x[eN,k,0])
-            v[eN,k,:]*=(tForReversal-t)/(tForReversal-0.0)*clock
+   if v.shape[2] == 3:
+      if transient == 1:
+         for eN in range(x.shape[0]):
+            for k in range(x.shape[1]):
+               v[eN,k,0]=2.0*pi*(x[eN,k,1]-xc)
+               v[eN,k,1]=2.0*pi*(yc-x[eN,k,0])
+               v[eN,k,2]=zvelocity
+               v[eN,k,:]*=(tForReversal-t)/(tForReversal-0.0)*clock
+      else:
+         for eN in range(x.shape[0]):
+            for k in range(x.shape[1]):
+               v[eN,k,0]=2.0*pi*(x[eN,k,1]-xc)
+               v[eN,k,1]=2.0*pi*(yc-x[eN,k,0])
+               v[eN,k,2]=zvelocity
    else:
-      for eN in range(x.shape[0]):
-         for k in range(x.shape[1]):
-            v[eN,k,0]=2.0*pi*(x[eN,k,1]-xc)
-            v[eN,k,1]=2.0*pi*(yc-x[eN,k,0])
+      assert v.shape[2] == 2
+      if transient == 1:
+         for eN in range(x.shape[0]):
+            for k in range(x.shape[1]):
+               v[eN,k,0]=2.0*pi*(x[eN,k,1]-xc)
+               v[eN,k,1]=2.0*pi*(yc-x[eN,k,0])
+               v[eN,k,:]*=(tForReversal-t)/(tForReversal-0.0)*clock
+      else:
+         for eN in range(x.shape[0]):
+            for k in range(x.shape[1]):
+               v[eN,k,0]=2.0*pi*(x[eN,k,1]-xc)
+               v[eN,k,1]=2.0*pi*(yc-x[eN,k,0])
+
       
 def rotatingGaussianElementVelocityEval4(int transient,
                                          double t,
@@ -801,23 +819,42 @@ def rotatingGaussianElementVelocityEval4(int transient,
                                          double clock,
                                          double xc, double yc,
                                          numpy.ndarray[DTYPE_t,ndim=4] x,
-                                         numpy.ndarray[DTYPE_t,ndim=4] v):
+                                         numpy.ndarray[DTYPE_t,ndim=4] v,
+                                         double zvelocity=0.0):
    cdef int eN,ebN,k
    cdef double pi
    pi = M_PI
-   if transient == 1:
-      for eN in range(x.shape[0]):
-         for ebN in range(x.shape[1]):
-            for k in range(x.shape[2]):
-               v[eN,ebN,k,0]=2.0*pi*(x[eN,ebN,k,1]-xc)
-               v[eN,ebN,k,1]=2.0*pi*(yc-x[eN,ebN,k,0])
-               v[eN,ebN,k,:]*=(tForReversal-t)/(tForReversal-0.0)*clock
+   if v.shape[-1] == 3:
+      if transient == 1:
+         for eN in range(x.shape[0]):
+            for ebN in range(x.shape[1]):
+               for k in range(x.shape[2]):
+                  v[eN,ebN,k,0]=2.0*pi*(x[eN,ebN,k,1]-xc)
+                  v[eN,ebN,k,1]=2.0*pi*(yc-x[eN,ebN,k,0])
+                  v[eN,ebN,k,2]=zvelocity
+                  v[eN,ebN,k,:]*=(tForReversal-t)/(tForReversal-0.0)*clock
+      else:
+         for eN in range(x.shape[0]):
+            for ebN in range(x.shape[1]):
+               for k in range(x.shape[2]):
+                  v[eN,ebN,k,0]=2.0*pi*(x[eN,ebN,k,1]-xc)
+                  v[eN,ebN,k,1]=2.0*pi*(yc-x[eN,ebN,k,0])
+                  v[eN,ebN,k,2]=zvelocity
    else:
-      for eN in range(x.shape[0]):
-         for ebN in range(x.shape[1]):
-            for k in range(x.shape[2]):
-               v[eN,ebN,k,0]=2.0*pi*(x[eN,ebN,k,1]-xc)
-               v[eN,ebN,k,1]=2.0*pi*(yc-x[eN,ebN,k,0])
+      assert v.shape[-1] == 2
+      if transient == 1:
+         for eN in range(x.shape[0]):
+            for ebN in range(x.shape[1]):
+               for k in range(x.shape[2]):
+                  v[eN,ebN,k,0]=2.0*pi*(x[eN,ebN,k,1]-xc)
+                  v[eN,ebN,k,1]=2.0*pi*(yc-x[eN,ebN,k,0])
+                  v[eN,ebN,k,:]*=(tForReversal-t)/(tForReversal-0.0)*clock
+      else:
+         for eN in range(x.shape[0]):
+            for ebN in range(x.shape[1]):
+               for k in range(x.shape[2]):
+                  v[eN,ebN,k,0]=2.0*pi*(x[eN,ebN,k,1]-xc)
+                  v[eN,ebN,k,1]=2.0*pi*(yc-x[eN,ebN,k,0])
       
 def helicalElementVelocityEval3(int transient,
                                 double t,
@@ -885,15 +922,15 @@ def vortexElementVelocityEval3(double t,
 
       
 def vortexElementVelocityEval4(double t,
-                               numpy.ndarray[DTYPE_t,ndim=3] x,
-                               numpy.ndarray[DTYPE_t,ndim=3] v):
+                               numpy.ndarray[DTYPE_t,ndim=4] x,
+                               numpy.ndarray[DTYPE_t,ndim=4] v):
    cdef int eN,k,ebN
    cdef double pi,one8
    pi = M_PI
    one8 = 1.0/8.0
    for eN in range(x.shape[0]):
       for ebN in range(x.shape[1]):
-         for k in range(x.shape[1]):
+         for k in range(x.shape[2]):
             v[eN,ebN,k,0]= cos(pi*one8*t)*sin(2.0*pi*x[eN,ebN,k,1])*sin(pi*x[eN,ebN,k,0])*sin(pi*x[eN,ebN,k,0]);
             v[eN,ebN,k,1]=-cos(pi*one8*t)*sin(2.0*pi*x[eN,ebN,k,0])*sin(pi*x[eN,ebN,k,1])*sin(pi*x[eN,ebN,k,1]);
 

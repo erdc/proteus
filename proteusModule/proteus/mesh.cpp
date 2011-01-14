@@ -85,7 +85,7 @@ extern "C"
     return 0;
   }
   
-  int regularRectangularToTriangularMeshElements(const int& nx, const int& ny, Mesh& mesh)
+  int regularRectangularToTriangularMeshElements(const int& nx, const int& ny, Mesh& mesh,int unionJack)
   {
     mesh.nNodes_element = 3;
     mesh.nElements_global = 2*(nx-1)*(ny-1);
@@ -105,18 +105,24 @@ extern "C"
 	    n2 =(j+0) + (i+1)*nx,
 	    n3 =(j+1) + (i+1)*nx;
 	  //uncomment for "right leaning" diagonal
-	  //eN=newTriangle(eN,mesh.elementNodesArray,n0,n3,n1);
-	  //eN=newTriangle(eN,mesh.elementNodesArray,n0,n2,n3);
-	  //uncomment for union jack
-	  if (i%2 + j%2 == 0 || i%2 + j%2 == 2)
+	  if (unionJack == 0)
 	    {
 	      eN=newTriangle(eN,mesh.elementNodesArray,n0,n3,n1);
 	      eN=newTriangle(eN,mesh.elementNodesArray,n0,n2,n3);
 	    }
 	  else
 	    {
-	      eN=newTriangle(eN,mesh.elementNodesArray,n0,n2,n1);
-	      eN=newTriangle(eN,mesh.elementNodesArray,n2,n3,n1);
+	      //uncomment for union jack
+	      if (i%2 + j%2 == 0 || i%2 + j%2 == 2)
+		{
+		  eN=newTriangle(eN,mesh.elementNodesArray,n0,n3,n1);
+		  eN=newTriangle(eN,mesh.elementNodesArray,n0,n2,n3);
+		}
+	      else
+		{
+		  eN=newTriangle(eN,mesh.elementNodesArray,n0,n2,n1);
+		  eN=newTriangle(eN,mesh.elementNodesArray,n2,n3,n1);
+		}
 	    }
 	  //NW element is (n0,n3,n1), SE element is (n0,n2,n3)
 	  //eN was incremented twice just now
