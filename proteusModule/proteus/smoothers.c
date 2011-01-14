@@ -614,6 +614,17 @@ void basm_NR_prepare(int rowBlocks,
   NRformat *ANR = (NRformat*) A->Store;
   double *nzval = (double*) ANR->nzval;
   assert (N*rowBlocks == A->nrow);
+  /*zero things for safety*/
+  for (i=0; i< N; i++)
+    {
+      int ii,jj;
+      for (ii=0; ii<subdomain_dim[i]; ii++)
+	{
+	  subdomainPivots[i][ii] = 0; subdomainColPivots[i][ii] = 0;
+	  for (jj=0; jj<subdomain_dim[i]; jj++)
+	    subdomainL[i][jj*subdomain_dim[i]+ii] = 0.0;
+	}
+    }
   for (i=0; i<N; i++)  
     { 
       int ii,jj; 
@@ -631,6 +642,26 @@ void basm_NR_prepare(int rowBlocks,
           } 
       PROTEUS_LAPACK_INTEGER La_N=((PROTEUS_LAPACK_INTEGER)subdomain_dim[i]),INFO=0; 
       dgetc2_(&La_N,subdomainL[i],&La_N,subdomainPivots[i],subdomainColPivots[i],&INFO);  
+      /*doesn't seem to be handling trivial case of dim=1 and L_00 = 0 well*/
+      /*mwf debug*/
+      if (INFO > 0)
+	{
+	  printf("basm prepare jac dgetc2 INFO=%d nN=%d \n",(int)(INFO),subdomain_dim[i]);
+	  for (ii=0;ii<subdomain_dim[i];ii++)
+	    {
+	      for(jj=0;jj<subdomain_dim[i];jj++)
+		{
+		  
+		  printf("%12.5e \t",subdomainL[i][ii*subdomain_dim[i] + jj]);
+		}
+	      printf("\n");
+	    }
+	  for (ii=0; ii<subdomain_dim[i];ii++)
+	    {
+	      printf("colPivot[%d]= %dl \t",ii,subdomainColPivots[i][ii]);
+	      printf("pivot[%d]= %dl \t",ii,subdomainPivots[i][ii]);
+	    }
+	}
     } 
 } 
 
@@ -660,27 +691,71 @@ void basm_NR_solve(int rowBlocks,
     assert(N*rowBlocks == A->nrow);
     double scale = 1.0;
     PROTEUS_LAPACK_INTEGER La_N; 
+    /*have to keep track of unique dofs in local system now*/
+    int max_local_dim=0;  /*size of largest possible subdomain system (assuming all the column entries are unique)*/
+    int local_nonzero_entries = 0;    /*total number of nonzero entries in local row system*/
+    int n_unique_local_dofs=0;/*number of unique unknowns in a local
+				system*/
+    int *unique_local_dofs; /*use to keep track of which unknowns
+			      have already been accounted for */
     
 
+    for (i=0; i < N; i++)
+      {
+	local_nonzero_entries = AStore->rowptr[(i+1)*rowBlocks]-AStore->rowptr[i*rowBlocks];
+	if (local_nonzero_entries > max_local_dim)
+	  max_local_dim = local_nonzero_entries;
+      }
+    unique_local_dofs = (int*) malloc(max_local_dim*sizeof(int));
+    for (i=0; i < max_local_dim; i++)
+      unique_local_dofs[i]=-1;
+    
     nnz = AStore->nnz; 
     nzval = (double*)AStore->nzval; 
     colind = AStore->colind; 
     rowptr = AStore->rowptr; 
-    memset(dX,0,sizeof(double)*N); 
+    memset(dX,0,sizeof(double)*N*rowBlocks); 
     for (i=0; i<N; i++)  
     { 
         int cnode = node_order[i]; 
-        int j, k,jj, ii; 
+        int j, k,kk, jj, ii, found_j=-1; 
+	/*again determine unique column indeces maybe go ahead and store these*/
+	local_nonzero_entries = AStore->rowptr[(cnode+1)*rowBlocks]-AStore->rowptr[cnode*rowBlocks];
+	for (jj=0; jj < local_nonzero_entries; jj++)
+	  unique_local_dofs[jj] = -12345;
+	n_unique_local_dofs = 0;
+	for (jj=0; jj < local_nonzero_entries; jj++)
+	  {
+	    /*global column id*/
+	    j = AStore->colind[AStore->rowptr[cnode*rowBlocks]+jj];
+	    /*is this entry unique*/
+	    found_j = -1;
+	    for (kk=0; kk < n_unique_local_dofs; kk++)
+	      {
+		if (unique_local_dofs[kk] == j)
+		  {
+		    found_j = 1;
+		    break;
+		  }
+	      }
+	    if (found_j == -1)
+	      {
+		unique_local_dofs[n_unique_local_dofs] = j;
+		n_unique_local_dofs++;
+	      }
+	    assert(n_unique_local_dofs <= local_nonzero_entries);
+	  }
+	assert(subdomain_dim[cnode] == n_unique_local_dofs);
         /* extract and update the subdomain residual */ 
         for (jj = 0;jj<subdomain_dim[cnode];jj++) 
           { 
-            subdomainR[cnode][jj] = R[colind[rowptr[cnode*rowBlocks] + jj]]; 
+            subdomainR[cnode][jj] = R[unique_local_dofs[jj]]; /*colind[rowptr[cnode*rowBlocks] + jj]];*/ 
           } 
         for (ii=0;ii<subdomain_dim[cnode];ii++)
           {
-            k = colind[rowptr[cnode*rowBlocks]+ii];
+            k = unique_local_dofs[ii]; /*colind[rowptr[cnode*rowBlocks]+ii];*/
             for (j=rowptr[k];j<rowptr[k+1];j++)
-              subdomainR[cnode][ii] -= nzval[j]*dX[colind[j]];
+              subdomainR[cnode][ii] -= nzval[j]*dX[colind[j]];/*check this if needs to be only entries in nodestar*/
           }
         /* copy R into dX because lapack wants it that way*/ 
         for (jj = 0;jj<subdomain_dim[cnode];jj++) 
@@ -689,16 +764,25 @@ void basm_NR_solve(int rowBlocks,
           }         
         /* solve  subdomain problem*/
         La_N = (PROTEUS_LAPACK_INTEGER) subdomain_dim[cnode];
-        dgesc2_(&La_N, 
-		subdomainL[cnode], 
-                &La_N, 
-                subdomain_dX[cnode], 
-                subdomainPivots[cnode], 
-		subdomainColPivots[cnode],
-		&scale);
+	/*doesn't seem to be handling trivial case of dim=1 and L_00 = 0 well*/
+	if (La_N == 1 && fabs(subdomainL[cnode][0]) <= 1.0e-64)
+	  subdomain_dX[cnode][0] = 0.0;
+	else
+	  {
+	    dgesc2_(&La_N, 
+		    subdomainL[cnode], 
+		    &La_N, 
+		    subdomain_dX[cnode], 
+		    subdomainPivots[cnode], 
+		    subdomainColPivots[cnode],
+		    &scale);
+	  }
         /* set the global correction from the subdomain correction */ 
         for (jj = 0;jj<subdomain_dim[cnode];jj++) 
-          dX[colind[rowptr[cnode*rowBlocks] + jj]] += w*subdomain_dX[cnode][jj];
+          {
+	    /*dX[colind[rowptr[cnode*rowBlocks] + jj]] += w*subdomain_dX[cnode][jj];*/
+	    dX[unique_local_dofs[jj]] += w*subdomain_dX[cnode][jj];
+	  }
     } 
 } 
 

@@ -354,7 +354,8 @@ class KSP_petsc4py(LinearSolver):
                  printInfo = False,
                  prefix=None,
                  Preconditioner=None,
-                 connectionList=None):
+                 connectionList=None,
+                 linearSolverLocalBlockSize=1):
         LinearSolver.__init__(self,
                               L,
                               rtol_r=rtol_r,
@@ -407,6 +408,19 @@ class KSP_petsc4py(LinearSolver):
                                                computeRates=False,
                                                printInfo=False)
                 self.pc = petsc4py.PETSc.PC().createPython(self.pccontext)
+            elif Preconditioner == StarBILU:
+                self.pccontext= Preconditioner(connectionList,
+                                               L,
+                                               bs=linearSolverLocalBlockSize,
+                                               weight=1.0,
+                                               rtol_r=rtol_r,
+                                               atol_r=atol_r,
+                                               maxIts=1,
+                                               norm = l2Norm,
+                                               convergenceTest='its',
+                                               computeRates=False,
+                                               printInfo=False)
+                self.pc = petsc4py.PETSc.PC().createPython(self.pccontext)
             elif Preconditioner == SimpleNavierStokes3D:
                 self.preconditioner = SimpleNavierStokes3D(par_L)
                 self.pc = self.preconditioner.pc
@@ -437,13 +451,7 @@ class KSP_petsc4py(LinearSolver):
             self.r_work = self.petsc_L.getVecLeft()
             self.rnorm0 = None
             def converged_trueRes(ksp,its,rnorm):
-                #doesn't work because need access to
-                #ksp's current guess which isn't held in ksp.getSolution
-                #need access to PETSc's KSPBuildResidual or BuildSolution at least
                 ksp.buildResidual(self.r_work)
-                #x = ksp.getSolution(); b = ksp.getRhs()
-                #self.petsc_L.mult(x,self.r_work)
-                #self.r_work.axpy(-1.0,b)
                 truenorm = self.r_work.norm()
                 if its == 0: self.rnorm0 = truenorm
                 #print "duh_conv its= %s rnorm= %s truenorm= %s self.rnorm0= %s ksp.resnorm= %s " % (its,rnorm,truenorm,self.rnorm0,ksp.getResidualNorm())
@@ -773,6 +781,63 @@ class StarILU(LinearSolver):
             u -= self.du
             self.computeResidual(u,r,b)
 
+class StarBILU(LinearSolver):
+    """
+    Alternating Schwarz Method on 'blocks' consisting of consectutive rows in system for things like dg ...
+    """
+    import csmoothers
+    def __init__(self,
+                 connectionList,
+                 L,
+                 bs=1,
+                 weight=1.0,
+                 sym=False,
+                 rtol_r  = 1.0e-4,
+                 atol_r  = 1.0e-16,
+                 rtol_du = 1.0e-4,
+                 atol_du = 1.0e-16,
+                 maxIts  = 100,
+                 norm = l2Norm,
+                 convergenceTest = 'r',
+                 computeRates = True,
+                 printInfo = True):
+        LinearSolver.__init__(self,L,
+                              rtol_r,
+                              atol_r,
+                              rtol_du,
+                              atol_du,
+                              maxIts,
+                              norm,
+                              convergenceTest,
+                              computeRates,
+                              printInfo)
+        self.solverName = "StarBILU"
+        self.w=weight
+        self.sym=sym
+        self.bs = bs
+        if type(self.L).__name__ == 'ndarray':
+            raise NotImplementedError
+        elif type(L).__name__ == 'SparseMatrix':
+            self.node_order=numpy.arange(self.n,dtype="i")
+            self.basmFactorObject = self.csmoothers.BASMFactor(L,bs)
+    def prepare(self,b=None):
+        if type(self.L).__name__ == 'ndarray':
+            raise NotImplementedError
+        elif type(self.L).__name__ == 'SparseMatrix':
+            self.csmoothers.basm_NR_prepare(self.L,self.basmFactorObject)
+    def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
+        (r,b) = self.solveInitialize(u,r,b,initialGuessIsZero)
+        while (not self.converged(r) and
+               not self.failed()):
+            #mwf debug
+            logEvent("StarBILU norm_r= %s norm_du= %s " % (self.norm_r,self.norm_du))
+            self.du[:]=0.0
+            if type(self.L).__name__ == 'ndarray':
+                raise NotImplementedError
+            elif type(self.L).__name__ == 'SparseMatrix':
+                self.csmoothers.basm_NR_solve(self.L,self.w,self.basmFactorObject,self.node_order,r,self.du)
+            u -= self.du
+            self.computeResidual(u,r,b)
 class TwoLevel(LinearSolver):
     """
     A generic two-level multiplicative Schwarz solver.
@@ -1048,7 +1113,8 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                   computeEigenvalues=False,
                                   parallelUsesFullOverlap = True,
                                   par_duList=None,
-                                  solver_options_prefix=None):
+                                  solver_options_prefix=None,
+                                  linearSolverLocalBlockSize=1):
     logEvent("multilevelLinearSolverChooser type= %s" % multilevelLinearSolverType)
     if (multilevelLinearSolverType == PETSc or
         multilevelLinearSolverType == KSP_petsc4py or
@@ -1056,6 +1122,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
 	multilevelLinearSolverType == Jacobi or
 	multilevelLinearSolverType == GaussSeidel or
 	multilevelLinearSolverType == StarILU or
+	multilevelLinearSolverType == StarBILU or
         multilevelLinearSolverType == MGM):
 	levelLinearSolverType = multilevelLinearSolverType
 	printLevelLinearSolverInfo = printSolverInfo
@@ -1120,6 +1187,25 @@ def multilevelLinearSolverChooser(linearOperatorList,
 						    convergenceTest = smootherConvergenceTest,
 						    computeRates = computeSmootherRates,
 						    printInfo = printSmootherInfo))
+		elif smootherType == StarBILU:
+		    if relaxationFactor == None:
+			relaxationFactor = 1.0
+		    preSmootherList.append(StarBILU(connectionList = connectivityListList[l],
+                                                    L=linearOperatorList[l],
+                                                    bs = linearSolverLocalBlockSize,
+                                                    weight=relaxationFactor,
+                                                    maxIts =  preSmooths,
+                                                    convergenceTest = smootherConvergenceTest,
+                                                    computeRates = computeSmootherRates,
+                                                    printInfo = printSmootherInfo))
+		    postSmootherList.append(StarBILU(connectionList = connectivityListList[l],
+                                                     L=linearOperatorList[l],
+                                                     bs = linearSolverLocalBlockSize,
+                                                     weight=relaxationFactor,
+                                                     maxIts =  postSmooths,
+                                                     convergenceTest = smootherConvergenceTest,
+                                                     computeRates = computeSmootherRates,
+                                                     printInfo = printSmootherInfo))
 		else:
 		    logEvent("smootherType unrecognized")
 	    else:
@@ -1158,7 +1244,8 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                       printInfo = printLevelSolverInfo,
                                                       prefix=solver_options_prefix,
                                                       Preconditioner=smootherType,
-                                                      connectionList = connectivityListList[l]))
+                                                      connectionList = connectivityListList[l],
+                                                      linearSolverLocalBlockSize = linearSolverLocalBlockSize))
             #if solverConvergenceTest == 'r-true' and par_duList != None:
             #    levelLinearSolverList[-1].useTrueResidualTest(par_duList[l])
 	levelLinearSolver = levelLinearSolverList
@@ -1203,6 +1290,21 @@ def multilevelLinearSolverChooser(linearOperatorList,
 						 computeRates = computeLevelSolverRates,
 						 printInfo = printLevelSolverInfo))
 	levelLinearSolver = levelLinearSolverList
+    elif levelLinearSolverType == StarBILU:
+	if relaxationFactor == None:
+	    relaxationFactor=1.0
+	for l in range(nLevels):
+	    levelLinearSolverList.append(StarBILU(connectionList = connectivityListList[l],
+                                                  L=linearOperatorList[l],
+                                                  bs= linearSolverLocalBlockSize,
+                                                  weight=relaxationFactor,
+                                                  maxIts = solverMaxIts,
+                                                  convergenceTest = solverConvergenceTest,
+                                                  rtol_r = relativeToleranceList[l],
+                                                  atol_r = absoluteTolerance,
+                                                  computeRates = computeLevelSolverRates,
+                                                  printInfo = printLevelSolverInfo))
+	levelLinearSolver = levelLinearSolverList
     else:
         raise RuntimeError,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Unknown level linear solver "+ levelLinearSolverType
     if multilevelLinearSolverType == NI:
@@ -1220,6 +1322,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
 	  multilevelLinearSolverType == Jacobi or
 	  multilevelLinearSolverType == GaussSeidel or
 	  multilevelLinearSolverType == StarILU or
+	  multilevelLinearSolverType == StarBILU or
           multilevelLinearSolverType == MGM):
 	multilevelLinearSolver = MultilevelLinearSolver(levelLinearSolverList,
                                                         computeRates = computeSolverRates,
