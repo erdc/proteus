@@ -1180,14 +1180,14 @@ dV,x = TriangleTools.testGenerateSSIPtriangulation(points)
     
     """
     #mwf debug
-    import pdb
-    pdb.set_trace()
+    #import pdb
+    #pdb.set_trace()
     #default representation for holding input points
     tri0 = triangleWrappers.new()
     
     triangleWrappers.setPoints(tri0,points[:,:2])
 
-    flags = "qz" #just use simple quality mesh generation, number from zero
+    flags = "z"#"qz" #just use simple quality mesh generation, number from zero
 
     #default representation for holding output points
     tri1 = triangleWrappers.new()
@@ -1200,14 +1200,18 @@ dV,x = TriangleTools.testGenerateSSIPtriangulation(points)
     elementNodesArray = triangleWrappers.getTriangles(tri1)
 
     import Quadrature,cfemIntegrals
-    subElementQuadrature = Quadrature.GaussTriangle()
-    subElementQuadrature.setOrder(2)
+    #try Gauss quadrature different orders
+    #subElementQuadrature = Quadrature.GaussTriangle()
+    #subElementQuadrature.setOrder(2)  #order(1)
+    #What about vertex quadrature
+    subElementQuadrature = Quadrature.LobattoTriangle()
+    subElementQuadrature.setOrder(3)  
+    
     nSubQuadraturePoints = len(subElementQuadrature.weights)
     nElements = elementNodesArray.shape[0]
     nQuadraturePoints = nElements*nSubQuadraturePoints
     nSpace = 2
     nDOF_element = 3
-    #mwf stopped here need to turn into correct shape
     weights_ref = numpy.array(subElementQuadrature.weights)
     points_ref  = numpy.array(subElementQuadrature.points)
     #loop through elements, compute area, map reference points to physical space,

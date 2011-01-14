@@ -741,9 +741,12 @@ class ForwardEuler_A(TI_base):
         #Problem is how to allow for implicit u in diffusion
         self.ebq_u_last = {} ; self.ebq_u_tmp = {}
         self.ebqe_u_last = {} ; self.ebqe_u_tmp = {}
+        self.q_u_last = {} ; self.q_u_tmp = {}
+        self.q_cfl_last= {} ; self.q_cfl_tmp = {} 
         self.q_df_tmp = {} ;    self.q_df_last= {}
         self.ebq_df_tmp= {} ;  self.ebq_df_last={}
         self.ebqe_df_tmp= {} ;  self.ebqe_df_last={}
+        
         #
         self.limiter=None; self.uLimDof = None
         self.limiterType = limiterType
@@ -774,6 +777,13 @@ class ForwardEuler_A(TI_base):
                 if transport.ebqe.has_key(('u',ci)):
                     self.ebqe_u_last[ci] = numpy.array(transport.ebqe[('u',ci)])
                     self.ebqe_u_tmp[ci] = numpy.array(transport.ebqe[('u',ci)])
+                if transport.q.has_key(('u',ci)):
+                    self.q_u_last[ci] = numpy.array(transport.q[('u',ci)])
+                    self.q_u_tmp[ci] = numpy.array(transport.q[('u',ci)])
+                if transport.q.has_key(('cfl',ci)):
+                    self.q_cfl_last[ci] = numpy.array(transport.q[('cfl',ci)])
+                    self.q_cfl_tmp[ci] = numpy.array(transport.q[('cfl',ci)])
+                    
                 #df
                 for cj in range(self.nc):
                     if transport.q.has_key(('df',ci,cj)):
@@ -813,6 +823,15 @@ class ForwardEuler_A(TI_base):
                     q[('df_advectiveNumericalFlux',ci,cj)][:] = self.q_df_last[(ci,cj)]
                     #zero for jacobian? will get skipped because of advectionIsImplicit?
                     #q[('df',ci,cj)].fill(0.0)
+        for ci in self.q_u_tmp.keys():
+            self.q_u_tmp[ci][:] = q[('u',ci)]
+            if q.has_key(('u_advectiveNumericalFlux',ci)):
+                q[('u_advectiveNumericalFlux',ci)][:] = self.q_u_last[ci]
+        for ci in self.q_cfl_tmp.keys():
+            self.q_cfl_tmp[ci][:] = q[('cfl',ci)]
+            if q.has_key(('cfl_advectiveNumericalFlux',ci)):
+                q[('cfl_advectiveNumericalFlux',ci)][:] = self.q_cfl_last[ci]
+                
     def calculateElementBoundaryCoefficients(self,ebq):
         for ci in self.bf_tmp.keys():
             self.bf_tmp[ci][:] = ebq[('f',ci)]
@@ -907,7 +926,11 @@ class ForwardEuler_A(TI_base):
             self.ebq_df_last[k][:] = self.ebq_df_tmp[k]
         for k in self.ebqe_df_last.keys():
             self.ebqe_df_last[k][:] = self.ebqe_df_tmp[k]
-
+        #
+        for ci in self.q_u_last.keys():
+            self.q_u_last[ci][:] = self.q_u_tmp[ci]
+        for ci in self.q_cfl_last.keys():
+            self.q_cfl_last[ci][:] = self.q_cfl_tmp[ci]
     def setFromOptions(self,nOptions):
         """
         allow classes to set various numerical parameters
@@ -951,6 +974,11 @@ class ForwardEuler_A(TI_base):
             self.ebq_df_last[k][:] = self.ebq_df_tmp[k]
         for k in self.ebqe_df_last.keys():
             self.ebqe_df_last[k][:] = self.ebqe_df_tmp[k]
+        #
+        for ci in self.q_u_last.keys():
+            self.q_u_last[ci][:] = self.q_u_tmp[ci]
+        for ci in self.q_cfl_last.keys():
+            self.q_cfl_last[ci][:] = self.q_cfl_tmp[ci]
     def initializeTimeHistory(self,resetFromDOF=True):
         """
         Push necessary information into time history arrays
@@ -975,6 +1003,11 @@ class ForwardEuler_A(TI_base):
             self.ebq_df_last[k][:] = self.ebq_df_tmp[k]
         for k in self.ebqe_df_last.keys():
             self.ebqe_df_last[k][:] = self.ebqe_df_tmp[k]
+        #
+        for ci in self.q_u_last.keys():
+            self.q_u_last[ci][:] = self.q_u_tmp[ci]
+        for ci in self.q_cfl_last.keys():
+            self.q_cfl_last[ci][:] = self.q_cfl_tmp[ci]
         
     
 class ForwardEuler_H(TI_base):
@@ -1259,8 +1292,6 @@ class OuterTheta(TI_base):
 
 IMEX_AD_Euler = ForwardEuler_A
 IMEX_HJ_Euler = ForwardEuler_H
-
-
 
 class VBDF(TI_base):
     """
