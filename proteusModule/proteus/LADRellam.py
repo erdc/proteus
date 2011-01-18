@@ -5,7 +5,9 @@ import cellam,ctracking,Quadrature
 """
 TODO
   high:
-    translate 1d SSIP code to c/c++
+    double check Kuzmin FCT symmetry, mass cons. and sign conventions in 1d
+    fix Kuzmin FCT implementation so that works for systems
+    check why sometimes seg faults on 1d slug test on first rerun
   med:
     need better way to set ellam specific options?
     move setupInitialElementLocations to c, allow for different types of tracking points
@@ -19,9 +21,9 @@ TODO
   3D
   
   General
-     try some strategic integration point approximations in 1d, 2d, 3d
-     slumping in 2d,3d
-     Kuzmin Turek approach 1d,2d,3d
+     try some strategic integration point approximations in 1d, 2d, 3d, --> now testing
+     slumping in 2d,3d --> now testing 2d ideas,
+     Kuzmin Turek approach 1d,2d,3d --> now testing Kuzmin_Moeller_etal_10 approach
     
      look at extra unknowns at outflow boundary for large time step
       and debug small oscillations
@@ -31,15 +33,9 @@ TODO
 
 For SSIPs type approach ...
 
-   element assembly with global integration points array [1d done]
-
-   coefficients evaluate with global integration points array [done]
-
-   mass at global integration points or (more likely) re-evaluate at
-     new SSIPs using stored degrees of freedom from last step. [done]
-     equivalent
-
-   creating a composite trapezoid rule type quadrature in 1d (ok know how), 2d, 3d?
+   see if picking SSIPs at new time level as a refined quadrature approximation for elements with
+     stuff going on but still defining quadrature at old time level helps
+   Do we need to go to a full refinement scheme?
 
 """
 class OneLevelLADR(OneLevelTransport):
@@ -544,7 +540,7 @@ class OneLevelLADR(OneLevelTransport):
 
         ##determine algorithm behaviors based on user options
         self.needToBackTrackSolution = False
-        if self.slumpingFlag == 2 or self.SSIPflag > 0:
+        if self.slumpingFlag in [2,3] or self.SSIPflag > 0:
             self.needToBackTrackSolution = True
 
         ###for tracking
@@ -667,6 +663,18 @@ class OneLevelLADR(OneLevelTransport):
             self.elementResidualTmp[ci] = numpy.zeros((self.mesh.nElements_global,self.nDOF_test_element[ci]),'d')
             self.elementModifiedMassMatrixCorrection[ci] = numpy.zeros((self.mesh.nElements_global,self.nDOF_test_element[ci],self.nDOF_test_element[ci]),'d')
             self.elementSlumpingParameter[ci] = numpy.zeros((self.mesh.nElements_global,),'d')
+
+        if self.slumpingFlag == 3: #FCT approach, assumes C0 P1 for now
+            #TODO only works for 1 component right now!!
+            assert ci == 0, "slumpingFlag == 3 only works for 1 component right now, fix rowptr colind info"
+            assert self.nFreeVDOF_global == self.mesh.nNodes_global, "slumpingFlag == 3 only works for no hardwired dirichlet bcs"
+            self.globalEdgeLimiter = {}; self.consistentMassMatrix= {}
+            self.FCT_Rim = numpy.zeros((self.mesh.nNodes_global,),'d')
+            self.FCT_Rip = numpy.zeros((self.mesh.nNodes_global,),'d')
+            for ci in range(self.nc):
+                self.globalEdgeLimiter[ci]   = numpy.zeros((self.mesh.nodeStarArray.shape[0]+self.mesh.nNodes_global,),'d')
+                self.consistentMassMatrix[ci]= numpy.copy(self.globalEdgeLimiter[ci])
+            
 
         #beg normal stuff allocating things
         self.points_elementBoundaryQuadrature= set()
@@ -1045,7 +1053,7 @@ class OneLevelLADR(OneLevelTransport):
                                                               self.elementResidual[ci])
                         
 
-        if True and self.SSIPflag > 0 and self.gq_x_depart != None:#todo come up with a better way to handle uninitialized cases (first step)
+        if False and self.SSIPflag > 0 and self.gq_x_depart != None:#todo come up with a better way to handle uninitialized cases (first step)
             self.approximateNewMassIntegralUsingSSIPs(self.elementResidual)
         else:
             for ci in self.coefficients.mass.keys():
@@ -1166,6 +1174,48 @@ class OneLevelLADR(OneLevelTransport):
                                                                   self.rightHandSideForLimiting[ci],
                                                                   self.elementResidual[ci],
                                                                   self.elementModifiedMassMatrixCorrection[ci])
+        elif self.slumpingFlag == 3:
+            #TODO move this somewhere else? what if in parallel? just ignore off processor coupling
+            #TODO only works for 1 component right now!!
+            assert ci == 0, "slumpingFlag == 3 only works for 1 component right now, fix rowptr colind info"
+            assert self.nFreeVDOF_global == self.mesh.nNodes_global, "slumpingFlag == 3 only works for no hardwired dirichlet bcs"
+            #manualy assemble the global mass matrix
+            self.consistentMassMatrix[ci].fill(0.0)
+            cellam.manuallyUpdateGlobalMassMatrix(self.rowptr,
+                                                  self.colind,
+                                                  self.u[ci].femSpace.dofMap.l2g,
+                                                  self.u[ci].dof,
+                                                  self.q[('dm',ci,ci)],
+                                                  self.q[('w',ci)],
+                                                  self.q[('v',ci)],
+                                                  self.q[('dV_u',ci)],
+                                                  self.consistentMassMatrix[ci])
+
+            #assumes C0P1
+            cellam.computeSlumpingParametersFCT_KuzminMoeller10(self.rowptr,
+                                                                self.colind,
+                                                                self.u[ci].dof,
+                                                                self.u_dof_track[ci],
+                                                                self.consistentMassMatrix[ci],
+                                                                self.FCT_Rip,
+                                                                self.FCT_Rim,
+                                                                self.globalEdgeLimiter[ci])
+            
+            #mwf debub
+            #import pdb
+            #pdb.set_trace()
+
+            cellam.calculateElementSlumpedMassApproximationFromGlobalEdgeLimiter(self.rowptr,
+                                                                                 self.colind,
+                                                                                 self.u[ci].femSpace.dofMap.l2g,
+                                                                                 self.u[ci].dof,
+                                                                                 self.q[('dm',ci,ci)],
+                                                                                 self.q[('w',ci)],
+                                                                                 self.q[('v',ci)],
+                                                                                 self.q[('dV_u',ci)],
+                                                                                 self.globalEdgeLimiter[ci],
+                                                                                 self.elementResidual[ci],
+                                                                                 self.elementModifiedMassMatrixCorrection[ci])
                 
     def calculateElementJacobian(self):
         for ci in range(self.nc):
@@ -1213,6 +1263,7 @@ class OneLevelLADR(OneLevelTransport):
                                                              self.q[('w*dV_m',ci)],
                                                              self.elementJacobian[ci][cj])
                 
+        #TODO unify so that all slumping approaches use same correction
         if self.slumpingFlag == 1:
             #mwf debug
             #import pdb
@@ -1232,7 +1283,7 @@ class OneLevelLADR(OneLevelTransport):
                                 for j in range(i+1,self.nDOF_trial_element[cj]):
                                     self.elementJacobian[ci][cj][eN,i,j] -= self.elementSlumpingParameter[ci][eN]
 
-        elif self.slumpingFlag == 2:
+        elif self.slumpingFlag in [2,3]:
             #mwf debug
             #import pdb
             #pdb.set_trace()
@@ -1276,7 +1327,8 @@ class OneLevelLADR(OneLevelTransport):
         #dont always need a deep copy but go ahead for now and keep
         for ci in range(self.nc):
             self.u_dof_last[ci].flat[:] = self.u[ci].dof.flat
-
+            #go ahead and set tracking variable to
+            self.u_dof_track[ci].flat[:] = self.u[ci].dof.flat
     def trackQuadraturePoints(self):
         """
         track quadrature points in q['x'] backward from t^{n+1} --> t^{n}, 
@@ -1321,6 +1373,9 @@ class OneLevelLADR(OneLevelTransport):
         #0 -- not backtracked at all
         #1 -- backtracked only nonzero solution points
         #2 -- backtracked everything
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
         solutionBackTrackedFlag = 0
         if self.needToTrackPoints and timeToTrackPoints and self.SSIPflag > 0:
             self.trackSolutionBackwards(skipPointsWithZeroSolution=True)
@@ -1391,7 +1446,7 @@ class OneLevelLADR(OneLevelTransport):
 
 
             if self.needToBackTrackSolution and solutionBackTrackedFlag < 1:
-                self.trackSolutionBackwards(skipPointsWithZeroSolution=True)
+                self.trackSolutionBackwards(skipPointsWithZeroSolution=False)
                
             #end tracking interpolation points
             self.needToTrackPoints = False
@@ -1928,7 +1983,8 @@ class OneLevelLADR(OneLevelTransport):
         #mwf TODO cleanup make sure coefficients has access to quadrature points for velocity evaluation??
         self.coefficients.elementBoundaryQuadraturePoints = self.elementBoundaryQuadraturePoints
         self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self.timeIntegration.t,self.ebqe)
-       
+
+        
     def estimate_mt(self):
         pass
 
@@ -1943,6 +1999,9 @@ class OneLevelLADR(OneLevelTransport):
         """
         x_depart_ip = {}
         nPoints_track_ip  = {}
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
         for ci in range(self.nc):
             #todo switch this to characteristic velocity, need _last values!
             self.particle_tracker.setTrackingVelocity(self.coefficients.adjoint_velocity_dofs_last[ci],ci,
