@@ -1149,6 +1149,127 @@ static PyObject* cellam_updateElementJacobianWithSlumpedMassCorrection(PyObject*
   return Py_None;
 }
 
+static PyObject* cellam_manuallyUpdateGlobalMassMatrix(PyObject* self,
+						       PyObject* args)
+{
+  PyObject *rowptr,*colind,*u_l2g,
+    *u_dof,
+    *dm,*w,*v,
+    *dV,
+    *globalMassMatrix;
+
+  if (!PyArg_ParseTuple(args,
+			"OOOOOOOOO",
+			&rowptr,
+			&colind,
+			&u_l2g,
+			&u_dof,
+			&dm,
+			&w,
+			&v,
+			&dV,
+			&globalMassMatrix))
+    return NULL;
+  
+  manuallyUpdateGlobalMassMatrix(SHAPE(u_l2g)[0],
+				 SHAPE(dm)[1],
+				 SHAPE(v)[2],
+				 SHAPE(w)[2],
+				 IDATA(rowptr),
+				 IDATA(colind),
+				 IDATA(u_l2g),
+				 DDATA(u_dof),
+				 DDATA(dm),
+				 DDATA(w),
+				 DDATA(v),
+				 DDATA(dV),
+				 DDATA(globalMassMatrix));
+  
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
+static PyObject* cellam_calculateElementSlumpedMassApproximationFromGlobalEdgeLimiter(PyObject* self,
+										      PyObject* args)
+{
+  PyObject *rowptr,*colind,*u_l2g,
+    *u_dof,
+    *dm,*w,*v,
+    *dV,
+    *globalEdgeSlumpingParameter,
+    *slumpedMassMatrixCorrection,
+    *elementResidual; 
+
+  if (!PyArg_ParseTuple(args,
+			"OOOOOOOOOOO",
+			&rowptr,
+			&colind,
+			&u_l2g,
+			&u_dof,
+			&dm,
+			&w,
+			&v,
+			&dV,
+			&globalEdgeSlumpingParameter,
+			&elementResidual,
+			&slumpedMassMatrixCorrection))
+    return NULL;
+  
+  calculateElementSlumpedMassApproximationFromGlobalEdgeLimiter(SHAPE(u_l2g)[0],
+								SHAPE(dm)[1],
+								SHAPE(v)[2],
+								SHAPE(w)[2],
+								IDATA(rowptr),
+								IDATA(colind),
+								IDATA(u_l2g),
+								DDATA(u_dof),
+								DDATA(dm),
+								DDATA(w),
+								DDATA(v),
+								DDATA(dV),
+								DDATA(globalEdgeSlumpingParameter),
+								DDATA(elementResidual),
+								DDATA(slumpedMassMatrixCorrection));
+  
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+static PyObject* cellam_computeSlumpingParametersFCT_KuzminMoeller10(PyObject* self,
+								     PyObject* args)
+{
+  PyObject *rowptr,*colind,
+    *u_dof,*u_dof_limit,
+    *Mc,
+    *Rip,*Rim,
+    *globalEdgeSlumpingParameter;
+
+  if (!PyArg_ParseTuple(args,
+			"OOOOOOOO",
+			&rowptr,
+			&colind,
+			&u_dof,
+			&u_dof_limit,
+			&Mc,
+			&Rip,
+			&Rim,
+			&globalEdgeSlumpingParameter))
+    return NULL;
+  
+  computeSlumpingParametersFCT_KuzminMoeller10(SHAPE(rowptr)[0]-1,
+					       IDATA(rowptr),
+					       IDATA(colind),
+					       DDATA(u_dof),
+					       DDATA(u_dof_limit),
+					       DDATA(Mc),
+					       DDATA(Rip),
+					       DDATA(Rim),
+					       DDATA(globalEdgeSlumpingParameter));
+  
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
+//-- SSIP stuff below --
 static PyObject* cellam_generateQuadratureArraysForSSIPs(PyObject* self,
 							 PyObject* args)
 
@@ -1418,6 +1539,19 @@ static PyMethodDef cellamMethods[] = {
     cellam_updateElementJacobianWithSlumpedMassCorrection,
    METH_VARARGS, 
    "update jacobian matrix to account for slumping"},
+ { "manuallyUpdateGlobalMassMatrix",
+   cellam_manuallyUpdateGlobalMassMatrix,
+   METH_VARARGS, 
+   "update a global mass matrix approx for all dofs "},
+ { "calculateElementSlumpedMassApproximationFromGlobalEdgeLimiter",
+   cellam_calculateElementSlumpedMassApproximationFromGlobalEdgeLimiter,
+   METH_VARARGS, 
+   "update element residual and jacobian based on FCT limiting parameters computed globally to keep assembly structure for now "},
+ { "computeSlumpingParametersFCT_KuzminMoeller10",
+   cellam_computeSlumpingParametersFCT_KuzminMoeller10,
+   METH_VARARGS, 
+   "compute slumping parameters based on FCT approach from Kuzmin Moeller10 assuming have an assembled global mass matrix"},
+ //SSIPs
  { "generateQuadratureArraysForSSIPs",
    cellam_generateQuadratureArraysForSSIPs,
    METH_VARARGS, 
