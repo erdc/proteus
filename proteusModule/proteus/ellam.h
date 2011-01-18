@@ -580,6 +580,48 @@ void updateElementJacobianWithSlumpedMassCorrection(int nElements_global,
 						    const double* elementMassMatrixCorrection,
 						    double* elementJacobianMatrix);
 
+
+void manuallyUpdateGlobalMassMatrix(int nElements_global,
+				    int nQuadraturePoints_element,
+				    int nDOF_trial_element,
+				    int nDOF_test_element,
+				    const int* rowptr,
+				    const int* colind,
+				    const int* l2g,
+				    const double* u_dof,
+				    const double* dm,
+				    const double* w,
+				    const double* v,
+				    const double* dV,
+				    double* globalMassMatrix);
+
+void calculateElementSlumpedMassApproximationFromGlobalEdgeLimiter(int nElements_global,
+								   int nQuadraturePoints_element,
+								   int nDOF_trial_element,
+								   int nDOF_test_element,
+								   const int* rowptr,
+								   const int* colind,
+								   const int* l2g,
+								   const double* u_dof,
+								   const double* dm,
+								   const double* w,
+								   const double* v,
+								   const double* dV,
+								   const double* globalEdgeSlumpingParameter,
+								   double* elementResidual,
+								   double* slumpedMassMatrixCorrection);
+
+void computeSlumpingParametersFCT_KuzminMoeller10(const int nDOF_global,
+						  const int* rowptr, //sparsity information
+						  const int* colind,
+						  const double* u_dof,
+						  const double* u_dof_limit,
+						  const double* Mc, //assembled global mass matrix
+						  double * Rip,  //waste some temporary space until get 
+						  double * Rim,  //algorithm debugged
+						  double* edgeSlumpingParameter); //spare rep for slumping factor for edge ij (i.e. alpha_ij)
+
+  //SSIP stuf
 void generateQuadratureArraysForSSIPs(int nElements_global,
 			    int nNodes_element,
 			    int nElementBoundaries_element,

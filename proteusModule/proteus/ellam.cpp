@@ -2011,6 +2011,7 @@ void calculateElementSlumpedMassApproximationFromGlobalEdgeLimiter(int nElements
 
   int nDOF_test_X_trial_element=nDOF_trial_element*nDOF_test_element;
   int * alpha_ij = new int[nDOF_test_X_trial_element];
+  int forceSymmetry=1;
 
   for (int eN=0; eN<nElements_global; eN++)
     {
@@ -2053,45 +2054,107 @@ void calculateElementSlumpedMassApproximationFromGlobalEdgeLimiter(int nElements
 	    }
 	}
       /*update mass matrix, storing only correction and element residual*/
-      for (int i=0; i < nDOF_test_element; i++)
+      if (forceSymmetry)
 	{
-	  //diagonal is M_{ii} = M^L_{i} - \sum_{j\ne i} alpha_ij M^c_{ij}
-          //                   = M^c_{ii} + \sum_{j\ne i} M^c_{ij} - \sum_{j\ne i} alpha_ij M^c_{ij}
-	  //so correction is 
-	  //      \delta M_{ii}= \sum_{j\ne i} (1- alpha_ij) M^c_{ij}
+	  for (int i=0; i < nDOF_test_element; i++)
+	    {
+	      //diagonal is M_{ii} = M^L_{i} - \sum_{j\ne i} alpha_ij M^c_{ij}
+	      //                   = M^c_{ii} + \sum_{j\ne i} M^c_{ij} - \sum_{j\ne i} alpha_ij M^c_{ij}
+	      //so correction is 
+	      //      \delta M_{ii}= \sum_{j\ne i} (1- alpha_ij) M^c_{ij}
 	  
-	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = 0.0;
-	  for (int j=0; j < i; j++)
+	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = 0.0;
+	      //upper half
+	      for (int j=i+1; j < nDOF_trial_element; j++)
+		{
+		  const double theta = (1.0-alpha_ij[i*nDOF_trial_element+j])*slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j];
+		  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] += theta;
+		  elementResidual[eN*nDOF_test_element + i] += theta*u_dof[l2g[eN*nDOF_trial_element+i]];
+		}
+	      //offdiagonals are 
+	      //            M_{ij} = alpha_{ij} M^c_{ij}
+	      //so correction is
+	      //     \delta M_{ij} = -M^c_{ij} + alpha_{ij}M^c_{ij}
+	      //                   = -(1 - alpha_{ij})M^c_{ij}
+	      for (int j=i+1; j < nDOF_trial_element; j++)
+		{
+		  const double theta = (1.0-alpha_ij[i*nDOF_trial_element+j])*slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j];
+		  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -theta;
+		  elementResidual[eN*nDOF_test_element + i] -= theta*u_dof[l2g[eN*nDOF_trial_element+j]];
+		}
+	    }//end i upper half
+	  for (int i=0; i < nDOF_test_element; i++)
 	    {
-	      //equivalent of theta in Tom's approach
-	      const double theta = (1.0-alpha_ij[i*nDOF_trial_element+j])*slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j];
-	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] += theta;
-	      elementResidual[eN*nDOF_test_element + i] += theta*u_dof[l2g[eN*nDOF_trial_element+i]];
-	    }
-	  for (int j=i+1; j < nDOF_trial_element; j++)
+	      //diagonal is M_{ii} = M^L_{i} - \sum_{j\ne i} alpha_ij M^c_{ij}
+	      //                   = M^c_{ii} + \sum_{j\ne i} M^c_{ij} - \sum_{j\ne i} alpha_ij M^c_{ij}
+	      //so correction is 
+	      //      \delta M_{ii}= \sum_{j\ne i} (1- alpha_ij) M^c_{ij}
+	  
+	      
+	      //lower half
+	      for (int j=0; j < i; j++)
+		{
+		  const double theta = -slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + j*nDOF_trial_element + i];
+		  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] += theta;
+		  elementResidual[eN*nDOF_test_element + i] += theta*u_dof[l2g[eN*nDOF_trial_element+i]];
+		}
+	      //offdiagonals are 
+	      //            M_{ij} = alpha_{ij} M^c_{ij}
+	      //so correction is
+	      //     \delta M_{ij} = -M^c_{ij} + alpha_{ij}M^c_{ij}
+	      //                   = -(1 - alpha_{ij})M^c_{ij}
+	      for (int j=0; j < i; j++)
+		{
+		  const double theta = -slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + j*nDOF_trial_element + i];
+		  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -theta;
+		  elementResidual[eN*nDOF_test_element + i] -= theta*u_dof[l2g[eN*nDOF_trial_element+j]];
+		}
+	    }//end i upper half
+	}//end force Symmetry
+      else
+	{
+	  for (int i=0; i < nDOF_test_element; i++)
 	    {
-	      const double theta = (1.0-alpha_ij[i*nDOF_trial_element+j])*slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j];
-	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] += theta;
-	      elementResidual[eN*nDOF_test_element + i] += theta*u_dof[l2g[eN*nDOF_trial_element+i]];
-	    }
-	  //offdiagonals are 
-	  //            M_{ij} = alpha_{ij} M^c_{ij}
-	  //so correction is
-	  //     \delta M_{ij} = -M^c_{ij} + alpha_{ij}M^c_{ij}
-	  //                   = -(1 - alpha_{ij})M^c_{ij}
-	  for (int j=0; j < i; j++)
-	    {
-	      const double theta = (1.0-alpha_ij[i*nDOF_trial_element+j])*slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j];
-	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -theta;
-	      elementResidual[eN*nDOF_test_element + i] -= theta*u_dof[l2g[eN*nDOF_trial_element+j]];
-	    }
-	  for (int j=i+1; j < nDOF_trial_element; j++)
-	    {
-	      const double theta = (1.0-alpha_ij[i*nDOF_trial_element+j])*slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j];
-	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -theta;
-	      elementResidual[eN*nDOF_test_element + i] -= theta*u_dof[l2g[eN*nDOF_trial_element+j]];
-	    }
-	}  
+	      //diagonal is M_{ii} = M^L_{i} - \sum_{j\ne i} alpha_ij M^c_{ij}
+	      //                   = M^c_{ii} + \sum_{j\ne i} M^c_{ij} - \sum_{j\ne i} alpha_ij M^c_{ij}
+	      //so correction is 
+	      //      \delta M_{ii}= \sum_{j\ne i} (1- alpha_ij) M^c_{ij}
+	  
+	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = 0.0;
+	      for (int j=0; j < i; j++)
+		{
+		  //equivalent of theta in Tom's approach
+		  const double theta = (1.0-alpha_ij[i*nDOF_trial_element+j])*slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j];
+		  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] += theta;
+		  elementResidual[eN*nDOF_test_element + i] += theta*u_dof[l2g[eN*nDOF_trial_element+i]];
+		}
+	      for (int j=i+1; j < nDOF_trial_element; j++)
+		{
+		  const double theta = (1.0-alpha_ij[i*nDOF_trial_element+j])*slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j];
+		  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] += theta;
+		  elementResidual[eN*nDOF_test_element + i] += theta*u_dof[l2g[eN*nDOF_trial_element+i]];
+		}
+	      //offdiagonals are 
+	      //            M_{ij} = alpha_{ij} M^c_{ij}
+	      //so correction is
+	      //     \delta M_{ij} = -M^c_{ij} + alpha_{ij}M^c_{ij}
+	      //                   = -(1 - alpha_{ij})M^c_{ij}
+	      for (int j=0; j < i; j++)
+		{
+		  const double theta = (1.0-alpha_ij[i*nDOF_trial_element+j])*slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j];
+		  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -theta;
+		  elementResidual[eN*nDOF_test_element + i] -= theta*u_dof[l2g[eN*nDOF_trial_element+j]];
+		}
+	      for (int j=i+1; j < nDOF_trial_element; j++)
+		{
+		  const double theta = (1.0-alpha_ij[i*nDOF_trial_element+j])*slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j];
+		  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -theta;
+		  elementResidual[eN*nDOF_test_element + i] -= theta*u_dof[l2g[eN*nDOF_trial_element+j]];
+		}
+	    }  
+
+	}
+
     }/*eN*/
   //cleanup
   delete [] alpha_ij;
@@ -2129,7 +2192,7 @@ void computeSlumpingParametersFCT_KuzminMoeller10(const int nDOF_global,
 
   ***********************************************************************/
   //todo zero corrections?
-  
+  int debugSymmetry=1;
   for (int I=0; I < nDOF_global; I++)
     {
       //determine max and min for node star, for now assume sparsity 
@@ -2192,6 +2255,30 @@ void computeSlumpingParametersFCT_KuzminMoeller10(const int nDOF_global,
       for (int m=rowptr[I]; m < rowptr[I+1]; m++)
 	{
 	  const int J = colind[m];
+	  //if don't explicitly force symmetry
+	  // if (J != I) //could set just upper half but then have to loop through offsets for J
+	  //   {
+	  //     double Fij=Mc[m]*(u_dof_limit[J]-u_dof_limit[I]);
+	  //     //mwf try reversign sign
+	  //     Fij *= -1.0;
+	  //     double Rij = Rip[I];
+	  //     if (Fij < 0.0)
+	  // 	Rij = Rim[I];
+	  //     //j --> i
+	  //     double Fji = - Fij;
+	  //     double Rji = Rip[J];
+	  //     if (Fji < 0.0)
+	  // 	Rji = Rim[J];
+	  //     double aij = fmin(Rij,Rji);
+	  //     //mwf hack force lumping
+	  //     //aij = 0.0;
+	  //     //test constant
+	  //     //aij = 0.5;
+	  //     assert(0.0 <= aij);
+	  //     assert(1.0 >= aij);
+	  //     edgeSlumpingParameter[m] = aij;
+
+	  //   }
 	  if (J != I) //could set just upper half but then have to loop through offsets for J
 	    {
 	      double Fij=Mc[m]*(u_dof_limit[J]-u_dof_limit[I]);
@@ -2213,12 +2300,69 @@ void computeSlumpingParametersFCT_KuzminMoeller10(const int nDOF_global,
 	      assert(0.0 <= aij);
 	      assert(1.0 >= aij);
 	      edgeSlumpingParameter[m] = aij;
-
+	      for (int mm=rowptr[J]; mm < rowptr[J+1]; mm++)
+		{
+		  const int II = colind[mm];
+		  if (II == I)
+		    {
+		      edgeSlumpingParameter[mm] = aij;
+		      break;
+		    }
+		}
 	    }
 	  else
 	    edgeSlumpingParameter[m] = 0.0; //what's a better default? 1.0
 	}
     }//loop through I to set aj
+
+  //test symmetry
+  if (debugSymmetry)
+    {
+      for (int I=0; I < nDOF_global; I++)
+	{
+	  for (int m=rowptr[I]; m < rowptr[I+1]; m++)
+	    {
+	      const int J = colind[m];
+	      const double mij = Mc[m];
+	      for (int mm = rowptr[J]; mm < rowptr[J+1]; mm++)
+		{
+		  const int II = colind[mm];
+		  if (II == I)
+		    {
+		      const double mji = Mc[mm];
+		      if (fabs(mij-mji) > 1.0e-12)
+			{
+			  std::cout<<"problem in Kuzmin_Turek limiting I= "<<I<<" J= "<<J<<" mij= "<<mij
+				   <<" mji = "<<mji<<std::endl;
+			  assert(0);
+			}
+		    }
+		}
+	    }
+	}
+      for (int I=0; I < nDOF_global; I++)
+	{
+	  for (int m=rowptr[I]; m < rowptr[I+1]; m++)
+	    {
+	      const int J = colind[m];
+	      const double aij = edgeSlumpingParameter[m];
+	      for (int mm = rowptr[J]; mm < rowptr[J+1]; mm++)
+		{
+		  const int II = colind[mm];
+		  if (II == I)
+		    {
+		      const double aji = edgeSlumpingParameter[mm];
+		      if (fabs(aij-aji) > 1.0e-12)
+			{
+			  std::cout<<"problem in Kuzmin_Turek limiting I= "<<I<<" J= "<<J<<" aij= "<<aij
+				   <<" aji = "<<aji<<std::endl;
+			  assert(0);
+			}
+		    }
+		}
+	    }
+	}
+    }//end debug symmetry
 }
 
 extern "C"
