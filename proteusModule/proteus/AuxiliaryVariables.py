@@ -552,3 +552,57 @@ class VelocityNormOverRegion(AV_base):
             log("Velocity Norms in Region %s L2= %s L1= %s LI= %s " % (self.regionIdList,results['L2'],results['L1'],results['LI']))
             self.Vfile.write('%21.15e %21.15e %21.15e\n' % (results['L2'],results['L1'],results['LI']))
             
+class MassOverRegion(AV_base):
+    def __init__(self,regionIdList=None,ci=0):
+        self.regionIdList=  regionIdList #which elements to select for mass integral, None means all
+        self.ci=ci
+    def attachModel(self,model,ar):
+        self.ofile = open('total_mass_comp_%s_%s.txt' % (self.ci,model.name),'w')
+        self.model=model
+        self.ar=ar
+        self.writer = Archiver.XdmfWriter()
+        self.nd = model.levelModelList[-1].nSpace_global
+        #element ids for the region sampled
+        self.elementsInRegion = []
+        for m in self.model.levelModelList:
+            self.elementsInRegion.append([])
+            if self.regionIdList == None:
+                #where returns a tuple
+                self.elementsInRegion[-1].append((numpy.arange(m.mesh.nElements_global),))
+            else:
+                for id in self.regionIdList:
+                    self.elementsInRegion[-1].append(numpy.where(m.mesh.elementMaterialTypes == id))
+        #get the volume of the region
+        m = self.model.levelModelList[0] 
+        self.volume=0.0
+        for region in self.elementsInRegion[0]:#coarse level only needed
+            for eN in region[0]: #where returns a tuple
+                for k in range(m.nQuadraturePoints_element):
+                    self.volume+=m.q[('dV_u',0)][eN,k]
+
+        self.levelNormList=[]
+        for m in self.model.levelModelList:
+            self.levelNormList.append({'total':-12345.0,'L2':-12345.0,'L1':-12345.0,'LI':-12345.0})
+        return self
+    def calculate(self):
+        ci = self.ci
+        for m,regions,results in zip(self.model.levelModelList,self.elementsInRegion,self.levelNormList):
+            for key in ['total','L2','L1','LI']:
+                results[key] = 0.0
+            for region in regions:#go through material types
+                for eN in region[0]: #where returns a tuple
+                    for k in range(m.nQuadraturePoints_element):
+                        e1 = abs(m.q[('m',ci)][eN,k])
+                        e2 = e1*e1
+                        ei = e1
+                        mtot= m.q[('m',self.ci)][eN,k]
+                        results['total']+= mtot*m.q[('dV_u',ci)][eN,k]
+                        results['L2'] += e2*m.q[('dV_u',ci)][eN,k]
+                        results['L1'] += e1*m.q[('dV_u',ci)][eN,k]
+                        results['LI'] = max(results['LI'],ei)
+            if self.regionIdList==None:
+                log("Mass Norms in Domain Total= %s L2= %s L1= %s LI= %s " % (results['total'],results['L2'],results['L1'],results['LI']))
+            else:
+                log("Mass Norms in Domain %s Total= %s L2= %s L1= %s LI= %s " % (self.regionIdList,results['total'],results['L2'],results['L1'],results['LI']))
+            self.ofile.write('%21.15e %21.15e %21.15e %21.15e\n' % (results['total'],results['L2'],results['L1'],results['LI']))
+            
