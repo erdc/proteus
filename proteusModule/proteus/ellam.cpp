@@ -1935,6 +1935,292 @@ void updateElementJacobianWithSlumpedMassCorrection(int nElements_global,
     }
 }
 
+
+//assumes globalMassMatrix has already been zeroed
+extern "C"
+void manuallyUpdateGlobalMassMatrix(int nElements_global,
+				    int nQuadraturePoints_element,
+				    int nDOF_trial_element,
+				    int nDOF_test_element,
+				    const int* rowptr,
+				    const int* colind,
+				    const int* l2g,
+				    const double* u_dof,
+				    const double* dm,
+				    const double* w,
+				    const double* v,
+				    const double* dV,
+				    double* globalMassMatrix)
+{
+  for (int eN=0; eN<nElements_global; eN++)
+    {
+      for (int i=0; i < nDOF_test_element; i++)
+	{
+	  const int I = l2g[eN*nDOF_test_element + i];
+	  for (int j=0; j < nDOF_trial_element; j++)
+	    {
+	      const int J = l2g[eN*nDOF_trial_element + j];
+	      double M_ij = 0.0;
+	      for (int k=0; k < nQuadraturePoints_element; k++)
+		{
+		  M_ij += 
+		    dm[eN*nQuadraturePoints_element+k]
+		    *
+		    v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		      k*nDOF_trial_element + 
+		      j]
+		    *
+		    w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		      k*nDOF_test_element + 
+		      i]
+		    *
+		    dV[eN*nQuadraturePoints_element+k];
+		}
+	      //can't assume colind is in assending order?
+	      for (int m=rowptr[I]; m < rowptr[I+1]; m++)
+		{
+		  if (J == colind[m])
+		    {
+		      globalMassMatrix[m] += M_ij;
+		      break;
+		    }
+		}
+	    }//j
+	}//i
+    }//eN
+}
+
+
+extern "C"
+void calculateElementSlumpedMassApproximationFromGlobalEdgeLimiter(int nElements_global,
+								   int nQuadraturePoints_element,
+								   int nDOF_trial_element,
+								   int nDOF_test_element,
+								   const int* rowptr,
+								   const int* colind,
+								   const int* l2g,
+								   const double* u_dof,
+								   const double* dm,
+								   const double* w,
+								   const double* v,
+								   const double* dV,
+								   const double* globalEdgeSlumpingParameter,
+								   double* elementResidual,
+								   double* slumpedMassMatrixCorrection)
+{
+
+  int nDOF_test_X_trial_element=nDOF_trial_element*nDOF_test_element;
+  int * alpha_ij = new int[nDOF_test_X_trial_element];
+
+  for (int eN=0; eN<nElements_global; eN++)
+    {
+      /*calculate local mass matrix, and store in correction for now */
+      for (int i=0; i < nDOF_test_element; i++)
+	for (int j=0; j < nDOF_trial_element; j++)
+	  {
+	    slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = 0.0;
+	    for (int k=0; k < nQuadraturePoints_element; k++)
+	      {
+		slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] +=  
+		  dm[eN*nQuadraturePoints_element+k]
+		  *
+		  v[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    k*nDOF_trial_element + 
+		    j]
+		  *
+		  w[eN*nQuadraturePoints_element*nDOF_trial_element + 
+		    k*nDOF_test_element + 
+		    i]
+		  *
+		  dV[eN*nQuadraturePoints_element+k];
+	      }
+	  }
+      /*while debugging generate a simple local lookup for i,j to offsets in edgeSlumpingParameters*/
+      for (int i=0; i < nDOF_trial_element; i++)
+	{
+	  const int I = l2g[eN*nDOF_trial_element + i];
+	  for (int j=0; j < nDOF_trial_element; j++) //can't assume colind is in assending order?
+	    {
+	      const int J = l2g[eN*nDOF_trial_element + j];
+	      for (int m=rowptr[I]; m < rowptr[I+1]; m++)
+		{
+		  if (J == colind[m])
+		    {
+		      alpha_ij[i*nDOF_trial_element + j] = globalEdgeSlumpingParameter[m];
+		      break;
+		    }
+		}
+	    }
+	}
+      /*update mass matrix, storing only correction and element residual*/
+      for (int i=0; i < nDOF_test_element; i++)
+	{
+	  //diagonal is M_{ii} = M^L_{i} - \sum_{j\ne i} alpha_ij M^c_{ij}
+          //                   = M^c_{ii} + \sum_{j\ne i} M^c_{ij} - \sum_{j\ne i} alpha_ij M^c_{ij}
+	  //so correction is 
+	  //      \delta M_{ii}= \sum_{j\ne i} (1- alpha_ij) M^c_{ij}
+	  
+	  slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] = 0.0;
+	  for (int j=0; j < i; j++)
+	    {
+	      //equivalent of theta in Tom's approach
+	      const double theta = (1.0-alpha_ij[i*nDOF_trial_element+j])*slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j];
+	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] += theta;
+	      elementResidual[eN*nDOF_test_element + i] += theta*u_dof[l2g[eN*nDOF_trial_element+i]];
+	    }
+	  for (int j=i+1; j < nDOF_trial_element; j++)
+	    {
+	      const double theta = (1.0-alpha_ij[i*nDOF_trial_element+j])*slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j];
+	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + i] += theta;
+	      elementResidual[eN*nDOF_test_element + i] += theta*u_dof[l2g[eN*nDOF_trial_element+i]];
+	    }
+	  //offdiagonals are 
+	  //            M_{ij} = alpha_{ij} M^c_{ij}
+	  //so correction is
+	  //     \delta M_{ij} = -M^c_{ij} + alpha_{ij}M^c_{ij}
+	  //                   = -(1 - alpha_{ij})M^c_{ij}
+	  for (int j=0; j < i; j++)
+	    {
+	      const double theta = (1.0-alpha_ij[i*nDOF_trial_element+j])*slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j];
+	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -theta;
+	      elementResidual[eN*nDOF_test_element + i] -= theta*u_dof[l2g[eN*nDOF_trial_element+j]];
+	    }
+	  for (int j=i+1; j < nDOF_trial_element; j++)
+	    {
+	      const double theta = (1.0-alpha_ij[i*nDOF_trial_element+j])*slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j];
+	      slumpedMassMatrixCorrection[eN*nDOF_test_X_trial_element + i*nDOF_trial_element + j] = -theta;
+	      elementResidual[eN*nDOF_test_element + i] -= theta*u_dof[l2g[eN*nDOF_trial_element+j]];
+	    }
+	}  
+    }/*eN*/
+  //cleanup
+  delete [] alpha_ij;
+}
+
+
+extern "C"
+void computeSlumpingParametersFCT_KuzminMoeller10(const int nDOF_global,
+						  const int* rowptr, //sparsity information
+						  const int* colind,
+						  const double* u_dof,
+						  const double* u_dof_limit,
+						  const double* Mc, //assembled global mass matrix
+						  double * Rip,  //waste some temporary space until get 
+						  double * Rim,  //algorithm debugged
+						  double* edgeSlumpingParameter) //spare rep for slumping factor for edge ij (i.e. alpha_ij)
+{
+  /***********************************************************************
+  try to apply FCT limiting approach for mass matrix
+    M^c * u = M^l * u + (M^c - M^l) * u 
+  or writing as a flux, for equation i
+    (M^c * u)_i = M^l_i u_i + \sum_{j\ne i} M^c_{ij}(u_j - u_i)
+  or 
+    (M^c * u)_i = M^l_i u_i + \sum_{j\ne i} F_{ij}
+    F_{ij} = M^c_{ij}(u_j - u_i), F_{ji} = - F_{ij}
+  
+    
+  Want to replace F_{ij} by \alpha_{ij}(u^*)F^{ij}
+  
+  Where u^* is some approximation to the solution (either from the last 
+    iterate, a mass-lumped low-order solution, or a backtracked approximation
+
+  First we'll try to use the FCT approach from Kuzmin Moeller etal 2010 JCP
+    to compute alpha_ij. Note alpha_ij = alpha_ji \in [0,1] always
+
+  ***********************************************************************/
+  //todo zero corrections?
+  
+  for (int I=0; I < nDOF_global; I++)
+    {
+      //determine max and min for node star, for now assume sparsity 
+      //gives you what you need (no need to get nodeStarOffsets etc)
+      double u_max(0.),u_min(0.);
+      for (int m=rowptr[I]; m < rowptr[I+1]; m++)
+	{
+	  const int J = colind[m];
+	  if (m==rowptr[I] || u_dof_limit[J] > u_max)
+	    u_max =u_dof_limit[J];
+	  if (m==rowptr[I] || u_dof_limit[J] < u_min)
+	    u_min =u_dof_limit[J];
+	}
+      //distance to local extremum
+      double Qip=u_max - u_dof_limit[I];
+      double Qim=u_min - u_dof_limit[I];
+
+      //sum of positive, negative anti-diffusive fluxes
+      double Pip(0.),Pim(0.);
+      //lumped mass coefficient
+      double MiL = 0.0;
+      for (int m=rowptr[I]; m < rowptr[I+1]; m++)
+	{
+	  const int J = colind[m];
+	  MiL += Mc[m];
+	  if (J != I)
+	    {
+	      double Fij=Mc[m]*(u_dof_limit[J]-u_dof_limit[I]);
+	      //try reversing sign
+	      Fij *= -1.0;
+	      Pip += fmax(0.0,Fij); 
+	      Pim += fmin(0.0,Fij);
+	    }
+	}
+
+      //Nodal correction factors
+      //what should be default if Pi=0, Pim=0?
+      double rrip(1.0),rrim(1.0);
+      //double rrip(0.0),rrim(0.0);
+      if (Pip > 1.0e-15)
+	rrip = fmin(1.0,MiL*Qip/Pip);
+      if (Pim < -1.0e-15)
+	rrim = fmin(1.0,MiL*Qim/Pim);
+
+      //waste space until done debugging 
+      Rip[I] = rrip; Rim[I] = rrim;
+      if (true || fabs(rrip) < 1.0 || fabs(rrim) < 1.0)
+	{
+	  std::cout<<"KuzminMoeller I= "<<I<<" Rip= "<<rrip<<" Rim= "<<rrim
+		   <<" u_max= "<<u_max<<" u_min= "<<u_min<<" u_I= "<<u_dof_limit[I]
+		   <<" MiL= "<<MiL<<" Qip= "<<Qip<<" Qim= "<<Qim<<" Pip= "<<Pip
+		   <<" Pim= "<<Pim<<std::endl;
+
+	}
+    }// First I loop to set Rip, Rim
+  //loop through again and set alpha_ij and enforce symmetry
+  for (int I=0; I < nDOF_global; I++)
+    {
+      //define and enforce alpha_ij=alpha_ji 
+      for (int m=rowptr[I]; m < rowptr[I+1]; m++)
+	{
+	  const int J = colind[m];
+	  if (J != I) //could set just upper half but then have to loop through offsets for J
+	    {
+	      double Fij=Mc[m]*(u_dof_limit[J]-u_dof_limit[I]);
+	      //mwf try reversign sign
+	      Fij *= -1.0;
+	      double Rij = Rip[I];
+	      if (Fij < 0.0)
+		Rij = Rim[I];
+	      //j --> i
+	      double Fji = - Fij;
+	      double Rji = Rip[J];
+	      if (Fji < 0.0)
+		Rji = Rim[J];
+	      double aij = fmin(Rij,Rji);
+	      //mwf hack force lumping
+	      //aij = 0.0;
+	      //test constant
+	      //aij = 0.5;
+	      assert(0.0 <= aij);
+	      assert(1.0 >= aij);
+	      edgeSlumpingParameter[m] = aij;
+
+	    }
+	  else
+	    edgeSlumpingParameter[m] = 0.0; //what's a better default? 1.0
+	}
+    }//loop through I to set aj
+}
+
 extern "C"
 void generateQuadratureArraysForSSIPs(int nElements_global,
 			    int nNodes_element,
@@ -2103,6 +2389,11 @@ void generateArraysForTrackedSSIPs(int nElements_global,
     }
 
 }
+
+
+/**********************************************************************
+ utility routines for SSIPs
+ **********************************************************************/
 namespace ELLAM
 {
 void collectTrackedPointsInElements(int nElements_global,
