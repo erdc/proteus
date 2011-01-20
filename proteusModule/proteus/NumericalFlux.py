@@ -81,9 +81,10 @@ class NF_base:
 	#			       max(1,self.vt.nSpace_global-1)),
                 #'d')
         if self.vt.movingDomain:
-            self.ebqe['xt'] = self.vt.ebqe['xt']
-            self.ebqe['n'] = self.vt.ebqe['n']
-            self.ebqe['sqrt(det(g))'] = self.vt.ebqe['sqrt(det(g))']
+            if self.vt.ebqe.has_key('xt'):
+                self.ebqe['xt'] = self.vt.ebqe['xt']
+                self.ebqe['n'] = self.vt.ebqe['n']
+                self.ebqe['sqrt(det(g))'] = self.vt.ebqe['sqrt(det(g))']
         #copy over stuff from vt.ebq
         for term in self.ebqeTerms:
             if self.vt.ebqe.has_key(term):

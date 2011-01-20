@@ -59,7 +59,14 @@ public:
 				       double& x,
 				       double& y,
 				       double& z);
-  
+  inline void calculateMappingVelocity_element(const int eN,
+					       const int k,
+					       double* mesh_velocity_dof,
+					       int* mesh_l2g,
+					       double* mesh_trial_ref,
+					       double& xt,
+					       double& yt,
+					       double& zt);
   inline void calculateMapping_elementBoundary(const int eN,
 					       const int ebN_local,
 					       const int kb,
@@ -80,6 +87,20 @@ public:
 					       double& x,
 					       double& y,
 					       double& z);
+  inline void calculateMappingVelocity_elementBoundary(const int eN,
+						       const int ebN_local,
+						       const int kb,
+						       const int ebN_local_kb,
+						       double* mesh_velocity_dof,
+						       int* mesh_l2g,
+						       double* mesh_trial_trace_ref,
+						       double& xt,
+						       double& yt,
+						       double& zt,
+						       double* normal,
+						       double* boundaryJac,						       
+						       double* metricTensor,
+						       double& metricTensorDetSqrt);  
 };
 
 //specialization for 3D
@@ -179,6 +200,28 @@ public:
     jacInv[ZZ] = oneOverJacDet*(jac[XX]*jac[YY] - jac[XY]*jac[YX]);
   }
   
+  inline void calculateMappingVelocity_element(const int eN,
+					       const int k,
+					       double* mesh_velocity_dof,
+					       int* mesh_l2g,
+					       double* mesh_trial_ref,
+					       double& xt,
+					       double& yt,
+					       double& zt)
+  {
+    //
+    //time derivative of mapping of reference element to physical element
+    //
+    xt=0.0;yt=0.0;zt=0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      {
+	int eN_j=eN*NDOF_MESH_TRIAL_ELEMENT+j;
+	xt += mesh_velocity_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
+	yt += mesh_velocity_dof[mesh_l2g[eN_j]*3+1]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
+	zt += mesh_velocity_dof[mesh_l2g[eN_j]*3+2]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];	      
+      }
+  }
+
   inline void calculateMapping_elementBoundary(const int eN,
 					       const int ebN_local,
 					       const int kb,
@@ -285,7 +328,59 @@ public:
   
     metricTensorDetSqrt=sqrt(metricTensor[HXHX]*metricTensor[HYHY]- metricTensor[HXHY]*metricTensor[HYHX]);
   }
+
+  inline void calculateMappingVelocity_elementBoundary(const int eN,
+						       const int ebN_local,
+						       const int kb,
+						       const int ebN_local_kb,
+						       double* mesh_velocity_dof,
+						       int* mesh_l2g,
+						       double* mesh_trial_trace_ref,
+						       double& xt,
+						       double& yt,
+						       double& zt,
+						       double* normal,
+						       double* boundaryJac,						       
+						       double* metricTensor,
+						       double& metricTensorDetSqrt)
+  {
+    const int ebN_local_kb_nSpace = ebN_local_kb*3,
+      ebN_local_kb_nSpace_nSpacem1 = ebN_local_kb*3*2;
+    // 
+    //calculate velocity of mapping from the reference element to the physical element
+    // 
+    xt=0.0;yt=0.0;zt=0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++) 
+      { 
+	int eN_j = eN*NDOF_MESH_TRIAL_ELEMENT+j;
+	int ebN_local_kb_j = ebN_local_kb*NDOF_MESH_TRIAL_ELEMENT+j;
+	xt += mesh_velocity_dof[mesh_l2g[eN_j]*3+0]*mesh_trial_trace_ref[ebN_local_kb_j]; 
+	yt += mesh_velocity_dof[mesh_l2g[eN_j]*3+1]*mesh_trial_trace_ref[ebN_local_kb_j]; 
+	zt += mesh_velocity_dof[mesh_l2g[eN_j]*3+2]*mesh_trial_trace_ref[ebN_local_kb_j]; 
+      }
+    //modify the metricTensorDetSqrt to include the effect of the moving domain
+    //it's not exactly the Sqrt(Det(G_tr_G)) now, see notes
+    //just do it brute force
+    double 
+      Gy_tr_Gy_00 = 1.0 + xt*xt + yt*yt + zt*zt,
+      Gy_tr_Gy_01 = boundaryJac[XHX]*xt+boundaryJac[YHX]*yt+boundaryJac[ZHX]*zt,
+      Gy_tr_Gy_02 = boundaryJac[XHY]*xt+boundaryJac[YHY]*yt+boundaryJac[ZHY]*zt,
+      Gy_tr_Gy_10 = Gy_tr_Gy_01,
+      Gy_tr_Gy_20 = Gy_tr_Gy_02,
+      Gy_tr_Gy_11 = metricTensor[HXHX],
+      Gy_tr_Gy_12 = metricTensor[HXHY],
+      Gy_tr_Gy_21 = metricTensor[HYHX],
+      Gy_tr_Gy_22 = metricTensor[HYHY],
+      xt_dot_n = xt*normal[X]+yt*normal[Y]+zt*normal[Z];
+    metricTensorDetSqrt=sqrt((Gy_tr_Gy_00*Gy_tr_Gy_11*Gy_tr_Gy_22 +
+			      Gy_tr_Gy_01*Gy_tr_Gy_12*Gy_tr_Gy_20 +
+			      Gy_tr_Gy_02*Gy_tr_Gy_10*Gy_tr_Gy_21 -
+			      Gy_tr_Gy_20*Gy_tr_Gy_11*Gy_tr_Gy_02 -
+			      Gy_tr_Gy_21*Gy_tr_Gy_12*Gy_tr_Gy_00 -
+			      Gy_tr_Gy_22*Gy_tr_Gy_10*Gy_tr_Gy_01) / (1.0+xt_dot_n*xt_dot_n));
+  }
 };
+
 
 template<const int NSPACE, const int NDOF_MESH_TRIAL_ELEMENT, const int NDOF_TRIAL_ELEMENT, const int NDOF_TEST_ELEMENT>
 class CompKernel
@@ -774,6 +869,18 @@ public:
     mapping.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
   }
 
+  inline void calculateMappingVelocity_element(const int eN,
+					       const int k,
+					       double* meshVelocity_dof,
+					       int* mesh_l2g,
+					       double* mesh_trial_ref,
+					       double& xt,
+					       double& yt,
+					       double& zt)
+  {
+    mapping.calculateMappingVelocity_element(eN,k,meshVelocity_dof,mesh_l2g,mesh_trial_ref,xt,yt,zt);
+  }
+
   inline 
   void calculateMapping_elementBoundary(const int eN,
 					const int ebN_local,
@@ -816,6 +923,38 @@ public:
 					     x,
 					     y,
 					     z);
+  }
+
+  inline 
+    void calculateMappingVelocity_elementBoundary(const int eN,
+						  const int ebN_local,
+						  const int kb,
+						  const int ebN_local_kb,
+						  double* mesh_velocity_dof,
+						  int* mesh_l2g,
+						  double* mesh_trial_trace_ref,
+						  double& xt,
+						  double& yt,
+						  double& zt,
+						  double* normal,
+						  double* boundaryJac,						       
+						  double* metricTensor,
+						  double& metricTensorDetSqrt)
+  {
+    mapping.calculateMappingVelocity_elementBoundary(eN,
+						     ebN_local,
+						     kb,
+						     ebN_local_kb,
+						     mesh_velocity_dof,
+						     mesh_l2g,
+						     mesh_trial_trace_ref,
+						     xt,
+						     yt,
+						     zt,
+						     normal,
+						     boundaryJac,
+						     metricTensor,
+						     metricTensorDetSqrt);
   }
   double Stress_u_weak(double* stress, double* grad_test_dV)
   {
