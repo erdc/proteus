@@ -363,6 +363,7 @@ class Mesh:
         self.nNodes_global=0
         self.nNodes_subdomain=0
         self.nodeArray=None
+        self.nodeVelocityArray=None
         self.nNodes_element=0
         #element node numbers, indexed by element number
         self.nElements_global=0
