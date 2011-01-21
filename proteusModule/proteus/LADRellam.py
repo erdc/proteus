@@ -5,8 +5,15 @@ import cellam,ctracking,Quadrature
 """
 TODO
   high:
-    double check Kuzmin FCT symmetry, mass cons. and sign conventions in 1d
-    fix Kuzmin FCT implementation so that works for systems
+    double check Kuzmin FCT why not exact mass cons. if aij and mij are symmetric?
+      --> looks like consistent mass matrix quadrature values are varying in the 6th digit too?
+    double check sign conventions in 1d, looks like Kuzmin and Moeller still assume Fij on rhs in limiting?
+    double check max min and see if cutting them off at 0,1 helps over-under shoot
+      --> didn't see much differcence.
+    Probably really need to use low order solution as mass lumping in limiting if want to recover
+     exactly the monotinicity constraints. Would Kuzmin 06 limiting be different?
+     
+    fix Kuzmin FCT implementation so that works for systems (that is the jacobian)
     check why sometimes seg faults on 1d slug test on first rerun
   med:
     need better way to set ellam specific options?
@@ -540,7 +547,7 @@ class OneLevelLADR(OneLevelTransport):
 
         ##determine algorithm behaviors based on user options
         self.needToBackTrackSolution = False
-        if self.slumpingFlag in [2,3] or self.SSIPflag > 0:
+        if self.slumpingFlag in [2,3,4] or self.SSIPflag > 0:
             self.needToBackTrackSolution = True
 
         ###for tracking
@@ -664,17 +671,17 @@ class OneLevelLADR(OneLevelTransport):
             self.elementModifiedMassMatrixCorrection[ci] = numpy.zeros((self.mesh.nElements_global,self.nDOF_test_element[ci],self.nDOF_test_element[ci]),'d')
             self.elementSlumpingParameter[ci] = numpy.zeros((self.mesh.nElements_global,),'d')
 
-        if self.slumpingFlag == 3: #FCT approach, assumes C0 P1 for now
+        if self.slumpingFlag in [3,4]: #FCT approach, assumes C0 P1 for now
             #TODO only works for 1 component right now!!
-            assert ci == 0, "slumpingFlag == 3 only works for 1 component right now, fix rowptr colind info"
-            assert self.nFreeVDOF_global == self.mesh.nNodes_global, "slumpingFlag == 3 only works for no hardwired dirichlet bcs"
+            assert ci == 0, "slumpingFlag == 3,4 only works for 1 component right now, fix rowptr colind info"
+            assert self.nFreeVDOF_global == self.mesh.nNodes_global, "slumpingFlag == 3,4 only works for no hardwired dirichlet bcs"
             self.globalEdgeLimiter = {}; self.consistentMassMatrix= {}
             self.FCT_Rim = numpy.zeros((self.mesh.nNodes_global,),'d')
             self.FCT_Rip = numpy.zeros((self.mesh.nNodes_global,),'d')
             for ci in range(self.nc):
                 self.globalEdgeLimiter[ci]   = numpy.zeros((self.mesh.nodeStarArray.shape[0]+self.mesh.nNodes_global,),'d')
                 self.consistentMassMatrix[ci]= numpy.copy(self.globalEdgeLimiter[ci])
-            
+
 
         #beg normal stuff allocating things
         self.points_elementBoundaryQuadrature= set()
@@ -1200,11 +1207,86 @@ class OneLevelLADR(OneLevelTransport):
                                                                 self.FCT_Rip,
                                                                 self.FCT_Rim,
                                                                 self.globalEdgeLimiter[ci])
-            
+
+
+            cellam.calculateElementSlumpedMassApproximationFromGlobalEdgeLimiter(self.rowptr,
+                                                                                 self.colind,
+                                                                                 self.u[ci].femSpace.dofMap.l2g,
+                                                                                 self.u[ci].dof,
+                                                                                 self.q[('dm',ci,ci)],
+                                                                                 self.q[('w',ci)],
+                                                                                 self.q[('v',ci)],
+                                                                                 self.q[('dV_u',ci)],
+                                                                                 self.globalEdgeLimiter[ci],
+                                                                                 self.elementResidual[ci],
+                                                                                 self.elementModifiedMassMatrixCorrection[ci])
+                
+        elif self.slumpingFlag == 4:
+            #TODO move this somewhere else? what if in parallel? just ignore off processor coupling
+            #TODO only works for 1 component right now!!
+            assert ci == 0, "slumpingFlag == 4 only works for 1 component right now, fix rowptr colind info"
+            assert self.nFreeVDOF_global == self.mesh.nNodes_global, "slumpingFlag == 3 only works for no hardwired dirichlet bcs"
+            #manualy assemble the global mass matrix
+            self.consistentMassMatrix[ci].fill(0.0)
+            cellam.manuallyUpdateGlobalMassMatrix(self.rowptr,
+                                                  self.colind,
+                                                  self.u[ci].femSpace.dofMap.l2g,
+                                                  self.u[ci].dof,
+                                                  self.q[('dm',ci,ci)],
+                                                  self.q[('w',ci)],
+                                                  self.q[('v',ci)],
+                                                  self.q[('dV_u',ci)],
+                                                  self.consistentMassMatrix[ci])
+
+            #assumes C0P1
+            #mwf hack try using mass-lumping as low-order solution
+            #requires 2 nonlinear iterations always, on the first call force lumping
+            #also use current solution to do limiting
+            #mwf debug
+            #import pdb
+            #pdb.set_trace()
+            if self.timeIntegration.low_order_step == True:
+                #skip limiting and lump
+                self.globalEdgeLimiter[ci].fill(0)
+            elif self.timeIntegration.low_order_step == False:
+                cellam.computeSlumpingParametersFCT_KuzminMoeller10(self.rowptr,
+                                                                    self.colind,
+                                                                    self.u[ci].dof,
+                                                                    self.timeIntegration.u_dof_low_order[ci],
+                                                                    self.consistentMassMatrix[ci],
+                                                                    self.FCT_Rip,
+                                                                    self.FCT_Rim,
+                                                                    self.globalEdgeLimiter[ci])
+
+
+            # if useLumpedAsLowOrder and self.nonlinear_function_evaluations == 0:
+            #     #skip limiting and lump
+            #     self.globalEdgeLimiter[ci].fill(0)
+            # elif useLumpedAsLowOrder and self.nonlinear_function_evaluations == 1:
+            #     cellam.computeSlumpingParametersFCT_KuzminMoeller10(self.rowptr,
+            #                                                         self.colind,
+            #                                                         self.u[ci].dof,
+            #                                                         self.u[ci].dof,
+            #                                                         self.consistentMassMatrix[ci],
+            #                                                         self.FCT_Rip,
+            #                                                         self.FCT_Rim,
+            #                                                         self.globalEdgeLimiter[ci])
+            #     #TODO need to create a u_dof_limit
+            #     self.u_dof_track[ci].flat[:] = self.u[ci].dof 
+            # elif useLumpedAsLowOrder and self.nonlinear_function_evaluations > 1:
+            #     cellam.computeSlumpingParametersFCT_KuzminMoeller10(self.rowptr,
+            #                                                         self.colind,
+            #                                                         self.u[ci].dof,
+            #                                                         self.u_dof_track[ci],
+            #                                                         self.consistentMassMatrix[ci],
+            #                                                         self.FCT_Rip,
+            #                                                         self.FCT_Rim,
+            #                                                         self.globalEdgeLimiter[ci])
+            # elif useLumpedAsLowOrder:
+            #     self.globalEdgeLimiter[ci].fill(0)
             #mwf debub
             #import pdb
             #pdb.set_trace()
-
             cellam.calculateElementSlumpedMassApproximationFromGlobalEdgeLimiter(self.rowptr,
                                                                                  self.colind,
                                                                                  self.u[ci].femSpace.dofMap.l2g,
@@ -1283,7 +1365,7 @@ class OneLevelLADR(OneLevelTransport):
                                 for j in range(i+1,self.nDOF_trial_element[cj]):
                                     self.elementJacobian[ci][cj][eN,i,j] -= self.elementSlumpingParameter[ci][eN]
 
-        elif self.slumpingFlag in [2,3]:
+        elif self.slumpingFlag in [2,3,4]:
             #mwf debug
             #import pdb
             #pdb.set_trace()
@@ -1310,6 +1392,7 @@ class OneLevelLADR(OneLevelTransport):
         because if step failes need to retrack
         """
         OneLevelTransport.updateTimeHistory(self,T,resetFromDOF)
+        self.nonlinear_function_evaluations = 0
         self.needToTrackPoints = True
         for ci in range(self.nc):
             self.ebqe[('outflow_flux_last',ci)].flat[:] = self.ebqe[('outflow_flux',ci)].flat

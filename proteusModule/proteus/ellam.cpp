@@ -2190,25 +2190,42 @@ void computeSlumpingParametersFCT_KuzminMoeller10(const int nDOF_global,
   First we'll try to use the FCT approach from Kuzmin Moeller etal 2010 JCP
     to compute alpha_ij. Note alpha_ij = alpha_ji \in [0,1] always
 
+  Limiting formulas written for F_{ij} on rhs of equation, so use negative
+    of formulas above
   ***********************************************************************/
   //todo zero corrections?
-  int debugSymmetry=1;
+  int forceAbsoluteMaxMin=0;
+  int debugSymmetry=0;
+  int debugOutput=0;
+  //mwf debug test max-min
+  const double u_max_absolute = 1.0; const double u_min_absolute = 0.0;
   for (int I=0; I < nDOF_global; I++)
     {
       //determine max and min for node star, for now assume sparsity 
       //gives you what you need (no need to get nodeStarOffsets etc)
-      double u_max(0.),u_min(0.);
+      double u_max(0.),u_min(0.),u_I(0.0),u_J(0.);
+      u_I =u_dof_limit[I];
+      if (forceAbsoluteMaxMin)
+	{
+	  u_I = fmin(fmax(u_I,u_min_absolute),u_max_absolute);
+	}
       for (int m=rowptr[I]; m < rowptr[I+1]; m++)
 	{
 	  const int J = colind[m];
-	  if (m==rowptr[I] || u_dof_limit[J] > u_max)
-	    u_max =u_dof_limit[J];
-	  if (m==rowptr[I] || u_dof_limit[J] < u_min)
-	    u_min =u_dof_limit[J];
+	  u_J =u_dof_limit[J];
+	  if (forceAbsoluteMaxMin)
+	    {
+	      u_J = fmin(fmax(u_J,u_min_absolute),u_max_absolute);
+	    }
+	  
+	  if (m==rowptr[I] || u_J > u_max)
+	    u_max =u_J;
+	  if (m==rowptr[I] || u_J < u_min)
+	    u_min = u_J;
 	}
       //distance to local extremum
-      double Qip=u_max - u_dof_limit[I];
-      double Qim=u_min - u_dof_limit[I];
+      double Qip=u_max - u_I;
+      double Qim=u_min - u_I;
 
       //sum of positive, negative anti-diffusive fluxes
       double Pip(0.),Pim(0.);
@@ -2220,9 +2237,13 @@ void computeSlumpingParametersFCT_KuzminMoeller10(const int nDOF_global,
 	  MiL += Mc[m];
 	  if (J != I)
 	    {
-	      double Fij=Mc[m]*(u_dof_limit[J]-u_dof_limit[I]);
-	      //try reversing sign
-	      Fij *= -1.0;
+	      u_J =u_dof_limit[J];
+	      if (forceAbsoluteMaxMin)
+		{
+		  u_J = fmin(fmax(u_J,u_min_absolute),u_max_absolute);
+		}
+	      
+	      double Fij=-Mc[m]*(u_dof_limit[J]-u_I);
 	      Pip += fmax(0.0,Fij); 
 	      Pim += fmin(0.0,Fij);
 	    }
@@ -2239,7 +2260,7 @@ void computeSlumpingParametersFCT_KuzminMoeller10(const int nDOF_global,
 
       //waste space until done debugging 
       Rip[I] = rrip; Rim[I] = rrim;
-      if (true || fabs(rrip) < 1.0 || fabs(rrim) < 1.0)
+      if (debugOutput > 2 && (fabs(rrip) < 1.0 || fabs(rrim) < 1.0))
 	{
 	  std::cout<<"KuzminMoeller I= "<<I<<" Rip= "<<rrip<<" Rim= "<<rrim
 		   <<" u_max= "<<u_max<<" u_min= "<<u_min<<" u_I= "<<u_dof_limit[I]
@@ -2251,6 +2272,13 @@ void computeSlumpingParametersFCT_KuzminMoeller10(const int nDOF_global,
   //loop through again and set alpha_ij and enforce symmetry
   for (int I=0; I < nDOF_global; I++)
     {
+      double u_I(0.0),u_J(0.);
+      //mwf stopped here
+      u_I =u_dof_limit[I];
+      if (forceAbsoluteMaxMin)
+	{
+	  u_I = fmin(fmax(u_I,u_min_absolute),u_max_absolute);
+	}
       //define and enforce alpha_ij=alpha_ji 
       for (int m=rowptr[I]; m < rowptr[I+1]; m++)
 	{
@@ -2258,9 +2286,8 @@ void computeSlumpingParametersFCT_KuzminMoeller10(const int nDOF_global,
 	  //if don't explicitly force symmetry
 	  // if (J != I) //could set just upper half but then have to loop through offsets for J
 	  //   {
-	  //     double Fij=Mc[m]*(u_dof_limit[J]-u_dof_limit[I]);
-	  //     //mwf try reversign sign
-	  //     Fij *= -1.0;
+	  //     double Fij=-Mc[m]*(u_dof_limit[J]-u_dof_limit[I]);
+	  //     
 	  //     double Rij = Rip[I];
 	  //     if (Fij < 0.0)
 	  // 	Rij = Rim[I];
@@ -2281,14 +2308,19 @@ void computeSlumpingParametersFCT_KuzminMoeller10(const int nDOF_global,
 	  //   }
 	  if (J != I) //could set just upper half but then have to loop through offsets for J
 	    {
-	      double Fij=Mc[m]*(u_dof_limit[J]-u_dof_limit[I]);
-	      //mwf try reversign sign
-	      Fij *= -1.0;
+	      u_J =u_dof_limit[J];
+	      if (forceAbsoluteMaxMin)
+		{
+		  u_J = fmin(fmax(u_J,u_min_absolute),u_max_absolute);
+		}
+
+	      double Fij=-Mc[m]*(u_J-u_I);
+	      
 	      double Rij = Rip[I];
 	      if (Fij < 0.0)
 		Rij = Rim[I];
 	      //j --> i
-	      double Fji = - Fij;
+	      double Fji = -Fij;
 	      double Rji = Rip[J];
 	      if (Fji < 0.0)
 		Rji = Rim[J];
