@@ -196,13 +196,13 @@ class Sequential_NonUniformFixedStep(SO_base):
         else:
             if (self.dt_system > 0.0):
                 if(self.t_system_last + self.dt_system >= tExact*(1.0-self.stepExactEps)):
-                    print "===========================================================dt system orig",self.dt_system
+                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = tExact - self.t_system_last
-                    print "=========================================================dt system final",self.dt_system
+                    log("=========================================================dt system final" + str(self.dt_system),level=5)
                 elif( tExact - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                    print "===========================================================dt system orig",self.dt_system
+                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = (tExact - self.t_system_last)/2.0
-                    print "=========================================================dt system final",self.dt_system
+                    log("=========================================================dt system final" + str(self.dt_system),level=5)
             if (self.dt_system < 0.0):
                 if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                     self.dt_system = tExact - self.t_system_last
@@ -262,13 +262,13 @@ class Sequential_MinModelStep(SO_base):
         else:
             if (self.dt_system > 0.0):
                 if(self.t_system_last + self.dt_system >= tExact*(1.0-self.stepExactEps)):
-                    print "===========================================================dt system orig",self.dt_system
+                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = tExact - self.t_system_last
-                    print "=========================================================dt system final",self.dt_system
+                    log("=========================================================dt system final" + str(self.dt_system),level=5)
                 elif( tExact - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                    print "===========================================================dt system orig",self.dt_system
+                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = (tExact - self.t_system_last)/2.0
-                    print "=========================================================dt system final",self.dt_system
+                    log("=========================================================dt system final" + str(self.dt_system),level=5)
             if (self.dt_system < 0.0):
                 if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                     self.dt_system = tExact - self.t_system_last
@@ -440,22 +440,22 @@ class Sequential_MinAdaptiveModelStep(SO_base):
         if old:
             if (self.dt_system > 0.0 and
                 self.t_system_last + self.dt_system >=  tExact*(1.0-self.stepExactEps)):
-                print "===========================================================dt system orig",self.dt_system
+                log("===========================================================dt system orig" + str(self.dt_system),level=5)
                 self.dt_system = tExact - self.t_system_last 
-                print "=========================================================dt system final",self.dt_system
+                log("=========================================================dt system final" + str(self.dt_system),level=5)
             elif (self.dt_system < 0.0 and
                   self.t_system_last + self.dt_system <=  tExact*(1.0 + self.stepExactEps)):
                 self.dt_system = tExact - self.t_system_last
         else:
             if (self.dt_system > 0.0):
                 if(self.t_system_last + self.dt_system >= tExact*(1.0-self.stepExactEps)):
-                    print "===========================================================dt system orig",self.dt_system
+                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = tExact - self.t_system_last
-                    print "=========================================================dt system final",self.dt_system
+                    log("=========================================================dt system final" + str(self.dt_system),level=5)
                 elif( tExact - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                    print "===========================================================dt system orig",self.dt_system
+                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = (tExact - self.t_system_last)/2.0
-                    print "=========================================================dt system final",self.dt_system
+                    log("=========================================================dt system final" + str(self.dt_system),level=5)
             if (self.dt_system < 0.0):
                 if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                     self.dt_system = tExact - self.t_system_last
@@ -568,22 +568,22 @@ class ISO_fixed_MinAdaptiveModelStep(SO_base):
         if old:
             if (self.dt_system > 0.0 and
                 self.t_system_last + self.dt_system >=  tExact*(1.0-self.stepExactEps)):
-                print "===========================================================dt system orig",self.dt_system
+                log("===========================================================dt system orig" + str(self.dt_system),level=5)
                 self.dt_system = tExact - self.t_system_last 
-                print "=========================================================dt system final",self.dt_system
+                log("=========================================================dt system final" + str(self.dt_system),level=5)
             elif (self.dt_system < 0.0 and
                   self.t_system_last + self.dt_system <=  tExact*(1.0 + self.stepExactEps)):
                 self.dt_system = tExact - self.t_system_last
         else:
             if (self.dt_system > 0.0):
                 if(self.t_system_last + self.dt_system >= tExact*(1.0-self.stepExactEps)):
-                    print "===========================================================dt system orig",self.dt_system
+                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = tExact - self.t_system_last
-                    print "=========================================================dt system final",self.dt_system
+                    log("=========================================================dt system final" + str(self.dt_system),level=5)
                 elif( tExact - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                    print "===========================================================dt system orig",self.dt_system
+                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = (tExact - self.t_system_last)/2.0
-                    print "=========================================================dt system final",self.dt_system
+                    log("=========================================================dt system final" + str(self.dt_system),level=5)
             if (self.dt_system < 0.0):
                 if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                     self.dt_system = tExact - self.t_system_last
@@ -697,22 +697,22 @@ class Sequential_MinAdaptiveModelStep_SS(SO_base):
         if old:
             if (self.dt_system > 0.0 and
                 self.t_system_last + self.dt_system >=  tExact*(1.0-self.stepExactEps)):
-                print "===========================================================dt system orig",self.dt_system
+                log("===========================================================dt system orig" + str(self.dt_system),level=5)
                 self.dt_system = tExact - self.t_system_last 
-                print "=========================================================dt system final",self.dt_system
+                log("=========================================================dt system final" + str(self.dt_system),level=5)
             elif (self.dt_system < 0.0 and
                   self.t_system_last + self.dt_system <=  tExact*(1.0 + self.stepExactEps)):
                 self.dt_system = tExact - self.t_system_last
         else:
             if (self.dt_system > 0.0):
                 if(self.t_system_last + self.dt_system >= tExact*(1.0-self.stepExactEps)):
-                    print "===========================================================dt system orig",self.dt_system
+                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = tExact - self.t_system_last
-                    print "=========================================================dt system final",self.dt_system
+                    log("=========================================================dt system final" + str(self.dt_system),level=5)
                 elif( tExact - (self.t_system_last + self.dt_system) < self.dt_system/2.0 ): #if next step would be within dt/2 ball go ahead and cut a little bit
-                    print "===========================================================dt system orig",self.dt_system
+                    log("===========================================================dt system orig" + str(self.dt_system),level=5)
                     self.dt_system = (tExact - self.t_system_last)/2.0
-                    print "=========================================================dt system final",self.dt_system
+                    log("=========================================================dt system final" + str(self.dt_system),level=5)
             if (self.dt_system < 0.0):
                 if(self.t_system_last + self.dt_system <= tExact*(1.0 + self.stepExactEps)):
                     self.dt_system = tExact - self.t_system_last
