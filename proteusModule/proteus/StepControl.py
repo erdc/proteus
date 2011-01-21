@@ -739,6 +739,41 @@ class Min_dt_cfl_controller(Min_dt_controller):
     def updateTimeHistory(self,resetFromDOF=False):
         Min_dt_controller.updateTimeHistory(self,resetFromDOF=resetFromDOF)
         self.dt_model_last = self.dt_model
+
+class Min_dt_controller_FCT(Min_dt_controller):
+    """
+    controller try and implement a piece of FCT methodology where first step is
+    a low order solution and the next step corrects is
+    
+    """
+    def __init__(self,model,nOptions):
+        Min_dt_controller.__init__(self,model,nOptions)
+
+    def initialize_dt_model(self,t0,tOut):
+        Min_dt_controller.initialize_dt_model(self,t0,tOut)
+
+    def setInitialGuess(self,uList,rList):
+        for m in self.model.levelModelList:
+            m.nonlinear_function_evaluations = 0
+            
+    def errorFailure(self):
+        #redo step if it was the low order (step)
+        low_order_step = False
+        for m in self.model.levelModelList:
+            if m.timeIntegration.low_order_step == True:
+                low_order_step = True
+                m.timeIntegration.low_order_step = False
+        return low_order_step
+    def retryStep_errorFailure(self):
+        self.errorFailures += 1
+        #need to one solution from first iteration as the
+        #low order one
+        if self.errorFailures == 1:
+            for m in self.model.levelModelList:
+                for ci in range(m.nc):
+                    m.timeIntegration.u_dof_low_order[ci].flat[:] = m.u[ci].dof
+            return True
+        return False
 class FLCBDF_controller(SC_base):
     def __init__(self,model,nOptions):
         import numpy
@@ -782,9 +817,7 @@ class FLCBDF_controller(SC_base):
             for flcbdf in flcbdfDict.values():
                 self.flcbdfListFlat.append(flcbdf)
     def setInitialGuess(self,uList,rList):
-        #mwf hack chris suggested turning this off
-        #return
-        for m,u,r in zip(self.model.levelModelList,uList,rList):
+         for m,u,r in zip(self.model.levelModelList,uList,rList):
             for ci in range(m.coefficients.nc):
                 #pass#cek hack, looks like initial guess is bad
                 m.timeIntegration.flcbdf[('u',ci)].setInitialGuess(m.u[ci].dof)
