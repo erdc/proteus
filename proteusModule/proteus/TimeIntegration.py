@@ -119,7 +119,6 @@ class TI_base:
         Recalculate the part of the element Jacobian due to the spatial terms
         """
         pass
-    #mwf add not sure if appropriate
     def calculateElementSpatialBoundaryJacobian(self,elementBoundaryJacobian,elementBoundaryJacobian_eb):
         """
         Recalculate the part of the element Jacobian due to the spatial terms
@@ -4045,5 +4044,27 @@ class CentralDifference_2ndD(TI_base):
             self.beta_bdf[ci].flat[:] = self.m_last[ci].flat
             self.beta_bdf[ci] *= -dtInv
             self.beta_bdf[ci].flat[:] -= self.mt1_last[ci].flat
+
+
+class BackwardEuler_ELLAM_FCT(BackwardEuler_cfl):
+    def __init__(self,transport,runCFL=0.9,integrateInterpolationPoints=False):
+        BackwardEuler_cfl.__init__(self,transport,integrateInterpolationPoints=integrateInterpolationPoints)
+        self.u_dof_low_order = {}
+        self.low_order_step = True
+        for ci in range(transport.nc):
+            self.u_dof_low_order[ci] = numpy.copy(transport.u[ci].dof)
+        
+    def updateTimeHistory(self,resetFromDOF=False):
+        BackwardEuler_cfl.updateTimeHistory(self,resetFromDOF)
+        self.low_order_step = True
+        for ci in range(self.transport.nc):
+            self.u_dof_low_order[ci].flat[:] = self.transport.u[ci].dof
+        
+    def setFromOptions(self,nOptions):
+        """
+        allow classes to set various numerical parameters
+        """
+        BackwardEuler_cfl.setFromOptions(self,nOptions)
+        
 ## @}   
 

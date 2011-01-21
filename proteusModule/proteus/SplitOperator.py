@@ -75,6 +75,7 @@ class SO_base:
         return False#kick out to sequence level
     def retryModelStep_errorFailure(self,model):
         self.retry = model.stepController.retryStep_errorFailure()
+        self.maxFailures = model.stepController.maxErrorFailures
         return False
     def ignoreSequenceStepFailure(self,model):
         return False#kick out to sequence level
