@@ -642,6 +642,9 @@ class  NS_base:
                                 log("Model substep t=%12.5e for model %s model.timeIntegration.t= %12.5e" % (self.tSubstep,model.name,model.levelModelList[-1].timeIntegration.t),level=3)
                                 #
                                 model.stepController.setInitialGuess(model.uList,model.rList)
+                                #mwf hack!! force zero nonlinear solver iterations
+                                #for m in model.levelModelList:
+                                #    m.nonlinear_function_evaluations = 0
                                 solverFailed = model.solver.solveMultilevel(uList=model.uList,
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,
