@@ -20,7 +20,6 @@ import Profiling
 from TransportCoefficients import *
 import NumericalFlux
 import cnumericalFlux
-MWFDEBUG=True 
 import Comm
 import flcbdfWrappers
 import cmeshTools
