@@ -2952,7 +2952,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 		}
 	      if (notFound)
 		{
-		  std::cout<<"=========================Face has no owned nodes"<<std::endl;
+		  //std::cout<<"=========================Face has no owned nodes"<<std::endl;
 		  PetscBTSet(elementBoundaryMask,ebN_global);
 		  elementBoundaries_subdomain_owned.insert(ebN_global);
 		}
@@ -3590,31 +3590,31 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     //
     //go ahead and renumber global mesh
     //
-    std::cout<<"nodeArray"<<std::endl;
+    //std::cout<<"nodeArray"<<std::endl;
     for (int i=0;i<mesh.nNodes_global*3;i++)
       mesh.nodeArray[i] = nodeArray_new[i];
-    std::cout<<"elementNodesArray"<<std::endl;
+    //std::cout<<"elementNodesArray"<<std::endl;
     for (int i=0;i<mesh.nElements_global*mesh.nNodes_element;i++)
       mesh.elementNodesArray[i] = elementNodesArray_new[i];
-    std::cout<<"elementBoundaryNodesArray"<<std::endl;
+    //std::cout<<"elementBoundaryNodesArray"<<std::endl;
     for (int i=0;i<mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary;i++)
       mesh.elementBoundaryNodesArray[i] = elementBoundaryNodesArray_new[i];
-    std::cout<<"edgeNodesArray"<<std::endl;
+    //std::cout<<"edgeNodesArray"<<std::endl;
     for (int i=0;i<mesh.nEdges_global*2;i++)
       mesh.edgeNodesArray[i] = edgeNodesArray_new[i];
-    std::cout<<"nodeStarArray"<<std::endl;
+    //std::cout<<"nodeStarArray"<<std::endl;
     for (int i=0;i<mesh.nodeStarOffsets[mesh.nNodes_global];i++)
       mesh.nodeStarArray[i] = nodeStarArray_new[i];
-    std::cout<<"elementNeighborsArray"<<std::endl;
+    //std::cout<<"elementNeighborsArray"<<std::endl;
     for (int i=0; i<mesh.nElements_global*mesh.nElementBoundaries_element; i++)
       mesh.elementNeighborsArray[i] = elementNeighborsArray_new[i];
-    std::cout<<"elementBoundariesArray"<<std::endl;
+    //std::cout<<"elementBoundariesArray"<<std::endl;
     for (int i=0; i<mesh.nElements_global*mesh.nElementBoundaries_element; i++)
       mesh.elementBoundariesArray[i] = elementBoundariesArray_new[i];
-    std::cout<<"elementBoundaryElementsArray"<<std::endl;
+    //std::cout<<"elementBoundaryElementsArray"<<std::endl;
     for (int i=0; i<mesh.nElementBoundaries_global*2; i++)
       mesh.elementBoundaryElementsArray[i] = elementBoundaryElementsArray_new[i];
-    std::cout<<"elementBoundaryLocalElementBoundariesArray"<<std::endl;
+    //std::cout<<"elementBoundaryLocalElementBoundariesArray"<<std::endl;
     for (int i=0; i<mesh.nElementBoundaries_global*2; i++)
       mesh.elementBoundaryLocalElementBoundariesArray[i] = elementBoundaryLocalElementBoundariesArray_new[i];
     //
@@ -3622,13 +3622,13 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     //
     if (mesh.elementMaterialTypes != NULL)
       {
-	std::cout<<"elementMaterialTypes"<<std::endl;
+	//std::cout<<"elementMaterialTypes"<<std::endl;
 	for (int i=0; i < mesh.nElements_global; i++)
 	  mesh.elementMaterialTypes[i] = elementMaterialTypes_new[i];
       }
     if (mesh.elementBoundaryMaterialTypes != NULL)
       {
-	std::cout<<"elementBoundaryMaterialTypes"<<std::endl;
+	//std::cout<<"elementBoundaryMaterialTypes"<<std::endl;
 	for (int i=0; i < mesh.nElementBoundaries_global; i++)
 	  mesh.elementBoundaryMaterialTypes[i] = elementBoundaryMaterialTypes_new[i];
       }
