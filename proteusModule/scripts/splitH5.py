@@ -13,7 +13,7 @@ def splitH5(basename1,basename2,size,finaltime,stride):
 <!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
 <Xdmf Version="2.0" xmlns:xi="http://www.w3.org/2001/XInclude">
   <Domain>"""+"\n")
-        ##XMFfile0.write(r'      <Grid CollectionType="Temporal" GridType="Collection">'+"\n")
+        XMFfile0.write(r'      <Grid GridType="Collection"   CollectionType="Temporal">'+"\n")
 	
 	for step in range(0,finaltime+1,stride):
         	XMFfile = open("solution."+str(step)+".xmf","w")
@@ -21,9 +21,10 @@ def splitH5(basename1,basename2,size,finaltime,stride):
 <!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
 <Xdmf Version="2.0" xmlns:xi="http://www.w3.org/2001/XInclude">
   <Domain>"""+"\n")
-        	XMFfile.write(r'      <Grid CollectionType="Spatial" GridType="Collection">'+"\n")
+        	
+		XMFfile.write(r'       <Grid GridType="Collection" CollectionType="Spatial">'+"\n")	
 			
-		XMFfile0.write(r'      <Grid CollectionType="Temporal" GridType="Collection">'+"\n")	
+		XMFfile0.write(r'      <Grid GridType="Collection" CollectionType="Spatial">'+"\n")	
 		XMFfile0.write(r'      <Time Value="'+str(step)+'" />'+"\n")		
 			
 		for proc in range(0,size):
@@ -135,7 +136,8 @@ def splitH5(basename1,basename2,size,finaltime,stride):
 		XMFfile.close()
 	
                 XMFfile0.write('    </Grid>'+"\n")
-		
+
+        XMFfile0.write('    </Grid>'+"\n")		
         XMFfile0.write('   </Domain>'+"\n")
         XMFfile0.write(' </Xdmf>'+"\n")		
 	XMFfile0.close()
