@@ -6,7 +6,7 @@
 import tables
 #from Xdmf import *
 
-def splitH5(basename1,basename2,size,finaltime,stride):
+def splitH5(basename1,basename2,size,start,finaltime,stride):
 
         XMFfile0 = open("solution.xmf","w")
         XMFfile0.write(r"""<?xml version="1.0" ?>
@@ -15,7 +15,7 @@ def splitH5(basename1,basename2,size,finaltime,stride):
   <Domain>"""+"\n")
         XMFfile0.write(r'      <Grid GridType="Collection"   CollectionType="Temporal">'+"\n")
 	
-	for step in range(0,finaltime+1,stride):
+	for step in range(start,finaltime+1,stride):
         	XMFfile = open("solution."+str(step)+".xmf","w")
         	XMFfile.write(r"""<?xml version="1.0" ?>
 <!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
@@ -159,7 +159,7 @@ if __name__ == '__main__':
                       action="store",
                       type="int",
                       dest="stride",
-                      default=10)
+                      default=1)
 
     parser.add_option("-t","--finaltime",
                       help="finaltime",
@@ -184,4 +184,8 @@ if __name__ == '__main__':
     
     (opts,args) = parser.parse_args()
     
-    splitH5(opts.filebase1,opts.filebase2,opts.size,opts.finaltime,opts.stride)
+    start = 0 
+    if opts.stride == 1 :
+   	start = opts.finaltime
+    
+    splitH5(opts.filebase1,opts.filebase2,opts.size,start,opts.finaltime,opts.stride)
