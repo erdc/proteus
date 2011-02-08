@@ -27,10 +27,7 @@ def splitH5(basename1,basename2,size,start,finaltime,stride):
      	     filename=basename1+str(proc)+".h5"
 	     print filename
      	     f1 = tables.openFile(filename)  
-     	     
-     	     filename=basename2+str(proc)+".h5"
-	     print filename
-     	     f2 = tables.openFile(filename)  
+
      	     
 	     hdfFiles = {}
      	     for step in range(start,finaltime+1,stride):	     
@@ -43,7 +40,7 @@ def splitH5(basename1,basename2,size,start,finaltime,stride):
      	     for tmp in f1.root:
 	         for step in range(start,finaltime+1,stride):
      		     if tmp.name ==  "elementsSpatial_Domain"+str(step):
-     			     print tmp.name
+     			     #print tmp.name
      			     hdfFiles[step].createArray("/","elements",tmp[:])
 			     
 			     XMFfile=xmfFiles[step]
@@ -52,7 +49,7 @@ def splitH5(basename1,basename2,size,start,finaltime,stride):
         		     XMFfile.write (r'</Topology>'+"\n")  
 			        			     
 		     if tmp.name ==  "nodesSpatial_Domain"+str(step):
-     			     print tmp.name
+     			     #print tmp.name
      			     hdfFiles[step].createArray("/","nodes",tmp[:]) 
 			     
 			     XMFfile=xmfFiles[step]			     
@@ -61,7 +58,7 @@ def splitH5(basename1,basename2,size,start,finaltime,stride):
                              XMFfile.write (r'</Geometry>'+"\n")
  
      		     if tmp.name ==  "u"+str(step):
-     			     print tmp.name
+     			     #print tmp.name
      			     hdfFiles[step].createArray("/","u",tmp[:])
 			     
 			     XMFfile=xmfFiles[step]     					
@@ -70,7 +67,7 @@ def splitH5(basename1,basename2,size,start,finaltime,stride):
                   	     XMFfile.write (r'</Attribute>'+"\n")
 
      		     if tmp.name ==  "v"+str(step):
-     			     print tmp.name
+     			     #print tmp.name
      			     hdfFiles[step].createArray("/","v",tmp[:])
 			     
 			     XMFfile=xmfFiles[step]			     
@@ -79,7 +76,7 @@ def splitH5(basename1,basename2,size,start,finaltime,stride):
                   	     XMFfile.write (r'</Attribute>'+"\n")
 			     
      		     if tmp.name ==  "w"+str(step):
-     			     print tmp.name
+     			     #print tmp.name
      			     hdfFiles[step].createArray("/","w",tmp[:])
 			     
 			     XMFfile=xmfFiles[step]			     
@@ -88,7 +85,7 @@ def splitH5(basename1,basename2,size,start,finaltime,stride):
                   	     XMFfile.write (r'</Attribute>'+"\n")
      			     
      		     if tmp.name ==  "p"+str(step):
-     			     print tmp.name
+     			     #print tmp.name
      			     hdfFiles[step].createArray("/","p",tmp[:])
 			     
 			     XMFfile=xmfFiles[step]			     	
@@ -107,7 +104,7 @@ def splitH5(basename1,basename2,size,start,finaltime,stride):
      	     for tmp in f2.root:
 	        for step in range(start,finaltime+1,stride):
      		     if tmp.name ==  "phid"+str(step):
-     			     print tmp.name
+     			     #print tmp.name
      			     hdfFiles[step].createArray("/","phid",tmp[:])
 			    
 			     XMFfile=xmfFiles[step]
@@ -116,10 +113,13 @@ def splitH5(basename1,basename2,size,start,finaltime,stride):
                   	     XMFfile.write (r'</Attribute>'+"\n")
 			     
 	     f2.close()
+
+     	     for step in range(start,finaltime+1,stride):	     
+     	     	hdfFiles[step].close()
 	     
 	     for step in range(start,finaltime+1,stride):
-	     	xmfFiles[step]	.write('      </Grid>'+"\n")
-			     	
+	     	xmfFiles[step].write('      </Grid>'+"\n")
+    	
      for step in range(start,finaltime+1,stride):
 		XMFfile=xmfFiles[step]	    
         	XMFfile.write('    </Grid>'+"\n")		
