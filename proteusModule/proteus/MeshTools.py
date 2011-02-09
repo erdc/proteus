@@ -5,6 +5,8 @@ from EGeometry import *
 import numpy
 import array
 from Archiver import *
+
+from Profiling import logEvent,memory
     
 class Node:
     xUnitVector = EVec(1.0,0.0,0.0)
@@ -436,11 +438,13 @@ class Mesh:
         import flcbdfWrappers
         comm = Comm.get()
         self.comm=comm
+	log(memory("partitionMesh 1","MeshTools"),level=4)
         log("Partitioning mesh among %d processors using partitioningType = %d" % (comm.size(),parallelPartitioningType)) 
         self.subdomainMesh=self.__class__()
         self.subdomainMesh.globalMesh = self
         self.subdomainMesh.cmesh=cmeshTools.CMesh()
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
+  	log(memory("partitionMesh 2","MeshTools"),level=4)
         if parallelPartitioningType == MeshParallelPartitioningTypes.node:
             #mwf for now always gives 1 layer of overlap
             (self.elementOffsets_subdomain_owned,
@@ -469,6 +473,7 @@ class Mesh:
              self.edgeNumbering_subdomain2global,
              self.edgeNumbering_global2original) = flcbdfWrappers.partitionElements(nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         #
+	log(memory("partitionMesh 3","MeshTools"),level=4)	
         self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
         self.subdomainMesh.nElements_owned = self.elementOffsets_subdomain_owned[comm.rank()+1] - self.elementOffsets_subdomain_owned[comm.rank()]
         self.subdomainMesh.nNodes_owned = self.nodeOffsets_subdomain_owned[comm.rank()+1] - self.nodeOffsets_subdomain_owned[comm.rank()]
@@ -476,6 +481,7 @@ class Mesh:
         self.subdomainMesh.nEdges_owned = self.edgeOffsets_subdomain_owned[comm.rank()+1] - self.edgeOffsets_subdomain_owned[comm.rank()]
 
         comm.barrier()
+	log(memory("partitionMesh 4","MeshTools"),level=4)
         log("Number of Subdomain Elements Owned= "+str(self.subdomainMesh.nElements_owned))
         log("Number of Subdomain Elements = "+str(self.subdomainMesh.nElements_global))
         log("Number of Subdomain Nodes Owned= "+str(self.subdomainMesh.nNodes_owned))
@@ -661,6 +667,7 @@ class Mesh:
     def buildFromC(self,cmesh):
         import cmeshTools
         #
+	log(memory("buildFromC","MeshTools"),level=4)
         self.cmesh = cmesh
         (self.nElements_global,
          self.nNodes_global,
@@ -707,6 +714,7 @@ class Mesh:
          self.sigmaMax,
          self.volume) = cmeshTools.buildPythonMeshInterface(self.cmesh)
         self.hasGeometricInfo = True
+	log(memory("buildFromC","MeshTools"),level=4)
     def buildNodeStarArrays(self):
         if self.nodeStarArray == None:
             #cek old 
@@ -1765,6 +1773,7 @@ class TetrahedralMesh(Mesh):
         cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
         cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
         self.buildFromC(self.cmesh)
+	cmeshTools.writeTetgenFiles(self.cmesh,"tetgen",1)
     def rectangularToTetrahedral6T(self,grid):
         #copy the nodes from the rectangular mesh
         #I want to be able to renumber later without
