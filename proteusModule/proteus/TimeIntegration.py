@@ -79,6 +79,14 @@ class TI_base:
                                          #this capability out of
                                          #TimeIntegration
         self.provides_initialGuess = False #does this method compute its own initialGuess for new solution
+        self.alpha_bdf = 0.0
+        self.beta_bdf  = {}
+        self.m_tmp  = {}
+        for ci in transport.coefficients.mass.keys():
+            if transport.q.has_key(('m',ci)):
+                self.m_tmp[ci] = transport.q[('m',ci)].copy()
+                self.beta_bdf[ci] = transport.q[('m',ci)].copy()
+                self.beta_bdf[ci][:]=0.0
     def calculateU(self,u):
         """
         Generate u_*
