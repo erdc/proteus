@@ -77,7 +77,8 @@ def gatherXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nStepsOnly=None,
     if nStepsOnly != None:
         nSteps = nStepsOnly
     print "nSteps",nSteps
-    stepsToGather=[i*stride for i in range(nSteps/stride)]
+    #stepsToGather=[i*stride for i in range(nSteps/stride)]
+    stepsToGather = range(0,nSteps,stride)
     fAll = open(os.path.join(dataDir,filename+addname+str(size)+".xmf"),"w")
     fAll.write(r"""<?xml version="1.0" ?>
 <!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
