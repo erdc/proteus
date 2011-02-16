@@ -11,7 +11,7 @@ def H5toXMF(basename,size,start,finaltime,stride):
 # Open XMF files
 
      for step in range(start,finaltime+1,stride):
-                XMFfile = open(basename+str(step)+".xmf","w")
+                XMFfile = open(basename+"."+str(step)+".xmf","w")
                 XMFfile.write(r"""<?xml version="1.0" ?>
 <!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
 <Xdmf Version="2.0" xmlns:xi="http://www.w3.org/2001/XInclude">
