@@ -66,7 +66,7 @@ for time in timesteps:
      fp = servermanager.Fetch(probe)
      pdata= fp.GetPointData()
      for i in  range(opts.resolution+1):
-       phi = pdata.GetArray("phi").GetTuple1(i)
+       phi = pdata.GetArray("phid").GetTuple1(i)
         
        if (phi > 0.0) and (phi_old < 0.0):          
           height = (float(i-1) + (phi_old/(phi_old-phi)))/float(opts.resolution)	  
@@ -78,7 +78,7 @@ for time in timesteps:
 	    point.Center=[xloc[p],0.5,height]
             fp2 = servermanager.Fetch(pprobe)
             pdata2= fp2.GetPointData()
-	    phi  = pdata2.GetArray("phi").GetTuple1(0)   	  
+	    phi  = pdata2.GetArray("phid").GetTuple1(0)   	  
 	    height = height - phi
 	    print time,height, phi
      else:	
