@@ -35,7 +35,7 @@ def splitH5single(basename1,basename2,proc,start,finaltime,stride):
      		name =  "elementsSpatial_Domain"+str(step)
      		hdfFile.createArray("/","elements",f1.getNode("/",name)[:])
 		     
-		name =  "nodesSpatial_Domain"+str(step
+		name =  "nodesSpatial_Domain"+str(step)
      		hdfFile.createArray("/","nodes",f1.getNode("/",name)[:]) 
 		    
      		name =  "u"+str(step)
@@ -50,8 +50,8 @@ def splitH5single(basename1,basename2,proc,start,finaltime,stride):
      		name =  "p"+str(step)
      		hdfFile.createArray("/","p",f1.getNode("/",name)[:])
 		
-     		name =  "phid"+str(step):
-     		hdfFile.createArray("/","phid",f2.getNode("/",name),[:])					
+     		name =  "phid"+str(step)
+     		hdfFile.createArray("/","phid",f2.getNode("/",name)[:])					
 
                 hdfFile.close()
 
