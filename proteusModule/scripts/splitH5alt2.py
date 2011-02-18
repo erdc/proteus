@@ -28,25 +28,24 @@ def splitH5single(basename1,basename2,proc,start,finaltime,stride):
 	     print filename
      	     f1 = tables.openFile(filename)  
 
-     	     for tmp in f1.root:
-	         for step in range(start,finaltime+1,stride):
-     		     if tmp.name ==  "elementsSpatial_Domain"+str(step):
-     			     hdfFiles[step].createArray("/","elements",tmp[:])
+     	     for step in range(start,finaltime+1,stride):
+     		     name =  "elementsSpatial_Domain"+str(step):
+     		     hdfFiles[step].createArray("/","elements",tmp[:])
 			     
-		     if tmp.name ==  "nodesSpatial_Domain"+str(step):
-     			     hdfFiles[step].createArray("/","nodes",tmp[:]) 
+		     name =  "nodesSpatial_Domain"+str(step):
+     		     hdfFiles[step].createArray("/","nodes",f1.getNode("/",name)[:]) 
 			    
-     		     if tmp.name ==  "u"+str(step):
-     			     hdfFiles[step].createArray("/","u",tmp[:])
+     		     name =  "u"+str(step):
+     		     hdfFiles[step].createArray("/","u",f1.getNode("/",name)[:])
 
-     		     if tmp.name ==  "v"+str(step):
-     			     hdfFiles[step].createArray("/","v",tmp[:])
+     		     name =  "v"+str(step):
+     		     hdfFiles[step].createArray("/","v",f1.getNode("/",name)[:])
 			     
-     		     if tmp.name ==  "w"+str(step):
-     			     hdfFiles[step].createArray("/","w",tmp[:])
+     		     name =  "w"+str(step):
+     		     hdfFiles[step].createArray("/","w",f1.getNode("/",name)[:])
 			     
-     		     if tmp.name ==  "p"+str(step):
-     			     hdfFiles[step].createArray("/","p",tmp[:])
+     		     name =  "p"+str(step):
+     		     hdfFiles[step].createArray("/","p",f1.getNode("/",name)[:])
 					
 
              f1.close()			     
@@ -56,10 +55,9 @@ def splitH5single(basename1,basename2,proc,start,finaltime,stride):
 	     print filename
      	     f2 = tables.openFile(filename)     			     
 
-     	     for tmp in f2.root:
-	        for step in range(start,finaltime+1,stride):
-     		     if tmp.name ==  "phid"+str(step):
-     			     hdfFiles[step].createArray("/","phid",tmp[:])
+     	     for step in range(start,finaltime+1,stride):
+     		name =  "phid"+str(step):
+     		hdfFiles[step].createArray("/","phid",f2.getNode("/",name),[:])
 			     
              f2.close()
 		     
