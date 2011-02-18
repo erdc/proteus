@@ -15,56 +15,49 @@ def splitH5all(basename1,basename2,size,start,finaltime,stride):
 
 def splitH5single(basename1,basename2,proc,start,finaltime,stride):
 
-# Open output h5 files    	     
-	     hdfFiles = {}
-     	     for step in range(start,finaltime+1,stride):	     
-     	    	filename="solution.p"+str(proc)+"."+str(step)+".h5"
-     	     	hdfFiles[step]=  tables.openFile(filename,
-				    mode = "w",
-				    title = filename+" Data")
 
 # Loop over entries and put in appropriate file
      	     filename=basename1+str(proc)+".h5"
 	     print filename
      	     f1 = tables.openFile(filename)  
-
-     	     for step in range(start,finaltime+1,stride):
-     			name =  "elementsSpatial_Domain"+str(step)
-     		    	hdfFiles[step].createArray("/","elements",f1.getNode("/",name)[:])
-			     
-		     	name =  "nodesSpatial_Domain"+str(step
-     		     	hdfFiles[step].createArray("/","nodes",f1.getNode("/",name)[:]) 
-			    
-     		     	name =  "u"+str(step)
-     		     	hdfFiles[step].createArray("/","u",f1.getNode("/",name)[:])
-
-     		     	name =  "v"+str(step)
-     		     	hdfFiles[step].createArray("/","v",f1.getNode("/",name)[:])
-			     
-     		     	name =  "w"+str(step)
-     		     	hdfFiles[step].createArray("/","w",f1.getNode("/",name)[:])
-			     
-     		     	name =  "p"+str(step)
-     		     	hdfFiles[step].createArray("/","p",f1.getNode("/",name)[:])
-					
-
-             f1.close()			     
-	     
-# Loop over entries and put in appropriate file			     
        	     filename=basename2+str(proc)+".h5"
 	     print filename
-     	     f2 = tables.openFile(filename)     			     
-
+     	     f2 = tables.openFile(filename) 
+	     
      	     for step in range(start,finaltime+1,stride):
-     		name =  "phid"+str(step):
-     		hdfFiles[step].createArray("/","phid",f2.getNode("/",name),[:])
-			     
-             f2.close()
+
+     	    	filename="solution.p"+str(proc)+"."+str(step)+".h5"
+     	     	hdfFile=  tables.openFile(filename,
+				    mode = "w",
+				    title = filename+" Data")
+				    
+	     
+     		name =  "elementsSpatial_Domain"+str(step)
+     		hdfFile.createArray("/","elements",f1.getNode("/",name)[:])
 		     
-# Close solution files
-	     for step in range(start,finaltime+1,stride):	     
-     	    	hdfFiles[step].close()
-	    
+		name =  "nodesSpatial_Domain"+str(step
+     		hdfFile.createArray("/","nodes",f1.getNode("/",name)[:]) 
+		    
+     		name =  "u"+str(step)
+     		hdfFile.createArray("/","u",f1.getNode("/",name)[:])
+
+     		name =  "v"+str(step)
+     		hdfFile.createArray("/","v",f1.getNode("/",name)[:])
+		     
+     		name =  "w"+str(step)
+     		hdfFile.createArray("/","w",f1.getNode("/",name)[:])
+		     
+     		name =  "p"+str(step)
+     		hdfFile.createArray("/","p",f1.getNode("/",name)[:])
+		
+     		name =  "phid"+str(step):
+     		hdfFile.createArray("/","phid",f2.getNode("/",name),[:])					
+
+                hdfFile.close()
+
+             f1.close()			    			     
+             f2.close()
+		     	    
 
 if __name__ == '__main__':
     from optparse import OptionParser
