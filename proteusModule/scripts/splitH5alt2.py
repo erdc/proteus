@@ -60,7 +60,10 @@ def splitH5single(basename1,basename2,proc,start,finaltime,stride):
 	        for step in range(start,finaltime+1,stride):
      		     if tmp.name ==  "phid"+str(step):
      			     hdfFiles[step].createArray("/","phid",tmp[:])
-# Close files
+			     
+             f2.close()
+		     
+# Close solution files
 	     for step in range(start,finaltime+1,stride):	     
      	    	hdfFiles[step].close()
 	    
