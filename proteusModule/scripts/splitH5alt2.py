@@ -29,23 +29,23 @@ def splitH5single(basename1,basename2,proc,start,finaltime,stride):
      	     f1 = tables.openFile(filename)  
 
      	     for step in range(start,finaltime+1,stride):
-     		     name =  "elementsSpatial_Domain"+str(step)
-     		     hdfFiles[step].createArray("/","elements",f1.getNode("/",name)[:])
+     			name =  "elementsSpatial_Domain"+str(step)
+     		    	hdfFiles[step].createArray("/","elements",f1.getNode("/",name)[:])
 			     
-		     name =  "nodesSpatial_Domain"+str(step
-     		     hdfFiles[step].createArray("/","nodes",f1.getNode("/",name)[:]) 
+		     	name =  "nodesSpatial_Domain"+str(step
+     		     	hdfFiles[step].createArray("/","nodes",f1.getNode("/",name)[:]) 
 			    
-     		     name =  "u"+str(step)
-     		     hdfFiles[step].createArray("/","u",f1.getNode("/",name)[:])
+     		     	name =  "u"+str(step)
+     		     	hdfFiles[step].createArray("/","u",f1.getNode("/",name)[:])
 
-     		     name =  "v"+str(step)
-     		     hdfFiles[step].createArray("/","v",f1.getNode("/",name)[:])
+     		     	name =  "v"+str(step)
+     		     	hdfFiles[step].createArray("/","v",f1.getNode("/",name)[:])
 			     
-     		     name =  "w"+str(step)
-     		     hdfFiles[step].createArray("/","w",f1.getNode("/",name)[:])
+     		     	name =  "w"+str(step)
+     		     	hdfFiles[step].createArray("/","w",f1.getNode("/",name)[:])
 			     
-     		     name =  "p"+str(step)
-     		     hdfFiles[step].createArray("/","p",f1.getNode("/",name)[:])
+     		     	name =  "p"+str(step)
+     		     	hdfFiles[step].createArray("/","p",f1.getNode("/",name)[:])
 					
 
              f1.close()			     
