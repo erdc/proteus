@@ -65,7 +65,7 @@ def H5toXMF(basename,size,start,finaltime,stride):
 # Open XMF files
 
      for step in range(start,finaltime+1,stride):
-                filename = basename+"."+str(step)+".h5",
+                filename = basename+"."+str(step)+".h5"
      	     	hdfFile=  tables.openFile(filename,
 				    mode = "w",
 				    title = filename+" Data")     
