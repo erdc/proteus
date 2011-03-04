@@ -396,15 +396,15 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
     def evaluate(self,t,c):
         if c[('u',0)].shape == self.q_shape:
             materialTypes = self.materialTypes_q
+            vol_frac = self.q[('vol_frac',0)]
         elif c[('u',0)].shape == self.ebqe_shape:
             materialTypes = self.materialTypes_ebqe
+            vol_frac = self.ebqe[('vol_frac',0)]
         elif c[('u',0)].shape == self.ebq_shape:
             materialTypes = self.materialTypes_ebq
+            vol_frac = self.ebq[('vol_frac',0)]
         else:
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
         self.conservativeHeadRichardsMualemVanGenuchten_sd_het(self.sdInfo[(0,0)][0],
                                                                self.sdInfo[(0,0)][1],
                                                                materialTypes,
@@ -423,7 +423,7 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
                                                                c[('df',0,0)],
                                                                c[('a',0,0)],
                                                                c[('da',0,0,0)],
-                                                               c[('vol_frac',0)])
+                                                               vol_frac)
 
 #         self.conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2(materialTypes,
 #                                                                      self.rho,
