@@ -541,6 +541,14 @@ class MeshHexDomain(D_base):
     def __init__(self,fileprefix):
         D_base.__init__(self,3,name=fileprefix)
         self.meshfile=fileprefix
+
+class MeshTetgenDomain(D_base):
+    """
+    3D domains from tetgen mesh files
+    """
+    def __init__(self,fileprefix):
+        D_base.__init__(self,3,name=fileprefix)
+        self.meshfile=fileprefix
 	
 class PiecewiseLinearComplexDomain(D_base):
     """
