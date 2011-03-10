@@ -3,7 +3,8 @@
 #include <fstream>
 #include <cassert>
 #include <cmath>
-
+#include <iomanip>
+#include <iostream>
 namespace IOutils
 {
 std::istream& eatline(std::istream& s)
@@ -655,5 +656,60 @@ writeTetgenElementBoundaryNodes(const char * filebase,
 
   return failed;
 }//end writeTriangleElementBoundaryNodes
+
+
+/*************************************************************
+
+************************************************************/
+bool
+write3dmMeshNodesAndElements(const char * filebase,
+			     const int& indexBase,
+			     const int& nElements, const int& nNodes,
+			     const double* nodeArray,
+			     const int* elementNodesArray,
+			     const int* elementMaterialTypes)
+{
+
+  bool failed = false;
+  const int vertexDim=3; const int simplexDim = 3+1;
+  
+  std::string meshFileName = std::string(filebase) + ".3dm";
+  std::ofstream meshFile(meshFileName.c_str());
+
+  if (!meshFile.good())
+    {
+      std::cerr<<"write3dmMeshNodesAndElements cannot open file "
+	  <<meshFileName<<std::endl;
+      failed = true;
+      return failed;
+    }
+  meshFile <<"MESH3D"<<std::endl;
+  for (int eN = 0; eN < nElements; eN++)
+    {
+      meshFile << "E4T "<<eN + indexBase 
+	       <<" " <<elementNodesArray[eN*simplexDim + 0] + indexBase
+	       <<" " <<elementNodesArray[eN*simplexDim + 1] + indexBase
+	       <<" " <<elementNodesArray[eN*simplexDim + 2] + indexBase
+	       <<" " <<elementNodesArray[eN*simplexDim + 3] + indexBase;
+      if (!elementMaterialTypes)
+	meshFile <<" 1 "<<std::endl;
+      else
+	meshFile <<" "<<elementMaterialTypes[eN]+indexBase<<std::endl;
+    }
+  meshFile << std::endl;
+  meshFile << std::setiosflags(std::ios::scientific) << std::setprecision(8); 
+  for (int nN = 0; nN < nNodes; nN++)
+    {
+      meshFile <<"ND "<<nN + indexBase
+	       <<"  "<<nodeArray[nN*vertexDim + 0]
+	       <<"  "<<nodeArray[nN*vertexDim + 1]
+	       <<"  "<<nodeArray[nN*vertexDim + 2]
+	       <<std::endl;
+    }
+  meshFile <<"END"<<std::endl;
+  meshFile.close();
+  return false;
+}
+			     
 
 }//meshIO
