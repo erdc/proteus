@@ -242,6 +242,17 @@ class  NS_base:
                 mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                       parallelPartitioningType=n.parallelPartitioningType)
+            elif isinstance(p.domain,Domain.MeshTetgenDomain):
+                mesh=MeshTools.TetrahedralMesh()
+	        log("Reading coarse mesh from tetgen file")
+                mesh.generateFromTetgenFiles(p.domain.meshfile,1)
+                mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
+                                                             nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                             parallelPartitioningType=n.parallelPartitioningType)
+                log("Generating %i-level mesh from coarse Tetgen mesh" % (n.nLevels,))
+                mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                      parallelPartitioningType=n.parallelPartitioningType)
             elif isinstance(p.domain,Domain.Mesh3DMDomain):
                 mesh=MeshTools.TetrahedralMesh()
                 log("Reading coarse mesh from 3DM file")
@@ -315,11 +326,11 @@ class  NS_base:
             tolList=[]
             linTolList=[]
             for l in range(n.nLevels):
-                if mlMesh.meshList[l].hasGeometricInfo != True:
-                    mlMesh.meshList[l].computeGeometricInfo()
+                #if mlMesh.meshList[l].hasGeometricInfo != True:
+                #    mlMesh.meshList[l].computeGeometricInfo()
    
-		fac = (mlMesh.meshList[l].h/mlMesh.meshList[0].h)**2
-		            
+		#fac = (mlMesh.meshList[l].h/mlMesh.meshList[0].h)**2
+		fac = 1.0            
 		tolList.append(n.tolFac*fac)
                 linTolList.append(n.linTolFac*fac)
 		
