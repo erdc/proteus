@@ -1,34 +1,41 @@
+#!/usr/bin/env python
 
-
-#import numpy
-#import os
-#from xml.etree.ElementTree import *
 import tables
-#from Xdmf import *
+import os
+import sys
 
 def splitH5all(basename1,basename2,size,start,finaltime,stride):
-
+     
+     print "=================="
+     print "   Extracting" 
+     print "=================="
+     
      for proc in range(0,size):
+        print "Processor", proc
      	splitH5single(basename1,basename2,proc,start,finaltime,stride)
 
-     H5toXMF("solution",size,start,finaltime,stride)
-	
+     print "=================="
+     print "   Composing" 
+     print "=================="
+     H5toXMF("solution",size,start,finaltime,stride)	
 
 def splitH5single(basename1,basename2,proc,start,finaltime,stride):
 
-
-
 # Loop over entries and put in appropriate file
      	     filename=basename1+str(proc)+".h5"
-	     print filename
+	     print " Open:",filename
      	     f1 = tables.openFile(filename)  
        	     filename=basename2+str(proc)+".h5"
-	     print filename
+	     print " Open:",filename
      	     f2 = tables.openFile(filename) 
 	     
+	     print "   Step:",
+	     
      	     for step in range(start,finaltime+1,stride):
-
-     	    	filename="sol.p"+str(proc)+"."+str(step)+".h5"
+                print  step,
+		sys.stdout.flush()
+		
+      	    	filename="sol.p"+str(proc)+"."+str(step)+".h5"
      	     	hdfFile=  tables.openFile(filename,
 				    mode = "w",
 				    title = filename+" Data")
@@ -56,98 +63,146 @@ def splitH5single(basename1,basename2,proc,start,finaltime,stride):
      		hdfFile.createArray("/","phid",f2.getNode("/",name)[:])					
 
                 hdfFile.close()
-
+            	 
              f1.close()			    			     
              f2.close()
+	     
+	     print "finished"
 		     	    
 def H5toXMF(basename,size,start,finaltime,stride):
 
 # Open XMF files
 
+     t1="  "
+     t2=t1+t1
+     t3=t2+t1
+     t4=t3+t1
+     t5=t4+t1
+
+     XMFfile1 = open(basename+".xmf","w")
+     XMFfile1.write('<?xml version="1.0" ?>'+"\n")
+     XMFfile1.write('<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'+"\n")
+     XMFfile1.write('<Xdmf Version="2.0" xmlns:xi="http://www.w3.org/2001/XInclude">'+"\n")
+     XMFfile1.write(t1 + '<Domain>'+"\n")
+     XMFfile1.write(t1 + '<Grid GridType="Collection"   CollectionType="Temporal">'+"\n")
+	
+     string="" 
+     print "   Step:",
      for step in range(start,finaltime+1,stride):
+                print step,		
+		sys.stdout.flush()
+		
                 filename = basename+"."+str(step)+".h5"
      	     	hdfFile=  tables.openFile(filename,
 				    mode = "w",
 				    title = filename+" Data")     
      
-                XMFfile = open(basename+"."+str(step)+".xmf","w")
-                XMFfile.write(r"""<?xml version="1.0" ?>
-<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
-<Xdmf Version="2.0" xmlns:xi="http://www.w3.org/2001/XInclude">
-  <Domain>"""+"\n")
+                XMFfile2 = open(basename+"."+str(step)+".xmf","w")
+                XMFfile2.write('<?xml version="1.0" ?>'+"\n")
+                XMFfile2.write('<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>'+"\n")
+                XMFfile2.write('<Xdmf Version="2.0" xmlns:xi="http://www.w3.org/2001/XInclude">'+"\n")
+                XMFfile2.write(t1 + '<Domain>'+"\n")
 	
-		XMFfile.write(r'      <Grid GridType="Collection" CollectionType="Spatial">'+"\n")	
-
+		string = t2 + '<Grid GridType="Collection" CollectionType="Spatial">'+"\n"	
+	        string = string + t3 + '<Time Value="'+str(step)+'" />'+"\n"
 
                 for proc in range(0,size):
-
- 
-     	        	f1 = tables.openFile("sol.p"+str(proc)+"."+str(step)+".h5")  
+                        group = hdfFile.createGroup(hdfFile.root, 'p'+str(proc))
 			
-		        XMFfile.write (r'<Grid GridType="Uniform">'+"\n")
-			XMFfile.write(r'      <Time Value="'+str(step)+'" />'+"\n")
+                        solname="sol.p"+str(proc)+"."+str(step)+".h5"
+     	        	f1 = tables.openFile(solname)  
+			
+		        string = string + t3+'<Grid GridType="Uniform">'+"\n"	
 
      			data=f1.getNode("/","elements")[:]
-     			hdfFile.createArray("/","elements_p"+str(proc),data)
-
-                  	XMFfile.write (r'<Topology NumberOfElements="' +str(len(data))+ '" Type="Tetrahedron">'+"\n")
-         		XMFfile.write (r' <DataItem DataType="Int" Dimensions="' +str(len(data))+ ' 4" Format="HDF">' + filename + ':/element_p'+str(proc)+'</DataItem>'+"\n")
-        		XMFfile.write (r'</Topology>'+"\n")  
+     			hdfFile.createArray(group,"elements",data)
+		
+                  	string = string + t4 + '<Topology NumberOfElements="' +str(len(data))+ '" Type="Tetrahedron">'+"\n"
+         		string = string + t5 + '<DataItem DataType="Int" Dimensions="' +str(len(data))+ ' 4" Format="HDF">'+"\n"
+			string = string + t5 + filename + ':/p'+str(proc)+'/elements'+"\n"
+			string = string + t5 +'</DataItem>'+"\n"
+        		string = string + t4 + '</Topology>'+"\n"
 
      			data=f1.getNode("/","nodes")[:]
-     			hdfFile.createArray("/","nodes_p"+str(proc),data)
+     			hdfFile.createArray(group,"nodes",data)
 					     
-                   	XMFfile.write (r'<Geometry Type="XYZ">'+"\n")
-                  	XMFfile.write (r'  <DataItem DataType="Float" Dimensions="' +str(len(data))+ ' 3" Format="HDF" Precision="8">' + filename + ':/nodes_p'+str(proc)+'</DataItem>'+"\n")
-                        XMFfile.write (r'</Geometry>'+"\n")
+                   	string = string + t4 + '<Geometry Type="XYZ">'+"\n"
+                  	string = string + t5 + '<DataItem DataType="Float" Dimensions="' +str(len(data))+ ' 3" Format="HDF" Precision="8">' + "\n"
+			string = string + t5 + filename + ':/p'+str(proc)+'/nodes'+"\n"
+			string = string + t5 + '</DataItem>'+"\n"
+                        string = string + t4 + '</Geometry>'+"\n"
 
      			data=f1.getNode("/","u")[:]
-     			hdfFile.createArray("/","u_p"+str(proc),data)
+     			hdfFile.createArray(group,"u",data)
 			  			
-                  	XMFfile.write (r'<Attribute AttributeType="Scalar" Center="Node" Name="u">'+"\n")
-                  	XMFfile.write (r'  <DataItem DataType="Float" Dimensions="' +str(len(data))+ '" Format="HDF" Precision="8">' + filename + ':/u_p'+str(proc)+'</DataItem>'+"\n")
-                  	XMFfile.write (r'</Attribute>'+"\n")
+                  	string = string + t4 + '<Attribute AttributeType="Scalar" Center="Node" Name="u">'+"\n"
+                  	string = string + t5 + '<DataItem DataType="Float" Dimensions="' +str(len(data))+ '" Format="HDF" Precision="8">' + "\n"
+			string = string + t5 + filename + ':/p'+str(proc)+'/u'+"\n"
+			string = string + t5 + '</DataItem>'+"\n"
+                  	string = string + t4 + '</Attribute>'+"\n"
 
      			data=f1.getNode("/","v")[:]
-     			hdfFile.createArray("/","v_p"+str(proc),data)
+     			hdfFile.createArray(group,"v",data)
 			
-     			XMFfile.write (r'<Attribute AttributeType="Scalar" Center="Node" Name="v">'+"\n")
-                  	XMFfile.write (r'  <DataItem DataType="Float" Dimensions="' +str(len(data))+ '" Format="HDF" Precision="8">' + filename + ':/v_'+str(proc)+'</DataItem>'+"\n")
-                  	XMFfile.write (r'</Attribute>'+"\n")
+     			string = string + t4 + '<Attribute AttributeType="Scalar" Center="Node" Name="v">'+"\n"
+                  	string = string + t5 +'<DataItem DataType="Float" Dimensions="' +str(len(data))+ '" Format="HDF" Precision="8">' + "\n"
+			string = string + t5 + filename + ':/p'+str(proc)+'/v'+"\n"
+			string = string + t5 + '</DataItem>'+"\n"
+                  	string = string + t4 + '</Attribute>'+"\n"
 
      			data=f1.getNode("/","w")[:]
-     			hdfFile.createArray("/","w_p"+str(proc),data)
+     			hdfFile.createArray(group,"w",data)
 						
-                  	XMFfile.write (r'<Attribute AttributeType="Scalar" Center="Node" Name="w">'+"\n")
-                  	XMFfile.write (r'  <DataItem DataType="Float" Dimensions="' +str(len(data))+ '" Format="HDF" Precision="8">' + filename + ':/w_p'+str(proc)+'</DataItem>'+"\n")
-                  	XMFfile.write (r'</Attribute>'+"\n")
+                  	string = string + t4 + '<Attribute AttributeType="Scalar" Center="Node" Name="w">'+"\n"
+                  	string = string + t5 + '<DataItem DataType="Float" Dimensions="' +str(len(data))+ '" Format="HDF" Precision="8">' + "\n"
+			string = string + t5 + filename + ':/p'+str(proc)+'/w'+"\n"
+			string = string + t5 + '</DataItem>'+"\n"
+                  	string = string + t4 + '</Attribute>'+"\n"
 
      			data=f1.getNode("/","p")[:]
-     			hdfFile.createArray("/","p_p"+str(proc),data)
+     			hdfFile.createArray(group,"p",data)
 						
-                  	XMFfile.write (r'<Attribute AttributeType="Scalar" Center="Node" Name="p">'+"\n")
-                  	XMFfile.write (r'  <DataItem DataType="Float" Dimensions="' +str(len(data))+ '" Format="HDF" Precision="8">' + filename + ':/p_p'+str(proc)+'</DataItem>'+"\n")
-                  	XMFfile.write (r'</Attribute>'+"\n")
+                  	string = string + t4 + '<Attribute AttributeType="Scalar" Center="Node" Name="p">'+"\n"
+                  	string = string + t5 + '<DataItem DataType="Float" Dimensions="' +str(len(data))+ '" Format="HDF" Precision="8">' + "\n"
+			string = string + t5 + filename + ':/p'+str(proc)+'/p'+"\n"
+			string = string + t5 + '</DataItem>'+"\n"
+                  	string = string + t4 + '</Attribute>'+"\n"
 
      			data=f1.getNode("/","phid")[:]
-     			hdfFile.createArray("/","phid_p"+str(proc),data)
+     			hdfFile.createArray(group,"phid",data)
 			
-                  	XMFfile.write (r'<Attribute AttributeType="Scalar" Center="Node" Name="phid">'+"\n")
-                        XMFfile.write (r'  <DataItem DataType="Float" Dimensions="' +str(len(data))+ '" Format="HDF" Precision="8">' + filename + ':/phid_p'+str(proc)+'</DataItem>'+"\n")
-                  	XMFfile.write (r'</Attribute>'+"\n")
+                  	string = string + t4 + '<Attribute AttributeType="Scalar" Center="Node" Name="phid">'+"\n"
+                        string = string + t5 + '<DataItem DataType="Float" Dimensions="' +str(len(data))+ '" Format="HDF" Precision="8">' + "\n"
+			string = string + t5 + filename + ':/p'+str(proc)+'/phid'+"\n"
+			string = string + t5 + '</DataItem>'+"\n"
+                  	string = string + t4 + '</Attribute>'+"\n"
+			
+			string = string + t3+'</Grid>'+"\n"
 			     
 	     		f1.close()
-                        XMFfile.write('      </Grid>'+"\n")
+			os.remove(solname)
 
-        	XMFfile.write('    </Grid>'+"\n")
-                XMFfile.write('   </Domain>'+"\n")
-                XMFfile.write(' </Xdmf>'+"\n")		
-		XMFfile.close()
+        	string = string + t2 + '</Grid>'+"\n"  
+		     
+                XMFfile1.write(string)	
+		
+                XMFfile2.write(string)			
+		XMFfile2.write(t1 + '</Domain>'+"\n")		
+                XMFfile2.write('</Xdmf>'+"\n")		
+		XMFfile2.close()
+		
 		hdfFile.close()
-
+		
+		
+		
+     XMFfile1.write(t1 + '</Grid>'+"\n")			
+     XMFfile1.write(t1 + '</Domain>'+"\n")			
+     XMFfile1.write('</Xdmf>'+"\n")		
+     XMFfile1.close()
 
 if __name__ == '__main__':
     from optparse import OptionParser
+    
     usage = ""
     parser = OptionParser(usage=usage)
 
@@ -171,20 +226,20 @@ if __name__ == '__main__':
                       type="int",
                       dest="finaltime",
                       default=1000)
-		      
+	    	      
     parser.add_option("-f","--filebase_flow",
                       help="base name for storage files",
                       action="store",
                       type="string",
                       dest="filebase1",
-                      default="twp_navier_stokes_wigley_3d_p")
+                      default="twp_navier_stokes_p")
 		      
     parser.add_option("-p","--filebase_phi",
                       help="base name for storage files",
                       action="store",
                       type="string",
                       dest="filebase2",
-                      default="redist_wigley_3d_p")
+                      default="redist_p")
     
     (opts,args) = parser.parse_args()
     
