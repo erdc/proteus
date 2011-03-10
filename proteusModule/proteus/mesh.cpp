@@ -2875,8 +2875,8 @@ extern "C"
     mesh.hMin = edgeLength(mesh.elementNodesArray[0],
                            mesh.elementNodesArray[1],
                            mesh.nodeArray);
-    const double nNperElemInv = 1.0/double(mesh.nNodes_element);
-    const double nNperElemBInv= 1.0/double(mesh.nNodes_elementBoundary);
+    //const double nNperElemInv = 1.0/double(mesh.nNodes_element);
+    //const double nNperElemBInv= 1.0/double(mesh.nNodes_elementBoundary);
     for (int ebN=0;ebN<mesh.nElementBoundaries_global;ebN++)
       {
 
@@ -2893,7 +2893,7 @@ extern "C"
       } 
     for (int eN=0;eN<mesh.nElements_global;eN++)
       {
-        double volume, surfaceArea=0.0, hMin=0.0,hMax=0.0;
+        double volume, hMin=0.0,hMax=0.0;
         volume = hexahedronVolume(mesh.elementNodesArray[eN*8+0],
 	                          mesh.elementNodesArray[eN*8+1],
      	                          mesh.elementNodesArray[eN*8+2],
@@ -3127,6 +3127,7 @@ extern "C"
     mesh.elementNodesArray = new int[mesh.nElements_global*mesh.nNodes_element];
     mesh.elementMaterialTypes = new int[mesh.nElements_global];
 
+    return 0;
   }
 
   //mwftodo get global refinement to preserve element boundary type   
@@ -3182,7 +3183,7 @@ extern "C"
                          multilevelMesh.meshArray[i-1].elementNodesArray[2*eN_parent+1]);
           }
         multilevelMesh.elementChildrenOffsets[i-1][multilevelMesh.meshArray[i-1].nElements_global] = multilevelMesh.elementChildrenOffsets[i-1][multilevelMesh.meshArray[i-1].nElements_global-1]+2;
-        assert(nN_new == (newNodeSet.size()+multilevelMesh.meshArray[i-1].nNodes_global));
+        assert(unsigned(nN_new) == (newNodeSet.size()+multilevelMesh.meshArray[i-1].nNodes_global));
         multilevelMesh.meshArray[i].nNodes_global = nN_new;
         multilevelMesh.meshArray[i].nodeArray = new double[multilevelMesh.meshArray[i].nNodes_global*3];
         for(int nN=0;nN<multilevelMesh.meshArray[i-1].nNodes_global;nN++)
@@ -3292,7 +3293,7 @@ extern "C"
 			     midpoints[2].nN);
           }
         multilevelMesh.elementChildrenOffsets[i-1][multilevelMesh.meshArray[i-1].nElements_global] = multilevelMesh.elementChildrenOffsets[i-1][multilevelMesh.meshArray[i-1].nElements_global-1]+4;
-        assert(nN_new == (newNodeSet.size()+multilevelMesh.meshArray[i-1].nNodes_global));
+        assert(unsigned(nN_new) == (newNodeSet.size()+multilevelMesh.meshArray[i-1].nNodes_global));
         multilevelMesh.meshArray[i].nNodes_global = nN_new;
         multilevelMesh.meshArray[i].nodeArray = new double[multilevelMesh.meshArray[i].nNodes_global*3];
         for(int nN=0;nN<multilevelMesh.meshArray[i-1].nNodes_global;nN++)
@@ -3510,7 +3511,7 @@ extern "C"
               }
           }
         multilevelMesh.elementChildrenOffsets[i-1][multilevelMesh.meshArray[i-1].nElements_global] = multilevelMesh.elementChildrenOffsets[i-1][multilevelMesh.meshArray[i-1].nElements_global-1]+8;
-        assert(nN_new == (newNodeSet.size()+multilevelMesh.meshArray[i-1].nNodes_global));
+        assert(unsigned(nN_new) == (newNodeSet.size()+multilevelMesh.meshArray[i-1].nNodes_global));
         multilevelMesh.meshArray[i].nNodes_global = nN_new;
         multilevelMesh.meshArray[i].nodeArray = new double[multilevelMesh.meshArray[i].nNodes_global*3];
         for(int nN=0;nN<multilevelMesh.meshArray[i-1].nNodes_global;nN++)
@@ -3549,8 +3550,8 @@ extern "C"
 	//             t[2][1] = multilevelMesh.meshArray[i].nodeArray[n3*3+1] - multilevelMesh.meshArray[i].nodeArray[n0*3+1];
 	//             t[2][2] = multilevelMesh.meshArray[i].nodeArray[n3*3+2] - multilevelMesh.meshArray[i].nodeArray[n0*3+2];
             
-	//             det = t[0][0]*(t[1][1]*t[2][2] - t[1][2]*t[2][1]) -   \
-	//               t[0][1]*(t[1][0]*t[2][2] - t[1][2]*t[2][0]) +       \
+	//             det = t[0][0]*(t[1][1]*t[2][2] - t[1][2]*t[2][1]) -   
+	//               t[0][1]*(t[1][0]*t[2][2] - t[1][2]*t[2][0]) +       
 	//               t[0][2]*(t[1][0]*t[2][1] - t[1][1]*t[2][0]);
             
 	//             if(det < 0.0)
@@ -3575,8 +3576,8 @@ extern "C"
 	//             t[2][1] = multilevelMesh.meshArray[i].nodeArray[n3*3+1] - multilevelMesh.meshArray[i].nodeArray[n0*3+1];
 	//             t[2][2] = multilevelMesh.meshArray[i].nodeArray[n3*3+2] - multilevelMesh.meshArray[i].nodeArray[n0*3+2];
             
-	//             det = fabs(t[0][0]*(t[1][1]*t[2][2] - t[1][2]*t[2][1]) -   \
-	//                        t[0][1]*(t[1][0]*t[2][2] - t[1][2]*t[2][0]) +   \
+	//             det = fabs(t[0][0]*(t[1][1]*t[2][2] - t[1][2]*t[2][1]) -   
+	//                        t[0][1]*(t[1][0]*t[2][2] - t[1][2]*t[2][0]) +   
 	//                        t[0][2]*(t[1][0]*t[2][1] - t[1][1]*t[2][0]));
 	//             cout<<"det "<<det<<endl;
             
@@ -4249,7 +4250,10 @@ int readTetgenElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, int
     }
   if (!elementBoundaryMaterialTypesInFile)
     return failed;
-  
+  //mwf debug
+  std::cout<<"readTetgenElementBoundaryMaterialTypes filebalse= "<<filebase<<" after read failed= "<<failed
+	   <<" nElementBoundaries_file= "<<nElementBoundaries_file<<" mesh.nElementBoundaries_global= "<<mesh.nElementBoundaries_global 
+	   <<" mesh.nExteriorElementBoundaries_global= "<<mesh.nExteriorElementBoundaries_global<<std::endl;
   assert(mesh.nElementBoundaries_global == nElementBoundaries_file ||
 	 mesh.nExteriorElementBoundaries_global == nElementBoundaries_file);
 
@@ -4546,6 +4550,26 @@ int readBC(Mesh& mesh, const char* filebase, int indexBase)
 	}
     }
   return 0;
+}
+int write3dmMesh(Mesh& mesh, const char* filebase, int adhIndexBase)
+{
+  /***************************************************
+    write nodes and element information in 3dm format
+
+  **************************************************/
+  using namespace std;
+  using namespace meshIO;
+  assert(filebase);
+
+  bool failed = write3dmMeshNodesAndElements(filebase,
+					     adhIndexBase,
+					     mesh.nElements_global,
+					     mesh.nNodes_global,
+					     mesh.nodeArray,
+					     mesh.elementNodesArray,
+					     mesh.elementMaterialTypes);
+					     
+  return failed;
 }
 
 extern "C"
@@ -5414,7 +5438,7 @@ extern "C"
         multilevelMesh.meshArray[i].elementNodesArray[eN*3+2] = (*element_itr)[3];
       }
     //write the nodes
-    assert(nN_new == (newNodeSet.size()+multilevelMesh.meshArray[i-1].nNodes_global));
+    assert(unsigned(nN_new) == (newNodeSet.size()+multilevelMesh.meshArray[i-1].nNodes_global));
     multilevelMesh.meshArray[i].nNodes_global = nN_new;
     multilevelMesh.meshArray[i].nodeArray = new double[multilevelMesh.meshArray[i].nNodes_global*3];
     for(int nN=0;nN<multilevelMesh.meshArray[i-1].nNodes_global;nN++)
@@ -5440,7 +5464,7 @@ extern "C"
     int offset=0;
     for(int eN_parent = 0; eN_parent < multilevelMesh.meshArray[i-1].nElements_global;eN_parent++)
       {
-        for(int childE=0;childE<elementChildren[eN_parent].size();childE++)
+        for(unsigned int childE=0;childE<elementChildren[eN_parent].size();childE++)
           {
             multilevelMesh.elementChildrenArray[i-1][offset] = elementChildren[eN_parent][childE]; 
             offset++;
@@ -6034,7 +6058,8 @@ bool add4TnodesForRefinement2d(int eN,//element to be refined
   int eN_longest_local = findLocalLongestEdge2d(eN,
 						elementNodesArray,
 						nodeArray);
-  int eN_longest = elementBoundariesArray[eN*nElementBoundaries_element+eN_longest_local];
+  int eN_longest;
+  eN_longest = elementBoundariesArray[eN*nElementBoundaries_element+eN_longest_local];
   for (int ebN_local = 0; ebN_local < nElementBoundaries_element; ebN_local++)
     {
       const int ebN = elementBoundariesArray[eN*nElementBoundaries_element+ebN_local];

@@ -894,6 +894,25 @@ cmeshToolsWriteTetgenFiles(PyObject* self,
   Py_INCREF(Py_None); 
   return Py_None;
 }
+static PyObject* 
+cmeshToolsWrite3dmFiles(PyObject* self,
+			   PyObject* args)
+{
+  PyObject *cmesh;
+  const char *filebase;
+  int base,failed;
+  if (!PyArg_ParseTuple(args,
+                        "Osi",
+                        &cmesh,
+                        &filebase,
+			&base))
+    return NULL;
+
+  failed = write3dmMesh(MESH(cmesh),filebase,base);
+
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
 
 static PyObject* 
 cmeshToolsGenerateFromHexFile(PyObject* self,
@@ -1890,6 +1909,10 @@ static PyMethodDef cmeshToolsMethods[] = {
    cmeshToolsWriteTetgenFiles,       
    METH_VARARGS,                        
    "just write out tetgen node and element files directly"},  /*doc string for method*/
+   {"write3dmFiles",            
+   cmeshToolsWrite3dmFiles,       
+   METH_VARARGS,                        
+   "just write out 3dm node and element files directly"},  /*doc string for method*/
    {"generateFrom3DMFile",            
    cmeshToolsGenerateFrom3DMFile,       
    METH_VARARGS,                        
