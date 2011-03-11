@@ -455,13 +455,14 @@ class Osher_PsiTC_controller2(SC_base):
             m.timeIntegration.isAdaptive=False
         self.nSteps=0
         self.nStepsOsher=nOptions.psitc['nStepsForce']
-        self.nStepsMax=nOptions.psitc['nStepsMax']
-		
+	self.red_ratio=nOptions.psitc['reduceRatio']
+        self.start_ratio=nOptions.psitc['startRatio']
+	self.nStepsMax=nOptions.psitc['nStepsMax']		
     def stepExact_model(self,tOut):
         #pseudo time step
         for m in self.model.levelModelList:
             m.timeIntegration.choose_dt()
-        self.dt_model = m.timeIntegration.dt
+        self.dt_model = self.start_ratio*m.timeIntegration.dt
         self.set_dt_allLevels()
         #physical time step
         self.t_model=tOut
@@ -474,7 +475,7 @@ class Osher_PsiTC_controller2(SC_base):
         for m in self.model.levelModelList:
             m.timeIntegration.initialize_dt(t0,tOut,m.q)
         #set the starting time steps
-        self.dt_model = m.timeIntegration.dt
+        self.dt_model = self.start_ratio*m.timeIntegration.dt
         self.set_dt_allLevels()
         #physical time step
         self.t = tOut
@@ -497,6 +498,8 @@ class Osher_PsiTC_controller2(SC_base):
             self.res0 = self.model.solver.solverList[-1].norm_r0
             for m in self.model.levelModelList:
                 m.timeIntegration.choose_dt()
+		
+            self.dt_model = self.start_ratio*self.model.levelModelList[0].timeIntegration.dt		
         res = self.model.solver.solverList[-1].norm_r0
         ssError = res/(self.res0*self.rtol + self.atol)
         for m in self.model.levelModelList:
@@ -508,7 +511,7 @@ class Osher_PsiTC_controller2(SC_base):
             self.nSteps+=1
             self.dt_model = m.timeIntegration.dt
             if self.nSteps >= self.nStepsOsher:#start ramping up the time step
-                self.dt_model = m.timeIntegration.dt*1.5 #**(self.nSteps-self.nStepsOsher)
+                self.dt_model = self.dt_model*self.red_ratio 
             #log("Osher-PsiTC dt %12.5e" %(self.dt_model),level=1)
             self.set_dt_allLevels()
             #physical time step
@@ -531,7 +534,7 @@ class Osher_PsiTC_controller2(SC_base):
         #pseudo time step
         for m in self.model.levelModelList:
             m.timeIntegration.choose_dt()
-        self.dt_model = m.timeIntegration.dt
+        self.dt_model = self.start_ratio*m.timeIntegration.dt
         self.set_dt_allLevels()
         #physical time step
         self.t_model = self.substeps[0]
