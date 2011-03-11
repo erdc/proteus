@@ -86,9 +86,9 @@
         deallocate(x,y,z,xg,IEN)
       else
         allocate( xg2(NNODZ,3), IEN2(NEL,8))
-        call removeObstacle(xs(2),xs(3),ys(2),ys(3),zs(1)-1d0,zs(2),
-     &                      xg,NNODZ,IEN,NEL,
-     &                      xg2,NNODZ2,IEN2,NEL2)
+        call removeObstacle(xs(2),xs(3),ys(2),ys(3),zs(1)-1d0,zs(2),    &
+                            xg,NNODZ,IEN,NEL,                           &
+                            xg2,NNODZ2,IEN2,NEL2)
   
         call writeMesh(xg2(:NNODZ2,:),NNODZ2,IEN2(:NEL2,:),NEL2)
         deallocate(x,y,z,xg,IEN,xg2,IEN2)
@@ -193,9 +193,9 @@
 !-------------------------------------------
 
 !-------------------------------------------
-      subroutine removeObstacle(x0,x1,y0,y1,z0,z1,
-     &                          xg,NNODZ,IEN,NEL,
-     &                          xg2,NNODZ2,IEN2,NEL2)
+      subroutine removeObstacle(x0,x1,y0,y1,z0,z1,   &
+                                xg,NNODZ,IEN,NEL,    &
+                                xg2,NNODZ2,IEN2,NEL2)
 
       implicit none
 
@@ -213,9 +213,9 @@
       NNODZ2=0
       do i = 1, NNODZ
   
-         if ((xg(i,1).gt.x0).and.(xg(i,1).lt.x1).and.
-     &       (xg(i,2).gt.y0).and.(xg(i,2).lt.y1).and.
-     &       (xg(i,3).gt.z0).and.(xg(i,3).lt.z1)) then
+         if ((xg(i,1).gt.x0).and.(xg(i,1).lt.x1).and. &
+             (xg(i,2).gt.y0).and.(xg(i,2).lt.y1).and. &
+             (xg(i,3).gt.z0).and.(xg(i,3).lt.z1)) then
            write(*,*) "Removing point = ", xg(i,:)
            o2n(i) = -1
          else
@@ -228,18 +228,18 @@
 
       NEL2 = 0
       do i = 1, NEL
-        if ( (o2n(IEN(i,1)+1).ge.0).and.(o2n(IEN(i,2)+1).ge.0).and.
-     &       (o2n(IEN(i,3)+1).ge.0).and.(o2n(IEN(i,4)+1).ge.0).and.
-     &       (o2n(IEN(i,5)+1).ge.0).and.(o2n(IEN(i,6)+1).ge.0).and.
-     &       (o2n(IEN(i,7)+1).ge.0).and.(o2n(IEN(i,8)+1).ge.0)) then
-          xn = (xg(IEN(i,1)+1,:) + xg(IEN(i,2)+1,:)
-     &       +  xg(IEN(i,3)+1,:) + xg(IEN(i,4)+1,:)   
-     &       +  xg(IEN(i,5)+1,:) + xg(IEN(i,6)+1,:) 
-     &       +  xg(IEN(i,7)+1,:) + xg(IEN(i,8)+1,:))/8d0   
+        if ( (o2n(IEN(i,1)+1).ge.0).and.(o2n(IEN(i,2)+1).ge.0).and. &
+             (o2n(IEN(i,3)+1).ge.0).and.(o2n(IEN(i,4)+1).ge.0).and. &
+             (o2n(IEN(i,5)+1).ge.0).and.(o2n(IEN(i,6)+1).ge.0).and. &
+             (o2n(IEN(i,7)+1).ge.0).and.(o2n(IEN(i,8)+1).ge.0)) then
+          xn = (xg(IEN(i,1)+1,:) + xg(IEN(i,2)+1,:)   & 
+             +  xg(IEN(i,3)+1,:) + xg(IEN(i,4)+1,:)   &
+             +  xg(IEN(i,5)+1,:) + xg(IEN(i,6)+1,:)   &
+             +  xg(IEN(i,7)+1,:) + xg(IEN(i,8)+1,:))/8d0   
          
-          if ((xn(1).gt.x0).and.(xn(1).lt.x1).and.
-     &        (xn(2).gt.y0).and.(xn(2).lt.y1).and.
-     &        (xn(3).gt.z0).and.(xn(3).lt.z1)) then
+          if ((xn(1).gt.x0).and.(xn(1).lt.x1).and.   &
+              (xn(2).gt.y0).and.(xn(2).lt.y1).and.   &
+              (xn(3).gt.z0).and.(xn(3).lt.z1)) then
            write(*,*) "  Removing Element ", i, " (based on coord!)"        
           else
             NEL2 = NEL2 + 1
@@ -282,8 +282,7 @@
       end do
 
       do i = 1, NEL
-        write(meshf,'(9I8)') IEN(i,1), IEN(i,2), IEN(i,3), IEN(i,4),
-     &                       IEN(i,5), IEN(i,6), IEN(i,7), IEN(i,8), 0
+        write(meshf,'(9I8)') IEN(i,1), IEN(i,2), IEN(i,3), IEN(i,4),IEN(i,5), IEN(i,6), IEN(i,7), IEN(i,8), 0
       end do
 
       end subroutine
