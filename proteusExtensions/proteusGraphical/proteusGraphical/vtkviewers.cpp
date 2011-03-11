@@ -4,6 +4,7 @@
 #include "vtkDoubleArray.h"
 #include "vtkIntArray.h"
 #include "vtkPolyData.h"
+#include "vtkPointData.h"
 #include "vtkCellArray.h"
 #include "vtkCellData.h"
 #include "stdio.h"
@@ -61,7 +62,8 @@ vtkUnstructuredGrid* vtkUnstructuredGridFromMesh(int nNodes,
 						 int nSimplex,
 						 const double* nodeArray,
 						 const int* elementNodesArray,
-						 const int* elementMaterialTypes)
+						 const int* elementMaterialTypes,
+						 const int* nodeMaterialTypes)
   
 {
   using namespace std;
@@ -123,9 +125,23 @@ vtkUnstructuredGrid* vtkUnstructuredGridFromMesh(int nNodes,
       matIds->SetName("elementMaterialTypes");
       matIds->SetNumberOfComponents(1);
       matIds->SetNumberOfValues(nElements);
-      matIds->SetArray(elementMaterialTypes_tmp,nElements,doNotDelete);
+      matIds->SetArray(elementMaterialTypes_tmp,nElements,doNotDelete_ids);
       vtkMesh->GetCellData()->SetScalars(matIds);
       matIds->Delete();
+    }
+  //try material types too
+  if (nodeMaterialTypes != 0)
+    {
+      int * nodeMaterialTypes_tmp = const_cast<int *>(nodeMaterialTypes);
+      assert(nodeMaterialTypes_tmp);
+      const int doNotDelete_ids = 1;
+      vtkIntArray * nodeIds = vtkIntArray::New();
+      nodeIds->SetName("nodeMaterialTypes");
+      nodeIds->SetNumberOfComponents(1);
+      nodeIds->SetNumberOfValues(nNodes);
+      nodeIds->SetArray(nodeMaterialTypes_tmp,nNodes,doNotDelete_ids);
+      vtkMesh->GetPointData()->SetScalars(nodeIds);
+      nodeIds->Delete();
     }
   return vtkMesh;
 }
