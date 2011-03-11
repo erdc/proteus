@@ -19,19 +19,32 @@ extern "C"
   cvtkviewersGetUnstructuredGridFromMesh(PyObject* self,
 					 PyObject* args)
   {
-    PyObject * nodeArray, *elementNodesArray; 
+    PyObject * nodeArray, *elementNodesArray, *elementMaterialTypes = 0; 
+    vtkUnstructuredGrid* vtkUgrid(0);
     
     if (!PyArg_ParseTuple(args,
-			  "OO",
+			  "OO|O",
 			  &nodeArray,
-			  &elementNodesArray))
+			  &elementNodesArray,
+			  &elementMaterialTypes))
       return NULL;
-    vtkUnstructuredGrid* vtkUgrid = vtkUnstructuredGridFromMesh(SHAPE(nodeArray)[0],
-								SHAPE(elementNodesArray)[0],
-								SHAPE(elementNodesArray)[1],
-								DDATA(nodeArray),
-								IDATA(elementNodesArray));
-    
+    if (elementMaterialTypes != 0)
+      {
+	vtkUgrid = vtkUnstructuredGridFromMesh(SHAPE(nodeArray)[0],
+					       SHAPE(elementNodesArray)[0],
+					       SHAPE(elementNodesArray)[1],
+					       DDATA(nodeArray),
+					       IDATA(elementNodesArray),
+					       IDATA(elementMaterialTypes));
+      }
+    else
+      {
+	vtkUgrid = vtkUnstructuredGridFromMesh(SHAPE(nodeArray)[0],
+					       SHAPE(elementNodesArray)[0],
+					       SHAPE(elementNodesArray)[1],
+					       DDATA(nodeArray),
+					       IDATA(elementNodesArray));
+      }
     return vtkPythonUtil::GetObjectFromPointer(vtkUgrid);
   }
 
