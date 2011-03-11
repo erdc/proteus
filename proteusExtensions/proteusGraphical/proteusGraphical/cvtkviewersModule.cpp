@@ -241,15 +241,16 @@ extern "C"
 					    PyObject* args)
   {
     PyObject *vtkMeshIn, * cmesh;
-    
+    int copyIdsFlag = 0;
     if (!PyArg_ParseTuple(args,
-			  "OO",
+			  "OO|i",
 			  &vtkMeshIn,
-			  &cmesh))
+			  &cmesh,
+			  &copyIdsFlag))
       return NULL;
     vtkUnstructuredGrid * vtkMesh = (vtkUnstructuredGrid*) vtkPythonGetPointerFromObject(vtkMeshIn,"vtkUnstructuredGrid");
     assert(vtkMesh);
-    bool copyMaterialIds = false; 
+    bool copyMaterialIds = (copyIdsFlag == 1); 
     int defaultElementMaterialFlag(0),defaultNodeMaterialFlag(0);
     
     bool failed = meshElementAndNodeArraysFromVTKUnstructuredGrid(vtkMesh,
