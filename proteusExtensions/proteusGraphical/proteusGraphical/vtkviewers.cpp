@@ -60,7 +60,8 @@ vtkUnstructuredGrid* vtkUnstructuredGridFromMesh(int nNodes,
 						 int nElements,
 						 int nSimplex,
 						 const double* nodeArray,
-						 const int* elementNodesArray)
+						 const int* elementNodesArray,
+						 const int* elementMaterialTypes)
   
 {
   using namespace std;
@@ -111,7 +112,21 @@ vtkUnstructuredGrid* vtkUnstructuredGridFromMesh(int nNodes,
     }
   vtkMesh->SetPoints(points);
   points->Delete();
-  
+
+  //try material types too
+  if (elementMaterialTypes != 0)
+    {
+      int * elementMaterialTypes_tmp = const_cast<int *>(elementMaterialTypes);
+      assert(elementMaterialTypes_tmp);
+      const int doNotDelete_ids = 1;
+      vtkIntArray * matIds = vtkIntArray::New();
+      matIds->SetName("elementMaterialTypes");
+      matIds->SetNumberOfComponents(1);
+      matIds->SetNumberOfValues(nElements);
+      matIds->SetArray(elementMaterialTypes_tmp,nElements,doNotDelete);
+      vtkMesh->GetCellData()->SetScalars(matIds);
+      matIds->Delete();
+    }
   return vtkMesh;
 }
 
