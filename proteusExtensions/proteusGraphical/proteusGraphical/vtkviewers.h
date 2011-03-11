@@ -18,7 +18,8 @@ vtkUnstructuredGrid* vtkUnstructuredGridFromMesh(int nNodes,
 						 int nElements,
 						 int nSimplex,
 						 const double * nodeArray,
-						 const int * elementNodesArray);
+						 const int * elementNodesArray,
+						 const int* elementMaterialTypes=0);
 
 vtkUnstructuredGrid* vtkUnstructuredGridFromQuadraticTriangleMesh(int nNodes,
 																  int nNodesTotal,
