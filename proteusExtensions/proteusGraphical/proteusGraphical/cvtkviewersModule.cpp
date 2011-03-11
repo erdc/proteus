@@ -13,6 +13,12 @@
 #define DDATA(p) ((double *) (((PyArrayObject *)p)->data))
 #define IDATA(p) ((int *) (((PyArrayObject *)p)->data))
 
+#ifdef USE_VTK_5_6_OR_EARLIER
+# define VTK_PYTHON_OBJECT_RETURN(X) vtkPythonGetObjectFromPointer(X)
+#else
+# define VTK_PYTHON_OBJECT_RETURN(X) vtkPythonUtil::GetObjectFromPointer(X)
+#endif
+
 extern "C"
 {
   static PyObject* 
@@ -45,7 +51,7 @@ extern "C"
 					       DDATA(nodeArray),
 					       IDATA(elementNodesArray));
       }
-    return vtkPythonUtil::GetObjectFromPointer(vtkUgrid);
+    return VTK_PYTHON_OBJECT_RETURN(vtkUgrid);
   }
 
   static PyObject* 
@@ -74,7 +80,7 @@ extern "C"
 										 IDATA(l2g),
 										 IDATA(edgeNodesArray));
     
-    return vtkPythonUtil::GetObjectFromPointer(vtkUgrid);
+    return VTK_PYTHON_OBJECT_RETURN(vtkUgrid);
   }
   
   static PyObject* 
@@ -103,7 +109,7 @@ extern "C"
 									    IDATA(l2g),
 									    IDATA(edgeNodesArray));
     
-    return vtkPythonUtil::GetObjectFromPointer(vtkUgrid);
+    return VTK_PYTHON_OBJECT_RETURN(vtkUgrid);
   }
   
   static PyObject* 
@@ -121,7 +127,7 @@ extern "C"
     vtkDoubleArray* vtkScalars = vtkPrepareScalarValueArray(length,
 							    DDATA(scalarsArray));
     
-    return vtkPythonUtil::GetObjectFromPointer(vtkScalars);
+    return VTK_PYTHON_OBJECT_RETURN(vtkScalars);
   }
   
   static PyObject* 
@@ -137,7 +143,7 @@ extern "C"
     							    3,
     							    DDATA(vectorsArray));
     
-    return vtkPythonUtil::GetObjectFromPointer(vtkVectors);
+    return VTK_PYTHON_OBJECT_RETURN(vtkVectors);
   }
   
   
@@ -154,7 +160,7 @@ extern "C"
     vtkPoints* points= vtkPrepareVTKPoints(SHAPE(nodeArray)[0],
 					   DDATA(nodeArray));
     
-    return vtkPythonUtil::GetObjectFromPointer(points);
+    return VTK_PYTHON_OBJECT_RETURN(points);
   }
   
   static PyObject* 
@@ -170,7 +176,7 @@ extern "C"
     vtkPoints* points= vtkPrepareVTKPoints(SHAPE(nodeArray)[0]/3,
 					   DDATA(nodeArray));
     
-    return vtkPythonUtil::GetObjectFromPointer(points);
+    return VTK_PYTHON_OBJECT_RETURN(points);
   }
   
   static PyObject* 
@@ -188,7 +194,7 @@ extern "C"
     vtkPoints* points= vtkPrepareVTKPoints(length,
 					   DDATA(nodeArray));
     
-    return vtkPythonUtil::GetObjectFromPointer(points);
+    return VTK_PYTHON_OBJECT_RETURN(points);
   }
     
   static PyObject* 
@@ -211,7 +217,7 @@ extern "C"
 						    IDATA(elementBoundaryNodesArray),
 						    IDATA(elementBoundaryMaterialTypes));
     
-    return vtkPythonUtil::GetObjectFromPointer(vtkBgrid);
+    return VTK_PYTHON_OBJECT_RETURN(vtkBgrid);
   }
   
   static PyObject* 
@@ -225,7 +231,7 @@ extern "C"
 			  &vtkMeshIn,
 			  &cmesh))
       return NULL;
-    vtkUnstructuredGrid * vtkMesh = (vtkUnstructuredGrid*) vtkPythonUtil::GetPointerFromObject(vtkMeshIn,"vtkUnstructuredGrid");
+    vtkUnstructuredGrid * vtkMesh = (vtkUnstructuredGrid*) vtkPythonGetPointerFromObject(vtkMeshIn,"vtkUnstructuredGrid");
     assert(vtkMesh);
     bool copyMaterialIds = false; 
     int defaultElementMaterialFlag(0),defaultNodeMaterialFlag(0);
