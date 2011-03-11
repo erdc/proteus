@@ -501,10 +501,61 @@ bool meshElementAndNodeArraysFromVTKUnstructuredGrid(vtkUnstructuredGrid* vtkMes
     delete [] nodeMaterialTypes;
   nodeMaterialTypes = new int[nNodes];
   
-  //skip reading material types temporarily
-  memset(elementMaterialTypes,defaultElementMaterialType,nElements*sizeof(int));
-  memset(nodeMaterialTypes,defaultNodeMaterialType,nNodes*sizeof(int));
-  
+  bool readNodeIds = false, readElementIds =false;
+  //not really tested
+  if (readMaterialIds)
+    {
+      const std::string elementIdName = "elementMaterialTypes";
+      const std::string nodeIdName = "nodeMaterialTypes";
+      std::cout<<"vtkViewers getMeshFromVTKUnst Trying to readMaterialIds"<<std::endl;
+      vtkCellData * cd = vtkMesh->GetCellData();
+      if (cd && cd->GetNumberOfArrays() > 0)
+	{
+	  for (int i=0; i < cd->GetNumberOfArrays(); i++)
+	    {
+	      std::cout<<"vtkViewers getMeshFromVTKUnst looking at array "<<i<<" = "<<cd->GetArrayName(i)<<std::endl;
+	      if (cd->GetArrayName(i) == elementIdName)
+		{
+		  //mwf debug
+		  std::cout<<"vtkViewers getMeshFromVTKUnst reading "<<cd->GetArrayName(i)<<std::endl;
+		  cd->SetActiveScalars("elementMaterialTypes");
+		  for (int eN=0; eN < cd->GetScalars()->GetNumberOfTuples(); eN++)
+		    {
+		      elementMaterialTypes[eN] = cd->GetScalars()->GetTuple1(eN);
+		    }
+		  readElementIds = true;
+		  break;
+		}
+	    }
+	}
+      vtkPointData * pd = vtkMesh->GetPointData();
+      if (pd && pd->GetNumberOfArrays() > 0)
+	{
+	  for (int i=0; i < pd->GetNumberOfArrays(); i++)
+	    {
+	      if (pd->GetArrayName(i) == nodeIdName)
+		{
+		  //mwf debug
+		  std::cout<<"vtkViewers getMeshFromVTKUnst reading "<<pd->GetArrayName(i)<<std::endl;
+		  pd->SetActiveScalars("nodeMaterialTypes");
+		  for (int nN=0; nN < pd->GetScalars()->GetNumberOfTuples(); nN++)
+		    {
+		      nodeMaterialTypes[nN] = pd->GetScalars()->GetTuple1(nN);
+		    }
+		  readNodeIds = true;
+		  break;
+		}
+	    }
+	}
+    }
+  if (!readNodeIds)
+    {
+      memset(nodeMaterialTypes,defaultNodeMaterialType,nNodes*sizeof(int));
+    }
+  if (!readElementIds)
+    {
+      memset(elementMaterialTypes,defaultElementMaterialType,nElements*sizeof(int));
+    }
   return failed;
 }
 
