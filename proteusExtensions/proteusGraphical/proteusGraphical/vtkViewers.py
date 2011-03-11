@@ -31,12 +31,15 @@ class Window:
         import proteus.Comm
         comm = proteus.Comm.init()
         self.hardCopies=0
+        #mwf vtk on laptop needs update
+        skipComm = False
         self.comm = comm
         self.compManager = vtkCompositeRenderManager()
-        self.communicator = vtkMPICommunicator()
-        self.controller = vtkMPIController()
-        self.controller.SetCommunicator(self.communicator.GetWorldCommunicator())
-        self.compManager.SetController(self.controller)
+        if not skipComm:
+            self.communicator = vtkMPICommunicator()
+            self.controller = vtkMPIController()
+            self.controller.SetCommunicator(self.communicator.GetWorldCommunicator())
+            self.compManager.SetController(self.controller)
         self.myProcId = comm.rank()
         self.numProcs = comm.size()
         self.isMaster = comm.isMaster()
