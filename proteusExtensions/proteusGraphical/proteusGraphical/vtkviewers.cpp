@@ -559,3 +559,50 @@ bool meshElementAndNodeArraysFromVTKUnstructuredGrid(vtkUnstructuredGrid* vtkMes
   return failed;
 }
 
+//loop through points in computational mesh, if in bounding box try to
+//use vtk FindCell method to determine if the element barycenter is
+//within the solid defined in the vtkUnstructuredGrid dataSet right
+//now tolerance test for belonging to a cell is chosen based on the
+//computational mesh element diameter. This might be not be a good idea
+bool classifyElementMaterialProperitesFromVTKUnstructuredGridSolid(vtkUnstructuredGrid* vtkSolid,
+								   //properties of the mesh classifying
+								   int nElements,
+								   int newMaterialId,
+								   const double* elementBarycentersArray,
+								   const double* elementDiametersArray,
+								   int * elementMaterialTypes)
+{
+  bool failed = false;
+  assert(vtkSolid);
+  assert(elementBarycentersArray);
+  assert(elementDiametersArray);
+  assert(elementMaterialTypes);
+
+  double bounds[6] = {0.,0.,0.,0.,0.,0.};
+  vtkSolid->GetBounds(bounds);
+  const double epsBounds = 1.0e-6;
+  double x[3] = {0.,0.,0.};
+  vtkCell* cell = 0; vtkIdType cellId =-1;
+  double tol2=1.0e-12; int subId(-1);
+  double pcoords[3] = {0.,0.,0.};
+  double weights[8] = {0.,0.,0.,0.,0.,0.,0.,0}; //assume tetrahedral surface, is this helpful to add padding for some other cell sizes?
+  for (int eN=0; eN < nElements; eN++)
+    {
+      const double h = elementDiametersArray[eN];
+      //todo what size to pick for tol?
+      tol2 = (0.2*h)*(0.2*h);
+      x[0] = elementBarycentersArray[eN*3+0]; x[1] = elementBarycentersArray[eN*3+1];x[2] = elementBarycentersArray[eN*3+2];
+      if ((x[0] >= bounds[0]+epsBounds && x[0] <= bounds[1]+epsBounds) &&
+	  (x[1] >= bounds[2]+epsBounds && x[1] <= bounds[3]+epsBounds) &&
+	  (x[2] >= bounds[4]+epsBounds && x[2] <= bounds[5]+epsBounds))
+	{
+	  vtkSolid->FindCell(x,cell,cellId,tol2,subId,pcoords,weights);
+
+	  if (cellId >= 0)
+	    {
+	      elementMaterialTypes[eN] = newMaterialId;
+	    }
+	}
+    }
+  return failed;
+}
