@@ -57,11 +57,12 @@ bool meshElementAndNodeArraysFromVTKUnstructuredGrid(vtkUnstructuredGrid* vtkMes
 						     const int& defaultElementMaterialType=0,
 						     const int& defaultNodeMaterialType=0);
 
-bool classifyElementMaterialProperitesFromVTKUnstructuredGridSolid(vtkUnstructuredGrid* vtkSolid,
+bool classifyElementMaterialPropertiesFromVTKUnstructuredGridSolid(vtkUnstructuredGrid* vtkSolid,
 								   //properties of the mesh classifying
 								   int nElements,
 								   int newMaterialId,
 								   const double* elementBarycentersArray,
 								   const double* elementDiametersArray,
-								   int * elementMaterialTypes);
+								   int * elementMaterialTypes,
+								   int verbose =0);
 #endif

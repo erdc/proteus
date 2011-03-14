@@ -277,28 +277,30 @@ extern "C"
     return Py_None;
   }
   static PyObject* 
-  cvtkviewersClassifyElementMaterialProperitesFromVTKUnstructuredGridSolid(PyObject* self,
+  cvtkviewersClassifyElementMaterialPropertiesFromVTKUnstructuredGridSolid(PyObject* self,
 									   PyObject* args)
   {
     PyObject *vtkSolidIn,*elementBarycentersArray,*elementDiametersArray,*elementMaterialTypes;
-    int nElements,newMaterialId;
+    int nElements,newMaterialId,verbose = 0;
     if (!PyArg_ParseTuple(args,
-			  "iOOOO",
+			  "iOOOO|i",
 			  &newMaterialId,
 			  &vtkSolidIn,
 			  &elementBarycentersArray,
 			  &elementDiametersArray,
-			  &elementMaterialTypes))
+			  &elementMaterialTypes,
+			  &verbose))
       return NULL;
     vtkUnstructuredGrid * vtkSolid = (vtkUnstructuredGrid*) vtkPythonGetPointerFromObject(vtkSolidIn,"vtkUnstructuredGrid");
     assert(vtkMesh);
     nElements = SHAPE(elementMaterialTypes)[0];
-    bool failed = classifyElementMaterialProperitesFromVTKUnstructuredGridSolid(vtkSolid,
-								  nElements,
-								  newMaterialId,
-								  DDATA(elementBarycentersArray),
-								  DDATA(elementDiametersArray),
-								  IDATA(elementMaterialTypes));
+    bool failed = classifyElementMaterialPropertiesFromVTKUnstructuredGridSolid(vtkSolid,
+										nElements,
+										newMaterialId,
+										DDATA(elementBarycentersArray),
+										DDATA(elementDiametersArray),
+										IDATA(elementMaterialTypes),
+										verbose);
     if (failed)
       assert(!failed);
 
@@ -348,8 +350,8 @@ extern "C"
      cvtkviewersGetMeshFromVTKUnstructuredGrid,
      METH_VARARGS,
      "generate meshTools mesh representation from vtkUnstructured grid"},
-    {"classifyElementMaterialProperitesFromVTKUnstructuredGridSolid",
-     cvtkviewersClassifyElementMaterialProperitesFromVTKUnstructuredGridSolid,
+    {"classifyElementMaterialPropertiesFromVTKUnstructuredGridSolid",
+     cvtkviewersClassifyElementMaterialPropertiesFromVTKUnstructuredGridSolid,
      METH_VARARGS,
      "assign new material id to elements in mesh if barycenter in (or close?) to solid defined by vtkUnstructuredGrid"},
     { NULL,NULL,0,NULL}
