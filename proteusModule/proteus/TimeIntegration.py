@@ -2258,7 +2258,7 @@ class SSPRKPIintegration(ExplicitRK_base):
         """
         ExplicitRK_base.setFromOptions(self,nOptions)
         
-        if 'limiterType' in dir(nOptions):
+        if 'limiterType' in dir(nOptions) and nOptions.limiterType != None:
             self.limiter = None; self.limiterType = None; self.uLimDof = {}
             self.limiterType = nOptions.limiterType
             self.limiter = self.limiterType(self.transport.mesh,
@@ -2339,7 +2339,7 @@ class LinearSSPRKPIintegration(LinearSSPRKintegration):
         """
         LinearSSPRKintegration.setFromOptions(self,nOptions)
         
-        if 'limiterType' in dir(nOptions):
+        if 'limiterType' in dir(nOptions) and nOptions.limiterType != None:
             self.limiter = None; self.limiterType = None; self.uLimDof = {}
             self.limiterType = nOptions.limiterType
             self.limiter = self.limiterType(self.transport.mesh,
@@ -3096,7 +3096,7 @@ class DGlimiterPkMonomial2d(CockburnNotesLimiter2d_base):
         self.nc = len(u)
         self.nu=nu
         self.Mfact = M*mesh.h**2
-        self.femSpaceSolution = femSpace
+        self.femSpaceSolution = dict([(ci,u[ci].femSpace) for ci in range(self.nc)])
 
         assert self.nSpace == 2, "2d only"
         #change this to be variable order next
@@ -3159,7 +3159,7 @@ class DGlimiterPkMonomial2d(CockburnNotesLimiter2d_base):
             self.bk21 = numpy.dot(self.PkToP1,self.uk)
             self.P1massLU.solve(self.u1,b=self.bk21)
             for k in range(self.l2gLimiting[ci].shape[1]):
-                self.ulim.dof[self.l2gLimiting[ci][eN,k]]=self.u1[k]
+                self.ulim[ci].dof[self.l2gLimiting[ci][eN,k]]=self.u1[k]
         #eN
         #mwf debug
         #import pdb
