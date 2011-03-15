@@ -4571,6 +4571,26 @@ int write3dmMesh(Mesh& mesh, const char* filebase, int adhIndexBase)
 					     
   return failed;
 }
+int write2dmMesh(Mesh& mesh, const char* filebase, int adhIndexBase)
+{
+  /***************************************************
+    write nodes and element information in 2dm format
+
+  **************************************************/
+  using namespace std;
+  using namespace meshIO;
+  assert(filebase);
+
+  bool failed = write2dmMeshNodesAndElements(filebase,
+					     adhIndexBase,
+					     mesh.nElements_global,
+					     mesh.nNodes_global,
+					     mesh.nodeArray,
+					     mesh.elementNodesArray,
+					     mesh.elementMaterialTypes);
+					     
+  return failed;
+}
 
 extern "C"
 {

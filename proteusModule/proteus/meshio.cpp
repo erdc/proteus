@@ -711,5 +711,53 @@ write3dmMeshNodesAndElements(const char * filebase,
   return false;
 }
 			     
+bool
+write2dmMeshNodesAndElements(const char * filebase,
+			     const int& indexBase,
+			     const int& nElements, const int& nNodes,
+			     const double* nodeArray,
+			     const int* elementNodesArray,
+			     const int* elementMaterialTypes)
+{
+
+  bool failed = false;
+  const int vertexDim=3; const int simplexDim = 2+1;
+  
+  std::string meshFileName = std::string(filebase) + ".2dm";
+  std::ofstream meshFile(meshFileName.c_str());
+
+  if (!meshFile.good())
+    {
+      std::cerr<<"write2dmMeshNodesAndElements cannot open file "
+	  <<meshFileName<<std::endl;
+      failed = true;
+      return failed;
+    }
+  meshFile <<"MESH2D"<<std::endl;
+  for (int eN = 0; eN < nElements; eN++)
+    {
+      meshFile << "E3T "<<eN + indexBase 
+	       <<" " <<elementNodesArray[eN*simplexDim + 0] + indexBase
+	       <<" " <<elementNodesArray[eN*simplexDim + 1] + indexBase
+	       <<" " <<elementNodesArray[eN*simplexDim + 2] + indexBase;
+      if (!elementMaterialTypes)
+	meshFile <<" 1 "<<std::endl;
+      else
+	meshFile <<" "<<elementMaterialTypes[eN]+indexBase<<std::endl;
+    }
+  meshFile << std::endl;
+  meshFile << std::setiosflags(std::ios::scientific) << std::setprecision(8); 
+  for (int nN = 0; nN < nNodes; nN++)
+    {
+      meshFile <<"ND "<<nN + indexBase
+	       <<"  "<<nodeArray[nN*vertexDim + 0]
+	       <<"  "<<nodeArray[nN*vertexDim + 1]
+	       <<"  "<<nodeArray[nN*vertexDim + 2]
+	       <<std::endl;
+    }
+  meshFile <<"END"<<std::endl;
+  meshFile.close();
+  return false;
+}
 
 }//meshIO
