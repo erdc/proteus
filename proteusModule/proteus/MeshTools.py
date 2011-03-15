@@ -2130,33 +2130,6 @@ class TetrahedralMesh(Mesh):
     def writeMeshADH(self,filename,adhBase=1):
         import cmeshTools
         cmeshTools.write3dmFiles(self.cmesh,filename,adhBase)
-#         meshOut=open(filename+'.3dm','w')
-#         meshOut.write('MESH3D \n')
-#         for T in self.tetrahedronList:
-#             T.computeGeometricInfo()
-#             DJ = edet(T.linearMap)
-#             if DJ < 0:
-#                 #print "Negative determinant ="+`DJ`+" Swapping two nodes"
-#                 newNodes = list(T.nodes)
-#                 newNodes[3] = T.nodes[2]
-#                 newNodes[2] = T.nodes[3]
-#             else:
-#                 newNodes = T.nodes
-#             line = 'E4T %5i %5i %5i %5i %5i %5i' % \
-#                           (T.N + adhBase,
-#                            newNodes[0].N + adhBase,
-#                            newNodes[1].N + adhBase,
-#                            newNodes[2].N + adhBase,
-#                            newNodes[3].N + adhBase,
-#                            1)
-#             #print line
-#             meshOut.write(line+'\n')
-#         for node in self.nodeList:
-#             line = 'ND %5i %14.8e %14.8e %14.8e' % \
-#                           (node.N + adhBase,node.p[X],node.p[Y],node.p[Z])
-#             #print line
-#             meshOut.write(line+'\n')
-#         meshOut.close()
     
     def writeBoundaryFacesADH(self,filename,adhBase=1):
         boundaryFacesOut=open(filename,'w')
@@ -3663,32 +3636,8 @@ Number of nodes : %d\n""" % (self.nElements_global,
         meshOut.close()
     
     def writeMeshADH(self,filename,adhBase=1):
-        meshOut=open(filename+'.3dm','w')
-        meshOut.write('MESH2D \n')
-        for t in self.triangleList:
-            t.computeGeometricInfo()
-            DJ = edet(t.linearMap)
-            if DJ < 0:
-                #print "Negative determinant ="+`DJ`+" Swapping two nodes"
-                newNodes = list(t.nodes)
-                newNodes[2] = t.nodes[1]
-                newNodes[1] = t.nodes[2]
-            else:
-                newNodes = t.nodes
-            line = 'E3T %5i %5i %5i %5i %5i\n' % \
-                          (t.N + adhBase,
-                           newNodes[0].N + adhBase,
-                           newNodes[1].N + adhBase,
-                           newNodes[2].N + adhBase,
-                           1)
-            #print line
-            meshOut.write(line+'\n')
-        for node in self.nodeList:
-            line = 'ND %5i %14.8e %14.8e %14.8e' % \
-                          (node.N + adhBase,node.p[X],node.p[Y],node.p[Z])
-            #print line
-            meshOut.write(line+'\n')
-        meshOut.close()
+        import cmeshTools
+        cmeshTools.write2dmFiles(self.cmesh,filename,adhBase)
     def writeAsymptote(self,fileprefix,L,x,units="m"):
         """
         Write a representation of the triangular mesh in the Asymptote vector graphics language
