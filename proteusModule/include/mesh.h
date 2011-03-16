@@ -332,6 +332,7 @@ extern "C"
   int readHex(Mesh& mesh, const char* filebase, int indexBase);
   int readBC(Mesh& mesh, const char* filebase, int indexBase);
   int write3dmMesh(Mesh& mesh, const char* filebase, int base);
+  int write2dmMesh(Mesh& mesh, const char* filebase, int base);
   int copyElementBoundaryMaterialTypesFromTriangle(triangulateio* trimesh, 
 						   Mesh& mesh, int base);
 }//extern "C"
