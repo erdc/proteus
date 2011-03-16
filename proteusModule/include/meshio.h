@@ -296,6 +296,38 @@ write3dmMeshNodesAndElements(const char * filebase,
 			     const int* elementMaterialTypes = 0);
 
 
+
+/***********************************************************************
+ \brief simple routine for writing the vertex and element 
+    information for a triangular mesh in a 2dm. 
+
+  @param filebase, IN. the base name for mesh files. The routine tries
+     to open filebase.2dm
+  @param indexBase, IN. The base numbering convetion (e.g., 0 or 1) 
+    for the mesh
+    
+  @param nElements, IN. The number of elements in the mesh
+  @param nNodes, IN. The number of nodes/vertices in the mesh
+  
+  @param nodeArray, IN. physical coordinates of each node in mesh
+    nodeArray[I,j] = x^j_I, coordinate j of global node I
+    Dim = Nn x 3.
+
+  @param elementNodesArray, IN. Map from each element to its global
+         node numbers elementNodesArray[I,j] = J, the global node
+         number J of global element I's local node j 
+         Dim: nElements x 3
+  **********************************************************************/
+
+bool 
+write2dmMeshNodesAndElements(const char * filebase, 
+			     const int& indexBase,
+			     const int& nElements, const int& nNodes,
+			     const double* nodeArray,
+			     const int* elementNodesArray,
+			     const int* elementMaterialTypes = 0);
+
+
 }
 
 #endif
