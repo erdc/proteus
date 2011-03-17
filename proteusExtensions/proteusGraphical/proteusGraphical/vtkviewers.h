@@ -64,5 +64,16 @@ bool classifyElementMaterialPropertiesFromVTKUnstructuredGridSolid(vtkUnstructur
 								   const double* elementBarycentersArray,
 								   const double* elementDiametersArray,
 								   int * elementMaterialTypes,
+								   double tol_hFactor,
 								   int verbose =0);
+bool classifyElementMaterialPropertiesFromVTKUnstructuredGridNeighborhood(vtkUnstructuredGrid* vtkSolid,
+									  //properties of the mesh classifying
+									  int nElements,
+									  int newMaterialId,
+									  const double* elementBarycentersArray,
+									  const double* elementDiametersArray,
+									  int * elementMaterialTypes,
+									  int useAbsoluteTolerance,
+									  double tolerance,
+									  int verbose);
 #endif

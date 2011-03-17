@@ -571,6 +571,7 @@ bool classifyElementMaterialPropertiesFromVTKUnstructuredGridSolid(vtkUnstructur
 								   const double* elementBarycentersArray,
 								   const double* elementDiametersArray,
 								   int * elementMaterialTypes,
+								   double tol_hFactor,
 								   int verbose)
 {
   bool failed = false;
@@ -600,7 +601,7 @@ bool classifyElementMaterialPropertiesFromVTKUnstructuredGridSolid(vtkUnstructur
     {
       const double h = elementDiametersArray[eN];
       //todo what size to pick for tol?
-      tol2 = (0.2*h)*(0.2*h);
+      tol2 = tol_hFactor*h*h;//(0.2*h)*(0.2*h);
       x[0] = elementBarycentersArray[eN*3+0]; x[1] = elementBarycentersArray[eN*3+1];x[2] = elementBarycentersArray[eN*3+2];
       if (verbose > 4)
 	{
@@ -621,6 +622,95 @@ bool classifyElementMaterialPropertiesFromVTKUnstructuredGridSolid(vtkUnstructur
 	      elementMaterialTypes[eN] = newMaterialId;
 	      if (verbose  > 3)
 		std::cout<<" and inside solid cellId= "<<cellId<<std::endl;
+	    }
+	  else
+	    {
+	      if (verbose > 3)
+		std::cout<<" but not in solid "<<std::endl;
+	    }
+	}
+    }
+  return failed;
+}
+//loop through points in computational mesh, if in bounding box try to
+//use vtkFindPoint to see if each element barycenter is within some tolerance
+//(absolute or relative to the element diameter of the solid
+//defined in the vtkUnstructuredGrid dataSet right
+
+bool classifyElementMaterialPropertiesFromVTKUnstructuredGridNeighborhood(vtkUnstructuredGrid* vtkSolid,
+									  //properties of the mesh classifying
+									  int nElements,
+									  int newMaterialId,
+									  const double* elementBarycentersArray,
+									  const double* elementDiametersArray,
+									  int * elementMaterialTypes,
+									  int useAbsoluteTolerance,
+									  double tolerance,
+									  int verbose)
+{
+  bool failed = false;
+  assert(vtkSolid);
+  assert(elementBarycentersArray);
+  assert(elementDiametersArray);
+  assert(elementMaterialTypes);
+
+  double bounds[6] = {0.,0.,0.,0.,0.,0.};
+  vtkSolid->GetBounds(bounds);
+  if (verbose > 0)
+    {
+      std::cout<<"Entering classifyELementMaterialPropsNeighborhood, bounds = [ ";
+      for (int i=0; i < 6; i++)
+	std::cout<<bounds[i]<<" , ";
+      std::cout<<"]; "<<std::endl;
+    }
+  if (verbose > -1)
+    {
+      if (!useAbsoluteTolerance && tolerance < 1.0)
+	{
+	  std::cout<<"Warning using relative tolerance= "<<tolerance<<" < 1 that will scale the element diameter "<<std::endl;
+	  
+	} 
+    }
+  double distance=0., x[3] = {0.,0.,0.}, p[3] = {0.0,0.0,0.};
+  vtkIdType pointId =-1;
+  for (int eN=0; eN < nElements; eN++)
+    {
+      const double h = elementDiametersArray[eN];
+      double delta = tolerance;
+      if (useAbsoluteTolerance)
+	delta = h*tolerance;
+      x[0] = elementBarycentersArray[eN*3+0]; x[1] = elementBarycentersArray[eN*3+1];x[2] = elementBarycentersArray[eN*3+2];
+      if (verbose > 4)
+	{
+	  std::cout<<"eN = "<<eN<<" x= ["<<x[0]<<" , "<<x[1]<<" , "<<x[2]<<"]; "<< std::endl;
+	}
+      if (verbose > 4)
+	{
+	  if (useAbsoluteTolerance && delta < h)
+	    {
+	      std::cout<<"Warning eN= "<<eN<<" using absolute tolerance= "<<tolerance<<" < h= "<<h<<std::endl;
+	    }
+	}
+       if ((x[0] >= bounds[0]+delta && x[0] <= bounds[1]+delta) &&
+	  (x[1] >= bounds[2]+delta && x[1] <= bounds[3]+delta) &&
+	  (x[2] >= bounds[4]+delta && x[2] <= bounds[5]+delta))
+	{
+	  if (verbose > 3)
+	    {
+	      std::cout<<"eN = "<<eN<<" inside bounds ... ";
+	    }
+	  pointId = vtkSolid->FindPoint(x);
+
+	  if (pointId >= 0)
+	    {
+	      vtkSolid->GetPoint(pointId,p);
+	      distance = sqrt((p[0]-x[0])*(p[0]-x[0]) + (p[1]-x[1])*(p[1]-x[1]) + (p[2]-x[2])*(p[2]-x[2]));
+	      if (distance <= delta)
+		{
+		  elementMaterialTypes[eN] = newMaterialId;
+		  if (verbose  > 3)
+		    std::cout<<" and within "<<delta<<" of  solid pointId= "<<pointId<<" = ["<<p[0]<<" , "<<p[1]<<" , "<<p[2]<<"]; "<<std::endl;
+		}
 	    }
 	  else
 	    {
