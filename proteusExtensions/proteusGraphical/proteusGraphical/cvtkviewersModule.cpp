@@ -282,13 +282,15 @@ extern "C"
   {
     PyObject *vtkSolidIn,*elementBarycentersArray,*elementDiametersArray,*elementMaterialTypes;
     int nElements,newMaterialId,verbose = 0;
+    double tol_hFactor;
     if (!PyArg_ParseTuple(args,
-			  "iOOOO|i",
+			  "iOOOOd|i",
 			  &newMaterialId,
 			  &vtkSolidIn,
 			  &elementBarycentersArray,
 			  &elementDiametersArray,
 			  &elementMaterialTypes,
+			  &tol_hFactor,
 			  &verbose))
       return NULL;
     vtkUnstructuredGrid * vtkSolid = (vtkUnstructuredGrid*) vtkPythonGetPointerFromObject(vtkSolidIn,"vtkUnstructuredGrid");
@@ -300,7 +302,44 @@ extern "C"
 										DDATA(elementBarycentersArray),
 										DDATA(elementDiametersArray),
 										IDATA(elementMaterialTypes),
+										tol_hFactor,
 										verbose);
+    if (failed)
+      assert(!failed);
+
+    Py_INCREF(Py_None); 
+    return Py_None;
+  }
+  static PyObject* 
+  cvtkviewersClassifyElementMaterialPropertiesFromVTKUnstructuredGridNeighborhood(PyObject* self,
+										  PyObject* args)
+  {
+    PyObject *vtkSolidIn,*elementBarycentersArray,*elementDiametersArray,*elementMaterialTypes;
+    int nElements,newMaterialId,verbose = 0,useAbsoluteTolerance;
+    double tolerance;
+    if (!PyArg_ParseTuple(args,
+			  "iOOOOid|i",
+			  &newMaterialId,
+			  &vtkSolidIn,
+			  &elementBarycentersArray,
+			  &elementDiametersArray,
+			  &elementMaterialTypes,
+			  &useAbsoluteTolerance,
+			  &tolerance,
+			  &verbose))
+      return NULL;
+    vtkUnstructuredGrid * vtkSolid = (vtkUnstructuredGrid*) vtkPythonGetPointerFromObject(vtkSolidIn,"vtkUnstructuredGrid");
+    assert(vtkMesh);
+    nElements = SHAPE(elementMaterialTypes)[0];
+    bool failed = classifyElementMaterialPropertiesFromVTKUnstructuredGridNeighborhood(vtkSolid,
+										       nElements,
+										       newMaterialId,
+										       DDATA(elementBarycentersArray),
+										       DDATA(elementDiametersArray),
+										       IDATA(elementMaterialTypes),
+										       useAbsoluteTolerance,
+										       tolerance,
+										       verbose);
     if (failed)
       assert(!failed);
 
@@ -354,6 +393,10 @@ extern "C"
      cvtkviewersClassifyElementMaterialPropertiesFromVTKUnstructuredGridSolid,
      METH_VARARGS,
      "assign new material id to elements in mesh if barycenter in (or close?) to solid defined by vtkUnstructuredGrid"},
+     {"classifyElementMaterialPropertiesFromVTKUnstructuredGridNeighborhood",
+     cvtkviewersClassifyElementMaterialPropertiesFromVTKUnstructuredGridNeighborhood,
+     METH_VARARGS,
+     "assign new material id to elements in mesh if barycenter within spherical neighborhood of solid defined by vtkUnstructuredGrid"},
     { NULL,NULL,0,NULL}
   };
   
