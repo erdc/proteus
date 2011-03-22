@@ -607,9 +607,9 @@ bool classifyElementMaterialPropertiesFromVTKUnstructuredGridSolid(vtkUnstructur
 	{
 	  std::cout<<"eN = "<<eN<<" x= ["<<x[0]<<" , "<<x[1]<<" , "<<x[2]<<"]; "<< std::endl;
 	}
-      if ((x[0] >= bounds[0]+epsBounds && x[0] <= bounds[1]+epsBounds) &&
-	  (x[1] >= bounds[2]+epsBounds && x[1] <= bounds[3]+epsBounds) &&
-	  (x[2] >= bounds[4]+epsBounds && x[2] <= bounds[5]+epsBounds))
+      if ((x[0] >= bounds[0]-epsBounds && x[0] <= bounds[1]+epsBounds) &&
+	  (x[1] >= bounds[2]-epsBounds && x[1] <= bounds[3]+epsBounds) &&
+	  (x[2] >= bounds[4]-epsBounds && x[2] <= bounds[5]+epsBounds))
 	{
 	  if (verbose > 3)
 	    {
@@ -677,7 +677,7 @@ bool classifyElementMaterialPropertiesFromVTKUnstructuredGridNeighborhood(vtkUns
     {
       const double h = elementDiametersArray[eN];
       double delta = tolerance;
-      if (useAbsoluteTolerance)
+      if (!useAbsoluteTolerance)
 	delta = h*tolerance;
       x[0] = elementBarycentersArray[eN*3+0]; x[1] = elementBarycentersArray[eN*3+1];x[2] = elementBarycentersArray[eN*3+2];
       if (verbose > 4)
@@ -691,9 +691,9 @@ bool classifyElementMaterialPropertiesFromVTKUnstructuredGridNeighborhood(vtkUns
 	      std::cout<<"Warning eN= "<<eN<<" using absolute tolerance= "<<tolerance<<" < h= "<<h<<std::endl;
 	    }
 	}
-       if ((x[0] >= bounds[0]+delta && x[0] <= bounds[1]+delta) &&
-	  (x[1] >= bounds[2]+delta && x[1] <= bounds[3]+delta) &&
-	  (x[2] >= bounds[4]+delta && x[2] <= bounds[5]+delta))
+       if ((x[0] >= bounds[0]-delta && x[0] <= bounds[1]+delta) &&
+	  (x[1] >= bounds[2]-delta && x[1] <= bounds[3]+delta) &&
+	  (x[2] >= bounds[4]-delta && x[2] <= bounds[5]+delta))
 	{
 	  if (verbose > 3)
 	    {
