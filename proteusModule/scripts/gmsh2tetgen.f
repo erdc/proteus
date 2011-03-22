@@ -13,7 +13,8 @@ program gmsh2tetgen
   integer :: rNFace, NFACE, hNFace, FACE_ID
   integer, allocatable ::  Face_IEN(:,:), FaceID(:)
   integer, allocatable :: hFace_IEN(:,:)
-  integer, allocatable :: IEN(:,:)
+  integer, allocatable :: IEN(:,:), o2n(:), n2o(:)
+  logical, allocatable :: check(:)
   
   character(len=30) :: fname
   character(len=40) :: ctmp
@@ -84,6 +85,33 @@ program gmsh2tetgen
   
   
   !==================================
+  ! Remove useless nodes
+  !==================================  
+  allocate(check(NNode),o2n(NNode),n2o(NNode))
+  check=.false.
+  do i = 1,NElem
+    check(IEN(i,1)) = .true. 
+    check(IEN(i,2)) = .true. 
+    check(IEN(i,4)) = .true. 
+    check(IEN(i,3)) = .true. 
+  end do   
+  
+  itmp =0
+  do i = 1, NNode
+    if (.not.check(i)) then
+       write(*,*) "Node: ", i
+    else
+      itmp = itmp  + 1
+      n2o(itmp) = i
+      o2n(i)    = itmp
+    endif 
+    
+  end do   
+  write(*,*) "Gross nodes: ",NNode       
+  NNode = itmp      	
+  write(*,*) "Net nodes: ",NNode       
+	
+  !==================================
   ! output elements/nodes/faces
   ! tetgen format 
   !==================================
@@ -91,9 +119,9 @@ program gmsh2tetgen
   fname = 'mesh.ele' 
   open(meshf, file = fname, status = 'unknown')
   write(*,*) "Writing ", fname  
-  write(meshf,*) NElem, NSHL, itmp         
+  write(meshf,*) NElem, NSHL, 0         
   do i = 1, NElem
-    write(meshf,'(5I8)') i, (IEN(i,j), j = 1, NSHL)
+    write(meshf,'(5I8)') i, (o2n(IEN(i,j)), j = 1, NSHL)
   end do      
   close(meshf)
 
@@ -102,7 +130,7 @@ program gmsh2tetgen
   open(meshf, file = fname, status = 'unknown')
   write(meshf,*) NNode, NSD, 0,0 
   do i = 1, NNode
-    write(meshf,'(I8,x, 3E17.9)') i, (  xg(i,j), j = 1, NSD)
+    write(meshf,'(I8,x, 3E17.9)') i, (  xg(n2o(i),j), j = 1, NSD)
   end do  
   close(meshf)
 
@@ -111,7 +139,7 @@ program gmsh2tetgen
   open(meshf, file = fname, status = 'unknown')
   write(meshf,*) NFace,1  
   do i = 1, NFace
-    write(meshf,'(5I8)') i, (Face_IEN(i,j), j = 1, NSHLb), FaceID(i)
+    write(meshf,'(5I8)') i, (o2n(Face_IEN(i,j)), j = 1, NSHLb), FaceID(i)
   end do       
   close(meshf)
 
@@ -131,12 +159,12 @@ program gmsh2tetgen
   write(meshf,'(a,x,I10,x,a)') 'POINTS ',NNode, 'float'
 
   do i = 1, NNode
-    write(meshf,'(3E17.8)') (real(xg(i,j),4), j = 1, NSD)    
+    write(meshf,'(3E17.8)') (real(xg(n2o(i),j),4), j = 1, NSD)    
   end do
 
   write(meshf,'(a,x,I10,x,I10)') 'CELLS ',NElem, NElem*5
   do i = 1, NElem
-    write(meshf,'(5I10)') 4, (IEN(i,j)-1, j = 1, 4)
+    write(meshf,'(5I10)') 4, (o2n(IEN(i,j))-1, j = 1, 4)
   end do
 
   write(meshf,'(a,x,I10)') 'CELL_TYPES',NElem
@@ -176,12 +204,12 @@ program gmsh2tetgen
       write(meshf,'(a,x,I10,x,a)') 'POINTS ',NNode, 'float'
 
       do i = 1, NNode
-        write(meshf,'(3E17.8)') (real(xg(i,j)), j = 1, NSD)    
+        write(meshf,'(3E17.8)') (real(xg(n2o(i),j)), j = 1, NSD)    
       end do
 
       write(meshf,'(a,x,I10,x,I10)') 'CELLS ',hNFace, hNFace*4
       do i = 1, hNFace
-        write(meshf,'(4I10)') 3, (hFace_IEN(i,j)-1, j = 1, NSHLb)
+        write(meshf,'(4I10)') 3, (o2n(hFace_IEN(i,j))-1, j = 1, NSHLb)
       end do
 
       write(meshf,'(a,x,I10)') 'CELL_TYPES',hNFace
