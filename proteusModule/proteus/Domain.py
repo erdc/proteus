@@ -287,6 +287,7 @@ class PlanarStraightLineGraphDomain(D_base):
         hasVertexFlag = int(firstLine[3])
         self.vertices=[]
         self.base=None
+        self.vertexFlags = None
         if hasVertexFlag:
             self.vertexFlags=[]
         for i in range(nVertices):
@@ -304,8 +305,9 @@ class PlanarStraightLineGraphDomain(D_base):
         while len(segmentLine) == 0 or segmentLine[0][0] == '#':
                 segmentLine = f.readline().split()
         nSegments = int(segmentLine[0])
-        hasSegmentFlag = bool(segmentLine[1])
+        hasSegmentFlag = bool(int(segmentLine[1]))
         self.segments=[]
+        self.segmentFlags = None
         if hasSegmentFlag:
             self.segmentFlags=[]
         for i in range(nSegments):
@@ -343,7 +345,8 @@ class PlanarStraightLineGraphDomain(D_base):
                     if line[4][0] != '#':
                         self.areaConstraint.append(float(line[4]))                
         self.getBoundingBox()
-        self.getSegmentPartition()
+        if self.segmentFlags != None:
+            self.getSegmentPartition()
         f.close()
     def writePoly(self,fileprefix):
         """
@@ -492,7 +495,113 @@ property float z
         Store the PSLG domain in an XDMF file. For now we store the information on holes in and Information element.
         """
         raise UserWarning("Xdmf output not implemented")
+    def writeGeo(self,fileprefix,dummyAxis=2,xref=0.):
+        """
+        Write the planar straight line graph domain in the gmsh geo format.
+        dummyAxis (0,1,2) is the remaining axis for
+        embedding the 2d geometry in 3d and xref is the constant value
+        for that axis
+        """
+        if True:#overwrite
+            pf = open(fileprefix+'.geo','w')
+            if self.vertexFlags !=None:
+                hasVertexFlags=1
+            else:
+                hasVertexFlags=0
+            if self.segmentFlags != None:
+                hasSegmentFlags=1
+            else:
+                hasSegmentFlags=0
+            #hack
+            hasSegmentFlags=False
+            hasVertexFlags=False
+            pf.write("""
+//format gmsh geo
+//comment author: Proteus
+//comment object: %s
+""" % (self.name,))
 
+            #write the vertices
+            if dummyAxis == 0:
+                for vN,v in enumerate(self.vertices):
+                    pf.write('Point(%d)=(%21.16e,%21.16e,%21.16e);\n' % (vN+1,xref,v[0],v[1]))
+            elif dummyAxis == 1:
+                for vN,v in enumerate(self.vertices):
+                    pf.write('Point(%d)=(%21.16e,%21.16e,%21.16e);\n' % (vN+1,v[0],xref,v[1]))
+            else:
+                for vN,v in enumerate(self.vertices):
+                    pf.write('Point(%d)=(%21.16e,%21.16e,%21.16e);\n' % (vN+1,v[0],v[1],xref))
+            # find point indices => physical point
+            if self.vertexFlags != None:		   
+	       vertFlagDict={}
+	       for vN,v in enumerate(self.vertices):
+	          if not vertFlagDict.has_key(self.vertexFlags[vN]):
+                     vertFlagDict[self.vertexFlags[vN]] = []
+		 
+	          vertFlagDict[self.vertexFlags[vN]].append(vN+1)
+	    
+	       print  "vertexFlags"
+	       print  vertFlagDict
+               # Physical Surfaces	
+	       pvN=0
+               for pv in vertFlagDict:                                 
+		   pvN+=1  	
+		   pf.write('Physical Point(%d) = {%d' % (pvN,vertFlagDict[pv][0]) )
+		   for vN in range(1,len(vertFlagDict[pv])):
+		      pf.write(',%d' %(vertFlagDict[pv][vN]))
+		   pf.write('};\n' )
+   
+
+            #write the facets	    
+            lN = 0
+	    fNN = 0
+            
+            lineLoop={}
+            #write the lines
+            for vN in range(0,len(self.segments)):
+                lN+=1			
+                pf.write('Line(%d) = {%d,%d};\n'% (lN,self.segments[vN][0]+1,self.segments[vN][1]+1))
+                lineLoop[vN] = lN;
+
+            #write the lineloop
+            fNN+=1  	
+            pf.write('Line Loop(%d) = {%d' % (fNN,lineLoop[0]) )
+            for vN in range(1,len(self.segments)):
+                pf.write(',%d' %(lineLoop[vN]))
+            pf.write('};\n' )
+
+            #write the surface	   
+            pf.write('Plane Surface(%d) = {%d};\n'% (fNN,fNN))
+
+            #todo add physical surfaces or lines?
+            pf.close()
+        else:
+            print "File already exists, not writing polyfile: " +`self.polyfile`
+    def writeGMSH(self,fileprefix,dummyAxis=2,xref=0.):
+        """
+        Write the PSLG using gmsh geo format incomplete write now
+        probably run into problems with orientation, no concept of a
+        line loop dummyAxis (0,1,2) is the remaining axis for
+        embedding the 2d geometry in 3d and xref is the constant value
+        for that axis
+        """
+        base =1
+        assert dummyAxis in [0,1,2]
+        pf = open(fileprefix+'.geo','w')
+        if dummyAxis == 0:
+            for vN,v in enumerate(self.vertices):
+                pf.write("Point(%d) = {%g,%g,%g}; \n" % (vN+base,xref,v[0],v[1]))
+        elif dummyAxis == 1:
+            for vN,v in enumerate(self.vertices):
+                pf.write("Point(%d) = {%g,%g,%g}; \n" % (vN+base,v[0],xref,v[1]))
+        else:
+            for vN,v in enumerate(self.vertices):
+                pf.write("Point(%d) = {%g,%g,%g}; \n" % (vN+base,v[0],v[1],xref))
+
+        #
+        for sN,s in enumerate(self.segments):
+            pf.write("Line(%d) = {%d,%d}; \n" % (sN+base,s[0]+base,s[1]+base))
+        pf.close()
 class TriangulatedSurfaceDomain(D_base):
     """
     3D domains described by closed surfaces made up of triangular facets.
@@ -618,9 +727,10 @@ class PiecewiseLinearComplexDomain(D_base):
         assert(self.dim == 3)
         nVertexAttributes = int(firstLine[2])
         self.vertexAttributes = [[] for j in range(nVertexAttributes)]
-        hasVertexFlag = bool(firstLine[3])
+        hasVertexFlag = bool(int(firstLine[3]))
         self.vertices=[]
         self.base=None
+        self.vertexFlags=None
         if hasVertexFlag:
             self.vertexFlags=[]
         for i in range(nVertices):
@@ -638,9 +748,10 @@ class PiecewiseLinearComplexDomain(D_base):
         while len(facetLine) == 0 or facetLine[0][0] == '#':
             facetLine = f.readline().split()
         nFacets = int(facetLine[0])
-        hasFacetFlag = bool(facetLine[1])
+        hasFacetFlag = bool(int(facetLine[1]))
         self.facets=[]
         self.facetHoles=[]
+        self.facetFlags= None
         if hasFacetFlag:
             self.facetFlags=[]
         for i in range(nFacets):
