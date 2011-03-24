@@ -1159,25 +1159,25 @@ class PicardNewton(Newton):
                  EWtol=True,
                  maxLSits = 100):
         Newton.__init__(self,
-                 linearSolver,
-                 F,J=None,du=None,par_du=None,
-                 rtol_r  = 1.0e-4,
-                 atol_r  = 1.0e-16,
-                 rtol_du = 1.0e-4,
-                 atol_du = 1.0e-16,
-                 maxIts  = 100,
-                 norm = l2Norm,
-                 convergenceTest = 'r',
-                 computeRates = True,
-                 printInfo = True,
-                 fullNewton=True,
-                 directSolver=False,
-                 EWtol=True,
-                 maxLSits = 100)
+                        linearSolver,
+                        F,J,du,par_du,
+                        rtol_r,
+                        atol_r,
+                        rtol_du,
+                        atol_du,
+                        maxIts,
+                        norm,
+                        convergenceTest,
+                        computeRates,
+                        printInfo,
+                        fullNewton,
+                        directSolver,
+                        EWtol,
+                        maxLSits)
         self.picardIts = 1
         self.picardTol = 1000.0
         self.usePicard = True
-   def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         import Viewers
         """
         Solve F(u) = b
