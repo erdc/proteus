@@ -8,6 +8,9 @@ marinHexMesh: marinHexMesh.f
 
 gmsh2tetgen:gmsh2tetgen.f 	
 	$(FC) -ffree-form gmsh2tetgen.f -o gmsh2tetgen
+
+gmsh2tetgen_withtags:gmsh2tetgen_withtags.f 	
+	$(FC) -ffree-form gmsh2tetgen_withtags.f -o gmsh2tetgen_withtags
 			
 clean:
 	rm -f marinHexMesh gmsh2tetgen
