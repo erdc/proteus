@@ -1364,29 +1364,6 @@ class OneLevelTransport(NonlinearEquation):
                          self.nElementBoundaryQuadraturePoints_elementBoundary,
                          self.nDOF_trial_element[cj]),
                         'd')
-                    
-                    self.fluxJacobian[ci][cj] = numpy.zeros(
-                        (self.mesh.nElementBoundaries_global,
-                         2,
-                         self.nElementBoundaryQuadraturePoints_elementBoundary,
-                         self.nDOF_trial_element[cj]),
-                        'd')
-                    self.fluxJacobian_eb[ci][cj] = numpy.zeros(
-                        (self.mesh.nElementBoundaries_global,
-                         2,
-                         self.mesh.nElementBoundaries_element,
-                         self.nElementBoundaryQuadraturePoints_elementBoundary,
-                         self.nDOF_trial_element[cj]),
-                        'd')
-
-                    self.ebq_global[('dadvectiveFlux_left',ci,cj)] = numpy.zeros(
-                        (self.mesh.nElementBoundaries_global,
-                         self.nElementBoundaryQuadraturePoints_elementBoundary),
-                        'd')
-                    self.ebq_global[('dadvectiveFlux_right',ci,cj)] = numpy.zeros(
-                        (self.mesh.nElementBoundaries_global,
-                         self.nElementBoundaryQuadraturePoints_elementBoundary),
-                        'd')
                     self.ebqe[('dadvectiveFlux_left',ci,cj)] = numpy.zeros(
                         (self.mesh.nExteriorElementBoundaries_global,
                          self.nElementBoundaryQuadraturePoints_elementBoundary),
@@ -1395,18 +1372,33 @@ class OneLevelTransport(NonlinearEquation):
                         (self.mesh.nExteriorElementBoundaries_global,
                          self.nElementBoundaryQuadraturePoints_elementBoundary),
                         'd')
+                    #mwf hack
+                    if numericalFluxType.hasInterior:
+                        self.fluxJacobian[ci][cj] = numpy.zeros(
+                            (self.mesh.nElementBoundaries_global,
+                             2,
+                             self.nElementBoundaryQuadraturePoints_elementBoundary,
+                             self.nDOF_trial_element[cj]),
+                            'd')
+                        self.fluxJacobian_eb[ci][cj] = numpy.zeros(
+                            (self.mesh.nElementBoundaries_global,
+                             2,
+                             self.mesh.nElementBoundaries_element,
+                             self.nElementBoundaryQuadraturePoints_elementBoundary,
+                             self.nDOF_trial_element[cj]),
+                            'd')
+
+                        self.ebq_global[('dadvectiveFlux_left',ci,cj)] = numpy.zeros(
+                            (self.mesh.nElementBoundaries_global,
+                             self.nElementBoundaryQuadraturePoints_elementBoundary),
+                            'd')
+                        self.ebq_global[('dadvectiveFlux_right',ci,cj)] = numpy.zeros(
+                            (self.mesh.nElementBoundaries_global,
+                             self.nElementBoundaryQuadraturePoints_elementBoundary),
+                            'd')
                     #mwf TODO use fluxJacobian_eb for HamiltonJacobi - two-sided flux
                     #mwf TODO check convention on flux derivatives, should be (cj,ci) to be consistent?
-                    self.ebq[('dHamiltonJacobiFlux_left',ci,cj)] = numpy.zeros(
-                        (self.mesh.nElements_global,
-                         self.mesh.nElementBoundaries_element,
-                         self.nElementBoundaryQuadraturePoints_elementBoundary),
-                        'd')
-                    self.ebq[('dHamiltonJacobiFlux_right',ci,cj)] = numpy.zeros(
-                        (self.mesh.nElements_global,
-                         self.mesh.nElementBoundaries_element,
-                         self.nElementBoundaryQuadraturePoints_elementBoundary),
-                        'd')
+                    #mwf hack
                     #treat as 1-sided flux on exterior boundary
                     self.ebqe[('dHamiltonJacobiFlux_left',ci,cj)] = numpy.zeros(
                         (self.mesh.nExteriorElementBoundaries_global,
@@ -1416,14 +1408,25 @@ class OneLevelTransport(NonlinearEquation):
                         (self.mesh.nExteriorElementBoundaries_global,
                          self.nElementBoundaryQuadraturePoints_elementBoundary),
                         'd')
-                    self.fluxJacobian_hj[ci][cj] = numpy.zeros(
-                        (self.mesh.nElementBoundaries_global,
-                         2,#left flux or right flux
-                         2,#left and right neighbor 
-                         self.nElementBoundaryQuadraturePoints_elementBoundary,
-                         self.nDOF_trial_element[cj]),
-                        'd')
-                    #should be able to reusefluxJacobian_exterior since only 1 flux at boundary
+                    if numericalFluxType.hasInterior:
+                        self.ebq[('dHamiltonJacobiFlux_left',ci,cj)] = numpy.zeros(
+                            (self.mesh.nElements_global,
+                             self.mesh.nElementBoundaries_element,
+                             self.nElementBoundaryQuadraturePoints_elementBoundary),
+                            'd')
+                        self.ebq[('dHamiltonJacobiFlux_right',ci,cj)] = numpy.zeros(
+                            (self.mesh.nElements_global,
+                             self.mesh.nElementBoundaries_element,
+                             self.nElementBoundaryQuadraturePoints_elementBoundary),
+                            'd')
+                        self.fluxJacobian_hj[ci][cj] = numpy.zeros(
+                            (self.mesh.nElementBoundaries_global,
+                             2,#left flux or right flux
+                             2,#left and right neighbor 
+                             self.nElementBoundaryQuadraturePoints_elementBoundary,
+                             self.nDOF_trial_element[cj]),
+                            'd')
+                  #should be able to reusefluxJacobian_exterior since only 1 flux at boundary
         #
         # Build the node connectivity lists for solvers
         #
