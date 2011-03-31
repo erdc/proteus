@@ -259,33 +259,33 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
 							    (char*)MESH(cmesh).elementBoundaryBarycentersArray);
 
 // NURBS
+  //mwf elementIJK,weights  V_KNOT,W_KNOT,U_KNOT unitialized? switched to MESH(cmesh).
   dims[0] = 0;
-  if (elementIJK != NULL) dims[0] = MESH(cmesh).nElements_global*3;
+  if (MESH(cmesh).elementIJK != NULL) dims[0] = MESH(cmesh).nElements_global*3;
   elementIJK = PyArray_FromDimsAndData(1,
 							    dims,
 							    PyArray_DOUBLE,
 							    (char*)MESH(cmesh).elementIJK);
   dims[0] = 0;
-  if (weights != NULL) dims[0] = MESH(cmesh).nElements_global;
+  if (MESH(cmesh).weights != NULL) dims[0] = MESH(cmesh).nElements_global;
   weights = PyArray_FromDimsAndData(1,
 							    dims,
 							    PyArray_DOUBLE,
 							    (char*)MESH(cmesh).weights);
-
   dims[0] = 0;
-  if (U_KNOT != NULL) dims[0] = MESH(cmesh).nx+MESH(cmesh).px+1;
+  if (MESH(cmesh).U_KNOT != NULL) dims[0] = MESH(cmesh).nx+MESH(cmesh).px+1;
   U_KNOT = PyArray_FromDimsAndData(1,
 							    dims,
 							    PyArray_DOUBLE,
 							    (char*)MESH(cmesh).U_KNOT);
   dims[0] = 0;
-  if (V_KNOT != NULL) dims[0] = MESH(cmesh).ny+MESH(cmesh).py+1;
+  if (MESH(cmesh).V_KNOT != NULL) dims[0] = MESH(cmesh).ny+MESH(cmesh).py+1;
   V_KNOT = PyArray_FromDimsAndData(1,
 							    dims,
 							    PyArray_DOUBLE,
 							    (char*)MESH(cmesh).V_KNOT);
   dims[0] = 0;
-  if (W_KNOT != NULL) dims[0] = MESH(cmesh).nz+MESH(cmesh).pz+1;
+  if (MESH(cmesh).W_KNOT != NULL) dims[0] = MESH(cmesh).nz+MESH(cmesh).pz+1;
   W_KNOT = PyArray_FromDimsAndData(1,
 							    dims,
 							    PyArray_DOUBLE,
