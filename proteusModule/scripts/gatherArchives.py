@@ -26,9 +26,6 @@ def gatherXDMFfiles(size,filename,dataDir='.',addname="_all"):
     size -- nprocessors
     
     """
-    #mwf debug
-    #import pdb
-    #pdb.set_trace()
     xmlFile = []; tree = []
     xmlFile.append(open(filename+str(0)+".xmf","r"))
     tree.append(ElementTree(file=xmlFile[0]))
@@ -67,9 +64,7 @@ def gatherXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nStepsOnly=None,
     size -- nprocessors
     
     """
-    #mwf debug
-    #import pdb
-    #pdb.set_trace()
+
     xmlFile = open(filename+str(0)+".xmf","r")
     tree = ElementTree(file=xmlFile)
     xmlFile.close()
@@ -122,9 +117,6 @@ def gatherSplitTimeStepXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nSt
     size -- nprocessors
     
     """
-    #mwf debug
-    #import pdb
-    #pdb.set_trace()
     xmlFile = open(filename+str(0)+".xmf","r")
     tree = ElementTree(file=xmlFile)
     xmlFile.close()
@@ -229,7 +221,7 @@ if __name__ == '__main__':
 
     if opts.lotsOfMemory:
         gatherXDMFfiles(opts.size,opts.filebase,opts.dataDir,opts.append)
-    if opts.splitTimeSteps:
+    elif opts.splitTimeSteps:
         gatherSplitTimeStepXDMFfilesOpt(opts.size,opts.filebase,opts.dataDir,opts.append,opts.nStepsOnly,opts.mStride)
     else:
         gatherXDMFfilesOpt(opts.size,opts.filebase,opts.dataDir,opts.append,opts.nStepsOnly,opts.mStride)
