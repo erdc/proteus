@@ -504,34 +504,35 @@ class Newton(NonlinearSolver):
                 norm_r_cur = self.norm(r)
                 norm_r_last = 2.0*norm_r_cur
                 ls_its = 0
-                #print norm_r_cur,self.atol_r,self.rtol_r
-#                 while ( (norm_r_cur >= 0.99 * self.norm_r + self.atol_r) and
-#                         (ls_its < self.maxLSits) and
-#                         norm_r_cur/norm_r_last < 1.0):
-                while ( (norm_r_cur >= 0.9999 * self.norm_r) and
-                        (ls_its < self.maxLSits)):
-                    self.convergingIts = 0
-                    ls_its +=1
-                    self.du *= 0.5
-                    u += self.du
-                    if par_u != None:
-                        par_u.scatter_forward_insert()
-                    self.computeResidual(u,r,b)
-                    #no overlap
-                    if par_r != None:
+                    #print norm_r_cur,self.atol_r,self.rtol_r
+    #                 while ( (norm_r_cur >= 0.99 * self.norm_r + self.atol_r) and
+    #                         (ls_its < self.maxLSits) and
+    #                         norm_r_cur/norm_r_last < 1.0):
+                if norm_r_cur > self.rtol_r*self.norm_r0 + self.atol_r:#make sure hasn't converged already
+                    while ( (norm_r_cur >= 0.9999 * self.norm_r) and
+                            (ls_its < self.maxLSits)):
+                        self.convergingIts = 0
+                        ls_its +=1
+                        self.du *= 0.5
+                        u += self.du
+                        if par_u != None:
+                            par_u.scatter_forward_insert()
+                        self.computeResidual(u,r,b)
                         #no overlap
-                        if not self.par_fullOverlap:
-                            par_r.scatter_reverse_add()
-                        else:
-                            par_r.scatter_forward_insert()
-                    norm_r_last = norm_r_cur
-                    norm_r_cur = self.norm(r)
-                    log("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
-                                                                           norm_r_cur,
-                                                                           self.atol_r,
-                                                                           self.rtol_r))
-                if ls_its > 0:
-                    log("Linesearches = %i" % ls_its,level=3)
+                        if par_r != None:
+                            #no overlap
+                            if not self.par_fullOverlap:
+                                par_r.scatter_reverse_add()
+                            else:
+                                par_r.scatter_forward_insert()
+                        norm_r_last = norm_r_cur
+                        norm_r_cur = self.norm(r)
+                        log("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
+                                                                               norm_r_cur,
+                                                                               self.atol_r,
+                                                                               self.rtol_r))
+                    if ls_its > 0:
+                        log("Linesearches = %i" % ls_its,level=3)
         else:
             if self.linearSolver.computeEigenvalues:
 #                 N = len(self.linearSolver.eigenvalues_r)

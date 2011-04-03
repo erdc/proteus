@@ -4109,6 +4109,19 @@ class Richards_IIPG_exterior(NF_base):
         self.penalty_constant = 100.0
         self.penalty_power = 1.0
 
+    def setDirichletValues(self,ebqe):
+        self.isDOFBoundary[0][:]=0
+        for ci in range(self.nc):
+            self.ebqe[('u',ci)].flat[:] = ebqe[('u',ci)].flat[:]
+            for (ebNE,k),g,x in zip(self.DOFBoundaryConditionsDictList[ci].keys(),
+                                    self.DOFBoundaryConditionsDictList[ci].values(),
+                                    self.DOFBoundaryPointDictList[ci].values()):
+               self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t)
+               self.isDOFBoundary[0][ebNE,k] = 1#this will get turned off if on the seepage boundary and flow is inward
+        for ci in range(self.nc):
+            for bci in self.periodicBoundaryConditionsDictList[ci].values():
+                self.ebqe[('u',ci)][bci[0]]=ebqe[('u',ci)][bci[1]]
+                self.ebqe[('u',ci)][bci[1]]=ebqe[('u',ci)][bci[0]]
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
         ebqe[('advectiveFlux',0)].flat[:]=0.0#just put everthing in the diffusive flux
         self.ebqe[('u',0)].flat[:] = ebqe[('u',0)].flat[:]

@@ -860,6 +860,11 @@ class OneLevelTransport(NonlinearEquation):
 				       max(1,self.nSpace_global-1)),
 				      'd')
         log(memory("global exterior element boundary quadrature","OneLevelTransport"),level=4)
+        self.forceStrongConditions=False#True
+        self.dirichletConditionsForceDOF = {}
+        if self.forceStrongConditions:
+            for cj in range(self.nc):
+                self.dirichletConditionsForceDOF[cj] = DOFBoundaryConditions(self.u[cj].femSpace,dofBoundaryConditionsSetterDict[cj],weakDirichletConditions=False)
         #
         # element boundary quadrature global
         #
@@ -1678,6 +1683,10 @@ class OneLevelTransport(NonlinearEquation):
         for cj in range(self.nc):
             for dofN,g in self.dirichletConditions[cj].DOFBoundaryConditionsDict.iteritems():
                 self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        if self.forceStrongConditions:
+            for cj in range(len(self.dirichletConditionsForceDOF)):
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                    self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateU(u)
         self.setUnknowns(self.timeIntegration.u)
@@ -1701,6 +1710,10 @@ class OneLevelTransport(NonlinearEquation):
                                                                   self.elementResidual[ci],
                                                                   r);
         log("Global residual",level=9,data=r)
+	if self.forceStrongConditions:#
+	    for cj in range(len(self.dirichletConditionsForceDOF)):#
+		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
         #for keeping solver statistics
         self.nonlinear_function_evaluations += 1
         #cek debug
@@ -1745,6 +1758,16 @@ class OneLevelTransport(NonlinearEquation):
         else:
             raise TypeError("Matrix type must be SparseMatrix or array")
         log("Jacobian ",level=10,data=jacobian)
+        if self.forceStrongConditions:
+            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
+            for cj in range(self.nc):
+                for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                    global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
+                        if (self.colind[i] == global_dofN):
+                            self.nzval[i] = scaling
+                        else:
+                            self.nzval[i] = 0.0
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         #cek debug
