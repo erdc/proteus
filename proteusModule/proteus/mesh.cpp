@@ -4251,11 +4251,11 @@ int readTetgenElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, int
   if (!elementBoundaryMaterialTypesInFile)
     return failed;
   //mwf debug
-  std::cout<<"readTetgenElementBoundaryMaterialTypes filebalse= "<<filebase<<" after read failed= "<<failed
+  std::cout<<"readTetgenElementBoundaryMaterialTypes filebase= "<<filebase<<" after read failed= "<<failed
 	   <<" nElementBoundaries_file= "<<nElementBoundaries_file<<" mesh.nElementBoundaries_global= "<<mesh.nElementBoundaries_global 
 	   <<" mesh.nExteriorElementBoundaries_global= "<<mesh.nExteriorElementBoundaries_global<<std::endl;
-  assert(mesh.nElementBoundaries_global == nElementBoundaries_file ||
-	 mesh.nExteriorElementBoundaries_global == nElementBoundaries_file);
+   assert(mesh.nElementBoundaries_global == nElementBoundaries_file ||
+     	 mesh.nExteriorElementBoundaries_global <= nElementBoundaries_file);
 
   assert(mesh.elementBoundaryMaterialTypes);
   //assume node numberings in triangle and mesh same but not necessarily 
@@ -4284,7 +4284,7 @@ int readTetgenElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, int
 	  mesh.elementBoundaryMaterialTypes[ebN] = tetgenElementBoundaryMaterialTypes[ttuple];
 	}
     }
-  else if (mesh.nExteriorElementBoundaries_global == nElementBoundaries_file) //just read exterior boundaries
+  else if (mesh.nExteriorElementBoundaries_global <= nElementBoundaries_file) //just read exterior boundaries
     {
       memset(mesh.elementBoundaryMaterialTypes,INTERIOR_ELEMENT_BOUNDARY_MATERIAL,
 	     mesh.nElementBoundaries_global*sizeof(int));
