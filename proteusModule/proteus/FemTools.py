@@ -6059,6 +6059,135 @@ class DOFBoundaryConditions:
             self.global2freeGlobal_global_dofs[i] = dofN#map each of the unknown DOF's to the original node number
             self.global2freeGlobal_free_dofs[i] = self.global2freeGlobal[dofN]#map each of the unknown DOF's to the free unknown number
 
+
+class DOFBoundaryConditions_alt:
+    """
+    A class for generating the set of DOF that are replaced by
+    Dirichlet conditions and the values that are to be assigned to
+    those DOF. For now I will ignore the ability to specify
+    different boundary conditions for interpolatory DOF that correspond
+    to the same physical point (i.e. discontinuous approximations where
+    left and right limits can be specified)
+    
+    DOFBoundaryConditionDict -- a dictionary of boundary condition functions
+    accessed by global DOF number
+    DOFBoundryConditionPointDict -- a dictionary of physical points associated
+    with the boundary condition
+    freeDOFSet -- the DOF not specified by boundary conditions
+    global2freeGlobal -- an integer mapping from global DOF numbers
+    to the free DOF numbers.
+    
+    The constructor requires a function that takes a point as input
+    and, if the point is on a part of the boundary where values are
+    specified, then it returns the function of t,x, and the unknown
+    that computes the boundary condition.
+
+    TODO
+     For now allow for flag to specify type of dirichlet condition to allow 
+     say nonlinear function of solution to be specified
+     initially, only weak bc's will allow this functionality though
+
+    """
+    def __init__(self,femSpace,getPointwiseBoundaryConditions=None,weakDirichletConditions=False,
+                 getPeriodicBoundaryConditions=None,allowNodalMaterialBoundaryTypes=True):
+        self.DOFBoundaryConditionsDict={}
+        self.DOFBoundaryPointDict={}
+        self.DOFBoundaryMaterialFlag={}
+        self.periodicDOFDict={}
+        class ptuple:
+            """
+            define a dictionary key that defines points as equal if they're "close"
+            """
+            h=femSpace.mesh.hMin
+            def __init__(self,p):
+                self.p=p
+            def __hash__(self):
+                return hash(tuple(self.p))
+            def __eq__(self,other):
+                return  enorm(self.p - other.p) < self.h
+        if getPointwiseBoundaryConditions!=None and femSpace.strongDirichletConditions and not weakDirichletConditions:
+            for eN in range(femSpace.elementMaps.mesh.nElements_global):
+            # mesh = femSpace.elementMaps.mesh
+            # for ebNE in range(mesh.nExteriorElementBoundaries_global):
+            #     ebN = mesh.exteriorElementBoundariesArray[ebNE]
+            #     eN = mesh.elementBoundaryElementsArray[ebN,0]
+                for k in range(femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+                    i = femSpace.referenceFiniteElement.interpolationConditions.quadrature2DOF_element(k)
+                    dofN = femSpace.dofMap.l2g[eN,i]
+                    x = femSpace.interpolationPoints[eN,k]
+                   
+                    #in case interpolation is wholly in element interior
+                    interiorInterpolationPoint = True
+                    for ebN_element in range(femSpace.elementMaps.mesh.nElementBoundaries_element):
+                    	if femSpace.referenceFiniteElement.interpolationConditions.definedOnLocalElementBoundary(k,ebN_element) == True:
+                    	    interiorInterpolationPoint = False
+                    	    ebN = femSpace.elementMaps.mesh.elementBoundariesArray[eN,ebN_element]
+                    	    materialFlag = femSpace.elementMaps.mesh.elementBoundaryMaterialTypes[ebN]
+                    	    #mwf now allow for flag to specify type of dirichlet condition to allow 
+                    	    #say nonlinear function of solution to be specified
+                    	    #initially, only weak bc's will allow this functionality though
+                    	    gReturn = getPointwiseBoundaryConditions(x,materialFlag)
+                    	    try:
+                    		g = gReturn[0]
+                    		gFlag = gReturn[1]
+                    	    except TypeError:
+                    		g = gReturn
+                    		gFlag = 1
+                    	    if gFlag != 1:
+                    		logEvent("WARNING strong Dirichlet conditions do not enforce nonlinear bcs")				    
+                    	    p = None
+                    	    if getPeriodicBoundaryConditions != None:
+                    		p = getPeriodicBoundaryConditions(x,materialFlag)
+                    	    self.DOFBoundaryMaterialFlag[dofN]  = None
+                    	    if p != None:
+                    		if self.periodicDOFDict.has_key(ptuple(p)):
+                    		    self.periodicDOFDict[ptuple(p)].add(dofN)
+                    		else:
+                    		    self.periodicDOFDict[ptuple(p)] = set([dofN])
+                    	    elif g != None:
+                    		self.DOFBoundaryConditionsDict[dofN] = g
+                    		self.DOFBoundaryPointDict[dofN]=x
+                    		self.DOFBoundaryMaterialFlag[dofN] = materialFlag
+  
+                    	    #has Dirichlet bc set or not
+                    	#on ebN_element
+                    #local faces
+                #k
+            #eN
+        self.freeDOFSet = set(range(femSpace.dim))
+        for nodeSet in self.periodicDOFDict.values():
+            nodeList = list(nodeSet)
+            nodeList.sort()
+            self.freeDOFSet.add(nodeList[0])
+            for dofN in nodeList[1:]:
+                self.freeDOFSet.discard(dofN)
+        self.nFreeDOF_global = len(self.freeDOFSet)
+        self.global2freeGlobal={}
+        self.myFreeDOF={}
+        for free_dofN, dofN in enumerate(self.freeDOFSet):
+            self.global2freeGlobal[dofN] = free_dofN
+            self.myFreeDOF[dofN] = dofN
+        for nodeSet in self.periodicDOFDict.values():
+            nodeList = list(nodeSet)
+            nodeList.sort()
+            free_dofN = self.global2freeGlobal[nodeList[0]]
+            print "node list",nodeList
+            for dofN in nodeSet:
+                self.global2freeGlobal[dofN] = free_dofN
+                self.myFreeDOF[dofN] = nodeList[0]
+        #create arrays for iterating over dofs in c
+        #not necessarily a 1-1 correspondence between free_dofN and dofN because of
+        #periodic bcs, so have to have 2 arrays
+        nfree = len(self.global2freeGlobal)
+        self.global2freeGlobal_global_dofs = numpy.zeros((nfree,),'i')
+        self.global2freeGlobal_free_dofs = numpy.zeros((nfree,),'i')
+        test = numpy.array(range(nfree),dtype='i')
+        for i,dofN in enumerate(self.global2freeGlobal.keys()):
+            self.global2freeGlobal_global_dofs[i] = dofN#map each of the unknown DOF's to the original node number
+            self.global2freeGlobal_free_dofs[i] = self.global2freeGlobal[dofN]#map each of the unknown DOF's to the free unknown number
+
+
+
 class FluxBoundaryConditions:
     """
     A class for generating the list of element boundaries
