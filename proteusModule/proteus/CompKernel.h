@@ -100,7 +100,22 @@ public:
 						       double* normal,
 						       double* boundaryJac,						       
 						       double* metricTensor,
-						       double& metricTensorDetSqrt);  
+						       double& metricTensorDetSqrt);
+  inline void valFromDOF(const double* dof,const int* l2g_element,const double* trial_ref,double& val)
+  {
+    val=0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      val+=dof[l2g_element[j]]*trial_ref[j];
+  }
+  
+  inline void gradFromDOF(const double* dof,const int* l2g_element,const double* grad_trial,double* grad)
+  {
+    for(int I=0;I<NSPACE;I++)
+      grad[I] = 0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      for(int I=0;I<NSPACE;I++)
+	grad[I] += dof[l2g_element[j]]*grad_trial[j*NSPACE+I];
+  }
 };
 
 //specialization for 3D
@@ -378,6 +393,21 @@ public:
 			      Gy_tr_Gy_20*Gy_tr_Gy_11*Gy_tr_Gy_02 -
 			      Gy_tr_Gy_21*Gy_tr_Gy_12*Gy_tr_Gy_00 -
 			      Gy_tr_Gy_22*Gy_tr_Gy_10*Gy_tr_Gy_01) / (1.0+xt_dot_n*xt_dot_n));
+  }
+  inline void valFromDOF(const double* dof,const int* l2g_element,const double* trial_ref,double& val)
+  {
+    val=0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      val+=dof[l2g_element[j]]*trial_ref[j];
+  }
+  
+  inline void gradFromDOF(const double* dof,const int* l2g_element,const double* grad_trial,double* grad)
+  {
+    for(int I=0;I<3;I++)
+      grad[I] = 0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      for(int I=0;I<3;I++)
+	grad[I] += dof[l2g_element[j]]*grad_trial[j*3+I];
   }
 };
 
