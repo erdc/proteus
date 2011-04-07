@@ -2297,12 +2297,13 @@ class TetrahedralMesh(Mesh):
     def refine(self,oldMesh):
         return self.refineFreudenthalBey(oldMesh)
     
-    def generateFromTetgenFiles(self,filebase,base):
+    def generateFromTetgenFiles(self,filebase,base,skipGeometricInit=True):
         import cmeshTools
         self.cmesh = cmeshTools.CMesh()
         cmeshTools.generateFromTetgenFiles(self.cmesh,filebase,base)
-        #cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
-        #cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
+        if skipGeometricInit == False:
+            cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
+            cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
         self.buildFromC(self.cmesh)
     def generateFrom3DMFile(self,filebase,base=1):
         import cmeshTools
