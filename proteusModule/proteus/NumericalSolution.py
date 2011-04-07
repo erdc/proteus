@@ -727,11 +727,19 @@ class  NS_base:
                 #end system split operator sequence 
                 if systemStepFailed:
                     log("System Step Failed")
+                    #go ahead and update as if the time step had succeeded
+                    self.postStep(model)
+                    self.systemStepController.modelStepTaken(model,self.t_stepSequence)
+                    self.systemStepController.sequenceTaken()                
+                    self.systemStepController.updateTimeHistory()
                     #you're dead if retrySequence didn't work
                     #go ahead and calculate auxiliary variables for failed solution
                     for model in self.modelList:
                         for av in self.auxiliaryVariables[model.name]:
                             av.calculate()
+                    log("Step Failed, Model step t=%12.5e, dt=%12.5e for model %s" % (model.stepController.t_model,
+                                                                                      model.stepController.dt_model,
+                                                                                      model.name))
                     break
                 else:
                     self.systemStepController.updateTimeHistory()
