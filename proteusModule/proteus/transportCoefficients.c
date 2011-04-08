@@ -5668,6 +5668,7 @@ void l2project2Tensor(const int nSimplices,
 void conservativeHeadRichardsMualemVanGenuchten_sd_het(const int nSimplex,
 						       const int nPointsPerSimplex,
 						       const int nSpace,
+						       double pc_eps,
 						       const int * rowptr,
 						       const int * colind,
 						       const int* materialTypes,
@@ -5690,7 +5691,7 @@ void conservativeHeadRichardsMualemVanGenuchten_sd_het(const int nSimplex,
 {
   int i,j,k,I,matID,ii;
   const int nSpace2=nSpace*nSpace;
-  register double psiC,
+  register double psiC,pcBarStar,
     pcBar,pcBar_n,pcBar_nM1,pcBar_nM2,
     onePlus_pcBar_n,
     sBar,sqrt_sBar,DsBar_DpsiC,
@@ -5699,7 +5700,8 @@ void conservativeHeadRichardsMualemVanGenuchten_sd_het(const int nSimplex,
     KWr,DKWr_DpsiC,
     rho2=rho*rho,
     thetaS,
-    rhom,drhom,m;
+    rhom,drhom,m,
+    betauStar;
   const int nnz = rowptr[nSpace];
   for (i=0; i < nSimplex; i++)
     {
@@ -5713,7 +5715,9 @@ void conservativeHeadRichardsMualemVanGenuchten_sd_het(const int nSimplex,
 	  if (psiC > 0.0)
 	    {
 	      pcBar = alpha[matID]*psiC;
-	      pcBar_nM2 = pow(pcBar,n[matID]-2);
+	      pcBarStar = fmax(pcBar,pc_eps);
+
+	      pcBar_nM2 = pow(pcBarStar,n[matID]-2);
 	      pcBar_nM1 = pcBar_nM2*pcBar;
 	      pcBar_n   = pcBar_nM1*pcBar;
 	      onePlus_pcBar_n = 1.0 + pcBar_n;
@@ -5743,7 +5747,8 @@ void conservativeHeadRichardsMualemVanGenuchten_sd_het(const int nSimplex,
 	      DKWr_DpsiC    = 0.0;
 	    }
           //slight compressibility
-          rhom = rho*exp(beta*u[k]);
+	  betauStar = fmin(beta*u[k],1000.0);
+          rhom = rho*exp(betauStar);
           drhom = beta*rhom;
           mass[k] = rhom*thetaW;
           dmass[k] = -rhom*DthetaW_DpsiC+drhom*thetaW;
@@ -5767,6 +5772,148 @@ void conservativeHeadRichardsMualemVanGenuchten_sd_het(const int nSimplex,
 
 }
 
+void conservativeHeadRichardsMualemVanGenuchten_sd_het_linearized_at_saturation(const int nSimplex,
+										const int nPointsPerSimplex,
+										const int nSpace,
+										double linear_break,
+										const int * rowptr,
+										const int * colind,
+										const int* materialTypes,
+										const double rho,
+										const double beta,
+										const double* gravity,
+										const double* alpha,
+										const double* n,
+										const double* thetaR,
+										const double* thetaSR,
+										const double* KWs,
+										double *u,
+										double *mass,
+										double *dmass,
+										double *f,
+										double *df,
+										double *a,
+										double *da,
+										double* vol_frac)
+{
+  int i,j,k,I,matID,ii;
+  const int nSpace2=nSpace*nSpace;
+  register double psiC,pcBarStar,sBarStar,KWrStar,
+    pcBar,pcBar_n,pcBar_nM1,pcBar_nM2,
+    onePlus_pcBar_n,
+    sBar,sqrt_sBar,DsBar_DpsiC,
+    thetaW,DthetaW_DpsiC,
+    vBar,vBar2,DvBar_DpsiC,
+    KWr,DKWr_DpsiC,
+    rho2=rho*rho,
+    thetaS,
+    rhom,drhom,m,
+    betauStar;
+  const int nnz = rowptr[nSpace];
+  pcBarStar = linear_break;
+  
+  for (i=0; i < nSimplex; i++)
+    {
+      matID= materialTypes[i];
+      for (j=0;j<nPointsPerSimplex;j++)
+	{
+	  k = i*nPointsPerSimplex + j;
+	  psiC = -u[k];
+	  m = 1.0 - 1.0/n[matID];
+	  thetaS = thetaR[matID] + thetaSR[matID];
+	  if (psiC > 0.0)
+	    {
+	      pcBar = alpha[matID]*psiC;
+	      if (psiC <= pcBarStar)
+		{
+		  /*calculate regularization parameters again because n varies*/
+		  pcBar_nM2 = pow(pcBarStar,n[matID]-2.);
+		  pcBar_nM1 = pcBar_nM2*pcBar;
+		  pcBar_n   = pcBar_nM1*pcBar;
+		  onePlus_pcBar_n = 1.0 + pcBar_n;
+	      
+		  sBar = pow(onePlus_pcBar_n,-m);
+		  /* using -mn = 1-n */
+		  DsBar_DpsiC = alpha[matID]*(1.0-n[matID])*(sBar/onePlus_pcBar_n)*pcBar_nM1;
+	      
+		  vBar = 1.0-pcBar_nM1*sBar;
+		  vBar2 = vBar*vBar;
+		  DvBar_DpsiC = -alpha[matID]*(n[matID]-1.0)*pcBar_nM2*sBar - pcBar_nM1*DsBar_DpsiC;
+
+		  sBarStar = sBar;
+		  sqrt_sBar = sqrt(sBar);
+		  KWrStar= sqrt_sBar*vBar2;
+	      
+		  /*now compute linearized solution*/
+		  DsBar_DpsiC = (sBarStar-1.0)/(pcBarStar-0.0);
+		  sBar = DsBar_DpsiC*(psiC-0.0) + 1.0;
+		  thetaW = thetaSR[matID]*sBar + thetaR[matID];
+		  DthetaW_DpsiC = thetaSR[matID] * DsBar_DpsiC; 
+  
+		  DKWr_DpsiC= (KWrStar - 1.0)/(pcBarStar-0.0);
+		  KWr = DKWr_DpsiC*(psiC-0.0) + 1.0;
+		}
+	      else
+		{
+		  pcBar = alpha[matID]*psiC;
+		  pcBarStar = fmax(pcBar,1.0e-8);
+		  
+		  pcBar_nM2 = pow(pcBarStar,n[matID]-2);
+		  pcBar_nM1 = pcBar_nM2*pcBar;
+		  pcBar_n   = pcBar_nM1*pcBar;
+		  onePlus_pcBar_n = 1.0 + pcBar_n;
+		  
+		  sBar = pow(onePlus_pcBar_n,-m);
+		  /* using -mn = 1-n */
+		  DsBar_DpsiC = alpha[matID]*(1.0-n[matID])*(sBar/onePlus_pcBar_n)*pcBar_nM1;
+		  
+		  vBar = 1.0-pcBar_nM1*sBar;
+		  vBar2 = vBar*vBar;
+		  DvBar_DpsiC = -alpha[matID]*(n[matID]-1.0)*pcBar_nM2*sBar - pcBar_nM1*DsBar_DpsiC;
+		  
+		  thetaW = thetaSR[matID]*sBar + thetaR[matID];
+		  DthetaW_DpsiC = thetaSR[matID] * DsBar_DpsiC; 
+		  
+		  sqrt_sBar = sqrt(sBar);
+		  KWr= sqrt_sBar*vBar2;
+		  DKWr_DpsiC= ((0.5/sqrt_sBar)*DsBar_DpsiC*vBar2
+			       +
+			       2.0*sqrt_sBar*vBar*DvBar_DpsiC);
+
+		}
+	    }
+	  else
+	    {
+	      thetaW        = thetaS;
+	      DthetaW_DpsiC = 0.0;
+	      KWr           = 1.0;
+	      DKWr_DpsiC    = 0.0;
+	    }
+          //slight compressibility
+	  betauStar = fmin(beta*u[k],1000.0);
+          rhom = rho*exp(betauStar);
+          drhom = beta*rhom;
+          mass[k] = rhom*thetaW;
+          dmass[k] = -rhom*DthetaW_DpsiC+drhom*thetaW;
+	  vol_frac[k] = thetaW;
+	  //mass[k] = rho*thetaW;
+	  //dmass[k] = -rho*DthetaW_DpsiC;
+	  for (I=0;I<nSpace;I++)
+	    {
+              f[k*nSpace+I] = 0.0;
+              df[k*nSpace+I] = 0.0;
+	      for (ii=rowptr[I]; ii < rowptr[I+1]; ii++)
+		{
+                  f[k*nSpace+I]  += rho2*KWr*KWs[matID*nnz+ii]*gravity[colind[ii]];
+                  df[k*nSpace+I] += -rho2*DKWr_DpsiC*KWs[matID*nnz+ii]*gravity[colind[ii]];
+		  a[k*nnz+ii]  = rho*KWr*KWs[matID*nnz+ii];
+		  da[k*nnz+ii] = -rho*DKWr_DpsiC*KWs[matID*nnz+ii];
+		}/*m*/
+	    }/*I*/
+	}/*k*/
+    }/*j*/
+
+}
 
 void conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2(const int nSimplex,
 							     const int nPointsPerSimplex,

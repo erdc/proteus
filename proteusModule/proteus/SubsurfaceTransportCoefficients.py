@@ -296,7 +296,8 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
                  density,
                  beta,
                  diagonal_conductivity=True,
-                 getSeepageFace=None):
+                 getSeepageFace=None,
+                 pc_eps=1.0e-8):
         variableNames=['pressure_head']
         nc=1
         mass={0:{0:'nonlinear'}}
@@ -318,6 +319,7 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
         self.materialTypes_q    = None
         self.materialTypes_ebq  = None
         self.materialTypes_ebqe  = None
+        self.pc_eps = pc_eps
         self.nd = nd
         self.nMaterialTypes = len(thetaR_types)
         self.q = {}; self.ebqe = {}; self.ebq = {}; self.ebq_global={}
@@ -405,6 +407,7 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
             vol_frac = self.ebq[('vol_frac',0)]
         else:
             assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
+        linearize = 0
         self.conservativeHeadRichardsMualemVanGenuchten_sd_het(self.sdInfo[(0,0)][0],
                                                                self.sdInfo[(0,0)][1],
                                                                materialTypes,
@@ -423,7 +426,9 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
                                                                c[('df',0,0)],
                                                                c[('a',0,0)],
                                                                c[('da',0,0,0)],
-                                                               vol_frac)
+                                                               vol_frac,
+                                                               linearize,
+                                                               self.pc_eps)
 
 #         self.conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2(materialTypes,
 #                                                                      self.rho,
