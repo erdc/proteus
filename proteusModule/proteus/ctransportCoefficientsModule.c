@@ -1911,9 +1911,11 @@ static PyObject* ctransportCoefficientsConservativeHeadRichardsMualemVanGenuchte
 {
   int i,nSimplex=1,nPointsPerSimplex=1;
   double rho,beta;
+  int linearize_at_zero=0;
+  double pc_eps=1.0e-4;
   PyObject *rowptr,*colind,*materialTypes,*gravity,*u,*mass,*dmass,*a,*da,*f,*df,*KWs,
     *alpha,*n,*thetaR,*thetaSR,*vol_frac;
-  if(!PyArg_ParseTuple(args,"OOOddOOOOOOOOOOOOOO",
+  if(!PyArg_ParseTuple(args,"OOOddOOOOOOOOOOOOOO|id",
 		       &rowptr,
 		       &colind,
 		       &materialTypes,
@@ -1932,34 +1934,67 @@ static PyObject* ctransportCoefficientsConservativeHeadRichardsMualemVanGenuchte
                        &df,
                        &a,
                        &da,
-		       &vol_frac))
+		       &vol_frac,
+		       &linearize_at_zero,
+		       &pc_eps))
     return NULL;
   for(i=0; i < ND(f)-2; i++)
     nSimplex *= SHAPE(f)[i];
   for(i=ND(f)-2;i<ND(f)-1;i++)
       nPointsPerSimplex *= SHAPE(f)[i];
-  conservativeHeadRichardsMualemVanGenuchten_sd_het(nSimplex,
-						    nPointsPerSimplex,
-						    SHAPE(f)[ND(f)-1],
-						    IDATA(rowptr),
-						    IDATA(colind),
-						    IDATA(materialTypes),
-						    rho,
-						    beta,
-						    DDATA(gravity),
-						    DDATA(alpha),
-						    DDATA(n),
-						    DDATA(thetaR),
-						    DDATA(thetaSR),
-						    DDATA(KWs),
-						    DDATA(u),
-						    DDATA(mass),
-						    DDATA(dmass),
-						    DDATA(f),
-						    DDATA(df),
-						    DDATA(a),
-						    DDATA(da),
-						    DDATA(vol_frac));
+  if (linearize_at_zero == 1)
+    {
+      conservativeHeadRichardsMualemVanGenuchten_sd_het_linearized_at_saturation(nSimplex,
+										 nPointsPerSimplex,
+										 SHAPE(f)[ND(f)-1],
+										 pc_eps,
+										 IDATA(rowptr),
+										 IDATA(colind),
+										 IDATA(materialTypes),
+										 rho,
+										 beta,
+										 DDATA(gravity),
+										 DDATA(alpha),
+										 DDATA(n),
+										 DDATA(thetaR),
+										 DDATA(thetaSR),
+										 DDATA(KWs),
+										 DDATA(u),
+										 DDATA(mass),
+										 DDATA(dmass),
+										 DDATA(f),
+										 DDATA(df),
+										 DDATA(a),
+										 DDATA(da),
+										 DDATA(vol_frac));
+
+    }
+  else
+    {
+      conservativeHeadRichardsMualemVanGenuchten_sd_het(nSimplex,
+							nPointsPerSimplex,
+							SHAPE(f)[ND(f)-1],
+							pc_eps,
+							IDATA(rowptr),
+							IDATA(colind),
+							IDATA(materialTypes),
+							rho,
+							beta,
+							DDATA(gravity),
+							DDATA(alpha),
+							DDATA(n),
+							DDATA(thetaR),
+							DDATA(thetaSR),
+							DDATA(KWs),
+							DDATA(u),
+							DDATA(mass),
+							DDATA(dmass),
+							DDATA(f),
+							DDATA(df),
+							DDATA(a),
+							DDATA(da),
+							DDATA(vol_frac));
+    }
   Py_INCREF(Py_None); 
   return Py_None;
 }

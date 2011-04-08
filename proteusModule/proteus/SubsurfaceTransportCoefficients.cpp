@@ -50,7 +50,7 @@ int findInterval(const double* vertices, int nv, double x, int* ival, double tol
 	leftInt = mid+1;
       else
 	{
-	  printf("findInterval shouldn't be here leftInt=%d rightInt=%d \n",leftInt,rightInt);
+	  std::cout<<"findInterval shouldn't be here leftInt= "<<leftInt<<" rightInt= "<<rightInt<<std::endl;
 	  assert(0);
 	  failed = 1;
 	  return failed;
