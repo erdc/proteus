@@ -105,7 +105,36 @@ namespace proteus
 		     else if (nDOF_mesh_trial_elementIn == 4)//sub-parametric tets
 		       {
 			 if (nDOF_trial_elementIn == 10)
-			   return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,10,10>,3,15,4,10,10,7>());
+			   {
+			     if (nQuadraturePoints_elementIn == 4 && nQuadraturePoints_elementBoundaryIn == 3)
+			       {
+				 return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,10,10>,3,4,4,10,10,3>());
+			       }
+			     else if (nQuadraturePoints_elementIn == 5 && nQuadraturePoints_elementBoundaryIn == 4)
+			       {
+				 return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,10,10>,3,5,4,10,10,4>());	
+			       }
+			     else if (nQuadraturePoints_elementIn == 14 && nQuadraturePoints_elementBoundaryIn == 6)
+			       {
+				 return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,10,10>,3,14,4,10,10,6>());
+			       }
+			     else if (nQuadraturePoints_elementIn == 15 && nQuadraturePoints_elementBoundaryIn == 7)
+			       {
+				 return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,10,10>,3,15,4,10,10,7>());
+			       }
+			     else if (nQuadraturePoints_elementIn == 24 && nQuadraturePoints_elementBoundaryIn == 12)
+			       {
+				 return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,10,10>,3,24,4,10,10,12>());
+			       }
+			     else if (nQuadraturePoints_elementIn == 31 && nQuadraturePoints_elementBoundaryIn == 12)
+			       {
+				 return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<3,4,10,10>,3,31,4,10,10,12>());
+			       }
+			     else
+			       {
+				 abort();
+			       }
+			   }
 			 else
 			   abort();
 		       }
