@@ -412,7 +412,7 @@ class PlanarStraightLineGraphDomain(D_base):
         f = open(fileprefix+".asy",'w')
         fileString="""
 unitsize(4.0 inches / %(Lx)f);
-size(5 inches);
+size(11 inches);
 real Lx=%(Lx)f;
 real Ly=%(Ly)f;
 real offset=0.0125Lx;
@@ -436,6 +436,8 @@ for(int i=0;i<%(nSegmentFlags)d+1;++i)
         #now loop over segments
         for s,sFlag in zip(self.segments,self.segmentFlags):
             fileString+="draw((%f,%f)--(%f,%f),myPens[%d]+linewidth(0.01));\n" % tuple(self.vertices[s[0]]+self.vertices[s[1]]+[sFlag-self.sMin])
+        #for vN,v in enumerate(self.vertices):
+        #    fileString+="label(\"(%1.1f,%1.1f)\",(%f,%f),N);\n" % (v[0],v[1],v[0],v[1])
         f.write(fileString)
         f.close()
     def writePLY(self,fileprefix):
