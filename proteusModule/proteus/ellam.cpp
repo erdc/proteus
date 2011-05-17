@@ -5,7 +5,7 @@
 #include <cassert>
 #include <list>
 #include <map>
-
+#include <algorithm>
 #include PROTEUS_LAPACK_H
 /***********************************************************************
 
