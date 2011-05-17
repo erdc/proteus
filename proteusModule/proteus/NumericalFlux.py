@@ -252,6 +252,9 @@ class DoNothing(NF_base):
         self.mixedDiffusion=[False for ci in range(vt.nc)]
         self.includeBoundaryAdjoint=False
         self.advectiveNumericalFlux = {}; self.diffusiveNumericalFlux = {}; self.HamiltonJacobiNumericalFlux = {}
+    def setDirichletValues(self,ebqe):
+        pass
+
 class NoFlux(NF_base):
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         for ci in range(self.nc):
