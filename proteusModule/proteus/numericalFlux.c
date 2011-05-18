@@ -8099,49 +8099,90 @@ void calculateDiffusionMatrixSplittings_LDG_sd(int aSplit,
       for (eN = 0; eN < nElements_global; eN++)
 	for (ebN = 0; ebN < nElementBoundaries_element; ebN++)
 	  for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
-	    for (I = 0; I < nSpace; I++)
-	      for (m=rowptr[I]; m < rowptr[I+1]; m++)
-		{
-		  /*for starters only treats as diagonal*/
-		  factor = colind[m] == I ? 1.0 : 0.0;
-		  /*mwf debug
-		  printf("calc LDG split eN=%d ebN=%d k=%d I=%d m=%d J=%d factor=%g \n",
-			 eN,ebN,k,I,m,colind[m],factor);
-		  */
-		  eb_aHat[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz +
-			  ebN*nQuadraturePoints_elementBoundary*nnz + 
-			  k*nnz +
-			  m] = factor;
-		}
+	    {
+	      for (I = 0; I < nSpace; I++)
+		for (m=rowptr[I]; m < rowptr[I+1]; m++)
+		  {
+		    /*for starters only treats as diagonal*/
+		    factor = colind[m] == I ? 1.0 : 0.0;
+		    /*mwf debug
+		      printf("calc LDG split eN=%d ebN=%d k=%d I=%d m=%d J=%d factor=%g \n",
+		      eN,ebN,k,I,m,colind[m],factor);
+		    */
+		    eb_aHat[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz +
+			    ebN*nQuadraturePoints_elementBoundary*nnz + 
+			    k*nnz +
+			    m] = factor;
+		  }
+	      /* printf("aHat*aTilde \n"); */
+	      /* for (I = 0; I < nSpace; I++) */
+	      /* 	{ */
+	      /* 	  assert(nnz == nSpace*nSpace); */
+	      /* 	  int J,K; */
+	      /* 	  for (J = 0; J < nSpace; J++) */
+	      /* 	    { */
+	      /* 	      double res = 0.0; */
+	      /* 	      for (K=0;K<nSpace;K++) */
+	      /* 		res += eb_aHat[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz + */
+	      /* 			       ebN*nQuadraturePoints_elementBoundary*nnz + */
+	      /* 			       k*nnz + I*nSpace + K] */
+	      /* 		  *eb_aTilde[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz + */
+	      /* 			     ebN*nQuadraturePoints_elementBoundary*nnz + */
+	      /* 			     k*nnz + K*nSpace + J]; */
+	      /* 	      printf("%i %i %12.5e \n",I,J,res); */
+	      /* 	    } */
+	      /* 	} */
+	    }
       for (eN = 0; eN < nElements_global; eN++)
-	  for (k = 0; k < nQuadraturePoints_element; k++)
-	    for (I = 0; I < nSpace; I++)
-	      for (m=rowptr[I]; m < rowptr[I+1]; m++)
-		{
-		  /*for starters only treats as diagonal*/
-		  factor = colind[m] == I ? 1.0 : 0.0;
-		  aHat[eN*nQuadraturePoints_element*nnz +
-		       k*nnz +
-		       m] = factor;
-		}
+	for (k = 0; k < nQuadraturePoints_element; k++)
+	  for (I = 0; I < nSpace; I++)
+	    for (m=rowptr[I]; m < rowptr[I+1]; m++)
+	      {
+		/*for starters only treats as diagonal*/
+		factor = colind[m] == I ? 1.0 : 0.0;
+		aHat[eN*nQuadraturePoints_element*nnz +
+		     k*nnz +
+		     m] = factor;
+	      }
     }
   else if (aSplit == 1)
     { /*inverted matrix is a*/
       for (eN = 0; eN < nElements_global; eN++)
 	for (ebN = 0; ebN < nElementBoundaries_element; ebN++)
 	  for (k = 0; k < nQuadraturePoints_elementBoundary; k++)
-	    for (I = 0; I < nSpace; I++)
-	      for (m=rowptr[I]; m < rowptr[I+1]; m++)
-		{
-		  /*for starters only treats as diagonal*/
-		  factor = colind[m] == I ? 1.0 : 0.0;
-		  eb_aTilde[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz +
-			    ebN*nQuadraturePoints_elementBoundary*nnz + 
-			    k*nnz +
-			    m] = factor;
-		}
+	    {
+	      for (I = 0; I < nSpace; I++)
+		for (m=rowptr[I]; m < rowptr[I+1]; m++)
+		  {
+		    /*for starters only treats as diagonal*/
+		    factor = colind[m] == I ? 1.0 : 0.0;
+		    eb_aTilde[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz +
+			      ebN*nQuadraturePoints_elementBoundary*nnz + 
+			      k*nnz +
+			      m] = factor;
+		  }
+	      /* printf("aHat*aTilde \n"); */
+	      /* for (I = 0; I < nSpace; I++) */
+	      /* 	{ */
+	      /* 	  assert(nnz == nSpace*nSpace); */
+	      /* 	  int J,K; */
+	      /* 	  for (J = 0; J < nSpace; J++) */
+	      /* 	    { */
+	      /* 	      double res = 0.0; */
+	      /* 	      for (K=0;K<nSpace;K++) */
+	      /* 		res += eb_aHat[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz + */
+	      /* 			       ebN*nQuadraturePoints_elementBoundary*nnz + */
+	      /* 			       k*nnz + I*nSpace + K] */
+	      /* 		  *eb_aTilde[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz + */
+	      /* 			     ebN*nQuadraturePoints_elementBoundary*nnz + */
+	      /* 			     k*nnz + K*nSpace + J]; */
+	      /* 	      printf("%i %i %12.5e \n",I,J,res); */
+	      /* 	    } */
+	      /* 	} */
+	    }
       for (eN = 0; eN < nElements_global; eN++)
-	  for (k = 0; k < nQuadraturePoints_element; k++)
+	for (k = 0; k < nQuadraturePoints_element; k++)
+	  {
 	    for (I = 0; I < nSpace; I++)
 	      for (m=rowptr[I]; m < rowptr[I+1]; m++)
 		{
@@ -8151,6 +8192,22 @@ void calculateDiffusionMatrixSplittings_LDG_sd(int aSplit,
 			 k*nnz +
 			 m] = factor;
 		}
+	    /* for (I = 0; I < nSpace; I++) */
+	    /*   { */
+	    /* 	assert(nnz == nSpace*nSpace); */
+	    /* 	int J,K; */
+	    /* 	for (J = 0; J < nSpace; J++) */
+	    /* 	  { */
+	    /* 	    double res = 0.0; */
+	    /* 	    for (K=0;K<nSpace;K++) */
+	    /* 	      res += aHat[eN*nQuadraturePoints_element*nnz + */
+	    /* 			  k*nnz + I*nSpace + K] */
+	    /* 		*aTilde[eN*nQuadraturePoints_element*nnz + */
+	    /* 			k*nnz + K*nSpace + J]; */
+	    /* 	    printf("%i %i %12.5e \n",I,J,res); */
+	    /* 	  } */
+	    /*   } */
+	  }
     }
   else
     {
@@ -8171,6 +8228,10 @@ void calculateDiffusionMatrixSplittings_LDG_sd(int aSplit,
 			    ebN*nQuadraturePoints_elementBoundary*nnz + 
 			    k*nnz +
 			    m] = factor;
+		  eb_aHat[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nnz +
+			  ebN*nQuadraturePoints_elementBoundary*nnz + 
+			  k*nnz +
+			  m] = factor;
 		}
       for (eN = 0; eN < nElements_global; eN++)
 	for (k = 0; k < nQuadraturePoints_element; k++)
@@ -8184,10 +8245,14 @@ void calculateDiffusionMatrixSplittings_LDG_sd(int aSplit,
 		aTilde[eN*nQuadraturePoints_element*nnz +
 		       k*nnz +
 		       m] = factor;
+		aHat[eN*nQuadraturePoints_element*nnz +
+		     k*nnz +
+		     m] = factor;
 	      }
-     
+      
     }
 }
+
 					       
 /***********************************************************************
   end LDG

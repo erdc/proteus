@@ -2713,7 +2713,8 @@ class OneLevelTransport(NonlinearEquation):
                         else:
                             if self.sd:
                                 cfemIntegrals.updateDiffusionJacobian_MixedForm_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
-                                                                                        self.q[('a',ci,ck)],
+                                                                                        self.numericalFlux.aTilde[(ci,ck)],
+                                                                                        #self.q[('a',ci,ck)],
                                                                                         self.q[('da',ci,ck,cj)],
                                                                                         self.numericalFlux.qV[ck],
                                                                                         self.numericalFlux.qDV[ck],
