@@ -1851,7 +1851,7 @@ class Diffusion_LDG(NF_base):
         self.aHat={}
         assert self.vt.sd, "LDG factor code currently assumes sparse diffusion rep" 
         self.diagEntry_a = {} #only need if not using c for splitting calculations
-        self.aSplit = 0 #how LDG diffusion matrix is factored
+        self.aSplit = 1 #how LDG diffusion matrix is factored
         self.aSplittingsHaveBeenAllocated= False
         for ci in range(self.nc):
             for ck in range(self.nc):
@@ -2130,7 +2130,8 @@ class Diffusion_LDG(NF_base):
                                                                                              self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                                              ebqe['n'],
                                                                                              ebqe[('u',ck)],
-                                                                                             ebqe[('a',ci,ck)],
+                                                                                             self.eb_aTilde[(ci,ck)],
+                                                                                             #ebqe[('a',ci,ck)],
                                                                                              self.ebqe[('phi',ck)],
                                                                                              ebqe[('phi',ck)],
                                                                                              self.ebqV[ck],
@@ -2228,7 +2229,8 @@ class Diffusion_LDG(NF_base):
                                                                                                           self.mesh.elementBoundaryElementsArray,
                                                                                                           self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                                                           ebq['n'],
-                                                                                                          ebq[('a',ci,ck)],
+                                                                                                          self.eb_aTilde[(ci,ck)],
+                                                                                                          #ebq[('a',ci,ck)],
                                                                                                           ebq[('da',ci,ck,cj)],
                                                                                                           ebq[('dphi',ck,cj)],
                                                                                                           self.ebqV[ck],
@@ -2263,22 +2265,24 @@ class Diffusion_LDG(NF_base):
                         for cj in range(self.nc):
                             if dphi.has_key((ck,cj)):
                                 if self.vt.sd:
-                                    cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_LDG_upwind_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
-                                                                                                           self.isDiffusiveFluxBoundary[ci],
-                                                                                                           self.mesh.exteriorElementBoundariesArray,
-                                                                                                           self.mesh.elementBoundaryElementsArray,
-                                                                                                           self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                                                           ebqe['n'],
-                                                                                                           ebqe[('a',ci,ck)],
-                                                                                                           ebqe[('da',ci,ck,cj)],
-                                                                                                           ebqe[('dphi',ck,cj)],
-                                                                                                           self.ebqV[ck],
-                                                                                                           self.ebqDV[ck],
-                                                                                                           self.ebqDV_eb[ck],
-                                                                                                           ebqe[('v',cj)],
-                                                                                                           ebqe[('penalty')],
-                                                                                                           fluxJacobian_exterior[ci][cj],
-                                                                                                           fluxJacobian_eb[ci][cj])
+                                    cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_LDG_upwind_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],
+                                                                                                              self.vt.coefficients.sdInfo[(ci,ck)][1],
+                                                                                                              self.isDiffusiveFluxBoundary[ci],
+                                                                                                              self.mesh.exteriorElementBoundariesArray,
+                                                                                                              self.mesh.elementBoundaryElementsArray,
+                                                                                                              self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                              ebqe['n'],
+                                                                                                              self.eb_aTilde[(ci,ck)],
+                                                                                                              #ebqe[('a',ci,ck)],
+                                                                                                              ebqe[('da',ci,ck,cj)],
+                                                                                                              ebqe[('dphi',ck,cj)],
+                                                                                                              self.ebqV[ck],
+                                                                                                              self.ebqDV[ck],
+                                                                                                              self.ebqDV_eb[ck],
+                                                                                                              ebqe[('v',cj)],
+                                                                                                              ebqe[('penalty')],
+                                                                                                              fluxJacobian_exterior[ci][cj],
+                                                                                                              fluxJacobian_eb[ci][cj])
                                 else:
                                     cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_LDG_upwind(self.isDiffusiveFluxBoundary[ci],
                                                                                                            self.mesh.exteriorElementBoundariesArray,

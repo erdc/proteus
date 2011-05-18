@@ -9502,7 +9502,7 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian(int nElements_global,
 {
   int eN,ebN,ebN_ebN,k,i,j,jj,I,nDOF_element2=nDOF_element*nDOF_element,nSpace2=nSpace*nSpace;
   PROTEUS_LAPACK_INTEGER ipiv[nDOF_element],lwork=((PROTEUS_LAPACK_INTEGER)nDOF_element),dim=((PROTEUS_LAPACK_INTEGER)nDOF_element),info=0;
-  double work[nDOF_element],A_inv[nSpace*nDOF_element2];
+  double work[nDOF_element],A_inv[nSpace][nDOF_element2];
   double DV_dof[nSpace][nDOF_element][nDOF_element];
   memset(DV,0,sizeof(double)*
          nElements_global*
@@ -9530,19 +9530,19 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian(int nElements_global,
          nSpace);
   for(eN=0;eN<nElements_global;eN++)
     {
-      memset(A_inv,0,sizeof(double)*nSpace*nDOF_element2);
       for(I=0;I<nSpace;I++)
 	{
+	  memset(A_inv[I],0,sizeof(double)*nDOF_element2);
 	  for(i=0;i<nDOF_element;i++)
 	    for(j=0;j<nDOF_element;j++)
 	      {
 		for(k=0;k<nQuadraturePoints_element;k++)
 		  {
 		    //cek hack do diagonal only for now
-		    A_inv[I*nDOF_element2+i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nSpace2+
-								       k*nSpace2+
-								       I*nSpace+
-								       I])
+		    A_inv[I][i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nSpace2+
+							  k*nSpace2+
+							  I*nSpace+
+							  I])
 		      *qv[eN*nQuadraturePoints_element*nDOF_element+
 			  k*nDOF_element+
 			  j]
@@ -9553,8 +9553,8 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian(int nElements_global,
 		  }
 	      }
 	  info=0;
-	  dgetrf_(&dim,&dim,&A_inv[I*nDOF_element2],&dim,ipiv,&info);
-	  dgetri_(&dim,&A_inv[I*nDOF_element2],&dim,ipiv,work,&lwork,&info);
+	  dgetrf_(&dim,&dim,&A_inv[I],&dim,ipiv,&info);
+	  dgetri_(&dim,&A_inv[I],&dim,ipiv,work,&lwork,&info);
 	  /* get derivatives of velocity DOF w.r.t. u DOF*/
 	  for(jj=0;jj<nDOF_element;jj++)
 	    for(i=0;i<nDOF_element;i++)
@@ -9563,9 +9563,8 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian(int nElements_global,
 		for(j=0;j<nDOF_element;j++)
 		  DV_dof[I][i][jj]
 		    +=
-		    A_inv[I*nDOF_element2+
-			  i*nDOF_element+
-			  j]
+		    A_inv[I][i*nDOF_element+
+			     j]
 		    *
 		    db[eN*nSpace*nDOF_element2+
 		       I*nDOF_element2+
@@ -9573,20 +9572,6 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian(int nElements_global,
 		       jj];
 	      }
 	}
-      //cek debug
-      /* for (I=0;I<nSpace;I++) */
-      /* 	{ */
-      /* 	  printf("A[%d] = ",I); */
-      /* 	  for(i=0;i<nDOF_element;i++) */
-      /* 	    { */
-      /* 	      for(j=0;j<nDOF_element;j++) */
-      /* 		printf("%f ",A_inv[I*nDOF_element2+i*nDOF_element+j]); */
-      /* 	      printf("\n"); */
-      /* 	    } */
-      /* 	  printf("\n"); */
-      /* 	} */
-      /* printf("\n"); */
-
       /* get derivatives of velocity at element quadrature  w.r.t u DOF on element*/
       for(k=0;k<nQuadraturePoints_element;k++)
         for(j=0;j<nDOF_element;j++)
@@ -9632,9 +9617,8 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian(int nElements_global,
                   for(j=0;j<nDOF_element;j++)
                     DV_dof[I][i][jj]
                       +=
-                      A_inv[I*nDOF_element2+
-                            i*nDOF_element+
-                            j]
+                      A_inv[I][i*nDOF_element+
+			       j]
                       *
                       db_eb[eN*nElementBoundaries_element*nSpace*nDOF_element2+
                             ebN*nSpace*nDOF_element2+
@@ -9709,7 +9693,7 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian_sd(int nElements_global,
   int eN,ebN,ebN_ebN,k,i,j,jj,I,nDOF_element2=nDOF_element*nDOF_element,nSpace2=nSpace*nSpace;
   int m,nnz=rowptr[nSpace];
   PROTEUS_LAPACK_INTEGER ipiv[nDOF_element],lwork=((PROTEUS_LAPACK_INTEGER)nDOF_element),dim=((PROTEUS_LAPACK_INTEGER)nDOF_element),info=0;
-  double work[nDOF_element],A_inv[nSpace*nDOF_element2];
+  double work[nDOF_element],A_inv[nSpace][nDOF_element2];
   double DV_dof[nSpace][nDOF_element][nDOF_element];
   memset(DV,0,sizeof(double)*
          nElements_global*
@@ -9737,9 +9721,9 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian_sd(int nElements_global,
          nSpace);
   for(eN=0;eN<nElements_global;eN++)
     {
-      memset(A_inv,0,sizeof(double)*nSpace*nDOF_element2);
       for(I=0;I<nSpace;I++)
 	{
+	  memset(A_inv[I],0,sizeof(double)*nDOF_element2);
 	  for(i=0;i<nDOF_element;i++)
 	    for(j=0;j<nDOF_element;j++)
 	      {
@@ -9749,8 +9733,8 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian_sd(int nElements_global,
 		    for (m=rowptr[I]; m < rowptr[I+1]; m++)
 		      if (colind[m] == I)
 			{
-			  A_inv[I*nDOF_element2+i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nnz+
-									     k*nnz+m])
+			  A_inv[I][i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nnz+
+							     k*nnz+m])
 			    *qv[eN*nQuadraturePoints_element*nDOF_element+
 				k*nDOF_element+
 				j]
@@ -9762,41 +9746,27 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian_sd(int nElements_global,
 		  }
 	      }
 	  info=0;
-	  dgetrf_(&dim,&dim,&A_inv[I*nDOF_element2],&dim,ipiv,&info);
-	  dgetri_(&dim,&A_inv[I*nDOF_element2],&dim,ipiv,work,&lwork,&info);
+	  dgetrf_(&dim,&dim,A_inv[I],&dim,ipiv,&info);
+	  dgetri_(&dim,A_inv[I],&dim,ipiv,work,&lwork,&info);
 	  /* get derivatives of velocity DOF w.r.t. u DOF*/
 	  for(jj=0;jj<nDOF_element;jj++)
-	    for(i=0;i<nDOF_element;i++)
-	      {
-		DV_dof[I][i][jj]=0.0;
-		for(j=0;j<nDOF_element;j++)
-		  DV_dof[I][i][jj]
-		    +=
-		    A_inv[I*nDOF_element2+
-			  i*nDOF_element+
-			  j]
-		    *
-		    db[eN*nSpace*nDOF_element2+
-		       I*nDOF_element2+
-		       j*nDOF_element+
-		       jj];
-	      }
+	    {
+	      for(i=0;i<nDOF_element;i++)
+		{
+		  DV_dof[I][i][jj]=0.0;
+		  for(j=0;j<nDOF_element;j++)
+		    DV_dof[I][i][jj]
+		      +=
+		      A_inv[I][i*nDOF_element+
+			    j]
+		      *
+		      db[eN*nSpace*nDOF_element2+
+			 I*nDOF_element2+
+			 j*nDOF_element+
+			 jj];
+		}
+	    }
 	}
-      //cek debug
-      /* for (I=0;I<nSpace;I++) */
-      /* 	{ */
-      /* 	  printf("A[%d] = ",I); */
-      /* 	  for(i=0;i<nDOF_element;i++) */
-      /* 	    { */
-      /* 	      for(j=0;j<nDOF_element;j++) */
-      /* 		printf("%f ",A_inv[I*nDOF_element2+i*nDOF_element+j]); */
-      /* 	      printf("\n"); */
-      /* 	    } */
-      /* 	  printf("\n"); */
-      /* 	} */
-      /* printf("\n"); */
-
-      /* get derivatives of velocity at element quadrature  w.r.t u DOF on element*/
       for(k=0;k<nQuadraturePoints_element;k++)
         for(j=0;j<nDOF_element;j++)
           for(jj=0;jj<nDOF_element;jj++)
@@ -9835,22 +9805,23 @@ void calculateVelocityQuadrature_MixedForm2_Jacobian_sd(int nElements_global,
           /* DOF calculations */
           for(I=0;I<nSpace;I++)
             for(jj=0;jj<nDOF_element;jj++)
-              for(i=0;i<nDOF_element;i++)
-                {
-                  DV_dof[I][i][jj] = 0.0;
-                  for(j=0;j<nDOF_element;j++)
-                    DV_dof[I][i][jj]
-                      +=
-                      A_inv[I*nDOF_element2+
-                            i*nDOF_element+
-                            j]
-                      *
-                      db_eb[eN*nElementBoundaries_element*nSpace*nDOF_element2+
-                            ebN*nSpace*nDOF_element2+
-                            I*nDOF_element2+
-                            j*nDOF_element+
-                            jj];
-                }
+              {
+		for(i=0;i<nDOF_element;i++)
+		  {
+		    DV_dof[I][i][jj] = 0.0;
+		    for(j=0;j<nDOF_element;j++)
+		      DV_dof[I][i][jj]
+			+=
+			A_inv[I][i*nDOF_element+
+			      j]
+			*
+			db_eb[eN*nElementBoundaries_element*nSpace*nDOF_element2+
+			      ebN*nSpace*nDOF_element2+
+			      I*nDOF_element2+
+			      j*nDOF_element+
+			      jj];
+		  }
+	      }
           /* quadrature calculations */
           for(k=0;k<nQuadraturePoints_element;k++)
             for(j=0;j<nDOF_element;j++)
