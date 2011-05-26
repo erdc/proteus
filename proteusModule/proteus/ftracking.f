@@ -4059,7 +4059,6 @@ CMWF DEBUG
      &     ATOL,' RTOL= ',RTOL, ' SF= ',SF, 'DN_SAFE= ',DN_SAFE
       ENDIF
       DO IPT=1,NPT
-
          IF(IVERBOSE.GT.1) THEN
 CMWF DEBUG
             WRITE(LU_O,*)'T_I(',IPT,')= ',T_I(IPT),
@@ -4758,8 +4757,8 @@ C MWF DEBUG
 C
 C A1. WHEN THERE IS NO TRACKIING THROUGH THIS ELEMENT
 C
-CMWF PYADH HAD            IF(DABS(D1).LT.DN_SAFE)THEN
-            IF(DABS(D1*DL).LT.ZEROTOL)THEN
+            IF(DABS(D1).LT.DN_SAFE)THEN
+C            IF(DABS(D1*DL).LT.ZEROTOL)THEN
                IF (IDEBUG.GT.0) THEN
 C MWF DEBUG
                   WRITE(6,*)' ELTRAK CASE A1 D1= ',D1,' D2= ',D2,
@@ -4772,7 +4771,7 @@ C     CONDUCT PT IN AN ADJACENT ELEMENT
 C
 C PYADH HAD               IF(DABS(D2).GT.DN_SAFE)THEN
 C                  CALL DN_CHECKA
-C     I                 (MAXND,NODE,NEQ, 1.D0,DN_SAFE,
+C     I                 (MAXND,NODE,NEQ, DL,ZEROTOL,
 C     I                 DN_S,
 C     O                 I1,I2,I3)
                IF(DABS(D2*DL).GT.ZEROTOL)THEN
@@ -4782,7 +4781,6 @@ C     O                 I1,I2,I3)
      O                 I1,I2,I3)
                   IDSDT=0
 
-                  IDSDT=0
                   IF (IDEBUG.GT.0) THEN
 C MWF DEBUG
                      WRITE(6,*)' ELTRAK DN_CHECKA LEAVING IDSDT= ',
@@ -4805,7 +4803,9 @@ C IF THE ENDING LOCATION CAN BE CONSIDERED ON THE ELEMENT BOUNDARY
 C ==> NO NEED TO REDUCE TIMESTEP
 C
 C PYADH HAD               IF(DABS(D2).LE.DN_SAFE) THEN
-               IF(DABS(D2*DL).LE.ZEROTOL) THEN
+               IF(DABS(D2).LE.DN_SAFE) THEN
+C LATER VERSION WAS
+C               IF(DABS(D2*DL).LE.ZEROTOL) THEN
                   IF (IDEBUG.GT.0) THEN
 C MWF DEBUG
                      WRITE(6,*)'D2*DL.LE.ZEROTOL GOTO 150'
@@ -4883,9 +4883,16 @@ CMWF DEBUG
             WRITE(6,*)'ELTRAK AFTER 150 DN(',I,')= ',DN(I),
      &           ' DABS(DN*DL) < ZEROTOL= ',DABS(DN(I)*DL).LT.ZEROTOL
          ENDIF
-C PYADH HAD         IF(DABS(DN(I)).LT.DN_SAFE)THEN
-C            CALL DN_CHECKA
+C PYADH HAD
+C         IF(DABS(DN(I)).LT.DN_SAFE)THEN
+C            CALL DN_CHECK
 C     I           (MAXND,NODE,NEQ, 1.D0,DN_SAFE,
+C     I           DN,
+C     O           I1,I2,I3)
+C LATER VERSION WAS
+C         IF(DABS(DN(I)*DL).LT.ZEROTOL)THEN
+C            CALL DN_CHECKA
+C     I           (MAXND,NODE,NEQ, DL,ZEROTOL,
 C     I           DN,
 C     O           I1,I2,I3)
          IF(DABS(DN(I)*DL).LT.ZEROTOL)THEN
@@ -7099,7 +7106,7 @@ C EVALUATE TERMS ON PAGE 6, RH00
       ELSE
          TERM4 = (SE - (1.D0 + S + 0.5*S**2 + ONESIXTH*S**3))/(VX**4)
       ENDIF
-      IF (SMAG.LT.(120.D0*ZEROTOL)*(0.2D0)) THEN
+      IF (SMAG.LT.(120.D0*ZEROTOL)**(0.2D0)) THEN
          TERM5 = DT**(3.D0)*(ONESIXTH + ONE24*S)
       ELSE
          TERM5 = (SE - (1.D0 + S + 0.5*S*S))/(VX**3)
