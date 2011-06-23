@@ -40,6 +40,9 @@ static PyObject* cellam_updateOldMass_weak(PyObject* self,
     *q_m_last,
     *elementResidual_u; 
 
+  /*return value*/
+  double totalOldMass = 0.0;
+
   if (!PyArg_ParseTuple(args,
                         "iiiiiiiOOOOOOOOOOOO",/*iiO",*/
 			&nSpace,
@@ -64,28 +67,27 @@ static PyObject* cellam_updateOldMass_weak(PyObject* self,
 
     return NULL;
   
-  updateOldMass_weak(nSpace,
-		     nDOF_test_element,
-		     nElements_global,
-		     nNodes_global,
-		     nNodes_element,
-		     nElementBoundaries_element,
-		     nQuadraturePoints_element,
-		     DDATA(nodeArray),
-		     IDATA(elementNodesArray),
-		     IDATA(elementNeighborsArray),
-		     DDATA(elementBoundaryOuterNormalsArray),
-		     DDATA(dV),
-		     DDATA(x_track),
-		     DDATA(t_track),
-		     IDATA(element_track),
-		     IDATA(flag_track),
-		     IDATA(u_l2g), 
-		     DDATA(q_m_last),
-		     DDATA(elementResidual_u));
-
-  Py_INCREF(Py_None); 
-  return Py_None;
+  totalOldMass = updateOldMass_weak(nSpace,
+				    nDOF_test_element,
+				    nElements_global,
+				    nNodes_global,
+				    nNodes_element,
+				    nElementBoundaries_element,
+				    nQuadraturePoints_element,
+				    DDATA(nodeArray),
+				    IDATA(elementNodesArray),
+				    IDATA(elementNeighborsArray),
+				    DDATA(elementBoundaryOuterNormalsArray),
+				    DDATA(dV),
+				    DDATA(x_track),
+				    DDATA(t_track),
+				    IDATA(element_track),
+				    IDATA(flag_track),
+				    IDATA(u_l2g), 
+				    DDATA(q_m_last),
+				    DDATA(elementResidual_u));
+  
+  return Py_BuildValue("d",totalOldMass);
 }
 static PyObject* cellam_updateOldMass_weak_arbitraryQuadrature(PyObject* self,
 							       PyObject* args)
@@ -156,6 +158,69 @@ static PyObject* cellam_updateOldMass_weak_arbitraryQuadrature(PyObject* self,
   
   Py_INCREF(Py_None); 
   return Py_None;
+}
+static PyObject* cellam_updateNewMass_weak(PyObject* self,
+					   PyObject* args)
+{
+  int nSpace,            
+    nDOF_test_element, 
+    nElements_global,  
+    nNodes_global,
+    nNodes_element,
+    nElementBoundaries_element,
+    nQuadraturePoints_element;
+  PyObject *nodeArray,
+    *elementNodesArray,
+    *elementNeighborsArray,
+    *elementBoundaryOuterNormalsArray,
+    *dV,
+    *x,
+    *u_l2g, 
+    *q_m,
+    *elementResidual_u; 
+
+  /*return value*/
+  double totalNewMass = 0.0;
+
+  if (!PyArg_ParseTuple(args,
+                        "iiiiiiiOOOOOOOOO",/*iiO",*/
+			&nSpace,
+			&nDOF_test_element,
+			&nElements_global,
+			&nNodes_global,
+			&nNodes_element,
+			&nElementBoundaries_element,
+			&nQuadraturePoints_element,
+			&nodeArray,
+			&elementNodesArray,
+			&elementNeighborsArray,
+			&elementBoundaryOuterNormalsArray,
+			&dV,
+			&x,
+			&u_l2g, 
+			&q_m,
+			&elementResidual_u))
+
+    return NULL;
+  
+  totalNewMass = updateNewMass_weak(nSpace,
+				    nDOF_test_element,
+				    nElements_global,
+				    nNodes_global,
+				    nNodes_element,
+				    nElementBoundaries_element,
+				    nQuadraturePoints_element,
+				    DDATA(nodeArray),
+				    IDATA(elementNodesArray),
+				    IDATA(elementNeighborsArray),
+				    DDATA(elementBoundaryOuterNormalsArray),
+				    DDATA(dV),
+				    DDATA(x),
+				    IDATA(u_l2g), 
+				    DDATA(q_m),
+				    DDATA(elementResidual_u));
+  
+  return Py_BuildValue("d",totalNewMass);
 }
 
 static PyObject* cellam_evaluateSolutionAtTrackedPoints(PyObject* self,
@@ -243,6 +308,8 @@ static PyObject* cellam_updateExteriorOutflowBoundaryFlux(PyObject* self,
     *u_l2g,
     *ebqe_outflow_flux;
   PyObject* q_elementResidual_u;
+  /*return value */
+  double totalOutflowFlux = 0.0;
 
   if (!PyArg_ParseTuple(args,
                         "diiiiOOOOOOOOOOO",
@@ -265,25 +332,24 @@ static PyObject* cellam_updateExteriorOutflowBoundaryFlux(PyObject* self,
 			
     return NULL;
 
-  updateExteriorOutflowBoundaryFlux(dtnp1,
-				    nSpace,
-				    nDOF_test_element,
-				    nQuadraturePoints_elementBoundary,
-				    nExteriorElementBoundaries_global,
-				    IDATA(exteriorElementBoundariesArray),
-				    IDATA(elementBoundaryElementsArray),
-				    IDATA(elementBoundaryLocalElementBoundariesArray),
-				    DDATA(ebqe_velocity_ext),
-				    DDATA(ebqe_n_ext),
-				    DDATA(ebqe_outflow_flux_last),
-				    DDATA(u_test_dS_ext),
-				    DDATA(ebqe_u),
-				    IDATA(u_l2g),
-				    DDATA(ebqe_outflow_flux),
-				    DDATA(q_elementResidual_u)); 
+  totalOutflowFlux = updateExteriorOutflowBoundaryFlux(dtnp1,
+						       nSpace,
+						       nDOF_test_element,
+						       nQuadraturePoints_elementBoundary,
+						       nExteriorElementBoundaries_global,
+						       IDATA(exteriorElementBoundariesArray),
+						       IDATA(elementBoundaryElementsArray),
+						       IDATA(elementBoundaryLocalElementBoundariesArray),
+						       DDATA(ebqe_velocity_ext),
+						       DDATA(ebqe_n_ext),
+						       DDATA(ebqe_outflow_flux_last),
+						       DDATA(u_test_dS_ext),
+						       DDATA(ebqe_u),
+						       IDATA(u_l2g),
+						       DDATA(ebqe_outflow_flux),
+						       DDATA(q_elementResidual_u)); 
 
-  Py_INCREF(Py_None); 
-  return Py_None;
+  return Py_BuildValue("d",totalOutflowFlux);
 
 } 
 
@@ -309,6 +375,8 @@ static PyObject* cellam_updateExteriorOutflowBoundaryFluxInGlobalResidual(PyObje
   PyObject* q_elementResidual_u,
     *globalResidual;
 
+  /*return value*/
+  double totalOutflowFlux = 0.0;
   if (!PyArg_ParseTuple(args,
                         "diiiiOOOOOOOOOOiiOO",
 			&dtnp1,
@@ -331,27 +399,27 @@ static PyObject* cellam_updateExteriorOutflowBoundaryFluxInGlobalResidual(PyObje
 			&globalResidual))
     return NULL;
 
-  updateExteriorOutflowBoundaryFluxInGlobalResidual(dtnp1,
-						    nSpace,
-						    nDOF_test_element,
-						    nQuadraturePoints_elementBoundary,
-						    nExteriorElementBoundaries_global,
-						    IDATA(exteriorElementBoundariesArray),
-						    IDATA(elementBoundaryElementsArray),
-						    IDATA(elementBoundaryLocalElementBoundariesArray),
-						    DDATA(ebqe_velocity_ext),
-						    DDATA(ebqe_n_ext),
-						    DDATA(ebqe_outflow_flux_last),
-						    DDATA(u_test_dS_ext),
-						    DDATA(ebqe_u),
-						    IDATA(u_l2g),
-						    DDATA(ebqe_outflow_flux),
-						    offset_u,stride_u, 
-						    DDATA(q_elementResidual_u), 
-						    DDATA(globalResidual));
+  totalOutflowFlux = updateExteriorOutflowBoundaryFluxInGlobalResidual(dtnp1,
+								       nSpace,
+								       nDOF_test_element,
+								       nQuadraturePoints_elementBoundary,
+								       nExteriorElementBoundaries_global,
+								       IDATA(exteriorElementBoundariesArray),
+								       IDATA(elementBoundaryElementsArray),
+								       IDATA(elementBoundaryLocalElementBoundariesArray),
+								       DDATA(ebqe_velocity_ext),
+								       DDATA(ebqe_n_ext),
+								       DDATA(ebqe_outflow_flux_last),
+								       DDATA(u_test_dS_ext),
+								       DDATA(ebqe_u),
+								       IDATA(u_l2g),
+								       DDATA(ebqe_outflow_flux),
+								       offset_u,stride_u, 
+								       DDATA(q_elementResidual_u), 
+								       DDATA(globalResidual));
 
-  Py_INCREF(Py_None); 
-  return Py_None;
+
+  return Py_BuildValue("d",totalOutflowFlux);
 
 } 
 
@@ -592,6 +660,8 @@ static PyObject* cellam_accumulateInflowFluxInGlobalResidual(PyObject* self,
     *isFluxBoundary_u,
     *ebqe_bc_flux_u_ext;
 
+  /*return value is total accumulated inflow flux*/
+  double totalInflowFlux;
   if (!PyArg_ParseTuple(args,
 			"iiiiiiiiOOOOOOOddOOOOOOOOOOiiOOO",
 			&nSpace,
@@ -628,42 +698,41 @@ static PyObject* cellam_accumulateInflowFluxInGlobalResidual(PyObject* self,
 			&globalResidual))
     return NULL;
 
-  accumulateInflowFluxInGlobalResidual(nSpace,
-				       nDOF_test_element,
-				       nElements_global,
-				       nNodes_global,
-				       nNodes_element,
-				       nElementBoundaries_element,
-				       nExteriorElementBoundaries_global,
-				       nQuadraturePoints_elementBoundary,
-				       DDATA(nodeArray),
-				       IDATA(elementNodesArray),
-				       IDATA(elementNeighborsArray), 
-				       IDATA(exteriorElementBoundariesArray),
-				       IDATA(elementBoundaryElementsArray),
-				       IDATA(elementBoundaryLocalElementBoundariesArray),
-				       DDATA(elementBoundaryOuterNormalsArray),
-				       tp,
-				       timeWeight,
-				       DDATA(dS),
-				       DDATA(x_track_ext),
-				       DDATA(t_track_ext),
-				       IDATA(element_track_ext),
-				       IDATA(flag_track_ext),
-				       IDATA(u_l2g), 
-				       DDATA(u_dof),
-				       DDATA(elementResidual_u), 
-				       IDATA(sdInfo_u_rowptr),
-				       IDATA(sdInfo_u_colind),
-				       offset_u,
-				       stride_u, 
-				       IDATA(isFluxBoundary_u),
-				       DDATA(ebqe_bc_flux_u_ext),
-				       DDATA(globalResidual));
+  totalInflowFlux = accumulateInflowFluxInGlobalResidual(nSpace,
+							 nDOF_test_element,
+							 nElements_global,
+							 nNodes_global,
+							 nNodes_element,
+							 nElementBoundaries_element,
+							 nExteriorElementBoundaries_global,
+							 nQuadraturePoints_elementBoundary,
+							 DDATA(nodeArray),
+							 IDATA(elementNodesArray),
+							 IDATA(elementNeighborsArray), 
+							 IDATA(exteriorElementBoundariesArray),
+							 IDATA(elementBoundaryElementsArray),
+							 IDATA(elementBoundaryLocalElementBoundariesArray),
+							 DDATA(elementBoundaryOuterNormalsArray),
+							 tp,
+							 timeWeight,
+							 DDATA(dS),
+							 DDATA(x_track_ext),
+							 DDATA(t_track_ext),
+							 IDATA(element_track_ext),
+							 IDATA(flag_track_ext),
+							 IDATA(u_l2g), 
+							 DDATA(u_dof),
+							 DDATA(elementResidual_u), 
+							 IDATA(sdInfo_u_rowptr),
+							 IDATA(sdInfo_u_colind),
+							 offset_u,
+							 stride_u, 
+							 IDATA(isFluxBoundary_u),
+							 DDATA(ebqe_bc_flux_u_ext),
+							 DDATA(globalResidual));
 
-  Py_INCREF(Py_None); 
-  return Py_None;
- 
+
+  return Py_BuildValue("d",totalInflowFlux);
 }
 
 static PyObject* cellam_accumulateInflowFlux(PyObject* self,
@@ -701,6 +770,9 @@ static PyObject* cellam_accumulateInflowFlux(PyObject* self,
     *isFluxBoundary_u,
     *ebqe_bc_flux_u_ext;
 
+  /*return value is total accumulated inflow flux*/
+  double totalInflowFlux;
+
   if (!PyArg_ParseTuple(args,
 			"iiiiiiiiOOOOOOOddOOOOOOOOOOOO",
 			&nSpace,
@@ -734,38 +806,37 @@ static PyObject* cellam_accumulateInflowFlux(PyObject* self,
 			&ebqe_bc_flux_u_ext))
     return NULL;
 
-  accumulateInflowFlux(nSpace,
-		       nDOF_test_element,
-		       nElements_global,
-		       nNodes_global,
-		       nNodes_element,
-		       nElementBoundaries_element,
-		       nExteriorElementBoundaries_global,
-		       nQuadraturePoints_elementBoundary,
-		       DDATA(nodeArray),
-		       IDATA(elementNodesArray),
-		       IDATA(elementNeighborsArray), 
-		       IDATA(exteriorElementBoundariesArray),
-		       IDATA(elementBoundaryElementsArray),
-		       IDATA(elementBoundaryLocalElementBoundariesArray),
-		       DDATA(elementBoundaryOuterNormalsArray),
-		       tp,
-		       timeWeight,
-		       DDATA(dS),
-		       DDATA(x_track_ext),
-		       DDATA(t_track_ext),
-		       IDATA(element_track_ext),
-		       IDATA(flag_track_ext),
-		       IDATA(u_l2g), 
-		       DDATA(u_dof),
-		       DDATA(elementResidual_u), 
-		       IDATA(sdInfo_u_rowptr),
-		       IDATA(sdInfo_u_colind),
-		       IDATA(isFluxBoundary_u),
-		       DDATA(ebqe_bc_flux_u_ext));
+  totalInflowFlux = accumulateInflowFlux(nSpace,
+					 nDOF_test_element,
+					 nElements_global,
+					 nNodes_global,
+					 nNodes_element,
+					 nElementBoundaries_element,
+					 nExteriorElementBoundaries_global,
+					 nQuadraturePoints_elementBoundary,
+					 DDATA(nodeArray),
+					 IDATA(elementNodesArray),
+					 IDATA(elementNeighborsArray), 
+					 IDATA(exteriorElementBoundariesArray),
+					 IDATA(elementBoundaryElementsArray),
+					 IDATA(elementBoundaryLocalElementBoundariesArray),
+					 DDATA(elementBoundaryOuterNormalsArray),
+					 tp,
+					 timeWeight,
+					 DDATA(dS),
+					 DDATA(x_track_ext),
+					 DDATA(t_track_ext),
+					 IDATA(element_track_ext),
+					 IDATA(flag_track_ext),
+					 IDATA(u_l2g), 
+					 DDATA(u_dof),
+					 DDATA(elementResidual_u), 
+					 IDATA(sdInfo_u_rowptr),
+					 IDATA(sdInfo_u_colind),
+					 IDATA(isFluxBoundary_u),
+					 DDATA(ebqe_bc_flux_u_ext));
 
-  Py_INCREF(Py_None); 
-  return Py_None;
+  return Py_BuildValue("d",totalInflowFlux);
  
 }
 
@@ -1471,6 +1542,10 @@ static PyMethodDef cellamMethods[] = {
     cellam_updateOldMass_weak_arbitraryQuadrature,
    METH_VARARGS, 
    "update ellam element residual with mass accumulation from previous time level using genera set of quadrature points"},
+ { "updateNewMass_weak",
+    cellam_updateNewMass_weak,
+   METH_VARARGS, 
+   "update ellam element residual with mass accumulation from current time level"},
  { "evaluateSolutionAtTrackedPoints",
     cellam_evaluateSolutionAtTrackedPoints,
    METH_VARARGS, 

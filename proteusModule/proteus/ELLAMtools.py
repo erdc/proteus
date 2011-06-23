@@ -30,6 +30,7 @@ class ELLAMdiscretization:
         self.slumpingFlag = 0 #0 -- none, 1 -- Russell, Binning (1d any way), 2 -- Berzins (or something close)
         self.SSIPflag = 0 #use strategic spatial integration points
 
+        
         #grab options from user if available
         #todo clean this up, add set from options for zeroTol etc
         assert 'particleTracking' in dir(options), "ELLAM requires particleTracking type to be set in n file"
@@ -181,7 +182,9 @@ class ELLAMdiscretization:
                 self.globalEdgeLimiter[ci]   = numpy.zeros((self.transport.mesh.nodeStarArray.shape[0]+self.transport.mesh.nNodes_global,),'d')
                 self.consistentMassMatrix[ci]= numpy.copy(self.globalEdgeLimiter[ci])
 
-
+        ###variables for debugging
+        self.totalInflowFlux_cur = numpy.zeros((self.transport.nc,),'d'); self.totalOutflowFlux_cur = numpy.zeros((self.transport.nc,),'d')
+        self.totalMassOld_cur = numpy.zeros((self.transport.nc,),'d'); self.totalMassNew_cur = numpy.zeros((self.transport.nc,),'d')
     ### routines for tracking
     def trackQuadraturePoints(self,q):
         """
@@ -421,7 +424,10 @@ class ELLAMdiscretization:
         self.trackQuadraturePoints(self.transport.q)
         self.updateElementResidualRHS(elementResidual)
         self.updateElementResidualLHS(elementResidual)
-
+        #mwf debug
+        for ci in range(self.transport.nc):
+            balance = self.totalMassNew_cur[ci] - self.totalMassOld_cur[ci] + self.totalInflowFlux_cur[ci] + self.totalOutflowFlux_cur[ci]
+            print "ELLAMtools in updateElementResidual ci= %s newMassCur= %s ; oldMassCur= %s ; inflow= %s ; outflow = %s ; balance = %s " % (ci,self.totalMassNew_cur[ci],self.totalMassOld_cur[ci],self.totalInflowFlux_cur[ci],self.totalOutflowFlux_cur[ci],balance)
     def updateElementResidualRHS(self,elementResidual):
         """
         accumulate ELLAM approximations in element residual that go on right hand side (at least conceptually)
@@ -482,10 +488,26 @@ class ELLAMdiscretization:
         else:
             for ci in self.transport.coefficients.mass.keys():
                 #note not dm/dt but just m
-                cfemIntegrals.updateMass_weak(self.transport.q[('m',ci)],
-                                              self.transport.q[('w*dV_m',ci)],
-                                              elementResidual[ci])
-
+                #cfemIntegrals.updateMass_weak(self.transport.q[('m',ci)],
+                #                              self.transport.q[('w*dV_m',ci)],
+                #                              elementResidual[ci])
+                #self.totalMassNew_cur[ci] = numpy.sum(self.transport.q[('m',ci)]*self.transport.q[('dV_u',ci)])
+                self.totalMassNew_cur[ci] = cellam.updateNewMass_weak(self.transport.nSpace_global,
+                                                                      self.transport.nDOF_test_element[ci],
+                                                                      self.transport.mesh.nElements_global,
+                                                                      self.transport.mesh.nNodes_global,
+                                                                      self.transport.mesh.nNodes_element,
+                                                                      self.transport.mesh.nElementBoundaries_element,
+                                                                      self.transport.nQuadraturePoints_element,
+                                                                      self.transport.mesh.nodeArray,
+                                                                      self.transport.mesh.elementNodesArray,
+                                                                      self.transport.mesh.elementNeighborsArray,
+                                                                      self.elementBoundaryOuterNormalsArray,
+                                                                      self.transport.q[('dV_u',ci)],#self.transport.q['dV'],
+                                                                      self.transport.q['x'][ci],
+                                                                      self.transport.u[ci].femSpace.dofMap.l2g,
+                                                                      self.transport.q[('m',ci)],
+                                                                      elementResidual[ci])
         #mwf debug
         #pdb.set_trace()
         if self.slumpingFlag == 1:
@@ -790,26 +812,48 @@ class ELLAMdiscretization:
             #import pdb
             #pdb.set_trace()
             for ci in range(self.transport.nc):
-                cellam.updateOldMass_weak(self.transport.nSpace_global,
-                                          self.transport.nDOF_test_element[ci],
-                                          self.transport.mesh.nElements_global,
-                                          self.transport.mesh.nNodes_global,
-                                          self.transport.mesh.nNodes_element,
-                                          self.transport.mesh.nElementBoundaries_element,
-                                          self.transport.nQuadraturePoints_element,
-                                          self.transport.mesh.nodeArray,
-                                          self.transport.mesh.elementNodesArray,
-                                          self.transport.mesh.elementNeighborsArray,
-                                          self.elementBoundaryOuterNormalsArray,
-                                          self.transport.q['dV'],
-                                          self.q_x_track[ci],
-                                          self.q_t_track[ci],
-                                          self.q_element_track[ci],
-                                          self.q_flag_track[ci],
-                                          self.transport.u[ci].femSpace.dofMap.l2g,
-                                          self.transport.timeIntegration.m_last[ci],
-                                          elementRes[ci])
+                self.totalMassOld_cur[ci] = cellam.updateOldMass_weak(self.transport.nSpace_global,
+                                                                  self.transport.nDOF_test_element[ci],
+                                                                  self.transport.mesh.nElements_global,
+                                                                  self.transport.mesh.nNodes_global,
+                                                                  self.transport.mesh.nNodes_element,
+                                                                  self.transport.mesh.nElementBoundaries_element,
+                                                                  self.transport.nQuadraturePoints_element,
+                                                                  self.transport.mesh.nodeArray,
+                                                                  self.transport.mesh.elementNodesArray,
+                                                                  self.transport.mesh.elementNeighborsArray,
+                                                                  self.elementBoundaryOuterNormalsArray,
+                                                                  self.transport.q[('dV_u',ci)],#self.transport.q['dV'],
+                                                                  self.q_x_track[ci],
+                                                                  self.q_t_track[ci],
+                                                                  self.q_element_track[ci],
+                                                                  self.q_flag_track[ci],
+                                                                  self.transport.u[ci].femSpace.dofMap.l2g,
+                                                                  self.transport.timeIntegration.m_last[ci],
+                                                                  elementRes[ci])
 
+                # #mwf hack debug
+                # dummyRes = numpy.copy(elementRes[ci]); dummyRes.fill(0.0);
+                # totalMassOld_cur_mnew = cellam.updateOldMass_weak(self.transport.nSpace_global,
+                #                                                   self.transport.nDOF_test_element[ci],
+                #                                                   self.transport.mesh.nElements_global,
+                #                                                   self.transport.mesh.nNodes_global,
+                #                                                   self.transport.mesh.nNodes_element,
+                #                                                   self.transport.mesh.nElementBoundaries_element,
+                #                                                   self.transport.nQuadraturePoints_element,
+                #                                                   self.transport.mesh.nodeArray,
+                #                                                   self.transport.mesh.elementNodesArray,
+                #                                                   self.transport.mesh.elementNeighborsArray,
+                #                                                   self.elementBoundaryOuterNormalsArray,
+                #                                                   self.transport.q[('dV_u',ci)],#self.transport.q['dV'],
+                #                                                   self.q_x_track[ci],
+                #                                                   self.q_t_track[ci],
+                #                                                   self.q_element_track[ci],
+                #                                                   self.q_flag_track[ci],
+                #                                                   self.transport.u[ci].femSpace.dofMap.l2g,
+                #                                                   self.transport.q[('m',ci)],
+                #                                                   dummyRes)
+                # print "UpdateOldMass totalMassOld_cur = %s with new solution = %s " % (self.totalMassOld_cur[ci],totalMassOld_cur_mnew)
 
     def approximateOldMassIntegralWithBackwardTracking(self,elementRes):
         """
@@ -948,35 +992,35 @@ class ELLAMdiscretization:
 
                     for ci in range(self.transport.nc):
                         #accumulate into correct locations in residual
-                        cellam.accumulateInflowFlux(self.transport.nSpace_global,
-                                                    self.transport.nDOF_test_element[ci],
-                                                    self.transport.mesh.nElements_global,
-                                                    self.transport.mesh.nNodes_global,
-                                                    self.transport.mesh.nNodes_element,
-                                                    self.transport.mesh.nElementBoundaries_element,
-                                                    self.transport.mesh.nExteriorElementBoundaries_global,
-                                                    self.transport.nElementBoundaryQuadraturePoints_elementBoundary,
-                                                    self.transport.mesh.nodeArray,
-                                                    self.transport.mesh.elementNodesArray,
-                                                    self.transport.mesh.elementNeighborsArray,
-                                                    self.transport.mesh.exteriorElementBoundariesArray,
-                                                    self.transport.mesh.elementBoundaryElementsArray,
-                                                    self.transport.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                    self.elementBoundaryOuterNormalsArray,
-                                                    tpi,
-                                                    dtpi,
-                                                    self.transport.ebqe['dS'],
-                                                    self.ebqe_x_track[ci],
-                                                    self.ebqe_t_track[ci],
-                                                    self.ebqe_element_track[ci],
-                                                    self.ebqe_flag_track[ci],
-                                                    self.transport.u[ci].femSpace.dofMap.l2g,
-                                                    self.transport.u[ci].dof,
-                                                    elementRes[ci], 
-                                                    self.transport.coefficients.sdInfo[(ci,ci)][0], #todo fix
-                                                    self.transport.coefficients.sdInfo[(ci,ci)][1],
-                                                    self.transport.ebqe[('advectiveFlux_bc_flag',ci)],
-                                                    self.transport.ebqe[('advectiveFlux_bc',ci)])
+                        self.totalInflowFlux_cur[ci] = cellam.accumulateInflowFlux(self.transport.nSpace_global,
+                                                                               self.transport.nDOF_test_element[ci],
+                                                                               self.transport.mesh.nElements_global,
+                                                                               self.transport.mesh.nNodes_global,
+                                                                               self.transport.mesh.nNodes_element,
+                                                                               self.transport.mesh.nElementBoundaries_element,
+                                                                               self.transport.mesh.nExteriorElementBoundaries_global,
+                                                                               self.transport.nElementBoundaryQuadraturePoints_elementBoundary,
+                                                                               self.transport.mesh.nodeArray,
+                                                                               self.transport.mesh.elementNodesArray,
+                                                                               self.transport.mesh.elementNeighborsArray,
+                                                                               self.transport.mesh.exteriorElementBoundariesArray,
+                                                                               self.transport.mesh.elementBoundaryElementsArray,
+                                                                               self.transport.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                                    self.elementBoundaryOuterNormalsArray,
+                                                                               tpi,
+                                                                               dtpi,
+                                                                               self.transport.ebqe['dS'],
+                                                                               self.ebqe_x_track[ci],
+                                                                               self.ebqe_t_track[ci],
+                                                                               self.ebqe_element_track[ci],
+                                                                               self.ebqe_flag_track[ci],
+                                                                               self.transport.u[ci].femSpace.dofMap.l2g,
+                                                                               self.transport.u[ci].dof,
+                                                                               elementRes[ci], 
+                                                                               self.transport.coefficients.sdInfo[(ci,ci)][0], #todo fix
+                                                                               self.transport.coefficients.sdInfo[(ci,ci)][1],
+                                                                               self.transport.ebqe[('advectiveFlux_bc_flag',ci)],
+                                                                               self.transport.ebqe[('advectiveFlux_bc',ci)])
 
 
     def approximateOutflowBoundaryIntegral(self,elementRes):
@@ -991,22 +1035,22 @@ class ELLAMdiscretization:
         """
         for ci in range(self.transport.nc):
             #accumulate into correct locations in residual
-            cellam.updateExteriorOutflowBoundaryFlux(self.transport.timeIntegration.t-self.transport.timeIntegration.tLast,
-                                                     self.transport.nSpace_global,
-                                                     self.transport.nDOF_test_element[ci],
-                                                     self.transport.nElementBoundaryQuadraturePoints_elementBoundary,
-                                                     self.transport.mesh.nExteriorElementBoundaries_global,
-                                                     self.transport.mesh.exteriorElementBoundariesArray,
-                                                     self.transport.mesh.elementBoundaryElementsArray,
-                                                     self.transport.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                     self.transport.coefficients.ebqe[('velocity',ci)],
-                                                     self.transport.ebqe[('n')],
-                                                     self.transport.ebqe[('outflow_flux_last',ci)],
-                                                     self.transport.ebqe[('w*dS_f',ci)],
-                                                     self.transport.ebqe[('u',ci)],
-                                                     self.transport.u[ci].femSpace.dofMap.l2g,
-                                                     self.transport.ebqe[('outflow_flux',ci)],
-                                                     elementRes[ci])
+            self.totalOutflowFlux_cur[ci] = cellam.updateExteriorOutflowBoundaryFlux(self.transport.timeIntegration.t-self.transport.timeIntegration.tLast,
+                                                                                 self.transport.nSpace_global,
+                                                                                 self.transport.nDOF_test_element[ci],
+                                                                                 self.transport.nElementBoundaryQuadraturePoints_elementBoundary,
+                                                                                 self.transport.mesh.nExteriorElementBoundaries_global,
+                                                                                 self.transport.mesh.exteriorElementBoundariesArray,
+                                                                                 self.transport.mesh.elementBoundaryElementsArray,
+                                                                                 self.transport.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                 self.transport.coefficients.ebqe[('velocity',ci)],
+                                                                                 self.transport.ebqe[('n')],
+                                                                                 self.transport.ebqe[('outflow_flux_last',ci)],
+                                                                                 self.transport.ebqe[('w*dS_f',ci)],
+                                                                                 self.transport.ebqe[('u',ci)],
+                                                                                 self.transport.u[ci].femSpace.dofMap.l2g,
+                                                                                 self.transport.ebqe[('outflow_flux',ci)],
+                                                                                 elementRes[ci])
 
 
     #
