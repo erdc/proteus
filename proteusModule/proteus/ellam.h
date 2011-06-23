@@ -5,6 +5,7 @@
 #include <map>
 #include <list>
 #include <vector>
+#include <iostream>
 namespace ELLAM
 {
 inline
@@ -100,7 +101,7 @@ void exteriorOutflowFlux_c(int nSpace,
 			   const double* velocity,
 			   double& flux)
 {
-
+  flux = 0.0;
   double flow=0.0;
   for (int I=0; I < nSpace; I++)
     flow += n[I]*velocity[I];
@@ -191,7 +192,7 @@ void createElementSSIPs_1d(const std::list<double>& elementTrackedPoints,
 
 extern "C"
 {
-void updateOldMass_weak(int nSpace,            
+double updateOldMass_weak(int nSpace,            
 			int nDOF_test_element, //dim for test function eval
 			int nElements_global,  //mesh representation
 			int nNodes_global,
@@ -233,6 +234,24 @@ void updateOldMass_weak_arbitraryQuadrature(int nSpace,
 					    const double* q_m_track,     //mass from old time level evaluated at tracked points
 					    double* q_elementResidual_u); 
 
+double updateNewMass_weak(int nSpace,            
+			  int nDOF_test_element, //dim for test function eval
+			  int nElements_global,  //mesh representation
+			  int nNodes_global,
+			  int nNodes_element,
+			  int nElementBoundaries_element,
+			  int nQuadraturePoints_element,     //element quadrature point data structures
+			  const double * nodeArray,          //mesh representation
+			  const int * elementNodesArray,
+			  const int * elementNeighborsArray, //local boundary id is associated with node across from boundary 
+			  const double * elementBoundaryOuterNormalsArray, //local element boundary outer normal constant on face
+			  const double* dV,             //integration weights 
+			  const double* x,        //location of integration points, 
+			                                    //nElements_global x nQuadraturePoints_element
+			  const int* u_l2g,             //solution representation
+			  const double* q_m,
+			  double* q_elementResidual_u);
+
 void evaluateSolutionAtTrackedPoints(int nSpace,
 				     int nDOF_trial_element,
 				     int nPoints_tracked,
@@ -254,7 +273,7 @@ void evaluateSolutionAtTrackedPoints(int nSpace,
 				     double *u_x_track);            //u(x)
 
 
-void updateExteriorOutflowBoundaryFlux(double dtnp1,          //full time step size
+double updateExteriorOutflowBoundaryFlux(double dtnp1,          //full time step size
 				       int nSpace,            
 				       int nDOF_test_element, //dim for test function evalint nExteriorElementBoundaries_global,
 				       int nQuadraturePoints_elementBoundary,
@@ -271,7 +290,7 @@ void updateExteriorOutflowBoundaryFlux(double dtnp1,          //full time step s
 				       double* ebqe_outflow_flux,
 				       double* q_elementResidual_u); 
 
-void updateExteriorOutflowBoundaryFluxInGlobalResidual(double dtnp1,          //full time step size
+double updateExteriorOutflowBoundaryFluxInGlobalResidual(double dtnp1,          //full time step size
 						       int nSpace,            
 						       int nDOF_test_element, //dim for test function evalint nExteriorElementBoundaries_global,
 						       int nQuadraturePoints_elementBoundary,
@@ -351,7 +370,7 @@ void markInflowBoundaryPoints(int nSpace,
 			      int* flag_track);  //>=-1 track
 
 
-void accumulateInflowFlux(int nSpace,
+double accumulateInflowFlux(int nSpace,
 			  int nDOF_test_element,
 			  int nElements_global,//mesh representation
 			  int nNodes_global,
@@ -382,7 +401,7 @@ void accumulateInflowFlux(int nSpace,
 			  const int* isFluxBoundary_u,
 			  const double* ebqe_bc_flux_u_ext);
 
-void accumulateInflowFluxInGlobalResidual(int nSpace,
+double accumulateInflowFluxInGlobalResidual(int nSpace,
 					  int nDOF_test_element,
 					  int nElements_global,//mesh representation
 					  int nNodes_global,
