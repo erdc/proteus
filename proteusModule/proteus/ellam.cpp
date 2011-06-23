@@ -18,26 +18,26 @@
 **********************************************************************/
 
 extern "C" 
-void updateOldMass_weak(int nSpace,            
-			int nDOF_test_element, //dim for test function eval
-			int nElements_global,  //mesh representation
-			int nNodes_global,
-			int nNodes_element,
-			int nElementBoundaries_element,
-			int nQuadraturePoints_element,     //element quadrature point data structures
-			const double * nodeArray,          //mesh representation
-			const int * elementNodesArray,
-			const int * elementNeighborsArray, //local boundary id is associated with node across from boundary 
-			const double * elementBoundaryOuterNormalsArray, //local element boundary outer normal constant on face
-			const double* dV,             //integration weights 
-			const double* x_track,        //location of forward tracked integration points, assumed for now 
+double updateOldMass_weak(int nSpace,            
+			  int nDOF_test_element, //dim for test function eval
+			  int nElements_global,  //mesh representation
+			  int nNodes_global,
+			  int nNodes_element,
+			  int nElementBoundaries_element,
+			  int nQuadraturePoints_element,     //element quadrature point data structures
+			  const double * nodeArray,          //mesh representation
+			  const int * elementNodesArray,
+			  const int * elementNeighborsArray, //local boundary id is associated with node across from boundary 
+			  const double * elementBoundaryOuterNormalsArray, //local element boundary outer normal constant on face
+			  const double* dV,             //integration weights 
+			  const double* x_track,        //location of forward tracked integration points, assumed for now 
 			                                    //nElements_global x nQuadraturePoints_element
-			const double* t_track,        //time forward tracked points stopped (t^{n+1} or earlier if exited domain)
-			const int* element_track,     //element each forward tracked point ended up in
-			const int* flag_track,        //id for each point, -1 -- interior, -2 exited domain, -3 didn't track for some reason
-			const int* u_l2g,             //solution representation
-			const double* q_m_last,
-			double* q_elementResidual_u) 
+			  const double* t_track,        //time forward tracked points stopped (t^{n+1} or earlier if exited domain)
+			  const int* element_track,     //element each forward tracked point ended up in
+			  const int* flag_track,        //id for each point, -1 -- interior, -2 exited domain, -3 didn't track for some reason
+			  const int* u_l2g,             //solution representation
+			  const double* q_m_last,
+			  double* q_elementResidual_u) 
 {
   using namespace ELLAM;
   /***********************************************************************
@@ -52,6 +52,8 @@ void updateOldMass_weak(int nSpace,
               and assume w_i = \lambda_i on eN^{n+1}_k, i=0,...nDOF_test_element-1
        5. accumulate m^{n+1}_k*W_k*w_i(x^{n+1}_{k}) to element residual 
   **********************************************************************/
+  /*return value*/
+  double totalOldMass = 0.0;
   //for now just assume a max dim
   register double w[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
   assert(nDOF_test_element <= 10);
@@ -67,7 +69,7 @@ void updateOldMass_weak(int nSpace,
 	  //compute indeces and declare local storage
 	  register int eN_k = eN*nQuadraturePoints_element+k;
 	  //todo decide if ignoring outflow mass is a better idea
-	  if (flag_track[eN_k] >= -1)
+	  if (flag_track[eN_k] >= -2) //-2 exited domain
 	    {
 	      //m_k^{n+1},W_k
 	      register double m_old = q_m_last[eN_k],
@@ -100,11 +102,11 @@ void updateOldMass_weak(int nSpace,
 					     elementBoundaryOuterNormalsArray,
 					     &x_track[eN_k*3],
 					     w);
-	      
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
 		  register int eN_track_i=eN_track*nDOF_test_element+i;
 		  q_elementResidual_u[eN_track_i] -= m_old*w[i]*weight;
+		  totalOldMass += m_old*w[i]*weight;
 		  //globalResidual[offset_u+stride_u*u_l2g[eN_track_i]] -= m_old*w[i]*weight; 
 		  //mwf debug
 		  //std::cout<<"LADRellam oldMass globalResid["<<offset_u+stride_u*u_l2g[eN_track_i]<<"]= "<< globalResidual[offset_u+stride_u*u_l2g[eN_track_i]] 
@@ -115,6 +117,7 @@ void updateOldMass_weak(int nSpace,
 	    
 	}//integration point per element
     }//nElements loop
+  return totalOldMass;
 }//updateOldMass
 void updateOldMass_weak_arbitraryQuadrature(int nSpace,            
 					    int nDOF_test_element, //dim for test function eval
@@ -159,7 +162,7 @@ void updateOldMass_weak_arbitraryQuadrature(int nSpace,
 	  w[i] = 0.0;
 	}
       //todo decide if ignoring outflow mass is a better idea
-      if (flag_track[k] >= -1)
+      if (flag_track[k] >= -1) //-2 is exited domain
 	{
 	  register int eN_track = element_track[k];
 	  //m_k^{n+1},W_k
@@ -187,6 +190,82 @@ void updateOldMass_weak_arbitraryQuadrature(int nSpace,
 	    
     }//integration points
 }//updateOldMass_weak_arbitraryQuadrature
+
+//include a function for evaluating new mass to see how much impact having different test function evaluates for
+//new and old makes
+extern "C" 
+double updateNewMass_weak(int nSpace,            
+			  int nDOF_test_element, //dim for test function eval
+			  int nElements_global,  //mesh representation
+			  int nNodes_global,
+			  int nNodes_element,
+			  int nElementBoundaries_element,
+			  int nQuadraturePoints_element,     //element quadrature point data structures
+			  const double * nodeArray,          //mesh representation
+			  const int * elementNodesArray,
+			  const int * elementNeighborsArray, //local boundary id is associated with node across from boundary 
+			  const double * elementBoundaryOuterNormalsArray, //local element boundary outer normal constant on face
+			  const double* dV,             //integration weights 
+			  const double* x,        //location of integration points, 
+			                                    //nElements_global x nQuadraturePoints_element
+			  const int* u_l2g,             //solution representation
+			  const double* q_m,
+			  double* q_elementResidual_u) 
+{
+  using namespace ELLAM;
+  /***********************************************************************
+    for current integration point x_k on element eN
+       1. get mass at new time level, m^{n+1}_k
+       2. get integration weight W_k
+       3. get integration point x^{n+1}_k
+       4. evaluate test functions with non-zero support at x^{n+1}_k
+           a. use physical space definition in terms of barycentric coords,
+               \lambda_0 = (x-x_1)/(x_0-x_1), \lambda_1 = 1-\lambda_0
+              and assume w_i = \lambda_i on eN^{n+1}_k, i=0,...nDOF_test_element-1
+       5. accumulate m^{n+1}_k*W_k*w_i(x^{n+1}_{k}) to element residual 
+  **********************************************************************/
+  /*return value*/
+  double totalNewMass = 0.0;
+  //for now just assume a max dim
+  register double w[10] = {0.,0.,0.,0.,0.,0.,0.,0.,0.,0.};
+  assert(nDOF_test_element <= 10);
+  for(int eN=0;eN<nElements_global;eN++)
+    {
+      //loop over quadrature points, may end up on elements with different support
+      for  (int k=0;k<nQuadraturePoints_element;k++)
+        {
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      w[i] = 0.0;
+	    }
+	  //compute indeces and declare local storage
+	  register int eN_k = eN*nQuadraturePoints_element+k;
+	  //m_k^{n+1},W_k
+	  register double m_new = q_m[eN_k],
+	    weight = dV[eN_k];
+	  
+	  evaluateTestFunctionsOnElement(nSpace,
+					 nDOF_test_element,
+					 eN,
+					 nNodes_element,
+					 nElementBoundaries_element,
+					 nodeArray,
+					 elementNodesArray,
+					 elementBoundaryOuterNormalsArray,
+					 &x[eN_k*3],
+					 w);
+	  
+	  for(int i=0;i<nDOF_test_element;i++) 
+	    { 
+	      register int eN_i=eN*nDOF_test_element+i;
+	      q_elementResidual_u[eN_i] += m_new*w[i]*weight;
+	      totalNewMass += m_new*w[i]*weight;
+	    }//i
+	}//integration point per element
+    }//nElements loop
+  return totalNewMass;
+}//updateOldMass
+
 extern "C" 
 void evaluateSolutionAtTrackedPoints(int nSpace,
 				     int nDOF_trial_element,
@@ -260,25 +339,25 @@ void evaluateSolutionAtTrackedPoints(int nSpace,
 }//evaluateSolutionAtTrackedPoints
 
 extern "C"
-void updateExteriorOutflowBoundaryFlux(double dtnp1,          //full time step size
-				       int nSpace,            
-				       int nDOF_test_element, //dim for test function evalint nExteriorElementBoundaries_global,
-				       int nQuadraturePoints_elementBoundary,
-				       int nExteriorElementBoundaries_global,
-				       const int* exteriorElementBoundariesArray,
-				       const int* elementBoundaryElementsArray,
-				       const int* elementBoundaryLocalElementBoundariesArray,
-				       const double* ebqe_velocity_ext,
-				       const double* ebqe_n_ext,
-				       const double* ebqe_outflow_flux_last,
-				       const double* u_test_dS_ext,
-				       const double* ebqe_u,
-				       const int* u_l2g,
-				       double* ebqe_outflow_flux,
-				       double* q_elementResidual_u)
+double updateExteriorOutflowBoundaryFlux(double dtnp1,          //full time step size
+					 int nSpace,            
+					 int nDOF_test_element, //dim for test function evalint nExteriorElementBoundaries_global,
+					 int nQuadraturePoints_elementBoundary,
+					 int nExteriorElementBoundaries_global,
+					 const int* exteriorElementBoundariesArray,
+					 const int* elementBoundaryElementsArray,
+					 const int* elementBoundaryLocalElementBoundariesArray,
+					 const double* ebqe_velocity_ext,
+					 const double* ebqe_n_ext,
+					 const double* ebqe_outflow_flux_last,
+					 const double* u_test_dS_ext,
+					 const double* ebqe_u,
+					 const int* u_l2g,
+					 double* ebqe_outflow_flux,
+					 double* q_elementResidual_u)
 {
   using namespace ELLAM;
-
+  double totalOutflow = 0.0;
   /***************************************************
      apply outflow flux with simple trapezoidal rule
      in time
@@ -304,7 +383,7 @@ void updateExteriorOutflowBoundaryFlux(double dtnp1,          //full time step s
 	  
 	  // 
 	  //calculate outflow numerical fluxes, 
-	  //for now applies zero diffusive flux if v.n >= 0 
+	  //for now applies zero diffusive flux if v.n > 0 
 	  // 
 	  exteriorOutflowFlux_c(nSpace,
 				&ebqe_n_ext[ebNE_kb_nSpace],
@@ -322,35 +401,37 @@ void updateExteriorOutflowBoundaryFlux(double dtnp1,          //full time step s
 		eN_i = eN*nDOF_test_element+i;
 
 	      q_elementResidual_u[eN_i] += ExteriorElementBoundaryFlux_c(flux_ext,u_test_dS_ext[ebNE_kb_i]);
+	      totalOutflow += ExteriorElementBoundaryFlux_c(flux_ext,u_test_dS_ext[ebNE_kb_i]);
 	      //mwf debug
 	      //std::cout<<"LADR2Dellam boundaryResidual globalResid["<<offset_u+stride_u*u_l2g[eN_i]<<"]= "<< globalResidual[offset_u+stride_u*u_l2g[eN_i]] 
 	      //   <<" elementResidual = "<<elementResidual_u[i] <<std::endl;
 	    }//i
 	}//kb
     }//ebNE
+  return totalOutflow;
 }
 extern "C"
-void updateExteriorOutflowBoundaryFluxInGlobalResidual(double dtnp1,          //full time step size
-						       int nSpace,            
-						       int nDOF_test_element, //dim for test function evalint nExteriorElementBoundaries_global,
-						       int nQuadraturePoints_elementBoundary,
-						       int nExteriorElementBoundaries_global,
-						       const int* exteriorElementBoundariesArray,
-						       const int* elementBoundaryElementsArray,
-						       const int* elementBoundaryLocalElementBoundariesArray,
-						       const double* ebqe_velocity_ext,
-						       const double* ebqe_n_ext,
-						       const double* ebqe_outflow_flux_last,
-						       const double* u_test_dS_ext,
-						       const double* ebqe_u,
-						       const int* u_l2g,
-						       double* ebqe_outflow_flux,
-						       int offset_u, int stride_u, 
-						       double* q_elementResidual_u, 
-						       double* globalResidual)
+double updateExteriorOutflowBoundaryFluxInGlobalResidual(double dtnp1,          //full time step size
+							 int nSpace,            
+							 int nDOF_test_element, //dim for test function evalint nExteriorElementBoundaries_global,
+							 int nQuadraturePoints_elementBoundary,
+							 int nExteriorElementBoundaries_global,
+							 const int* exteriorElementBoundariesArray,
+							 const int* elementBoundaryElementsArray,
+							 const int* elementBoundaryLocalElementBoundariesArray,
+							 const double* ebqe_velocity_ext,
+							 const double* ebqe_n_ext,
+							 const double* ebqe_outflow_flux_last,
+							 const double* u_test_dS_ext,
+							 const double* ebqe_u,
+							 const int* u_l2g,
+							 double* ebqe_outflow_flux,
+							 int offset_u, int stride_u, 
+							 double* q_elementResidual_u, 
+							 double* globalResidual)
 {
   using namespace ELLAM;
-
+  double totalOutflowFlux  = 0.0; /*return value*/
   /***************************************************
      apply outflow flux with simple trapezoidal rule
      in time
@@ -395,12 +476,14 @@ void updateExteriorOutflowBoundaryFluxInGlobalResidual(double dtnp1,          //
 
 	      q_elementResidual_u[eN_i] += ExteriorElementBoundaryFlux_c(flux_ext,u_test_dS_ext[ebNE_kb_i]);
 	      globalResidual[offset_u+stride_u*u_l2g[eN_i]] += ExteriorElementBoundaryFlux_c(flux_ext,u_test_dS_ext[ebNE_kb_i]);
+	      totalOutflowFlux += ExteriorElementBoundaryFlux_c(flux_ext,u_test_dS_ext[ebNE_kb_i]);
 	      //mwf debug
 	      //std::cout<<"LADR2Dellam boundaryResidual globalResid["<<offset_u+stride_u*u_l2g[eN_i]<<"]= "<< globalResidual[offset_u+stride_u*u_l2g[eN_i]] 
 	      //   <<" elementResidual = "<<elementResidual_u[i] <<std::endl;
 	    }//i
 	}//kb
     }//ebNE
+  return totalOutflowFlux;
 }
 
 extern "C"
@@ -614,7 +697,7 @@ extern "C" void tagNegligibleIntegrationPoints(int nPoints,
   with non-zero support in those areas
  **********************************************************************/
 extern "C" 
-void accumulateInflowFluxInGlobalResidual(int nSpace,
+double accumulateInflowFluxInGlobalResidual(int nSpace,
 					  int nDOF_test_element,
 					  int nElements_global,//mesh representation
 					  int nNodes_global,
@@ -661,6 +744,7 @@ void accumulateInflowFluxInGlobalResidual(int nSpace,
               and assume w_i = \lambda_i on eN^{n+1}_k, i=0,...nDOF_test_element-1
        5. accumulate \sigma^{p}_k*\Delta t^p* W_k*w_i(x^{n+1}_{k}) to global residual I(i) 
   **********************************************************************/
+  double totalInflow = 0.0;
   double w[10] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
   assert(nDOF_test_element <= 10);
   //todo switch to a loop over boundary integration points?
@@ -702,13 +786,14 @@ void accumulateInflowFluxInGlobalResidual(int nSpace,
 		  register int eN_track_i=eN_track*nDOF_test_element+i;
 		  q_elementResidual_u[eN_track_i] += totalFlux*w[i]*spatialWeight*timeWeight;
 		  globalResidual[offset_u+stride_u*u_l2g[eN_track_i]] += totalFlux*w[i]*spatialWeight*timeWeight; 
+		  totalInflow += totalFlux*w[i]*spatialWeight*timeWeight;
 		}//i
 	      
 	    }//needed to track point
 	    
 	}//integration point per element boundary
     }//element boundaries
-  
+  return totalInflow;
 }
 
 
@@ -718,7 +803,7 @@ void accumulateInflowFluxInGlobalResidual(int nSpace,
   with non-zero support in those areas
  **********************************************************************/
 extern "C" 
-void accumulateInflowFlux(int nSpace,
+double accumulateInflowFlux(int nSpace,
 			  int nDOF_test_element,
 			  int nElements_global,//mesh representation
 			  int nNodes_global,
@@ -763,6 +848,8 @@ void accumulateInflowFlux(int nSpace,
               and assume w_i = \lambda_i on eN^{n+1}_k, i=0,...nDOF_test_element-1
        5. accumulate \sigma^{p}_k*\Delta t^p* W_k*w_i(x^{n+1}_{k}) to global residual I(i) 
   **********************************************************************/
+  double totalInflowFlux = 0.0;
+
   double w[10] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
   assert(nDOF_test_element <= 10);
   //todo switch to a loop over boundary integration points?
@@ -803,12 +890,14 @@ void accumulateInflowFlux(int nSpace,
 		{ 
 		  register int eN_track_i=eN_track*nDOF_test_element+i;
 		  q_elementResidual_u[eN_track_i] += totalFlux*w[i]*spatialWeight*timeWeight;
+		  totalInflowFlux += totalFlux*w[i]*spatialWeight*timeWeight;
 		}//i
 	      
 	    }//needed to track point
 	    
 	}//integration point per element boundary
     }//element boundaries
+  return totalInflowFlux;
 }
 
 
