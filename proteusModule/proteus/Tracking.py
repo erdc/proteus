@@ -2374,7 +2374,7 @@ def writePT123RT0velocityAsElementVelocity(opts,p,mesh,params,tnList,q,ebq,
                                                                                    local_velocity_array)
             for nN in range(mesh.nNodes_element):
                 for j in range(p.nd):
-                    fvel.write("  %g  " % local_velocity_array[nN,j])
+                    fvel.write("  %f  " % local_velocity_array[nN,j])
                 #mwf PT123 doc incorrect, only reads up to neq
                 #for j in range(p.nd,3):
                 #    fvel.write("  %g " % 0.0)
@@ -4605,7 +4605,7 @@ def test9(opts,tryPT123A=True,writePT123files=True):
     except:
         pass
 
-def Pearce_Ex7_non_uniform(opts,tryPT123A=False,writePT123files=False):
+def Pearce_Ex7_non_uniform(opts,tryPT123A=True,writePT123files=False):
     """
     1D example from Pearce with transient velocity
 
