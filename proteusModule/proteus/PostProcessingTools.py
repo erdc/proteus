@@ -11,6 +11,7 @@ import cfemIntegrals
 import cpostprocessing
 from Profiling import logEvent
 import Norms
+import Archiver
 
 def VelocityPostProcessingChooser(transport):
     """
@@ -159,7 +160,8 @@ class VelocityPostProcessingAlgorithmBase:
                      #
                 #
             #end setting flux boundary elements
-            
+        #
+        self.velocityWriter = Archiver.XdmfWriter()
     def computeGeometricInfo(self):
         pass
     def postprocess(self,verbose=0):
@@ -232,6 +234,25 @@ class VelocityPostProcessingAlgorithmBase:
                                                                       self.elementResidual[ci])
         
 
+    #
+    def archiveVelocityValues(self,archive,t,tCount,initialPhase=False,meshChanged=False):
+        """
+        write out post processed velocity values as a finite element space
+        TODO
+           test
+           reuse data arrays
+        """
+        self.velocityWriter.writeMeshXdmf_LowestOrderMixed(archive,
+                                                           self.vt.mesh,
+                                                           self.vt.nSpace_global,
+                                                           t=t,init=initialPhase,
+                                                           meshChanged=meshChanged,arGrid=None,
+                                                           tCount=tCount)
+        dgnodes = self.vt.mesh.nodeArray[self.vt.mesh.elementNodesArray]
+        for ci in self.vtComponents:
+          velocity= self.evaluateElementVelocityField(dgnodes,ci)
+          self.velocityWriter.writeVectorFunctionXdmf_LowestOrderMixed(archive,velocity,tCount,init=initialPhase,name="velocity_vpp"+"_%s" % ci)
+          
 class VPP_P1nc_RT0(VelocityPostProcessingAlgorithmBase):
     """
     P1-nonconforming velocity postprocessing
@@ -466,6 +487,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         self.localVelocityRepresentationFlag = 2
         
         self.omitFluxBoundaryNodes=omitFluxBoundaryNodes
+
         #to handle some spaces being P^k k > 1
         self.alpha = {}
         self.solutionTestSpaceIsNotPWL = {}
@@ -700,6 +722,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         if correctFlux == True:
             self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
 
+            
         cpostprocessing.calculateConservationResidualPWL(self.vt.mesh.interiorElementBoundariesArray,
                                                          self.vt.mesh.exteriorElementBoundariesArray,
                                                          self.vt.mesh.elementBoundaryElementsArray,
@@ -2582,6 +2605,14 @@ class AggregateVelocityPostProcessor:
             return None
         for vpp in self.vpp_algorithms:
             return vpp.evaluateElementVelocityField(x,ci)
+    def archiveVelocityValues(self,archive,t,tCount,initialPhase=False,meshChanged=False):
+        """
+        write out post processed velocity values as a finite element space
+        """
+        if self.postProcessingTypes == None:
+            return None
+        for vpp in self.vpp_algorithms:
+            return vpp.archiveVelocityValues(archive,t,tCount,initialPhase=initialPhase,meshChanged=meshChanged)
 
 ####################################################################################################
 #original Velocity PostProcessing Class 
