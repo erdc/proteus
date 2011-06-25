@@ -1464,5 +1464,83 @@ class XdmfWriter:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",tmp)
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"}) 
         
-    
-    
+    def writeMeshXdmf_LowestOrderMixed(self,ar,mesh,spaceDim,t=0.0,init=False,meshChanged=False,arGrid=None,tCount=0,
+                                       spaceSuffix = "_RT0"):
+        #write out basic geometry if not already done?
+        mesh.writeMeshXdmf(ar,"Spatial_Domain",t,init,meshChanged,tCount=tCount)
+        #now try to write out a mesh that matches RT0 velocity as dgp1 lagrange
+        gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
+
+        if self.arGrid == None or self.arTime.get('Value') != str(t):
+            if spaceDim == 1:
+                Xdmf_ElementTopology = "Polyline"
+            elif spaceDim == 2:
+                Xdmf_ElementTopology = "Triangle"
+            elif spaceDim == 3:
+                Xdmf_ElementTopology = "Tetrahedron"
+            Xdmf_NodesPerElement = spaceDim+1
+            Xdmf_NumberOfElements= mesh.nElements_global
+            self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            topology    = SubElement(self.arGrid,"Topology",
+                                     {"Type":Xdmf_ElementTopology,
+                                      "NumberOfElements":str(Xdmf_NumberOfElements)})
+            elements    = SubElement(topology,"DataItem",
+                                     {"Format":ar.dataItemFormat,
+                                      "DataType":"Int",
+                                      "Dimensions":"%i %i" % (Xdmf_NumberOfElements,Xdmf_NodesPerElement)})
+            geometry    = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
+            nodes       = SubElement(geometry,"DataItem",
+                                     {"Format":ar.dataItemFormat,
+                                      "DataType":"Float",
+                                      "Dimensions":"%i %i" % (Xdmf_NumberOfElements*Xdmf_NodesPerElement,3)})
+            if ar.hdfFile != None:
+                elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
+                nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
+                if init or meshChanged:
+                    #simple dg l2g mapping
+                    dg_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
+                    ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,dg_l2g)
+
+                    dgnodes = numpy.reshape(mesh.nodeArray[mesh.elementNodesArray],(Xdmf_NumberOfElements*Xdmf_NodesPerElement,3))
+                    ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,dgnodes)
+            else:
+                SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt"})
+                SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt"})
+                if init or meshChanged:
+                    dg_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
+                    numpy.savetxt(ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt",dg_l2g,fmt='%d')
+
+                    dgnodes = numpy.reshape(mesh.nodeArray[mesh.elementNodesArray],(Xdmf_NumberOfElements*Xdmf_NodesPerElement,3))
+                    numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",dgnodes)
+                    
+                #
+            #hdfile
+        #need to write a grid
+        return self.arGrid
+    #def
+    def writeVectorFunctionXdmf_LowestOrderMixed(self,ar,u,tCount=0,init=True,spaceSuffix="_RT0",name="velocity"):
+        Xdmf_NodesGlobal = u.shape[0]*u.shape[1]
+        Xdmf_NumberOfComponents = u.shape[2]
+        Xdmf_StorageDim = 3
+        
+        #if writing as dgp1
+        attribute = SubElement(self.arGrid,"Attribute",{"Name":name,
+                                                        "AttributeType":"Vector",
+                                                        "Center":"Node"})
+        values    = SubElement(attribute,"DataItem",
+                               {"Format":ar.dataItemFormat,
+                                "DataType":"Float",
+                                "Precision":"8",
+                                "Dimensions":"%i %i" % (Xdmf_NodesGlobal,Xdmf_StorageDim)})#force 3d vector since points 3d
+        tmp = numpy.zeros((Xdmf_NodesGlobal,Xdmf_StorageDim),'d')
+        tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(u.flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
+
+        if ar.hdfFile != None:
+            values.text = ar.hdfFilename+":/"+name+str(tCount)
+            ar.hdfFile.createArray("/",name+str(tCount),tmp)
+        else:
+            numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",tmp)
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"}) 
+        #
+        

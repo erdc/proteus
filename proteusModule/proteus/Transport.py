@@ -5218,7 +5218,7 @@ class OneLevelTransport(NonlinearEquation):
         if n%2==1:
             uOut.write('\n')
         uOut.close()
-    def archiveFiniteElementSolutions(self,archive,t,tCount,initialPhase=False,writeVectors=True,meshChanged=False,femSpaceWritten={}):
+    def archiveFiniteElementSolutions(self,archive,t,tCount,initialPhase=False,writeVectors=True,meshChanged=False,femSpaceWritten={},writeVelocityPostProcessor=True):
         """
         write finite element solutions to archive at time t, tries to group finite element
         functions by their space 
@@ -5254,6 +5254,9 @@ class OneLevelTransport(NonlinearEquation):
                                                         self.coefficients.vectorComponents,
                                                         self.coefficients.vectorName,
                                                         tCount)
+        
+        if writeVelocityPostProcessor and self.velocityPostProcessor != None:
+            self.velocityPostProcessor.archiveVelocityValues(archive,t,tCount,initialPhase=initialPhase,meshChanged=meshChanged)
     def archiveElementQuadratureValues(self,archive,t,tCount,scalarKeys=None,vectorKeys=None,
                                        tensorKeys=None,
                                        initialPhase=False,meshChanged=False):
