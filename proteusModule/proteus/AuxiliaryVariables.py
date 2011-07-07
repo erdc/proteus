@@ -606,3 +606,186 @@ class MassOverRegion(AV_base):
                 log("Mass Norms in Domain %s Total= %s L2= %s L1= %s LI= %s " % (self.regionIdList,results['total'],results['L2'],results['L1'],results['LI']))
             self.ofile.write('%21.15e %21.15e %21.15e %21.15e\n' % (results['total'],results['L2'],results['L1'],results['LI']))
             
+class PT123velocityGenerator(AV_base):
+    """
+    write out the velocity field from a model for PT123 to use in tracking as a
+    standalone application
+    """
+    from cpostprocessing import getElementRT0velocityValues
+    def __init__(self,filebase,tnList,ci=0):
+        self.filebase = filebase
+        self.tnList = tnList
+        self.ci=ci
+        self.nodal_velocity_file = None
+        self.element_velocity_file=None
+        self.element_vf_file=None
+        self.nodal_vf_file=None
+    def attachModel(self,model,ar):
+        AV_base.attachModel(self,model,ar)
+        #write mesh out first and don't rewrite for now
+        self.nd  = model.levelModelList[-1].nSpace_global
+        self.mesh= model.levelModelList[-1].mesh
+        self.writePT123inputMesh(self.nd,self.mesh)
+        self.velocityPostProcessor = self.model.levelModelList[-1].velocityPostProcessor
+        if self.velocityPostProcessor != None:
+            self.PT123_RT0_interpolation_points = self.mesh.nodeArray[self.mesh.elementNodesArray]
+            self.PT123_interpolation_values = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'d')
+            
+        return self
+    def checkFileClose(self,filetoclose):
+        if self.model.levelModelList[-1].timeIntegration.t >= self.tnList[-1]:
+            filetoclose.write("ENDR\n")
+        #let file close itself?
+    def writePT123inputMesh(self,nd,mesh):
+        base = 1 #base 1 numbering
+        mesh_prefix = '1dm'; ele_label   = 'GE2'; node_label = 'GN'
+        if nd == 2:
+            mesh_prefix = '2dm'; ele_label   = 'GE3'; 
+        elif nd == 3:
+            mesh_prefix = '3dm'; ele_label   = 'GE4';
+        #   
+        fmesh = open(self.filebase+'.'+mesh_prefix,'w')
+        fmesh.write('MESH \n')
+        for eN in range(mesh.nElements_global):
+            fmesh.write("%s   %d " % (ele_label,eN+base))
+            for nN in range(mesh.nNodes_element):
+                fmesh.write("   %d " % (mesh.elementNodesArray[eN,nN]+base))
+            fmesh.write("\n")
+        #
+        for nN in range(mesh.nNodes_global):
+            fmesh.write("%s   %d " % (node_label,nN+base))
+            for I in range(nd):
+                fmesh.write("   %g " % (mesh.nodeArray[nN,I]))
+            fmesh.write("\n")
+        #
+        fmesh.write("ENDR\n")
+        fmesh.close()
+    #
+    def writePT123nodalVelocity(self,components):
+        #write out velocity file for current time step
+        if self.nodal_velocity_file == None:
+            vel_prefix = 'vn1'; 
+            if self.nd == 2:
+                vel_prefix = 'vn2'; 
+            elif self.nd == 3:
+                vel_prefix = 'vn3'; 
+    
+            self.nodal_velocity_file = open(self.filebase+'.'+vel_prefix,'w')
+            self.nodal_velocity_file.write("     %d     %d    %d \n" % (self.mesh.nNodes_global,self.nd,len(self.tnList)-1))
+        #
+        self.nodal_velocity_file.write("TS    %f \n" % self.model.levelModelList[-1].timeIntegration.t)
+        
+        for I in range(self.mesh.nNodes_global):
+            for j in range(self.nd):
+                self.nodal_velocity_file.write("  %f  " % self.model.levelModelList[-1].u[components[j]][I])
+            #mwf PT123 doc incorrect, only reads up to neq
+            #for j in range(p.nd,3):
+            #    fvel.write("  %g  " % 0.0)
+            self.nodal_velocity_file.write("\n")
+        #
+        self.checkFileClose(self.nodal_velocity_file)
+    #
+    def writePT123elementVelocity(self,components):
+        #write out velocity file for current time step
+        if self.element_velocity_file == None:
+            vel_prefix = 've1'; 
+            if self.nd == 2:
+                vel_prefix = 've2'; 
+            elif self.nd == 3:
+                vel_prefix = 've3'; 
+    
+            self.element_velocity_file = open(self.filebase+'.'+vel_prefix,'w')
+            self.element_velocity_file.write("     %d     %d    %d \n" % (self.mesh.nElements_global,self.nd,len(self.tnList)-1))
+        #
+        self.element_velocity_file.write("TS    %f \n" % self.model.levelModelList[-1].timeIntegration.t)
+        
+        for eN in range(self.mesh.nElements_global):
+            for nN in range(self.mesh.nNodes_element):
+                for j in range(self.nd):
+                    I = self.model.levelModelList[-1].u[components[j]].femSpace.dofMap.l2g[eN,nN]
+                    self.element_velocity_file.write("  %f  " % self.model.levelModelList[-1].u[components[j]][I])
+            #mwf PT123 doc incorrect, only reads up to neq
+            #for j in range(p.nd,3):
+            #    fvel.write("  %g  " % 0.0)
+            self.element_velocity_file.write("\n")
+        #
+        self.checkFileClose(self.element_velocity_file)
+    #
+    def writePT123MixedVelocityAsElementVelocity(self,ci):
+        #write out velocity file for current time step
+        if self.element_velocity_file == None:
+            vel_prefix = 've1'; 
+            if self.nd == 2:
+                vel_prefix = 've2'; 
+            elif self.nd == 3:
+                vel_prefix = 've3'; 
+    
+            self.element_velocity_file = open(self.filebase+'.'+vel_prefix,'w')
+            self.element_velocity_file.write("     %d     %d    %d \n" % (self.mesh.nElements_global,self.nd,len(self.tnList)-1))
+        #
+        self.element_velocity_file.write("TS    %f \n" % self.model.levelModelList[-1].timeIntegration.t)
+        self.PT123_interpolation_values = self.velocityPostProcessor.evaluateElementVelocityField(self.PT123_RT0_interpolation_points,ci)
+
+        for i in range(self.PT123_interpolation_values.shape[0]):
+            for j in range(self.PT123_interpolation_values.shape[1]):
+                for k in range(self.PT123_interpolation_values.shape[2]):
+                    self.element_velocity_file.write("  %f  " % self.PT123_interpolation_values[i,j,k])
+            #mwf PT123 doc incorrect, only reads up to neq
+            #for j in range(p.nd,3):
+            #    fvel.write("  %g  " % 0.0)
+            self.element_velocity_file.write("\n")
+        #
+        self.checkFileClose(self.element_velocity_file)
+
+    #
+    def writePT123elementPorosity(self,value=1.0):
+        #write out constant value for volume fraction for now
+        if self.element_vf_file == None:
+            vf_prefix = 'eemc1'; 
+            if self.nd == 2:
+                vf_prefix = 'eemc2'; 
+            elif self.nd == 3:
+                vf_prefix = 'eemc3'; 
+    
+            self.element_vf_file = open(self.filebase+'.'+vf_prefix,'w')
+            self.element_vf_file.write("     %d    %d \n" % (self.mesh.nElements_global,len(self.tnList)-1))
+        #
+        self.element_vf_file.write("TS    %f \n" % self.model.levelModelList[-1].timeIntegration.t)
+        
+        for eN in range(self.mesh.nElements_global):
+            self.element_vf_file.write("  %f  \n" % value)
+        #
+        self.checkFileClose(self.element_vf_file)
+
+    #
+    def writePT123nodalPorosity(self,value=1.0):
+        #write out constant value for volume fraction for now
+        if self.nodal_vf_file == None:
+            vf_prefix = 'nemc1'; 
+            if self.nd == 2:
+                vf_prefix = 'nemc2'; 
+            elif self.nd == 3:
+                vf_prefix = 'nemc3'; 
+    
+            self.nodal_vf_file = open(self.filebase+'.'+vf_prefix,'w')
+            self.nodal_vf_file.write("     %d    %d \n" % (self.mesh.nNodes_global,len(self.tnList)-1))
+        #
+        self.nodal_vf_file.write("TS    %f \n" % self.model.levelModelList[-1].timeIntegration.t)
+        
+        for nN in range(self.mesh.nNodes_global):
+            self.nodal_vf_file.write("  %f  \n" % value)
+        #
+        self.checkFileClose(self.nodal_vf_file)
+    #
+    def calculate(self):
+        #mwf todo when to write what type of file?
+        timeToPrint = False
+        for t in self.tnList[1:]:
+            if abs(t-self.model.levelModelList[-1].timeIntegration.t) < 1.0e-6:
+                timeToPrint = True
+                break
+        if timeToPrint:
+            if self.velocityPostProcessor != None:
+                self.writePT123MixedVelocityAsElementVelocity(self.ci)
+                self.writePT123elementPorosity(value=1.)
+        #mwf stopped here
