@@ -2945,7 +2945,7 @@ void accumulateSourceContribution(int nParticles_global, //number of particles i
       double t_in = t_traj[i]; 
       int eN = elem_traj[i]; //current element
       //mwf debug
-      std::cout<<"Starting particle "<< k <<" flag= "<<flag_k<<" t_in= "<< t_in <<" eN= "<<eN <<" i= "<< i <<std::endl;
+      //std::cout<<"Starting particle "<< k <<" flag= "<<flag_k<<" t_in= "<< t_in <<" eN= "<<eN <<" i= "<< i <<std::endl;
       
       while (i < traj_offsets[k+1]-1) //walk through trajectory for particle k
 	{
@@ -2963,9 +2963,9 @@ void accumulateSourceContribution(int nParticles_global, //number of particles i
 	  if (fabs(retardation) > 0.0)
 	    t_out = t_in + dt_cons*retardation; 
 	  //mwf debug
-	  std::cout<<"walked through element "<<eN<<" i_in= "<<i_in<<" i = "<<i<<" found next element "<<elem_traj[i+1]<<" dt_cons= "<<dt_cons
-		   <<" t_traj[i_in] = "<<t_traj[i_in]<<" t_traj[i+1]= "<<t_traj[i+1]<<" t_in= "<<t_in<<" t_out= "<<t_out
-		   <<" retardation= "<<retardation<<std::endl<<'\t'<<" t_in + dt_cons*retardation= "<<t_in + dt_cons*retardation<<std::endl;
+	  //std::cout<<"walked through element "<<eN<<" i_in= "<<i_in<<" i = "<<i<<" found next element "<<elem_traj[i+1]<<" dt_cons= "<<dt_cons
+	  //   <<" t_traj[i_in] = "<<t_traj[i_in]<<" t_traj[i+1]= "<<t_traj[i+1]<<" t_in= "<<t_in<<" t_out= "<<t_out
+	  //   <<" retardation= "<<retardation<<std::endl<<'\t'<<" t_in + dt_cons*retardation= "<<t_in + dt_cons*retardation<<std::endl;
 	  assert(fabs(t_out-t_in) > 0.0);
 	  double tau_out = fmax(0.,tau-t_out), tau_in = fmax(0.0,tau-t_in);
 	  double convolution_term = 0.0;
