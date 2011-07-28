@@ -680,5 +680,33 @@ void generateArraysForTrackedSSIPs(int nElements_global,
 				   const double* x_track,
 				   std::vector<int>& element_offsets_ssip,
 				   std::vector<double>& x_ssip);
+
+
+double integratePiecewiseLinearMassSource(int nknots,
+					 const double * t_vals,
+					 const double * m_vals,
+					 double t_in,
+					 double t_out,
+					 double tau_out,
+					 double tau_in,
+					 double decay); //must be nonpositive
+
+void accumulateSourceContribution(int nParticles_global, //number of particles in this source
+				  int nElements_global,  //number of elements in domain
+				  int nParticleFlags,    //total number of particle types or flags
+				  int nMassSourceKnots,  //number of knots in source spline
+				  double tau,            //time evaluating solution
+				  const int * traj_offsets, //traj_offsets[i] = start of trajectory info for particle i
+				                            //n_i = traj_offsets[i+1]-traj_offsets[i] 
+				  const double * x_traj, //particle trajectories: x (size 3\sum_i n_i])
+				  const double * t_traj, //particle trajectories: t
+				  const int * elem_traj, //particle trajectories: element id's
+				  const double * massSource_t, //discrete t values (knot's) for mass source
+				  const double * massSource_m, //values for mass source at knot's
+				  const double * decay_coef_element,  //linear decay: nParticleFlags * nElements_global
+				  const double * retardation_factor_element,  //Retardation factor: nParticleFlags * nElements_global
+				  const int * particleFlags, //The particle 'type' associated with particles
+				  double *c_element); //element concentrations
+
 }//extern C
 #endif 
