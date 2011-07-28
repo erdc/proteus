@@ -1441,6 +1441,7 @@ static PyObject* cellam_generateQuadratureArraysForSSIPs(PyObject* self,
 		       x_gq);
 }
 
+
 static PyObject* cellam_generateArraysForTrackedSSIPs(PyObject* self,
 						      PyObject* args)
 
@@ -1532,7 +1533,90 @@ static PyObject* cellam_generateArraysForTrackedSSIPs(PyObject* self,
 		       element_offsets_ssip,
 		       x_ssip);
 }
+static PyObject* cellam_accumulateSourceContribution(PyObject* self,
+						     PyObject* args)
+{
+  //input
+  PyObject * traj_offsets, //traj_offsets[i] = start of trajectory info for particle i
+		           //n_i = traj_offsets[i+1]-traj_offsets[i] 
+     * x_traj, //particle trajectories: x (size 3\sum_i n_i])
+     * t_traj, //particle trajectories: t
+     * elem_traj, //particle trajectories: element id's
+     * massSource_t, //discrete t values (knot's) for mass source
+     * massSource_m, //values for mass source at knot's
+     * decay_coef_element,  //linear decay: nParticleFlags * nElements_global
+     * retardation_factor_element,  //Retardation factor: nParticleFlags * nElements_global
+     * particleFlags, //The particle 'type' associated with particles
+     * c_element; //element concentrations
+  double tau;
+  if(!PyArg_ParseTuple(args,
+                       "dOOOOOOOOOO",
+		       &tau,
+                       &traj_offsets,
+		       &x_traj,
+		       &t_traj,
+		       &elem_traj,
+		       &massSource_t,
+		       &massSource_m,
+		       &decay_coef_element,
+		       &retardation_factor_element,
+		       &particleFlags,
+		       &c_element))
+    return NULL;
+ 
+  accumulateSourceContribution(SHAPE(traj_offsets)[0]-1,
+			       SHAPE(c_element)[0],
+			       SHAPE(decay_coef_element)[1],
+			       SHAPE(massSource_t)[0],
+			       tau,           
+			       IDATA(traj_offsets),
+			       DDATA(x_traj),
+			       DDATA(t_traj),
+			       IDATA(elem_traj),
+			       DDATA(massSource_t),
+			       DDATA(massSource_m),
+			       DDATA(decay_coef_element),
+			       DDATA(retardation_factor_element),
+			       IDATA(particleFlags),
+			       DDATA(c_element));
 
+  
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+
+static PyObject* cellam_integratePiecewiseLinearMassSource(PyObject* self,
+							   PyObject* args)
+{
+  //input
+  PyObject * t_vals,
+    * m_vals;
+  double t_in,t_out,tau_out,tau_in,decay;
+
+  if(!PyArg_ParseTuple(args,
+                       "dddddOO",
+		       &t_in,
+		       &t_out,
+		       &tau_out,
+		       &tau_in,
+		       &decay,
+		       &t_vals,
+		       &m_vals))
+    return NULL;
+ 
+  double massint = integratePiecewiseLinearMassSource(SHAPE(t_vals)[0],
+						     DDATA(t_vals),
+						     DDATA(m_vals),
+						     t_in,
+						     t_out,
+						     tau_out,
+						     tau_in,
+						     decay);
+  
+  return Py_BuildValue("d",
+		       massint);
+
+}
 static PyMethodDef cellamMethods[] = {
  { "updateOldMass_weak",
     cellam_updateOldMass_weak,
@@ -1635,7 +1719,15 @@ static PyMethodDef cellamMethods[] = {
    cellam_generateArraysForTrackedSSIPs,
    METH_VARARGS, 
    "return element offsets array and point array for subset of SSIPs that actually get tracked to an element"},
- { NULL,NULL,0,NULL}
+ { "accumulateSourceContribution",
+   cellam_accumulateSourceContribution,
+   METH_VARARGS, 
+   "apply convolution-based particle tracking (CBPT) approach to generate element-based concentrations"},
+ { "integratePiecewiseLinearMassSource",
+   cellam_integratePiecewiseLinearMassSource,
+   METH_VARARGS, 
+   "integrate piecewise-linear mass source with exponential decay for CBPT"},
+  { NULL,NULL,0,NULL}
 };
 
 extern "C"
