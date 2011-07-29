@@ -2,6 +2,7 @@
 #include "numpy/arrayobject.h"
 #include "tracking.h"
 #include "superluWrappersModule.h"
+#include <iostream>
 
 #define ND(p) ((PyArrayObject *)p)->nd
 #define SHAPE(p) ((PyArrayObject *)p)->dimensions
@@ -246,6 +247,131 @@ static PyObject* ctracking_trackPointsRT0Velocity2d(PyObject* self,
   Py_INCREF(Py_None); 
   return Py_None;
 }
+static PyObject* ctracking_trackPointsRT0Velocity2dWithTrajectories(PyObject* self,
+								    PyObject* args)
+{
+  int localVelocityRepresentationFlag,
+    nElements_global,
+    nNodes_global,
+    nNodes_element,
+    nElementBoundaries_element,
+    nPointsToTrack,
+    debugLevel;
+  
+  double dir,
+    zeroTolForTracking;
+
+  PyObject *nodeArray,
+    *elementNodesArray,
+    *elementNeighborsArray,
+    *elementBoundariesArray,
+    *elementBoundaryBarycentersArray,
+    *elementLocalBoundaryOuterNormalsArray,
+    *cvelocity_l2g,
+    *cvelocity_dof,
+    *x_depart_times,
+    *x_arrive_times,
+    *x_in,
+    *x_element,
+    *x_out,
+    *flag;
+
+  //try to build arrays for trajectories and return
+  int n_traj,n_tracked;
+  double * x_traj = 0, * t_traj = 0;
+  int * e_traj = 0, * offsets_traj = 0;
+  debugLevel = 0;
+  if (!PyArg_ParseTuple(args,
+			"iiiiiOOOOOOOOdOOidOOOO|i",
+			&localVelocityRepresentationFlag,
+			&nElements_global,
+			&nNodes_global,
+			&nNodes_element,
+			&nElementBoundaries_element,
+			&nodeArray,
+			&elementNodesArray,
+			&elementNeighborsArray,
+			&elementBoundariesArray,
+			&elementBoundaryBarycentersArray,
+			&elementLocalBoundaryOuterNormalsArray,
+			&cvelocity_l2g,
+			&cvelocity_dof,
+			&dir,                   
+			&x_depart_times,               
+			&x_arrive_times,               
+			&nPointsToTrack,        
+			&zeroTolForTracking,    
+			&x_in,                
+			&x_element,           
+			&x_out,               
+			&flag,
+			&debugLevel))    
+    return NULL;
+
+  trackPointsRT0Velocity2dWithTrajectories(debugLevel,
+					   localVelocityRepresentationFlag,
+					   nElements_global,             
+					   nNodes_global,
+					   nNodes_element,
+					   nElementBoundaries_element,
+					   DDATA(nodeArray),
+					   IDATA(elementNodesArray),
+					   IDATA(elementNeighborsArray), 
+					   IDATA(elementBoundariesArray),
+					   DDATA(elementBoundaryBarycentersArray),
+					   DDATA(elementLocalBoundaryOuterNormalsArray),
+					   IDATA(cvelocity_l2g),
+					   DDATA(cvelocity_dof),       
+					   dir,                        
+					   DDATA(x_depart_times),      
+					   DDATA(x_arrive_times),      
+					   nPointsToTrack,             
+					   zeroTolForTracking,         
+					   DDATA(x_in),                
+					   IDATA(x_element),           
+					   DDATA(x_out),
+					   IDATA(flag),
+					   n_traj,
+					   n_tracked,
+					   offsets_traj,
+					   x_traj,
+					   t_traj,
+					   e_traj);
+  npy_intp dim[1],dim2[2]; 
+  dim[0] = n_traj;
+  PyArrayObject *t_traj_py = (PyArrayObject *)PyArray_SimpleNew(1,dim,PyArray_DOUBLE);
+  double* t_ptr = DDATA(t_traj_py);
+  //mwf debug
+  std::cout<<"back from trajectory t_ptr= "<<t_ptr<<" t_traj= "<<t_traj<<std::endl; 
+  dim2[0] = n_traj; dim2[1] = 3;
+  PyArrayObject *x_traj_py = (PyArrayObject *)PyArray_SimpleNew(2,dim2,PyArray_DOUBLE);
+  double* x_ptr = DDATA(x_traj_py);
+  //mwf debug
+  std::cout<<"back from trajectory x_ptr= "<<x_ptr<<" x_traj= "<<x_traj<<std::endl; 
+  dim[0] = n_traj;
+  PyArrayObject *e_traj_py = (PyArrayObject *)PyArray_SimpleNew(1,dim,PyArray_INT);
+  int* e_ptr = IDATA(e_traj_py);
+  //mwf debug
+  std::cout<<"back from trajectory e_ptr= "<<e_ptr<<" e_traj= "<<e_traj<<std::endl; 
+  dim[0] = n_tracked+1;
+  PyArrayObject *o_traj_py = (PyArrayObject *)PyArray_SimpleNew(1,dim,PyArray_INT);
+  int* o_ptr = IDATA(o_traj_py);
+  //mwf debug
+  std::cout<<"back from trajectory o_ptr= "<<o_ptr<<" offsets_traj= "<<offsets_traj<<std::endl; 
+
+  for (int i=0; i < n_traj; i++)
+    {
+      t_ptr[i] = t_traj[i]; e_ptr[i] = e_traj[i]; 
+      for (int j=0; j < 3; j++)
+	x_ptr[i*3+j] = x_traj[i*3+j];
+    }
+  for (int i=0; i < n_tracked+1; i++)
+    {
+      o_ptr[i] = offsets_traj[i];
+    }
+  return Py_BuildValue("(O,O,O,O)",PyArray_Return(x_traj_py),PyArray_Return(t_traj_py),PyArray_Return(e_traj_py),PyArray_Return(o_traj_py));
+
+}
 
 static PyObject* ctracking_getOuterNormals_affineSimplex(PyObject* self,
 							 PyObject* args)
@@ -336,6 +462,10 @@ static PyMethodDef ctrackingMethods[] = {
    ctracking_trackPointsRT0Velocity2d,
    METH_VARARGS, 
    "track points on unstructured 1d mesh assuming RT0 velocity"},
+ { "trackPointsRT0Velocity2dWithTrajectories",
+   ctracking_trackPointsRT0Velocity2dWithTrajectories,
+   METH_VARARGS, 
+   "track points on unstructured 2d mesh assuming RT0 velocity, returns particle trajectory history too"},
  { "getOuterNormals_affineSimplex",
    ctracking_getOuterNormals_affineSimplex,
    METH_VARARGS, 

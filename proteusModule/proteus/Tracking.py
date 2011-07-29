@@ -1148,7 +1148,7 @@ class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocit
                             x_track[ci].reshape(nPoints[ci]*maxeq),
                             idve=2,#element based C0P1 velocity field
                             maxeq=3,
-                            iverbose=0)
+                            iverbose=1)
 
             self.mesh.elementNodesArray -= fbase
             self.mesh.nodeElementsArray -= fbase
