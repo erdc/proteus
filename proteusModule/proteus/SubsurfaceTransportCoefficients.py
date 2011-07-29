@@ -144,11 +144,12 @@ class SinglePhaseDarcyCoefficients(TC_base):
                 stfuncs.setVectorMaterialFunctionOverElements(self.elementMaterialTypes,
                                                               cq[('a',ci,ci)],
                                                               self.K_types_const)
-                if cq.has_key(('m',ci)):
+                if cq.has_key(('dm',ci,ci)):
                     stfuncs.setScalarMaterialFunctionOverElements(self.elementMaterialTypes,
-                                                                  cq[('m',ci)],
+                                                                  cq[('dm',ci,ci)],
                                                                   self.S_s_types_const)
-                    cq[('m',ci)] *= cq[('u',ci)]
+                    cq[('m',ci)].flat[:] = cq[('u',ci)].flat
+                    cq[('m',ci)] *= cq[('dm',ci,ci)]
         else:
             for ci in range(self.nc):
                 cq[('f',ci)].flat[:] = 0.0
@@ -164,12 +165,13 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                    cq[('a',ci,ci)],
                                                                    self.K_types)
                 
-                if cq.has_key(('m',ci)):
+                if cq.has_key(('dm',ci,ci)):
                     stfuncs.evaluateScalarMaterialFunctionOverElements(t,self.elementMaterialTypes,
                                                                        cq['x'],
-                                                                       cq[('m',ci)],
+                                                                       cq[('dm',ci,ci)],
                                                                        self.S_s_types)
-                    cq[('m',ci)] *= cq[('u',ci)]
+                    cq[('m',ci)].flat[:] = cq[('u',ci)].flat
+                    cq[('m',ci)] *= cq[('dm',ci,ci)]
     def evaluateHeterogeneity_elementBoundary(self,t,cebq):
         #use harmonic average for a, arith average for f
         if self.materialValuesLocallyConstant:
@@ -195,16 +197,17 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                                                  cebq[('a',ci,ci)],
                                                                                                  self.K_types_const)
         
-                if cebq.has_key(('m',ci)):
+                if cebq.has_key(('dm',ci,ci)):
                     stfuncs.setScalarMaterialFunctionOverElementBoundaries_arithmeticAverage(self.elementBoundariesArray,
                                                                                              self.elementBoundaryTypes,
-                                                                                             cebq[('m',ci)],
+                                                                                             cebq[('dm',ci,ci)],
                                                                                              self.S_s_types_const)
-                    cebq[('m',ci)] *= cebq[('u',ci)]
+                    cebq[('m',ci)].flat[:] = cebq[('u',ci)].flat
+                    cebq[('m',ci)] *= cebq[('dm',ci,ci)]
                     
         else:
             for ci in range(self.nc):
-                if cebq.has_key(('f',ci)): cebq[('f',ci)].flat[:] = 0.0
+                if cebq.has_key(('f',ci)): cebq[('f',ci)].fill(0.0)
                 if cebq.has_key(('r',ci)):
                     stfuncs.evaluateScalarMaterialFunctionOverElementBoundaries_arithmeticAverage(t,
                                                                                                   self.elementBoundariesArray,
@@ -221,15 +224,16 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                                                       cebq['x'],
                                                                                                       cebq[('a',ci,ci)],
                                                                                                       self.K_types)
-                if cebq.has_key(('m',ci)):
+                if cebq.has_key(('dm',ci,ci)):
                     stfuncs.evaluateScalarMaterialFunctionOverElementBoundaries_arithmeticAverage(t,
                                                                                                   self.elementBoundariesArray,
                                                                                                   self.elementBoundaryTypes,
                                                                                                   cebq['x'],
-                                                                                                  cebq[('m',ci)],
+                                                                                                  cebq[('dm',ci,ci)],
                                                                                                   self.S_s_types)
 
-                    cebq[('m',ci)] *= cebq[('u',ci)]
+                    cebq[('m',ci)].flat[:] = cebq[('u',ci)].flat
+                    cebq[('m',ci)] *= cebq[('dm',ci,ci)]
 
     def evaluateHeterogeneity_globalElementBoundary(self,t,cebq_global):
         #use harmonic average for a, arith average for f
@@ -256,12 +260,13 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                                                        cebq_global[('a',ci,ci)],
                                                                                                        self.K_types_const)
         
-                if cebq_global.has_key(('m',ci)):
+                if cebq_global.has_key(('dm',ci,ci)):
                     stfuncs.setScalarMaterialFunctionOverGlobalElementBoundaries_arithmeticAverage(self.elementBoundariesArray,
                                                                                                    self.elementBoundaryTypes,
-                                                                                                   cebq_global[('m',ci)],
+                                                                                                   cebq_global[('dm',ci,ci)],
                                                                                                    self.S_s_types_const)
-                    cebq_global[('m',ci)] *= cebq_global[('u',ci)]
+                    cebq_global[('m',ci)].flat[:] = cebq_global[('u',ci)].flat
+                    cebq_global[('m',ci)] *= cebq_global[('dm',ci,ci)]
         else:
             for ci in range(self.nc):
                 if cebq_global.has_key(('f',ci)): cebq_global[('f',ci)].flat[:] = 0.0
@@ -282,14 +287,15 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                                                             cebq_global[('a',ci,ci)],
                                                                                                             self.K_types)
 
-                if cebq_global.has_key(('m',ci)):
+                if cebq_global.has_key(('dm',ci,ci)):
                     stfuncs.evaluateScalarMaterialFunctionOverGlobalElementBoundaries_arithmeticAverage(t,
                                                                                                         self.elementBoundariesArray,
                                                                                                         self.elementBoundaryTypes,
                                                                                                         cebq_global['x'],
-                                                                                                        cebq_global[('m',ci)],
+                                                                                                        cebq_global[('dm',ci,ci)],
                                                                                                         self.S_s_types)
-                    cebq_global[('m',ci)] *= cebq_global[('u',ci)]
+                    cebq_global[('m',ci)].flat[:] = cebq_global[('u',ci)].flat
+                    cebq_global[('m',ci)] *= cebq_global[('dm',ci,ci)]
     def evaluateHeterogeneity_exteriorElementBoundary(self,t,cebqe):
         if self.materialValuesLocallyConstant:
             x = numpy.zeros((3,),'d'); t0 = 0.0
@@ -311,11 +317,12 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                               cebqe[('a',ci,ci)],
                                                               self.K_types_const)
                 
-                if cebqe.has_key(('m',ci)):
+                if cebqe.has_key(('dm',ci,ci)):
                     stfuncs.setScalarMaterialFunctionOverElements(self.exteriorElementBoundaryTypes,
-                                                                  cebqe[('m',ci)],
+                                                                  cebqe[('dm',ci,ci)],
                                                                   self.S_s_types_const)
-                    cebqe[('m',ci)] *= cebqe[('u',ci)]
+                    cebqe[('m',ci)].flat[:] = cebqe[('u',ci)].flat
+                    cebqe[('m',ci)] *= cebqe[('dm',ci,ci)]
         else:
             for ci in range(self.nc):
                 cebqe[('f',ci)].flat[:] = 0.0
@@ -331,12 +338,13 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                    cebqe[('a',ci,ci)],
                                                                    self.K_types)
                 
-                if cebqe.has_key(('m',ci)):
+                if cebqe.has_key(('dm',ci,ci)):
                     stfuncs.evaluateScalarMaterialFunctionOverElements(t,self.exteriorElementBoundaryTypes,
                                                                        cebqe['x'],
-                                                                       cebqe[('m',ci)],
+                                                                       cebqe[('dm',ci,ci)],
                                                                        self.S_s_types)
-                    cebqe[('m',ci)] *= cebqe[('u',ci)]
+                    cebqe[('m',ci)].flat[:] = cebqe[('u',ci)].flat
+                    cebqe[('m',ci)] *= cebqe[('dm',ci,ci)]
 
     def evaluate(self,t,c):
         if self.timeVaryingCoefficients == True:
