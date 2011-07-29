@@ -2938,6 +2938,8 @@ void accumulateSourceContribution(int nParticles_global, //number of particles i
 				  double *c_element) //element concentrations
 {
   const double particle_weight = 1.0/float(nParticles_global);
+  //add as argument
+  const double dt_tol = 1.0e-8;
   for (int k = 0; k < nParticles_global; k++)
     {
       int flag_k = particleFlags[k];
@@ -2964,15 +2966,18 @@ void accumulateSourceContribution(int nParticles_global, //number of particles i
 	    t_out = t_in + dt_cons*retardation; 
 	  //mwf debug
 	  //std::cout<<"walked through element "<<eN<<" i_in= "<<i_in<<" i = "<<i<<" found next element "<<elem_traj[i+1]<<" dt_cons= "<<dt_cons
-	  //   <<" t_traj[i_in] = "<<t_traj[i_in]<<" t_traj[i+1]= "<<t_traj[i+1]<<" t_in= "<<t_in<<" t_out= "<<t_out
-	  //   <<" retardation= "<<retardation<<std::endl<<'\t'<<" t_in + dt_cons*retardation= "<<t_in + dt_cons*retardation<<std::endl;
-	  assert(fabs(t_out-t_in) > 0.0);
-	  double tau_out = fmax(0.,tau-t_out), tau_in = fmax(0.0,tau-t_in);
-	  double convolution_term = 0.0;
-	  if (tau_out < tau_in) //evaluate mass source
-	    convolution_term = integratePiecewiseLinearMassSource(nMassSourceKnots,massSource_t,massSource_m,t_in,t_out,tau_out,tau_in,decay);
+	  //	   <<" t_traj[i_in] = "<<t_traj[i_in]<<" t_traj[i+1]= "<<t_traj[i+1]<<" t_in= "<<t_in<<" t_out= "<<t_out
+	  //	   <<" retardation= "<<retardation<<std::endl<<'\t'<<" t_in + dt_cons*retardation= "<<t_in + dt_cons*retardation<<std::endl;
+	  if (fabs(t_out-t_in) > dt_tol)
+	    {
+	      
+	      double tau_out = fmax(0.,tau-t_out), tau_in = fmax(0.0,tau-t_in);
+	      double convolution_term = 0.0;
+	      if (tau_out < tau_in) //evaluate mass source
+		convolution_term = integratePiecewiseLinearMassSource(nMassSourceKnots,massSource_t,massSource_m,t_in,t_out,tau_out,tau_in,decay);
 	  
-	  c_element[eN] += convolution_term*particle_weight;
+	      c_element[eN] += convolution_term*particle_weight;
+	    }
 	  //get ready for next element
 	  assert(eN != elem_traj[i+1] || i+1 == traj_offsets[k+1]-1);
 	  eN = elem_traj[i+1];
