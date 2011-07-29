@@ -229,6 +229,43 @@ void trackPointsRT0Velocity2d(int debugLevel,
  				                                //out: -2   -- point exited domain somewhere in (tIn,tOut)
                                                                 //out: -3   -- did not track (e.g.,  or u = 0)
 
+void trackPointsRT0Velocity2dWithTrajectories(int debugLevel,
+					 int localVelocityRepresentationFlag, //2 -- 'flux' dofs, 1 -- \vec a + b \vec x
+					 int nElements_global,               //mesh representation
+					 int nNodes_global,
+					 int nNodes_element,
+					 int nElementBoundaries_element,
+					 const double * nodeArray,
+					 const int * elementNodesArray,
+					 const int * elementNeighborsArray, //local boundary id is associated with node across from boundary 
+					 const int * elementBoundariesArray, //element --> global element boundary id
+					 const double * elementBoundaryBarycentersArray,  //\vec{\bar{x}}_f [nElementBoundaries_global,3]
+					 const double * elementLocalBoundaryOuterNormalsArray, //\vec n_{f}      [nElements_global,nElementBoundaries_element,nd]
+					 const int * cvelocity_l2g,
+					 const double * cvelocity_dof,   //characteristic speed (velocity) representation
+					                                //v = \sum_{i=0}^{n_d} V^i \vec N_i
+                                                                        //\vec N_i = \frac{1}{d|\Omega_e|}(\vec x - \vec x_{n,i}) i=0,..,n_d
+					 double dir,                    //direction in time
+					 const double *x_depart_times,  //in  -- time of departure for each point
+					 double *x_arrive_times,        //in  -- desired stopping time
+					                                //out -- stopping time for each point 
+					 int nPointsToTrack,            //number of points to track
+					 double zeroTolForTracking,     //ignore point if |u| < eps or |v| < eps
+					 const double* x_in,            //points for tracking (always 3d)
+					 int *x_element,                //in -- element where point i is located at tIn
+					                                //out -- element where point i is located at tOut
+					 double * x_out,                //stopping location for point i at tOut
+					 int * flag,                    //in: > -2  -- track point
+                                                                        //in: -3    -- skip point
+                                                                        //out: -1   -- point in interior at tOut
+					                                //out: -2   -- point exited domain somewhere in (tIn,tOut)
+                                                                        //out: -3   -- did not track (e.g.,  or u = 0)
+					 int & n_traj,                  //out: number of points in path
+					 int & n_tracked,               //out: number of points actually tracked
+					 int*& offsets_traj, 		 //out: starting locations for particle trajectories
+					 double *& x_traj,               //out: x for path taken by point
+					 double *& t_traj,               //out: t for path taken by point
+   				         int *& e_traj);
 /***********************************************************************
    utility routines
    
