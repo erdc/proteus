@@ -2946,28 +2946,22 @@ void accumulateSourceContribution(int nParticles_global, //number of particles i
       int i = traj_offsets[k]; 
       double t_in = t_traj[i]; 
       int eN = elem_traj[i]; //current element
-      //mwf debug
-      //std::cout<<"Starting particle "<< k <<" flag= "<<flag_k<<" t_in= "<< t_in <<" eN= "<<eN <<" i= "<< i <<std::endl;
-      
-      while (i < traj_offsets[k+1]-1) //walk through trajectory for particle k
+      int i_in = i;
+      while (i < traj_offsets[k+1]) //walk through trajectory for particle k
 	{
 	  //physical coefficients for this element
 	  double decay = decay_coef_element[eN*nParticleFlags + flag_k];
 	  double retardation = retardation_factor_element[eN*nParticleFlags + flag_k];
 
-	  int i_in = i;
-	  while (i < traj_offsets[k+1]-1 && elem_traj[i+1] == eN) //walk until through element
-	    i++;
-	  if (i == traj_offsets[k+1]-1) i--; //back up assume left element at last step
+	  while (i < traj_offsets[k+1] && elem_traj[i] == eN) //walk until through element
+            i++;
+          int i_out = i-1; if (i_out < i_in) i_out = i_in; //mwf check this
 	  //adjust travel times due to retardation?
-	  double dt_cons  = t_traj[i+1] - t_traj[i_in]; //travel time for conservative simulation
-	  double t_out    = t_traj[i+1];
+	  double dt_cons  = t_traj[i_out]-t_traj[i_in];//travel time for conservative simulation
+	  double t_out    = t_traj[i_out];
 	  if (fabs(retardation) > 0.0)
 	    t_out = t_in + dt_cons*retardation; 
-	  //mwf debug
-	  //std::cout<<"walked through element "<<eN<<" i_in= "<<i_in<<" i = "<<i<<" found next element "<<elem_traj[i+1]<<" dt_cons= "<<dt_cons
-	  //	   <<" t_traj[i_in] = "<<t_traj[i_in]<<" t_traj[i+1]= "<<t_traj[i+1]<<" t_in= "<<t_in<<" t_out= "<<t_out
-	  //	   <<" retardation= "<<retardation<<std::endl<<'\t'<<" t_in + dt_cons*retardation= "<<t_in + dt_cons*retardation<<std::endl;
+
 	  if (fabs(t_out-t_in) > dt_tol)
 	    {
 	      
@@ -2975,14 +2969,16 @@ void accumulateSourceContribution(int nParticles_global, //number of particles i
 	      double convolution_term = 0.0;
 	      if (tau_out < tau_in) //evaluate mass source
 		convolution_term = integratePiecewiseLinearMassSource(nMassSourceKnots,massSource_t,massSource_m,t_in,t_out,tau_out,tau_in,decay);
-	  
 	      c_element[eN] += convolution_term*particle_weight;
 	    }
 	  //get ready for next element
-	  assert(eN != elem_traj[i+1] || i+1 == traj_offsets[k+1]-1);
-	  eN = elem_traj[i+1];
+	  assert(eN == elem_traj[i_out] || i == traj_offsets[k+1]);
+          assert(eN != elem_traj[i]);
+          
+          eN = elem_traj[i];
 	  t_in  = t_out;
-	  i++;
+          i_in  = i_out;
+          
 	}// end walk through trajectory for i
     }//end particle loop
 }
