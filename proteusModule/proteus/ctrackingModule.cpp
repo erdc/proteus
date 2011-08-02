@@ -341,23 +341,18 @@ static PyObject* ctracking_trackPointsRT0Velocity2dWithTrajectories(PyObject* se
   dim[0] = n_traj;
   PyArrayObject *t_traj_py = (PyArrayObject *)PyArray_SimpleNew(1,dim,PyArray_DOUBLE);
   double* t_ptr = DDATA(t_traj_py);
-  //mwf debug
-  std::cout<<"back from trajectory t_ptr= "<<t_ptr<<" t_traj= "<<t_traj<<std::endl; 
+
   dim2[0] = n_traj; dim2[1] = 3;
   PyArrayObject *x_traj_py = (PyArrayObject *)PyArray_SimpleNew(2,dim2,PyArray_DOUBLE);
   double* x_ptr = DDATA(x_traj_py);
-  //mwf debug
-  std::cout<<"back from trajectory x_ptr= "<<x_ptr<<" x_traj= "<<x_traj<<std::endl; 
+
   dim[0] = n_traj;
   PyArrayObject *e_traj_py = (PyArrayObject *)PyArray_SimpleNew(1,dim,PyArray_INT);
   int* e_ptr = IDATA(e_traj_py);
-  //mwf debug
-  std::cout<<"back from trajectory e_ptr= "<<e_ptr<<" e_traj= "<<e_traj<<std::endl; 
+
   dim[0] = n_tracked+1;
   PyArrayObject *o_traj_py = (PyArrayObject *)PyArray_SimpleNew(1,dim,PyArray_INT);
   int* o_ptr = IDATA(o_traj_py);
-  //mwf debug
-  std::cout<<"back from trajectory o_ptr= "<<o_ptr<<" offsets_traj= "<<offsets_traj<<std::endl; 
 
   for (int i=0; i < n_traj; i++)
     {
