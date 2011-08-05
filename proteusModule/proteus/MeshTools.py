@@ -596,6 +596,7 @@ class Mesh:
                                            {"Format":ar.dataItemFormat,
                                             "DataType":"Int",
                                             "Dimensions":"%i" % (self.nElements_global-self.nElements_owned,)})
+
             if ar.hdfFile != None:
                 if nGhostElements > 0:
                     ghostElements.text = ar.hdfFilename+":/ghostElements"+name+`tCount`
@@ -616,6 +617,41 @@ class Mesh:
                         numpy.savetxt(ar.textDataDir+"/ghostElements"+name+".txt",ghostElementsArray,fmt='%d')
                     if nGhostNodes > 0:
                         numpy.savetxt(ar.textDataDir+"/ghostNodes"+name+".txt",ghostNodesArray,fmt='%d')
+
+            # Add the local->global index maps for collect.py and for
+            # reverse mapping in hotstarts from a global XDMF file.
+            if self.globalMesh != None:
+                nodeMapAtt = SubElement(self.arGrid,"Attribute",
+                                        {"Name":"NodeMapL2G",
+                                         "AttributeType":"Scalar",
+                                         "Center":"Node"})
+                nodeMap = SubElement(nodeMapAtt,"DataItem",
+                                     {"Format":ar.dataItemFormat,
+                                      "DataType":"Int",
+                                      "Precision":"4",
+                                      "Dimensions":str(self.nNodes_global)})
+                elemMapAtt = SubElement(self.arGrid,"Attribute",
+                                        {"Name":"CellMapL2G",
+                                         "AttributeType":"Scalar",
+                                         "Center":"Cell"})
+                elemMap = SubElement(elemMapAtt,"DataItem",
+                                     {"Format":ar.dataItemFormat,
+                                      "DataType":"Int",
+                                      "Precision":"4",
+                                      "Dimensions":str(self.nElements_global)})
+
+                if ar.hdfFile != None:
+                    nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+name+`tCount`
+                    elemMap.text = ar.hdfFilename+":/cellMapL2G"+name+`tCount`
+                    if init or meshChanged:
+                        ar.hdfFile.createArray("/",'nodeMapL2G'+name+`tCount`,self.globalMesh.nodeNumbering_subdomain2global)
+                        ar.hdfFile.createArray("/",'cellMapL2G'+name+`tCount`,self.globalMesh.elementNumbering_subdomain2global)
+                else:
+                    SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodeMapL2G"+name+".txt"})
+                    SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/cellMapL2G"+name+".txt"})
+                    if init or meshChanged:
+                        numpy.savetxt(ar.textDataDir+"/nodeMapL2G"+name+".txt",self.globalMesh.nodeNumbering_subdomain2global)
+                        numpy.savetxt(ar.textDataDir+"/cellMapL2G"+name+".txt",self.globalMesh.elementNumbering_subdomain2global)
             #
             #material types
             #
@@ -2055,8 +2091,10 @@ class TetrahedralMesh(Mesh):
         self.tetrahedronDict = dict([(T.nodes,T) for T in self.tetrahedronList])
         print "Building boundary maps"
         self.buildBoundaryMaps()
-    def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0):
-        Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Tetrahedron",tCount)
+    def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0, EB=False):
+        #print "Warning mwf hack for EB printing for tet writeMeshXdmf for now"
+        #EB = True
+        Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Tetrahedron",tCount,EB=EB)
     def writeMeshEnsight(self,filename,description=None):
         base=1
         #write the casefile
@@ -2511,8 +2549,8 @@ min(h_k)             : %d\n""" % (self.nElements_global,
             return info
         return minfo
         
-    def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0):
-        Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Hexahedron",tCount)
+    def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0,EB=False):
+        Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Hexahedron",tCount,EB=EB)
         
     def generateFromHexFile(self,filebase,base=0):
         import cmeshTools
@@ -2540,11 +2578,15 @@ class Mesh2DM(Mesh):
         nz  = array.array('d')
         print "Reading "+`filename` 
         #assume tets are ordered by tet number
-        while (columns[0] == 'E3T'):
+        while (len(columns) > 0 and columns[0] == 'E3T'):
             tn0.append(int(columns[2]))
             tn1.append(int(columns[3]))
             tn2.append(int(columns[4]))
             material.append(int(columns[5]))
+            line = meshIn.readline()
+            columns = line.split()
+        #allow for missing lines
+        while (len(columns) == 0):
             line = meshIn.readline()
             columns = line.split()
         #assume nodes are ordered by node number
@@ -2577,10 +2619,14 @@ class Mesh2DM(Mesh):
         print "Deleting temporary storage"
         del tn0,tn1,tn2,nx,ny,nz
         self.nElements_global = self.nTriangles_global
-        self.elementArray = self.triangleArray
+        self.elementNodesArray = self.triangleArray
         print "Number of triangles:"+`self.nElements_global`
         print "Number of nodes     :"+`self.nNodes_global`
-    
+        #archive with Xdmf
+        self.nNodes_element = 3
+        self.arGridCollection = None
+        self.arGrid = None; self.arTime = None
+
     def buildEdgeArrays(self):
         print "Extracting edges triangles dictionary"
         edges_triangles={}
@@ -2701,6 +2747,44 @@ class Mesh2DM(Mesh):
             meshOut.write('%10i%10i%10i\n' % (tA[tN,0]+base,tA[tN,1]+base,tA[tN,2]+base))
         meshOut.close()
     
+    def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0):
+        if self.arGridCollection != None:
+            init = False
+        if init:
+            self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
+                                                               "GridType":"Collection",
+                                                               "CollectionType":"Temporal"})
+        if self.arGrid == None or self.arTime.get('Value') != str(t):
+            #
+            #topology and geometry
+            #
+            self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            topology = SubElement(self.arGrid,"Topology",
+                                  {"Type":Xdmf_ElementTopology,
+                                   "NumberOfElements":str(self.nElements_global)})
+            elements = SubElement(topology,"DataItem",
+                                  {"Format":ar.dataItemFormat,
+                                   "DataType":"Int",
+                                   "Dimensions":"%i %i" % (self.nElements_global,self.nNodes_element)})
+            geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
+            nodes    = SubElement(geometry,"DataItem",
+                                  {"Format":ar.dataItemFormat,
+                                   "DataType":"Float",
+                                   "Precision":"8",
+                                   "Dimensions":"%i %i" % (self.nNodes_global,3)})
+            if ar.hdfFile != None:
+                elements.text = ar.hdfFilename+":/elements"+name+`tCount`
+                nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                if init or meshChanged:
+                    ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray)
+                    ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+            else:
+                SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
+                SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
+                if init or meshChanged:
+                    numpy.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray,fmt='%d')
+                    numpy.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
 #      def writeBoundaryMeshEnsight(self,filename,description=None):
 #          base=1
 #          #write the casefile
@@ -2801,7 +2885,7 @@ class Mesh3DM(Mesh):
         print "Deleting temporary storage"
         del Tn0,Tn1,Tn2,Tn3,nx,ny,nz
         self.nElements_global = self.nTetrahedra_global
-        self.elementArray = self.tetrahedronArray
+        self.elementNodesArray = self.tetrahedronArray
         print "Number of tetrahedra:"+`self.nElements_global`
         print "Number of nodes     :"+`self.nNodes_global`
     
@@ -3152,10 +3236,10 @@ class TriangularMesh(Mesh):
     def computeGeometricInfo(self):
         import cmeshTools
         cmeshTools.computeGeometricInfo_triangle(self.cmesh)
-    def generateTriangularMeshFromRectangularGrid(self,nx,ny,Lx,Ly,unionJack=1):
+    def generateTriangularMeshFromRectangularGrid(self,nx,ny,Lx,Ly,triangleFlag=1):
         import cmeshTools
         self.cmesh = cmeshTools.CMesh()
-        cmeshTools.generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly,self.cmesh,unionJack)
+        cmeshTools.generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly,self.cmesh,triangleFlag)
         cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
         cmeshTools.computeGeometricInfo_triangle(self.cmesh)
         self.buildFromC(self.cmesh)
@@ -3513,8 +3597,8 @@ Number of nodes : %d\n""" % (self.nElements_global,
             return info
         return minfo
 
-    def readMeshADH(self,filename,adhBase=1):
-        meshIn = open(filename+'.3dm','r')
+    def readMeshADH(self,filename,adhBase=1,suffix='3dm'):
+        meshIn = open(filename+'.'+suffix,'r')
         firstLine = meshIn.readline()
         firstWords = firstLine.split()
         print "Reading object=%s from file=%s" % (firstWords[0],filename)
@@ -3568,8 +3652,8 @@ Number of nodes : %d\n""" % (self.nElements_global,
         self.elementList = self.triangleList
         self.elementBoundaryList = self.edgeList
         
-    def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0):
-        Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Triangle",tCount)
+    def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0,EB=False):
+        Mesh.writeMeshXdmf(self,ar,name,t,init,meshChanged,"Triangle",tCount,EB=EB)
     def writeMeshEnsight(self,filename,description=None):
         base=1
         #write the casefile
@@ -3805,7 +3889,7 @@ class QuadrilateralMesh(Mesh):
 class MultilevelTriangularMesh(MultilevelMesh):
     import cmeshTools
     def __init__(self,nx,ny,nz,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
-                 parallelPartitioningType=MeshParallelPartitioningTypes.element,unionJack=0):
+                 parallelPartitioningType=MeshParallelPartitioningTypes.element,triangleFlag=0):
         import cmeshTools
         MultilevelMesh.__init__(self)
         self.useC = True
@@ -3814,7 +3898,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
         if not skipInit:
             if self.useC:
                 self.meshList.append(TriangularMesh())
-                self.meshList[0].generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly,unionJack=unionJack)
+                self.meshList[0].generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly,triangleFlag=triangleFlag)
                 self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
                 self.buildFromC(self.cmultilevelMesh)
                 self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)

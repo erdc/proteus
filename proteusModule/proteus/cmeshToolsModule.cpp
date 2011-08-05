@@ -743,7 +743,7 @@ static PyObject* cmeshToolsGenerateTriangularMeshFromRectangularGrid(PyObject* s
   int nx,ny;
   double Lx,Ly;
   PyObject *cmesh;
-  int unionJack=1;
+  int triangleFlag=1;
   if (!PyArg_ParseTuple(args,
                         "iiddO|i",
                         &nx,
@@ -751,9 +751,9 @@ static PyObject* cmeshToolsGenerateTriangularMeshFromRectangularGrid(PyObject* s
                         &Lx,
                         &Ly,
                         &cmesh,
-			&unionJack))
+			&triangleFlag))
     return NULL;
-  regularRectangularToTriangularMeshElements(nx,ny,MESH(cmesh),unionJack);
+  regularRectangularToTriangularMeshElements(nx,ny,MESH(cmesh),triangleFlag);
   regularRectangularToTriangularMeshNodes(nx,ny,Lx,Ly,MESH(cmesh));
   constructElementBoundaryElementsArray_triangle(MESH(cmesh));
   Py_INCREF(Py_None); 
