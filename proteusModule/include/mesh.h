@@ -267,7 +267,7 @@ extern "C"
 				int * elementTagArray);
   int setNewestNodeBasesToLongestEdge(MultilevelMesh& multilevelMesh);
 
-  int regularRectangularToTriangularMeshElements(const int& nx,const int& ny,Mesh& mesh, int unionJack);
+  int regularRectangularToTriangularMeshElements(const int& nx,const int& ny,Mesh& mesh, int triangleFlag);
   int regularRectangularToTriangularMeshNodes(const int& nx, const int& ny, const double& Lx, const double& Ly, Mesh& mesh);
   int globallyRefineTriangularMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh);
 
