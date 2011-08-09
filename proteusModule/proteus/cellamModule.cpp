@@ -1584,6 +1584,60 @@ static PyObject* cellam_accumulateSourceContribution(PyObject* self,
   Py_INCREF(Py_None); 
   return Py_None;
 }
+static PyObject* cellam_accumulateSourceContributionMaterialTypes(PyObject* self,
+								  PyObject* args)
+{
+  //input
+  PyObject * traj_offsets, //traj_offsets[i] = start of trajectory info for particle i
+		           //n_i = traj_offsets[i+1]-traj_offsets[i] 
+     * x_traj, //particle trajectories: x (size 3\sum_i n_i])
+     * t_traj, //particle trajectories: t
+     * elem_traj, //particle trajectories: element id's
+     * massSource_t, //discrete t values (knot's) for mass source
+     * massSource_m, //values for mass source at knot's
+     * material_types_element, //identifier for material of each element 
+     * decay_coef_types,  //linear decay: nMaterialTypes * nParticleFlags  
+     * retardation_factor_types,  //Retardation factor: nMaterialTypes * nParticleFlags 
+     * particle_flags, //The particle 'type' associated with particles
+     * c_element; //element concentrations
+  double tau;
+  if(!PyArg_ParseTuple(args,
+                       "dOOOOOOOOOOO",
+		       &tau,
+                       &traj_offsets,
+		       &x_traj,
+		       &t_traj,
+		       &elem_traj,
+		       &massSource_t,
+		       &massSource_m,
+		       &material_types_element,
+		       &decay_coef_types,
+		       &retardation_factor_types,
+		       &particle_flags,
+		       &c_element))
+    return NULL;
+ 
+  accumulateSourceContributionMaterialTypes(SHAPE(traj_offsets)[0]-1,
+					    SHAPE(c_element)[0],
+					    SHAPE(decay_coef_types)[1],
+					    SHAPE(massSource_t)[0],
+					    tau,           
+					    IDATA(traj_offsets),
+					    DDATA(x_traj),
+					    DDATA(t_traj),
+					    IDATA(elem_traj),
+					    DDATA(massSource_t),
+					    DDATA(massSource_m),
+					    IDATA(material_types_element),
+					    DDATA(decay_coef_types),
+					    DDATA(retardation_factor_types),
+					    IDATA(particle_flags),
+					    DDATA(c_element));
+
+  
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
 
 static PyObject* cellam_integratePiecewiseLinearMassSource(PyObject* self,
 							   PyObject* args)
@@ -1723,11 +1777,15 @@ static PyMethodDef cellamMethods[] = {
    cellam_accumulateSourceContribution,
    METH_VARARGS, 
    "apply convolution-based particle tracking (CBPT) approach to generate element-based concentrations"},
+ { "accumulateSourceContributionMaterialTypes",
+   cellam_accumulateSourceContributionMaterialTypes,
+   METH_VARARGS, 
+   "apply convolution-based particle tracking (CBPT) approach to generate element-based concentrations assuming material types assigned using element material id and particle id"},
  { "integratePiecewiseLinearMassSource",
    cellam_integratePiecewiseLinearMassSource,
    METH_VARARGS, 
    "integrate piecewise-linear mass source with exponential decay for CBPT"},
-  { NULL,NULL,0,NULL}
+ { NULL,NULL,0,NULL}
 };
 
 extern "C"

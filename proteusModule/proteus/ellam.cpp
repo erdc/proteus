@@ -2982,4 +2982,73 @@ void accumulateSourceContribution(int nParticles_global, //number of particles i
 	}// end walk through trajectory for i
     }//end particle loop
 }
+extern "C"
+void accumulateSourceContributionMaterialTypes(int nParticles_global, //number of particles in this source
+					       int nElements_global,  //number of elements in domain
+					       int nParticleFlags,    //total number of particle types or flags
+					       int nMassSourceKnots,  //number of knots in source spline
+					       double tau,            //time evaluating solution
+					       const int * traj_offsets, //traj_offsets[i] = start of trajectory info for particle i
+  				                                         //n_i = traj_offsets[i+1]-traj_offsets[i]  
+					       const double * x_traj, //particle trajectories: x (size 3\sum_i n_i])
+					       const double * t_traj, //particle trajectories: t
+					       const int * elem_traj, //particle trajectories: element id's
+					       const double * massSource_t, //discrete t values (knot's) for mass source
+					       const double * massSource_m, //values for mass source at knot's
+					       const int* material_types_element, //identifier for material of each element 
+					       const double * decay_coef_types,  //linear decay:  nMaterialTypes * nParticleFlags 
+					       const double * retardation_factor_types,  //Retardation factor: nMaterialTypes * nParticleFlags  
+					       const int * particle_flags, //The particle 'type' associated with particles
+					       double *c_element) //element concentrations
+{
+  const double particle_weight = 1.0/float(nParticles_global);
+  //add as argument
+  const double dt_tol = 1.0e-8;
+  for (int k = 0; k < nParticles_global; k++)
+    {
+      int flag_k = particle_flags[k];
+      int i = traj_offsets[k]; 
+      double t_in = t_traj[i]; 
+      int eN = elem_traj[i]; //current element
+      int i_in = i;
+      while (i < traj_offsets[k+1]) //walk through trajectory for particle k
+	{
+	  //physical coefficients for this element
+	  const int material_id = material_types_element[eN];
+	  double decay = decay_coef_types[material_id*nParticleFlags + flag_k];
+	  double retardation = retardation_factor_types[material_id*nParticleFlags + flag_k];
+
+	  while (i < traj_offsets[k+1] && elem_traj[i] == eN) //walk until through element
+            i++;
+          int i_out = i-1; if (i_out < i_in) i_out = i_in; //mwf check this
+	  //adjust travel times due to retardation?
+	  double dt_cons  = t_traj[i_out]-t_traj[i_in];//travel time for conservative simulation
+	  double t_out    = t_traj[i_out];
+	  if (fabs(retardation) > 0.0)
+	    t_out = t_in + dt_cons*retardation; 
+	  //mwf debug
+	  //std::cout<<"accumSourceMat i= "<<i<<" eN= "<<eN<<" matid= "<<material_id<<" flag_k= "<<flag_k<<" nParticleFlags= "<<nParticleFlags<<" decay = "<<decay<<" R= "
+	  //	   <<" t_in= "<<t_in<<" t_out= "<<t_out<<retardation<<std::endl;
+	  if (fabs(t_out-t_in) > dt_tol && fabs(retardation) > 0.0)
+	    {
+	      
+	      double tau_out = fmax(0.,tau-t_out), tau_in = fmax(0.0,tau-t_in);
+	      double convolution_term = 0.0;
+	      if (tau_out < tau_in) //evaluate mass source
+		convolution_term = integratePiecewiseLinearMassSource(nMassSourceKnots,massSource_t,massSource_m,t_in,t_out,tau_out,tau_in,decay);
+	      //mwf debug
+	      //std::cout<<"\t"<<" tau_out= "<<tau_out<<" tau_in= "<<tau_in<<" conv_term= "<<convolution_term<<std::endl;
+	      c_element[eN] += convolution_term*particle_weight;
+	    }
+	  //get ready for next element
+	  assert(eN == elem_traj[i_out] || i == traj_offsets[k+1]);
+          assert(eN != elem_traj[i]);
+          
+          eN = elem_traj[i];
+	  t_in  = t_out;
+          i_in  = i_out;
+	  assert(eN >= 0 && eN < nElements_global);
+	}// end walk through trajectory for i
+    }//end particle loop
+}
 }//namespace ELLAM

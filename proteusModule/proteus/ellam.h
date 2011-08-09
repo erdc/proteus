@@ -708,5 +708,23 @@ void accumulateSourceContribution(int nParticles_global, //number of particles i
 				  const int * particleFlags, //The particle 'type' associated with particles
 				  double *c_element); //element concentrations
 
+void accumulateSourceContributionMaterialTypes(int nParticles_global, //number of particles in this source
+					       int nElements_global,  //number of elements in domain
+					       int nParticleFlags,    //total number of particle types or flags
+					       int nMassSourceKnots,  //number of knots in source spline
+					       double tau,            //time evaluating solution
+					       const int * traj_offsets, //traj_offsets[i] = start of trajectory info for particle i
+  				                                         //n_i = traj_offsets[i+1]-traj_offsets[i]  
+					       const double * x_traj, //particle trajectories: x (size 3\sum_i n_i])
+					       const double * t_traj, //particle trajectories: t
+					       const int * elem_traj, //particle trajectories: element id's
+					       const double * massSource_t, //discrete t values (knot's) for mass source
+					       const double * massSource_m, //values for mass source at knot's
+					       const int* material_types_element, //identifier for material of each element 
+					       const double * decay_coef_types,  //linear decay:  nMaterialTypes * nParticleFlags 
+					       const double * retardation_factor_types,  //Retardation factor: nMaterialTypes * nParticleFlags  
+					       const int * particle_flags, //The particle 'type' associated with particles
+					       double *c_element); //element concentrations
+
 }//extern C
 #endif 
