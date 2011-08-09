@@ -2947,20 +2947,20 @@ void accumulateSourceContribution(int nParticles_global, //number of particles i
       double t_in = t_traj[i]; 
       int eN = elem_traj[i]; //current element
       int i_in = i;
+      double decay = 0.0;
       while (i < traj_offsets[k+1]) //walk through trajectory for particle k
 	{
 	  //physical coefficients for this element
-	  double decay = decay_coef_element[eN*nParticleFlags + flag_k];
+	  decay += decay_coef_element[eN*nParticleFlags + flag_k];
 	  double retardation = retardation_factor_element[eN*nParticleFlags + flag_k];
-
+	  assert (fabs(retardation) > 0.0);
 	  while (i < traj_offsets[k+1] && elem_traj[i] == eN) //walk until through element
             i++;
           int i_out = i-1; if (i_out < i_in) i_out = i_in; //mwf check this
 	  //adjust travel times due to retardation?
 	  double dt_cons  = t_traj[i_out]-t_traj[i_in];//travel time for conservative simulation
 	  double t_out    = t_traj[i_out];
-	  if (fabs(retardation) > 0.0)
-	    t_out = t_in + dt_cons*retardation; 
+	  t_out = t_in + dt_cons*retardation; 
 
 	  if (fabs(t_out-t_in) > dt_tol)
 	    {
