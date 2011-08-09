@@ -2578,7 +2578,7 @@ class Mesh2DM(Mesh):
         nz  = array.array('d')
         print "Reading "+`filename` 
         #assume tets are ordered by tet number
-        while (len(columns) > 0 and columns[0] == 'E3T'):
+        while (len(columns) > 0 and (columns[0] == 'E3T' or columns[0] == 'GE3')):
             tn0.append(int(columns[2]))
             tn1.append(int(columns[3]))
             tn2.append(int(columns[4]))
@@ -2611,7 +2611,7 @@ class Mesh2DM(Mesh):
             tA[tN,0] = tn0[tN] - adhBase
             tA[tN,1] = tn1[tN] - adhBase
             tA[tN,2] = tn2[tN] - adhBase
-            tMA = material[tN] - adhBase
+            tMA[tN]  = material[tN] - adhBase
         for nN in range(self.nNodes_global):
             self.nodeArray[nN,0]= nx[nN]
             self.nodeArray[nN,1]= ny[nN]
@@ -2620,6 +2620,7 @@ class Mesh2DM(Mesh):
         del tn0,tn1,tn2,nx,ny,nz
         self.nElements_global = self.nTriangles_global
         self.elementNodesArray = self.triangleArray
+        self.elementMaterialTypes = self.triangleMaterialArray
         print "Number of triangles:"+`self.nElements_global`
         print "Number of nodes     :"+`self.nNodes_global`
         #archive with Xdmf
@@ -2773,18 +2774,30 @@ class Mesh2DM(Mesh):
                                    "DataType":"Float",
                                    "Precision":"8",
                                    "Dimensions":"%i %i" % (self.nNodes_global,3)})
+            #material types
+            elementMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"elementMaterialTypes",
+                                                                       "AttributeType":"Scalar",
+                                                                       "Center":"Cell"})
+            elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
+                                                    {"Format":ar.dataItemFormat,
+                                                     "DataType":"Int",
+                                                     "Dimensions":"%i" % (self.nElements_global,)})
             if ar.hdfFile != None:
                 elements.text = ar.hdfFilename+":/elements"+name+`tCount`
                 nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
                 if init or meshChanged:
                     ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray)
                     ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+                    ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes)
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
+                SubElement(elementMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt"}) 
                 if init or meshChanged:
                     numpy.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray,fmt='%d')
                     numpy.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
+                    numpy.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes)
 #      def writeBoundaryMeshEnsight(self,filename,description=None):
 #          base=1
 #          #write the casefile
@@ -2846,7 +2859,7 @@ class Mesh3DM(Mesh):
         nz  = array.array('d')
         print "Reading "+`filename` 
         #assume tets are ordered by tet number
-        while (columns[0] == 'E4T'):
+        while (len(columns) > 0 and (columns[0] == 'E4T' or columns[0] == 'GE4')):
             Tn0.append(int(columns[2]))
             Tn1.append(int(columns[3]))
             Tn2.append(int(columns[4]))
@@ -2877,7 +2890,7 @@ class Mesh3DM(Mesh):
             TA[TN,1] = Tn1[TN] - adhBase
             TA[TN,2] = Tn2[TN] - adhBase
             TA[TN,3] = Tn3[TN] - adhBase
-            TMA = material[TN] - adhBase
+            TMA[TN]  = material[TN] - adhBase
         for nN in range(self.nNodes_global):
             self.nodeArray[nN,0]= nx[nN]
             self.nodeArray[nN,1]= ny[nN]
@@ -2886,6 +2899,7 @@ class Mesh3DM(Mesh):
         del Tn0,Tn1,Tn2,Tn3,nx,ny,nz
         self.nElements_global = self.nTetrahedra_global
         self.elementNodesArray = self.tetrahedronArray
+        self.elementMaterialTypes = self.tetrahedronMaterialArray
         print "Number of tetrahedra:"+`self.nElements_global`
         print "Number of nodes     :"+`self.nNodes_global`
     
@@ -3081,6 +3095,56 @@ class Mesh3DM(Mesh):
                            self.globalToExteriorNodeArray[tA[tN,2]]+base))
         meshOut.close()
 
+    def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Tetrahedron",tCount=0):
+        if self.arGridCollection != None:
+            init = False
+        if init:
+            self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
+                                                               "GridType":"Collection",
+                                                               "CollectionType":"Temporal"})
+        if self.arGrid == None or self.arTime.get('Value') != str(t):
+            #
+            #topology and geometry
+            #
+            self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            topology = SubElement(self.arGrid,"Topology",
+                                  {"Type":Xdmf_ElementTopology,
+                                   "NumberOfElements":str(self.nElements_global)})
+            elements = SubElement(topology,"DataItem",
+                                  {"Format":ar.dataItemFormat,
+                                   "DataType":"Int",
+                                   "Dimensions":"%i %i" % (self.nElements_global,self.nNodes_element)})
+            geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
+            nodes    = SubElement(geometry,"DataItem",
+                                  {"Format":ar.dataItemFormat,
+                                   "DataType":"Float",
+                                   "Precision":"8",
+                                   "Dimensions":"%i %i" % (self.nNodes_global,3)})
+            #material types
+            elementMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"elementMaterialTypes",
+                                                                       "AttributeType":"Scalar",
+                                                                       "Center":"Cell"})
+            elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
+                                                    {"Format":ar.dataItemFormat,
+                                                     "DataType":"Int",
+                                                     "Dimensions":"%i" % (self.nElements_global,)})
+            if ar.hdfFile != None:
+                elements.text = ar.hdfFilename+":/elements"+name+`tCount`
+                nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
+                if init or meshChanged:
+                    ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray)
+                    ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+                    ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes)
+            else:
+                SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
+                SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
+                SubElement(elementMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt"}) 
+                if init or meshChanged:
+                    numpy.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray,fmt='%d')
+                    numpy.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
+                    numpy.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes)
 class MultilevelTetrahedralMesh(MultilevelMesh):
     def __init__(self,nx,ny,nz,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.element):
