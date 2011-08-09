@@ -3011,25 +3011,25 @@ void accumulateSourceContributionMaterialTypes(int nParticles_global, //number o
       double t_in = t_traj[i]; 
       int eN = elem_traj[i]; //current element
       int i_in = i;
+      double decay = 0.0;
       while (i < traj_offsets[k+1]) //walk through trajectory for particle k
 	{
 	  //physical coefficients for this element
 	  const int material_id = material_types_element[eN];
-	  double decay = decay_coef_types[material_id*nParticleFlags + flag_k];
+	  decay += decay_coef_types[material_id*nParticleFlags + flag_k];
 	  double retardation = retardation_factor_types[material_id*nParticleFlags + flag_k];
-
+	  assert (fabs(retardation) > 0.0);
 	  while (i < traj_offsets[k+1] && elem_traj[i] == eN) //walk until through element
             i++;
           int i_out = i-1; if (i_out < i_in) i_out = i_in; //mwf check this
 	  //adjust travel times due to retardation?
 	  double dt_cons  = t_traj[i_out]-t_traj[i_in];//travel time for conservative simulation
 	  double t_out    = t_traj[i_out];
-	  if (fabs(retardation) > 0.0)
-	    t_out = t_in + dt_cons*retardation; 
+	  t_out = t_in + dt_cons*retardation; 
 	  //mwf debug
 	  //std::cout<<"accumSourceMat i= "<<i<<" eN= "<<eN<<" matid= "<<material_id<<" flag_k= "<<flag_k<<" nParticleFlags= "<<nParticleFlags<<" decay = "<<decay<<" R= "
 	  //	   <<" t_in= "<<t_in<<" t_out= "<<t_out<<retardation<<std::endl;
-	  if (fabs(t_out-t_in) > dt_tol && fabs(retardation) > 0.0)
+	  if (fabs(t_out-t_in) > dt_tol)
 	    {
 	      
 	      double tau_out = fmax(0.,tau-t_out), tau_in = fmax(0.0,tau-t_in);
