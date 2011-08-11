@@ -3051,4 +3051,97 @@ void accumulateSourceContributionMaterialTypes(int nParticles_global, //number o
 	}// end walk through trajectory for i
     }//end particle loop
 }
+
+
+extern "C"
+double volume123(int nSpace, //space dimension
+		 int nNodes_element, //number of nodes in this element
+		 const int* elementNodes_element, //element--> global node table for this element 
+		 const double* nodeArray) //coordinates (3d)
+{
+  //use Pearce's approach to compute volume for simplex, quad, prism, or hex
+  //base 1
+  const int KVB2[2][2][3] = {{{1,2,3},{1,3,4}},  
+			     {{1,2,3},{0,0,0}}};
+  //base 1
+  const int KVB3[3][6][4] = {{{5,1,2,4}, {6,5,2,4}, {8,5,6,4}, {7,2,3,4}, {8,6,7,4}, {6,7,4,2}},
+			     {{4,1,2,3}, {5,4,2,3}, {6,4,5,3}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}},
+			     {{4,1,2,3}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}, {0,0,0,0}}};
+  //base 1
+  const int KKOFF[4][3] = {{2,3,4},{1,3,4},{1,2,4},{1,2,3}}; 
+  const int ibase = 1;
+  double XX[4] = {0.,0.,0.,0.}, YY[4] = {0.,0.,0.,0.}, ZZ[4] = {0.,0.,0.,0.};
+  double volume=0.0;
+  if (nSpace == 1)
+    {
+      assert(nNodes_element == 2);
+      volume = fabs(nodeArray[elementNodes_element[1]*3+0]-
+		    nodeArray[elementNodes_element[0]*3+0]);
+      
+      return volume;
+    }//1d
+  if (nSpace == 2)
+    {
+      //default is triangle
+      int ID = 1, NA=1; //which slice of KVB2 and how many sub triangles
+      if (nNodes_element == 4)
+	{
+	  ID = 0; NA=2; //quad
+	}
+      for (int IA =0 ; IA < NA; IA++) //loop through sub-triangles
+	{
+	  for (int I=0; I < 3; I++) //build triangle
+	    {
+	      const int II = KVB2[ID][IA][I]-ibase;
+	      assert(0 <= II && II < nNodes_element);
+	      const int nN = elementNodes_element[II]; 
+	      XX[I] = nodeArray[nN*3 + 0];
+	      YY[I] = nodeArray[nN*3 + 1];
+	    }
+	  //determinant
+	  const double X12=XX[0]-XX[1];
+	  const double X23=XX[1]-XX[2];
+          const double X31=XX[2]-XX[0]; 
+          const double Y12=YY[0]-YY[1];
+          const double Y23=YY[1]-YY[2];
+          const double Y31=YY[2]-YY[0];
+	  volume += XX[0]*Y23 + XX[1]*Y31 + XX[2]*Y12;
+	}
+      volume /= double(NA);
+      return volume;
+    }//2d
+  if (nSpace == 3)
+    {
+
+      int ID = 2, NV=1; //which slice of KVB3 and how many sub tets
+      if (nNodes_element == 6) //triangular prism
+	{
+	  ID=1; NV = 3;
+	}
+      else if (nNodes_element == 8) //hexahedron
+	{
+	  ID = 0; NV = 6;
+	}
+      for (int IV = 0; IV < NV; IV++) //loop through sub-tets
+	{
+	  for (int I = 0; I < 4; I++) //build tet
+	    {
+	      const int II = KVB3[ID][IV][I]-ibase;
+	      const int nN = elementNodes_element[II];
+	      XX[I] = nodeArray[nN*3+0]; YY[I] = nodeArray[nN*3+1]; ZZ[I] = nodeArray[nN*3+2];
+	    }
+	  for (int KK=0; KK < 4; KK++)
+	    {
+	      const int K1 = KKOFF[KK][0]-ibase, K2 = KKOFF[KK][1]-ibase, K3 = KKOFF[KK][2]-ibase;
+	      volume += pow(-1.0,KK)*(XX[K1]*YY[K2]*ZZ[K3]+
+				      YY[K1]*ZZ[K2]*XX[K3]+ZZ[K1]*XX[K2]*YY[K3]-
+				      XX[K3]*YY[K2]*ZZ[K1]-YY[K3]*ZZ[K2]*XX[K1]-
+				      ZZ[K3]*XX[K2]*YY[K1]);
+	    }//KK
+	}//IV
+      volume /= float(NV);
+      return volume;
+    }
+}
+
 }//namespace ELLAM
