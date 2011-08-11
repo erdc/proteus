@@ -726,5 +726,9 @@ void accumulateSourceContributionMaterialTypes(int nParticles_global, //number o
 					       const int * particle_flags, //The particle 'type' associated with particles
 					       double *c_element); //element concentrations
 
+double volume123(int nSpace, //space dimension
+		 int nNodes_element, //number of nodes in this element
+		 const int* elementNodes_element, //element--> global node table for this element 
+		 const double* nodeArray);
 }//extern C
 #endif 
