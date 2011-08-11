@@ -3107,7 +3107,7 @@ double volume123(int nSpace, //space dimension
           const double Y31=YY[2]-YY[0];
 	  volume += XX[0]*Y23 + XX[1]*Y31 + XX[2]*Y12;
 	}
-      volume /= double(NA);
+      volume = fabs(volume)/double(NA);
       return volume;
     }//2d
   if (nSpace == 3)
@@ -3133,13 +3133,14 @@ double volume123(int nSpace, //space dimension
 	  for (int KK=0; KK < 4; KK++)
 	    {
 	      const int K1 = KKOFF[KK][0]-ibase, K2 = KKOFF[KK][1]-ibase, K3 = KKOFF[KK][2]-ibase;
-	      volume += pow(-1.0,KK)*(XX[K1]*YY[K2]*ZZ[K3]+
-				      YY[K1]*ZZ[K2]*XX[K3]+ZZ[K1]*XX[K2]*YY[K3]-
-				      XX[K3]*YY[K2]*ZZ[K1]-YY[K3]*ZZ[K2]*XX[K1]-
-				      ZZ[K3]*XX[K2]*YY[K1]);
+              const double tmp = pow(-1.0,KK)*(XX[K1]*YY[K2]*ZZ[K3]+
+                                               YY[K1]*ZZ[K2]*XX[K3]+ZZ[K1]*XX[K2]*YY[K3]-
+                                               XX[K3]*YY[K2]*ZZ[K1]-YY[K3]*ZZ[K2]*XX[K1]-
+                                               ZZ[K3]*XX[K2]*YY[K1]);
+	      volume += tmp;
 	    }//KK
 	}//IV
-      volume /= float(NV);
+      volume = fabs(volume)/float(NV);
       return volume;
     }
 }
