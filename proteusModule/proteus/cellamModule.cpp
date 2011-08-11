@@ -1671,6 +1671,29 @@ static PyObject* cellam_integratePiecewiseLinearMassSource(PyObject* self,
 		       massint);
 
 }
+static PyObject* cellam_volume123(PyObject* self,
+				  PyObject* args)
+{
+  //input
+  PyObject * elementNodes_element,
+    * nodeArray;
+  int nSpace;
+
+  if(!PyArg_ParseTuple(args,
+                       "iOO",
+		       &nSpace,
+		       &elementNodes_element,
+		       &nodeArray))
+    return NULL;
+ 
+  double volume = volume123(nSpace,
+			    SHAPE(elementNodes_element)[0],
+			    IDATA(elementNodes_element),
+			    DDATA(nodeArray));
+  return Py_BuildValue("d",
+		       volume);
+
+}
 static PyMethodDef cellamMethods[] = {
  { "updateOldMass_weak",
     cellam_updateOldMass_weak,
@@ -1785,6 +1808,10 @@ static PyMethodDef cellamMethods[] = {
    cellam_integratePiecewiseLinearMassSource,
    METH_VARARGS, 
    "integrate piecewise-linear mass source with exponential decay for CBPT"},
+ { "volume123",
+   cellam_volume123,
+   METH_VARARGS, 
+   "compute volume for simplex, quadrilateral, triangular prism, or hexahedron"},
  { NULL,NULL,0,NULL}
 };
 
