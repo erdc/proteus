@@ -201,6 +201,9 @@ class  NS_base:
                 tmesh.readFromPolyFile(p.domain.polyfile)
                 log("Converting to Proteus Mesh")
                 mesh=tmesh.convertToProteusMesh(verbose=1)
+                #mwf hack
+                #ok this looks like input
+                mesh.writeTriangleFiles("firstTriangleTest_%s" % comm.rank(),1)
                 mlMesh = MeshTools.MultilevelTriangularMesh(0,0,0,skipInit=True,
                                                             nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                             parallelPartitioningType=n.parallelPartitioningType)
@@ -208,6 +211,12 @@ class  NS_base:
                 mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                       parallelPartitioningType=n.parallelPartitioningType)
+                #mwf hack
+                mesh.writeTriangleFiles("secondTriangleTest_%s" % comm.rank(),1)
+                #mwf hack
+                mlMesh.meshList[-1].writeTriangleFiles("triangleTest_mlMeshList_%s" % comm.rank(),1)
+                #mwf hack
+                mlMesh.meshList[-1].subdomainMesh.writeTriangleFiles("triangleTest_mlMeshList_subdomain_%s" % comm.rank(),1)
             elif isinstance(p.domain,Domain.PiecewiseLinearComplexDomain):
                 if comm.rank() == 0 and (p.genMesh or not (os.path.exists(p.domain.polyfile+".ele") and
                                                            os.path.exists(p.domain.polyfile+".node") and
@@ -465,8 +474,12 @@ class  NS_base:
                 log("Setting initial conditions from hot start file for "+p.name) 
                 tCount = len(self.ar[index].ar_old.tree.getroot()[-1][-1]) - 1
                 time = float(self.ar[index].ar_old.tree.getroot()[-1][-1][-1][0].attrib['Value'])
-                dt = time - float(self.ar[index].ar_old.tree.getroot()[-1][-1][-2][0].attrib['Value'])
-                log("Last time step in hot start file was t = "+`time`) 
+                if len(self.ar[index].ar_old.tree.getroot()[-1][-1]) > 1:
+                    dt = time - float(self.ar[index].ar_old.tree.getroot()[-1][-1][-2][0].attrib['Value'])
+                else:
+                    log("Only one step in hot start file, setting dt to 1.0")
+                    dt = 1.0
+                log("Last time step in hot start file was t = "+`time`)
                 for lm,lu,lr in zip(m.levelModelList,m.uList,m.rList):
                     for cj in range(lm.coefficients.nc):
                         lm.u[cj].femSpace.readFunctionXdmf(self.ar[index].ar_old,lm.u[cj],tCount)
@@ -536,7 +549,7 @@ class  NS_base:
                     log("Spin-Up Step Failed t=%12.5e, dt=%12.5e for model %s, CONTINUING ANYWAY!" %  (m.stepController.t_model,
                                                                                                      m.stepController.dt_model,
                                                                                                      m.name))
-                    break
+                    
                 else:
                     if n.restrictFineSolutionToAllMeshes:
                         log("Using interpolant of fine mesh an all meshes")
