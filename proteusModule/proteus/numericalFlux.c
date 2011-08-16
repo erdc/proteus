@@ -8291,11 +8291,11 @@ void calculateInteriorLesaintRaviartNumericalFlux(int nInteriorElementBoundaries
 	dH_min = min(dH_L,dH_R), dH_max = max(dH_L,dH_R)
 
 	if dH_min  < 0
-           flux_eN_left = |dH_min| (u^{R}- u^{L})
+           flux_eN_left = |dH_min| (u^{L}- u^{R})
         else
            flux_eN_left = 0
         if dH_max  > 0 
-           flux_eN_right = |dH_max| (u^{L}-u^{R})
+           flux_eN_right = |dH_max| (u^{R}-u^{L})
 	else
            flux_eN_right = 0
       */
@@ -8426,11 +8426,11 @@ void calculateExteriorLesaintRaviartNumericalFlux(int nExteriorElementBoundaries
 	dH_min = min(dH_L,dH_R), dH_max = max(dH_L,dH_R)
 
 	if dH_min  < 0
-           flux_eN_left = |dH_min| (u^{R}- u^{L})
+           flux_eN_left = |dH_min| (u^{L}- u^{R})
         else
            flux_eN_left = 0
         if dH_max  > 0 
-           flux_eN_right = |dH_max| (u^{L}-u^{R})
+           flux_eN_right = |dH_max| (u^{R}-u^{L})
 	else
            flux_eN_right = 0
       */
@@ -8531,11 +8531,11 @@ void calculateGlobalExteriorLesaintRaviartNumericalFlux(int nExteriorElementBoun
 	dH_min = min(dH_L,dH_R), dH_max = max(dH_L,dH_R)
 
 	if dH_min  < 0
-           flux_eN_left = |dH_min| (u^{R}- u^{L})
+           flux_eN_left = |dH_min| (u^{L}- u^{R})
         else
            flux_eN_left = 0
         if dH_max  > 0 
-           flux_eN_right = |dH_max| (u^{L}-u^{R})
+           flux_eN_right = |dH_max| (u^{R}-u^{L})
 	else
            flux_eN_right = 0
       */
@@ -12800,11 +12800,11 @@ void calculateInteriorChengShuNumericalFlux(int nInteriorElementBoundaries_globa
         dH_max = max_{\Omega_{L} \cup \Omega_{R}}(dH_L,dH_R)
 
 	if dH_min  < 0
-           flux_eN_left = |dH_min| (u^{R}- u^{L})
+           flux_eN_left = |dH_min| (u^{L}- u^{R})
         else
            flux_eN_left = 0
         if dH_max  > 0 
-           flux_eN_right = |dH_max| (u^{L}-u^{R})
+           flux_eN_right = |dH_max| (u^{R}-u^{L})
 	else
            flux_eN_right = 0
       */

@@ -37,6 +37,7 @@ class AR_base:
         self.comm=comm
         self.dataDir=dataDir
         self.filename=filename
+        self.hdfFileGlb=None # The global XDMF file for hotStarts
         if hotStart:
             self.filename+="hot"
         self.comm=comm
@@ -79,6 +80,13 @@ class AR_base:
                 self.hdfFile=tables.openFile(os.path.join(self.dataDir,self.hdfFilename),
                                              mode = "r",
                                              title = filename+" Data")
+                try:
+                    # The "global" extension is hardcoded in collect.py
+                    self.hdfFileGlb=tables.openFile(os.path.join(self.dataDir,filename+"global.h5"),
+                                                    mode = "r",
+                                                    title = filename+" Data")
+                except:
+                    pass
                 self.dataItemFormat="HDF"
             else:
                 self.textDataDir=filename+"_Data"
@@ -1126,21 +1134,34 @@ class XdmfWriter:
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
 
         if self.arGrid == None or self.arTime.get('Value') != str(t):
-            if spaceDim == 1:
-                Xdmf_ElementTopology = "Polyline"
-            elif spaceDim == 2:
-                Xdmf_ElementTopology = "Triangle"
-            elif spaceDim == 3:
-                Xdmf_ElementTopology = "Tetrahedron"
+            #mwf hack
+            #allow for other types of topologies if the mesh has specified one
+            if 'elementTopologyName' in dir(mesh):
+                Xdmf_ElementTopology = mesh.elementTopologyName
+            else:
+                if spaceDim == 1:
+                    Xdmf_ElementTopology = "Polyline"
+                elif spaceDim == 2:
+                    Xdmf_ElementTopology = "Triangle"
+                elif spaceDim == 3:
+                    Xdmf_ElementTopology = "Tetrahedron"
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
             self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(mesh.nElements_global)})
-            elements    = SubElement(topology,"DataItem",
-                                     {"Format":ar.dataItemFormat,
-                                      "DataType":"Int",
-                                      "Dimensions":"%i %i" % (mesh.nElements_global,mesh.nNodes_element)})
+            #mwf hack, allow for a mixed element mesh
+            if mesh.nNodes_element == None:
+                assert 'xdmf_topology' in dir(mesh)
+                elements = SubElement(topology,"DataItem",
+                                      {"Format":ar.dataItemFormat,
+                                       "DataType":"Int",
+                                       "Dimensions":"%i" % len(self.xdmf_topology)})
+            else:
+                elements    = SubElement(topology,"DataItem",
+                                         {"Format":ar.dataItemFormat,
+                                          "DataType":"Int",
+                                          "Dimensions":"%i %i" % (mesh.nElements_global,mesh.nNodes_element)})
             geometry    = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
             nodes       = SubElement(geometry,"DataItem",
                                      {"Format":ar.dataItemFormat,
