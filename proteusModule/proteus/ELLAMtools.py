@@ -27,7 +27,7 @@ class ELLAMdiscretization:
         ###ellam specific options with defauls here
         self.particleTrackingType = None
         self.useBackwardTrackingForOldMass = False
-        self.slumpingFlag = 0 #0 -- none, 1 -- Russell, Binning (1d any way), 2 -- Berzins (or something close)
+        self.slumpingFlag = 0 #0 -- none, 1 -- Russell, Binning (1d any way), 2 -- Berzins (or something close), 3 -- FCT approach
         self.SSIPflag = 0 #use strategic spatial integration points
 
         
