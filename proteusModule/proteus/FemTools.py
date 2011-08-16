@@ -3436,7 +3436,14 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"}) 
     def readFunctionXdmf(self,ar,u,tCount=0):
         if ar.hdfFile != None:
-            u.dof[:]=ar.hdfFile.getNode("/",u.name+str(tCount))
+            if ar.hdfFileGlb is not None:
+                map = self.mesh.globalMesh.nodeNumbering_subdomain2global
+                array=ar.hdfFileGlb.getNode("/",u.name+str(tCount))
+                for i in range(len(map)):
+                    u.dof[i] = array[map[i]]
+                del array
+            else:
+                u.dof[:]=ar.hdfFile.getNode("/",u.name+str(tCount))
         else:
             assert(False)
             #numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
