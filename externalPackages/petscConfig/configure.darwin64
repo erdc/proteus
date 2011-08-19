@@ -1,0 +1,1 @@
+./config/configure.py --with-clanguage=C --with-cc="/usr/bin/mpicc -arch x86_64" --with-cxx="/usr/bin/mpicxx -arch x86_64" --without-fortran  --with-mpi-compilers --with-shared --with-dynamic --download-parmetis=ifneeded --prefix=${PROTEUS_PREFIX}

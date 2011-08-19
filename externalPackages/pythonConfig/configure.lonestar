@@ -1,0 +1,2 @@
+./configure --prefix=${PROTEUS_PREFIX} --with-pth CC="icc -m64 -pthread" CXX="icpc -m64 -pthread" LD="icc -m64 -pthread"
+#CC="gcc -m64 -pthread" CXX="g++ -m64 -pthread" LD="gcc -m64 -pthread"

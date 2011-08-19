@@ -1,0 +1,16 @@
+SRCS_ADD =  NewtonOneIt.C  \
+  DtHistoryDataFile.C \
+  ErrorNorms.C \
+  TimeIntegrationErrorController.C \
+  RosenbrockDaeDefinition.C \
+  RosenbrockIntegratorBase.C \
+  ThomasGladwellIntegrator.C 
+
+OBJS_ADD =  NewtonOneIt.o \
+  DtHistoryDataFile.o \
+  ErrorNorms.o \
+  TimeIntegrationErrorController.o \
+  RosenbrockDaeDefinition.o \
+  RosenbrockIntegratorBase.o \
+  ThomasGladwellIntegrator.o
+

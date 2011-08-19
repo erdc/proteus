@@ -1,0 +1,4 @@
+LDFLAGS="-f95" ./config/configure.py --with-pic --with-clanguage=C --with-cc=mpicc --without-fortran --with-cxx=mpiCC \
+--with-mpi-compilers --with-shared --with-dynamic --download-parmetis=ifneeded --prefix=${PROTEUS_PREFIX}  \
+--download-c-blas-lapack=ifneeded
+

@@ -1,0 +1,2 @@
+#!/bin/csh
+${PROTEUS_PYTHON} setup.py config --mpi=sgimpi

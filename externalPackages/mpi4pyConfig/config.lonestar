@@ -1,0 +1,2 @@
+#!/bin/csh
+${PYADH_PYTHON} setup.py config --mpi=sgimpi

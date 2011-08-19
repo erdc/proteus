@@ -1,0 +1,8 @@
+#!/bin/csh
+setenv CC gcc
+unsetenv CFLAGS
+setenv CXX g++
+unsetenv CXXFLAGS
+setenv LD gcc
+unsetenv LDFLAGS
+./configure --prefix=${PROTEUS_PREFIX}

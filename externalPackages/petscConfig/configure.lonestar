@@ -1,0 +1,2 @@
+./config/configure.py --with-x=0 --with-pic --with-clanguage=C --with-64-bit-pointers --download-parmetis=ifneeded --with-blas-lapack-dir=${TACC_MKL_LIB} --with-mpiexec=ibrun --download-parmetis=ifneeded --download-spooles=ifneeded --download-superlu_dist=ifneeded --prefix=${PROTEUS_PREFIX}
+
