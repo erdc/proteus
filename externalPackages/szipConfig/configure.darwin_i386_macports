@@ -1,0 +1,4 @@
+#!/bin/csh
+#szip configuration for pyadh
+setenv PYADH_ARCH darwin_i386_macports
+./configure --enable-shared --prefix=${PYADH}/${PYADH_ARCH}
