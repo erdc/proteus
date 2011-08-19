@@ -1,0 +1,4 @@
+python setup.py install --hdf5=${PYADH}/${PYADH_ARCH}
+
+
+

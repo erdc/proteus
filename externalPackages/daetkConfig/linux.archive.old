@@ -1,0 +1,2 @@
+$(ARCHIVE): $(OBJS) $(OBJS_ADD)
+	$(LD) -shared $(CXXFLAGS) $(OBJS) $(OBJS_ADD) $(LDFLAGS) -o $(ARCHIVE)

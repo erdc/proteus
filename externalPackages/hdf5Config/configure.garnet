@@ -1,0 +1,4 @@
+#!/bin/csh
+setenv CC gcc
+setenv CXX g++
+./configure --disable-fortran --disable-cxx --with-zlib=${PROTEUS_PREFIX} --with-szlib=${PROTEUS_PREFIX} --enable-shared --prefix=${PROTEUS_PREFIX}

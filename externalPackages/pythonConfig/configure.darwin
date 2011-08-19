@@ -1,0 +1,1 @@
+./configure --prefix=${PROTEUS_PREFIX} --enable-framework=${PROTEUS_PREFIX} --disable-universalsdk CC="/usr/bin/gcc"  CXX="/usr/bin/g++" CPPFLAGS="-I/${PROTEUS_PREFIX}/include" CXXFLAGS="-I${PROTEUS_PREFIX}/include" LD="/usr/bin/gcc"  LDFLAGS="-L${PROTEUS_PREFIX}/lib"

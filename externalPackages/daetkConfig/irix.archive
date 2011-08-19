@@ -1,0 +1,3 @@
+$(ARCHIVE): $(OBJS) $(OBJS_ADD)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(DEFS) -ar $(ARFLAGS) -o $(ARCHIVE) $(OBJS) 
+	$(CXX) $(CXXFLAGS) -shared $(OBJS) $(OBJS_ADD) -o $(ARCHIVE)

@@ -1,0 +1,1 @@
+./configure --prefix=${PYADH}/${PYADH_ARCH} --with-cxx-main=mpicxx
