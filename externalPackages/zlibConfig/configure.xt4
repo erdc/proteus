@@ -1,0 +1,5 @@
+#!/bin/csh
+setenv CC cc
+setenv CXX CC
+setenv LD cc
+./configure --prefix=/usr/local/usp/pyadh

@@ -1,0 +1,8 @@
+#!/bin/csh
+unsetenv CC
+unsetenv CFLAGS
+unsetenv CXX
+unsetenv CXXFLAGS
+unsetenv LD
+unsetenv LDFLAGS
+./configure --shared --prefix=${PROTEUS_PREFIX}
