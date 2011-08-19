@@ -1,0 +1,1 @@
+./configure --shared --prefix=${PYADH}/${PYADH_ARCH}
