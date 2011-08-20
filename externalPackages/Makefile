@@ -31,7 +31,7 @@ install_core_python: install_zlib install_python
 
 install_core_libraries: install_petsc install_daetk install_szip install_hdf5 install_triangle install_tetgen install_superlu 
 
-install_core_modules: install_numpy install_nose install_numexpr install_cython install_tables install_mpi4py install_petsc4py
+install_core_modules: install_numpy install_nose install_numexpr install_cython install_pytables install_mpi4py install_petsc4py
 
 install_extensions_libraries:
 
@@ -42,7 +42,7 @@ distclean_core_python: distclean_python
 
 distclean_core_libraries: distclean_petsc distclean_daetk distclean_zlib distclean_szip distclean_hdf5 distclean_triangle distclean_tetgen distclean_superlu 
 
-distclean_core_modules: distclean_numpy distclean_nose distclean_tables distclean_cython distclean_mpi4py distclean_petsc4py
+distclean_core_modules: distclean_numpy distclean_nose distclean_pytables distclean_cython distclean_mpi4py distclean_petsc4py
 
 distclean_extensions_libraries: 
 
@@ -53,7 +53,7 @@ newConfig_core_python: newConfig_python
 
 newConfig_core_libraries: newConfig_petsc newConfig_daetk newConfig_zlib newConfig_szip newConfig_hdf5 newConfig_triangle newConfig_tetgen newConfig_superlu 
 
-newConfig_core_modules: newConfig_numpy newConfig_nose newConfig_tables newConfig_cython newConfig_mpi4py newConfig_petsc4py
+newConfig_core_modules: newConfig_numpy newConfig_nose newConfig_pytables newConfig_cython newConfig_mpi4py newConfig_petsc4py
 
 newConfig_extensions_libraries:
 
@@ -63,7 +63,7 @@ newConfig_extensions_modules: newConfig_setuptools newConfig_readline newConfig_
 editConfig_core_python: editConfig_python
 editConfig_core_libraries: editConfig_petsc editConfig_daetk editConfig_zlib editConfig_szip editConfig_hdf5 editConfig_triangle editConfig_tetgen editConfig_superlu 
 
-editConfig_core_modules: editConfig_numpy editConfig_nose editConfig_tables editConfig_cython editConfig_mpi4py editConfig_petsc4py
+editConfig_core_modules: editConfig_numpy editConfig_nose editConfig_pytables editConfig_cython editConfig_mpi4py editConfig_petsc4py
 
 editConfig_extensions_libraries:
 
@@ -359,28 +359,28 @@ distclean_numexpr:
 	mv -f install_numexpr install_numexpr_last
 	cd ${NUMEXPR_VERSION} && rm -rf build
 
-#tables
-newConfig_tables:
-	cd tablesConfig && cp build.${PROTEUS_ARCH_OLD} build.${PROTEUS_ARCH} && cp install.${PROTEUS_ARCH_OLD} install.${PROTEUS_ARCH}
+#pytables
+newConfig_pytables:
+	cd pytablesConfig && cp build.${PROTEUS_ARCH_OLD} build.${PROTEUS_ARCH} && cp install.${PROTEUS_ARCH_OLD} install.${PROTEUS_ARCH}
 
-editConfig_tables:
-	cd tablesConfig && ${EDITOR} build.${PROTEUS_ARCH} install.${PROTEUS_ARCH}
+editConfig_pytables:
+	cd pytablesConfig && ${EDITOR} build.${PROTEUS_ARCH} install.${PROTEUS_ARCH}
 
-config_tables:
-	echo "tables has no config step; run make 'make editConfig_tables'" > config_tables_progress 2>&1
+config_pytables:
+	echo "pytables has no config step; run make 'make editConfig_pytables'" > config_pytables_progress 2>&1
 
-build_tables:
-	cd ${TABLES_VERSION} && ../tablesConfig/build.${PROTEUS_ARCH} > ../build_tables_progress 2>&1
+build_pytables:
+	cd ${PYTABLES_VERSION} && ../pytablesConfig/build.${PROTEUS_ARCH} > ../build_pytables_progress 2>&1
 
-install_tables: install_szip install_zlib install_hdf5
-	make config_tables build_tables
-	cd ${TABLES_VERSION} && ../tablesConfig/install.${PROTEUS_ARCH} > ../install_tables_progress 2>&1
-	cat config_tables_progress build_tables_progress install_tables_progress > install_tables
+install_pytables: install_szip install_zlib install_hdf5
+	make config_pytables build_pytables
+	cd ${PYTABLES_VERSION} && ../pytablesConfig/install.${PROTEUS_ARCH} > ../install_pytables_progress 2>&1
+	cat config_pytables_progress build_pytables_progress install_pytables_progress > install_pytables
 
-distclean_tables:
-	touch install_tables
-	mv -f install_tables install_tables_last
-	cd ${TABLES_VERSION} && rm -rf build
+distclean_pytables:
+	touch install_pytables
+	mv -f install_pytables install_pytables_last
+	cd ${PYTABLES_VERSION} && rm -rf build
 
 #nose
 newConfig_nose:
