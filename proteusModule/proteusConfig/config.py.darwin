@@ -37,5 +37,5 @@ PROTEUS_MPI_LIB_DIR = '.'
 PROTEUS_MPI_LIBS =['m']
 
 PROTEUS_PETSC_LIB_DIRS = [PROTEUS_LIB_DIR]
-PROTEUS_PETSC_LIBS = ['petsc', 'X11', 'parmetis', 'metis', 'lapack', 'blas', 'dl']
+PROTEUS_PETSC_LIBS = ['petsc', 'superlu_dist_2.4', 'parmetis', 'metis', 'lapack', 'blas', 'dl']
 PROTEUS_PETSC_INCLUDE_DIRS = [PROTEUS_INCLUDE_DIR]
