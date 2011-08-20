@@ -495,7 +495,6 @@ static PyObject* superluWrappersSparseFactorPrepare(PyObject* self,
     }
   dgstrf(&SFP(sparseFactor)->options,
          &SFP(sparseFactor)->AC,
-         drop_tol,
          relax,
          panel_size,
          SFP(sparseFactor)->etree,
