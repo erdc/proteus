@@ -1,21 +1,21 @@
 [submodule "externalPackages/numpy"]
 	path = externalPackages/numpy
-	url = https://github.com/numpy/numpy.git
+	url = git@github.com:numpy/numpy.git
 [submodule "externalPackages/cython"]
 	path = externalPackages/cython
-	url = https://github.com/cython/cython.git
+	url = git@github.com:cython/cython.git
 [submodule "externalPackages/ipython"]
 	path = externalPackages/ipython
-	url = https://github.com/ipython/ipython.git
+	url = git@github.com:ipython/ipython.git
 [submodule "externalPackages/matplotlib"]
 	path = externalPackages/matplotlib
-	url = https://github.com/matplotlib/matplotlib.git
+	url = git@github.com:matplotlib/matplotlib.git
 [submodule "externalPackages/sympy"]
 	path = externalPackages/sympy
-	url = https://github.com/sympy/sympy.git
+	url = git@github.com:sympy/sympy.git
 [submodule "externalPackages/pytables"]
 	path = externalPackages/pytables
-	url = https://github.com/PyTables/PyTables.git
+	url = git@github.com:PyTables/PyTables.git
 [submodule "externalPackages/zlib"]
 	path = externalPackages/zlib
 	url = git@github.com:erdc-cm/zlib.git
