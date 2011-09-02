@@ -278,7 +278,7 @@ build_petsc:
 
 install_petsc:
 	make config_petsc build_petsc
-	cd ${PETSC_VERSION} && make install > ../install_petsc_progress 2>&1
+	cd ${PETSC_VERSION} && PETSC_ARCH=${PROTEUS_ARCH} PETSC_DIR=${PWD}/${PETSC_VERSION} make install > ../install_petsc_progress 2>&1
 	cat config_petsc_progress build_petsc_progress install_petsc_progress > install_petsc
 
 distclean_petsc:
