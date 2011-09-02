@@ -1,1 +1,1 @@
-./configure --shared --prefix=${PROTEUS_PREFIX} CC=icc CPP=cpp LD=icc
+./configure --shared --prefix=${PROTEUS_PREFIX}
