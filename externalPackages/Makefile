@@ -300,11 +300,11 @@ config_daetk:
 	cd ${DAETK_VERSION} && touch dep.txt > ../config_daetk_progress 2>&1
 
 build_daetk:
-	cd ${DAETK_VERSION} && DAETK_ARCH=${PROTEUS_ARCH} DAETK_DIR=${PWD}/${DAETK_VERSION} make > ../build_daetk_progress 2>&1
+	cd ${DAETK_VERSION} && PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' DAETK_ARCH=${PROTEUS_ARCH} DAETK_DIR=${PWD}/${DAETK_VERSION} make > ../build_daetk_progress 2>&1
 
 install_daetk:
 	make config_daetk build_daetk
-	cd ${DAETK_VERSION} && DAETK_ARCH=${PROTEUS_ARCH} DAETK_DIR=${PWD}/${DAETK_VERSION}  make install > ../install_daetk_progress 2>&1
+	cd ${DAETK_VERSION} && PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' DAETK_ARCH=${PROTEUS_ARCH} DAETK_DIR=${PWD}/${DAETK_VERSION}  make install > ../install_daetk_progress 2>&1
 	cat config_daetk_progress build_daetk_progress install_daetk_progress > install_daetk
 
 distclean_daetk:
