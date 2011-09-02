@@ -271,10 +271,10 @@ editConfig_petsc:
 	cd petscConfig && ${EDITOR} configure.${PROTEUS_ARCH}
 
 config_petsc:
-	cd ${PETSC_VERSION} && ../petscConfig/configure.${PROTEUS_ARCH} > ../config_petsc_progress 2>&1
+	cd ${PETSC_VERSION} && PETSC_ARCH=${PROTEUS_ARCH} PETSC_DIR=${PWD}/${PETSC_VERSION} ../petscConfig/configure.${PROTEUS_ARCH} > ../config_petsc_progress 2>&1
 
 build_petsc:
-	cd ${PETSC_VERSION} && make > ../build_petsc_progress 2>&1
+	cd ${PETSC_VERSION} && PETSC_ARCH=${PROTEUS_ARCH} PETSC_DIR=${PWD}/${PETSC_VERSION} make > ../build_petsc_progress 2>&1
 
 install_petsc:
 	make config_petsc build_petsc
@@ -300,11 +300,11 @@ config_daetk:
 	cd ${DAETK_VERSION} && touch dep.txt > ../config_daetk_progress 2>&1
 
 build_daetk:
-	cd ${DAETK_VERSION} && make > ../build_daetk_progress 2>&1
+	cd ${DAETK_VERSION} && DAETK_ARCH=${PROTEUS_ARCH} DAETK_DIR=${PWD}/${DAETK_VERSION} make > ../build_daetk_progress 2>&1
 
 install_daetk:
 	make config_daetk build_daetk
-	cd ${DAETK_VERSION} && make install > ../install_daetk_progress 2>&1
+	cd ${DAETK_VERSION} && DAETK_ARCH=${PROTEUS_ARCH} DAETK_DIR=${PWD}/${DAETK_VERSION}  make install > ../install_daetk_progress 2>&1
 	cat config_daetk_progress build_daetk_progress install_daetk_progress > install_daetk
 
 distclean_daetk:
