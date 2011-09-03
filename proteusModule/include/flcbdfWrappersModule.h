@@ -22,6 +22,16 @@ namespace Daetk
 #ifdef PROTEUSREDEFINECPP
 #define __cplusplus
 #endif
+#include "petscconf.h"
+	/*cek try adding forward declarations since I can't find the header for these intel functions */
+#ifdef PETSC_HAVE__INTEL_FAST_MEMSET
+          #include <string.h>
+          extern void* _intel_fast_memset(void *b, int c, size_t len);
+#endif
+#ifdef PETSC_HAVE__INTEL_FAST_MEMCPY
+          #include <string.h>
+          extern void* _intel_fast_memcpy(void* s1, const void* s2, size_t n);
+#endif
 #include "petsc.h"
 #include "petscmat.h"
 #include "petscao.h"
