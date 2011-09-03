@@ -1,2 +1,2 @@
 #!/bin/csh
-${PROTEUS_PYTHON} setup.py config --mpi=sgimpi
+${PROTEUS_PYTHON} setup.py config --mpicc=mpicc
