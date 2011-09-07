@@ -430,13 +430,13 @@ distclean_setuptools:
 
 #mpi4py
 newConfig_mpi4py:
-	cd mpi4pyConfig && cp config.${PROTEUS_ARCH_OLD} config.${PROTEUS_ARCH}  && cp build.${PROTEUS_ARCH_OLD} build.${PROTEUS_ARCH} && cp install.${PROTEUS_ARCH_OLD} install.${PROTEUS_ARCH}
+	cd mpi4pyConfig && cp config.${PROTEUS_ARCH_OLD} config.${PROTEUS_ARCH}  && cp build.${PROTEUS_ARCH_OLD} build.${PROTEUS_ARCH} && cp install.${PROTEUS_ARCH_OLD} install.${PROTEUS_ARCH} && cp mpi.cfg.${PROTEUS_ARCH_OLD} mpi.cfg.${PROTEUS_ARCH}
 
 editConfig_mpi4py:
-	cd mpi4pyConfig && ${EDITOR} config.${PROTEUS_ARCH} build.${PROTEUS_ARCH} install.${PROTEUS_ARCH}
+	cd mpi4pyConfig && ${EDITOR} config.${PROTEUS_ARCH} build.${PROTEUS_ARCH} install.${PROTEUS_ARCH} mpi.cfg.${PROTEUS_ARCH}
 
 config_mpi4py:
-	cd ${MPI4PY_VERSION} && ../mpi4pyConfig/config.${PROTEUS_ARCH} > ../config_mpi4py_progress 2>&1
+	cd ${MPI4PY_VERSION} && cp ../mpi4pyConfig/mpi.cfg.${PROTEUS_ARCH} mpi.cfg && ../mpi4pyConfig/config.${PROTEUS_ARCH} > ../config_mpi4py_progress 2>&1
 
 build_mpi4py:
 	cd ${MPI4PY_VERSION} && ../mpi4pyConfig/build.${PROTEUS_ARCH} > ../build_mpi4py_progress 2>&1

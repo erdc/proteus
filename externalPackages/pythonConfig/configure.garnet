@@ -1,8 +1,1 @@
-#!/bin/csh
-setenv CC gcc
-unsetenv CFLAGS
-setenv CXX g++
-unsetenv CXXFLAGS
-setenv LD gcc
-unsetenv LDFLAGS
-./configure --prefix=${PROTEUS_PREFIX}
+./configure --prefix=${PROTEUS_PREFIX} CFLAGS="-I${HOME}/include" LDFLAGS="-L${HOME}/lib"
