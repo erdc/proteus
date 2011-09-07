@@ -1,5 +1,1 @@
-#!/bin/csh
-setenv CC gcc
-setenv CXX g++
-setenv LD gcc
 ./configure --enable-shared --prefix=${PROTEUS_PREFIX}
