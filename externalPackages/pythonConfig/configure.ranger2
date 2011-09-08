@@ -1,1 +1,1 @@
-LINKFORSHARED="-Wl,-export-dynamic" ./configure --prefix=${PROTEUS_PREFIX} --with-system-ffi
+CC="${CC} -DPROTEUS_FFI64_HACK" LINKFORSHARED="-Wl,-export-dynamic" ./configure --prefix=${PROTEUS_PREFIX}
