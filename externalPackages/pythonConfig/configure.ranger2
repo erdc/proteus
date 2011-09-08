@@ -1,1 +1,1 @@
-./configure --prefix=${PROTEUS_PREFIX}
+./configure --prefix=${PROTEUS_PREFIX} CC="${CC} -DPROTEUS_FFI64_HACK"

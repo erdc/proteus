@@ -1,1 +1,1 @@
-./configure --prefix=${PROTEUS_PREFIX} CPPFLAGS="-DPROTEUS_FFI64_HACK"
+./configure --prefix=${PROTEUS_PREFIX} CC="${CC} -DPROTEUS_FFI64_HACK"
