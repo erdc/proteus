@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+
 namespace IOutils
 {
 std::istream& eatline(std::istream& s)
@@ -134,7 +135,8 @@ readTriangleMeshNodesAndElements(const char * filebase,
       if (hasMarkers > 0)
 	{
 	  elementFile >> elementId_double;
-          elementId = lrintl(elementId_double);
+          //elementId = lrintl(elementId_double);
+          elementId = static_cast<long int>(elementId_double);
 	  elementMaterialTypes[ne] = elementId;
 	}
       elementFile >> eatline;
@@ -431,7 +433,8 @@ readTetgenMeshNodesAndElements(const char * filebase,
       if (hasMarkers > 0)
 	{
 	  elementFile >> elementId_double;
-          elementId = lrintl(elementId_double);
+          //elementId = lrintl(elementId_double);
+          elementId = static_cast<long int>(elementId_double);
 	  elementMaterialTypes[ne] = elementId;
 	}
       elementFile >> eatline;
