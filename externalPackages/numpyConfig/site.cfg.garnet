@@ -55,9 +55,9 @@
 # This is a good place to add general library and include directories like
 # /usr/local/{lib,include}
 #
-[DEFAULT]
-library_dirs = os.getenv('TACC_ACML_INCLUDE')
-include_dirs = os.getenv('TACC_ACML_LIB')
+#[DEFAULT]
+#library_dirs = os.getenv('TACC_ACML_INCLUDE')
+#include_dirs = os.getenv('TACC_ACML_LIB')
 
 # Optimized BLAS and LAPACK
 # -------------------------
@@ -72,9 +72,11 @@ include_dirs = os.getenv('TACC_ACML_LIB')
 # is important for the BLAS C interface):
 #
 [blas_opt]
+library_dirs = /opt/acml/4.4.0/gnu64/lib
 libraries = acml
 #
 [lapack_opt]
+library_dirs = /opt/acml/4.4.0/gnu64/lib
 libraries = acml
 #
 # If your ATLAS was compiled with pthreads, the names of the libraries might be
