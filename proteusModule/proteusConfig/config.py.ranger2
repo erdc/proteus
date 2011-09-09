@@ -2,10 +2,10 @@ import os
 
 PROTEUS_INCLUDE_DIR = os.getenv('PROTEUS_PREFIX')+'/include'
 PROTEUS_LIB_DIR = os.getenv('PROTEUS_PREFIX')+'/lib'
-PROTEUS_EXTRA_COMPILE_ARGS= ['-Wall']
-PROTEUS_EXTRA_LINK_ARGS=['-L/opt/apps/intel/10.1/fc/lib','-lifport','-lifcoremt','-lirc','-lirc_s','-limf','-lsvml']
-PROTEUS_EXTRA_FC_COMPILE_ARGS= ['-Wall']
-PROTEUS_EXTRA_FC_LINK_ARGS=['-L/opt/apps/intel/10.1/fc/lib','-lifport','-lifcoremt','-lirc','-lirc_s','-limf','-lsvml']
+PROTEUS_EXTRA_COMPILE_ARGS= []
+PROTEUS_EXTRA_LINK_ARGS=[]
+PROTEUS_EXTRA_FC_COMPILE_ARGS= []
+PROTEUS_EXTRA_FC_LINK_ARGS=[]
 
 PROTEUS_SUPERLU_INCLUDE_DIR = PROTEUS_INCLUDE_DIR
 PROTEUS_SUPERLU_H   = r'"slu_ddefs.h"'
