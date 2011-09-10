@@ -1,1 +1,1 @@
-CC='' CXX='' LD='' ./configure --enable-shared --with-pic --with-zlib=${PROTEUS_PREFIX} --with-szlib=${PROTEUS_PREFIX} --disable-parallel --enable-threadsafe --with-pthread --prefix=${PROTEUS_PREFIX}
+./configure --enable-shared --with-pic --with-zlib=${PROTEUS_PREFIX} --with-szlib=${PROTEUS_PREFIX} --disable-parallel --enable-threadsafe --with-pthread --prefix=${PROTEUS_PREFIX}
