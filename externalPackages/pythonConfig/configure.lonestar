@@ -1,2 +1,5 @@
-./configure --prefix=${PROTEUS_PREFIX} --with-pth CC="icc -m64 -pthread" CXX="icpc -m64 -pthread" LD="icc -m64 -pthread"
-#CC="gcc -m64 -pthread" CXX="g++ -m64 -pthread" LD="gcc -m64 -pthread"
+./configure --prefix=${PROTEUS_PREFIX} \
+CC="icc -DNDEBUG -DPROTEUS_FFI64_HACK -fp-model precise -fno-strict-aliasing -xSSE4.2 -O1" \
+CXX="icpc -DPROTEUS_FFI64_HACK -DNDEBUG -fp-model precise -fno-strict-aliasing -xSSE4.2 -O1" \
+--with-threads \
+--with-cxx-main="icpc -DPROTEUS_FFI64_HACK -pthread -fp-model precise -fno-strict-aliasing -xSSE4.2 -O1"
