@@ -129,7 +129,7 @@
 # lapack_libs = mkl_lapack
 #
 # For 10.*, on 32 bits machines:
-#[mkl]
-#library_dirs = /opt/intel/mkl/10.0.3.020/lib/em64t
-#lapack_libs = mkl_intel_lp64
-#mkl_libs = mkl_sequential,mkl_core
+[mkl]
+library_dirs = os.getenv('TACC_MKL_LIB')
+lapack_libs = mkl_lapack
+mkl_libs = mkl_intel_lp64,mkl_sequential,mkl_core
