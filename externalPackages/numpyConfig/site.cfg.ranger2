@@ -55,9 +55,9 @@
 # This is a good place to add general library and include directories like
 # /usr/local/{lib,include}
 #
-[DEFAULT]
-library_dirs = /usr/lib64
-include_dirs = /usr/include
+#[DEFAULT]
+#library_dirs = ${TACC_ACML/usr/lib64
+#include_dirs = /usr/include
 
 # Optimized BLAS and LAPACK
 # -------------------------
@@ -71,11 +71,11 @@ include_dirs = /usr/include
 # include directories have already been set in [DEFAULT]; the include directory
 # is important for the BLAS C interface):
 #
-[blas_opt]
-libraries = blas,gfortran
+#[blas_opt]
+#libraries = acml
 #
-[lapack_opt]
-libraries = lapack,gfortran
+#[lapack_opt]
+#libraries = acml
 #
 # If your ATLAS was compiled with pthreads, the names of the libraries might be
 # different:
@@ -129,7 +129,7 @@ libraries = lapack,gfortran
 # lapack_libs = mkl_lapack
 #
 # For 10.*, on 32 bits machines:
-# [mkl]
-# library_dirs = /opt/intel/mkl/10.0.1.014/lib/32/
-# lapack_libs = mkl_lapack
-# mkl_libs = mkl, guide
+[mkl]
+#library_dirs = /opt/intel/mkl/10.0.1.014/lib/32/
+lapack_libs = mkl_lapack
+mkl_libs = mkl_intel_lp64,mkl_sequential,mkl_core
