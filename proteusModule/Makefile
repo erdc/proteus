@@ -2,6 +2,9 @@ include ${PROTEUS_PREFIX}/conf/variables
 
 all: build_ext install
 
+newConfig:
+	cd proteusConfig && cp config.py.${PROTEUS_ARCH_OLD} config.py.${PROTEUS_ARCH}
+
 build_ext:
 	${PROTEUS_PYTHON} setup.py build_ext -i
 	${PROTEUS_PYTHON} setuppyx.py build_ext -i
