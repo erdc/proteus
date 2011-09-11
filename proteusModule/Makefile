@@ -1,5 +1,3 @@
-include ${PROTEUS_PREFIX}/conf/variables
-
 all: build_ext install
 
 newConfig:
@@ -16,7 +14,7 @@ install:
 	${PROTEUS_PYTHON} setup.py install
 
 petsc-config:
-	${PROTEUS_PYTHON} ./setPetscLib.py ${PETSC_LIB} ${PETSC_INCLUDE}
+	make -f Makefile.petsc petsc-config
 
 docs:
 	doxygen proteus-doc.conf
