@@ -3,7 +3,6 @@
 #
 module swap PrgEnv-pgi PrgEnv-gnu
 module load acml
-export PROTEUS=${HOME}/proteus
 export PROTEUS_ARCH=garnet.gnu
 export PROTEUS_PREFIX=${PROTEUS}/${PROTEUS_ARCH}
 export PROTEUS_PYTHON=${PROTEUS_PREFIX}/bin/python
