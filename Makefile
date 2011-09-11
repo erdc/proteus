@@ -18,6 +18,10 @@ clean_externalPackages:
 clean_proteusModule:
 	cd proteusModule && make cleaner
 
+newConfig:
+	cd externalPackages && make newConfig
+	cd proteusModule && make newConfig
+
 spkg:
 	rm -rf proteus
 	mkdir proteus
