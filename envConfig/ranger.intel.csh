@@ -7,7 +7,6 @@ module load atlas
 setenv PROTEUS_ARCH ranger.intel
 setenv PATH ${TACC_ATLAS_LIB}:${PATH}
 #
-setenv PROTEUS ${HOME}/proteus
 setenv PROTEUS_PREFIX ${PROTEUS}/${PROTEUS_ARCH}
 setenv PROTEUS_PYTHON ${PROTEUS}/${PROTEUS_ARCH}/bin/python
 setenv PATH ${PROTEUS}/${PROTEUS_ARCH}/bin:${PATH}
