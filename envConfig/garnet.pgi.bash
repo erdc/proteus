@@ -2,7 +2,6 @@
 #garent.pgi
 #
 module load acml
-export PROTEUS=${HOME}/proteus
 export PROTEUS_ARCH=garnet.pgi
 export PROTEUS_PREFIX=${PROTEUS}/${PROTEUS_ARCH}
 export PROTEUS_PYTHON=${PROTEUS_PREFIX}/bin/python
