@@ -11,7 +11,6 @@ setenv FC  pgf90
 setenv F77 pgf77
 setenv F90 pgf90
 #
-setenv PROTEUS ${HOME}/proteus
 setenv PROTEUS_PREFIX ${PROTEUS}/${PROTEUS_ARCH}
 setenv PROTEUS_PYTHON ${PROTEUS}/${PROTEUS_ARCH}/bin/python
 setenv PATH ${PROTEUS}/${PROTEUS_ARCH}/bin:${PATH}
