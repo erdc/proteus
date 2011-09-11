@@ -34,11 +34,11 @@ ARCH         = ar
 ARCHFLAGS    = cr
 RANLIB       = ranlib
 
-CC           = mpicc -fPIC
+CC           = cc -fPIC
 CFLAGS       = -O2
-FORTRAN	     = mpif77 -fPIC
+FORTRAN	     = f77 -fPIC
 FFLAGS       = -O2
-LOADER       = mpif77 -fPIC
+LOADER       = f77 -fPIC
 LOADOPTS     = 
 
 #
