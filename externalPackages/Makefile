@@ -42,7 +42,7 @@ distclean_core_python: distclean_python
 
 distclean_core_libraries: distclean_petsc distclean_daetk distclean_zlib distclean_szip distclean_hdf5 distclean_triangle distclean_tetgen distclean_superlu 
 
-distclean_core_modules: distclean_numpy distclean_nose distclean_pytables distclean_cython distclean_mpi4py distclean_petsc4py
+distclean_core_modules: distclean_numpy distclean_nose distclean_pytables distclean_cython distclean_mpi4py distclean_petsc4py distclean_numexpr
 
 distclean_extensions_libraries: 
 
