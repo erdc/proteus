@@ -1,6 +1,8 @@
 #
 #diamond
 #
+module unload compilers mpi
+module load mpi/intelmpi-4.0.0
 setenv PROTEUS_ARCH diamond
 setenv PROTEUS_PREFIX ${PROTEUS}/${PROTEUS_ARCH}
 setenv PROTEUS_PYTHON ${PROTEUS_PREFIX}/bin/python
