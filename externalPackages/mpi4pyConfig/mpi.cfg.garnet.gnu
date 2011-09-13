@@ -16,22 +16,16 @@
 # ---------------------
 [mpi]
 
-## mpi_dir              = /usr
-## mpi_dir              = /usr/local
-## mpi_dir              = /usr/local/mpi
-## mpi_dir              = /opt
-## mpi_dir              = /opt/mpi
-## mpi_dir =            = $ProgramFiles\MPI
-
-## mpicc                = %(mpi_dir)s/bin/mpicc
-## mpicxx               = %(mpi_dir)s/bin/mpicxx
+mpi_dir              = /opt/cray/mpt/5.1.2/xt/gemini/mpich2-gnu
+mpicc                = gcc
+mpicxx               = g++
 
 ## define_macros        =
 ## undef_macros         =
-## include_dirs         = %(mpi_dir)s/include
-## libraries            = mpi
-## library_dirs         = %(mpi_dir)s/lib
-## runtime_library_dirs = %(mpi_dir)s/lib
+include_dirs         = %(mpi_dir)s/include
+libraries            = mpich
+library_dirs         = %(mpi_dir)s/lib
+runtime_library_dirs = %(mpi_dir)s/lib
 
 ## extra_compile_args   =
 ## extra_link_args      =

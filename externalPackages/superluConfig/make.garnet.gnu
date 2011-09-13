@@ -24,21 +24,21 @@ PLAT =
 TMGLIB       = tmglib$(PLAT).a
 SUPERLULIB   = libsuperlu$(PLAT).a
 BLASDEF = -DUSE_VENDOR_BLAS
-BLASLIB = -lblas
-PREFIX = ${PROTEUS_PREFIX}
+BLASLIB =
+PREFIX =  ${PROTEUS_PREFIX}
 #
 #  The archiver and the flag(s) to use when building archive (library)
 #  If your system has no ranlib, set RANLIB = echo.
 #
 ARCH         = ar
-ARCHFLAGS    = cr
+ARCHFLAGS    = -cru
 RANLIB       = ranlib
 
-CC           = mpicc -fPIC
-CFLAGS       = -O2
-FORTRAN	     = mpif77 -fPIC
-FFLAGS       = -O2
-LOADER       = mpif77 -fPIC
+CC           = gcc -fPIC
+CFLAGS       = -O3
+FORTRAN	     = fortran -fPIC
+FFLAGS       = -O3
+LOADER       = gcc -fPIC
 LOADOPTS     = 
 
 #
