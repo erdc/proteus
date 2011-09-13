@@ -10,7 +10,7 @@ install_externalPackages:
 	cd externalPackages && make all
 
 install_proteusModule:
-	cd proteusModule && cp proteusConfig/config.py.${PROTEUS_ARCH} config.py && make petsc-config install
+	cd proteusModule && cp proteusConfig/config.py.${PROTEUS_ARCH} config.py && make PETSC_DIR=${PROTEUS_PREFIX} petsc-config install
 
 clean_externalPackages:
 	cd externalPackages && make -k distclean
