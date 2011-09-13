@@ -19,7 +19,7 @@ LIB = ../lib/
 
 # CC should be set to the name of your favorite C compiler.
 
-CC = mpicc -fPIC
+CC = gcc -fPIC
 
 # CSWITCHES is a list of all switches passed to the C compiler.  I strongly
 #   recommend using the best level of optimization.  I also strongly
@@ -74,7 +74,7 @@ CC = mpicc -fPIC
 #
 #   CSWITCHES = -O -DNO_TIMER -DLINUX -I/usr/X11R6/include -L/usr/X11R6/lib
 #mwf no fpu_control
-CSWITCHES = -O -I/usr/X11R6/include -L/usr/X11R6/lib64
+CSWITCHES = -O
 
 # TRILIBDEFS is a list of definitions used to compile an object code version
 #   of Triangle (triangle.o) to be called by another program.  The file
@@ -95,15 +95,15 @@ RM = /bin/rm
 
 # The action starts here.
 
-all: $(BIN)triangle $(BIN)showme
+all: $(BIN)triangle #$(BIN)showme
 
 trilibrary: $(BIN)triangle.o $(BIN)tricall
 	ar r $(LIB)libtri.a $(BIN)triangle.o
 	ranlib $(LIB)libtri.a
 
-install: trilibrary $(BIN)triangle $(BIN)showme
+install: trilibrary $(BIN)triangle #$(BIN)showme
 	cp -f $(LIB)libtri.a $(PROTEUS_PREFIX)/lib
-	cp -f $(BIN)triangle $(BIN)showme  $(PROTEUS_PREFIX)/bin
+	#cp -f $(BIN)triangle $(BIN)showme  $(PROTEUS_PREFIX)/bin
 	cp -f triangle.h $(PROTEUS_PREFIX)/include
 
 $(BIN)triangle: $(SRC)triangle.c

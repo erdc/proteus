@@ -1,1 +1,1 @@
-./configure --enable-shared --with-pic --prefix=${PROTEUS_PREFIX}
+./configure --enable-shared --prefix=${PROTEUS_PREFIX}

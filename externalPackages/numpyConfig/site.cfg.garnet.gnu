@@ -56,8 +56,8 @@
 # /usr/local/{lib,include}
 #
 #[DEFAULT]
-#library_dirs = ${TACC_ACML/usr/lib64
-#include_dirs = /usr/include
+#library_dirs = os.getenv('TACC_ACML_INCLUDE')
+#include_dirs = os.getenv('TACC_ACML_LIB')
 
 # Optimized BLAS and LAPACK
 # -------------------------
@@ -72,11 +72,11 @@
 # is important for the BLAS C interface):
 #
 [blas_opt]
-library_dirs = ${TACC_ACML_LIB}
+library_dirs = /opt/acml/4.4.0/gnu64/lib
 libraries = acml
 #
 [lapack_opt]
-library_dirs = ${TACC_ACML_LIB}
+library_dirs = /opt/acml/4.4.0/gnu64/lib
 libraries = acml
 #
 # If your ATLAS was compiled with pthreads, the names of the libraries might be
@@ -131,7 +131,7 @@ libraries = acml
 # lapack_libs = mkl_lapack
 #
 # For 10.*, on 32 bits machines:
-#[mkl]
-#library_dirs = /opt/intel/mkl/10.0.1.014/lib/32/
-#lapack_libs = mkl_lapack
-#mkl_libs = mkl_intel_lp64,mkl_sequential,mkl_core
+# [mkl]
+# library_dirs = /opt/intel/mkl/10.0.1.014/lib/32/
+# lapack_libs = mkl_lapack
+# mkl_libs = mkl, guide

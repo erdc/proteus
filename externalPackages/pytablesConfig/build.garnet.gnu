@@ -1,4 +1,1 @@
-${PROTEUS_PYTHON} setup.py build --hdf5=${PROTEUS_PREFIX} --lflags="-L${PROTEUS_PREFIX}/lib -lsz -lz" 
-
-
-
+python setup.py install --hdf5=${PROTEUS_PREFIX}
