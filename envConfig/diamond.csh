@@ -1,3 +1,4 @@
+#!/bin/csh
 #
 #diamond
 #
