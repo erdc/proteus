@@ -1,0 +1,5 @@
+#!/bin/bash
+unset CC
+unset CXX
+unset LD
+./configure --shared --prefix=${PROTEUS_PREFIX}
