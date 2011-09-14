@@ -3,9 +3,8 @@
 #
 module swap pgi intel
 module swap mvapich openmpi
-module load atlas
+module load gotoblas
 setenv PROTEUS_ARCH ranger.intel
-setenv PATH ${TACC_ATLAS_LIB}:${PATH}
 #
 setenv PROTEUS_PREFIX ${PROTEUS}/${PROTEUS_ARCH}
 setenv PROTEUS_PYTHON ${PROTEUS}/${PROTEUS_ARCH}/bin/python

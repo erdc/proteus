@@ -2,7 +2,7 @@
 #
 #ranger.pgi
 #
-module load acml
+module load gotoblas
 module load git
 setenv PROTEUS_ARCH ranger.pgi
 setenv CC  pgcc
