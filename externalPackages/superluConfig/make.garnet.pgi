@@ -24,7 +24,7 @@ PLAT =
 TMGLIB       = tmglib$(PLAT).a
 SUPERLULIB   = libsuperlu$(PLAT).a
 BLASDEF = -DUSE_VENDOR_BLAS
-BLASLIB = -lblas
+BLASLIB = -lacml
 PREFIX = ${PROTEUS_PREFIX}
 #
 #  The archiver and the flag(s) to use when building archive (library)
@@ -36,9 +36,9 @@ RANLIB       = ranlib
 
 CC           = cc -fPIC
 CFLAGS       = -O2
-FORTRAN	     = f77 -fPIC
+FORTRAN	     = ftn -fPIC
 FFLAGS       = -O2
-LOADER       = f77 -fPIC
+LOADER       = ftn -fPIC
 LOADOPTS     = 
 
 #
