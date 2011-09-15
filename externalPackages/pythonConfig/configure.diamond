@@ -1,1 +1,8 @@
-./configure --prefix=${PROTEUS_PREFIX} CC="${CC} -DPROTEUS_FFI64_HACK"
+./configure --prefix=${PROTEUS_PREFIX} \
+CC="icc -DNDEBUG -DPROTEUS_FFI64_HACK -fp-model precise -fno-strict-aliasing -O3" \
+CXX="icpc -DPROTEUS_FFI64_HACK -DNDEBUG -fp-model precise -fno-strict-aliasing -O3" \
+--with-threads \
+--with-cxx-main="icpc -DPROTEUS_FFI64_HACK -pthread -fp-model precise -fno-strict-aliasing -O3"
+#
+#./configure --prefix=${PROTEUS_PREFIX} --with-pth CC="icc -DPROTEUS_FFI64_HACK -m64 -pthread" \
+#CXX="icpc -DPROTEUS_FFI64_HACK -m64 -pthread" LD="icc -DPROTEUS_FFI64_HACK -m64 -pthread"
