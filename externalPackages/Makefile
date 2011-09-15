@@ -324,7 +324,7 @@ config_numpy:
 	cp -f numpyConfig/site.cfg.${PROTEUS_ARCH} ${NUMPY_VERSION}/site.cfg
 
 build_numpy:
-	cd ${NUMPY_VERSION} && ${PROTEUS_PYTHON} setup.py build > ../build_numpy_progress 2>&1
+	cd ${NUMPY_VERSION} && ${PROTEUS}/externalPackages/numpyConfig/build.numpy.${PROTEUS_ARCH} > ../build_numpy_progress 2>&1
 
 install_numpy:
 	make config_numpy build_numpy

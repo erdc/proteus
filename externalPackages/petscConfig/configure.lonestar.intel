@@ -1,6 +1,6 @@
 ./config/configure.py --with-x=0 --with-pic --with-clanguage=C \
 -download-parmetis=ifneeded \
---with-blas-lapack-lib=[${TACC_MKL_LIB}/libmkl_lapack.so,${TACC_MKL_LIB}/libmkl_intel_lp64.a,${TACC_MKL_LIB}/libmkl_sequential.a,${TACC_MKL_LIB}/libmkl_core.a] \
+--with-blas-lapack-lib=[${TACC_MKL_LIB}/libmkl_lapack.so,${TACC_MKL_LIB}/libmkl_intel_lp64.so,${TACC_MKL_LIB}/libmkl_sequential.so,${TACC_MKL_LIB}/libmkl_core.so] \
 --with-mpiexec=ibrun \
 --download-spooles=ifneeded \
 --download-superlu_dist=ifneeded \
