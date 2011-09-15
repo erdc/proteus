@@ -1,1 +1,1 @@
-${PROTEUS_PYTHON} setup.py build
+${PROTEUS_PYTHON} setup.py build install
