@@ -43,9 +43,6 @@
 [submodule "externalPackages/nose"]
 	path = externalPackages/nose
 	url = git@github.com:erdc-cm/nose.git
-[submodule "externalPackages/mpi4py"]
-	path = externalPackages/mpi4py
-	url = git@github.com:erdc-cm/mpi4py.git
 [submodule "externalPackages/daetk"]
 	path = externalPackages/daetk
 	url = git@github.com:erdc-cm/daetk.git
