@@ -52,3 +52,6 @@
 [submodule "externalPackages/python"]
 	path = externalPackages/python
 	url = git@github.com:erdc-cm/python.git
+[submodule "externalPackages/mpi4py"]
+	path = externalPackages/mpi4py
+	url = git@github.com:erdc-cm/mpi4py.git
