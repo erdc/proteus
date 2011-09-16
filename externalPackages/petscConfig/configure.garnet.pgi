@@ -1,5 +1,5 @@
 ./config/configure.py --prefix=${PROTEUS_PREFIX} --with-pic --with-clanguage=C \
---with-cc=cc --with-cxx=CC --with-fc=ftn --with-mpi-compilers --FFLAGS="-I." \
+--with-cc='cc -noswitcherror' --with-cxx='CC -noswitcherror' --with-fc='ftn -noswitcherror' --with-mpi-compilers --FFLAGS="-I." \
 --with-shared --with-dynamic \
 --with-blas-lapack-lib=acml \
 --download-parmetis=ifneeded \
