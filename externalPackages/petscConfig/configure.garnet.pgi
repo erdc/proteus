@@ -1,7 +1,7 @@
 ./config/configure.py --prefix=${PROTEUS_PREFIX} --with-pic --with-clanguage=C \
 --with-cc=cc --with-cxx=CC --with-fc=ftn --with-mpi-compilers --FFLAGS="-I." \
 --with-shared --with-dynamic \
----with-blas-lapack-dir=/opt/acml/4.4.0/pgi64/lib --with-blas-lapack-lib=acml \
+--with-blas-lapack-lib=acml \
 --download-parmetis=ifneeded \
 --download-spooles=ifneeded \
 --download-superlu_dist=ifneeded
