@@ -317,7 +317,7 @@ newConfig_numpy:
 	cd numpyConfig && cp site.cfg.${PROTEUS_ARCH_OLD} site.cfg.${PROTEUS_ARCH} 
 
 editConfig_numpy:
-	cd numpyConfig && ${EDITOR} site.cfg.${PROTEUS_ARCH}
+	cd numpyConfig && ${EDITOR} site.cfg.${PROTEUS_ARCH} build.numpy.${PROTEUS_ARCH}
 
 config_numpy:
 	echo "numpy has no config step run 'make editConfig_numpy'" > config_numpy_progress 2>&1
@@ -328,8 +328,7 @@ build_numpy:
 
 install_numpy:
 	make config_numpy build_numpy
-	cd ${NUMPY_VERSION} && ${PROTEUS_PYTHON} setup.py install > ../install_numpy_progress 2>&1
-	cat config_numpy_progress build_numpy_progress install_numpy_progress > install_numpy
+	cat config_numpy_progress build_numpy_progress > install_numpy
 
 distclean_numpy:
 	touch install_numpy
