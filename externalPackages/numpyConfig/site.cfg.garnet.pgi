@@ -72,11 +72,11 @@
 # is important for the BLAS C interface):
 #
 [blas_opt]
-library_dirs = /opt/acml/4.4.0/pgi64/lib
+#library_dirs = 
 libraries = acml
 #
 [lapack_opt]
-library_dirs = /opt/acml/4.4.0/pgi64/lib
+#library_dirs =
 libraries = acml
 #
 # If your ATLAS was compiled with pthreads, the names of the libraries might be

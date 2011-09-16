@@ -1,1 +1,1 @@
-${PROTEUS_PYTHON} setup.py config --mpicc=cc --mpicxx=CC
+${PROTEUS_PYTHON} setup.py config --mpicc='cc -noswitcherror' --mpicxx='CC -noswitcherror'
