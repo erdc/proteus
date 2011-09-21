@@ -2668,7 +2668,17 @@ class HamiltonJacobi_DiagonalLesaintRaviart(NF_base):
             self.advectiveNumericalFlux[ci] = False
             self.diffusiveNumericalFlux[ci] = False
             self.HamiltonJacobiNumericalFlux[ci] = True
-        
+    def setDirichletValues(self,ebqe):
+        for ci in range(self.nc):
+            self.ebqe[('u',ci)].flat[:] = ebqe[('u',ci)].flat[:]
+            for (ebNE,k),g,x in zip(self.DOFBoundaryConditionsDictList[ci].keys(),
+                                    self.DOFBoundaryConditionsDictList[ci].values(),
+                                    self.DOFBoundaryPointDictList[ci].values()):
+               self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t)
+        for ci in range(self.nc):
+            for bci in self.periodicBoundaryConditionsDictList[ci].values():
+                self.ebqe[('u',ci)][bci[0]]=ebqe[('u',ci)][bci[1]]
+                self.ebqe[('u',ci)][bci[1]]=ebqe[('u',ci)][bci[0]]
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         for ci in range(self.nc):
             cnumericalFlux.calculateInteriorLesaintRaviartNumericalFlux(self.speedEvaluationType,

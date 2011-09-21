@@ -1,0 +1,1 @@
+./config/configure.py --with-clanguage=C --with-cc="/usr/local/bin/mpicc" --with-cxx="/usr/local/bin/mpicxx" --with-fc="/usr/local/bin/mpif90"  --with-x=0 --with-mpi-compilers --with-dynamic --with-pic --download-parmetis=ifneeded --download-superlu_dist=ifneeded --prefix=${PROTEUS_PREFIX}
