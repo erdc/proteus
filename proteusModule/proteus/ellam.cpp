@@ -6,6 +6,8 @@
 #include <list>
 #include <map>
 #include <algorithm>
+#include <string.h>
+
 #include PROTEUS_LAPACK_H
 /***********************************************************************
 
