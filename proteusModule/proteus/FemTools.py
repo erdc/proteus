@@ -5908,7 +5908,7 @@ class DOFBoundaryConditions:
             def __hash__(self):
                 return hash(tuple(self.p))
             def __eq__(self,other):
-                return  enorm(self.p - other.p) < self.h
+                return  enorm(self.p - other.p) <= self.h
         if getPointwiseBoundaryConditions!=None and femSpace.strongDirichletConditions and not weakDirichletConditions:
             for eN in range(femSpace.elementMaps.mesh.nElements_global):
             # mesh = femSpace.elementMaps.mesh
