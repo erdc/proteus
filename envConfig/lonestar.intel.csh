@@ -8,7 +8,6 @@ setenv CXX icpc
 setenv FC  ifort
 setenv F77 ifort
 setenv F90 ifort
-setenv LD  mpicc
 setenv PROTEUS_ARCH lonestar.intel
 setenv PROTEUS_PREFIX ${PROTEUS}/${PROTEUS_ARCH}
 setenv PROTEUS_PYTHON ${PROTEUS_PREFIX}/bin/python

@@ -1,1 +1,1 @@
-./configure --enable-shared --prefix=${PROTEUS_PREFIX}
+CC='icc -gcc' CFLAGS='-fPIC' CXX='icpc -gcc' CXXFLAGS='-fPIC' ./configure --enable-shared --with-pic --prefix=${PROTEUS_PREFIX}
