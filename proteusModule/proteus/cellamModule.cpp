@@ -1694,6 +1694,41 @@ static PyObject* cellam_volume123(PyObject* self,
 		       volume);
 
 }
+static PyObject* cellam_nodalProjection123(PyObject* self,
+					   PyObject* args)
+{
+  //input
+  PyObject * elementNodes_offset,
+    * elementNodesArray,
+    * elementVolumesArray,
+    * c_ele,
+    * nodeStar_volume,
+    * c_nodal;
+  int calculateNodeStarVolume;
+  if(!PyArg_ParseTuple(args,
+                       "iOOOOOO",
+		       &calculateNodeStarVolume,
+		       &elementNodes_offset,
+		       &elementNodesArray,
+		       &elementVolumesArray,
+		       &c_ele,
+		       &nodeStar_volume,
+		       &c_nodal))
+    return NULL;
+  nodalProjection123(calculateNodeStarVolume,
+		     SHAPE(c_ele)[0],
+		     SHAPE(c_nodal)[0],
+		     IDATA(elementNodes_offset),
+		     IDATA(elementNodesArray),
+		     DDATA(elementVolumesArray),
+		     DDATA(c_ele),
+		     DDATA(nodeStar_volume),
+		     DDATA(c_nodal));
+
+  Py_INCREF(Py_None); 
+  return Py_None;
+
+}
 static PyMethodDef cellamMethods[] = {
  { "updateOldMass_weak",
     cellam_updateOldMass_weak,
@@ -1812,6 +1847,10 @@ static PyMethodDef cellamMethods[] = {
    cellam_volume123,
    METH_VARARGS, 
    "compute volume for simplex, quadrilateral, triangular prism, or hexahedron"},
+ { "nodalProjection123",
+   cellam_nodalProjection123,
+   METH_VARARGS, 
+   "mass-lumped L2 projection for simplex, quadrilateral, triangular prism, or hexahedron"},
  { NULL,NULL,0,NULL}
 };
 
