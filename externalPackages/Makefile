@@ -6,7 +6,11 @@
 #
 include versionsConfig/versions.${PROTEUS_ARCH}
 
-all: install
+all: install pip
+
+pip:
+	${PROTEUS_PYTHON} distribute_setup.py
+	easy_install pip
 
 install: install_core
 
@@ -317,7 +321,7 @@ newConfig_numpy:
 	cd numpyConfig && cp site.cfg.${PROTEUS_ARCH_OLD} site.cfg.${PROTEUS_ARCH} 
 
 editConfig_numpy:
-	cd numpyConfig && ${EDITOR} site.cfg.${PROTEUS_ARCH}
+	cd numpyConfig && ${EDITOR} site.cfg.${PROTEUS_ARCH} build.numpy.${PROTEUS_ARCH}
 
 config_numpy:
 	echo "numpy has no config step run 'make editConfig_numpy'" > config_numpy_progress 2>&1
@@ -328,8 +332,7 @@ build_numpy:
 
 install_numpy:
 	make config_numpy build_numpy
-	cd ${NUMPY_VERSION} && ${PROTEUS_PYTHON} setup.py install > ../install_numpy_progress 2>&1
-	cat config_numpy_progress build_numpy_progress install_numpy_progress > install_numpy
+	cat config_numpy_progress build_numpy_progress > install_numpy
 
 distclean_numpy:
 	touch install_numpy
@@ -549,3 +552,74 @@ distclean_sphinx:
 	touch install_sphinx
 	mv -f install_sphinx install_sphinx_last
 	cd ${SPHINX_VERSION} && make -k clean
+
+#sip
+newConfig_sip:
+	echo "no sip customization implemented"
+
+editConfig_sip:
+	echo "no sip customization implemented"
+
+config_sip:
+	cd ${SIP_VERSION} && ${PROTEUS_PYTHON} configure.py > ../config_sip_progress 2>&1
+
+build_sip:
+	cd ${SIP_VERSION} && make > ../build_sip_progress 2>&1
+
+install_sip:
+	make config_sip build_sip
+	cd ${SIP_VERSION} && make install > ../install_sip_progress 2>&1
+	cat config_sip_progress build_sip_progress install_sip_progress > install_sip
+
+distclean_sip:
+	touch install_sip
+	mv -f install_sip install_sip_last
+	cd ${SIP_VERSION} && make -k clean
+
+#qt
+newConfig_qt:
+	echo "no qt customization implemented"
+
+editConfig_qt:
+	echo "no qt customization implemented"
+
+config_qt:
+	cd ${QT_VERSION} && echo "yes\n" > yes.txt && ${PROTEUS_PYTHON} configure.py < yes.txt > ../config_qt_progress 2>&1 && rm yes.txt
+
+build_qt:
+	cd ${QT_VERSION} && make > ../build_qt_progress 2>&1
+
+install_qt: install_sip
+	make config_qt build_qt
+	cd ${QT_VERSION} && make install > ../install_qt_progress 2>&1
+	cat config_qt_progress build_qt_progress install_qt_progress > install_qt
+
+distclean_qt:
+	touch install_qt
+	mv -f install_qt install_qt_last
+	cd ${QT_VERSION} && make -k clean
+
+#ipython
+newConfig_ipython:
+	echo "no ipython customization implemented"
+
+editConfig_ipython:
+	echo "no ipython customization implemented"
+
+config_ipython:
+	pip install readline pyzmq pygments tornado pexpect Sphinx
+	cd ${IPYTHON_VERSION} && ${PROTEUS_PYTHON} setup.py config > ../config_ipython_progress 2>&1
+
+build_ipython:
+	cd ${IPYTHON_VERSION} && ${PROTEUS_PYTHON} setup.py build > ../build_ipython_progress 2>&1
+
+install_ipython: install_qt install_matplotlib
+	make config_ipython build_ipython
+	cd ${IPYTHON_VERSION} && ${PROTEUS_PYTHON} setup.py install > ../install_ipython_progress 2>&1
+	cat config_ipython_progress build_ipython_progress install_ipython_progress > install_ipython
+
+distclean_ipython:
+	touch install_ipython
+	mv -f install_ipython install_ipython_last
+	cd ${IPYTHON_VERSION} && make -k clean
+
