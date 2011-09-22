@@ -21,6 +21,7 @@ typedef struct
   PyObject_HEAD
   double* array;
   Vec v;
+  PyArrayObject* numpy_array;
 } ParVec;
 
 
@@ -50,6 +51,8 @@ ParVec_init(ParVec *self, PyObject *args, PyObject *kwds)
 		       &useBlockVec))
     
     return -1;
+  self->numpy_array = ((PyArrayObject *)array);
+  Py_INCREF(self->numpy_array);
   self->array = DDATA(array);
   if (nghost >= 0)
     {
@@ -101,8 +104,12 @@ ParVec_init(ParVec *self, PyObject *args, PyObject *kwds)
 static  void
 ParVec_dealloc(ParVec* self)
 {
-  VecRestoreArray(self->v,&self->array);
-  VecDestroy(self->v);
+  if (self->numpy_array != NULL)//shouldn't be NULL, here in any case
+    {
+      VecRestoreArray(self->v,&self->array);
+      VecDestroy(self->v);
+      Py_DECREF(self->numpy_array);
+    }
 }
 
 static PyObject*

@@ -730,5 +730,15 @@ double volume123(int nSpace, //space dimension
 		 int nNodes_element, //number of nodes in this element
 		 const int* elementNodes_element, //element--> global node table for this element 
 		 const double* nodeArray);
+
+void nodalProjection123(int calculateNodeStar_volume,
+			int nElements_global,
+			int nNodes_global,
+			const int* elementNodes_offset,
+			const int* elementNodesArray,
+			const double* elementVolumesArray,
+			const double* c_ele,
+			double * nodeStar_volume, 
+			double * c_nodal);
 }//extern C
 #endif 

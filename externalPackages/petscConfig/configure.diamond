@@ -1,6 +1,7 @@
 ./config/configure.py --prefix=${PROTEUS_PREFIX} --with-pic \
 --with-mpi-compilers \
---with-blas-lapack-lib=[/opt/intel/cmkl/10.2.0.013/lib/em64t/libmkl_lapack.so,/opt/intel/cmkl/10.2.0.013/lib/em64t/libmkl_intel_lp64.a,/opt/intel/cmkl/10.2.0.013/lib/em64t/libmkl_sequential.a,/opt/intel/cmkl/10.2.0.013/lib/em64t/libmkl_core.a]  \
+--with-cc=mpicc --with-cxx=mpiCC --with-fc=mpif90 \
+--with-blas-lapack-lib=[/opt/intel/cmkl/10.2.0.013/lib/em64t/libmkl_lapack.so,/opt/intel/cmkl/10.2.0.013/lib/em64t/libmkl_intel_lp64.so,/opt/intel/cmkl/10.2.0.013/lib/em64t/libmkl_sequential.so,/opt/intel/cmkl/10.2.0.013/lib/em64t/libmkl_core.so]  \
 --with-clanguage=C \
 --download-parmetis=ifneeded \
---download-superlu_dist=ifneeded \
+--download-superlu_dist=ifneeded 
