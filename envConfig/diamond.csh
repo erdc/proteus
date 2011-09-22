@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/tcsh
 #
 #diamond
 #
@@ -18,7 +18,5 @@ setenv FCFLAGS "-fPIC"
 setenv F77FLAGS "-fPIC"
 setenv F90FLAGS "-fPIC"
 setenv FFLAGS "-fPIC"
-setenv LD "mpicxx"
-setenv LDFLAGS "-lirc"
 setenv PATH .:${PROTEUS_PREFIX}/bin:${PATH}
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:${PROTEUS_PREFIX}/lib
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}/lib:${PROTEUS_PREFIX}/lib

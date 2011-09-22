@@ -6,6 +6,8 @@
 #include <list>
 #include <map>
 #include <algorithm>
+#include <string.h>
+
 #include PROTEUS_LAPACK_H
 /***********************************************************************
 
@@ -3144,5 +3146,49 @@ double volume123(int nSpace, //space dimension
       return volume;
     }
 }
-
+extern "C"
+void nodalProjection123(int calculateNodeStarVolume,
+			int nElements_global,
+			int nNodes_global,
+			const int* elementNodes_offset,
+			const int* elementNodesArray,
+			const double* elementVolumesArray,
+			const double* c_ele,
+			double * nodeStarVolume, 
+			double * c_nodal)
+{
+  //mass-lumped L2 projection of element-wise constant concentration
+  //loop through all the elements and accumulate that elements contribution to 
+  //all of its nodes
+  memset(c_nodal,0,sizeof(double)*nNodes_global);
+  if (calculateNodeStarVolume > 0)
+    {
+      memset(nodeStarVolume,0,sizeof(double)*nNodes_global);
+      for (int eN=0; eN < nElements_global; eN++)
+	{
+	  const int nNodes_element = elementNodes_offset[eN+1] - elementNodes_offset[eN];
+	  const double weight = elementVolumesArray[eN]/double(nNodes_element);
+	  for (int i=elementNodes_offset[eN]; i < elementNodes_offset[eN+1]; i++)
+	    {
+	      const int nN = elementNodesArray[i];
+	      nodeStarVolume[nN] += weight;
+	    }
+	}
+    }
+  
+  for (int eN=0; eN < nElements_global; eN++)
+    {
+      const int nNodes_element = elementNodes_offset[eN+1] - elementNodes_offset[eN];
+      const double weight = elementVolumesArray[eN]/double(nNodes_element);
+      for (int i=elementNodes_offset[eN]; i < elementNodes_offset[eN+1]; i++)
+	{
+	  const int nN = elementNodesArray[i];
+	  c_nodal[nN] += weight*c_ele[eN];
+	}
+    }
+  for (int nN = 0; nN < nNodes_global; nN++)
+    {
+      c_nodal[nN] /= nodeStarVolume[nN];
+    }
+}
 }//namespace ELLAM
