@@ -4662,6 +4662,34 @@ cfemIntegralsUpdatePotential_MixedForm_weak(PyObject* self,
 }
 
 static PyObject*
+cfemIntegralsUpdatePotential_MixedForm_weak_gwvd(PyObject* self,
+                                            PyObject* args)
+{ 
+  double epsilon;
+  PyObject *phi, *w_dV, *mf,*grad_w_dV,*b;
+  if(!PyArg_ParseTuple(args,"OOOdOO",
+		       &phi,
+                       &grad_w_dV,
+		       &w_dV,
+		       &epsilon,
+		       &mf,
+                       &b))
+    return NULL;
+  updatePotential_MixedForm_weak_gwvd(SHAPE(grad_w_dV)[0],
+                                 SHAPE(grad_w_dV)[1],
+                                 SHAPE(grad_w_dV)[2],
+                                 SHAPE(grad_w_dV)[3],
+				 epsilon,
+                                 DDATA(phi),
+				 DDATA(w_dV),
+                                 DDATA(grad_w_dV),
+				 DDATA(b),   
+				 DDATA(mf));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyObject*
 cfemIntegralsUpdatePotential_MixedForm_weakJacobian(PyObject* self,
                                                     PyObject* args)
 { 
@@ -4985,13 +5013,14 @@ static PyObject* cfemIntegralsUpdateDiffusion_MixedForm_weak(PyObject* self,
 static PyObject* cfemIntegralsUpdateDiffusion_MixedForm_weak_sd(PyObject* self, 
                                                                 PyObject* args)
 {
-  PyObject *a,*qV,*grad_w_dV,*residual,*rowptr,*colind;
-  if(!PyArg_ParseTuple(args,"OOOOOO",
+  PyObject *a,*qV,*grad_w_dV,*residual,*rowptr,*colind,*velocity;
+  if(!PyArg_ParseTuple(args,"OOOOOOO",
                        &rowptr,
                        &colind,
                        &a,
                        &qV,
                        &grad_w_dV,
+		       &velocity,
                        &residual))
     return NULL;
   updateDiffusion_MixedForm_weak_sd(SHAPE(grad_w_dV)[0],
@@ -5003,6 +5032,7 @@ static PyObject* cfemIntegralsUpdateDiffusion_MixedForm_weak_sd(PyObject* self,
                                     DDATA(a),
                                     DDATA(qV),
                                     DDATA(grad_w_dV),
+				    DDATA(velocity),
                                     DDATA(residual));
   Py_INCREF(Py_None);
   return Py_None;
@@ -6486,6 +6516,10 @@ static PyMethodDef cfemIntegralsMethods[] = {
     cfemIntegralsUpdatePotential_MixedForm_weak,
     METH_VARARGS, 
     "Update the element integral for the mixed form of diffusion"},
+ { "updatePotential_MixedForm_weak_gwvd",
+    cfemIntegralsUpdatePotential_MixedForm_weak_gwvd,
+    METH_VARARGS, 
+    "Update the element integral for the mixed form of diffusion for variable density flow LDG Method"},
   { "updateExteriorElementBoundary_MixedForm_weakJacobian",
     cfemIntegralsUpdateExteriorElementBoundary_MixedForm_weakJacobian,
     METH_VARARGS, 
