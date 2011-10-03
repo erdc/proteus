@@ -1433,6 +1433,44 @@ cnumericalFluxCalculateInteriorNumericalDiffusiveFlux(PyObject* self,
                                                      PyObject* args)
 {
   PyObject *interiorElementBoundaries,*elementBoundaryElements,*elementBoundaryLocalElementBoundaries,*n,*a,*grad_phi,*u,*penalty,*diffusiveFlux;
+  int scale_penalty = 0;
+  double penalty_floor = 0.0;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOO|id",
+                       &interiorElementBoundaries,
+                       &elementBoundaryElements,
+                       &elementBoundaryLocalElementBoundaries,
+                       &n,
+                       &a,
+                       &grad_phi,
+                       &u,
+                       &penalty,
+                       &diffusiveFlux,
+                       &scale_penalty,
+                       &penalty_floor))
+    return NULL;
+  calculateInteriorNumericalDiffusiveFlux(scale_penalty,penalty_floor,
+                                          SHAPE(interiorElementBoundaries)[0],
+                                          SHAPE(grad_phi)[1],
+                                          SHAPE(grad_phi)[2],
+                                          SHAPE(grad_phi)[3],
+                                          IDATA(interiorElementBoundaries),
+                                          IDATA(elementBoundaryElements),
+                                          IDATA(elementBoundaryLocalElementBoundaries),
+                                          DDATA(n),
+                                          DDATA(a),
+                                          DDATA(grad_phi),
+                                          DDATA(u),
+                                          DDATA(penalty),
+                                          DDATA(diffusiveFlux));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+/*
+static PyObject*
+cnumericalFluxCalculateInteriorNumericalDiffusiveFlux(PyObject* self, 
+                                                     PyObject* args)
+{
+  PyObject *interiorElementBoundaries,*elementBoundaryElements,*elementBoundaryLocalElementBoundaries,*n,*a,*grad_phi,*u,*penalty,*diffusiveFlux;
   if(!PyArg_ParseTuple(args,"OOOOOOOOO",
                        &interiorElementBoundaries,
                        &elementBoundaryElements,
@@ -1460,7 +1498,50 @@ cnumericalFluxCalculateInteriorNumericalDiffusiveFlux(PyObject* self,
   Py_INCREF(Py_None);
   return Py_None;
 }
+*/
 
+static PyObject*
+cnumericalFluxCalculateInteriorNumericalDiffusiveFlux_sd(PyObject* self, 
+							 PyObject* args)
+{
+  PyObject *interiorElementBoundaries,*elementBoundaryElements,*elementBoundaryLocalElementBoundaries,*n,*a,*grad_phi,*u,*penalty,*diffusiveFlux,*rowptr,*colind;
+  int scale_penalty = 0;
+  double penalty_floor = 0.0;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOOO|id",
+		       &rowptr,
+		       &colind,
+                       &interiorElementBoundaries,
+                       &elementBoundaryElements,
+                       &elementBoundaryLocalElementBoundaries,
+                       &n,
+                       &a,
+                       &grad_phi,
+                       &u,
+                       &penalty,
+                       &diffusiveFlux,
+                       &scale_penalty,
+                       &penalty_floor))
+    return NULL;
+  calculateInteriorNumericalDiffusiveFlux_sd(scale_penalty,penalty_floor,
+                                             SHAPE(interiorElementBoundaries)[0],
+					     SHAPE(grad_phi)[1],
+					     SHAPE(grad_phi)[2],
+					     SHAPE(grad_phi)[3],
+					     IDATA(rowptr),
+					     IDATA(colind),
+					     IDATA(interiorElementBoundaries),
+					     IDATA(elementBoundaryElements),
+					     IDATA(elementBoundaryLocalElementBoundaries),
+					     DDATA(n),
+					     DDATA(a),
+					     DDATA(grad_phi),
+					     DDATA(u),
+					     DDATA(penalty),
+					     DDATA(diffusiveFlux));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+/*
 static PyObject*
 cnumericalFluxCalculateInteriorNumericalDiffusiveFlux_sd(PyObject* self, 
 							 PyObject* args)
@@ -1497,7 +1578,55 @@ cnumericalFluxCalculateInteriorNumericalDiffusiveFlux_sd(PyObject* self,
   Py_INCREF(Py_None);
   return Py_None;
 }
+*/
 
+static PyObject*
+cnumericalFluxUpdateInteriorNumericalDiffusiveFluxJacobian(PyObject* self, 
+                                                          PyObject* args)
+{
+  PyObject *interiorElementBoundaries,*elementBoundaryElements,*elementBoundaryLocalElementBoundaries,*l2g,*n,*a,*da,*grad_phi,*dphi,*v,*grad_v,*penalty,*fluxJacobian;
+  int scale_penalty = 0;
+  double penalty_floor = 0.0;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOOOOO|id",
+                       &l2g,
+                       &interiorElementBoundaries,
+                       &elementBoundaryElements,
+                       &elementBoundaryLocalElementBoundaries,
+                       &n,
+                       &a,
+                       &da,
+                       &grad_phi,
+                       &dphi,
+                       &v,
+                       &grad_v,
+                       &penalty,
+                       &fluxJacobian,
+                       &scale_penalty,
+                       &penalty_floor))
+    return NULL;
+  updateInteriorNumericalDiffusiveFluxJacobian(scale_penalty,penalty_floor,
+                                               SHAPE(interiorElementBoundaries)[0],
+                                               SHAPE(grad_v)[1],
+                                               SHAPE(grad_v)[2],
+                                               SHAPE(grad_v)[3],
+                                               SHAPE(grad_v)[4],
+                                               IDATA(l2g),
+                                               IDATA(interiorElementBoundaries),
+                                               IDATA(elementBoundaryElements),
+                                               IDATA(elementBoundaryLocalElementBoundaries),
+                                               DDATA(n),
+                                               DDATA(a),
+                                               DDATA(da),
+                                               DDATA(grad_phi),
+                                               DDATA(dphi),
+                                               DDATA(v),
+                                               DDATA(grad_v),
+                                               DDATA(penalty),
+                                               DDATA(fluxJacobian));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+/*
 static PyObject*
 cnumericalFluxUpdateInteriorNumericalDiffusiveFluxJacobian(PyObject* self, 
                                                           PyObject* args)
@@ -1539,7 +1668,59 @@ cnumericalFluxUpdateInteriorNumericalDiffusiveFluxJacobian(PyObject* self,
   Py_INCREF(Py_None);
   return Py_None;
 }
+*/
 
+static PyObject*
+cnumericalFluxUpdateInteriorNumericalDiffusiveFluxJacobian_sd(PyObject* self, 
+							      PyObject* args)
+{
+  PyObject *interiorElementBoundaries,*elementBoundaryElements,*elementBoundaryLocalElementBoundaries,*l2g,*n,*a,*da,*grad_phi,*dphi,*v,*grad_v,*penalty,*fluxJacobian,*rowptr,*colind;
+  int scale_penalty = 0;
+  double penalty_floor = 0.0;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOOOOOOO|id",
+		       &rowptr,
+		       &colind,
+                       &l2g,
+                       &interiorElementBoundaries,
+                       &elementBoundaryElements,
+                       &elementBoundaryLocalElementBoundaries,
+                       &n,
+                       &a,
+                       &da,
+                       &grad_phi,
+                       &dphi,
+                       &v,
+                       &grad_v,
+                       &penalty,
+                       &fluxJacobian,
+                       &scale_penalty,
+                       &penalty_floor))
+    return NULL;
+  updateInteriorNumericalDiffusiveFluxJacobian_sd(scale_penalty,penalty_floor,
+                                                  SHAPE(interiorElementBoundaries)[0],
+						  SHAPE(grad_v)[1],
+						  SHAPE(grad_v)[2],
+						  SHAPE(grad_v)[3],
+						  SHAPE(grad_v)[4],
+						  IDATA(rowptr),
+						  IDATA(colind),
+						  IDATA(l2g),
+						  IDATA(interiorElementBoundaries),
+						  IDATA(elementBoundaryElements),
+						  IDATA(elementBoundaryLocalElementBoundaries),
+						  DDATA(n),
+						  DDATA(a),
+						  DDATA(da),
+						  DDATA(grad_phi),
+						  DDATA(dphi),
+						  DDATA(v),
+						  DDATA(grad_v),
+						  DDATA(penalty),
+						  DDATA(fluxJacobian));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+/*
 static PyObject*
 cnumericalFluxUpdateInteriorNumericalDiffusiveFluxJacobian_sd(PyObject* self, 
 							      PyObject* args)
@@ -1585,7 +1766,79 @@ cnumericalFluxUpdateInteriorNumericalDiffusiveFluxJacobian_sd(PyObject* self,
   Py_INCREF(Py_None);
   return Py_None;
 }
-
+*/
+static PyObject*
+cnumericalFluxCalculateExteriorNumericalDiffusiveFlux(PyObject* self, 
+                                                     PyObject* args)
+{
+  PyObject *exteriorElementBoundaries,*elementBoundaryElements,*elementBoundaryLocalElementBoundaries,*isDOFBoundary,*n,*bc_a,*bc_grad_phi,*bc_u,*a,*grad_phi,*u,*penalty,*diffusiveFlux;
+  int scale_penalty = 0;
+  double penalty_floor = 0.0;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOOOOO|id",
+                       &exteriorElementBoundaries,
+                       &elementBoundaryElements,
+                       &elementBoundaryLocalElementBoundaries,
+                       &isDOFBoundary,
+                       &n,
+                       &bc_a,
+                       &bc_grad_phi,
+                       &bc_u,
+                       &a,
+                       &grad_phi,
+                       &u,
+                       &penalty,
+                       &diffusiveFlux,
+                       &scale_penalty,
+                       &penalty_floor))
+    return NULL;
+  if (ND(grad_phi) > 3)
+    {
+      assert(ND(grad_phi) == 4);
+      calculateExteriorNumericalDiffusiveFlux(scale_penalty,penalty_floor,
+                                              SHAPE(exteriorElementBoundaries)[0],
+					      SHAPE(grad_phi)[1],
+					      SHAPE(grad_phi)[2],
+					      SHAPE(grad_phi)[3],
+					      IDATA(exteriorElementBoundaries),
+					      IDATA(elementBoundaryElements),
+					      IDATA(elementBoundaryLocalElementBoundaries),
+					      IDATA(isDOFBoundary),
+					      DDATA(n),
+					      DDATA(bc_a),
+					      DDATA(bc_grad_phi),
+					      DDATA(bc_u),
+					      DDATA(a),
+					      DDATA(grad_phi),
+					      DDATA(u),
+					      DDATA(penalty),
+					      DDATA(diffusiveFlux));
+    }
+  else
+    {
+      assert(ND(grad_phi) == 3);
+      calculateGlobalExteriorNumericalDiffusiveFlux(scale_penalty,penalty_floor,
+                                                    SHAPE(exteriorElementBoundaries)[0],
+						    SHAPE(grad_phi)[1],
+						    SHAPE(grad_phi)[2],
+						    IDATA(exteriorElementBoundaries),
+						    IDATA(elementBoundaryElements),
+						    IDATA(elementBoundaryLocalElementBoundaries),
+						    IDATA(isDOFBoundary),
+						    DDATA(n),
+						    DDATA(bc_a),
+						    DDATA(bc_grad_phi),
+						    DDATA(bc_u),
+						    DDATA(a),
+						    DDATA(grad_phi),
+						    DDATA(u),
+						    DDATA(penalty),
+						    DDATA(diffusiveFlux));
+ 
+    }
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+/*
 static PyObject*
 cnumericalFluxCalculateExteriorNumericalDiffusiveFlux(PyObject* self, 
                                                      PyObject* args)
@@ -1651,7 +1904,86 @@ cnumericalFluxCalculateExteriorNumericalDiffusiveFlux(PyObject* self,
   Py_INCREF(Py_None);
   return Py_None;
 }
+*/
 
+static PyObject*
+cnumericalFluxCalculateExteriorNumericalDiffusiveFlux_sd(PyObject* self, 
+							 PyObject* args)
+{
+  PyObject *exteriorElementBoundaries,*elementBoundaryElements,*elementBoundaryLocalElementBoundaries,*isDOFBoundary,*n,*bc_a,*bc_grad_phi,*bc_u,*a,*grad_phi,*u,*penalty,*diffusiveFlux,*rowptr,*colind;
+  int scale_penalty = 0;
+  double penalty_floor = 0.0;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOOOOOOO|id",
+		       &rowptr,
+		       &colind,
+                       &exteriorElementBoundaries,
+                       &elementBoundaryElements,
+                       &elementBoundaryLocalElementBoundaries,
+                       &isDOFBoundary,
+                       &n,
+                       &bc_a,
+                       &bc_grad_phi,
+                       &bc_u,
+                       &a,
+                       &grad_phi,
+                       &u,
+                       &penalty,
+                       &diffusiveFlux,
+                       &scale_penalty,
+                       &penalty_floor))
+    return NULL;
+  if (ND(grad_phi) > 3)
+    {
+      assert(ND(grad_phi) == 4);
+      calculateExteriorNumericalDiffusiveFlux_sd(scale_penalty,penalty_floor,
+                                                 SHAPE(exteriorElementBoundaries)[0],
+						 SHAPE(grad_phi)[1],
+						 SHAPE(grad_phi)[2],
+						 SHAPE(grad_phi)[3],
+						 IDATA(rowptr),
+						 IDATA(colind),
+						 IDATA(exteriorElementBoundaries),
+						 IDATA(elementBoundaryElements),
+						 IDATA(elementBoundaryLocalElementBoundaries),
+						 IDATA(isDOFBoundary),
+						 DDATA(n),
+						 DDATA(bc_a),
+						 DDATA(bc_grad_phi),
+						 DDATA(bc_u),
+						 DDATA(a),
+						 DDATA(grad_phi),
+						 DDATA(u),
+						 DDATA(penalty),
+						 DDATA(diffusiveFlux));
+    }
+  else
+    {
+      assert(ND(grad_phi) == 3);
+      calculateGlobalExteriorNumericalDiffusiveFlux_sd(scale_penalty,penalty_floor,
+                                                       SHAPE(exteriorElementBoundaries)[0],
+						       SHAPE(grad_phi)[1],
+						       SHAPE(grad_phi)[2],
+						       IDATA(rowptr),
+						       IDATA(colind),
+						       IDATA(exteriorElementBoundaries),
+						       IDATA(elementBoundaryElements),
+						       IDATA(elementBoundaryLocalElementBoundaries),
+						       IDATA(isDOFBoundary),
+						       DDATA(n),
+						       DDATA(bc_a),
+						       DDATA(bc_grad_phi),
+						       DDATA(bc_u),
+						       DDATA(a),
+						       DDATA(grad_phi),
+						       DDATA(u),
+						       DDATA(penalty),
+						       DDATA(diffusiveFlux));
+ 
+    }
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+/*
 static PyObject*
 cnumericalFluxCalculateExteriorNumericalDiffusiveFlux_sd(PyObject* self, 
 							 PyObject* args)
@@ -1723,7 +2055,7 @@ cnumericalFluxCalculateExteriorNumericalDiffusiveFlux_sd(PyObject* self,
   Py_INCREF(Py_None);
   return Py_None;
 }
-
+*/
 static PyObject*
 cnumericalFluxCalculateExteriorNumericalDiffusiveFlux_free(PyObject* self, 
                                                      PyObject* args)
@@ -1862,7 +2194,84 @@ cnumericalFluxCalculateExteriorNumericalDiffusiveFlux_free_sd(PyObject* self,
   return Py_None;
 }
 
+
 static PyObject*
+cnumericalFluxUpdateExteriorNumericalDiffusiveFluxJacobian(PyObject* self, 
+                                                          PyObject* args)
+{
+  PyObject *exteriorElementBoundaries,*elementBoundaryElements,*elementBoundaryLocalElementBoundaries,*l2g,*isDOFBoundary,*n,*a,*da,*grad_phi,*dphi,*v,*grad_v,*penalty,*fluxJacobian;
+  int scale_penalty = 0;
+  double penalty_floor = 0.0;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOOOOOO|id",
+                       &l2g,
+                       &exteriorElementBoundaries,
+                       &elementBoundaryElements,
+                       &elementBoundaryLocalElementBoundaries,
+                       &isDOFBoundary,
+                       &n,
+                       &a,
+                       &da,
+                       &grad_phi,
+                       &dphi,
+                       &v,
+                       &grad_v,
+                       &penalty,
+                       &fluxJacobian,
+                       &scale_penalty,
+                       &penalty_floor))
+    return NULL;
+  if (ND(grad_v) > 4)
+    {
+      assert(ND(grad_v) == 5);
+      updateExteriorNumericalDiffusiveFluxJacobian(scale_penalty,penalty_floor,
+                                                   SHAPE(exteriorElementBoundaries)[0],
+						   SHAPE(grad_v)[1],
+						   SHAPE(grad_v)[2],
+						   SHAPE(grad_v)[3],
+						   SHAPE(grad_v)[4],
+						   IDATA(l2g),
+						   IDATA(exteriorElementBoundaries),
+						   IDATA(elementBoundaryElements),
+						   IDATA(elementBoundaryLocalElementBoundaries),
+						   IDATA(isDOFBoundary),
+						   DDATA(n),
+						   DDATA(a),
+						   DDATA(da),
+						   DDATA(grad_phi),
+						   DDATA(dphi),
+						   DDATA(v),
+						   DDATA(grad_v),
+						   DDATA(penalty),
+						   DDATA(fluxJacobian));
+    }
+  else
+    {
+      assert(ND(grad_v) == 4);
+      updateGlobalExteriorNumericalDiffusiveFluxJacobian(scale_penalty,penalty_floor,
+                                                         SHAPE(exteriorElementBoundaries)[0],
+							 SHAPE(grad_v)[1],
+							 SHAPE(grad_v)[2],
+							 SHAPE(grad_v)[3],
+							 IDATA(l2g),
+							 IDATA(exteriorElementBoundaries),
+							 IDATA(elementBoundaryElements),
+							 IDATA(elementBoundaryLocalElementBoundaries),
+							 IDATA(isDOFBoundary),
+							 DDATA(n),
+							 DDATA(a),
+							 DDATA(da),
+							 DDATA(grad_phi),
+							 DDATA(dphi),
+							 DDATA(v),
+							 DDATA(grad_v),
+							 DDATA(penalty),
+							 DDATA(fluxJacobian));
+    }
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+/*static PyObject*
 cnumericalFluxUpdateExteriorNumericalDiffusiveFluxJacobian(PyObject* self, 
                                                           PyObject* args)
 {
@@ -1931,7 +2340,91 @@ cnumericalFluxUpdateExteriorNumericalDiffusiveFluxJacobian(PyObject* self,
   Py_INCREF(Py_None);
   return Py_None;
 }
+*/
 
+static PyObject*
+cnumericalFluxUpdateExteriorNumericalDiffusiveFluxJacobian_sd(PyObject* self, 
+							      PyObject* args)
+{
+  PyObject *exteriorElementBoundaries,*elementBoundaryElements,*elementBoundaryLocalElementBoundaries,*l2g,*isDOFBoundary,*n,*a,*da,*grad_phi,*dphi,*v,*grad_v,*penalty,*fluxJacobian,*rowptr,*colind;
+  int scale_penalty = 0;
+  double penalty_floor = 0.0;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOOOOOOOO|id",
+		       &rowptr,
+		       &colind,
+                       &l2g,
+                       &exteriorElementBoundaries,
+                       &elementBoundaryElements,
+                       &elementBoundaryLocalElementBoundaries,
+                       &isDOFBoundary,
+                       &n,
+                       &a,
+                       &da,
+                       &grad_phi,
+                       &dphi,
+                       &v,
+                       &grad_v,
+                       &penalty,
+                       &fluxJacobian,
+                       &scale_penalty,
+                       &penalty_floor))
+    return NULL;
+  if (ND(grad_v) > 4)
+    {
+      assert(ND(grad_v) == 5);
+      updateExteriorNumericalDiffusiveFluxJacobian_sd(scale_penalty,penalty_floor,
+                                                      SHAPE(exteriorElementBoundaries)[0],
+						      SHAPE(grad_v)[1],
+						      SHAPE(grad_v)[2],
+						      SHAPE(grad_v)[3],
+						      SHAPE(grad_v)[4],
+						      IDATA(rowptr),
+						      IDATA(colind),
+						      IDATA(l2g),
+						      IDATA(exteriorElementBoundaries),
+						      IDATA(elementBoundaryElements),
+						      IDATA(elementBoundaryLocalElementBoundaries),
+						      IDATA(isDOFBoundary),
+						      DDATA(n),
+						      DDATA(a),
+						      DDATA(da),
+						      DDATA(grad_phi),
+						      DDATA(dphi),
+						      DDATA(v),
+						      DDATA(grad_v),
+						      DDATA(penalty),
+						      DDATA(fluxJacobian));
+    }
+  else
+    {
+      assert(ND(grad_v) == 4);
+      updateGlobalExteriorNumericalDiffusiveFluxJacobian_sd(scale_penalty,penalty_floor,
+                                                            SHAPE(exteriorElementBoundaries)[0],
+							    SHAPE(grad_v)[1],
+							    SHAPE(grad_v)[2],
+							    SHAPE(grad_v)[3],
+							    IDATA(rowptr),
+							    IDATA(colind),
+							    IDATA(l2g),
+							    IDATA(exteriorElementBoundaries),
+							    IDATA(elementBoundaryElements),
+							    IDATA(elementBoundaryLocalElementBoundaries),
+							    IDATA(isDOFBoundary),
+							    DDATA(n),
+							    DDATA(a),
+							    DDATA(da),
+							    DDATA(grad_phi),
+							    DDATA(dphi),
+							    DDATA(v),
+							    DDATA(grad_v),
+							    DDATA(penalty),
+							    DDATA(fluxJacobian));
+    }
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+/* 
 static PyObject*
 cnumericalFluxUpdateExteriorNumericalDiffusiveFluxJacobian_sd(PyObject* self, 
 							      PyObject* args)
@@ -2007,6 +2500,7 @@ cnumericalFluxUpdateExteriorNumericalDiffusiveFluxJacobian_sd(PyObject* self,
   Py_INCREF(Py_None);
   return Py_None;
 }
+*/
 
 static PyObject*
 cnumericalFluxUpdateExteriorNumericalDiffusiveFluxJacobian_free(PyObject* self, 
