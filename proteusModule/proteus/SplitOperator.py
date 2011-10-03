@@ -112,7 +112,10 @@ class SO_base:
         for model in self.modelList:
             model.stepController.updateTimeHistory()
             model.stepController.choose_dt_model()
-
+    # tjp added for split operator class
+    def SysNorm(self,rSys=0):
+        """ Compute the maximum discrete residual value from both models"""
+        pass
 Sequential_FixedStep = SO_base
 
 

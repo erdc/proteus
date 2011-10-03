@@ -68,6 +68,7 @@ class  NS_base:
         memBase = Profiling.memLast #save current memory usage for later
         if not so.useOneMesh: so.useOneArchive=False
         log("Setting Archiver(s)")
+        #pdb.set_trace()
         if so.useOneArchive:
             self.femSpaceWritten={}
             tmp  = Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
