@@ -8587,7 +8587,7 @@ void loadBoundaryFluxIntoGlobalElementBoundaryVelocity(int nExteriorElementBound
 
 }
 
-#define TR_ALPHA 1.0
+#define TR_ALPHA 0.5
 #define TR_ALPHA_EXT 1.0
 
 /**
@@ -8999,6 +8999,43 @@ void updatePotential_MixedForm_weak(int nElements_global,
 		      k*nDOF_test_element*nSpace +
 		      i*nSpace +
 		      I];
+}
+
+void updatePotential_MixedForm_weak_gwvd(int nElements_global,
+                                    int nQuadraturePoints_element,
+                                    int nDOF_test_element,
+                                    int nSpace,
+				    double  epsilon,
+                                    double* phi,
+				    double* w_dV,
+                                    double* grad_w_dV,
+                                    double* b,
+				    double* mf) 
+{
+  int eN,i,k,I;
+  for(eN=0;eN<nElements_global;eN++)
+    for (I=0;I<nSpace;I++)
+      for (i=0;i<nDOF_test_element;i++)
+        for (k=0;k<nQuadraturePoints_element;k++)
+          { 
+	    b[eN*nDOF_test_element*nSpace +
+            I*nDOF_test_element+i]
+	      += 
+            phi[eN*nQuadraturePoints_element+
+                k]
+            *
+            grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+		      k*nDOF_test_element*nSpace +
+		      i*nSpace +
+		      I];
+	        if (I==nSpace-1)
+	      { 
+		b[eN*nDOF_test_element*nSpace +
+		I*nDOF_test_element+i]
+	       -= epsilon*mf[eN*nQuadraturePoints_element+
+			     k ]*w_dV[eN*nQuadraturePoints_element*nDOF_test_element+ k*nDOF_test_element + i ];
+			     }
+	  }
 }
 
 void updatePotential_MixedForm_weakJacobian(int nElements_global,
@@ -9938,6 +9975,7 @@ void updateDiffusion_MixedForm_weak_sd(int nElements_global,
                                        double* a,
                                        double* qV,
                                        double* grad_w_dV,
+				       double* velocity, /* added for ldg coupling */
                                        double* weak_residual)
 {
   int eN,i,k,I,m,nnz=rowptr[nSpace];
@@ -9946,9 +9984,21 @@ void updateDiffusion_MixedForm_weak_sd(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
           for (m=rowptr[I];m<rowptr[I+1];m++)
-            weak_residual[eN*nDOF_test_element + i] 
-              -=
+            {
+	    velocity[eN*nQuadraturePoints_element*nSpace + 
+                 k*nSpace + 
+                 I]
+	      +=
               a[eN*nQuadraturePoints_element*nnz+
+                k*nnz+
+                m]
+              *
+              qV[eN*nQuadraturePoints_element*nSpace + 
+                 k*nSpace + 
+                 colind[m]];
+	    weak_residual[eN*nDOF_test_element + i] 
+              -=
+             a[eN*nQuadraturePoints_element*nnz+
                 k*nnz+
                 m]
               *
@@ -9960,6 +10010,7 @@ void updateDiffusion_MixedForm_weak_sd(int nElements_global,
                         k*nDOF_test_element*nSpace + 
                         i*nSpace+
                         I];
+	    }
 }
 
 void updateDiffusionJacobian_MixedForm_weak(int nElements_global,
