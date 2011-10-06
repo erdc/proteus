@@ -317,6 +317,9 @@ class  NS_base:
         self.modelSpinUpList = []
         #
         for p in pList:
+	    p.coefficients.opts = self.opts
+	    print p.name
+	    print p.coefficients.opts.dataDir
             if p.coefficients.sdInfo == {}:
                 for ci,ckDict in p.coefficients.diffusion.iteritems():
                     for ck in ckDict.keys():
