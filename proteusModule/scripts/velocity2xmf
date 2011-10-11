@@ -1,0 +1,158 @@
+#!/usr/bin/env python
+import os
+import optparse
+import numpy
+import array
+from proteus import Archiver
+from xml.etree.ElementTree import *
+
+usage = "usage: %prog filePrefix [options]"
+parser = optparse.OptionParser(usage=usage)
+parser.add_option("-x", "--nodes-x",
+                  help="Number of points along x dimension",
+                  action="store",
+                  type="int",
+                  dest="x")    
+parser.add_option("-y", "--nodes-y",
+                  help="Number of points along y dimension",
+                  action="store",
+                  type="int",
+                  dest="y")    
+parser.add_option("-z", "--nodes-z",
+                  help="Number of points along z dimension",
+                  action="store",
+                  type="int",
+                  dest="z")    
+parser.add_option("-t", "--nodes-t",
+                  help="Number of points along t dimension",
+                  action="store",
+                  type="int",
+                  dest="t")    
+parser.add_option("-X", "--dimensions-x",
+                  help="Number of points along x dimension",
+                  action="store",
+                  type="float",
+                  dest="X")    
+parser.add_option("-Y", "--dimensions-y",
+                  help="Number of points along y dimension",
+                  action="store",
+                  type="float",
+                  dest="Y")    
+parser.add_option("-Z", "--dimensions-z",
+                  help="Number of points along Z dimension",
+                  action="store",
+                  type="float",
+                  dest="Z")    
+parser.add_option("-A", "--origin-x",
+                  help="Number of points along x dimension",
+                  action="store",
+                  type="float",
+                  dest="A")    
+parser.add_option("-B", "--origin-y",
+                  help="Number of points along y dimension",
+                  action="store",
+                  type="float",
+                  dest="B")    
+parser.add_option("-C", "--origin-z",
+                  help="Number of points along Z dimension",
+                  action="store",
+                  type="float",
+                  dest="C")    
+parser.add_option("-T", "--dimensions-t",
+                  help="Number of points along t dimension",
+                  action="store",
+                  type="float",
+                  dest="T")    
+
+(opts,args) = parser.parse_args()
+filePrefix=args[0]
+dx = opts.X/float(opts.x-1)
+dy = opts.Y/float(opts.y-1)
+dz = opts.Z/float(opts.z-1)
+dt = opts.T/float(opts.t-1)
+fu = open(args[0]+"_u_velocity.bin","rb")
+au = array.array('d')
+au.read(fu,opts.t*opts.z*opts.y*opts.x)
+#print au
+Au = numpy.array(au,'d')
+Au = numpy.reshape(Au,(opts.t,opts.z,opts.y,opts.x))
+fu.close()
+fv = open(args[0]+"_v_velocity.bin","rb")
+av = array.array('d')
+av.read(fv,opts.t*opts.z*opts.y*opts.x)
+#print av
+Av = numpy.array(av,'d')
+Av = numpy.reshape(Av,(opts.t,opts.z,opts.y,opts.x))
+fv.close()
+fw = open(args[0]+"_w_velocity.bin","rb")
+aw = array.array('d')
+aw.read(fw,opts.t*opts.z*opts.y*opts.x)
+#print aw
+Aw = numpy.array(aw,'d')
+Aw = numpy.reshape(Aw,(opts.t,opts.z,opts.y,opts.x))
+fw.close()
+#debug
+#Au[:] = 1.0
+#Av[:] = 2.0
+#Aw[:] = 3.0
+#
+#open xdmf archive (xmf and h5)
+#
+archive = Archiver.XdmfArchive(".",filePrefix,useTextArchive=False)
+archive.domain = SubElement(archive.tree.getroot(),"Domain")
+archive.gridCollection = SubElement(archive.domain,"Grid",{"Name":"WavesSpaceTimeGrid",
+                                                           "GridType":"Collection",
+                                                           "CollectionType":"Temporal"})
+#write xdmf
+for i in range(opts.t):
+    grid = SubElement(archive.gridCollection,"Grid",{"GridType":"Uniform"})
+    time = SubElement(grid,"Time",{"Value":str(i*dt)})
+    topology = SubElement(grid,"Topology",{"TopologyType":"3DCoRectMesh",
+                                           "Dimensions":"%i %i %i" % (opts.z,opts.y,opts.x)})
+    geometry = SubElement(grid,"Geometry",{"GeometryType":"ORIGIN_DXDYDZ"})
+    geometryOrigin = SubElement(geometry,"DataItem",
+                              {"Format":"XML",
+                               "DataType":"Float",
+                               "Precision":"8",
+                               "Dimensions":"%i" % (3,)})
+    geometryOrigin.text = "%f %f %f" % (opts.C,opts.B,opts.A)
+    geometryDxDy = SubElement(geometry,"DataItem",
+                              {"Format":"XML",
+                               "DataType":"Float",
+                               "Precision":"8",
+                               "Dimensions":"%i" % (3,)})
+    geometryDxDy.text = "%f %f %f" % (dz,dy,dx)
+
+    attribute = SubElement(grid,"Attribute",{"Name":"u",
+                                             "AttributeType":"Scalar",
+                                             "Center":"Node"})
+    values    = SubElement(attribute,"DataItem",
+                           {"Format":archive.dataItemFormat,
+                            "DataType":"Float",
+                            "Precision":"8",
+                            "Dimensions":"%i %i %i" % (opts.z,opts.y,opts.x)})
+    values.text = archive.hdfFilename+":/u"+`i`
+    archive.hdfFile.createArray("/","u"+`i`,Au[i,...])
+
+    attribute = SubElement(grid,"Attribute",{"Name":"v",
+                                             "AttributeType":"Scalar",
+                                             "Center":"Node"})
+    values    = SubElement(attribute,"DataItem",
+                           {"Format":archive.dataItemFormat,
+                            "DataType":"Float",
+                            "Precision":"8",
+                            "Dimensions":"%i %i %i" % (opts.z,opts.y,opts.x)})
+    values.text = archive.hdfFilename+":/v"+`i`
+    archive.hdfFile.createArray("/","v"+`i`,Av[i,...])
+
+    attribute = SubElement(grid,"Attribute",{"Name":"w",
+                                             "AttributeType":"Scalar",
+                                             "Center":"Node"})
+    values    = SubElement(attribute,"DataItem",
+                           {"Format":archive.dataItemFormat,
+                            "DataType":"Float",
+                            "Precision":"8",
+                            "Dimensions":"%i %i %i" % (opts.z,opts.y,opts.x)})
+    values.text = archive.hdfFilename+":/w"+`i`
+    archive.hdfFile.createArray("/","w"+`i`,Aw[i,...])
+archive.close()
