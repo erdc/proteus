@@ -167,6 +167,14 @@ if opts.logLevel > 0:
         Profiling.openLog(args[0][-3:]+".log",opts.logLevel)
 log = Profiling.logEvent
 
+if opts.dataDir != '':
+    if not os.path.exists(opts.dataDir):
+    	try: 
+    	     os.mkdir(opts.dataDir)
+        except os.error:
+             print "Failed to create: " + opts.dataDir 
+             opts.dataDir=''
+
 log("Initializing MPI")
 if opts.petscOptions != None:
     petsc_argv = sys.argv[:1]+opts.petscOptions.split()

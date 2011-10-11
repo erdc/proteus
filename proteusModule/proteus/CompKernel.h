@@ -359,8 +359,8 @@ public:
 						       double* metricTensor,
 						       double& metricTensorDetSqrt)
   {
-    const int ebN_local_kb_nSpace = ebN_local_kb*3,
-      ebN_local_kb_nSpace_nSpacem1 = ebN_local_kb*3*2;
+    //const int ebN_local_kb_nSpace = ebN_local_kb*3,
+    //  ebN_local_kb_nSpace_nSpacem1 = ebN_local_kb*3*2;
     // 
     //calculate velocity of mapping from the reference element to the physical element
     // 
