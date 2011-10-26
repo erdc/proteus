@@ -9985,17 +9985,6 @@ void updateDiffusion_MixedForm_weak_sd(int nElements_global,
         for (I=0;I<nSpace;I++)
           for (m=rowptr[I];m<rowptr[I+1];m++)
             {
-	    velocity[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
-                 I]
-	      +=
-              a[eN*nQuadraturePoints_element*nnz+
-                k*nnz+
-                m]
-              *
-              qV[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
-                 colind[m]];
 	    weak_residual[eN*nDOF_test_element + i] 
               -=
              a[eN*nQuadraturePoints_element*nnz+
@@ -10010,6 +9999,24 @@ void updateDiffusion_MixedForm_weak_sd(int nElements_global,
                         k*nDOF_test_element*nSpace + 
                         i*nSpace+
                         I];
+	    }
+
+  for(eN=0;eN<nElements_global;eN++)
+      for (k=0;k<nQuadraturePoints_element;k++)
+        for (I=0;I<nSpace;I++)
+          for (m=rowptr[I];m<rowptr[I+1];m++)
+            {
+	    velocity[eN*nQuadraturePoints_element*nSpace + 
+                 k*nSpace + 
+                 I]
+	      +=
+              a[eN*nQuadraturePoints_element*nnz+
+                k*nnz+
+                m]
+              *
+              qV[eN*nQuadraturePoints_element*nSpace + 
+                 k*nSpace + 
+                 colind[m]];
 	    }
 }
 
