@@ -568,10 +568,41 @@ cpostprocessingGetElementBDM1velocityValuesLagrangeRep(PyObject* self,
 		       &q_velocity))
     return NULL;
   nVDOFs_element = SHAPE(q_velocity)[2]*(SHAPE(q_velocity)[2]+1);
+  
   if (ND(p1_vdofs) > 1)
     assert(nVDOFs_element == SHAPE(p1_vdofs)[1]);
 
   getElementBDM1velocityValuesLagrangeRep(SHAPE(q_velocity)[0],
+					  SHAPE(q_velocity)[1],
+					  SHAPE(q_velocity)[2],
+					  SHAPE(q_v)[2],
+					  nVDOFs_element,
+					  DDATA(q_v),
+					  DDATA(p1_vdofs),
+					  DDATA(q_velocity));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+// tjp added for LDG velocity local representation for error analysis
+static PyObject*
+cpostprocessingGetElementLDGvelocityValuesLagrangeRep(PyObject* self,
+						     PyObject* args)
+{
+  
+  PyObject *q_v,*p1_vdofs,*q_velocity;
+  int nVDOFs_element=1;
+  if(!PyArg_ParseTuple(args,"OOO",
+		       &q_v,
+		       &p1_vdofs,
+		       &q_velocity))
+    return NULL;
+  nVDOFs_element = SHAPE(q_velocity)[2]*(SHAPE(p1_vdofs)[1]/SHAPE(q_velocity)[2]);
+  //printf('nVDOFs_element=%d',nVDOFs_element);
+  //nVDOFs_element = SHAPE(q_velocity)[2]*(SHAPE(q_velocity)[2]+1);
+  if (ND(p1_vdofs) > 1)
+    assert(nVDOFs_element == SHAPE(p1_vdofs)[1]);
+
+  getElementLDGvelocityValuesLagrangeRep(SHAPE(q_velocity)[0],
 					  SHAPE(q_velocity)[1],
 					  SHAPE(q_velocity)[2],
 					  SHAPE(q_v)[2],
@@ -2127,6 +2158,10 @@ static PyMethodDef cpostprocessingMethods[] = {
     cpostprocessingGetElementBDM1velocityValuesLagrangeRep,
     METH_VARARGS, 
     "get velocity at quadrature points assuming have local dofs for local P^1(E) and std Lagr. basis" },
+  { "getElementLDGvelocityValuesLagrangeRep", 
+    cpostprocessingGetElementLDGvelocityValuesLagrangeRep,
+    METH_VARARGS, 
+    "get velocity at quadrature points assuming have local dofs for local P^k(E) where k=1,2 and std Lagr. basis" },
   { "getGlobalExteriorElementBoundaryBDM1velocityValuesLagrangeRep", 
     cpostprocessingGetGlobalExteriorElementBoundaryBDM1velocityValuesLagrangeRep,
     METH_VARARGS, 
