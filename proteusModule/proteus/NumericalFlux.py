@@ -22,6 +22,7 @@ class NF_base:
         import copy
         self.hasInterior=NF_base.hasInterior
         self.includeBoundaryAdjoint=False
+        self.includeBoundaryAdjointInteriorOnly=False # tjp added 
         self.boundaryAdjoint_sigma=0.0
         self.penalty_constant = 2.0
         self.penalty_power = 1.0
