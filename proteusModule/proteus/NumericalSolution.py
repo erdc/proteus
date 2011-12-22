@@ -466,6 +466,7 @@ class  NS_base:
         log("Time sequence"+`self.tnList`)
         log("Setting "+so.name+" systemStepController to object of type "+str(so.systemStepControllerType))
         self.systemStepController = so.systemStepControllerType(self.modelList,stepExact=so.systemStepExact)
+        self.systemStepController.setFromOptions(so)
         log("Finished NumericalSolution initialization")
     ## compute the solution
     def calculateSolution(self,runName):
