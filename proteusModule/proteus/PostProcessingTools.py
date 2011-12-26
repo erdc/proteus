@@ -1899,9 +1899,7 @@ class VPP_DG_RT0(VelocityPostProcessingAlgorithmBase):
           Check if need to evaluate element boundary and global element boundary velocities (and exterior global element boundary  too?)
           or if they are already evaluated with DG fluxes
         """
-        #tjp debug
-        #import pdb
-        #pdb.set_trace()
+     
         cpostprocessing.projectElementBoundaryFluxToRT0fluxRep(self.vt.mesh.elementBoundaryElementsArray,
                                                                self.vt.mesh.elementBoundariesArray,
                                                                self.vt.ebq[('dS_u',ci)],
@@ -2207,27 +2205,19 @@ class VPP_POINT_EVAL_GWVD(VelocityPostProcessingAlgorithmBase):
     at fine grid quadrature points; assumes that the coarse velocity degrees of 
     freedom from the LDG solution are known
 
-    Currently only working for P=1
+    Currently only working for P=1 and P=2
     """
-    from cpostprocessing import getElementBDM1velocityValuesLagrangeRep
+    from cpostprocessing import getElementLDGvelocityValuesLagrangeRep
     def __init__(self,vectorTransport=None,vtComponents=[0]):
         VelocityPostProcessingAlgorithmBase.__init__(self,postProcessingType='point-eval-gwvd',
                                                      vectorTransport=vectorTransport,
                                                      vtComponents=vtComponents)
         #how is the local velocity represented, 1=P1 Lagrange, 2=P2 Lagrange
-        self.localVelocityRepresentationFlag = 1
-        #tjp debug
-        #import pdb
-        #pdb.set_trace()
-        
+       
         self.testSpace=None
         for ci in self.vtComponents:
             self.testSpace=self.vt.u[ci].femSpace
-            #if not isinstance(self.vt.u[ci].femSpace,FemTools.DG_AffineLinearOnSimplexWithNodalBasis):
-            #    if (self.testSpace == None and self.localVelocityRepresentationFlag ==1):
-            #        self.testSpace = FemTools.DG_AffineLinearOnSimplexWithNodalBasis
-            #else:
-            #    self.testSpace=self.vt.u[ci].femSpace
+        
         
 
     def postprocess_component(self,ci,verbose=0):
@@ -2249,7 +2239,6 @@ class VPP_POINT_EVAL_GWVD(VelocityPostProcessingAlgorithmBase):
         nE = x.shape[0]; nq = x.shape[1]; nd = self.vt.nSpace_global
         vx = numpy.zeros((nE,nq,nd),'d')
         #have to evaluate shape functions at new points. This is painful
-        #uci     = self.vt.u[ci]
         xiArray = numpy.zeros(x.shape,'d')
         vArray  = numpy.zeros((nE,nq,self.testSpace.max_nDOF_element),'d')
         invJ    = numpy.zeros((nE,nq,self.vt.q['inverse(J)'].shape[2],self.vt.q['inverse(J)'].shape[3]),
@@ -2259,20 +2248,18 @@ class VPP_POINT_EVAL_GWVD(VelocityPostProcessingAlgorithmBase):
                 invJ[ie,iq,:,:] = self.vt.q['inverse(J)'][ie,0,:,:] #assume affine
             #iq
         #iq
-        # tjp debug
-        #import pdb
-        #pdb.set_trace()
+   
         self.testSpace.elementMaps.getInverseValues(invJ,x,xiArray)
         self.testSpace.getBasisValuesAtArray(xiArray,vArray)
 
-        #cpostprocessing.getElementBDM1velocityValuesLagrangeRep(vArray,
-        #                                                        self.q[('velocity_dofs',ci)],
-        #                                                        vx)
         cpostprocessing.getElementLDGvelocityValuesLagrangeRep(vArray,
                                                                 self.q[('velocity_dofs',ci)],
                                                                 vx)
-
+ 
         return vx
+
+    def archiveVelocityValues(self,archive,t,tCount,initialPhase=False,meshChanged=False):
+            pass
 
 #########################################################################
 #Begin trying "fixes" for material interface jumps
