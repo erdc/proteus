@@ -2983,7 +2983,9 @@ void getElementLDGvelocityValuesLagrangeRep(int nElements_global,
 	  for (id = 0; id < nSpace; id++)
 	    {
 	      q_velocity[eN*nQuadraturePoints_element*nSpace + iq*nSpace + id] = 0.0;
-	      for (k = 0; k < nSpace+1; k++)
+
+	      for (k=0; k < nDOF_trial_element; k++)
+		/*for (k = 0; k < nSpace+1; k++)*/
 		{
 		  j = k*nSpace+ id; /*id*(nSpace+1) + k;*/
 		  q_velocity[eN*nQuadraturePoints_element*nSpace + iq*nSpace + id] +=

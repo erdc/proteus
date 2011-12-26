@@ -589,26 +589,30 @@ cpostprocessingGetElementLDGvelocityValuesLagrangeRep(PyObject* self,
 						     PyObject* args)
 {
   
-  PyObject *q_v,*p1_vdofs,*q_velocity;
-  int nVDOFs_element=1;
+  PyObject *q_v,*vdofs,*q_velocity;
+  int nVDOF_element=1;
+  int nDOF_trial_element=1;
+  
   if(!PyArg_ParseTuple(args,"OOO",
 		       &q_v,
-		       &p1_vdofs,
+		       &vdofs,
 		       &q_velocity))
     return NULL;
-  nVDOFs_element = SHAPE(q_velocity)[2]*(SHAPE(p1_vdofs)[1]/SHAPE(q_velocity)[2]);
+  
+  nVDOF_element =SHAPE(vdofs)[1];
+  nDOF_trial_element=SHAPE(q_v)[2];
   //printf('nVDOFs_element=%d',nVDOFs_element);
   //nVDOFs_element = SHAPE(q_velocity)[2]*(SHAPE(q_velocity)[2]+1);
-  if (ND(p1_vdofs) > 1)
-    assert(nVDOFs_element == SHAPE(p1_vdofs)[1]);
+  if (ND(vdofs) > 1)
+    assert(nVDOF_element == SHAPE(q_v)[2]*SHAPE(q_velocity)[2]);
 
   getElementLDGvelocityValuesLagrangeRep(SHAPE(q_velocity)[0],
 					  SHAPE(q_velocity)[1],
 					  SHAPE(q_velocity)[2],
-					  SHAPE(q_v)[2],
-					  nVDOFs_element,
+					  nDOF_trial_element,
+					  nVDOF_element,
 					  DDATA(q_v),
-					  DDATA(p1_vdofs),
+					  DDATA(vdofs),
 					  DDATA(q_velocity));
   Py_INCREF(Py_None);
   return Py_None;
