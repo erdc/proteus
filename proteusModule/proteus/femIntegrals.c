@@ -9359,6 +9359,144 @@ void calculateVelocityQuadrature_MixedForm2_sd(int nElements_global,
     }
 }
 
+/* Velocity Quadrature_MixedForm2 function that saves the velocity degrees of freedom, tjp added*/
+
+void calculateVelocityQuadrature_MixedForm2_vdof_sd(int nElements_global,
+					       int nElementBoundaries_element,
+					       int nElementBoundaryQuadraturePoints_elementBoundary,
+					       int nDOF_element,
+					       int nSpace,
+					       int nQuadraturePoints_element,
+					       const int * rowptr,
+					       const int * colind,
+					       double* qa,
+					       double* qw_dV,
+					       double* b,
+					       double* v,
+					       double* V,
+					       double* qv,
+					       double* qV,
+					       double* vel_dofs)
+{
+  int eN,ebN,k,i,j,I,nDOF_element2=nDOF_element*nDOF_element,nSpace2=nSpace*nSpace;
+  int m,nnz=rowptr[nSpace];
+  PROTEUS_LAPACK_INTEGER ipiv[nDOF_element],lwork=((PROTEUS_LAPACK_INTEGER)nDOF_element),dim=((PROTEUS_LAPACK_INTEGER)nDOF_element),info=0;
+  double work[nDOF_element],A_inv[nDOF_element2];
+  double V_dof[nSpace][nDOF_element];
+  double vel_dofs_temp[nElements_global][nSpace][nDOF_element];
+  memset(V,0,sizeof(double)*
+         nElements_global*
+         nElementBoundaries_element*
+         nElementBoundaryQuadraturePoints_elementBoundary*
+         nSpace);
+  memset(qV,0,sizeof(double)*
+         nElements_global*
+         nQuadraturePoints_element*
+         nSpace);
+  for(eN=0;eN<nElements_global;eN++)
+    {
+      for(I=0;I<nSpace;I++)
+	{
+	  memset(A_inv,0,sizeof(double)*nDOF_element2);
+	  for(i=0;i<nDOF_element;i++)
+	    for(j=0;j<nDOF_element;j++)
+	      {
+		for(k=0;k<nQuadraturePoints_element;k++)
+		  {
+		    //cek hack do diagonal only for now
+		    for (m=rowptr[I]; m < rowptr[I+1];m++)
+		      if (colind[m] == I)
+			{
+			  /*mwf debug
+			  printf("mixedform2 eN=%d I=%d m=%d colind[m]=%d a=%g \n",
+				 eN,I,m,colind[m],qa[eN*nQuadraturePoints_element*nnz+
+						     k*nnz + m]);
+			  */
+			  A_inv[i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nnz+
+							     k*nnz + m])
+			    *qv[eN*nQuadraturePoints_element*nDOF_element+
+				k*nDOF_element+
+				j]
+			    *
+			    qw_dV[eN*nQuadraturePoints_element*nDOF_element+
+				  k*nDOF_element+
+				  i];
+			}
+		  }
+	      }
+	  info=0;
+	  dgetrf_(&dim,&dim,A_inv,&dim,ipiv,&info);
+	  dgetri_(&dim,A_inv,&dim,ipiv,work,&lwork,&info);
+	  
+	  /* velocity DOF */
+	  for(i=0;i<nDOF_element;i++)
+	    {
+	      V_dof[I][i]=0.0;
+	      vel_dofs_temp[eN][I][i]=0.0;
+	      for(j=0;j<nDOF_element;j++)
+		{
+		V_dof[I][i]
+		  +=
+		  A_inv[i*nDOF_element+
+			j]
+		  *
+		  b[eN*nSpace*nDOF_element+
+		    I*nDOF_element+
+		    j];
+	        vel_dofs_temp[eN][I][i] 
+		+= A_inv[i*nDOF_element+
+			j]
+		  *
+		  b[eN*nSpace*nDOF_element+
+		    I*nDOF_element+
+		    j];
+		}
+	    }
+	}
+
+      /* Change the shape of the velocity degrees of freedom */
+	for(j=0;j<nDOF_element;j++)
+	  for(I=0;I<nSpace;I++)
+	    vel_dofs[eN*nDOF_element*nSpace+
+	       j*nSpace+
+	       I]
+	      =vel_dofs_temp[eN][I][j];
+	  
+      /* evaluate at element quadrature */
+      for(k=0;k<nQuadraturePoints_element;k++)
+	for(j=0;j<nDOF_element;j++)
+	  for(I=0;I<nSpace;I++)
+	    qV[eN*nQuadraturePoints_element*nSpace+
+	       k*nSpace+
+	       I]
+	      +=
+	      V_dof[I][j]
+	      *
+	      qv[eN*nQuadraturePoints_element*nDOF_element+
+		 k*nDOF_element+
+		 j];
+
+     
+      /* evaluate at element boundary quadrature*/
+      for (ebN=0;ebN<nElementBoundaries_element;ebN++)
+	for(k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
+	  for(j=0;j<nDOF_element;j++)
+	    for(I=0;I<nSpace;I++)
+	      V[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
+		ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
+		k*nSpace+
+		I]
+		+=
+		V_dof[I][j]
+		*
+		v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
+		  ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
+		  k*nDOF_element+
+		  j];
+    }
+}
+
+
 void calculateVelocityQuadrature_MixedForm_Jacobian(int nElements_global,
                                                     int nElementBoundaries_element,
                                                     int nElementBoundaryQuadraturePoints_elementBoundary,
