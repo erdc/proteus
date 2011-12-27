@@ -343,7 +343,7 @@ class PlanarStraightLineGraphDomain(D_base):
                 self.regionFlags.append(int(line[3]))
                 if len(line) > 4:
                     if line[4][0] != '#':
-                        self.areaConstraint.append(float(line[4]))                
+                        self.areaConstraints.append(float(line[4]))                
         self.getBoundingBox()
         if self.segmentFlags != None:
             self.getSegmentPartition()
@@ -795,7 +795,7 @@ class PiecewiseLinearComplexDomain(D_base):
         nRegions = int(regionLine[0])
         self.regions=[]
         self.regionFlags=[]
-        self.areaConstraings=[]
+        self.areaConstraints=[]
         for i in range(nRegions):
             line =  f.readline().split()
             while len(line) == 0 or line[0][0] == '#':
@@ -804,7 +804,7 @@ class PiecewiseLinearComplexDomain(D_base):
             if len(line) > 4:
                 self.regionFlags.append(int(line[4]))
             if len(line) > 5:
-                self.areaConstraint.append(float(line[5]))                
+                self.areaConstraints.append(float(line[5]))                
         self.getBoundingBox()
         f.close()
     def writePoly(self,fileprefix):
