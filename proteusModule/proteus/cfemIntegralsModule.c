@@ -4828,6 +4828,52 @@ cfemIntegralsCalculateVelocityQuadrature_MixedForm2_sd(PyObject* self,
 }
 
 static PyObject*
+cgwvdNumericalFluxCalculateVelocityQuadrature_MixedForm2_vdof_sd(PyObject* self,
+                                                   PyObject* args)
+{ 
+  PyObject *qa,
+    *qw_dV,
+    *b,
+    *v,
+    *V,
+    *qv,
+    *qV,
+    *rowptr,
+    *colind,
+    *vel_dofs;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOO",
+		       &rowptr,
+		       &colind,
+		       &qa,
+		       &qw_dV,
+                       &b,
+                       &v,
+                       &V,
+                       &qv,
+                       &qV,
+		       &vel_dofs))
+    return NULL;
+      calculateVelocityQuadrature_MixedForm2_vdof_sd(SHAPE(v)[0],
+						SHAPE(v)[1],
+						SHAPE(v)[2],
+						SHAPE(v)[3],
+						SHAPE(b)[1],
+						SHAPE(qv)[1],
+						IDATA(rowptr),
+						IDATA(colind),
+						DDATA(qa),
+						DDATA(qw_dV),
+						DDATA(b),
+						DDATA(v),
+						DDATA(V),
+						DDATA(qv),
+						DDATA(qV),
+						DDATA(vel_dofs));
+      Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyObject*
 cfemIntegralsCalculateVelocityQuadrature_MixedForm_Jacobian(PyObject* self,
                                                             PyObject* args)
 { 
@@ -6508,6 +6554,10 @@ static PyMethodDef cfemIntegralsMethods[] = {
     cfemIntegralsCalculateVelocityQuadrature_MixedForm2_sd,
     METH_VARARGS, 
     "Calculate the diffusive velocity at the quadrature points for mixed form diffusion sparse rep"},
+  { "calculateVelocityQuadrature_MixedForm2_vdof_sd",
+    cgwvdNumericalFluxCalculateVelocityQuadrature_MixedForm2_vdof_sd,
+    METH_VARARGS, 
+    "Calculate the diffusive velocity at the quadrature points for mixed form diffusion sparse rep and saving the velocity degrees of freedom"},
   { "updatePotential_MixedForm_weakJacobian",
     cfemIntegralsUpdatePotential_MixedForm_weakJacobian,
     METH_VARARGS, 
