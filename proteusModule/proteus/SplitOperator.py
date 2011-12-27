@@ -32,6 +32,7 @@ class SO_base:
         self.updateAfterModelStep=True
         self.stepExactEps = 1.0e-12
         self.stepFailures = 0
+        #self.atol_iso=1.e-8 #tjp added for iterative SO routine tolerance
     def converged(self):
         #no iteration
         if self.its > 0:
@@ -116,6 +117,12 @@ class SO_base:
     def SysNorm(self,rSys=0):
         """ Compute the maximum discrete residual value from both models"""
         pass
+    def setFromOptions(self,soOptions):
+        """
+        allow classes to set various numerical parameters
+        """
+        pass
+
 Sequential_FixedStep = SO_base
 
 
