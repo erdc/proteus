@@ -2,7 +2,7 @@
 #define COMPKERNEL_H
 #include <cmath>
 
-template<const int NSPACE>
+template<int NSPACE>
 class EIndex
 {
 };
@@ -43,7 +43,7 @@ public:
   {}
 };
 //I separated the space mapping part of the kernel so I could partially specialize the template on NSPACE
-template<const int NSPACE, const int NDOF_MESH_TRIAL_ELEMENT>
+template<int NSPACE, int NDOF_MESH_TRIAL_ELEMENT>
 class CompKernelSpaceMapping
 {
 public:
@@ -119,7 +119,7 @@ public:
 };
 
 //specialization for 3D
-template<const int NDOF_MESH_TRIAL_ELEMENT>
+template<int NDOF_MESH_TRIAL_ELEMENT>
 class CompKernelSpaceMapping<3,NDOF_MESH_TRIAL_ELEMENT>
 {
 public:
@@ -412,7 +412,7 @@ public:
 };
 
 
-template<const int NSPACE, const int NDOF_MESH_TRIAL_ELEMENT, const int NDOF_TRIAL_ELEMENT, const int NDOF_TEST_ELEMENT>
+template<int NSPACE, int NDOF_MESH_TRIAL_ELEMENT, int NDOF_TRIAL_ELEMENT, int NDOF_TEST_ELEMENT>
 class CompKernel
 {
 public:
