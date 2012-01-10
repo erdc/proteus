@@ -472,7 +472,7 @@ class ConservationHistoryMC(AV_base):
     """A simple class for storing the time history of things related conservation in conservative level set methods"""
     def __init__(self,filename):
         import Comm
-        self.comm = Comm.init()
+        self.comm = Comm.get()
         AV_base.__init__(self)
         self.massVOFFile = open(filename+"massVOF",'w')
         self.massLSFile = open(filename+"massLS",'w')
@@ -494,7 +494,7 @@ class ConservationHistoryLS(AV_base):
     """A simple class for storing the time history of things related conservation in non-conservative level set methods"""
     def __init__(self,filename):
         import Comm
-        self.comm = Comm.init()
+        self.comm = Comm.get()
         AV_base.__init__(self)
         self.massFile = open(filename+"massLS",'w')
         self.massErrorFile = open(filename+"massErrorLS",'w')
