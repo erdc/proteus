@@ -646,7 +646,7 @@ if __name__ == "__main__":
     #now need for mpi
     import proteus
     from proteus import Comm
-    comm = proteus.Comm.init()
+    comm = proteus.Comm.get()
 
     def circle1d(x):
         return (x-0.5)**2 - 0.2**2
