@@ -881,10 +881,14 @@ class Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
                                                                                                 ebqe['penalty'],
                                                                                                 fluxJacobian_exterior[ci][cj])
 class Advection_DiagonalUpwind_Diffusion_SIPG_exterior(Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
-    def __init__(self,vt,getPointwiseBoundaryConditions,
+    def __init__(self,
+                 vt,
+                 getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions):
-        Advection_DiagonalUpwind_Diffusion_IIPG_exterior.__init__(self,vt,getPointwiseBoundaryConditions,
+        Advection_DiagonalUpwind_Diffusion_IIPG_exterior.__init__(self,
+                                                                  vt,
+                                                                  getPointwiseBoundaryConditions,
                                                                   getAdvectiveFluxBoundaryConditions,
                                                                   getDiffusiveFluxBoundaryConditions)
         self.penalty_constant = 10.0
