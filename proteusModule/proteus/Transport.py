@@ -5582,7 +5582,7 @@ class MultilevelTransport:
             #cek try setting parallel periodic conditions
             #
             import Comm
-            comm = Comm.init()
+            comm = Comm.get()
             if options.periodicDirichletConditions and options.parallelPeriodic:
                 log("Generating Trial Space--Parallel Periodic",level=2)
                 #the global mesh has been renumbered so all this is in the new (partitioned) numberings
