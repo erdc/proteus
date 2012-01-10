@@ -3,6 +3,7 @@ Some simple modules for doing runtime visualization
 
 .. todo::
 
+   Added support for image cache and some global data structure that provides a map into the image cache
    Clean up Viewers.py
 """
 import  subprocess
@@ -63,14 +64,15 @@ def vtkOn(problemName,silent=True):
     viewerType='vtk'
     plotNumber=0
     windowNumber=0
-    
+    return vtkViewers
+
 def viewerOn(problemName,viewer):
     if viewer == 'gnuplot':
-        gnuplotOn(problemName)
+        return gnuplotOn(problemName)
     if viewer == 'matlab':
-        matlabOn(problemName)
+        return matlabOn(problemName)
     if viewer == 'vtk':
-        vtkOn(problemName)
+        return vtkOn(problemName)
 
 def newPlot():
     global plotNumber
@@ -130,11 +132,11 @@ class V_base:
             'u' in self.s.viewQuantities):
             if self.plotOffSet == None:
                self.plotOffSet = self.windowNumber()
-            self.windowNumberTmp= mlvt.levelModelList[-1].viewSolution(plotOffSet=None,
-                                                                  titleModifier='',
-                                                                  dgridnx=self.dgridx,
-                                                                  dgridny=self.dgridy,
-                                                                  pause=self.s.viewerPause)
+            self.windowNumberTmp= mlvt.levelModelList[-1].viewSolution(plotOffSet=self.plotOffSet,
+                                                                       titleModifier='',
+                                                                       dgridnx=self.dgridx,
+                                                                       dgridny=self.dgridy,
+                                                                       pause=self.s.viewerPause)
             #should create new windows if plotted here
             self.stepPlotExact(mlvt,tsim)
             self.stepPlotElementQuantities(mlvt,tsim)
