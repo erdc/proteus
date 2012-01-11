@@ -208,6 +208,8 @@ void calculateExteriorNumericalAdvectiveFluxRusanov(double safetyFactor,
 
 
 extern void calculateInteriorNumericalDiffusiveFlux(
+  int scale_penalty,
+  double penalty_floor,						    
   int nInteriorElementBoundaries_global,
   int nElementBoundaries_element,
   int nQuadraturePoints_elementBoundary,
@@ -223,6 +225,8 @@ extern void calculateInteriorNumericalDiffusiveFlux(
   double *flux
 );
 extern void updateInteriorNumericalDiffusiveFluxJacobian(
+  int scale_penalty,
+  double penalty_floor,
   int nInteriorElementBoundaries_global,
   int nElementBoundaries_element,
   int nQuadraturePoints_elementBoundary,
@@ -243,6 +247,8 @@ extern void updateInteriorNumericalDiffusiveFluxJacobian(
   double *fluxJacobian
 );
 extern void calculateExteriorNumericalDiffusiveFlux(
+  int scale_penalty,
+  double penalty_floor,
   int nExteriorElementBoundaries_global,
   int nElementBoundaries_element,
   int nQuadraturePoints_elementBoundary,
@@ -262,6 +268,8 @@ extern void calculateExteriorNumericalDiffusiveFlux(
   double *flux
 );
 extern void updateExteriorNumericalDiffusiveFluxJacobian(
+  int scale_penalty,
+  double penalty_floor,
   int nExteriorElementBoundaries_global,
   int nElementBoundaries_element,
   int nQuadraturePoints_elementBoundary,
@@ -544,7 +552,9 @@ void calculateGlobalExteriorNumericalAdvectiveFluxRusanov(double safetyFactor,
 							  double* dflux);
 
 extern
-void calculateGlobalExteriorNumericalDiffusiveFlux(int nExteriorElementBoundaries_global,
+void calculateGlobalExteriorNumericalDiffusiveFlux(int scale_penalty,
+                                                   double penalty_floor,
+						   int nExteriorElementBoundaries_global,
 						   int nQuadraturePoints_elementBoundary,
 						   int nSpace,
 						   int* exteriorElementBoundaries,
@@ -582,7 +592,9 @@ void calculateGlobalExteriorNumericalDiffusiveFlux_free(int nExteriorElementBoun
 
 
 extern
-void updateGlobalExteriorNumericalDiffusiveFluxJacobian(int nExteriorElementBoundaries_global,
+void updateGlobalExteriorNumericalDiffusiveFluxJacobian(int scale_penalty,
+                                                        double penalty_floor,
+							int nExteriorElementBoundaries_global,
 							int nQuadraturePoints_elementBoundary,
 							int nDOF_trial_element,
 							int nSpace,

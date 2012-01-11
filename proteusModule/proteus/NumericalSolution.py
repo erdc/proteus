@@ -68,6 +68,7 @@ class  NS_base:
         memBase = Profiling.memLast #save current memory usage for later
         if not so.useOneMesh: so.useOneArchive=False
         log("Setting Archiver(s)")
+        #pdb.set_trace()
         if so.useOneArchive:
             self.femSpaceWritten={}
             tmp  = Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
@@ -468,6 +469,7 @@ class  NS_base:
         log("Time sequence"+`self.tnList`)
         log("Setting "+so.name+" systemStepController to object of type "+str(so.systemStepControllerType))
         self.systemStepController = so.systemStepControllerType(self.modelList,stepExact=so.systemStepExact)
+        self.systemStepController.setFromOptions(so)
         log("Finished NumericalSolution initialization")
     ## compute the solution
     def calculateSolution(self,runName):
