@@ -607,7 +607,7 @@ editConfig_ipython:
 	echo "no ipython customization implemented"
 
 config_ipython:
-	pip install readline pyzmq pygments tornado pexpect Sphinx
+	pip install pyzmq pygments tornado pexpect Sphinx
 	cd ${IPYTHON_VERSION} && ${PROTEUS_PYTHON} setup.py config > ../config_ipython_progress 2>&1
 
 build_ipython:

@@ -6,12 +6,39 @@ from proteus import Quadrature
 import sys
 try:
     from vtk.qt4.QVTKRenderWindowInteractor import *
-    from PyQt4 import QtGui
+    from PyQt4 import QtGui,Qt,QtCore
     hasQt=True
 except:
     hasQt=False
 
-import pdb
+useCoPro=False
+
+if useCoPro:
+    def initializeCoProcessor(comm,controller):
+        import paraview
+        from paraview import servermanager
+        if comm.rank() == 0:
+            print "initializing coprocessor"
+        paraview.options.batch = True
+        paraview.options.symmetric = True
+        pm = servermanager.vtkProcessModule.GetProcessModule()
+        globalController = pm.GetGlobalController()
+        globalController.SetGlobalController(controller)
+#        if globalController == None:
+#            globalController = vtk.vtkMPIController()
+#            globalController.Initialize()
+#            globalController.SetGlobalController(globalController)
+#            newGlobalController = globalController.PartitionController(0, comm.size()-comm.rank()-1)
+#            newGlobalController.SetGlobalController(newGlobalController)
+#        elif globalController.IsA("vtkDummyController") == True:
+#            globalController = vtk.vtkMPIController()
+#            globalController.Initialize()
+#            globalController.SetGlobalController(globalController)
+#            newGlobalController = globalController.PartitionController(0, comm.rank())
+#            newGlobalController.SetGlobalController(newGlobalController)
+#        else:
+#            print globalController.GetLocalProcessId(), ' we have a global controller from the process module. the mpcontroller is ', globalController.GetGlobalController(), pm.GetReferenceCount()
+#end coprocessing init
 from proteus import flcbdfWrappers
 #cek todo
 #put back in hard copy capability
@@ -22,14 +49,14 @@ from proteus import flcbdfWrappers
 #see if something is wrong with quadratics
 #see if something is wrong with 3d pointSet
 #
-useMainWindow = True#False
+useMainWindow = True
 #
 #Utilities and high level functions
 #
 class Window:
     def __init__(self,name,title):
         import proteus.Comm
-        comm = proteus.Comm.init()
+        comm = proteus.Comm.get()
         self.hardCopies=0
         #mwf vtk on laptop needs update
         skipComm = False
@@ -40,6 +67,8 @@ class Window:
             self.controller = vtkMPIController()
             self.controller.SetCommunicator(self.communicator.GetWorldCommunicator())
             self.compManager.SetController(self.controller)
+            if useCoPro:
+                self.copro = initializeCoProcessor(self.comm,self.controller)
         self.myProcId = comm.rank()
         self.numProcs = comm.size()
         self.isMaster = comm.isMaster()
@@ -56,8 +85,11 @@ class Window:
                     self.frameWidget = QtGui.QFrame(g.mainWindow)
                     self.hbox = QtGui.QHBoxLayout()
                     self.iren = QVTKRenderWindowInteractor(self.frameWidget)
-                    self.iren.SetInteractorStyle(vtkInteractorStyleTrackballCamera())
                     self.iren.Initialize()
+                    if comm.size() > 1:
+                       self.iren.Disable() 
+                    else:
+                        self.iren.SetInteractorStyle(vtkInteractorStyleTrackballCamera())
                     self.renWin = self.iren.GetRenderWindow()
                     self.renWin.SetWindowName(name)
                     self.hbox.addWidget(self.iren)
@@ -72,8 +104,11 @@ class Window:
                 else:
                     #self.iren = vtkRenderWindowInteractor()#QVTKRenderWindowInteractor()
                     self.iren = QVTKRenderWindowInteractor()
-                    self.iren.SetInteractorStyle(vtkInteractorStyleTrackballCamera())
                     self.iren.Initialize()
+                    if comm.size() > 1:
+                       self.iren.Disable() 
+                    else:
+                        self.iren.SetInteractorStyle(vtkInteractorStyleTrackballCamera())
                     self.renWin = self.iren.GetRenderWindow()
                     #self.renWin = self.compManager.MakeRenderWindow()
                     #self.iren.SetRenderWindow(self.renWin)
@@ -90,8 +125,8 @@ class Window:
             self.renWin = self.compManager.MakeRenderWindow()
             self.renWin.OffScreenRenderingOn()
 
-global windowDict
 windowDict={}
+imageDict={}
         
 class vtkGlobals:
     def __init__(self):
@@ -171,7 +206,7 @@ def createLegendActor(lut):
     tp.SetColor(0,0,0)
     return legend
 
-def ViewMesh(mesh,title="mesh",viewMaterialTypes=True,hardcopy=False):
+def ViewMesh(mesh,title="Mesh",viewMaterialTypes=True,hardcopy=False):
     ##\todo improve legend
     ##      add probe filter for querying material types
     ##      1d mesh visualization
@@ -182,85 +217,94 @@ def ViewMesh(mesh,title="mesh",viewMaterialTypes=True,hardcopy=False):
     if mesh.nNodes_element == 2:
         return
     import cvtkviewers
-    vtkMesh = cvtkviewers.getUnstructuredGridFromMesh(mesh.nodeArray,
-                                                      mesh.elementNodesArray)
-    vtkMesh.Update()
+    global g,windowDict
+    windowName = title
+    window = Window(windowName,title)
+    windowDict[window.name] = window
+    window.vod['vtkMesh'] = cvtkviewers.getUnstructuredGridFromMesh(mesh.nodeArray,
+                                                                    mesh.elementNodesArray)
+    window.vod['vtkMesh'].Update()
     #crude viewing for  now
-    ren = vtk.vtkRenderer()
-    renWin = vtk.vtkRenderWindow()
-    renWin.SetWindowName(title)
-    ren.SetBackground(1, 1, 1)
-    renWin.SetSize(500, 500)
-    renWin.AddRenderer(ren)
-    iren = QVTKRenderWindowInteractor()
-    iren.SetInteractorStyle(vtkInteractorStyleTrackballCamera())
-    iren.SetRenderWindow(renWin)
+    createRenderers(['wireframe'],window)
+    ren = window.vod['ren_wireframe']
+    #ren = vtk.vtkRenderer()
+    #renWin = vtk.vtkRenderWindow()
+    #renWin.SetWindowName(title)
+    #ren.SetBackground(1, 1, 1)
+    #renWin.SetSize(500, 500)
+    #renWin.AddRenderer(ren)
+    #iren = QVTKRenderWindowInteractor()
+    #iren.SetInteractorStyle(vtkInteractorStyleTrackballCamera())
+    #iren.SetRenderWindow(renWin)
     if viewMaterialTypes and mesh.elementMaterialTypes != None:
-        matData = vtk.vtkIntArray()
-        matData.SetNumberOfComponents(1)
-        matData.SetNumberOfValues(mesh.nElements_global)
+        window.vod['matData'] = vtk.vtkIntArray()
+        window.vod['matData'].SetNumberOfComponents(1)
+        window.vod['matData'].SetNumberOfValues(mesh.nElements_global)
         saveArray=1
-        matData.SetVoidArray(mesh.elementMaterialTypes,mesh.nElements_global,saveArray)
+        window.vod['matData'].SetVoidArray(mesh.elementMaterialTypes,mesh.nElements_global,saveArray)
         #copy in manually ... 
         #for eN in range(mesh.nElements_global):
-        #    matData.InsertValue(eN,mesh.elementMaterialTypes[eN])
-        vtkMesh.GetCellData().SetScalars(matData)
-        vtkMesh.Update()
+        #    window.vod['matData'].InsertValue(eN,mesh.elementMaterialTypes[eN])
+        window.vod['vtkMesh'].GetCellData().SetScalars(window.vod['matData'])
+        window.vod['vtkMesh'].Update()
 
-        mrange = vtkMesh.GetCellData().GetScalars().GetRange()
-        meshMapper = vtk.vtkDataSetMapper()
-        meshMapper.SetInput(vtkMesh)
-        meshMapper.SetScalarRange(mrange)
-        meshActor = vtk.vtkActor()
-        meshActor.SetMapper(meshMapper)
-        meshActor.GetProperty().SetRepresentationToWireframe()
+        mrange = window.vod['vtkMesh'].GetCellData().GetScalars().GetRange()
+        window.vod['meshMapper'] = vtk.vtkDataSetMapper()
+        window.vod['meshMapper'].SetInput(window.vod['vtkMesh'])
+        window.vod['meshMapper'].SetScalarRange(mrange)
+        window.vod['meshActor'] = vtk.vtkActor()
+        window.vod['meshActor'].SetMapper(window.vod['meshMapper'])
+        window.vod['meshActor'].GetProperty().SetRepresentationToWireframe()
     
-        meshActor.GetProperty().SetDiffuseColor(1,0,0)
-        ren.AddActor(meshActor)
+        window.vod['meshActor'].GetProperty().SetDiffuseColor(1,0,0)
+        ren.AddActor(window.vod['meshActor'])
         
         # Create the LookupTable for the Mesh
-        lut = vtk.vtkLookupTable()
-        lut.SetTableRange(mrange[0], mrange[1])
-        lut.Build()
+        window.vod['lut'] = vtk.vtkLookupTable()
+        window.vod['lut'].SetTableRange(mrange[0], mrange[1])
+        window.vod['lut'].Build()
         #
-        legend = vtk.vtkScalarBarActor()
-        legend.SetLookupTable(lut)
-        legend.SetTitle("Material Flags")
-        legend.SetOrientationToVertical()
-        legend.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
-        legend.GetPositionCoordinate().SetValue(0.9,0.25)
-        legend.SetWidth(0.1)
-        legend.SetHeight(0.75)
-        legend.SetNumberOfLabels(int(mrange[1]-mrange[0]+1))
-        # Set up the legend text
-        tp = legend.GetTitleTextProperty()
-        tp.SetFontSize(12)
-        tp.SetFontFamilyToArial()
-        tp.SetColor(0,0,0)
-        tp = legend.GetLabelTextProperty()
-        tp.SetFontSize(12)
-        tp.SetFontFamilyToArial()   
-        tp.SetColor(0,0,0)
+        window.vod['legend'] = vtk.vtkScalarBarActor()
+        window.vod['legend'].SetLookupTable(window.vod['lut'])
+        window.vod['legend'].SetTitle("Material Flags")
+        window.vod['legend'].SetOrientationToVertical()
+        window.vod['legend'].GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
+        window.vod['legend'].GetPositionCoordinate().SetValue(0.9,0.25)
+        window.vod['legend'].SetWidth(0.1)
+        window.vod['legend'].SetHeight(0.75)
+        window.vod['legend'].SetNumberOfLabels(int(mrange[1]-mrange[0]+1))
+        # Set up the window.vod['legend'] text
+        window.vod['tp'] = window.vod['legend'].GetTitleTextProperty()
+        window.vod['tp'].SetFontSize(12)
+        window.vod['tp'].SetFontFamilyToArial()
+        window.vod['tp'].SetColor(0,0,0)
+        window.vod['tp'] = window.vod['legend'].GetLabelTextProperty()
+        window.vod['tp'].SetFontSize(12)
+        window.vod['tp'].SetFontFamilyToArial()   
+        window.vod['tp'].SetColor(0,0,0)
 
-        ren.AddActor(legend)
+        ren.AddActor(window.vod['legend'])
     else:
         #view mesh this way
-        meshMapper = vtk.vtkDataSetMapper()
-        meshMapper.SetInput(vtkMesh)
-        meshActor = vtk.vtkActor()
-        meshActor.SetMapper(meshMapper)
-        meshActor.GetProperty().SetRepresentationToWireframe()
+        window.vod['meshMapper'] = vtk.vtkDataSetMapper()
+        window.vod['meshMapper'].SetInput(window.vod['vtkMesh'])
+        window.vod['meshActor'] = vtk.vtkActor()
+        window.vod['meshActor'].SetMapper(window.vod['meshMapper'])
+        window.vod['meshActor'].GetProperty().SetRepresentationToWireframe()
     
-        meshActor.GetProperty().SetDiffuseColor(1,0,0)
-        ren.AddActor(meshActor)
+        window.vod['meshActor'].GetProperty().SetDiffuseColor(1,0,0)
+        ren.AddActor(window.vod['meshActor'])
+    if window.myProcId == 0:
+        if window.numProcs > 1:
+            window.compManager.ResetAllCameras()
+        window.renWin.Render()
+        if hasQt:
+            g.app.processEvents()
+        window.compManager.StopServices()
+    else:
+        window.compManager.StartServices()
     
-    iren.Initialize()
-    renWin.Render()
-    if hardcopy:
-        GenerateHardcopy(renWin,filebase=title, format = g.DefaultImageFormat, filepath = g.ImageFolderPath,
-                         is3D = mesh.nNodes_element == 4, isVectorPlot = False, forceWriter = 'WriteImage')
-
-def ViewBoundaryMesh(mesh,title="boundaryMesh",viewBoundaryMaterialTypes=True,hardcopy=False):
+def ViewBoundaryMesh(mesh,title="Boundary Mesh",viewBoundaryMaterialTypes=True,hardcopy=False):
     ##\todo improve legend
     ##      add probe filter for querying material types
     ##      1d mesh visualization
@@ -271,63 +315,64 @@ def ViewBoundaryMesh(mesh,title="boundaryMesh",viewBoundaryMaterialTypes=True,ha
     if mesh.nNodes_element == 2:
         return
     import cvtkviewers
-    pdata = cvtkviewers.getPolyDataBoundaryMesh(mesh.nodeArray,mesh.elementBoundaryNodesArray,
-                                                mesh.elementBoundaryMaterialTypes)
-    pdata.Update()
+    global g,windowDict
+    #windowName = mesh.domain.name+mesh.name+variableName
+    windowName = title
+    t = 0.0
+    window = Window(windowName,title)
+    windowDict[window.name] = window
+    window.vod['pdata'] = cvtkviewers.getPolyDataBoundaryMesh(mesh.nodeArray,mesh.elementBoundaryNodesArray,
+                                                              mesh.elementBoundaryMaterialTypes)
+    window.vod['pdata'].Update()
     brange = [0,1]
     #
     if  viewBoundaryMaterialTypes and mesh.elementBoundaryMaterialTypes != None:
-        brange = pdata.GetCellData().GetScalars().GetRange()
+        brange = window.vod['pdata'].GetCellData().GetScalars().GetRange()
     #crude viewing for  now
-    ren = vtk.vtkRenderer()
-    renWin = vtk.vtkRenderWindow()
-    renWin.SetWindowName(title)
-    ren.SetBackground(1, 1, 1)
-    renWin.SetSize(500, 500)
-    renWin.AddRenderer(ren)
-    iren = QVTKRenderWindowInteractor()
-    iren.SetInteractorStyle(vtkInteractorStyleTrackballCamera())
-    iren.SetRenderWindow(renWin)
-
+    createRenderers(['colormapped'],window)
+    ren = window.vod['ren_colormapped']
     #view mesh this way
-    meshMapper = vtk.vtkPolyDataMapper()
-    meshMapper.SetInput(pdata)
-    meshMapper.SetScalarRange(brange)
-    meshActor = vtk.vtkActor()
-    meshActor.SetMapper(meshMapper)
-
-    ren.AddActor(meshActor)
+    window.vod['meshMapper'] = vtk.vtkPolyDataMapper()
+    window.vod['meshMapper'].SetInput(window.vod['pdata'])
+    window.vod['meshMapper'].SetScalarRange(brange)
+    window.vod['meshActor'] = vtk.vtkActor()
+    window.vod['meshActor'].SetMapper(window.vod['meshMapper'])
+    ren.AddActor(window.vod['meshActor'])
     if viewBoundaryMaterialTypes and mesh.elementBoundaryMaterialTypes != None and brange[1] > brange[0]:
         # Create the LookupTable for the Mesh
-        lut = vtk.vtkLookupTable()
-        lut.SetTableRange(brange[0], brange[1])
-        lut.ForceBuild()
+        window.vod['lut'] = vtk.vtkLookupTable()
+        window.vod['lut'].SetTableRange(brange[0], brange[1])
+        window.vod['lut'].ForceBuild()
         #
-        legend = vtk.vtkScalarBarActor()
-        legend.SetLookupTable(lut)
-        legend.SetTitle("Boundary Flags")
-        legend.SetOrientationToVertical()
-        legend.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
-        legend.GetPositionCoordinate().SetValue(0.9,0.25)
-        legend.SetWidth(0.1)
-        legend.SetHeight(0.75)
-        legend.SetNumberOfLabels(int(brange[1]-brange[0]+1))
+        window.vod['legend'] = vtk.vtkScalarBarActor()
+        window.vod['legend'].SetLookupTable(window.vod['lut'])
+        window.vod['legend'].SetTitle("Boundary Flags")
+        window.vod['legend'].SetOrientationToVertical()
+        window.vod['legend'].GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
+        window.vod['legend'].GetPositionCoordinate().SetValue(0.9,0.25)
+        window.vod['legend'].SetWidth(0.1)
+        window.vod['legend'].SetHeight(0.75)
+        window.vod['legend'].SetNumberOfLabels(int(brange[1]-brange[0]+1))
         # Set up the legend text
-        tp = legend.GetTitleTextProperty()
-        tp.SetFontSize(12)
-        tp.SetFontFamilyToArial()
-        tp.SetColor(0,0,0)
-        tp = legend.GetLabelTextProperty()
-        tp.SetFontSize(12)
-        tp.SetFontFamilyToArial()   
-        tp.SetColor(0,0,0)
-        ren.AddActor(legend)
+        window.vod['tp'] = window.vod['legend'].GetTitleTextProperty()
+        window.vod['tp'].SetFontSize(12)
+        window.vod['tp'].SetFontFamilyToArial()
+        window.vod['tp'].SetColor(0,0,0)
+        window.vod['tp'] = window.vod['legend'].GetLabelTextProperty()
+        window.vod['tp'].SetFontSize(12)
+        window.vod['tp'].SetFontFamilyToArial()   
+        window.vod['tp'].SetColor(0,0,0)
+        ren.AddActor(window.vod['legend'])
     #
-    iren.Initialize()
-    renWin.Render()
-    if hardcopy:
-        GenerateHardcopy(renWin,filebase=title, format = g.DefaultImageFormat, filepath = g.ImageFolderPath,
-                         is3D = mesh.nNodes_element == 4, isVectorPlot = False)
+    if window.myProcId == 0:
+        if window.numProcs > 1:
+            window.compManager.ResetAllCameras()
+        window.renWin.Render()
+        if hasQt:
+            g.app.processEvents()
+        window.compManager.StopServices()
+    else:
+        window.compManager.StartServices()
 #
 # 1D Scalars
 #
@@ -424,7 +469,8 @@ def viewScalar_1D(xVals, yVals, xTitle, yTitle, title, winNum, Pause = True, sor
     window.vod['xArray'].Modified()
     window.vod['yArray'].Modified()
     if window.myProcId == 0:
-        #window.compManager.ResetAllCameras()
+        if window.numProcs > 1:
+            window.compManager.ResetAllCameras()
         window.renWin.Render()
         if hasQt:
             g.app.processEvents()
@@ -436,7 +482,7 @@ def viewScalar_1D(xVals, yVals, xTitle, yTitle, title, winNum, Pause = True, sor
 #2D Scalars
 #
 #def viewScalar_tri3_2D(mesh, scalars, title, winNum, viewTypes=['colorMapped','contour','warp'],IsoSurface = True, Pause = True, Hardcopy = False):
-def viewScalar_tri3_2D(mesh, scalars, title, winNum, viewTypes=['colorMapped'],IsoSurface = True, Pause = True, Hardcopy = False, Adapted = False):
+def viewScalar_tri3_2D(mesh, scalars, title, winNum, viewTypes=['colorMapped','hardcopy'],IsoSurface = True, Pause = True, Hardcopy = False, Adapted = False):
     #
     #build an unstructured grid data set and pass to viewScalar_2DMesh
     #
@@ -613,7 +659,7 @@ def viewScalar_pointSet_2D(nodes, scalars, title, winNum,IsoSurface = True, Paus
         window.vod['lut'].SetTableRange(window.vod['scalars'].GetRange())
     viewScalar_2D(window,windowCreated,viewTypes)
 
-def viewScalar_2D(window,windowCreated,viewTypes,Adapted=False):
+def viewScalar_2D(window,windowCreated,viewTypes,Adapted=False,Hardcopy=True):
     global g,windowDict
     if windowCreated:
         createRenderers(viewTypes,window)
@@ -646,13 +692,13 @@ def viewScalar_2D(window,windowCreated,viewTypes,Adapted=False):
             window.vod['algo_contour'] = vtk.vtkContourGrid()
             window.vod['algo_contour'].SetInput(window.vod['dataSet'])
             window.vod['algo_contour'].GenerateValues(10,window.vod['dataSet'].GetPointData().GetScalars().GetRange())            
-            window.vod['countourMapper'] = vtk.vtkPolyDataMapper()
-            window.vod['countourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
-            #window.vod['countourMapper'].SetScalarRange(window.vod['dataSet'].GetPointData().GetScalars().GetRange())
-            window.vod['countourMapper'].SetLookupTable(window.vod['lut'])
-            window.vod['countourMapper'].UseLookupTableScalarRangeOn()
+            window.vod['contourMapper'] = vtk.vtkPolyDataMapper()
+            window.vod['contourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
+            #window.vod['contourMapper'].SetScalarRange(window.vod['dataSet'].GetPointData().GetScalars().GetRange())
+            window.vod['contourMapper'].SetLookupTable(window.vod['lut'])
+            window.vod['contourMapper'].UseLookupTableScalarRangeOn()
             window.vod['actorcontour'] = vtk.vtkActor()
-            window.vod['actorcontour'].SetMapper(window.vod['countourMapper'])
+            window.vod['actorcontour'].SetMapper(window.vod['contourMapper'])
             window.vod['axesActor_contour'] = vtk.vtkCubeAxesActor2D()
             window.vod['axesActor_contour'].SetInput(window.vod['dataSet'])
             window.vod['axesActor_contour'].SetCamera(window.vod['ren_contour'].GetActiveCamera())
@@ -704,6 +750,23 @@ def viewScalar_2D(window,windowCreated,viewTypes,Adapted=False):
             ren.AddActor(window.vod['legendActor_warp'])
             ren.AddActor2D(window.vod['axesActor_warp'])
             ren.ResetCamera()
+        if Hardcopy:
+            if window.myProcId == 0:
+                window.hardCopies = 0
+                # exp = vtk.vtkGL2PSExporter()
+                # exp.SetRenderWindow(window.renWin)
+                # #exp.SetFileFormatToTeX()
+                # #exp.OcclusionCullOff()
+                # exp.SetFilePrefix(window.name)
+                # # Turn off compression so PIL can read file.
+                # exp.CompressOff() 
+                # exp.SetSortToBSP()
+                # exp.DrawBackgroundOff()
+                # exp.SimpleLineOffsetOn()
+                # exp.BestRootOn()
+                # exp.TextOff()
+                # #
+                # exp.Write()
     elif Adapted:
         if 'colorMapped' in viewTypes:
             window.vod['gridActor_colorMapped'].SetMapper(window.vod['dataSetMapper'])
@@ -714,8 +777,8 @@ def viewScalar_2D(window,windowCreated,viewTypes,Adapted=False):
         if 'contour' in viewTypes:
             window.vod['algo_contour'].SetInput(window.vod['dataSet'])
             window.vod['algo_contour'].GenerateValues(10,window.vod['dataSet'].GetPointData().GetScalars().GetRange())            
-            window.vod['countourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
-            window.vod['countourMapper'].SetLookupTable(window.vod['lut'])
+            window.vod['contourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
+            window.vod['contourMapper'].SetLookupTable(window.vod['lut'])
             window.vod['axesActor_contour'].SetInput(window.vod['dataSet'])
             ren = window.vod['ren_contour']
             ren.ResetCamera()
@@ -730,45 +793,56 @@ def viewScalar_2D(window,windowCreated,viewTypes,Adapted=False):
 
     if 'contour' in viewTypes:
         window.vod['algo_contour'].GenerateValues(10,window.vod['dataSet'].GetPointData().GetScalars().GetRange())
-    if 'hardcopy' in viewTypes:
-        exp = vtk.vtkGL2PSExporter()
-        exp.SetRenderWindow(window.renWin)
-        #exp.SetFileFormatToTeX()
-        #exp.OcclusionCullOff()
-        exp.SetFilePrefix(window.name)
-        # Turn off compression so PIL can read file.
-        exp.CompressOff() 
-        exp.SetSortToBSP()
-        exp.DrawBackgroundOff()
-        exp.SimpleLineOffsetOn()
-        exp.BestRootOn()
-        exp.TextOff()
-        #
-        exp.Write()
     if window.myProcId == 0:
-        #window.compManager.ResetAllCameras()
+        if window.numProcs > 1:
+            window.compManager.ResetAllCameras()
         window.renWin.Render()
+        if Hardcopy:
+            window.vod['w2if'] = vtk.vtkWindowToImageFilter()
+            window.vod['writer'] = vtk.vtkPNGWriter()
+            window.vod['w2if'].SetInput(window.renWin)
+            window.vod['writer'].SetInput(window.vod['w2if'].GetOutput())   
+            filename = window.name+`window.hardCopies`+'.png'
+            window.vod['writer'].SetFileName(filename)
+            window.hardCopies+=1
+            window.vod['writer'].Write()        
+            window.png = open(filename).read()
         if hasQt:
+            #g.app.sendPostedEvents()
+            #g.app.flush()
+            #g.app.processEvents(QtCore.QEventLoop.ExcludeUserInputEvents)
+            #g.app.processEvents(QtCore.QEventLoop.ExcludeSocketNotifiers)
             g.app.processEvents()
-#         #hard copy
-#         w2if = vtk.vtkWindowToImageFilter()
-#         w2if.SetInput(window.renWin)
-#         writer = vtk.vtkPNGWriter()
-#         writer.SetInput(w2if.GetOutput())    
-#         filename = window.name+`window.hardCopies`+'.png'
-#         writer.SetFileName(filename)
-#         window.hardCopies+=1
-#         writer.Write()
-#         #
         window.compManager.StopServices()
+        #
     else:
         window.compManager.StartServices()
+    if useCoPro:
+        #coprocess
+        from vtk import vtkCoProcessorPython
+        import samplecoprocessingscript as cpscript
+        datadescription = \
+            vtkCoProcessorPython.vtkCPDataDescription()
+        #to do --- pass down real value of time and integer step number
+        cptime=0.0
+        cpstep=0
+        #if step == lastStep-1:
+        #    datadescription.SetForceOuputOn()#or something like that
+        datadescription.SetTimeData(cptime, cpstep)
+        datadescription.AddInput("input")
+        cpscript.RequestDataDescription(datadescription)
+        inputdescription = \
+            datadescription.GetInputDescriptionByName("input")
+        if inputdescription.GetIfGridIsNecessary() == False:
+            return
+        inputdescription.SetGrid(windowDict[window.name].vod['dataSet'])
+        cpscript.DoCoProcessing(datadescription)
 
 #
 #2D Vectors
 #
 def viewVector_tri3_2D(mesh, u,v, title,IsoSurface = True, Pause = True, Hardcopy = False,
-                       viewTypes=['streamlines'],Adapted=False):#'arrows','streamlines','colorMapped','contour','warp']):
+                       viewTypes=['colorMapped'],Adapted=False):#'arrows','streamlines','colorMapped','contour','warp']):
     #
     #build an unstructured grid data set and pass to viewScalar_2DMesh
     #
@@ -805,10 +879,14 @@ def viewVector_tri3_2D(mesh, u,v, title,IsoSurface = True, Pause = True, Hardcop
         window.vod['normFilter'].SetAttributeModeToUsePointData()
         window.vod['normFilter'].Update()
         window.vod['dataSetMapper'] = vtk.vtkDataSetMapper()
-        window.vod['dataSetMapper'].SetInputConnection(window.vod['normFilter'].GetOutputPort())
+        #window.vod['dataSetMapper'].SetInputConnection(window.vod['normFilter'].GetOutputPort())
+        window.vod['dataSetMapper'].SetInput(window.vod['normFilter'].GetOutput())
         window.vod['dataSetMapper'].SetScalarVisibility(1)
         window.vod['lut'] = vtk.vtkLookupTable()
-        window.vod['lut'].SetTableRange(window.vod['normFilter'].GetOutput().GetPointData().GetScalars().GetRange())
+        #window.vod['lut'].SetTableRange(window.vod['normFilter'].GetOutput().GetPointData().GetScalars().GetRange())
+        range = window.vod['normFilter'].GetOutput().GetPointData().GetScalars().GetRange()
+        range = (flcbdfWrappers.globalMin(range[0]),flcbdfWrappers.globalMax(range[1]))
+        window.vod['lut'].SetTableRange(range)
         window.vod['lut'].SetHueRange(0.66667,0.0)
         window.vod['dataSetMapper'].SetLookupTable(window.vod['lut'])
         window.vod['dataSetMapper'].UseLookupTableScalarRangeOn()
@@ -830,7 +908,10 @@ def viewVector_tri3_2D(mesh, u,v, title,IsoSurface = True, Pause = True, Hardcop
         window = windowDict[windowName]
         window.vectors[:] = numpy.column_stack((u,v,window.w)).flatten()
         window.vod['vectors'].Modified()
-        window.vod['lut'].SetTableRange(window.vod['normFilter'].GetOutput().GetPointData().GetScalars().GetRange())
+        #window.vod['lut'].SetTableRange(window.vod['normFilter'].GetOutput().GetPointData().GetScalars().GetRange())
+        range = window.vod['normFilter'].GetOutput().GetPointData().GetScalars().GetRange()
+        range = (flcbdfWrappers.globalMin(range[0]),flcbdfWrappers.globalMax(range[1]))
+        window.vod['lut'].SetTableRange(range)
     #window and viewports 
     viewVector_2D(window,
                   windowCreated,
@@ -1020,8 +1101,8 @@ def viewVector_2D(window,
             streamline = window.vod['streamLineActor']
             window.vod['streamLineActor'].SetMapper(window.vod['streamLineMapper'])
             window.vod['streamLineActor'].VisibilityOn()
-            if window.isMaster:
-                lineWidget.SetInteractor(window.iren)
+            #if window.isMaster:
+            #    lineWidget.SetInteractor(window.iren)
             window.vod['gridActor_colorMapped'] = vtk.vtkActor()
             window.vod['gridActor_colorMapped'].SetMapper(window.vod['dataSetMapper'])
             window.vod['axesActor_colorMapped'] = vtk.vtkCubeAxesActor2D()
@@ -1048,36 +1129,37 @@ def viewVector_2D(window,
         if 'colorMapped' in viewTypes:
             window.vod['gridActor_colorMapped'] = vtk.vtkActor()
             window.vod['gridActor_colorMapped'].SetMapper(window.vod['dataSetMapper'])
-            window.vod['axesActor_colorMapped'] = vtk.vtkCubeAxesActor2D()
-            window.vod['axesActor_colorMapped'].SetInput(window.vod['dataSet'])
-            window.vod['axesActor_colorMapped'].SetCamera(window.vod['ren_colorMapped'].GetActiveCamera())
-            window.vod['axesActor_colorMapped'].SetFlyModeToClosestTriad()
-            window.vod['axesActor_colorMapped'].SetZAxisVisibility(0)
-            tp=window.vod['axesActor_colorMapped'].GetAxisTitleTextProperty()
-            tp.SetFontSize(14)
-            tp.SetFontFamilyToArial()
-            tp.SetColor(0,0,0)
-            tp=window.vod['axesActor_colorMapped'].GetAxisLabelTextProperty()
-            tp.SetFontSize(14)
-            tp.SetFontFamilyToArial()
-            tp.SetColor(0,0,0)
-            window.vod['legendActor_colorMapped']= createLegendActor(window.vod['lut'])
-            window.vod['legendActor_colorMapped'].SetLookupTable(window.vod['lut'])
             ren = window.vod['ren_colorMapped']
+            if window.isMaster:
+                window.vod['axesActor_colorMapped'] = vtk.vtkCubeAxesActor2D()
+                window.vod['axesActor_colorMapped'].SetInput(window.vod['dataSet'])
+                window.vod['axesActor_colorMapped'].SetCamera(window.vod['ren_colorMapped'].GetActiveCamera())
+                window.vod['axesActor_colorMapped'].SetFlyModeToClosestTriad()
+                window.vod['axesActor_colorMapped'].SetZAxisVisibility(0)
+                tp=window.vod['axesActor_colorMapped'].GetAxisTitleTextProperty()
+                tp.SetFontSize(14)
+                tp.SetFontFamilyToArial()
+                tp.SetColor(0,0,0)
+                tp=window.vod['axesActor_colorMapped'].GetAxisLabelTextProperty()
+                tp.SetFontSize(14)
+                tp.SetFontFamilyToArial()
+                tp.SetColor(0,0,0)
+                window.vod['legendActor_colorMapped']= createLegendActor(window.vod['lut'])
+                window.vod['legendActor_colorMapped'].SetLookupTable(window.vod['lut'])
+                ren.AddActor(window.vod['legendActor_colorMapped'])
+                ren.AddActor2D(window.vod['axesActor_colorMapped'])
             ren.AddActor(window.vod['gridActor_colorMapped'])
-            ren.AddActor(window.vod['legendActor_colorMapped'])
-            ren.AddActor2D(window.vod['axesActor_colorMapped'])
             ren.ResetCamera()
         if 'contour' in viewTypes:
             window.vod['algo_contour'] = vtk.vtkContourGrid()
             window.vod['algo_contour'].SetInput(window.vod['normFilter'].GetOutput())
             window.vod['algo_contour'].GenerateValues(10,window.vod['normFilter'].GetOutput().GetPointData().GetScalars().GetRange())            
-            window.vod['countourMapper'] = vtk.vtkPolyDataMapper()
-            window.vod['countourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
-            window.vod['countourMapper'].SetLookupTable(window.vod['lut'])
-            window.vod['countourMapper'].UseLookupTableScalarRangeOn()
+            window.vod['contourMapper'] = vtk.vtkPolyDataMapper()
+            window.vod['contourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
+            window.vod['contourMapper'].SetLookupTable(window.vod['lut'])
+            window.vod['contourMapper'].UseLookupTableScalarRangeOn()
             window.vod['actorcontour'] = vtk.vtkActor()
-            window.vod['actorcontour'].SetMapper(window.vod['countourMapper'])
+            window.vod['actorcontour'].SetMapper(window.vod['contourMapper'])
             window.vod['axesActor_contour'] = vtk.vtkCubeAxesActor2D()
             window.vod['axesActor_contour'].SetInput(window.vod['dataSet'])
             window.vod['axesActor_contour'].SetCamera(window.vod['ren_contour'].GetActiveCamera())
@@ -1134,14 +1216,17 @@ def viewVector_2D(window,
     if 'streamlines' in viewTypes:
         window.vod['lineWidget'].GetPolyData(window.vod['seeds'])
     if window.myProcId == 0:
-        #window.compManager.ResetAllCameras()
+        if window.numProcs > 1:
+            window.compManager.ResetAllCameras()
         window.renWin.Render()
         if hasQt:
+            #g.app.sendPostedEvents()
+            #g.app.flush()
+            #g.app.processEvents(QtCore.QEventLoop.ExcludeUserInputEvents)
             g.app.processEvents()
         window.compManager.StopServices()
     else:
         window.compManager.StartServices()
-
 #
 #3D Scalars
 #
@@ -1333,13 +1418,13 @@ def viewScalar_3D(window,windowCreated,viewTypes,Adapted=False):
             window.vod['algo_contour'] = vtk.vtkContourGrid()
             window.vod['algo_contour'].SetInput(window.vod['dataSet'])
             window.vod['algo_contour'].GenerateValues(10,window.vod['dataSet'].GetPointData().GetScalars().GetRange())            
-            window.vod['countourMapper'] = vtk.vtkPolyDataMapper()
-            window.vod['countourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
-            #window.vod['countourMapper'].SetScalarRange(window.vod['dataSet'].GetPointData().GetScalars().GetRange())
-            window.vod['countourMapper'].SetLookupTable(window.vod['lut'])
-            window.vod['countourMapper'].UseLookupTableScalarRangeOn()
+            window.vod['contourMapper'] = vtk.vtkPolyDataMapper()
+            window.vod['contourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
+            #window.vod['contourMapper'].SetScalarRange(window.vod['dataSet'].GetPointData().GetScalars().GetRange())
+            window.vod['contourMapper'].SetLookupTable(window.vod['lut'])
+            window.vod['contourMapper'].UseLookupTableScalarRangeOn()
             window.vod['actorcontour'] = vtk.vtkActor()
-            window.vod['actorcontour'].SetMapper(window.vod['countourMapper'])
+            window.vod['actorcontour'].SetMapper(window.vod['contourMapper'])
             window.vod['axesActor_contour'] = vtk.vtkCubeAxesActor2D()
             window.vod['axesActor_contour'].SetInput(window.vod['dataSet'])
             window.vod['axesActor_contour'].SetCamera(window.vod['ren_contour'].GetActiveCamera())
@@ -1399,8 +1484,8 @@ def viewScalar_3D(window,windowCreated,viewTypes,Adapted=False):
         if 'contour' in viewTypes:
             window.vod['algo_contour'].SetInput(window.vod['dataSet'])
             window.vod['algo_contour'].GenerateValues(10,window.vod['dataSet'].GetPointData().GetScalars().GetRange())            
-            window.vod['countourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
-            window.vod['countourMapper'].SetLookupTable(window.vod['lut'])
+            window.vod['contourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
+            window.vod['contourMapper'].SetLookupTable(window.vod['lut'])
             window.vod['axesActor_contour'].SetInput(window.vod['dataSet'])
             ren = window.vod['ren_contour']
             ren.ResetCamera()
@@ -1416,7 +1501,8 @@ def viewScalar_3D(window,windowCreated,viewTypes,Adapted=False):
     if 'contour' in viewTypes:
         window.vod['algo_contour'].GenerateValues(10,window.vod['dataSet'].GetPointData().GetScalars().GetRange())
     if window.myProcId == 0:
-        #window.compManager.ResetAllCameras()
+        if window.numProcs > 1:
+            window.compManager.ResetAllCameras()
         window.renWin.Render()
         if hasQt:
             g.app.processEvents()
@@ -1663,8 +1749,10 @@ def viewVector_3D(window,
             streamline = window.vod['streamLineActor']
             window.vod['streamLineActor'].SetMapper(window.vod['streamLineMapper'])
             window.vod['streamLineActor'].VisibilityOn()
-            if window.isMaster:
-                planeWidget.SetInteractor(window.iren)
+            #if window.isMaster:
+            #    import pdb
+            #    pdb.set_trace()
+            #    planeWidget.SetInteractor(window.iren)
 #             window.vod['gridActor_colorMapped'] = vtk.vtkActor()
 #             window.vod['gridActor_colorMapped'].SetMapper(window.vod['dataSetMapper'])
             window.vod['axesActor_colorMapped'] = vtk.vtkCubeAxesActor2D()
@@ -1713,12 +1801,12 @@ def viewVector_3D(window,
             window.vod['algo_contour'] = vtk.vtkContourGrid()
             window.vod['algo_contour'].SetInput(window.vod['normFilter'].GetOutput())
             window.vod['algo_contour'].GenerateValues(10,window.vod['normFilter'].GetOutput().GetPointData().GetScalars().GetRange())            
-            window.vod['countourMapper'] = vtk.vtkPolyDataMapper()
-            window.vod['countourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
-            window.vod['countourMapper'].SetLookupTable(window.vod['lut'])
-            window.vod['countourMapper'].UseLookupTableScalarRangeOn()
+            window.vod['contourMapper'] = vtk.vtkPolyDataMapper()
+            window.vod['contourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
+            window.vod['contourMapper'].SetLookupTable(window.vod['lut'])
+            window.vod['contourMapper'].UseLookupTableScalarRangeOn()
             window.vod['actorcontour'] = vtk.vtkActor()
-            window.vod['actorcontour'].SetMapper(window.vod['countourMapper'])
+            window.vod['actorcontour'].SetMapper(window.vod['contourMapper'])
             window.vod['axesActor_contour'] = vtk.vtkCubeAxesActor2D()
             window.vod['axesActor_contour'].SetInput(window.vod['dataSet'])
             window.vod['axesActor_contour'].SetCamera(window.vod['ren_contour'].GetActiveCamera())
@@ -1773,7 +1861,8 @@ def viewVector_3D(window,
     if 'streamlines' in viewTypes:
         window.vod['planeWidget'].GetPolyData(window.vod['seeds'])
     if window.myProcId == 0:
-        #window.compManager.ResetAllCameras()
+        if window.numProcs > 1:
+            window.compManager.ResetAllCameras()
         window.renWin.Render()
         if hasQt:
             g.app.processEvents()
@@ -2129,12 +2218,12 @@ def viewParticles_2D(window,
 #             window.vod['algo_contour'] = vtk.vtkContourGrid()
 #             window.vod['algo_contour'].SetInput(window.vod['normFilter'].GetOutput())
 #             window.vod['algo_contour'].GenerateValues(10,window.vod['normFilter'].GetOutput().GetPointData().GetScalars().GetRange())            
-#             window.vod['countourMapper'] = vtk.vtkPolyDataMapper()
-#             window.vod['countourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
-#             window.vod['countourMapper'].SetLookupTable(window.vod['lut'])
-#             window.vod['countourMapper'].UseLookupTableScalarRangeOn()
+#             window.vod['contourMapper'] = vtk.vtkPolyDataMapper()
+#             window.vod['contourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
+#             window.vod['contourMapper'].SetLookupTable(window.vod['lut'])
+#             window.vod['contourMapper'].UseLookupTableScalarRangeOn()
 #             window.vod['actorcontour'] = vtk.vtkActor()
-#             window.vod['actorcontour'].SetMapper(window.vod['countourMapper'])
+#             window.vod['actorcontour'].SetMapper(window.vod['contourMapper'])
 #             window.vod['axesActor_contour'] = vtk.vtkCubeAxesActor2D()
 #             window.vod['axesActor_contour'].SetInput(window.vod['dataSet'])
 #             window.vod['axesActor_contour'].SetCamera(window.vod['ren_contour'].GetActiveCamera())

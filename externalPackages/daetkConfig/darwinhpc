@@ -17,7 +17,7 @@ FC = ${F77}
 
 FCFLAGS = ${PETSC_FCPPFLAGS}
 
-LD =  /usr/bin/mpicxx 
+LD =  /usr/local/bin/mpicxx 
 LDFLAGS = ${PCC_LINKER_FLAGS} 
 LDLIBS  = ${PETSC_LIB}
 

@@ -19,6 +19,12 @@
 # define VTK_PYTHON_OBJECT_RETURN(X) vtkPythonUtil::GetObjectFromPointer(X)
 #endif
 
+#ifdef USE_VTK_5_9_OR_LATER
+#define VTK_PYTHON_POINTER_RETURN(X,Y) vtkPythonUtil::GetPointerFromObject(X,Y)
+#else
+#define VTK_PYTHON_POINTER_RETURN(X,Y) vtkPythonGetPointerFromObject(X,Y)
+#endif
+
 extern "C"
 {
   static PyObject* 
@@ -248,7 +254,7 @@ extern "C"
 			  &cmesh,
 			  &copyIdsFlag))
       return NULL;
-    vtkUnstructuredGrid * vtkMesh = (vtkUnstructuredGrid*) vtkPythonGetPointerFromObject(vtkMeshIn,"vtkUnstructuredGrid");
+    vtkUnstructuredGrid * vtkMesh = (vtkUnstructuredGrid*) VTK_PYTHON_POINTER_RETURN(vtkMeshIn,"vtkUnstructuredGrid");
     assert(vtkMesh);
     bool copyMaterialIds = (copyIdsFlag == 1); 
     int defaultElementMaterialFlag(0),defaultNodeMaterialFlag(0);
@@ -293,7 +299,7 @@ extern "C"
 			  &tol_hFactor,
 			  &verbose))
       return NULL;
-    vtkUnstructuredGrid * vtkSolid = (vtkUnstructuredGrid*) vtkPythonGetPointerFromObject(vtkSolidIn,"vtkUnstructuredGrid");
+    vtkUnstructuredGrid * vtkSolid = (vtkUnstructuredGrid*) VTK_PYTHON_POINTER_RETURN(vtkSolidIn,"vtkUnstructuredGrid");
     assert(vtkMesh);
     nElements = SHAPE(elementMaterialTypes)[0];
     bool failed = classifyElementMaterialPropertiesFromVTKUnstructuredGridSolid(vtkSolid,
@@ -328,7 +334,7 @@ extern "C"
 			  &tolerance,
 			  &verbose))
       return NULL;
-    vtkUnstructuredGrid * vtkSolid = (vtkUnstructuredGrid*) vtkPythonGetPointerFromObject(vtkSolidIn,"vtkUnstructuredGrid");
+    vtkUnstructuredGrid * vtkSolid = (vtkUnstructuredGrid*) VTK_PYTHON_POINTER_RETURN(vtkSolidIn,"vtkUnstructuredGrid");
     assert(vtkMesh);
     nElements = SHAPE(elementMaterialTypes)[0];
     bool failed = classifyElementMaterialPropertiesFromVTKUnstructuredGridNeighborhood(vtkSolid,
