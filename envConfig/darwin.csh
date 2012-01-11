@@ -1,5 +1,5 @@
 #basic darwin
-setenv MACOSX_DEPLOYMENT_TARGET 10.6
+setenv MACOSX_DEPLOYMENT_TARGET 10.7
 setenv PROTEUS_ARCH darwin
 setenv PROTEUS_PREFIX ${PROTEUS}/${PROTEUS_ARCH}
 setenv PROTEUS_PYTHON ${PROTEUS_PREFIX}/Library/Frameworks/Python.framework/Versions/Current/bin/python

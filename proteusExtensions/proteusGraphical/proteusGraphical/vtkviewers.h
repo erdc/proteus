@@ -1,7 +1,6 @@
 #ifndef PROTEUS_VTK_VIEWERS_H
 #define PROTEUS_VTK_VIEWERS_H
 #include <cassert>
-using namespace std;
 class  vtkUnstructuredGrid;
 class  vtkDoubleArray;
 class  vtkPoints;
