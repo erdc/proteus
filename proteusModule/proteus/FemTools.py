@@ -3782,7 +3782,7 @@ class C0_AffineLagrangeOnCubeWithNodalBasis(ParametricFiniteElementSpace):
             for j in range(localFunctionSpace.dim):
                 x_j = interpolationConditions.quadraturePointArray[j]
                 psi_ij = localFunctionSpace.basis[i](x_j)
-                print i,j,x_j,psi_ij
+                #print i,j,x_j,psi_ij
                 if i==j:
                     assert(abs(1.0-psi_ij) < 1.0e-8)
                 else:
