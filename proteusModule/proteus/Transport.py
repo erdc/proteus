@@ -5527,6 +5527,8 @@ class MultilevelTransport:
             self.trialSpaceListDict[cj]=[]
             self.bcListDict[cj]=[]
         for mesh in mlMesh.meshList:
+            #import pdb
+            #pdb.set_trace()
             sdmesh = mesh.subdomainMesh
             memory()
             log("Generating Trial Space",level=2)
@@ -5593,7 +5595,7 @@ class MultilevelTransport:
                                                                 lambda x,flag: None,
                                                                 False,
                                                                 options.periodicDirichletConditions[0])
-                #collected the free DOF
+                #collect the free DOF
                 ownedDOF=set()
                 globalDOF=set()
                 trialSpaceDict[0].dofMap.nDOF_all_processes = periodicConditions_global.nFreeDOF_global                    
