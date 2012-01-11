@@ -877,7 +877,19 @@ public:
     return flux*w_dS;
   }
 
+  inline double InteriorElementBoundaryFlux(const double& flux,
+					    const double& w_dS)
+  {
+    return flux*w_dS;
+  }
+
   inline double ExteriorNumericalAdvectiveFluxJacobian(const double& dflux_left,
+						       const double& v)
+  {
+    return dflux_left*v;
+  }
+
+  inline double InteriorNumericalAdvectiveFluxJacobian(const double& dflux_left,
 						       const double& v)
   {
     return dflux_left*v;
