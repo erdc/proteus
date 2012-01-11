@@ -55,7 +55,7 @@ class RectangularDomain(D_base):
         if self.nd==2:
             fileString="""
 # vertices
-4 2 0 0
+4 2 0 1
 1 %(x0)f %(x1)f 1
 2 %(x0pL0)f %(x1)f 2
 3 %(x0pL0)f %(x1pL1)f 3
@@ -70,7 +70,8 @@ class RectangularDomain(D_base):
 0
 # regions
 1
-1 ((%(x0pL0)f)/2)f ((%(x1pL1)f)/2) 1 """  % {'x0': self.x[0],'x1': self.x[1],'x0pL0': self.x[0]+self.L[0],'x1pL1': self.x[1]+self.L[1]}
+1 %(x0pL0)f %(x1pL1)f 1 """  % {'x0': self.x[0],'x1': self.x[1],'x0pL0': self.x[0]+self.L[0],'x1pL1': self.x[1]+self.L[1]}
+# tjp altered the regions line and the boundary tags from 0 to 1 to get to work
         elif self.nd==3:
             fileString="""
 # vertices
