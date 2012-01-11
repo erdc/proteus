@@ -1983,7 +1983,8 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                                    self.ebq[('grad(v)',ci)],
                                                                                                                    self.ebq[('dS_u',ck)],
                                                                                                                    jacobian)
-                        cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                        if not self.numericalFlux.includeBoundaryAdjointInteriorOnly: #added to only eval interior tjp
+                            cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                                                                                self.offset[ci],
                                                                                                                self.stride[ci],
                                                                                                                self.offset[ck],
@@ -2029,7 +2030,8 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                                 self.ebq[('grad(v)',ci)],
                                                                                                                 self.ebq[('dS_u',ck)],
                                                                                                                 jacobian)
-                        cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(self.offset[ci],
+                        if not self.numericalFlux.includeBoundaryAdjointInteriorOnly: #added to only eval interior tjp
+                            cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(self.offset[ci],
                                                                                                             self.stride[ci],
                                                                                                             self.offset[ck],
                                                                                                             self.stride[ck],
@@ -2273,7 +2275,8 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                                  self.ebq[('grad(v)',ci)],
                                                                                                                  self.ebq[('dS_u',ck)],
                                                                                                                  jacobian)
-                        cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(self.coefficients.sdInfo[(ci,ck)][0],
+                        if not self.numericalFlux.includeBoundaryAdjointInteriorOnly: #added to only eval interior tjp
+                            cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(self.coefficients.sdInfo[(ci,ck)][0],
                                                                                                              self.coefficients.sdInfo[(ci,ck)][1],
                                                                                                              self.offset[ci],
                                                                                                              self.stride[ci],
@@ -2307,6 +2310,7 @@ class OneLevelTransport(NonlinearEquation):
     def calculateElementResidual(self):
         """Calculate all the element residuals"""
         import pdb
+        #pdb.set_trace()
         for ci in range(self.nc):
             self.elementResidual[ci].fill(0.0)
         for ci  in self.coefficients.advection.keys():
@@ -2336,10 +2340,15 @@ class OneLevelTransport(NonlinearEquation):
                     if not self.q.has_key(('grad(w)*dV_f',ck)):
                         self.q[('grad(w)*dV_f',ck)] = self.q[('grad(w)*dV_a',ci,ck)]
                     if self.sd:
+                        #tjp need to zero velocity because this just updates
+                        #import pdb
+                        #pdb.set_trace()
+                        self.q[('velocity',ck)].fill(0.0)
                         cfemIntegrals.updateDiffusion_MixedForm_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                                         self.numericalFlux.aTilde[(ci,ck)],
                                                                         self.numericalFlux.qV[ck],
                                                                         self.q[('grad(w)*dV_f',ck)],
+                                                                        self.q[('velocity',ck)],#added for ldg coupling tjp
                                                                         self.elementResidual[ci])
                     else:
                         cfemIntegrals.updateDiffusion_MixedForm_weak(self.numericalFlux.aTilde[(ci,ck)],
@@ -2488,7 +2497,8 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                    self.ebq[('grad(v)',ci)],#cek should be grad(w)
                                                                                                    self.ebq[('dS_u',ci)],
                                                                                                    self.elementResidual[ci])
-                                cfemIntegrals.updateExteriorElementBoundaryDiffusionAdjoint_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                if not self.numericalFlux.includeBoundaryAdjointInteriorOnly: #added to only eval interior tjp      
+                                    cfemIntegrals.updateExteriorElementBoundaryDiffusionAdjoint_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
                                                                                                self.numericalFlux.isDOFBoundary[ck],
                                                                                                self.mesh.exteriorElementBoundariesArray,
                                                                                                self.mesh.elementBoundaryElementsArray,
@@ -2513,7 +2523,8 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                 self.ebq[('grad(v)',ci)],#cek grad w
                                                                                                 self.ebq[('dS_u',ci)],
                                                                                                 self.elementResidual[ci])
-                                cfemIntegrals.updateExteriorElementBoundaryDiffusionAdjoint(self.numericalFlux.isDOFBoundary[ck],
+                                if not self.numericalFlux.includeBoundaryAdjointInteriorOnly: #added to only eval interior tjp      
+                                    cfemIntegrals.updateExteriorElementBoundaryDiffusionAdjoint(self.numericalFlux.isDOFBoundary[ck],
                                                                                             self.mesh.exteriorElementBoundariesArray,
                                                                                             self.mesh.elementBoundaryElementsArray,
                                                                                             self.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -3496,6 +3507,8 @@ class OneLevelTransport(NonlinearEquation):
         for ci,sbcObject  in self.stressFluxBoundaryConditionsObjectsDict.iteritems():
             for t,g in sbcObject.stressFluxBoundaryConditionsDict.iteritems():
                 self.ebqe[('stressFlux',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
+      
+
     def calculateQuadrature(self):
         log("Element Quadrature",level=3)
         self.calculateElementQuadrature()

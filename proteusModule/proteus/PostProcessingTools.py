@@ -31,7 +31,7 @@ def VelocityPostProcessingChooser(transport):
             elif 'pwl' in transport.conservativeFlux[ci]:
                 ppcomps.append(ci)
                 pptypes[ci] = transport.conservativeFlux[ci]
-            elif transport.conservativeFlux[ci] in ['point-eval','dg-point-eval']:
+            elif transport.conservativeFlux[ci] in ['point-eval','dg-point-eval','point-eval-gwvd']: #tjp addin for gwvd
                 ppcomps.append(ci)
                 pptypes[ci] = transport.conservativeFlux[ci]
             elif transport.conservativeFlux[ci] == 'pwc':
@@ -1899,24 +1899,38 @@ class VPP_DG_RT0(VelocityPostProcessingAlgorithmBase):
           Check if need to evaluate element boundary and global element boundary velocities (and exterior global element boundary  too?)
           or if they are already evaluated with DG fluxes
         """
+     
         cpostprocessing.projectElementBoundaryFluxToRT0fluxRep(self.vt.mesh.elementBoundaryElementsArray,
                                                                self.vt.mesh.elementBoundariesArray,
                                                                self.vt.ebq[('dS_u',ci)],
                                                                self.vt.ebq_global[('totalFlux',ci)],
                                                                self.q[('velocity_dofs',ci)])
+        ### velocity DEBUG tjp ###
+        #my_vel = self.q[('velocity',ci)].copy()
+        #my_vel_ebq=self.ebq[('velocity',ci)].copy()
+        #my_vel_ebq_global=self.ebq_global[('velocity',ci)].copy()
         cpostprocessing.getElementRT0velocityValuesFluxRep(self.vt.mesh.nodeArray,
                                                            self.vt.mesh.elementNodesArray,
                                                            self.vt.q['abs(det(J))'],
                                                            self.vt.q['x'],
                                                            self.q[('velocity_dofs',ci)],
                                                            self.q[('velocity',ci)])
-        
+        ###velocity DEBUG tjp ####
+        #print "velocity difference"
+        #print max(my_vel.flat)
+        #result = my_vel - self.q[('velocity',ci)]
+        #print max(result.flat)
         cpostprocessing.getElementBoundaryRT0velocityValuesFluxRep(self.vt.mesh.nodeArray,
                                                                    self.vt.mesh.elementNodesArray,
                                                                    self.vt.q['abs(det(J))'],
                                                                    self.vt.ebq['x'],
                                                                    self.q[('velocity_dofs',ci)],
                                                                    self.ebq[('velocity',ci)])
+        ###velocity DEBUG tjp ####
+        #print "velocity ebq  difference"
+        #print max(my_vel_ebq.flat)
+        #result2= my_vel_ebq - self.ebq[('velocity',ci)]
+        #print max(result2.flat)
         cpostprocessing.getGlobalElementBoundaryRT0velocityValuesFluxRep(self.vt.mesh.nodeArray,
                                                                          self.vt.mesh.elementNodesArray,
                                                                          self.vt.mesh.elementBoundaryElementsArray,
@@ -1924,6 +1938,12 @@ class VPP_DG_RT0(VelocityPostProcessingAlgorithmBase):
                                                                          self.vt.ebq_global['x'],
                                                                          self.q[('velocity_dofs',ci)],
                                                                          self.ebq_global[('velocity',ci)])
+        ###velocity DEBUG tjp ####
+        #print "velocity ebq_global difference"
+        #print max(my_vel_ebq_global.flat)
+        #result3= my_vel_ebq_global - self.ebq_global[('velocity',ci)]
+        #print max(result3.flat)
+
     def evaluateElementVelocityField(self,x,ci):
         """
         evaluate velocity field assuming velocity_dofs already calculated
@@ -2176,6 +2196,70 @@ class VPP_POINT_EVAL(VelocityPostProcessingAlgorithmBase):
         #
         return vx
 
+#########################
+#  GWVD Post Processing Classes; gwvd addin tjp
+#########################
+class VPP_POINT_EVAL_GWVD(VelocityPostProcessingAlgorithmBase):
+    """
+    Velocity calculation for evaluating coarse grid velocity solution
+    at fine grid quadrature points; assumes that the coarse velocity degrees of 
+    freedom from the LDG solution are known
+
+    Currently only working for P=1 and P=2
+    """
+    from cpostprocessing import getElementLDGvelocityValuesLagrangeRep
+    def __init__(self,vectorTransport=None,vtComponents=[0]):
+        VelocityPostProcessingAlgorithmBase.__init__(self,postProcessingType='point-eval-gwvd',
+                                                     vectorTransport=vectorTransport,
+                                                     vtComponents=vtComponents)
+        #how is the local velocity represented, 1=P1 Lagrange, 2=P2 Lagrange
+       
+        self.testSpace=None
+        for ci in self.vtComponents:
+            self.testSpace=self.vt.u[ci].femSpace
+        
+        
+
+    def postprocess_component(self,ci,verbose=0):
+        """
+       may need to compute velocity field at the desired velocity dofs if this step is not
+       included in the getResidual step of the solution
+        """
+        pass
+  
+
+    def evaluateElementVelocityField(self,x,ci):
+        """
+        evaluate velocity field assuming velocity_dofs already calculated
+        for now assumes x shaped like nE x nq x 3
+        TODO:
+           put python loops in c
+        """
+        assert len(x.shape) == 3, "wrong shape for x= %s " % x.shape
+        nE = x.shape[0]; nq = x.shape[1]; nd = self.vt.nSpace_global
+        vx = numpy.zeros((nE,nq,nd),'d')
+        #have to evaluate shape functions at new points. This is painful
+        xiArray = numpy.zeros(x.shape,'d')
+        vArray  = numpy.zeros((nE,nq,self.testSpace.max_nDOF_element),'d')
+        invJ    = numpy.zeros((nE,nq,self.vt.q['inverse(J)'].shape[2],self.vt.q['inverse(J)'].shape[3]),
+                                'd')
+        for ie in range(nE):
+            for iq in range(nq):
+                invJ[ie,iq,:,:] = self.vt.q['inverse(J)'][ie,0,:,:] #assume affine
+            #iq
+        #iq
+   
+        self.testSpace.elementMaps.getInverseValues(invJ,x,xiArray)
+        self.testSpace.getBasisValuesAtArray(xiArray,vArray)
+
+        cpostprocessing.getElementLDGvelocityValuesLagrangeRep(vArray,
+                                                                self.q[('velocity_dofs',ci)],
+                                                                vx)
+ 
+        return vx
+
+    def archiveVelocityValues(self,archive,t,tCount,initialPhase=False,meshChanged=False):
+            pass
 
 #########################################################################
 #Begin trying "fixes" for material interface jumps
@@ -2564,6 +2648,7 @@ class AggregateVelocityPostProcessor:
                  'sun-gs-rt0':VPP_SUN_GS_RT0,    #Sun and Wheeler local Gauss-Seidel, RT_0 velocity repres.
                  'point-eval':VPP_POINT_EVAL,    #direct pointwise evaluation of fluxes
                  'dg-point-eval':VPP_POINT_EVAL, #pointwise evaluation for dg
+                 'point-eval-gwvd':VPP_POINT_EVAL_GWVD, #pointwise evaluation for dg using LDG method vel_DoFs, add in tjp
                  'dg':VPP_DG_RT0,            #dg scheme, RT_0 local velocity repres
                  'dg-bdm':VPP_DG_BDM,        #dg scheme,  Brezzi Douglas Marini linear velocity repres
                  'pwl-ib-fix-0':VPP_LOW_K_IB_PWL_RT0} #hack to enforce zero flux manually around low perm regions        
@@ -2987,7 +3072,7 @@ class VelocityPostProcessor_Original:
 
                         
                 #end pwl
-                elif self.postProcessingTypes[ci] in ['point-eval','dg-point-eval']:
+                elif self.postProcessingTypes[ci] in ['point-eval','dg-point-eval','point-eval-gwvd']: # gwvd addin tjp
                     if not self.q.has_key(('velocity',ci)):
                         self.q[('velocity',ci)]      = numpy.zeros((self.vt.mesh.nElements_global,
                                                                     self.vt.nQuadraturePoints_element,
@@ -3454,7 +3539,7 @@ class VelocityPostProcessor_Original:
                     self.postprocessPWL_opt(ci,verbose=verbose+1)#mwf hack
                 else:
                     self.postprocessPWL(ci,verbose=verbose+1)#mwf hack
-            elif self.postProcessingTypes[ci] in ['point-eval','dg-point-eval']:
+            elif self.postProcessingTypes[ci] in ['point-eval','dg-point-eval','point-eval-gwvd']:#gwvd add-in tjp
                 self.postprocessPointEval(ci,verbose=verbose)
             elif self.postProcessingTypes[ci] == 'pwc':
                 self.postprocessPWC(ci,verbose=verbose+1)
