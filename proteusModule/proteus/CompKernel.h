@@ -2,7 +2,7 @@
 #define COMPKERNEL_H
 #include <cmath>
 
-template<const int NSPACE>
+template<int NSPACE>
 class EIndex
 {
 };
@@ -43,7 +43,7 @@ public:
   {}
 };
 //I separated the space mapping part of the kernel so I could partially specialize the template on NSPACE
-template<const int NSPACE, const int NDOF_MESH_TRIAL_ELEMENT>
+template<int NSPACE, int NDOF_MESH_TRIAL_ELEMENT>
 class CompKernelSpaceMapping
 {
 public:
@@ -119,7 +119,7 @@ public:
 };
 
 //specialization for 3D
-template<const int NDOF_MESH_TRIAL_ELEMENT>
+template<int NDOF_MESH_TRIAL_ELEMENT>
 class CompKernelSpaceMapping<3,NDOF_MESH_TRIAL_ELEMENT>
 {
 public:
@@ -359,8 +359,8 @@ public:
 						       double* metricTensor,
 						       double& metricTensorDetSqrt)
   {
-    const int ebN_local_kb_nSpace = ebN_local_kb*3,
-      ebN_local_kb_nSpace_nSpacem1 = ebN_local_kb*3*2;
+    //const int ebN_local_kb_nSpace = ebN_local_kb*3,
+    //  ebN_local_kb_nSpace_nSpacem1 = ebN_local_kb*3*2;
     // 
     //calculate velocity of mapping from the reference element to the physical element
     // 
@@ -412,7 +412,7 @@ public:
 };
 
 
-template<const int NSPACE, const int NDOF_MESH_TRIAL_ELEMENT, const int NDOF_TRIAL_ELEMENT, const int NDOF_TEST_ELEMENT>
+template<int NSPACE, int NDOF_MESH_TRIAL_ELEMENT, int NDOF_TRIAL_ELEMENT, int NDOF_TEST_ELEMENT>
 class CompKernel
 {
 public:
@@ -877,7 +877,19 @@ public:
     return flux*w_dS;
   }
 
+  inline double InteriorElementBoundaryFlux(const double& flux,
+					    const double& w_dS)
+  {
+    return flux*w_dS;
+  }
+
   inline double ExteriorNumericalAdvectiveFluxJacobian(const double& dflux_left,
+						       const double& v)
+  {
+    return dflux_left*v;
+  }
+
+  inline double InteriorNumericalAdvectiveFluxJacobian(const double& dflux_left,
 						       const double& v)
   {
     return dflux_left*v;
