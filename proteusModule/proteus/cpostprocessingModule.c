@@ -568,6 +568,7 @@ cpostprocessingGetElementBDM1velocityValuesLagrangeRep(PyObject* self,
 		       &q_velocity))
     return NULL;
   nVDOFs_element = SHAPE(q_velocity)[2]*(SHAPE(q_velocity)[2]+1);
+  
   if (ND(p1_vdofs) > 1)
     assert(nVDOFs_element == SHAPE(p1_vdofs)[1]);
 
@@ -578,6 +579,40 @@ cpostprocessingGetElementBDM1velocityValuesLagrangeRep(PyObject* self,
 					  nVDOFs_element,
 					  DDATA(q_v),
 					  DDATA(p1_vdofs),
+					  DDATA(q_velocity));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+// tjp added for LDG velocity local representation for error analysis
+static PyObject*
+cpostprocessingGetElementLDGvelocityValuesLagrangeRep(PyObject* self,
+						     PyObject* args)
+{
+  
+  PyObject *q_v,*vdofs,*q_velocity;
+  int nVDOF_element=1;
+  int nDOF_trial_element=1;
+  
+  if(!PyArg_ParseTuple(args,"OOO",
+		       &q_v,
+		       &vdofs,
+		       &q_velocity))
+    return NULL;
+  
+  nVDOF_element =SHAPE(vdofs)[1];
+  nDOF_trial_element=SHAPE(q_v)[2];
+  //printf('nVDOFs_element=%d',nVDOFs_element);
+  //nVDOFs_element = SHAPE(q_velocity)[2]*(SHAPE(q_velocity)[2]+1);
+  if (ND(vdofs) > 1)
+    assert(nVDOF_element == SHAPE(q_v)[2]*SHAPE(q_velocity)[2]);
+
+  getElementLDGvelocityValuesLagrangeRep(SHAPE(q_velocity)[0],
+					  SHAPE(q_velocity)[1],
+					  SHAPE(q_velocity)[2],
+					  nDOF_trial_element,
+					  nVDOF_element,
+					  DDATA(q_v),
+					  DDATA(vdofs),
 					  DDATA(q_velocity));
   Py_INCREF(Py_None);
   return Py_None;
@@ -2127,6 +2162,10 @@ static PyMethodDef cpostprocessingMethods[] = {
     cpostprocessingGetElementBDM1velocityValuesLagrangeRep,
     METH_VARARGS, 
     "get velocity at quadrature points assuming have local dofs for local P^1(E) and std Lagr. basis" },
+  { "getElementLDGvelocityValuesLagrangeRep", 
+    cpostprocessingGetElementLDGvelocityValuesLagrangeRep,
+    METH_VARARGS, 
+    "get velocity at quadrature points assuming have local dofs for local P^k(E) where k=1,2 and std Lagr. basis" },
   { "getGlobalExteriorElementBoundaryBDM1velocityValuesLagrangeRep", 
     cpostprocessingGetGlobalExteriorElementBoundaryBDM1velocityValuesLagrangeRep,
     METH_VARARGS, 
