@@ -49,7 +49,7 @@ class LatexResultsSummary:
     #end def
     def open(self,append=False):
         import os
-        if not os.path.exists(self.resFileName):
+        if not (os.path.exists(self.resFileName) or os.path.exists(self.resFileName + os.extsep + "dir")): #tjp hack 
             logEvent("""LatexResSumm resFile= %s not found! """ % self.resFileName)
             return True
         import shelve
@@ -60,7 +60,6 @@ class LatexResultsSummary:
         self.report = openLatexReport(self.repFileName,self.repName)
 
         #check ok
-
         return False
     def close(self):
         closeLatexReport(self.report)
