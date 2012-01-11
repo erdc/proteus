@@ -8587,7 +8587,7 @@ void loadBoundaryFluxIntoGlobalElementBoundaryVelocity(int nExteriorElementBound
 
 }
 
-#define TR_ALPHA 1.0
+#define TR_ALPHA 0.5
 #define TR_ALPHA_EXT 1.0
 
 /**
@@ -9001,6 +9001,43 @@ void updatePotential_MixedForm_weak(int nElements_global,
 		      I];
 }
 
+void updatePotential_MixedForm_weak_gwvd(int nElements_global,
+                                    int nQuadraturePoints_element,
+                                    int nDOF_test_element,
+                                    int nSpace,
+				    double  epsilon,
+                                    double* phi,
+				    double* w_dV,
+                                    double* grad_w_dV,
+                                    double* b,
+				    double* mf) 
+{
+  int eN,i,k,I;
+  for(eN=0;eN<nElements_global;eN++)
+    for (I=0;I<nSpace;I++)
+      for (i=0;i<nDOF_test_element;i++)
+        for (k=0;k<nQuadraturePoints_element;k++)
+          { 
+	    b[eN*nDOF_test_element*nSpace +
+            I*nDOF_test_element+i]
+	      += 
+            phi[eN*nQuadraturePoints_element+
+                k]
+            *
+            grad_w_dV[eN*nQuadraturePoints_element*nDOF_test_element*nSpace +
+		      k*nDOF_test_element*nSpace +
+		      i*nSpace +
+		      I];
+	        if (I==nSpace-1)
+	      { 
+		b[eN*nDOF_test_element*nSpace +
+		I*nDOF_test_element+i]
+	       -= epsilon*mf[eN*nQuadraturePoints_element+
+			     k ]*w_dV[eN*nQuadraturePoints_element*nDOF_test_element+ k*nDOF_test_element + i ];
+			     }
+	  }
+}
+
 void updatePotential_MixedForm_weakJacobian(int nElements_global,
                                             int nQuadraturePoints_element,
                                             int nDOF_test_element,
@@ -9321,6 +9358,144 @@ void calculateVelocityQuadrature_MixedForm2_sd(int nElements_global,
 		  j];
     }
 }
+
+/* Velocity Quadrature_MixedForm2 function that saves the velocity degrees of freedom, tjp added*/
+
+void calculateVelocityQuadrature_MixedForm2_vdof_sd(int nElements_global,
+					       int nElementBoundaries_element,
+					       int nElementBoundaryQuadraturePoints_elementBoundary,
+					       int nDOF_element,
+					       int nSpace,
+					       int nQuadraturePoints_element,
+					       const int * rowptr,
+					       const int * colind,
+					       double* qa,
+					       double* qw_dV,
+					       double* b,
+					       double* v,
+					       double* V,
+					       double* qv,
+					       double* qV,
+					       double* vel_dofs)
+{
+  int eN,ebN,k,i,j,I,nDOF_element2=nDOF_element*nDOF_element,nSpace2=nSpace*nSpace;
+  int m,nnz=rowptr[nSpace];
+  PROTEUS_LAPACK_INTEGER ipiv[nDOF_element],lwork=((PROTEUS_LAPACK_INTEGER)nDOF_element),dim=((PROTEUS_LAPACK_INTEGER)nDOF_element),info=0;
+  double work[nDOF_element],A_inv[nDOF_element2];
+  double V_dof[nSpace][nDOF_element];
+  double vel_dofs_temp[nElements_global][nSpace][nDOF_element];
+  memset(V,0,sizeof(double)*
+         nElements_global*
+         nElementBoundaries_element*
+         nElementBoundaryQuadraturePoints_elementBoundary*
+         nSpace);
+  memset(qV,0,sizeof(double)*
+         nElements_global*
+         nQuadraturePoints_element*
+         nSpace);
+  for(eN=0;eN<nElements_global;eN++)
+    {
+      for(I=0;I<nSpace;I++)
+	{
+	  memset(A_inv,0,sizeof(double)*nDOF_element2);
+	  for(i=0;i<nDOF_element;i++)
+	    for(j=0;j<nDOF_element;j++)
+	      {
+		for(k=0;k<nQuadraturePoints_element;k++)
+		  {
+		    //cek hack do diagonal only for now
+		    for (m=rowptr[I]; m < rowptr[I+1];m++)
+		      if (colind[m] == I)
+			{
+			  /*mwf debug
+			  printf("mixedform2 eN=%d I=%d m=%d colind[m]=%d a=%g \n",
+				 eN,I,m,colind[m],qa[eN*nQuadraturePoints_element*nnz+
+						     k*nnz + m]);
+			  */
+			  A_inv[i*nDOF_element+j] += (1.0/qa[eN*nQuadraturePoints_element*nnz+
+							     k*nnz + m])
+			    *qv[eN*nQuadraturePoints_element*nDOF_element+
+				k*nDOF_element+
+				j]
+			    *
+			    qw_dV[eN*nQuadraturePoints_element*nDOF_element+
+				  k*nDOF_element+
+				  i];
+			}
+		  }
+	      }
+	  info=0;
+	  dgetrf_(&dim,&dim,A_inv,&dim,ipiv,&info);
+	  dgetri_(&dim,A_inv,&dim,ipiv,work,&lwork,&info);
+	  
+	  /* velocity DOF */
+	  for(i=0;i<nDOF_element;i++)
+	    {
+	      V_dof[I][i]=0.0;
+	      vel_dofs_temp[eN][I][i]=0.0;
+	      for(j=0;j<nDOF_element;j++)
+		{
+		V_dof[I][i]
+		  +=
+		  A_inv[i*nDOF_element+
+			j]
+		  *
+		  b[eN*nSpace*nDOF_element+
+		    I*nDOF_element+
+		    j];
+	        vel_dofs_temp[eN][I][i] 
+		+= A_inv[i*nDOF_element+
+			j]
+		  *
+		  b[eN*nSpace*nDOF_element+
+		    I*nDOF_element+
+		    j];
+		}
+	    }
+	}
+
+      /* Change the shape of the velocity degrees of freedom */
+	for(j=0;j<nDOF_element;j++)
+	  for(I=0;I<nSpace;I++)
+	    vel_dofs[eN*nDOF_element*nSpace+
+	       j*nSpace+
+	       I]
+	      =vel_dofs_temp[eN][I][j];
+	  
+      /* evaluate at element quadrature */
+      for(k=0;k<nQuadraturePoints_element;k++)
+	for(j=0;j<nDOF_element;j++)
+	  for(I=0;I<nSpace;I++)
+	    qV[eN*nQuadraturePoints_element*nSpace+
+	       k*nSpace+
+	       I]
+	      +=
+	      V_dof[I][j]
+	      *
+	      qv[eN*nQuadraturePoints_element*nDOF_element+
+		 k*nDOF_element+
+		 j];
+
+     
+      /* evaluate at element boundary quadrature*/
+      for (ebN=0;ebN<nElementBoundaries_element;ebN++)
+	for(k=0;k<nElementBoundaryQuadraturePoints_elementBoundary;k++)
+	  for(j=0;j<nDOF_element;j++)
+	    for(I=0;I<nSpace;I++)
+	      V[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
+		ebN*nElementBoundaryQuadraturePoints_elementBoundary*nSpace+
+		k*nSpace+
+		I]
+		+=
+		V_dof[I][j]
+		*
+		v[eN*nElementBoundaries_element*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
+		  ebN*nElementBoundaryQuadraturePoints_elementBoundary*nDOF_element+
+		  k*nDOF_element+
+		  j];
+    }
+}
+
 
 void calculateVelocityQuadrature_MixedForm_Jacobian(int nElements_global,
                                                     int nElementBoundaries_element,
@@ -9938,6 +10113,7 @@ void updateDiffusion_MixedForm_weak_sd(int nElements_global,
                                        double* a,
                                        double* qV,
                                        double* grad_w_dV,
+				       double* velocity, /* added for ldg coupling */
                                        double* weak_residual)
 {
   int eN,i,k,I,m,nnz=rowptr[nSpace];
@@ -9946,9 +10122,10 @@ void updateDiffusion_MixedForm_weak_sd(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
           for (m=rowptr[I];m<rowptr[I+1];m++)
-            weak_residual[eN*nDOF_test_element + i] 
+            {
+	    weak_residual[eN*nDOF_test_element + i] 
               -=
-              a[eN*nQuadraturePoints_element*nnz+
+             a[eN*nQuadraturePoints_element*nnz+
                 k*nnz+
                 m]
               *
@@ -9960,6 +10137,25 @@ void updateDiffusion_MixedForm_weak_sd(int nElements_global,
                         k*nDOF_test_element*nSpace + 
                         i*nSpace+
                         I];
+	    }
+
+  for(eN=0;eN<nElements_global;eN++)
+      for (k=0;k<nQuadraturePoints_element;k++)
+        for (I=0;I<nSpace;I++)
+          for (m=rowptr[I];m<rowptr[I+1];m++)
+            {
+	    velocity[eN*nQuadraturePoints_element*nSpace + 
+                 k*nSpace + 
+                 I]
+	      +=
+              a[eN*nQuadraturePoints_element*nnz+
+                k*nnz+
+                m]
+              *
+              qV[eN*nQuadraturePoints_element*nSpace + 
+                 k*nSpace + 
+                 colind[m]];
+	    }
 }
 
 void updateDiffusionJacobian_MixedForm_weak(int nElements_global,
