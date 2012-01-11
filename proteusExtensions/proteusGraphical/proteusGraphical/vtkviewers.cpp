@@ -153,7 +153,7 @@ void BuildQuadraticTriangleNodeList(int numNodes,
 				    vtkIdType* NodeList)
 {
   int base = 0;
-  int n0, n1, edgeN;
+  //int n0, n1, edgeN;
   
   //Build the node list
   for  (int i=0; i<3; i++)
@@ -256,8 +256,8 @@ void BuildQuadraticTetNodeList(int numNodes,
 			       const int* edgeNodesArray,
 			       vtkIdType* NodeList)
 {
-  int base = 0;
-  int n0, n1, edgeN;
+  //  int base = 0;
+  //int n0, n1, edgeN;
   
   //Build the node list
   for  (int i=0; i<4; i++)
