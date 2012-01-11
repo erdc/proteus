@@ -465,16 +465,15 @@ class KSP_petsc4py(LinearSolver):
             self.ksp.setOptionsPrefix(prefix)
         self.ksp.setFromOptions()
     def prepare(self,b=None):
+        from petsc4py import PETSc
         #self.petsc_L.setOption(petsc4py.PETSc.Mat.Option.SYMMETRIC, True)
-        addValues = False
+        addValues = PETSc.InsertMode.INSERT_VALUES
         if self.par_fullOverlap == False: 
-            addValues = True
-        #
+            addValues = PETSc.InsertMode.ADD_VALUES
         self.petsc_L.zeroEntries()
         blockSize = self.petsc_L.getBlockSize()
         assert blockSize == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
         self.petsc_L.setValuesLocalCSR(self.csr_rep[0],self.csr_rep[1],self.csr_rep[2],addValues)
-        
         self.petsc_L.assemblyBegin()
         self.petsc_L.assemblyEnd()
         if self.pc != None:
