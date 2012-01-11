@@ -107,7 +107,7 @@ ParVec_dealloc(ParVec* self)
   if (self->numpy_array != NULL)//shouldn't be NULL, here in any case
     {
       VecRestoreArray(self->v,&self->array);
-      VecDestroy(self->v);
+      VecDestroy(&self->v);
       Py_DECREF(self->numpy_array);
     }
 }
@@ -322,18 +322,19 @@ ParMat_init(ParMat *self, PyObject *args, PyObject *kwds)
       MatSeqAIJSetPreallocationCSR(self->m,SMP(L)->A.rowptr,&j[0],(double*)(SMP(L)->A.nzval));
       MatMPIAIJSetPreallocationCSR(self->m,SMP(L)->A.rowptr,&j[0],(double*)(SMP(L)->A.nzval));
     }
-  PetscOptionsPrint(stdout);
-  ISLocalToGlobalMappingCreate(Py_PETSC_COMM_WORLD,bs*SHAPE(subdomain2global)[0],&indices[0],&self->subdomain2globalIS);
-  MatSetLocalToGlobalMapping(self->m,self->subdomain2globalIS);
+  //cek hack
+  //PetscOptionsPrint(stdout);
+  ISLocalToGlobalMappingCreate(Py_PETSC_COMM_WORLD,bs*SHAPE(subdomain2global)[0],&indices[0],PETSC_COPY_VALUES,&self->subdomain2globalIS);
+  MatSetLocalToGlobalMapping(self->m,self->subdomain2globalIS,self->subdomain2globalIS);
   return 0;
 }
 
 static  void
 ParMat_dealloc(ParMat* self)
 {
-  MatDestroy(self->m);
+  MatDestroy(&self->m);
   //  MatDestroy(self->m2);
-  ISLocalToGlobalMappingDestroy(self->subdomain2globalIS);
+  ISLocalToGlobalMappingDestroy(&self->subdomain2globalIS);
 }
 
 static PyTypeObject ParMatType = {    
@@ -400,13 +401,13 @@ int destroy_TrueResidualTestCtx(void* ctx)
 {
   int ierr = 0;
   if (TRUERESCTX(ctx)->t)
-    ierr = VecDestroy(TRUERESCTX(ctx)->t);
+    ierr = VecDestroy(&TRUERESCTX(ctx)->t);
   if (ierr) return ierr;
   if (TRUERESCTX(ctx)->v)
-    ierr = VecDestroy(TRUERESCTX(ctx)->v);
+    ierr = VecDestroy(&TRUERESCTX(ctx)->v);
   if (ierr) return ierr;
   if (TRUERESCTX(ctx)->residual)
-    ierr = VecDestroy(TRUERESCTX(ctx)->residual);
+    ierr = VecDestroy(&TRUERESCTX(ctx)->residual);
   return ierr;
 }
 
@@ -512,7 +513,7 @@ CKSP_useTrueResidualConvergence(CKSP *self, PyObject *args, PyObject *kwds)
   PyObject *par_v;
   double atol,rtol,divtol;
   int max_it;
-  PetscTruth found;
+  PetscBool found;
   if(!PyArg_ParseTuple(args,
                        "O",
                        &par_v))
@@ -545,7 +546,7 @@ CKSP_useTrueResidualConvergence(CKSP *self, PyObject *args, PyObject *kwds)
 static  void
 CKSP_dealloc(CKSP* self)
 {
-  KSPDestroy(self->ksp);
+  KSPDestroy(&self->ksp);
   destroy_TrueResidualTestCtx(&(self->tres_ctx));
 }
 
@@ -568,6 +569,7 @@ CKSP_prepare(CKSP *self, PyObject* args)
   a = (double*) (SMP(L)->A.nzval);
   rowptr = SMP(L)->A.rowptr;
   colind = SMP(L)->A.colind;
+  std::cout<<"MatZeroEntries"<<std::endl<<std::flush;
   MatZeroEntries(PETSCMAT(par_L));
   //  MatZeroEntries(PETSCMAT2(par_L));
   int irow[1];
@@ -579,7 +581,9 @@ CKSP_prepare(CKSP *self, PyObject* args)
 //     }
   //overlap
   int offset_rank,offset_rankP1,ldim;
+  std::cout<<"MatGetOwnership"<<std::endl<<std::flush;
   MatGetOwnershipRange(PETSCMAT(par_L),&offset_rank,&offset_rankP1);
+  std::cout<<"offset_rank "<<offset_rank<<" offset_rankP1"<<offset_rankP1<<std::endl<<std::flush;
   //MatGetOwnershipRange(PETSCMAT2(par_L),&offset_rank,&offset_rankP1);
   //  int bs;
   //MatGetBlockSize(PETSCMAT(par_L),&bs);
@@ -592,11 +596,14 @@ CKSP_prepare(CKSP *self, PyObject* args)
 //     }
   //MatSetBlockSize(PETSCMAT(par_L),1);
   //mwf hack
+  std::cout<<"MatsetValuesLocal"<<std::endl<<std::flush;
   if (overlap <= 0)
     {
       for (int i=0;i<SMP(L)->dim[0];i++)
 	{
 	  irow[0] = i;
+	  //for (int ti=rowptr[i];ti<rowptr[i+1];ti++)
+	  //  std::cout<<"a "<<a[colind[ti]]<<'\t'<<ti<<'\t'<<colind[ti]<<std::endl<<std::flush;
 	  MatSetValuesLocal(PETSCMAT(par_L),1,irow,rowptr[i+1]-rowptr[i],&colind[rowptr[i]],&a[rowptr[i]],ADD_VALUES);
 	  //MatSetValuesLocal(PETSCMAT2(par_L),1,irow,rowptr[i+1]-rowptr[i],&colind[rowptr[i]],&a[rowptr[i]],ADD_VALUES);
 	}
@@ -614,6 +621,7 @@ CKSP_prepare(CKSP *self, PyObject* args)
   //MatSetBlockSize(PETSCMAT(par_L),bs);
 //   double block_row[100];
 //   int block_col_indeces[10];
+  std::cout<<"MatAssemblyBegin"<<std::endl<<std::flush;
   MatAssemblyBegin(PETSCMAT(par_L),MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(PETSCMAT(par_L),MAT_FINAL_ASSEMBLY);
   //MatSetOption(PETSCMAT(par_L),MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);//the preallocation does an initial assembly so I think this should be safe
@@ -625,8 +633,13 @@ CKSP_prepare(CKSP *self, PyObject* args)
   //std::cout<<"inf norm of L - L2 = "<<norm<<std::endl;
 //   MatView(PETSCMAT(par_L),PETSC_VIEWER_STDOUT_WORLD);
   //MatView(PETSCMAT(par_L),PETSC_VIEWER_STDOUT_WORLD);
-  KSPSetOperators(self->ksp,PETSCMAT(par_L),PETSCMAT(par_L),SAME_NONZERO_PATTERN);
+  std::cout<<"KSPSetOps"<<std::endl<<std::flush;
+  //KSPSetOperators(self->ksp,PETSCMAT(par_L),PETSCMAT(par_L),SAME_NONZERO_PATTERN);
+  //cek hack
+  KSPSetOperators(self->ksp,PETSCMAT(par_L),PETSCMAT(par_L),DIFFERENT_NONZERO_PATTERN);
+  std::cout<<"KSPSetUp"<<std::endl<<std::flush;
   KSPSetUp(self->ksp);
+  std::cout<<"Done"<<std::endl<<std::flush;
 
   Py_INCREF(Py_None); 
   return Py_None;
@@ -1257,7 +1270,7 @@ DaetkPetscSys_size(DaetkPetscSys *self,
     //get a petsc index set that has the new submdomain number for each element
     IS elementPartitioningIS_new;
     MatPartitioningApply(petscPartition,&elementPartitioningIS_new); 
-    MatPartitioningDestroy(petscPartition);
+    MatPartitioningDestroy(&petscPartition);
     //MatDestroy(petscAdjacency);
     //ISView(elementPartitioningIS_new,PETSC_VIEWER_STDOUT_WORLD);
     
@@ -1406,7 +1419,7 @@ DaetkPetscSys_size(DaetkPetscSys *self,
         nodeNumbering_new2old[nN] = *nN_ownedp++;
       }
     IS nodeNumberingIS_new2old;
-    ISCreateGeneral(Py_PETSC_COMM_WORLD,nodes_subdomain_owned.size(),&nodeNumbering_new2old[0],&nodeNumberingIS_new2old);
+    ISCreateGeneral(Py_PETSC_COMM_WORLD,nodes_subdomain_owned.size(),&nodeNumbering_new2old[0],PETSC_COPY_VALUES,&nodeNumberingIS_new2old);
     IS nodeNumberingIS_global_new2old;
     ISAllGather(nodeNumberingIS_new2old,&nodeNumberingIS_global_new2old);
     const PetscInt *nodeNumbering_global_new2old;
@@ -1684,14 +1697,14 @@ DaetkPetscSys_size(DaetkPetscSys *self,
 
     ISRestoreIndices(elementNumberingIS_global_old2new,&elementNumbering_global_old2new);
 
-    ISDestroy(elementPartitioningIS_new);
-    ISDestroy(elementNumberingIS_subdomain_old2new);
-    ISDestroy(elementNumberingIS_global_old2new);
+    ISDestroy(&elementPartitioningIS_new);
+    ISDestroy(&elementNumberingIS_subdomain_old2new);
+    ISDestroy(&elementNumberingIS_global_old2new);
 
     ISRestoreIndices(nodeNumberingIS_global_new2old,&nodeNumbering_global_new2old);
 
-    ISDestroy(nodeNumberingIS_new2old);
-    ISDestroy(nodeNumberingIS_global_new2old);
+    ISDestroy(&nodeNumberingIS_new2old);
+    ISDestroy(&nodeNumberingIS_global_new2old);
 
     return 0;
   }
@@ -1775,7 +1788,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   //get petsc index set that has the new subdomain number for each node
   IS nodePartitioningIS_new;
   MatPartitioningApply(petscPartition,&nodePartitioningIS_new);
-  MatPartitioningDestroy(petscPartition); //gets petscAdjacency too I believe
+  MatPartitioningDestroy(&petscPartition); //gets petscAdjacency too I believe
 
   //determine the number of nodes per subdomain in new partitioning
   valarray<int> nNodes_subdomain_new(size);
@@ -1915,7 +1928,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     }
   //use Petsc IS to get global new2old numbering
   IS elementNumberingIS_subdomain_new2old;
-  ISCreateGeneral(Py_PETSC_COMM_WORLD,elements_subdomain_owned.size(),&elementNumbering_subdomain_new2old[0],
+  ISCreateGeneral(Py_PETSC_COMM_WORLD,elements_subdomain_owned.size(),&elementNumbering_subdomain_new2old[0],PETSC_COPY_VALUES,
 		  &elementNumberingIS_subdomain_new2old);
   IS elementNumberingIS_global_new2old;
   ISAllGather(elementNumberingIS_subdomain_new2old,&elementNumberingIS_global_new2old);
@@ -2052,7 +2065,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       elementBoundaryNumbering_new2old[ebN] = *ebN_ownedp++;
     }
   IS elementBoundaryNumberingIS_subdomain_new2old;
-  ISCreateGeneral(Py_PETSC_COMM_WORLD,elementBoundaries_subdomain_owned.size(),&elementBoundaryNumbering_new2old[0],&elementBoundaryNumberingIS_subdomain_new2old);
+  ISCreateGeneral(Py_PETSC_COMM_WORLD,elementBoundaries_subdomain_owned.size(),&elementBoundaryNumbering_new2old[0],PETSC_COPY_VALUES,&elementBoundaryNumberingIS_subdomain_new2old);
   IS elementBoundaryNumberingIS_global_new2old;
   ISAllGather(elementBoundaryNumberingIS_subdomain_new2old,&elementBoundaryNumberingIS_global_new2old);
   const PetscInt *elementBoundaryNumbering_global_new2old;
@@ -2109,7 +2122,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     edgeNumbering_new2old[i] = *edges_ownedp++;
     
   IS edgeNumberingIS_subdomain_new2old;
-  ISCreateGeneral(Py_PETSC_COMM_WORLD,edges_subdomain_owned.size(),&edgeNumbering_new2old[0],&edgeNumberingIS_subdomain_new2old);
+  ISCreateGeneral(Py_PETSC_COMM_WORLD,edges_subdomain_owned.size(),&edgeNumbering_new2old[0],PETSC_COPY_VALUES,&edgeNumberingIS_subdomain_new2old);
   IS edgeNumberingIS_global_new2old;
   ISAllGather(edgeNumberingIS_subdomain_new2old,&edgeNumberingIS_global_new2old);
   const PetscInt *edgeNumbering_global_new2old;
@@ -2627,24 +2640,24 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   //cleanup
   ISRestoreIndices(nodeNumberingIS_global_old2new,&nodeNumbering_global_old2new);
 
-  ISDestroy(nodePartitioningIS_new);
-  ISDestroy(nodeNumberingIS_subdomain_old2new);
-  ISDestroy(nodeNumberingIS_global_old2new);
+  ISDestroy(&nodePartitioningIS_new);
+  ISDestroy(&nodeNumberingIS_subdomain_old2new);
+  ISDestroy(&nodeNumberingIS_global_old2new);
   
   ISRestoreIndices(elementNumberingIS_global_new2old,&elementNumbering_global_new2old);
   
-  ISDestroy(elementNumberingIS_subdomain_new2old);
-  ISDestroy(elementNumberingIS_global_new2old);
+  ISDestroy(&elementNumberingIS_subdomain_new2old);
+  ISDestroy(&elementNumberingIS_global_new2old);
 
   ISRestoreIndices(elementBoundaryNumberingIS_global_new2old,&elementBoundaryNumbering_global_new2old);
   
-  ISDestroy(elementBoundaryNumberingIS_subdomain_new2old);
-  ISDestroy(elementBoundaryNumberingIS_global_new2old);
+  ISDestroy(&elementBoundaryNumberingIS_subdomain_new2old);
+  ISDestroy(&elementBoundaryNumberingIS_global_new2old);
 
   ISRestoreIndices(edgeNumberingIS_global_new2old,&edgeNumbering_global_new2old);
   
-  ISDestroy(edgeNumberingIS_subdomain_new2old);
-  ISDestroy(edgeNumberingIS_global_new2old);
+  ISDestroy(&edgeNumberingIS_subdomain_new2old);
+  ISDestroy(&edgeNumberingIS_global_new2old);
 
   return 0;
 }
@@ -2736,8 +2749,8 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     //get a petsc index set that has the new submdomain number for each element
     IS elementPartitioningIS_new;
     MatPartitioningApply(petscPartition,&elementPartitioningIS_new); 
-    MatPartitioningDestroy(petscPartition);
-    //MatDestroy(petscAdjacency);
+    MatPartitioningDestroy(&petscPartition);
+    //MatDestroy(&petscAdjacency);
     //ISView(elementPartitioningIS_new,PETSC_VIEWER_STDOUT_WORLD);
     
     //experiment with metis
@@ -2885,7 +2898,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
         nodeNumbering_new2old[nN] = *nN_ownedp++;
       }
     IS nodeNumberingIS_new2old;
-    ISCreateGeneral(Py_PETSC_COMM_WORLD,nodes_subdomain_owned.size(),&nodeNumbering_new2old[0],&nodeNumberingIS_new2old);
+    ISCreateGeneral(Py_PETSC_COMM_WORLD,nodes_subdomain_owned.size(),&nodeNumbering_new2old[0],PETSC_COPY_VALUES,&nodeNumberingIS_new2old);
     IS nodeNumberingIS_global_new2old;
     ISAllGather(nodeNumberingIS_new2old,&nodeNumberingIS_global_new2old);
     const PetscInt *nodeNumbering_global_new2old;
@@ -3001,7 +3014,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
         elementBoundaryNumbering_new2old[ebN] = *ebN_ownedp++;
       }
     IS elementBoundaryNumberingIS_new2old;
-    ISCreateGeneral(Py_PETSC_COMM_WORLD,elementBoundaries_subdomain_owned.size(),&elementBoundaryNumbering_new2old[0],&elementBoundaryNumberingIS_new2old);
+    ISCreateGeneral(Py_PETSC_COMM_WORLD,elementBoundaries_subdomain_owned.size(),&elementBoundaryNumbering_new2old[0],PETSC_COPY_VALUES,&elementBoundaryNumberingIS_new2old);
     IS elementBoundaryNumberingIS_global_new2old;
     ISAllGather(elementBoundaryNumberingIS_new2old,&elementBoundaryNumberingIS_global_new2old);
     const PetscInt *elementBoundaryNumbering_global_new2old;
@@ -3128,7 +3141,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       edgeNumbering_new2old[i] = *edges_ownedp++;
     
     IS edgeNumberingIS_new2old;
-    ISCreateGeneral(Py_PETSC_COMM_WORLD,edges_subdomain_owned.size(),&edgeNumbering_new2old[0],&edgeNumberingIS_new2old);
+    ISCreateGeneral(Py_PETSC_COMM_WORLD,edges_subdomain_owned.size(),&edgeNumbering_new2old[0],PETSC_COPY_VALUES,&edgeNumberingIS_new2old);
     IS edgeNumberingIS_global_new2old;
     ISAllGather(edgeNumberingIS_new2old,&edgeNumberingIS_global_new2old);
     const PetscInt *edgeNumbering_global_new2old;
@@ -3642,24 +3655,24 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
    
     ISRestoreIndices(elementNumberingIS_global_old2new,&elementNumbering_global_old2new);
 
-    ISDestroy(elementPartitioningIS_new);
-    ISDestroy(elementNumberingIS_subdomain_old2new);
-    ISDestroy(elementNumberingIS_global_old2new);
+    ISDestroy(&elementPartitioningIS_new);
+    ISDestroy(&elementNumberingIS_subdomain_old2new);
+    ISDestroy(&elementNumberingIS_global_old2new);
 
     ISRestoreIndices(nodeNumberingIS_global_new2old,&nodeNumbering_global_new2old);
 
-    ISDestroy(nodeNumberingIS_new2old);
-    ISDestroy(nodeNumberingIS_global_new2old);
+    ISDestroy(&nodeNumberingIS_new2old);
+    ISDestroy(&nodeNumberingIS_global_new2old);
 
     ISRestoreIndices(elementBoundaryNumberingIS_global_new2old,&elementBoundaryNumbering_global_new2old);
 
-    ISDestroy(elementBoundaryNumberingIS_new2old);
-    ISDestroy(elementBoundaryNumberingIS_global_new2old);
+    ISDestroy(&elementBoundaryNumberingIS_new2old);
+    ISDestroy(&elementBoundaryNumberingIS_global_new2old);
 
     ISRestoreIndices(edgeNumberingIS_global_new2old,&edgeNumbering_global_new2old);
 
-    ISDestroy(edgeNumberingIS_new2old);
-    ISDestroy(edgeNumberingIS_global_new2old);
+    ISDestroy(&edgeNumberingIS_new2old);
+    ISDestroy(&edgeNumberingIS_global_new2old);
 
     return 0;
   }
@@ -3714,7 +3727,7 @@ int buildQuadraticSubdomain2GlobalMappings_1d(Mesh& mesh,
 
   //build an index set for new numbering
   IS quadraticNumberingIS_new2old;
-  ISCreateGeneral(Py_PETSC_COMM_WORLD,nNodes_owned + nElements_owned,&quadraticNumbering_new2old[0],&quadraticNumberingIS_new2old);
+  ISCreateGeneral(Py_PETSC_COMM_WORLD,nNodes_owned + nElements_owned,&quadraticNumbering_new2old[0],PETSC_COPY_VALUES,&quadraticNumberingIS_new2old);
   IS quadraticNumberingIS_global_new2old;
   ISAllGather(quadraticNumberingIS_new2old,&quadraticNumberingIS_global_new2old);
   //get old 2 new mapping for dofs
@@ -3809,8 +3822,8 @@ int buildQuadraticSubdomain2GlobalMappings_1d(Mesh& mesh,
     }
 
   ISRestoreIndices(quadraticNumberingIS_global_new2old,&quadraticNumbering_global_new2old);
-  ISDestroy(quadraticNumberingIS_new2old);
-  ISDestroy(quadraticNumberingIS_global_new2old);
+  ISDestroy(&quadraticNumberingIS_new2old);
+  ISDestroy(&quadraticNumberingIS_global_new2old);
 
   return 0;
 }
@@ -3865,7 +3878,7 @@ int buildQuadraticSubdomain2GlobalMappings_2d(Mesh& mesh,
 
   //build an index set for new numbering
   IS quadraticNumberingIS_new2old;
-  ISCreateGeneral(Py_PETSC_COMM_WORLD,nDOFs_owned,&quadraticNumbering_new2old[0],&quadraticNumberingIS_new2old);
+  ISCreateGeneral(Py_PETSC_COMM_WORLD,nDOFs_owned,&quadraticNumbering_new2old[0],PETSC_COPY_VALUES,&quadraticNumberingIS_new2old);
   IS quadraticNumberingIS_global_new2old;
   ISAllGather(quadraticNumberingIS_new2old,&quadraticNumberingIS_global_new2old);
   //get old 2 new mapping for dofs
@@ -3966,8 +3979,8 @@ int buildQuadraticSubdomain2GlobalMappings_2d(Mesh& mesh,
     }//eN
 
   ISRestoreIndices(quadraticNumberingIS_global_new2old,&quadraticNumbering_global_new2old);
-  ISDestroy(quadraticNumberingIS_new2old);
-  ISDestroy(quadraticNumberingIS_global_new2old);
+  ISDestroy(&quadraticNumberingIS_new2old);
+  ISDestroy(&quadraticNumberingIS_global_new2old);
 
   return 0;
 }
@@ -4023,7 +4036,7 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
 
   //build an index set for new numbering
   IS quadraticNumberingIS_new2old;
-  ISCreateGeneral(Py_PETSC_COMM_WORLD,nDOFs_owned,&quadraticNumbering_new2old[0],&quadraticNumberingIS_new2old);
+  ISCreateGeneral(Py_PETSC_COMM_WORLD,nDOFs_owned,&quadraticNumbering_new2old[0],PETSC_COPY_VALUES,&quadraticNumberingIS_new2old);
   IS quadraticNumberingIS_global_new2old;
   ISAllGather(quadraticNumberingIS_new2old,&quadraticNumberingIS_global_new2old);
   //get old 2 new mapping for dofs
@@ -4253,8 +4266,8 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
     }//eN
 
   ISRestoreIndices(quadraticNumberingIS_global_new2old,&quadraticNumbering_global_new2old);
-  ISDestroy(quadraticNumberingIS_new2old);
-  ISDestroy(quadraticNumberingIS_global_new2old);
+  ISDestroy(&quadraticNumberingIS_new2old);
+  ISDestroy(&quadraticNumberingIS_global_new2old);
 
   return 0;
 }
@@ -4333,7 +4346,7 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
 
   //build an index set for new numbering
   IS quadraticNumberingIS_new2old;
-  ISCreateGeneral(Py_PETSC_COMM_WORLD,nDOFs_owned,&quadraticNumbering_new2old[0],&quadraticNumberingIS_new2old);
+  ISCreateGeneral(Py_PETSC_COMM_WORLD,nDOFs_owned,&quadraticNumbering_new2old[0],PETSC_COPY_VALUES,&quadraticNumberingIS_new2old);
   IS quadraticNumberingIS_global_new2old;
   ISAllGather(quadraticNumberingIS_new2old,&quadraticNumberingIS_global_new2old);
   //get old 2 new mapping for dofs
@@ -4634,8 +4647,8 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
     }//eN
 
   ISRestoreIndices(quadraticNumberingIS_global_new2old,&quadraticNumbering_global_new2old);
-  ISDestroy(quadraticNumberingIS_new2old);
-  ISDestroy(quadraticNumberingIS_global_new2old);
+  ISDestroy(&quadraticNumberingIS_new2old);
+  ISDestroy(&quadraticNumberingIS_global_new2old);
 
   return 0;
 }
@@ -4776,7 +4789,7 @@ static PyObject* flcbdfWrappersPartitionElements(PyObject* self,
 //                  nghost,
 //                  &ghost[0],
 //                  &u2);
-//   VecDestroy(u2);
+//   VecDestroy(&u2);
 
   int dims[1];
   //build handles to python arrays
@@ -4906,7 +4919,7 @@ static PyObject* flcbdfWrappersPartitionNodes(PyObject* self,
 //                  nghost,
 //                  &ghost[0],
 //                  &u2);
-//   VecDestroy(u2);
+//   VecDestroy(&u2);
 
   int dims[1];
   //build handles to python arrays
