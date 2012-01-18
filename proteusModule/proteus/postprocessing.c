@@ -3044,7 +3044,102 @@ void getGlobalExteriorElementBoundaryBDM1velocityValuesLagrangeRep(int nExterior
     }/*eN*/
 
 }
+void getGlobalElementBoundaryBDM1velocityValuesLagrangeRep(int nExteriorElementBoundaries_global,
+								   int nQuadraturePoints_elementBoundary,
+								   int nSpace,
+								   int nDOF_trial_element,
+								   int nVDOF_element,
+								   int *elementBoundaryElementsArray,
+								   int *exteriorElementBoundariesArray,
+								   double * ebqe_v, /*scalar P^1 shape fncts*/
+								   double * p1_velocity_dofs,
+								   double * ebq_global_velocity)
+{
+  /***********************************************************************
+    Assumes local representation for \f$[P^1(E)]^d\f$ is
+\f[
+    \vec N_j= \lambda_k \vec e_{id}
+\f]
+\f[
+       k = j / nd, id = j % nd
+\f]
+   **********************************************************************/
+  int ebN,ebNE,eN,iq,id,k,j;
+ 
+  for (ebNE = 0; ebNE < nExteriorElementBoundaries_global; ebNE++)
+    {
+      ebN = exteriorElementBoundariesArray[ebNE]; /* global boundary number */
+      eN  = elementBoundaryElementsArray[ebN*2 + 0];
+      
+      for (iq = 0; iq < nQuadraturePoints_elementBoundary; iq++)
+	{
+	  for (id = 0; id < nSpace; id++)
+	    {
+	      ebq_global_velocity[ebN*nQuadraturePoints_elementBoundary*nSpace + iq*nSpace + id] = 0.0;
+	      for (k = 0; k < nSpace+1; k++) /* looping over P1 degrees of freedom */
+		{
+		  j = k*nSpace+ id; /*id*(nSpace+1) + k;*/
+		  ebq_global_velocity[ebN*nQuadraturePoints_elementBoundary*nSpace + iq*nSpace + id] +=
+		    ebqe_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element + iq*nDOF_trial_element + k]
+		    *
+		    p1_velocity_dofs[eN*nVDOF_element + j];
+		}/*k*/ 
+	    }/*id*/
+	}/*iq*/
+    }/*eN*/
 
+}
+
+void getElementBoundaryBDM1velocityValuesLagrangeRep(int nElements_global,
+								   int nBoundaries_Element,
+								   int nQuadraturePoints_elementBoundary,
+								   int nSpace,
+								   int nDOF_trial_element,
+								   int nVDOF_element,
+						                   int *elementBoundaryElementsArray, /* not used */
+								   int *exteriorElementBoundariesArray, /*not used */
+								   double * ebq_v, /*scalar P^1 shape fncts*/
+								   double * p1_velocity_dofs,
+								   double * ebq_velocity)
+{
+  /***********************************************************************
+    Assumes local representation for \f$[P^1(E)]^d\f$ is
+\f[
+    \vec N_j= \lambda_k \vec e_{id}
+\f]
+\f[
+       k = j / nd, id = j % nd
+\f]
+   **********************************************************************/
+  int ebN,eN,iq,id,k,j;
+
+  for (eN = 0; eN < nElements_global; eN++)
+    {
+     
+     for (ebN=0; ebN < nBoundaries_Element; ebN ++)
+       {
+      for (iq = 0; iq < nQuadraturePoints_elementBoundary; iq++)
+	{
+	  for (id = 0; id < nSpace; id++)
+	    {
+	      ebq_velocity[eN*nBoundaries_Element*nQuadraturePoints_elementBoundary*nSpace 
+			+ ebN*nQuadraturePoints_elementBoundary*nSpace + iq*nSpace + id] = 0.0;
+	      for (k = 0; k < nSpace+1; k++)
+		{
+		  j = k*nSpace+ id; /*id*(nSpace+1) + k;*/
+		  ebq_velocity[eN*ebN*nQuadraturePoints_elementBoundary*nSpace 
+			+ nBoundaries_Element*nQuadraturePoints_elementBoundary*nSpace + iq*nSpace + id] +=
+		    ebq_v[eN*nBoundaries_Element*nQuadraturePoints_elementBoundary*nDOF_trial_element 
+			+ ebN*nQuadraturePoints_elementBoundary*iq*nDOF_trial_element + k]
+		    *
+		    p1_velocity_dofs[eN*nVDOF_element + j];
+		}/*k*/ 
+	    }/*id*/
+	}/*iq*/
+       }/*ebN*/
+    }/*eN*/
+
+}
 
 /***********************************************************************
    try implementing Sun-Wheeler Gauss-Seidel velocity postprocessing
