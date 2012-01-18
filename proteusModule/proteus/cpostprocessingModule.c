@@ -583,6 +583,7 @@ cpostprocessingGetElementBDM1velocityValuesLagrangeRep(PyObject* self,
   Py_INCREF(Py_None);
   return Py_None;
 }
+
 // tjp added for LDG velocity local representation for error analysis
 static PyObject*
 cpostprocessingGetElementLDGvelocityValuesLagrangeRep(PyObject* self,
@@ -654,9 +655,82 @@ cpostprocessingGetGlobalExteriorElementBoundaryBDM1velocityValuesLagrangeRep(PyO
 
 
 static PyObject*
+cpostprocessingGetGlobalElementBoundaryBDM1velocityValuesLagrangeRep(PyObject* self,
+									     PyObject* args)
+{
+  
+  PyObject *elementBoundaryElementsArray,
+    *exteriorElementBoundariesArray,
+    *ebqe_v,*p1_vdofs,*ebq_global_velocity;
+  int nVDOFs_element=1;
+  if(!PyArg_ParseTuple(args,"OOOOO",
+		       &elementBoundaryElementsArray,
+		       &exteriorElementBoundariesArray,
+		       &ebqe_v,
+		       &p1_vdofs,
+		       &ebq_global_velocity))
+    return NULL;
+  nVDOFs_element = SHAPE(ebq_global_velocity)[2]*(SHAPE(ebq_global_velocity)[2]+1);
+  if (ND(p1_vdofs) > 1)
+    assert(nVDOFs_element == SHAPE(p1_vdofs)[1]);
+
+  getGlobalExteriorElementBoundaryBDM1velocityValuesLagrangeRep(SHAPE(ebqe_v)[0],
+								SHAPE(ebq_global_velocity)[1],
+								SHAPE(ebq_global_velocity)[2],
+								SHAPE(ebqe_v)[2],
+								nVDOFs_element,
+								IDATA(elementBoundaryElementsArray),
+								IDATA(exteriorElementBoundariesArray),
+								DDATA(ebqe_v),
+								DDATA(p1_vdofs),
+								DDATA(ebq_global_velocity));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+
+
+static PyObject*
+cpostprocessingGetElementBoundaryBDM1velocityValuesLagrangeRep(PyObject* self,
+									     PyObject* args)
+{
+  
+  PyObject *elementBoundaryElementsArray,
+    *exteriorElementBoundariesArray,
+    *ebq_v,*p1_vdofs,*ebq_velocity;
+  int nVDOFs_element=1;
+  if(!PyArg_ParseTuple(args,"OOOOO",
+		       &elementBoundaryElementsArray,
+		       &exteriorElementBoundariesArray,
+		       &ebq_v,
+		       &p1_vdofs,
+		       &ebq_velocity))
+    return NULL;
+  nVDOFs_element = SHAPE(ebq_velocity)[3]*(SHAPE(ebq_velocity)[3]+1);
+  if (ND(p1_vdofs) > 1)
+    assert(nVDOFs_element == SHAPE(p1_vdofs)[1]);
+
+  getElementBoundaryBDM1velocityValuesLagrangeRep(SHAPE(ebq_velocity)[0],
+								SHAPE(ebq_velocity)[1],
+								SHAPE(ebq_velocity)[2],
+								SHAPE(ebq_velocity)[3],
+								SHAPE(ebq_v)[2],
+								nVDOFs_element,
+								IDATA(elementBoundaryElementsArray),
+								IDATA(exteriorElementBoundariesArray), /*need the correct mapping here */
+								DDATA(ebq_v),
+								DDATA(p1_vdofs),
+								DDATA(ebq_velocity));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+
+static PyObject*
 cpostprocessingProjectElementBoundaryVelocityToRT0fluxRep(PyObject* self,
 							PyObject* args)
 {
+
   
   PyObject *elementBoundaryQuadratureWeights,*n,*v_elementBoundary,
     *rt0vdofs_element;
@@ -2170,6 +2244,14 @@ static PyMethodDef cpostprocessingMethods[] = {
     cpostprocessingGetGlobalExteriorElementBoundaryBDM1velocityValuesLagrangeRep,
     METH_VARARGS, 
     "get velocity at exterior element boundary quadrature points assuming have local dofs for local P^1(E) and std Lagr. basis" },
+ { "getGlobalElementBoundaryBDM1velocityValuesLagrangeRep", 
+    cpostprocessingGetGlobalElementBoundaryBDM1velocityValuesLagrangeRep,
+    METH_VARARGS, 
+    "get velocity at exterior element boundary quadrature points (but stored in the global element boundary quadrature array) assuming have local dofs for local P^1(E) and std Lagr. basis" },
+  { "getElementBoundaryBDM1velocityValuesLagrangeRep", 
+    cpostprocessingGetElementBoundaryBDM1velocityValuesLagrangeRep,
+    METH_VARARGS, 
+    "get velocity at element boundary quadrature points assuming have local dofs for local P^1(E) and std Lagr. basis" },
   { "updateSelectedExteriorElementBoundaryFlux", 
     cpostprocessingUpdateSelectedExteriorElementBoundaryFlux,
     METH_VARARGS, 
