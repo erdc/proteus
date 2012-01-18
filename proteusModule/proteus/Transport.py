@@ -1489,7 +1489,7 @@ class OneLevelTransport(NonlinearEquation):
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
              self.timeIntegration = TimeIntegrationClass(self)
-           
+      
         if options != None:
             self.timeIntegration.setFromOptions(options)
         log(memory("TimeIntegration","OneLevelTransport"),level=4)
@@ -1523,6 +1523,8 @@ class OneLevelTransport(NonlinearEquation):
                                                        advectiveFluxBoundaryConditionsSetterDict,
                                                        diffusiveFluxBoundaryConditionsSetterDictDict,
                                                        options.periodicDirichletConditions)
+            if options != None:
+                self.numericalFlux.setFromOptions(options)
         else:
             self.numericalFlux = None
         #set penalty terms
@@ -3345,7 +3347,7 @@ class OneLevelTransport(NonlinearEquation):
         if self.conservativeFlux != None:
             for ci in self.conservativeFlux.keys():
                 #don't need for p1-nc?
-                if self.conservativeFlux[ci] not in ['p1-nc','dg','dg-bdm','dg-point-eval'] and self.conservativeFlux[ci] != None:
+                if self.conservativeFlux[ci] not in ['p1-nc','dg','dg-bdm','dg-point-eval','point-eval-gwvd'] and self.conservativeFlux[ci] != None:
                     self.ebq[('velocity',ci)].fill(0.0)
                     #self.ebq_global[('velocity',ci)].fill(0.0)
                     self.ebq_global[('velocityAverage',ci)].fill(0.0)
