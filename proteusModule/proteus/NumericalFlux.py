@@ -251,6 +251,12 @@ class NF_base:
     def updateExteriorNumericalFluxJacobian(self,l2g,inflowFlag,q,ebqe,dphi,fluxJacobian_exterior,fluxJacobian_eb,fluxJacobian_hj):
         pass
 
+    def setFromOptions(self,nOptions):
+        """
+        allow classes to set various numerical parameters
+        """
+        pass
+
 class DoNothing(NF_base):
     hasInterior=False
     def __init__(self,vt,
