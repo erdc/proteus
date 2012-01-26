@@ -1905,32 +1905,21 @@ class VPP_DG_RT0(VelocityPostProcessingAlgorithmBase):
                                                                self.vt.ebq[('dS_u',ci)],
                                                                self.vt.ebq_global[('totalFlux',ci)],
                                                                self.q[('velocity_dofs',ci)])
-        ### velocity DEBUG tjp ###
-        #my_vel = self.q[('velocity',ci)].copy()
-        #my_vel_ebq=self.ebq[('velocity',ci)].copy()
-        #my_vel_ebq_global=self.ebq_global[('velocity',ci)].copy()
+    
         cpostprocessing.getElementRT0velocityValuesFluxRep(self.vt.mesh.nodeArray,
                                                            self.vt.mesh.elementNodesArray,
                                                            self.vt.q['abs(det(J))'],
                                                            self.vt.q['x'],
                                                            self.q[('velocity_dofs',ci)],
                                                            self.q[('velocity',ci)])
-        ###velocity DEBUG tjp ####
-        #print "velocity difference"
-        #print max(my_vel.flat)
-        #result = my_vel - self.q[('velocity',ci)]
-        #print max(result.flat)
+
         cpostprocessing.getElementBoundaryRT0velocityValuesFluxRep(self.vt.mesh.nodeArray,
                                                                    self.vt.mesh.elementNodesArray,
                                                                    self.vt.q['abs(det(J))'],
                                                                    self.vt.ebq['x'],
                                                                    self.q[('velocity_dofs',ci)],
                                                                    self.ebq[('velocity',ci)])
-        ###velocity DEBUG tjp ####
-        #print "velocity ebq  difference"
-        #print max(my_vel_ebq.flat)
-        #result2= my_vel_ebq - self.ebq[('velocity',ci)]
-        #print max(result2.flat)
+      
         cpostprocessing.getGlobalElementBoundaryRT0velocityValuesFluxRep(self.vt.mesh.nodeArray,
                                                                          self.vt.mesh.elementNodesArray,
                                                                          self.vt.mesh.elementBoundaryElementsArray,
@@ -1938,11 +1927,6 @@ class VPP_DG_RT0(VelocityPostProcessingAlgorithmBase):
                                                                          self.vt.ebq_global['x'],
                                                                          self.q[('velocity_dofs',ci)],
                                                                          self.ebq_global[('velocity',ci)])
-        ###velocity DEBUG tjp ####
-        #print "velocity ebq_global difference"
-        #print max(my_vel_ebq_global.flat)
-        #result3= my_vel_ebq_global - self.ebq_global[('velocity',ci)]
-        #print max(result3.flat)
 
     def evaluateElementVelocityField(self,x,ci):
         """
@@ -2015,6 +1999,7 @@ class VPP_DG_BDM(VPP_DG_RT0):
                      self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
                      self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
                     'd') 
+
                 self.testSpace.getBasisValues(self.vt.elementQuadraturePoints,
                                               self.qv[ci])
                 self.testSpace.getBasisValuesTrace(self.vt.u[0].femSpace.elementMaps.permutations,
@@ -2065,10 +2050,25 @@ class VPP_DG_BDM(VPP_DG_RT0):
                                               self.w_dS[ci],
                                               self.ebq_global[('totalFlux',ci)],
                                               self.q[('velocity_dofs',ci)])
-
+ 
         cpostprocessing.getElementBDM1velocityValuesLagrangeRep(self.qv[ci],
                                                                 self.q[('velocity_dofs',ci)],
                                                                 self.vt.q[('velocity',ci)])
+      
+        cpostprocessing.getElementBoundaryBDM1velocityValuesLagrangeRep(self.vt.mesh.elementBoundaryElementsArray,
+                                                                        self.vt.mesh.exteriorElementBoundariesArray,
+                                                                        self.vt.ebq[('v',ci)],
+                                                                        self.q[('velocity_dofs',ci)],
+                                                                        self.vt.ebq[('velocity',ci)])
+
+        #tjp hack Only values computed and stored are the exterior element boundary velocity values -- interior are not computed
+        cpostprocessing.getGlobalElementBoundaryBDM1velocityValuesLagrangeRep(self.vt.mesh.elementBoundaryElementsArray,
+                                                                              self.vt.mesh.exteriorElementBoundariesArray,
+                                                                              self.vt.ebqe[('v',ci)],
+                                                                              self.q[('velocity_dofs',ci)],
+                                                                              self.vt.ebq_global[('velocity',ci)])
+
+
 
 
     def evaluateElementVelocityField(self,x,ci):
