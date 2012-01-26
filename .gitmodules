@@ -55,3 +55,6 @@
 [submodule "externalPackages/mpi4py"]
 	path = externalPackages/mpi4py
 	url = git@github.com:erdc-cm/mpi4py.git
+[submodule "externalPackages/clawpack"]
+	path = externalPackages/clawpack
+	url = git@github.com:clawpack/pyclaw.git
