@@ -31,12 +31,6 @@
 [submodule "externalPackages/superlu"]
 	path = externalPackages/superlu
 	url = git@github.com:erdc-cm/superlu.git
-[submodule "externalPackages/petsc4py"]
-	path = externalPackages/petsc4py
-	url = git@github.com:erdc-cm/petsc4py.git
-[submodule "externalPackages/petsc"]
-	path = externalPackages/petsc
-	url = git@github.com:erdc-cm/petsc.git
 [submodule "externalPackages/numexpr"]
 	path = externalPackages/numexpr
 	url = git@github.com:erdc-cm/numexpr.git
@@ -52,9 +46,6 @@
 [submodule "externalPackages/python"]
 	path = externalPackages/python
 	url = git@github.com:erdc-cm/python.git
-[submodule "externalPackages/mpi4py"]
-	path = externalPackages/mpi4py
-	url = git@github.com:erdc-cm/mpi4py.git
 [submodule "externalPackages/clawpack"]
 	path = externalPackages/clawpack
 	url = git@github.com:clawpack/pyclaw.git
