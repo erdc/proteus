@@ -39,7 +39,7 @@ install_core_modules: install_numpy install_nose install_numexpr install_cython 
 
 install_extensions_libraries:
 
-install_extensions_modules: install_setuptools install_matplotlib install_sphinx
+install_extensions_modules: install_setuptools install_matplotlib install_python
 
 #distclean
 distclean_core_python: distclean_python
@@ -50,7 +50,7 @@ distclean_core_modules: distclean_numpy distclean_nose distclean_pytables distcl
 
 distclean_extensions_libraries: 
 
-distclean_extensions_modules: distclean_setuptools distclean_readline distclean_matplotlib distclean_sphinx
+distclean_extensions_modules: distclean_setuptools distclean_readline distclean_matplotlib
 
 #newConfig
 newConfig_core_python: newConfig_python
@@ -61,7 +61,7 @@ newConfig_core_modules: newConfig_numpy newConfig_nose newConfig_pytables newCon
 
 newConfig_extensions_libraries:
 
-newConfig_extensions_modules: newConfig_setuptools newConfig_readline newConfig_matplotlib newConfig_sphinx
+newConfig_extensions_modules: newConfig_setuptools newConfig_readline newConfig_matplotlib
 
 #editConfig
 editConfig_core_python: editConfig_python
@@ -71,7 +71,7 @@ editConfig_core_modules: editConfig_numpy editConfig_nose editConfig_pytables ed
 
 editConfig_extensions_libraries:
 
-editConfig_extensions_modules: newConfig_setuptools newConfig_readline editConfig_matplotlib editConfig_sphinx
+editConfig_extensions_modules: newConfig_setuptools newConfig_readline editConfig_matplotlib
 
 #core
 #core python
@@ -275,6 +275,7 @@ editConfig_petsc:
 	cd petscConfig && ${EDITOR} configure.${PROTEUS_ARCH}
 
 config_petsc:
+	ln -sf petsc-BuildSystem petsc/config/BuildSystem
 	cd ${PETSC_VERSION} && PETSC_ARCH=${PROTEUS_ARCH} PETSC_DIR=${PWD}/${PETSC_VERSION} ../petscConfig/configure.${PROTEUS_ARCH} > ../config_petsc_progress 2>&1
 
 build_petsc:
@@ -530,28 +531,6 @@ distclean_matplotlib:
 	touch install_matplotlib
 	mv -f install_matplotlib install_matplotlib_last
 	cd ${MATPLOTLIB_VERSION} && make -k clean && rm -rf build
-#sphinx
-newConfig_sphinx:
-	echo "no sphinx customization implemented"
-
-editConfig_sphinx:
-	echo "no sphinx customization implemented"
-
-config_sphinx:
-	cd ${SPHINX_VERSION} && ${PROTEUS_PYTHON} setup.py config > ../config_sphinx_progress 2>&1
-
-build_sphinx:
-	cd ${SPHINX_VERSION} && ${PROTEUS_PYTHON} setup.py build > ../build_sphinx_progress 2>&1
-
-install_sphinx:
-	make config_sphinx build_sphinx
-	cd ${SPHINX_VERSION} && ${PROTEUS_PYTHON} setup.py install > ../install_sphinx_progress 2>&1
-	cat config_sphinx_progress build_sphinx_progress install_sphinx_progress > install_sphinx
-
-distclean_sphinx:
-	touch install_sphinx
-	mv -f install_sphinx install_sphinx_last
-	cd ${SPHINX_VERSION} && make -k clean
 
 #sip
 newConfig_sip:
