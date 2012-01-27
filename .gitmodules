@@ -46,12 +46,27 @@
 [submodule "externalPackages/python"]
 	path = externalPackages/python
 	url = git@github.com:erdc-cm/python.git
-[submodule "externalPackages/clawpack"]
-	path = externalPackages/clawpack
-	url = git@github.com:clawpack/pyclaw.git
 [submodule "externalPackages/petsc4py"]
 	path = externalPackages/petsc4py
 	url = git@github.com:erdc-cm/petsc4py
 [submodule "externalPackages/mpi4py"]
 	path = externalPackages/mpi4py
 	url = git@github.com:erdc-cm/mpi4py
+[submodule "externalPackages/petsc"]
+	path = externalPackages/petsc
+	url = git@github.com:erdc-cm/petsc.git
+[submodule "externalPackages/petsc-BuildSystem"]
+	path = externalPackages/petsc-BuildSystem
+	url = git@github.com:erdc-cm/petsc-BuildSystem.git
+[submodule "externalPackages/clawpack/pyclaw"]
+	path = externalPackages/clawpack/pyclaw
+	url = git@github.com:clawpack/pyclaw.git
+[submodule "externalPackages/clawpack/riemann"]
+	path = externalPackages/clawpack/riemann
+	url = git@github.com:clawpack/riemann.git
+[submodule "externalPackages/clawpack/visclaw"]
+	path = externalPackages/clawpack/visclaw
+	url = git@github.com:clawpack/visclaw.git
+[submodule "externalPackages/clawpack/clawutil"]
+	path = externalPackages/clawpack/clawutil
+	url = git@github.com:clawpack/clawutil.git
