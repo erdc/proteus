@@ -43,9 +43,6 @@
 [submodule "externalPackages/hdf5"]
 	path = externalPackages/hdf5
 	url = git@github.com:erdc-cm/hdf5.git
-[submodule "externalPackages/python"]
-	path = externalPackages/python
-	url = git@github.com:erdc-cm/python.git
 [submodule "externalPackages/petsc4py"]
 	path = externalPackages/petsc4py
 	url = git@github.com:erdc-cm/petsc4py
@@ -70,3 +67,6 @@
 [submodule "externalPackages/clawpack/clawutil"]
 	path = externalPackages/clawpack/clawutil
 	url = git@github.com:clawpack/clawutil.git
+[submodule "externalPackages/python"]
+	path = externalPackages/python
+	url = git@github.com:erdc-cm/python.git
