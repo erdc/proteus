@@ -1,6 +1,5 @@
 CYTHON_VERSION     = cython
 PYTHON_VERSION     = python
-SPHINX_VERSION     = Sphinx-0.6.5
 DAETK_VERSION      = daetk
 HDF5_VERSION       = hdf5
 MPI4PY_VERSION     = mpi4py
@@ -8,7 +7,7 @@ NOSE_VERSION       = nose
 NUMPY_VERSION      = numpy
 PETSC_VERSION      = petsc
 PETSC4PY_VERSION   = petsc4py
-READLINE_VERSION   = realine
+READLINE_VERSION   = readline
 SETUPTOOLS_VERSION = setuptools
 SUPERLU_VERSION    = superlu
 SZIP_VERSION       = szip

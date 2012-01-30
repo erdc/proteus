@@ -7,5 +7,5 @@ setenv FC  /opt/local/bin/openmpif90
 setenv F90 /opt/local/bin/openmpif90
 setenv F77 /opt/local/bin/openmpif77
 setenv DYLD_LIBRARY_PATH ${PROTEUS_PREFIX}/lib:${PROTEUS_PREFIX}/lib/paraview-3.12
-setenv MACOSX_DEPLOYMENT_TARGET 10.7
+setenv MACOSX_DEPLOYMENT_TARGET 10.6
 setenv PATH ${PROTEUS_PREFIX}/Library/Frameworks/Python.framework/Versions/Current/bin:${PROTEUS_PREFIX}/bin:/opt/local/bin:${PATH}
