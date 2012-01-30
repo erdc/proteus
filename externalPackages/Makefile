@@ -289,7 +289,7 @@ install_petsc:
 distclean_petsc:
 	touch install_petsc
 	mv -f install_petsc install_petsc_last
-	cd ${PETSC_VERSION} && make -k clean
+	cd ${PETSC_VERSION} && make -k clean && rm -rf externalpackages
 
 #daetk
 newConfig_daetk:
@@ -563,7 +563,7 @@ editConfig_qt:
 	echo "no qt customization implemented"
 
 config_qt:
-	cd ${QT_VERSION} && echo "yes\n" > yes.txt && ${PROTEUS_PYTHON} configure.py < yes.txt > ../config_qt_progress 2>&1 && rm yes.txt
+	cd ${QT_VERSION} && echo "yes\n" > yes.txt && echo "yes\n" | ${PROTEUS_PYTHON} configure.py > ../config_qt_progress 2>&1
 
 build_qt:
 	cd ${QT_VERSION} && make > ../build_qt_progress 2>&1
