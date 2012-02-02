@@ -275,8 +275,9 @@ editConfig_petsc:
 	cd petscConfig && ${EDITOR} configure.${PROTEUS_ARCH}
 
 config_petsc:
-	ln -sf petsc-BuildSystem petsc/config/BuildSystem
-	cd ${PETSC_VERSION} && PETSC_ARCH=${PROTEUS_ARCH} PETSC_DIR=${PWD}/${PETSC_VERSION} ../petscConfig/configure.${PROTEUS_ARCH} > ../config_petsc_progress 2>&1
+	rm -rf petsc/config/BuildSystem
+	cp -r petsc-BuildSystem petsc/config/BuildSystem
+	cd ${PETSC_VERSION} && PETSC_ARCH=${PROTEUS_ARCH} PETSC_DIR=${PWD}/${PETSC_VERSION} ../petscConfig/configure.${PROTEUS_ARCH}  > ../config_petsc_progress 2>&1
 
 build_petsc:
 	cd ${PETSC_VERSION} && PETSC_ARCH=${PROTEUS_ARCH} PETSC_DIR=${PWD}/${PETSC_VERSION} make > ../build_petsc_progress 2>&1
