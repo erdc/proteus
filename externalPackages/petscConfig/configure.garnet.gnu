@@ -1,8 +1,9 @@
 ./config/configure.py --prefix=${PROTEUS_PREFIX} \
 --with-pic \
 --with-clanguage=C \
+--with-mpi-compilers=1 \
 --with-cc="cc" \
---with-cxx="cc" \
+--with-cxx="CC" \
 --with-fc="ftn" \
 --with-shared-libraries \
 --with-blas-lapack-lib=\[/opt/acml/4.4.0/gnu64/lib/libacml.so\] \

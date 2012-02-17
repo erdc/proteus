@@ -23,9 +23,9 @@ PROTEUS_LAPACK_LIB_DIR = '/opt/acml/4.4.0/gnu64/lib'
 PROTEUS_LAPACK_LIB = 'acml'
 PROTEUS_LAPACK_INTEGER = 'int'
 
-PROTEUS_MPI_INCLUDE_DIR = '.'
-PROTEUS_MPI_LIB_DIR = '.'
-PROTEUS_MPI_LIBS = []
+PROTEUS_MPI_INCLUDE_DIR = '/opt/cray/mpt/5.1.2/xt/gemini/mpich2-gnu/include'
+PROTEUS_MPI_LIB_DIR = '/opt/cray/mpt/5.1.2/xt/gemini/mpich2-gnu/lib'
+PROTEUS_MPI_LIBS = ['mpich']
 
 PROTEUS_TRIANGLE_INCLUDE_DIR = PROTEUS_INCLUDE_DIR
 PROTEUS_TRIANGLE_H = r'"triangle.h"'
@@ -39,3 +39,6 @@ PROTEUS_DAETK_LIB ='daetk'
 PROTEUS_PETSC_LIB_DIRS = [PROTEUS_LIB_DIR, '/opt/acml/4.4.0/gnu64/lib', '/opt/cray/mpt/5.1.2/xt/gemini/mpich2-gnu/lib', '/opt/gcc/4.5.1/snos/lib/gcc/x86_64-suse-linux/4.5.1', '/opt/gcc/4.5.1/snos/lib64', '/opt/gcc/4.5.1/snos/lib']
 PROTEUS_PETSC_LIBS = ['petsc', 'X11', 'HYPRE', 'l,-rpath,/opt/gcc/4.5.1/snos/lib/gcc/x86_64-suse-linux/4.5.1', 'stdc++', 'superlu_dist_2.4', 'cmumps', 'dmumps', 'smumps', 'zmumps', 'mumps_common', 'pord', 'parmetis', 'metis', 'scalapack', 'blacs', 'superlu_4.0', 'acml', 'mpich', 'm', 'l,-rpath,/opt/gcc/4.5.1/snos/lib/gcc/x86_64-suse-linux/4.5.1', '/opt/gcc/4.5.1/snos/lib/gcc/x86_64-suse-linux/4.5.1', 'dl', 'gcc_s', 'gfortran', 'm', 'm', 'stdc++', 'dl', 'gcc_s', 'dl']
 PROTEUS_PETSC_INCLUDE_DIRS = [PROTEUS_INCLUDE_DIR, '/opt/cray/mpt/5.1.2/xt/gemini/mpich2-gnu/include']
+PROTEUS_PETSC_LIB_DIRS = [PROTEUS_LIB_DIR, '/opt/acml/4.4.0/gnu64/lib']
+PROTEUS_PETSC_LIBS = ['petsc', 'pthread', 'acml', 'dl']
+PROTEUS_PETSC_INCLUDE_DIRS = []
