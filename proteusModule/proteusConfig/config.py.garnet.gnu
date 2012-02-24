@@ -3,9 +3,9 @@ import os
 PROTEUS_INCLUDE_DIR = os.getenv('PROTEUS_PREFIX')+'/include'
 PROTEUS_LIB_DIR = os.getenv('PROTEUS_PREFIX')+'/lib'
 PROTEUS_EXTRA_COMPILE_ARGS= ['-DF77_POST_UNDERSCORE','-DUSE_BLAS','-DCMRVEC_BOUNDS_CHECK','-DMV_VECTOR_BOUNDS_CHECK']
-PROTEUS_EXTRA_LINK_ARGS=['-L/opt/acml/4.4.0/gnu64/lib','-lacml']
+PROTEUS_EXTRA_LINK_ARGS=['-L/opt/acml/4.4.0/gnu64/lib','-lacml','-lscicpp_gnu']
 PROTEUS_EXTRA_FC_COMPILE_ARGS= ['-Wall']
-PROTEUS_EXTRA_FC_LINK_ARGS=['-L/opt/acml/4.4.0/gnu64/lib','-acml']
+PROTEUS_EXTRA_FC_LINK_ARGS=['-L/opt/acml/4.4.0/gnu64/lib','-lacml']
 
 PROTEUS_SUPERLU_INCLUDE_DIR = PROTEUS_INCLUDE_DIR
 PROTEUS_SUPERLU_H   = r'"slu_ddefs.h"'
