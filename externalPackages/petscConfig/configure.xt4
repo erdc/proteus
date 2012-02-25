@@ -1,10 +1,9 @@
-#! /usr/bin/csh
- ./config/configure.py --with-clanguage=C --with-mpi --with-mpi-compilers \
+${PROTEUS_PYTHON}  ./config/configure.py --with-clanguage=C --with-mpi --with-mpi-compilers \
 --with-x11  --CC=cc --CXX=CC --FC=ftn \
 --with-shared=0 --download-umfpack=ifneeded --download-spooles=ifneeded \
 --download-parmetis=ifneeded \
-  >& configure.xt4.out
-
+--PETSC_ARCH=${PROTEUS_ARCH} \
+--PETSC_DIR=${PROTEUS}/externalPackages/petsc
 #--download-blacs=ifneeded 
 #--download-scalapack=ifneeded
 #--download-parmetis=ifneeded
