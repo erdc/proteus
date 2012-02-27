@@ -1,13 +1,17 @@
 ${PROTEUS_PYTHON} ./config/configure.py --prefix=${PROTEUS_PREFIX} \
 --PETSC_ARCH=${PROTEUS_ARCH} \
 --PETSC_DIR=${PROTEUS}/externalPackages/petsc \
---with-pic \
 --with-clanguage=C \
 --with-cc="cc" \
 --with-cxx="CC" \
 --with-fc="ftn" \
 --with-shared-libraries=1 \
+--with-dynamic-loading=1 \
+--with-pic=1 \
 --with-blas-lapack-lib=\[/opt/acml/4.4.0/gnu64/lib/libacml.so\] \
+--CFLAGS="-fPIC" \
+--CXXFLAGS="-fPIC" \
+--FFLAGS="-fPIC" \
 --download-cmake=1 \
 --download-metis=1 \
 --download-parmetis=1 \
