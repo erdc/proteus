@@ -1041,9 +1041,9 @@ class TwophaseDarcy_split_saturation(TwophaseDarcyFlow_base):
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_split_sd_diag_saturation
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_split_sd_diag_saturation_het_matType
     def __init__(self,
-                 g=9.8, 
+                 g=[9.8], 
                  rhon=1.0,
-                 rhow=0.0,
+                 rhow=1.0,
                  mun    = 1.0,
                  muw    = 1.0,
                  Ksw=1.0,
