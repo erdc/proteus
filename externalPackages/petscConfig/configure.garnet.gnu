@@ -1,4 +1,4 @@
-./config/configure.py --prefix=${PROTEUS_PREFIX} \
+${PROTEUS_PYTHON} ./config/configure.py --prefix=${PROTEUS_PREFIX} \
 --PETSC_ARCH=${PROTEUS_ARCH} \
 --PETSC_DIR=${PROTEUS}/externalPackages/petsc \
 --with-pic \

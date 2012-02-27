@@ -56,7 +56,7 @@
 # /usr/local/{lib,include}
 #
 [DEFAULT]
-library_dirs = /usr/lib64
+library_dirs = /usr/lib
 include_dirs = /usr/include
 
 # Optimized BLAS and LAPACK
