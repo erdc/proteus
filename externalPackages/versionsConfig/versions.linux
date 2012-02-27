@@ -18,3 +18,6 @@ TRIANGLE_VERSION   = triangle
 ZLIB_VERSION       = zlib
 NUMEXPR_VERSION    = numexpr
 MATPLOTLIB_VERSION = matplotlib
+SIP_VERSION        = sip
+QT_VERSION         = pyqt
+IPYTHON_VERSION    = ipython

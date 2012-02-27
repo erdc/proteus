@@ -1,4 +1,4 @@
-./config/configure.py \
+${PROTEUS_PYTHON} ./config/configure.py \
 --with-clanguage=C \
 --with-cc=/usr/local/bin/mpicc \
 --with-cxx=/usr/local/bin/mpicxx \
@@ -10,4 +10,6 @@
 --download-parmetis=1 \
 --download-metis=1 \
 --download-superlu_dist=1 \
---prefix=${PROTEUS_PREFIX}
+--prefix=${PROTEUS_PREFIX} \
+--PETSC_ARCH=${PROTEUS_ARCH} \
+--PETSC_DIR=${PROTEUS}/externalPackages/petsc 

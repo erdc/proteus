@@ -1,7 +1,10 @@
-./config/configure.py --prefix=${PROTEUS_PREFIX} --with-pic --with-clanguage=C \
+${PROTEUS_PYTHON} ./config/configure.py --prefix=${PROTEUS_PREFIX} --with-pic --with-clanguage=C \
 --with-cc='cc -noswitcherror' --with-cxx='CC -noswitcherror' --with-fc='ftn -noswitcherror' --with-mpi-compilers --FFLAGS="-I." \
 --with-shared --with-dynamic \
 --with-blas-lapack-lib=acml \
 --download-parmetis=ifneeded \
 --download-spooles=ifneeded \
---download-superlu_dist=ifneeded
+--download-superlu_dist=ifneeded \
+--PETSC_ARCH=${PROTEUS_ARCH} \
+--PETSC_DIR=${PROTEUS}/externalPackages/petsc
+

@@ -183,6 +183,9 @@ class ParMat_petsc4py(PETSc.Mat):
 		self.csr_rep_owned = ghosted_csr_mat.getSubMatCSRrepresentation(0,blockOwned)
 		self.petsc_l2g = PETSc.LGMap()
 		self.petsc_l2g.create(self.subdomain2global)
+		#cek todo, fix preallocation and storage
+		#self.setPreallocationCSR(self.csr_rep_owned)
+		self.setUp()
 		self.setLGMap(self.petsc_l2g)
 		self.setFromOptions()
 	
