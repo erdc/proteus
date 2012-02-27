@@ -1,0 +1,1 @@
+./config/configure.py --with-pic --with-clanguage=C --with-cc=/usr/openmpi-1.4.4/bin/mpicc --with-cxx=/usr/openmpi-1.4.4/bin/mpicxx --with-fc=/usr/openmpi-1.4.4/bin/mpif90 --with-mpi-compilers --with-shared-libraries --with-pic --with-x=0 --download-metis=1 --download-parmetis=1 --download-spooles=1 --download-superlu_dist=1 --download-hypre=1 --prefix=${PROTEUS_PREFIX}
