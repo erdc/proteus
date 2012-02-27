@@ -69,6 +69,7 @@ class LinearSolver:
         self.par_fullOverlap = True #whether or not partitioning has full overlap
         #for petsc interface
         self.xGhosted = None
+        self.b=None
     def setResTol(self,rtol,atol):
         self.rtol_r = rtol
         self.atol_r = atol

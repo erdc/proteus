@@ -638,7 +638,6 @@ class Buckley_Leverett_RiemannSoln(AS_base):
             return self.uR
         self.riemF.xi = (x[0]-self.x0)/(t-self.t0)
         u,f = self.solver.solve(Guess_x = 0.5*(self.uL+self.uR))
-
         return u
     def uOfX(self,x):
         return self.uOfXT(x,self.T)
