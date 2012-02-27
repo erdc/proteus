@@ -1188,6 +1188,7 @@ DaetkPetscSys_size(DaetkPetscSys *self,
     int nElements_subdomain = (elementOffsets_old[rank+1] - elementOffsets_old[rank]);
     valarray<int> elementNeighborsOffsets_subdomain(nElements_subdomain+1),
       elementNeighbors_subdomain(nElements_subdomain*mesh.nElementBoundaries_element);
+    valarray<int> weights_subdomain(nElements_subdomain*mesh.nElementBoundaries_element);
     //this wastes a little space
     elementNeighborsOffsets_subdomain[0] = 0;
     for (int eN=0,offset=0; eN < nElements_subdomain; eN++)
@@ -1202,6 +1203,9 @@ DaetkPetscSys_size(DaetkPetscSys *self,
           }
 	elementNeighborsOffsets_subdomain[eN+1]=offset;
 	sort(&elementNeighbors_subdomain[offsetStart],&elementNeighbors_subdomain[offset]);
+	int weight = (elementNeighborsOffsets_subdomain[eN+1] - elementNeighborsOffsets_subdomain[eN]);
+	for (int k=elementNeighborsOffsets_subdomain[eN];k < elementNeighborsOffsets_subdomain[eN+1];k++)
+	  weights_subdomain[k] = weight;
         // for (int o = offsetStart; o < offset; o++)
         //   {
 	//     std::cout<<elementNeighbors_subdomain[o]<<'\t';
@@ -1213,7 +1217,7 @@ DaetkPetscSys_size(DaetkPetscSys *self,
     MatCreateMPIAdj(Py_PETSC_COMM_WORLD, 
                     nElements_subdomain, mesh.nElements_global, 
                     &elementNeighborsOffsets_subdomain[0], &elementNeighbors_subdomain[0], 
-                    PETSC_NULL, 
+                    &weights_subdomain[0], 
                     &petscAdjacency);
     MatPartitioning petscPartition;
     MatPartitioningCreate(Py_PETSC_COMM_WORLD,&petscPartition);
@@ -1710,7 +1714,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   int nNodes_subdomain = (nodeOffsets_old[rank+1] - nodeOffsets_old[rank]);
   valarray<int> nodeNeighborsOffsets_subdomain(nNodes_subdomain+1),
     nodeNeighbors_subdomain(nNodes_subdomain*mesh.max_nNodeNeighbors_node);
-   
+  valarray<int> weights_subdomain(nNodes_subdomain*mesh.max_nNodeNeighbors_node);
   nodeNeighborsOffsets_subdomain[0] = 0;
   for (int nN = 0,offset=0; nN < nNodes_subdomain; nN++)
     {
@@ -1722,6 +1726,9 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 	}
       nodeNeighborsOffsets_subdomain[nN+1]=offset;
       sort(&nodeNeighbors_subdomain[nodeNeighborsOffsets_subdomain[nN]],&nodeNeighbors_subdomain[nodeNeighborsOffsets_subdomain[nN+1]]);
+      int weight= (nodeNeighborsOffsets_subdomain[nN+1] - nodeNeighborsOffsets_subdomain[nN]);
+      for (int k=nodeNeighbors_subdomain[nN];k<nodeNeighbors_subdomain[nN+1];k++)
+	weights_subdomain[k] = weight;
     }
   //
   //3. Generate new nodal partition using PETSc interface
@@ -1730,9 +1737,8 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   MatCreateMPIAdj(Py_PETSC_COMM_WORLD,
 		  nNodes_subdomain, mesh.nNodes_global,
 		  &nodeNeighborsOffsets_subdomain[0], &nodeNeighbors_subdomain[0],
-		  PETSC_NULL,//ignore weighting for now
+		  &weights_subdomain[0],//PETSC_NULL,//ignore weighting for now
 		  &petscAdjacency);
-
   MatPartitioning petscPartition;
   MatPartitioningCreate(Py_PETSC_COMM_WORLD,&petscPartition);
   MatPartitioningSetAdjacency(petscPartition,petscAdjacency);
@@ -2667,6 +2673,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     int nElements_subdomain = (elementOffsets_old[rank+1] - elementOffsets_old[rank]);
     valarray<int> elementNeighborsOffsets_subdomain(nElements_subdomain+1),
       elementNeighbors_subdomain(nElements_subdomain*mesh.nElementBoundaries_element);
+    valarray<int> weights_subdomain(nElements_subdomain*mesh.nElementBoundaries_element);
     //this wastes a little space
     elementNeighborsOffsets_subdomain[0] = 0;
     for (int eN=0,offset=0; eN < nElements_subdomain; eN++)
@@ -2681,6 +2688,9 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
           }
 	elementNeighborsOffsets_subdomain[eN+1]=offset;
 	sort(&elementNeighbors_subdomain[offsetStart],&elementNeighbors_subdomain[offset]);
+	int weight = (elementNeighborsOffsets_subdomain[eN+1] - elementNeighborsOffsets_subdomain[eN]);
+	for (int k=elementNeighborsOffsets_subdomain[eN];k<elementNeighborsOffsets_subdomain[eN+1];k++)
+	  weights_subdomain[k] = weight;
         // for (int o = offsetStart; o < offset; o++)
         //   {
 	//     std::cout<<elementNeighbors_subdomain[o]<<'\t';
@@ -2692,7 +2702,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     MatCreateMPIAdj(Py_PETSC_COMM_WORLD, 
                     nElements_subdomain, mesh.nElements_global, 
                     &elementNeighborsOffsets_subdomain[0], &elementNeighbors_subdomain[0], 
-                    PETSC_NULL, 
+                    &weights_subdomain[0],//PETSC_NULL, 
                     &petscAdjacency);
     MatPartitioning petscPartition;
     MatPartitioningCreate(Py_PETSC_COMM_WORLD,&petscPartition);
