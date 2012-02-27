@@ -569,43 +569,17 @@ CKSP_prepare(CKSP *self, PyObject* args)
   a = (double*) (SMP(L)->A.nzval);
   rowptr = SMP(L)->A.rowptr;
   colind = SMP(L)->A.colind;
-  std::cout<<"MatZeroEntries"<<std::endl<<std::flush;
   MatZeroEntries(PETSCMAT(par_L));
-  //  MatZeroEntries(PETSCMAT2(par_L));
   int irow[1];
-  //no overlap
-//   for (int i=0;i<SMP(L)->dim[0];i++)
-//     {
-//       irow[0] = i;
-//       MatSetValuesLocal(PETSCMAT(par_L),1,irow,rowptr[i+1]-rowptr[i],&colind[rowptr[i]],&a[rowptr[i]],ADD_VALUES);
-//     }
-  //overlap
   int offset_rank,offset_rankP1,ldim;
-  std::cout<<"MatGetOwnership"<<std::endl<<std::flush;
   MatGetOwnershipRange(PETSCMAT(par_L),&offset_rank,&offset_rankP1);
-  std::cout<<"offset_rank "<<offset_rank<<" offset_rankP1"<<offset_rankP1<<std::endl<<std::flush;
-  //MatGetOwnershipRange(PETSCMAT2(par_L),&offset_rank,&offset_rankP1);
-  //  int bs;
-  //MatGetBlockSize(PETSCMAT(par_L),&bs);
   ldim = offset_rankP1-offset_rank;
-  //std::cout<<"bs "<<bs<<" ldim "<<ldim<<std::endl;
-//   for (int i=0;i<ldim;i++)
-//     {
-//       irow[0] = i;
-//       MatSetValuesLocal(PETSCMAT(par_L),1,irow,rowptr[i+1]-rowptr[i],&colind[rowptr[i]],&a[rowptr[i]],INSERT_VALUES);
-//     }
-  //MatSetBlockSize(PETSCMAT(par_L),1);
-  //mwf hack
-  std::cout<<"MatsetValuesLocal"<<std::endl<<std::flush;
   if (overlap <= 0)
     {
       for (int i=0;i<SMP(L)->dim[0];i++)
 	{
 	  irow[0] = i;
-	  //for (int ti=rowptr[i];ti<rowptr[i+1];ti++)
-	  //  std::cout<<"a "<<a[colind[ti]]<<'\t'<<ti<<'\t'<<colind[ti]<<std::endl<<std::flush;
 	  MatSetValuesLocal(PETSCMAT(par_L),1,irow,rowptr[i+1]-rowptr[i],&colind[rowptr[i]],&a[rowptr[i]],ADD_VALUES);
-	  //MatSetValuesLocal(PETSCMAT2(par_L),1,irow,rowptr[i+1]-rowptr[i],&colind[rowptr[i]],&a[rowptr[i]],ADD_VALUES);
 	}
     }
   else
@@ -613,34 +587,13 @@ CKSP_prepare(CKSP *self, PyObject* args)
       for (int i=0;i<ldim;i++)
 	{
 	  irow[0] = i;
-	  //MatSetValuesRowLocal(PETSCMAT(par_L),i,&a[rowptr[i]]);
 	  MatSetValuesLocal(PETSCMAT(par_L),1,irow,rowptr[i+1]-rowptr[i],&colind[rowptr[i]],&a[rowptr[i]],INSERT_VALUES);
-	  //MatSetValuesLocal(PETSCMAT2(par_L),1,irow,rowptr[i+1]-rowptr[i],&colind[rowptr[i]],&a[rowptr[i]],INSERT_VALUES);
 	}
     }
-  //MatSetBlockSize(PETSCMAT(par_L),bs);
-//   double block_row[100];
-//   int block_col_indeces[10];
-  std::cout<<"MatAssemblyBegin"<<std::endl<<std::flush;
   MatAssemblyBegin(PETSCMAT(par_L),MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(PETSCMAT(par_L),MAT_FINAL_ASSEMBLY);
-  //MatSetOption(PETSCMAT(par_L),MAT_NEW_NONZERO_LOCATIONS,PETSC_FALSE);//the preallocation does an initial assembly so I think this should be safe
-  //MatAssemblyBegin(PETSCMAT2(par_L),MAT_FINAL_ASSEMBLY);
-  //MatAssemblyEnd(PETSCMAT2(par_L),MAT_FINAL_ASSEMBLY);
-  //MatAXPY(PETSCMAT2(par_L),-1.0,PETSCMAT(par_L),DIFFERENT_NONZERO_PATTERN);
-  //PetscReal norm=-1.0;
-  //MatNorm(PETSCMAT2(par_L),NORM_INFINITY,&norm);
-  //std::cout<<"inf norm of L - L2 = "<<norm<<std::endl;
-//   MatView(PETSCMAT(par_L),PETSC_VIEWER_STDOUT_WORLD);
-  //MatView(PETSCMAT(par_L),PETSC_VIEWER_STDOUT_WORLD);
-  std::cout<<"KSPSetOps"<<std::endl<<std::flush;
-  //KSPSetOperators(self->ksp,PETSCMAT(par_L),PETSCMAT(par_L),SAME_NONZERO_PATTERN);
-  //cek hack
   KSPSetOperators(self->ksp,PETSCMAT(par_L),PETSCMAT(par_L),DIFFERENT_NONZERO_PATTERN);
-  std::cout<<"KSPSetUp"<<std::endl<<std::flush;
   KSPSetUp(self->ksp);
-  std::cout<<"Done"<<std::endl<<std::flush;
-
   Py_INCREF(Py_None); 
   return Py_None;
 }
