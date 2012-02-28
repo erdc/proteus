@@ -433,10 +433,12 @@ class KSP_petsc4py(LinearSolver):
         assert isinstance(par_L,ParMat_petsc4py)
         self.solverName  = "PETSc"
         self.par_fullOverlap = True
+        self.par_firstAssembly=True
         self.par_L   = par_L
         self.petsc_L = par_L
         self.ksp     = petsc4py.PETSc.KSP().create()
-        self.csr_rep = self.petsc_L.csr_rep_owned #has to be owned dofs only
+        self.csr_rep_owned = self.petsc_L.csr_rep_owned
+        self.csr_rep = self.petsc_L.csr_rep
         #shell for main operator
         self.Lshell = petsc4py.PETSc.Mat().create()
         sizes = self.petsc_L.getSizes()
@@ -467,14 +469,17 @@ class KSP_petsc4py(LinearSolver):
         self.ksp.setFromOptions()
     def prepare(self,b=None):
         from petsc4py import PETSc
-        #self.petsc_L.setOption(petsc4py.PETSc.Mat.Option.SYMMETRIC, True)
-        addValues = PETSc.InsertMode.INSERT_VALUES
-        if self.par_fullOverlap == False: 
-            addValues = PETSc.InsertMode.ADD_VALUES
         self.petsc_L.zeroEntries()
-        blockSize = self.petsc_L.getBlockSize()
-        assert blockSize == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
-        self.petsc_L.setValuesLocalCSR(self.csr_rep[0],self.csr_rep[1],self.csr_rep[2],addValues)
+        assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
+        if self.par_fullOverlap == True: 
+            self.petsc_L.setValuesLocalCSR(self.csr_rep_owned[0],self.csr_rep_owned[1],self.csr_rep_owned[2],PETSc.InsertMode.INSERT_VALUES)
+        else:   
+            if self.par_firstAssembly:
+                self.petsc_L.setOption(PETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,False)
+                self.par_firstAssembly = False
+            else:
+                self.petsc_L.setOption(PETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,True)                
+            self.petsc_L.setValuesLocalCSR(self.csr_rep[0],self.csr_rep[1],self.csr_rep[2],PETSc.InsertMode.ADD_VALUES)
         self.petsc_L.assemblyBegin()
         self.petsc_L.assemblyEnd()
         if self.pc != None:
