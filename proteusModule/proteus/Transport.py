@@ -1721,8 +1721,8 @@ class OneLevelTransport(NonlinearEquation):
         #cek debug
         #r.tofile("residual"+`self.nonlinear_function_evaluations`,sep="\n")
         #mwf debug
-        imax = numpy.argmax(r); imin = numpy.argmin(r)
-        print "getResidual max,index r[%s]= %s min,index= r[%s] r= %s " % (imax,r[imax],imin,r[imin])
+        #imax = numpy.argmax(r); imin = numpy.argmin(r)
+        #print "getResidual max,index r[%s]= %s min,index= r[%s] r= %s " % (imax,r[imax],imin,r[imin])
         #mwf debug
         #import pdb
         #pdb.set_trace()

@@ -1,15 +1,22 @@
 """
 Tools for n-dimensional linear algebra
 
-Vectors will just be numpy arrays
-as will dense matrices. 
+Vectors are just numpy arrays, as are dense matrices. Sparse matrices
+are CSR matrices. Parallel vector and matrix are built on top of those
+representations using PETSc.
+
+\todo LinearAlgebraTools: make better use of numpy.linalg and petsc4py to provide the needed functionality and add test suite
 """
 import numpy
 from superluWrappers import *
 import flcbdfWrappers
 from Profiling import logEvent
+from petsc4py import PETSc
 
 class ParVec:
+	"""
+	A parallel vector built on top of daetk's wrappers for petsc
+	"""
         def __init__(self,array,blockSize,n,N,nghosts=None,subdomain2global=None,blockVecType="simple"):#"block"
                 import flcbdfWrappers
                 self.dim_proc=n*blockSize
@@ -32,26 +39,9 @@ class ParVec:
         def scatter_reverse_add(self):
                 self.cparVec.scatter_reverse_add()
 
-class ParVec2:
-        def __init__(self,array,blockSize,n,N,subdomain2global):
-                import flcbdfWrappers
-		self.arrayAll = array
-		self.arrayPetsc = numpy.zeros((blockSize*n,),'d')
-		self.subdomain2global = subdomain2global
-		self.blockSize=blockSize
-                self.dim_proc=n*blockSize
-		self.cparVec=flcbdfWrappers.ParVec(blockSize,n,N,-1,None,self.arrayPetsc,0)
-        def scatter_forward_insert(self):
-                self.cparVec.scatter_forward_insertAll(self.subdomain2global,self.arrayAll)
-        def scatter_reverse_add(self):
-                self.cparVec.scatter_reverse_addAll(self.subdomain2global,self.arrayAll)
-
-from petsc4py import PETSc
 class ParVec_petsc4py(PETSc.Vec):
 	"""
-	wrapper for petsc4py's interface to PETSc Vec
-	TODO:
-
+	Parallel vector using petsc4py's wrappers for PETSc
 	"""
 	def __init__(self,array=None,bs=None,n=None,N=None,nghosts=None,subdomain2global=None,blockVecType="simple"):
 		if array == None:
@@ -78,26 +68,11 @@ class ParVec_petsc4py(PETSc.Vec):
 				ghosts = numpy.zeros((blockSize*nghosts),'i')
 				for j in range(blockSize):
 					ghosts[j::blockSize]=subdomain2global[n:]*blockSize+j
-				#keep for debugging for a little while
-				#ghosts2 = numpy.zeros((blockSize*nghosts),'i')
-				#for i in range(nghosts):
-				#	for j in range(blockSize):
-				#		ghosts2[i*blockSize+j]=subdomain2global[n+i]*blockSize+j
-				#if len(ghosts2) > 0 or len(ghosts) > 0:
-				#	assert numpy.max(numpy.absolute(ghosts2-ghosts)) < 1.0e-8
-				
 				self.createGhostWithArray(ghosts,array,size=(blockSize*n,blockSize*N),bsize=1)
 				if blockSize > 1: #have to build in block dofs
 					subdomain2globalTotal = numpy.zeros((blockSize*subdomain2global.shape[0],),'i')
 					for j in range(blockSize):
 						subdomain2globalTotal[j::blockSize]=subdomain2global*blockSize+j
-					#keep for debugging for a minute
-					#subdomain2globalTotal2= numpy.zeros((blockSize*subdomain2global.shape[0],),'i')
-					#for i in range(subdomain2global.shape[0]):
-					#	for j in range(blockSize):
-					#		subdomain2globalTotal2[i*blockSize+j]=subdomain2global[i]*blockSize+j
-					#if len(subdomain2globalTotal) > 0 or len(subdomain2globalTotal2) > 0:
-					#	assert numpy.max(numpy.absolute(subdomain2globalTotal2-subdomain2globalTotal)) < 1.0e-8
 					self.subdomain2global=subdomain2globalTotal
 				else:
 					self.subdomain2global=subdomain2global
@@ -113,32 +88,17 @@ class ParVec_petsc4py(PETSc.Vec):
 				self.petsc_l2g = PETSc.LGMap()
 				self.petsc_l2g.create(self.subdomain2global)
 				self.setLGMap(self.petsc_l2g)
-		#
 		self.setFromOptions()
-	#
         def scatter_forward_insert(self):
-		#mwf debug
-		#import Comm
-		#comm = Comm.get()
-		#print "rank= %s ParVec3 into scatter_forward view " % (comm.rank()) 
-		#self.view()
-		addValues = False; scatterReverse=False
-                self.ghostUpdateBegin(addValues,scatterReverse)
-		self.ghostUpdateEnd(addValues,scatterReverse)
-		#print "rank= %s ParVec3 outof scatter_forward " % (comm.rank())
-		#self.view()
-		#comm.barrier()
+                self.ghostUpdateBegin(PETSc.InsertMode.INSERT,PETSc.ScatterMode.FORWARD)
+		self.ghostUpdateEnd(PETSc.InsertMode.INSERT,PETSc.ScatterMode.FORWARD)
         def scatter_reverse_add(self):
-		addValues = True; scatterReverse=True
-                self.ghostUpdateBegin(addValues,scatterReverse)
-		self.ghostUpdateEnd(addValues,scatterReverse)
-
+                self.ghostUpdateBegin(PETSc.InsertMode.ADD_VALUES,PETSc.ScatterMode.REVERSE)
+		self.ghostUpdateEnd(PETSc.InsertMode.ADD_VALUES,PETSc.ScatterMode.REVERSE)
 			
 class ParMat_petsc4py(PETSc.Mat):
 	"""
-	wrapper for petsc4py interface to PETSc Mat
-	TODO:
-	
+	Parallel matrix based on petsc4py's wrappers for PETSc.
 	"""
 	def __init__(self,ghosted_csr_mat,par_bs,par_n,par_N,par_nghost,subdomain2global,blockVecType="simple"):
 		PETSc.Mat.__init__(self)
@@ -148,7 +108,7 @@ class ParMat_petsc4py(PETSc.Mat):
 		self.create(PETSc.COMM_WORLD)
 		blockSize = max(1,par_bs)
 		if blockSize >= 1 and blockVecType != "simple":
-			#need to debug
+			## \todo fix block aij in ParMat_petsc4py
 			self.setType('baij')
 			self.setSizes([[blockSize*par_n,blockSize*par_N],[blockSize*par_n,blockSize*par_N]],bsize=blockSize)
 			self.setBlockSize(blockSize)
@@ -160,42 +120,40 @@ class ParMat_petsc4py(PETSc.Mat):
 				subdomain2globalTotal = numpy.zeros((blockSize*subdomain2global.shape[0],),'i')
 				for j in range(blockSize):
 					subdomain2globalTotal[j::blockSize]=subdomain2global*blockSize+j
-				#keep for debugging for a minute
-				#subdomain2globalTotal2= numpy.zeros((blockSize*subdomain2global.shape[0],),'i')
-				#for i in range(subdomain2global.shape[0]):
-				#	for j in range(blockSize):
-				#		subdomain2globalTotal2[i*blockSize+j]=subdomain2global[i]*blockSize+j
-				#if len(subdomain2globalTotal) > 0 or len(subdomain2globalTotal2) > 0:
-				#	assert numpy.max(numpy.absolute(subdomain2globalTotal2-subdomain2globalTotal)) < 1.0e-8
 				self.subdomain2global=subdomain2globalTotal
 			else:
 				self.subdomain2global=subdomain2global
-		#
 		import Comm
 		comm = Comm.get()
-		print "ParMat_petsc4py comm.rank= %s blockSize = %s par_n= %s par_N=%s par_nghost=%s par_jacobian.getSizes()= %s " % (comm.rank(),blockSize,
-																      par_n,par_N,par_nghost,
-																      self.getSizes())
-		
-		#includes overlap
+		logEvent("ParMat_petsc4py comm.rank= %s blockSize = %s par_n= %s par_N=%s par_nghost=%s par_jacobian.getSizes()= %s " 
+			 % (comm.rank(),blockSize,par_n,par_N,par_nghost,self.getSizes()))
 		self.csr_rep = ghosted_csr_mat.getCSRrepresentation()
 		blockOwned = blockSize*par_n
 		self.csr_rep_owned = ghosted_csr_mat.getSubMatCSRrepresentation(0,blockOwned)
 		self.petsc_l2g = PETSc.LGMap()
 		self.petsc_l2g.create(self.subdomain2global)
-		#cek todo, fix preallocation and storage
-		#self.setPreallocationCSR(self.csr_rep_owned)
+		self.colind_global = self.petsc_l2g.apply(self.csr_rep_owned[1]) #prealloc needs global indices
+		self.setPreallocationCSR([self.csr_rep_owned[0],self.colind_global,self.csr_rep_owned[2]])
 		self.setUp()
 		self.setLGMap(self.petsc_l2g)
 		self.setFromOptions()
 	
 def Vec(n):
+	"""
+	Build a vector of length n (using numpy)
+	"""
         return numpy.zeros((n,),'d')
 
 def Mat(n,m):
+	"""
+        Build an n x m matrix (using numpy)
+        """
         return numpy.zeros((n,m),'d')
 
 def SparseMatFromDict(nr,nc,aDict):
+	"""
+	Build a nr x nc sparse matrix from a dictionary representation
+	"""
         import superluWrappers
         indeces = aDict.keys()
         indeces.sort()
@@ -214,25 +172,25 @@ def SparseMatFromDict(nr,nc,aDict):
                         rowptr[i]=k
                 k+=1
         rowptr[i+1] = k
-##         print 'nr',nr
-##         print 'nc',nc
-##         print 'nnz',nnz
-##         print 'rowptr',rowptr
-##         print 'colind',colind
-##         print 'nzval',nzval
         return (SparseMat(nr,nc,nnz,nzval,colind,rowptr),nzval)
+
 def SparseMat(nr,nc,nnz,nzval,colind,rowptr):
+	"""
+	Build a nr x nc sparse matrix from the CSR data structures
+	"""
         import superluWrappers
         return superluWrappers.SparseMatrix(nr,nc,nnz,nzval,colind,rowptr)
 
 class SparseMatShell:
+	"""
+	Build a parallel matrix shell using the subdomain CSR data structures (must have overlapping subdomains)
+	"""
 	from petsc4py import PETSc
 	def __init__(self,ghosted_csr_mat):
 		self.ghosted_csr_mat=ghosted_csr_mat
 		self.par_b = None
 		self.xGhosted = None
 		self.yGhosted = None
-	#cek define matshell
 	def create(self, A):
 		pass
 	def mult(self, A, x, y):
@@ -247,46 +205,79 @@ class SparseMatShell:
 		self.ghosted_csr_mat.matvec(self.xGhosted.getLocalForm().getArray(),self.yGhosted.getLocalForm().getArray())
 		y.setArray(self.yGhosted.getArray())
 
-## def SparseMat_old(n,m,storage):
-##         return spmatrix.ll_mat(n,m,storage)
-
 def l2Norm(x):
+	"""
+	Compute the parallel l_2 norm
+	"""
         return numpy.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
 
 def l1Norm(x):
+	"""
+	Compute the parallel l_1 norm
+	"""
         return flcbdfWrappers.globalSum(numpy.sum(numpy.abs(x)))
 
 def lInfNorm(x):
+	"""
+	Compute the parallel l_{\infty} norm
+	"""
         return flcbdfWrappers.globalMax(numpy.linalg.norm(x,numpy.inf))
 
 def wDot(x,y,h):
+	"""
+	Compute the parallel weighted dot product with weight h
+	"""
         return flcbdfWrappers.globalSum(numpy.sum(x*y*h))
 
 def wl2Norm(x,h):
+	"""
+	Compute the parallel weighted l_2 norm with weight h
+	"""
         return numpy.sqrt(flcbdfWrappers.globalSum(wDot(x,x,h)))
 
 def wl1Norm(x,h):
+	"""
+	Compute the parallel weighted l_1 norm with weight h
+	"""
         return numpy.sum(flcbdfWrappers.globalSum(numpy.abs(h*x)))
 
 def wlInfNorm(x,h):
+	"""
+	Compute the parallel weighted l_{\infty} norm with weight h
+	"""
         return flcbdfWrappers.globalMax(numpy.max(h*numpy.abs(x)))
 
 def energyDot(x,y,A):
-        flcbdfWrappers.globalSum(numpy.dot(A*x,y))
+	"""
+	Compute the "energy" dot product x^t A y (not parallel)
+	"""
+        numpy.dot(A*x,y)
 
 def energyNorm(x,A):
+	"""
+	Compute the "energy" norm x^t A x (not parallel)
+	"""
         numpy.sqrt(energyDot(x,x,A))
 
 def l2NormAvg(x):
-	#mwf what if scale by number of unknowns?
+	"""
+        Compute the arithmetic averaged l_2 norm (root mean squared norm)
+        """
 	scale = 1.0/flcbdfWrappers.globalSum(len(x.flat))
         return scale*numpy.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
+
+rmsNorm = l2NormAvg
+
 def l2Norm_local(x):
 	"""
-	l2 norm for just local (processor) system 
+	Compute the l_2 norm for just local (processor) system  (not parallel)
 	"""
 	return numpy.sqrt(numpy.dot(x,x))
+
 class WeightedNorm:
+	"""
+        Compute the weighted norm for time step control (not currently parallel)
+        """
 	def __init__(self,shape,atol,rtol):
 		self.shape = shape
 		self.dim = sum(self.shape)
@@ -303,7 +294,6 @@ class WeightedNorm:
 		self.tmp /= self.weight
 		value = numpy.linalg.norm(self.tmp.flat,type)
 		return value/self.dim
-## @}
 
 if __name__ == '__main__':
         from LinearAlgebraTools import *
