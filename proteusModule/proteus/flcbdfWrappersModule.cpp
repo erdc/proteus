@@ -95,7 +95,6 @@ ParVec_init(ParVec *self, PyObject *args, PyObject *kwds)
       VecGetBlockSize(self->v,&bstmp);
       assert(bstmp==bs);
     }
-  //VecPlaceArray(self->v,DDATA(array)); //no longer needed
   VecGetArray(self->v,&self->array);
   assert(self->array==DDATA(array));
   return 0;
