@@ -30,7 +30,7 @@ class ELLAMdiscretization:
         self.slumpingFlag = 0 #0 -- none, 1 -- Russell, Binning (1d any way), 2 -- Berzins (or something close), 3 -- FCT approach
         self.SSIPflag = 0 #use strategic spatial integration points
 
-        
+
         #grab options from user if available
         #todo clean this up, add set from options for zeroTol etc
         assert 'particleTracking' in dir(options), "ELLAM requires particleTracking type to be set in n file"
@@ -63,7 +63,7 @@ class ELLAMdiscretization:
             self.q_element_track[ci]   = numpy.zeros((self.transport.mesh.nElements_global,self.transport.nQuadraturePoints_element),'i')
         #interpolation points for solution values
         self.x_track_ip = {}; self.t_track_ip={}; self.t_depart_ip={}; self.u_track_ip={}; self.flag_track_ip={}; self.element_track_ip={}
-        self.u_dof_track = {}; self.u_dof_track_tmp = {} ; 
+        self.u_dof_track = {}; self.u_dof_track_tmp = {} ;
         for ci in range(self.transport.nc):
             self.x_track_ip[ci] = numpy.zeros((self.transport.mesh.nElements_global,self.transport.n_phi_ip_element[ci],3),'d')
             self.t_track_ip[ci]   = numpy.zeros((self.transport.mesh.nElements_global,self.transport.n_phi_ip_element[ci]),'d')
@@ -86,12 +86,12 @@ class ELLAMdiscretization:
         self.gq_x_depart=None; self.gq_element_depart=None;
         #not really needed except for evaluateSolutionAtTrackedPoints convention
         #todo get rid of
-        self.gq_flag_depart=None; 
-        
+        self.gq_flag_depart=None;
+
         ##particle tracker setup
         self.particle_tracker = options.particleTracking(self.transport.mesh,self.transport.nSpace_global,
                                                          activeComponentList=range(self.transport.nc))
-                       
+
         self.particle_tracker.setFromOptions(options)
         self.particle_tracker.updateTransportInformation(self)
         self.zeroSolutionTol_track = {}
@@ -101,13 +101,13 @@ class ELLAMdiscretization:
         else:
             for ci in range(self.transport.nc):
                 self.zeroSolutionTol_track[ci]=1.0e-8
-            
+
 
         #need to be able to evaluate solution at old and new time levels in some cases
         #could make this a shallow copy otherwise to save memory
         self.u_dof_last = {}
         for ci in range(self.transport.nc):
-            self.u_dof_last[ci] = numpy.copy(self.transport.u[ci].dof)    
+            self.u_dof_last[ci] = numpy.copy(self.transport.u[ci].dof)
 
 
         if self.useBackwardTrackingForOldMass:
@@ -125,14 +125,14 @@ class ELLAMdiscretization:
             #    deep_keys |= set([('df',ci,cj) for cj in cjDict.keys()])
             #for ci,ckDict in self.transport.coefficients.diffusion.iteritems():
             #    deep_keys |= set([('a',ci,ck) for ck in ckDict.keys()])
-                
+
             shallow_keys=set(['x'])
             for k in self.transport.q.keys():
                 if k in deep_keys:
                     self.q_backtrack[k] = numpy.copy(self.transport.q[k])
                 elif k in shallow_keys:
                     self.q_backtrack[k] = self.transport.q[k]
-            
+
         else:
             self.q_backtrack=self.transport.q #could only grab shallow copies of specific keys
 
@@ -154,7 +154,7 @@ class ELLAMdiscretization:
         for ci in range(self.transport.nc):
             self.transport.ebqe[('outflow_flux',ci)] = numpy.zeros((self.transport.mesh.nExteriorElementBoundaries_global,self.transport.nElementBoundaryQuadraturePoints_elementBoundary),'d')
             self.transport.ebqe[('outflow_flux_last',ci)] = numpy.zeros((self.transport.mesh.nExteriorElementBoundaries_global,self.transport.nElementBoundaryQuadraturePoints_elementBoundary),'d')
-        
+
             self.transport.ebqe[('u',ci)] = numpy.zeros((self.transport.mesh.nExteriorElementBoundaries_global,self.transport.nElementBoundaryQuadraturePoints_elementBoundary),'d')
             self.transport.ebqe[('grad(u)',ci)] = numpy.zeros((self.transport.mesh.nExteriorElementBoundaries_global,self.transport.nElementBoundaryQuadraturePoints_elementBoundary,self.transport.nSpace_global),'d')
 
@@ -162,7 +162,7 @@ class ELLAMdiscretization:
             self.transport.ebqe[('advectiveFlux_bc_flag',ci)] = numpy.zeros((self.transport.mesh.nExteriorElementBoundaries_global,self.transport.nElementBoundaryQuadraturePoints_elementBoundary),'i')
             self.transport.ebqe[('advectiveFlux_bc',ci)] = numpy.zeros((self.transport.mesh.nExteriorElementBoundaries_global,self.transport.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         #
- 
+
         ##data structures for slumping
         self.rightHandSideForLimiting = {}; self.elementResidualTmp = {}; self.elementModifiedMassMatrixCorrection = {}; self.elementSlumpingParameter = {}
         for ci in range(self.transport.nc):
@@ -188,26 +188,26 @@ class ELLAMdiscretization:
     ### routines for tracking
     def trackQuadraturePoints(self,q):
         """
-        track quadrature points in q['x'] backward from t^{n+1} --> t^{n}, 
+        track quadrature points in q['x'] backward from t^{n+1} --> t^{n},
           loads
              x_track[0]      : location of point at end of tracking
              t_track[0]      : time tracking ended
              flag_track[0]   : -1  -- point in interior at tOut
-			       -2  -- point exited domain somewhere in (tIn,tOut)
+                               -2  -- point exited domain somewhere in (tIn,tOut)
                                -3  -- did not track (e.g., v = 0 or u = 0)
              element_track[0]     : element containing point at end of tracking
-        save time steps for domain in 
+        save time steps for domain in
              dt_track[0] = t^{n+1} - t_track[0]
         Then
-        track quadrature points in q['x'] forward from t^n --> t^{n+1}, 
-          save 
+        track quadrature points in q['x'] forward from t^n --> t^{n+1},
+          save
              'x_track[0]     : location of point at end of tracking
              t_track[0]      : time tracking ended
              flag_track[0]   : -1  -- point in interior at tOut
-			       -2  -- point exited domain somewhere in (tIn,tOut)
+                               -2  -- point exited domain somewhere in (tIn,tOut)
                                -3  -- did not track (e.g., v = 0 or u = 0)
              element_track[0]     : element containing point at end of tracking
-             
+
         """
         import pdb
         timeToTrackPoints = (self.transport.timeIntegration.t > self.transport.timeIntegration.tLast + 1.0e-8 or
@@ -224,7 +224,7 @@ class ELLAMdiscretization:
             for k in range(q_e[ci].shape[1]):
                 q_e[ci][:,k] = numpy.arange(self.transport.mesh.nElements_global,dtype='i')
         #todo need to allow skipping nonzero points with q or gq
-        
+
         #first generate SSIPs if needed
         #todo this could be turned into a data member
         #0 -- not backtracked at all
@@ -253,7 +253,7 @@ class ELLAMdiscretization:
                                                           timeLevel=1)
 
 
-                log(" LADRellam tracking integration points backward ci=%s" % ci,level=2) 
+                log(" LADRellam tracking integration points backward ci=%s" % ci,level=2)
                 self.q_t_depart[ci].fill(self.transport.timeIntegration.t)
                 #in desired output time, out actual time
                 self.q_t_track[ci].fill(self.transport.timeIntegration.tLast)
@@ -261,7 +261,7 @@ class ELLAMdiscretization:
                 self.q_flag_track[ci].fill(-1)
                 #assign ownership of quadrature points to elements
                 setupInitialElementLocations(ci,self.q_element_track)
-                    
+
             #todo make sure activeComponents set explicitly?
             #mwf debug just play with forwardTrack call, normally backward tracking
             self.particle_tracker.backwardTrack(self.q_t_depart,
@@ -278,10 +278,10 @@ class ELLAMdiscretization:
             for ci in range(self.transport.nc):
                 self.q_dt_track[ci]  = numpy.copy(self.q_t_depart[ci])
                 self.q_dt_track[ci] -= self.q_t_track[ci]
-                        
+
             if not self.useBackwardTrackingForOldMass:
                 for ci in range(self.transport.nc):
-                    log(" LADRellam tracking integration points forward ci=%s " % ci,level=2) 
+                    log(" LADRellam tracking integration points forward ci=%s " % ci,level=2)
                     #forward
                     self.q_t_depart[ci].fill(self.transport.timeIntegration.tLast)
                     self.q_t_track[ci].fill(self.transport.timeIntegration.t)
@@ -290,7 +290,7 @@ class ELLAMdiscretization:
                     self.q_flag_track[ci].fill(-1)
                     #assign ownership of quadrature points to elements
                     setupInitialElementLocations(ci,self.q_element_track)
-                    
+
 
                 #todo make sure activeComponents set explicitly?
                 self.particle_tracker.forwardTrack(self.q_t_depart,
@@ -304,7 +304,7 @@ class ELLAMdiscretization:
 
             if self.needToBackTrackSolution and solutionBackTrackedFlag < 1:
                 self.trackSolutionBackwards(skipPointsWithZeroSolution=False)
-               
+
             #end tracking interpolation points
             self.needToTrackPoints = False
             self.tForLastTrackingStep=self.transport.timeIntegration.t
@@ -333,7 +333,7 @@ class ELLAMdiscretization:
                                                       timeLevel=1)
 
 
-            log(" LADRellam tracking integration points backward ci=%s" % ci,level=2) 
+            log(" LADRellam tracking integration points backward ci=%s" % ci,level=2)
             self.t_depart_ip[ci].fill(self.transport.timeIntegration.t)
             #in desired output time, out actual time
             self.t_track_ip[ci].fill(self.transport.timeIntegration.tLast)
@@ -413,7 +413,7 @@ class ELLAMdiscretization:
             self.transport.u[ci].dof[:] = self.u_dof_track_tmp[ci]
         #ci
     #def
-        
+
 
     ###routines for implementing ellam integrals
     def updateElementResidual(self,elementResidual):
@@ -431,7 +431,7 @@ class ELLAMdiscretization:
     def updateElementResidualRHS(self,elementResidual):
         """
         accumulate ELLAM approximations in element residual that go on right hand side (at least conceptually)
-         
+
         """
         for ci in self.transport.coefficients.reaction.keys():
             #weight by time step size
@@ -442,7 +442,7 @@ class ELLAMdiscretization:
             cfemIntegrals.updateReaction_weak(self.transport.q[('r',ci)],
                                               self.transport.q[('dt*w*dV_r',ci)],
                                               elementResidual[ci])
-        
+
         #
         # (m^{n},w^{n+1})
         self.approximateOldMassIntegral(elementResidual)
@@ -454,13 +454,13 @@ class ELLAMdiscretization:
             for ci in range(self.transport.nc):
                 self.elementResidualTmp[ci].fill(0.0)
                 self.elementResidualTmp[ci] -= elementResidual[ci]
-        
+
     def updateElementResidualLHS(self,elementResidual):
         """
         accumulate ELLAM approximations in element residual that go on left hand side (at least conceptually)
-         
+
         """
-        # (m^{n+1,w^{n+1}) + (\Delta t(x) a\grad u, grad w^{n+1}) + (\Delta t(x) r,w^{n+1}) 
+        # (m^{n+1,w^{n+1}) + (\Delta t(x) a\grad u, grad w^{n+1}) + (\Delta t(x) r,w^{n+1})
         for ci,ckDict in self.transport.coefficients.diffusion.iteritems():
             for ck in ckDict.keys():
                 #weight by time step size
@@ -480,9 +480,9 @@ class ELLAMdiscretization:
                                                               self.transport.q[('grad(phi)',ck)],
                                                               self.transport.q[('dt*grad(w)*dV_a',ck,ci)],
                                                               elementResidual[ci])
-                        
 
-        
+
+
         if False and self.SSIPflag > 0 and self.gq_x_depart != None:#todo come up with a better way to handle uninitialized cases (first step)
             self.approximateNewMassIntegralUsingSSIPs(elementResidual)
         else:
@@ -551,7 +551,7 @@ class ELLAMdiscretization:
                                                                elementResidual[ci],
                                                                self.elementSlumpingParameter[ci],
                                                                self.elementModifiedMassMatrixCorrection[ci])
-                
+
             elif self.transport.nSpace_global == 2:
                 tryLocalUpwind = False
                 if tryLocalUpwind:
@@ -588,8 +588,8 @@ class ELLAMdiscretization:
                                                                self.elementSlumpingParameter[ci],
                                                                self.elementModifiedMassMatrixCorrection[ci],
                                                                adjustFactor)
-                                                            
-                
+
+
         elif self.slumpingFlag == 2:
             #start by using current solution to do limiting, then try back tracking
             if self.transport.nSpace_global == 1:
@@ -659,7 +659,7 @@ class ELLAMdiscretization:
                                                                                  self.globalEdgeLimiter[ci],
                                                                                  elementResidual[ci],
                                                                                  self.elementModifiedMassMatrixCorrection[ci])
-                
+
         elif self.slumpingFlag == 4:
             #TODO move this somewhere else? what if in parallel? just ignore off processor coupling
             #TODO only works for 1 component right now!!
@@ -708,7 +708,7 @@ class ELLAMdiscretization:
                                                                                  self.globalEdgeLimiter[ci],
                                                                                  elementResidual[ci],
                                                                                  self.elementModifiedMassMatrixCorrection[ci])
-                
+
 
     #
     def updateElementJacobian(self,elementJacobian):
@@ -754,7 +754,7 @@ class ELLAMdiscretization:
                                                              self.transport.q[('v',cj)],
                                                              self.transport.q[('w*dV_m',ci)],
                                                              elementJacobian[ci][cj])
-                
+
         #TODO unify so that all slumping approaches use same correction
         if self.slumpingFlag == 1:
             #mwf debug
@@ -794,14 +794,14 @@ class ELLAMdiscretization:
 
     def updateExteriorElementBoundaryJacobian(self,fluxJacobian_exterior):
         self.approximateOutflowBoundaryIntegralJacobian(fluxJacobian_exterior)
-        
+
     def approximateOldMassIntegral(self,elementRes):
         """
         approximate weak integral
-        \int_{\Omega} m^{n} w^{n+1} \dV 
+        \int_{\Omega} m^{n} w^{n+1} \dV
         """
         #by default, using just element quadrature array points (g)
-            
+
         if self.useBackwardTrackingForOldMass:
             return self.approximateOldMassIntegralWithBackwardTracking(elementRes)
         if self.SSIPflag > 0 and self.gq_x_depart != None: #todo come up with a better way to avoid unitialized cases (first step)
@@ -886,7 +886,7 @@ class ELLAMdiscretization:
                                                    self.q_backtrack[('u',ci)])
 
         #now evaluate as a standard mass integral
-        #todo get rid of all of this, just want mass 
+        #todo get rid of all of this, just want mass
         self.q_backtrack['dV']= self.transport.q['dV']
         #mwf debug
         #import pdb
@@ -904,13 +904,13 @@ class ELLAMdiscretization:
         #mwf debug
         #import pdb
         #pdb.set_trace()
- 
+
     def approximateInflowBoundaryIntegral(self,elementRes):
         """
         approximate term
 
          \int_{t^n}^{t^{n+1}}  \int_{\Gamma_{I}\sigma^b w \dS \dt
-        
+
         numerically using composite trapezoidal rule in time (and space too)
 
           \sum_{p=1}^{NT}\sum_{q=1}^{N_{q,b}}\Delta t^{p}\sigma^b(x_{q},t^p)w^{n+1}_{i}(\tilde{x}_q,t^{n+1})} W_q
@@ -918,7 +918,7 @@ class ELLAMdiscretization:
         Here (x_q,t^p) tracks forward to  (\tilde{x}_q,t^{n+1}) and w^{n+1}_{i} is any test function with support
           covering (\tilde{x}_q,t^{n+1})
 
-        only points on inflow boundary are tracked  
+        only points on inflow boundary are tracked
         """
         if self.transport.timeIntegration.t > self.transport.timeIntegration.tLast + 1.0e-8:
             #mwf debug
@@ -963,7 +963,7 @@ class ELLAMdiscretization:
                                                     self.transport.ebqe[('advectiveFlux_bc_flag',ci)],
                                                     self.ebqe_element_track[ci],
                                                     self.ebqe_flag_track[ci])
-                    
+
                     #track forward
                     self.ebqe_t_depart[ci].fill(tpi)
                     self.ebqe_t_track[ci].fill(self.transport.timeIntegration.t)
@@ -979,9 +979,9 @@ class ELLAMdiscretization:
                                                               ebqe_x_depart[ci],
                                                               self.transport.ebqe[('advectiveFlux_bc',ci)],
                                                               self.ebqe_flag_track[ci])
-                    
+
                 direction = 1.0 #forward tracking
-                if self.transport.timeIntegration.t > tpi + 1.0e-8: 
+                if self.transport.timeIntegration.t > tpi + 1.0e-8:
                     self.particle_tracker.forwardTrack(self.ebqe_t_depart,
                                                        self.ebqe_t_track,
                                                        ebqe_nPoints_track,
@@ -1016,7 +1016,7 @@ class ELLAMdiscretization:
                                                                                self.ebqe_flag_track[ci],
                                                                                self.transport.u[ci].femSpace.dofMap.l2g,
                                                                                self.transport.u[ci].dof,
-                                                                               elementRes[ci], 
+                                                                               elementRes[ci],
                                                                                self.transport.coefficients.sdInfo[(ci,ci)][0], #todo fix
                                                                                self.transport.coefficients.sdInfo[(ci,ci)][1],
                                                                                self.transport.ebqe[('advectiveFlux_bc_flag',ci)],
@@ -1028,8 +1028,8 @@ class ELLAMdiscretization:
         approximate term
 
          \int_{t^n}^{t^{n+1}}  \int_{\Gamma_{O}} f w \dS \dt
-        
-        numerically using trapezoidal rule in time 
+
+        numerically using trapezoidal rule in time
 
 
         """
@@ -1059,8 +1059,8 @@ class ELLAMdiscretization:
         approximate jacobian for term
 
          \int_{t^n}^{t^{n+1}}  \int_{\Gamma_{O}} f w \dS \dt
-        
-        numerically using trapezoidal rule in time 
+
+        numerically using trapezoidal rule in time
 
 
         """
@@ -1097,14 +1097,14 @@ class ELLAMdiscretization:
         #don't always need deep copy but go ahead and keep for now
         for ci in range(self.transport.nc):
             self.u_dof_last[ci].flat[:] = self.transport.u[ci].dof.flat
-            
+
     def setInitialConditions(self,getInitialConditionsDict,T=0.0):
         #dont always need a deep copy but go ahead for now and keep
         for ci in range(self.transport.nc):
             self.u_dof_last[ci].flat[:] = self.transport.u[ci].dof.flat
             #go ahead and set tracking variable to
             self.u_dof_track[ci].flat[:] = self.transport.u[ci].dof.flat
-    
+
     ###setting up geometry, quadrature point specific information
     def updateElementQuadrature(self,q):
         #extra boundary normal information for 2d, 3d to save need for ebq array
@@ -1112,14 +1112,14 @@ class ELLAMdiscretization:
         ctracking.getOuterNormals_affineSimplex(boundaryNormals,
                                                 q['inverse(J)'],
                                                 self.elementBoundaryOuterNormalsArray)
-        
+
         #mwf hack
         #TODO make sure coefficients has access to quadrature points for velocity evaluation??
         self.transport.coefficients.elementQuadraturePoints = self.transport.elementQuadraturePoints
     def calculateExteriorElementBoundaryQuadrature(self,ebqe):
         #mwf TODO cleanup make sure coefficients has access to quadrature points for velocity evaluation??
         self.transport.coefficients.elementBoundaryQuadraturePoints = self.transport.elementBoundaryQuadraturePoints
-         
+
     ###SSIP routines
     def trackSSIPs(self):
         """
@@ -1132,11 +1132,11 @@ class ELLAMdiscretization:
         #    for eN in range(self.mesh.nElements_global):
         #        start = self.gq_x_track_offsets[ci][eN]; finish = self.gq_x_track_offsets[ci][eN+1]
         #        q_e[ci][start:finish] = eN
-            
+
         #only forward track SSIPs
         assert not self.useBackwardTrackingForOldMass, "no need to use SSIPs with backtracking for mass"
         for ci in range(self.transport.nc):
-            log(" LADRellam tracking SSIP  points forward ci=%s " % ci,level=2) 
+            log(" LADRellam tracking SSIP  points forward ci=%s " % ci,level=2)
             nPoints_track[ci] = self.gq_x_track[ci].shape[0]
 
             self.gq_t_depart[ci].fill(self.transport.timeIntegration.tLast)
@@ -1157,7 +1157,7 @@ class ELLAMdiscretization:
                                            self.gq_x_track,
                                            self.gq_flag_track)
 
-    
+
     def generateSSIPs(self):
         """
         The general idea is to track interpolation points back to old time level and create quadrature rules
@@ -1167,15 +1167,15 @@ class ELLAMdiscretization:
 
         After tracking solution backwards, generate lookup table to determine points that are contained in each
         element (inverse of element_track). In this step, we should take care of the duplicate entries in the interpolation points.
-        We also need to make sure that 
+        We also need to make sure that
 
         Then call dimension specific routines to create quadrature points
-        on each element that contain the tracked points. 
+        on each element that contain the tracked points.
 
         """
         #have to redimension tracking arrays
         self.gq_x_track_offsets={}; self.gq_x_track={}; self.gq_t_track={}; self.gq_t_depart={}; self.gq_dt_track={}; self.gq_flag_track={}; self.gq_element_track={};
-        self.gq_dV={}; self.gq={}; self.gq_last={}; self.gq_x_depart={}; self.gq_element_depart={}; self.gq_flag_depart={}; 
+        self.gq_dV={}; self.gq={}; self.gq_last={}; self.gq_x_depart={}; self.gq_element_depart={}; self.gq_flag_depart={};
         #TODO make these user options
         #TODO make sub element quadrature type an option
         boundaryTolerance = 1.0e-6#1.0e-4;
@@ -1199,7 +1199,7 @@ class ELLAMdiscretization:
                                                                                      self.element_track_ip[ci],
                                                                                      self.flag_track_ip[ci],
                                                                                      self.x_track_ip[ci])
-                
+
                 #for debugging, loop through elements extract points and get back local quadrature points and weights
                 import TriangleTools
                 gq_dV_tmp = {}; gq_x_depart_tmp = {}; gq_element_depart = {}
@@ -1241,7 +1241,7 @@ class ELLAMdiscretization:
                         self.gq_x_depart[ci][nSoFar:nSoFar+nPoints_eN].flat[:] = self.transport.q['x'][eN].flat[:]
                         self.gq_element_depart[ci][nSoFar:nSoFar+nPoints_eN] = eN
                         nSoFar += nPoints_eN
-                        
+
                 #
                 #generate other arrays that are needed
                 #for now have to resize everthing here
@@ -1259,7 +1259,7 @@ class ELLAMdiscretization:
                 for cj in self.transport.coefficients.mass[ci].keys():
                     self.gq[('dm',ci,cj)]      = numpy.zeros((nPoints_global,),'d')
                     self.gq_last[('dm',ci,cj)] = numpy.zeros((nPoints_global,),'d')
-                     
+
                 self.gq[('x',ci)]          = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
                 self.gq_last[('x',ci)]     = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
             #ci
@@ -1312,110 +1312,110 @@ class ELLAMdiscretization:
                 dV_track_gq        = {}
                 #todo allow for using only 1 component to determine SSIPs
                 for ci in range(self.transport.nc):
-                     elementsToTrackedPoints[ci] = {}
-                     #mwf debug
-                     #import pdb
-                     #pdb.set_trace()
-                     for k in range(len(self.element_track_ip[ci].flat)):
-                         eN = self.element_track_ip[ci].flat[k]
-                         if eN >= 0 and self.flag_track_ip[ci].flat[k] >= -1:
-                             if elementsToTrackedPoints[ci].has_key(eN):
-                                 #todo: make sure only add points that are far enough away from existing points using a tolerance
-                                 elementsToTrackedPoints[ci][eN].add((self.x_track_ip[ci].flat[k*3+0],self.x_track_ip[ci].flat[k*3+1],self.x_track_ip[ci].flat[k*3+2]))
-                             else:
-                                 #start with nodal points then add those that are tracked
-                                 elementsToTrackedPoints[ci][eN] = set([(self.transport.mesh.nodeArray[nN,0],self.transport.mesh.nodeArray[nN,1],self.transport.mesh.nodeArray[nN,2]) for nN in self.transport.mesh.elementNodesArray[eN]])
-                                 #todo: make sure only add points that are far enough away from existing points using a tolerance and
-                                 #      if the point is too close to a boundary, the project to the boundary and check that point is not too close
-                                 #      to an existing point
-                                 elementsToTrackedPoints[ci][eN] |= set([(self.x_track_ip[ci].flat[3*k+0],self.x_track_ip[ci].flat[3*k+1],self.x_track_ip[ci].flat[k*3+2])])
-                     #
-                     x_track_gq_offsets[ci] = numpy.zeros((self.transport.mesh.nElements_global+1,),'i')
-                     #these will have to be converted to arrays
-                     x_track_gq_tmp = {}; dV_track_gq_tmp = {}
-                     if self.transport.nSpace_global == 1:
-                         subQuadratureOrder = 2
-                         subQuadratureType  = Quadrature.GaussEdge#Quadrature.CompositeTrapezoidalEdge#Quadrature.GaussEdge
-                         #count number of points
-                         for eN in range(self.transport.mesh.nElements_global):
-                             if not elementsToTrackedPoints[ci].has_key(eN):
-                                 x_track_gq_offsets[ci][eN+1] = x_track_gq_offsets[ci][eN]+len(self.transport.q['dV'][eN])
-                                 #copy over q's integration points and weights to temporary data structures
-                                 dV_track_gq_tmp[eN] = numpy.copy(self.transport.q['dV'][eN])
-                                 x_track_gq_tmp[eN]  = numpy.copy(self.transport.q['x'][eN])
-                             else:
-                                 #options are to generate quadrature physical directly or map back to reference
-                                 #mwf debug
-                                 #import pdb
-                                 #pdb.set_trace()
-                                 #subdivide element according to SSIPs then generate
-                                 #Gaussian quadrature on each sub-interval
-                                 #do manipulations in physical space first since that's
-                                 #how triangle would handle it I believe
-                                 #manually grab the points, sort, and subdivide
-                                 #generate a triangulation of element
-                                 tmpEdgeMesh = sorted(elementsToTrackedPoints[ci][eN])
-                                 #number of elements in sub-triangulation
-                                 nElements_base= len(tmpEdgeMesh)-1
-                                 subElementQuadrature = subQuadratureType()
-                                 subElementQuadrature.setOrder(subQuadratureOrder)
-                                 nSubElementPoints = len(subElementQuadrature.points)
-                                 nQuadraturePointsNew = nElements_base*nSubElementPoints
-                                 x_track_gq_offsets[ci][eN+1] = x_track_gq_offsets[ci][eN]+nQuadraturePointsNew
-                                 dV_track_gq_tmp[eN] = numpy.zeros((nQuadraturePointsNew,),'d')
-                                 x_track_gq_tmp[eN]  = numpy.zeros((nQuadraturePointsNew,3),'d')
-                                 #loop through each 'base' element in sub element triangulation and
-                                 #allocate the quadrature points and weights from the quadrature rule
-                                 #short-cut that may or may not be ok is to generate affine mapping on the fly
-                                 np_last = 0
-                                 for eN_local in range(nElements_base):
-                                     d = numpy.zeros((3,),'d')
-                                     for I in range(3):
-                                         d[I]=tmpEdgeMesh[eN_local+1][I]-tmpEdgeMesh[eN_local][I]
-                                     volume = numpy.sqrt(numpy.dot(d,d))
-                                     for p,w in zip(subElementQuadrature.points,subElementQuadrature.weights):
-                                         for I in range(3):
-                                             x_track_gq_tmp[eN][np_last,I] = tmpEdgeMesh[eN_local][I]*(1.0-p[0]) + tmpEdgeMesh[eN_local+1][I]*p[0]
-                                         dV_track_gq_tmp[eN][np_last]  = w*volume
-                                         np_last += 1
-                             #else has tracked points
-                         #eN
-                         nPoints_global = x_track_gq_offsets[ci][-1]
-                         self.gq_x_track[ci] = numpy.zeros((nPoints_global,3),'d')
-                         self.gq_dV[ci]= numpy.zeros((nPoints_global,),'d')
-                         for eN in range(self.transport.mesh.nElements_global):
-                             self.gq_x_track[ci][x_track_gq_offsets[ci][eN]:x_track_gq_offsets[ci][eN+1],:] =x_track_gq_tmp[eN][:,:]
-                             self.gq_dV[ci][x_track_gq_offsets[ci][eN]:x_track_gq_offsets[ci][eN+1]]=dV_track_gq_tmp[eN][:]
-                         #
-                         self.gq_x_track_offsets[ci]= numpy.copy(x_track_gq_offsets[ci])
-                         self.gq_x_depart[ci]       = numpy.copy(self.gq_x_track[ci])
-                         #for now have to resize everthing here
-                         self.gq_t_track[ci]        = numpy.zeros((nPoints_global,),'d')
-                         self.gq_t_depart[ci]       = numpy.zeros((nPoints_global,),'d')
-                         self.gq_dt_track[ci]       = numpy.zeros((nPoints_global,),'d')
-                         self.gq_flag_track[ci]     = numpy.zeros((nPoints_global,),'i')
-                         self.gq_flag_depart[ci]     = numpy.zeros((nPoints_global,),'i')
-                         self.gq_element_track[ci]  = numpy.zeros((nPoints_global,),'i')
-                         self.gq_element_depart[ci]  = numpy.zeros((nPoints_global,),'i')
-                         self.gq[('u',ci)]          = numpy.zeros((nPoints_global,),'d')
-                         self.gq[('m',ci)]          = numpy.zeros((nPoints_global,),'d')
-                         self.gq_last[('u',ci)]     = numpy.zeros((nPoints_global,),'d')
-                         self.gq_last[('m',ci)]     = numpy.zeros((nPoints_global,),'d')
-                         for cj in self.transport.coefficients.mass[ci].keys():
-                             self.gq[('dm',ci,cj)]      = numpy.zeros((nPoints_global,),'d')
-                             self.gq_last[('dm',ci,cj)] = numpy.zeros((nPoints_global,),'d')
+                    elementsToTrackedPoints[ci] = {}
+                    #mwf debug
+                    #import pdb
+                    #pdb.set_trace()
+                    for k in range(len(self.element_track_ip[ci].flat)):
+                        eN = self.element_track_ip[ci].flat[k]
+                        if eN >= 0 and self.flag_track_ip[ci].flat[k] >= -1:
+                            if elementsToTrackedPoints[ci].has_key(eN):
+                                #todo: make sure only add points that are far enough away from existing points using a tolerance
+                                elementsToTrackedPoints[ci][eN].add((self.x_track_ip[ci].flat[k*3+0],self.x_track_ip[ci].flat[k*3+1],self.x_track_ip[ci].flat[k*3+2]))
+                            else:
+                                #start with nodal points then add those that are tracked
+                                elementsToTrackedPoints[ci][eN] = set([(self.transport.mesh.nodeArray[nN,0],self.transport.mesh.nodeArray[nN,1],self.transport.mesh.nodeArray[nN,2]) for nN in self.transport.mesh.elementNodesArray[eN]])
+                                #todo: make sure only add points that are far enough away from existing points using a tolerance and
+                                #      if the point is too close to a boundary, the project to the boundary and check that point is not too close
+                                #      to an existing point
+                                elementsToTrackedPoints[ci][eN] |= set([(self.x_track_ip[ci].flat[3*k+0],self.x_track_ip[ci].flat[3*k+1],self.x_track_ip[ci].flat[k*3+2])])
+                    #
+                    x_track_gq_offsets[ci] = numpy.zeros((self.transport.mesh.nElements_global+1,),'i')
+                    #these will have to be converted to arrays
+                    x_track_gq_tmp = {}; dV_track_gq_tmp = {}
+                    if self.transport.nSpace_global == 1:
+                        subQuadratureOrder = 2
+                        subQuadratureType  = Quadrature.GaussEdge#Quadrature.CompositeTrapezoidalEdge#Quadrature.GaussEdge
+                        #count number of points
+                        for eN in range(self.transport.mesh.nElements_global):
+                            if not elementsToTrackedPoints[ci].has_key(eN):
+                                x_track_gq_offsets[ci][eN+1] = x_track_gq_offsets[ci][eN]+len(self.transport.q['dV'][eN])
+                                #copy over q's integration points and weights to temporary data structures
+                                dV_track_gq_tmp[eN] = numpy.copy(self.transport.q['dV'][eN])
+                                x_track_gq_tmp[eN]  = numpy.copy(self.transport.q['x'][eN])
+                            else:
+                                #options are to generate quadrature physical directly or map back to reference
+                                #mwf debug
+                                #import pdb
+                                #pdb.set_trace()
+                                #subdivide element according to SSIPs then generate
+                                #Gaussian quadrature on each sub-interval
+                                #do manipulations in physical space first since that's
+                                #how triangle would handle it I believe
+                                #manually grab the points, sort, and subdivide
+                                #generate a triangulation of element
+                                tmpEdgeMesh = sorted(elementsToTrackedPoints[ci][eN])
+                                #number of elements in sub-triangulation
+                                nElements_base= len(tmpEdgeMesh)-1
+                                subElementQuadrature = subQuadratureType()
+                                subElementQuadrature.setOrder(subQuadratureOrder)
+                                nSubElementPoints = len(subElementQuadrature.points)
+                                nQuadraturePointsNew = nElements_base*nSubElementPoints
+                                x_track_gq_offsets[ci][eN+1] = x_track_gq_offsets[ci][eN]+nQuadraturePointsNew
+                                dV_track_gq_tmp[eN] = numpy.zeros((nQuadraturePointsNew,),'d')
+                                x_track_gq_tmp[eN]  = numpy.zeros((nQuadraturePointsNew,3),'d')
+                                #loop through each 'base' element in sub element triangulation and
+                                #allocate the quadrature points and weights from the quadrature rule
+                                #short-cut that may or may not be ok is to generate affine mapping on the fly
+                                np_last = 0
+                                for eN_local in range(nElements_base):
+                                    d = numpy.zeros((3,),'d')
+                                    for I in range(3):
+                                        d[I]=tmpEdgeMesh[eN_local+1][I]-tmpEdgeMesh[eN_local][I]
+                                    volume = numpy.sqrt(numpy.dot(d,d))
+                                    for p,w in zip(subElementQuadrature.points,subElementQuadrature.weights):
+                                        for I in range(3):
+                                            x_track_gq_tmp[eN][np_last,I] = tmpEdgeMesh[eN_local][I]*(1.0-p[0]) + tmpEdgeMesh[eN_local+1][I]*p[0]
+                                        dV_track_gq_tmp[eN][np_last]  = w*volume
+                                        np_last += 1
+                            #else has tracked points
+                        #eN
+                        nPoints_global = x_track_gq_offsets[ci][-1]
+                        self.gq_x_track[ci] = numpy.zeros((nPoints_global,3),'d')
+                        self.gq_dV[ci]= numpy.zeros((nPoints_global,),'d')
+                        for eN in range(self.transport.mesh.nElements_global):
+                            self.gq_x_track[ci][x_track_gq_offsets[ci][eN]:x_track_gq_offsets[ci][eN+1],:] =x_track_gq_tmp[eN][:,:]
+                            self.gq_dV[ci][x_track_gq_offsets[ci][eN]:x_track_gq_offsets[ci][eN+1]]=dV_track_gq_tmp[eN][:]
+                        #
+                        self.gq_x_track_offsets[ci]= numpy.copy(x_track_gq_offsets[ci])
+                        self.gq_x_depart[ci]       = numpy.copy(self.gq_x_track[ci])
+                        #for now have to resize everthing here
+                        self.gq_t_track[ci]        = numpy.zeros((nPoints_global,),'d')
+                        self.gq_t_depart[ci]       = numpy.zeros((nPoints_global,),'d')
+                        self.gq_dt_track[ci]       = numpy.zeros((nPoints_global,),'d')
+                        self.gq_flag_track[ci]     = numpy.zeros((nPoints_global,),'i')
+                        self.gq_flag_depart[ci]     = numpy.zeros((nPoints_global,),'i')
+                        self.gq_element_track[ci]  = numpy.zeros((nPoints_global,),'i')
+                        self.gq_element_depart[ci]  = numpy.zeros((nPoints_global,),'i')
+                        self.gq[('u',ci)]          = numpy.zeros((nPoints_global,),'d')
+                        self.gq[('m',ci)]          = numpy.zeros((nPoints_global,),'d')
+                        self.gq_last[('u',ci)]     = numpy.zeros((nPoints_global,),'d')
+                        self.gq_last[('m',ci)]     = numpy.zeros((nPoints_global,),'d')
+                        for cj in self.transport.coefficients.mass[ci].keys():
+                            self.gq[('dm',ci,cj)]      = numpy.zeros((nPoints_global,),'d')
+                            self.gq_last[('dm',ci,cj)] = numpy.zeros((nPoints_global,),'d')
 
-                         self.gq[('x',ci)]          = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
-                         self.gq_last[('x',ci)]     = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
-                         #go ahead and assign element_depart
-                         for eN in range(self.transport.mesh.nElements_global):
-                             start = self.gq_x_track_offsets[ci][eN]; finish = self.gq_x_track_offsets[ci][eN+1]
-                             self.gq_element_depart[ci][start:finish] = eN
+                        self.gq[('x',ci)]          = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
+                        self.gq_last[('x',ci)]     = self.gq_x_depart[ci] #simple alias for coeffficient evaluation
+                        #go ahead and assign element_depart
+                        for eN in range(self.transport.mesh.nElements_global):
+                            start = self.gq_x_track_offsets[ci][eN]; finish = self.gq_x_track_offsets[ci][eN+1]
+                            self.gq_element_depart[ci][start:finish] = eN
 
-                     #1d
-                     #mwf debug
-                     #import pdb
-                     #pdb.set_trace()
+                    #1d
+                    #mwf debug
+                    #import pdb
+                    #pdb.set_trace()
                 #ci loop for generating SSIPs
             #not useC
         #1d
@@ -1432,7 +1432,7 @@ class ELLAMdiscretization:
         #for i in range(self.gq_x_depart[0].shape[0]):
         #    print "%g %g %g %g" % (i,self.gq_x_depart[0][i,0],self.gq_dV[0][i],self.gq_element_depart[0][i])
         #
-        
+
         for ci in range(self.transport.nc):
             self.gq_flag_depart[ci].fill(-1); self.gq_t_depart[ci].fill(self.transport.timeIntegration.tLast)
 
@@ -1460,7 +1460,7 @@ class ELLAMdiscretization:
         #import pdb
         #pdb.set_trace()
 
-                    
+
     #
     def approximateNewMassIntegralUsingSSIPs(self,elementRes):
         """
@@ -1468,7 +1468,7 @@ class ELLAMdiscretization:
         \int_{\Omega} m^{n+1} w^{n+1} \dV using variable quadrature based on SSIPs
         """
         log("LADRellam evaluating new mass integral with SSIPs and forwardtracking",level=2)
-            
+
         assert not self.useBackwardTrackingForOldMass, "no need to use SSIPs and backward tracking for mass"
 
         #evaluate time solution at SSIPs
@@ -1480,12 +1480,12 @@ class ELLAMdiscretization:
         #        start = self.gq_x_track_offsets[ci][eN]; finish = self.gq_x_track_offsets[ci][eN+1]
         #        q_e[ci][start:finish] = eN
 
-        #have to evaluate new time solution and mass at SSIPs 
+        #have to evaluate new time solution and mass at SSIPs
         for ci in range(self.transport.nc):
             self.gq_t_depart[ci].fill(self.transport.timeIntegration.t)
             self.gq_flag_depart[ci].fill(-1)
             #should be already set setupInitialElementLocations(ci,self.gq_element_depart)
-            
+
             cellam.evaluateSolutionAtTrackedPoints(self.transport.nSpace_global,
                                                    self.transport.nDOF_trial_element[ci],
                                                    self.gq_x_depart[ci].shape[0],
@@ -1539,10 +1539,10 @@ class ELLAMdiscretization:
         """
         #todo need to figure out how to handle case like initial step where points
         #may not be tracked backwards yet
-        
+
         #by default, using just element quadrature array points (g)
         log("LADRellam evaluating old mass integral with SSIPs and forwardtracking",level=2)
-            
+
         assert not self.useBackwardTrackingForOldMass, "no need to use SSIPs and backward tracking for mass"
 
         #assume old time solution already evaluated at SSIPs
@@ -1569,4 +1569,3 @@ class ELLAMdiscretization:
                                                           self.transport.u[ci].femSpace.dofMap.l2g,
                                                           self.gq_last[('m',ci)],
                                                           elementRes[ci])
-

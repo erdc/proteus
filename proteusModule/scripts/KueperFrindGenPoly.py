@@ -39,4 +39,3 @@ for bN in range(nBlocks):
                                   1+bN))
 poly.write('#holes\n0\n#regions\n0\n')
 poly.close()
-               

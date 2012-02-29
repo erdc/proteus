@@ -67,7 +67,7 @@ def proteusRun(runRoutines):
                       action="store",
                       type="int",
                       dest="logLevel",
-                      default=1)    
+                      default=1)
     parser.add_option("-v", "--verbose",
                       help="Print logging information to standard out",
                       action="callback",
@@ -106,7 +106,7 @@ def proteusRun(runRoutines):
         #mwf debug
         #print """now path= %s """ % sys.path
     #end if
-    
+
     if len(args) < 1:
         raise RuntimeError("No input file specified")
     if len(args) > 1:
@@ -160,7 +160,7 @@ def proteusRun(runRoutines):
                 simFlags['plotOptions'] = {'ensight':{'on':True}}
             #control convention on case file for multiple models, doesn't effect proteusRun right now
             simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ `comm.rank()`
-  
+
         #viewers section
     #pName,simFlags defaults
     #figure out how to do batch file,
@@ -192,12 +192,12 @@ def proteusRun(runRoutines):
         #end while
         #always pop the last block so have to have a start at the end
         batchBlocks.pop()
-        
+
         #mwf debug
         #print """end of batch read size batchBlocks= %d """ % len(batchBlocks)
         #for i,block in enumerate(batchBlocks):
         #    print """block[%d]= %s """ % (i,block)
-        
+
     #end batch
     running = True
 
@@ -210,7 +210,7 @@ def proteusRun(runRoutines):
             lines = '\n'.join(batchBlocks.pop(0))
             exec lines
             run     = True
-            running = len(batchBlocks) > 0        
+            running = len(batchBlocks) > 0
         else:
             userInput = False
             run = True
@@ -255,7 +255,7 @@ def proteusRun(runRoutines):
         if Viewers.viewerType == 'matlab':
             Viewers.viewerPipe.write("quit \n")
         #matlab
-        
+
 def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     Profiling.memory()
     memBase = Profiling.memLast
@@ -315,7 +315,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
 #                 else:
 #                     elementBoundaryQuadratureDict[I] = n.elementBoundaryQuadrature['default']
 #         else:
-#             for I in p.coefficients.elementBoundaryIntegralKeys: 
+#             for I in p.coefficients.elementBoundaryIntegralKeys:
 #                 elementBoundaryQuadratureDict[I] = n.elementBoundaryQuadrature
 #         elementQuadratureList.append(elementQuadratureDict)
 #         elementBoundaryQuadratureList.append(elementBoundaryQuadratureDict)
@@ -404,7 +404,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     for l in range(n.nLevels):
         print """proteusRun debug: mesh level=%d  nElements= %d nNodes=%d nFaces=%d diameter= %g """ % (l,
                                                                                       mlMesh.meshList[l].nElements_global,mlMesh.meshList[l].nNodes_global,mlMesh.meshList[l].nElementBoundaries_global,mlMesh.meshList[l].h)
-        
+
 
     Profiling.memory("mesh")
     Profiling.logEvent("Setting up MultilevelTransport",level=1)
@@ -477,7 +477,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
             par_duList=mlTransport.par_duList,
             multilevelNonlinearSolverType = n.multilevelNonlinearSolver,
             computeSolverRates=True,
-            printSolverInfo=False, 
+            printSolverInfo=False,
             relativeToleranceList = tolList,
             absoluteTolerance = n.atol,
             levelNonlinearSolverType=n.levelNonlinearSolver,
@@ -654,7 +654,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
         #if firstStep == True:
         #    for n,ti,tn in zip(nList,timeIntegratorList,tnList):
         #        ti.initialize(dt,t0=tn)
-            
+
         for it in range(len(mList)):
             print "Begin step for Model Number =",it
             for l,mm in enumerate(mList[it].modelList):
@@ -663,7 +663,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                     #cek have to use dof here because models might have different strong Dirichlet conditions.
                     #mList[it].uList[l].flat[:] = mList[preCopy['uList_model']].uList[l].flat[:]
                     for u_ci_lhs,u_ci_rhs in zip(mList[it].modelList[l].u.values(),mList[preCopy['uList_model']].modelList[l].u.values()):
-                       u_ci_lhs.dof[:] = u_ci_rhs.dof
+                        u_ci_lhs.dof[:] = u_ci_rhs.dof
                     mList[it].modelList[l].setFreeDOF(mList[it].uList[l])
                 if preCopy != None and preCopy.has_key(('clear_uList')) and preCopy['clear_uList'] == True:
                     #cek have to use dof here because models might have different strong Dirichlet conditions.
@@ -721,11 +721,11 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
         if opts.viewer and viewSolutionOrig:
             for m,p,tn,pName,mi in zip(mList,pList,tnList,pNameList,range(len(mList))):
                 m.modelList[l].viewSolution(plotOffSet,': t=%12.5e' % tn)
-                m.modelList[l].saveSolution()                
+                m.modelList[l].saveSolution()
                 plotOffSet+=m.modelList[-1].coefficients.nc
-                #mwf debug 
+                #mwf debug
                 if m.modelList[-1].q.has_key(('velocity',0)):
-                    plotOffSet+=1 
+                    plotOffSet+=1
                 if m.modelList[-1].coefficients.vectorComponents != None:
                     plotOffSet += 1
                 #if
@@ -800,4 +800,4 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     Profiling.memorySummary()
     #    raw_input('\nPress return to close windows and exit... \n')
 if __name__ == '__main__':
-   proteusRun(runProblems)
+    proteusRun(runProblems)

@@ -28,7 +28,7 @@ for e in refEdges:
     e.sort()
 refEdges.sort()
 refEdges = Numeric.array(refEdges)
-#quadrilaterals of reference hex 
+#quadrilaterals of reference hex
 refQuadrilaterals = [[[0,0,0],[0,1,0],[1,1,0],[1,0,0]],
                      [[0,0,0],[0,1,0],[0,1,1],[0,0,1]],
                      [[0,1,0],[0,1,1],[1,1,1],[1,1,0]],

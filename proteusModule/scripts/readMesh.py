@@ -3,7 +3,7 @@ import proteus
 from proteus.MeshTools import *
 
 ## \ingroup scripts
-# 
+#
 # \file readMesh.py
 #
 # \brief A script for reading a .3dm file for  viewing or exctracint the boundary mesh.
@@ -77,7 +77,7 @@ def readMesh():
     if opts.gnuplot or opts.viewGnuplot:
         mesh.writeEdgesGnuplot('meshEdges')
     if opts.viewGnuplot:
-         mesh.viewMeshGnuplot('meshEdges')
+        mesh.viewMeshGnuplot('meshEdges')
     return 0
 if __name__ == '__main__':
     import profile
@@ -91,4 +91,3 @@ if __name__ == '__main__':
 #      p.sort_stats('time').print_stats(20)
     readMesh()
     raw_input('Please press return to continue... \n')
-

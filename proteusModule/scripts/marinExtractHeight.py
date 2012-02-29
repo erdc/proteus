@@ -26,11 +26,11 @@ parser.add_option("-a","--accuracy",
                     type="float",
                     dest="accuracy",
                     default=0.01)
-		    
-(opts,args) = parser.parse_args()	
+
+(opts,args) = parser.parse_args()
 
 if not paraview.servermanager.ActiveConnection:
-	connection = paraview.servermanager.Connect()
+    connection = paraview.servermanager.Connect()
 
 reader = servermanager.sources.XdmfReader(FileName=opts.filename)
 reader.UpdatePipeline()
@@ -42,47 +42,47 @@ xloc = [2.724, 2.228,1.732, 0.582]
 
 lines=[]
 for x in xloc:
-  lines.append(LineSource(Point1=[x,0.5,0.0],Point2=[x,0.5,1.0],Resolution=opts.resolution))
+    lines.append(LineSource(Point1=[x,0.5,0.0],Point2=[x,0.5,1.0],Resolution=opts.resolution))
 
 probes=[]
 for line in lines:
-  probes.append(ProbePoint(Source=line,Input=reader))
-  
-point=PointSource(Center=[0.0,0.5,0.0],NumberOfPoints=1)  
+    probes.append(ProbePoint(Source=line,Input=reader))
+
+point=PointSource(Center=[0.0,0.5,0.0],NumberOfPoints=1)
 pprobe=ProbePoint(Source=point,Input=reader)
 
 outfile = open("height.txt",'w')
 for time in timesteps:
-  print "Time =" + str(time)
-  outfile.write(str(time))
-  
-  phi_old = 99.99
-  height  = 0.0
-  p =-1
-  for probe in probes:
-     p = p+1
-     probe.UpdatePipeline (time)
+    print "Time =" + str(time)
+    outfile.write(str(time))
 
-     fp = servermanager.Fetch(probe)
-     pdata= fp.GetPointData()
-     for i in  range(opts.resolution+1):
-       phi = pdata.GetArray("phid").GetTuple1(i)
-        
-       if (phi > 0.0) and (phi_old < 0.0):          
-          height = (float(i-1) + (phi_old/(phi_old-phi)))/float(opts.resolution)	  
-       phi_old=phi
-       
-     if (height > 0.0): 
-        phi = 111.0
-        while abs(phi) > opts.accuracy: 
-	    point.Center=[xloc[p],0.5,height]
-            fp2 = servermanager.Fetch(pprobe)
-            pdata2= fp2.GetPointData()
-	    phi  = pdata2.GetArray("phid").GetTuple1(0)   	  
-	    height = height - phi
-	    print time,height, phi
-     else:	
-        height = 0.0    
-     outfile.write("  " + str(height))
-  outfile.write("\n")
+    phi_old = 99.99
+    height  = 0.0
+    p =-1
+    for probe in probes:
+        p = p+1
+        probe.UpdatePipeline (time)
+
+        fp = servermanager.Fetch(probe)
+        pdata= fp.GetPointData()
+        for i in  range(opts.resolution+1):
+            phi = pdata.GetArray("phid").GetTuple1(i)
+
+            if (phi > 0.0) and (phi_old < 0.0):
+                height = (float(i-1) + (phi_old/(phi_old-phi)))/float(opts.resolution)
+            phi_old=phi
+
+        if (height > 0.0):
+            phi = 111.0
+            while abs(phi) > opts.accuracy:
+                point.Center=[xloc[p],0.5,height]
+                fp2 = servermanager.Fetch(pprobe)
+                pdata2= fp2.GetPointData()
+                phi  = pdata2.GetArray("phid").GetTuple1(0)
+                height = height - phi
+                print time,height, phi
+        else:
+            height = 0.0
+        outfile.write("  " + str(height))
+    outfile.write("\n")
 outfile.close()

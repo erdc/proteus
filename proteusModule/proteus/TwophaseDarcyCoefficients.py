@@ -10,7 +10,7 @@ log = Profiling.logEvent
 #base class for setting up fluid and material properties
 class TwophaseDarcyFlow_base(TC_base):
     def __init__(self,
-                 g=9.8, 
+                 g=9.8,
                  rhon=1.0,
                  rhow=0.0,
                  mun    = 1.0,
@@ -19,7 +19,7 @@ class TwophaseDarcyFlow_base(TC_base):
                  psk_model='VGM',
                  vg_alpha = 5.0,
                  vg_m  = 0.75,
-                 bc_pd  = 1.0/5.47, 
+                 bc_pd  = 1.0/5.47,
                  bc_lambda = 0.5,
                  omega  = 1.0,
                  Sw_max = 1.0,
@@ -34,10 +34,10 @@ class TwophaseDarcyFlow_base(TC_base):
                         'BCM':3,
                         'BCB':4}
         assert(self.psk_model in self.psk_types.keys())
-	self.vg_alpha=vg_alpha
-	self.vg_m = vg_m
-	self.bc_pd = bc_pd
-	self.bc_lambda=bc_lambda 
+        self.vg_alpha=vg_alpha
+        self.vg_m = vg_m
+        self.bc_pd = bc_pd
+        self.bc_lambda=bc_lambda
         #normalize gravity
         self.g = numpy.array(g,dtype='d')
         gMag= sqrt(numpy.dot(self.g,self.g))
@@ -48,16 +48,16 @@ class TwophaseDarcyFlow_base(TC_base):
         self.isHomogeneous=True
         self.hasMaterialTypes=False
         self.setParams=None
-	self.Ksw=Ksw
-	self.omega=omega
-	self.Sw_min = Sw_min
+        self.Ksw=Ksw
+        self.omega=omega
+        self.Sw_min = Sw_min
         self.Sw_max = Sw_max
         #set fluid properies
-	self.b = rhon/rhow         #normalize density
-	self.rhon=rhon/rhon
-	self.rhow=rhow/rhow
-	self.muw=muw/muw
-	self.mun=mun/muw
+        self.b = rhon/rhow         #normalize density
+        self.rhon=rhon/rhon
+        self.rhow=rhow/rhow
+        self.muw=muw/muw
+        self.mun=mun/muw
         #setup rwork arrays for homogeneous media, make heterogeneity later
         if self.psk_model == 'simp':
             self.len_rwork_psk=2
@@ -211,7 +211,7 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_sd_diag
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_sd_diag_het_matType
     def __init__(self,
-                 g=9.8, 
+                 g=9.8,
                  rhon=1.0,
                  rhow=0.0,
                  mun    = 1.0,
@@ -220,7 +220,7 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
                  psk_model='VGM',
                  vg_alpha = 5.0,
                  vg_m  = 0.75,
-                 bc_pd  = 1.0/5.47, 
+                 bc_pd  = 1.0/5.47,
                  bc_lambda = 0.5,
                  omega  = 1.0,
                  Sw_max = 1.0,
@@ -231,7 +231,7 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
                  diagonalHet = False,
                  sparseDiffusionTensors={},
                  sd = True):
-    	self.nc=2
+        self.nc=2
         variableNames=['s_w','psi_w']
         #just assume mass is a function of psi w now?
         mass = {0:{0:'linear',1:'nonlinear'},
@@ -275,11 +275,11 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
                          potential,
                          reaction,
                          hamiltonian,
-			 variableNames,
+                         variableNames,
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion = sd)
         TwophaseDarcyFlow_base.__init__(self,
-                                        g, 
+                                        g,
                                         rhon,
                                         rhow,
                                         mun,
@@ -288,7 +288,7 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
                                         psk_model,
                                         vg_alpha,
                                         vg_m,
-                                        bc_pd, 
+                                        bc_pd,
                                         bc_lambda,
                                         omega,
                                         Sw_max,
@@ -509,7 +509,7 @@ class TwophaseDarcy_fc_ff(TwophaseDarcyFlow_base):
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_ff_sd_diag
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_fc_ff_sd_diag_het_matType
     def __init__(self,
-                 g=9.8, 
+                 g=9.8,
                  rhon=1.0,
                  rhow=0.0,
                  mun    = 1.0,
@@ -518,7 +518,7 @@ class TwophaseDarcy_fc_ff(TwophaseDarcyFlow_base):
                  psk_model='VGM',
                  vg_alpha = 5.0,
                  vg_m  = 0.75,
-                 bc_pd  = 1.0/5.47, 
+                 bc_pd  = 1.0/5.47,
                  bc_lambda = 0.5,
                  omega  = 1.0,
                  Sw_max = 1.0,
@@ -526,7 +526,7 @@ class TwophaseDarcy_fc_ff(TwophaseDarcyFlow_base):
                  diagonalHet = False,
                  sparseDiffusionTensors={},
                  sd = True):
-    	self.nc=2
+        self.nc=2
         variableNames=['s_w','psi_w']
         mass = {0:{0:'linear'},
                 1:{0:'linear'}}
@@ -558,11 +558,11 @@ class TwophaseDarcy_fc_ff(TwophaseDarcyFlow_base):
                          potential,
                          reaction,
                          hamiltonian,
-			 variableNames,
+                         variableNames,
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion= sd)
         TwophaseDarcyFlow_base.__init__(self,
-                                        g, 
+                                        g,
                                         rhon,
                                         rhow,
                                         mun,
@@ -571,7 +571,7 @@ class TwophaseDarcy_fc_ff(TwophaseDarcyFlow_base):
                                         psk_model,
                                         vg_alpha,
                                         vg_m,
-                                        bc_pd, 
+                                        bc_pd,
                                         bc_lambda,
                                         omega,
                                         Sw_max,
@@ -742,7 +742,7 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_split_sd_diag_pressure
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_split_sd_diag_pressure_het_matType
     def __init__(self,
-                 g=9.8, 
+                 g=9.8,
                  rhon=1.0,
                  rhow=0.0,
                  mun    = 1.0,
@@ -751,7 +751,7 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
                  psk_model='VGM',
                  vg_alpha = 5.0,
                  vg_m  = 0.75,
-                 bc_pd  = 1.0/5.47, 
+                 bc_pd  = 1.0/5.47,
                  bc_lambda = 0.5,
                  omega  = 1.0,
                  Sw_max = 1.0,
@@ -763,7 +763,7 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
                  sparseDiffusionTensors={},
                  sd = True):
         self.swConstant=swConstant
-    	self.nc=1
+        self.nc=1
         variableNames=['psi_w']
         #these are only nonlinear for compressible flow
         mass      = {0:{0:'nonlinear'}}
@@ -787,11 +787,11 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
                          potential,
                          reaction,
                          hamiltonian,
-			 variableNames,
+                         variableNames,
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion = sd)
         TwophaseDarcyFlow_base.__init__(self,
-                                       g, 
+                                       g,
                                        rhon,
                                        rhow,
                                        mun,
@@ -800,7 +800,7 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
                                        psk_model,
                                        vg_alpha,
                                        vg_m,
-                                       bc_pd, 
+                                       bc_pd,
                                        bc_lambda,
                                        omega,
                                        Sw_max,
@@ -847,24 +847,24 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
 
     def initializeElementQuadrature(self,t,cq):
         TwophaseDarcyFlow_base.initializeElementQuadrature(self,t,cq)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.q_s_w   = numpy.zeros(cq[('u',0)].shape,'d')
         self.q_s_w[:] = self.swConstant
         for i in range(len(self.q_s_w.flat)/2,len(self.q_s_w.flat)):
-                self.q_s_w.flat[i] = 1.0e-4
+            self.q_s_w.flat[i] = 1.0e-4
         self.q_grad_psic   = numpy.zeros(cq[('f',0)].shape,'d')
         self.q_psic        = numpy.zeros(cq[('u',0)].shape,'d')
         #mwf not sure if this is ok
         cq['psi_n'] = numpy.zeros(cq[('u',0)].shape,'d')
         cq[('dpsi_n',0)] = numpy.ones(cq[('u',0)].shape,'d')
-        
+
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         TwophaseDarcyFlow_base.initializeElementBoundaryQuadrature(self,t,cebq,cebq_global)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ebq_s_w = numpy.zeros(cebq[('u',0)].shape,'d')
         self.ebq_s_w[:]=self.swConstant
         for i in range(len(self.ebq_s_w.flat)/2,len(self.ebq_s_w.flat)):
-                self.ebq_s_w.flat[i] = 1.0e-4
+            self.ebq_s_w.flat[i] = 1.0e-4
         self.ebq_grad_psic = numpy.zeros(cebq[('f',0)].shape,'d')
         self.ebq_psic = numpy.zeros(cebq[('u',0)].shape,'d')
         if cebq.has_key(('u',0)):
@@ -875,22 +875,22 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
             cebq_global[('dpsi_n',0)] = numpy.ones(cebq_global[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         TwophaseDarcyFlow_base.initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ebqe_s_w = numpy.zeros(cebqe[('u',0)].shape,'d')
         self.ebqe_s_w[:]=self.swConstant
         for i in range(len(self.ebqe_s_w.flat)/2,len(self.ebqe_s_w.flat)):
-                self.ebqe_s_w.flat[i] = 1.0e-4
+            self.ebqe_s_w.flat[i] = 1.0e-4
         self.ebqe_grad_psic = numpy.zeros(cebqe[('f',0)].shape,'d')
         self.ebqe_psic = numpy.zeros(cebqe[('u',0)].shape,'d')
         cebqe['psi_n'] = numpy.zeros(cebqe[('u',0)].shape,'d')
         cebqe[('dpsi_n',0)] = numpy.ones(cebqe[('u',0)].shape,'d')
     def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
         TwophaseDarcyFlow_base.initializeGeneralizedInterpolationPointQuadrature(self,t,cip)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ip_s_w = numpy.zeros(cip[('u',0)].shape,'d')
         self.ip_s_w[:]=self.swConstant
         for i in range(len(self.ip_s_w.flat)/2,len(self.ip_s_w.flat)):
-                self.ip_s_w.flat[i] = 1.0e-4
+            self.ip_s_w.flat[i] = 1.0e-4
         self.ip_grad_psic = numpy.zeros(cip[('f',0)].shape,'d')
         self.ip_psic = numpy.zeros(cip[('u',0)].shape,'d')
         cip['psi_n'] = numpy.zeros(cip[('u',0)].shape,'d')
@@ -1016,7 +1016,7 @@ class TwophaseDarcy_split_pressure(TwophaseDarcyFlow_base):
             elif c[('u',0)].shape == self.ebq_shape:
                 materialTypes = self.materialTypes_ebq
             else:
-               assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
+                assert False, "no materialType found to match c[('u',0)].shape= %s " % c[('u',0)].shape
             self.twophaseDarcy_split_sd_diag_pressure_het_matType(self.psk_types[self.psk_model],
                                                                   materialTypes,
                                                                   self.muw,
@@ -1041,7 +1041,7 @@ class TwophaseDarcy_split_saturation(TwophaseDarcyFlow_base):
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_split_sd_diag_saturation
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_split_sd_diag_saturation_het_matType
     def __init__(self,
-                 g=[9.8], 
+                 g=[9.8],
                  rhon=1.0,
                  rhow=1.0,
                  mun    = 1.0,
@@ -1050,7 +1050,7 @@ class TwophaseDarcy_split_saturation(TwophaseDarcyFlow_base):
                  psk_model='VGM',
                  vg_alpha = 5.0,
                  vg_m  = 0.75,
-                 bc_pd  = 1.0/5.47, 
+                 bc_pd  = 1.0/5.47,
                  bc_lambda = 0.5,
                  omega  = 1.0,
                  Sw_max = 1.0,
@@ -1062,13 +1062,13 @@ class TwophaseDarcy_split_saturation(TwophaseDarcyFlow_base):
                  sparseDiffusionTensors={},
                  sd = True):
         self.qScalarConstant=qScalarConstant
-    	self.nc=1
+        self.nc=1
         variableNames=['s_w']
         mass      = {0:{0:'nonlinear'}}
         advection = {0:{0:'nonlinear'}}
         hamiltonian={}
         diffusion = {0:{0:{0:'nonlinear'}}}
-        potential = {0:{0: 'nonlinear'}} 
+        potential = {0:{0: 'nonlinear'}}
         reaction  = {0:{0:'linear'}}
         #for handling sparse diffusion options
         self.diagonal = diagonalHet
@@ -1085,11 +1085,11 @@ class TwophaseDarcy_split_saturation(TwophaseDarcyFlow_base):
                          potential,
                          reaction,
                          hamiltonian,
-			 variableNames,
+                         variableNames,
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion= sd)
         TwophaseDarcyFlow_base.__init__(self,
-                                       g, 
+                                       g,
                                        rhon,
                                        rhow,
                                        mun,
@@ -1098,7 +1098,7 @@ class TwophaseDarcy_split_saturation(TwophaseDarcyFlow_base):
                                        psk_model,
                                        vg_alpha,
                                        vg_m,
-                                       bc_pd, 
+                                       bc_pd,
                                        bc_lambda,
                                        omega,
                                        Sw_max,
@@ -1128,25 +1128,25 @@ class TwophaseDarcy_split_saturation(TwophaseDarcyFlow_base):
             self.ebq_psiw = modelList[self.nModel].ebq[('u',0)]
     def initializeElementQuadrature(self,t,cq):
         TwophaseDarcyFlow_base.initializeElementQuadrature(self,t,cq)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.q_q_t   = numpy.zeros(cq[('f',0)].shape,'d')
         self.q_q_t[:] = self.qScalarConstant
         self.q_psiw   = numpy.ones(cq[('u',0)].shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         TwophaseDarcyFlow_base.initializeElementBoundaryQuadrature(self,t,cebq,cebq_global)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ebq_q_t = numpy.zeros(cebq[('f',0)].shape,'d')
         self.ebq_q_t[:] = self.qScalarConstant
         self.ebq_psiw = numpy.ones(cebq[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         TwophaseDarcyFlow_base.initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ebqe_q_t = numpy.zeros(cebqe[('f',0)].shape,'d')
         self.ebqe_q_t[:] = self.qScalarConstant
         self.ebqe_psiw = numpy.ones(cebqe[('u',0)].shape,'d')
     def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
         TwophaseDarcyFlow_base.initializeGeneralizedInterpolationPointQuadrature(self,t,cip)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ip_q_t = numpy.zeros(cip[('f',0)].shape,'d')
         self.ip_q_t[:] = self.qScalarConstant
         self.ip_psiw = numpy.ones(cip[('u',0)].shape,'d')
@@ -1316,4 +1316,3 @@ class TwophaseDarcy_split_saturation(TwophaseDarcyFlow_base):
             numpy.isnan(c[('dm',0,0)]).any()):
             import pdb
             pdb.set_trace()
-

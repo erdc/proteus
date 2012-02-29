@@ -19,8 +19,8 @@ def buildProblems(testFlag=0,
 
     testFlag says which one to run?
       0 --- LinearAD_DiracIC  (1d)
-      1 --- rotating Cone (2d) 
-      
+      1 --- rotating Cone (2d)
+
     """
     testProblems = []
     nd = {}
@@ -33,7 +33,7 @@ def buildProblems(testFlag=0,
         test = 'RotatingCone2D'
         testProblems.append(test)
         nd[test]=2
-        
+
         getDirichletConditions[test]=getHomogeneousDBC2D
         N=3.0
         analyticalSolution[test] = RotatingCone2D(1.0/8.0)
@@ -45,7 +45,7 @@ def buildProblems(testFlag=0,
         getInitialConditions[test] = analyticalSolution[test]
         coefficients[test].mass = 'linear'
         coefficients[test].advection = 'linear'
-        #mwf correct  coefficients[test].diffusion = None 
+        #mwf correct  coefficients[test].diffusion = None
         #mwf correct coefficients[test].potential = None
         #mwf worked better
         coefficients[test].diffusion = 'constant'
@@ -58,7 +58,7 @@ def buildProblems(testFlag=0,
         #u_t + (bu - a u_x)_x = 0; u(0) = 1; u(1) = 0
         #
         test='LinearAD_DiracIC'
-    
+
         testProblems.append(test)
         nd[test]=1
         getDirichletConditions[test]=getDBC_hom
@@ -71,7 +71,7 @@ def buildProblems(testFlag=0,
         #b0=0.0
         B0=Numeric.array([b0])
         C0=1.0
-        M0=0.0        
+        M0=0.0
         coefficients[test] = LinearADR_ConstantCoefficients(M=1.0,A=A0,B=B0,C=0.0)
         analyticalSolution[test] = LinearAD_DiracIC(b=B0,a=a0,tStart=0.25)
         T[test]=0.1 #0.5
@@ -99,9 +99,9 @@ def buildProblems(testFlag=0,
 
 def buildSimParams(test,TimeIntegrationClass,verbose=0):
     """
-    
+
     define the necessary flags and tolerances for performing test problems
-    
+
     """
 
     #mwf debug
@@ -144,7 +144,7 @@ def buildSimParams(test,TimeIntegrationClass,verbose=0):
         if test == 'RotatingCone2D':
             nn  =31
         else:
-            nn = 51 
+            nn = 51
     else:
         FemSpace = C0_AffineLinearOnSimplexWithNodalBasis
         conservativeFlux = None#'pwc'
@@ -206,14 +206,14 @@ def buildQuadrature(test,tpars,problems):
         quadrature[integral] = gq
     #end for
     if tpars['stabilization'] != None:
-        quadrature['stab'] = gq 
+        quadrature['stab'] = gq
     if tpars['shockCapturing'] != None:
-        quadrature['numDiff'] = gq 
+        quadrature['numDiff'] = gq
     elementBoundaryQuadrature={}
     ebgq = SimplexGaussQuadrature(problems['nd'][test]-1)
     ebgq.setOrder(tpars['quadratureOrder'])
     for elementBoundaryIntegral in OneLevelScalarTransport.elementBoundaryIntegralKeys:
-        elementBoundaryQuadrature[elementBoundaryIntegral] = ebgq 
+        elementBoundaryQuadrature[elementBoundaryIntegral] = ebgq
     #end boundary quad integral
 
     tpars['quadrature']= quadrature
@@ -282,11 +282,11 @@ def buildMultiLevelScalarTransport(test,tpars,problems,mlMesh):
     tpars['lin_atol']= lin_atol
     tpars['tolList'] = tolList
     tpars['linTolList']= linTolList
-    
+
     return mlScalarTransport,tpars
 #end build mlScalarTransport
 
-        
+
 def buildSolvers(test,tpars,problems,mlScalarTransport,verbose=0):
     """
     create linear and nonlinear solvers
@@ -295,7 +295,7 @@ def buildSolvers(test,tpars,problems,mlScalarTransport,verbose=0):
     printNLinfo=False
     if verbose > 3:
         printNLinfo=True
-    
+
     levelLinearSolver = None
     #force linearSolver to be SparseLU
     if tpars['linearSolverType'] != 'SparseLU':
@@ -353,7 +353,7 @@ def computeErrors(eSpace,eSpaceTime,eSpaceLast,
                   test,pars,problems,verbose):
     """
     go through and calculate errors on mesh hierarchy
-    
+
     """
     eCoarse=1.0
     eFine=1.0
@@ -446,43 +446,43 @@ def plotInitial(tn,test,tpars,problems,
                                            with='lines'))
             #end if on analytical solution
         elif problems['nd'][test]==2:
-                nx = (tpars['nn']-1)*(2**(tpars['nLevels']-1))+1
-                ny = nx
-                x = Numeric.arange(nx)/float(nx-1)
-                y = Numeric.arange(nx)/float(nx-1)
-                nSol = Numeric.reshape(mlScalarTransport.modelList[-1].u.dof,
-                                       (nx,ny))
-                solPlot('set parametric')
-                solPlot('set data style lines')
-                solPlot('set hidden')
-                solPlot('set contour base')
-                solPlot('set cntrparam levels incremental 0.1,0.1,1.0')
-                solPlot.xlabel('x')
-                solPlot.ylabel('y')
-                solPlot.splot(Gnuplot.GridData(nSol,
+            nx = (tpars['nn']-1)*(2**(tpars['nLevels']-1))+1
+            ny = nx
+            x = Numeric.arange(nx)/float(nx-1)
+            y = Numeric.arange(nx)/float(nx-1)
+            nSol = Numeric.reshape(mlScalarTransport.modelList[-1].u.dof,
+                                   (nx,ny))
+            solPlot('set parametric')
+            solPlot('set data style lines')
+            solPlot('set hidden')
+            solPlot('set contour base')
+            solPlot('set cntrparam levels incremental 0.1,0.1,1.0')
+            solPlot.xlabel('x')
+            solPlot.ylabel('y')
+            solPlot.splot(Gnuplot.GridData(nSol,
+                                           x,
+                                           y,
+                                           binary=0,
+                                           inline=0))
+            if problems['analyticalSolution'][test] != None:
+                aSol = Numeric.zeros((nx,ny),Numeric.Float)
+                for i in range(nx):
+                    for j in range(ny):
+                        aSol[i,j]=problems['analyticalSolution'][test].uOfXT(Numeric.array([x[i],y[j],0.0]),tn)
+
+                aSolPlot('set parametric')
+                aSolPlot('set data style lines')
+                aSolPlot('set hidden')
+                aSolPlot('set contour base')
+                aSolPlot('set cntrparam levels incremental 0.1,0.1,1.0')
+                aSolPlot.xlabel('x')
+                aSolPlot.ylabel('y')
+                aSolPlot.splot(Gnuplot.GridData(aSol,
                                                x,
                                                y,
                                                binary=0,
                                                inline=0))
-                if problems['analyticalSolution'][test] != None:
-                    aSol = Numeric.zeros((nx,ny),Numeric.Float)
-                    for i in range(nx):
-                        for j in range(ny):
-                            aSol[i,j]=problems['analyticalSolution'][test].uOfXT(Numeric.array([x[i],y[j],0.0]),tn)
-                            
-                    aSolPlot('set parametric')
-                    aSolPlot('set data style lines')
-                    aSolPlot('set hidden')
-                    aSolPlot('set contour base')
-                    aSolPlot('set cntrparam levels incremental 0.1,0.1,1.0')
-                    aSolPlot.xlabel('x')
-                    aSolPlot.ylabel('y')
-                    aSolPlot.splot(Gnuplot.GridData(aSol,
-                                                   x,
-                                                   y,
-                                                   binary=0,
-                                                   inline=0))
-                #end if on analytical solution
+            #end if on analytical solution
         #end if on nd ==2
     #end if on not DG
     return solPlot,aSolPlot
@@ -519,44 +519,44 @@ def plotTimeStep(solPlot,aSolPlot,tn,test,tpars,problems,
                                           title='numerical solution'))
             #end if on analytical solution
         elif problems['nd'][test]==2:
-                nx = (tpars['nn']-1)*(2**(tpars['nLevels']-1))+1
-                ny = nx
-                x = Numeric.arange(nx)/float(nx-1)
-                y = Numeric.arange(nx)/float(nx-1)
-                nSol = Numeric.reshape(mlScalarTransport.modelList[-1].u.dof,
-                                       (nx,ny))
-                solPlot('set parametric')
-                solPlot('set data style lines')
-                solPlot('set hidden')
-                solPlot('set contour base')
-                solPlot('set cntrparam levels incremental 0.1,0.1,1.0')
-                solPlot.xlabel('x')
-                solPlot.ylabel('y')
-                solPlot.splot(Gnuplot.GridData(nSol,
+            nx = (tpars['nn']-1)*(2**(tpars['nLevels']-1))+1
+            ny = nx
+            x = Numeric.arange(nx)/float(nx-1)
+            y = Numeric.arange(nx)/float(nx-1)
+            nSol = Numeric.reshape(mlScalarTransport.modelList[-1].u.dof,
+                                   (nx,ny))
+            solPlot('set parametric')
+            solPlot('set data style lines')
+            solPlot('set hidden')
+            solPlot('set contour base')
+            solPlot('set cntrparam levels incremental 0.1,0.1,1.0')
+            solPlot.xlabel('x')
+            solPlot.ylabel('y')
+            solPlot.splot(Gnuplot.GridData(nSol,
+                                           x,
+                                           y,
+                                           binary=0,
+                                           inline=0))
+            if problems['analyticalSolution'][test] != None:
+                aSol = Numeric.zeros((nx,ny),Numeric.Float)
+                for i in range(nx):
+                    for j in range(ny):
+                        aSol[i,j]=problems['analyticalSolution'][test].uOfXT(Numeric.array([x[i],y[j],0.0]),tn)
+                    #end j
+                #end i
+                aSolPlot('set parametric')
+                aSolPlot('set data style lines')
+                aSolPlot('set hidden')
+                aSolPlot('set contour base')
+                aSolPlot('set cntrparam levels incremental 0.1,0.1,1.0')
+                aSolPlot.xlabel('x')
+                aSolPlot.ylabel('y')
+                aSolPlot.splot(Gnuplot.GridData(aSol,
                                                x,
                                                y,
                                                binary=0,
                                                inline=0))
-                if problems['analyticalSolution'][test] != None:
-                    aSol = Numeric.zeros((nx,ny),Numeric.Float)
-                    for i in range(nx):
-                        for j in range(ny):
-                            aSol[i,j]=problems['analyticalSolution'][test].uOfXT(Numeric.array([x[i],y[j],0.0]),tn)
-                        #end j
-                    #end i
-                    aSolPlot('set parametric')
-                    aSolPlot('set data style lines')
-                    aSolPlot('set hidden')
-                    aSolPlot('set contour base')
-                    aSolPlot('set cntrparam levels incremental 0.1,0.1,1.0')
-                    aSolPlot.xlabel('x')
-                    aSolPlot.ylabel('y')
-                    aSolPlot.splot(Gnuplot.GridData(aSol,
-                                                   x,
-                                                   y,
-                                                   binary=0,
-                                                   inline=0))
-                #end if on analytical solution
+            #end if on analytical solution
         #end if on nd ==2
     #end if on not DG
     return solPlot,aSolPlot
@@ -588,7 +588,7 @@ if __name__ == '__main__':
     verbose = 5
     #testFlag = 0 # LinearAD_Dirac_IC
     testFlag = 1 # rotating clone
-    
+
     problems = buildProblems(testFlag,verbose)
 
     test = problems['testProblems'][0] #first test I hope
@@ -641,7 +641,7 @@ if __name__ == '__main__':
         print 'taking step to t= ',tn
         nSteps += 1
         testOut = test + ('%4.4i' % nSteps)
-        
+
         #only Newton iteration for now
         if pars['nonlinearSolverType'] != 'Newton':
             print 'nonlinearSolverType must be Newton'
@@ -659,7 +659,7 @@ if __name__ == '__main__':
                                          r = mlScalarTransport.rList[l])
             #end l loop
             mlScalarTransport.updateStage()
-            
+
         #end s loop
         print 'max u on fine= ',max(mlScalarTransport.modelList[-1].u.dof.flat)
         print 'min u on fine= ',min(mlScalarTransport.modelList[-1].u.dof.flat)
@@ -690,11 +690,11 @@ if __name__ == '__main__':
         eSpace,eSpaceTime,eSpaceLast = computeErrors(
             eSpace,eSpaceTime,eSpaceLast,
             tn,mlScalarTransport,mlMesh,test,pars,problems,verbose)
-        
+
         #figure out if done or not
         done = (abs(tn - problems['T'][test]) < 1.0e-10
-                or nSteps >= maxSteps) 
-        
+                or nSteps >= maxSteps)
+
 
     #end while
 

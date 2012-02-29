@@ -10,50 +10,50 @@ def genPoly(polyfileBase = "cobras_saj_embankment",
             outflowLength= 1.0,
             outflowPad= 1.0):
     """
-    try to generate Jeff Melby's domain 
+    try to generate Jeff Melby's domain
     points from sajlevee.bat file
 
     lengthBousDomain -- point in bathymetry data afterwhich RANS domain is considered
-            
+
     ransDomainStop   -- point in bathymetry data afterwhich RANS domain stops
 
     inflowLength     -- size of region for inflow boundary
     inflowPad        -- how much to add to domain to accomodate inflow (make sure on flat region)
- 
+
     outflowLength    -- size of region for inflow boundary
     outflowPad       -- how much to add to domain to accomodate outflow (make sure on flat region)
- 
-    
+
+
     """
     #lengthBousDomain = 170.0# where Boussinesq domain stops
     allBathymetryPoints = [(-100,        -8.53),
-                           (101.71,	-8.53),
-                           (120.00,	-7.92),
-                           (132.19,	-7.52),
-                           (184.01,	-5.79),
-                           (190.41,	-3.66),
-                           (196.81,	-1.52),
-                           (204.43,	-1.52),
-                           (204.43,	-1.22),
-                           (205.34,	-1.22),
-                           (205.34,	-0.91),
-                           (206.26,	-0.91),
-                           (206.26,	-0.61),
-                           (207.17,	-0.61),
-                           (207.17,	-0.30),
-                           (208.09,	-0.30),
-                           (208.09,	0.00),
-                           (209.00,	0.00),
-                           (209.00,	0.30),
-                           (209.92,	0.30),
-                           (209.92,	0.61),
-                           (210.83,	0.61),
-                           (210.83,	0.91),
-                           (215.10,	0.91),
-                           (215.10,	-1.00),
-                           (250.00,	-1.25)]
+                           (101.71,     -8.53),
+                           (120.00,     -7.92),
+                           (132.19,     -7.52),
+                           (184.01,     -5.79),
+                           (190.41,     -3.66),
+                           (196.81,     -1.52),
+                           (204.43,     -1.52),
+                           (204.43,     -1.22),
+                           (205.34,     -1.22),
+                           (205.34,     -0.91),
+                           (206.26,     -0.91),
+                           (206.26,     -0.61),
+                           (207.17,     -0.61),
+                           (207.17,     -0.30),
+                           (208.09,     -0.30),
+                           (208.09,     0.00),
+                           (209.00,     0.00),
+                           (209.00,     0.30),
+                           (209.92,     0.30),
+                           (209.92,     0.61),
+                           (210.83,     0.61),
+                           (210.83,     0.91),
+                           (215.10,     0.91),
+                           (215.10,     -1.00),
+                           (250.00,     -1.25)]
 
-    
+
     #pop off points in Boussinesq domain
     bathymetryPoints = []
     for p in allBathymetryPoints:
@@ -76,7 +76,7 @@ def genPoly(polyfileBase = "cobras_saj_embankment",
     #now get corners of domain
     pSW = (pin[0]-inflowPad,pin[1])
     pSE = (pout[0]+outflowPad,pout[1])
- 
+
     ransDomainLength= pSE[0]-pSW[0]
     #domain
     L = (ransDomainLength,ransDomainHeight,1.0)
@@ -85,9 +85,9 @@ def genPoly(polyfileBase = "cobras_saj_embankment",
     pNW = (pSW[0],minY+ransDomainHeight)
     pNE = (pSE[0],minY+ransDomainHeight)
 
-    
+
     #check vertical coordinates
-    tmp = sorted(bathymetryPoints,cmp=lambda x,y: int(x[1]-y[1]))    
+    tmp = sorted(bathymetryPoints,cmp=lambda x,y: int(x[1]-y[1]))
     assert minY <= tmp[0][1], "found point below proposed block floor minY=%s tmp[0]= " % (minY,tmp[0])
     assert minY+ransDomainHeight > tmp[-1][1], "found point above proposed block ceiling maxnY=%s tmp[-1]= " % (minY+ransDomainHeight,
                                                                                                                 tmp[-1])
@@ -99,7 +99,7 @@ def genPoly(polyfileBase = "cobras_saj_embankment",
     vertices = [p for p in bathymetryPoints]
 
     #start with NW corner and work way around
-    #left 
+    #left
     vertices.insert(0,pNW)
     vertices.insert(1,pSW)
     #add midpoint to make sure some points are inflow labelled
@@ -156,4 +156,3 @@ def genPoly(polyfileBase = "cobras_saj_embankment",
     poly.close()
 
     return L,segmentLabels,backHeight
-

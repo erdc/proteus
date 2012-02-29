@@ -5,21 +5,21 @@ Class and script for generating a report from simulation data.
 
 def openLatexReport(filename,reportname):
     latexReport = open(filename,'w')
-    latexReport.write(r"""\documentclass{amsart} 
-\usepackage{epsfig}   
-\setlength{\oddsidemargin}{0in}   
-\setlength{\evensidemargin}{0in}   
-\setlength{\topmargin}{-0.25in}   
-\setlength{\headheight}{0.1in}   
-\setlength{\headsep}{0.15in}   
-\setlength{\topskip}{0in}   
-\setlength{\footskip}{0.15in}   
-\setlength{\textwidth}{6.5in}   
-\setlength{\textheight}{9in}   
+    latexReport.write(r"""\documentclass{amsart}
+\usepackage{epsfig}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\setlength{\topmargin}{-0.25in}
+\setlength{\headheight}{0.1in}
+\setlength{\headsep}{0.15in}
+\setlength{\topskip}{0in}
+\setlength{\footskip}{0.15in}
+\setlength{\textwidth}{6.5in}
+\setlength{\textheight}{9in}
 \begin{document}
-\begin{center}   
-{\bf"""+(' %s ' % reportname)+  
-r"""}\end{center}  
+\begin{center}
+{\bf"""+(' %s ' % reportname)+
+r"""}\end{center}
 \tableofcontents
 """)
     return latexReport
@@ -49,7 +49,7 @@ class LatexResultsSummary:
     #end def
     def open(self,append=False):
         import os
-        if not (os.path.exists(self.resFileName) or os.path.exists(self.resFileName + os.extsep + "dir")): #tjp hack 
+        if not (os.path.exists(self.resFileName) or os.path.exists(self.resFileName + os.extsep + "dir")): #tjp hack
             logEvent("""LatexResSumm resFile= %s not found! """ % self.resFileName)
             return True
         import shelve
@@ -80,14 +80,14 @@ class LatexResultsSummary:
         preamble = r"""
 \begin{table}[h!]
 \begin{tabular}{%s}
-""" 
+"""
         postamble = r"""
 \hline
 \end{tabular}
 \end{table}
 """
         tabcols = "|l|c|c|"
-        rowform0 = """%s[%d] & %s & %g """ 
+        rowform0 = """%s[%d] & %s & %g """
         for enorm in self.results['flags']['errorNorms']:
             if enorm != None:
                 tabcols += "c|c|"
@@ -113,7 +113,7 @@ class LatexResultsSummary:
         self.report.write(rowtitle + """\\\\ \n""")
         self.report.write("""\\hline\n""")
 
-        
+
         for errorQuantity in self.results['flags']['errorQuantities']:
             elabelBase = 'error '+errorQuantity
             ekeyBase   = 'error_'+errorQuantity
@@ -139,7 +139,7 @@ class LatexResultsSummary:
             elif ('globalHeavisideMassBalance' in self.results['flags']['errorTypes'] and
                 errorQuantity != 'u'):
                 rowend += """ & - """
-            
+
             for il in range(nLevels):
                 for ci in self.results['flags']['components']:
                     h  = self.results['simulationData']['spatialMesh'][il]['h'][-1]
@@ -165,7 +165,7 @@ class LatexResultsSummary:
                                     exact = self.results['errorData'][ci][nLevels-1][exkey]
                                 if abs(exact) < relativeErrorEps:
                                     exact += relativeErrorEps
-                                error = error/exact 
+                                error = error/exact
                             if il == 0:
                                 row += """ & %g & %s """ % (error,'-')
                             else:
@@ -178,7 +178,7 @@ class LatexResultsSummary:
                                     rate = math.log((errM/exact+1.0e-24)/(error+1.0e-24))/math.log(hM/h)
                                 else:
                                     rate = math.log((errM+1.0e-24)/(error+1.0e-24))/math.log(hM/h)
-                        
+
                                 row += """& %g & %g """ % (error,rate)
                     if computeLocalMassBalErr or computeGlobalHeavisideMassBalErr:
                         if computeLocalMassBalErr:
@@ -262,4 +262,3 @@ if __name__ == '__main__':
     os.system(dvicmd)
 
     #raw_input('press return to exit')
-    

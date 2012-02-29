@@ -183,7 +183,7 @@ linearPostSmooths = 3
 
 computeNonlinearSolverRates=True
 
-printNonlinearSolverInfo=False 
+printNonlinearSolverInfo=False
 
 computeNonlinearLevelSolverRates=False
 

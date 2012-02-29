@@ -75,7 +75,7 @@ def proteusRun(runRoutine):
                       action="store",
                       type="int",
                       dest="logLevel",
-                      default=1)    
+                      default=1)
     parser.add_option("-v", "--verbose",
                       help="Print logging information to standard out",
                       action="callback",
@@ -115,7 +115,7 @@ def proteusRun(runRoutine):
         #mwf debug
         #print """now path= %s """ % sys.path
     #end if
-    
+
     if len(args) < 1:
         raise RuntimeError("No input file specified")
     else:
@@ -184,12 +184,12 @@ def proteusRun(runRoutine):
         #end while
         #always pop the last block so have to have a start at the end
         batchBlocks.pop()
-        
+
         #mwf debug
         #print """end of batch read size batchBlocks= %d """ % len(batchBlocks)
         #for i,block in enumerate(batchBlocks):
         #    print """block[%d]= %s """ % (i,block)
-        
+
     #end batch
     running = True
     #mwf debug
@@ -220,7 +220,7 @@ def proteusRun(runRoutine):
             lines = '\n'.join(batchBlocks.pop(0))
             #exec lines
             run     = True
-            running = len(batchBlocks) > 0        
+            running = len(batchBlocks) > 0
         else:
             userInput = False
             run = True
@@ -229,7 +229,7 @@ def proteusRun(runRoutine):
             line = sys.stdin.readline()
             if line:
                 if line.isspace():
-                    userInput = True  
+                    userInput = True
                 elif (line.split()[0] == 's' or
                     line.split()[0] == 'start'):
                     userInput = False
@@ -267,14 +267,14 @@ def proteusRun(runRoutine):
         if Viewers.viewerType == 'matlab':
             Viewers.viewerPipe.write("quit \n")
         #matlab
-        
+
 def runProblem(pName,p,n,opts,simFlags=None):
     from proteus import cmeshTools
     comm = Comm.get()
     pNameProc = pName+`comm.rank()` #mwf does this agree with pNameProc above?
     Profiling.memory()
 
-    
+
     memBase = Profiling.memLast
     elementQuadratureDict={}
     elemQuadIsDict = isinstance(n.elementQuadrature,dict)
@@ -321,7 +321,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
             else:
                 elementBoundaryQuadratureDict[I] = n.elementBoundaryQuadrature['default']
     else:
-        for I in p.coefficients.elementBoundaryIntegralKeys: 
+        for I in p.coefficients.elementBoundaryIntegralKeys:
             elementBoundaryQuadratureDict[I] = n.elementBoundaryQuadrature
     Profiling.logEvent("Setting up MultilevelMesh",level=1)
     mlMesh = None
@@ -358,7 +358,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
                 #    mesh.generateFromTriangleFiles(p.polyfile,nbase)
                 #    mlMesh = MeshTools.MultilevelTriangularMesh(2,2,1)
                 #    mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels)
-                #    
+                #
                 print "reading triangle mesh"
                 tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
                                                        nbase=1,
@@ -368,7 +368,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
                 mlMesh = MeshTools.MultilevelTriangularMesh(2,2,1)
                 mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels)
                 #previous way of reading in from triangle
-                
+
                 #mlMesh.meshList[-1].writeEdgesGnuplot2('refinedTriangleMesh')
                 #mlMesh.meshList[-1].viewMeshGnuplotPipe('refinedTriangleMesh')
             else:
@@ -417,7 +417,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
             #mlMesh.meshList[-1].writeEdgesGnuplot2('refinedTetgenMesh')
             #mlMesh.meshList[-1].viewMeshGnuplotPipe('refinedTetgenMesh')
             #mlMesh.meshList[-1].writeTetgenFiles("mesh-last",1)
- 
+
 #         cPickle.dump(mlMesh,mlMeshFile,protocol=cPickle.HIGHEST_PROTOCOL)
     adaptMesh = False#True
     tol = 5.0e-2
@@ -447,7 +447,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
         if (n.nLevels < maxLevels and adaptMesh ==  True):
             #import random
             #for i in range(mlMesh.meshList[n.nLevels-1].nElements_global):
-            #    elementTagArray[i] = random.randint(0,1) 
+            #    elementTagArray[i] = random.randint(0,1)
             mlMesh.locallyRefine(elementTagArray)
             #mlMesh.meshList[-1].writeEdgesGnuplot2('locallyRefineMesh')
             #mlMesh.meshList[-1].viewMeshGnuplotPipe('locallyRefineMesh')
@@ -596,7 +596,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
         if p.initialConditions != None:
             mlTransport.setInitialConditions(p.initialConditions,tn)
             #mwf ask chris if want to use this or not
-            #cek maybe left in ability to view all levels, but got rid of initial conditions plot 
+            #cek maybe left in ability to view all levels, but got rid of initial conditions plot
             if opts.viewLevels:
                 for i in range(len(mlTransport.modelList)):
                     mlTransport.modelList[i].viewSolution(titleModifier=': Initial Condition')
@@ -649,7 +649,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
             ctemp=mlTransport.modelList[-1].coefficients.allocateDummyCoefficients(c=mlTransport.modelList[-1].q)
             mlTransport.modelList[-1].coefficients.plotCoefficientFunctions(mlTransport.modelList[-1].T,ctemp)
         timeValues = [tn]
-        dt = p.T/n.nDTout 
+        dt = p.T/n.nDTout
         #mwf debug
         print """proteusRun T=%g nDTout= %d dt=%g """ % (p.T,n.nDTout,dt)
         failedFlag=False
@@ -667,7 +667,7 @@ def runProblem(pName,p,n,opts,simFlags=None):
             print "error,tol,error>tol",error,tol,error > tol
             if abs(tn) < abs(p.T) and abs(tn+dt) > abs(p.T - tn*1.0e-8):
                 dt= p.T-tn
-            assert dt > 1.0e-15, "dt= %s too small " % dt 
+            assert dt > 1.0e-15, "dt= %s too small " % dt
             #mwf debug
             if failedFlag:
                 print """proteusRun tn=%g dt=%g failed= %s""" % (tn,dt,failedFlag)

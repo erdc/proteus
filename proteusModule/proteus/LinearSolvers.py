@@ -10,7 +10,7 @@ import petsc4py
 
 class LinearSolver:
     """
-    The base class for linear solvers. 
+    The base class for linear solvers.
     """
     def __init__(self,
                  L,
@@ -88,7 +88,7 @@ class LinearSolver:
                 r[:] = numpy.dot(u,self.L)
             elif type(self.L).__name__ == 'SparseMatrix':
                 self.L.matvec(u,r)
-            r-=b        
+            r-=b
     def solveInitialize(self,u,r,b,initialGuessIsZero=True):
         if r == None:
             if self.r == None:
@@ -204,11 +204,11 @@ class LinearSolver:
         self.infoString  = "************Start Linear Solver Info************\n"
         self.infoString += "its                   =  %i \n" % self.its
         self.infoString += "r reduction factor    = %12.5e\n" % self.rReductionFactor
-        self.infoString += "du reduction factor   = %12.5e\n" % self.duReductionFactor 
+        self.infoString += "du reduction factor   = %12.5e\n" % self.duReductionFactor
         self.infoString += "r reduction order     = %12.5e\n" % self.rReductionOrder
-        self.infoString += "du reduction order    = %12.5e\n" % self.duReductionOrder 
+        self.infoString += "du reduction order    = %12.5e\n" % self.duReductionOrder
         self.infoString += "<r reduction factor>  = %12.5e\n" % self.rReductionFactor_avg
-        self.infoString += "<du reduction factor> = %12.5e\n" % self.duReductionFactor_avg 
+        self.infoString += "<du reduction factor> = %12.5e\n" % self.duReductionFactor_avg
         self.infoString += "<r reduction order>   = %12.5e\n" % self.rReductionOrder_avg
         self.infoString += "<du reduction order>  = %12.5e\n" % self.duReductionOrder_avg
         self.infoString += "total its             =  %i \n" % self.recordedIts
@@ -229,7 +229,7 @@ class LinearSolver:
         return self.infoString
     def printPerformance(self):
         pass
-	
+
     #petsc preconditioner interface
     def setUp(self, pc):
         self.prepare()
@@ -271,7 +271,7 @@ class LU(LinearSolver):
             self.Leig=copy.deepcopy(L)
             self.work=numpy.zeros((self.n*5,),'d')
             self.eigenvalues_r = numpy.zeros((self.n,),'d')
-            self.eigenvalues_i = numpy.zeros((self.n,),'d')            
+            self.eigenvalues_i = numpy.zeros((self.n,),'d')
     def prepare(self,b=None):
         if type(self.L).__name__ == 'SparseMatrix':
             superluWrappers.sparseFactorPrepare(self.L,self.sparseFactor)
@@ -282,7 +282,7 @@ class LU(LinearSolver):
             lapackWrappers.denseFactorPrepare(self.n,
                                               self.L,
                                               self.denseFactor)
-    #mwf may need to reconcile argument 
+    #mwf may need to reconcile argument
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
         (r,b) = self.solveInitialize(u,r,b,initialGuessIsZero)
         self.du[:]=u
@@ -331,7 +331,7 @@ class PETSc(LinearSolver):
         self.par_fullOverlap = True
     def prepare(self,b=None):
         overlap = 1
-        if self.par_fullOverlap == False: 
+        if self.par_fullOverlap == False:
             overlap = 0
         self.ksp.prepare(self.L,self.par_L,overlap)
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
@@ -341,9 +341,9 @@ class PETSc(LinearSolver):
             self.ksp.useTrueResidualConvergence(par_u.cparVec)
     def printPerformance(self):
         self.ksp.info()
-	 
- 
-        
+
+
+
 class KSP_petsc4py(LinearSolver):
     def __init__(self,L,par_L,
                  rtol_r  = 1.0e-4,
@@ -471,14 +471,14 @@ class KSP_petsc4py(LinearSolver):
         from petsc4py import PETSc
         self.petsc_L.zeroEntries()
         assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
-        if self.par_fullOverlap == True: 
+        if self.par_fullOverlap == True:
             self.petsc_L.setValuesLocalCSR(self.csr_rep_owned[0],self.csr_rep_owned[1],self.csr_rep_owned[2],PETSc.InsertMode.INSERT_VALUES)
-        else:   
+        else:
             if self.par_firstAssembly:
                 self.petsc_L.setOption(PETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,False)
                 self.par_firstAssembly = False
             else:
-                self.petsc_L.setOption(PETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,True)                
+                self.petsc_L.setOption(PETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,True)
             self.petsc_L.setValuesLocalCSR(self.csr_rep[0],self.csr_rep[1],self.csr_rep[2],PETSc.InsertMode.ADD_VALUES)
         self.petsc_L.assemblyBegin()
         self.petsc_L.assemblyEnd()
@@ -487,7 +487,7 @@ class KSP_petsc4py(LinearSolver):
             self.pc.setUp()
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
         #self.ksp.setOperators(self.Lshell,self.petsc_L)
-        self.ksp.setUp()        
+        self.ksp.setUp()
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
 #         if self.petsc_L.isSymmetric(tol=1.0e-14):
 #            self.petsc_L.setOption(petsc4py.PETSc.Mat.Option.SYMMETRIC, True)
@@ -715,7 +715,7 @@ class StarILU(LinearSolver):
         self.solverName = "StarILU"
         self.w=weight
         self.sym=sym
-        if type(self.L).__name__ == 'ndarray':            
+        if type(self.L).__name__ == 'ndarray':
             self.connectionList=connectionList
             self.subdomainIndecesList=[]
             self.subdomainSizeList=[]
@@ -882,9 +882,9 @@ class TwoLevel(LinearSolver):
         self.preSmoother = preSmoother
         self.postSmoother = postSmoother
         self.coarseSolver = coarseSolver
-        self.cb = Vec(prolong.shape[1]) 
-        self.cr = Vec(prolong.shape[1]) 
-        self.cdu = Vec(prolong.shape[1]) 
+        self.cb = Vec(prolong.shape[1])
+        self.cr = Vec(prolong.shape[1])
+        self.cdu = Vec(prolong.shape[1])
         self.prepareCoarse=prepareCoarse
     def prepare(self,b=None):
         self.preSmoother.prepare()
@@ -910,20 +910,20 @@ class MultilevelLinearSolver:
     A generic multilevel solver.
     """
     def __init__(self,levelLinearSolverList,computeRates=False,printInfo=False):
-	self.printInfo=printInfo
-	self.solverList=levelLinearSolverList
-	self.nLevels = len(self.solverList)
+        self.printInfo=printInfo
+        self.solverList=levelLinearSolverList
+        self.nLevels = len(self.solverList)
         self.computeEigenvalues = False
-	for l in range(self.nLevels):
+        for l in range(self.nLevels):
             levelLinearSolverList[l].computeRates=computeRates
-	    levelLinearSolverList[l].printInfo=self.printInfo
+            levelLinearSolverList[l].printInfo=self.printInfo
     def info(self):
-	self.infoString="********************Start Multilevel Linear Solver Info*********************\n"
-	for l in range(self.nLevels):
-	    self.infoString += "**************Start Level %i Info********************\n" % l
-	    self.infoString += self.solverList[l].info()                    
-	    self.infoString += "**************End Level %i Info********************\n" % l
-	self.infoString+="********************End Multilevel Linear Solver Info*********************\n"
+        self.infoString="********************Start Multilevel Linear Solver Info*********************\n"
+        for l in range(self.nLevels):
+            self.infoString += "**************Start Level %i Info********************\n" % l
+            self.infoString += self.solverList[l].info()
+            self.infoString += "**************End Level %i Info********************\n" % l
+        self.infoString+="********************End Multilevel Linear Solver Info*********************\n"
         return self.infoString
 
 class MGM(MultilevelLinearSolver):
@@ -962,7 +962,7 @@ class MGM(MultilevelLinearSolver):
     def prepare(self,b=None):
         for s in self.solverList:
             s.prepare()
-    
+
     def solve(self,u,r=None,b=None,initialGuessIsZero=False):
         self.mgmSolver.solve(u,r,b,initialGuessIsZero)
 
@@ -981,7 +981,7 @@ class NI(MultilevelLinearSolver):
                  printInfo=False):
         self.levelSolverList=solverList
         self.solverList = [self for n in range(len(solverList))]
-	MultilevelLinearSolver.__init__(self,self.solverList,computeRates=computeRates,printInfo=printInfo)
+        MultilevelLinearSolver.__init__(self,self.solverList,computeRates=computeRates,printInfo=printInfo)
         self.prolongList = prolongList
         self.restrictList = restrictList
         self.fineMesh = self.nLevels - 1
@@ -1055,9 +1055,9 @@ class NI(MultilevelLinearSolver):
             if self.tolList != None:
                 self.revertToFixedIteration(self.levelSolverList[l])
             self.prolongList[l+1].matvec(uList[l],uList[l+1])
-	    self.infoString += "**************Start Level %i Info********************\n" % l
+            self.infoString += "**************Start Level %i Info********************\n" % l
             self.infoString+=self.levelSolverList[l].info()
-	    self.infoString += "**************End Level %i Info********************\n" % l
+            self.infoString += "**************End Level %i Info********************\n" % l
         if self.tolList != None:
             self.switchToResidualConvergence(self.levelSolverList[self.fineMesh],self.tolList[self.fineMesh])
         self.levelSolverList[self.fineMesh].solve(u=uList[self.fineMesh],b=bList[self.fineMesh],initialGuessIsZero=initialGuessIsZero)
@@ -1082,39 +1082,39 @@ class NI(MultilevelLinearSolver):
         solver.printInfo = self.printInfo
     def revertToFixedIteration(self,solver):
         solver.convergenceTest = self.saved_ctest
-        solver.rtol_r = self.saved_rtol_r 
+        solver.rtol_r = self.saved_rtol_r
         solver.atol_r = self.saved_atol_r
         solver.maxIts = self.saved_maxIts
         solver.printInfo = self.saved_printInfo
-        
+
     def info(self):
         return self.infoString
 """
 A function for setting up a multilevel linear solver.
 """
 def multilevelLinearSolverChooser(linearOperatorList,
-				  par_linearOperatorList,
-				  multilevelLinearSolverType=NI,
-				  relativeToleranceList=None,
-				  absoluteTolerance=1.0e-8,
-				  solverConvergenceTest='r',
-				  solverMaxIts=500,
-				  printSolverInfo=False,
-				  computeSolverRates=False,
-				  levelLinearSolverType=MGM,
-				  printLevelSolverInfo=False,
-				  computeLevelSolverRates=False,
-				  smootherType=Jacobi,
-				  prolongList=None,
-				  restrictList=None,
-				  connectivityListList=None,
-				  cycles=3,
-				  preSmooths=3,
-				  postSmooths=3,
-				  printSmootherInfo=False,
-				  computeSmootherRates=False,
-				  smootherConvergenceTest='its',
-				  relaxationFactor=None,
+                                  par_linearOperatorList,
+                                  multilevelLinearSolverType=NI,
+                                  relativeToleranceList=None,
+                                  absoluteTolerance=1.0e-8,
+                                  solverConvergenceTest='r',
+                                  solverMaxIts=500,
+                                  printSolverInfo=False,
+                                  computeSolverRates=False,
+                                  levelLinearSolverType=MGM,
+                                  printLevelSolverInfo=False,
+                                  computeLevelSolverRates=False,
+                                  smootherType=Jacobi,
+                                  prolongList=None,
+                                  restrictList=None,
+                                  connectivityListList=None,
+                                  cycles=3,
+                                  preSmooths=3,
+                                  postSmooths=3,
+                                  printSmootherInfo=False,
+                                  computeSmootherRates=False,
+                                  smootherConvergenceTest='its',
+                                  relaxationFactor=None,
                                   computeEigenvalues=False,
                                   parallelUsesFullOverlap = True,
                                   par_duList=None,
@@ -1124,78 +1124,78 @@ def multilevelLinearSolverChooser(linearOperatorList,
     if (multilevelLinearSolverType == PETSc or
         multilevelLinearSolverType == KSP_petsc4py or
         multilevelLinearSolverType == LU or
-	multilevelLinearSolverType == Jacobi or
-	multilevelLinearSolverType == GaussSeidel or
-	multilevelLinearSolverType == StarILU or
-	multilevelLinearSolverType == StarBILU or
+        multilevelLinearSolverType == Jacobi or
+        multilevelLinearSolverType == GaussSeidel or
+        multilevelLinearSolverType == StarILU or
+        multilevelLinearSolverType == StarBILU or
         multilevelLinearSolverType == MGM):
-	levelLinearSolverType = multilevelLinearSolverType
-	printLevelLinearSolverInfo = printSolverInfo
-	computeLevelSolverRates = computeSolverRates
+        levelLinearSolverType = multilevelLinearSolverType
+        printLevelLinearSolverInfo = printSolverInfo
+        computeLevelSolverRates = computeSolverRates
     nLevels = len(linearOperatorList)
     multilevelLinearSolver = None
     levelLinearSolverList = []
     levelLinearSolver = None
     if levelLinearSolverType == MGM:
-	preSmootherList=[]
-	postSmootherList=[]
-	mgItsList=[]
-	for l in range(nLevels):
-	    mgItsList.append(cycles)
-	    if l > 0:
-		if smootherType == Jacobi:
-		    if relaxationFactor == None:
-			relaxationFactor = 4.0/5.0
-		    preSmootherList.append(Jacobi(L=linearOperatorList[l],
-						  weight=relaxationFactor,
-						  maxIts=preSmooths,
-						  convergenceTest = smootherConvergenceTest,
-						  computeRates = computeSmootherRates,
-						  printInfo = printSmootherInfo))
-		    postSmootherList.append(Jacobi(L=linearOperatorList[l],
-						   weight=relaxationFactor,
-						   maxIts=postSmooths,
-						   convergenceTest = smootherConvergenceTest,
-						   computeRates = computeSmootherRates,
-						   printInfo = printSmootherInfo))
-		elif smootherType == GaussSeidel:
-		    if relaxationFactor == None:
-			relaxationFactor = 0.33
-		    preSmootherList.append(GaussSeidel(connectionList = connectivityListList[l],
-						       L=linearOperatorList[l],
-						       weight=relaxationFactor,
-						       maxIts =  preSmooths,
-						       convergenceTest = smootherConvergenceTest,
-						       computeRates = computeSmootherRates,
-						       printInfo = printSmootherInfo))
-		    postSmootherList.append(GaussSeidel(connectionList = connectivityListList[l],
-							L=linearOperatorList[l],
-							weight=relaxationFactor,
-							maxIts =  postSmooths,
-							convergenceTest = smootherConvergenceTest,
-							computeRates = computeSmootherRates,
-							printInfo = printSmootherInfo))
-		elif smootherType == StarILU:
-		    if relaxationFactor == None:
-			relaxationFactor = 1.0
-		    preSmootherList.append(StarILU(connectionList = connectivityListList[l],
-						   L=linearOperatorList[l],
-						   weight=relaxationFactor,
-						   maxIts =  preSmooths,
-						   convergenceTest = smootherConvergenceTest,
-						   computeRates = computeSmootherRates,
-						   printInfo = printSmootherInfo))
-		    postSmootherList.append(StarILU(connectionList = connectivityListList[l],
-						    L=linearOperatorList[l],
-						    weight=relaxationFactor,
-						    maxIts =  postSmooths,
-						    convergenceTest = smootherConvergenceTest,
-						    computeRates = computeSmootherRates,
-						    printInfo = printSmootherInfo))
-		elif smootherType == StarBILU:
-		    if relaxationFactor == None:
-			relaxationFactor = 1.0
-		    preSmootherList.append(StarBILU(connectionList = connectivityListList[l],
+        preSmootherList=[]
+        postSmootherList=[]
+        mgItsList=[]
+        for l in range(nLevels):
+            mgItsList.append(cycles)
+            if l > 0:
+                if smootherType == Jacobi:
+                    if relaxationFactor == None:
+                        relaxationFactor = 4.0/5.0
+                    preSmootherList.append(Jacobi(L=linearOperatorList[l],
+                                                  weight=relaxationFactor,
+                                                  maxIts=preSmooths,
+                                                  convergenceTest = smootherConvergenceTest,
+                                                  computeRates = computeSmootherRates,
+                                                  printInfo = printSmootherInfo))
+                    postSmootherList.append(Jacobi(L=linearOperatorList[l],
+                                                   weight=relaxationFactor,
+                                                   maxIts=postSmooths,
+                                                   convergenceTest = smootherConvergenceTest,
+                                                   computeRates = computeSmootherRates,
+                                                   printInfo = printSmootherInfo))
+                elif smootherType == GaussSeidel:
+                    if relaxationFactor == None:
+                        relaxationFactor = 0.33
+                    preSmootherList.append(GaussSeidel(connectionList = connectivityListList[l],
+                                                       L=linearOperatorList[l],
+                                                       weight=relaxationFactor,
+                                                       maxIts =  preSmooths,
+                                                       convergenceTest = smootherConvergenceTest,
+                                                       computeRates = computeSmootherRates,
+                                                       printInfo = printSmootherInfo))
+                    postSmootherList.append(GaussSeidel(connectionList = connectivityListList[l],
+                                                        L=linearOperatorList[l],
+                                                        weight=relaxationFactor,
+                                                        maxIts =  postSmooths,
+                                                        convergenceTest = smootherConvergenceTest,
+                                                        computeRates = computeSmootherRates,
+                                                        printInfo = printSmootherInfo))
+                elif smootherType == StarILU:
+                    if relaxationFactor == None:
+                        relaxationFactor = 1.0
+                    preSmootherList.append(StarILU(connectionList = connectivityListList[l],
+                                                   L=linearOperatorList[l],
+                                                   weight=relaxationFactor,
+                                                   maxIts =  preSmooths,
+                                                   convergenceTest = smootherConvergenceTest,
+                                                   computeRates = computeSmootherRates,
+                                                   printInfo = printSmootherInfo))
+                    postSmootherList.append(StarILU(connectionList = connectivityListList[l],
+                                                    L=linearOperatorList[l],
+                                                    weight=relaxationFactor,
+                                                    maxIts =  postSmooths,
+                                                    convergenceTest = smootherConvergenceTest,
+                                                    computeRates = computeSmootherRates,
+                                                    printInfo = printSmootherInfo))
+                elif smootherType == StarBILU:
+                    if relaxationFactor == None:
+                        relaxationFactor = 1.0
+                    preSmootherList.append(StarBILU(connectionList = connectivityListList[l],
                                                     L=linearOperatorList[l],
                                                     bs = linearSolverLocalBlockSize,
                                                     weight=relaxationFactor,
@@ -1203,7 +1203,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                     convergenceTest = smootherConvergenceTest,
                                                     computeRates = computeSmootherRates,
                                                     printInfo = printSmootherInfo))
-		    postSmootherList.append(StarBILU(connectionList = connectivityListList[l],
+                    postSmootherList.append(StarBILU(connectionList = connectivityListList[l],
                                                      L=linearOperatorList[l],
                                                      bs = linearSolverLocalBlockSize,
                                                      weight=relaxationFactor,
@@ -1211,36 +1211,36 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                      convergenceTest = smootherConvergenceTest,
                                                      computeRates = computeSmootherRates,
                                                      printInfo = printSmootherInfo))
-		else:
-		    logEvent("smootherType unrecognized")
-	    else:
-		preSmootherList.append([])
-		postSmootherList.append([])
+                else:
+                    logEvent("smootherType unrecognized")
+            else:
+                preSmootherList.append([])
+                postSmootherList.append([])
                 coarseSolver = LU(L=linearOperatorList[l])
         levelLinearSolver = MGM(prolongList = prolongList,
-				restrictList = restrictList,
-				LList = linearOperatorList,
-				preSmootherList = preSmootherList,
-				postSmootherList = postSmootherList,
-				coarseSolver = coarseSolver,
-				mgItsList = mgItsList,
-				printInfo = printLevelSolverInfo,
-				computeRates = computeLevelSolverRates)
-	levelLinearSolverList = levelLinearSolver.solverList
+                                restrictList = restrictList,
+                                LList = linearOperatorList,
+                                preSmootherList = preSmootherList,
+                                postSmootherList = postSmootherList,
+                                coarseSolver = coarseSolver,
+                                mgItsList = mgItsList,
+                                printInfo = printLevelSolverInfo,
+                                computeRates = computeLevelSolverRates)
+        levelLinearSolverList = levelLinearSolver.solverList
     elif levelLinearSolverType == LU:
-	for l in range(nLevels):
-	    levelLinearSolverList.append(LU(linearOperatorList[l],computeEigenvalues))
-	levelLinearSolver = levelLinearSolverList
+        for l in range(nLevels):
+            levelLinearSolverList.append(LU(linearOperatorList[l],computeEigenvalues))
+        levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == PETSc:
-	for l in range(nLevels):
-	    levelLinearSolverList.append(PETSc(linearOperatorList[l],par_linearOperatorList[l],
+        for l in range(nLevels):
+            levelLinearSolverList.append(PETSc(linearOperatorList[l],par_linearOperatorList[l],
                                                prefix=solver_options_prefix))
             if solverConvergenceTest == 'r-true' and par_duList != None:
                 levelLinearSolverList[-1].useTrueResidualTest(par_duList[l])
-	levelLinearSolver = levelLinearSolverList
+        levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == KSP_petsc4py:
-	for l in range(nLevels):
-	    levelLinearSolverList.append(KSP_petsc4py(linearOperatorList[l],par_linearOperatorList[l],
+        for l in range(nLevels):
+            levelLinearSolverList.append(KSP_petsc4py(linearOperatorList[l],par_linearOperatorList[l],
                                                       maxIts = solverMaxIts,
                                                       convergenceTest = solverConvergenceTest,
                                                       rtol_r = relativeToleranceList[l],
@@ -1253,53 +1253,53 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                       linearSolverLocalBlockSize = linearSolverLocalBlockSize))
             #if solverConvergenceTest == 'r-true' and par_duList != None:
             #    levelLinearSolverList[-1].useTrueResidualTest(par_duList[l])
-	levelLinearSolver = levelLinearSolverList
+        levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == Jacobi:
-	if relaxationFactor == None:
-	    relaxationFactor = 4.0/5.0
-	for l in range(nLevels):
-	    levelLinearSolverList.append(Jacobi(L=linearOperatorList[l],
-						weight=relaxationFactor,
-						maxIts = solverMaxIts,
-						convergenceTest = solverConvergenceTest,
-						rtol_r = relativeToleranceList[l],
-						atol_r = absoluteTolerance,
-						computeRates = computeLevelSolverRates,
-						printInfo = printLevelSolverInfo))
-	levelLinearSolver = levelLinearSolverList
+        if relaxationFactor == None:
+            relaxationFactor = 4.0/5.0
+        for l in range(nLevels):
+            levelLinearSolverList.append(Jacobi(L=linearOperatorList[l],
+                                                weight=relaxationFactor,
+                                                maxIts = solverMaxIts,
+                                                convergenceTest = solverConvergenceTest,
+                                                rtol_r = relativeToleranceList[l],
+                                                atol_r = absoluteTolerance,
+                                                computeRates = computeLevelSolverRates,
+                                                printInfo = printLevelSolverInfo))
+        levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == GaussSeidel:
-	if relaxationFactor == None:
-	    relaxationFactor=0.33
-	for l in range(nLevels):
-	    levelLinearSolverList.append(GaussSeidel(connectionList = connectivityListList[l],
-						     L=linearOperatorList[l],
-						     weight = relaxationFactor,
-						     maxIts = solverMaxIts,
-						     convergenceTest = solverConvergenceTest,
-						     rtol_r = relativeToleranceList[l],
-						     atol_r = absoluteTolerance,
-						     computeRates = computeLevelSolverRates,
-						     printInfo = printLevelSolverInfo))
-	levelLinearSolver = levelLinearSolverList
+        if relaxationFactor == None:
+            relaxationFactor=0.33
+        for l in range(nLevels):
+            levelLinearSolverList.append(GaussSeidel(connectionList = connectivityListList[l],
+                                                     L=linearOperatorList[l],
+                                                     weight = relaxationFactor,
+                                                     maxIts = solverMaxIts,
+                                                     convergenceTest = solverConvergenceTest,
+                                                     rtol_r = relativeToleranceList[l],
+                                                     atol_r = absoluteTolerance,
+                                                     computeRates = computeLevelSolverRates,
+                                                     printInfo = printLevelSolverInfo))
+        levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == StarILU:
-	if relaxationFactor == None:
-	    relaxationFactor=1.0
-	for l in range(nLevels):
-	    levelLinearSolverList.append(StarILU(connectionList = connectivityListList[l],
-						 L=linearOperatorList[l],
-						 weight=relaxationFactor,
-						 maxIts = solverMaxIts,
-						 convergenceTest = solverConvergenceTest,
-						 rtol_r = relativeToleranceList[l],
-						 atol_r = absoluteTolerance,
-						 computeRates = computeLevelSolverRates,
-						 printInfo = printLevelSolverInfo))
-	levelLinearSolver = levelLinearSolverList
+        if relaxationFactor == None:
+            relaxationFactor=1.0
+        for l in range(nLevels):
+            levelLinearSolverList.append(StarILU(connectionList = connectivityListList[l],
+                                                 L=linearOperatorList[l],
+                                                 weight=relaxationFactor,
+                                                 maxIts = solverMaxIts,
+                                                 convergenceTest = solverConvergenceTest,
+                                                 rtol_r = relativeToleranceList[l],
+                                                 atol_r = absoluteTolerance,
+                                                 computeRates = computeLevelSolverRates,
+                                                 printInfo = printLevelSolverInfo))
+        levelLinearSolver = levelLinearSolverList
     elif levelLinearSolverType == StarBILU:
-	if relaxationFactor == None:
-	    relaxationFactor=1.0
-	for l in range(nLevels):
-	    levelLinearSolverList.append(StarBILU(connectionList = connectivityListList[l],
+        if relaxationFactor == None:
+            relaxationFactor=1.0
+        for l in range(nLevels):
+            levelLinearSolverList.append(StarBILU(connectionList = connectivityListList[l],
                                                   L=linearOperatorList[l],
                                                   bs= linearSolverLocalBlockSize,
                                                   weight=relaxationFactor,
@@ -1309,11 +1309,11 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                   atol_r = absoluteTolerance,
                                                   computeRates = computeLevelSolverRates,
                                                   printInfo = printLevelSolverInfo))
-	levelLinearSolver = levelLinearSolverList
+        levelLinearSolver = levelLinearSolverList
     else:
         raise RuntimeError,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Unknown level linear solver "+ levelLinearSolverType
     if multilevelLinearSolverType == NI:
-	multilevelLinearSolver = NI(solverList = levelLinearSolverList,
+        multilevelLinearSolver = NI(solverList = levelLinearSolverList,
                                     prolongList = prolongList,
                                     restrictList = restrictList,
                                     maxIts  = solverMaxIts,
@@ -1323,21 +1323,21 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                     computeRates = computeSolverRates)
     elif (multilevelLinearSolverType == PETSc or
           multilevelLinearSolverType == KSP_petsc4py or
-	  multilevelLinearSolverType == LU or
-	  multilevelLinearSolverType == Jacobi or
-	  multilevelLinearSolverType == GaussSeidel or
-	  multilevelLinearSolverType == StarILU or
-	  multilevelLinearSolverType == StarBILU or
+          multilevelLinearSolverType == LU or
+          multilevelLinearSolverType == Jacobi or
+          multilevelLinearSolverType == GaussSeidel or
+          multilevelLinearSolverType == StarILU or
+          multilevelLinearSolverType == StarBILU or
           multilevelLinearSolverType == MGM):
-	multilevelLinearSolver = MultilevelLinearSolver(levelLinearSolverList,
+        multilevelLinearSolver = MultilevelLinearSolver(levelLinearSolverList,
                                                         computeRates = computeSolverRates,
                                                         printInfo=printSolverInfo)
     else:
-	raise RuntimeError,"Unknown linear solver %s" % multilevelLinearSolverType
+        raise RuntimeError,"Unknown linear solver %s" % multilevelLinearSolverType
     if (levelLinearSolverType == LU):
-	directSolverFlag=True
+        directSolverFlag=True
     else:
-	directSolverFlag=False
+        directSolverFlag=False
     for levelSolver in multilevelLinearSolver.solverList:
         levelSolver.par_fullOverlap = parallelUsesFullOverlap
     return (multilevelLinearSolver,directSolverFlag)
@@ -1385,7 +1385,7 @@ if __name__ == '__main__':
     postSmootherList=[]
     mgItsList=[]
     for l in range(levels):
-        N = 2**(l+1) + 1 
+        N = 2**(l+1) + 1
         L = SparseMat_old(N-2,N-2,3*(N-2),sym=True)
         LD = Mat(N-2,N-2)
         H = 1.0/(N-1.0)
@@ -1470,4 +1470,3 @@ if __name__ == '__main__':
     for ev in evals[1:]:
         gevals.replot(Gnuplot.Data(ev,title='eigenvalues'))
     raw_input('Please press return to continue... \n')
-             

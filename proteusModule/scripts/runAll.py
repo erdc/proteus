@@ -26,5 +26,3 @@ for p,nList in caseDict.iteritems():
             sys.stdout.write("\n----------------Running  "+p+"---"+n+"\n")
             sys.stdout.flush()
             os.spawnvpe(os.P_WAIT,'proteusRun.py',args,os.environ)
-    
-       

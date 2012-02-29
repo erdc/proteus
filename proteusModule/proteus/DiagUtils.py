@@ -43,13 +43,13 @@ def getQuadraturePhysPointsAndWeights(mesh,femSpace,quadrature,verbose=0):
         qpoints[k][:] = p
     for k,w in enumerate(quadrature.weights):
         qweights[k] = w
-    
+
     quadX = numpy.zeros((mesh.nElements_global,nquad,3),'d')
     quadW = numpy.zeros((mesh.nElements_global,nquad),'d')
     jacTmp   = numpy.zeros((mesh.nElements_global,nquad,nd,nd),'d')
     jInvTmp  = numpy.zeros((mesh.nElements_global,nquad,nd,nd),'d')
     detJTmp  = numpy.zeros((mesh.nElements_global,nquad),'d')
-    
+
     femSpace.elementMaps.getValues(qpoints,quadX)
     femSpace.elementMaps.getJacobianValues(qpoints,jacTmp,
                                            jInvTmp,detJTmp)
@@ -92,9 +92,9 @@ def getFEMvals(u,xiArray,verbose=0):
     #end eN
     return uvals
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #stuff for running test problems
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 """
 identity tensor in 1d,2d,3d
@@ -110,13 +110,13 @@ for k in range(3):
     Ident3[k,k] = 1.0
 #end k
 
-# # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # #
 #some useful test routines
-# # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # #
 
-# # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # #
 #examples for testing a new finite element space
-# # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # #
 def testCrRavNodalBasis(nd,verbose=0):
     """
     test local Crouzeix-Raviart element space
@@ -140,7 +140,7 @@ def testCrRavNodalBasis(nd,verbose=0):
                         [1./3., 1./3., 1./3.],
                         [0., 1./3., 1./3.],
                         [1./3., 0., 1./3.],
-                        [1./3., 1./3., 0.]] 
+                        [1./3., 1./3., 0.]]
     #end if
     if verbose > 1:
         print 'trying to get values at points \n',xiArray
@@ -270,7 +270,7 @@ def testEdgeDOFMap(mesh,nd):
     if nd == 1:
         ndofLoc= 1
         #try to do a proto loop over elements and assemble local stiffness matrix
-        
+
         stiffMat = numpy.array([[1.0,-1.0],
                                   [-1.0,1.0]])
     #end 1d
@@ -285,12 +285,12 @@ def testEdgeDOFMap(mesh,nd):
         #stiffMat = numpy.array([[2.0, 0., -2.0],
         #                          [0., 0., 0.],
         #                          [-2.0, 0., 2.0]])
-    
+
         stiffMat = numpy.array([[4.0, -2., -2.],
                                   [-2., 2., 0.],
                                   [-2., 0., 2.]])
     #end 2d
-    
+
     A = Mat(dofMap.nDOF,dofMap.nDOF)
     for eN in range(mesh.nElements_global):
         for i in range(ndofLoc):
@@ -304,20 +304,20 @@ def testEdgeDOFMap(mesh,nd):
     #end eN
 
     print 'leaving testEdgeDofMap A= \n',A
-    
+
 def testQuadRefMats(nd,verbose=0):
     """
     test quad reference matrices to see what its doing
     """
-    
+
     lspace = QuadraticOnSimplexWithNodalBasis(nd)
     ndofLoc= lspace.dim
     volWeights = [1.0,0.5,1.0/6.0]
-    
+
     #compute mass matrix numerically
     quadRule = SimplexGaussQuadrature(nd)
     quadRule.setOrder(4)
-    
+
     stiffMat = numpy.zeros((lspace.dim,lspace.dim),'d')
     massMat = numpy.zeros((lspace.dim,lspace.dim),'d')
     for p,w in zip(quadRule.points,quadRule.weights):
@@ -339,7 +339,7 @@ def testQuadDOFMap(mesh,nd,verbose=0):
     """
     test quad dof map to see what its doing
     """
-    
+
     lspace = QuadraticOnSimplexWithNodalBasis(nd)
     #dofMap = NodalDOFMap(mesh)
     dofMap = QuadraticLagrangeDOFMap(mesh,lspace,nd)
@@ -349,7 +349,7 @@ def testQuadDOFMap(mesh,nd,verbose=0):
     #compute mass matrix numerically
     quadRule = SimplexGaussQuadrature(nd)
     quadRule.setOrder(4)
-    
+
     stiffMat = numpy.zeros((lspace.dim,lspace.dim),'d')
     massMat = numpy.zeros((lspace.dim,lspace.dim),'d')
     for p,w in zip(quadRule.points,quadRule.weights):

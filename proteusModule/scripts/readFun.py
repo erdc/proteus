@@ -5,7 +5,7 @@ from proteus.MeshTools import *
 from proteus.FemTools import *
 
 ## \ingroup scripts
-# 
+#
 # \file readFun.py
 #
 # \brief A script for reading an ADH .3dm mesh and .data file to build a finite element function.
@@ -140,4 +140,3 @@ if __name__ == '__main__':
 #      p.sort_stats('cumulative').print_stats(20)
 #      p.sort_stats('time').print_stats(20)
     readFun()
-
