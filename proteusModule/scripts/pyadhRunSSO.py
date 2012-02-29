@@ -6,7 +6,7 @@ import os
 ## need to insert more comments
 # \ingroup scripts
 # \file proteusRunSSO.py
-# 
+#
 # @{
 #   \brief driver for multi-model simulations
 #
@@ -64,7 +64,7 @@ def proteusRun(runRoutines):
                       action="store",
                       type="int",
                       dest="logLevel",
-                      default=1)    
+                      default=1)
     parser.add_option("-v", "--verbose",
                       help="Print logging information to standard out",
                       action="callback",
@@ -90,7 +90,7 @@ def proteusRun(runRoutines):
     if probDir not in sys.path:
         sys.path.insert(0,probDir)
     #end if
-    
+
     if len(args) < 1:
         raise RuntimeError("No input file specified")
     if len(args) > 1:
@@ -168,7 +168,7 @@ def proteusRun(runRoutines):
         if Viewers.viewerType == 'matlab':
             Viewers.viewerPipe.write("quit \n")
         #matlab
-        
+
 def runProblems(pNameAll,pNameList,pList,nList,opts):
     Profiling.memory()
     memBase = Profiling.memLast
@@ -335,7 +335,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts):
     except:
         pass
     os.chdir('tmp/'+pNameAll)
-    
+
     if nM.timeIntegration == TimeIntegration.NoIntegration:
         n.T = 1.0
     tn = 0.0
@@ -352,7 +352,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts):
         if m.modelList[-1].coefficients.vectorComponents != None:
             plotOffSet += 1
     if nM.timeIntegration != TimeIntegration.NoIntegration:
-         DTSET = nM.DT
+        DTSET = nM.DT
     else:
         DTSET = 1.0
         pM.T = 1.0
@@ -424,12 +424,12 @@ def runProblems(pNameAll,pNameList,pList,nList,opts):
                             for mm in m.modelList:
                                 pList[it].weakDirichletConditions[ci](mm)
                 firstStep=False
-                failedStage=nls.solveMultilevel(uList   = 
+                failedStage=nls.solveMultilevel(uList   =
                                                m.uList,
-                                               rList   = 
+                                               rList   =
                                                m.rList)
                 m.updateStage()
-                failedStep[it] = failedStep[it] or failedStage 
+                failedStep[it] = failedStep[it] or failedStage
             it += 1
             failedFlag = True in failedStep
             timeValues.append(tn)
@@ -453,6 +453,6 @@ def runProblems(pNameAll,pNameList,pList,nList,opts):
     #    mlTransport.modelList[-1].u[ci].femSpace.writeFunctionGnuplot(mlTransport.modelList[-1].u[ci],pName+"""-gnu-%d""" % ci)
     #    raw_input('\nPress return to close windows and exit... \n')
 if __name__ == '__main__':
-   proteusRun(runProblems)
+    proteusRun(runProblems)
 
 ## @}

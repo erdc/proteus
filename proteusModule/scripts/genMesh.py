@@ -2,7 +2,7 @@
 import proteus
 from proteus.MeshTools import *
 ## \ingroup scripts
-# 
+#
 # \file genMesh.py
 #
 # \brief A script for generating (multilevel) meshes on cuboidal domains.
@@ -17,13 +17,13 @@ def genMesh():
                       dest="boundaryMesh",
                       default=False)
     parser.add_option("-f", "--file",
-                      help="write adh mesh to MESHFILE", 
+                      help="write adh mesh to MESHFILE",
                       action="store",
                       type="string",
                       dest="meshFile",
                       default="adh")
     parser.add_option("-F", "--format",
-                      help="write mesh in FORMAT", 
+                      help="write mesh in FORMAT",
                       action="store",
                       type="string",
                       dest="format",

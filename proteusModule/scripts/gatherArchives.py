@@ -24,7 +24,7 @@ def gatherXDMFfiles(size,filename,dataDir='.',addname="_all"):
     in case archiving failed to collect results from various processors in parallel simulation
 
     size -- nprocessors
-    
+
     """
     xmlFile = []; tree = []
     xmlFile.append(open(filename+str(0)+".xmf","r"))
@@ -62,7 +62,7 @@ def gatherXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nStepsOnly=None,
     in case archiving failed to collect results from various processors in parallel simulation
 
     size -- nprocessors
-    
+
     """
 
     xmlFile = open(filename+str(0)+".xmf","r")
@@ -115,7 +115,7 @@ def gatherSplitTimeStepXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nSt
     in case archiving failed to collect results from various processors in parallel simulation
 
     size -- nprocessors
-    
+
     """
     xmlFile = open(filename+str(0)+".xmf","r")
     tree = ElementTree(file=xmlFile)
@@ -160,7 +160,7 @@ def gatherSplitTimeStepXDMFfilesOpt(size,filename,dataDir='.',addname="_all",nSt
 </Xdmf>
 """)
         fAll.close()
-    
+
 if __name__ == '__main__':
     from optparse import OptionParser
     usage = ""
@@ -225,4 +225,3 @@ if __name__ == '__main__':
         gatherSplitTimeStepXDMFfilesOpt(opts.size,opts.filebase,opts.dataDir,opts.append,opts.nStepsOnly,opts.mStride)
     else:
         gatherXDMFfilesOpt(opts.size,opts.filebase,opts.dataDir,opts.append,opts.nStepsOnly,opts.mStride)
-

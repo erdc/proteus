@@ -7,7 +7,7 @@ class StupidHeap:
 
     heap   = [(key,val), ...] such that heap[i][1] <= heap[2*i+1][1], heap[2*i+2][1]
     heapPos= {key:i} heap[heapPos[key]]=val
-    
+
     """
     #for indexing tuples
     keyIndex=0; valIndex=1;
@@ -17,7 +17,7 @@ class StupidHeap:
 
     def isempty(self):
         return len(self.heap) == 0
-    
+
     def insert(self,key,val):
         """
 
@@ -63,7 +63,7 @@ class StupidHeap:
         assert self.heap[pos][K] == key, "updateVal key=%s self.heap[pos][K]=%s " % (key,self.heap[pos][K])
         self.heap[pos] = (key,newval)
         return self.downHeap(pos,debugLevel=debugLevel)
-        
+
     def updateNodeWithMin(self,key,newval,debugLevel=0):
         """
         modify value associated with key and restore heap property
@@ -78,7 +78,7 @@ class StupidHeap:
             return
         self.heap[pos] = (key,newval)
         return self.downHeap(pos,debugLevel=debugLevel)
-        
+
     def upHeap(self,pos,debugLevel=0):
         """
         recursively move node at pos up the heap while it is less than its parent
@@ -101,7 +101,7 @@ class StupidHeap:
         """
         assume left and right children of pos are heap, but
         left or right child < pos
-        
+
         promote smaller of children of node at pos, then repeat on its subheap
 
         then put original value at pos and work back up
@@ -133,7 +133,7 @@ class StupidHeap:
         self.heapPos[misfit[K]]=pos
 
         return self.upHeap(pos,debugLevel=debugLevel)
-        
+
     def checkHeap(self):
         K = 0; V=1;
         for i in range(len(self.heap)/2):
@@ -148,11 +148,11 @@ class StupidHeap:
             assert self.heapPos[self.heap[i][K]]==i,  "failed node %d = %s heapPos[%s]=%d " % (i,self.heap[i],
                                                                                               self.heap[i][K],
                                                                                               self.heapPos[self.heap[i][K]])
-            
+
     def printHeap(self):
         print "heap= %s " % self.heap
         print "heapPos= %s " % self.heapPos
-        
+
 if __name__ == "__main__":
     H = StupidHeap()
 
@@ -162,7 +162,7 @@ if __name__ == "__main__":
     a.append((11,5.)); a.append((-1,6.))
     for i in range(nn):
         print "inserting a[%s]=%s " % (i,a[i])
-    
+
         H.insert(a[i][0],a[i][1])
     H.printHeap()
     H.checkHeap()
@@ -175,7 +175,7 @@ if __name__ == "__main__":
 
     for i in range(nn):
         print "re inserting a[%s]=%s " % (i,a[i])
-    
+
         H.insert(a[i][0],a[i][1])
 
     #now modify some values
@@ -185,4 +185,3 @@ if __name__ == "__main__":
         h = H.pop()
         print "H.pop = (%s,%s) " % h
         H.checkHeap()
-    

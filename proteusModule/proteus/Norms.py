@@ -230,7 +230,7 @@ def globalScalarDomainIntegral(abs_det_J,quadratureWeightArray,nValueArray):
         for eN in range(nValueArray.shape[0]):
             for k in range_nQuadraturePoints_element:
                 integral += nValueArray[eN,k]*quadratureWeightArray[k]*abs_det_J[eN,k]
-                
+
     return globalSum(integral)
 
 #just compute the mass in the domain
@@ -256,7 +256,7 @@ def LIerrorSFEMvsAF(analyticalFunction,quadraturePointArray,functionValueArray,T
     for eN in range(quadraturePointArray.shape[0]):
         for k in range_nQuadraturePoints_element:
             AF = analyticalFunction.uOfXT(quadraturePointArray[eN,k],T)
-            error = max(error,abs(functionValueArray[eN,k] - AF))    
+            error = max(error,abs(functionValueArray[eN,k] - AF))
     return globalMax(error)
 
 def LIerrorVFEMvsAF(analyticalFunction,quadraturePointArray,quadratureWeightArray,functionValueArray,T=None):
@@ -266,7 +266,7 @@ def LIerrorVFEMvsAF(analyticalFunction,quadraturePointArray,quadratureWeightArra
         for k in range_nQuadraturePoints_element:
             AF = analyticalFunction.uOfXT(quadraturePointArray[eN,k],T)
             e = numpy.absolute(functionValueArray[eN,k,:] - AF)
-            
+
             error = max(error,max(e.flat))
     return globalMax(error)
 

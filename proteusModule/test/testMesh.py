@@ -27,7 +27,7 @@ def constructTriangularMeshOnRectangle(Lx,Ly,nx,ny,writeMesh=0,
     if writeMesh == 1:
         #print mesh in gnuplot format
         mesh2d.writeEdgesGnuplot(meshFileBase)
-        #can view with 
+        #can view with
         #mesh2d.viewMeshGnuplotPipe(meshFileBase)
     elif writeMesh == 2:
         mesh2d.writeEdgesMatlab(meshFileBase)
@@ -45,14 +45,14 @@ def buildMatlabMeshDataStructures(mesh,meshFileBase='meshMatlab'):
     in matlab can then print mesh with
 
       pdemesh(p,e,t)
- 
+
     where p is the vertex or point matrix
-          e is the edge matrix, and 
+          e is the edge matrix, and
           t is the element matrix
 
-    points matrix is [2 x num vertices] 
+    points matrix is [2 x num vertices]
       format :
-         row 1 = x coord, 
+         row 1 = x coord,
          row 2 = y coord for nodes in mesh
 
     edge matrix is [7 x num edges]
@@ -70,7 +70,7 @@ def buildMatlabMeshDataStructures(mesh,meshFileBase='meshMatlab'):
         row 2 = vertex 2 global number
         row 3 = vertex 3 global number
         row 4 = triangle subdomain number
-     where 1,2,3 is a local counter clockwise numbering of vertices in 
+     where 1,2,3 is a local counter clockwise numbering of vertices in
        triangle
 
      """
@@ -99,15 +99,15 @@ def buildMatlabMeshDataStructures(mesh,meshFileBase='meshMatlab'):
         #mwf debug
         #print 'in build edge ',nE,' nodes ',pE[0],' ',pE[0].N,' ',pE[1],' ',pE[1].N
         medges[0,nE] = pE[0].N+matlabBase        #global node number
-						 #of start node base 1
+                                                 #of start node base 1
         medges[1,nE] = pE[1].N+matlabBase        #global node number
-						 #of end node base 1
+                                                 #of end node base 1
         medges[2,nE] = 0.0            #edge param. is 0 to 1
         medges[3,nE] = 1.0
         medges[4,nE] = nE+matlabBase  #global edge number base 1
         medges[5,nE] = 0              #subdomain to left?
         medges[6,nE] = 1              #subdomain to right?
-    #end 
+    #end
 
     #now get element array
     nelems = mesh.nElements_global
@@ -117,7 +117,7 @@ def buildMatlabMeshDataStructures(mesh,meshFileBase='meshMatlab'):
         nE = mesh.triangleDict[key].N        #global element number
         pE = mesh.triangleDict[key].nodes    #nodes defining triangle
 
-        #global numbers here need to be base 1 
+        #global numbers here need to be base 1
         melems[0,nE] = pE[0].N+matlabBase    #global node number for vertex 0
         melems[1,nE] = pE[1].N+matlabBase    #global node number for vertex 1
         melems[2,nE] = pE[2].N+matlabBase    #global node number for vertex 2
@@ -152,7 +152,7 @@ def buildMatlabMeshDataStructures(mesh,meshFileBase='meshMatlab'):
     mfile.write(']; \n');
     mfile.write("t = t\';\n") #need transpose for matlab
 
-    
+
     mfile.close()
     return (mnodes,medges,melems)
 
@@ -192,7 +192,7 @@ if __name__=='__main__':
         for j in xrange(mp.shape[1]): #number of columns is number of nodes
             print '\t',mp[0,j],' ',mp[1,j]
         #end for
-    
+
         #do brute force loop through edge array too
         print 'matlab edge array holds (matlab edge id, node 0, node 1)'
         print 'note base 0'

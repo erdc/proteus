@@ -5,22 +5,22 @@ def writeMeshMatlabFormat(mesh,meshFileBase):
     """
     build array data structures for matlab finite element mesh representation
     and write to a file to view and play with in matlatb
-    
+
     in matlab can then print mesh with
-    
+
     pdemesh(p,e,t)
-        
+
     where
-        
+
     p is the vertex or point matrix
-    e is the edge matrix, and 
+    e is the edge matrix, and
     t is the element matrix
-        
-    points matrix is [2 x num vertices] 
+
+    points matrix is [2 x num vertices]
     format :
-    row 1 = x coord, 
+    row 1 = x coord,
     row 2 = y coord for nodes in mesh
-    
+
     edge matrix is [7 x num edges]
     format:
     row 1 = start vertex number
@@ -30,15 +30,15 @@ def writeMeshMatlabFormat(mesh,meshFileBase):
     row 5 = global edge id, base 1
     row 6 = subdomain on left? always 1 for now
     row 7 = subdomain on right? always 0 for now
-    
+
     element matrix is [4 x num elements]
     row 1 = vertex 1 global number
     row 2 = vertex 2 global number
     row 3 = vertex 3 global number
     row 4 = triangle subdomain number
-    where 1,2,3 is a local counter clockwise numbering of vertices in 
+    where 1,2,3 is a local counter clockwise numbering of vertices in
     triangle
-    
+
     """
     import numpy as numpy
     matlabBase = 1
@@ -84,7 +84,7 @@ def writeMeshMatlabFormat(mesh,meshFileBase):
 
     mfile.close()
     return p,e,t
-    
+
 
 ########################################################################
 if __name__ == '__main__':
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     import ppmatlab,numpy.oldnumeric as numpy
 
     os.listdir('./results')
-    
+
     filename = './results/re_forsyth2_ss_2d_pre_forsyth2_ss_2d_c0p1_n_mesh_results.dat'
 
     res = shelve.open(filename)
@@ -101,5 +101,3 @@ if __name__ == '__main__':
 
     mmfile = 'forsyth2MeshMatlab'
     p,e,t = ppmatlab.writeMeshMatlabFormat(mesh,mmfile)
-
-    

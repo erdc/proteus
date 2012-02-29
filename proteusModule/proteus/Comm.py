@@ -1,21 +1,18 @@
 """
 Module for controlling MPI
-TODO:
-  access petsc4py PetscSys instead of through flcbdfWrappers
-  pass petscDatabaseFilename to petsc4py
 """
 import sys
 import flcbdfWrappers
-#mwf debug
 initial_communicator = None
+
 def init(petscDatabaseFilename=None,argv=sys.argv):
     global initial_communicator
     if initial_communicator == None:
         try:
             import petsc4py
-            petsc4py.init(argv)        
+            petsc4py.init(argv)
         except:
-            print "WARNING petsc4py import failed!!!" 
+            print "WARNING petsc4py import failed!!!"
     if isinstance(petscDatabaseFilename,str):
         comm = flcbdfWrappers.DaetkPetscSys(argv,petscDatabaseFilename)
     else:

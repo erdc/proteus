@@ -92,7 +92,7 @@ class AR_base:
                 self.textDataDir=filename+"_Data"
                 assert(os.path.exists(self.textDataDir))
                 self.hdfFile=None
-                self.dataItemFormat="XML"            
+                self.dataItemFormat="XML"
         else:
             self.xmlFile=open(os.path.join(self.dataDir,filename+str(self.rank)+".xmf"),"w")
             self.tree=ElementTree(Element("Xdmf",
@@ -186,11 +186,11 @@ class XdmfWriter:
 
     as well as current grid under grid collection where data belong,
     since data are associated with a grid of specific type
-    (e.g., P1 Lagrange, P2 Lagrange, elementQuadrature dictionary, ...) 
+    (e.g., P1 Lagrange, P2 Lagrange, elementQuadrature dictionary, ...)
     """
     def __init__(self,shareSingleGrid=True,arGridCollection=None,arGrid=None,arTime=None):
         self.arGridCollection = arGridCollection #collection of "grids" (at least one per time level)
-        self.arGrid           = arGrid #grid in collection that data should be associated with 
+        self.arGrid           = arGrid #grid in collection that data should be associated with
         self.arTime           = arTime #time level for data
         self.shareSingleGrid  = shareSingleGrid
 
@@ -211,9 +211,9 @@ class XdmfWriter:
                 if child.tag == "Grid" and child.attrib["Name"] == "Mesh"+spaceSuffix:
                     self.arGridCollection = child
         assert self.arGridCollection != None
-        
+
         #see if dgp1 grid exists with current time?
-        
+
         if self.shareSingleGrid:
             gridName = "Grid"+spaceSuffix
             if arGrid != None:
@@ -229,7 +229,7 @@ class XdmfWriter:
             #            self.arGrid = g
             #            break
             #end brute force search
-            
+
         else:
             gridName = "Grid"+spaceSuffix+name
         return gridName
@@ -246,7 +246,7 @@ class XdmfWriter:
                                                         init=False,meshChanged=False,arGrid=None,tCount=0):
         return self.writeMeshXdmf_quadraturePoints(ar,mesh,spaceDim,x,t=t,quadratureType="ebqe",
                                                    init=init,meshChanged=meshChanged,arGrid=arGrid,tCount=tCount)
-    
+
     def writeScalarXdmf_elementQuadrature(self,ar,u,name,tCount=0,init=True):
         qualifiedName = name.replace(' ','_')+"_elementQuadrature"
         return self.writeScalarXdmf_quadrature(ar,u,qualifiedName,tCount=tCount,init=init)
@@ -276,7 +276,7 @@ class XdmfWriter:
     def writeTensorXdmf_exteriorElementBoundaryQuadrature(self,ar,u,name,tCount=0,init=True):
         qualifiedName = name.replace(' ','_')+"_exteriorElementBoundaryQuadrature"
         return self.writeTensorXdmf_quadrature(ar,u,qualifiedName,tCount=tCount,init=init)
-    
+
 
     def writeMeshXdmf_quadraturePoints(self,ar,mesh,spaceDim,x,t=0.0,quadratureType="q",
                                        init=False,meshChanged=False,arGrid=None,tCount=0):
@@ -297,11 +297,11 @@ class XdmfWriter:
             spaceSuffix = "_exteriorElementBoundaryQuadrature"
         else:
             raise RuntimeError("quadratureType = %s not recognized" % quadratureType)
-        
+
         #write out basic geometry if not already done?
         mesh.writeMeshXdmf(ar,"Spatial_Domain",t,init,meshChanged,tCount=tCount)
         #now try to write out a mesh that is a collection of points per element
-        
+
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
 
         assert len(x.shape) == 3 #make sure have right type of dictionary
@@ -310,7 +310,7 @@ class XdmfWriter:
             Xdmf_NumberOfElements= x.shape[0]
             Xdmf_NodesPerElement = x.shape[1]
             Xdmf_NodesGlobal     = Xdmf_NumberOfElements*Xdmf_NodesPerElement
-            
+
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
             self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
             topology    = SubElement(self.arGrid,"Topology",
@@ -355,7 +355,7 @@ class XdmfWriter:
                     q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
                     numpy.savetxt(ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt",q_l2g,fmt='%d')
                     numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",x.flat[:])
-                    
+
                 #
             #hdfile
         #need to write a grid
@@ -377,9 +377,9 @@ class XdmfWriter:
             ar.hdfFile.createArray("/",name+str(tCount),u.flat[:])
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",u.flat[:])
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"}) 
-        
-    
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
+
+
     def writeVectorXdmf_quadrature(self,ar,u,name,tCount=0,init=True):
         assert len(u.shape) == 3
         Xdmf_NodesGlobal = u.shape[0]*u.shape[1]
@@ -395,15 +395,15 @@ class XdmfWriter:
                                 "Dimensions":"%i %i" % (Xdmf_NodesGlobal,Xdmf_StorageDim)})#force 3d vector since points 3d
         tmp = numpy.zeros((Xdmf_NodesGlobal,Xdmf_StorageDim),'d')
         tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(u.flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
-        
+
         if ar.hdfFile != None:
             values.text = ar.hdfFilename+":/"+name+str(tCount)
             ar.hdfFile.createArray("/",name+str(tCount),tmp)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",tmp)
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"}) 
-        
-    
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
+
+
     def writeTensorXdmf_quadrature(self,ar,u,name,tCount=0,init=True):
         """
         TODO make faster tmp creation
@@ -425,15 +425,15 @@ class XdmfWriter:
             for i in range(u.shape[2]):
                 for j in range(u.shape[3]):
                     tmp.flat[k*9 + i*3 + j]=u.flat[k*Xdmf_NumberOfComponents + i*u.shape[2] + j]
-        
+
         if ar.hdfFile != None:
             values.text = ar.hdfFilename+":/"+name+str(tCount)
             ar.hdfFile.createArray("/",name+str(tCount),tmp)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",tmp)
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"}) 
-        
-    
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
+
+
     def writeMeshXdmf_DGP1Lagrange(self,ar,name,mesh,spaceDim,dofMap,CGDOFMap,t=0.0,
                                    init=False,meshChanged=False,arGrid=None,tCount=0):
         """
@@ -494,7 +494,7 @@ class XdmfWriter:
                             dgnodes[dofMap.l2g[eN,nN],:]=mesh.nodeArray[mesh.elementNodesArray[eN,nN]]
                     #make more pythonic loop
                     numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",dgnodes)
-                    
+
                 #
             #hdfile
         #need to write a grid
@@ -552,7 +552,7 @@ class XdmfWriter:
                         #next loop over extra dofs on element and write out
                         #for nN in range(mesh.nNodes_element,dofMap.l2g.shape[1]):
                         #    dgnodes[dofMap.l2g[eN,nN],:]= CGDOFMap.lagrangeNodesArray[CGDOFMap.l2g[eN,nN]-mesh.nNodes_global,:]
-                            
+
                     #make more pythonic loop
                     ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,dgnodes)
             else:
@@ -570,10 +570,10 @@ class XdmfWriter:
                         #next loop over extra dofs on element and write out
                         #for nN in range(mesh.nNodes_element,dofMap.l2g.shape[1]):
                         #    dgnodes[dofMap.l2g[eN,nN],:]= CGDOFMap.lagrangeNodesArray[CGDOFMap.l2g[eN,nN]-mesh.nNodes_global,:]
-                    
+
                     #make more pythonic loop
                     numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",dgnodes)
-                    
+
                 #
             #hdfile
         #need to write a grid
@@ -640,7 +640,7 @@ class XdmfWriter:
                         elements=copy.deepcopy(dofMap.l2g)
                         #proteus stores 3d dof as
                         #|n0,n1,n2,n3|(n0,n1),(n1,n2),(n2,n3)|(n0,n2),(n1,n3)|(n0,n3)|
-                        #looks like xdmf wants them as 
+                        #looks like xdmf wants them as
                         #|n0,n1,n2,n3|(n0,n1),(n1,n2),(n0,n2) (n0,n3),(n1,n3) (n2,n3)|
                         for eN in range(mesh.nElements_global):
                             elements[eN,4+2] = dofMap.l2g[eN,4+3]
@@ -657,7 +657,7 @@ class XdmfWriter:
                         #                                                                           mesh.nodeArray.flat[3*mesh.nNodes_owned:3*mesh.nNodes_global],
                         #                                                                           lagrangeNodesArray.flat[3*mesh.nElements_owned:3*mesh.nElements_global])))
                         ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,lagrangeNodesArray)
-                        #mwf debug 
+                        #mwf debug
                         #print "nodes ",numpy.concatenate((mesh.nodeArray,lagrangeNodesArray))
                         #print "nodes ",numpy.concatenate((mesh.nodeArray.flat[:3*mesh.nNodes_owned],
                         #                                  lagrangeNodesArray.flat[:3*mesh.nElements_owned],
@@ -702,11 +702,11 @@ class XdmfWriter:
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
         if self.arGrid == None or self.arTime.get('Value') != str(t):
             if spaceDim == 1:
-                 print "No writeMeshXdmf_C0Q2Lagrange for 1D" 
-                 return 0
+                print "No writeMeshXdmf_C0Q2Lagrange for 1D"
+                return 0
             elif spaceDim == 2:
-                 print "No writeMeshXdmf_C0Q2Lagrange for 2D" 
-                 return 0
+                print "No writeMeshXdmf_C0Q2Lagrange for 2D"
+                return 0
             elif spaceDim == 3:
                 Xdmf_ElementTopology = "Hexahedron"
 
@@ -715,15 +715,15 @@ class XdmfWriter:
 
                 l2g = numpy.zeros((8*mesh.nElements_global,8),'i')
                 for eN in range(mesh.nElements_global):
-                   dofs=dofMap.l2g[eN,:]
-                   for i in range(8): #loop over subelements
-                      for j in range(8): # loop over nodes of subelement
-                         l2g[8*eN+i,j] = dofs[e2s[i][j]]
+                    dofs=dofMap.l2g[eN,:]
+                    for i in range(8): #loop over subelements
+                        for j in range(8): # loop over nodes of subelement
+                            l2g[8*eN+i,j] = dofs[e2s[i][j]]
 
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
             self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
 
-            lagrangeNodesArray = dofMap.lagrangeNodesArray      
+            lagrangeNodesArray = dofMap.lagrangeNodesArray
 
             topology = SubElement(self.arGrid,"Topology",
                                   {"Type":Xdmf_ElementTopology,
@@ -757,7 +757,7 @@ class XdmfWriter:
                                               {"Format":ar.dataItemFormat,
                                                "DataType":"Float",
                                                "Precision":"8",
-                                               "Dimensions":"%i %i" % lagrangeNodesArray.shape}) 
+                                               "Dimensions":"%i %i" % lagrangeNodesArray.shape})
 
             if ar.hdfFile != None:
                 elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
@@ -773,7 +773,7 @@ class XdmfWriter:
                         #                                                                           mesh.nodeArray.flat[3*mesh.nNodes_owned:3*mesh.nNodes_global],
                         #                                                                           lagrangeNodesArray.flat[3*mesh.nElements_owned:3*mesh.nElements_global])))
                         ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,lagrangeNodesArray)
-                        #mwf debug 
+                        #mwf debug
                         #print "nodes ",numpy.concatenate((mesh.nodeArray,lagrangeNodesArray))
                         #print "nodes ",numpy.concatenate((mesh.nodeArray.flat[:3*mesh.nNodes_owned],
                         #                                  lagrangeNodesArray.flat[:3*mesh.nElements_owned],
@@ -809,7 +809,7 @@ class XdmfWriter:
         return self.arGrid
 
 
-    
+
     def writeMeshXdmf_CrouzeixRaviartP1(self,ar,mesh,spaceDim,dofMap,t=0.0,
                                         init=False,meshChanged=False,arGrid=None,tCount=0):
         """
@@ -866,7 +866,7 @@ class XdmfWriter:
 
                     dgnodes = numpy.reshape(mesh.nodeArray[mesh.elementNodesArray],(Xdmf_NumberOfElements*Xdmf_NodesPerElement,3))
                     numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",dgnodes)
-                    
+
                 #
             #hdfile
         #need to write a grid
@@ -886,8 +886,8 @@ class XdmfWriter:
             ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
         else:
             numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"}) 
-        
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"})
+
     def writeFunctionXdmf_DGP2Lagrange(self,ar,u,tCount=0,init=True):
         attribute = SubElement(self.arGrid,"Attribute",{"Name":u.name,
                                                         "AttributeType":"Scalar",
@@ -902,11 +902,11 @@ class XdmfWriter:
             ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
         else:
             numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"}) 
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"})
     def writeFunctionXdmf_CrouzeixRaviartP1(self,ar,u,tCount=0,init=True):
         Xdmf_NumberOfElements = u.femSpace.mesh.nElements_global
         Xdmf_NodesPerElement  = u.femSpace.mesh.nNodes_element
-        
+
         name = u.name.replace(' ','_')
         #if writing as dgp1
         attribute = SubElement(self.arGrid,"Attribute",{"Name":name,
@@ -928,7 +928,7 @@ class XdmfWriter:
                 u_tmp[eN*Xdmf_NodesPerElement + 0] = u.dof[u.femSpace.dofMap.l2g[eN,1]]
                 u_tmp[eN*Xdmf_NodesPerElement + 0]+= u.dof[u.femSpace.dofMap.l2g[eN,2]]
                 u_tmp[eN*Xdmf_NodesPerElement + 0]-= u.dof[u.femSpace.dofMap.l2g[eN,0]]
-                
+
                 u_tmp[eN*Xdmf_NodesPerElement + 1] = u.dof[u.femSpace.dofMap.l2g[eN,0]]
                 u_tmp[eN*Xdmf_NodesPerElement + 1]+= u.dof[u.femSpace.dofMap.l2g[eN,2]]
                 u_tmp[eN*Xdmf_NodesPerElement + 1]-= u.dof[u.femSpace.dofMap.l2g[eN,1]]
@@ -941,16 +941,16 @@ class XdmfWriter:
                 for i in range(Xdmf_NodesPerElement):
                     u_tmp[eN*Xdmf_NodesPerElement + i] = u.dof[u.femSpace.dofMap.l2g[eN,i]]*(1.0-float(u.femSpace.nSpace_global)) + \
                                                          sum([u.dof[u.femSpace.dofMap.l2g[eN,j]] for j in range(Xdmf_NodesPerElement) if j != i])
-            
-                
+
+
         if ar.hdfFile != None:
             values.text = ar.hdfFilename+":/"+name+str(tCount)
             ar.hdfFile.createArray("/",name+str(tCount),u_tmp)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",u_tmp)
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"}) 
-        
-    
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
+
+
         #if writing as face centered (true nc p1)
         #could be under self.arGrid or mesh.arGrid
         grid = u.femSpace.mesh.arGrid #self.arGrid
@@ -966,8 +966,8 @@ class XdmfWriter:
             ar.hdfFile.createArray("/",name+"_dof"+str(tCount),u.dof)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+"_dof"+str(tCount)+".txt",u.dof)
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+"_dof"+str(tCount)+".txt"}) 
-        
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+"_dof"+str(tCount)+".txt"})
+
     def writeVectorFunctionXdmf_nodal(self,ar,uList,components,vectorName,spaceSuffix,tCount=0,init=True):
         concatNow=True
         nDOF_global = uList[components[0]].nDOF_global
@@ -992,7 +992,7 @@ class XdmfWriter:
             if ar.hdfFile != None:
                 values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
                 ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
-        else:            
+        else:
             attribute = SubElement(self.arGrid,"Attribute",{"Name":vectorName,
                                                             "AttributeType":"Vector",
                                                             "Center":"Node"})
@@ -1012,19 +1012,19 @@ class XdmfWriter:
     def writeVectorFunctionXdmf_CrouzeixRaviartP1(self,ar,uList,components,spaceSuffix,tCount=0,init=True):
         return self.writeVectorFunctionXdmf_nodal(ar,uList,components,"_ncp1_CrouzeixRaviart",
                                                   tCount=tCount,init=init)
-    
+
     def writeMeshXdmf_MonomialDGPK(self,ar,mesh,spaceDim,interpolationPoints,t=0.0,
                                    init=False,meshChanged=False,arGrid=None,tCount=0):
         """
         as a first cut, archive DG monomial spaces using same approach as for element quadrature
         arrays using x = interpolation points (which are just Gaussian quadrature points) as values
         """
-        
+
         #write out basic geometry if not already done?
         mesh.writeMeshXdmf(ar,"Spatial_Domain",t,init,meshChanged,tCount=tCount)
         #now try to write out a mesh that is a collection of points per element
         spaceSuffix = "_dgpk_Monomial"
-        
+
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
 
         assert len(interpolationPoints.shape) == 3 #make sure have right type of dictionary
@@ -1033,7 +1033,7 @@ class XdmfWriter:
             Xdmf_NumberOfElements= interpolationPoints.shape[0]
             Xdmf_NodesPerElement = interpolationPoints.shape[1]
             Xdmf_NodesGlobal     = Xdmf_NumberOfElements*Xdmf_NodesPerElement
-            
+
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
             self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
             topology    = SubElement(self.arGrid,"Topology",
@@ -1064,7 +1064,7 @@ class XdmfWriter:
                     q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
                     numpy.savetxt(ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt",q_l2g,fmt='%d')
                     numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",interpolationPoints.flat[:])
-                    
+
                 #
             #hdfile
         #need to write a grid
@@ -1090,8 +1090,8 @@ class XdmfWriter:
             ar.hdfFile.createArray("/",name+str(tCount),interpolationValues.flat[:])
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",interpolationValues.flat[:])
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"}) 
-        
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
+
     def writeVectorFunctionXdmf_MonomialDGPK(self,ar,interpolationValues,name,tCount=0,init=True):
         """
         Different than usual FemFunction Write routines since saves values at interpolation points
@@ -1111,21 +1111,21 @@ class XdmfWriter:
         #mwf brute force
         tmp = numpy.zeros((Xdmf_NodesGlobal,3),'d')
         tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(interpolationValues.flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
-        
+
         if ar.hdfFile != None:
             values.text = ar.hdfFilename+":/"+name+str(tCount)
             ar.hdfFile.createArray("/",name+str(tCount),tmp)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",tmp)
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"}) 
-        
-    
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
+
+
     def writeMeshXdmf_DGP0(self,ar,mesh,spaceDim,
                            t=0.0,init=False,meshChanged=False,arGrid=None,tCount=0):
         """
         as a first cut, archive piecewise constant space
         """
-        
+
         #write out basic geometry if not already done?
         meshSpaceSuffix = "Spatial_Domain"
         mesh.writeMeshXdmf(ar,meshSpaceSuffix,t,init,meshChanged,tCount=tCount)
@@ -1194,8 +1194,8 @@ class XdmfWriter:
             ar.hdfFile.createArray("/",name+str(tCount),u.dof)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",u.dof)
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"}) 
- 
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
+
     def writeVectorFunctionXdmf_DGP0(self,ar,uList,components,vectorName,tCount=0,init=True):
         concatNow=True
         if concatNow:
@@ -1220,7 +1220,7 @@ class XdmfWriter:
             if ar.hdfFile != None:
                 values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
                 ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
-        else:            
+        else:
             attribute = SubElement(uList[components[0]].femSpace.elementMaps.mesh.arGrid,"Attribute",{"Name":vectorName,
                                                                  "AttributeType":"Vector",
                                                                  "Center":"Cell"})
@@ -1237,7 +1237,7 @@ class XdmfWriter:
             for ci in components:
                 ReferenceString="/Xdmf/Domain/Grid/Grid[%i]/Attribute[%i]/DataItem" % (tCount+1,ci+1)
                 component = SubElement(values,"DataItem",{"Reference":ReferenceString})
-        
+
     #
     def writeMeshXdmf_P1Bubble(self,ar,mesh,spaceDim,dofMap,t=0.0,
                                init=False,meshChanged=False,arGrid=None,tCount=0):
@@ -1286,7 +1286,7 @@ class XdmfWriter:
                 if init or meshChanged:
                     numpy.savetxt(ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt",mesh.elementNodesArray,fmt='%d')
                     numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",mesh.nodeArray)
-                    
+
                 #
             #hdfile
         #need to write a grid
@@ -1297,7 +1297,7 @@ class XdmfWriter:
         Xdmf_NumberOfElements = u.femSpace.mesh.nElements_global
         Xdmf_NumberOfNodes    = u.femSpace.mesh.nNodes_global
         name = u.name.replace(' ','_')
-        
+
         #if writing as dgp1
         attribute = SubElement(self.arGrid,"Attribute",{"Name":name,
                                                         "AttributeType":"Scalar",
@@ -1312,7 +1312,7 @@ class XdmfWriter:
             ar.hdfFile.createArray("/",name+str(tCount),u.dof[0:Xdmf_NumberOfNodes])
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",u.dof[0:Xdmf_NumberOfNodes])
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"}) 
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
 
     def writeFunctionXdmf_C0P2Lagrange(self,ar,u,tCount=0,init=True):
         attribute = SubElement(self.arGrid,"Attribute",{"Name":u.name,
@@ -1328,8 +1328,8 @@ class XdmfWriter:
             ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
         else:
             numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"}) 
-        
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"})
+
     def writeVectorFunctionXdmf_P1Bubble(self,ar,uList,components,vectorName,spaceSuffix,tCount=0,init=True):
         concatNow=True
         nDOF_global = uList[components[0]].femSpace.mesh.nNodes_global
@@ -1354,7 +1354,7 @@ class XdmfWriter:
             if ar.hdfFile != None:
                 values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
                 ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
-        else:            
+        else:
             attribute = SubElement(self.arGrid,"Attribute",{"Name":vectorName,
                                                             "AttributeType":"Vector",
                                                             "Center":"Node"})
@@ -1371,7 +1371,7 @@ class XdmfWriter:
             for ci in components:
                 ReferenceString="""/Xdmf/Domain/Grid[@Name=\"Mesh%s\"]/Grid[%i]/Attribute[%i]/DataItem""" % (spaceSuffix,tCount+1,ci+1)
                 component = SubElement(values,"DataItem",{"Reference":ReferenceString})
- 
+
     def writeMeshXdmf_particles(self,ar,mesh,spaceDim,x,t=0.0,
                                 init=False,meshChanged=False,arGrid=None,tCount=0,
                                 spaceSuffix = "_particles"):
@@ -1383,7 +1383,7 @@ class XdmfWriter:
         #write out basic geometry if not already done?
         mesh.writeMeshXdmf(ar,"Spatial_Domain",t,init,meshChanged,tCount=tCount)
         #now try to write out a mesh that is a collection of points per element
-        
+
         gridName = self.setGridCollectionAndGridElements(init,ar,arGrid,t,spaceSuffix)
         nPoints = numpy.cumprod(x.shape)[-2]
         if self.arGrid == None or self.arTime.get('Value') != str(t):
@@ -1391,7 +1391,7 @@ class XdmfWriter:
             Xdmf_NumberOfElements= nPoints
             Xdmf_NodesPerElement = 1
             Xdmf_NodesGlobal     = nPoints
-            
+
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
             self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
             topology    = SubElement(self.arGrid,"Topology",
@@ -1436,7 +1436,7 @@ class XdmfWriter:
                     q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
                     numpy.savetxt(ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt",q_l2g,fmt='%d')
                     numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",x.flat[:])
-                    
+
                 #
             #hdfile
         #need to write a grid
@@ -1444,7 +1444,7 @@ class XdmfWriter:
     #def
     def writeScalarXdmf_particles(self,ar,u,name,tCount=0,init=True):
         nPoints = numpy.cumprod(u.shape)[-1]
-        
+
         Xdmf_NodesGlobal = nPoints
         attribute = SubElement(self.arGrid,"Attribute",{"Name":name,
                                                         "AttributeType":"Scalar",
@@ -1459,8 +1459,8 @@ class XdmfWriter:
             ar.hdfFile.createArray("/",name+str(tCount),u.flat[:])
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",u.flat[:])
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"}) 
-        
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
+
     def writeVectorXdmf_particles(self,ar,u,name,tCount=0,init=True):
         nPoints = numpy.cumprod(u.shape)[-2]
 
@@ -1477,14 +1477,14 @@ class XdmfWriter:
         #mwf brute force
         tmp = numpy.zeros((Xdmf_NodesGlobal,3),'d')
         tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(u.flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
-        
+
         if ar.hdfFile != None:
             values.text = ar.hdfFilename+":/"+name+str(tCount)
             ar.hdfFile.createArray("/",name+str(tCount),tmp)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",tmp)
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"}) 
-        
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
+
     def writeMeshXdmf_LowestOrderMixed(self,ar,mesh,spaceDim,t=0.0,init=False,meshChanged=False,arGrid=None,tCount=0,
                                        spaceSuffix = "_RT0"):
         #write out basic geometry if not already done?
@@ -1534,7 +1534,7 @@ class XdmfWriter:
 
                     dgnodes = numpy.reshape(mesh.nodeArray[mesh.elementNodesArray],(Xdmf_NumberOfElements*Xdmf_NodesPerElement,3))
                     numpy.savetxt(ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt",dgnodes)
-                    
+
                 #
             #hdfile
         #need to write a grid
@@ -1544,7 +1544,7 @@ class XdmfWriter:
         Xdmf_NodesGlobal = u.shape[0]*u.shape[1]
         Xdmf_NumberOfComponents = u.shape[2]
         Xdmf_StorageDim = 3
-        
+
         #if writing as dgp1
         attribute = SubElement(self.arGrid,"Attribute",{"Name":name,
                                                         "AttributeType":"Vector",
@@ -1562,6 +1562,5 @@ class XdmfWriter:
             ar.hdfFile.createArray("/",name+str(tCount),tmp)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",tmp)
-            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"}) 
+            SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
         #
-        
