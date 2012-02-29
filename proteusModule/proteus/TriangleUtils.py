@@ -78,7 +78,7 @@ def writeOutTriangulation(tri,filebase="mesh",nbase=0,verbose=0):
 def printNodeFile(nodes,filebase='mesh',attrib=None,markers=None,nbase=0):
     """
     print out nodes in triangle format, nbase is the numbering base
-    
+
     file format that triangle is expecting
 
     First line:  <# of vertices> <dimension (must be 2)>  <# of attributes> <# of boundary markers (0 or 1)>
@@ -134,7 +134,7 @@ def printNodeFile(nodes,filebase='mesh',attrib=None,markers=None,nbase=0):
 def printElemFile(elems,filebase='mesh',attrib=None,nbase=0):
     """
     print out triangles/elements in the mesh
-    
+
     file format that triangle is expecting
     First line: <# of triangles> <nodes per triangle>  <# of attributes>
     Remaining lines: <triangle #> <node> <node>  <node> ... [attributes]
@@ -188,7 +188,7 @@ def printPolyFile(nodes,segments,filebase='mesh',
                   nbase=0):
     """
     print out mesh info in triangle's poly format, nbase is the numbering base
-    
+
     First line: <# of vertices> <dimension (must be 2)>  <# of attributes> <# of boundary markers (0 or 1)>
     Following lines: <vertex #> <x> <y> [attributes] [boundary marker]
     One line: <# of segments> <# of boundary markers (0 or 1)>
@@ -197,7 +197,7 @@ def printPolyFile(nodes,segments,filebase='mesh',
     Following lines: <hole #> <x> <y>
     Optional line: <# of regional attributes and/or area constraints>
     Optional following lines: <region #> <x> <y> <attribute> <maximum area>
-    
+
     """
     failed = False
     if nodes == None: #ok to do nothing of nodes is empy
@@ -287,7 +287,7 @@ def printPolyFile(nodes,segments,filebase='mesh',
         nregions = regions.shape[0]
     #end if
     line = "#no regions specified"
-    
+
     if nregions > 0:
         line = """%d\n""" % nregions
     #end if
@@ -308,13 +308,13 @@ def printAreaFile(elemAreas,filebase='mesh',nbase=0):
     print out area constraints
 
     file format that triangle is expecting
-    First line: <# of triangles> 
+    First line: <# of triangles>
     Remaining lines: <triangle #> <maximum area>
 
     note, negative area means that the area is unconstrained
     """
     failed = False
-    if elemAreas == None: #ok to do nothing if elemAreas is empty 
+    if elemAreas == None: #ok to do nothing if elemAreas is empty
         return failed
     #end elemAreas empty
     if not nbase in [0,1]:
@@ -327,7 +327,7 @@ def printAreaFile(elemAreas,filebase='mesh',nbase=0):
 
     format = """
 #file format for areas
-#First line: <# of triangles> 
+#First line: <# of triangles>
 #Remaining lines: <triangle #> <maximum area>
 
 """
@@ -348,16 +348,16 @@ def printAreaFile(elemAreas,filebase='mesh',nbase=0):
 def printEdgeFile(edges,filebase='mesh',markers=None,nbase=0):
     """
     print out edges in the mesh
-    
+
     file format that triangle is expecting
     First line: <# of edges> <# of boundary markers (0 or 1)>
-    Following lines: <edge #> <endpoint> <endpoint> [boundary marker] 
+    Following lines: <edge #> <endpoint> <endpoint> [boundary marker]
     """
     failed = False
-    if edges == None: #ok to do nothing if elemAreas is empty 
+    if edges == None: #ok to do nothing if elemAreas is empty
         return failed
     #end empty arrays check
-    
+
     if not nbase in [0,1]:
         print 'must have vertex base numbering = 0 or 1, got nbase= ',nbase
         failed = True
@@ -369,7 +369,7 @@ def printEdgeFile(edges,filebase='mesh',markers=None,nbase=0):
     format = """
 #file format for edges
 #First line: <# of edges> <# of boundary markers (0 or 1)>
-#Following lines: <edge #> <endpoint> <endpoint> [boundary marker] 
+#Following lines: <edge #> <endpoint> <endpoint> [boundary marker]
 """
     fout.write(format)
     nedges   = edges.shape[0]
@@ -395,15 +395,15 @@ def printEdgeFile(edges,filebase='mesh',markers=None,nbase=0):
 def printNeighborFile(neigs,filebase='mesh',nbase=0):
     """
     print out elment neighbors  in the mesh
-    
+
     file format that triangle is expecting
     First line: <# of triangles>  <# of neighbors per triangle (always 3)>
-    Following lines: <triangle #> <neighbor> <neighbor> <neighbor> 
+    Following lines: <triangle #> <neighbor> <neighbor> <neighbor>
     """
     failed = False
-    if neigs == None: #ok to do nothing if elemAreas is empty 
+    if neigs == None: #ok to do nothing if elemAreas is empty
         return failed
-    #end 
+    #end
     if not nbase in [0,1]:
         print 'must have vertex base numbering = 0 or 1, got nbase= ',nbase
         failed = True
@@ -415,7 +415,7 @@ def printNeighborFile(neigs,filebase='mesh',nbase=0):
     format = """
 #file format for neighbors
 #First line: <# of triangles>  <# of neighbors per triangle (always 3)>
-#Following lines: <triangle #> <neighbor> <neighbor> <neighbor> 
+#Following lines: <triangle #> <neighbor> <neighbor> <neighbor>
 """
     fout.write(format)
     nelems   = neigs.shape[0]
@@ -460,8 +460,8 @@ class TriangleInputFileReader:
         for type in self.inputDataTypes:
             self.recordFormatDoc[type] = """format doc string not set"""
         #end for
-        
-        #now go through and specify the details of different formats  
+
+        #now go through and specify the details of different formats
         self.recordInfo     = {}
         for type in self.inputDataTypes: #set defaults
             self.recordInfo[type] = {}
@@ -518,7 +518,7 @@ class TriangleInputFileReader:
 
         #regions
         self.recordFormatDoc['region'] = """
-#<region #> <x> <y> <attribute> <maximum area>        
+#<region #> <x> <y> <attribute> <maximum area>
         """
         self.recordInfo['region']['nRecords'] = 1
         self.recordInfo['region']['types']    = ['d']
@@ -527,7 +527,7 @@ class TriangleInputFileReader:
 
         ## end record info block
 
-        
+
         ##now set the line format for each data type that one might read in
         self.initialLineFormat = {}
         for type in self.inputDataTypes:
@@ -542,7 +542,7 @@ class TriangleInputFileReader:
         self.initialLineFormat['hole'] = r'^\s*(\d+)\s*$'
         #region section just contains the number of holes
         self.initialLineFormat['region'] = r'^\s*(\d+)\s*$'
-        
+
         #because of format discrepancies, keep a different record info object
         #for processing initial line in file
         self.recordInfoInit = {}
@@ -557,7 +557,7 @@ class TriangleInputFileReader:
         self.recordInfoInit['hole']['types']    = []
         self.recordInfoInit['region']['nRecords'] = 0
         self.recordInfoInit['region']['types']    = []
-        
+
     #end init
 
     def readNodes(self,filebase,commchar='#',nbase=0,verbose=0):
@@ -569,7 +569,7 @@ class TriangleInputFileReader:
 
         data[0] = nodes
         data[1] = node attributes
-        data[1] = node markers 
+        data[1] = node markers
         """
         type = 'node'
         filename = filebase+'.node'
@@ -606,7 +606,7 @@ class TriangleInputFileReader:
 
         data[0] = triangles
         data[1] = triangle attributes
-        
+
         """
         type = 'triangle'
         filename = filebase+'.ele'
@@ -643,7 +643,7 @@ class TriangleInputFileReader:
         returns dataInfo holding basic info about data read and array of data read
 
         this function is more tedious because of variations in input formats
-        
+
         """
         filename = filebase+'.poly'
         fout = open(filename,'r')
@@ -657,7 +657,7 @@ class TriangleInputFileReader:
                                                            self.initialLineFormat[type],
                                                            commchar=commchar,
                                                            nbase=nbase,verbose=verbose)
-        
+
         nodestart   = nodeInfo['dataStartLineNumber']
         #mwf debug print "recordInfo ",self.recordInfo[type]
         nodeData,nlast=TriangleFileUtils.readSimpleFormattedDataEntries(lines[nodestart:],
@@ -676,7 +676,7 @@ class TriangleInputFileReader:
                                                            self.initialLineFormat[type],
                                                            commchar=commchar,
                                                            nbase=nbase,verbose=verbose)
-    
+
         #now add segment size into the expected record sizes per entry
         segInfo = segInfo0.copy()
         #segment size is 2 (beginning node and ending node)
@@ -685,7 +685,7 @@ class TriangleInputFileReader:
                segInfo0['recordSizes'][0] == 1)
         segSize   = 2
         markerSize= int(segInfo0['recordSizes'][0])
-        segInfo['recordSizes'] = [segSize,markerSize] 
+        segInfo['recordSizes'] = [segSize,markerSize]
         #first value per line is the entry number
         #record I is in entries recLocPerLine[I]:recLocPerLine[I+1]
         segInfo['recordLocationsPerLine'] = numpy.array([0,1,1+segSize,
@@ -709,13 +709,13 @@ class TriangleInputFileReader:
                                                             self.initialLineFormat[type],
                                                             commchar=commchar,
                                                             nbase=nbase,verbose=verbose)
-    
+
         #now add hole size into the expected record sizes per entry
         holeInfo = holeInfo0.copy()
         #hole size is 2 (x and y)
         sdim = 2
         holeInfo['recordSizes'] = [sdim] #no optional sizing, just may
-					 #or may not be data included
+                                         #or may not be data included
         holeInfo['recordLocationsPerLine'] = numpy.array([0,1,1+sdim],'i')
 
         holedstart   = holeInfo['dataStartLineNumber']
@@ -735,15 +735,15 @@ class TriangleInputFileReader:
                                                            self.initialLineFormat[type],
                                                            commchar=commchar,
                                                            nbase=nbase,verbose=verbose)
-        
-        
+
+
         #now add hole size into the expected record sizes per entry
         regionInfo = regionInfo0.copy()
         #region size is 4 (x,y, attribute, area constraint)
         #actually, Triangle allows user to omit one of the last two values!
         rsize = 4
         regionInfo['recordSizes'] = [rsize] #no optional sizing, just may
-					 #or may not be data included
+                                         #or may not be data included
         regionInfo['recordLocationsPerLine'] = numpy.array([0,1,1+rsize],'i')
 
         regdstart   = regionInfo['dataStartLineNumber']
@@ -760,7 +760,7 @@ class TriangleInputFileReader:
                                                                         commchar=commchar,
                                                                         nbase=nbase,
                                                                         verbose=verbose)
-        
+
         outputInfo = {}
         outputData = {}
         #info
@@ -790,7 +790,7 @@ class TriangleInputFileReader:
         outputData['hole']['holes'] = None
         if not holeData == None:
             outputData['hole']['holes']  = holeData[0]
-        
+
         outputData['region'] = {}
         outputData['region']['regions'] = None
         if not regionData == None:
@@ -799,5 +799,3 @@ class TriangleInputFileReader:
         return outputInfo,outputData
     #end readPoly
 #end input file reader
-
-        

@@ -282,7 +282,7 @@ class RecirculationLength(AV_base):
                         self.maxX_domain = x
                     if x < self.minX_domain:
                         self.minX_domain = x
-                    if u < 0.0:                                    
+                    if u < 0.0:
                         if x > self.maxX_neg:
                             self.maxX_neg = x
                             if x > self.maxX:
@@ -415,7 +415,7 @@ class VelocityAverage(AV_base):
                 self.Vfile.write('%21.15e %21.15e \n' % tuple(V))
             else:
                 self.Vfile.write('%21.15e %21.15e %21.15e\n' % tuple(V))
-            
+
 class BoundaryPressure(AV_base):
     def __init__(self):
         pass
@@ -436,7 +436,7 @@ class BoundaryPressure(AV_base):
         assert(flagMin == 0)
         assert(flagMax >= 0)
         self.nPressures=flagMax+1
-        #create a list containing pressure for each boundary face on each mesh in 
+        #create a list containing pressure for each boundary face on each mesh in
         #multilevel hierarchy
         self.levelPlist=[]
         #also area/length of boundaries
@@ -525,7 +525,7 @@ class VelocityNormOverRegion(AV_base):
             for id in self.regionIdList:
                 self.elementsInRegion[-1].append(numpy.where(m.mesh.elementMaterialTypes == id))
         #get the volume of the region
-        m = self.model.levelModelList[0] 
+        m = self.model.levelModelList[0]
         self.volume=0.0
         for region in self.elementsInRegion[0]:#coarse level only needed
             for eN in region[0]: #where returns a tuple
@@ -551,7 +551,7 @@ class VelocityNormOverRegion(AV_base):
                         results['LI'] = max(results['LI'],ei)
             log("Velocity Norms in Region %s L2= %s L1= %s LI= %s " % (self.regionIdList,results['L2'],results['L1'],results['LI']))
             self.Vfile.write('%21.15e %21.15e %21.15e\n' % (results['L2'],results['L1'],results['LI']))
-            
+
 class MassOverRegion(AV_base):
     def __init__(self,regionIdList=None,ci=0):
         self.regionIdList=  regionIdList #which elements to select for mass integral, None means all
@@ -573,7 +573,7 @@ class MassOverRegion(AV_base):
                 for id in self.regionIdList:
                     self.elementsInRegion[-1].append(numpy.where(m.mesh.elementMaterialTypes == id))
         #get the volume of the region
-        m = self.model.levelModelList[0] 
+        m = self.model.levelModelList[0]
         self.volume=0.0
         for region in self.elementsInRegion[0]:#coarse level only needed
             for eN in region[0]: #where returns a tuple
@@ -605,7 +605,7 @@ class MassOverRegion(AV_base):
             else:
                 log("Mass Norms in Domain %s Total= %s L2= %s L1= %s LI= %s " % (self.regionIdList,results['total'],results['L2'],results['L1'],results['LI']))
             self.ofile.write('%21.15e %21.15e %21.15e %21.15e\n' % (results['total'],results['L2'],results['L1'],results['LI']))
-            
+
 class PT123velocityGenerator(AV_base):
     """
     write out the velocity field from a model for PT123 to use in tracking as a
@@ -630,7 +630,7 @@ class PT123velocityGenerator(AV_base):
         if self.velocityPostProcessor != None:
             self.PT123_RT0_interpolation_points = self.mesh.nodeArray[self.mesh.elementNodesArray]
             self.PT123_interpolation_values = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'d')
-            
+
         return self
     def checkFileClose(self,filetoclose):
         if self.model.levelModelList[-1].timeIntegration.t >= self.tnList[-1]:
@@ -640,10 +640,10 @@ class PT123velocityGenerator(AV_base):
         base = 1 #base 1 numbering
         mesh_prefix = '1dm'; ele_label   = 'GE2'; node_label = 'GN'
         if nd == 2:
-            mesh_prefix = '2dm'; ele_label   = 'GE3'; 
+            mesh_prefix = '2dm'; ele_label   = 'GE3';
         elif nd == 3:
             mesh_prefix = '3dm'; ele_label   = 'GE4';
-        #   
+        #
         fmesh = open(self.filebase+'.'+mesh_prefix,'w')
         fmesh.write('MESH \n')
         for eN in range(mesh.nElements_global):
@@ -664,17 +664,17 @@ class PT123velocityGenerator(AV_base):
     def writePT123nodalVelocity(self,components):
         #write out velocity file for current time step
         if self.nodal_velocity_file == None:
-            vel_prefix = 'vn1'; 
+            vel_prefix = 'vn1';
             if self.nd == 2:
-                vel_prefix = 'vn2'; 
+                vel_prefix = 'vn2';
             elif self.nd == 3:
-                vel_prefix = 'vn3'; 
-    
+                vel_prefix = 'vn3';
+
             self.nodal_velocity_file = open(self.filebase+'.'+vel_prefix,'w')
             self.nodal_velocity_file.write("     %d     %d    %d \n" % (self.mesh.nNodes_global,self.nd,len(self.tnList)-1))
         #
         self.nodal_velocity_file.write("TS    %f \n" % self.model.levelModelList[-1].timeIntegration.t)
-        
+
         for I in range(self.mesh.nNodes_global):
             for j in range(self.nd):
                 self.nodal_velocity_file.write("  %f  " % self.model.levelModelList[-1].u[components[j]][I])
@@ -688,17 +688,17 @@ class PT123velocityGenerator(AV_base):
     def writePT123elementVelocity(self,components):
         #write out velocity file for current time step
         if self.element_velocity_file == None:
-            vel_prefix = 've1'; 
+            vel_prefix = 've1';
             if self.nd == 2:
-                vel_prefix = 've2'; 
+                vel_prefix = 've2';
             elif self.nd == 3:
-                vel_prefix = 've3'; 
-    
+                vel_prefix = 've3';
+
             self.element_velocity_file = open(self.filebase+'.'+vel_prefix,'w')
             self.element_velocity_file.write("     %d     %d    %d \n" % (self.mesh.nElements_global,self.nd,len(self.tnList)-1))
         #
         self.element_velocity_file.write("TS    %f \n" % self.model.levelModelList[-1].timeIntegration.t)
-        
+
         for eN in range(self.mesh.nElements_global):
             for nN in range(self.mesh.nNodes_element):
                 for j in range(self.nd):
@@ -714,12 +714,12 @@ class PT123velocityGenerator(AV_base):
     def writePT123MixedVelocityAsElementVelocity(self,ci):
         #write out velocity file for current time step
         if self.element_velocity_file == None:
-            vel_prefix = 've1'; 
+            vel_prefix = 've1';
             if self.nd == 2:
-                vel_prefix = 've2'; 
+                vel_prefix = 've2';
             elif self.nd == 3:
-                vel_prefix = 've3'; 
-    
+                vel_prefix = 've3';
+
             self.element_velocity_file = open(self.filebase+'.'+vel_prefix,'w')
             self.element_velocity_file.write("     %d     %d    %d \n" % (self.mesh.nElements_global,self.nd,len(self.tnList)-1))
         #
@@ -741,17 +741,17 @@ class PT123velocityGenerator(AV_base):
     def writePT123elementPorosity(self,value=1.0):
         #write out constant value for volume fraction for now
         if self.element_vf_file == None:
-            vf_prefix = 'eemc1'; 
+            vf_prefix = 'eemc1';
             if self.nd == 2:
-                vf_prefix = 'eemc2'; 
+                vf_prefix = 'eemc2';
             elif self.nd == 3:
-                vf_prefix = 'eemc3'; 
-    
+                vf_prefix = 'eemc3';
+
             self.element_vf_file = open(self.filebase+'.'+vf_prefix,'w')
             self.element_vf_file.write("     %d    %d \n" % (self.mesh.nElements_global,len(self.tnList)-1))
         #
         self.element_vf_file.write("TS    %f \n" % self.model.levelModelList[-1].timeIntegration.t)
-        
+
         for eN in range(self.mesh.nElements_global):
             self.element_vf_file.write("  %f  \n" % value)
         #
@@ -761,17 +761,17 @@ class PT123velocityGenerator(AV_base):
     def writePT123nodalPorosity(self,value=1.0):
         #write out constant value for volume fraction for now
         if self.nodal_vf_file == None:
-            vf_prefix = 'nemc1'; 
+            vf_prefix = 'nemc1';
             if self.nd == 2:
-                vf_prefix = 'nemc2'; 
+                vf_prefix = 'nemc2';
             elif self.nd == 3:
-                vf_prefix = 'nemc3'; 
-    
+                vf_prefix = 'nemc3';
+
             self.nodal_vf_file = open(self.filebase+'.'+vf_prefix,'w')
             self.nodal_vf_file.write("     %d    %d \n" % (self.mesh.nNodes_global,len(self.tnList)-1))
         #
         self.nodal_vf_file.write("TS    %f \n" % self.model.levelModelList[-1].timeIntegration.t)
-        
+
         for nN in range(self.mesh.nNodes_global):
             self.nodal_vf_file.write("  %f  \n" % value)
         #

@@ -9,7 +9,7 @@ from Profiling import logEvent
 class AS_base:
     """
     The base class for general analytical solutions, u(x,y,z,t)
-    
+
     For basic error calculations only the :func:`uOfXT` member need be
     overridden. The vectorized member functions such as
     :func:`getUOfXT` are provided for future optimizations but are
@@ -23,40 +23,40 @@ class AS_base:
     def duOfXT(self,X,T):
         """
         Return the gradient of the solution at a 3D point, X, and a time, T
-        
+
         .. todo:: Change du to Du
         """
         pass
     def rOfUX(self,u,x):
         """
         Return the reaction term for the (manufactured) solution at a 3D point, X, and a time, T
-        """        
+        """
         pass
     def drOfUX(self,u,x):
         """
         Return the derivative of the reaction term for the (manufactured) solution at a 3D point, X, and a time, T
-        """        
+        """
         pass
     def advectiveFluxOfX(self,x):
         """
         Return the advective flux at a 3D point, X
 
         .. todo:: Change advective flux to depend on T
-        """        
+        """
         pass
     def diffusiveFluxOfX(self,x):
         """
         Return the diffusive flux at a 3D point, X
 
         .. todo:: Change advective flux to depend on T
-        """        
+        """
         pass
     def totalFluxOfX(self,x):
         """
         Return the total flux at a 3D point, X
 
         .. todo:: Decide if we need total flux
-        """        
+        """
         pass
     def getUOfXT(self,X,T,U):
         """
@@ -107,7 +107,7 @@ class DAE_base(AS_base):
     """
     The base class for differential-algebraic equation solutions
 
-    To use this class override :func:`uOfT` 
+    To use this class override :func:`uOfT`
     """
     def uOfXT(self,X,T):
         return self.uOfT(self,T)
@@ -152,7 +152,7 @@ class LinearAD_SteadyState(SteadyState):
     The solution of the steady linear advection-diffusion equation
 
     The boundary value problem is
-    
+
     .. math: (bu - au_x)_x = 0 \quad u(0) = 1 \quad u(1) = 0
     """
     def __init__(self,b=1.0,a=5.0e-1):
@@ -173,7 +173,7 @@ class LinearAD_SteadyState(SteadyState):
 class NonlinearAD_SteadyState(LinearAD_SteadyState):
     r"""
     The solution of a steady nonlinear advection-diffusion equation
-    
+
     The boundary value problem is
 
     .. math: (bu^q - a(u^r)_x)_x = 0 \quad u(0) = 1 \quad u(1) = 0
@@ -215,7 +215,7 @@ class NonlinearAD_SteadyState(LinearAD_SteadyState):
                 print dC
                 Ctmp = C + dC
                 while (abs(f(Ctmp)) > 0.99*abs(f(C))
-                       or Ctmp <= 1.0):  
+                       or Ctmp <= 1.0):
                     print f(Ctmp)
                     print f(C)
                     logEvent("ls")
@@ -282,12 +282,12 @@ class NonlinearAD_SteadyState(LinearAD_SteadyState):
 
 class LinearADR_Sine(SteadyState):
     r"""
-    An exact solution and source term for 
+    An exact solution and source term for
 
     .. math:: \nabla \cdot (\mathbf{b} u - \mathbf{a} \nabla u) + c u + d = 0
 
     The solution and source are
-    
+
     .. math::
        :nowrap:
 
@@ -301,7 +301,7 @@ class LinearADR_Sine(SteadyState):
 
     also returns the advective, diffusive, and total flux at a point.
     """
-    
+
     def __init__(self,
                  b=numpy.array((1.0,0.0,0.0)),
                  a=numpy.array(((1.0e-2,0.0,0.0),
@@ -320,25 +320,25 @@ class LinearADR_Sine(SteadyState):
         self.omega0_=omega0
         self.D_ = - numpy.dot(b,omega)
         self.E_ = - numpy.dot(numpy.dot(a,omega),omega) - c
-    
+
     def uOfX(self,x):
         return sin(numpy.dot(self.omega_,x[:self.omega_.shape[0]]) + self.omega0_)
-    
+
     def duOfX(self,x):
         return self.omega_ * cos(numpy.dot(self.omega_,x[:self.omega_.shape[0]])+self.omega0_)
-    
+
     def rOfUX(self,u,x):
         return self.c_*u + self.D_*cos(numpy.dot(self.omega_,x[:self.omega_.shape[0]])+self.omega0_) + self.E_*sin(numpy.dot(self.omega_,x[:self.omega_.shape[0]]) + self.omega0_)
-    
+
     def drOfUX(self,u,x):
         return self.c_
-    
+
     def advectiveFluxOfX(self,x):
         return self.b_*self.uOfX(x)
-    
+
     def diffusiveFluxOfX(self,x):
         return -numpy.dot(self.a_,self.duOfX(x))
-    
+
     def totalFluxOfX(self,x):
         return self.advectiveFluxOfX(x) + self.diffusiveFluxOfX(x)
 
@@ -354,7 +354,7 @@ class PoissonsEquation(SteadyState):
        :nowrap:
 
        \begin{eqnarray}
-       u &=& K x(1-x)y(1-y)z(1-z)e^{x^2 + y^2 + z^2} \\ 
+       u &=& K x(1-x)y(1-y)z(1-z)e^{x^2 + y^2 + z^2} \\
        f &=& -K\{[y(1-y)z(1-z)][4x^3 - 4x^2 + 6x - 2]+ \\
            &&[x(1-x)z(1-z)][4y^3 - 4y^2 + 6y - 2]+ \\
            &&[x(1-x)y(1-y)][4z^3 - 4z^2 + 6z - 2]\}e^{x^2 + y^2 + z^2}
@@ -379,35 +379,35 @@ class PoissonsEquation(SteadyState):
     def rOfUX(self,u,X):
         if self.nd_==1:
             x = X[0]
-            return  self.K_*(4.0*(1.0-x)*x**3 - 4.0*x**2 + 6.0*(1.0-x)*x - 2.0)*exp(x**2) 
+            return  self.K_*(4.0*(1.0-x)*x**3 - 4.0*x**2 + 6.0*(1.0-x)*x - 2.0)*exp(x**2)
         elif self.nd_==2:
             x = X[0]
             y = X[1]
             return  self.K_*(y*(1.0-y)*(4.0*(1.0-x)*x**3 - 4.0*x**2 + 6.0*x*(1.0-x) - 2.0)+
-                             x*(1.0-x)*(4.0*(1.0-y)*y**3 - 4.0*y**2 + 6.0*y*(1.0-y) - 2.0))*exp(x**2 + y**2) 
+                             x*(1.0-x)*(4.0*(1.0-y)*y**3 - 4.0*y**2 + 6.0*y*(1.0-y) - 2.0))*exp(x**2 + y**2)
         else:
             x = X[0]
             y = X[1]
             z = X[2]
             return  self.K_*(y*(1.0-y)*z*(1.0-z)*(4.0*(1.0-x)*x**3 - 4.0*x**2 + 6.0*x*(1.0-x) - 2.0)+
                              x*(1.0-x)*z*(1.0-z)*(4.0*(1.0-y)*y**3 - 4.0*y**2 + 6.0*y*(1.0-y) - 2.0)+
-                             x*(1.0-x)*y*(1.0-y)*(4.0*(1.0-z)*z**3 - 4.0*z**2 + 6.0*z*(1.0-z) - 2.0))*exp(x**2 + y**2 + z**2) 
+                             x*(1.0-x)*y*(1.0-y)*(4.0*(1.0-z)*z**3 - 4.0*z**2 + 6.0*z*(1.0-z) - 2.0))*exp(x**2 + y**2 + z**2)
     def drOfUX(self,u,x):
         return 0.0
 
 class LinearAD_DiracIC(AS_base):
     r"""
     The exact solution of
-    
+
     .. math:: u_t + \nabla \cdot (b u - a \nabla u) = 0
-    
+
     on an infinite domain with dirac initial data
-    
+
     .. math:: u0 = \int u0 \delta(x - x0)
 
     also returns advective, diffusive, and total flux
     """
-    
+
     def __init__(self,
                  n=1.0,
                  b=numpy.array((1.0,0.0,0.0)),
@@ -429,27 +429,27 @@ class LinearAD_DiracIC(AS_base):
             return 0.0
         else:
             return self.u0_*exp(-exp_arg) / (4.0*self.a_*pi*t)**(self.n_/2.0)
-    
+
     def duOfXT(self,x,T):
         t = T + self.tStart
         y = (x[:self.b_.shape[0]] - self.x0_[:self.b_.shape[0]] - self.b_*t)
         return self.uOfXT(x,T)*2.0*y/(4.0*self.a_*t)
-    
+
     def advectiveFluxOfXT(self,x,T):
         return self.b_*self.uOfXT(x,T)
-    
+
     def diffusiveFluxOfXT(self,x,T):
         return -self.a_*self.duOfXT(x,T)
-    
+
     def totalFluxOfXT(self,x,T):
         return self.advectiveFluxOfXT(x,T) + self.diffusiveFluxOfXT(x,T)
 
 class LinearADR_Decay_DiracIC(LinearAD_DiracIC):
     r"""
-    The exact solution of 
+    The exact solution of
 
     .. math:: u_t + \nabla \cdot (bu - a \nabla u) + cu= 0
-    
+
     on an infinite domain with Dirac initial data.  Also
     returns the fluxes (by inheritance).
     """
@@ -463,27 +463,27 @@ class LinearADR_Decay_DiracIC(LinearAD_DiracIC):
                  x0=numpy.array((0.0,0.0,0.0))):
         LinearAD_DiracIC.__init__(self,n,b,a,tStart,u0,x0)
         self.c_ = c
-    
+
     def uOfXT(self,x,T):
         t = T + self.tStart
         return LinearAD_DiracIC.uOfXT(self,x,T)*exp(- self.c_*t)
 
     def rOfUXT(self,u,x,T):
         return self.c_*u
-    
+
     def drOfUXT(self,u,x,T):
         return self.c_
 
 class NonlinearADR_Decay_DiracIC(LinearADR_Decay_DiracIC):
     r"""
     The approximate analytical solution of
-    
+
     .. math:: u_t + \nabla \cdot (bu - a \nabla u) + cu^d= 0
-    
+
     on an infinite domain with Dirac initial data.
     Also returns the fluxes (by inheritance).
     """
-    
+
     def __init__(self,
                  n=1.0,
                  b=numpy.array((1.0,0.0,0.0)),
@@ -495,7 +495,7 @@ class NonlinearADR_Decay_DiracIC(LinearADR_Decay_DiracIC):
                  x0=numpy.array((0.0,0.0,0.0))):
         LinearADR_Decay_DiracIC.__init__(self,n,b,a,c,tStart,u0,x0)
         self.d_=d
-    
+
     def uOfXT(self,x,T):
         t = T + self.tStart
         u1=LinearAD_DiracIC.uOfXT(self,x,T)
@@ -503,10 +503,10 @@ class NonlinearADR_Decay_DiracIC(LinearADR_Decay_DiracIC):
             return u1*exp(-(2.0*self.c_*t*pow(u1,self.d_-1.0))/(self.d_+1.0))
         else:
             return u1
-    
+
     def rOfUXT(self,u,x,T):
         return self.c_*(u**self.d_)
-    
+
     def drOfUXT(self,u,x,T):
         return self.d_*self.c_*(u**(self.d_-1))
 
@@ -643,7 +643,7 @@ class Buckley_Leverett_RiemannSoln(AS_base):
         return self.uOfXT(x,self.T)
     def generateAplot(self,xLeft,xRight,nnx,t,filename='Buckley_Leverett_ex.dat'):
         """
-        save exact solution to a file 
+        save exact solution to a file
         """
         dx = (xRight-xLeft)/(nnx-1.)
         fout = open(filename,'w')
@@ -941,7 +941,7 @@ if __name__ == '__main__':
 #                         [sol.diffusiveFluxOfX(x)[0] for x in X],
 #                         title='Diffusive Flux'))
 #     #raw_input('Please press return to continue... \n')
-    
+
 #     g.plot(Gnuplot.Data(Xx,
 #                         [sol.totalFluxOfX(x)[0] for x in X],
 #                         title='Total Flux'))
@@ -1159,7 +1159,7 @@ if __name__ == '__main__':
 #     #     upy[i]=pySol.uOfX(x[i,:])
 #     # gnuplot.plot(Gnuplot.Data(x[:,0],
 #     #                           upy,
-#     #                           
+#     #
 #     #                           title='NonlinearDAE'))
 #     # #raw_input('Please press return to continue... \n')
 #     # #---------------------------------------------------------------
@@ -1192,7 +1192,7 @@ if __name__ == '__main__':
 #     gnuplot.splot(Gnuplot.GridData(u[:,:,slice,0],
 #                                    x[:,0,slice,0],
 #                                    x[0,:,slice,1],
-                                   
+
 #                                    title='NonlinearDAE_f'))
 #     #raw_input('Please press return to continue... \n')
 #     # #---------------------------------------------------------------
@@ -1271,7 +1271,7 @@ if __name__ == '__main__':
 #     gnuplot.splot(Gnuplot.GridData(u,
 #                                    x[:,0,0],
 #                                    x[0,:,1],
-                                   
+
 #                                    title='LinearADR_Sine'))
 #     #raw_input('Please press return to continue... \n')
 #     # #---------------------------------------------------------------
@@ -1303,7 +1303,7 @@ if __name__ == '__main__':
 #     gnuplot.splot(Gnuplot.GridData(u[:,:,0,0],
 #                                    x[:,0,0,0],
 #                                    x[0,:,0,1],
-                                   
+
 #                                    title='LinearADR_Sine_du: Gradient'))
 #     #raw_input('Please press return to continue... \n')
 #     # #-----------------------------------------------------------------
@@ -1347,7 +1347,7 @@ if __name__ == '__main__':
 #     gnuplot.splot(Gnuplot.GridData(u[:,:,0,0],
 #                                    x[:,0,0,0],
 #                                    x[0,:,0,1],
-                                   
+
 #                                    title='LinearADR_Sine_AvectiveVelocity'))
 #     #raw_input('Please press return to continue... \n')
 #     # #---------------------------------------------------------------
@@ -1391,7 +1391,7 @@ if __name__ == '__main__':
 #     gnuplot.splot(Gnuplot.GridData(u[:,:,0,0],
 #                                    x[:,0,0,0],
 #                                    x[0,:,0,1],
-                                   
+
 #                                    title='LinearADR_Sine_DiffusiveVelocity'))
 #     #raw_input('Please press return to continue... \n')
 #     # #---------------------------------------------------------------
@@ -1435,7 +1435,7 @@ if __name__ == '__main__':
 #     gnuplot.splot(Gnuplot.GridData(u[:,:,0,0],
 #                                    x[:,0,0,0],
 #                                    x[0,:,0,1],
-                              
+
 #                               title='LinearADR_Sine_TotalVelocity'))
 #     #raw_input('Please press return to continue... \n')
 #     # #---------------------------------------------------------------
@@ -1480,7 +1480,7 @@ if __name__ == '__main__':
 # #     gnuplot.splot(Gnuplot.GridData(u[:,:],
 # #                                    x[:,0,0],
 # #                                    x[0,:,1],
-# #                                    
+# #
 # #                                    title='LinearADR_Sine_r: reaction'))
 # #     #raw_input('Please press return to continue... \n')
 #     # #---------------LinearADR_SINE_r-3D-----------------------------
@@ -1514,7 +1514,7 @@ if __name__ == '__main__':
 # #     gnuplot.clear()
 # #     gnuplot.plot(Gnuplot.Data(x[:,0],
 # #                               u,
-# #                               
+# #
 # #                               title='LinearADR_Sine_dr'))
 # #     #raw_input('Please press return to continue... \n')
 #     # #---------------------------------------------------------------
@@ -1532,7 +1532,7 @@ if __name__ == '__main__':
 #     gnuplot.clear()
 #     gnuplot.plot(Gnuplot.Data(x[:,0],
 #                               u,
-                              
+
 #                               title='poissonsEquationExp1D'))
 #     #raw_input('Please press return to continue... \n')
 #     # #---------------------------------------------------------------
@@ -1570,10 +1570,10 @@ if __name__ == '__main__':
 #     x = numpy.zeros((nPoints_x,nPoints_y,nPoints_z,3),'d')
 #     for i in range(nPoints_x):
 #         for j in range(nPoints_y):
-#     		for k in range(nPoints_z):
-#     			x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
-#     			x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
-#     			x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
+#               for k in range(nPoints_z):
+#                       x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
+#                       x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
+#                       x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
 #     u = numpy.zeros(x.shape[:-1],'d')
 #     canalyticalSolutions.poissonsEquationExp3D(iwork,rwork,t,x,u)
 #     gnuplot.clear()
@@ -1621,7 +1621,7 @@ if __name__ == '__main__':
 # #     gnuplot.clear()
 # #     gnuplot.plot(Gnuplot.Data(x[:,0],
 # #                               u,
-# #                               
+# #
 # #                               title='poissonsEquationExp1D_r'))
 # #     #raw_input('Please press return to continue... \n')
 # #     # # #---------------------------------------------------------------
@@ -1659,10 +1659,10 @@ if __name__ == '__main__':
 # #     x = numpy.zeros((nPoints_x,nPoints_y,nPoints_z,3),'d')
 # #     for i in range(nPoints_x):
 # #         for j in range(nPoints_y):
-# #     		for k in range(nPoints_z):
-# #     			x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
-# #     			x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
-# #     			x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
+# #                     for k in range(nPoints_z):
+# #                             x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
+# #                             x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
+# #                             x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
 # #     u = numpy.zeros(x.shape[:-1],'d')
 # #     canalyticalSolutions.poissonsEquationExp3D_r(iwork,rwork,t,x,u)
 # #     gnuplot.clear()
@@ -1732,8 +1732,8 @@ if __name__ == '__main__':
 #     x = numpy.zeros((nPoints_x,nPoints_y,3),'d')
 #     for i in range(nPoints_x):
 #         for j in range(nPoints_y):
-#     			x[i,j,0] = i*(1.0/(nPoints_x-1.0))
-#     			x[i,j,1] = j*(1.0/(nPoints_y-1.0))
+#                       x[i,j,0] = i*(1.0/(nPoints_x-1.0))
+#                       x[i,j,1] = j*(1.0/(nPoints_y-1.0))
 #     u = numpy.zeros(x.shape[:-1],'d')
 #     gnuplot.clear()
 #     gnuplot('set parametric')
@@ -1747,7 +1747,7 @@ if __name__ == '__main__':
 #         gnuplot.splot(Gnuplot.GridData(u,
 #                                        x[:,0,0],
 #                                        x[0,:,1],
-                                       
+
 #                                        title='LinearAD_DiracIC'))
 #         #raw_input('Please press return to continue... \n')
 #     #---------------------------------------------------------------
@@ -1770,10 +1770,10 @@ if __name__ == '__main__':
 #     x = numpy.zeros((nPoints_x,nPoints_y,nPoints_z,3),'d')
 #     for i in range(nPoints_x):
 #         for j in range(nPoints_y):
-#     		for k in range(nPoints_z):
-#     			x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
-#     			x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
-#     			x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
+#               for k in range(nPoints_z):
+#                       x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
+#                       x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
+#                       x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
 #     u = numpy.zeros((nPoints_x,nPoints_y,nPoints_z,3),'d')
 #     tt =[0.25, 0.75]
 #     gnuplot.clear()
@@ -1782,12 +1782,12 @@ if __name__ == '__main__':
 #     gnuplot('set hidden')
 #     gnuplot('set contour base')
 #     for t in tt:
-#         logEvent("time t = "+`t`)   
+#         logEvent("time t = "+`t`)
 #         canalyticalSolutions.LinearAD_DiracIC_du(iwork,rwork,t,x,u)
 #         gnuplot.splot(Gnuplot.GridData(u[:,:,0,0],
 #                                        x[:,0,0,0],
 #                                        x[0,:,0,1],
-                                       
+
 #                                        title='LinearAD_DiracIC_du: Gradient'))
 #         #raw_input('Please press return to continue... \n')
 #     # #---------------------------------------------------------------
@@ -1810,10 +1810,10 @@ if __name__ == '__main__':
 #     x = numpy.zeros((nPoints_x,nPoints_y,nPoints_z,3),'d')
 #     for i in range(nPoints_x):
 #         for j in range(nPoints_y):
-#     		for k in range(nPoints_z):
-#     			x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
-#     			x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
-#     			x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
+#               for k in range(nPoints_z):
+#                       x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
+#                       x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
+#                       x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
 #     u = numpy.zeros((nPoints_x,nPoints_y,nPoints_z,3),'d')
 #     tt =[0.25, 0.75]
 #     gnuplot.clear()
@@ -1827,7 +1827,7 @@ if __name__ == '__main__':
 #         gnuplot.splot(Gnuplot.GridData(u[:,:,0,0],
 #                                        x[:,0,0,0],
 #                                        x[0,:,0,1],
-                                       
+
 #                                        title='LinearAD_DiracIC_AdvectiveVelocity'))
 #         #raw_input('Please press return to continue... \n')
 #     # # #---------------------------------------------------------------
@@ -1850,10 +1850,10 @@ if __name__ == '__main__':
 #     x = numpy.zeros((nPoints_x,nPoints_y,nPoints_z,3),'d')
 #     for i in range(nPoints_x):
 #         for j in range(nPoints_y):
-#     		for k in range(nPoints_z):
-#     			x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
-#     			x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
-#     			x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
+#               for k in range(nPoints_z):
+#                       x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
+#                       x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
+#                       x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
 #     u = numpy.zeros((nPoints_x,nPoints_y,nPoints_z,3),'d')
 #     tt =[0.25, 0.75]
 #     gnuplot.clear()
@@ -1867,7 +1867,7 @@ if __name__ == '__main__':
 #         gnuplot.splot(Gnuplot.GridData(u[:,:,0,0],
 #                                        x[:,0,0,0],
 #                                        x[0,:,0,1],
-                                       
+
 #                                        title='LinearAD_DiracIC_DiffusiveVelocity'))
 #         #raw_input('Please press return to continue... \n')
 #     # # #---------------------------------------------------------------
@@ -1890,10 +1890,10 @@ if __name__ == '__main__':
 #     x = numpy.zeros((nPoints_x,nPoints_y,nPoints_z,3),'d')
 #     for i in range(nPoints_x):
 #         for j in range(nPoints_y):
-#     		for k in range(nPoints_z):
-#     			x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
-#     			x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
-#     			x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
+#               for k in range(nPoints_z):
+#                       x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
+#                       x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
+#                       x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
 #     u = numpy.zeros((nPoints_x,nPoints_y,nPoints_z,3),'d')
 #     tt =[0.25, 0.75]
 #     gnuplot.clear()
@@ -1907,7 +1907,7 @@ if __name__ == '__main__':
 #         gnuplot.splot(Gnuplot.GridData(u[:,:,0,0],
 #                                        x[:,0,0,0],
 #                                        x[0,:,0,1],
-                                       
+
 #                                        title='LinearAD_DiracIC_TotalVelocity'))
 #         #raw_input('Please press return to continue... \n')
 #     # #---------------------------------------------------------------
@@ -1930,8 +1930,8 @@ if __name__ == '__main__':
 #     x = numpy.zeros((nPoints_x,nPoints_y,3),'d')
 #     for i in range(nPoints_x):
 #         for j in range(nPoints_y):
-#     			x[i,j,0] = i*(1.0/(nPoints_x-1.0))
-#     			x[i,j,1] = j*(1.0/(nPoints_y-1.0))
+#                       x[i,j,0] = i*(1.0/(nPoints_x-1.0))
+#                       x[i,j,1] = j*(1.0/(nPoints_y-1.0))
 #     u = numpy.zeros(x.shape[:-1],'d')
 #     gnuplot.clear()
 #     gnuplot('set parametric')
@@ -1945,7 +1945,7 @@ if __name__ == '__main__':
 #         gnuplot.splot(Gnuplot.GridData(u,
 #                                        x[:,0,0],
 #                                        x[0,:,1],
-                                       
+
 #                                        title='LinearADR_Decay_DiracIC'))
 #         #raw_input('Please press return to continue... \n')
 #     # #---------------------------------------------------------------
@@ -1967,8 +1967,8 @@ if __name__ == '__main__':
 # #     x = numpy.zeros((nPoints_x,nPoints_y,3),'d')
 # #     for i in range(nPoints_x):
 # #         for j in range(nPoints_y):
-# #     			x[i,j,0] = i*(1.0/(nPoints_x-1.0))
-# #     			x[i,j,1] = j*(1.0/(nPoints_y-1.0))
+# #                             x[i,j,0] = i*(1.0/(nPoints_x-1.0))
+# #                             x[i,j,1] = j*(1.0/(nPoints_y-1.0))
 # #     u = numpy.zeros(x.shape[:-1],'d')
 # #     gnuplot.clear()
 # #     gnuplot('set parametric')
@@ -1982,7 +1982,7 @@ if __name__ == '__main__':
 # #         gnuplot.splot(Gnuplot.GridData(u,
 # #                                        x[:,0,0],
 # #                                        x[0,:,1],
-# #                                        
+# #
 # #                                        title='LinearADR_Decay_DiracIC_r'))
 # #         #raw_input('Please press return to continue... \n')
 # #     # ---------------------------------------------------------------
@@ -2017,7 +2017,7 @@ if __name__ == '__main__':
 # #     gnuplot.splot(Gnuplot.GridData(u,
 # #                                    x[:,0,0],
 # #                                    x[0,:,1],
-# #                                    
+# #
 # #                                    title='LinearADR_Decay_DiracIC_dr'))
 #     #raw_input('Please press return to continue... \n')
 #     # ---------------------------------------------------------------
@@ -2042,8 +2042,8 @@ if __name__ == '__main__':
 #     x = numpy.zeros((nPoints_x,nPoints_y,3),'d')
 #     for i in range(nPoints_x):
 #         for j in range(nPoints_y):
-#     			x[i,j,0] = i*(1.0/(nPoints_x-1.0))
-#     			x[i,j,1] = j*(1.0/(nPoints_y-1.0))
+#                       x[i,j,0] = i*(1.0/(nPoints_x-1.0))
+#                       x[i,j,1] = j*(1.0/(nPoints_y-1.0))
 #     u = numpy.zeros(x.shape[:-1],'d')
 #     gnuplot.clear()
 #     gnuplot('set parametric')
@@ -2057,7 +2057,7 @@ if __name__ == '__main__':
 #         gnuplot.splot(Gnuplot.GridData(u,
 #                                        x[:,0,0],
 #                                        x[0,:,1],
-                                       
+
 #                                        title='NonlinearADR_Decay_DiracIC'))
 #         #raw_input('Please press return to continue... \n')
 #     # ---------------------------------------------------------------
@@ -2095,7 +2095,7 @@ if __name__ == '__main__':
 # #         gnuplot.splot(Gnuplot.GridData(u[:,:],
 # #                                        x[:,0,0],
 # #                                        x[0,:,1],
-# #                                        
+# #
 # #                                        title='NonlinearADR_Decay_DiracIC_r'))
 #         #raw_input('Please press return to continue... \n')
 #     # ---------------------------------------------------------------
@@ -2135,7 +2135,7 @@ if __name__ == '__main__':
 # #         gnuplot.splot(Gnuplot.GridData(u[:,:],
 # #                                        x[:,0,0],
 # #                                        x[0,:,1],
-# #                                        
+# #
 # #                                        title='NonlinearADR_Decay_DiracIC_dr'))
 #         #raw_input('Please press return to continue... \n')
 #     # ---------------------------------------------------------------
@@ -2153,7 +2153,7 @@ if __name__ == '__main__':
 #     gnuplot.clear()
 #     gnuplot.plot(Gnuplot.Data(x[:,0],
 #                               u,
-                              
+
 #                               title='diffusionSin1D'))
 #     #raw_input('Please press return to continue... \n')
 #     # ---------------------------------------------------------------
@@ -2196,10 +2196,10 @@ if __name__ == '__main__':
 #     x = numpy.zeros((nPoints_x,nPoints_y,nPoints_z,3),'d')
 #     for i in range(nPoints_x):
 #         for j in range(nPoints_y):
-#     		for k in range(nPoints_z):
-#     			x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
-#     			x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
-#     			x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
+#               for k in range(nPoints_z):
+#                       x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
+#                       x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
+#                       x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
 #     b=time.clock()
 #     print b- a
 #     a = time.clock()
@@ -2252,7 +2252,7 @@ if __name__ == '__main__':
 # #     gnuplot.clear()
 # #     gnuplot.plot(Gnuplot.Data(x[:,0],
 # #                               u,
-# #                               
+# #
 # #                               title='diffusionSin1D_r'))
 #     #raw_input('Please press return to continue... \n')
 #     # ---------------------------------------------------------------
@@ -2298,10 +2298,10 @@ if __name__ == '__main__':
 # #     x = numpy.zeros((nPoints_x,nPoints_y,nPoints_z,3),'d')
 # #     for i in range(nPoints_x):
 # #         for j in range(nPoints_y):
-# #     		for k in range(nPoints_z):
-# #     			x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
-# #     			x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
-# #     			x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
+# #                     for k in range(nPoints_z):
+# #                             x[i,j,k,0] = i*(1.0/(nPoints_x-1.0))
+# #                             x[i,j,k,1] = j*(1.0/(nPoints_y-1.0))
+# #                             x[i,j,k,2] = k*(1.0/(nPoints_z-1.0))
 # #     u = numpy.zeros(x.shape[:-1],'d')
 # #     canalyticalSolutions.diffusionSin3D_r(iwork,rwork,t,x,u)
 # #     gnuplot.clear()
@@ -2630,7 +2630,7 @@ if __name__ == '__main__':
 #     gnuplot.plot(Gnuplot.Data(numpy.reshape(x[:,:,slice,0],(nPoints_x*nPoints_y,)),
 #                               numpy.reshape(x[:,:,slice,1],(nPoints_x*nPoints_y,)),
 #                               numpy.reshape(ux[:,:,slice], (nPoints_x*nPoints_y,)),
-#                               numpy.reshape(uy[:,:,slice],(nPoints_x*nPoints_y,)), 
+#                               numpy.reshape(uy[:,:,slice],(nPoints_x*nPoints_y,)),
 #                               ))
 #     #raw_input('Please press return to continue... \n')
 #     # # ---------------------------------------------------------------

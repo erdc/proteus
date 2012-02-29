@@ -66,7 +66,7 @@ def proteusRun(runRoutines):
                       action="store",
                       type="int",
                       dest="logLevel",
-                      default=1)    
+                      default=1)
     parser.add_option("-v", "--verbose",
                       help="Print logging information to standard out",
                       action="callback",
@@ -105,7 +105,7 @@ def proteusRun(runRoutines):
         #mwf debug
         #print """now path= %s """ % sys.path
     #end if
-    
+
     if len(args) < 1:
         raise RuntimeError("No input file specified")
     if len(args) > 1:
@@ -178,12 +178,12 @@ def proteusRun(runRoutines):
         #end while
         #always pop the last block so have to have a start at the end
         batchBlocks.pop()
-        
+
         #mwf debug
         #print """end of batch read size batchBlocks= %d """ % len(batchBlocks)
         #for i,block in enumerate(batchBlocks):
         #    print """block[%d]= %s """ % (i,block)
-        
+
     #end batch
     running = True
 
@@ -196,7 +196,7 @@ def proteusRun(runRoutines):
             lines = '\n'.join(batchBlocks.pop(0))
             exec lines
             run     = True
-            running = len(batchBlocks) > 0        
+            running = len(batchBlocks) > 0
         else:
             userInput = False
             run = True
@@ -241,7 +241,7 @@ def proteusRun(runRoutines):
         if Viewers.viewerType == 'matlab':
             Viewers.viewerPipe.write("quit \n")
         #matlab
-        
+
 def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     Profiling.memory()
     memBase = Profiling.memLast
@@ -300,7 +300,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
                 else:
                     elementBoundaryQuadratureDict[I] = n.elementBoundaryQuadrature['default']
         else:
-            for I in p.coefficients.elementBoundaryIntegralKeys: 
+            for I in p.coefficients.elementBoundaryIntegralKeys:
                 elementBoundaryQuadratureDict[I] = n.elementBoundaryQuadrature
         elementQuadratureList.append(elementQuadratureDict)
         elementBoundaryQuadratureList.append(elementBoundaryQuadratureDict)
@@ -354,7 +354,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     for l in range(n.nLevels):
         print """proteusRun debug: mesh level=%d  nElements= %d nNodes=%d nFaces=%d diameter= %g """ % (l,
                                                                                       mlMesh.meshList[l].nElements_global,mlMesh.meshList[l].nNodes_global,mlMesh.meshList[l].nElementBoundaries_global,mlMesh.meshList[l].h)
-        
+
 
     Profiling.memory("mesh")
     Profiling.logEvent("Setting up MultilevelTransport",level=1)
@@ -471,7 +471,7 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
     for p in pList:
         tnList.append(tn)
     plotOffSet=0
-    
+
     #
     timeIntegratorList = []
     pNameM = pNameList[opts.masterModel]
@@ -611,6 +611,6 @@ def runProblems(pNameAll,pNameList,pList,nList,opts,simFlagsList=None):
         m.modelList[-1].u[0].femSpace.endTimeSeriesEnsight(timeValues,pNameM+'master',pNameM+'master')
     for p,n,m,tn,simOutput in zip(pList,nList,mList,tnList,simOutputList):
         simOutput.postprocess(p,n,m,tn)
-    
+
 if __name__ == '__main__':
-   proteusRun(runProblems)
+    proteusRun(runProblems)

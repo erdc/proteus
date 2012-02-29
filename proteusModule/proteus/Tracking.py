@@ -52,10 +52,10 @@ class Tracking_Base:
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         """
         raise NotImplementedError
@@ -73,16 +73,16 @@ class Tracking_Base:
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         """
         raise NotImplementedError
     def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
         """
-        load tracking velocity degrees of freedom for component at time and call it timeLevel 
+        load tracking velocity degrees of freedom for component at time and call it timeLevel
         """
         pass
 
@@ -128,10 +128,10 @@ class SteadyState_LinearAdvection_C0P1Velocity_AnalyticalTracking_1d(Tracking_Ba
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         """
         direction = 1.0
@@ -168,10 +168,10 @@ class SteadyState_LinearAdvection_C0P1Velocity_AnalyticalTracking_1d(Tracking_Ba
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         """
         direction = -1.0
@@ -194,10 +194,10 @@ class SteadyState_LinearAdvection_C0P1Velocity_AnalyticalTracking_1d(Tracking_Ba
                                                 element_track[ci],
                                                 x_track[ci],
                                                 flag_track[ci])
-                                                
+
     def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
         """
-        load tracking velocity degrees of freedom for component at time and call it timeLevel 
+        load tracking velocity degrees of freedom for component at time and call it timeLevel
         ignores time information right now since steady state
         """
         self.component_velocity_dofs[component] = trackingVelocity_dofs
@@ -220,7 +220,7 @@ class SteadyState_LinearAdvection_RT0Velocity_AnalyticalTracking_2d(Tracking_Bas
         Tracking_Base.__init__(self,mesh,nd,activeComponentList=activeComponentList,params=params)
         self.component_velocity_l2g=component_velocity_l2g
         self.component_velocity_dofs=component_velocity_dofs
-        
+
     def forwardTrack(self,
                      t_depart,           #point departure times
                      t_track,            #target end time
@@ -235,10 +235,10 @@ class SteadyState_LinearAdvection_RT0Velocity_AnalyticalTracking_2d(Tracking_Bas
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         """
         direction = 1.0
@@ -280,10 +280,10 @@ class SteadyState_LinearAdvection_RT0Velocity_AnalyticalTracking_2d(Tracking_Bas
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         """
         direction = -1.0
@@ -311,7 +311,7 @@ class SteadyState_LinearAdvection_RT0Velocity_AnalyticalTracking_2d(Tracking_Bas
                                                x_track[ci],
                                                flag_track[ci],
                                                0)
-                                                
+
     def updateTransportInformation(self,transport):
         """
         hack for now to allow tracking to grab information it needs from the transport
@@ -321,7 +321,7 @@ class SteadyState_LinearAdvection_RT0Velocity_AnalyticalTracking_2d(Tracking_Bas
         self.elementBoundaryOuterNormalsArray = transport.elementBoundaryOuterNormalsArray
     def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
         """
-        load tracking velocity degrees of freedom for component at time and call it timeLevel 
+        load tracking velocity degrees of freedom for component at time and call it timeLevel
         ignores time information right now since steady state
         """
         self.component_velocity_dofs[component] = trackingVelocity_dofs
@@ -334,7 +334,7 @@ class SteadyState_LinearAdvection_C0P1Velocity_PT123(Tracking_Base):
       using Pearce's PT123 code
     TODO
       setup input tracking flags to determine if a point is a node or not
- 
+
 
     """
     def __init__(self,mesh,nd,
@@ -347,7 +347,7 @@ class SteadyState_LinearAdvection_C0P1Velocity_PT123(Tracking_Base):
                          ('dn_safe_tracking',0):1.0e-7,#tolerance for traking in-element tests
                          ('dt_init',0):0.001, #initial time step estimate if using constant value
                          ('dt_init_flag',0):1, #how to pick initial time step (0 --> const, 1 --> CFL=1)
-                         ('rk_flag',0):45}):#RK type 
+                         ('rk_flag',0):45}):#RK type
         Tracking_Base.__init__(self,mesh,nd,activeComponentList=activeComponentList,params=params)
         #build lookup array for indicating which nodes are on the boundary
         self.nodeOnBoundaryArray = numpy.zeros((self.mesh.nNodes_global,),'i')
@@ -373,7 +373,7 @@ class SteadyState_LinearAdvection_C0P1Velocity_PT123(Tracking_Base):
                 for I in range(self.nd):
                     self.component_velocity_l2g[ci][:,:,I]=component_velocity_l2g[ci]*self.nd + I
 
-                    
+
     def forwardTrack(self,
                      t_depart,           #point departure times
                      t_track,            #target end time
@@ -388,13 +388,13 @@ class SteadyState_LinearAdvection_C0P1Velocity_PT123(Tracking_Base):
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         """
-        direction = 1; output_id=6; 
+        direction = 1; output_id=6;
         for ci in self.activeComponentList:
             #
             maxeq = 3;
@@ -409,7 +409,7 @@ class SteadyState_LinearAdvection_C0P1Velocity_PT123(Tracking_Base):
             #mwf debug
             #import pdb
             #pdb.set_trace()
-            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the
             #c data structures here and then convert back to base zero after call
             fbase = 1
             self.mesh.elementNodesArray += fbase
@@ -472,14 +472,14 @@ class SteadyState_LinearAdvection_C0P1Velocity_PT123(Tracking_Base):
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         no need to set direction = -1 if time values are decreasing
         """
-        direction = 1; output_id=6; 
+        direction = 1; output_id=6;
         for ci in self.activeComponentList:
             maxeq = 3
             #mwf debug
@@ -493,7 +493,7 @@ class SteadyState_LinearAdvection_C0P1Velocity_PT123(Tracking_Base):
             t_velocity_1 = t_track[ci].min()
             #assert abs(t_velocity_1-t_velocity_0) > 0.0, "pt123 requires velocity tracking times different"
 
-            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the
             #c data structures here and then convert back to base zero after call
             fbase = 1
             self.mesh.elementNodesArray += fbase
@@ -543,7 +543,7 @@ class SteadyState_LinearAdvection_C0P1Velocity_PT123(Tracking_Base):
 
     def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
         """
-        load tracking velocity degrees of freedom for component at time and call it timeLevel 
+        load tracking velocity degrees of freedom for component at time and call it timeLevel
         ignores time information right now since steady state
         """
         self.component_velocity_dofs[component] = trackingVelocity_dofs
@@ -552,12 +552,12 @@ class SteadyState_LinearAdvection_C0P1Velocity_PT123(Tracking_Base):
             if trackingVelocity_l2g.shape[-1] == self.mesh.nNodes_element:
                     #standard C0P1 FemSpace uses a l2g that's consistent with a scalar value and assumes extra dofs
                     #are just tacked on
-                    self.component_velocity_l2g[component] = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'i')
-                    for I in range(self.nd):
-                        self.component_velocity_l2g[component][:,:,I]=trackingVelocity_l2g*self.nd + I
+                self.component_velocity_l2g[component] = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'i')
+                for I in range(self.nd):
+                    self.component_velocity_l2g[component][:,:,I]=trackingVelocity_l2g*self.nd + I
             else:
                 assert ((len(trackingVelocity_l2g.shape) == 2 and trackingVelocity_l2g.shape[-1] == nVDOF_element) or
-                        (len(trackingVelocity_l2g.shape) == 3 and trackingVelocity_l2g.shape[-1] == self.nd)) 
+                        (len(trackingVelocity_l2g.shape) == 3 and trackingVelocity_l2g.shape[-1] == self.nd))
                 self.component_velocity_l2g[component] = trackingVelocity_l2g
 
 class SteadyState_LinearAdvection_BDM1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocity_PT123):
@@ -601,10 +601,10 @@ class SteadyState_LinearAdvection_BDM1Velocity_PT123(SteadyState_LinearAdvection
 class SteadyState_LinearAdvection_RT0Velocity_PT123(Tracking_Base):
     """
     element by element tracking for a steady continuous, RT0 velocity field
-      on simplices using Pearce's PT123 code 
+      on simplices using Pearce's PT123 code
     TODO
       setup input tracking flags to determine if a point is a node or not
- 
+
 
     """
     def __init__(self,mesh,nd,
@@ -631,7 +631,7 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123(Tracking_Base):
         #are just tacked on
         self.component_velocity_dofs=component_velocity_dofs
         self.component_velocity_l2g = component_velocity_l2g
-                    
+
     def forwardTrack(self,
                      t_depart,           #point departure times
                      t_track,            #target end time
@@ -646,13 +646,13 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123(Tracking_Base):
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         """
-        direction = 1; output_id=6; 
+        direction = 1; output_id=6;
         for ci in self.activeComponentList:
             #
             maxeq = 3;
@@ -667,7 +667,7 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123(Tracking_Base):
             t_velocity_0 = t_depart[ci].min()
             t_velocity_1 = t_track[ci].max()
             #assert abs(t_velocity_1-t_velocity_0) > 0.0, "pt123 requires velocity tracking times different"
-            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the
             #c data structures here and then convert back to base zero after call
             fbase = 1
             self.mesh.elementNodesArray += fbase
@@ -710,7 +710,7 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123(Tracking_Base):
                             idve=idve,
                             maxeq=3,
                             iverbose=0)
-            
+
             self.mesh.elementNodesArray -= fbase
             self.mesh.nodeElementsArray -= fbase
             self.component_velocity_l2g[ci] -= fbase
@@ -730,14 +730,14 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123(Tracking_Base):
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         no need to set direction = -1 if time values are decreasing
         """
-        direction = 1; output_id=6; 
+        direction = 1; output_id=6;
         for ci in self.activeComponentList:
             maxeq = 3
             #mwf debug
@@ -754,7 +754,7 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123(Tracking_Base):
             t_velocity_0 = t_depart[ci].max()
             t_velocity_1 = t_track[ci].min()
 
-            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the
             #c data structures here and then convert back to base zero after call
             fbase = 1
             self.mesh.elementNodesArray += fbase
@@ -804,7 +804,7 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123(Tracking_Base):
 
     def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
         """
-        load tracking velocity degrees of freedom for component at time and call it timeLevel 
+        load tracking velocity degrees of freedom for component at time and call it timeLevel
         ignores time information right now since steady state
         """
         self.component_velocity_dofs[component] = trackingVelocity_dofs
@@ -814,10 +814,10 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123(Tracking_Base):
 class SteadyState_LinearAdvection_RT0Velocity_PT123A(Tracking_Base):
     """
     element by element tracking for a steady continuous, RT0 velocity field
-      on simplices using Pearce's PT123 code 
+      on simplices using Pearce's PT123 code
     TODO
       setup input tracking flags to determine if a point is a node or not
- 
+
 
     """
     def __init__(self,mesh,nd,
@@ -844,7 +844,7 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123A(Tracking_Base):
         #are just tacked on
         self.component_velocity_dofs=component_velocity_dofs
         self.component_velocity_l2g = component_velocity_l2g
-                    
+
     def forwardTrack(self,
                      t_depart,           #point departure times
                      t_track,            #target end time
@@ -859,13 +859,13 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123A(Tracking_Base):
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         """
-        direction = 1; output_id=6; 
+        direction = 1; output_id=6;
         for ci in self.activeComponentList:
             #
             maxeq = 3;
@@ -880,7 +880,7 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123A(Tracking_Base):
             t_velocity_0 = t_depart[ci].min()
             t_velocity_1 = t_track[ci].max()
             #assert abs(t_velocity_1-t_velocity_0) > 0.0, "pt123 requires velocity tracking times different"
-            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the
             #c data structures here and then convert back to base zero after call
             fbase = 1
             self.mesh.elementNodesArray += fbase
@@ -924,7 +924,7 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123A(Tracking_Base):
                              idve=idve,
                              maxeq=3,
                              iverbose=0)
-            
+
             self.mesh.elementNodesArray -= fbase
             self.mesh.nodeElementsArray -= fbase
             self.component_velocity_l2g[ci] -= fbase
@@ -944,14 +944,14 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123A(Tracking_Base):
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         no need to set direction = -1 if time values are decreasing
         """
-        direction = 1; output_id=6; 
+        direction = 1; output_id=6;
         for ci in self.activeComponentList:
             maxeq = 3
             #mwf debug
@@ -967,8 +967,8 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123A(Tracking_Base):
             #this is supposed to be for steady-state problems so time levels in velocity field shouldn't matter
             t_velocity_0 = t_depart[ci].max()
             t_velocity_1 = t_track[ci].min()
-            
-            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the
             #c data structures here and then convert back to base zero after call
             fbase = 1
             self.mesh.elementNodesArray += fbase
@@ -1020,7 +1020,7 @@ class SteadyState_LinearAdvection_RT0Velocity_PT123A(Tracking_Base):
 
     def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
         """
-        load tracking velocity degrees of freedom for component at time and call it timeLevel 
+        load tracking velocity degrees of freedom for component at time and call it timeLevel
         ignores time information right now since steady state
         """
         self.component_velocity_dofs[component] = trackingVelocity_dofs
@@ -1046,12 +1046,12 @@ class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocit
       using Pearce's PT123 code
     Note that the velocity and times dictionaries are shallow copies
     TODO
-    
+
     """
     def __init__(self,mesh,nd,
                  component_velocity_l2g={0:None}, #dictionary of component velocity l2g mappings
                  component_velocity_dofs_0={0:None}, #dictionary of component velocity dofs at time level 1
-                 component_velocity_dofs_1={0:None}, 
+                 component_velocity_dofs_1={0:None},
                  component_velocity_times_0={0:None},#time levels for velocities
                  component_velocity_times_1={0:None},
                  activeComponentList=[0],
@@ -1087,13 +1087,13 @@ class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocit
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         """
-        direction = 1; output_id=6; 
+        direction = 1; output_id=6;
         for ci in self.activeComponentList:
             #
             maxeq = 3;
@@ -1106,7 +1106,7 @@ class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocit
             #mwf debug
             #import pdb
             #pdb.set_trace()
-            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the
             #c data structures here and then convert back to base zero after call
             fbase = 1
             self.mesh.elementNodesArray += fbase
@@ -1169,14 +1169,14 @@ class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocit
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         no need to set direction = -1 if time values are decreasing
         """
-        direction = 1; output_id=6; 
+        direction = 1; output_id=6;
         for ci in self.activeComponentList:
             maxeq = 3
             #mwf debug
@@ -1189,7 +1189,7 @@ class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocit
             t_velocity_1 = self.component_velocity_times_1[ci]
             #assert abs(t_velocity_1-t_velocity_0) > 0.0, "pt123 requires velocity tracking times different"
 
-            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the
             #c data structures here and then convert back to base zero after call
             fbase = 1
             self.mesh.elementNodesArray += fbase
@@ -1238,20 +1238,20 @@ class LinearAdvection_C0P1Velocity_PT123(SteadyState_LinearAdvection_C0P1Velocit
             flag_track[ci]    -= fbase
     def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
         """
-        load tracking velocity degrees of freedom for component at time and call it timeLevel 
-        
+        load tracking velocity degrees of freedom for component at time and call it timeLevel
+
         """
         if trackingVelocity_l2g != None:
             nVDOF_element=self.nd*self.mesh.nNodes_element
             if trackingVelocity_l2g.shape[-1] == self.mesh.nNodes_element:
-                    #standard C0P1 FemSpace uses a l2g that's consistent with a scalar value and assumes extra dofs
-                    #are just tacked on
-                    self.component_velocity_l2g[component] = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'i')
-                    for I in range(self.nd):
-                        self.component_velocity_l2g[component][:,:,I]=trackingVelocity_l2g*self.nd + I
+                #standard C0P1 FemSpace uses a l2g that's consistent with a scalar value and assumes extra dofs
+                #are just tacked on
+                self.component_velocity_l2g[component] = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'i')
+                for I in range(self.nd):
+                    self.component_velocity_l2g[component][:,:,I]=trackingVelocity_l2g*self.nd + I
             else:
                 assert ((len(trackingVelocity_l2g.shape) == 2 and trackingVelocity_l2g.shape[-1] == nVDOF_element) or
-                        (len(trackingVelocity_l2g.shape) == 3 and trackingVelocity_l2g.shape[-1] == self.nd)) 
+                        (len(trackingVelocity_l2g.shape) == 3 and trackingVelocity_l2g.shape[-1] == self.nd))
                 self.component_velocity_l2g[component] = trackingVelocity_l2g
 
         if timeLevel == 1:
@@ -1274,7 +1274,7 @@ class LinearAdvection_BDM1Velocity_PT123(LinearAdvection_C0P1Velocity_PT123):
     def __init__(self,mesh,nd,
                  component_velocity_l2g={0:None}, #dictionary of component velocity l2g mappings
                  component_velocity_dofs_0={0:None}, #dictionary of component velocity dofs at time level 1
-                 component_velocity_dofs_1={0:None}, 
+                 component_velocity_dofs_1={0:None},
                  component_velocity_times_0={0:None},#time levels for velocities
                  component_velocity_times_1={0:None},
                  activeComponentList=[0],
@@ -1284,7 +1284,7 @@ class LinearAdvection_BDM1Velocity_PT123(LinearAdvection_C0P1Velocity_PT123):
                          ('dn_safe_tracking',0):1.0e-7,#tolerance for traking in-element tests
                          ('dt_init',0):0.001, #initial time step estimate if using constant value
                          ('dt_init_flag',0):1, #how to pick initial time step (0 --> const, 1 --> CFL=1)
-                         ('rk_flag',0):45}):#RK type 
+                         ('rk_flag',0):45}):#RK type
         Tracking_Base.__init__(self,mesh,nd,activeComponentList=activeComponentList,params=params)
         #build lookup array for indicating which nodes are on the boundary
         self.nodeOnBoundaryArray = numpy.zeros((self.mesh.nNodes_global,),'i')
@@ -1308,12 +1308,12 @@ class LinearAdvection_RT0Velocity_PT123(SteadyState_LinearAdvection_RT0Velocity_
       using Pearce's PT123 code
     Note that the velocity and times dictionaries are shallow copies
     TODO
-    
+
     """
     def __init__(self,mesh,nd,
                  component_velocity_l2g={0:None}, #dictionary of component velocity l2g mappings
                  component_velocity_dofs_0={0:None}, #dictionary of component velocity dofs at time level 1
-                 component_velocity_dofs_1={0:None}, 
+                 component_velocity_dofs_1={0:None},
                  component_velocity_times_0={0:None},#time levels for velocities
                  component_velocity_times_1={0:None},
                  activeComponentList=[0],
@@ -1350,13 +1350,13 @@ class LinearAdvection_RT0Velocity_PT123(SteadyState_LinearAdvection_RT0Velocity_
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         """
-        direction = 1; output_id=6; 
+        direction = 1; output_id=6;
         for ci in self.activeComponentList:
             #
             maxeq = 3;
@@ -1371,7 +1371,7 @@ class LinearAdvection_RT0Velocity_PT123(SteadyState_LinearAdvection_RT0Velocity_
             #mwf debug
             #import pdb
             #pdb.set_trace()
-            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the
             #c data structures here and then convert back to base zero after call
             fbase = 1
             self.mesh.elementNodesArray += fbase
@@ -1434,14 +1434,14 @@ class LinearAdvection_RT0Velocity_PT123(SteadyState_LinearAdvection_RT0Velocity_
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         no need to set direction = -1 if time values are decreasing
         """
-        direction = 1; output_id=6; 
+        direction = 1; output_id=6;
         for ci in self.activeComponentList:
             maxeq = 3
             #mwf debug
@@ -1457,7 +1457,7 @@ class LinearAdvection_RT0Velocity_PT123(SteadyState_LinearAdvection_RT0Velocity_
             t_velocity_0 = self.component_velocity_times_0[ci]
             t_velocity_1 = self.component_velocity_times_1[ci]
 
-            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the
             #c data structures here and then convert back to base zero after call
             fbase = 1
             self.mesh.elementNodesArray += fbase
@@ -1506,8 +1506,8 @@ class LinearAdvection_RT0Velocity_PT123(SteadyState_LinearAdvection_RT0Velocity_
             flag_track[ci]    -= fbase
     def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
         """
-        load tracking velocity degrees of freedom for component at time and call it timeLevel 
-        
+        load tracking velocity degrees of freedom for component at time and call it timeLevel
+
         """
         if trackingVelocity_l2g != None:
             self.component_velocity_l2g[component]    = trackingVelocity_l2g
@@ -1523,18 +1523,18 @@ class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity
     """
     analytical element by element tracking for a RT0 velocity field (on simplices)
       V = V_0 + v_x (X-X_0) + V_t (t-t_0) + v_xt (X-X_0)(t-t_0)
-      
+
     using Pearce's PT123A framework and Russell, Healy 00 approach (sort of)
     idvt = 1 --> v_xt = 0
-    
+
     Note that the velocity and times dictionaries are shallow copies
     TODO
-    
+
     """
     def __init__(self,mesh,nd,
                  component_velocity_l2g={0:None}, #dictionary of component velocity l2g mappings
                  component_velocity_dofs_0={0:None}, #dictionary of component velocity dofs at time level 1
-                 component_velocity_dofs_1={0:None}, 
+                 component_velocity_dofs_1={0:None},
                  component_velocity_times_0={0:None},#time levels for velocities
                  component_velocity_times_1={0:None},
                  activeComponentList=[0],
@@ -1569,13 +1569,13 @@ class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         """
-        direction = 1; output_id=6; 
+        direction = 1; output_id=6;
         for ci in self.activeComponentList:
             #
             maxeq = 3;
@@ -1589,13 +1589,13 @@ class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity
             #what type of temporal variation is assumed, 0 -- steady state, 1 -- linear in x-t, 2 -- bilinear in x-t
             assert self.params[('temporalVariationFlag',ci)] in [0,1,2], "self.params[('temporalVariationFlag',ci)]= %s must be in [0,1,2] " % (self.params[('temporalVariationFlag',ci)])
             idvt = self.params[('temporalVariationFlag',ci)]
-            
+
             t_velocity_0 = self.component_velocity_times_0[ci]
             t_velocity_1 = self.component_velocity_times_1[ci]
             #mwf debug
             #import pdb
             #pdb.set_trace()
-            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the
             #c data structures here and then convert back to base zero after call
             fbase = 1
             self.mesh.elementNodesArray += fbase
@@ -1658,14 +1658,14 @@ class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         no need to set direction = -1 if time values are decreasing
         """
-        direction = 1; output_id=6; 
+        direction = 1; output_id=6;
         for ci in self.activeComponentList:
             maxeq = 3
             #mwf debug
@@ -1684,7 +1684,7 @@ class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity
             t_velocity_0 = self.component_velocity_times_0[ci]
             t_velocity_1 = self.component_velocity_times_1[ci]
 
-            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the
             #c data structures here and then convert back to base zero after call
             fbase = 1
             self.mesh.elementNodesArray += fbase
@@ -1733,8 +1733,8 @@ class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity
             flag_track[ci]    -= fbase
     def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
         """
-        load tracking velocity degrees of freedom for component at time and call it timeLevel 
-        
+        load tracking velocity degrees of freedom for component at time and call it timeLevel
+
         """
         if trackingVelocity_l2g != None:
             self.component_velocity_l2g[component]    = trackingVelocity_l2g
@@ -1749,17 +1749,17 @@ class LinearAdvection_RT0Velocity_PT123A(SteadyState_LinearAdvection_RT0Velocity
 class LinearAdvection_C0P1Velocity_PT123A(SteadyState_LinearAdvection_C0P1Velocity_PT123):
     """
     analytical element by element tracking for a velocity field (on simplices)
-     V = V_0 + v_x (X-X_0) + V_t (t-t_0) 
+     V = V_0 + v_x (X-X_0) + V_t (t-t_0)
       using Pearce's PT123A framework and Russell, Healy 00 approach (sort of)
-    Apply this to a C0P1 velocity field and allow some error 
+    Apply this to a C0P1 velocity field and allow some error
     Note that the velocity and times dictionaries are shallow copies
     TODO
-    
+
     """
     def __init__(self,mesh,nd,
                  component_velocity_l2g={0:None}, #dictionary of component velocity l2g mappings
                  component_velocity_dofs_0={0:None}, #dictionary of component velocity dofs at time level 1
-                 component_velocity_dofs_1={0:None}, 
+                 component_velocity_dofs_1={0:None},
                  component_velocity_times_0={0:None},#time levels for velocities
                  component_velocity_times_1={0:None},
                  activeComponentList=[0],
@@ -1777,7 +1777,7 @@ class LinearAdvection_C0P1Velocity_PT123A(SteadyState_LinearAdvection_C0P1Veloci
         #
         self.component_velocity_dofs_0  = self.component_velocity_dofs
         self.component_velocity_dofs_1  = component_velocity_dofs_1
- 
+
     def forwardTrack(self,
                      t_depart,           #point departure times
                      t_track,            #target end time
@@ -1792,13 +1792,13 @@ class LinearAdvection_C0P1Velocity_PT123A(SteadyState_LinearAdvection_C0P1Veloci
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         """
-        direction = 1; output_id=6; 
+        direction = 1; output_id=6;
         for ci in self.activeComponentList:
             #
             maxeq = 3;
@@ -1811,7 +1811,7 @@ class LinearAdvection_C0P1Velocity_PT123A(SteadyState_LinearAdvection_C0P1Veloci
             #mwf debug
             #import pdb
             #pdb.set_trace()
-            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the
             #c data structures here and then convert back to base zero after call
             fbase = 1
             self.mesh.elementNodesArray += fbase
@@ -1873,14 +1873,14 @@ class LinearAdvection_C0P1Velocity_PT123A(SteadyState_LinearAdvection_C0P1Veloci
            x_track   : location of point at end of tracking
            t_track   : time tracking ended
            flag_track: -3  did not track (e.g., v = 0 or u = 0 and algorithm has flag to skip
-                           zero solution values) 
+                           zero solution values)
                        -2  point exited the domain somewhere in (t_depart,t_target)
                        -1  point in interior at t_target
-                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)  
+                      >=0  reserved to indicate mesh vertex id (e.g., for Pearce's tracking)
           element_track : element containing point at end of tracking
         no need to set direction = -1 if time values are decreasing
         """
-        direction = 1; output_id=6; 
+        direction = 1; output_id=6;
         for ci in self.activeComponentList:
             maxeq = 3
             #mwf debug
@@ -1893,7 +1893,7 @@ class LinearAdvection_C0P1Velocity_PT123A(SteadyState_LinearAdvection_C0P1Veloci
             t_velocity_1 = self.component_velocity_times_1[ci]
             #assert abs(t_velocity_1-t_velocity_0) > 0.0, "pt123 requires velocity tracking times different"
 
-            #rather than modify fortran code that assume's base 1 node, element id's etc just update the 
+            #rather than modify fortran code that assume's base 1 node, element id's etc just update the
             #c data structures here and then convert back to base zero after call
             fbase = 1
             self.mesh.elementNodesArray += fbase
@@ -1943,20 +1943,20 @@ class LinearAdvection_C0P1Velocity_PT123A(SteadyState_LinearAdvection_C0P1Veloci
 
     def setTrackingVelocity(self,trackingVelocity_dofs,component,time,timeLevel=0,trackingVelocity_l2g=None):
         """
-        load tracking velocity degrees of freedom for component at time and call it timeLevel 
-        
+        load tracking velocity degrees of freedom for component at time and call it timeLevel
+
         """
         if trackingVelocity_l2g != None:
             nVDOF_element=self.nd*self.mesh.nNodes_element
             if trackingVelocity_l2g.shape[-1] == self.mesh.nNodes_element:
-                    #standard C0P1 FemSpace uses a l2g that's consistent with a scalar value and assumes extra dofs
-                    #are just tacked on
-                    self.component_velocity_l2g[component] = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'i')
-                    for I in range(self.nd):
-                        self.component_velocity_l2g[component][:,:,I]=trackingVelocity_l2g*self.nd + I
+                #standard C0P1 FemSpace uses a l2g that's consistent with a scalar value and assumes extra dofs
+                #are just tacked on
+                self.component_velocity_l2g[component] = numpy.zeros((self.mesh.nElements_global,self.mesh.nNodes_element,self.nd),'i')
+                for I in range(self.nd):
+                    self.component_velocity_l2g[component][:,:,I]=trackingVelocity_l2g*self.nd + I
             else:
                 assert ((len(trackingVelocity_l2g.shape) == 2 and trackingVelocity_l2g.shape[-1] == nVDOF_element) or
-                        (len(trackingVelocity_l2g.shape) == 3 and trackingVelocity_l2g.shape[-1] == self.nd)) 
+                        (len(trackingVelocity_l2g.shape) == 3 and trackingVelocity_l2g.shape[-1] == self.nd))
                 self.component_velocity_l2g[component] = trackingVelocity_l2g
 
         if timeLevel == 1:
@@ -1987,21 +1987,21 @@ class LinearAdvection_C0P1Velocity_PT123A(SteadyState_LinearAdvection_C0P1Veloci
 #routines for testing tracking
 def setupMesh_1d(opts,p):
     assert p.nd == 1, "1d only for now"
-    #spatial mesh, 
+    #spatial mesh,
     mlMesh = MeshTools.MultilevelEdgeMesh(opts.nnx,1,1,p.L[0],refinementLevels=1)
     #track on finest level only
     mesh=mlMesh.meshList[-1]
     return mesh
 def setupMesh_2d(opts,p):
     assert p.nd == 2, "2d only for now"
-    #spatial mesh, 
+    #spatial mesh,
     mlMesh = MeshTools.MultilevelTriangularMesh(opts.nnx,opts.nny,1,p.L[0],p.L[1],refinementLevels=1)
     #track on finest level only
     mesh=mlMesh.meshList[-1]
     return mesh
 def setupMesh_3d(opts,p):
     assert p.nd == 3, "2d only for now"
-    #spatial mesh, 
+    #spatial mesh,
     mlMesh = MeshTools.MultilevelTetrahedralMesh(opts.nnx,opts.nny,opts.nnz,p.L[0],p.L[1],p.L[2],refinementLevels=1)
     #track on finest level only
     mesh=mlMesh.meshList[-1]
@@ -2025,7 +2025,7 @@ def setupSolution_C0P1(opts,p,mesh,t):
     return trialSpace,u,u_interpolation_values
 def setupVelocity_C0P1(opts,p,mesh,t):
     """
-    returns FEM space and FEM function, and interpolation values 
+    returns FEM space and FEM function, and interpolation values
     """
     velocitySpace= FemTools.C0_AffineLinearOnSimplexWithNodalBasis(mesh,p.nd)
     velocity = FemTools.FiniteElementFunction(velocitySpace,dim_dof=p.nd,isVector=True,name="velocity")
@@ -2035,29 +2035,29 @@ def setupVelocity_C0P1(opts,p,mesh,t):
             velocity_interpolation_values[eN,k,:] = p.analyticalSolutionParticleVelocity[0].uOfXT(velocitySpace.interpolationPoints[eN,k],t)
     #evaluate velocity degrees of freedom from its interpolation conditions
     velocity.projectFromInterpolationConditions(velocity_interpolation_values)
-    
+
     return velocitySpace,velocity,velocity_interpolation_values
 def setupVelocity_RT0(opts,p,mesh,geometricSpace,t,nd=2):
     """
-    initially returns just a l2g mapping and dof map for an RT0 velocity representation on 
+    initially returns just a l2g mapping and dof map for an RT0 velocity representation on
     simplexes because we don't have a fem function or space for this yet
 
     On element e:
       \vec v_h = \sum^d_{i=0}V^i\vec N_{e,i}
-    for 
+    for
       \vec N_{e,i} = \frac{1}{d|\Omega_e|}(\vec x - x_{n,i}), i=0,...,d
-      
+
    The degrees of freedom are flux integrals through faces
       V^i = \int_{\gamma_i}\vec v\dot n_{i}\ds
 
     velocity dofs is logically nElements_global x nElementBoundaries_element
-      
+
     geometricSpace defines geometry for mesh (affine simplicial for now)
     """
     velocity_dofs = numpy.zeros((mesh.nElements_global*mesh.nElementBoundaries_element),'d')
     velocity_l2g  = numpy.arange((mesh.nElements_global*mesh.nElementBoundaries_element),dtype='i').reshape((mesh.nElements_global,mesh.nElementBoundaries_element))
     velocity_interpolation_values = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element),'d')
-    
+
     #setup information for boundary integrals
     if nd == 1:
         boundaryQuadrature = Quadrature.GaussPoint()
@@ -2067,7 +2067,7 @@ def setupVelocity_RT0(opts,p,mesh,geometricSpace,t,nd=2):
         boundaryQuadrature = Quadrature.GaussEdge(4)
     elementBoundaryQuadraturePoints = numpy.array([pt for pt in boundaryQuadrature.points],dtype='d')
     elementBoundaryQuadratureWeights= numpy.array([wt for wt in boundaryQuadrature.weights],dtype='d')
-    
+
     nElementBoundaryQuadraturePoints_elementBoundary = elementBoundaryQuadraturePoints.shape[0]
     ebq = {}
     ebq['x'] = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
@@ -2078,7 +2078,7 @@ def setupVelocity_RT0(opts,p,mesh,geometricSpace,t,nd=2):
     ebq['dS'] = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,nElementBoundaryQuadraturePoints_elementBoundary),'d')
 
     ebq['velocity'] = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,nElementBoundaryQuadraturePoints_elementBoundary,p.nd),'d')
-    
+
     geometricSpace.elementMaps.getValuesTrace(elementBoundaryQuadraturePoints,
                                               ebq['x'])
     geometricSpace.elementMaps.getJacobianValuesTrace(elementBoundaryQuadraturePoints,
@@ -2101,7 +2101,7 @@ def setupVelocity_RT0(opts,p,mesh,geometricSpace,t,nd=2):
                 #print "setup RT0 eN= %s ebN= %s kb=%s v=[%s,%s] n=[%s,%s] integral=%s " % (eN,ebN,kb,v[0],v[1],ebq['n'][eN,ebN,kb,0],ebq['n'][eN,ebN,kb,1],integral)
             velocity_interpolation_values[eN,ebN] = integral
             velocity_dofs[velocity_l2g[eN,ebN]] = velocity_interpolation_values[eN,ebN]
-    
+
     return velocity_dofs,velocity_l2g,velocity_interpolation_values,ebq,elementBoundaryQuadraturePoints,elementBoundaryQuadratureWeights
 def evaluateVelocity_RT0(opts,p,mesh,t,ebq,velocity_dofs,velocity_l2g,velocity_interpolation_values):
     """
@@ -2109,14 +2109,14 @@ def evaluateVelocity_RT0(opts,p,mesh,t,ebq,velocity_dofs,velocity_l2g,velocity_i
 
     On element e:
       \vec v_h = \sum^d_{i=0}V^i\vec N_{e,i}
-    for 
+    for
       \vec N_{e,i} = \frac{1}{d|\Omega_e|}(\vec x - x_{n,i}), i=0,...,d
-      
+
    The degrees of freedom are flux integrals through faces
       V^i = \int_{\gamma_i}\vec v\dot n_{i}\ds
 
     velocity dofs is logically nElements_global x nElementBoundaries_element
-      
+
     geometricSpace defines geometry for mesh (affine simplicial for now)
     """
 
@@ -2140,7 +2140,7 @@ def evaluateVelocity_RT0(opts,p,mesh,t,ebq,velocity_dofs,velocity_l2g,velocity_i
                     #print "setup RT0 eN= %s ebN= %s kb=%s v=[%s,%s] n=[%s,%s] integral=%s " % (eN,ebN,kb,v[0],v[1],ebq['n'][eN,ebN,kb,0],ebq['n'][eN,ebN,kb,1],integral)
                 velocity_interpolation_values[eN,ebN] = integral
                 velocity_dofs[velocity_l2g[eN,ebN]] = velocity_interpolation_values[eN,ebN]
-    
+
 def setupTrackingPointsInReferenceSpace(opts,p,useGaussianQuadrature=False):
     """
     return points to track in reference space
@@ -2155,22 +2155,22 @@ def setupTrackingPointsInReferenceSpace(opts,p,useGaussianQuadrature=False):
             quadrature = Quadrature.CompositeTrapezoidalEdge(order=opts.nnq)
         #(q['x_hat'],q['w_hat'],q['x_hat_indeces']) = Quadrature.buildUnion({0:quadrature})
         x_hat = numpy.array([x for x in quadrature.points],dtype='d')
-        return x_hat 
+        return x_hat
     elif p.nd == 2:
         #need CompositeTrapezoidalTriangle
         if useGaussianQuadrature:
             quadrature = Quadrature.GaussTriangle(order=opts.nnq)
         else:
             quadrature = Quadrature.CompositeTrapezoidalTriangle(order=opts.nnq)
-        
+
         x_hat = numpy.array([x for x in quadrature.points],dtype='d')
-        return x_hat 
+        return x_hat
     elif p.nd == 3:
         #need CompositeTrapezoidalTriangle
         quadrature = Quadrature.GaussTetrahedron(order=opts.nnq)
-        
+
         x_hat = numpy.array([x for x in quadrature.points],dtype='d')
-        return x_hat 
+        return x_hat
     else:
         return None
 def setupTrackingDataArrays(t_start,t_target,mesh,q,nq_per_element):
@@ -2188,7 +2188,7 @@ def setupTrackingDataArrays(t_start,t_target,mesh,q,nq_per_element):
     q['x_track'] = numpy.zeros((mesh.nElements_global,nq_per_element,3),'d')
     #in/out --- status of point
     #in
-    #0 : track point, later can make >= 0 track, 1 --> vertex 
+    #0 : track point, later can make >= 0 track, 1 --> vertex
     #out
     #0 : point in interior
     #1 : point exited domain
@@ -2226,7 +2226,7 @@ def setupArbitraryTrackingDataArrays(t_start,t_target,mesh,elementBoundaryNormal
     q['t_track'].fill(t_target)
     #in/out --- status of point
     #in
-    #0 : track point, later can make >= 0 track, 1 --> vertex 
+    #0 : track point, later can make >= 0 track, 1 --> vertex
     #out
     #0 : point in interior
     #1 : point exited domain
@@ -2238,16 +2238,16 @@ def setupArbitraryTrackingDataArrays(t_start,t_target,mesh,elementBoundaryNormal
 
 def writePT123inputMesh(opts,p,mesh,filebase="test_pt123"):
     """
-    create input mesh file for running actual PT123 code 
+    create input mesh file for running actual PT123 code
     """
     base = 1 #base 1 numbering
     #write out mesh
     mesh_prefix = '1dm'; ele_label   = 'GE2'; node_label = 'GN'
     if p.nd == 2:
-        mesh_prefix = '2dm'; ele_label   = 'GE3'; 
+        mesh_prefix = '2dm'; ele_label   = 'GE3';
     elif p.nd == 3:
         mesh_prefix = '3dm'; ele_label   = 'GE4';
-    
+
     fmesh = open(filebase+'.'+mesh_prefix,'w')
     fmesh.write('MESH \n')
     for eN in range(mesh.nElements_global):
@@ -2268,18 +2268,18 @@ def writePT123inputMesh(opts,p,mesh,filebase="test_pt123"):
 def writePT123nodalVelocity(opts,p,mesh,tnList,q,velocitySpace,velocityFEFunction,
                             filebase="test_pt123"):
     #write out velocity file (have to loop through time steps)
-    vel_prefix = 'vn1'; 
+    vel_prefix = 'vn1';
     if p.nd == 2:
-        vel_prefix = 'vn2'; 
+        vel_prefix = 'vn2';
     elif p.nd == 3:
-        vel_prefix = 'vn3'; 
-    
+        vel_prefix = 'vn3';
+
     fvel = open(filebase+'.'+vel_prefix,'w')
     fvel.write("     %d     %d    %d \n" % (mesh.nNodes_global,p.nd,len(tnList)))
 
     for i,t in enumerate(tnList):
         fvel.write("TS    %f \n" % t)
-        
+
         try:
             p.analyticalSolutionParticleVelocity[0].uOfXTv(velocitySpace.interpolationPoints,t,q['velocity_interpolation_values'])
         except TypeError:
@@ -2301,18 +2301,18 @@ def writePT123nodalVelocity(opts,p,mesh,tnList,q,velocitySpace,velocityFEFunctio
 def writePT123elementVelocity(opts,p,mesh,params,tnList,q,velocitySpace,velocityFEFunction,
                               filebase="test_pt123"):
     #write out velocity file (have to loop through time steps)
-    vel_prefix = 've1'; 
+    vel_prefix = 've1';
     if p.nd == 2:
-        vel_prefix = 've2'; 
+        vel_prefix = 've2';
     elif p.nd == 3:
-        vel_prefix = 've3'; 
-    
+        vel_prefix = 've3';
+
     fvel = open(filebase+'.'+vel_prefix,'w')
     fvel.write("     %d     %d    %d \n" % (mesh.nElements_global,p.nd,len(tnList)))
 
     for i,t in enumerate(tnList):
         fvel.write("TS    %f \n" % t)
-        
+
         try:
             p.analyticalSolutionParticleVelocity[0].uOfXTv(velocitySpace.interpolationPoints,t,q['velocity_interpolation_values'])
         except TypeError:
@@ -2336,12 +2336,12 @@ def writePT123elementVelocity(opts,p,mesh,params,tnList,q,velocitySpace,velocity
 def writePT123RT0velocityAsElementVelocity(opts,p,mesh,params,tnList,q,ebq,
                                            filebase="test_pt123"):
     #write out velocity file (have to loop through time steps)
-    vel_prefix = 've1'; 
+    vel_prefix = 've1';
     if p.nd == 2:
-        vel_prefix = 've2'; 
+        vel_prefix = 've2';
     elif p.nd == 3:
-        vel_prefix = 've3'; 
-    
+        vel_prefix = 've3';
+
     fvel = open(filebase+'.'+vel_prefix,'w')
     fvel.write("     %d     %d    %d \n" % (mesh.nElements_global,p.nd,len(tnList)))
 
@@ -2353,7 +2353,7 @@ def writePT123RT0velocityAsElementVelocity(opts,p,mesh,params,tnList,q,ebq,
     #pdb.set_trace()
     for i,t in enumerate(tnList):
         fvel.write("TS    %f \n" % t)
-        
+
         evaluateVelocity_RT0(opts,p,mesh,t,ebq,q['velocity_new_dof'],q['velocity_l2g'],q['velocity_interpolation_values'])
 
         #evaluate RT0 velocity at nodes
@@ -2386,14 +2386,14 @@ def writePT123RT0velocityAsElementVelocity(opts,p,mesh,params,tnList,q,ebq,
 def writePT123nodalVolumeFraction(opts,p,mesh,params,tnList,q,
                                   filebase="test_pt123"):
     #write out element volume fraction file (have to loop through time steps)
-    emc_prefix = 'nemc%d' % p.nd; 
-    
+    emc_prefix = 'nemc%d' % p.nd;
+
     femc = open(filebase+'.'+emc_prefix,'w')
     femc.write("     %d     %d  \n" % (mesh.nNodes_global,len(tnList))) #constant for now
 
     for i,t in enumerate(tnList):
         femc.write("TS    %f \n" % t)
-        
+
         for eN in range(mesh.nNodes_global):
             femc.write("%f \n" % 1.0)
     #
@@ -2403,14 +2403,14 @@ def writePT123nodalVolumeFraction(opts,p,mesh,params,tnList,q,
 def writePT123elementVolumeFraction(opts,p,mesh,params,tnList,q,
                               filebase="test_pt123"):
     #write out element volume fraction file (have to loop through time steps)
-    emc_prefix = 'nemc%d' % p.nd; 
-    
+    emc_prefix = 'nemc%d' % p.nd;
+
     femc = open(filebase+'.'+emc_prefix,'w')
     femc.write("     %d     %d  \n" % (mesh.nElements_global,len(tnList))) #constant for now
 
     for i,t in enumerate(tnList):
         femc.write("TS    %f \n" % t)
-        
+
         for eN in range(mesh.nElements_global):
             femc.write("%f \n" % 1.0)
     #
@@ -2428,10 +2428,10 @@ def writePT123particleFile(opts,p,t,mesh,params,tnList,q,analyticalTracking,file
 
     fpart.write("%d  NP\n" % q['x_depart_start'].shape[0])
     for i in range(q['x_depart_start'].shape[0]):
-         fpart.write("%d  %g  %g  %g \n" % (q['element_depart_start'][i]+base,
-                                           q['x_depart_start'][i,0],
-                                           q['x_depart_start'][i,1],
-                                           q['x_depart_start'][i,2]))
+        fpart.write("%d  %g  %g  %g \n" % (q['element_depart_start'][i]+base,
+                                          q['x_depart_start'][i,0],
+                                          q['x_depart_start'][i,1],
+                                          q['x_depart_start'][i,2]))
 
     #
     ibf = 1 #forward
@@ -2472,7 +2472,7 @@ def test0(opts):
         opts.t_target = p.T
     #to collect integration points etc
     q = {}
-    #spatial mesh on 1 level for now, 
+    #spatial mesh on 1 level for now,
     mesh = setupMesh_1d(opts,p)
     sdmesh = mesh.subdomainMesh
     #solution representation, not used for linear problems
@@ -2489,7 +2489,7 @@ def test0(opts):
     #map points to physical space
     q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
     trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
-    
+
     #go ahead and get shape functions at initial points to evaluate solution, may not want to use
     #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
     q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
@@ -2524,10 +2524,10 @@ def test0(opts):
                                          q['element_track'],                  #in/out element locations
                                          q['x_track'],                        #arrival points
                                          q['flag_track'])                     #tracking status
-    
+
     #mwf debug
     #pdb.set_trace()
-    
+
     #exact or reference solution
     q['x_track_exact']= numpy.copy(q['x'])
     q['t_track_exact']= numpy.copy(q['t_depart'])
@@ -2551,7 +2551,7 @@ def test0(opts):
     fflg = open('x_flag.grf','w')
     ferr = open('x_err.grf','w')
     fexa = open('x_exa.grf','w')
-    l2errX= 0.0; l2errT= 0.0; 
+    l2errX= 0.0; l2errT= 0.0;
     for eN in range(sdmesh.nElements_global):
         for k in range(nq_per_element):
             fdep.write("%12.5e %12.5e \n " % (q['x'][eN,k,0],q['t_depart'][eN,k]))
@@ -2570,7 +2570,7 @@ def test0(opts):
     l2errX = math.sqrt(l2errX)/(sdmesh.nElements_global*nq_per_element)
     l2errT = math.sqrt(l2errT)/(sdmesh.nElements_global*nq_per_element)
     print "T= %s ell_2 error in spatial locations = %s ell_2 error in temporal locations = %s " % (opts.t_target,l2errX,l2errT)
-    
+
 def test1(opts):
     """
     1d, steady, linear velocity in space
@@ -2584,7 +2584,7 @@ def test1(opts):
         opts.t_target = p.T
     #to collect integration points etc
     q = {}
-    #spatial mesh on 1 level for now, 
+    #spatial mesh on 1 level for now,
     mesh = setupMesh_1d(opts,p)
     sdmesh = mesh.subdomainMesh
     #solution representation, not used for linear problems
@@ -2601,7 +2601,7 @@ def test1(opts):
     #map points to physical space
     q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
     trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
-    
+
     #go ahead and get shape functions at initial points to evaluate solution, may not want to use
     #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
     q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
@@ -2637,10 +2637,10 @@ def test1(opts):
                                         q['element_track'],                  #in/out element locations
                                         q['x_track'],                        #arrival points
                                         q['flag_track'])                     #tracking status
-    
+
     #mwf debug
     #pdb.set_trace()
-    
+
     #exact or reference solution
     q['x_track_exact']= numpy.copy(q['x'])
     q['t_track_exact']= numpy.copy(q['t_depart'])
@@ -2685,7 +2685,7 @@ def test1(opts):
     fflg = open('x_flag.grf','w')
     ferr = open('x_err.grf','w')
     fexa = open('x_exa.grf','w')
-    l2errX= 0.0; l2errT= 0.0; 
+    l2errX= 0.0; l2errT= 0.0;
     for eN in range(sdmesh.nElements_global):
         for k in range(nq_per_element):
             fdep.write("%12.5e %12.5e \n " % (q['x'][eN,k,0],q['t_depart'][eN,k]))
@@ -2704,7 +2704,7 @@ def test1(opts):
     l2errX = math.sqrt(l2errX)/(sdmesh.nElements_global*nq_per_element)
     l2errT = math.sqrt(l2errT)/(sdmesh.nElements_global*nq_per_element)
     print "T= %s ell_2 error in spatial locations = %s ell_2 error in temporal locations = %s " % (opts.t_target,l2errX,l2errT)
-    
+
 def test2(opts):
     """
     2d, steady, linear velocity in space
@@ -2718,7 +2718,7 @@ def test2(opts):
         opts.t_target = p.T
     #to collect integration points etc
     q = {}
-    #spatial mesh on 1 level for now, 
+    #spatial mesh on 1 level for now,
     mesh = setupMesh_2d(opts,p)
     sdmesh = mesh.subdomainMesh
     #solution representation, not used for linear problems
@@ -2739,7 +2739,7 @@ def test2(opts):
     #map points to physical space
     q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
     trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
-    
+
     #go ahead and get shape functions at initial points to evaluate solution, may not want to use
     #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
     q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
@@ -2765,7 +2765,7 @@ def test2(opts):
                                                                            q['element_track'],
                                                                            q['velocity_dof'],
                                                                            q['velocity_depart'])
- 
+
 
     ########## visualization and output stuff
     #mwf debug
@@ -2809,9 +2809,9 @@ def test2(opts):
     #2d need outer normals on each face
     #right now have element boundary quadrature array calculated values already so can grab 1st one
     #since its affine geometry
-    #In actual code can skip most of the ebq info by just using 
+    #In actual code can skip most of the ebq info by just using
     #  \vec n = (\ten{J}^{-T} \vec \hat{n})/||\ten{J}^{-T} \vec \hat{n})||
-    
+
     elementBoundaryOuterNormals = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,p.nd),'d')
     elementBoundaryOuterNormalsOrig = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,p.nd),'d')
     #mwf orig
@@ -2842,7 +2842,7 @@ def test2(opts):
         #update for next step
         t += dtout
 
-        q['t_track'].fill(t) 
+        q['t_track'].fill(t)
         ctracking.trackPointsRT0Velocity2d(localVelocityRepresentationFlag,
                                            sdmesh.nElements_global,                #mesh representation
                                            sdmesh.nNodes_global,
@@ -2923,7 +2923,7 @@ def test2(opts):
 #                                                                           dx,n)
 #                     if abs(dtb) < abs(dt):
 #                         dt = dtb
-    
+
 #                 if x[1] < 0.0:
 #                     n  = numpy.array([0.0,-1.0]); xb = numpy.array([0.5,0.0])
 #                     dx = xb-x0[:p.nd]
@@ -2957,7 +2957,7 @@ def test2(opts):
     fflg = open('x_flag.grf','w')
     ferr = open('x_err.grf','w')
     fexa = open('x_exa.grf','w')
-    l2errX= 0.0; l2errT= 0.0; 
+    l2errX= 0.0; l2errT= 0.0;
     for eN in range(sdmesh.nElements_global):
         for k in range(nq_per_element):
             fdep.write("%12.5e %12.5e %12.5e \n " % (q['x'][eN,k,0],q['x'][eN,k,1],q['t_depart'][eN,k]))
@@ -3006,7 +3006,7 @@ def test3(opts):
         opts.t_target = p.T
     #to collect integration points etc
     q = {}
-    #spatial mesh on 1 level for now, 
+    #spatial mesh on 1 level for now,
     mesh = setupMesh_2d(opts,p)
     sdmesh = mesh.subdomainMesh
     #solution representation, not used for linear problems
@@ -3025,7 +3025,7 @@ def test3(opts):
     #map points to physical space
     q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
     trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
-    
+
     #go ahead and get shape functions at initial points to evaluate solution, may not want to use
     #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
     q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
@@ -3051,7 +3051,7 @@ def test3(opts):
                                                                            q['element_track'],
                                                                            q['velocity_dof'],
                                                                            q['velocity_depart'])
- 
+
 
     ########## visualization and output stuff
     #mwf debug
@@ -3095,9 +3095,9 @@ def test3(opts):
     #2d need outer normals on each face
     #right now have element boundary quadrature array calculated values already so can grab 1st one
     #since its affine geometry
-    #In actual code can skip most of the ebq info by just using 
+    #In actual code can skip most of the ebq info by just using
     #  \vec n = (\ten{J}^{-T} \vec \hat{n})/||\ten{J}^{-T} \vec \hat{n})||
-    
+
     elementBoundaryOuterNormals = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,p.nd),'d')
     elementBoundaryOuterNormalsOrig = numpy.zeros((mesh.nElements_global,mesh.nElementBoundaries_element,p.nd),'d')
     #mwf orig
@@ -3129,7 +3129,7 @@ def test3(opts):
         #update for next step
         t += dtout
 
-        q['t_track'].fill(t) 
+        q['t_track'].fill(t)
         ctracking.trackPointsRT0Velocity2d(sdmesh.nElements_global,                #mesh representation
                                            sdmesh.nNodes_global,
                                            sdmesh.nNodes_element,
@@ -3266,7 +3266,7 @@ def test3(opts):
     fflg = open('x_flag.grf','w')
     ferr = open('x_err.grf','w')
     fexa = open('x_exa.grf','w')
-    l2errX= 0.0; l2errT= 0.0; 
+    l2errX= 0.0; l2errT= 0.0;
     for eN in range(sdmesh.nElements_global):
         for k in range(nq_per_element):
             fdep.write("%12.5e %12.5e %12.5e \n " % (q['x'][eN,k,0],q['x'][eN,k,1],q['t_depart'][eN,k]))
@@ -3315,7 +3315,7 @@ def test4(opts):
         opts.t_target = p.T
     #to collect integration points etc
     q = {}
-    #spatial mesh on 1 level for now, 
+    #spatial mesh on 1 level for now,
     mesh = setupMesh_2d(opts,p)
     sdmesh = mesh.subdomainMesh
     #solution representation, not used for linear problems
@@ -3332,7 +3332,7 @@ def test4(opts):
     #map points to physical space
     q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
     trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
-    
+
     #go ahead and get shape functions at initial points to evaluate solution, may not want to use
     #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
     q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
@@ -3400,27 +3400,27 @@ def test4(opts):
         #update for next step
         t += dtout
 
-        q['t_track'].fill(t) 
+        q['t_track'].fill(t)
         #mwf debug
         #import pdb
         #pdb.set_trace()
         if direction > 0.0:
-            particle_tracker.forwardTrack({0:q['t_depart']},    
+            particle_tracker.forwardTrack({0:q['t_depart']},
                                           {0:q['t_track']},                          #target end time
                                           {0:sdmesh.nElements_global*nq_per_element},#total number of points
                                           {0:q['x']},                                #departure points
                                           {0:q['element_track']},                    #in/out element locations
                                           {0:q['x_track']},                          #arrival points
-                                          {0:q['flag_track']})                       
+                                          {0:q['flag_track']})
         else:
-            particle_tracker.backwardTrack({0:q['t_depart']},    
+            particle_tracker.backwardTrack({0:q['t_depart']},
                                            {0:q['t_track']},                          #target end time
                                            {0:sdmesh.nElements_global*nq_per_element},#total number of points
                                            {0:q['x']},                                #departure points
                                            {0:q['element_track']},                    #in/out element locations
                                            {0:q['x_track']},                          #arrival points
-                                           {0:q['flag_track']})                       
-            
+                                           {0:q['flag_track']})
+
         writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track'],t,init=False,meshChanged=True,arGrid=arGrid,tCount=i+1)
         writer.writeScalarXdmf_particles(archive,q['t_track'],"t_particle",tCount=i+1)
         writer.writeVectorXdmf_particles(archive,q['velocity_track'],"velocity",tCount=i+1)
@@ -3443,7 +3443,7 @@ def test4(opts):
     #output step loop
     #mwf debug
     #pdb.set_trace()
-    
+
     #accommodate vtk updating paradigm
     if opts.view:
         q['t_viz'].flat[:] = q['t_track']
@@ -3475,7 +3475,7 @@ def test5(opts):
         opts.t_target = p.T
     #to collect integration points etc
     q = {}
-    #spatial mesh on 1 level for now, 
+    #spatial mesh on 1 level for now,
     if p.nd == 2:
         mesh = setupMesh_2d(opts,p)
     else:
@@ -3501,7 +3501,7 @@ def test5(opts):
     #map points to physical space
     q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
     trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
-    
+
     #go ahead and get shape functions at initial points to evaluate solution, may not want to use
     #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
     q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
@@ -3586,28 +3586,28 @@ def test5(opts):
         #evaluate velocity degrees of freedom from its interpolation conditions
         velocity_new.projectFromInterpolationConditions(q['velocity_interpolation_values'])
         particle_tracker.setTrackingVelocity(velocity_new.dof,0,t,timeLevel=1)
-        
-        q['t_track'].fill(t) 
+
+        q['t_track'].fill(t)
         #mwf debug
         #import pdb
         #pdb.set_trace()
         if direction > 0.0:
-            particle_tracker.forwardTrack({0:q['t_depart']},    
+            particle_tracker.forwardTrack({0:q['t_depart']},
                                           {0:q['t_track']},                          #target end time
                                           {0:sdmesh.nElements_global*nq_per_element},#total number of points
                                           {0:q['x']},                                #departure points
                                           {0:q['element_track']},                    #in/out element locations
                                           {0:q['x_track']},                          #arrival points
-                                          {0:q['flag_track']})                       
+                                          {0:q['flag_track']})
         else:
-            particle_tracker.backwardTrack({0:q['t_depart']},    
+            particle_tracker.backwardTrack({0:q['t_depart']},
                                            {0:q['t_track']},                          #target end time
                                            {0:sdmesh.nElements_global*nq_per_element},#total number of points
                                            {0:q['x']},                                #departure points
                                            {0:q['element_track']},                    #in/out element locations
                                            {0:q['x_track']},                          #arrival points
-                                           {0:q['flag_track']})                       
-            
+                                           {0:q['flag_track']})
+
         writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track'],t,init=False,meshChanged=True,arGrid=arGrid,tCount=i+1)
         writer.writeScalarXdmf_particles(archive,q['t_track'],"t_particle",tCount=i+1)
         writer.writeVectorXdmf_particles(archive,q['velocity_track'],"velocity",tCount=i+1)
@@ -3631,7 +3631,7 @@ def test5(opts):
     #output step loop
     #mwf debug
     #pdb.set_trace()
-    
+
     #accommodate vtk updating paradigm
     if opts.view:
         q['t_viz'].flat[:] = q['t_track']
@@ -3648,7 +3648,7 @@ def test5(opts):
     except:
         pass
 
-     
+
 def test6(opts):
     """
     transient, linear velocity in space. Computes error by comparing starting and ending location for points in a specified
@@ -3663,7 +3663,7 @@ def test6(opts):
         opts.t_target = p.T
     #to collect integration points etc
     q = {}
-    #spatial mesh on 1 level for now, 
+    #spatial mesh on 1 level for now,
     if p.nd == 3:
         mesh = setupMesh_3d(opts,p)
     elif p.nd == 2:
@@ -3691,7 +3691,7 @@ def test6(opts):
     #map points to physical space
     q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
     trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
-    
+
     #go ahead and get shape functions at initial points to evaluate solution, may not want to use
     #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
     q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
@@ -3776,28 +3776,28 @@ def test6(opts):
         #evaluate velocity degrees of freedom from its interpolation conditions
         velocity_new.projectFromInterpolationConditions(q['velocity_interpolation_values'])
         particle_tracker.setTrackingVelocity(velocity_new.dof,0,t,timeLevel=1)
-        
-        q['t_track'].fill(t) 
+
+        q['t_track'].fill(t)
         #mwf debug
         #import pdb
         #pdb.set_trace()
         if direction > 0.0:
-            particle_tracker.forwardTrack({0:q['t_depart']},    
+            particle_tracker.forwardTrack({0:q['t_depart']},
                                           {0:q['t_track']},                          #target end time
                                           {0:sdmesh.nElements_global*nq_per_element},#total number of points
                                           {0:q['x']},                                #departure points
                                           {0:q['element_track']},                    #in/out element locations
                                           {0:q['x_track']},                          #arrival points
-                                          {0:q['flag_track']})                       
+                                          {0:q['flag_track']})
         else:
-            particle_tracker.backwardTrack({0:q['t_depart']},    
+            particle_tracker.backwardTrack({0:q['t_depart']},
                                            {0:q['t_track']},                          #target end time
                                            {0:sdmesh.nElements_global*nq_per_element},#total number of points
                                            {0:q['x']},                                #departure points
                                            {0:q['element_track']},                    #in/out element locations
                                            {0:q['x_track']},                          #arrival points
-                                           {0:q['flag_track']})                       
-            
+                                           {0:q['flag_track']})
+
         writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track'],t,init=False,meshChanged=True,arGrid=arGrid,tCount=i+1)
         writer.writeScalarXdmf_particles(archive,q['t_track'],"t_particle",tCount=i+1)
         writer.writeVectorXdmf_particles(archive,q['velocity_track'],"velocity",tCount=i+1)
@@ -3821,7 +3821,7 @@ def test6(opts):
     #output step loop
     #mwf debug
     #pdb.set_trace()
-    
+
     #accommodate vtk updating paradigm
     if opts.view:
         q['t_viz'].flat[:] = q['t_track']
@@ -3848,21 +3848,21 @@ def Lu1Dex(opts,tryPT123A=True,writePT123files=True):
 
      K = T/b 2.0e-2 cm/s = 1728.0 cm/d, S_s = S/b = 2.0e-6 1/cm
 
-     S_s \pd{h}{t} = K\pd2{h}{x} 
+     S_s \pd{h}{t} = K\pd2{h}{x}
 
-     for 
+     for
        x \in [0,\infty]
 
      Initial and boundary conditions are
-  
+
        h(x,0) = H= 10 m
 
        h(0,t) = 0 m, t > 0
-      
+
        \pd{h}{x} = 0 x \rightarrow \infty  (double check?)
-           
+
      Analytical solution is
- 
+
        h = H \erf(\frac{x}{2\sqrt{tK/S_s}}
 
       \pd{h}{x} = \frac{H}{\sqrt{\pi t K / S_s}}\exp\left(-\frac{S_s}{4 K t}x^2\right)   , note Lu has extra K in numerator here
@@ -3925,7 +3925,7 @@ def Lu1Dex(opts,tryPT123A=True,writePT123files=True):
     assert opts.nnq > 0, "nnq = %s not ok must be > 1" % opts.nnq
 
     tnList = p.tnList
-        
+
     #to collect integration points etc
     q = {}
     mesh = setupMesh_1d(opts,p)
@@ -3951,7 +3951,7 @@ def Lu1Dex(opts,tryPT123A=True,writePT123files=True):
     #map points to physical space
     q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
     trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
-    
+
     #go ahead and get shape functions at initial points to evaluate solution, may not want to use
     #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
     q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
@@ -3967,7 +3967,7 @@ def Lu1Dex(opts,tryPT123A=True,writePT123files=True):
     if not tryPT123A or writePT123files:
         particleTracking_params[('dt_init',0)]= 0.001
         particleTracking_params[('dt_init_flag',0)] = 1 #how to pick initial time step (0 --> const, 1 --> CFL=1)
-        particleTracking_params[('rk_flag',0)] = 45 #RK type 
+        particleTracking_params[('rk_flag',0)] = 45 #RK type
 
     opts.particleTracking_params = particleTracking_params
 
@@ -3976,7 +3976,7 @@ def Lu1Dex(opts,tryPT123A=True,writePT123files=True):
     istart = 0
     while istart < len(tnList)-2 and tnList[istart+1] <= t:
         istart+=1
-    assert tnList[istart] <= t and t < tnList[istart+1] 
+    assert tnList[istart] <= t and t < tnList[istart+1]
     #this will get cycled through and set as value at tnList[istart] in loop
     #evaluate velocity
     #\todo move out of python
@@ -4000,7 +4000,7 @@ def Lu1Dex(opts,tryPT123A=True,writePT123files=True):
     ctracking.getOuterNormals_affineSimplex(boundaryNormals,
                                             q['inverse(J)'],
                                             elementBoundaryOuterNormalsArray)
-    q['x_track']  = p.getInitialTrackingLocations(q)#q['x']; 
+    q['x_track']  = p.getInitialTrackingLocations(q)#q['x'];
     q['x_depart'] = numpy.copy(q['x_track'])
 
     setupArbitraryTrackingDataArrays(opts.t_start,tnList[istart+1],sdmesh,elementBoundaryOuterNormalsArray,q)
@@ -4052,7 +4052,7 @@ def Lu1Dex(opts,tryPT123A=True,writePT123files=True):
     #to accomodate updating pardigm for visualization copy _track info to be consistent
     #with start locations
     q['t_viz'] = numpy.copy(q['t_depart'])
- 
+
     #which way to track (1. forward, -1. backward)
     direction = 1.0
 
@@ -4081,27 +4081,27 @@ def Lu1Dex(opts,tryPT123A=True,writePT123files=True):
         #evaluate velocity degrees of freedom from its interpolation conditions
         velocity_new.projectFromInterpolationConditions(q['velocity_interpolation_values'])
         particle_tracker.setTrackingVelocity(velocity_new.dof,0,t,timeLevel=1)
-        
+
         #only update times for points that are going to be tracked
         q['t_track'][q['flag_track'] >= -1] = t
 
         if direction > 0.0:
-            particle_tracker.forwardTrack({0:q['t_depart']},    
+            particle_tracker.forwardTrack({0:q['t_depart']},
                                           {0:q['t_track']},                          #target end time
                                           {0:q['x_depart'].shape[0]},                #total number of points
                                           {0:q['x_depart']},                         #departure points
                                           {0:q['element_track']},                    #in/out element locations
                                           {0:q['x_track']},                          #arrival points
-                                          {0:q['flag_track']})                       
+                                          {0:q['flag_track']})
         else:
-            particle_tracker.backwardTrack({0:q['t_depart']},    
+            particle_tracker.backwardTrack({0:q['t_depart']},
                                            {0:q['t_track']},                          #target end time
                                            {0:q['x_depart'].shape[0]},                #total number of points
                                            {0:q['x_depart']},                         #departure points
                                            {0:q['element_track']},                    #in/out element locations
                                            {0:q['x_track']},                          #arrival points
-                                           {0:q['flag_track']})                       
-            
+                                           {0:q['flag_track']})
+
         velocity_new.getValues(q[('u_shape_functions')],q['velocity_track'])
         writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track'],t,init=False,meshChanged=True,arGrid=arGrid,tCount=i+1)
         writer.writeScalarXdmf_particles(archive,q['t_track'],"t_particle",tCount=i+1)
@@ -4113,7 +4113,7 @@ def Lu1Dex(opts,tryPT123A=True,writePT123files=True):
         tvelOld = t
 
         print """t= %s t_track[0]= %s x_track[0][0] = %s  """ % (t,q['t_track'][0],q['x_track'][0][0])
-        
+
     #output step loop
 
     #
@@ -4130,7 +4130,7 @@ def Lu1Dex(opts,tryPT123A=True,writePT123files=True):
         writePT123nodalVolumeFraction(opts,p,mesh,particleTracking_params,tnList,q,
                                       filebase="testLu1D_pt123")
         writePT123particleFile(opts,p,opts.t_start,sdmesh,particleTracking_params,tnList,q,tryPT123A,filebase="testLu1D_pt123")
-        
+
 
     try:#run time visualization?
         sys.exit(vtkViewers.g.app.exec_())
@@ -4156,7 +4156,7 @@ def test8(opts,tryPT123A=False,writePT123files=True):
     tnList = [opts.t_start + i*dtout for i in range(int(opts.nnt)+1)]
     #to collect integration points etc
     q = {}
-    #spatial mesh on 1 level for now, 
+    #spatial mesh on 1 level for now,
     if p.nd == 3:
         mesh = setupMesh_3d(opts,p)
     elif p.nd == 2:
@@ -4175,7 +4175,7 @@ def test8(opts,tryPT123A=False,writePT123files=True):
     if not tryPT123A or writePT123files:
         particleTracking_params[('dt_init',0)]= 0.001
         particleTracking_params[('dt_init_flag',0)] = 1 #how to pick initial time step (0 --> const, 1 --> CFL=1)
-        particleTracking_params[('rk_flag',0)] = 45 #RK type 
+        particleTracking_params[('rk_flag',0)] = 45 #RK type
 
     opts.particleTracking_params = particleTracking_params
     #solution representation, not used for linear problems
@@ -4198,7 +4198,7 @@ def test8(opts,tryPT123A=False,writePT123files=True):
     #map points to physical space
     q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
     trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
-    
+
     #go ahead and get shape functions at initial points to evaluate solution, may not want to use
     #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
     q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
@@ -4209,10 +4209,10 @@ def test8(opts,tryPT123A=False,writePT123files=True):
     istart = 0
     while istart < len(tnList)-2 and tnList[istart+1] <= t:
         istart+=1
-    assert tnList[istart] <= t and t < tnList[istart+1] 
+    assert tnList[istart] <= t and t < tnList[istart+1]
     #this will get cycled through and set as value at tnList[istart] in loop
     #evaluate velocity
-    #\todo move out of python 
+    #\todo move out of python
     try:
         p.analyticalSolutionParticleVelocity[0].uOfXTv(velocitySpace.interpolationPoints,t,q['velocity_interpolation_values'])
     except TypeError:
@@ -4234,7 +4234,7 @@ def test8(opts,tryPT123A=False,writePT123files=True):
                                             q['inverse(J)'],
                                             elementBoundaryOuterNormalsArray)
     q['nPointsToTrack'] = nPointsToTrack
-    q['x_track']  = p.getInitialTrackingLocations(q)#q['x']; 
+    q['x_track']  = p.getInitialTrackingLocations(q)#q['x'];
     q['x_depart'] = numpy.copy(q['x_track'])
 
     #save initial elements for output pt123 input files
@@ -4244,7 +4244,7 @@ def test8(opts,tryPT123A=False,writePT123files=True):
     if writePT123files:
         q['element_depart_start'] = numpy.copy(q['element_track'])
         q['x_depart_start'] = numpy.copy(q['x_depart'])
-        
+
     label = "PT123"
     if tryPT123A:
         label = "PT123A"
@@ -4290,7 +4290,7 @@ def test8(opts,tryPT123A=False,writePT123files=True):
     #to accomodate updating pardigm for visualization copy _track info to be consistent
     #with start locations
     q['t_viz'] = numpy.copy(q['t_depart'])
- 
+
     #which way to track (1. forward, -1. backward)
     direction = 1.0
 
@@ -4313,7 +4313,7 @@ def test8(opts,tryPT123A=False,writePT123files=True):
         t += dtout
 
         #evaluate velocity
-        #\todo move out of python 
+        #\todo move out of python
         try:
             p.analyticalSolutionParticleVelocity[0].uOfXTv(velocitySpace.interpolationPoints,t,q['velocity_interpolation_values'])
         except TypeError:
@@ -4323,27 +4323,27 @@ def test8(opts,tryPT123A=False,writePT123files=True):
         #evaluate velocity degrees of freedom from its interpolation conditions
         velocity_new.projectFromInterpolationConditions(q['velocity_interpolation_values'])
         particle_tracker.setTrackingVelocity(velocity_new.dof,0,t,timeLevel=1)
-        
+
         #only update times for points that are going to be tracked
         q['t_track'][q['flag_track'] >= -1] = t
 
         if direction > 0.0:
-            particle_tracker.forwardTrack({0:q['t_depart']},    
+            particle_tracker.forwardTrack({0:q['t_depart']},
                                           {0:q['t_track']},                          #target end time
                                           {0:q['x_depart'].shape[0]},                #total number of points
                                           {0:q['x_depart']},                         #departure points
                                           {0:q['element_track']},                    #in/out element locations
                                           {0:q['x_track']},                          #arrival points
-                                          {0:q['flag_track']})                       
+                                          {0:q['flag_track']})
         else:
-            particle_tracker.backwardTrack({0:q['t_depart']},    
+            particle_tracker.backwardTrack({0:q['t_depart']},
                                            {0:q['t_track']},                          #target end time
                                            {0:q['x_depart'].shape[0]},                #total number of points
                                            {0:q['x_depart']},                         #departure points
                                            {0:q['element_track']},                    #in/out element locations
                                            {0:q['x_track']},                          #arrival points
-                                           {0:q['flag_track']})                       
-            
+                                           {0:q['flag_track']})
+
         velocity_new.getValues(q[('u_shape_functions')],q['velocity_track'])
         writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track'],t,init=False,meshChanged=True,arGrid=arGrid,tCount=i+1)
         writer.writeScalarXdmf_particles(archive,q['t_track'],"t_particle",tCount=i+1)
@@ -4358,7 +4358,7 @@ def test8(opts,tryPT123A=False,writePT123files=True):
         tvelOld = t
 
         #print """t= %s t_track= %s x_track = %s  """ % (t,q['t_track'],q['x_track'])
-        
+
     #output step loop
 
     xfile.close()
@@ -4377,7 +4377,7 @@ def test8(opts,tryPT123A=False,writePT123files=True):
         writePT123nodalVolumeFraction(opts,p,mesh,particleTracking_params,tnList,q,
                                       filebase="test8_pt123")
         writePT123particleFile(opts,p,opts.t_start,sdmesh,particleTracking_params,tnList,q,tryPT123A,filebase="test8_pt123")
-        
+
     try:#run time visualization?
         sys.exit(vtkViewers.g.app.exec_())
     except:
@@ -4402,7 +4402,7 @@ def test9(opts,tryPT123A=True,writePT123files=True):
     tnList = [opts.t_start + i*dtout for i in range(int(opts.nnt)+1)]
     #to collect integration points etc
     q = {}
-    #spatial mesh on 1 level for now, 
+    #spatial mesh on 1 level for now,
     if p.nd == 3:
         mesh = setupMesh_3d(opts,p)
     elif p.nd == 2:
@@ -4422,8 +4422,8 @@ def test9(opts,tryPT123A=True,writePT123files=True):
     if not tryPT123A or writePT123files:
         particleTracking_params[('dt_init',0)]= 0.001
         particleTracking_params[('dt_init_flag',0)] = 1 #how to pick initial time step (0 --> const, 1 --> CFL=1)
-        particleTracking_params[('rk_flag',0)] = 45 #RK type 
-    
+        particleTracking_params[('rk_flag',0)] = 45 #RK type
+
     opts.particleTracking_params = particleTracking_params
     #solution representation, not used for linear problems
 
@@ -4435,7 +4435,7 @@ def test9(opts,tryPT123A=True,writePT123files=True):
     #uses flux rep
     localVelocityRepresentationFlag = 2
     q['velocity_new_dof'] = numpy.copy(q['velocity_dof'])
-    
+
     component_velocity_times={0:tnList[0]}
 
     component_velocity_times_new={0:tnList[0]}
@@ -4446,7 +4446,7 @@ def test9(opts,tryPT123A=True,writePT123files=True):
     #map points to physical space
     q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
     trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
-    
+
     #go ahead and get shape functions at initial points to evaluate solution, may not want to use
     #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
     q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
@@ -4457,7 +4457,7 @@ def test9(opts,tryPT123A=True,writePT123files=True):
     istart = 0
     while istart < len(tnList)-2 and tnList[istart+1] <= t:
         istart+=1
-    assert tnList[istart] <= t and t < tnList[istart+1] 
+    assert tnList[istart] <= t and t < tnList[istart+1]
 
     #get points actually going to track
     q['J']            = numpy.zeros((q['x'].shape[0],q['x'].shape[1],p.nd,p.nd),'d')
@@ -4471,7 +4471,7 @@ def test9(opts,tryPT123A=True,writePT123files=True):
                                             q['inverse(J)'],
                                             elementBoundaryOuterNormalsArray)
     q['nPointsToTrack'] = nPointsToTrack
-    q['x_track']  = p.getInitialTrackingLocations(q)#q['x']; 
+    q['x_track']  = p.getInitialTrackingLocations(q)#q['x'];
     q['x_depart'] = numpy.copy(q['x_track'])
 
     setupArbitraryTrackingDataArrays(opts.t_start,tnList[istart+1],sdmesh,elementBoundaryOuterNormalsArray,q)
@@ -4519,7 +4519,7 @@ def test9(opts,tryPT123A=True,writePT123files=True):
     #to accomodate updating pardigm for visualization copy _track info to be consistent
     #with start locations
     q['t_viz'] = numpy.copy(q['t_depart'])
- 
+
     #which way to track (1. forward, -1. backward)
     direction = 1.0
 
@@ -4542,29 +4542,29 @@ def test9(opts,tryPT123A=True,writePT123files=True):
         #time tracking to
         t += dtout
         evaluateVelocity_RT0(opts,p,sdmesh,t,ebq,q['velocity_new_dof'],q['velocity_l2g'],q['velocity_interpolation_values'])
-        
+
         particle_tracker.setTrackingVelocity(q['velocity_new_dof'],0,t,timeLevel=1)
-        
+
         #only update times for points that are going to be tracked
         q['t_track'][q['flag_track'] >= -1] = t
 
         if direction > 0.0:
-            particle_tracker.forwardTrack({0:q['t_depart']},    
+            particle_tracker.forwardTrack({0:q['t_depart']},
                                           {0:q['t_track']},                          #target end time
                                           {0:q['x_depart'].shape[0]},                #total number of points
                                           {0:q['x_depart']},                         #departure points
                                           {0:q['element_track']},                    #in/out element locations
                                           {0:q['x_track']},                          #arrival points
-                                          {0:q['flag_track']})                       
+                                          {0:q['flag_track']})
         else:
-            particle_tracker.backwardTrack({0:q['t_depart']},    
+            particle_tracker.backwardTrack({0:q['t_depart']},
                                            {0:q['t_track']},                          #target end time
                                            {0:q['x_depart'].shape[0]},                #total number of points
                                            {0:q['x_depart']},                         #departure points
                                            {0:q['element_track']},                    #in/out element locations
                                            {0:q['x_track']},                          #arrival points
-                                           {0:q['flag_track']})                       
-            
+                                           {0:q['flag_track']})
+
         writer.writeMeshXdmf_particles(archive,sdmesh,p.nd,q['x_track'],t,init=False,meshChanged=True,arGrid=arGrid,tCount=i+1)
         writer.writeScalarXdmf_particles(archive,q['t_track'],"t_particle",tCount=i+1)
 
@@ -4576,7 +4576,7 @@ def test9(opts,tryPT123A=True,writePT123files=True):
         tvelOld = t
 
         #print """t= %s t_track= %s x_track = %s  """ % (t,q['t_track'],q['x_track'])
-        
+
     #output step loop
 
     #
@@ -4598,8 +4598,8 @@ def test9(opts,tryPT123A=True,writePT123files=True):
         writePT123elementVolumeFraction(opts,p,mesh,particleTracking_params,tnList,q,
                                         filebase="test9_pt123")
         writePT123particleFile(opts,p,opts.t_start,sdmesh,particleTracking_params,tnList,q,tryPT123A,filebase="test9_pt123")
-        
-    
+
+
     try:#run time visualization?
         sys.exit(vtkViewers.g.app.exec_())
     except:
@@ -4610,7 +4610,7 @@ def Pearce_Ex7_non_uniform(opts,tryPT123A=True,writePT123files=False):
     1D example from Pearce with transient velocity
 
     Domain is [-100,100], domain discretized with 21 nodes
-    
+
     """
     from math import pi,sqrt,exp
     #dummy p module
@@ -4621,9 +4621,9 @@ def Pearce_Ex7_non_uniform(opts,tryPT123A=True,writePT123files=False):
             def uOfXT(self,x,t):
                 return self.val
         def __init__(self,filebase="test_nu"):
-            #time intervals for velocity evaluation 
+            #time intervals for velocity evaluation
             #self.tnList = [0.0,200.0,400.0,600.0,800.0,1000.0,1200.0]
-            self.L=(200.0,1.0,1.0) 
+            self.L=(200.0,1.0,1.0)
             self.x0=numpy.array([-100.0,0.0,0.0])
             self.filebase=filebase
             vnfile = open(filebase+".vn1",'r')
@@ -4660,7 +4660,7 @@ def Pearce_Ex7_non_uniform(opts,tryPT123A=True,writePT123files=False):
     #pdb.set_trace()
 
     tnList = p.tnList
-        
+
     #to collect integration points etc
     q = {}
     mesh = p.mesh
@@ -4688,7 +4688,7 @@ def Pearce_Ex7_non_uniform(opts,tryPT123A=True,writePT123files=False):
     #map points to physical space
     q['x'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,3),'d')
     trialSpace.elementMaps.getValues(q['x_hat'],q['x'])
-    
+
     #go ahead and get shape functions at initial points to evaluate solution, may not want to use
     #this approach later for nonlinear problems (put shape eval in tracking step if need soln at more points)
     q['u_shape_functions'] = numpy.zeros((sdmesh.nElements_global,nq_per_element,trialSpace.max_nDOF_element),'d')
@@ -4704,7 +4704,7 @@ def Pearce_Ex7_non_uniform(opts,tryPT123A=True,writePT123files=False):
     if not tryPT123A or writePT123files:
         particleTracking_params[('dt_init',0)]= 0.001
         particleTracking_params[('dt_init_flag',0)] = 1 #how to pick initial time step (0 --> const, 1 --> CFL=1)
-        particleTracking_params[('rk_flag',0)] = 45 #RK type 
+        particleTracking_params[('rk_flag',0)] = 45 #RK type
 
     opts.particleTracking_params = particleTracking_params
 
@@ -4714,7 +4714,7 @@ def Pearce_Ex7_non_uniform(opts,tryPT123A=True,writePT123files=False):
     while istart < len(tnList)-2 and tnList[istart+1] <= t:
         istart+=1
     assert tnList[istart] <= t and t < tnList[istart+1]
-    
+
     #this will get cycled through and set as value at tnList[istart] in loop
     velocity_new.dof[:]=p.velocity_dofs[istart]
 
@@ -4729,7 +4729,7 @@ def Pearce_Ex7_non_uniform(opts,tryPT123A=True,writePT123files=False):
     ctracking.getOuterNormals_affineSimplex(boundaryNormals,
                                             q['inverse(J)'],
                                             elementBoundaryOuterNormalsArray)
-    q['x_track']  = p.getInitialTrackingLocations(q)#q['x']; 
+    q['x_track']  = p.getInitialTrackingLocations(q)#q['x'];
     q['x_depart'] = numpy.copy(q['x_track'])
 
     setupArbitraryTrackingDataArrays(opts.t_start,tnList[istart+1],sdmesh,elementBoundaryOuterNormalsArray,q)
@@ -4781,7 +4781,7 @@ def Pearce_Ex7_non_uniform(opts,tryPT123A=True,writePT123files=False):
     #to accomodate updating pardigm for visualization copy _track info to be consistent
     #with start locations
     q['t_viz'] = numpy.copy(q['t_depart'])
- 
+
     #which way to track (1. forward, -1. backward)
     direction = 1.0
 
@@ -4810,22 +4810,22 @@ def Pearce_Ex7_non_uniform(opts,tryPT123A=True,writePT123files=False):
         q['t_track'][q['flag_track'] >= -1] = min(t,opts.t_target)
 
         if direction > 0.0:
-            particle_tracker.forwardTrack({0:q['t_depart']},    
+            particle_tracker.forwardTrack({0:q['t_depart']},
                                           {0:q['t_track']},                          #target end time
                                           {0:q['x_depart'].shape[0]},                #total number of points
                                           {0:q['x_depart']},                         #departure points
                                           {0:q['element_track']},                    #in/out element locations
                                           {0:q['x_track']},                          #arrival points
-                                          {0:q['flag_track']})                       
+                                          {0:q['flag_track']})
         else:
-            particle_tracker.backwardTrack({0:q['t_depart']},    
+            particle_tracker.backwardTrack({0:q['t_depart']},
                                            {0:q['t_track']},                          #target end time
                                            {0:q['x_depart'].shape[0]},                #total number of points
                                            {0:q['x_depart']},                         #departure points
                                            {0:q['element_track']},                    #in/out element locations
                                            {0:q['x_track']},                          #arrival points
-                                           {0:q['flag_track']})                       
-            
+                                           {0:q['flag_track']})
+
         velocity_new.getValues(q[('u_shape_functions')],q['velocity_track'])
         #mwf scale by domain offset for output
         q['x_track'][:,0] += p.x0[0]
@@ -4857,7 +4857,7 @@ def Pearce_Ex7_non_uniform(opts,tryPT123A=True,writePT123files=False):
         writePT123nodalVolumeFraction(opts,p,mesh,particleTracking_params,tnList,q,
                                       filebase="testEx7_1d_non-uniform_pt123")
         writePT123particleFile(opts,p,opts.t_start,sdmesh,particleTracking_params,tnList,q,tryPT123A,filebase="testEx7_1d_non-uniform_pt123")
-        
+
 
     try:#run time visualization?
         sys.exit(vtkViewers.g.app.exec_())
@@ -4955,12 +4955,12 @@ if __name__=='__main__':
                       action="store_true",
                       dest="profile",
                       default=False)
-    
-                      
+
+
     (opts,args) = parser.parse_args()
 
     #pdb.set_trace()
-    
+
     #initialize mpi
     comm = Comm.init(argv=sys.argv[:1])
 
@@ -4972,7 +4972,7 @@ if __name__=='__main__':
                 10:Pearce_Ex7_non_uniform}
     test = None
     assert opts.test_id in testDict.keys(), "test_id= %s not supported yet " % opts.test_id
-    
+
     if opts.profile:
         name = 'Tracking_test_id_%s' % opts.test_id
         profiler.run('testDict[opts.test_id](opts)',name+'_prof')
@@ -4985,4 +4985,3 @@ if __name__=='__main__':
         stats.print_stats(30)
     else:
         testDict[opts.test_id](opts)
-

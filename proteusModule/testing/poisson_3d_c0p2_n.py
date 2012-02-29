@@ -23,7 +23,7 @@ nnz = 11
 #number of levels in mesh
 nLevels = 1
 
-#no stabilization or shock capturing    
+#no stabilization or shock capturing
 subgridError = None
 
 shockCapturing = None
@@ -44,7 +44,7 @@ tolFac = 0.0
 #matrix type
 matrix = SparseMatrix
 
-#convenience flag 
+#convenience flag
 parallel = False
 
 if parallel:
@@ -54,7 +54,7 @@ if parallel:
     #-pc_type lu -pc_factor_mat_solver_package
     #can also set -pc_asm_overlap 2 with default asm type (restrict)
     levelLinearSolver = KSP_petsc4py#PETSc#
-    #pick number of layers to use in overlap 
+    #pick number of layers to use in overlap
     nLayersOfOverlapForParallel = 1
     #type of partition
     #parallelPartitioningType = MeshParallelPartitioningTypes.node
@@ -77,4 +77,3 @@ linTolFac = 0.0
 l_atol_res = 1.0e-10
 
 conservativeFlux =  {0:'pwl'}
-
