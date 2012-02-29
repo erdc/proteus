@@ -48,14 +48,14 @@ def VelocityPostProcessingChooser(transport):
         #for ci
         if tryNew:
             velocityPostProcessor = AggregateVelocityPostProcessor(pptypes,transport)
-            
+
         else:
             velocityPostProcessor = VelocityPostProcessor_Original(pptypes,
                                                                    transport,
                                                                    ppcomps)
     #conservative flux specified
     return velocityPostProcessor
-    
+
 
 #####################################################################################################
 #begin pulling out different velocity cases into separate classes to make this more manageable
@@ -69,7 +69,7 @@ class VelocityPostProcessingAlgorithmBase:
       make velocity representation type an enum
     """
     def __init__(self,postProcessingType=None,vectorTransport=None,vtComponents=[0]):
-        self.postProcessingType=postProcessingType 
+        self.postProcessingType=postProcessingType
         self.vt = vectorTransport
         self.vtComponents = vtComponents
         self.q = None
@@ -81,14 +81,14 @@ class VelocityPostProcessingAlgorithmBase:
         self.ebq_global = self.vt.ebq_global
         self.ebq = self.vt.ebq
         self.ebqe = self.vt.ebqe
-        
+
         #test spaces and weights
         self.qv={}
         self.w={}
         self.w_dS={}
-        
 
-        #information for enforcing Neumann boundaries directly, 
+
+        #information for enforcing Neumann boundaries directly,
         #start with original approach then modify to be cleaner
         self.fluxElementBoundaries = {}
         self.fluxBoundaryNodes     = {}
@@ -100,7 +100,7 @@ class VelocityPostProcessingAlgorithmBase:
         #  2 -- RT0, local rep is \sum^d_{i=0}V^i\vec N_{T,i},
         #           \vec N_{T,i} = \frac{1}{d|E|}(\vec x - p_i), i=0,...,d
         self.localVelocityRepresentationFlag = -1
-        #information for 
+        #information for
         for ci in self.vtComponents:
             ##make sure velocity entries are in the transport quadrature dictionaries
             if not self.q.has_key(('velocity',ci)):
@@ -116,7 +116,7 @@ class VelocityPostProcessingAlgorithmBase:
                 self.ebq_global[('velocity',ci)] = numpy.zeros((self.vt.mesh.nElementBoundaries_global,
                                                                 self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
                                                                 self.vt.nSpace_global),'d')
-                
+
             ##
             self.q[('conservationResidual',ci)] = numpy.zeros((self.vt.mesh.nElements_global,),'d')
 
@@ -139,14 +139,14 @@ class VelocityPostProcessingAlgorithmBase:
                                                           self.w_dS[ci])
             else:
                 self.w_dS[ci] = self.ebq[('w*dS_f',ci)]
-            
+
 
             ##determine flux boundary information as before to start?
             if self.vt.numericalFlux != None and self.vt.numericalFlux.useWeakDirichletConditions:
                 self.fluxElementBoundaries[ci] = numpy.ones((self.vt.mesh.nExteriorElementBoundaries_global,),'i')
             else:
                 self.fluxElementBoundaries[ci] = numpy.zeros((self.vt.mesh.nExteriorElementBoundaries_global,),'i')
-                
+
             for cj,fbcObject  in self.vt.fluxBoundaryConditionsObjectsDict.iteritems():
                 for t,g in fbcObject.advectiveFluxBoundaryConditionsDict.iteritems():
                     if cj == ci:
@@ -166,7 +166,7 @@ class VelocityPostProcessingAlgorithmBase:
         pass
     def postprocess(self,verbose=0):
         """
-        main functionality 
+        main functionality
         generate post-processed velocity field for attached
         VectorTransport object and store them in local dictionaries
         """
@@ -175,7 +175,7 @@ class VelocityPostProcessingAlgorithmBase:
 
     def postprocess_component(self,ci,verbose=0):
         """
-        main functionality 
+        main functionality
         generate post-processed velocity field component ci
 
         """
@@ -232,7 +232,7 @@ class VelocityPostProcessingAlgorithmBase:
                                                                       flux,
                                                                       self.w_dS[ci],
                                                                       self.elementResidual[ci])
-        
+
 
     #
     def archiveVelocityValues(self,archive,t,tCount,initialPhase=False,meshChanged=False):
@@ -250,9 +250,9 @@ class VelocityPostProcessingAlgorithmBase:
                                                            tCount=tCount)
         dgnodes = self.vt.mesh.nodeArray[self.vt.mesh.elementNodesArray]
         for ci in self.vtComponents:
-          velocity= self.evaluateElementVelocityField(dgnodes,ci)
-          self.velocityWriter.writeVectorFunctionXdmf_LowestOrderMixed(archive,velocity,tCount,init=initialPhase,name="velocity_vpp"+"_%s" % ci)
-          
+            velocity= self.evaluateElementVelocityField(dgnodes,ci)
+            self.velocityWriter.writeVectorFunctionXdmf_LowestOrderMixed(archive,velocity,tCount,init=initialPhase,name="velocity_vpp"+"_%s" % ci)
+
 class VPP_P1nc_RT0(VelocityPostProcessingAlgorithmBase):
     """
     P1-nonconforming velocity postprocessing
@@ -270,7 +270,7 @@ class VPP_P1nc_RT0(VelocityPostProcessingAlgorithmBase):
         VelocityPostProcessingAlgorithmBase.__init__(self,postProcessingType='p1-nc',
                                                      vectorTransport=vectorTransport,
                                                      vtComponents=vtComponents)
-        
+
         #how is the local velocity represented
         #  1 -- RT0, local rep is \vec a + b \vec x
         self.localVelocityRepresentationFlag = 1
@@ -324,7 +324,7 @@ class VPP_P1nc_RT0(VelocityPostProcessingAlgorithmBase):
     def postprocess_component(self,ci,verbose=0):
         """
         compute velocity field in RT_0 assuming a potential field in P^1_{nc} has already been solved for
-        
+
         Uses Chou and Tang approach for now, so averaged pressure is not correct
         TODO:
            cleanup use of mt,r
@@ -428,7 +428,7 @@ class VPP_P1nc_RT0(VelocityPostProcessingAlgorithmBase):
                                                                 self.vt.q[('grad(phi)',cj)],
                                                                 self.vt.q[('a',ci,cj)],
                                                                 self.q[('velocity_dofs',ci)])
-        
+
         self.getElementRT0velocityValues(self.vt.q['x'],
                                          self.q[('velocity_dofs',ci)],
                                          self.q[('velocity',ci)])
@@ -466,13 +466,13 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
     """
     Local Larson-Niklasson method with RT_0 representation for element velocities
     This is not the correct postprocessing for optimized NS codes
- 
+
     uses RT_0 representation in terms of local basis
       \vec N_i = \frac{1}{d|E|}(\vec x - p_i)
     where p_i is the vertex across from face i, |E| is the volume of the element,
     and d is the space dimension
     the degrees of freedom are V^i = \int_{e_i}\vec v\dot n_{i}\ds
-    
+
     TODO:
       remove python loops in building mesh infrastructure or get rid of dependence
         on these forms of node star info and use data structures in cmesh
@@ -485,7 +485,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         #  2 -- RT0, local rep is \sum^d_{i=0}V^i\vec N_{T,i},
         #           \vec N_{T,i} = \frac{1}{d|E|}(\vec x - p_i), i=0,...,d
         self.localVelocityRepresentationFlag = 2
-        
+
         self.omitFluxBoundaryNodes=omitFluxBoundaryNodes
 
         #to handle some spaces being P^k k > 1
@@ -547,13 +547,13 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                                       self.nodeStarElementsArray,
                                                                       self.nodeStarElementNeighborsArray)
 
- 
+
         #
         self.nDOFs_element = {}
         self.updateConservationJacobian = {}
         for ci in self.vtComponents:
             ##Start with original approach to "fix" local node star problems around boundaries
-            #when one or more faces may be omitted because of direct enforcement of Neumann boundary 
+            #when one or more faces may be omitted because of direct enforcement of Neumann boundary
             #conditions
             #start with no nodes to be "fixed" for Neumann boundaries
             self.fluxBoundaryNodes[ci] = numpy.zeros((self.vt.mesh.nNodes_global,),'i')
@@ -572,7 +572,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                     for nN_ebN in range(self.vt.mesh.nNodes_elementBoundary):
                         nN = self.vt.mesh.elementBoundaryNodesArray[ebN,nN_ebN]
                         boundaryNodes.add(nN)
-                        if not self.fluxElementBoundaries[ci][ebNE]: 
+                        if not self.fluxElementBoundaries[ci][ebNE]:
                             nodesWithDirichletBoundaryFace.add(nN) #Dirichlet Node connected to at least one Dirichlet face
                         #
                     #local elementBoundary nodes
@@ -596,7 +596,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                 self.fluxElementBoundaries[ci][ebNE] = 0
                                 fluxElementBoundariesRemoved.add(ebNE)
 
-                #update "free" nodes without a "Dirichlet" boundary collection 
+                #update "free" nodes without a "Dirichlet" boundary collection
                 for ebNE in fluxElementBoundariesRemoved:
                     ebN = self.vt.mesh.exteriorElementBoundariesArray[ebNE]
                     for nN_ebN in range(self.vt.mesh.nNodes_elementBoundary):#nodes on elementBoundary
@@ -624,24 +624,24 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                         self.alpha[ci][j,i] = f(w)
                 self.elementResidual[ci] = numpy.zeros((self.vt.mesh.nElements_global,
                                                         self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-                                                       'd') 
+                                                       'd')
                 self.qv[ci] = numpy.zeros(
                     (self.vt.mesh.nElements_global,
                      self.vt.nQuadraturePoints_element,
                      self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-                    'd') 
+                    'd')
                 self.w[ci] = numpy.zeros(
                     (self.vt.mesh.nElements_global,
                      self.vt.mesh.nElementBoundaries_element,
                      self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
                      self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-                    'd') 
+                    'd')
                 self.w_dS[ci] = numpy.zeros(
                     (self.vt.mesh.nElements_global,
                      self.vt.mesh.nElementBoundaries_element,
                      self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
                      self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-                    'd') 
+                    'd')
                 self.testSpace.getBasisValues(self.vt.elementQuadraturePoints,
                                               self.qv[ci])
                 self.testSpace.getBasisValuesTrace(self.vt.u[0].femSpace.elementMaps.permutations,
@@ -656,13 +656,13 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                 self.elementResidual[ci] = self.vt.elementResidual[ci]
 
             #solution space not P^1
-            self.updateConservationJacobian[ci] = True    
+            self.updateConservationJacobian[ci] = True
 
             #RT0 specific information
             self.nDOFs_element[ci] = self.vt.nSpace_global+1
             self.q[('velocity_dofs',ci)] = numpy.zeros((self.vt.mesh.nElements_global,
                                                         self.nDOFs_element[ci]),'d')
-  
+
             if self.q.has_key(('velocity_l2g',self.vtComponents[0])):
                 self.q[('velocity_l2g',ci)]  = self.q[('velocity_l2g',self.vtComponents[0])]
             else:
@@ -698,8 +698,8 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
             logEvent("""velpp Max local conservation (average velocity) = %12.5e""" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.subdomainMesh.nElements_owned])))
 
         if self.updateConservationJacobian[ci]:
-	    self.getConservationJacobianPWL(ci)
-	    self.updateConservationJacobian[ci] = False #only depends on mesh need to resignal if mesh adapts
+            self.getConservationJacobianPWL(ci)
+            self.updateConservationJacobian[ci] = False #only depends on mesh need to resignal if mesh adapts
 
         cpostprocessing.calculateConservationFluxPWL(self.nElements_node,
                                                      self.vt.internalNodesArray,
@@ -711,7 +711,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         #add back fluxes for elementBoundaries that were Neumann but
         #not enforced directly
         self.addBoundaryFluxesBackToResidual(ci,self.fluxElementBoundaries[ci])
-        
+
         if verbose > 0:
             logEvent("Max local conservation (dgp1 enriched) = %12.5e" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.nElements_owned])))
 
@@ -722,7 +722,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         if correctFlux == True:
             self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
 
-            
+
         cpostprocessing.calculateConservationResidualPWL(self.vt.mesh.interiorElementBoundariesArray,
                                                          self.vt.mesh.exteriorElementBoundariesArray,
                                                          self.vt.mesh.elementBoundaryElementsArray,
@@ -749,7 +749,7 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                                         self.vt.ebq_global[('totalFlux',ci)],
                                                                         updateCoef,
                                                                         self.vt.ebq_global[('velocity',ci)])
-        
+
 
         cfemIntegrals.copyGlobalElementBoundaryVelocityToElementBoundary(self.vt.mesh.interiorElementBoundariesArray,
                                                                          self.vt.mesh.exteriorElementBoundariesArray,
@@ -758,13 +758,13 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                                          self.vt.ebq_global[('velocity',ci)],
                                                                          self.vt.ebq[('velocity',ci)])
 
-            
+
         cfemIntegrals.copyExteriorElementBoundaryValuesFromGlobalElementBoundaryValues(self.vt.mesh.exteriorElementBoundariesArray,
                                                                                        self.vt.mesh.elementBoundaryElementsArray,
                                                                                        self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                                        self.vt.ebq_global[('velocity',ci)],
                                                                                        self.vt.ebqe[('velocity',ci)])
- 
+
 
         #end set boundary flux
         #go from boundary flux to local element boundary representation
@@ -823,7 +823,7 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
     """
     Local Larson-Niklasson method with BDM1 representation for element velocities
     This is not the correct postprocessing for optimized NS codes
- 
+
     Only difference from VPP_PWL_RT0 should be steps for local velocity representation
     This one uses  BDM_1 space which is [P^1]^d locally with continuous
     linear fluxes on each face
@@ -841,7 +841,7 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
       Check what the problem is when running with numerical flux. mass balances are right
         but getting strange convergence and error values. May need to check what is getting
         added to ebq[('velocity',ci)] from numerical flux
-      
+
     """
     from cpostprocessing import buildLocalBDM1projectionMatrices,factorLocalBDM1projectionMatrices
     from cpostprocessing import solveLocalBDM1projection,getElementBDM1velocityValuesLagrangeRep
@@ -852,7 +852,7 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
         #how is the local velocity represented
         #  0 -- BDM P^1 Lagrange rep
         self.localVelocityRepresentationFlag = 0
-        
+
         #
         for ci in self.vtComponents:
             self.nDOFs_element[ci] = self.vt.nSpace_global*(self.vt.nSpace_global+1)
@@ -862,7 +862,7 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
             else:
                 self.q[('velocity_l2g',ci)]  = numpy.arange((self.vt.mesh.nElements_global*self.nDOFs_element[ci]),dtype='i').reshape((self.vt.mesh.nElements_global,self.nDOFs_element[ci]))
         #
-        
+
         self.BDMcomponent=self.vtComponents[0]
         self.BDMprojectionMat_element = numpy.zeros((self.vt.mesh.nElements_global,
                                                      self.nDOFs_element[self.BDMcomponent],
@@ -889,7 +889,7 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
         project to BDM velocity from element boundary fluxes
         """
         assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
-        
+
         self.solveLocalBDM1projection(self.BDMprojectionMat_element,
                                       self.BDMprojectionMatPivots_element,
                                       self.w_dS[ci],
@@ -945,7 +945,7 @@ class VPP_PWL_RT0_OPT(VPP_PWL_RT0):
         VPP_PWL_RT0.__init__(self,vectorTransport,vtComponents=vtComponents)
         #have to directly modify the type now to set to optimized
         self.postProcessingType = 'pwl-opt'
- 
+
         from LinearAlgebraTools import ParVec
 
         self.ebq_v_par_local = self.vt.ebq_global[('velocity',self.vtComponents[0])].copy()
@@ -979,8 +979,8 @@ class VPP_PWL_RT0_OPT(VPP_PWL_RT0):
             cpostprocessing.calculateElementResidualPWL(self.alpha[ci],self.vt.elementResidual[ci],self.elementResidual[ci])
         self.getConservationResidualPWL(ci)
         if self.updateConservationJacobian[ci]:
-	    self.getConservationJacobianPWL(ci)
-	    self.updateConservationJacobian[ci] = False #only depends on mesh need to resignal if mesh adapts
+            self.getConservationJacobianPWL(ci)
+            self.updateConservationJacobian[ci] = False #only depends on mesh need to resignal if mesh adapts
         #calculation partial corrections on owned node stars
         cpostprocessing.calculateConservationFluxPWL_opt(self.vt.mesh.nNodes_owned,
                                                          self.nElements_node,
@@ -1041,7 +1041,7 @@ class VPP_PWL_RT0_OPT(VPP_PWL_RT0):
                                                                    self.vt.ebq_global['n'],
                                                                    self.q[('conservationResidual',ci)],
                                                                    self.ebq_global[('velocity',ci)])
-        
+
         logEvent("Max local divergence (dgp1 enriched all elements) = %12.5e" % globalMax(max(numpy.absolute(self.q[('conservationResidual',ci)].flat))))
         divergence = Norms.fluxDomainBoundaryIntegralFromVector(self.vt.ebqe['dS'],
                                                                 self.vt.ebqe[('velocity',ci)],
@@ -1091,7 +1091,7 @@ class VPP_PWL_RT0_OPT(VPP_PWL_RT0):
                                                          self.q[('conservationResidual',ci)],
                                                          self.vt.ebq_global[('velocity',ci)],
                                                          self.ebq[('velocity',ci)])
-          
+
 
     def evaluateElementVelocityField(self,x,ci):
         """
@@ -1113,7 +1113,7 @@ class VPP_PWL_BDM_OPT(VPP_PWL_RT0_OPT):
     """
     Local Larson-Niklasson method with BDM1 representation for element velocities
     for optimized parallel codes
- 
+
     Only difference from VPP_PWL_RT0_OPT should be steps for local velocity representation
     This one uses  BDM_1 space which is [P^1]^d locally with continuous
     linear fluxes on each face
@@ -1121,7 +1121,7 @@ class VPP_PWL_BDM_OPT(VPP_PWL_RT0_OPT):
       \vec N_i = \lambda_{i%(d+1)} \vec e_{i/(d+1)}
     Have to use BDM projection to get degrees of freedom
 
-    
+
 
     """
     from cpostprocessing import buildLocalBDM1projectionMatrices,factorLocalBDM1projectionMatrices
@@ -1133,7 +1133,7 @@ class VPP_PWL_BDM_OPT(VPP_PWL_RT0_OPT):
         #how is the local velocity represented
         #  0 -- BDM P^1 Lagrange rep
         self.localVelocityRepresentationFlag = 0
-        
+
         #
         for ci in self.vtComponents:
             self.nDOFs_element[ci] = self.vt.nSpace_global*(self.vt.nSpace_global+1)
@@ -1143,7 +1143,7 @@ class VPP_PWL_BDM_OPT(VPP_PWL_RT0_OPT):
             else:
                 self.q[('velocity_l2g',ci)]  = numpy.arange((self.vt.mesh.nElements_global*self.nDOFs_element[ci]),dtype='i').reshape((self.vt.mesh.nElements_global,self.nDOFs_element[ci]))
         #
-        
+
         self.BDMcomponent=self.vtComponents[0]
         self.BDMprojectionMat_element = numpy.zeros((self.vt.mesh.nElements_global,
                                                      self.nDOFs_element[self.BDMcomponent],
@@ -1170,7 +1170,7 @@ class VPP_PWL_BDM_OPT(VPP_PWL_RT0_OPT):
         project to BDM velocity from element boundary fluxes
         """
         assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
-        
+
         self.solveLocalBDM1projection(self.BDMprojectionMat_element,
                                       self.BDMprojectionMatPivots_element,
                                       self.w_dS[ci],
@@ -1227,7 +1227,7 @@ class VPP_PWC_RT0(VelocityPostProcessingAlgorithmBase):
     TOOD:
        make sure works with weak dirichlet conditions
        remove python loops in building global Jacobian
-    """        
+    """
     def __init__(self,vectorTransport=None,vtComponents=[0]):
         VelocityPostProcessingAlgorithmBase.__init__(self,postProcessingType='pwc',
                                                      vectorTransport=vectorTransport,
@@ -1237,7 +1237,7 @@ class VPP_PWC_RT0(VelocityPostProcessingAlgorithmBase):
         #  2 -- RT0, local rep is \sum^d_{i=0}V^i\vec N_{T,i},
         #           \vec N_{T,i} = \frac{1}{d|E|}(\vec x - p_i), i=0,...,d
         self.localVelocityRepresentationFlag = 2
-        
+
         self.nDOFs_element = {}
         #local element residuals
         self.elementResidual = self.vt.elementResidual
@@ -1355,7 +1355,7 @@ class VPP_PWC_RT0(VelocityPostProcessingAlgorithmBase):
                                                  self.ebq_global['pwc-corr'],
                                                  self.pwcV[ci],
                                                  self.ebq_global[('flux_correction',ci)])
-                 
+
         cpostprocessing.fluxCorrectionVelocityUpdate(self.vt.mesh.interiorElementBoundariesArray,
                                                    self.vt.mesh.exteriorElementBoundariesArray,
                                                    self.vt.mesh.elementBoundaryElementsArray,
@@ -1374,7 +1374,7 @@ class VPP_PWC_RT0(VelocityPostProcessingAlgorithmBase):
                                                                         self.vt.ebq_global[('totalFlux',ci)],
                                                                         updateCoef,
                                                                         self.vt.ebq_global[('velocity',ci)])
-        
+
 
         cfemIntegrals.copyGlobalElementBoundaryVelocityToElementBoundary(self.vt.mesh.interiorElementBoundariesArray,
                                                                          self.vt.mesh.exteriorElementBoundariesArray,
@@ -1394,7 +1394,7 @@ class VPP_PWC_RT0(VelocityPostProcessingAlgorithmBase):
         self.addBoundaryFluxesBackToResidual(ci,self.fluxElementBoundaries[ci])
         if verbose > 0:
             logEvent("Max local conservation (dgp0 enriched) = %12.5e" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.subdomainMesh.nElements_owned])))
-                                                       
+
 
     def evaluateLocalVelocityRepresentation(self,ci):
         """
@@ -1440,7 +1440,7 @@ class VPP_SUN_RT0(VelocityPostProcessingAlgorithmBase):
     TOOD:
        make sure works with weak dirichlet conditions
        remove python loops in building global Jacobian
-    """        
+    """
     def __init__(self,vectorTransport=None,vtComponents=[0]):
         VelocityPostProcessingAlgorithmBase.__init__(self,postProcessingType='sun-rt0',
                                                      vectorTransport=vectorTransport,
@@ -1450,7 +1450,7 @@ class VPP_SUN_RT0(VelocityPostProcessingAlgorithmBase):
         #  2 -- RT0, local rep is \sum^d_{i=0}V^i\vec N_{T,i},
         #           \vec N_{T,i} = \frac{1}{d|E|}(\vec x - p_i), i=0,...,d
         self.localVelocityRepresentationFlag = 2
-        
+
         self.nDOFs_element = {}
         #local element residuals
         self.elementResidual = self.vt.elementResidual
@@ -1631,7 +1631,7 @@ class VPP_SUN_RT0(VelocityPostProcessingAlgorithmBase):
                                                                         self.vt.ebq_global[('totalFlux',ci)],
                                                                         updateCoef,
                                                                         self.vt.ebq_global[('velocity',ci)])
-        
+
 
         cfemIntegrals.copyGlobalElementBoundaryVelocityToElementBoundary(self.vt.mesh.interiorElementBoundariesArray,
                                                                          self.vt.mesh.exteriorElementBoundariesArray,
@@ -1642,7 +1642,7 @@ class VPP_SUN_RT0(VelocityPostProcessingAlgorithmBase):
 
         #go from boundary flux to local element boundary representation
         self.evaluateLocalVelocityRepresentation(ci)
- 
+
         cfemIntegrals.copyExteriorElementBoundaryValuesFromGlobalElementBoundaryValues(self.vt.mesh.exteriorElementBoundariesArray,
                                                                                        self.vt.mesh.elementBoundaryElementsArray,
                                                                                        self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -1651,7 +1651,7 @@ class VPP_SUN_RT0(VelocityPostProcessingAlgorithmBase):
         self.addBoundaryFluxesBackToResidual(ci,self.fluxElementBoundaries[ci])
         if verbose > 0:
             logEvent("Max local conservation (Sun global enriched) = %12.5e" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.subdomainMesh.nElements_owned])))
-                                                       
+
 
     def evaluateLocalVelocityRepresentation(self,ci):
         """
@@ -1696,7 +1696,7 @@ class VPP_SUN_GS_RT0(VelocityPostProcessingAlgorithmBase):
 
     TODO:
 
-    """        
+    """
     def __init__(self,vectorTransport=None,vtComponents=[0]):
         VelocityPostProcessingAlgorithmBase.__init__(self,postProcessingType='sun-gs-rt0',
                                                      vectorTransport=vectorTransport,
@@ -1706,7 +1706,7 @@ class VPP_SUN_GS_RT0(VelocityPostProcessingAlgorithmBase):
         #  2 -- RT0, local rep is \sum^d_{i=0}V^i\vec N_{T,i},
         #           \vec N_{T,i} = \frac{1}{d|E|}(\vec x - p_i), i=0,...,d
         self.localVelocityRepresentationFlag = 2
-        
+
         #need to allow these as parameters
         self.GSmaxIts = 10000
         self.GStol    = 1.0e-6
@@ -1784,12 +1784,12 @@ class VPP_SUN_GS_RT0(VelocityPostProcessingAlgorithmBase):
                                                                       self.ebq_global[('velocity',ci)],
                                                                       self.q[('conservationResidual',ci)])
 
- 
+
         converged = False
         GSits = 0
         if verbose > 0:
             logEvent("Sun-Wheeler GS initial residual= %s" % max(abs(self.q[('conservationResidual',ci)].flat[:])))
-                    
+
         while GSits < self.GSmaxIts and not converged:
             cpostprocessing.sunWheelerGSsweep(self.vt.mesh.interiorElementBoundariesArray,
                                               self.vt.mesh.exteriorElementBoundariesArray,
@@ -1821,7 +1821,7 @@ class VPP_SUN_GS_RT0(VelocityPostProcessingAlgorithmBase):
 
         #go from boundary flux to local element boundary representation
         self.evaluateLocalVelocityRepresentation(ci)
- 
+
         cfemIntegrals.copyExteriorElementBoundaryValuesFromGlobalElementBoundaryValues(self.vt.mesh.exteriorElementBoundariesArray,
                                                                                        self.vt.mesh.elementBoundaryElementsArray,
                                                                                        self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -1830,7 +1830,7 @@ class VPP_SUN_GS_RT0(VelocityPostProcessingAlgorithmBase):
         self.addBoundaryFluxesBackToResidual(ci,self.fluxElementBoundaries[ci])
         if verbose > 0:
             logEvent("Max local conservation (Sun global enriched) = %12.5e" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.subdomainMesh.nElements_owned])))
-                                                       
+
 
     def evaluateLocalVelocityRepresentation(self,ci):
         """
@@ -1862,7 +1862,7 @@ class VPP_SUN_GS_RT0(VelocityPostProcessingAlgorithmBase):
                                                            vx)
         return vx
 
- 
+
 class VPP_DG_RT0(VelocityPostProcessingAlgorithmBase):
     """
     Post process DG solution velocity by projecting boundary fluxes onto local RT0 space
@@ -1871,7 +1871,7 @@ class VPP_DG_RT0(VelocityPostProcessingAlgorithmBase):
         VelocityPostProcessingAlgorithmBase.__init__(self,postProcessingType='dg',
                                                      vectorTransport=vectorTransport,
                                                      vtComponents=vtComponents)
-        
+
         #how is the local velocity represented
         #  2 -- RT0, local rep is \sum^d_{i=0}V^i\vec N_{T,i},
         #           \vec N_{T,i} = \frac{1}{d|E|}(\vec x - p_i), i=0,...,d
@@ -1880,7 +1880,7 @@ class VPP_DG_RT0(VelocityPostProcessingAlgorithmBase):
         #local element residuals
         self.elementResidual = self.vt.elementResidual
         for ci in self.vtComponents:
-            #for RT0 
+            #for RT0
             self.nDOFs_element[ci] = self.vt.nSpace_global+1
             self.q[('velocity_dofs',ci)] = numpy.zeros((self.vt.mesh.nElements_global,self.nDOFs_element[ci]),'d')
             if self.q.has_key(('velocity_l2g',self.vtComponents[0])):
@@ -1899,13 +1899,13 @@ class VPP_DG_RT0(VelocityPostProcessingAlgorithmBase):
           Check if need to evaluate element boundary and global element boundary velocities (and exterior global element boundary  too?)
           or if they are already evaluated with DG fluxes
         """
-     
+
         cpostprocessing.projectElementBoundaryFluxToRT0fluxRep(self.vt.mesh.elementBoundaryElementsArray,
                                                                self.vt.mesh.elementBoundariesArray,
                                                                self.vt.ebq[('dS_u',ci)],
                                                                self.vt.ebq_global[('totalFlux',ci)],
                                                                self.q[('velocity_dofs',ci)])
-    
+
         cpostprocessing.getElementRT0velocityValuesFluxRep(self.vt.mesh.nodeArray,
                                                            self.vt.mesh.elementNodesArray,
                                                            self.vt.q['abs(det(J))'],
@@ -1919,7 +1919,7 @@ class VPP_DG_RT0(VelocityPostProcessingAlgorithmBase):
                                                                    self.vt.ebq['x'],
                                                                    self.q[('velocity_dofs',ci)],
                                                                    self.ebq[('velocity',ci)])
-      
+
         cpostprocessing.getGlobalElementBoundaryRT0velocityValuesFluxRep(self.vt.mesh.nodeArray,
                                                                          self.vt.mesh.elementNodesArray,
                                                                          self.vt.mesh.elementBoundaryElementsArray,
@@ -1955,7 +1955,7 @@ class VPP_DG_BDM(VPP_DG_RT0):
 
      TODO:
       need additional code to compute velocities at ebq and ebq_global if desired
-   
+
 
     """
     from cpostprocessing import buildLocalBDM1projectionMatrices,factorLocalBDM1projectionMatrices
@@ -1986,19 +1986,19 @@ class VPP_DG_BDM(VPP_DG_RT0):
                     (self.vt.mesh.nElements_global,
                      self.vt.nQuadraturePoints_element,
                      self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-                    'd') 
+                    'd')
                 self.w[ci] = numpy.zeros(
                     (self.vt.mesh.nElements_global,
                      self.vt.mesh.nElementBoundaries_element,
                      self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
                      self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-                    'd') 
+                    'd')
                 self.w_dS[ci] = numpy.zeros(
                     (self.vt.mesh.nElements_global,
                      self.vt.mesh.nElementBoundaries_element,
                      self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
                      self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-                    'd') 
+                    'd')
 
                 self.testSpace.getBasisValues(self.vt.elementQuadraturePoints,
                                               self.qv[ci])
@@ -2050,11 +2050,11 @@ class VPP_DG_BDM(VPP_DG_RT0):
                                               self.w_dS[ci],
                                               self.ebq_global[('totalFlux',ci)],
                                               self.q[('velocity_dofs',ci)])
- 
+
         cpostprocessing.getElementBDM1velocityValuesLagrangeRep(self.qv[ci],
                                                                 self.q[('velocity_dofs',ci)],
                                                                 self.vt.q[('velocity',ci)])
-      
+
         cpostprocessing.getElementBoundaryBDM1velocityValuesLagrangeRep(self.vt.mesh.elementBoundaryElementsArray,
                                                                         self.vt.mesh.exteriorElementBoundariesArray,
                                                                         self.vt.ebq[('v',ci)],
@@ -2103,7 +2103,7 @@ class VPP_DG_BDM(VPP_DG_RT0):
 
 class VPP_POINT_EVAL(VelocityPostProcessingAlgorithmBase):
     """
-    Velocity calculation from just directly evaluating flux formula at intergration points using 
+    Velocity calculation from just directly evaluating flux formula at intergration points using
     trial solution
     """
     def __init__(self,vectorTransport=None,vtComponents=[0]):
@@ -2118,7 +2118,7 @@ class VPP_POINT_EVAL(VelocityPostProcessingAlgorithmBase):
           v = -\ten{a}_h\grad \phi_h + \vec f_h
 
          TODO
-           Include off diagonal potentials 
+           Include off diagonal potentials
         """
         self.q[('velocity',ci)].fill(0.0)
         if self.vt.q.has_key(('a',ci,ci)):
@@ -2129,12 +2129,12 @@ class VPP_POINT_EVAL(VelocityPostProcessingAlgorithmBase):
                                                                     self.vt.coefficients.sdInfo[(ci,ci)][0],self.vt.coefficients.sdInfo[(ci,ci)][1],
                                                                     self.vt.q[('a',ci,ci)],
                                                                     self.vt.q[('grad(phi)',ci)],
-                                                                    self.q[('velocity'),ci])            
+                                                                    self.q[('velocity'),ci])
             else:
-               cpostprocessing.updateDiffusiveVelocityPointEval(updateCoef,
-                                                             self.vt.q[('a',ci,ci)],
-                                                             self.vt.q[('grad(phi)',ci)],
-                                                             self.q[('velocity'),ci])            
+                cpostprocessing.updateDiffusiveVelocityPointEval(updateCoef,
+                                                              self.vt.q[('a',ci,ci)],
+                                                              self.vt.q[('grad(phi)',ci)],
+                                                              self.q[('velocity'),ci])
         if self.vt.q.has_key(('f',ci)):
             updateCoef = 1.0
             cpostprocessing.updateAdvectiveVelocityPointEval(updateCoef,
@@ -2149,12 +2149,12 @@ class VPP_POINT_EVAL(VelocityPostProcessingAlgorithmBase):
                                                                     self.vt.coefficients.sdInfo[(ci,ci)][0],self.vt.coefficients.sdInfo[(ci,ci)][1],
                                                                     self.vt.ebq[('a',ci,ci)],
                                                                     self.vt.ebq[('grad(phi)',ci)],
-                                                                    self.ebq[('velocity'),ci])   
+                                                                    self.ebq[('velocity'),ci])
             else:
                 cpostprocessing.updateDiffusiveVelocityPointEval(updateCoef,
                                                                  self.vt.ebq[('a',ci,ci)],
                                                                  self.vt.ebq[('grad(phi)',ci)],
-                                                                 self.ebq[('velocity'),ci])            
+                                                                 self.ebq[('velocity'),ci])
         if self.vt.ebq.has_key(('f',ci)):
             updateCoef = 1.0
             cpostprocessing.updateAdvectiveVelocityPointEval(updateCoef,
@@ -2169,12 +2169,12 @@ class VPP_POINT_EVAL(VelocityPostProcessingAlgorithmBase):
                                                                     self.vt.coefficients.sdInfo[(ci,ci)][0],self.vt.coefficients.sdInfo[(ci,ci)][1],
                                                                     self.vt.ebqe[('a',ci,ci)],
                                                                     self.vt.ebqe[('grad(phi)',ci)],
-                                                                    self.ebqe[('velocity'),ci])            
+                                                                    self.ebqe[('velocity'),ci])
             else:
                 cpostprocessing.updateDiffusiveVelocityPointEval(updateCoef,
                                                              self.vt.ebqe[('a',ci,ci)],
                                                              self.vt.ebqe[('grad(phi)',ci)],
-                                                             self.ebqe[('velocity'),ci])            
+                                                             self.ebqe[('velocity'),ci])
         if self.vt.ebqe.has_key(('f',ci)):
             updateCoef = 1.0
             cpostprocessing.updateAdvectiveVelocityPointEval(updateCoef,
@@ -2202,7 +2202,7 @@ class VPP_POINT_EVAL(VelocityPostProcessingAlgorithmBase):
 class VPP_POINT_EVAL_GWVD(VelocityPostProcessingAlgorithmBase):
     """
     Velocity calculation for evaluating coarse grid velocity solution
-    at fine grid quadrature points; assumes that the coarse velocity degrees of 
+    at fine grid quadrature points; assumes that the coarse velocity degrees of
     freedom from the LDG solution are known
 
     Currently only working for P=1 and P=2
@@ -2213,12 +2213,12 @@ class VPP_POINT_EVAL_GWVD(VelocityPostProcessingAlgorithmBase):
                                                      vectorTransport=vectorTransport,
                                                      vtComponents=vtComponents)
         #how is the local velocity represented, 1=P1 Lagrange, 2=P2 Lagrange
-       
+
         self.testSpace=None
         for ci in self.vtComponents:
             self.testSpace=self.vt.u[ci].femSpace
-        
-        
+
+
 
     def postprocess_component(self,ci,verbose=0):
         """
@@ -2226,7 +2226,7 @@ class VPP_POINT_EVAL_GWVD(VelocityPostProcessingAlgorithmBase):
        included in the getResidual step of the solution
         """
         pass
-  
+
 
     def evaluateElementVelocityField(self,x,ci):
         """
@@ -2248,18 +2248,18 @@ class VPP_POINT_EVAL_GWVD(VelocityPostProcessingAlgorithmBase):
                 invJ[ie,iq,:,:] = self.vt.q['inverse(J)'][ie,0,:,:] #assume affine
             #iq
         #iq
-   
+
         self.testSpace.elementMaps.getInverseValues(invJ,x,xiArray)
         self.testSpace.getBasisValuesAtArray(xiArray,vArray)
 
         cpostprocessing.getElementLDGvelocityValuesLagrangeRep(vArray,
                                                                 self.q[('velocity_dofs',ci)],
                                                                 vx)
- 
+
         return vx
 
     def archiveVelocityValues(self,archive,t,tCount,initialPhase=False,meshChanged=False):
-            pass
+        pass
 
 #########################################################################
 #Begin trying "fixes" for material interface jumps
@@ -2346,7 +2346,7 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                                       self.nodeStarElementsArray,
                                                                       self.nodeStarElementNeighborsArray)
 
- 
+
         #
         self.nDOFs_element = {}
         self.updateConservationJacobian = {}
@@ -2365,24 +2365,24 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                         self.alpha[ci][j,i] = f(w)
                 self.elementResidual[ci] = numpy.zeros((self.vt.mesh.nElements_global,
                                                         self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-                                                       'd') 
+                                                       'd')
                 self.qv[ci] = numpy.zeros(
                     (self.vt.mesh.nElements_global,
                      self.vt.nQuadraturePoints_element,
                      self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-                    'd') 
+                    'd')
                 self.w[ci] = numpy.zeros(
                     (self.vt.mesh.nElements_global,
                      self.vt.mesh.nElementBoundaries_element,
                      self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
                      self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-                    'd') 
+                    'd')
                 self.w_dS[ci] = numpy.zeros(
                     (self.vt.mesh.nElements_global,
                      self.vt.mesh.nElementBoundaries_element,
                      self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
                      self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-                    'd') 
+                    'd')
                 self.testSpace.getBasisValues(self.vt.elementQuadraturePoints,
                                               self.qv[ci])
                 self.testSpace.getBasisValuesTrace(self.vt.u[0].femSpace.elementMaps.permutations,
@@ -2397,13 +2397,13 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                 self.elementResidual[ci] = self.vt.elementResidual[ci]
 
             #solution space not P^1
-            self.updateConservationJacobian[ci] = True    
+            self.updateConservationJacobian[ci] = True
 
             #RT0 specific information
             self.nDOFs_element[ci] = self.vt.nSpace_global+1
             self.q[('velocity_dofs',ci)] = numpy.zeros((self.vt.mesh.nElements_global,
                                                         self.nDOFs_element[ci]),'d')
-  
+
             if self.q.has_key(('velocity_l2g',self.vtComponents[0])):
                 self.q[('velocity_l2g',ci)]  = self.q[('velocity_l2g',self.vtComponents[0])]
             else:
@@ -2430,7 +2430,7 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
     #init
     def setInteriorFluxBoundaries(self,ci):
         """
-        Flag interior flux boundaries 
+        Flag interior flux boundaries
 
         this version flags boundaries where |max(|a|_L)-max(|a|_R)|_{ebN} > jump_tol and min(max(|a|_L),max(|a|_R)) < min_tol
         TODO:
@@ -2453,8 +2453,8 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                     self.fluxElementBoundaries_global[ci][ebN] = 1
                     #mwf debug
                     print "vpp-ib-fix-0 setting ebN=%s ebN = 1, max_a_left=%s max_a_right= %s " % (ebN,max_a_left,max_a_right)
-                    
-                    
+
+
         #
         #mwf debug
         #import pdb
@@ -2503,8 +2503,8 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
             logEvent("""velpp Max local conservation (average velocity) = %12.5e""" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.subdomainMesh.nElements_owned])))
 
         if self.updateConservationJacobian[ci]:
-	    self.getConservationJacobianPWL(ci)
-	    self.updateConservationJacobian[ci] = False #only depends on mesh need to resignal if mesh adapts
+            self.getConservationJacobianPWL(ci)
+            self.updateConservationJacobian[ci] = False #only depends on mesh need to resignal if mesh adapts
 
         cpostprocessing.calculateConservationFluxPWL_noNeumannFix(self.nElements_node,
                                                                   self.nodeStarFactors[ci])
@@ -2518,7 +2518,7 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         #if the interior boundaries are set somewhere that they shouldn't be
         #should show up as mass error
         self.addBoundaryFluxesBackToResidual(ci,self.fluxElementBoundaries[ci])
-        
+
         if verbose > 0:
             logEvent("Max local conservation (dgp1 enriched) = %12.5e" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.nElements_owned])))
 
@@ -2568,13 +2568,13 @@ class VPP_LOW_K_IB_PWL_RT0(VelocityPostProcessingAlgorithmBase):
                                                                          self.vt.ebq_global[('velocity',ci)],
                                                                          self.vt.ebq[('velocity',ci)])
 
-            
+
         cfemIntegrals.copyExteriorElementBoundaryValuesFromGlobalElementBoundaryValues(self.vt.mesh.exteriorElementBoundariesArray,
                                                                                        self.vt.mesh.elementBoundaryElementsArray,
                                                                                        self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                                        self.vt.ebq_global[('velocity',ci)],
                                                                                        self.vt.ebqe[('velocity',ci)])
- 
+
 
         #end set boundary flux
         #go from boundary flux to local element boundary representation
@@ -2651,7 +2651,7 @@ class AggregateVelocityPostProcessor:
                  'point-eval-gwvd':VPP_POINT_EVAL_GWVD, #pointwise evaluation for dg using LDG method vel_DoFs, add in tjp
                  'dg':VPP_DG_RT0,            #dg scheme, RT_0 local velocity repres
                  'dg-bdm':VPP_DG_BDM,        #dg scheme,  Brezzi Douglas Marini linear velocity repres
-                 'pwl-ib-fix-0':VPP_LOW_K_IB_PWL_RT0} #hack to enforce zero flux manually around low perm regions        
+                 'pwl-ib-fix-0':VPP_LOW_K_IB_PWL_RT0} #hack to enforce zero flux manually around low perm regions
     def __init__(self,postProcessingTypes=None,transport=None):
         self.postProcessingTypes = postProcessingTypes
         self.vpp_algorithms = []
@@ -2672,7 +2672,7 @@ class AggregateVelocityPostProcessor:
 
     def postprocess(self,verbose=0):
         """
-        main functionality 
+        main functionality
         generate post-processed velocity field for attached
         VectorTransport object and store them in local dictionaries
 
@@ -2700,7 +2700,7 @@ class AggregateVelocityPostProcessor:
             return vpp.archiveVelocityValues(archive,t,tCount,initialPhase=initialPhase,meshChanged=meshChanged)
 
 ####################################################################################################
-#original Velocity PostProcessing Class 
+#original Velocity PostProcessing Class
 #set tryNew = False in Chooser at beginning of file to use it
 ####################################################################################################
 #for timing
@@ -2734,14 +2734,14 @@ class VelocityPostProcessor_Original:
     from cpostprocessing import getElementBoundaryRT0velocityValues
     from cpostprocessing import updateRT0velocityWithAveragedPotentialP1nc,updateRT0velocityWithAveragedPotentialP1nc_sd
     from cfemIntegrals import calculateConservationResidual
-    
+
     def __init__(self,postProcessingTypes=None,vectorTransport=None,vtComponents=[0],
                  mlMesh=None,thisLevel=None):
         self.postProcessingTypes = postProcessingTypes
         self.vt = vectorTransport
         self.vtComponents = vtComponents
         if self.postProcessingTypes != None:
-            assert self.vt != None, "postProcessTypes not None vt==None" 
+            assert self.vt != None, "postProcessTypes not None vt==None"
         self.q = None
         self.ebq_global = None
         self.BDMcomponent = None
@@ -2749,7 +2749,7 @@ class VelocityPostProcessor_Original:
         self.fluxElementBoundaries = {}
         self.fluxBoundaryNodes     = {}
         if self.postProcessingTypes != None and self.vt !=None:
-            #cek begin adding stuff for post-processing higher-order 
+            #cek begin adding stuff for post-processing higher-order
             self.qv={}
             self.w={}
             self.w_dS={}
@@ -2925,24 +2925,24 @@ class VelocityPostProcessor_Original:
 #                                 self.alpha[ci][j,i] = f(w)
 #                         self.elementResidualPWL[ci] = numpy.zeros((self.vt.mesh.nElements_global,
 #                                                                    self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-#                                                                   'd') 
+#                                                                   'd')
 #                         self.qv[ci] = numpy.zeros(
 #                             (self.vt.mesh.nElements_global,
 #                              self.vt.nQuadraturePoints_element,
 #                              self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-#                             'd') 
+#                             'd')
 #                         self.w[ci] = numpy.zeros(
 #                             (self.vt.mesh.nElements_global,
 #                              self.vt.mesh.nElementBoundaries_element,
 #                              self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
 #                              self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-#                             'd') 
+#                             'd')
 #                         self.w_dS[ci] = numpy.zeros(
 #                             (self.vt.mesh.nElements_global,
 #                              self.vt.mesh.nElementBoundaries_element,
 #                              self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
 #                              self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-#                             'd') 
+#                             'd')
 #                         self.testSpace.getBasisValues(self.vt.elementQuadraturePoints,
 #                                                       self.qv[ci])
 #                         self.testSpace.getBasisValuesTrace(self.vt.u[0].femSpace.elementMaps.permutations,
@@ -2967,7 +2967,7 @@ class VelocityPostProcessor_Original:
 #                                                                       self.ebq['sqrt(det(g))'],
 #                                                                       self.ebq[('w',ci)],
 #                                                                       self.ebq[('w*dS_'+'f',ci)])
-                            
+
 
 #                         self.w_dS[ci] = self.ebq[('w*dS_f',ci)]
 #                         self.qv[ci] = self.q[('v',ci)]
@@ -3029,7 +3029,7 @@ class VelocityPostProcessor_Original:
                         for nN_ebN in range(self.vt.mesh.nNodes_elementBoundary):
                             nN = self.vt.mesh.elementBoundaryNodesArray[ebN,nN_ebN]
                             boundaryNodes.add(nN)
-                            if not self.fluxElementBoundaries[ci][ebNE]: 
+                            if not self.fluxElementBoundaries[ci][ebNE]:
                                 nodesWithDirichletBoundaryFace.add(nN) #Dirichlet Node connected to at least one Dirichlet face
                             #
                         #local elementBoundary nodes
@@ -3053,7 +3053,7 @@ class VelocityPostProcessor_Original:
                                     self.fluxElementBoundaries[ci][ebNE] = 0
                                     fluxElementBoundariesRemoved.add(ebNE)
 
-                    #update "free" nodes without a "Dirichlet" boundary collection 
+                    #update "free" nodes without a "Dirichlet" boundary collection
                     for ebNE in fluxElementBoundariesRemoved:
                         ebN = self.vt.mesh.exteriorElementBoundariesArray[ebNE]
                         for nN_ebN in range(self.vt.mesh.nNodes_elementBoundary):#nodes on elementBoundary
@@ -3070,7 +3070,7 @@ class VelocityPostProcessor_Original:
                     #import pdb
                     #pdb.set_trace()
 
-                        
+
                 #end pwl
                 elif self.postProcessingTypes[ci] in ['point-eval','dg-point-eval','point-eval-gwvd']: # gwvd addin tjp
                     if not self.q.has_key(('velocity',ci)):
@@ -3087,7 +3087,7 @@ class VelocityPostProcessor_Original:
                                                                        self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
                                                                        self.vt.nSpace_global),'d')
                 #end point-eval
-                elif 'sun-' in self.postProcessingTypes[ci]:                    
+                elif 'sun-' in self.postProcessingTypes[ci]:
                     if not self.q.has_key(('velocity',ci)):
                         self.q[('velocity',ci)]      = numpy.zeros((self.vt.mesh.nElements_global,
                                                                     self.vt.nQuadraturePoints_element,
@@ -3101,7 +3101,7 @@ class VelocityPostProcessor_Original:
                         self.ebq_global[('velocity',ci)]= numpy.zeros((self.vt.mesh.nElementBoundaries_global,
                                                                        self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
                                                                        self.vt.nSpace_global),'d')
-                    
+
                     self.q[('conservationResidual',ci)] = numpy.zeros((self.vt.mesh.nElements_global,),
                                                                         'd')
                     self.ebq_global[('flux_correction',ci)] = numpy.zeros((self.vt.mesh.nElementBoundaries_global),
@@ -3115,7 +3115,7 @@ class VelocityPostProcessor_Original:
                         sunWheelerGlobalComponents.append(ci)
                     elif self.postProcessingTypes[ci] == 'sun-gs-rt0':
                         atLeastOneSunGS     = True
-                elif self.postProcessingTypes[ci] == 'pwc':                    
+                elif self.postProcessingTypes[ci] == 'pwc':
                     if not self.q.has_key(('velocity',ci)):
                         self.q[('velocity',ci)]      = numpy.zeros((self.vt.mesh.nElements_global,
                                                                     self.vt.nQuadraturePoints_element,
@@ -3152,24 +3152,24 @@ class VelocityPostProcessor_Original:
                             self.alpha[ci][j,i] = f(w)
                     self.elementResidualPWL[ci] = numpy.zeros((self.vt.mesh.nElements_global,
                                                                self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-                                                              'd') 
+                                                              'd')
                     self.qv[ci] = numpy.zeros(
                         (self.vt.mesh.nElements_global,
                          self.vt.nQuadraturePoints_element,
                          self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-                        'd') 
+                        'd')
                     self.w[ci] = numpy.zeros(
                         (self.vt.mesh.nElements_global,
                          self.vt.mesh.nElementBoundaries_element,
                          self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
                          self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-                        'd') 
+                        'd')
                     self.w_dS[ci] = numpy.zeros(
                         (self.vt.mesh.nElements_global,
                          self.vt.mesh.nElementBoundaries_element,
                          self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
                          self.testSpace.referenceFiniteElement.localFunctionSpace.dim),
-                        'd') 
+                        'd')
                     self.testSpace.getBasisValues(self.vt.elementQuadraturePoints,
                                                   self.qv[ci])
                     self.testSpace.getBasisValuesTrace(self.vt.u[0].femSpace.elementMaps.permutations,
@@ -3241,7 +3241,7 @@ class VelocityPostProcessor_Original:
                         self.nodeStarElementsArray[right_eN_global,i] = self.globalNodeGlobalElement2StarElement[right_I][right_eN_global]
                         if i != right_ebN_element:
                             self.nodeStarElementNeighborsArray[right_eN_global,i,right_ebN_element] = self.globalNodeGlobalElement2StarElement[right_I][left_eN_global]
-                       
+
                     #i
                 #ebNi
                 for ebNE in range(self.vt.mesh.nExteriorElementBoundaries_global):
@@ -3253,7 +3253,7 @@ class VelocityPostProcessor_Original:
                         self.nodeStarElementsArray[eN_global,i] = self.globalNodeGlobalElement2StarElement[I][eN_global]
                     #i
                 #ebNE
-                
+
                 self.nodeStarFactors = {}
                 for ci in self.vtComponents:
                     if self.postProcessingTypes[ci] == 'pwl' or self.postProcessingTypes[ci] == 'pwl-bdm':
@@ -3323,7 +3323,7 @@ class VelocityPostProcessor_Original:
                     #weighted arithmetic average basically
                     #self.ebq_global['sun-gs-alpha'][ebN,0]=  vol_left/(area_face*(vol_left+vol_right))
                     #self.ebq_global['sun-gs-alpha'][ebN,1]= -vol_right/(area_face*(vol_left+vol_right))
-                    
+
                 #ebNI
             #sun-wheeler gs
             if atLeastOneSunGlobal == True:
@@ -3335,7 +3335,7 @@ class VelocityPostProcessor_Original:
                     volFact = 0.5
                 if self.vt.nSpace_global == 3:
                     volFact = 1.0/6.0; areaFact = 0.5
-                #use same correction everywhere since just going to overwrite Neumann boundaries 
+                #use same correction everywhere since just going to overwrite Neumann boundaries
                 self.ebq_global['sun-glob-corr'] = numpy.zeros((self.vt.mesh.nElementBoundaries_global,
                                                                  2),'d')
                 #mwf need to look at global solution some more
@@ -3528,7 +3528,7 @@ class VelocityPostProcessor_Original:
         #import pdb
         #pdb.set_trace()
         if self.postProcessingTypes != None:
-            assert self.vt != None, "postprocess types not None vt==None" 
+            assert self.vt != None, "postprocess types not None vt==None"
         for ci in self.vtComponents:
             if self.postProcessingTypes[ci] in ['dg','dg-bdm']:
                 self.postprocessDG(ci,verbose=verbose)
@@ -3656,7 +3656,7 @@ class VelocityPostProcessor_Original:
                                                                 self.vt.q[('grad(phi)',cj)],
                                                                 self.vt.q[('a',ci,cj)],
                                                                 self.q[('velocity_dofs',ci)])
-            
+
         #not right if use V2 which has Chou and Tang approach
         #this isn't right for multiple potentials either I beleve
         #self.postProcessRT0potentialFromP1nc(self.vt.q[('dV_u',ci)],
@@ -3675,7 +3675,7 @@ class VelocityPostProcessor_Original:
         #                                     self.vt.q[('r',ci)],
         #                                     self.q[('velocity_dofs',ci)],
         #                                     self.q[('u_RT0',ci)])
-        
+
         self.getElementRT0velocityValues(self.vt.q['x'],
                                          self.q[('velocity_dofs',ci)],
                                          self.q[('velocity',ci)])
@@ -3730,10 +3730,10 @@ class VelocityPostProcessor_Original:
         if verbose > 0:
             logEvent("""velpp Max local conservation (average velocity) = %12.5e""" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.subdomainMesh.nElements_owned])))
 
-        
+
         if self.updateConservationJacobian[ci]:
-	    self.getConservationJacobianPWL(ci)
-	    self.updateConservationJacobian[ci] = False #only depends on mesh need to resignal if mesh adapts
+            self.getConservationJacobianPWL(ci)
+            self.updateConservationJacobian[ci] = False #only depends on mesh need to resignal if mesh adapts
 
         cpostprocessing.calculateConservationFluxPWL(self.nElements_node,
                                                      self.vt.internalNodesArray,
@@ -3745,7 +3745,7 @@ class VelocityPostProcessor_Original:
         #add back fluxes for elementBoundaries that were Neumann but
         #not enforced directly
         self.addBoundaryFluxesBackToResidual(ci,self.fluxElementBoundaries[ci])
-        
+
         if verbose > 0:
             logEvent("Max local conservation (dgp1 enriched) = %12.5e" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.nElements_owned])))
 
@@ -3759,8 +3759,8 @@ class VelocityPostProcessor_Original:
             cpostprocessing.calculateElementResidualPWL(self.alpha[ci],self.vt.elementResidual[ci],self.elementResidualPWL[ci])
         self.getConservationResidualPWL_opt(ci)
         if self.updateConservationJacobian[ci]:
-	    self.getConservationJacobianPWL_opt(ci)
-	    self.updateConservationJacobian[ci] = False #only depends on mesh need to resignal if mesh adapts
+            self.getConservationJacobianPWL_opt(ci)
+            self.updateConservationJacobian[ci] = False #only depends on mesh need to resignal if mesh adapts
         #calculation partial corrections on owned node stars
         cpostprocessing.calculateConservationFluxPWL_opt(self.vt.mesh.nNodes_owned,
                                                          self.nElements_node,
@@ -3894,7 +3894,7 @@ class VelocityPostProcessor_Original:
             cpostprocessing.getElementBDM1velocityValuesLagrangeRep(self.vt.q[('v',ci)],
                                                                   self.q[('velocity_dofs',ci)],
                                                                   self.vt.q[('velocity',ci)])
-            
+
     def getConservationResidualPWL(self,ci,correctFlux=False):
         #mwf debug
         #import pdb
@@ -3959,10 +3959,10 @@ class VelocityPostProcessor_Original:
                                                                  self.q[('conservationResidual',ci)],
                                                                  self.ebq_global[('velocity',ci)],
                                                                  self.ebq[('velocity',ci)])
-    
+
             #end repeat
             t1 = os.times()
-            tElap = t1[4]-t0[4]; tUser = t1[0]-t0[0]; tSys  = t1[1]-t0[1]; 
+            tElap = t1[4]-t0[4]; tUser = t1[0]-t0[0]; tSys  = t1[1]-t0[1];
             tCPUpy= tUser+tSys;  tCPU  = t1[2]-t0[2] + t1[3]-t0[3]
 
             logEvent("""time: calculateConservationResidualPWL
@@ -3982,7 +3982,7 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
                                                                         self.vt.ebq_global[('totalFlux',ci)],
                                                                         updateCoef,
                                                                         self.vt.ebq_global[('velocity',ci)])
-        
+
 
         cfemIntegrals.copyGlobalElementBoundaryVelocityToElementBoundary(self.vt.mesh.interiorElementBoundariesArray,
                                                                          self.vt.mesh.exteriorElementBoundariesArray,
@@ -3991,13 +3991,13 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
                                                                          self.vt.ebq_global[('velocity',ci)],
                                                                          self.vt.ebq[('velocity',ci)])
 
-            
+
         cfemIntegrals.copyExteriorElementBoundaryValuesFromGlobalElementBoundaryValues(self.vt.mesh.exteriorElementBoundariesArray,
                                                                                        self.vt.mesh.elementBoundaryElementsArray,
                                                                                        self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
                                                                                        self.vt.ebq_global[('velocity',ci)],
                                                                                        self.vt.ebqe[('velocity',ci)])
- 
+
 
         #end set boundary flux
         if self.useBDMpwlBasis[ci] == True:
@@ -4071,7 +4071,7 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
                                                                  qsave['nodeStarFactor'])
             #end repeat
             t1 = os.times()
-            tElap = t1[4]-t0[4]; tUser = t1[0]-t0[0]; tSys  = t1[1]-t0[1]; 
+            tElap = t1[4]-t0[4]; tUser = t1[0]-t0[0]; tSys  = t1[1]-t0[1];
             tCPUpy= tUser+tSys;  tCPU  = t1[2]-t0[2] + t1[3]-t0[3]
 
             logEvent("""time: calculateConservationJacobianPWL
@@ -4120,7 +4120,7 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
         compute velocity field by just using point evaluation of trial solution
         and coefficients
           v = -\ten{a}_h\grad \phi_h + \vec f_h
-        
+
         """
         self.q[('velocity'),ci][:]=0.0
         assert self.postProcessingTypes[ci] in ['point-eval','dg-point-eval'], "wrong postprocessing type"
@@ -4132,12 +4132,12 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
                                                                     self.vt.coefficients.sdInfo[(ci,ci)][0],self.vt.coefficients.sdInfo[(ci,ci)][1],
                                                                     self.vt.q[('a',ci,ci)],
                                                                     self.vt.q[('grad(phi)',ci)],
-                                                                    self.q[('velocity'),ci])            
+                                                                    self.q[('velocity'),ci])
             else:
-               cpostprocessing.updateDiffusiveVelocityPointEval(updateCoef,
-                                                             self.vt.q[('a',ci,ci)],
-                                                             self.vt.q[('grad(phi)',ci)],
-                                                             self.q[('velocity'),ci])            
+                cpostprocessing.updateDiffusiveVelocityPointEval(updateCoef,
+                                                              self.vt.q[('a',ci,ci)],
+                                                              self.vt.q[('grad(phi)',ci)],
+                                                              self.q[('velocity'),ci])
         if self.vt.q.has_key(('f',ci)):
             updateCoef = 1.0
             cpostprocessing.updateAdvectiveVelocityPointEval(updateCoef,
@@ -4152,12 +4152,12 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
                                                                     self.vt.coefficients.sdInfo[(ci,ci)][0],self.vt.coefficients.sdInfo[(ci,ci)][1],
                                                                     self.vt.ebq[('a',ci,ci)],
                                                                     self.vt.ebq[('grad(phi)',ci)],
-                                                                    self.ebq[('velocity'),ci])   
+                                                                    self.ebq[('velocity'),ci])
             else:
                 cpostprocessing.updateDiffusiveVelocityPointEval(updateCoef,
                                                                  self.vt.ebq[('a',ci,ci)],
                                                                  self.vt.ebq[('grad(phi)',ci)],
-                                                                 self.ebq[('velocity'),ci])            
+                                                                 self.ebq[('velocity'),ci])
         if self.vt.ebq.has_key(('f',ci)):
             updateCoef = 1.0
             cpostprocessing.updateAdvectiveVelocityPointEval(updateCoef,
@@ -4172,12 +4172,12 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
                                                                     self.vt.coefficients.sdInfo[(ci,ci)][0],self.vt.coefficients.sdInfo[(ci,ci)][1],
                                                                     self.vt.ebqe[('a',ci,ci)],
                                                                     self.vt.ebqe[('grad(phi)',ci)],
-                                                                    self.ebqe[('velocity'),ci])            
+                                                                    self.ebqe[('velocity'),ci])
             else:
                 cpostprocessing.updateDiffusiveVelocityPointEval(updateCoef,
                                                              self.vt.ebqe[('a',ci,ci)],
                                                              self.vt.ebqe[('grad(phi)',ci)],
-                                                             self.ebqe[('velocity'),ci])            
+                                                             self.ebqe[('velocity'),ci])
         if self.vt.ebqe.has_key(('f',ci)):
             updateCoef = 1.0
             cpostprocessing.updateAdvectiveVelocityPointEval(updateCoef,
@@ -4188,7 +4188,7 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
         #mwf debug
         #q_velocityCheck = numpy.zeros(self.q[('velocity',ci)].shape,'d')
         #ebq_velocityCheck = numpy.zeros(self.ebq[('velocity',ci)].shape,'d')
-        
+
         #for eN in range(self.vt.mesh.nElements_global):
         #    for k in range(self.vt.nQuadraturePoints_element):
         #        #cek added tests to see if terms are in eqn
@@ -4222,7 +4222,7 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
         try to implement Larson and Niklasson piecewise-constant algorithm
 
         TODO:
-             
+
         """
         assert self.postProcessingTypes[ci] == 'pwc', "wrong postprocessing type"
         #compute initial element conservation residual for average velocity
@@ -4233,7 +4233,7 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
         #need to add back in after solves, now skip Neumann boundaries since enforcing them explicitly
         self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
         #what if use weak dirichlet with PWC
-        
+
         cpostprocessing.calculateConservationResidualGlobalBoundaries(self.vt.mesh.interiorElementBoundariesArray,
                                                                       self.vt.mesh.exteriorElementBoundariesArray,
                                                                       self.vt.mesh.elementBoundaryElementsArray,
@@ -4258,7 +4258,7 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
                                                  self.ebq_global['pwc-corr'],
                                                  self.pwcV[ci],
                                                  self.ebq_global[('flux_correction',ci)])
-                 
+
         cpostprocessing.fluxCorrectionVelocityUpdate(self.vt.mesh.interiorElementBoundariesArray,
                                                    self.vt.mesh.exteriorElementBoundariesArray,
                                                    self.vt.mesh.elementBoundaryElementsArray,
@@ -4277,7 +4277,7 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
                                                                         self.vt.ebq_global[('totalFlux',ci)],
                                                                         updateCoef,
                                                                         self.vt.ebq_global[('velocity',ci)])
-        
+
 
         cfemIntegrals.copyGlobalElementBoundaryVelocityToElementBoundary(self.vt.mesh.interiorElementBoundariesArray,
                                                                          self.vt.mesh.exteriorElementBoundariesArray,
@@ -4296,7 +4296,7 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
                                                          self.vt.q['x'],
                                                          self.q[('velocity_dofs',ci)],
                                                          self.q[('velocity',ci)])
-                                            
+
         cfemIntegrals.copyExteriorElementBoundaryValuesFromGlobalElementBoundaryValues(self.vt.mesh.exteriorElementBoundariesArray,
                                                                                        self.vt.mesh.elementBoundaryElementsArray,
                                                                                        self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -4305,14 +4305,14 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
         self.addBoundaryFluxesBackToResidual(ci,self.fluxElementBoundaries[ci])
         if verbose > 0:
             logEvent("Max local conservation (dgp0 enriched) = %12.5e" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.subdomainMesh.nElements_owned])))
-                                                       
+
     def postprocessSunWheeler(self,ci,verbose=0):
         """
         try to implement Sun and Wheeler Gauss-Seidel postprocessing algorithm
 
         TODO:
              account for velocity fields that aren't globally conservative
-             
+
         """
         assert (self.postProcessingTypes[ci] == 'sun-rt0' or
                 self.postProcessingTypes[ci] == 'sun-gs-rt0'), "wrong postprocessing type"
@@ -4339,7 +4339,7 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
                     self.ebq_global[('velocity',ci)][ebN,k,:] += (self.vt.ebq_global[('totalFlux',ci)][ebN,k]-vdotn)*self.vt.ebq_global['n'][ebN,k,:]
             self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
             needToAddBackBoundaryFluxes = True
-            
+
         cpostprocessing.calculateConservationResidualGlobalBoundaries(self.vt.mesh.interiorElementBoundariesArray,
                                                                       self.vt.mesh.exteriorElementBoundariesArray,
                                                                       self.vt.mesh.elementBoundaryElementsArray,
@@ -4351,7 +4351,7 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
                                                                       self.ebq_global[('velocity',ci)],
                                                                       self.q[('conservationResidual',ci)])
 
-        if self.postProcessingTypes[ci] == 'sun-gs-rt0':            
+        if self.postProcessingTypes[ci] == 'sun-gs-rt0':
             #need to allow these as parameters
             GSmaxIts = 10000
             GStol    = 1.0e-6
@@ -4361,7 +4361,7 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
                 logEvent("Sun-Wheeler GS initial residual= %s" % max(abs(self.q[('conservationResidual',ci)].flat[:])))
             if TESTVPPTIMES:
                 t0 = os.times()
-            
+
             while GSits < GSmaxIts and not converged:
                 cpostprocessing.sunWheelerGSsweep(self.vt.mesh.interiorElementBoundariesArray,
                                                   self.vt.mesh.exteriorElementBoundariesArray,
@@ -4381,7 +4381,7 @@ nCalls= %d ; totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (nCal
             #end while
             if TESTVPPTIMES:
                 t1 = os.times()
-                tElap = t1[4]-t0[4]; tUser = t1[0]-t0[0]; tSys  = t1[1]-t0[1]; 
+                tElap = t1[4]-t0[4]; tUser = t1[0]-t0[0]; tSys  = t1[1]-t0[1];
                 tCPUpy= tUser+tSys;  tCPU  = t1[2]-t0[2] + t1[3]-t0[3]
 
                 logEvent("""time: sunWheelerGSsweep
@@ -4413,8 +4413,8 @@ totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (tElap,tCPUpy,tCPU
                                                      self.ebq_global[('flux_correction',ci)])
 
         #global solve
-                
-                
+
+
         cpostprocessing.fluxCorrectionVelocityUpdate(self.vt.mesh.interiorElementBoundariesArray,
                                                      self.vt.mesh.exteriorElementBoundariesArray,
                                                      self.vt.mesh.elementBoundaryElementsArray,
@@ -4434,7 +4434,7 @@ totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (tElap,tCPUpy,tCPU
                                                                             self.vt.ebq_global[('totalFlux',ci)],
                                                                             updateCoef,
                                                                             self.vt.ebq_global[('velocity',ci)])
-        
+
 
             cfemIntegrals.copyGlobalElementBoundaryVelocityToElementBoundary(self.vt.mesh.interiorElementBoundariesArray,
                                                                              self.vt.mesh.exteriorElementBoundariesArray,
@@ -4453,7 +4453,7 @@ totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (tElap,tCPUpy,tCPU
                                                          self.vt.q['x'],
                                                          self.q[('velocity_dofs',ci)],
                                                          self.q[('velocity',ci)])
-                                            
+
         cfemIntegrals.copyExteriorElementBoundaryValuesFromGlobalElementBoundaryValues(self.vt.mesh.exteriorElementBoundariesArray,
                                                                                        self.vt.mesh.elementBoundaryElementsArray,
                                                                                        self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
@@ -4496,7 +4496,7 @@ totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (tElap,tCPUpy,tCPU
             cpostprocessing.getElementBDM1velocityValuesLagrangeRep(vArray,
                                                                   self.q[('velocity_dofs',ci)],
                                                                   vx)
-                                     
+
         elif self.postProcessingTypes[ci] == 'point-eval':
             logEvent("""WARNING evalute ElementVelocity Field point-eval not implemented """)
         else:
@@ -4530,7 +4530,7 @@ totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (tElap,tCPUpy,tCPU
                                                                       self.w_dS[ci],#vt.ebq[('w*dS_u',ci)],
                                                                       self.elementResidualPWL[ci])#vt.elementResidual[ci])
 
-                                                                              
+
     #end remove boundary fluxes
     def addBoundaryFluxesBackToResidual(self,ci,flag_elementBoundaries=None):
         """
@@ -4553,5 +4553,5 @@ totalTime= %12.5e ; pythonCPU = %12.5e ; simCPU= %12.5e """ % (tElap,tCPUpy,tCPU
                                                                       flux,
                                                                       self.w_dS[ci],#vt.ebq[('w*dS_u',ci)],
                                                                       self.elementResidualPWL[ci])#vt.elementResidual[ci])
-        
+
     #end add boundary fluxes

@@ -5,7 +5,7 @@ from proteus.MeshTools import *
 from proteus.FemTools import *
 
 ## \ingroup scripts
-# 
+#
 # \file readFunLite.py
 #
 # \brief A lightweight method for reading .3dm and .dat files and generating a finite element function.
@@ -117,4 +117,3 @@ if __name__ == '__main__':
     #p.sort_stats('cumulative').print_stats(20)
     #p.sort_stats('time').print_stats(20)
     readFunLite()
-

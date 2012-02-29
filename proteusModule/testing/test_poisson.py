@@ -6,7 +6,7 @@ This module solves equations of the form
 
 .. _math::
 
-  \nabla \cdot \left( a(x) \nabla u \right) = f(x) 
+  \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
 from proteus.iproteus import *

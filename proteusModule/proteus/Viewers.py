@@ -127,11 +127,11 @@ class V_base:
     def preprocess(self,mlvt,tsim):
         if (('Init' in self.s.viewTimes or
              'All' in self.s.viewTimes or
-             tsim in self.s.viewTimes) 
-            and 
+             tsim in self.s.viewTimes)
+            and
             'u' in self.s.viewQuantities):
             if self.plotOffSet == None:
-               self.plotOffSet = self.windowNumber()
+                self.plotOffSet = self.windowNumber()
             self.windowNumberTmp= mlvt.levelModelList[-1].viewSolution(plotOffSet=self.plotOffSet,
                                                                        titleModifier='',
                                                                        dgridnx=self.dgridx,
@@ -146,7 +146,7 @@ class V_base:
             self.stepProcessPlot(mlvt,tsim)
     def postprocess(self,mlvt,tsim):
         if ('All' in self.s.viewTimes or
-            'Last' in self.s.viewTimes or 
+            'Last' in self.s.viewTimes or
             tsim in self.s.viewTimes):
             self.stepProcessPlot(mlvt,tsim)
     def stepProcessPlot(self,mlvt,tsim):
@@ -162,16 +162,16 @@ class V_base:
         TO DO:
 
         """
-        import pdb 
+        import pdb
         nplots = 0
         if 'u' in self.s.viewQuantities:
-                self.windowNumberSave = self.windowNumber()
-                mlvt.levelModelList[-1].viewSolution(plotOffSet=self.plotOffSet,titleModifier='',
-                                                     dgridnx=self.dgridx,dgridny=self.dgridy,pause=self.s.viewerPause)
-                if self.plotOffSet == None:
-                    self.plotOffSet = self.windowNumberSave
+            self.windowNumberSave = self.windowNumber()
+            mlvt.levelModelList[-1].viewSolution(plotOffSet=self.plotOffSet,titleModifier='',
+                                                 dgridnx=self.dgridx,dgridny=self.dgridy,pause=self.s.viewerPause)
+            if self.plotOffSet == None:
+                self.plotOffSet = self.windowNumberSave
         #end if
-        
+
         self.stepPlotExact(mlvt,tsim)
         self.stepPlotElementQuantities(mlvt,tsim)
     def stepPlotExact(self,mlvt,tsim):
@@ -209,7 +209,7 @@ class V_base:
                            self.p.analyticalSolution.has_key(ci)  and \
                            self.p.analyticalSolution[ci] != None
                 if plotExact:
-                    #copy the code from VectorTransport.viewSolution as much as possibe
+                #copy the code from VectorTransport.viewSolution as much as possibe
                     if self.viewerType == 'gnuplot':
                         title=vt.coefficients.variableNames[ci]+'_exact: t=%12.5e' % tsim
                         if vt.nSpace_global == 1:
@@ -309,13 +309,13 @@ class V_base:
                             vtkViewers.viewScalar_1D(xvals,yvals,"x",vt.coefficients.variableNames[ci]+'_exact',title,
                                                         self.windowNumber(),
                                                         Pause=self.viewerPause,sortPoints=True)
-                       
+
                             newPlot()
-                            newWindow()                    
+                            newWindow()
                         #1d
                     #vtk
                 #end plotExact
-                plotExactVel = ('velocity_exact' in self.s.viewQuantities and 
+                plotExactVel = ('velocity_exact' in self.s.viewQuantities and
                                 'p.analyticalSolutionVelocity' in dir(p) and
                                 self.p.p.analyticalSolutionVelocity != None and
                                 vt.q.has_key(('velocity',ci)))
@@ -326,7 +326,7 @@ class V_base:
                         #to scale need exact solution values everywhere first
                         v = numpy.zeros(vt.q[('velocity',ci)].shape,'d')
                         if vt.nSpace_global == 1:
-                            max_u = 0.0; 
+                            max_u = 0.0;
                             for eN in range(vt.mesh.nElements_global):
                                 for k in range(vt.nQuadraturePoints_element):
                                     xtmp = vt.q['x'][eN,k,:];
@@ -349,10 +349,10 @@ class V_base:
                             newPlot()
                             newWindow()
                         elif vt.nSpace_global == 2:
-                            max_u = 0.0; max_v =0.0;  
+                            max_u = 0.0; max_v =0.0;
                             for eN in range(vt.mesh.nElements_global):
                                 for k in range(vt.nQuadraturePoints_element):
-                                    xtmp = vt.q['x'][eN,k,:]; 
+                                    xtmp = vt.q['x'][eN,k,:];
                                     v[eN,k,:] = self.p.p.analyticalSolutionVelocity[ci].uOfXT(xtmp,tsim)
                                     max_u=max(max_u,abs(v[eN,k,0]))
                                     max_v=max(max_u,abs(v[eN,k,1]))
@@ -361,7 +361,7 @@ class V_base:
                                 scale = 1.0
                             for eN in range(vt.mesh.nElements_global):
                                 for k in range(vt.nQuadraturePoints_element):
-                                    xtmp = vt.q['x'][eN,k,:]; 
+                                    xtmp = vt.q['x'][eN,k,:];
                                     vtmp = v[eN,k,:]
                                     self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[0],xtmp[1],
                                                                                                   vtmp[0]/scale,vtmp[1]/scale))
@@ -370,17 +370,17 @@ class V_base:
                                                                                                           self.datFilename,
                                                                                                           self.plotNumber(),
                                                                                                           title)
-                        
+
                             self.cmdFile.write(cmd)
                             self.viewerPipe.write(cmd)
                             newPlot()
                             newWindow()
                         elif vt.nSpace_global == 3:
-                            max_u = 0.0; max_v =0.0; max_w = 0.0; 
+                            max_u = 0.0; max_v =0.0; max_w = 0.0;
                             (slice_x,slice_y,slice_z) = vt.mesh.nodeArray[vt.mesh.nodeArray.shape[0]/2,:]
                             for eN in range(vt.mesh.nElements_global):
                                 for k in range(vt.nQuadraturePoints_element):
-                                    xtmp = vt.q['x'][eN,k,:]; 
+                                    xtmp = vt.q['x'][eN,k,:];
                                     v[eN,k,:] = self.p.p.analyticalSolutionVelocity[ci].uOfXT(xtmp,tsim)
                                     max_u=max(max_u,abs(v[eN,k,0]))
                                     max_v=max(max_u,abs(v[eN,k,1]))
@@ -390,7 +390,7 @@ class V_base:
                                 scale = 1.0
                             for eN in range(vt.mesh.nElements_global):
                                 for k in range(vt.nQuadraturePoints_element):
-                                    xtmp = vt.q['x'][eN,k,:]; 
+                                    xtmp = vt.q['x'][eN,k,:];
                                     vtmp = v[eN,k,:]
                                     if abs(xtmp[0]- slice_x) < vt.mesh.h:
                                         self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[1],xtmp[2],
@@ -407,7 +407,7 @@ class V_base:
                             #yslice
                             for eN in range(vt.mesh.nElements_global):
                                 for k in range(vt.nQuadraturePoints_element):
-                                    xtmp = vt.q['x'][eN,k,:]; 
+                                    xtmp = vt.q['x'][eN,k,:];
                                     vtmp = v[eN,k,:]
                                     if abs(xtmp[1]- slice_y) < vt.mesh.h:
                                         self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[0],xtmp[2],
@@ -424,7 +424,7 @@ class V_base:
                             #zslice
                             for eN in range(vt.mesh.nElements_global):
                                 for k in range(vt.nQuadraturePoints_element):
-                                    xtmp = vt.q['x'][eN,k,:]; 
+                                    xtmp = vt.q['x'][eN,k,:];
                                     vtmp = v[eN,k,:]
                                     if abs(xtmp[2]- slice_z) < vt.mesh.h:
                                         self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (xtmp[0],xtmp[1],
@@ -454,7 +454,7 @@ class V_base:
 
                         windowNumber += nplotted
                     #need vtk option
-                    
+
             #end components
         #end ci
         #vector components
@@ -463,8 +463,8 @@ class V_base:
             if vt.nSpace_global == 2:
                 uci = vt.coefficients.vectorComponents[0]; vci = vt.coefficients.vectorComponents[1]
                 plotVector = (uci in self.s.viewComponents and vci in self.s.viewComponents and
-                              self.p.analyticalSolution != None and 
-                              self.p.analyticalSolution.has_key(uci) and self.p.analyticalSolution.has_key(vci) and 
+                              self.p.analyticalSolution != None and
+                              self.p.analyticalSolution.has_key(uci) and self.p.analyticalSolution.has_key(vci) and
                               self.p.analyticalSolution[uci] != None and self.p.analyticalSolution[vci] != None)
                 if plotVector and self.viewerType == 'gnuplot':
                     for x in vt.mesh.nodeArray[:,:]:
@@ -484,14 +484,14 @@ class V_base:
                 (slice_x,slice_y,slice_z) = vt.mesh.nodeArray[vt.mesh.nodeArray.shape[0]/2,:]
                 uci = vt.coefficients.vectorComponents[0]; vci = vt.coefficients.vectorComponents[1]
                 wci = vt.coefficients.vectorComponents[2]
-                plotVector = (uci in self.s.viewComponents and vci in self.s.viewComponents and 
-                              wci in self.s.viewComponents and self.p.analyticalSolution != None and 
-                              self.p.analyticalSolution != None and 
-                              self.p.analyticalSolution.has_key(uci) and self.p.analyticalSolution.has_key(vci) and 
-                              self.p.analyticalSolution.has_key(wci) and 
-                              self.p.analyticalSolution[uci] != None and self.p.analyticalSolution[vci] != None and 
+                plotVector = (uci in self.s.viewComponents and vci in self.s.viewComponents and
+                              wci in self.s.viewComponents and self.p.analyticalSolution != None and
+                              self.p.analyticalSolution != None and
+                              self.p.analyticalSolution.has_key(uci) and self.p.analyticalSolution.has_key(vci) and
+                              self.p.analyticalSolution.has_key(wci) and
+                              self.p.analyticalSolution[uci] != None and self.p.analyticalSolution[vci] != None and
                               self.p.analyticalSolution[wci] != None)
-                
+
                 if plotVector and self.viewerType == 'gnuplot':
                     for x in vt.mesh.nodeArray[:,:]:
                         uex = self.p.analyticalSolution[uci].uOfXT(x,tsim)
@@ -499,7 +499,7 @@ class V_base:
                         wex = self.p.analyticalSolution[wci].uOfXT(x,tsim)
                         if x[0] == slice_x:
                             self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (x[1],x[2],vex,wex))
-                    
+
                     self.datFile.write("\n \n")
                     cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (self.windowNumber(),
                                                                                                   self.datFilename,
@@ -515,7 +515,7 @@ class V_base:
                         wex = self.p.analyticalSolution[wci].uOfXT(x,tsim)
                         if x[1] == slice_y:
                             self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (x[0],x[2],uex,wex))
-                    
+
                     self.datFile.write("\n \n")
                     cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (self.windowNumber(),
                                                                                                   self.datFilename,
@@ -531,7 +531,7 @@ class V_base:
                         wex = self.p.analyticalSolution[wci].uOfXT(x,tsim)
                         if x[2] == slice_z:
                             self.datFile.write("%12.5e %12.5e %12.5e %12.5e \n" % (x[0],x[1],uex,vex))
-                    
+
                     self.datFile.write("\n \n")
                     cmd = "set term x11 %i; plot \'%s\' index %i with vectors title \"%s\" \n" % (self.windowNumber(),
                                                                                                   self.datFilename,
@@ -590,14 +590,14 @@ class V_base:
         """
         plotting routine to look at scalar quantity stored in element quad dictionary q
         input :
-          ckey --- what should be plotted  
+          ckey --- what should be plotted
           p    --- problem definition
           n    --- numerics definition
           mlvt --- multilevel vector transport that holds the quantities to measure
           tsim --- simulation time
         assumes this is the correct time to plot
         and plotOffSet is set correctly
-        
+
         """
         p = self.p; n = self.n
 
@@ -646,7 +646,7 @@ class V_base:
                         if vt.q['x'][eN,k,0] == slice_x:
                             self.datFile.write("%12.5e %12.5e %12.5e \n" % (vt.q['x'][eN,k,1],
                                                                                vt.q['x'][eN,k,2],vt.q[ckey][eN,k]))
-                        
+
                 self.datFile.write("\n \n")
                 cmd = "set dgrid3d; set contour base; set term x11 %i; splot \'%s\' index %i with lines title \"%s-x-slice\" \n" % (self.windowNumber(),
                                                                                                                                             self.datFilename,
@@ -662,7 +662,7 @@ class V_base:
                         if vt.q['x'][eN,k,1] == slice_y:
                             self.datFile.write("%12.5e %12.5e %12.5e \n" % (vt.q['x'][eN,k,0],
                                                                                vt.q['x'][eN,k,2],vt.q[ckey][eN,k]))
-                            
+
                 self.datFile.write("\n \n")
                 cmd = "set dgrid3d; set contour base; set term x11 %i; splot \'%s\' index %i with lines title \"%s-y-slice\" \n" % (self.windowNumber(),
                                                                                                                                     self.datFilename,
@@ -678,7 +678,7 @@ class V_base:
                         if vt.q['x'][eN,k,2] == slice_z:
                             self.datFile.write("%12.5e %12.5e %12.5e \n" % (vt.q['x'][eN,k,0],
                                                                                vt.q['x'][eN,k,1],vt.q[ckey][eN,k]))
-                        
+
                 self.datFile.write("\n \n")
                 cmd = "set dgrid3d; set contour base; set term x11 %i; splot \'%s\' index %i with lines title \"%s-z-slice\" \n" % (self.windowNumber(),
                                                                                                                                     self.datFilename,
@@ -695,7 +695,7 @@ class V_base:
             name = ckey[0];
             for i in range(len(ckey)-1):
                 name += "_%s" % ckey[1+i]
-                
+
             title = "%s t = %g " % (name,tsim)
             #does not handle window number counting internally
             writer = MatlabWriter(nxgrid=50,nygrid=50,nzgrid=50)
@@ -715,7 +715,7 @@ class V_base:
                 vtkViewers.viewScalar_1D(xvals,yvals,"x",ckey[0],title,self.windowNumber(),
                                             Pause=self.s.viewerPause,sortPoints=True)
                 newPlot()
-                newWindow()                    
+                newWindow()
             elif vt.nSpace_global == 2:
                 vtkViewers.viewScalar_pointSet_2D(vt.q['x'], vt.q[ckey], title, self.windowNumber(), True, self.s.viewerPause, False)
                 newPlot()
@@ -724,24 +724,24 @@ class V_base:
                 vtkViewers.viewScalar_pointSet_3D(vt.q['x'], vt.q[ckey], title, self.windowNumber(), self.s.viewerPause, False)
                 newPlot()
                 newWindow()
-            
+
     #def
     def plotVectorGlobalElementBoundaryQuantity(self,ckey,mlvt,tsim):
         """
         plotting routine to look at vector quantity stored in global elementBoundary quad dictionary ebq_global
         input :
-          ckey --- what should be plotted  
+          ckey --- what should be plotted
           p    --- problem definition
           n    --- numerics definition
           mlvt --- multilevel vector transport that holds the quantities to measure
           tsim --- simulation time
         assumes this is the correct time to plot
         and plotOffSet is set correctly
-        
+
         """
         from proteusGraphical import vtkViewers
         p = self.p; n = self.n
-        
+
         vt = mlvt.levelModelList[-1]
         title = """ebq_global[%s] t= %s""" % (ckey,tsim)
         assert vt.ebq_global.has_key(ckey)
@@ -815,7 +815,7 @@ class V_base:
                                                                                               self.plotNumber(),
                                                                                               title+" max=(%s,%s,%s) " % (max_u,max_v,max_w)+" : x-slice")
 
-                
+
                 self.cmdFile.write(cmd)
                 self.viewerPipe.write(cmd)
                 newPlot()
@@ -851,7 +851,7 @@ class V_base:
                                                                                               self.datFilename,
                                                                                               self.plotNumber(),
                                                                                               title+" max=(%s,%s,%s) " % (max_u,max_v,max_w)+" : z-slice")
-                
+
 
                 self.cmdFile.write(cmd)
                 self.viewerPipe.write(cmd)
@@ -873,8 +873,8 @@ class V_base:
                 vtkViewers.viewScalar_1D(xvals,yvals,"x",ckey[0],title,self.windowNumber(),
                                             Pause=self.s.viewerPause,sortPoints=True)
                 newPlot()
-                newWindow() 
-                
+                newWindow()
+
             elif vt.nSpace_global == 2:
                 max_u=max(numpy.absolute(numpy.take(vt.ebq_global[ckey],[0],2).flat))
                 max_v=max(numpy.absolute(numpy.take(vt.ebq_global[ckey],[1],2).flat))
@@ -926,14 +926,14 @@ class V_base:
         """
         plotting routine to look at vector quantity stored in global element quad dictionary q
          input :
-          ckey --- what should be plotted  
+          ckey --- what should be plotted
           p    --- problem definition
           n    --- numerics definition
           mlvt --- multilevel vector transport that holds the quantities to measure
           tsim --- simulation time
         assumes this is the correct time to plot
         and plotOffSet is set correctly
-        
+
         """
         from proteusGraphical import vtkViewers
         p = self.p; n = self.n
@@ -982,7 +982,7 @@ class V_base:
                                                                                               self.datFilename,
                                                                                               self.plotNumber(),
                                                                                               ptitle)
-                        
+
                 self.cmdFile.write(cmd)
                 self.viewerPipe.write(cmd)
                 newPlot()
@@ -1049,14 +1049,14 @@ class V_base:
                 self.cmdFile.write(cmd)
                 self.viewerPipe.write(cmd)
                 newPlot()
-                newWindow()                        
+                newWindow()
             #end 3d
         #gnuplot
         elif self.viewerType == 'matlab':
             name = ckey[0];
             for i in range(len(ckey)-1):
                 name += "_%s" % ckey[1+i]
-                
+
             title = "%s t = %g " % (name,tsim)
             #does not handle window number counting internally
             writer = MatlabWriter(nxgrid=50,nygrid=50,nzgrid=50)
@@ -1065,7 +1065,7 @@ class V_base:
                                                   useLocal=False,#not implemented yed
                                                   figureNumber =self.windowNumber()+1,title=title)
             windowNumber += nplotted
-            
+
         elif self.viewerType == 'vtk':
             title = """q[%s]""" % (ckey,)
             if vt.nSpace_global == 1:
@@ -1091,7 +1091,7 @@ class V_base:
                                                   Pause=self.s.viewerPause)
                 newPlot()
                 newWindow()
-                
+
      #def
 
 
@@ -1124,7 +1124,7 @@ class MatlabWriter:
         or build a global one depending on useLocal.
 
         If useLocal and  nPoints_elemnet < nSpace+1 calls global routine
-        
+
         """
         if not useLocal:
             return self.viewGlobalScalarPointData(cmdFile,nSpace,q,ckey,name=name,
@@ -1141,7 +1141,7 @@ Warning! viewScalarPointData nPoints_element=%s < %s too small for useLocal, usi
         return self.viewLocalScalarPointData(cmdFile,nSpace,q,ckey,name=name,
                                              storeMeshData=storeMeshData,
                                              figureNumber=figureNumber,title=title)
-            
+
     def viewVectorPointData(self,cmdFile,nSpace,q,ckey,name=None,
                             storeMeshData=True,useLocal=True,
                             figureNumber=1,title=None):
@@ -1149,9 +1149,9 @@ Warning! viewScalarPointData nPoints_element=%s < %s too small for useLocal, usi
         wrapper for visualling element quadrature points, can try to use a local representation
         or build a global one depending on useLocal.
         TODO: implement local view for vectors
-        
+
         If useLocal and  nPoints_elemnet < nSpace+1 calls global routine
-        
+
         """
         if not useLocal:
             return self.viewGlobalVectorPointData(cmdFile,nSpace,q,ckey,name=name,
@@ -1173,7 +1173,7 @@ Warning! viewScalarPointData nPoints_element=%s < %s too small for useLocal, usi
 #         return self.viewLocalScalarPointData(cmdFile,nSpace,q,ckey,name=name,
 #                                              storeMeshData=storeMeshData,
 #                                              figureNumber=figureNumber,title=title)
-            
+
     def viewGlobalScalarPointData(self,cmdFile,nSpace,q,ckey,name=None,
                                   storeMeshData=True,figureNumber=1,title=None):
         """
@@ -1181,16 +1181,16 @@ Warning! viewScalarPointData nPoints_element=%s < %s too small for useLocal, usi
            q['x'], q[ckey]
         respectively, generate global continuous interpolant
         should work for q, ebq_global, and ebqe quadrature dictionaries
-        
+
         uses delaunay triangulation in 2d and 3d
 
         scalar data is stored in
             name_q
-            
+
         if storeMeshData = True, writes out
-            name_x_q    -- point data 
+            name_x_q    -- point data
             tri_name_q  -- Delaunay representation (2d,3d)
-    
+
         returns number of figures actually plotted
         """
         nplotted = 0
@@ -1200,7 +1200,7 @@ Warning! viewScalarPointData nPoints_element=%s < %s too small for useLocal, usi
 [x_tmp,i_tmp] = sort(%s_x_q(:,1)); %s_x_q = %s_x_q(i_tmp); %s_q = %s_q(i_tmp);
 """
         cmd1dView = """
-figure(%i) ; plot(%s_x_q(:,1),%s_q) ;  title('%s'); 
+figure(%i) ; plot(%s_x_q(:,1),%s_q) ;  title('%s');
 """
         #2d
         cmd2dData = """
@@ -1208,7 +1208,7 @@ tri_%s_q = delaunay(%s_x_q(:,1),%s_x_q(:,2));
 """
         cmd2dView = """
 figure(%i) ; trimesh(tri_%s_q,%s_x_q(:,1),%s_x_q(:,2),%s_q); title('%s');
-%%also could be used 
+%%also could be used
 %%trisurf(tri_name_q,name_x_q(:,1),name_x_q(:,2),name_q);
 """
         cmd2dGrid = """
@@ -1224,7 +1224,7 @@ tri_%s_q = delaunay3(%s_x_q(:,1),%s_x_q(:,2),%s_x_q(:,3));
 """
         cmd3dView = """
 %%Warning not very good right now
-%%figure(%i) ; tetramesh(tri_%s_q,%s_x_q);  title('%s'); 
+%%figure(%i) ; tetramesh(tri_%s_q,%s_x_q);  title('%s');
 """
         cmd3dGrid = """
 nx = %i; ny = %i; nz = %i ;
@@ -1243,7 +1243,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             title = name
         assert q.has_key(ckey), " ckey = %s missing from q " % ckey
         assert len(q[ckey].shape) == 2, " q[%s].shape= %s should be ( , ) " % (ckey,q[ckey].shape)
-        
+
         if storeMeshData:
             self.storePointMeshData(cmdFile,q['x'],name)
             #cmdFile.write("%s_x_q = [ ... \n" % name)
@@ -1252,13 +1252,13 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             #        cmdFile.write("%g %g %g \n" % (q['x'][eN,k,0],q['x'][eN,k,1],q['x'][eN,k,2]))
             #cmdFile.write("];")
         #
-        
+
         cmdFile.write("%s_q = [ ... \n" % name)
         for eN in range(q[ckey].shape[0]): #ebq_global or ebqe would work
             for k in range(q[ckey].shape[1]):
-                cmdFile.write("%g \n" % q[ckey][eN,k]) 
+                cmdFile.write("%g \n" % q[ckey][eN,k])
         cmdFile.write("];");
-         
+
         if nSpace == 1:
             cmd = cmd1dData % (name,name,name,name,name)
             cmdFile.write(cmd)
@@ -1274,7 +1274,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,name,name,
                                name,name,
                                name,name,name,name,name,name)
-            
+
             cmdFile.write(cmd)
             nplotted = 1
         else:
@@ -1299,16 +1299,16 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
            q['x'], q[ckey]
         respectively, generate global continuous interpolant
         should work for q, ebq_global, and ebqe quadrature dictionaries
-        
+
         uses delaunay triangulation in 2d and 3d
 
         vector data is stored in
             name_q
-            
+
         if storeMeshData = True, writes out
-            name_x_q    -- point data 
+            name_x_q    -- point data
             tri_name_q  -- Delaunay representation (2d,3d)
-                    
+
         returns number of figures actually generated
         """
         nplotted = 0
@@ -1318,7 +1318,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 [x_tmp,i_tmp] = sort(%s_x_q(:,1)); %s_x_q = %s_x_q(i_tmp); %s_q = %s_q(i_tmp);
 """
         cmd1dView = """
-figure(%i) ; plot(%s_x_q(:,1),%s_q) ;  title('%s'); 
+figure(%i) ; plot(%s_x_q(:,1),%s_q) ;  title('%s');
 """
         #2d
         cmd2dData = """
@@ -1326,9 +1326,9 @@ tri_%s_q = delaunay(%s_x_q(:,1),%s_x_q(:,2));
 """
         cmd2dView = """
 %s_q_mag = (%s_q(:,1).^2 + %s_q(:,2).^2).^(0.5);
-figure(%i) ; quiver(%s_x_q(:,1),%s_x_q(:,2),%s_q(:,1),%s_q(:,2));title('%s'); 
+figure(%i) ; quiver(%s_x_q(:,1),%s_x_q(:,2),%s_q(:,1),%s_q(:,2));title('%s');
 %%could also use
-%% trimesh(tri_name_q,name_x_q(:,1),name_x_q(:,2),name_q_mag); 
+%% trimesh(tri_name_q,name_x_q(:,1),name_x_q(:,2),name_q_mag);
 """
         cmd2dGrid = """
 nx = %i; ny = %i;
@@ -1343,8 +1343,8 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny;
 tri_%s_q = delaunay3(%s_x_q(:,1),%s_x_q(:,2),%s_x_q(:,3));
 """
         cmd3dView = """
-%s_q_mag = (%s_q(:,1).^2 + %s_q(:,2).^2 + %s_q(:,3).^2).^(0.5); 
-figure(%i) ; quiver3(%s_x_q(:,1),%s_x_q(:,2),%s_x_q(:,3),%s_q(:,1),%s_q(:,2),%s_q(:,3));title('%s'); 
+%s_q_mag = (%s_q(:,1).^2 + %s_q(:,2).^2 + %s_q(:,3).^2).^(0.5);
+figure(%i) ; quiver3(%s_x_q(:,1),%s_x_q(:,2),%s_x_q(:,3),%s_q(:,1),%s_q(:,2),%s_q(:,3));title('%s');
 %%Warning not very good right now
 %% tetramesh(tri_name_q,name_x_q);
 """
@@ -1367,12 +1367,12 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             title = name
         assert q.has_key(ckey), " ckey = %s missing from q " % ckey
         assert len(q[ckey].shape) == 3, " q[%s].shape= %s should be ( , , ) " % (ckey,q[ckey].shape)
-        
+
         if storeMeshData:
             self.storePointMeshData(cmdFile,q['x'],name)
 
         #
-        
+
         cmdFile.write("%s_q = [ ... \n" % name)
         for eN in range(q[ckey].shape[0]): #ebq_global or ebqe would work
             for k in range(q[ckey].shape[1]):
@@ -1380,7 +1380,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                     cmdFile.write(" %g " % q[ckey][eN,k,I])
                 cmdFile.write(" ; \n ")
         cmdFile.write("];");
-        
+
         if nSpace == 1:
             cmd = cmd1dData % (name,name,name,name,name)
             cmdFile.write(cmd)
@@ -1398,7 +1398,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,
                                name,name,name,name,name,name,
                                name,name,name,name,name,name)
-            
+
             cmdFile.write(cmd)
             nplotted = 1
         else:
@@ -1414,7 +1414,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,name,name,name,name,name,name,
                                name,name,name,name,name,name,name,name)
             cmdFile.write(cmd)
-            nplotted = 1 
+            nplotted = 1
 
         #
         return nplotted
@@ -1426,16 +1426,16 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
            q['x'], q[ckey]
         respectively, generate local  interpolant that is element-wise continuous
         should work for q, ebq_global, and ebqe quadrature dictionaries
-        
+
         uses delaunay triangulation in 2d and 3d on each element (stored in cell array)
 
         scalar data is stored in
             name_q
-            
+
         if storeMeshData = True, writes out
-            name_x_q    -- point data 
+            name_x_q    -- point data
             tri_name_q  -- Delaunay representation (2d,3d)
-    
+
         returns number of figures actually plotted
         """
         #1d
@@ -1518,9 +1518,9 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
         cmdFile.write("%s_q = [ ... \n" % name)
         for eN in range(q[ckey].shape[0]): #ebq_global or ebqe would work
             for k in range(q[ckey].shape[1]):
-                cmdFile.write("%g \n" % q[ckey][eN,k]) 
+                cmdFile.write("%g \n" % q[ckey][eN,k])
         cmdFile.write("];");
-         
+
         if nSpace == 1:
             cmd = cmd1dData % (nElements_global,nPoints_element,
                                name,
@@ -1546,10 +1546,10 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,name,name,
                                name,name,
                                name,name,name,name,name,name)
-            
+
             cmdFile.write(cmd)
             nplotted = 1
-        
+
         else:
             cmd = cmd3dData % (nElements_global,nPoints_element,
                                name,
@@ -1570,19 +1570,19 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     def viewScalarAnalyticalFunction(self,cmdFile,nSpace,f,t,x,elementNodesConnectivity=None,
                                      name='exact',storeMeshData=True,figureNumber=1,title=None):
         """
-        input scalar analytical function f(x,t) and array of points 
+        input scalar analytical function f(x,t) and array of points
 
         respectively, generate global continuous interpolant
-                
+
         uses delaunay triangulation in 2d and 3d if element - node triangulation not already defined
 
         scalar data is stored in
             name_ex
-            
+
         if storeMeshData = True, writes out
-            name_x_ex   -- point data 
-            tri_name_ex -- element-node representation (2d,3d) 
-    
+            name_x_ex   -- point data
+            tri_name_ex -- element-node representation (2d,3d)
+
         returns number of figures actually plotted
         """
         nplotted = 0
@@ -1592,16 +1592,16 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 [x_tmp,i_tmp] = sort(%s_x_ex(:,1)); %s_x_ex = %s_x_ex(i_tmp); %s_ex = %s_ex(i_tmp);
 """
         cmd1dView = """
-figure(%i) ; plot(%s_x_ex(:,1),%s_ex) ;  title('%s'); 
+figure(%i) ; plot(%s_x_ex(:,1),%s_ex) ;  title('%s');
 """
         #2d
-        #if does not have element-node connectivity already 
+        #if does not have element-node connectivity already
         cmd2dData = """
 tri_%s_ex = delaunay(%s_x_ex(:,1),%s_x_ex(:,2));
 """
         cmd2dView = """
 figure(%i) ; trimesh(tri_%s_ex,%s_x_ex(:,1),%s_x_ex(:,2),%s_ex); title('%s');
-%%also could be used 
+%%also could be used
 %%trisurf(tri_name_ex,name_x_ex(:,1),name_x_ex(:,2),name_ex);
 """
         cmd2dGrid = """
@@ -1612,13 +1612,13 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny;
 %s_qg = griddata(%s_x_ex(:,1),%s_x_ex(:,2),%s_ex,%s_qxg,%s_qyg);
 """
         #3d
-        #if does not have element-node connectivity already 
+        #if does not have element-node connectivity already
         cmd3dData = """
 tri_%s_ex = delaunay3(%s_x_ex(:,1),%s_x_ex(:,2),%s_x_ex(:,3));
 """
         cmd3dView = """
 %%Warning not very good right now
-%%figure(%i) ; tetramesh(tri_%s_ex,%s_x_ex);  title('%s'); 
+%%figure(%i) ; tetramesh(tri_%s_ex,%s_x_ex);  title('%s');
 """
         cmd3dGrid = """
 nx = %i; ny = %i; nz = %i ;
@@ -1631,7 +1631,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
         ###
         if title == None:
             title = name
-        
+
         nPoints = 1
         for i in range(len(x.shape)-1):
             nPoints *= x.shape[i]
@@ -1655,10 +1655,10 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
         cmdFile.write("%s_ex = [ ... \n" % name)
         for i in range(nPoints):
             uex = f(x.flat[3*i:3*(i+1)],t)
-            cmdFile.write("%g \n" % uex) 
+            cmdFile.write("%g \n" % uex)
         cmdFile.write("];");
 
-        
+
         if nSpace == 1:
             cmd = cmd1dData % (name,name,name,name,name)
             cmdFile.write(cmd)
@@ -1675,7 +1675,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,name,name,
                                name,name,
                                name,name,name,name,name,name)
-            
+
             cmdFile.write(cmd)
             nplotted = 1
         else:
@@ -1697,19 +1697,19 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     def viewVectorAnalyticalFunction(self,cmdFile,nSpace,f,t,x,elementNodesConnectivity=None,
                                      name='exact',storeMeshData=True,figureNumber=1,title=None):
         """
-        input vector analytical function f(x,t) and array of points 
+        input vector analytical function f(x,t) and array of points
 
         respectively, generate global continuous interpolant
-                
+
         uses delaunay triangulation in 2d and 3d if element - node triangulation not already defined
 
         vector data is stored in
             name_ex
-            
+
         if storeMeshData = True, writes out
-            name_x_ex   -- point data 
+            name_x_ex   -- point data
             tri_name_ex -- element-node representation (2d,3d)
-    
+
         returns number of figures actually plotted
         """
         nplotted = 0
@@ -1719,18 +1719,18 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 [x_tmp,i_tmp] = sort(%s_x_ex(:,1)); %s_x_ex = %s_x_ex(i_tmp); %s_ex = %s_ex(i_tmp);
 """
         cmd1dView = """
-figure(%i) ; plot(%s_x_ex(:,1),%s_ex) ;  title('%s'); 
+figure(%i) ; plot(%s_x_ex(:,1),%s_ex) ;  title('%s');
 """
         #2d
-        #if does not have element-node connectivity already 
+        #if does not have element-node connectivity already
         cmd2dData = """
 tri_%s_ex = delaunay(%s_x_ex(:,1),%s_x_ex(:,2));
 """
         cmd2dView = """
 %s_ex_mag = (%s_ex(:,1).^2 + %s_ex(:,2).^2).^(0.5);
-figure(%i) ; quiver(%s_x_ex(:,1),%s_x_ex(:,2),%s_ex(:,1),%s_ex(:,2));title('%s'); 
+figure(%i) ; quiver(%s_x_ex(:,1),%s_x_ex(:,2),%s_ex(:,1),%s_ex(:,2));title('%s');
 %%could also use
-%% trimesh(tri_name_ex,name_x_ex(:,1),name_x_ex(:,2),name_ex_mag); 
+%% trimesh(tri_name_ex,name_x_ex(:,1),name_x_ex(:,2),name_ex_mag);
 """
         cmd2dGrid = """
 nx = %i; ny = %i;
@@ -1741,13 +1741,13 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny;
 %s_qg_y = griddata(%s_x_ex(:,1),%s_x_ex(:,2),%s_ex(:,2),%s_qxg,%s_qyg);
 """
         #3d
-        #if does not have element-node connectivity already 
+        #if does not have element-node connectivity already
         cmd3dData = """
 tri_%s_ex = delaunay3(%s_x_ex(:,1),%s_x_ex(:,2),%s_x_ex(:,3));
 """
         cmd3dView = """
-%s_ex_mag = (%s_ex(:,1).^2 + %s_ex(:,2).^2 + %s_ex(:,3).^2).^(0.5); 
-figure(%i) ; quiver3(%s_x_ex(:,1),%s_x_ex(:,2),%s_x_ex(:,3),%s_ex(:,1),%s_ex(:,2),%s_ex(:,3));title('%s'); 
+%s_ex_mag = (%s_ex(:,1).^2 + %s_ex(:,2).^2 + %s_ex(:,3).^2).^(0.5);
+figure(%i) ; quiver3(%s_x_ex(:,1),%s_x_ex(:,2),%s_x_ex(:,3),%s_ex(:,1),%s_ex(:,2),%s_ex(:,3));title('%s');
 %%Warning not very good right now
 %% tetramesh(tri_name_ex,name_x_ex);
 """
@@ -1765,11 +1765,11 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
         ###
         if title == None:
             title = name
-        
+
         nPoints = 1
         for i in range(len(x.shape)-1):
             nPoints *= x.shape[i]
-        
+
         if storeMeshData:
             cmdFile.write("%s_x_ex = [ ... \n" % name)
             for i in range(nPoints):
@@ -1795,7 +1795,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmdFile.write("; \n")
         cmdFile.write("];");
 
-        
+
         if nSpace == 1:
             cmd = cmd1dData % (name,name,name,name,name)
             cmdFile.write(cmd)
@@ -1848,13 +1848,13 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 
         scalar data is stored in
             name
-            
+
         if storeMeshData = True, writes out
             name_x      -- mesh vertices
             tri_name_v  -- element-node representation
-    
+
         returns number of figures actually plotted
-            
+
         """
         nplotted = 0
         ###simple visualization commands (%s --> name)
@@ -1863,19 +1863,19 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 [x_tmp,i_tmp] = sort(%s_x(:,1)); %s_x = %s_x(i_tmp); %s = %s(i_tmp);
 """
         cmd1dView = """
-figure(%i) ; plot(%s_x(:,1),%s) ;  title('%s'); 
+figure(%i) ; plot(%s_x(:,1),%s) ;  title('%s');
 """
         #2d
         cmd2dData = """ \n """
 
         cmd2dView = """
 figure(%i) ; trimesh(tri_%s,%s_x(:,1),%s_x(:,2),%s); title('%s');
-%%also could be used 
+%%also could be used
 %%trisurf(tri_name,name_x(:,1),name_x(:,2),name);
 %%tmp = name_x; tmp(:,3) = name;
 %%patch('vertices',tmp,'faces',tri_name,'FaceVertexCData',name,'FaceColor','interp','EdgeColor','none')
 """
-        
+
         cmd2dGrid = """
 nx = %i; ny = %i;
 XYZ = [min(%s_x(:,1)) max(%s_x(:,1)) ; min(%s_x(:,2)) max(%s_x(:,2))];
@@ -1902,7 +1902,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
         nNodes_global = nodeArray.shape[0]; nElements_global = elementNodesArray.shape[0]
         nNodes_element= elementNodesArray.shape[1]
         assert nNodes_element == nSpace+1, "affine simplicial geometry only"
-        
+
         if storeMeshData:
             cmdFile.write("%s_x = [ ... \n" % name)
             for nN in range(nNodes_global):
@@ -1920,8 +1920,8 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
         #
 
         cmdFile.write("%s = [ ... \n" % name)
-        for i in range(u_dof.shape[0]): 
-            cmdFile.write("%g \n" % u_dof[i]) 
+        for i in range(u_dof.shape[0]):
+            cmdFile.write("%g \n" % u_dof[i])
         cmdFile.write("];");
 
         if nSpace == 1:
@@ -1930,7 +1930,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmd = cmd1dView % (figureNumber,name,name,title)
             cmdFile.write(cmd)
             nplotted = 1
-         
+
         elif nSpace == 2:
             #nothing to be done with mesh-data representation here
             cmd = cmd2dView % (figureNumber,name,name,name,name,title)
@@ -1939,7 +1939,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,name,name,
                                name,name,
                                name,name,name,name,name,name)
-            
+
             cmdFile.write(cmd)
             nplotted = 1
         else:
@@ -1971,13 +1971,13 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 
         vector data is stored in
             name which is [nNodes,nCoord]
-            
+
         if storeMeshData = True, writes out
             name_x      -- mesh vertices
             tri_name_v  -- element-node representation
-    
+
         returns number of figures actually plotted
-            
+
         """
         nplotted = 0
         ###simple visualization commands (%s --> name)
@@ -1986,18 +1986,18 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 [x_tmp,i_tmp] = sort(%s_x(:,1)); %s_x = %s_x(i_tmp); %s = %s(i_tmp);
 """
         cmd1dView = """
-figure(%i) ; plot(%s_x(:,1),%s) ;  title('%s'); 
+figure(%i) ; plot(%s_x(:,1),%s) ;  title('%s');
 """
         #2d
         cmd2dData = """ \n """
 
         cmd2dView = """
 %s_mag = (%s(:,1).^2 + %s(:,2).^2).^(0.5);
-figure(%i) ; quiver(%s_x(:,1),%s_x(:,2),%s(:,1),%s(:,2));title('%s'); 
+figure(%i) ; quiver(%s_x(:,1),%s_x(:,2),%s(:,1),%s(:,2));title('%s');
 %%could also use
-%% trimesh(tri_name,name_x(:,1),name_x(:,2),name_mag); 
+%% trimesh(tri_name,name_x(:,1),name_x(:,2),name_mag);
 """
-        
+
         cmd2dGrid = """
 nx = %i; ny = %i;
 XYZ = [min(%s_x(:,1)) max(%s_x(:,1)) ; min(%s_x(:,2)) max(%s_x(:,2))];
@@ -2010,8 +2010,8 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny;
         cmd3dData = """ \n """
 
         cmd3dView = """
-%s_mag = (%s_x(:,1).^2 + %s_x(:,2).^2 + %s_x(:,3).^2).^(0.5); 
-figure(%i) ; quiver3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s(:,1),%s(:,2),%s(:,3));title('%s'); 
+%s_mag = (%s_x(:,1).^2 + %s_x(:,2).^2 + %s_x(:,3).^2).^(0.5);
+figure(%i) ; quiver3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s(:,1),%s(:,2),%s(:,3));title('%s');
 %%figure out reasonable default using tetramesh or patch
 """
         cmd3dGrid = """
@@ -2038,7 +2038,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             assert w_dof.shape == u_dof.shape
         assert (1 <= nCoords and nCoords <= nSpace), "nCoords= %s nSpace= %s wrong " % (nCoords,nSpace)
 
-        
+
         if storeMeshData:
             cmdFile.write("%s_x = [ ... \n" % name)
             for nN in range(nNodes_global):
@@ -2061,7 +2061,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             if nCoords > 1: cmdFile.write(" %g " % v_dof[i])
             if nCoords > 2: cmdFile.write(" %g " % w_dof[i])
             cmdFile.write(" \n ")
-            
+
         cmdFile.write("];");
 
         if nSpace == 1:
@@ -2070,7 +2070,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmd = cmd1dView % (figureNumber,name,name,title)
             cmdFile.write(cmd)
             nplotted = 1
-         
+
         elif nSpace == 2:
             #nothing to be done with mesh-data representation here
             cmd = cmd2dView % (name,name,name,
@@ -2081,7 +2081,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,
                                name,name,name,name,name,name,
                                name,name,name,name,name,name)
-            
+
             cmdFile.write(cmd)
             nplotted = 1
         else:
@@ -2115,16 +2115,16 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
            and element connectivity for refined mesh
            degrees of freedom at all vertices
            'mid-edge' vertices stored in midNodesArray
-  
+
         scalar data is stored in
             name
-            
+
         if storeMeshData = True, writes out
             name_x      -- matlab mesh vertices
             tri_name_v  -- matlab element-node representation
-    
+
         returns number of figures actually plotted
-            
+
         """
         nplotted = 0
         ###simple visualization commands (%s --> name)
@@ -2133,19 +2133,19 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 [x_tmp,i_tmp] = sort(%s_x(:,1)); %s_x = %s_x(i_tmp); %s = %s(i_tmp);
 """
         cmd1dView = """
-figure(%i) ; plot(%s_x(:,1),%s) ;  title('%s'); 
+figure(%i) ; plot(%s_x(:,1),%s) ;  title('%s');
 """
         #2d
         cmd2dData = """ \n """
 
         cmd2dView = """
 figure(%i) ; trimesh(tri_%s,%s_x(:,1),%s_x(:,2),%s); title('%s');
-%%also could be used 
+%%also could be used
 %%trisurf(tri_name,name_x(:,1),name_x(:,2),name);
 %%tmp = name_x; tmp(:,3) = name;
 %%patch('vertices',tmp,'faces',tri_name,'FaceVertexCData',name,'FaceColor','interp','EdgeColor','none')
 """
-        
+
         cmd2dGrid = """
 nx = %i; ny = %i;
 XYZ = [min(%s_x(:,1)) max(%s_x(:,1)) ; min(%s_x(:,2)) max(%s_x(:,2))];
@@ -2169,7 +2169,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
         if title == None:
             title = name
 
-        
+
         nLagrangeNodes_global = lagrangeNodesArray.shape[0]; nElements_global = elementNodesArray.shape[0]
         nNodes_element= elementNodesArray.shape[1]
         assert nNodes_element == nSpace+1, "affine simplicial geometry only"
@@ -2182,7 +2182,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             for nN in range(nLagrangeNodes_global):
                 cmdFile.write("%g %g %g \n" % (lagrangeNodesArray[nN,0],lagrangeNodesArray[nN,1],lagrangeNodesArray[nN,2]))
             #
-            
+
             cmdFile.write("];")
         #
 
@@ -2224,8 +2224,8 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
         #
         #assumes l2g layout consistent with matlab one
         cmdFile.write("%s = [ ... \n" % name)
-        for i in range(u_dof.shape[0]): 
-            cmdFile.write("%g \n" % u_dof[i]) 
+        for i in range(u_dof.shape[0]):
+            cmdFile.write("%g \n" % u_dof[i])
         cmdFile.write("];");
 
         if nSpace == 1:
@@ -2234,7 +2234,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmd = cmd1dView % (figureNumber,name,name,title)
             cmdFile.write(cmd)
             nplotted = 1
-         
+
         elif nSpace == 2:
             #nothing to be done with mesh-data representation here
             cmd = cmd2dView % (figureNumber,name,name,name,name,title)
@@ -2243,7 +2243,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,name,name,
                                name,name,
                                name,name,name,name,name,name)
-            
+
             cmdFile.write(cmd)
             nplotted = 1
         else:
@@ -2265,7 +2265,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                 name="velocity",storeMeshData=True,figureNumber=1,title=None):
         """
         TODO: 3D
-        
+
         given a vector valued C0 P2 function with nodal Lagrange representation
         generate a matlab representation that is as faithful as possible to
         the actual finite element function structure
@@ -2279,13 +2279,13 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 
         vector data is stored in
             name which is [nNodes,nCoord]
-            
+
         if storeMeshData = True, writes out
             name_x      -- mesh vertices
             tri_name_v  -- element-node representation
-    
+
         returns number of figures actually plotted
-            
+
         """
         nplotted = 0
         ###simple visualization commands (%s --> name)
@@ -2294,18 +2294,18 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 [x_tmp,i_tmp] = sort(%s_x(:,1)); %s_x = %s_x(i_tmp); %s = %s(i_tmp);
 """
         cmd1dView = """
-figure(%i) ; plot(%s_x(:,1),%s) ;  title('%s'); 
+figure(%i) ; plot(%s_x(:,1),%s) ;  title('%s');
 """
         #2d
         cmd2dData = """ \n """
 
         cmd2dView = """
 %s_mag = (%s(:,1).^2 + %s(:,2).^2).^(0.5);
-figure(%i) ; quiver(%s_x(:,1),%s_x(:,2),%s(:,1),%s(:,2));title('%s'); 
+figure(%i) ; quiver(%s_x(:,1),%s_x(:,2),%s(:,1),%s(:,2));title('%s');
 %%could also use
-%% trimesh(tri_name,name_x(:,1),name_x(:,2),name_mag); 
+%% trimesh(tri_name,name_x(:,1),name_x(:,2),name_mag);
 """
-        
+
         cmd2dGrid = """
 nx = %i; ny = %i;
 XYZ = [min(%s_x(:,1)) max(%s_x(:,1)) ; min(%s_x(:,2)) max(%s_x(:,2))];
@@ -2318,8 +2318,8 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny;
         cmd3dData = """ \n """
 
         cmd3dView = """
-%s_mag = (%s_x(:,1).^2 + %s_x(:,2).^2 + %s_x(:,3).^2).^(0.5); 
-figure(%i) ; quiver3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s(:,1),%s(:,2),%s(:,3));title('%s'); 
+%s_mag = (%s_x(:,1).^2 + %s_x(:,2).^2 + %s_x(:,3).^2).^(0.5);
+figure(%i) ; quiver3(%s_x(:,1),%s_x(:,2),%s_x(:,3),%s(:,1),%s(:,2),%s(:,3));title('%s');
 %%figure out reasonable default using tetramesh or patch
 """
         cmd3dGrid = """
@@ -2351,14 +2351,14 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             assert w_dof.shape == u_dof.shape
         assert (1 <= nCoords and nCoords <= nSpace), "nCoords= %s nSpace= %s wrong " % (nCoords,nSpace)
 
-        
+
         #store geometric nodes first, then "quadratic" ones
         if storeMeshData:
             cmdFile.write("%s_x = [ ... \n" % name)
             for nN in range(nLagrangeNodes_global):
                 cmdFile.write("%g %g %g \n" % (lagrangeNodesArray[nN,0],lagrangeNodesArray[nN,1],lagrangeNodesArray[nN,2]))
             #
-            
+
             cmdFile.write("];")
         #
         if nSpace == 1:
@@ -2405,7 +2405,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             if nCoords > 1: cmdFile.write(" %g " % v_dof[i])
             if nCoords > 2: cmdFile.write(" %g " % w_dof[i])
             cmdFile.write(" \n ")
-            
+
         cmdFile.write("];");
 
         if nSpace == 1:
@@ -2414,7 +2414,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmd = cmd1dView % (figureNumber,name,name,title)
             cmdFile.write(cmd)
             nplotted = 1
-         
+
         elif nSpace == 2:
             #nothing to be done with mesh-data representation here
             cmd = cmd2dView % (name,name,name,
@@ -2425,7 +2425,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,
                                name,name,name,name,name,name,
                                name,name,name,name,name,name)
-            
+
             cmdFile.write(cmd)
             nplotted = 1
         else:
@@ -2448,30 +2448,30 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
     def viewScalar_DGP0(self,cmdFile,nSpace,nodeArray,elementNodesArray,l2g,u_dof,
                         name="u",storeMeshData=True,figureNumber=1,title=None):
         """
-        given DG P0 function 
+        given DG P0 function
         generate a matlab representation that is as faithful as possible to
         the actual finite element function structure
 
         Assumes local dof associated with local node numbering
         DG-P0 output:
            element-wise list of vertices and local elemntwise-connectivity matrices
-           degrees of freedom at element vertices (as if a DG-P1 function) 
+           degrees of freedom at element vertices (as if a DG-P1 function)
 
         scalar data is stored in
             name
-            
+
         if storeMeshData = True, writes out
             name_x      -- mesh vertices
             tri_name    -- element-node representation
-    
+
         returns number of figures actually plotted
-            
+
         """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
         cmd1dData = """
-%s_dg = %s_x; %s_dg(:,2) = %s; 
+%s_dg = %s_x; %s_dg(:,2) = %s;
 nNodes = max(max(tri_%s_cg)); %s_cg = zeros(nNodes,1); nn_cg = zeros(nNodes,1);
 nElements = size(tri_%s_cg,1); nDOF_element =  size(tri_%s_cg,2);
 for eN = 1:nElements
@@ -2485,11 +2485,11 @@ end
 
 """
         cmd1dView = """
-figure(%i); patch('vertices',%s_dg(:,1:2),'faces',tri_%s); title('%s'); 
+figure(%i); patch('vertices',%s_dg(:,1:2),'faces',tri_%s); title('%s');
 """
         #2d
         cmd2dData = """
-%s_dg = %s_x; %s_dg(:,3) = %s; 
+%s_dg = %s_x; %s_dg(:,3) = %s;
 nNodes = max(max(tri_%s_cg)); %s_cg = zeros(nNodes,1); nn_cg = zeros(nNodes,1);
 nElements = size(tri_%s_cg,1); nDOF_element =  size(tri_%s_cg,2);
 for eN = 1:nElements
@@ -2504,15 +2504,15 @@ end
 """
 
         cmd2dView = """
-figure(%i); patch('vertices',%s_dg,'faces',tri_%s,'FaceVertexCData',%s_dg,'FaceColor','interp','EdgeColor','none'); title('%s'); 
+figure(%i); patch('vertices',%s_dg,'faces',tri_%s,'FaceVertexCData',%s_dg,'FaceColor','interp','EdgeColor','none'); title('%s');
 """
-        
+
         cmd2dGrid = """
 nx = %i; ny = %i;
 XYZ = [min(%s_x(:,1)) max(%s_x(:,1)) ; min(%s_x(:,2)) max(%s_x(:,2))];
 dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny;
 [%s_xg,%s_yg] = meshgrid(XYZ(1,1):dx:XYZ(1,2),XYZ(2,1):dy:XYZ(2,2));
-%%note, uses average of duplicate values 
+%%note, uses average of duplicate values
 %s_g = griddata(%s_x(:,1),%s_x(:,2),%s,%s_xg,%s_yg);
 """
         #3d
@@ -2530,7 +2530,7 @@ end
 """
 
         cmd3dView = """
-figure(%i); patch('vertices',%s_x,'faces',tri_%s,'FaceVertexCData',%s,'FaceColor','interp','EdgeColor','none'); title('%s'); 
+figure(%i); patch('vertices',%s_x,'faces',tri_%s,'FaceVertexCData',%s,'FaceColor','interp','EdgeColor','none'); title('%s');
 """
         cmd3dGrid = """
 nx = %i; ny = %i; nz = %i ;
@@ -2581,7 +2581,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
         cmdFile.write("%s = [ ... \n" % name)
         for eN in range(nElements_global):
             for nN in range(nNodes_element):
-                cmdFile.write("%g \n" % u_dof[l2g[eN,0]]) 
+                cmdFile.write("%g \n" % u_dof[l2g[eN,0]])
         cmdFile.write("];");
 
         if nSpace == 1:
@@ -2595,7 +2595,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmd = cmd1dView % (figureNumber,name,name,title)
             cmdFile.write(cmd)
             nplotted = 1
-         
+
         elif nSpace == 2:
             cmd = cmd2dData % (name,name,name,name,
                                name,name,
@@ -2610,7 +2610,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,name,name,
                                name,name,
                                name,name,name,name,name,name)
-            
+
             cmdFile.write(cmd)
             nplotted = 1
         else:
@@ -2627,7 +2627,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,name,
                                name,name,name,name,name,name,name,name)
             cmdFile.write(cmd)
-            nplotted = 1 
+            nplotted = 1
 
         #
         return nplotted
@@ -2643,23 +2643,23 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
         Assumes local dof associated with local node numbering
         DG-P1 output:
            element-wise list of vertices and local elemntwise-connectivity matrices
-           degrees of freedom at vertices 
+           degrees of freedom at vertices
 
         scalar data is stored in
             name
-            
+
         if storeMeshData = True, writes out
             name_x      -- mesh vertices
             tri_name    -- element-node representation
-    
+
         returns number of figures actually plotted
-            
+
         """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
         cmd1dData = """
-%s_dg = %s_x; %s_dg(:,2) = %s; 
+%s_dg = %s_x; %s_dg(:,2) = %s;
 nNodes = max(max(tri_%s_cg)); %s_cg = zeros(nNodes,1); nn_cg = zeros(nNodes,1);
 nElements = size(tri_%s_cg,1); nDOF_element =  size(tri_%s_cg,2);
 for eN = 1:nElements
@@ -2673,11 +2673,11 @@ end
 
 """
         cmd1dView = """
-figure(%i); patch('vertices',%s_dg(:,1:2),'faces',tri_%s); title('%s'); 
+figure(%i); patch('vertices',%s_dg(:,1:2),'faces',tri_%s); title('%s');
 """
         #2d
         cmd2dData = """
-%s_dg = %s_x; %s_dg(:,3) = %s; 
+%s_dg = %s_x; %s_dg(:,3) = %s;
 nNodes = max(max(tri_%s_cg)); %s_cg = zeros(nNodes,1); nn_cg = zeros(nNodes,1);
 nElements = size(tri_%s_cg,1); nDOF_element =  size(tri_%s_cg,2);
 for eN = 1:nElements
@@ -2692,15 +2692,15 @@ end
 """
 
         cmd2dView = """
-figure(%i); patch('vertices',%s_dg,'faces',tri_%s,'FaceVertexCData',%s_dg,'FaceColor','interp','EdgeColor','none'); title('%s'); 
+figure(%i); patch('vertices',%s_dg,'faces',tri_%s,'FaceVertexCData',%s_dg,'FaceColor','interp','EdgeColor','none'); title('%s');
 """
-        
+
         cmd2dGrid = """
 nx = %i; ny = %i;
 XYZ = [min(%s_x(:,1)) max(%s_x(:,1)) ; min(%s_x(:,2)) max(%s_x(:,2))];
 dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny;
 [%s_xg,%s_yg] = meshgrid(XYZ(1,1):dx:XYZ(1,2),XYZ(2,1):dy:XYZ(2,2));
-%%note, uses average of duplicate values 
+%%note, uses average of duplicate values
 %s_g = griddata(%s_x(:,1),%s_x(:,2),%s,%s_xg,%s_yg);
 """
         #3d
@@ -2718,7 +2718,7 @@ end
 """
 
         cmd3dView = """
-figure(%i); patch('vertices',%s_x,'faces',tri_%s,'FaceVertexCData',%s,'FaceColor','interp','EdgeColor','none'); title('%s'); 
+figure(%i); patch('vertices',%s_x,'faces',tri_%s,'FaceVertexCData',%s,'FaceColor','interp','EdgeColor','none'); title('%s');
 """
         cmd3dGrid = """
 nx = %i; ny = %i; nz = %i ;
@@ -2767,8 +2767,8 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
         #
 
         cmdFile.write("%s = [ ... \n" % name)
-        for i in range(u_dof.shape[0]): 
-            cmdFile.write("%g \n" % u_dof[i]) 
+        for i in range(u_dof.shape[0]):
+            cmdFile.write("%g \n" % u_dof[i])
         cmdFile.write("];");
 
         if nSpace == 1:
@@ -2782,7 +2782,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmd = cmd1dView % (figureNumber,name,name,title)
             cmdFile.write(cmd)
             nplotted = 1
-         
+
         elif nSpace == 2:
             cmd = cmd2dData % (name,name,name,name,
                                name,name,
@@ -2797,7 +2797,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,name,name,
                                name,name,
                                name,name,name,name,name,name)
-            
+
             cmdFile.write(cmd)
             nplotted = 1
         else:
@@ -2814,7 +2814,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,name,
                                name,name,name,name,name,name,name,name)
             cmdFile.write(cmd)
-            nplotted = 1 
+            nplotted = 1
 
         #
         return nplotted
@@ -2823,7 +2823,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                 l2g,cg_l2g,u_dof,
                                 name="u",storeMeshData=True,figureNumber=1,title=None):
         """
-        TODO: 3d 
+        TODO: 3d
         given DG P1 function with nodal Lagrange representation
         generate a matlab representation that is as faithful as possible to
         the actual finite element function structure
@@ -2839,40 +2839,40 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 
         scalar data is stored in
             name
-            
+
         if storeMeshData = True, writes out
             name_x      -- mesh vertices and mid-edge vertices
             tri_name    -- element-node representation
-    
+
         returns number of figures actually plotted
-            
+
         """
         nplotted = 0
         ###simple visualization commands (%s --> name)
         #1d
         cmd1dData = """
-%s_dg = %s_x; %s_dg(:,2) = %s; 
+%s_dg = %s_x; %s_dg(:,2) = %s;
 
 """
         cmd1dView = """
-figure(%i); patch('vertices',%s_dg(:,1:2),'faces',tri_%s); title('%s'); 
+figure(%i); patch('vertices',%s_dg(:,1:2),'faces',tri_%s); title('%s');
 """
         #2d
         cmd2dData = """
-%s_dg = %s_x; %s_dg(:,3) = %s; 
+%s_dg = %s_x; %s_dg(:,3) = %s;
 
 """
 
         cmd2dView = """
-figure(%i); patch('vertices',%s_dg,'faces',tri_%s,'FaceVertexCData',%s_dg,'FaceColor','interp','EdgeColor','none'); title('%s'); 
+figure(%i); patch('vertices',%s_dg,'faces',tri_%s,'FaceVertexCData',%s_dg,'FaceColor','interp','EdgeColor','none'); title('%s');
 """
-        
+
         cmd2dGrid = """
 nx = %i; ny = %i;
 XYZ = [min(%s_x(:,1)) max(%s_x(:,1)) ; min(%s_x(:,2)) max(%s_x(:,2))];
 dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny;
 [%s_xg,%s_yg] = meshgrid(XYZ(1,1):dx:XYZ(1,2),XYZ(2,1):dy:XYZ(2,2));
-%%note, uses average of duplicate values 
+%%note, uses average of duplicate values
 %s_g = griddata(%s_x(:,1),%s_x(:,2),%s,%s_xg,%s_yg);
 """
         #3d
@@ -2880,7 +2880,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny;
 """
 
         cmd3dView = """
-figure(%i); patch('vertices',%s_dg,'faces',tri_%s,'FaceVertexCData',%s,'FaceColor','interp','EdgeColor','none'); title('%s'); 
+figure(%i); patch('vertices',%s_dg,'faces',tri_%s,'FaceVertexCData',%s,'FaceColor','interp','EdgeColor','none'); title('%s');
 """
         cmd3dGrid = """
 nx = %i; ny = %i; nz = %i ;
@@ -2947,14 +2947,14 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
         else:
             print """3d LagrangeDGP2 not implemented yet"""
             return 0
-            
+
         #
         cmdFile.write("];")
         #
 
         cmdFile.write("%s = [ ... \n" % name)
-        for i in range(u_dof.shape[0]): 
-            cmdFile.write("%g \n" % u_dof[i]) 
+        for i in range(u_dof.shape[0]):
+            cmdFile.write("%g \n" % u_dof[i])
         cmdFile.write("];");
 
         if nSpace == 1:
@@ -2963,7 +2963,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmd = cmd1dView % (figureNumber,name,name,title)
             cmdFile.write(cmd)
             nplotted = 1
-         
+
         elif nSpace == 2:
             cmd = cmd2dData % (name,name,name,name)
             cmdFile.write(cmd)
@@ -2973,7 +2973,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,name,name,
                                name,name,
                                name,name,name,name,name,name)
-            
+
             cmdFile.write(cmd)
             nplotted = 1
         else:
@@ -2984,7 +2984,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,name,
                                name,name,name,name,name,name,name,name)
             cmdFile.write(cmd)
-            nplotted = 1 
+            nplotted = 1
 
         #
         return nplotted
@@ -2998,19 +2998,19 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 
         Assumes local dof associated with local node numbering
         CR output:
-           Just treat as a DGP1 function 
+           Just treat as a DGP1 function
            element-wise list of vertices and local elemntwise-connectivity matrices
            degrees of freedom at vertices instead of face barycenters
 
         scalar data is stored in
             name
-            
+
         if storeMeshData = True, writes out
             name_x      -- mesh vertices
             tri_name    -- element-node representation
-    
+
         returns number of figures actually plotted
-            
+
         """
         nplotted = 0
         ###simple visualization commands (%s --> name)
@@ -3020,11 +3020,11 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
 %s_cr = %s_x; %s_cr(:,2) = %s;
 """
         cmd1dView = """
-figure(%i); patch('vertices',%s_cr(:,1:2),'faces',tri_%s); title('%s'); 
+figure(%i); patch('vertices',%s_cr(:,1:2),'faces',tri_%s); title('%s');
 """
         #2d
         cmd2dData = """
-%s_cr = %s_x; %s_cr(:,3) = %s; 
+%s_cr = %s_x; %s_cr(:,3) = %s;
 nNodes = max(max(tri_%s_cg)); %s_cg = zeros(nNodes,1); nn_cg = zeros(nNodes,1);
 nElements = size(tri_%s_cg,1); nDOF_element =  size(tri_%s_cg,2);
 for eN = 1:nElements
@@ -3041,15 +3041,15 @@ end
 figure(%i); patch('vertices',%s_cr,'faces',tri_%s,'FaceVertexCData',%s_cr,'FaceColor','interp','EdgeColor','none'); title('%s');
 %%for average cg interpolant can also use
 %%tmp = name_x_cg; tmp(:,3) = name_cg;
-%%patch('vertices',tmp,'faces',tri_name_cg,'FaceVertexCData',name_cg,'FaceColor','interp','EdgeColor','none'); 
+%%patch('vertices',tmp,'faces',tri_name_cg,'FaceVertexCData',name_cg,'FaceColor','interp','EdgeColor','none');
 """
-        
+
         cmd2dGrid = """
 nx = %i; ny = %i;
 XYZ = [min(%s_x(:,1)) max(%s_x(:,1)) ; min(%s_x(:,2)) max(%s_x(:,2))];
 dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny;
 [%s_xg,%s_yg] = meshgrid(XYZ(1,1):dx:XYZ(1,2),XYZ(2,1):dy:XYZ(2,2));
-%%note, uses average of duplicate values 
+%%note, uses average of duplicate values
 %s_g = griddata(%s_x(:,1),%s_x(:,2),%s,%s_xg,%s_yg);
 """
         #3d
@@ -3067,7 +3067,7 @@ end
 """
 
         cmd3dView = """
-figure(%i); patch('vertices',%s_cr,'faces',tri_%s,'FaceVertexCData',%s,'FaceColor','interp','EdgeColor','none'); title('%s'); 
+figure(%i); patch('vertices',%s_cr,'faces',tri_%s,'FaceVertexCData',%s,'FaceColor','interp','EdgeColor','none'); title('%s');
 """
         cmd3dGrid = """
 nx = %i; ny = %i; nz = %i ;
@@ -3121,7 +3121,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
         #dofs
         cmdFile.write("%s = [ ... \n" % name)
         #u(vertex_i) = u^i(1-nSpace) + \sum_{j \ne i} u^j where u^j is local dof j
-                
+
         if nSpace == 1:
             for eN in range(nElements_global):
                 #dof associated with face id, so opposite usual C0P1 ordering here
@@ -3136,11 +3136,11 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                 nodeVal[0] = u_dof[l2g[eN,1]]
                 nodeVal[0]+= u_dof[l2g[eN,2]]
                 nodeVal[0]-= u_dof[l2g[eN,0]]
-                
+
                 nodeVal[1] = u_dof[l2g[eN,0]]
                 nodeVal[1]+= u_dof[l2g[eN,2]]
                 nodeVal[1]-= u_dof[l2g[eN,1]]
-                            
+
                 nodeVal[2] = u_dof[l2g[eN,0]]
                 nodeVal[2]+= u_dof[l2g[eN,1]]
                 nodeVal[2]-= u_dof[l2g[eN,2]]
@@ -3163,7 +3163,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmd = cmd1dView % (figureNumber,name,name,title)
             cmdFile.write(cmd)
             nplotted = 1
-         
+
         elif nSpace == 2:
             cmd = cmd2dData % (name,name,name,name,
                                name,name,
@@ -3178,7 +3178,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,name,name,
                                name,name,
                                name,name,name,name,name,name)
-            
+
             cmdFile.write(cmd)
             nplotted = 1
         else:
@@ -3195,7 +3195,7 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,name,
                                name,name,name,name,name,name,name,name)
             cmdFile.write(cmd)
-            nplotted = 1 
+            nplotted = 1
 
         #
         return nplotted
@@ -3209,20 +3209,20 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
         the actual finite element function structure
 
         input is u values at interpolation points (not dof)
-        Generates an array of triangulations of interpolation points on each element 
+        Generates an array of triangulations of interpolation points on each element
         DG-PK output:
            element-wise list of interpolation points and local elementwise-connectivity matrices
            degrees of freedom at interpolation points
 
         scalar data is stored in
             name
-            
+
         if storeMeshData = True, writes out
             name_x      -- mesh vertices
             tri_name    -- element-node representation
-    
+
         returns number of figures actually plotted
-            
+
         """
         #1d
         cmd1dData = """
@@ -3308,11 +3308,11 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
             cmdFile.write("];")
 
         cmdFile.write("%s = [ ... \n" % name)
-        for eN in range(nElements_global): 
+        for eN in range(nElements_global):
             for k in range(nPoints_element):
-                cmdFile.write("%g \n" % u_interpolationPoints[eN,k]) 
+                cmdFile.write("%g \n" % u_interpolationPoints[eN,k])
         cmdFile.write("];");
-         
+
         if nSpace == 1:
             cmd = cmd1dData % (nElements_global,nPoints_element,
                                name,
@@ -3338,10 +3338,10 @@ dx = (XYZ(1,2)-XYZ(1,1))/nx; dy = (XYZ(2,2)-XYZ(2,1))/ny; dz = (XYZ(3,2)-XYZ(3,1
                                name,name,name,name,
                                name,name,
                                name,name,name,name,name,name)
-            
+
             cmdFile.write(cmd)
             nplotted = 1
-        
+
         else:
             cmd = cmd3dData % (nElements_global,nPoints_element,
                                name,

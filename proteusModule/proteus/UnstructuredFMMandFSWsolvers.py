@@ -21,7 +21,7 @@ class FMMEikonalSolver:
       \|\grad T\| = 1/F
 
       T = 0 on \Gamma
-      
+
     1d local solver is standard upwind approximation
     2d local solver variations:
        acute triangulations version 1 or version 2 from Qian Zhang etal 07
@@ -45,7 +45,7 @@ class FMMEikonalSolver:
         #default speeds for Eikonal equation
         import numpy
         self.unitNodalSpeeds = numpy.ones((self.mesh.nNodes_global,),'d')
-        
+
         self.frontInitFlag = 1
         if frontInitType == 'magnitudeOnly':
             self.frontInitFlag = 0
@@ -57,25 +57,25 @@ class FMMEikonalSolver:
     def solve(self,phi0,T,nodalSpeeds=None,zeroTol=1.0e-4,trialTol=1.0e-1,verbose=0):
         """
         Test first order fast marching method algorithm for eikonal equation
-        
+
         \|\grad T \| = 1, \phi(\vec x) = 0, x \in \Gamma
-        
+
         assuming \phi_0 describes initial location of interface Gamma and
         has reasonable values (absolute values) for T close to Gamma. Here
         T can be interpreted as the travel time from Gamma.
-        
+
         Right now assumes global node numbers <--> global dofs but this can be
         fixed easily
         Input
-        
+
 
         phi0: dof array from P1 C0 FiniteElementFunction holding initial condition
-        
+
         T   : dof array from P1 C0 FiniteElementFunction for solution
-        
+
 
         Output
-        T(\vec x_n)    : travel time from initial front to node (\vec x_n) 
+        T(\vec x_n)    : travel time from initial front to node (\vec x_n)
 
         Internal data structures
 
@@ -91,7 +91,7 @@ class FMMEikonalSolver:
         import numpy
 
         assert len(T) == len(phi0), "phi0 and T must be same dimensionality"
-        assert len(T) == self.mesh.nNodes_global, "FemSpaces must be C0 P1" 
+        assert len(T) == self.mesh.nNodes_global, "FemSpaces must be C0 P1"
         #mwf debug
         #import pdb
         #pdb.set_trace()
@@ -116,7 +116,7 @@ class FSWEikonalSolver:
       \|\grad T\| = 1/F
 
       T = 0 on \Gamma
-      
+
     1d local solver is standard upwind approximation
     2d local solver variations:
        acute triangulations version 1 or version 2 from Qian Zhang etal 07
@@ -177,25 +177,25 @@ class FSWEikonalSolver:
     def solve(self,phi0,T,nodalSpeeds=None,zeroTol=1.0e-4,trialTol=1.0e-1,verbose=0):
         """
         Test first order fast sweeping method algorithm for eikonal equation
-        
+
         \|\grad T \| = 1, \phi(\vec x) = 0, x \in \Gamma
-        
+
         assuming \phi_0 describes initial location of interface Gamma and
         has reasonable values (absolute values) for T close to Gamma. Here
         T can be interpreted as the travel time from Gamma.
-        
+
         Right now assumes global node numbers <--> global dofs but this can be
         fixed easily
         Input
-        
+
 
         phi0: dof array holding P1 C0 FiniteElementFunction holding initial condition
-        
+
         T   : dof array holding P1 C0 FiniteElementFunction for solution
-        
+
 
         Output
-        T(\vec x_n)    : travel time from initial front to node (\vec x_n) 
+        T(\vec x_n)    : travel time from initial front to node (\vec x_n)
 
         Internal data structures
 
@@ -204,12 +204,12 @@ class FSWEikonalSolver:
               1 --> Known
 
         Order  : ordering of points in domain using l_p metric from fixed reference points
-    
+
         """
         import numpy
         from math import sqrt, fmod
         assert len(T) == len(phi0), "phi0 and T must be same dimensionality"
-        assert len(T) == self.mesh.nNodes_global, "FemSpaces must be C0 P1" 
+        assert len(T) == self.mesh.nNodes_global, "FemSpaces must be C0 P1"
 
         failed = False
         if nodalSpeeds == None:
@@ -233,7 +233,7 @@ def unstructuredEx1d(initFunc,Lx,nx,method='FMM',verbose=0):
     run a couple of redistancing examples in 1d: circle and two circles
     """
     import numpy
-    
+
     mesh = MeshTools.EdgeMesh()
     mesh.generateEdgeMeshFromRectangularGrid(nx,Lx)
 
@@ -247,7 +247,7 @@ def unstructuredEx1d(initFunc,Lx,nx,method='FMM',verbose=0):
 
     phi0 = FemPhi0.dof ; phi0p = FemPhi0p.dof ; phi0m = FemPhi0m.dof ;
     Tp   = FemTp.dof; Tm = FemTm.dof
-    
+
 
     icout = open("phi0.dat",'w')
 
@@ -274,8 +274,8 @@ def unstructuredEx1d(initFunc,Lx,nx,method='FMM',verbose=0):
         print "back. calling FMMEikonalSolver.solve for - ..."
         failed = solver.solve(FemPhi0m.dof,FemTm.dof,verbose=verbose)
         print "back."
-    
-    
+
+
     fout = open("T.dat",'w')
     phout= open("phi.dat",'w')
     for I in range(mesh.nNodes_global):
@@ -289,13 +289,13 @@ def unstructuredEx1d(initFunc,Lx,nx,method='FMM',verbose=0):
 
 def unstructuredEx2d(initFunc,Lx,Ly,nx,ny,method='FMM',verbose=0):
     """
-    run a couple of redistancing examples in 2d: 
+    run a couple of redistancing examples in 2d:
     """
     import numpy
 
     mesh = MeshTools.TriangularMesh()
     mesh.generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly)
- 
+
     femSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(mesh)
 
     FemPhi0  = FemTools.FiniteElementFunction(femSpace,name="phi0")
@@ -306,7 +306,7 @@ def unstructuredEx2d(initFunc,Lx,Ly,nx,ny,method='FMM',verbose=0):
 
     phi0 = FemPhi0.dof ; phi0p = FemPhi0p.dof ; phi0m = FemPhi0m.dof ;
     Tp   = FemTp.dof; Tm = FemTm.dof
-    
+
 
     icout = open("phi0.dat",'w')
 
@@ -337,7 +337,7 @@ def unstructuredEx2d(initFunc,Lx,Ly,nx,ny,method='FMM',verbose=0):
         failed = solver.solve(FemPhi0m.dof,FemTm.dof,verbose=verbose)
         print "back."
     #meth switch
-    
+
     fout = open("T.dat",'w')
     phout= open("phi.dat",'w')
     for I in range(mesh.nNodes_global):
@@ -351,7 +351,7 @@ def unstructuredEx2d(initFunc,Lx,Ly,nx,ny,method='FMM',verbose=0):
 
 def unstructuredEx3d(initFunc,Lx,Ly,Lz,nx,ny,nz,method='FMM',verbose=0):
     """
-    run a redistancing example in 3d: 
+    run a redistancing example in 3d:
     """
     import numpy
 
@@ -368,8 +368,8 @@ def unstructuredEx3d(initFunc,Lx,Ly,Lz,nx,ny,nz,method='FMM',verbose=0):
 
     phi0 = FemPhi0.dof ; phi0p = FemPhi0p.dof ; phi0m = FemPhi0m.dof ;
     Tp   = FemTp.dof; Tm = FemTm.dof
-    
-    
+
+
     icout = open("phi0.dat",'w')
 
     #construct initial level set, short cut assuming dofs <--> node numbers
@@ -396,7 +396,7 @@ def unstructuredEx3d(initFunc,Lx,Ly,Lz,nx,ny,nz,method='FMM',verbose=0):
         failed = solver.solve(FemPhi0m.dof,FemTm.dof,verbose=verbose)
         print "back."
     #method switch
-    
+
     fout = open("T.dat",'w')
     phout= open("phi.dat",'w')
     for I in range(mesh.nNodes_global):
@@ -422,17 +422,17 @@ def test3dLocalSolver(verbose=0):
 
     T = numpy.zeros((nNodes,),'d')
 
-    sqrt3 = math.sqrt(3.) 
+    sqrt3 = math.sqrt(3.)
     waveNormal = 1.0/sqrt3*numpy.array([-1.,1.,1.])
     eikSpeed=1.0
-    
+
     eN = 0;
     #nodes with causal ordering
     N_A = 1; N_B=0; N_C=2; N_D=3
     #generic node numbering
     N = [0,1,2];
     T[N_A]=0; T[N_B]=sqrt3/3.0; T[N_C]=2.0*sqrt3/3.0
-    
+
     print "calling qianZhangLocalSolver\n\t nodes=%s \n N=%s \n\t T=%s " % (nodes,N,T)
     T_D = qianZhangLocalSolver3d(eN,N_D,N[0],N[1],N[2],nodes,T,eikSpeed,verbose=verbose)
     print "T_D= %s " % T_D
@@ -458,7 +458,7 @@ def unstructuredEx1dInCpp(initFunc,Lx,nx,method='FMM',verbose=0):
 
     phi0 = FemPhi0.dof ; phi0p = FemPhi0p.dof ; phi0m = FemPhi0m.dof ;
     Tp   = FemTp.dof; Tm = FemTm.dof
-    
+
 
     icout = open("phi0.dat",'w')
 
@@ -488,8 +488,8 @@ def unstructuredEx1dInCpp(initFunc,Lx,nx,method='FMM',verbose=0):
         print "back. calling FMMEikonalSolver.solve for - ..."
         failed = solver.solve(FemPhi0m.dof,nodalSpeeds,FemTm.dof,initFlag=0,verbose=verbose)
         print "back."
-    
-    
+
+
     fout = open("T.dat",'w')
     phout= open("phi.dat",'w')
     for I in range(mesh.nNodes_global):
@@ -503,7 +503,7 @@ def unstructuredEx1dInCpp(initFunc,Lx,nx,method='FMM',verbose=0):
 
 def unstructuredEx2dInCpp(initFunc,Lx,Ly,nx,ny,method='FMM',verbose=0):
     """
-    run a couple of redistancing examples in 2d: 
+    run a couple of redistancing examples in 2d:
     """
     import numpy
     from proteus import cfmmfsw
@@ -521,7 +521,7 @@ def unstructuredEx2dInCpp(initFunc,Lx,Ly,nx,ny,method='FMM',verbose=0):
 
     phi0 = FemPhi0.dof ; phi0p = FemPhi0p.dof ; phi0m = FemPhi0m.dof ;
     Tp   = FemTp.dof; Tm = FemTm.dof
-    
+
 
     icout = open("phi0.dat",'w')
 
@@ -556,7 +556,7 @@ def unstructuredEx2dInCpp(initFunc,Lx,Ly,nx,ny,method='FMM',verbose=0):
                               initFlag=0,verbose=verbose)
         print "back."
     #meth switch
-    
+
     fout = open("T.dat",'w')
     phout= open("phi.dat",'w')
     for I in range(mesh.nNodes_global):
@@ -570,7 +570,7 @@ def unstructuredEx2dInCpp(initFunc,Lx,Ly,nx,ny,method='FMM',verbose=0):
 
 def unstructuredEx3dinCpp(initFunc,Lx,Ly,Lz,nx,ny,nz,method='FMM',verbose=0):
     """
-    run a redistancing example in 3d: 
+    run a redistancing example in 3d:
     """
     import numpy
     from proteus import cfmmfsw
@@ -589,8 +589,8 @@ def unstructuredEx3dinCpp(initFunc,Lx,Ly,Lz,nx,ny,nz,method='FMM',verbose=0):
 
     phi0 = FemPhi0.dof ; phi0p = FemPhi0p.dof ; phi0m = FemPhi0m.dof ;
     Tp   = FemTp.dof; Tm = FemTm.dof
-    
-    
+
+
     icout = open("phi0.dat",'w')
 
     #construct initial level set, short cut assuming dofs <--> node numbers
@@ -624,7 +624,7 @@ def unstructuredEx3dinCpp(initFunc,Lx,Ly,Lz,nx,ny,nz,method='FMM',verbose=0):
                               initFlag=0,verbose=verbose)
     print "back."
     #method switch
-    
+
     fout = open("T.dat",'w')
     phout= open("phi.dat",'w')
     for I in range(mesh.nNodes_global):
@@ -637,7 +637,7 @@ def unstructuredEx3dinCpp(initFunc,Lx,Ly,Lz,nx,ny,nz,method='FMM',verbose=0):
     phout.close()
 
 
-    
+
 if __name__ == "__main__":
     import math
     #method = 'FMM'
@@ -693,6 +693,6 @@ if __name__ == "__main__":
         #test3dLocalSolver(verbose=10)
         nx=21; ny = 21; nz=21
         testFunc= sphere3d
-        #testFunc= twoSphere3d 
+        #testFunc= twoSphere3d
         #unstructuredEx3d(testFunc,Lx,Ly,Lz,nx,ny,nz,method=method,verbose=0)
         unstructuredEx3dinCpp(testFunc,Lx,Ly,Lz,nx,ny,nz,method=method,verbose=1)
