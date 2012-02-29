@@ -19,4 +19,4 @@ setenv F77FLAGS "-fPIC"
 setenv F90FLAGS "-fPIC"
 setenv FFLAGS "-fPIC"
 setenv PATH .:${PROTEUS_PREFIX}/bin:${PATH}
-setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}/lib:${PROTEUS_PREFIX}/lib
+setenv LD_LIBRARY_PATH ${LD_LIBRARY_PATH}/lib:${PROTEUS_PREFIX}/lib:/opt/intel/cmkl/10.2.0.013/lib/em64t
