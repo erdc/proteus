@@ -62,3 +62,5 @@
    cnumericalFlux.rst
    cfmmfsw.rst
    cTwophaseDarcyCoefficients.rst
+   mprans.rst
+
