@@ -8,7 +8,6 @@ except:
 from distutils import sysconfig
 import sys
 sys.path.append(os.getenv('PROTEUS')+'/externalPackages/petsc4py')
-print sys.path
 from conf.petscconf import Extension as PetscExtension
 from conf.petscconf import build_ext as petsc_build_ext
 from conf.petscconf import config, build, build_src
@@ -23,7 +22,7 @@ class my_build_ext(petsc_build_ext):
         #
         build_lib   = self.build_lib
         dist_name   = self.distribution.get_name()
-        config_file = os.path.join(build_lib, dist_name,'petsc.cfg')
+        config_file = os.path.join(build_lib, dist_name,'petsc.cfg')#cek hack
         #
         def write_file(filename, data):
             fh = open(filename, 'w')
@@ -43,7 +42,7 @@ class my_build_ext(petsc_build_ext):
         newext = extclass(name, sources)
         newext.__dict__.update(deepcopy(ext.__dict__))
         newext.name = name
-        pkgpath=''
+        pkgpath=''#cek hack
         return pkgpath, newext
 
 setup(name='proteus',
