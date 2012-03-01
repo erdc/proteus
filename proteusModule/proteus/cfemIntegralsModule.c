@@ -5060,19 +5060,22 @@ static PyObject* cfemIntegralsUpdateDiffusion_MixedForm_weak_sd(PyObject* self,
                                                                 PyObject* args)
 {
   PyObject *a,*qV,*grad_w_dV,*residual,*rowptr,*colind,*velocity;
-  if(!PyArg_ParseTuple(args,"OOOOOOO",
-                       &rowptr,
+  int rho_split;
+  if(!PyArg_ParseTuple(args,"OOOOOOOi",
+		       &rowptr,
                        &colind,
                        &a,
                        &qV,
                        &grad_w_dV,
 		       &velocity,
-                       &residual))
+                       &residual,
+		       &rho_split))
     return NULL;
   updateDiffusion_MixedForm_weak_sd(SHAPE(grad_w_dV)[0],
                                     SHAPE(grad_w_dV)[1],
                                     SHAPE(grad_w_dV)[2],
                                     SHAPE(grad_w_dV)[3],
+				    rho_split,
                                     IDATA(rowptr),
                                     IDATA(colind),
                                     DDATA(a),
