@@ -320,7 +320,7 @@ distclean_daetk:
 
 #numpy
 newConfig_numpy:
-	cd numpyConfig && cp site.cfg.${PROTEUS_ARCH_OLD} site.cfg.${PROTEUS_ARCH} 
+	cd numpyConfig && cp site.cfg.${PROTEUS_ARCH_OLD} site.cfg.${PROTEUS_ARCH} && cp build.numpy.${PROTEUS_ARCH_OLD} build.numpy.${PROTEUS_ARCH} 
 
 editConfig_numpy:
 	cd numpyConfig && ${EDITOR} site.cfg.${PROTEUS_ARCH} build.numpy.${PROTEUS_ARCH}
