@@ -1874,6 +1874,7 @@ class Diffusion_LDG(NF_base):
         assert self.vt.sd, "LDG factor code currently assumes sparse diffusion rep"
         self.diagEntry_a = {} #only need if not using c for splitting calculations
         self.aSplit = 1 #how LDG diffusion matrix is factored
+        self.rho_split=0 # for variable density flow
         self.aSplittingsHaveBeenAllocated= False
         for ci in range(self.nc):
             for ck in range(self.nc):

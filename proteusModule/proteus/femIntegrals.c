@@ -10108,6 +10108,7 @@ void updateDiffusion_MixedForm_weak_sd(int nElements_global,
                                        int nQuadraturePoints_element,
                                        int nDOF_test_element,
                                        int nSpace,
+				       int rho_split,
                                        int* rowptr,
                                        int* colind,
                                        double* a,
@@ -10142,19 +10143,26 @@ void updateDiffusion_MixedForm_weak_sd(int nElements_global,
   for(eN=0;eN<nElements_global;eN++)
       for (k=0;k<nQuadraturePoints_element;k++)
         for (I=0;I<nSpace;I++)
-          for (m=rowptr[I];m<rowptr[I+1];m++)
-            {
-	    velocity[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
-                 I]
-	      +=
-              a[eN*nQuadraturePoints_element*nnz+
-                k*nnz+
-                m]
-              *
-              qV[eN*nQuadraturePoints_element*nSpace + 
-                 k*nSpace + 
-                 colind[m]];
+	  if (rho_split==0)
+	    {
+	      for (m=rowptr[I];m<rowptr[I+1];m++)
+		{
+		  velocity[eN*nQuadraturePoints_element*nSpace + 
+			   k*nSpace + I]
+		    += a[eN*nQuadraturePoints_element*nnz+
+			 k*nnz+ m]
+		    *
+		    qV[eN*nQuadraturePoints_element*nSpace + 
+		       k*nSpace + colind[m]];
+	        }
+	    }
+	  else if (rho_split==1)
+	    {
+	      velocity[eN*nQuadraturePoints_element*nSpace + 
+			   k*nSpace + I]
+		    = 
+		    qV[eN*nQuadraturePoints_element*nSpace + 
+		       k*nSpace + I];
 	    }
 }
 
