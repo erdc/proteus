@@ -290,7 +290,7 @@ install_petsc:
 distclean_petsc:
 	touch install_petsc
 	mv -f install_petsc install_petsc_last
-	cd ${PETSC_VERSION} && make -k clean && rm -rf externalpackages
+	cd ${PETSC_VERSION} && make -k clean && rm -rf externalpackages ${PROTEUS_ARCH}
 
 #daetk
 newConfig_daetk:
@@ -316,7 +316,7 @@ install_daetk:
 distclean_daetk:
 	touch install_daetk
 	mv -f install_daetk install_daetk_last	
-	cd ${DAETK_VERSION} && make -k clobber
+	cd ${DAETK_VERSION} && PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' DAETK_ARCH=${PROTEUS_ARCH} DAETK_DIR=${PWD}/${DAETK_VERSION}  make -k clobber
 
 #numpy
 newConfig_numpy:
