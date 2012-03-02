@@ -1,2 +1,1 @@
-#!/bin/csh
-${PROTEUS_PYTHON} setup.py config --mpicc=mpicc
+${PROTEUS_PYTHON} setup.py config --mpicc=mpicc --mpicxx=mpicxx

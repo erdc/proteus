@@ -1,7 +1,1 @@
-#!/bin/tcsh
-unsetenv CC
-unsetenv CXX
-unsetenv LD
-unsetenv LDSHARED
-unsetenv LDFLAGS
-./configure --shared --prefix=${PROTEUS_PREFIX}
+CC=gcc ./configure --shared --prefix=${PROTEUS_PREFIX}
