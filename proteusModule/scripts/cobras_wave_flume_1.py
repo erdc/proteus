@@ -25,7 +25,7 @@ vertices = {'bottom_left' : (-19.0,0.0),
             'rubble_mound_upper_left':  (22.85,0.60),
             'rubble_mound_upper_right': (23.433+0.15,0.60),
             'rubble_mound_bottom_right': (23.703,0.52),
-            'right_filter_layer_upper_left':  (23.433,0.63),#filter layer on right side 
+            'right_filter_layer_upper_left':  (23.433,0.63),#filter layer on right side
             'right_filter_layer_upper_right': (23.433+0.159,0.63),
             'right_filter_layer_lower_right': (23.753,0.52),
             'caisson_lower_left' : (23.0,0.60),
@@ -69,7 +69,7 @@ segmentList = [('top_left','bottom_left','left'),
                ('tetrapod_bottom_right' , 'tetrapod_bottom_left','tetrapod_interior' ),
                ('tetrapod_bottom_right'  , 'rubble_mound_bottom_left','bottom_slope'),
                ('rubble_mound_bottom_left' , 'slope_shelf_left','bottom_slope'),
-               ('slope_shelf_left' , 'rubble_mound_bottom_right', 'bottom_shelf'), 
+               ('slope_shelf_left' , 'rubble_mound_bottom_right', 'bottom_shelf'),
                ('rubble_mound_bottom_left', 'rubble_mound_upper_left','rubble_mound'),
                ('rubble_mound_upper_left' , 'caisson_lower_left','rubble_mound'),
                ('caisson_lower_left' ,'tetrapod_shelf3_right','caisson_interior'),
@@ -92,7 +92,7 @@ segmentList = [('top_left','bottom_left','left'),
 segments = set([])
 for s in segmentList:
     segments.add((vertexId[s[0]],vertexId[s[1]],segmentLabels[s[2]]))
-            
+
 regions = {'tetrapod' : (22.6,0.6,1),             #porosity =0.5 W=370g looks like all have dm_50 0.05 [m]
            'filter_layer_left' : (22.85,0.615,2), #porosity = 0.53, W=6.5g
            'rubble_mound' : (23.5, 0.55, 3),      #porosity = 0.49, W=1.4g
@@ -103,8 +103,8 @@ solid_regions  = {}
 for reg in ['tetrapod','filter_layer_left','rubble_mound','filter_layer_right']:
     porous_regions[reg]= regions[reg]
 for reg in ['caisson']:
-    solid_regions[reg]= regions[reg] 
-    
+    solid_regions[reg]= regions[reg]
+
 
 poly = open('cobras_wave_flume_1.poly','w')
 poly.write('%d %d %d %d \n' % (nvertices,2,0,0))

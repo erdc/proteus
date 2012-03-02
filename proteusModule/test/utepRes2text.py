@@ -3,9 +3,9 @@
 def printFinalSolutionToFile(resFileName,outputFileName,
                              key='u_dof',component=0,meshLevel=0,verbose=0):
     """
-    write solution component at last (or only time step) on a given mesh level 
+    write solution component at last (or only time step) on a given mesh level
     as simple text file
-    
+
     """
     import os
     if not os.path.exists(resFileName):
@@ -57,8 +57,8 @@ if __name__ == '__main__':
                       action="store",
                       type="int",
                       default=0)
-    
- 
+
+
     (opts,args) = parser.parse_args()
     if len(args) < 2:
         raise RuntimeError("command line requires resultsFileName outputFileName")
@@ -77,5 +77,3 @@ if __name__ == '__main__':
                                       component=opts.component,
                                       meshLevel=opts.level,
                                       verbose=opts.verbose)
-
-

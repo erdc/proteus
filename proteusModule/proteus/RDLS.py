@@ -102,7 +102,7 @@ class OneLevelRDLS(OneLevelTransport):
             and dimensions of the storage dictionaries are
 
             e          -- at element
-            q          -- at element quadrature, unique to elements        
+            q          -- at element quadrature, unique to elements
             ebq        -- at element boundary quadrature, unique to elements
             ebq_global -- at element boundary quadrature, unique to element boundary
             ebqe       -- at element boundary quadrature, unique to global, exterior element boundary
@@ -121,7 +121,7 @@ class OneLevelRDLS(OneLevelTransport):
             self.timeTerm=True#allow turning off  the  time derivative
             #self.lowmem=False
             self.testIsTrial=True
-            self.phiTrialIsTrial=True            
+            self.phiTrialIsTrial=True
             self.u = uDict
             self.ua = {}#analytical solutions
             self.phi  = phiDict
@@ -179,8 +179,8 @@ class OneLevelRDLS(OneLevelTransport):
             #determine if we need element boundary storage
             self.elementBoundaryIntegrals = {}
             for ci  in range(self.nc):
-                self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or 
-                                                     (numericalFluxType != None) or 
+                self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or
+                                                     (numericalFluxType != None) or
                                                      (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                      (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                      (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -194,7 +194,7 @@ class OneLevelRDLS(OneLevelTransport):
             self.nDOF_test_element     = [femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
             self.nFreeDOF_global  = [dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
             self.nVDOF_element    = sum(self.nDOF_trial_element)
-            self.nFreeVDOF_global = sum(self.nFreeDOF_global) 
+            self.nFreeVDOF_global = sum(self.nFreeDOF_global)
             #
             NonlinearEquation.__init__(self,self.nFreeVDOF_global)
             #
@@ -249,7 +249,7 @@ class OneLevelRDLS(OneLevelTransport):
                     else:
                         elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
             else:
-                for I in self.coefficients.elementBoundaryIntegralKeys: 
+                for I in self.coefficients.elementBoundaryIntegralKeys:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature
             #
             # find the union of all element quadrature points and
@@ -329,7 +329,7 @@ class OneLevelRDLS(OneLevelTransport):
             self.q[('m_last',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
             self.q[('m_tmp',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
             self.q[('m',0)] = self.q[('u',0)]#for time integration by VBDF and probably FLCBDF
-            #needed by PsiTCtte 
+            #needed by PsiTCtte
             self.q[('mt',0)] = numpy.zeros(self.q[('u',0)].shape,'d')
             self.q[('dH',0,0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
             self.q[('dH_sge',0,0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
@@ -386,7 +386,7 @@ class OneLevelRDLS(OneLevelTransport):
             if self.stabilization and self.stabilization.usesGradientStabilization:
                 self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
             else:
-                 self.timeIntegration = TimeIntegrationClass(self)
+                self.timeIntegration = TimeIntegrationClass(self)
 
             if options != None:
                 self.timeIntegration.setFromOptions(options)
@@ -440,7 +440,7 @@ class OneLevelRDLS(OneLevelTransport):
             self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
             #use post processing tools to get conservative fluxes, None by default
             import PostProcessingTools
-            self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)  
+            self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
             log(memory("velocity postprocessor","OneLevelTransport"),level=4)
             #helper for writing out data storage
             import Archiver
@@ -481,7 +481,7 @@ class OneLevelRDLS(OneLevelTransport):
     def calculateCoefficients(self):
         if debugRDLS:
             OneLevelTransport.calculateCoefficients(self)
-        
+
     def calculateElementResidual(self):
         if debugRDLS:
             OneLevelTransport.calculateElementResidual(self)
@@ -497,7 +497,7 @@ class OneLevelRDLS(OneLevelTransport):
         """
         if not debugRDLS:
             return self.getResidualNew(u,r)
-            
+
         OneLevelTransport.getResidual(self,u,r)
         q_tmp = copy.deepcopy(self.q)
         if self.globalResidualDummy == None:
@@ -560,10 +560,10 @@ class OneLevelRDLS(OneLevelTransport):
                   self.u[0].femSpace.dofMap.l2g,
                   self.mesh.elementDiametersArray,
                   self.u[0].dof,
-                  self.q[('v',0)], 
-                  self.q[('grad(v)',0)], 
-                  self.q[('w*dV_H',0)], 
-                  self.q[('grad(w)*dV_H',0)], 
+                  self.q[('v',0)],
+                  self.q[('grad(v)',0)],
+                  self.q[('w*dV_H',0)],
+                  self.q[('grad(w)*dV_H',0)],
                   self.coefficients.q_u0,
                   self.timeIntegration.m_tmp[0],
                   self.q[('u',0)],
@@ -574,7 +574,7 @@ class OneLevelRDLS(OneLevelTransport):
                   self.q[('cfl',0)],
                   self.shockCapturing.numDiff[0],
                   self.shockCapturing.numDiff_last[0],
-                  self.elementResidual[0], 
+                  self.elementResidual[0],
                   #mwf for debugging
                   self.q[('mt',0)],
                   self.q[('r',0)],
@@ -612,8 +612,8 @@ class OneLevelRDLS(OneLevelTransport):
         import superluWrappers
         import numpy
         import pdb
-	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
-				       jacobian)
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                       jacobian)
         #for  now force time integration
         useTimeIntegration = 1
         if self.timeIntegration.__class__ == TimeIntegration.NoIntegration or not self.timeTerm:
@@ -650,10 +650,10 @@ class OneLevelRDLS(OneLevelTransport):
                   self.u[0].femSpace.dofMap.l2g,
                   self.mesh.elementDiametersArray,
                   self.u[0].dof,
-                  self.q[('v',0)], 
-                  self.q[('grad(v)',0)], 
-                  self.q[('w*dV_H',0)], 
-                  self.q[('grad(w)*dV_H',0)], 
+                  self.q[('v',0)],
+                  self.q[('grad(v)',0)],
+                  self.q[('w*dV_H',0)],
+                  self.q[('grad(w)*dV_H',0)],
                   self.coefficients.q_u0,
                   beta_bdf[0],
                   self.q[('dH_sge',0,0)],
@@ -685,16 +685,16 @@ class OneLevelRDLS(OneLevelTransport):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points.
-        
+
         This function should be called only when the mesh changes.
         """
-	#
+        #
         #get physical locations of quadrature points and jacobian information there
-	#assume all components live on the same mesh
+        #assume all components live on the same mesh
         #
         self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
                                                   self.q['x'])
-        if self.movingDomain: 
+        if self.movingDomain:
             if self.tLast_mesh != None:
                 self.q['xt'][:]=self.q['x']
                 self.q['xt']-=self.q['x_last']
@@ -750,7 +750,7 @@ class OneLevelRDLS(OneLevelTransport):
         #
         #get physical locations of element boundary quadrature points
         #
-	#assume all components live on the same mesh
+        #assume all components live on the same mesh
         self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
                                                                     self.ebqe['x'])
         #
@@ -881,4 +881,3 @@ def setZeroLSweakDirichletBCsSimple(RDLSvt):
                                                                            RDLSvt.u[0].dof,
                                                                            RDLSvt.dofFlag_element,#temporary storage
                                                                            RDLSvt.weakDirichletConditionFlags)
-        

@@ -156,8 +156,8 @@ class TC_base:
                     should be corrected in the future\n""" % (ci,ck,ck,ck,ck))
                     self.potential[ck]='u'
                 for cj in cjDict.keys():
-		    self.stencil[ci].add(cj)
-		    self.stencil[ci].add(ck)
+                    self.stencil[ci].add(cj)
+                    self.stencil[ci].add(ck)
         for ci,cjDict in self.potential.iteritems():
             for cj in cjDict.keys():
                 self.stencil[ci].add(cj)
@@ -391,9 +391,9 @@ class LinearVADR_ConstantCoefficients(TC_base):
                                                         t,
                                                         c['x'],
                                                         c[('u',i)],
-							c[('m',i)],c[('dm',i,i)],
-							c[('f',i)],c[('df',i,i)],
-							c[('a',i,i)],
+                                                        c[('m',i)],c[('dm',i,i)],
+                                                        c[('f',i)],c[('df',i,i)],
+                                                        c[('a',i,i)],
                                                         c[('r',i)],c[('dr',i,i)])
             nSpace=c['x'].shape[-1]
             if self.rFunc != None:
@@ -441,7 +441,7 @@ class LinearVADR_ConstantCoefficients_skew(TC_base):
         self.B = B
         self.C = C
     def evaluate(self,t,c):
-	nc=self.nc
+        nc=self.nc
         for  i  in range(self.nc):
             self.linearADR_ConstantCoefficientsEvaluate(self.M[i],
                                                         self.A[i],
@@ -450,9 +450,9 @@ class LinearVADR_ConstantCoefficients_skew(TC_base):
                                                         t,
                                                         c['x'],
                                                         c[('u',nc-1-i)],
-							c[('m',i)],c[('dm',i,nc-1-i)],
-							c[('f',i)],c[('df',i,nc-1-i)],
-							c[('a',i,nc-1-i)],
+                                                        c[('m',i)],c[('dm',i,nc-1-i)],
+                                                        c[('f',i)],c[('df',i,nc-1-i)],
+                                                        c[('a',i,nc-1-i)],
                                                         c[('r',i)],c[('dr',i,nc-1-i)])
 
 ##\brief Linear advection-diffusion-reaction (upper triangular multi-component systems)
@@ -514,9 +514,9 @@ class LinearVADR_ConstantCoefficients_upper(TC_base):
                                                         t,
                                                         c['x'],
                                                         c[('u',i)],
-							c[('m',i)],c[('dm',i,i)],
-							c[('f',i)],c[('df',i,i)],
-							c[('a',i,i)],
+                                                        c[('m',i)],c[('dm',i,i)],
+                                                        c[('f',i)],c[('df',i,i)],
+                                                        c[('a',i,i)],
                                                         c[('r',i)],c[('dr',i,i)])
             for j in range(self.nc-1,i,-1):
                 c[('m',i)]+=c[('m',j)]
@@ -585,9 +585,9 @@ class LinearVADR_ConstantCoefficients_lower(TC_base):
                                                         t,
                                                         c['x'],
                                                         c[('u',i)],
-							c[('m',i)],c[('dm',i,i)],
-							c[('f',i)],c[('df',i,i)],
-							c[('a',i,i)],
+                                                        c[('m',i)],c[('dm',i,i)],
+                                                        c[('f',i)],c[('df',i,i)],
+                                                        c[('a',i,i)],
                                                         c[('r',i)],c[('dr',i,i)])
             for j in range(i):
                 c[('m',i)]+=c[('m',j)]
@@ -649,11 +649,11 @@ class LinearVADR_ConstantCoefficients_full(TC_base):
         self.A = A
         self.B = B
         self.C = C
-	self.eps=0.1
+        self.eps=0.1
     def evaluate(self,t,c):
-	mtmp=numpy.zeros(c[('m',0)].shape,'d')
-	ftmp=numpy.zeros(c[('f',0)].shape,'d')
-	rtmp=numpy.zeros(c[('r',0)].shape,'d')
+        mtmp=numpy.zeros(c[('m',0)].shape,'d')
+        ftmp=numpy.zeros(c[('f',0)].shape,'d')
+        rtmp=numpy.zeros(c[('r',0)].shape,'d')
         for  i  in range(self.nc):
             self.linearADR_ConstantCoefficientsEvaluate(self.M[i],
                                                         self.A[i],
@@ -662,25 +662,25 @@ class LinearVADR_ConstantCoefficients_full(TC_base):
                                                         t,
                                                         c['x'],
                                                         c[('u',i)],
-							c[('m',i)],c[('dm',i,i)],
-							c[('f',i)],c[('df',i,i)],
-							c[('a',i,i)],
+                                                        c[('m',i)],c[('dm',i,i)],
+                                                        c[('f',i)],c[('df',i,i)],
+                                                        c[('a',i,i)],
                                                         c[('r',i)],c[('dr',i,i)])
-	    for j in range(0,i)+range(i+1,self.nc):
-		self.linearADR_ConstantCoefficientsEvaluate(self.eps*self.M[j],
-							    self.eps*self.A[j],
-							    self.eps*self.B[j],
-							    self.eps*self.C[j],
-							    t,
-							    c['x'],
-							    c[('u',j)],
-							    mtmp,c[('dm',i,j)],
-							    ftmp,c[('df',i,j)],
-							    c[('a',i,j)],
-							    rtmp,c[('dr',i,j)])
-		c[('m',i)]+=mtmp
-		c[('f',i)]+=ftmp
-		c[('r',i)]+=rtmp
+            for j in range(0,i)+range(i+1,self.nc):
+                self.linearADR_ConstantCoefficientsEvaluate(self.eps*self.M[j],
+                                                            self.eps*self.A[j],
+                                                            self.eps*self.B[j],
+                                                            self.eps*self.C[j],
+                                                            t,
+                                                            c['x'],
+                                                            c[('u',j)],
+                                                            mtmp,c[('dm',i,j)],
+                                                            ftmp,c[('df',i,j)],
+                                                            c[('a',i,j)],
+                                                            rtmp,c[('dr',i,j)])
+                c[('m',i)]+=mtmp
+                c[('f',i)]+=ftmp
+                c[('r',i)]+=rtmp
 
 
 ##Nonlinear advection-diffusion-reaction (single-component or uncoupled multi-component systems)
@@ -1501,43 +1501,43 @@ class Stokes(TC_base):
                              variableNames)
             self.vectorComponents=[1,2]
         elif nd==3:
-           variableNames=['p','u','v','w']
-           mass={1:{1:'linear'},
-                 2:{2:'linear'},
-                 3:{3:'linear'}}
-           if not weakBoundaryConditions:
-               advection = {0:{1:'linear',
-                               2:'linear',
-                               3:'linear'}}
-           else:
-               advection = {0:{1:'linear',
-                               2:'linear',
-                               3:'linear'},
-                            1:{0:'linear'},
-                            2:{0:'linear'},
-                            3:{0:'linear'}}
-           diffusion = {1:{1:{1:'constant'}},
-                        2:{2:{2:'constant'}},
-                        3:{3:{3:'constant'}}}
-           potential = {1:{1:'u'},
-                        2:{2:'u'},
-                        3:{3:'u'}}
-           reaction = {1:{1:'constant'},
-                       2:{2:'constant'},
-                       3:{3:'constant'}}
-           hamiltonian = {1:{0:'linear'},
-                          2:{0:'linear'},
-                          3:{0:'linear'}}
-           TC_base.__init__(self,
-                            4,
-                            mass,
-                            advection,
-                            diffusion,
-                            potential,
-                            reaction,
-                            hamiltonian,
-                            variableNames)
-           self.vectorComponents=[1,2,3]
+            variableNames=['p','u','v','w']
+            mass={1:{1:'linear'},
+                  2:{2:'linear'},
+                  3:{3:'linear'}}
+            if not weakBoundaryConditions:
+                advection = {0:{1:'linear',
+                                2:'linear',
+                                3:'linear'}}
+            else:
+                advection = {0:{1:'linear',
+                                2:'linear',
+                                3:'linear'},
+                             1:{0:'linear'},
+                             2:{0:'linear'},
+                             3:{0:'linear'}}
+            diffusion = {1:{1:{1:'constant'}},
+                         2:{2:{2:'constant'}},
+                         3:{3:{3:'constant'}}}
+            potential = {1:{1:'u'},
+                         2:{2:'u'},
+                         3:{3:'u'}}
+            reaction = {1:{1:'constant'},
+                        2:{2:'constant'},
+                        3:{3:'constant'}}
+            hamiltonian = {1:{0:'linear'},
+                           2:{0:'linear'},
+                           3:{0:'linear'}}
+            TC_base.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectorComponents=[1,2,3]
     def evaluate(self,t,c):
         if self.nd==2:            
             self.Stokes_2D_Evaluate(self.rho,
@@ -1636,35 +1636,35 @@ class StokesP(TC_base):
                              variableNames)
             self.vectorComponents=[1,2]
         elif nd==3:
-           variableNames=['p','u','v','w']
-           mass={1:{1:'linear'},
-                 2:{2:'linear'},
-                 3:{3:'linear'}}
-           advection = {0:{1:'linear',
-                           2:'linear',
-                           3:'linear'},
-                        1:{0:'linear'},
-                        2:{0:'linear'},
-                        3:{0:'linear'}}
-           diffusion = {1:{1:{1:'constant'}},
-                        2:{2:{2:'constant'}},
-                        3:{3:{3:'constant'}}}
-           potential = {1:{1:'u'},
-                        2:{2:'u'},
-                        3:{3:'u'}}
-           reaction = {1:{1:'constant'},
-                       2:{2:'constant'},
-                       3:{3:'constant'}}
-           TC_base.__init__(self,
-                            4,
-                            mass,
-                            advection,
-                            diffusion,
-                            potential,
-                            reaction,
-                            hamiltonian,
-                            variableNames)
-           self.vectorComponents=[1,2,3]
+            variableNames=['p','u','v','w']
+            mass={1:{1:'linear'},
+                  2:{2:'linear'},
+                  3:{3:'linear'}}
+            advection = {0:{1:'linear',
+                            2:'linear',
+                            3:'linear'},
+                         1:{0:'linear'},
+                         2:{0:'linear'},
+                         3:{0:'linear'}}
+            diffusion = {1:{1:{1:'constant'}},
+                         2:{2:{2:'constant'}},
+                         3:{3:{3:'constant'}}}
+            potential = {1:{1:'u'},
+                         2:{2:'u'},
+                         3:{3:'u'}}
+            reaction = {1:{1:'constant'},
+                        2:{2:'constant'},
+                        3:{3:'constant'}}
+            TC_base.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectorComponents=[1,2,3]
     def evaluate(self,t,c):
         if self.nd==2:
             self.StokesP_2D_Evaluate(self.rho,
@@ -2993,36 +2993,36 @@ class TwophaseStokes_LS_SO(TC_base):
                              variableNames)
             self.vectorComponents=[1,2]
         elif nd==3:
-           variableNames=['p','u','v','w']
-           if not steady:
-               mass={1:{1:'linear'},
-                     2:{2:'linear'},
-                     3:{3:'linear'}}
-           advection = {0:{1:'linear',
-                           2:'linear',
-                           3:'linear'}}
-           diffusion = {1:{1:{1:'constant'}},
-                        2:{2:{2:'constant'}},
-                        3:{3:{3:'constant'}}}
-           potential = {1:{1:'u'},
-                        2:{2:'u'},
-                        3:{3:'u'}}
-           reaction = {1:{1:'constant'},
-                       2:{2:'constant'},
-                       3:{3:'constant'}}
-           hamiltonian = {1:{0:'linear'},
-                          2:{0:'linear'},
-                          3:{0:'linear'}}
-           TC_base.__init__(self,
-                            4,
-                            mass,
-                            advection,
-                            diffusion,
-                            potential,
-                            reaction,
-                            hamiltonian,
-                            variableNames)
-           self.vectorComponents=[1,2,3]
+            variableNames=['p','u','v','w']
+            if not steady:
+                mass={1:{1:'linear'},
+                      2:{2:'linear'},
+                      3:{3:'linear'}}
+            advection = {0:{1:'linear',
+                            2:'linear',
+                            3:'linear'}}
+            diffusion = {1:{1:{1:'constant'}},
+                         2:{2:{2:'constant'}},
+                         3:{3:{3:'constant'}}}
+            potential = {1:{1:'u'},
+                         2:{2:'u'},
+                         3:{3:'u'}}
+            reaction = {1:{1:'constant'},
+                        2:{2:'constant'},
+                        3:{3:'constant'}}
+            hamiltonian = {1:{0:'linear'},
+                           2:{0:'linear'},
+                           3:{0:'linear'}}
+            TC_base.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectorComponents=[1,2,3]
         self.q_phi = None
         self.ebq_phi = None
         self.ebqe_phi = None
@@ -3415,36 +3415,36 @@ class TwophaseStokes_VOF_SO(TC_base):
                              variableNames)
             self.vectorComponents=[1,2]
         elif nd==3:
-           variableNames=['p','u','v','w']
-           if not steady:
-               mass={1:{1:'linear'},
-                     2:{2:'linear'},
-                     3:{3:'linear'}}
-           advection = {0:{1:'linear',
-                           2:'linear',
-                           3:'linear'}}
-           diffusion = {1:{1:{1:'constant'}},
-                        2:{2:{2:'constant'}},
-                        3:{3:{3:'constant'}}}
-           potential = {1:{1:'u'},
-                        2:{2:'u'},
-                        3:{3:'u'}}
-           reaction = {1:{1:'constant'},
-                       2:{2:'constant'},
-                       3:{3:'constant'}}
-           hamiltonian = {1:{0:'linear'},
-                          2:{0:'linear'},
-                          3:{0:'linear'}}
-           TC_base.__init__(self,
-                            4,
-                            mass,
-                            advection,
-                            diffusion,
-                            potential,
-                            reaction,
-                            hamiltonian,
-                            variableNames)
-           self.vectorComponents=[1,2,3]
+            variableNames=['p','u','v','w']
+            if not steady:
+                mass={1:{1:'linear'},
+                      2:{2:'linear'},
+                      3:{3:'linear'}}
+            advection = {0:{1:'linear',
+                            2:'linear',
+                            3:'linear'}}
+            diffusion = {1:{1:{1:'constant'}},
+                         2:{2:{2:'constant'}},
+                         3:{3:{3:'constant'}}}
+            potential = {1:{1:'u'},
+                         2:{2:'u'},
+                         3:{3:'u'}}
+            reaction = {1:{1:'constant'},
+                        2:{2:'constant'},
+                        3:{3:'constant'}}
+            hamiltonian = {1:{0:'linear'},
+                           2:{0:'linear'},
+                           3:{0:'linear'}}
+            TC_base.__init__(self,
+                             4,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames)
+            self.vectorComponents=[1,2,3]
         self.q_vof = None
         self.ebq_vof = None
         self.ebqe_vof = None
@@ -6290,7 +6290,7 @@ class ConservativeHead2PMualemVanGenuchten(TC_base):
                                                                    c[('df',1,1)],
                                                                    c[('a',1,1)],
                                                                    c[('da',1,1,1)])
-								   
+                                                                   
 class PoissonEquationCoefficients(TC_base):
     from proteus.ctransportCoefficients import L2projectEvaluate
     def __init__(self,aOfX,fOfX,nc=1,nd=2,l2proj=None,
@@ -6710,7 +6710,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
         self.g = numpy.array(g)
         self.nu= nu
         self.rho=rho
-    	self.nc=2
+        self.nc=2
         self.nd=nd
         variableNames=['k','eps']
         mass={}
@@ -6752,7 +6752,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                          potential,
                          reaction,
                          hamiltonian,
-			 variableNames,
+                         variableNames,
                          sparseDiffusionTensors=sdInfo)
         self.flowModelID = flowModelID
         for term in ['q_velocity','ebq_velocity','ebqe_velocity','ebq_global_velocity']:
@@ -7039,7 +7039,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
         self.g = numpy.array(g)
         self.nu= nu
         self.rho=rho
-    	self.nc=1
+        self.nc=1
         self.nd=nd
         variableNames=['k']
         mass={}
@@ -7067,7 +7067,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                          potential,
                          reaction,
                          hamiltonian,
-			 variableNames,
+                         variableNames,
                          sparseDiffusionTensors=sdInfo)
         self.flowModelID = flowModelID
         self.epsilonModelID = epsilonModelID
@@ -7323,7 +7323,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
         self.g = numpy.array(g)
         self.nu= nu
         self.rho=rho
-    	self.nc=1
+        self.nc=1
         self.nd=nd
         variableNames=['epsilon']
         mass={}
@@ -7351,7 +7351,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                          potential,
                          reaction,
                          hamiltonian,
-			 variableNames,
+                         variableNames,
                          sparseDiffusionTensors=sdInfo)
         self.flowModelID = flowModelID
         self.kModelID = kModelID

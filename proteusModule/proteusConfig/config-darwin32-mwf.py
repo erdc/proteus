@@ -45,8 +45,3 @@ PROTEUS_PETSC_LIBS =['petscts','petscsnes','petscksp','petscdm','petscmat','pets
 PROTEUS_MPI_INCLUDE_DIR = '/sw/include'
 PROTEUS_MPI_LIB_DIR = ['/sw/lib','/sw/lib/openmpi','/sw/lib/gcc4.2/lib']
 PROTEUS_MPI_LIBS =['mpi','orte','opal','dl','mpi_f77','mpi_f90']
-
-
-
-
-
