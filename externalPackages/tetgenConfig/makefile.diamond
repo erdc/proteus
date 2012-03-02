@@ -11,8 +11,8 @@
 # CXX should be set to the name of your favorite C++ compiler.
 # ===========================================================
 
-CXX = g++
-#CXX = icpc
+#CXX = g++
+CXX = icpc
 #CXX = CC
 
 # CXXFLAGS is the level of optimiztion, default is -O. One should try
