@@ -39,7 +39,7 @@ class ShockCapturing_base:
                         cq[('dphi_sge',ck,cj)]=cq[('dphi',ck,cj)]
                     if not cq.has_key(('da_sge',ci,ck,cj)):
                         cq[('da_sge',ci,ck,cj)]=cq[('da',ci,ck,cj)]
-        
+
     def calculateNumericalDiffusion(self,q):
         for ci in range(self.nc):
             self.numDiff[ci].flat[:] = self.shockCapturingFactor
@@ -69,16 +69,16 @@ class ResGradFFDarcy_SC(ShockCapturing_base):
                                                            q[('pdeResidual',0)],
                                                            q[('grad(u)',0)],
                                                            self.numDiff[0])
-        
+
 class ResGradQuad_SC(ShockCapturing_base):
     def __init__(self,coefficients,nd,shockCapturingFactor=0.25,lag=True,gradLag=True):
         ShockCapturing_base.__init__(self,coefficients,nd,shockCapturingFactor,lag)
         self.debug=False
-	self.gradLag = gradLag
+        self.gradLag = gradLag
     def calculateNumericalDiffusion(self,q):
         for ci in range(self.nc):
             if self.debug:
-                if numpy.isnan(q[('pdeResidual',ci)]).any(): # 
+                if numpy.isnan(q[('pdeResidual',ci)]).any(): #
                     import pdb
                     print "NaN's in res"
                     pdb.set_trace()
@@ -383,5 +383,3 @@ class ResGradFFDarcyDelayLag_SC(ResGradFFDarcy_SC):
             for ci in range(self.nc):
                 self.numDiff_last.append(self.cq_numDiff[ci])
                 self.numDiff.append(numpy.zeros(self.cq_numDiff[ci].shape,'d'))
-                
-

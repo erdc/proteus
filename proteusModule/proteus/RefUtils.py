@@ -6,9 +6,9 @@ for doing FEM calculations on reference elements, etc
 from EGeometry import *
 from Quadrature import *
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #global data
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 baryCoords = {}
 baryCoords['1d'] = []
@@ -47,7 +47,7 @@ baryGrads['3d'].append(numpy.array([ 0.0, 0.0, 1.0]))
 
 
 #keep around nodal points for P2 lagrange shape functions on
-#unit simplex 
+#unit simplex
 p2refNodes = []
 p2refNodes.append(numpy.array([[0.0],[1.0],[0.5]]))
 p2refNodes.append(numpy.array([[0.0, 0.0],
@@ -72,35 +72,35 @@ q2refNodes.append(numpy.array([[-1.0,   -1.0,   -1.0],#nodes on bottom
                                [ 1.0,   -1.0,   -1.0],
                                [ 1.0,    1.0,   -1.0],
                                [-1.0,    1.0,   -1.0],
-                               
-			       [-1.0,   -1.0,    1.0],#nodes on top
+
+                               [-1.0,   -1.0,    1.0],#nodes on top
                                [ 1.0,   -1.0,    1.0],
                                [ 1.0,    1.0,    1.0],
                                [-1.0,    1.0,    1.0],
-			       
+
                                [ 0.0,   -1.0,   -1.0],#nodes on bottom edges
-                               [ 1.0,    0.0,   -1.0], 
+                               [ 1.0,    0.0,   -1.0],
                                [ 0.0,    1.0,   -1.0],
                                [-1.0,    0.0,   -1.0],
-			          
+
                                [-1.0,   -1.0,    0.0],#nodes on side edges
-                               [ 1.0,   -1.0,    0.0], 
+                               [ 1.0,   -1.0,    0.0],
                                [ 1.0,    1.0,    0.0],
                                [-1.0,    1.0,    0.0],
-                         
-			       [ 0.0,   -1.0,    1.0],#nodes on top edges
-                               [ 1.0,    0.0,    1.0], 
+
+                               [ 0.0,   -1.0,    1.0],#nodes on top edges
+                               [ 1.0,    0.0,    1.0],
                                [ 0.0,    1.0,    1.0],
-                               [-1.0,    0.0,    1.0],			       			       			       
-                               
-			       [ 0.0,    0.0,   -1.0],#nodes on face centers
-			       [ 0.0,   -1.0,    0.0],
-			       [ 1.0,    0.0,    0.0],
-			       [ 0.0,    1.0,    0.0],
-			       [-1.0,    0.0,    0.0],
-			       [ 0.0,    0.0,    1.0],
-			       
-                               [ 0.0,    0.0,    0.0]])) #node on element center 
+                               [-1.0,    0.0,    1.0],
+
+                               [ 0.0,    0.0,   -1.0],#nodes on face centers
+                               [ 0.0,   -1.0,    0.0],
+                               [ 1.0,    0.0,    0.0],
+                               [ 0.0,    1.0,    0.0],
+                               [-1.0,    0.0,    0.0],
+                               [ 0.0,    0.0,    1.0],
+
+                               [ 0.0,    0.0,    0.0]])) #node on element center
 
 #which local boundaries are ref nodes "on"
 p2tetrahedronLocalBoundaryLookup = {0:[1,2,3],
@@ -114,23 +114,23 @@ p2tetrahedronLocalBoundaryLookup = {0:[1,2,3],
                                     8:[0,2],
                                     9:[1,2]}
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #local convenience functions
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 def fact(n):
     if n == 0: return 1
     return n*fact(n-1)
 #end fact
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 #test functions for internal data
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 def testBarycentricCoords(verbose=0):
     """
 
     make sure barycentric coordinates working as expected
 
-    
+
     """
     #1d
     nd=1
@@ -149,7 +149,7 @@ def testBarycentricCoords(verbose=0):
         #end j
     #end i
     for i,dlam in enumerate(baryGrads['1d']):
-            dlamVals[i]=dlam
+        dlamVals[i]=dlam
         #end j
     #end i
     out = """
@@ -184,7 +184,7 @@ dla = %s
         #end j
     #end i
     for i,dlam in enumerate(baryGrads['2d']):
-            dlamVals[i]=dlam
+        dlamVals[i]=dlam
         #end j
     #end i
     out = """
@@ -197,7 +197,7 @@ dla =\n%s
 """ % (nd,xiArray,lamVals[0,:],lamVals[1,:],lamVals[2,:],dlamVals)
 
     print out
-    
+
     #3d
     nd=3
     #nxi     = 8
@@ -223,7 +223,7 @@ dla =\n%s
         #end j
     #end i
     for i,dlam in enumerate(baryGrads['3d']):
-            dlamVals[i]=dlam
+        dlamVals[i]=dlam
         #end j
     #end i
     out = """
@@ -237,7 +237,7 @@ dla =\n%s
 """ % (nd,xiArray,lamVals[0,:],lamVals[1,:],lamVals[2,:],lamVals[3,:],dlamVals)
 
     print out
-    
+
 
 #end testBarycentricCoords
 

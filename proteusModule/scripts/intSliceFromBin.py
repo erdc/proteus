@@ -30,15 +30,15 @@ else:
     k = 150*300*2
     for i in range(xr[0],xr[1]):
         for j  in range(yr[0],yr[1]):
-           #print  a[i*300+j]
-           if a[k+i*300+j] =='\x00':
-               aSlice[i-xr[0],j-yr[0]] = 0
-               
-           if a[k+i*300+j] =='\x01':
-               aSlice[i-xr[0],j-yr[0]] = 1
-               
-           if a[k+i*300+j] =='\x02':
-               aSlice[i-xr[0],j-yr[0]] = 2
+            #print  a[i*300+j]
+            if a[k+i*300+j] =='\x00':
+                aSlice[i-xr[0],j-yr[0]] = 0
+
+            if a[k+i*300+j] =='\x01':
+                aSlice[i-xr[0],j-yr[0]] = 1
+
+            if a[k+i*300+j] =='\x02':
+                aSlice[i-xr[0],j-yr[0]] = 2
         #
     #
 #
@@ -108,7 +108,7 @@ for i in range(nx-1):
             nodes.add((i+1,j+1))#top corner
             segments.add(((i+1,j),(i+1,j+1)))
             #holes.add((i+1.5,j))
-        
+
         #
     #
 #y faces
@@ -120,7 +120,7 @@ for j in range(ny-1):
             nodes.add((i+1,j+1))#right corner
             segments.add(((i,j+1),(i+1,j+1)))
             #holes.add((i,j+1.5))
-            
+
     #
 #
 #

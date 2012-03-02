@@ -12,11 +12,11 @@ parser.add_option("-f","--filebase",
                     type="string",
                     dest="filename",
                     default="simulation")
-		    
-(opts,args) = parser.parse_args()	
+
+(opts,args) = parser.parse_args()
 
 if not paraview.servermanager.ActiveConnection:
-	connection = paraview.servermanager.Connect()
+    connection = paraview.servermanager.Connect()
 
 reader = servermanager.sources.XdmfReader(FileName=opts.filename)
 reader.UpdatePipeline()
@@ -30,18 +30,18 @@ points.append(PointSource(Center=[2.4995,0.5255,0.161],NumberOfPoints=1))
 
 probes=[]
 for point in points:
-  probes.append(ProbePoint(Source=point,Input=reader))
+    probes.append(ProbePoint(Source=point,Input=reader))
 
 outfile = open("pressure.txt",'w')
 for time in timesteps:
-  outfile.write(str(time))
-  for probe in probes:
-     probe.UpdatePipeline (time)
+    outfile.write(str(time))
+    for probe in probes:
+        probe.UpdatePipeline (time)
 
-     fp = servermanager.Fetch(probe)
-     pdata= fp.GetPointData()
-     pressure = pdata.GetArray("p").GetTuple1(0)
+        fp = servermanager.Fetch(probe)
+        pdata= fp.GetPointData()
+        pressure = pdata.GetArray("p").GetTuple1(0)
 
-     outfile.write("  " + str(pressure))
-  outfile.write("\n")
+        outfile.write("  " + str(pressure))
+    outfile.write("\n")
 outfile.close()

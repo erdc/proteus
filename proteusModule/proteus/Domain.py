@@ -60,8 +60,8 @@ class RectangularDomain(D_base):
 2 %(x0pL0)f %(x1)f 2
 3 %(x0pL0)f %(x1pL1)f 3
 4 %(x0)f %(x1pL1)f 4
-# segments                       
-4 1 
+# segments
+4 1
 1 1 2 1
 2 2 3 2
 3 3 4 3
@@ -304,7 +304,7 @@ class PlanarStraightLineGraphDomain(D_base):
                 self.vertexFlags.append(line[3+nVertexAttributes])
         segmentLine = f.readline().split()
         while len(segmentLine) == 0 or segmentLine[0][0] == '#':
-                segmentLine = f.readline().split()
+            segmentLine = f.readline().split()
         nSegments = int(segmentLine[0])
         hasSegmentFlag = bool(int(segmentLine[1]))
         self.segments=[]
@@ -320,7 +320,7 @@ class PlanarStraightLineGraphDomain(D_base):
                 self.segmentFlags.append(int(line[3]))
         holeLine = f.readline().split()
         while len(holeLine) == 0 or holeLine[0][0] == '#':
-                holeLine = f.readline().split()
+            holeLine = f.readline().split()
         nHoles = int(holeLine[0])
         self.holes=[]
         for i in range(nHoles):
@@ -330,7 +330,7 @@ class PlanarStraightLineGraphDomain(D_base):
             self.holes.append([float(line[0]),float(line[1])])
         regionLine = f.readline().split()
         while len(regionLine) == 0 or regionLine[0][0] == '#':
-                regionLine = f.readline().split()
+            regionLine = f.readline().split()
         nRegions = int(regionLine[0])
         self.regions=[]
         self.regionFlags=[]
@@ -344,7 +344,7 @@ class PlanarStraightLineGraphDomain(D_base):
                 self.regionFlags.append(int(line[3]))
                 if len(line) > 4:
                     if line[4][0] != '#':
-                        self.areaConstraints.append(float(line[4]))                
+                        self.areaConstraints.append(float(line[4]))
         self.getBoundingBox()
         if self.segmentFlags != None:
             self.getSegmentPartition()
@@ -468,7 +468,7 @@ property float y
 property float z
 """ % (len(self.vertices),))
             if hasVertexFlags:
-                pf.write("property int flag\n")            
+                pf.write("property int flag\n")
             pf.write("element face %d \n" % (len(self.segments),))
             pf.write("property list uchar int vertex_index\n")
             if hasSegmentFlags:
@@ -535,45 +535,45 @@ property float z
                 for vN,v in enumerate(self.vertices):
                     pf.write('Point(%d)=(%21.16e,%21.16e,%21.16e);\n' % (vN+1,v[0],v[1],xref))
             # find point indices => physical point
-            if self.vertexFlags != None:		   
-	       vertFlagDict={}
-	       for vN,v in enumerate(self.vertices):
-	          if not vertFlagDict.has_key(self.vertexFlags[vN]):
-                     vertFlagDict[self.vertexFlags[vN]] = []
-		 
-	          vertFlagDict[self.vertexFlags[vN]].append(vN+1)
-	    
-	       print  "vertexFlags"
-	       print  vertFlagDict
-               # Physical Surfaces	
-	       pvN=0
-               for pv in vertFlagDict:                                 
-		   pvN+=1  	
-		   pf.write('Physical Point(%d) = {%d' % (pvN,vertFlagDict[pv][0]) )
-		   for vN in range(1,len(vertFlagDict[pv])):
-		      pf.write(',%d' %(vertFlagDict[pv][vN]))
-		   pf.write('};\n' )
-   
+            if self.vertexFlags != None:
+                vertFlagDict={}
+                for vN,v in enumerate(self.vertices):
+                    if not vertFlagDict.has_key(self.vertexFlags[vN]):
+                        vertFlagDict[self.vertexFlags[vN]] = []
 
-            #write the facets	    
+                    vertFlagDict[self.vertexFlags[vN]].append(vN+1)
+
+                print  "vertexFlags"
+                print  vertFlagDict
+                # Physical Surfaces
+                pvN=0
+                for pv in vertFlagDict:
+                    pvN+=1
+                    pf.write('Physical Point(%d) = {%d' % (pvN,vertFlagDict[pv][0]) )
+                    for vN in range(1,len(vertFlagDict[pv])):
+                        pf.write(',%d' %(vertFlagDict[pv][vN]))
+                    pf.write('};\n' )
+
+
+            #write the facets
             lN = 0
-	    fNN = 0
-            
+            fNN = 0
+
             lineLoop={}
             #write the lines
             for vN in range(0,len(self.segments)):
-                lN+=1			
+                lN+=1
                 pf.write('Line(%d) = {%d,%d};\n'% (lN,self.segments[vN][0]+1,self.segments[vN][1]+1))
                 lineLoop[vN] = lN;
 
             #write the lineloop
-            fNN+=1  	
+            fNN+=1
             pf.write('Line Loop(%d) = {%d' % (fNN,lineLoop[0]) )
             for vN in range(1,len(self.segments)):
                 pf.write(',%d' %(lineLoop[vN]))
             pf.write('};\n' )
 
-            #write the surface	   
+            #write the surface
             pf.write('Plane Surface(%d) = {%d};\n'% (fNN,fNN))
 
             #todo add physical surfaces or lines?
@@ -661,7 +661,7 @@ class MeshTetgenDomain(D_base):
     def __init__(self,fileprefix):
         D_base.__init__(self,3,name=fileprefix)
         self.meshfile=fileprefix
-	
+
 class PiecewiseLinearComplexDomain(D_base):
     """
     3D domains desribed by closed surfaces made up of general polygonal facets.
@@ -782,7 +782,7 @@ class PiecewiseLinearComplexDomain(D_base):
                                             float(line[2])])
         holeLine = f.readline().split()
         while len(holeLine) == 0 or holeLine[0][0] == '#':
-                holeLine = f.readline().split()
+            holeLine = f.readline().split()
         nHoles = int(holeLine[0])
         self.holes=[]
         for i in range(nHoles):
@@ -792,7 +792,7 @@ class PiecewiseLinearComplexDomain(D_base):
             self.holes.append([float(line[0]),float(line[1])])
         regionLine = f.readline().split()
         while len(regionLine) == 0 or regionLine[0][0] == '#':
-                regionLine = f.readline().split()
+            regionLine = f.readline().split()
         nRegions = int(regionLine[0])
         self.regions=[]
         self.regionFlags=[]
@@ -805,7 +805,7 @@ class PiecewiseLinearComplexDomain(D_base):
             if len(line) > 4:
                 self.regionFlags.append(int(line[4]))
             if len(line) > 5:
-                self.areaConstraints.append(float(line[5]))                
+                self.areaConstraints.append(float(line[5]))
         self.getBoundingBox()
         f.close()
     def writePoly(self,fileprefix):
@@ -872,7 +872,7 @@ class PiecewiseLinearComplexDomain(D_base):
                     if self.regionConstraints != None:
                         pf.write('%21.16e' % (self.regionConstraints[rN]))
                     pf.write('\n')
-                        
+
             else:
                 pf.write('%d\n' % (0,))
             pf.close()
@@ -1002,11 +1002,11 @@ for(int i=0;i< %(nFlags)i;++i)
                     #f.write("draw(p);\n")
                     f.write("s.append(surface(p,planar=true));\n")
                 #else:
-                #    f.write("dot((%f,%f,%f));" % tuple(self.vertices[vertexList[0]]))                    
+                #    f.write("dot((%f,%f,%f));" % tuple(self.vertices[vertexList[0]]))
             #f.write("purge(10);\n")
         if self.regions != None and self.regionFlags != None:
             for region,regionFlag in zip(self.regions,self.regionFlags):
-                f.write("dot((%f,%f,%f),materialPens[%i]);" % (region[0],region[1],region[2],regionFlag))                    
+                f.write("dot((%f,%f,%f),materialPens[%i]);" % (region[0],region[1],region[2],regionFlag))
         f.close()
         f_bl = open(fileprefix+'_boundaryLegend.asy','w')
         fileString="""import palette;
@@ -1055,82 +1055,82 @@ dotfactor=12;
                 pf.write('Point(%d)=(%21.16e,%21.16e,%21.16e);\n' % (vN+1,v[0],v[1],v[2]))
 
             # find point indices => physical point
-            if self.vertexFlags != None:		   
-	       vertFlagDict={}
-	       for vN,v in enumerate(self.vertices):
-	          if not vertFlagDict.has_key(self.vertexFlags[vN]):
-                     vertFlagDict[self.vertexFlags[vN]] = []
-		 
-	          vertFlagDict[self.vertexFlags[vN]].append(vN+1)
-	    
-	       print  "vertexFlags"
-	       print  vertFlagDict
-               # Physical Surfaces	
-	       pvN=0
-               for pv in vertFlagDict:                                 
-		   pvN+=1  	
-		   pf.write('Physical Point(%d) = {%d' % (pvN,vertFlagDict[pv][0]) )
-		   for vN in range(1,len(vertFlagDict[pv])):
-		      pf.write(',%d' %(vertFlagDict[pv][vN]))
-		   pf.write('};\n' )
-   
+            if self.vertexFlags != None:
+                vertFlagDict={}
+                for vN,v in enumerate(self.vertices):
+                    if not vertFlagDict.has_key(self.vertexFlags[vN]):
+                        vertFlagDict[self.vertexFlags[vN]] = []
 
-            #write the facets	    
+                    vertFlagDict[self.vertexFlags[vN]].append(vN+1)
+
+                print  "vertexFlags"
+                print  vertFlagDict
+                # Physical Surfaces
+                pvN=0
+                for pv in vertFlagDict:
+                    pvN+=1
+                    pf.write('Physical Point(%d) = {%d' % (pvN,vertFlagDict[pv][0]) )
+                    for vN in range(1,len(vertFlagDict[pv])):
+                        pf.write(',%d' %(vertFlagDict[pv][vN]))
+                    pf.write('};\n' )
+
+
+            #write the facets
             lN = 0
-	    fNN = 0
+            fNN = 0
             for fN,f in enumerate(self.facets):
                 for segmentList in f:
-		   lineLoop={}
-		   #write the lines
-                   for vN in range(0,len(segmentList)):
-                        lN+=1			
-			pf.write('Line(%d) = {%d,%d};\n'% (lN,segmentList[vN-1]+1,segmentList[vN]+1))
-			lineLoop[vN] = lN;
-			
-		   #write the lineloop
-		   fNN+=1  	
-		   pf.write('Line Loop(%d) = {%d' % (fNN,lineLoop[0]) )
-		   for vN in range(1,len(segmentList)):
-		      pf.write(',%d' %(lineLoop[vN]))
-		   pf.write('};\n' )
+                    lineLoop={}
+                    #write the lines
+                    for vN in range(0,len(segmentList)):
+                        lN+=1
+                        pf.write('Line(%d) = {%d,%d};\n'% (lN,segmentList[vN-1]+1,segmentList[vN]+1))
+                        lineLoop[vN] = lN;
 
-		   #write the surface	   
-                   pf.write('Plane Surface(%d) = {%d};\n'% (fNN,fNN))
+                    #write the lineloop
+                    fNN+=1
+                    pf.write('Line Loop(%d) = {%d' % (fNN,lineLoop[0]) )
+                    for vN in range(1,len(segmentList)):
+                        pf.write(',%d' %(lineLoop[vN]))
+                    pf.write('};\n' )
 
-            # Find Face indices   => Physical Surfaces		   
-            if self.facetFlags != None:	   
-	       facetFlagDict={}
+                    #write the surface
+                    pf.write('Plane Surface(%d) = {%d};\n'% (fNN,fNN))
 
-	       fNN = 0
-               for fN,f in enumerate(self.facets):
-	          if not facetFlagDict.has_key(self.facetFlags[fN]):
-                     facetFlagDict[self.facetFlags[fN]] = []
-		     
-                  for segmentList in f:
-		     fNN+=1  	
-		     facetFlagDict[self.facetFlags[fN]].append(fNN)
-		     
-	       print  "facetFlags"	    
-	       print  facetFlagDict
+            # Find Face indices   => Physical Surfaces
+            if self.facetFlags != None:
+                facetFlagDict={}
 
-               # Physical Surfaces	
-	       psN=0
-               for ps in facetFlagDict:                                 
-		   psN+=1  	
-		   pf.write('Physical Surface(%d) = {%d' % (psN,facetFlagDict[ps][0]) )
-		   for vN in range(1,len(facetFlagDict[ps])):
-		      pf.write(',%d' %(facetFlagDict[ps][vN]))
-		   pf.write('};\n' )
+                fNN = 0
+                for fN,f in enumerate(self.facets):
+                    if not facetFlagDict.has_key(self.facetFlags[fN]):
+                        facetFlagDict[self.facetFlags[fN]] = []
+
+                    for segmentList in f:
+                        fNN+=1
+                        facetFlagDict[self.facetFlags[fN]].append(fNN)
+
+                print  "facetFlags"
+                print  facetFlagDict
+
+                # Physical Surfaces
+                psN=0
+                for ps in facetFlagDict:
+                    psN+=1
+                    pf.write('Physical Surface(%d) = {%d' % (psN,facetFlagDict[ps][0]) )
+                    for vN in range(1,len(facetFlagDict[ps])):
+                        pf.write(',%d' %(facetFlagDict[ps][vN]))
+                    pf.write('};\n' )
 
 
-	       
-	       
+
+
             pf.close()
         else:
             print "File already exists, not writing polyfile: " +`self.polyfile`
-	    
-	    
-	    
+
+
+
 if __name__ == "__main__":
     import os
  #    r1d = RectangularDomain(L=[1.2])
@@ -1142,13 +1142,13 @@ if __name__ == "__main__":
 #     r2d.writeAsymptote("r2d")
 #     os.system("asy -V r2d")
 #     r2d.writePoly("r2d")
- 
+
 #     r3d = RectangularDomain(L=[1.0,2.0,3.7],
 #                             units='m')
 #     r3d.writeAsymptote("r3d")
 #     os.system("asy -V r3d")
 #     r3d.writePoly("r3d")
-    
+
 #     plsg = PlanarStraightLineGraphDomain(vertices=[[0.0,0.0],
 #                                                    [0.0,1.0],
 #                                                    [1.0,0.0]],
@@ -1189,7 +1189,7 @@ if __name__ == "__main__":
     os.system("asy -V plc")
     plc.writePoly("plc")
     plc.writeGeo("geo")
-    
+
 #    plcFromFile = PiecewiseLinearComplexDomain(units='m')
 #    plcFromFile.readPoly('cylinder3d')
 #    plcFromFile.writeAsymptote('cylinder3d')

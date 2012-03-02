@@ -44,8 +44,8 @@ def generateDefaultFormatPattern(recInfo,verbose=0):
 
     In some cases (e.g., segments) the number of entries in a segment
     is omitted so that the default format doesn't follow
-    
-    """ 
+
+    """
     #number of records looking for
     nrecs = recInfo['nRecords']
     if verbose > 2:
@@ -88,8 +88,8 @@ def findInitialFormatLine(lines,recInfo,formatpattern,
                                            should start on a valid entry line
                                            record I is in entries
                                            recStart[I]:recStart[I+1]
-    
-    """ 
+
+    """
 
     import re
     #mwf debug
@@ -145,7 +145,7 @@ def findInitialFormatLine(lines,recInfo,formatpattern,
     #end while
     #now proceed through the rest of the file and get the data
     nentries= dataInfo['nEntries']
-    nValuesPerLine = sum(dataInfo['recordSizes'])+1 #include entry number 
+    nValuesPerLine = sum(dataInfo['recordSizes'])+1 #include entry number
     #should have record I contained in entries recStart[I]:recStart[I+1]
     #also include first value as entry number
     recStart = numpy.zeros((nrecs+2,),'i')
@@ -180,7 +180,7 @@ def readSimpleFormattedDataEntries(lines,recInfo,dataInfo,
     lines or commented lines and then the first meaningful line which
     gives the file format that should be the same as what I'm
     expecting ...
-   
+
     Nentries NumEntriesInRec0 NumEntriesInRec1 ....
 
     The regex format for this line is given in formatpattern.
@@ -193,8 +193,8 @@ def readSimpleFormattedDataEntries(lines,recInfo,dataInfo,
 
     returns
        data     : what was read
-       ilast    : index of last line read 
-    
+       ilast    : index of last line read
+
     """
     #
     if verbose > 2:
@@ -202,7 +202,7 @@ def readSimpleFormattedDataEntries(lines,recInfo,dataInfo,
     nrecs = recInfo['nRecords']
     #proceed through the rest of the file and get the data
     nentries= dataInfo['nEntries']
-    nValuesPerLine = sum(dataInfo['recordSizes'])+1 #include entry number 
+    nValuesPerLine = sum(dataInfo['recordSizes'])+1 #include entry number
     #should have record I contained in entries recStart[I]:recStart[I+1]
     #also include first value as entry number
     recStart       = dataInfo['recordLocationsPerLine']
@@ -259,7 +259,7 @@ def readSimpleFormattedDataEntries(lines,recInfo,dataInfo,
             index    = int(entryNum[0])-nbase #could be base 1
             if verbose > 5:
                 print 'index= ',index
-            
+
             for i in range(nrecs): #go through each record and insert if it is in file
                 #get the substring for this record
                 subentry = entry[recStart[i+1]:recStart[i+2]]
@@ -296,12 +296,12 @@ def readSimpleFormattedDataEntriesLastOptional(lines,recInfo,dataInfo,
     This version allows the last data entry to be omitted so that I
       can read the regions list. I need to generalize to allow
       a given entry to not be found I guess
-      
+
     I'll go ahead and assume the file looks like a series of blank
     lines or commented lines and then the first meaningful line which
     gives the file format that should be the same as what I'm
     expecting ...
-   
+
     Nentries NumEntriesInRec0 NumEntriesInRec1 ....
 
     The regex format for this line is given in formatpattern.
@@ -314,14 +314,14 @@ def readSimpleFormattedDataEntriesLastOptional(lines,recInfo,dataInfo,
 
     returns
        data     : what was read
-       ilast    : index of last line read 
-    
+       ilast    : index of last line read
+
     """
     #
     nrecs = recInfo['nRecords']
     #proceed through the rest of the file and get the data
     nentries= dataInfo['nEntries']
-    nValuesPerLine = sum(dataInfo['recordSizes'])+1 #include entry number 
+    nValuesPerLine = sum(dataInfo['recordSizes'])+1 #include entry number
     #should have record I contained in entries recStart[I]:recStart[I+1]
     #also include first value as entry number
     recStart       = dataInfo['recordLocationsPerLine']
@@ -378,7 +378,7 @@ def readSimpleFormattedDataEntriesLastOptional(lines,recInfo,dataInfo,
             index    = int(entryNum[0])-nbase #could be base 1
             if verbose > 5:
                 print 'index= ',index
-            
+
             for i in range(nrecs): #go through each record and insert if it is in file
                 #get the substring for this record
                 padEnd = False

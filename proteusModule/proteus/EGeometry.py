@@ -17,9 +17,9 @@ def EVec(x=0.0,y=0.0,z=0.0):
     return v
 
 #  class EVec(tuple):
-    
+
 #      """A vector in 3D Euclidean space.
-    
+
 #      The vector is represented by a 3-tuple of Cartesian coordinates.
 #      EVec's are immuitable and can be used as dictionary keys.
 #      Comparisons are done lexicographically, first z, then y, then x; therefore,
@@ -28,7 +28,7 @@ def EVec(x=0.0,y=0.0,z=0.0):
 #      * is provided as scalar multiplication.
 #      scalar, vector, tensor, and triple products are defined as edot,ecross,
 #      etensor, and etriple."""
-    
+
 #      def __new__(type,x,y=0.0,z=0.0):
 #          return tuple.__new__(type,(z,y,x))
 #      def asArray(self):
@@ -54,9 +54,9 @@ def EVec(x=0.0,y=0.0,z=0.0):
 #      def __isub__(self, other):
 #          return EVec(self[X] - other[X],self[Y] - other[Y],self[Z] - other[Z])
 #      def __mul__(self,a):
-#          return EVec(a*self[X],a*self[Y],a*self[Z]) 
+#          return EVec(a*self[X],a*self[Y],a*self[Z])
 #      def __imul__(self,a):
-#          return EVec(a*self[X],a*self[Y],a*self[Z]) 
+#          return EVec(a*self[X],a*self[Y],a*self[Z])
 #      def __rmul__(self,a):
 #          return (self*a)
 #      def __div__(self,a):
@@ -86,7 +86,7 @@ def dot(v0,v1):
         return v0[X]*v1[X] + v0[Y]*v1[Y]
     elif v0.shape[0] == 3:
         return v0[X]*v1[X] + v0[Y]*v1[Y] + v0[Z]*v1[Z]
-    
+
 def ecross(v0,v1):
     return EVec(v0[Y]*v1[Z] - v0[Z]*v1[Y],
                 v0[Z]*v1[X] - v0[X]*v1[Z],
@@ -113,9 +113,9 @@ def ETen(rx=EVec(),ry=EVec(),rz=EVec()):
     return t
 
 #  class ETen(tuple):
-    
+
 #      """A tensor in 3D Euclidean space.
-    
+
 #      The tensor is represented as a 3-tuple of EVec's (the rows).
 #      ETen's are immutable and can be used as dictionary keys.
 #      Comparisons are done lexicographically, first row z, then row y, then row x.
@@ -123,7 +123,7 @@ def ETen(rx=EVec(),ry=EVec(),rz=EVec()):
 #      * is provided for  scalar multiplication.
 #      transpose, determinant, cofactor,adjugate,inverse, tensor multiplication, tensor-vector multiplication
 #      are also defined"""
-    
+
 #      def __new__(type,rx,ry,rz):
 #          return tuple.__new__(type,(rz,ry,rx))
 #      def asArray(self):
@@ -169,9 +169,9 @@ def ETen(rx=EVec(),ry=EVec(),rz=EVec()):
 #      def __isub__(self, other):
 #          return ETen(self[X] - other[X],self[Y] - other[Y],self[Z] - other[Z])
 #      def __mul__(self,a):
-#          return ETen(a*self[X],a*self[Y],a*self[Z]) 
+#          return ETen(a*self[X],a*self[Y],a*self[Z])
 #      def __imul__(self,a):
-#          return ETen(a*self[X],a*self[Y],a*self[Z]) 
+#          return ETen(a*self[X],a*self[Y],a*self[Z])
 #      def __rmul__(self,a):
 #          return (self*a)
 #      def __div__(self,a):
@@ -243,7 +243,7 @@ def einv(t):
 
 def inv(t):
     return adj(t)/det(t)
-    
+
 def etenten(r,t):
     tt = etrans(t)
     return ETen(EVec(edot(r[X],tt[X]),edot(r[X],tt[Y]),edot(r[X],tt[Z])),
@@ -384,4 +384,3 @@ if __name__=='__main__':
     print 'vl = '+`vl`
     vl.sort()
     print 'sorted vl = '+`vl`
-    

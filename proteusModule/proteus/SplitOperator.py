@@ -104,7 +104,7 @@ class SO_base:
         self.stepFailures=0
         model.calculateAuxiliaryQuantitiesAfterStep()
         model.stepController.t_model_last = t_stepSequence
-            
+
     def sequenceStepTaken(self,model):
         self.stepFailures=0
     def sequenceTaken(self):
@@ -199,7 +199,7 @@ class Sequential_NonUniformFixedStep(SO_base):
         if old:
             if (self.dt_system > 0.0 and
                 self.t_system_last + self.dt_system >=  tExact*(1.0-self.stepExactEps)):
-                self.dt_system = tExact - self.t_system_last 
+                self.dt_system = tExact - self.t_system_last
             elif (self.dt_system < 0.0 and
                 self.t_system_last + self.dt_system <=  tExact*(1.0 + self.stepExactEps)):
                 self.dt_system = tExact - self.t_system_last
@@ -239,7 +239,7 @@ class Sequential_NonUniformFixedStep(SO_base):
         #for model in self.modelList:
         #    model.stepController.updateTimeHistory()
         #    model.stepController.choose_dt_model()
-            
+
 
 class Sequential_MinModelStep(SO_base):
     """
@@ -265,7 +265,7 @@ class Sequential_MinModelStep(SO_base):
         if old:
             if (self.dt_system > 0.0 and
                 self.t_system_last + self.dt_system >=  tExact*(1.0-self.stepExactEps)):
-                self.dt_system = tExact - self.t_system_last 
+                self.dt_system = tExact - self.t_system_last
             elif (self.dt_system < 0.0 and
                 self.t_system_last + self.dt_system <=  tExact*(1.0 + self.stepExactEps)):
                 self.dt_system = tExact - self.t_system_last
@@ -348,7 +348,7 @@ class Sequential_MinFLCBDFModelStep(SO_base):
         #mwf needs to be checked
         if (self.dt_system > 0.0 and
             self.t_system_last + self.dt_system >=  tExact*(1.0-self.stepExactEps)):
-            self.dt_system = tExact - self.t_system_last 
+            self.dt_system = tExact - self.t_system_last
         elif (self.dt_system < 0.0 and
             self.t_system_last + self.dt_system <=  tExact*(1.0 + self.stepExactEps)):
             self.dt_system = tExact - self.t_system_last
@@ -451,7 +451,7 @@ class Sequential_MinAdaptiveModelStep(SO_base):
             if (self.dt_system > 0.0 and
                 self.t_system_last + self.dt_system >=  tExact*(1.0-self.stepExactEps)):
                 log("===========================================================dt system orig" + str(self.dt_system),level=5)
-                self.dt_system = tExact - self.t_system_last 
+                self.dt_system = tExact - self.t_system_last
                 log("=========================================================dt system final" + str(self.dt_system),level=5)
             elif (self.dt_system < 0.0 and
                   self.t_system_last + self.dt_system <=  tExact*(1.0 + self.stepExactEps)):
@@ -579,7 +579,7 @@ class ISO_fixed_MinAdaptiveModelStep(SO_base):
             if (self.dt_system > 0.0 and
                 self.t_system_last + self.dt_system >=  tExact*(1.0-self.stepExactEps)):
                 log("===========================================================dt system orig" + str(self.dt_system),level=5)
-                self.dt_system = tExact - self.t_system_last 
+                self.dt_system = tExact - self.t_system_last
                 log("=========================================================dt system final" + str(self.dt_system),level=5)
             elif (self.dt_system < 0.0 and
                   self.t_system_last + self.dt_system <=  tExact*(1.0 + self.stepExactEps)):
@@ -676,7 +676,7 @@ class ISO_fixed_MinAdaptiveModelStep(SO_base):
                 model.stepController.updateTimeHistory()
                 model.stepController.choose_dt_model()
             #recompute auxiliary variables here?
-                
+
 class Sequential_MinAdaptiveModelStep_SS(SO_base):
     """
     Look at the minimum model step and make that the system step as
@@ -708,7 +708,7 @@ class Sequential_MinAdaptiveModelStep_SS(SO_base):
             if (self.dt_system > 0.0 and
                 self.t_system_last + self.dt_system >=  tExact*(1.0-self.stepExactEps)):
                 log("===========================================================dt system orig" + str(self.dt_system),level=5)
-                self.dt_system = tExact - self.t_system_last 
+                self.dt_system = tExact - self.t_system_last
                 log("=========================================================dt system final" + str(self.dt_system),level=5)
             elif (self.dt_system < 0.0 and
                   self.t_system_last + self.dt_system <=  tExact*(1.0 + self.stepExactEps)):
@@ -826,7 +826,7 @@ class SequentialNotInOrder_MinFLCBDFModelStep(Sequential_MinFLCBDFModelStep):
         #mwf needs to be checked
         if (self.dt_system > 0.0 and
             self.t_system_last + self.dt_system >=  tExact*(1.0-self.stepExactEps)):
-            self.dt_system = tExact - self.t_system_last 
+            self.dt_system = tExact - self.t_system_last
         elif (self.dt_system < 0.0 and
             self.t_system_last + self.dt_system <=  tExact*(1.0 + self.stepExactEps)):
             self.dt_system = tExact - self.t_system_last
@@ -865,7 +865,7 @@ class SequentialNotInOrder_MinFLCBDFModelStep(Sequential_MinFLCBDFModelStep):
             (self.system.name,
              self.stepSequence),
             level=1)
-            
+
 class SequentialNotInOrder_MinAdaptiveModelStep(Sequential_MinAdaptiveModelStep):
     """
     loop through the models in some specified order
@@ -882,7 +882,7 @@ class SequentialNotInOrder_MinAdaptiveModelStep(Sequential_MinAdaptiveModelStep)
         #mwf needs to be checked
         if (self.dt_system > 0.0 and
             self.t_system_last + self.dt_system >=  tExact*(1.0-self.stepExactEps)):
-            self.dt_system = tExact - self.t_system_last 
+            self.dt_system = tExact - self.t_system_last
         elif (self.dt_system < 0.0 and
             self.t_system_last + self.dt_system <=  tExact*(1.0 + self.stepExactEps)):
             self.dt_system = tExact - self.t_system_last
