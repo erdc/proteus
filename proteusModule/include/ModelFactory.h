@@ -40,18 +40,18 @@ namespace proteus
 		      <<std::endl<<std::flush;
 	     if (CompKernelFlag == 0)
 	       {
-		 if (nSpaceIn == 2)
-		   {
-		     if (nDOF_mesh_trial_elementIn == nDOF_trial_elementIn)//iso-parametric
-		       {
-			 if (nDOF_mesh_trial_elementIn == 3)
-			   {
-			     if (nQuadraturePoints_elementIn == 10)
-			       if ( nQuadraturePoints_elementBoundaryIn == 4)
-				 return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,2,10,3,3,3,4>());
-			   }
-		       }
-		   }
+		 /* if (nSpaceIn == 2) */
+		 /*   { */
+		 /*     if (nDOF_mesh_trial_elementIn == nDOF_trial_elementIn)//iso-parametric */
+		 /*       { */
+		 /* 	 if (nDOF_mesh_trial_elementIn == 3) */
+		 /* 	   { */
+		 /* 	     if (nQuadraturePoints_elementIn == 10) */
+		 /* 	       if ( nQuadraturePoints_elementBoundaryIn == 4) */
+		 /* 		 return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<2,3,3,3>,2,10,3,3,3,4>()); */
+		 /* 	   } */
+		 /*       } */
+		 /*   } */
 		 if (nSpaceIn == 3)
 		   {
 		     if (nDOF_mesh_trial_elementIn == nDOF_trial_elementIn)//iso-parametric
