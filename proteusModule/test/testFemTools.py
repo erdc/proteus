@@ -45,19 +45,19 @@ def buildTraceOpArray(mesh,dgspace,verboseLevel=0):
        0,1     -- denotes the element neigbhor
        edgeDim -- the dimension of the edge space (k+1) for P^k in 2d
        polyDim -- the dimension of the element space P^k in 2d
-       
+
     """
     polyOrder  = dgspace.polyOrder
     edgeDim    = polyOrder+1
     elemDim    = dgspace.localDim
     #global number of edges
     ngEdges = mesh.nElementBoundaries_global
-   
+
     traceArray = Numeric.zeros((ngEdges,2,edgeDim,elemDim),Numeric.Float)
 
     #edge space nodal location is (ie,k,:) for ie global edge id, k polydim id
     physEdgeNodes = Numeric.zeros((ngEdges,edgeDim,3),Numeric.Float)
-    
+
     #loop through mesh edges and neighboring elements that are defined
     for ie in range(ngEdges):
         #map edge reference nodes to physical space
@@ -70,7 +70,7 @@ def buildTraceOpArray(mesh,dgspace,verboseLevel=0):
         physEdgeNodes[ie,:,:]= getEdgeNodesInPhysicalSpace(
             p0,
             p1,
-            polyOrder) 
+            polyOrder)
 
     #end ie loop
     if verboseLevel > 0:
@@ -86,7 +86,7 @@ def buildTraceOpArray(mesh,dgspace,verboseLevel=0):
         refCoordsDebug[0,:] = (0.0,0.0,0.0)
         refCoordsDebug[1,:] = (1.0,0.0,0.0)
         refCoordsDebug[2,:] = (0.0,1.0,0.0)
-        
+
         print 'in buildTraceOp '
         for j in range(3):
             print 'node ',j,' =\n',refCoordsDebug[j,:]
@@ -99,7 +99,7 @@ def buildTraceOpArray(mesh,dgspace,verboseLevel=0):
 
     #brute force compute inverse values of edge nodes on each element
     #holds refCoords for edges
-    refCoords  = Numeric.zeros((edgeDim,3),Numeric.Float) 
+    refCoords  = Numeric.zeros((edgeDim,3),Numeric.Float)
     #holds basis values for edges
     basisValues= Numeric.zeros((edgeDim,elemDim),Numeric.Float)
     #easiest if loop through all of the elements
@@ -119,7 +119,7 @@ def buildTraceOpArray(mesh,dgspace,verboseLevel=0):
             if elid == mesh.elementBoundaryElementsArray[globedge,1]:
                 iamneig = 1
             #end if
-            for j in range(edgeDim): 
+            for j in range(edgeDim):
                 refCoords[j,:] = dgspace.mapFamily.getMap(elid).getInverseValue(physLocal[j,:])
                 for k,w in enumerate(dgspace.referenceSpace.basis):
                     basisValues[j,k] = w(tuple(refCoords[j,:]))
@@ -131,14 +131,14 @@ def buildTraceOpArray(mesh,dgspace,verboseLevel=0):
                     #    print 'basisValues= ',basisValues[j,k]
                     #end if debug
                 #end k
-            #end j loop 
+            #end j loop
             traceArray[globedge,iamneig,:,:] = basisValues
             #if globedge == 47: #mwf debug
             #    print 'edge ',globedge,' physLocal= ',physLocal
             #    print '\t iamneig= ',iamneig,' elid = ',elid
             #    print 'refCoords=\n',refCoords
             #    print 'basisValues=\n',basisValues
-            #end if 
+            #end if
         #end loop through local edges
     #end loop through elements
     #mwf debug
@@ -150,7 +150,7 @@ def buildTraceOpArray(mesh,dgspace,verboseLevel=0):
             print 'glob edge ',ie,'\n 1 neig= \n',traceArray[ie,1,:,:]
         #end ie
     #end if verbose
-        
+
     return traceArray
 
 #end buildTraceOp
@@ -162,7 +162,7 @@ def checkFunctionTrace(u,mesh,dgspace,traceArray,jumpTol=1.0e-8):
     Basically, it's computing a jump term.
     For a continuous solution, should get no difference.
     """
-    
+
     #global number of edges and elements
     ngEdges = mesh.nElementBoundaries_global
     ngElems = mesh.nElements_global
@@ -199,7 +199,7 @@ if __name__ == '__main__':
     #test out some of the FemTools functionality here
     from testMesh import *
     import math
-    
+
     verboseLevel = 1
     #first just create a simple triangular mesh and look at it in a
     #couple of different ways
@@ -220,7 +220,7 @@ if __name__ == '__main__':
     mesh = constructTriangularMeshOnRectangle(Lx,Ly,nx,ny,viewMesh)
 
     print 'mesh Info says \n',mesh.meshInfo()
-    
+
     dgDofMap = DG1LagrangeDofMap(mesh)
 
     if verboseLevel > 0:
@@ -253,14 +253,14 @@ if __name__ == '__main__':
     print 'finite element space says num in map family is '
     print '\t', u.femSpace.mapFamily.nMaps
     physNodes = Numeric.zeros((nelem,polydim,3),Numeric.Float)
-    
+
     u.femSpace.mapFamily.getValues(nodalRefPoints,physNodes)
 
     if verboseLevel > 0:
         print 'physical Nodes = \n',physNodes
     #end verbose check
 
-    #set value of u manually 
+    #set value of u manually
     for ie in range(mesh.nElements_global):
         for iv in range(polydim):
             px = physNodes[ie,iv,0]
@@ -269,7 +269,7 @@ if __name__ == '__main__':
             u.dof[ig] = math.sin(math.pi*px)*math.cos(math.pi*py)
         #end local shape loop
     #end element loop
-    
+
     if verboseLevel > 0:
         print 'u dof values = \n',u.dof
     #end verbose check

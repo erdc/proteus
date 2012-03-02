@@ -12,26 +12,26 @@ TODO
       --> didn't see much differcence.
     Probably really need to use low order solution as mass lumping in limiting if want to recover
      exactly the monotinicity constraints. Would Kuzmin 06 limiting be different?
-     
+
     fix Kuzmin FCT implementation so that works for systems (that is the jacobian)
     check why sometimes seg faults on 1d slug test on first rerun
   med:
     need better way to set ellam specific options?
     move setupInitialElementLocations to c, allow for different types of tracking points
   low:
-    add coupling between components 
+    add coupling between components
     decide if should get rid of numerical flux use or keep?
-  1D 
+  1D
 
   2D
 
   3D
-  
+
   General
      try some strategic integration point approximations in 1d, 2d, 3d, --> now testing
      slumping in 2d,3d --> now testing 2d ideas,
      Kuzmin Turek approach 1d,2d,3d --> now testing Kuzmin_Moeller_etal_10 approach
-    
+
      look at extra unknowns at outflow boundary for large time step
       and debug small oscillations
      worth trying something to get smoother inflow boundary approx. for
@@ -75,47 +75,47 @@ class OneLevelLADR(OneLevelTransport):
                  movingDomain=False):
         """
         Allocate storage and initialize some variables.
-        
+
         uDict   -- a dictionary of FiniteElementFunction objects
-        
+
         phiDict -- a dictionary of FiniteElementFunction objects
-        
+
         testSpaceDict -- a dictionary of FiniteElementSpace objects
-        
+
         dofBoundaryConditionsDict -- a dictionary of DOFBoundaryConditions objects for
         the Dirichlet conditions
-                
+
         coefficients -- a TransportCoefficients object
-        
+
         elementQuadratureDict -- a dictionary of dictionaries of quadrature rules for each
         element integral in each component equation
-        
+
         elementBoundaryQuadratureDict -- a dictionary of dictionaries of quadrature rules
         for each element boundary integral in each component equation
-        
+
         stabilization
-        
+
         shockCapturing
-        
+
         numericalFlux
-        
+
         The constructor sets the input arguments, calculates
         dimensions, and allocates storage. The meanings of variable
         suffixes are
-        
+
         _global          -- per physical domain
         _element         -- per element
         _elementBoundary -- per element boundary
-        
+
         The prefix n means 'number of'.
-        
+
         Storage is divided into quantities required at different sets
         of points or geometric entities. Each type of storage has a
         dictionary for all the quantities of that type. The names
         and dimensions of the storage dictionaries are
-        
+
         e          -- at element
-        q          -- at element quadrature, unique to elements        
+        q          -- at element quadrature, unique to elements
         ebq        -- at element boundary quadrature, unique to elements
         ebq_global -- at element boundary quadrature, unique to element boundary
         ebqe       -- at element boundary quadrature, unique to global, exterior element boundary
@@ -134,7 +134,7 @@ class OneLevelLADR(OneLevelTransport):
         self.timeTerm=True#allow turning off  the  time derivative
         #self.lowmem=False
         self.testIsTrial=True
-        self.phiTrialIsTrial=True            
+        self.phiTrialIsTrial=True
         self.u = uDict
         self.ua = {}#analytical solutions
         self.phi  = phiDict
@@ -175,42 +175,42 @@ class OneLevelLADR(OneLevelTransport):
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         #cek come back
-	if self.stabilization != None:
-	    for ci in range(self.nc):
-		if coefficients.mass.has_key(ci):
-		    for flag in coefficients.mass[ci].values():
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  coefficients.advection.has_key(ci):
-		    for  flag  in coefficients.advection[ci].values():
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  coefficients.diffusion.has_key(ci):
-		    for diffusionDict in coefficients.diffusion[ci].values():
-			for  flag  in diffusionDict.values():
-			    if flag != 'constant':
-				self.stabilizationIsNonlinear=True
-		if  coefficients.potential.has_key(ci):
- 		    for flag in coefficients.potential[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if coefficients.reaction.has_key(ci):
-		    for flag in coefficients.reaction[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if coefficients.hamiltonian.has_key(ci):
-		    for flag in coefficients.hamiltonian[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
+        if self.stabilization != None:
+            for ci in range(self.nc):
+                if coefficients.mass.has_key(ci):
+                    for flag in coefficients.mass[ci].values():
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  coefficients.advection.has_key(ci):
+                    for  flag  in coefficients.advection[ci].values():
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  coefficients.diffusion.has_key(ci):
+                    for diffusionDict in coefficients.diffusion[ci].values():
+                        for  flag  in diffusionDict.values():
+                            if flag != 'constant':
+                                self.stabilizationIsNonlinear=True
+                if  coefficients.potential.has_key(ci):
+                    for flag in coefficients.potential[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if coefficients.reaction.has_key(ci):
+                    for flag in coefficients.reaction[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if coefficients.hamiltonian.has_key(ci):
+                    for flag in coefficients.hamiltonian[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or 
-                                                 (numericalFluxType != None) or 
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or
+                                                 (numericalFluxType != None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
-	#
+        #
         #calculate some dimensions
         #
         self.nSpace_global    = self.u[0].femSpace.nSpace_global #assume same space dim for all variables
@@ -220,7 +220,7 @@ class OneLevelLADR(OneLevelTransport):
         self.nDOF_test_element     = [femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
         self.nFreeDOF_global  = [dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
         self.nVDOF_element    = sum(self.nDOF_trial_element)
-        self.nFreeVDOF_global = sum(self.nFreeDOF_global) 
+        self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
         NonlinearEquation.__init__(self,self.nFreeVDOF_global)
         #
@@ -275,7 +275,7 @@ class OneLevelLADR(OneLevelTransport):
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
         else:
-            for I in self.coefficients.elementBoundaryIntegralKeys: 
+            for I in self.coefficients.elementBoundaryIntegralKeys:
                 elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature
         #
         # find the union of all element quadrature points and
@@ -315,11 +315,11 @@ class OneLevelLADR(OneLevelTransport):
         self.q['J'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global,self.nSpace_global),'d')
         self.q['inverse(J)'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global,self.nSpace_global),'d')
         self.ebqe['x'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-	self.ebqe['g'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
-				       self.nElementBoundaryQuadraturePoints_elementBoundary,
-				       max(1,self.nSpace_global-1),
-				       max(1,self.nSpace_global-1)),
-				      'd')
+        self.ebqe['g'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+                                       self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                       max(1,self.nSpace_global-1),
+                                       max(1,self.nSpace_global-1)),
+                                      'd')
         self.ebqe['inverse(J)'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global,self.nSpace_global),'d')
         self.ebqe['hat(x)'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
         self.ebqe['bar(x)'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
@@ -332,7 +332,7 @@ class OneLevelLADR(OneLevelTransport):
         self.q[('grad(w)',0)] =  self.q[('grad(v)',0)]
         self.q[('grad(w)*dV',0)]   =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[0],self.nSpace_global),'d')
         self.q[('grad(w)*dV_f',0)] = self.q[('grad(w)*dV',0)]
-        #todo get rid of dV_{f,a}, etc 
+        #todo get rid of dV_{f,a}, etc
         self.q[('w*dV',0)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[0]),'d')
         self.q[('w*dV_m',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[0]),'d')
         #assume all components are the same space for now
@@ -357,7 +357,7 @@ class OneLevelLADR(OneLevelTransport):
                 key_ci = (key,ci)
                 key_0  = (key,0)
                 self.ebqe[key_ci] = self.ebqe[key_0]
-            
+
         for ci in range(self.nc):
             self.q[('u',ci)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
             self.q[('grad(u)',ci)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
@@ -369,9 +369,9 @@ class OneLevelLADR(OneLevelTransport):
             self.ebqe[('f',ci)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
             for cj in self.coefficients.advection[ci].keys():
                 self.ebqe[('df',ci,cj)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
-        
+
         #a, linear dispersion single component
-       
+
         for ci,ckDict in self.coefficients.diffusion.iteritems():
             for ck,cjDict in ckDict.iteritems():
                 for flag in cjDict.values():
@@ -439,9 +439,9 @@ class OneLevelLADR(OneLevelTransport):
         for key in self.dphi.keys():
             self.dphi[key].dof.fill(1.0)
             self.q[('dphi',key[0],key[1])] = numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-            
-           
-        
+
+
+
 #         if self.coefficients.diffusion.has_key(0):
 #             for ck,flag in self.coefficients.diffusion[0][0].iteritems():
 #                 assert  self.coefficients.diffusion[0][0][ck] == 'constant', "Error potential %s LADRellam does not handle diffusion = %s yet" % (ck,flag)
@@ -466,7 +466,7 @@ class OneLevelLADR(OneLevelTransport):
 #                      self.nElementBoundaryQuadraturePoints_elementBoundary,
 #                      self.coefficients.sdInfo[(0,0)][0][self.nSpace_global]),
 #                     'd')
-                
+
 #             else:
 #                 self.q[('a',0,0)]=numpy.zeros(
 #                     (self.mesh.nElements_global,
@@ -497,16 +497,16 @@ class OneLevelLADR(OneLevelTransport):
 #             self.dphi[(0,0)].dof.fill(1.0)
 #             self.q[('grad(phi)',0)] = self.q[('grad(u)',0)]
 #             self.q[('dphi',0,0)] = numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-            
+
 #             self.q[('grad(w)*dV_a',0,0)]   = self.q[('grad(w)*dV_f',0)]
 #             self.q[('dt*grad(w)*dV_a',0,0)]= self.q[('dt*grad(w)*dV',0)]
-            
+
         #r 'constant' ie not a function of solution but go ahead and include dr for now
         for ci,cjDict in self.coefficients.reaction.iteritems():
             self.q[('r',ci)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
             for cj in cjDict.keys():
                 self.q[('dr',ci,cj)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-            self.q[('w*dV_r',ci)] = self.q[('w*dV',ci)] 
+            self.q[('w*dV_r',ci)] = self.q[('w*dV',ci)]
             self.q[('dt*w*dV_r',ci)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nDOF_trial_element[0]),'d')
             self.ebqe[('r',ci)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
 
@@ -576,7 +576,7 @@ class OneLevelLADR(OneLevelTransport):
                 self.ebq[('w',ci)] = self.ebq[('w',0)]
             for ci in range(self.nc):
                 self.ebq[('v',ci)] = self.ebq[('w',0)]
-                
+
             #ebq_global info
             self.ebq_global['x'] = numpy.zeros((self.mesh.nElementBoundaries_global,
                                                 self.nElementBoundaryQuadraturePoints_elementBoundary,
@@ -596,15 +596,15 @@ class OneLevelLADR(OneLevelTransport):
              self.nDOF_test_element[ci]),
             'd') for ci in range(self.nc)]
         self.elementJacobian = {}
-	for ci in range(self.nc):
-	    self.elementJacobian[ci]={}
-	    for cj in range(self.nc):
+        for ci in range(self.nc):
+            self.elementJacobian[ci]={}
+            for cj in range(self.nc):
                 if cj in self.coefficients.stencil[ci]:
-		    self.elementJacobian[ci][cj] = numpy.zeros(
-			(self.mesh.nElements_global,
-			 self.nDOF_test_element[ci],
-			 self.nDOF_trial_element[cj]),
-			'd')
+                    self.elementJacobian[ci][cj] = numpy.zeros(
+                        (self.mesh.nElements_global,
+                         self.nDOF_test_element[ci],
+                         self.nDOF_trial_element[cj]),
+                        'd')
         #
         self.fluxJacobian_exterior = {}
         for ci in range(self.nc):
@@ -615,21 +615,21 @@ class OneLevelLADR(OneLevelTransport):
                      self.nElementBoundaryQuadraturePoints_elementBoundary,
                      self.nDOF_trial_element[cj]),
                     'd')
- 
+
         #
         #
         #
         #
         log(memory("element and element boundary Jacobians","OneLevelTransport"),level=4)
-	self.inflowBoundaryBC = {}
-	self.inflowBoundaryBC_values = {}
-	self.inflowFlux = {}
- 	for cj in range(self.nc):
- 	    self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
- 	    self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
- 	    self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.inflowBoundaryBC = {}
+        self.inflowBoundaryBC_values = {}
+        self.inflowFlux = {}
+        for cj in range(self.nc):
+            self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
+            self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
+            self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.internalNodes = set(range(self.mesh.nNodes_global))
-	#identify the internal nodes this is ought to be in mesh
+        #identify the internal nodes this is ought to be in mesh
         ##\todo move this to mesh
         for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
             ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
@@ -654,8 +654,8 @@ class OneLevelLADR(OneLevelTransport):
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
-             self.timeIntegration = TimeIntegrationClass(self)
-           
+            self.timeIntegration = TimeIntegrationClass(self)
+
         if options != None:
             self.timeIntegration.setFromOptions(options)
         log(memory("TimeIntegration","OneLevelTransport"),level=4)
@@ -663,8 +663,8 @@ class OneLevelLADR(OneLevelTransport):
         self.calculateQuadrature()
         #lay out components/equations contiguously for now
         self.offset = [0]
-	for ci in range(1,self.nc):
-	    self.offset += [self.offset[ci-1]+self.nFreeDOF_global[ci-1]]
+        for ci in range(1,self.nc):
+            self.offset += [self.offset[ci-1]+self.nFreeDOF_global[ci-1]]
         self.stride = [1 for ci in range(self.nc)]
         #use contiguous layout of components for parallel, requires weak DBC's
         comm = Comm.get()
@@ -708,7 +708,7 @@ class OneLevelLADR(OneLevelTransport):
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         import PostProcessingTools
-        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)  
+        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         log(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         import Archiver
@@ -722,7 +722,7 @@ class OneLevelLADR(OneLevelTransport):
                 if self.coefficients.advection.has_key(ci):
                     self.ebqe[('advectiveFlux_bc',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
                     self.ebqe[('advectiveFlux_bc_flag',ci)][t[0],t[1]] = 1
-        
+
         if hasattr(self.numericalFlux,'setDirichletValues'):
             self.numericalFlux.setDirichletValues(self.ebqe)
         if not hasattr(self.numericalFlux,'isDOFBoundary'):
@@ -733,45 +733,45 @@ class OneLevelLADR(OneLevelTransport):
             self.numericalFlux.ebqe = {}
             for ci in range(self.nc):
                 self.numericalFlux.ebqe[('u',ci)]= numpy.zeros(self.ebqe[('u',ci)].shape,'d')
-        
+
     def calculateElementCoefficients(self):
         """
         calculate the nonlinear coefficients at the quadrature points and nodes
         this version is simplified to eliminate unnecessary logic, can always recover
-        the full version by using base class 
+        the full version by using base class
         """
         #
         #get u,grad(u), and grad(u)Xgrad(w) at the quadrature points
         #
-	for cj in range(self.nc):
-	    self.u[cj].getValues(self.q[('v',cj)],
-				 self.q[('u',cj)])
-	    if self.q.has_key(('grad(u)',cj)):
-		self.u[cj].getGradientValues(self.q[('grad(v)',cj)],
-					     self.q[('grad(u)',cj)])
+        for cj in range(self.nc):
+            self.u[cj].getValues(self.q[('v',cj)],
+                                 self.q[('u',cj)])
+            if self.q.has_key(('grad(u)',cj)):
+                self.u[cj].getGradientValues(self.q[('grad(v)',cj)],
+                                             self.q[('grad(u)',cj)])
         #
         #get functions of (t,x,u) at the quadrature points
         #
         self.coefficients.evaluate(self.timeIntegration.t,self.q)
         log("Coefficients on element",level=10,data=self.q)
         #
-        # time integration is handled directly in ELLAM weak approximation, don't have a hook for 
+        # time integration is handled directly in ELLAM weak approximation, don't have a hook for
         # doing that via a time integration object (could if it were a direct Lagrange Galerkin formulation I believe)
         # however, need to set time integration's m_tmp if use that anywhere
         #if self.timeTerm:
         #    self.timeIntegration.calculateElementCoefficients(self.q)
-        
+
         #todo eventually can add nonlinear potential here
 
         #cek and mwf need to go through this section to clean up, some of next two blocks could go to calcQuad
         #
         #todo need non-diagonal dependence?
         for ci in range(self.nc):
-            cfemIntegrals.calculateCFLADR(self.elementEffectiveDiametersArray, 
+            cfemIntegrals.calculateCFLADR(self.elementEffectiveDiametersArray,
                                           self.q[('dm',ci,ci)],
                                           self.q[('df',ci,ci)],#could just be velocity
                                           self.q[('cfl',ci)])
- 
+
 
     def calculateExteriorElementBoundaryCoefficients(self):
         """
@@ -781,8 +781,8 @@ class OneLevelLADR(OneLevelTransport):
         #
         #get u and grad(u) at the quadrature points
         #
-	for ci in range(self.nc):
-	    self.u[ci].getValuesGlobalExteriorTrace(self.ebqe[('v',ci)],self.ebqe[('u',ci)])
+        for ci in range(self.nc):
+            self.u[ci].getValuesGlobalExteriorTrace(self.ebqe[('v',ci)],self.ebqe[('u',ci)])
             if self.ebqe.has_key(('grad(u)',ci)):
                 self.u[ci].getGradientValuesGlobalExteriorTrace(self.ebqe[('grad(v)',ci)],self.ebqe[('grad(u)',ci)])
         #
@@ -809,26 +809,26 @@ class OneLevelLADR(OneLevelTransport):
         Switch order around to facilitate slumping/limiting, compute explicit/rhs parts first
         """
         import pdb
-       
+
         for ci in range(self.nc):
             self.elementResidual[ci].fill(0.0)
         #
         self.ellamDiscretization.updateElementResidual(self.elementResidual)
-        
-        
-                
+
+
+
     def calculateElementJacobian(self):
         for ci in range(self.nc):
             for cj in self.coefficients.stencil[ci]:
                 self.elementJacobian[ci][cj].fill(0.0)
-                
+
         self.ellamDiscretization.updateElementJacobian(self.elementJacobian)
     def calculateExteriorElementBoundaryJacobian(self):
         for jDict in self.fluxJacobian_exterior.values():
             for j in jDict.values():
                 j.fill(0.0)
         self.ellamDiscretization.updateExteriorElementBoundaryJacobian(self.fluxJacobian_exterior)
-        
+
     def updateTimeHistory(self,T,resetFromDOF=False):
         """
         todo find a better place to make sure know when a step is done
@@ -858,7 +858,7 @@ class OneLevelLADR(OneLevelTransport):
         #if hasattr(self.numericalFlux,'setDirichletValues'):
         self.numericalFlux.setDirichletValues(self.ebqe)
         self.calculateCoefficients()
-        
+
 
         self.calculateElementResidual()
         for ci in range(self.nc):
@@ -875,11 +875,11 @@ class OneLevelLADR(OneLevelTransport):
         import superluWrappers
         import numpy
         import pdb
-	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
-				       jacobian)
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                       jacobian)
 
-        
-	self.calculateElementJacobian()
+
+        self.calculateElementJacobian()
         self.calculateExteriorElementBoundaryJacobian()
         for ci in range(self.nc):
             for cj in self.coefficients.stencil[ci]:
@@ -909,8 +909,8 @@ class OneLevelLADR(OneLevelTransport):
                                                                                               jacobian)
         #outflow boundary flux terms contribute too
         #self.approximateOutflowBoundaryIntegralGlobalJacobian(jacobian)
-        
-            
+
+
         log("Jacobian ",level=10,data=jacobian)
         #mwf debug
         #jacobian.fwrite("matdebug.txt")
@@ -922,19 +922,19 @@ class OneLevelLADR(OneLevelTransport):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points.
-        
+
         This function should be called only when the mesh changes.
         """
-	#
+        #
         #get physical locations of quadrature points and jacobian information there
-	#assume all components live on the same mesh
+        #assume all components live on the same mesh
         #
         #mwf debug
         #import pdb
         #pdb.set_trace()
         self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
                                                   self.q['x'])
-        if self.movingDomain: 
+        if self.movingDomain:
             if self.tLast_mesh != None:
                 self.q['xt'][:]=self.q['x']
                 self.q['xt']-=self.q['x_last']
@@ -987,7 +987,7 @@ class OneLevelLADR(OneLevelTransport):
             #
             #get physical locations of element boundary quadrature points
             #
-	    #assume all components live on the same mesh
+            #assume all components live on the same mesh
             self.u[0].femSpace.elementMaps.getValuesTrace(self.elementBoundaryQuadraturePoints,
                                                           self.ebq['x'])
 
@@ -1026,7 +1026,7 @@ class OneLevelLADR(OneLevelTransport):
         #
         #get physical locations of element boundary quadrature points
         #
-	#assume all components live on the same mesh
+        #assume all components live on the same mesh
         self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
                                                                     self.ebqe['x'])
         #
@@ -1089,7 +1089,7 @@ class OneLevelLADR(OneLevelTransport):
         #
         self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self.timeIntegration.t,self.ebqe)
 
-        
+
     def estimate_mt(self):
         pass
 

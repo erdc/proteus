@@ -88,13 +88,13 @@ class GaussEdge(Q_base):
         Q_base.setOrder(self,order)
 
         points = self.points
-        weights = self.weights       
+        weights = self.weights
         self.points = []
         self.weights = []
         for i in range(order):
-           self.points.append(EVec((domain[1]-domain[0])*points[i][0] +domain[0]))
-           self.weights.append((domain[1]-domain[0])*weights[i])
-        
+            self.points.append(EVec((domain[1]-domain[0])*points[i][0] +domain[0]))
+            self.weights.append((domain[1]-domain[0])*weights[i])
+
 class LobattoEdge(Q_base):
     """
     Gauss-Lobatto quadrature on the unit interval.
@@ -200,7 +200,7 @@ class GaussTriangle(Q_base):
             fifthOrderPoints.append((1.-2.*a5[i],a5[i])); fifthOrderWeights.append(w5[i])
             fifthOrderPoints.append((a5[i],1.-2.*a5[i])); fifthOrderWeights.append(w5[i])
         fifthOrderPoints.append((1./3.,1./3.)); fifthOrderWeights.append(0.5*9.0/40.0)
-        
+
         #6th order
         a6  = (0.063089014491502,0.249286745170910)
         a6a = 0.310352451033785
@@ -216,7 +216,7 @@ class GaussTriangle(Q_base):
                    (a6b,a6a),(1.-a6a-a6b,a6b),(a6a,1.-a6a-a6b)]
         abWeights= [w6ab for i in range(6)]
         sixthOrderPoints.extend(abPerms); sixthOrderWeights.extend(abWeights)
-        
+
         Q_base.__init__(self,order)
         self.pointsAll=(
             ( EVec(1.0/3.0,1.0/3.0),),
@@ -253,7 +253,7 @@ class LobattoTriangle(Q_base):
         #3, (0,0),     0.0333333333
         #6, (0,a),     0.1666666667
         #where a = 0.2763932023
-        
+
         a = 0.2763932023; b = 1.0-a; wv = 0.03333333333333*0.25; wab = 0.16666666666667*0.25
         self.pointsAll=(
             ( EVec(0.0,0.0),EVec(1.0,0.0),EVec(0.0,1.0)),
@@ -279,7 +279,7 @@ class LobattoTriangle(Q_base):
 
 class CompositeTrapezoidalTriangle(Q_base):
     """
-    Composite trapezoidal rule on the reference triangle 
+    Composite trapezoidal rule on the reference triangle
     order is number of intervals
     """
     def __init__(self,order=1,maxOrder=20):
@@ -389,10 +389,10 @@ class GaussTetrahedron(Q_base):
              EVec(0.433449846426335728,0.433449846426335728,0.665501535736642813e-1),
              EVec(0.433449846426335728,0.665501535736642813e-1,0.433449846426335728),
              EVec(0.665501535736642813e-1,0.433449846426335728,0.433449846426335728)),
-            (EVec(0.214602871259151684,0.214602871259151684,0.214602871259151684),#6th degree  
+            (EVec(0.214602871259151684,0.214602871259151684,0.214602871259151684),#6th degree
              EVec(0.214602871259151684,0.214602871259151684,0.356191386222544953),
              EVec(0.214602871259151684,0.356191386222544953,0.214602871259151684),
-             EVec(0.356191386222544953,0.214602871259151684,0.214602871259151684),  
+             EVec(0.356191386222544953,0.214602871259151684,0.214602871259151684),
              EVec(0.406739585346113397e-1,0.406739585346113397e-1,0.406739585346113397e-1),
              EVec(0.406739585346113397e-1,0.406739585346113397e-1,0.877978124396165982),
              EVec(0.406739585346113397e-1,0.877978124396165982,0.406739585346113397e-1),
@@ -518,7 +518,7 @@ class GaussTetrahedron(Q_base):
 #               EVec(a,a,0.5-a),
 #               EVec(0.5-a,0.5-a,a),
 #               EVec(a,0.5-a,0.5-a),
-#               EVec(0.5-a,a,0.5-a)))              
+#               EVec(0.5-a,a,0.5-a)))
         self.weightsAll=(
             (1.0/6.0,),
             (1.0/24.0,#2nd degree
@@ -749,8 +749,8 @@ class CubeGaussQuadrature(Q_base):
         self.nd=nd
         self.quadrature = GaussEdge(order=order)
         self.setOrder(order)
-        
-        
+
+
     def setOrder(self,order):
         self.quadrature.setOrder(order,[-1.0,1.0])
 
@@ -761,21 +761,21 @@ class CubeGaussQuadrature(Q_base):
             self.points = []
             self.weights = []
             for i in range(order):
-               for j in range(order): 
-                       
-                  self.points.append(EVec(self.quadrature.points[i][0],self.quadrature.points[j][0]))
-                  self.weights.append(self.quadrature.weights[i]*self.quadrature.weights[j])
-          
+                for j in range(order):
+
+                    self.points.append(EVec(self.quadrature.points[i][0],self.quadrature.points[j][0]))
+                    self.weights.append(self.quadrature.weights[i]*self.quadrature.weights[j])
+
         if self.nd == 3:
             self.points =[]
             self.weights = []
             for i in range(order):
-               for j in range(order): 
-                  for k in range(order):         
-                     self.points.append(EVec(self.quadrature.points[i][0],self.quadrature.points[j][0],self.quadrature.points[k][0]))
-                     self.weights.append(self.quadrature.weights[i]*self.quadrature.weights[j]*self.quadrature.weights[k])
+                for j in range(order):
+                    for k in range(order):
+                        self.points.append(EVec(self.quadrature.points[i][0],self.quadrature.points[j][0],self.quadrature.points[k][0]))
+                        self.weights.append(self.quadrature.weights[i]*self.quadrature.weights[j]*self.quadrature.weights[k])
 
-                
+
 class SimplexLobattoQuadrature(Q_base):
     """
     A class for quadrature on unit simplices.
@@ -816,49 +816,49 @@ def buildUnion(quadratureDict):
         #
         #First calculate the union of all element quadrature points.
         #
-        quadraturePointSet = set()
-        for I,quadrature in quadratureDict.iteritems():
-            quadraturePointSet |= set([(p[0],p[1],p[2]) for p in quadrature.points])
-        nQuadraturePoints = len(quadraturePointSet)
-        #
-        #Now build a dictionary at each element quadrature point which
-        #contains the weights for each integral
-        #
-        # e.g. quadratureWeightDict[(I,p)] is the weight at p for the
-        # integral I
-        #
-        quadratureWeightDict={}
-        #mwf check to avoid float comparison
-        quadraturePointValid= {}
-        for I,quadrature in quadratureDict.iteritems():
-            for p in quadraturePointSet:
-                quadratureWeightDict[(I,p)]=0.0
-                quadraturePointValid[(I,p)]=False
-            for w,p in zip(quadrature.weights,
-                           quadrature.points):
-                quadratureWeightDict[(I,(p[0],p[1],p[2]))]=w
-                quadraturePointValid[(I,(p[0],p[1],p[2]))]=True
-        #
-        # Now create the desired point and weight arrays
-        #
-        quadraturePoints = numpy.zeros((nQuadraturePoints,3),
-                                              'd')
+    quadraturePointSet = set()
+    for I,quadrature in quadratureDict.iteritems():
+        quadraturePointSet |= set([(p[0],p[1],p[2]) for p in quadrature.points])
+    nQuadraturePoints = len(quadraturePointSet)
+    #
+    #Now build a dictionary at each element quadrature point which
+    #contains the weights for each integral
+    #
+    # e.g. quadratureWeightDict[(I,p)] is the weight at p for the
+    # integral I
+    #
+    quadratureWeightDict={}
+    #mwf check to avoid float comparison
+    quadraturePointValid= {}
+    for I,quadrature in quadratureDict.iteritems():
+        for p in quadraturePointSet:
+            quadratureWeightDict[(I,p)]=0.0
+            quadraturePointValid[(I,p)]=False
+        for w,p in zip(quadrature.weights,
+                       quadrature.points):
+            quadratureWeightDict[(I,(p[0],p[1],p[2]))]=w
+            quadraturePointValid[(I,(p[0],p[1],p[2]))]=True
+    #
+    # Now create the desired point and weight arrays
+    #
+    quadraturePoints = numpy.zeros((nQuadraturePoints,3),
+                                          'd')
+    for k,p in enumerate(quadraturePointSet):
+        quadraturePoints[k,:]=p
+    quadratureWeights = {}
+    #mwf add dictionary to get indeces for points corresponding to each integral type
+    quadraturePointIndeces = {}
+    for I in quadratureDict.keys():
+        quadratureWeights[I] = numpy.zeros(
+            (nQuadraturePoints,),'d')
+        quadraturePointIndeces[I]= []
         for k,p in enumerate(quadraturePointSet):
-            quadraturePoints[k,:]=p
-        quadratureWeights = {}
-        #mwf add dictionary to get indeces for points corresponding to each integral type
-        quadraturePointIndeces = {}
-        for I in quadratureDict.keys():
-            quadratureWeights[I] = numpy.zeros(
-                (nQuadraturePoints,),'d')
-            quadraturePointIndeces[I]= []
-            for k,p in enumerate(quadraturePointSet):
-                quadratureWeights[I][k] = quadratureWeightDict[(I,p)]
-                if quadraturePointValid[(I,p)]:
+            quadratureWeights[I][k] = quadratureWeightDict[(I,p)]
+            if quadraturePointValid[(I,p)]:
                     #mwf is this good enough to tell me what the correct indeces are?
-                    assert abs(quadratureWeightDict[(I,p)]) > 1.0e-10, "valid quadrature point zero weight"
-                    quadraturePointIndeces[I].append(k)
-        return (quadraturePoints,quadratureWeights,quadraturePointIndeces)
+                assert abs(quadratureWeightDict[(I,p)]) > 1.0e-10, "valid quadrature point zero weight"
+                quadraturePointIndeces[I].append(k)
+    return (quadraturePoints,quadratureWeights,quadraturePointIndeces)
 ## @}
 
 if __name__ == '__main__':
@@ -879,7 +879,7 @@ if __name__ == '__main__':
         return map(lambda y: 1.0 + b*y[X]**3 + a*y[Y]**3 + c*y[Z]**3, x)
     def f4(x):
         return map(lambda y: 1.0 + c*y[X]**4 + b*y[Y]**4 + a*y[Z]**4, x)
-    
+
     gaussEdge=GaussEdge()
     gaussTriangle=GaussTriangle()
     gaussTetrahedron=GaussTetrahedron()

@@ -16,8 +16,8 @@ import subsurfaceTransportFunctions as stfuncs
 
 class BlockHeterogeneousCoefficients:
     """
-    Basic data structures and functionality for keeping track of a 
-    block heterogeneity 
+    Basic data structures and functionality for keeping track of a
+    block heterogeneity
     """
     def __init__(self,mesh):
         self.mesh = mesh
@@ -27,8 +27,8 @@ class BlockHeterogeneousCoefficients:
           in tuple
         element,exterior_element_boundaries,element_boundaries
 
-        note element_boundaries is nElementBoundaries_global x 2 and gives the 
-         element material property to the left and right of a global element boundary 
+        note element_boundaries is nElementBoundaries_global x 2 and gives the
+         element material property to the left and right of a global element boundary
         """
         elementMaterialTypes = self.mesh.elementMaterialTypes
         exteriorElementBoundaryTypes =  numpy.zeros((self.mesh.nExteriorElementBoundaries_global),'i')
@@ -59,7 +59,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
         if S_s_types == None:
             self.S_s_types = {}
             for mat in self.K_types.keys():
-                self.S_s_types[mat] = lambda x,t: 0.0 
+                self.S_s_types[mat] = lambda x,t: 0.0
         else:
             self.S_s_types = S_s_types
         self.nd = nd
@@ -108,7 +108,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion = True)
 
-        
+
     def initializeMesh(self,mesh):
         self.elementMaterialTypes,self.exteriorElementBoundaryTypes,self.elementBoundaryTypes = BlockHeterogeneousCoefficients(mesh).initializeMaterialTypes()
         self.elementBoundariesArray = mesh.elementBoundariesArray
@@ -164,7 +164,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                    cq['x'],
                                                                    cq[('a',ci,ci)],
                                                                    self.K_types)
-                
+
                 if cq.has_key(('dm',ci,ci)):
                     stfuncs.evaluateScalarMaterialFunctionOverElements(t,self.elementMaterialTypes,
                                                                        cq['x'],
@@ -179,7 +179,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
             for mat in self.K_types.keys():
                 self.K_types_const[mat]     =self.K_types[mat](x,t0)
             for mat in self.source_types.keys():
-                self.source_types_const[mat]=self.source_types[mat](x,t0) 
+                self.source_types_const[mat]=self.source_types[mat](x,t0)
             for mat in self.S_s_types.keys():
                 self.S_s_types_const[mat]=self.S_s_types[mat](x,t0)
             for ci in range(self.nc):
@@ -196,7 +196,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                                                  self.elementBoundaryTypes,
                                                                                                  cebq[('a',ci,ci)],
                                                                                                  self.K_types_const)
-        
+
                 if cebq.has_key(('dm',ci,ci)):
                     stfuncs.setScalarMaterialFunctionOverElementBoundaries_arithmeticAverage(self.elementBoundariesArray,
                                                                                              self.elementBoundaryTypes,
@@ -204,7 +204,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                                              self.S_s_types_const)
                     cebq[('m',ci)].flat[:] = cebq[('u',ci)].flat
                     cebq[('m',ci)] *= cebq[('dm',ci,ci)]
-                    
+
         else:
             for ci in range(self.nc):
                 if cebq.has_key(('f',ci)): cebq[('f',ci)].fill(0.0)
@@ -242,7 +242,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
             for mat in self.K_types.keys():
                 self.K_types_const[mat]     =self.K_types[mat](x,t0)
             for mat in self.source_types.keys():
-                self.source_types_const[mat]=self.source_types[mat](x,t0) 
+                self.source_types_const[mat]=self.source_types[mat](x,t0)
             for mat in self.S_s_types.keys():
                 self.S_s_types_const[mat]=self.S_s_types[mat](x,t0)
             for ci in range(self.nc):
@@ -259,7 +259,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                                                        self.elementBoundaryTypes,
                                                                                                        cebq_global[('a',ci,ci)],
                                                                                                        self.K_types_const)
-        
+
                 if cebq_global.has_key(('dm',ci,ci)):
                     stfuncs.setScalarMaterialFunctionOverGlobalElementBoundaries_arithmeticAverage(self.elementBoundariesArray,
                                                                                                    self.elementBoundaryTypes,
@@ -302,7 +302,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
             for mat in self.K_types.keys():
                 self.K_types_const[mat]     =self.K_types[mat](x,t0)
             for mat in self.source_types.keys():
-                self.source_types_const[mat]=self.source_types[mat](x,t0) 
+                self.source_types_const[mat]=self.source_types[mat](x,t0)
             for mat in self.S_s_types.keys():
                 self.S_s_types_const[mat]=self.S_s_types[mat](x,t0)
             for ci in range(self.nc):
@@ -316,7 +316,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                 stfuncs.setVectorMaterialFunctionOverElements(self.exteriorElementBoundaryTypes,
                                                               cebqe[('a',ci,ci)],
                                                               self.K_types_const)
-                
+
                 if cebqe.has_key(('dm',ci,ci)):
                     stfuncs.setScalarMaterialFunctionOverElements(self.exteriorElementBoundaryTypes,
                                                                   cebqe[('dm',ci,ci)],
@@ -337,7 +337,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                                                                    cebqe['x'],
                                                                    cebqe[('a',ci,ci)],
                                                                    self.K_types)
-                
+
                 if cebqe.has_key(('dm',ci,ci)):
                     stfuncs.evaluateScalarMaterialFunctionOverElements(t,self.exteriorElementBoundaryTypes,
                                                                        cebqe['x'],
@@ -445,7 +445,7 @@ class ConservativeHeadRichardsMualemVanGenuchten(TC_base):
                          variableNames,
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion = True)
-            
+
     def initializeMesh(self,mesh):
         #import pdb
         #pdb.set_trace()
@@ -604,7 +604,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
                                              reuse_trial_and_test_quadrature=reuse_trial_and_test_quadrature,
                                              sd = sd,
                                              movingDomain=movingDomain)
-        
+
         assert self.nQuadraturePoints_element == self.nSpace_global+1
         #particular arrays needed for Darcy flow
         self.q[('k_r',0,0)]    = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
@@ -612,7 +612,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
         self.q[('f_lin',0)]    = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
         self.q[('a_lin',0,0)]  = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.coefficients.sdInfo[(0,0)][0][self.nSpace_global]),'d')
         self.q[('k_r_up',0,0)]    = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        
+
         #need to check that points are the interpolation points too
 
 #         #quadrature dictionary for solution interpolation points
@@ -625,25 +625,25 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #         self.tensors_u_ip=StorageSet(shape={})
 #         #shape
 #         self.trial_shape_u_ip=StorageSet(shape={})
-#         self.test_shape_u_ip = StorageSet(shape={}) 
+#         self.test_shape_u_ip = StorageSet(shape={})
 #         self.test_shapeGradient_u_ip = StorageSet(shape={})
 #         self.trial_shapeGradient_u_ip= StorageSet(shape={})
 #         trial_shape_u_ip_duplicate = StorageSet(shape={})
 #         trial_shape_u_ip_duplicate_map = {}
-        
+
 #         #
 #         # build sets
 #         #
 #         #u
 #         self.scalars_u_ip |= set([('u',ci) for ci  in range(self.nc)])
-#         self.vectors_u_ip |= set([('grad(u)',ci) for ci in range(self.nc)]) 
+#         self.vectors_u_ip |= set([('grad(u)',ci) for ci in range(self.nc)])
 #         #trial
 #         self.trial_shape_u_ip |= set([('v',ci) for ci in self.unique_test_trial_range])
 #         trial_shape_u_ip_duplicate |= set([('v',ci) for ci in self.duplicate_test_trial_range])
 #         for ci in self.duplicate_test_trial_range:
-#             trial_shape_u_ip_duplicate_map[('v',ci)] = ('v',self.unique_test_trial_range[0]) 
+#             trial_shape_u_ip_duplicate_map[('v',ci)] = ('v',self.unique_test_trial_range[0])
 #         #test
-# 	self.test_shape_u_ip |= set([('w',ci) for ci in range(self.nc)])
+#       self.test_shape_u_ip |= set([('w',ci) for ci in range(self.nc)])
 #         self.test_shapeGradient_u_ip |= set([('grad(w)',ci) for ci in range(self.nc)])
 #         #m
 #         self.scalars_u_ip |= set([('m',ci) for ci  in self.coefficients.mass.keys()])
@@ -664,21 +664,21 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #             #special for Darcy flow
 #             self.tensors_u_ip |= set([('a_lin',ci,ck) for ck  in ckDict.keys()])
 #             self.scalars_u_ip |= set([('k_r',ci,ck) for ck  in self.ckDict.keys()])
-            
-#             self.vectors_u_ip |= set([('grad(phi)',ck) for ck  in ckDict.keys()])            
+
+#             self.vectors_u_ip |= set([('grad(phi)',ck) for ck  in ckDict.keys()])
 #             for ck,cjDict in ckDict.iteritems():
 #                 self.tensors_u_ip |= set([('da',ci,ck,cj) for cj  in cjDict.keys()])
 #                 #special for Darcy flow
 #                 self.scalars_u_ip |= set([('dk_r',ci,ck,cj) for cj  in cjDict.keys()])
 #                 #mwf trial-dup start
-# 		#mwf orig self.trial_shape_quadrature |= set([('v',cj) for cj in cjDict.keys()])
+#               #mwf orig self.trial_shape_quadrature |= set([('v',cj) for cj in cjDict.keys()])
 #                 unique_cj   = set.intersection(set(self.unique_test_trial_range),set(cjDict.keys()))
 #                 duplicate_cj= set.intersection(set(self.duplicate_test_trial_range),set(cjDict.keys()))
-# 		self.trial_shape_u_ip |= set([('v',cj) for cj in unique_cj])
-# 		trial_shape_u_ip_duplicate |= set([('v',cj) for cj in duplicate_cj])
+#               self.trial_shape_u_ip |= set([('v',cj) for cj in unique_cj])
+#               trial_shape_u_ip_duplicate |= set([('v',cj) for cj in duplicate_cj])
 #                 #any reason to do this again
 #                 for cj in self.duplicate_test_trial_range:
-#                     trial_shape_u_ip_duplicate_map[('v',cj)] = ('v',self.unique_test_trial_range[0]) 
+#                     trial_shape_u_ip_duplicate_map[('v',cj)] = ('v',self.unique_test_trial_range[0])
 #                 #mwf trial-dup end
 #                 for cj in self.coefficients.potential[ck].keys():
 #                     self.scalars_u_ip |= set([('dphi',ck,cj)])
@@ -702,7 +702,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #         #allocations
 #         #
 #         self.scalars_u_ip.allocate(self.u_ip)
-#         #points 
+#         #points
 #         self.points_u_ip.allocate(self.u_ip)
 #         #scalars
 #         self.scalars_u_ip.allocate(self.u_ip)
@@ -713,7 +713,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #             if (self.sd
 #                 and k[0] in ['a','da']
 #                 and self.coefficients.sdInfo != None
-#                 and (k[1],k[2]) in self.coefficients.sdInfo.keys()):                
+#                 and (k[1],k[2]) in self.coefficients.sdInfo.keys()):
 #                 self.u_ip[k]=numpy.zeros(
 #                     (self.mesh.nElements_global,
 #                      self.n_u_ip_element[k[2]],
@@ -760,7 +760,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #         #
 #         #allocate trial shape functions
 #         for k in sorted(self.trial_shape_u_ip):
-#             if not makeAliasForComponent1(self.u_ip,k,['v'],refi=0):#need to handle multiple component combinations 
+#             if not makeAliasForComponent1(self.u_ip,k,['v'],refi=0):#need to handle multiple component combinations
 #                 self.u_ip[k]=numpy.zeros(
 #                     (self.mesh.nElements_global,
 #                      self.n_u_ip_element,
@@ -770,7 +770,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #             self.u_ip[k] = self.u_ip[trial_shape_quadrature_duplicate_map[k]]
 #         #mwf trial-dup end
 #         log(memory("solution interpolation points, test/trial functions trial_shape","OneLevelTransport"),level=4)
-#         #allocate test shape functions 
+#         #allocate test shape functions
 #         for k in self.test_shape_quadrature:
 #             if not makeAlias(self.u_ip,k):
 #                 self.u_ip[k]=numpy.zeros(
@@ -781,13 +781,13 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #         log(memory("solution interpolation points, test/trial functions test_shape","OneLevelTransport"),level=4)
 #         #allocate trial shape function gradients
 #         for k in sorted(self.trial_shapeGradient_quadrature):
-#             if not makeAliasForComponent1(self.u_ip,k,['grad(v)'],refi=0):#need to handle multiple component combinations 
+#             if not makeAliasForComponent1(self.u_ip,k,['grad(v)'],refi=0):#need to handle multiple component combinations
 #                 self.u_ip[k]=numpy.zeros(
 #                     (self.mesh.nElements_global,
 #                      self.n_u_ip_element,
 #                      self.nDOF_trial_element[k[-1]],
 #                      self.nSpace_global),
-#                     'd')        
+#                     'd')
 #         log(memory("solution interpolation points, test/trial functions trial_shapeGradient","OneLevelTransport"),level=4)
 #         #allocate test shape function gradients
 #         for k in self.test_shapeGradient_quadrature:
@@ -800,17 +800,17 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
 #                     'd')
     def calculateElementCoefficients(self):
         """
-        calculate the nonlinear coefficients at the quadrature points and nodes 
+        calculate the nonlinear coefficients at the quadrature points and nodes
         include interpolation points explicitly here now
         """
-        
-	for cj in range(self.nc):
-	    self.u[cj].getValues(self.q[('v',cj)],
-				 self.q[('u',cj)])
-	    if self.q.has_key(('grad(u)',cj)):
-		self.u[cj].getGradientValues(self.q[('grad(v)',cj)],
-					     self.q[('grad(u)',cj)])
-        
+
+        for cj in range(self.nc):
+            self.u[cj].getValues(self.q[('v',cj)],
+                                 self.q[('u',cj)])
+            if self.q.has_key(('grad(u)',cj)):
+                self.u[cj].getGradientValues(self.q[('grad(v)',cj)],
+                                             self.q[('grad(u)',cj)])
+
         #can skip this after first call
         stfuncs.RE_NCP1_evaluateElementCoefficients_Linear(self.coefficients.rho,
                                                            self.coefficients.gravity,
@@ -865,7 +865,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
                                                                   self.nQuadraturePoints_element,
                                                                   self.nSpace_global,
                                                                   self.coefficients.sdInfo[(ci,ci)][0],self.coefficients.sdInfo[(ci,ci)][1],
-                                                                  self.elementEffectiveDiametersArray, 
+                                                                  self.elementEffectiveDiametersArray,
                                                                   self.q[('df',ci,ci)],
                                                                   self.q[('a',ci,ci)],
                                                                   self.q[('dphi',ci,ci)],
@@ -877,7 +877,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
                 cfemIntegrals.calculateDimensionlessNumbersADR(self.mesh.nElements_global,
                                                                self.nQuadraturePoints_element,
                                                                self.nSpace_global,
-                                                               self.elementEffectiveDiametersArray, 
+                                                               self.elementEffectiveDiametersArray,
                                                                self.q[('df',ci,ci)],
                                                                self.q[('a',ci,ci)],
                                                                self.q[('dphi',ci,ci)],
@@ -885,7 +885,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
                                                                self.q[('dmt',ci,ci)],
                                                                self.q[('pe',ci)],
                                                                self.q[('cfl',ci)])
-                    
+
         if self.shockCapturing != None:
             self.shockCapturing.calculateNumericalDiffusion(self.q)
 
@@ -923,7 +923,7 @@ class RE_NCP1_OneLevelTransport(Transport.OneLevelTransport):
         #mwf debug
         #pdb.set_trace()
 
-        
+
     def calculateElementJacobian(self):
         import pdb
         #Transport.OneLevelTransport.calculateElementJacobian(self)
@@ -968,7 +968,7 @@ class TwophaseDarcyFlow_base(TC_base):
     from proteus.cTwophaseDarcyCoefficients import twophaseDarcy_vol_frac,generateSplineTables
     """
     base class for two-phase flow implementations
-    holds information for 
+    holds information for
 
         fluid properties
         eos model tag
@@ -1051,7 +1051,7 @@ class TwophaseDarcyFlow_base(TC_base):
                 self.psk_tolerances[psk_model_id] = self.psk_tolerances['default']
         self.nPskTolerances=1
         assert(self.psk_model in self.psk_types.keys())
-        self.nMaterialTypes = nMaterialTypes        
+        self.nMaterialTypes = nMaterialTypes
         #psk rwork array lengths
         self.nPSKsplineKnots = nPSKsplineKnots
         self.iwork_psk = numpy.zeros((2,),'i')
@@ -1068,12 +1068,12 @@ class TwophaseDarcyFlow_base(TC_base):
             self.nPskParams=self.nPSKsplineKnots*4
             self.iwork_psk[0] = self.nPSKsplineKnots
             self.iwork_psk[1] = self.nPskParams
-            
+
         self.rwork_psk = None
         self.rwork_psk_tolerances = numpy.zeros((self.nPskTolerances,),'d')
         for i,tol in enumerate(self.psk_tolerances[self.psk_model].values()):
             self.rwork_psk_tolerances[i] = tol
-        
+
         self.diagonal_conductivity=diagonal_conductivity
         self.q = {}; self.ebqe = {}; self.ebq = {}; self.ebq_global={}; self.ip = {}
     def initializeMesh(self,mesh):
@@ -1166,7 +1166,7 @@ class TwophaseDarcyFlow_base(TC_base):
             assert psk_spline_types != None
             self.rwork_psk = psk_spline_types
             assert self.rwork_psk.shape[0] == self.nMaterialTypes*self.nPskParams
-            
+
         #try to allow some flexibility in input of permeability/conductivity tensor
         #keep track of input for debugging now
         self.Ksw_types_in = Ksw_types
@@ -1209,9 +1209,9 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
 
       \pd{m_n}{t} - \deld (\ten{a}_n \grad \phi_n) + r_n = 0
 
-    (normalized) mass for each phase 
+    (normalized) mass for each phase
        m_i = \theta_i \rho_i,  i=w,n
-       
+
        \theta_i = \theta_s S_i
        \rho_i   = \varrho_i/\varrho_{i,0}, i=w,n
 
@@ -1221,7 +1221,7 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
     (normalized) mass flux for each phase is
 
        \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
-    
+
        \ten{a}_i = \rho_i k_{r,i}/\hat{\mu}_i \ten{K}_s
     and the potentials are defined as
        \phi_{w}  = \psi_{w} - \rho_w \vec g\cdot \vec x
@@ -1241,7 +1241,7 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
     Note S_n = 1-S_w
 
     needs to be implemented
-    r_i = r_i(\vec x,t) 
+    r_i = r_i(\vec x,t)
 
 
     slight compressibility assumed in spatial gradients
@@ -1295,7 +1295,7 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
                            1:'nonlinear'}}}
         reaction = {0:{0:'linear'},
                     1:{1:'linear'}}
-        
+
 
         if self.diagonal_conductivity:
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd+1,dtype='i'),
@@ -1318,7 +1318,7 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
                          potential,
                          reaction,
                          hamiltonian,
-			 variableNames,
+                         variableNames,
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion = True)
 
@@ -1347,7 +1347,7 @@ class TwophaseDarcy_fc(TwophaseDarcyFlow_base):
         #mwf do some debugging
         assert materialTypes.max() < self.nMaterialTypes
         assert materialTypes.min() == 0
-        
+
 
         self.twophaseDarcy_fc_sd_het_matType(self.psk_types[self.psk_model],
                                              self.density_types[self.density_w_model],
@@ -1420,7 +1420,7 @@ class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
     """
     def __init__(self,
                  nd,
-                 Ksw_types, 
+                 Ksw_types,
                  vgm_n_types,
                  vgm_alpha_types,
                  thetaR_types,
@@ -1457,7 +1457,7 @@ class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
                                   nPSKsplineKnots=nPSKsplineKnots)
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
-        
+
         vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
@@ -1476,7 +1476,7 @@ class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
                 import pdb
                 import matplotlib
                 from matplotlib import pylab
-            
+
             for i in range(self.nMaterialTypes):
                 sw_domain = numpy.zeros((self.nPSKsplineKnots,),'d')
                 sw_domain[1:-1] = numpy.linspace(Sw_min_types[i],Sw_max_types[i],num=self.nPSKsplineKnots-2)
@@ -1492,7 +1492,7 @@ class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
                                           self.iwork_psk,
                                           rwork_tol_tmp,
                                           self.splineTableWork)
-                
+
                 #mwf debug
                 if plot_splines:
                     pdb.set_trace()
@@ -1509,8 +1509,8 @@ class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
                                   Sw_max_types=Sw_max_types,
                                   Sw_min_types=Sw_min_types,
                                   psk_spline_types=self.splineTableWork)
-            
-            
+
+
         else:
             self.setMaterialTypes(Ksw_types=Ksw_types,
                                   omega_types=thetaS_types,
@@ -1518,7 +1518,7 @@ class FullyCoupledMualemVanGenuchten(TwophaseDarcy_fc):
                                   Sw_min_types=Sw_min_types,
                                   vg_alpha_types=vgm_alpha_types,
                                   vg_m_types=vgm_m_types)
-        
+
 
 class FullyCoupledSimplePSKs(TwophaseDarcy_fc):
     """
@@ -1528,7 +1528,7 @@ class FullyCoupledSimplePSKs(TwophaseDarcy_fc):
     """
     def __init__(self,
                  nd,
-                 Ksw_types, 
+                 Ksw_types,
                  thetaR_types,
                  thetaSR_types,
                  dimensionless_gravity,
@@ -1554,7 +1554,7 @@ class FullyCoupledSimplePSKs(TwophaseDarcy_fc):
                                   diagonal_conductivity=diagonal_conductivity)
         for input in [thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
-        
+
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
         Sw_min_types   = thetaR_types/thetaS_types
@@ -1572,9 +1572,9 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
 
       \pd{m_n}{t} - \deld (\ten{a}_n \grad \phi_n) + r_n = 0
 
-    (normalized) mass for each phase 
+    (normalized) mass for each phase
        m_i = \theta_i \rho_i,  i=w,n
-       
+
        \theta_i = \theta_s S_i
        \rho_i   = \varrho_i/\varrho_{i,0}, i=w,n
 
@@ -1584,7 +1584,7 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
     (normalized) mass flux for each phase is
 
        \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
-    
+
        \ten{a}_i = \rho_i k_{r,i}/\hat{\mu}_i \ten{K}_s
     and the potentials are defined as
        \phi_{w}  = \psi_{w} - \rho_w \vec g\cdot \vec x
@@ -1604,7 +1604,7 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
     Note S_n = 1-S_w
 
     needs to be implemented
-    r_i = r_i(\vec x,t) 
+    r_i = r_i(\vec x,t)
 
 
     slight compressibility assumed in spatial gradients
@@ -1655,7 +1655,7 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
                            1:'nonlinear'}}}
         reaction = {0:{0:'linear'},
                     1:{1:'linear'}}
-        
+
 
         if self.diagonal_conductivity:
             sparseDiffusionTensors = {(0,0):(numpy.arange(self.nd+1,dtype='i'),
@@ -1678,7 +1678,7 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
                          potential,
                          reaction,
                          hamiltonian,
-			 variableNames,
+                         variableNames,
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion = True)
 
@@ -1732,7 +1732,7 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
         #mwf do some debugging
         assert materialTypes.max() < self.nMaterialTypes
         assert materialTypes.min() == 0
-        
+
         self.twophaseDarcy_fc_pp_sd_het_matType(self.psk_types[self.psk_model],
                                                 self.density_types[self.density_w_model],
                                                 self.density_types[self.density_n_model],
@@ -1770,7 +1770,7 @@ class TwophaseDarcy_fc_pp(TwophaseDarcyFlow_base):
                                                 c[('a',1,1)],
                                                 c[('da',1,1,0)],
                                                 c[('da',1,1,1)])
- 
+
         #todo put this back in cpp eval
         #c['psi_n'][:] = c[('u',0)]
         #c['psi_n'] += c[('u',1)]
@@ -1799,14 +1799,14 @@ class FullyCoupledPressurePressureMualemVanGenuchten(TwophaseDarcy_fc_pp):
     """
     Formulation using phase continuity equations, pressure-pressure formulation and
      Van-Genuchten Mualem psk relations
-    
+
     Basically a convenience wrapper for fully coupled approximation
      with volume-fraction based inputs as in Richards' equation formulations
 
     """
     def __init__(self,
                  nd,
-                 Ksw_types, 
+                 Ksw_types,
                  vgm_n_types,
                  vgm_alpha_types,
                  thetaR_types,
@@ -1844,7 +1844,7 @@ class FullyCoupledPressurePressureMualemVanGenuchten(TwophaseDarcy_fc_pp):
                                      nPSKsplineKnots=nPSKsplineKnots)
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
-        
+
         vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
@@ -1885,7 +1885,7 @@ class FullyCoupledPressurePressureMualemVanGenuchten(TwophaseDarcy_fc_pp):
                                           self.iwork_psk,
                                           rwork_tol_tmp,
                                           self.splineTableWork)
-                
+
                 #mwf debug
                 pdb.set_trace()
                 pylab.figure(1); pylab.plot(self.splineTableWork[materialOffset:materialOffset+self.nPSKsplineKnots],
@@ -1901,8 +1901,8 @@ class FullyCoupledPressurePressureMualemVanGenuchten(TwophaseDarcy_fc_pp):
                                   Sw_max_types=Sw_max_types,
                                   Sw_min_types=Sw_min_types,
                                   psk_spline_types=self.splineTableWork)
-            
-            
+
+
         else:
             self.setMaterialTypes(Ksw_types=Ksw_types,
                                   omega_types=thetaS_types,
@@ -1920,7 +1920,7 @@ class FullyCoupledPressurePressureSimplePSKs(TwophaseDarcy_fc_pp):
     """
     def __init__(self,
                  nd,
-                 Ksw_types, 
+                 Ksw_types,
                  thetaR_types,
                  thetaSR_types,
                  dimensionless_gravity,
@@ -1946,7 +1946,7 @@ class FullyCoupledPressurePressureSimplePSKs(TwophaseDarcy_fc_pp):
                                      diagonal_conductivity=diagonal_conductivity)
         for input in [thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
-        
+
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
         Sw_min_types   = thetaR_types/thetaS_types
@@ -1964,7 +1964,7 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
     Base class for 'pressure' or total flow conservation equation in fractional flow formulations. This
 
     The primary functionality of the base class is to handle synchronization with a 'saturation' model to
-    get the saturation, S_w, and capillary pressure (head), \psi_c, variables 
+    get the saturation, S_w, and capillary pressure (head), \psi_c, variables
 
    """
     def __init__(self,
@@ -1996,7 +1996,7 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
                                         nMaterialTypes=nMaterialTypes,
                                         diagonal_conductivity=diagonal_conductivity)
 
-    	self.nc=1
+        self.nc=1
         self.nd=nd
         #
         self.nSatModel=nSatModel
@@ -2040,7 +2040,7 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
 
     def initializeElementQuadrature(self,t,cq):
         TwophaseDarcyFlow_base.initializeElementQuadrature(self,t,cq)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.q_s_w   = numpy.zeros(cq[('u',0)].shape,'d')
         self.q_s_w.fill(self.swConstant)
         self.q_grad_psic   = numpy.zeros(cq[('f',0)].shape,'d')
@@ -2049,10 +2049,10 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
         #mwf not sure if this is ok
         cq['psi_n'] = numpy.zeros(cq[('u',0)].shape,'d')
         cq[('dpsi_n',0)] = numpy.ones(cq[('u',0)].shape,'d')
-        
+
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         TwophaseDarcyFlow_base.initializeElementBoundaryQuadrature(self,t,cebq,cebq_global)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ebq_s_w = numpy.zeros(cebq[('u',0)].shape,'d')
         self.ebq_s_w.fill(self.swConstant)
         self.ebq_grad_psic = numpy.zeros(cebq[('f',0)].shape,'d')
@@ -2066,7 +2066,7 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
             cebq_global[('dpsi_n',0)] = numpy.ones(cebq_global[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         TwophaseDarcyFlow_base.initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ebqe_s_w = numpy.zeros(cebqe[('u',0)].shape,'d')
         self.ebqe_s_w.fill(self.swConstant)
         self.ebqe_grad_psic = numpy.zeros(cebqe[('f',0)].shape,'d')
@@ -2076,7 +2076,7 @@ class TwophaseDarcy_split_pressure_base(TwophaseDarcyFlow_base):
         cebqe[('dpsi_n',0)] = numpy.ones(cebqe[('u',0)].shape,'d')
     def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
         TwophaseDarcyFlow_base.initializeGeneralizedInterpolationPointQuadrature(self,t,cip)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ip_s_w = numpy.zeros(cip[('u',0)].shape,'d')
         self.ip_s_w.fill(self.swConstant)
         self.ip_grad_psic = numpy.zeros(cip[('f',0)].shape,'d')
@@ -2127,7 +2127,7 @@ class TwophaseDarcy_split_saturation_base(TwophaseDarcyFlow_base):
                                         nMaterialTypes=nMaterialTypes,
                                         diagonal_conductivity=diagonal_conductivity)
 
-    	self.nc=1
+        self.nc=1
         self.nd=nd
         self.nPressModel=nPressModel
         #for debugging
@@ -2153,25 +2153,25 @@ class TwophaseDarcy_split_saturation_base(TwophaseDarcyFlow_base):
             self.ebq_psiw = modelList[self.nPressModel].ebq[('u',0)]
     def initializeElementQuadrature(self,t,cq):
         TwophaseDarcyFlow_base.initializeElementQuadrature(self,t,cq)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.q_q_t   = numpy.zeros(cq[('f',0)].shape,'d')
         self.q_q_t[:] = self.qScalarConstant
         self.q_psiw   = numpy.ones(cq[('u',0)].shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         TwophaseDarcyFlow_base.initializeElementBoundaryQuadrature(self,t,cebq,cebq_global)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ebq_q_t = numpy.zeros(cebq[('f',0)].shape,'d')
         self.ebq_q_t[:] = self.qScalarConstant
         self.ebq_psiw = numpy.ones(cebq[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         TwophaseDarcyFlow_base.initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ebqe_q_t = numpy.zeros(cebqe[('f',0)].shape,'d')
         self.ebqe_q_t[:] = self.qScalarConstant
         self.ebqe_psiw = numpy.ones(cebqe[('u',0)].shape,'d')
     def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
         TwophaseDarcyFlow_base.initializeGeneralizedInterpolationPointQuadrature(self,t,cip)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ip_q_t = numpy.zeros(cip[('f',0)].shape,'d')
         self.ip_q_t[:] = self.qScalarConstant
         self.ip_psiw = numpy.ones(cip[('u',0)].shape,'d')
@@ -2188,7 +2188,7 @@ Saturation equation
 and total flow conservation equation
 \begin{eqnarray}
 \label{eq:2p-ff-mb-m}
-\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0 
+\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
 \end{eqnarray}
 
 \begin{table}[ht]
@@ -2212,7 +2212,7 @@ $\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
 $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
 $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
 $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline 
+\hline
 \end{tabular}
 \end{table}
 
@@ -2222,7 +2222,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
     (normalized) mass flux for each phase is
 
        \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
-    
+
     and
        \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
        b        = \varrho_{n,0}/\varrho_{w,0}
@@ -2237,7 +2237,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
     Note S_n = 1-S_w
 
     needs to be implemented
-    r_m = r_m(\vec x,t) 
+    r_m = r_m(\vec x,t)
 
     TODO:
 
@@ -2278,7 +2278,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
         advection = {0:{0:'linear'}}
         hamiltonian={}
         diffusion = {0:{0: {0:'linear'}}}
-        potential = {0:{0: 'u'}}         
+        potential = {0:{0: 'u'}}
         reaction  = {0:{0:'linear'}}
 
         if self.diagonal_conductivity:
@@ -2298,7 +2298,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                          potential,
                          reaction,
                          hamiltonian,
-			 variableNames,
+                         variableNames,
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion = True)
     def evaluate(self,t,c):
@@ -2325,7 +2325,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             #            print "split press eval inside lens eN=%s k=%s x=%s grad_psiw= %s grad_psic= %s s_w= %s " % (eN,k,c['x'][eN,k],c[('grad(u)',0)][eN,k],grad_psic[eN,k],s_w[eN,k])
             #        else:
             #            print "split press eval outside lens eN=%s k=%s x=%s grad_psiw= %s grad_psic= %s s_w= %s " % (eN,k,c['x'][eN,k],c[('grad(u)',0)][eN,k],grad_psic[eN,k],s_w[eN,k])
-                    
+
             #import pdb
             #pdb.set_trace()
         elif c[('u',0)].shape == self.ebqe_s_w.shape:
@@ -2370,7 +2370,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                                         self.Ksw_types,
                                                                         self.b,
                                                                         self.capillaryDiffusionScaling,
-                                                                        self.rwork_psk,self.iwork_psk,     
+                                                                        self.rwork_psk,self.iwork_psk,
                                                                         self.rwork_psk_tolerances,
                                                                         self.rwork_density_w,
                                                                         self.rwork_density_n,
@@ -2411,7 +2411,7 @@ Saturation equation
 and total flow conservation equation
 \begin{eqnarray}
 \label{eq:2p-ff-mb-m}
-\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0 
+\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
 \end{eqnarray}
 
 \begin{table}[ht]
@@ -2435,7 +2435,7 @@ $\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
 $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
 $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
 $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline 
+\hline
 \end{tabular}
 \end{table}
 
@@ -2445,7 +2445,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
     (normalized) mass flux for each phase is
 
        \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
-    
+
     and
        \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
        b        = \varrho_{n,0}/\varrho_{w,0}
@@ -2460,7 +2460,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
     Note S_n = 1-S_w
 
     needs to be implemented
-    r_m = r_m(\vec x,t) 
+    r_m = r_m(\vec x,t)
 
     TODO:
 
@@ -2502,7 +2502,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
         advection = {0:{0:'nonlinear'}}
         hamiltonian={}
         diffusion = {0:{0:{0:'nonlinear'}}}
-        potential = {0:{0: 'nonlinear'}} 
+        potential = {0:{0: 'nonlinear'}}
         reaction  = {0:{0:'linear'}}
 
         if self.diagonal_conductivity:
@@ -2522,7 +2522,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                          potential,
                          reaction,
                          hamiltonian,
-			 variableNames,
+                         variableNames,
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion = True)
     def evaluate(self,t,c):
@@ -2601,8 +2601,8 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 #                     else:
 #                         print "split sat eval outside lens eN=%s k=%s x=%s matID=%s psic= %s s_w= %s " % (eN,k,c['x'][eN,k],materialTypes[eN],c[('phi',0)][eN,k],c[('u',0)][eN,k])
 #                         assert materialTypes[eN] == 0
-                        
-                    
+
+
             #import pdb
             #pdb.set_trace()
 
@@ -2623,12 +2623,12 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
 class TwophaseDarcy_compressible_split_pressure(TwophaseDarcy_split_pressure_base):
     """
     Total flow conservation equation in a split compressible fractional flow formulation
-    Right now, the options are 
- 
+    Right now, the options are
+
         compressibility for the non-wetting phase (compressibleN) : compressiblityFlag=1
-        compressibility for both phases but with the slight       
+        compressibility for both phases but with the slight
           compressiblity assumption (spatial density gradients are negligible) compressiblityFlag=2
-             
+
 Saturation equation
 \begin{eqnarray}
 \label{eq:2p-c-ff-mb-w}
@@ -2637,7 +2637,7 @@ Saturation equation
 and total flow conservation equation
 \begin{eqnarray}
 \label{eq:2p-c-ff-mb-m}
-\pd{m_m}{t} + \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0 
+\pd{m_m}{t} + \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
 \end{eqnarray}
 
 \begin{table}[ht]
@@ -2662,12 +2662,12 @@ $\ten a_{m,m}^{\dagger}$ & $\lambda_t \ten{K}_{s}$ \\
 $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
 $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
 $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline 
+\hline
 \multicolumn{2}{l}
 {$\dagger$ : $\rho_i \equiv 1$, $\lambda_i= k_{r,i}/\hat{\mu}_{i}$ for slight compressibility assumption}
 \end{tabular}
 \end{table}
-    
+
 
 
      Here S_i is the saturation for each phase, \varrho_{i} is the density and
@@ -2676,7 +2676,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
     (normalized) mass flux for each phase is
 
        \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
-    
+
     and
        \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
        b        = \varrho_{n,0}/\varrho_{w,0}
@@ -2693,7 +2693,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
     Note S_n = 1-S_w
 
     needs to be implemented
-    r_m = r_m(\vec x,t) 
+    r_m = r_m(\vec x,t)
 
     TODO:
 
@@ -2741,7 +2741,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
         advection = {0:{0:'nonlinear'}}
         hamiltonian={}
         diffusion = {0:{0: {0:'nonlinear'}}}
-        potential = {0:{0: 'u'}}         
+        potential = {0:{0: 'u'}}
         reaction  = {0:{0:'linear'}}
         if self.compressibilityFlag == 2:
             advection = {0:{0:'linear'}}
@@ -2764,7 +2764,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                          potential,
                          reaction,
                          hamiltonian,
-			 variableNames,
+                         variableNames,
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion = True)
     def evaluate(self,t,c):
@@ -2817,7 +2817,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                                                   self.Ksw_types,
                                                                                   self.b,
                                                                                   self.capillaryDiffusionScaling,
-                                                                                  self.rwork_psk,self.iwork_psk,     
+                                                                                  self.rwork_psk,self.iwork_psk,
                                                                                   self.rwork_psk_tolerances,
                                                                                   self.rwork_density_w,
                                                                                   self.rwork_density_n,
@@ -2844,7 +2844,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                                            self.Ksw_types,
                                                                            self.b,
                                                                            self.capillaryDiffusionScaling,
-                                                                           self.rwork_psk,self.iwork_psk,     
+                                                                           self.rwork_psk,self.iwork_psk,
                                                                            self.rwork_psk_tolerances,
                                                                            self.rwork_density_w,
                                                                            self.rwork_density_n,
@@ -2883,10 +2883,10 @@ class TwophaseDarcy_compressible_split_saturation(TwophaseDarcy_split_saturation
     Aqueous phase mass conservation equation (saturation equation) in
     a  compressible fractional flow formulation
 
-    Right now, the options are 
- 
+    Right now, the options are
+
         compressibility for the non-wetting phase (compressibleN) : compressiblityFlag=1
-        compressibility for both phases but with the slight       
+        compressibility for both phases but with the slight
           compressiblity assumption (spatial density gradients are negligible) compressiblityFlag=2
 Saturation equation
 \begin{eqnarray}
@@ -2896,7 +2896,7 @@ Saturation equation
 and total flow conservation equation
 \begin{eqnarray}
 \label{eq:2p-c-ff-mb-m}
-\pd{m_m}{t} + \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0 
+\pd{m_m}{t} + \deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
 \end{eqnarray}
 
 \begin{table}[ht]
@@ -2921,12 +2921,12 @@ $\ten a_{m,m}^{\dagger}$ & $\lambda_t \ten{K}_{s}$ \\
 $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
 $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
 $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline 
+\hline
 \multicolumn{2}{l}
 {$\dagger$ : $\rho_i \equiv 1$, $\lambda_i= k_{r,i}/\hat{\mu}_{i}$ for slight compressibility assumption}
 \end{tabular}
 \end{table}
-    
+
 
 
      Here S_i is the saturation for each phase, \varrho_{i} is the density and
@@ -2935,7 +2935,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
     (normalized) mass flux for each phase is
 
        \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
-    
+
     and
        \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
        b        = \varrho_{n,0}/\varrho_{w,0}
@@ -2952,7 +2952,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
     Note S_n = 1-S_w
 
     needs to be implemented
-    r_m = r_m(\vec x,t) 
+    r_m = r_m(\vec x,t)
 
     TODO:
 
@@ -3001,7 +3001,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
         advection = {0:{0:'nonlinear'}}
         hamiltonian={}
         diffusion = {0:{0:{0:'nonlinear'}}}
-        potential = {0:{0: 'nonlinear'}} 
+        potential = {0:{0: 'nonlinear'}}
         reaction  = {0:{0:'linear'}}
 
         if self.diagonal_conductivity:
@@ -3021,7 +3021,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                          potential,
                          reaction,
                          hamiltonian,
-			 variableNames,
+                         variableNames,
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion = True)
     def evaluate(self,t,c):
@@ -3114,7 +3114,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                                              c[('df',0,0)],
                                                                              c[('a',0,0)],
                                                                              c[('da',0,0,0)])
-            
+
         self.twophaseDarcy_vol_frac(materialTypes,
                                     self.omega_types,
                                     c[('u',0)],
@@ -3140,7 +3140,7 @@ class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
     Base class for 'pressure' or total flow conservation equation in fractional flow formulations. This
 
     The primary functionality of the base class is to handle synchronization with a 'saturation' model to
-    get the saturation, S_w, and capillary pressure (head), \psi_c, variables 
+    get the saturation, S_w, and capillary pressure (head), \psi_c, variables
 
     This version would allow for capillary pressure to be unknown for saturation equation
    """
@@ -3173,7 +3173,7 @@ class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
                                         nMaterialTypes=nMaterialTypes,
                                         diagonal_conductivity=diagonal_conductivity)
 
-    	self.nc=1
+        self.nc=1
         self.nd=nd
         #
         self.nSatModel=nSatModel
@@ -3204,19 +3204,19 @@ class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
 
     def initializeElementQuadrature(self,t,cq):
         TwophaseDarcyFlow_base.initializeElementQuadrature(self,t,cq)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.q_s_w   = numpy.zeros(cq[('u',0)].shape,'d')
         self.q_s_w[:] = self.swConstant
         for i in range(len(self.q_s_w.flat)/2,len(self.q_s_w.flat)):
-                self.q_s_w.flat[i] = 1.0e-4
+            self.q_s_w.flat[i] = 1.0e-4
         self.q_grad_psic   = numpy.zeros(cq[('f',0)].shape,'d')
         self.q_psic        = numpy.zeros(cq[('u',0)].shape,'d')
         cq['psi_n'] = numpy.zeros(cq[('u',0)].shape,'d')
         cq[('dpsi_n',0)] = numpy.ones(cq[('u',0)].shape,'d')
-        
+
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         TwophaseDarcyFlow_base.initializeElementBoundaryQuadrature(self,t,cebq,cebq_global)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ebq_s_w = numpy.zeros(cebq[('u',0)].shape,'d')
         self.ebq_s_w.fill(self.swConstant)
         self.ebq_grad_psic = numpy.zeros(cebq[('f',0)].shape,'d')
@@ -3229,7 +3229,7 @@ class TwophaseDarcy_split_pp_pressure_base(TwophaseDarcyFlow_base):
             cebq_global[('dpsi_n',0)] = numpy.ones(cebq_global[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         TwophaseDarcyFlow_base.initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ebqe_s_w = numpy.zeros(cebqe[('u',0)].shape,'d')
         self.ebqe_s_w[:]=self.swConstant
         self.ebqe_grad_psic = numpy.zeros(cebqe[('f',0)].shape,'d')
@@ -3284,7 +3284,7 @@ class TwophaseDarcy_split_pp_saturation_base(TwophaseDarcyFlow_base):
                                         nMaterialTypes=nMaterialTypes,
                                         diagonal_conductivity=diagonal_conductivity)
 
-    	self.nc=1
+        self.nc=1
         self.nd=nd
         self.nPressModel=nPressModel
         #for debugging
@@ -3310,14 +3310,14 @@ class TwophaseDarcy_split_pp_saturation_base(TwophaseDarcyFlow_base):
             self.ebq_psiw = modelList[self.nPressModel].ebq[('u',0)]
     def initializeElementQuadrature(self,t,cq):
         TwophaseDarcyFlow_base.initializeElementQuadrature(self,t,cq)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.q_q_t   = numpy.zeros(cq[('f',0)].shape,'d')
         self.q_q_t[:] = self.qScalarConstant
         self.q_psiw   = numpy.ones(cq[('u',0)].shape,'d')
         cq['sw'] = numpy.zeros(cq[('u',0)].shape,'d')
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         TwophaseDarcyFlow_base.initializeElementBoundaryQuadrature(self,t,cebq,cebq_global)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ebq_q_t = numpy.zeros(cebq[('f',0)].shape,'d')
         self.ebq_q_t[:] = self.qScalarConstant
         self.ebq_psiw = numpy.ones(cebq[('u',0)].shape,'d')
@@ -3327,19 +3327,19 @@ class TwophaseDarcy_split_pp_saturation_base(TwophaseDarcyFlow_base):
             cebq_global['sw'] = numpy.zeros(cebq_global[('u',0)].shape,'d')
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         TwophaseDarcyFlow_base.initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ebqe_q_t = numpy.zeros(cebqe[('f',0)].shape,'d')
         self.ebqe_q_t[:] = self.qScalarConstant
         self.ebqe_psiw = numpy.ones(cebqe[('u',0)].shape,'d')
         cebqe['sw'] = numpy.zeros(cebqe[('u',0)].shape,'d')
     def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
         TwophaseDarcyFlow_base.initializeGeneralizedInterpolationPointQuadrature(self,t,cip)
-    	#set up dummy values in case we're not running the other model
+        #set up dummy values in case we're not running the other model
         self.ip_q_t = numpy.zeros(cip[('f',0)].shape,'d')
         self.ip_q_t[:] = self.qScalarConstant
         self.ip_psiw = numpy.ones(cip[('u',0)].shape,'d')
         cip['sw'] = numpy.zeros(cip[('u',0)].shape,'d')
-        
+
 class TwophaseDarcy_incompressible_split_pp_pressure(TwophaseDarcy_split_pp_pressure_base):
     """
     Total flow conservation equation in an incompressible fractional flow formulation
@@ -3352,7 +3352,7 @@ Saturation equation
 and total flow conservation equation
 \begin{eqnarray}
 \label{eq:2p-ff-mb-m}
-\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0 
+\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
 \end{eqnarray}
 
 \begin{table}[ht]
@@ -3376,7 +3376,7 @@ $\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
 $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
 $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
 $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline 
+\hline
 \end{tabular}
 \end{table}
 
@@ -3386,7 +3386,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
     (normalized) mass flux for each phase is
 
        \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
-    
+
     and
        \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
        b        = \varrho_{n,0}/\varrho_{w,0}
@@ -3401,7 +3401,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
     Note S_n = 1-S_w
 
     needs to be implemented
-    r_m = r_m(\vec x,t) 
+    r_m = r_m(\vec x,t)
 
     TODO:
 
@@ -3442,7 +3442,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
         advection = {0:{0:'linear'}}
         hamiltonian={}
         diffusion = {0:{0: {0:'linear'}}}
-        potential = {0:{0: 'u'}}         
+        potential = {0:{0: 'u'}}
         reaction  = {0:{0:'linear'}}
 
         if self.diagonal_conductivity:
@@ -3462,7 +3462,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                          potential,
                          reaction,
                          hamiltonian,
-			 variableNames,
+                         variableNames,
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion = True)
     def evaluate(self,t,c):
@@ -3470,7 +3470,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             materialTypes = self.materialTypes_q
             s_w = self.q_s_w
             grad_psic = self.q_grad_psic
-            
+
             c['psi_n']= numpy.copy(self.q_psic)
             c['psi_n'] += c[('u',0)]
             vol_frac_w = self.q[('vol_frac',0)]
@@ -3489,14 +3489,14 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             #            print "split press eval inside lens eN=%s k=%s x=%s grad_psiw= %s grad_psic= %s s_w= %s " % (eN,k,c['x'][eN,k],c[('grad(u)',0)][eN,k],grad_psic[eN,k],s_w[eN,k])
             #        else:
             #            print "split press eval outside lens eN=%s k=%s x=%s grad_psiw= %s grad_psic= %s s_w= %s " % (eN,k,c['x'][eN,k],c[('grad(u)',0)][eN,k],grad_psic[eN,k],s_w[eN,k])
-                    
+
             #import pdb
             #pdb.set_trace()
         elif c[('u',0)].shape == self.ebqe_s_w.shape:
             materialTypes = self.materialTypes_ebqe
             s_w = self.ebqe_s_w
             grad_psic = self.ebqe_grad_psic
-            
+
             c['psi_n']= numpy.copy(self.ebqe_psic)
             c['psi_n'] += c[('u',0)]
             vol_frac_w = self.ebqe[('vol_frac',0)]
@@ -3510,7 +3510,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
             materialTypes = self.materialTypes_ebq
             s_w = self.ebq_s_w
             grad_psic = self.ebq_grad_psic
-            
+
             c['psi_n']= numpy.copy(self.ebq_psic)
             c['psi_n'] += c[('u',0)]
             vol_frac_w = self.ebq[('vol_frac',0)]
@@ -3530,7 +3530,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                                                                         self.Ksw_types,
                                                                         self.b,
                                                                         self.capillaryDiffusionScaling,
-                                                                        self.rwork_psk,self.iwork_psk,     
+                                                                        self.rwork_psk,self.iwork_psk,
                                                                         self.rwork_psk_tolerances,
                                                                         self.rwork_density_w,
                                                                         self.rwork_density_n,
@@ -3571,7 +3571,7 @@ Saturation equation
 and total flow conservation equation
 \begin{eqnarray}
 \label{eq:2p-ff-mb-m}
-\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0 
+\deld\left(\vec f_m - \ten{a}_m \grad \phi_m \right) + r_m &=& 0
 \end{eqnarray}
 
 \begin{table}[ht]
@@ -3595,7 +3595,7 @@ $\ten a_{m,m}$ & $\lambda_t \ten{K}_{s}$ \\
 $F_i $ & $\lambda_i/\lambda_t $, $i=w,n$  \\
 $\grad \psi_c $ & $\od{\psi_c}{S_w}\grad S_w $  \\
 $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
-\hline 
+\hline
 \end{tabular}
 \end{table}
 
@@ -3605,7 +3605,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
     (normalized) mass flux for each phase is
 
        \vec \sigma_i = - \ten{a}_{i}\grad \phi_i,    i=w,n
-    
+
     and
        \psi_{i} = p_{i}/|\vec g|\rho_{w,0}
        b        = \varrho_{n,0}/\varrho_{w,0}
@@ -3620,7 +3620,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
     Note S_n = 1-S_w
 
     needs to be implemented
-    r_m = r_m(\vec x,t) 
+    r_m = r_m(\vec x,t)
 
     TODO:
 
@@ -3662,7 +3662,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
         advection = {0:{0:'nonlinear'}}
         hamiltonian={}
         diffusion = {0:{0:{0:'nonlinear'}}}
-        potential = {0:{0: 'nonlinear'}} 
+        potential = {0:{0: 'nonlinear'}}
         reaction  = {0:{0:'linear'}}
 
         if self.diagonal_conductivity:
@@ -3682,7 +3682,7 @@ $\gvec {\sigma}_t$ & $\gvec \sigma_w + \gvec \sigma_n$\\
                          potential,
                          reaction,
                          hamiltonian,
-			 variableNames,
+                         variableNames,
                          sparseDiffusionTensors = sparseDiffusionTensors,
                          useSparseDiffusion = True)
     def evaluate(self,t,c):
@@ -3758,7 +3758,7 @@ class IncompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_incom
     """
     def __init__(self,
                  nd,
-                 Ksw_types, 
+                 Ksw_types,
                  vgm_n_types,
                  vgm_alpha_types,
                  thetaR_types,
@@ -3791,7 +3791,7 @@ class IncompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_incom
 
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
-        
+
         vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
@@ -3815,7 +3815,7 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_inc
     """
     def __init__(self,
                  nd,
-                 Ksw_types, 
+                 Ksw_types,
                  vgm_n_types,
                  vgm_alpha_types,
                  thetaR_types,
@@ -3850,7 +3850,7 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_inc
 
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
-        
+
         vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
@@ -3875,7 +3875,7 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
     """
     def __init__(self,
                  nd,
-                 Ksw_types, 
+                 Ksw_types,
                  vgm_n_types,
                  vgm_alpha_types,
                  thetaR_types,
@@ -3897,7 +3897,7 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
                  satModelIndex_other=2):
         IncompressibleFractionalFlowSaturationMualemVanGenuchten.__init__(self,
                                                                           nd,
-                                                                          Ksw_types, 
+                                                                          Ksw_types,
                                                                           vgm_n_types,
                                                                           vgm_alpha_types,
                                                                           thetaR_types,
@@ -3932,7 +3932,7 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
                                                   'd')
         if 0 <= self.satModelIndex_other and self.satModelIndex_other < len(modelList):
             self.satModel_other = modelList[self.satModelIndex_other]
-            #other model's saturation trial functions at this models interpolation points 
+            #other model's saturation trial functions at this models interpolation points
             self.u_ip[('v_other',0)] = numpy.zeros((self.satModel_me.mesh.nElements_global,
                                                     self.satModel_me.u[0].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints,
                                                     self.satModel_other.nDOF_trial_element[0]),
@@ -3978,7 +3978,7 @@ class IncompressibleFractionalFlowSaturationMualemVanGenuchtenSplitAdvDiff(Incom
             copyInstructions = {'reset_uList':True}
             #print "advDiff satModel_me= %s after \n u_me= %s " % (self.satModelIndex_me,
             #                                                      self.satModel_me.u[0].dof)
-            #                                                      
+            #
 
             return copyInstructions
         else:
@@ -3991,7 +3991,7 @@ class CompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_compres
     """
     def __init__(self,
                  nd,
-                 Ksw_types, 
+                 Ksw_types,
                  vgm_n_types,
                  vgm_alpha_types,
                  thetaR_types,
@@ -4030,7 +4030,7 @@ class CompressibleFractionalFlowPressureMualemVanGenuchten(TwophaseDarcy_compres
 
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
-        
+
         vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
@@ -4055,7 +4055,7 @@ class CompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_compr
     """
     def __init__(self,
                  nd,
-                 Ksw_types, 
+                 Ksw_types,
                  vgm_n_types,
                  vgm_alpha_types,
                  thetaR_types,
@@ -4096,7 +4096,7 @@ class CompressibleFractionalFlowSaturationMualemVanGenuchten(TwophaseDarcy_compr
 
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
-        
+
         vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
@@ -4120,7 +4120,7 @@ class IncompressibleFractionalFlowPressureSimplePSKs(TwophaseDarcy_incompressibl
     """
     def __init__(self,
                  nd,
-                 Ksw_types, 
+                 Ksw_types,
                  thetaR_types,
                  thetaSR_types,
                  dimensionless_gravity,
@@ -4149,7 +4149,7 @@ class IncompressibleFractionalFlowPressureSimplePSKs(TwophaseDarcy_incompressibl
 
         for input in [thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
-        
+
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
         Sw_min_types   = thetaR_types/thetaS_types
@@ -4169,7 +4169,7 @@ class IncompressibleFractionalFlowSaturationSimplePSKs(TwophaseDarcy_incompressi
     """
     def __init__(self,
                  nd,
-                 Ksw_types, 
+                 Ksw_types,
                  thetaR_types,
                  thetaSR_types,
                  dimensionless_gravity,
@@ -4200,7 +4200,7 @@ class IncompressibleFractionalFlowSaturationSimplePSKs(TwophaseDarcy_incompressi
 
         for input in [thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
-        
+
         vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
@@ -4222,7 +4222,7 @@ class PressurePressureIncompressibleFractionalFlowPressureMualemVanGenuchten(Two
     """
     def __init__(self,
                  nd,
-                 Ksw_types, 
+                 Ksw_types,
                  vgm_n_types,
                  vgm_alpha_types,
                  thetaR_types,
@@ -4255,7 +4255,7 @@ class PressurePressureIncompressibleFractionalFlowPressureMualemVanGenuchten(Two
 
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
-        
+
         vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
@@ -4279,7 +4279,7 @@ class PressurePressureIncompressibleFractionalFlowSaturationMualemVanGenuchten(T
     """
     def __init__(self,
                  nd,
-                 Ksw_types, 
+                 Ksw_types,
                  vgm_n_types,
                  vgm_alpha_types,
                  thetaR_types,
@@ -4314,7 +4314,7 @@ class PressurePressureIncompressibleFractionalFlowSaturationMualemVanGenuchten(T
 
         for input in [vgm_n_types,vgm_alpha_types,thetaR_types,thetaSR_types]:
             assert len(input)==self.nMaterialTypes
-        
+
         vgm_m_types    = 1.0-1.0/vgm_n_types
         thetaS_types   = thetaSR_types + thetaR_types
         Sw_max_types   = numpy.ones((self.nMaterialTypes,),'d')
@@ -4337,8 +4337,8 @@ class PressurePressureIncompressibleFractionalFlowSaturationMualemVanGenuchten(T
 class GroundwaterTransportCoefficients(TC_base):
     from proteus.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate_hetMat
     """
-    groundwater advection-dispersion equation with coefficients varying by material type and variable 
-    velocity 
+    groundwater advection-dispersion equation with coefficients varying by material type and variable
+    velocity
     """
     def __init__(self,nc=1,nd=2,
                  omega_types=numpy.array([0.3]),
@@ -4348,7 +4348,7 @@ class GroundwaterTransportCoefficients(TC_base):
                  meModelId = 0,
                  flowModelId = None,
                  velocityFunctions = None):
-        
+
         self.alpha_L_types = alpha_L_types
         self.alpha_T_types = alpha_T_types
         self.omega_types   = omega_types
@@ -4357,7 +4357,7 @@ class GroundwaterTransportCoefficients(TC_base):
         self.flowModelId = flowModelId
         self.flowModel   = None
         self.meModelId   = meModelId
-        
+
         mass = {}
         advection = {}
         diffusion = {}
@@ -4427,16 +4427,16 @@ class GroundwaterTransportCoefficients(TC_base):
 
         """
         if self.velocityFunctions != None:
-           for ci in range(self.nc):
-               if len(c['x'].shape) == 3:
-                   for i in range(c['x'].shape[0]):
-                       for j in range(c['x'].shape[1]):
-                           c[('velocity',ci)][i,j,:] = self.velocityFunctions[ci](c['x'][i,j],t)
-               elif len(c['x'].shape) == 4:
-                   for i in range(c['x'].shape[0]):
-                       for j in range(c['x'].shape[1]):
-                           for k in range(c['x'].shape[2]):
-                               c[('velocity',ci)][i,j,k,:] = self.velocityFunctions[ci](c['x'][i,j,k],t)
+            for ci in range(self.nc):
+                if len(c['x'].shape) == 3:
+                    for i in range(c['x'].shape[0]):
+                        for j in range(c['x'].shape[1]):
+                            c[('velocity',ci)][i,j,:] = self.velocityFunctions[ci](c['x'][i,j],t)
+                elif len(c['x'].shape) == 4:
+                    for i in range(c['x'].shape[0]):
+                        for j in range(c['x'].shape[1]):
+                            for k in range(c['x'].shape[2]):
+                                c[('velocity',ci)][i,j,k,:] = self.velocityFunctions[ci](c['x'][i,j,k],t)
 
     def evaluate(self,t,c):
         """
@@ -4464,7 +4464,7 @@ class GroundwaterTransportCoefficients(TC_base):
                 print c[('df',ci,ci)].shape
                 print "no v---------------------"
                 raise RuntimeError
-           
+
             self.groundwaterTransportCoefficientsEvaluate_hetMat(self.d[ci],
                                                                  materialTypes,
                                                                  self.omega_types,
@@ -4484,8 +4484,8 @@ class GroundwaterTransportCoefficients(TC_base):
 class MultiphaseGroundwaterTransportCoefficients(TC_base):
     from proteus.ctransportCoefficients import variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat
     """
-    groundwater advection-dispersion equation with coefficients varying by material type and variable 
-    velocity 
+    groundwater advection-dispersion equation with coefficients varying by material type and variable
+    velocity
     """
     def __init__(self,nc=1,nd=2,
                  omega_types=numpy.array([0.3]),
@@ -4495,7 +4495,7 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
                  meModelId = 0,
                  flowModelId = None,
                  velocityFunctions = None):
-        
+
         self.alpha_L_types = alpha_L_types
         self.alpha_T_types = alpha_T_types
         self.omega_types   = omega_types
@@ -4504,7 +4504,7 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
         self.flowModelId = flowModelId
         self.flowModel   = None
         self.meModelId   = meModelId
-        
+
         mass = {}
         advection = {}
         diffusion = {}
@@ -4579,16 +4579,16 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
 
         """
         if self.velocityFunctions != None:
-           for ci in range(self.nc):
-               if len(c['x'].shape) == 3:
-                   for i in range(c['x'].shape[0]):
-                       for j in range(c['x'].shape[1]):
-                           c[('velocity',ci)][i,j,:] = self.velocityFunctions[ci](c['x'][i,j],t)
-               elif len(c['x'].shape) == 4:
-                   for i in range(c['x'].shape[0]):
-                       for j in range(c['x'].shape[1]):
-                           for k in range(c['x'].shape[2]):
-                               c[('velocity',ci)][i,j,k,:] = self.velocityFunctions[ci](c['x'][i,j,k],t)
+            for ci in range(self.nc):
+                if len(c['x'].shape) == 3:
+                    for i in range(c['x'].shape[0]):
+                        for j in range(c['x'].shape[1]):
+                            c[('velocity',ci)][i,j,:] = self.velocityFunctions[ci](c['x'][i,j],t)
+                elif len(c['x'].shape) == 4:
+                    for i in range(c['x'].shape[0]):
+                        for j in range(c['x'].shape[1]):
+                            for k in range(c['x'].shape[2]):
+                                c[('velocity',ci)][i,j,k,:] = self.velocityFunctions[ci](c['x'][i,j,k],t)
 
     def evaluate(self,t,c):
         """
@@ -4619,7 +4619,7 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
                 print c[('df',ci,ci)].shape
                 print "no v---------------------"
                 raise RuntimeError
-           
+
             self.variablySaturatedGroundwaterTransportCoefficientsEvaluate_hetMat(self.d[ci],
                                                                                   materialTypes,
                                                                                   vol_frac,
@@ -4637,8 +4637,8 @@ class MultiphaseGroundwaterTransportCoefficients(TC_base):
 class VariablySaturatedGroundwaterEnergyTransportCoefficients(MultiphaseGroundwaterTransportCoefficients):
     from proteus.ctransportCoefficients import variablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat
     """
-    groundwater heat equation with coefficients varying by material type and variable 
-    velocity 
+    groundwater heat equation with coefficients varying by material type and variable
+    velocity
     """
     def __init__(self,nc=1,nd=2,
                  density_w=998.2, #kg/m^3
@@ -4653,7 +4653,7 @@ class VariablySaturatedGroundwaterEnergyTransportCoefficients(MultiphaseGroundwa
                  specificHeat_s_types=numpy.array([0.004167]), #W d / (kg K) 1.0e-4, W hr/g-C need to convert
                  lambda_sat_types=numpy.array([0.58]),#W/m-K need to convert
                  lambda_dry_types=numpy.array([0.3]),#W/m-K need to convert
-                 lambda_ani_types=numpy.array([1.0,1.0,1.0]), 
+                 lambda_ani_types=numpy.array([1.0,1.0,1.0]),
                  meModelId = 0,
                  flowModelId = None,
                  velocityFunctions = None):
@@ -4675,7 +4675,7 @@ class VariablySaturatedGroundwaterEnergyTransportCoefficients(MultiphaseGroundwa
         self.lambda_dry_types = lambda_dry_types
         self.lambda_ani_types = lambda_ani_types
         self.nd = nd
-        
+
     def evaluate(self,t,c):
         """
         TODO
@@ -4705,7 +4705,7 @@ class VariablySaturatedGroundwaterEnergyTransportCoefficients(MultiphaseGroundwa
                 print c[('df',ci,ci)].shape
                 print "no v---------------------"
                 raise RuntimeError
-           
+
             self.variablySaturatedGroundwaterEnergyTransportCoefficientsEvaluate_hetMat(self.density_w,
                                                                                         self.density_n,
                                                                                         self.specificHeat_w,
@@ -4735,20 +4735,20 @@ class VariablySaturatedGroundwaterEnergyTransportCoefficients(MultiphaseGroundwa
 class GroundwaterTransportCoefficientsELLAM(TC_base):
     from proteus.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate
     """
-    groundwater advection-dispersion equation with constant coefficients but variable 
-    velocity 
+    groundwater advection-dispersion equation with constant coefficients but variable
+    velocity
     can have a spatially varying 'reaction' term r(x,t) for testing
 
     differentiates between Darcy velocity and 'adjoint' and 'characteristic' velocities
     anything labeled just velocity corresponds to Darcy velocity
 
-    computes the characteristic and adjoint velocities as 
-       q_e = q_e/\bar{\omega}_e   on element \Omega_e where \bar{\omega_e} is the average 
+    computes the characteristic and adjoint velocities as
+       q_e = q_e/\bar{\omega}_e   on element \Omega_e where \bar{\omega_e} is the average
     TODO
         figure out how to get reference point quadrature values here
 
         allow differerent velocity reps for different components?
- 
+
         move python loops in velocity setup to cython
     """
     def __init__(self,nc=1,
@@ -4826,12 +4826,12 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
             #by default all point to first component of flow
             self.flowVelocityComponentMap = {}
             for ci in range(self.nc):
-                self.flowVelocityComponentMap[ci] = 0 
+                self.flowVelocityComponentMap[ci] = 0
     def initializeMesh(self,mesh):
         self.mesh = mesh
         #adjoint and characteristic velocities are the same for a linear problem
-        self.characteristic_velocity_dofs = {}; 
-        self.characteristic_velocity_l2g  = {}; 
+        self.characteristic_velocity_dofs = {};
+        self.characteristic_velocity_l2g  = {};
         #TODO This is not going to be consistent with BDM representation
         if self.velocitySpaceFlag == 'c0p1':
             for ci in range(self.nc):
@@ -4871,7 +4871,7 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
             #rt0 can use same representation because just uses local dofs, but doesn't really stay in the same space
             self.adjoint_velocity_interpolation_values = self.velocity_interpolation_values
             self.adjoint_velocity_l2g         = self.velocity_l2g
-            self.characteristic_velocity_dofs = self.adjoint_velocity_dofs 
+            self.characteristic_velocity_dofs = self.adjoint_velocity_dofs
             self.characteristic_velocity_l2g  = self.adjoint_velocity_l2g
 
     def initializeElementQuadrature(self,t,cq):
@@ -4896,7 +4896,7 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
                 #
                 self.adjoint_velocitySpace[ci].getBasisValues(self.elementQuadraturePoints,self.q[('adjoint_velocity_v',ci)])
             self.q[('characteristic_velocity',ci)] = self.q[('adjoint_velocity',ci)]
-    
+
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         """
         Give the TC object access to the exterior element boundary quadrature storage
@@ -4953,7 +4953,7 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
                     self.velocity[ci].projectFromInterpolationConditions(self.velocity_interpolation_values[ci])
                     self.velocity[ci].getValues(self.q[('v',ci)],self.q[('velocity',ci)])
                     self.velocity[ci].getValuesGlobalExteriorTrace(self.ebqe[('v',ci)],self.ebqe[('velocity',ci)])
-            
+
                 #manual evaluation for now
                 elif self.velocitySpaceFlag in ['rt0','bdm1']:
                     if self.velocitySpaceFlag == 'rt0':
@@ -5071,7 +5071,7 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
                         for k in range(q['dV'].shape[1]):
                             omega_e += q['dV'][eN,k]*q[('dm',0,0)][eN,k]
                             vol_e   += q['dV'][eN,k]
-                        self.adjoint_velocity_interpolation_values[ci][eN] *= vol_e/(omega_e+1.e-12) 
+                        self.adjoint_velocity_interpolation_values[ci][eN] *= vol_e/(omega_e+1.e-12)
                     #
                 #evaluate velocity degrees of freedom from its interpolation conditions
                 self.adjoint_velocity[ci].projectFromInterpolationConditions(self.adjoint_velocity_interpolation_values[ci])
@@ -5254,7 +5254,7 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
                                                              self.vt.nSpace_global),'d')
 
             self.need_ebq_arrays = False
-        
+
     def evaluateReactions(self,t,c):
         if self.reactionTerms != None and c.has_key('x') and c.has_key(('r',0)):
             self.reactionTerms.evaluate(t,c)
@@ -5288,7 +5288,7 @@ class GroundwaterTransportCoefficientsELLAM(TC_base):
         if self.q[('velocity',0)].shape == c[('df',0,0)].shape:
             if self.needToEvaluateVelocity:
                 evaluatedVelocity = self.evaluateVelocity(t,c)
-                
+
         for ci in range(self.nc):
             if self.q[('velocity',ci)].shape == c[('df',ci,ci)].shape:
                 v = self.q[('velocity',ci)]

@@ -28,7 +28,7 @@ class SimulationProcessor:
     TO DO
 
     be able to append data to file correctly
-    
+
     """
     import math
     defaultFlags = {'simulationName':None,       #label for simulation
@@ -36,11 +36,11 @@ class SimulationProcessor:
                     'dataFile':'results.dat',    #file for holding results
                     'dataDir' :'.',              #where file is located
                     'appendResults':False,       #append to existing data files?
-                    'echo':False,                #print to screen  
+                    'echo':False,                #print to screen
                     'components':[0],            #list of components to monitor
                     'errorQuantities':[None],    #quantities in which to estimate error
                     'errorNorms':[None],         #norms to use for error calc
-                    'errorTimes':[None],         #time levels at which to estimate error (All,Last, ...), 
+                    'errorTimes':[None],         #time levels at which to estimate error (All,Last, ...),
                     'errorTypes':[None],         #types of error to calculate (u-u_h,mass, etc)
                     'plotQuantities':[None],     #quantities to plot
                     'plotTimes':[None],          #time levels to plot (All,Last,tList ...
@@ -55,7 +55,7 @@ class SimulationProcessor:
     ErrorQuantities = ['m','u','grad(u)','velocity']
     #possible error norms
     ErrorNorms      = ['L1','L2','LI','TV','H1','H1semi','W11','W11semi',
-                       'L1_L1','L1_LI','L2_L2','L2_LI','TV_L1','TV_LI'] 
+                       'L1_L1','L1_LI','L2_L2','L2_LI','TV_L1','TV_LI']
     #
     ErrorTimes      = ['All','Last','tList']
     #type of error to check (e.g., mass balance,
@@ -65,7 +65,7 @@ class SimulationProcessor:
     #
     PlotTimes       = ['All','Last','Init','tList']
     #
-    PlotQuantities  = ['u','u_exact','velocity','velocity_exact',"q:('%s',%d)","q:('%s',%d,%d)"] 
+    PlotQuantities  = ['u','u_exact','velocity','velocity_exact',"q:('%s',%d)","q:('%s',%d,%d)"]
     #
     PlotOptions     = {'ensight':{'on':False},
                        'gnuplot':{'on':False,'setGnuplotGridSize':True},
@@ -96,7 +96,7 @@ class SimulationProcessor:
         self.stepPlotCalled['ensight']=False; self.stepPlotCalled['ensightElementQuantities']=False
         self.plotWindowStart= {}
         self.nLevels    = nLevels
-        self.flags = {}#force a deep copy? 
+        self.flags = {}#force a deep copy?
         for key,val in SimulationProcessor.defaultFlags.iteritems():
             self.flags[key] = val
         #mwf for postprocessing nodal values of coefficients etc
@@ -151,7 +151,7 @@ class SimulationProcessor:
                 #end for enorm
             #end for
         #end if
-        
+
         #save info about the spatial mesh?
         self.simulationData = {}
         self.simulationData['spatialMesh'] = {}
@@ -202,7 +202,7 @@ class SimulationProcessor:
             #print "SimTools opening dataStorage file=%s dataStorage=%s " % (absfile,self.dataStorage)
             assert self.dataStorage != None, "dataStorage == None storeTimes=%s absfile=%s " % (self.flags['storeTimes'],
                                                                                                 absfile)
-            
+
         #end storing something
 
     #end init
@@ -219,7 +219,7 @@ class SimulationProcessor:
 
           TO DO:
             local mass balance
-            solution plotting of initial condition? 
+            solution plotting of initial condition?
         """
         self.timeValues.append(tsim)
         p = self.pFile; n = self.nFile
@@ -309,7 +309,7 @@ class SimulationProcessor:
             #      so we enforce that either q: entries are plotted or ebq_global
             #element quadrature entries
             self.plottingQuadratureValuesForEnsight={'elements':False,'elementBoundaries':False}
-            
+
             for quant in self.flags['plotQuantities']:
                 recType = quant.split(':')
                 if len(recType) > 1 and recType[0] == 'q': #found element quadrature quantity
@@ -397,14 +397,14 @@ class SimulationProcessor:
 
         #end ensight configuration
 #cek moving to Viewers.V_base
-#         if (('Init' in self.flags['plotTimes'] or 'All' in self.flags['plotTimes']) and 
+#         if (('Init' in self.flags['plotTimes'] or 'All' in self.flags['plotTimes']) and
 #             'u' in self.flags['plotQuantities'] and 'viewerType' in dir(Viewers)):#
 #             #and  p.initialConditions != None ):
 #             dgrid = (n.nn-1)*(2**n.nLevels) #default should be 50
 #             #mwf debug
 #             #import pdb
 #             #pdb.set_trace()
-            
+
 #             if self.plotOffSet == None:
 #                self.plotOffSet = Viewers.windowNumber #keep from orphaning windows?
 #             #don't reset window number
@@ -424,7 +424,7 @@ class SimulationProcessor:
 #                 self.ensightTimeSeries.append(tsim)
 #cek
         #
-        if (('Init' in self.flags['storeTimes'] or 'All' in self.flags['storeTimes']) and 
+        if (('Init' in self.flags['storeTimes'] or 'All' in self.flags['storeTimes']) and
             p.initialConditions != None):
             if 'u' in self.flags['storeQuantities']:
                 mlvt.levelModelList[-1].saveSolution()
@@ -484,7 +484,7 @@ class SimulationProcessor:
 
         if 'Last' in self.flags['errorTimes'] or tsim in self.flags['errorTimes']:
             self.stepProcessError(mlvt,tsim)
-            
+
         #now look at global mass balance (could do similar thing each step too)
         if 'globalMassBalance' in self.flags['errorTypes']:
             for il,m in enumerate(mlvt.levelModelList):
@@ -498,7 +498,7 @@ class SimulationProcessor:
                                          (tsim,ci,il,self.errorData[ci][il]['globalMassF'][-1],ci,il,
                                           self.errorData[ci][il]['globalMassF'][-1]-self.errorData[ci][il]['globalMass0']))
                         #end if
-                    #end if 
+                    #end if
                 #end for ci
             #end for il
         #end calc globalMassBalance
@@ -515,12 +515,12 @@ class SimulationProcessor:
                                          (tsim,ci,il,self.errorData[ci][il]['globalHeavisideMassF'][-1],ci,il,
                                           abs(self.errorData[ci][il]['globalHeavisideMassF'][-1]-self.errorData[ci][il]['globalHeavisideMass0'])))
                         #end if
-                    #end if 
+                    #end if
                 #end for ci
             #end for il
         #end calc globalMassBalance
 
-        #compute space-time norms, ... 
+        #compute space-time norms, ...
         if 'numericalSolution' in self.flags['errorTypes']:
             for il,m in enumerate(mlvt.levelModelList):
                 for ci in range(p.coefficients.nc):
@@ -599,7 +599,7 @@ class SimulationProcessor:
             mlvt.levelModelList[-1].u[0].femSpace.endTimeSeriesEnsight(self.ensightTimeSeries,
                                                                   self.flags['plotOptions']['ensight']['caseFileName'],
                                                                   self.flags['plotOptions']['ensight']['caseFileName'])
-        
+
         #
         #assume that 'u' taken care of in step process???
         if 'Last' in self.flags['storeTimes']:
@@ -615,7 +615,7 @@ class SimulationProcessor:
             ##if
             #store everything basically? ...
             #if 'multilevelModel' in self.flags['storeQuantities']:
-            #    #need to make 
+            #    #need to make
             #    self.dataStorage[('multilevelModel',tsim)]=mlvt
 #
         #if
@@ -626,10 +626,10 @@ class SimulationProcessor:
         """
         TO DO
         save error to disk
-        make sure can append if necessary? 
+        make sure can append if necessary?
         """
         if self.flags['storeTimes'] != [None]:
-            assert self.dataStorage != None, "dataStorage None storeTimes= %s " % self.flags['storeTimes'] 
+            assert self.dataStorage != None, "dataStorage None storeTimes= %s " % self.flags['storeTimes']
             if 'simulationData' in self.flags['storeQuantities']:
                 self.dataStorage['timeValues']    = self.timeValues
                 self.dataStorage['simulationData']= self.simulationData
@@ -644,7 +644,7 @@ class SimulationProcessor:
             #
         #don't store anything
     #end def
-    
+
     def stepProcessError(self,mlvt,tsim):
         """
         calculate desired error quantities for a single step
@@ -668,7 +668,7 @@ class SimulationProcessor:
         hasAnalyticalSolution = {}
         hasAnalyticalSolutionVelocity = {}
         for ci in range(p.coefficients.nc):
-            hasAnalyticalSolution[ci] = (self.analyticalSolution.has_key(ci)  and 
+            hasAnalyticalSolution[ci] = (self.analyticalSolution.has_key(ci)  and
                                          self.analyticalSolution[ci] != None)
             hasAnalyticalSolutionVelocity[ci] = ('analyticalSolutionVelocity' in dir(p) and
                                                  p.analyticalSolutionVelocity != None)
@@ -702,7 +702,7 @@ class SimulationProcessor:
                         #mwf debug
                         logEvent("SimTools proj velocity for error calling projectVelocityToFinestLevelNC")
                         velproj[ci] = projectVelocityToFinestLevelNC(mlvt,il,ci)
-                        
+
                 for ci in range(p.coefficients.nc):
                     if ci in self.flags['components']:
                         if not hasAnalyticalSolution[ci]:
@@ -712,7 +712,7 @@ class SimulationProcessor:
                             veldense = mlvt.levelModelList[-1].q[('velocity',ci)]
                         mFine = mlvt.levelModelList[-1]
 
-                        calcL2u = ('L2' in self.flags['errorNorms'] and 
+                        calcL2u = ('L2' in self.flags['errorNorms'] and
                                    'u' in self.flags['errorQuantities'])
                         if calcL2u:
                             err = -12345.0
@@ -723,7 +723,7 @@ class SimulationProcessor:
                                                              m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.elementQuadratureWeights.values()[0],
                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],tsim)
-                            
+
                                 exa = Norms.L2errorSFEMvsAF2(zeroFunction(),
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
@@ -741,7 +741,7 @@ class SimulationProcessor:
                                 logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
                         #if calcL2u
-                        calcL1u = ('L1' in self.flags['errorNorms'] and 
+                        calcL1u = ('L1' in self.flags['errorNorms'] and
                                    'u' in self.flags['errorQuantities'])
                         if calcL1u:
                             err = -12345.0
@@ -761,7 +761,7 @@ class SimulationProcessor:
                                 err = Norms.L1errorSFEM(mFine.q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],udense[0:mFine.mesh.subdomainMesh.nElements_owned],uproj[ci][0:mFine.mesh.subdomainMesh.nElements_owned])
                                 exa = Norms.L1errorSFEM(mFine.q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],udense[0:mFine.mesh.subdomainMesh.nElements_owned],
                                                         numpy.zeros(udense[0:mFine.mesh.subdomainMesh.nElements_owned].shape,'d'))
-                                
+
                             kerr = 'error_'+'u'+'_'+'L1'
                             kexa = 'exact_'+'u'+'_'+'L1'
                             self.errorData[ci][il][kerr].append(err)
@@ -795,9 +795,9 @@ class SimulationProcessor:
                             #end if
                             #
                         #calcLIu
-                        calcH1u = ('H1' in self.flags['errorNorms'] and 
+                        calcH1u = ('H1' in self.flags['errorNorms'] and
                                    'u' in self.flags['errorQuantities'])
-                        
+
                         if calcH1u:
                             err = -12345.0; err0 = -12345.0; err1 = -12345.0
                             exa = 1.0; exa0 = 1.0; exa1 = 1.0
@@ -807,14 +807,14 @@ class SimulationProcessor:
                                                               m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.elementQuadratureWeights.values()[0],
                                                               m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],tsim)
-                                
+
                                 exa0 = Norms.L2errorSFEMvsAF2(zeroFunction(),
                                                               m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.elementQuadratureWeights.values()[0],
                                                               m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],tsim)
                             else:
-                                
+
                                 err0 = Norms.L2errorSFEM(mlvt.levelModelList[-1].q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],udense[0:mFine.mesh.subdomainMesh.nElements_owned],uproj[ci][0:mFine.mesh.subdomainMesh.nElements_owned])
                                 exa0 = Norms.L2errorSFEM(mlvt.levelModelList[-1].q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],udense[0:mFine.mesh.subdomainMesh.nElements_owned],
                                                          numpy.zeros(udense[0:mFine.mesh.subdomainMesh.nElements_owned].shape,'d'))
@@ -836,7 +836,7 @@ class SimulationProcessor:
                                                         gradu_dense[0:mFine.mesh.subdomainMesh.nElements_owned],
                                                         numpy.zeros(gradu_dense[0:mFine.mesh.subdomainMesh.nElements_owned].shape,
                                                                       'd'))
-                                
+
                             err = math.sqrt(err0**2 + err1**2)
                             exa = math.sqrt(exa0**2 + exa1**2)
                             kerr = 'error_'+'u'+'_'+'H1'
@@ -847,12 +847,12 @@ class SimulationProcessor:
                                 logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
                         #if calcH1u
-                        calcH1semiU = ('H1semi' in self.flags['errorNorms'] and 
+                        calcH1semiU = ('H1semi' in self.flags['errorNorms'] and
                                        'u' in self.flags['errorQuantities'])
-                        
+
                         if calcH1semiU:
-                            err = -12345.0; 
-                            exa = 1.0; 
+                            err = -12345.0;
+                            exa = 1.0;
                             if hasAnalyticalSolution[ci]:
                                 err = Norms.L2errorVFEMvsAF(gradWrapper(p.analyticalSolution[ci]),
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
@@ -870,7 +870,7 @@ class SimulationProcessor:
                                                         gradu_dense[0:mFine.mesh.subdomainMesh.nElements_owned],
                                                         numpy.zeros(gradu_dense[0:mFine.mesh.subdomainMesh.nElements_owned].shape,
                                                                       'd'))
-                                
+
                             kerr = 'error_'+'u'+'_'+'H1semi'
                             kexa = 'exact_'+'u'+'_'+'H1semi'
                             self.errorData[ci][il][kerr].append(err)
@@ -879,9 +879,9 @@ class SimulationProcessor:
                                 logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
                         #if calcH1semiu
-                        calcW11u = ('W11' in self.flags['errorNorms'] and 
+                        calcW11u = ('W11' in self.flags['errorNorms'] and
                                     'u' in self.flags['errorQuantities'])
-                        
+
                         if calcW11u:
                             err = -12345.0; err0 = -12345.0; err1 = -12345.0
                             exa = 1.0; exa0 = 1.0; exa1 = 1.0
@@ -891,7 +891,7 @@ class SimulationProcessor:
                                                               m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.elementQuadratureWeights.values()[0],
                                                               m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],tsim)
-                                
+
                                 exa0 = Norms.L1errorSFEMvsAF2(zeroFunction(),
                                                               m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
@@ -919,7 +919,7 @@ class SimulationProcessor:
                                                         gradu_dense[0:mFine.mesh.subdomainMesh.nElements_owned],
                                                         numpy.zeros(gradu_dense[0:mFine.mesh.subdomainMesh.nElements_owned].shape,
                                                                       'd'))
-                                
+
                             err = err0 + err1
                             exa = exa0 + exa1
                             kerr = 'error_'+'u'+'_'+'W11'
@@ -930,11 +930,11 @@ class SimulationProcessor:
                                 logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
                         #if calcW11u
-                        calcW11semiU = ('W11semi' in self.flags['errorNorms'] and 
+                        calcW11semiU = ('W11semi' in self.flags['errorNorms'] and
                                         'u' in self.flags['errorQuantities'])
                         if calcW11semiU:
-                            err = -12345.0; 
-                            exa = 1.0; 
+                            err = -12345.0;
+                            exa = 1.0;
                             if hasAnalyticalSolution[ci]:
                                 err = Norms.L1errorVFEMvsAF(gradWrapper(p.analyticalSolution[ci]),
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
@@ -952,7 +952,7 @@ class SimulationProcessor:
                                                         gradu_dense[0:mFine.mesh.subdomainMesh.nElements_owned],
                                                         numpy.zeros(gradu_dense[0:mFine.mesh.subdomainMesh.nElements_owned].shape,
                                                                       'd'))
-                                
+
                             kerr = 'error_'+'u'+'_'+'W11semi'
                             kexa = 'exact_'+'u'+'_'+'W11semi'
                             self.errorData[ci][il][kerr].append(err)
@@ -961,7 +961,7 @@ class SimulationProcessor:
                                 logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
                         #if calcH1semiu
-                        calcTVu = ('TV' in self.flags['errorNorms'] and 
+                        calcTVu = ('TV' in self.flags['errorNorms'] and
                                    'u' in self.flags['errorQuantities'])
                         if calcTVu:
                             err = -12345.0
@@ -987,8 +987,8 @@ class SimulationProcessor:
                                                         gradu_dense[0:mFine.mesh.subdomainMesh.nElements_owned],
                                                         numpy.zeros(gradu_dense[0:mFine.mesh.subdomainMesh.nElements_owned].shape,
                                                                       'd'))
-                                
-                            
+
+
                             kerr = 'error_'+'u'+'_'+'TV'
                             kexa = 'exact_'+'u'+'_'+'TV'
                             self.errorData[ci][il][kerr].append(err)
@@ -1017,7 +1017,7 @@ class SimulationProcessor:
                                 #now try to project velocity to finer grids?
                                 #mwf debug
                                 #print """SimTools calcL2vel ci=%d veldense.shape=%s velproj[ci].shape=%s """ % (ci,veldense.shape,velproj[ci].shape)
- 
+
                                 err = Norms.L2errorVFEM(mlvt.levelModelList[-1].q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],
                                                         veldense[0:mFine.mesh.subdomainMesh.nElements_owned],velproj[ci][0:mFine.mesh.subdomainMesh.nElements_owned])
                                 exa = Norms.L2errorVFEM(mlvt.levelModelList[-1].q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],
@@ -1055,7 +1055,7 @@ class SimulationProcessor:
                                                         veldense[0:mFine.mesh.subdomainMesh.nElements_owned],
                                                         numpy.zeros(veldense[0:mFine.mesh.subdomainMesh.nElements_owned].shape,
                                                                       'd'))
-                                
+
                             kerr = 'error_'+'velocity'+'_'+'L1'
                             kexa = 'exact_'+'velocity'+'_'+'L1'
                             self.errorData[ci][il][kerr].append(err)
@@ -1064,7 +1064,7 @@ class SimulationProcessor:
                                 logEvent("""\nt= %g; %s[%d][%d]= %g;""" % (tsim,kerr,ci,il,err),level=0)
                             #end if
                         #if calcL2vel
-                        
+
                         calcLIvel = ('LI' in self.flags['errorNorms'] and
                                      'velocity' in self.flags['errorQuantities'])
                         if calcLIvel:
@@ -1080,7 +1080,7 @@ class SimulationProcessor:
                                                             m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                             numpy.zeros(m.q[('velocity',ci)][0:m.mesh.subdomainMesh.nElements_owned].shape,
                                                                           'd'))
-                                
+
                             else:
                                 #now try to project velocity to finer grids?
                                 err = max(numpy.absolute(veldense.flat[:]-velproj[ci].flat[:]))
@@ -1122,7 +1122,7 @@ class SimulationProcessor:
                                                                         flux,
                                                                         m.ebq[('w*dS_u',ci)],
                                                                         self.elementResidual[il])
-                    #removing boundary flux from 
+                    #removing boundary flux from
                     if n.conservativeFlux == None or ci not in n.conservativeFlux.keys() or 'dg' in n.conservativeFlux[ci]:
                         cfemIntegrals.calculateConservationResidualDG(self.elementResidual[il],self.conservationResidual[il])
                     else:
@@ -1152,7 +1152,7 @@ class SimulationProcessor:
                             logEvent("""t= %g globalMassF[%d][%d] = %g globalMassDiff[%d][%d]= %g""" % \
                                          (tsim,ci,il,globalMass,ci,il,globErr),level=0)
                         #end if
-                    #end if 
+                    #end if
                 #end for ci
             #end for il
         #end calc globalMassBalance
@@ -1170,7 +1170,7 @@ class SimulationProcessor:
                             logEvent("""t= %g globalHeavisideMassF[%d][%d] = %g globalHeavisideMassDiff[%d][%d]= %g""" % \
                                          (tsim,ci,il,globalMass,ci,il,globErr),level=0)
                         #end if
-                    #end if 
+                    #end if
                 #end for ci
             #end for il
         #end calc globalMassBalance
@@ -1347,7 +1347,7 @@ class SimulationProcessor:
         """
         shelve quantities for a given time instance, if self.storeHeavyData == True
         soon to be deprecated and will use Archiver tools instead
-        
+
 
         Quadrature dictionary quantities are shelved in a dictionary
         whose key is the corresponding quadrature dictionary name.
@@ -1359,7 +1359,7 @@ class SimulationProcessor:
         flags['storeQuantities'] in the format
 
         "q:(%s,%d)",ebq:(%s,%d) etc e.g., "q:('u',0)" will store component 0 solution values from q
-       
+
         dataStorage['q']['x']= [[0.,0.,0.],[...],...] element quadrature points for 1st time called
         dataStorage['q']['t']= [0.0,0.1,...,1.0]
         dataStorage['q']['vals'] = [subset of q at t=0.0, subset of q at t=0.1, ...]
@@ -1383,17 +1383,17 @@ class SimulationProcessor:
         #print """SimTools entering stepStore t=%s dataFile=%s """ % (tsim,self.flags['dataFile'])
         m = mlvt.levelModelList[-1]
         q = {}; ebq = {}; ebq_global = {};
-        solutionData = {}; 
-                        
+        solutionData = {};
+
         for quant in self.flags['storeQuantities']:
             recType = quant.split(':')
             if len(recType) > 1:
                 quadDict = recType[0]
-                stval    = eval(recType[1])    
+                stval    = eval(recType[1])
                 if recType[0] == 'q' and m.q.has_key(stval):
                     q[stval]=m.q[stval]
                     #if not q.has_key('x'):
-                    #    q['x']= m.q['x'] 
+                    #    q['x']= m.q['x']
                 elif recType[0] == 'ebq' and m.ebq.has_key(stval):
                     ebq[stval] = m.ebq[stval]
                     #if not ebq.has_key('x'):
@@ -1409,7 +1409,7 @@ class SimulationProcessor:
                         solutionData[ci][il] = {}
                         solutionData[ci][il]['u_dof'] = im.u[ci].dof
                         solutionData[ci][il]['l2g'] = im.u[ci].femSpace.dofMap.l2g
-            #found quad dict entry for storage            
+            #found quad dict entry for storage
         #end quantities
         for d in ['q','ebq','ebq_global','solutionData']:
             dval = eval(d)
@@ -1443,7 +1443,7 @@ class SimulationProcessor:
         vt = mlvt.levelModelList[-1]
         nd = vt.nSpace_global; nq = nd+1 ; ne = vt.mesh.nElements_global
         quad = Quadrature.SimplexLobattoQuadrature(nd,1)
-        
+
         self.nodalQuadratureInfo['elementQuadraturePoints'] = numpy.array(quad.points,'d')
         self.nodalQuadratureInfo['x'] = numpy.zeros((ne,nq,3),'d')
         self.nodalQuadratureInfo['J'] = numpy.zeros((ne,nq,nd,nd),'d')
@@ -1466,7 +1466,7 @@ class SimulationProcessor:
                                                      self.nodalQuadratureInfo['inverse(J)'],
                                                      self.nodalQuadratureInfo[('grad(v)',cj)])
         #cj
-                                             
+
         #wasteful
         for key in vt.q.keys():
             if key not in self.nodalQuadratureInfo.keys():
@@ -1552,7 +1552,7 @@ class SimulationProcessor:
                                                            mlvt.levelModelList[-1].q['x'][eN,k,2]))
                 pN+=1
         meshOut.close()
-        
+
     def writeEnsightMeshForElementBoundaryQuantities(self,filename,mlvt,tsim=0.0):
         caseOut=open(filename+'.case','a')
         caseOut.write('measured: '+filename+'ebq.geo\n')
@@ -1569,8 +1569,8 @@ class SimulationProcessor:
                                                            mlvt.levelModelList[-1].ebq_global['x'][ebN,k,1],
                                                            mlvt.levelModelList[-1].ebq_global['x'][ebN,k,2]))
                 pN+=1
-        meshOut.close()        
-        
+        meshOut.close()
+
     def writeScalarElementFunctionHeaderEnsight(self,ckey,filename,append=False,firstVariable=True,case_filename=None):
         if case_filename == None:
             case_filename = filename
@@ -1599,7 +1599,7 @@ class SimulationProcessor:
     def plotScalarElementQuantityEnsight(self,ckey,mlvt,tsim):
         """
         Ensight plotting routine to look at scalar quantity stored in element quad dictionary q
-          ckey --- what should be plotted  
+          ckey --- what should be plotted
           p    --- problem definition
           n    --- numerics definition
           mlvt --- multilevel vector transport that holds the quantities to measure
@@ -1634,7 +1634,7 @@ class SimulationProcessor:
     def plotVectorElementQuantityEnsight(self,ckey,mlvt,tsim,scaleOutput=None):
         """
         Ensight plotting routine to look at vector quantity stored in element quad dictionary q
-          ckey --- what should be plotted  
+          ckey --- what should be plotted
           p    --- problem definition
           n    --- numerics definition
           mlvt --- multilevel vector transport that holds the quantities to measure
@@ -1672,11 +1672,11 @@ class SimulationProcessor:
         uOut.close()
 
         self.stepPlotCalled['ensightElementQuantities']= True
-        
+
     def plotScalarGlobalElementBoundaryQuantityEnsight(self,ckey,mlvt,tsim):
         """
         Ensight plotting routine to look at scalar quantity stored in element quad dictionary ebq_global
-          ckey --- what should be plotted  
+          ckey --- what should be plotted
           p    --- problem definition
           n    --- numerics definition
           mlvt --- multilevel vector transport that holds the quantities to measure
@@ -1713,7 +1713,7 @@ class SimulationProcessor:
     def plotVectorGlobalElementBoundaryQuantityEnsight(self,ckey,mlvt,tsim,scaleOutput=None):
         """
         Ensight plotting routine to look at vector quantity stored in element quad dictionary ebq_global
-          ckey --- what should be plotted  
+          ckey --- what should be plotted
           p    --- problem definition
           n    --- numerics definition
           mlvt --- multilevel vector transport that holds the quantities to measure
@@ -1754,7 +1754,7 @@ class SimulationProcessor:
         uOut.close()
 
         self.stepPlotCalled['ensightElementQuantities']= True
-        
+
 #end SimulationProcessor
 
 ########################################################################
@@ -1765,12 +1765,12 @@ def projectToFinestLevel(mlTransport,level,tsim=0.0,verbose=0):
     """
     use multilevel transport prolongation to get fine grid information
     starting at level.
-    
+
     returns quadrature dictionary of projected values on fine grid
     TODO
        appears broken (error values not consistent) 1/13/10
        set uproj to be size of level down to mfine rather than full hiearachy
-     
+
     """
     import numpy
     nLevels = len(mlTransport.uList)
@@ -1822,7 +1822,7 @@ def projectToFinestLevel(mlTransport,level,tsim=0.0,verbose=0):
                 #eN
                 Viewers.datFile.write("\n \n#end uqproj ci=%d level=%d \n" % (ci,level))
                 ggrid = (3-1)*(2**nLevels)
-                title="uqproj ci=%d level=%d " % (ci,level) 
+                title="uqproj ci=%d level=%d " % (ci,level)
                 cmd = "set dgrid3d %d,%d,16; set contour base; set term x11 %i; splot \'%s\' index %i with lines title \"%s\" \n" % (ggrid,ggrid,Viewers.windowNumber,
                                                                                                                                  Viewers.datFilename,
                                                                                                                                  Viewers.plotNumber,
@@ -1859,7 +1859,7 @@ def getIntegrationPointsOnCoarseGrid(xf,lf,P,lc):
     """
     given array of points N^f_e x n_q x 3 on level lf
     generate dictionary on coarse
-    grid that's N^c_e x n_q^c(e_c) x 3 and holds the integration points 
+    grid that's N^c_e x n_q^c(e_c) x 3 and holds the integration points
     assigned to the correct coarse grid element. If using uniform refinement
     should have the same number of integration points per coarse grid element
     but the number depends on the level of refinement eg  n_q^4(lf-lc).
@@ -1877,7 +1877,7 @@ def getIntegrationPointsOnCoarseGrid(xf,lf,P,lc):
     xc = {}
     for ec in range(nEc):
         xc[ec] = {}
-    
+
     for ef in range(nEf):
         ec = ef
         for l in range(ldiff):
@@ -1885,7 +1885,7 @@ def getIntegrationPointsOnCoarseGrid(xf,lf,P,lc):
             #mwf debug
             #print "genCoarseGridX ef=%d l=%d ec=%d ep=%d " % (ef,l,ec,ep)
             ec = ep
-            
+
         for iq in range(nq):
             xc[ec][(ef,iq)] = xf[ef,iq,:]
         #iq
@@ -1901,19 +1901,19 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
     """
     use brute force evaluation to get coarse grid quantities on fine grid
     starting at level.
-    
+
     returns quadrature dictionary of projected values on fine grid
     """
     import numpy
     nLevels = len(mlTransport.levelModelList)
-    
+
     assert 0 <= level and level < nLevels, "projectVelocityToFinestLevelNC range= [0,%d]" % nLevels-1
 
     mFine  = mlTransport.levelModelList[-1]
     mCoarse= mlTransport.levelModelList[level]
     if mCoarse.velocityPostProcessor == None:
         return None
-    
+
     P = generateParentInfo(mlTransport.mlMeshSave)
     nEf = mFine.q['x'].shape[0]; nqf = mFine.q['x'].shape[1]
     lf = nLevels-1 #index into list
@@ -1975,7 +1975,7 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
                     iqc += 1
                 #x
             #ec
-        
+
         #postprocessing type
     #else on level
     if verbose > 2:
@@ -2034,6 +2034,3 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
         #end gnuplot
     #end verbose
     return velciprojFine
-
-
-                    
