@@ -19,7 +19,7 @@ TESTVPPTIMES = False
 class ExplicitLevelSetSolver:
     """
     Implement explicit, stabilized P^1 C^0 HJ level set algorithm from Barth and Sethian 98 (5.2)
-    
+
     """
     def __init__(self,nDOF_global,RKorder=2,solnComponent=0,redistance=False,
                  enforceWeakDir=False,redEpsFact=2.0,redCFL=0.1):
@@ -73,7 +73,7 @@ class ExplicitLevelSetSolver:
 #                                                                          q[('H',ci)].shape,
 #                                                                          q[('dH',ci,ci)].shape,
 #                                                                          phiOut.shape)
-                                                                          
+
             testStuffImpl.advanceStageP1_C0_SGS_lump_noSource(elementDiameters,
                                                               ebq['n'],
                                                               q['abs(det(J))'],
@@ -86,10 +86,10 @@ class ExplicitLevelSetSolver:
                                                               dt,
                                                               phiOut,
                                                               wOut)
-         
-        
-        return 
-    
+
+
+        return
+
     def computeSolution(self,vtran,dt):
         """
         compute \phi^n --> \phi^{n+1}, for \Delta t= t^{n+1}-t^n
@@ -118,7 +118,7 @@ class ExplicitLevelSetSolver:
 ##         #en
         #mwf debug
         #print """\nexLS computeSoln dt=%g\n""" % dt
-        
+
         ci = self.component
         self.advanceStage(vtran.u[ci].dof,self.phiP12,self.w,
                           vtran.q,vtran.ebq,
@@ -204,14 +204,14 @@ class ExplicitLevelSetSolver:
             vtran.u[ci].dof.flat[:] = self.redPhi.flat[:]
         #end redistance
         vtran.calculateCoefficients()
-        
+
         #end if
-        #mwf debug 
+        #mwf debug
         #print """\nAfter advanceStage phiIn = %s
         #phiOut= %s
-        #self.phiP12= %s\n """ % (phiIn,phiOut,self.phiP12) 
+        #self.phiP12= %s\n """ % (phiIn,phiOut,self.phiP12)
 
-        return 
+        return
     #end computeSolution
 
 import TimeIntegration
@@ -264,7 +264,7 @@ class ExplicitLevelSetIntegrator(TimeIntegration.ForwardIntegrator):
             if abs(tOut-t) < 1.0e-15:
                 t = tOut
             self.mlvTran.updateTimeHistory(t)
-            
+
             self.tLast = t
             maxCFL=1.e-6
             if self.mlvTran.modelList[-1].q.has_key(('cfl',ci)):
@@ -279,7 +279,7 @@ class ExplicitLevelSetIntegrator(TimeIntegration.ForwardIntegrator):
         return failedFlag,t
     #def
 #class
-                
+
 
 ########################################################################
 
@@ -294,7 +294,7 @@ def projectToFinestLevel(mlTransport,level,tsim=0.0):
     """
     use multilevel transport prolongation to get fine grid information
     starting at level.
-    
+
     returns quadrature dictionary of projected values on fine grid
     """
     import numpy
@@ -353,7 +353,7 @@ def getIntegrationPointsOnCoarseGrid(xf,lf,P,lc):
     """
     given array of points N^f_e x n_q x 3 on level lf
     generate dictionary on coarse
-    grid that's N^c_e x n_q^c(e_c) x 3 and holds the integration points 
+    grid that's N^c_e x n_q^c(e_c) x 3 and holds the integration points
     assigned to the correct coarse grid element. If using uniform refinement
     should have the same number of integration points per coarse grid element
     but the number depends on the level of refinement eg  n_q^4(lf-lc).
@@ -371,7 +371,7 @@ def getIntegrationPointsOnCoarseGrid(xf,lf,P,lc):
     xc = {}
     for ec in range(nEc):
         xc[ec] = {}
-    
+
     for ef in range(nEf):
         ec = ef
         for l in range(ldiff):
@@ -379,7 +379,7 @@ def getIntegrationPointsOnCoarseGrid(xf,lf,P,lc):
             #mwf debug
             #print "genCoarseGridX ef=%d l=%d ec=%d ep=%d " % (ef,l,ec,ep)
             ec = ep
-            
+
         for iq in range(nq):
             xc[ec][(ef,iq)] = xf[ef,iq,:]
         #iq
@@ -404,7 +404,7 @@ def getCoarseGridBasisValuesOnFinePointsUniform(uc,xc,invJc,nEf,nq):
     xiArray = numpy.zeros((nEc,nqc,3),'d')
     vcArray = numpy.zeros((nEc,nqc,uc.femSpace.max_nDOF_element),'d')
     invJ    = numpy.zeros((nEc,nqc,invJc.shape[2],invJc.shape[3]),'d')#affine
-    
+
     for ec in range(nEc):
         iqc = 0
         for k,x in xc[ec].iteritems():
@@ -415,7 +415,7 @@ def getCoarseGridBasisValuesOnFinePointsUniform(uc,xc,invJc,nEf,nq):
             iqc += 1
         #end x
     #end ec
-    
+
     uc.femSpace.elementMaps.getInverseValues(invJ,
                                              xArray,
                                              xiArray)
@@ -428,7 +428,7 @@ def getCoarseGridBasisValuesOnFinePointsUniform(uc,xc,invJc,nEf,nq):
 def getCoarseGridValuesOnFineUniform(uc,vcArray,xc,nEf,nq):
     """
     given basis representation for coarse grid at fine grid points compute fem function values
-    and return in fine grid array 
+    and return in fine grid array
     """
     nEc = len(xc)
     nqc = len(xc[0]) #needs to be the same for all ec
@@ -449,20 +449,20 @@ def getCoarseGridValuesOnFineUniform(uc,vcArray,xc,nEf,nq):
     #print "getCoarseGridValues uc.dof=%s \n ucvals= %s \n ufvals= %s " % (uc.dof,ucvals,ufvals)
 
     return ufvals
-                            
+
 def projectToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0):
     """
     use brute force evaluation to get coarse grid quantities on fine grid
     starting at level.
-    
+
     returns quadrature dictionary of projected values on fine grid
     """
     import numpy
     verbose = 0
     nLevels = len(mlTransport.modelList)
-    
+
     assert 0 <= level and level < nLevels, "projectToFinestLevelNC range= [0,%d]" % nLevels-1
-    
+
     P = generateParentInfo(mlTransport.mlMeshSave)
     mFine  = mlTransport.modelList[-1]
     mCoarse= mlTransport.modelList[level]
@@ -478,7 +478,7 @@ def projectToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0):
                                                                        mCoarse.q['inverse(J)'],nEf,nqf)
         uqciprojFine = getCoarseGridValuesOnFineUniform(uc,vc,xc,nEf,nqf)
 
-    #mwf debug    
+    #mwf debug
     if verbose > 1:
         import Viewers
         if 'viewerType' in dir(Viewers) and Viewers.viewerType == 'gnuplot' and mFine.nSpace_global == 2:
@@ -491,7 +491,7 @@ def projectToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0):
             #eN
             Viewers.datFile.write("\n \n#end uqproj ci=%d level=%d \n" % (ci,level))
             ggrid = 32
-            title="uqproj ci=%d level=%d " % (ci,level) 
+            title="uqproj ci=%d level=%d " % (ci,level)
             cmd = "set dgrid3d %d,%d,16; set contour base; set term x11 %i; splot \'%s\' index %i with lines title \"%s\" \n" % (ggrid,ggrid,Viewers.windowNumber,
                                                                                                                                  Viewers.datFilename,
                                                                                                                                  Viewers.plotNumber,
@@ -501,7 +501,7 @@ def projectToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0):
             Viewers.newPlot()
             Viewers.newWindow()
             raw_input('press return to continue')
-        
+
             for eN in range(mCoarse.q[('u',ci)].shape[0]):
                 for k in range(mCoarse.q[('u',ci)].shape[1]):
                     Viewers.datFile.write("%12.5e %12.5e %12.5e \n" % (mCoarse.q['x'][eN,k,0],
@@ -511,7 +511,7 @@ def projectToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0):
             #eN
             Viewers.datFile.write("\n \n#end uq ci=%d level=%d \n" % (ci,level))
             ggrid = 32
-            title="uc ci=%d level=%d " % (ci,level) 
+            title="uc ci=%d level=%d " % (ci,level)
             cmd = "set dgrid3d %d,%d,16; set contour base; set term x11 %i; splot \'%s\' index %i with lines title \"%s\" \n" % (ggrid,ggrid,Viewers.windowNumber,
                                                                                                                                  Viewers.datFilename,
                                                                                                                                  Viewers.plotNumber,
@@ -524,25 +524,25 @@ def projectToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0):
     #verbose
     return uqciprojFine
 
-                    
-                    
+
+
 def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
     """
     use brute force evaluation to get coarse grid quantities on fine grid
     starting at level.
-    
+
     returns quadrature dictionary of projected values on fine grid
     """
     import numpy
     nLevels = len(mlTransport.modelList)
-    
+
     assert 0 <= level and level < nLevels, "projectVelocityToFinestLevelNC range= [0,%d]" % nLevels-1
 
     mFine  = mlTransport.modelList[-1]
     mCoarse= mlTransport.modelList[level]
     if mCoarse.velocityPostProcessor == None:
         return None
-    
+
     P = generateParentInfo(mlTransport.mlMeshSave)
     nEf = mFine.q['x'].shape[0]; nqf = mFine.q['x'].shape[1]
     lf = nLevels-1 #index into list
@@ -598,7 +598,7 @@ def projectVelocityToFinestLevelNC(mlTransport,level,ci=0,tsim=0.0,verbose=0):
                     iqc += 1
                 #x
             #ec
-        
+
         #postprocessing type
     #else on level
     if verbose > 2:
@@ -664,7 +664,7 @@ class MultilevelProjectionOperatorsNC:
     """
     A class that takes a hierarchical (multiLevel) mesh and generates
     the interpolation and restriction operators.
-    
+
     restrictList/prolongList -- projection and restriction at only the free nodes
     restrict_bcList/prolong_bcList -- includes dirichlet boundaries as well
 
@@ -682,8 +682,8 @@ class MultilevelProjectionOperatorsNC:
     Using the injection i we can express this in the fine space as
     a(i e_c, i w_c) = <f - a(u_f,w_f),i w_c> writing
     this in matrix form yields p^t A_f p E = p^t R_f
-    
-    --- P1 nonconforming space ---- 
+
+    --- P1 nonconforming space ----
     Try to set up now for nonconforming P1 approximation following Chen_96b.
     Setup prolongation by evaluating coarse grid basis functions at
     fine grid interpolation condition points (face barycenters).
@@ -692,7 +692,7 @@ class MultilevelProjectionOperatorsNC:
     interface of coarse grid elements or not. If so, use average value of coarse
     grid quantity on fine grid. Otherwise just evaluate it
 
-    Use this simple interpolation from coarse to fine as the projection operator.    
+    Use this simple interpolation from coarse to fine as the projection operator.
     Restriction is taken as the matrix of the adjoint of the
     injection, which is simply the transpose of the projection matrix.
 
@@ -732,7 +732,7 @@ class MultilevelProjectionOperatorsNC:
             fine_nFreeDOF_global=0
             for cj in range(self.nc):
                 coarse_nFreeDOF_global += self.dof_bc_DictList[l][cj].nFreeDOF_global
-                fine_nFreeDOF_global   += self.dof_bc_DictList[l+1][cj].nFreeDOF_global            
+                fine_nFreeDOF_global   += self.dof_bc_DictList[l+1][cj].nFreeDOF_global
             rSum = Vec(coarse_nFreeDOF_global)
             rColumnIndeces=[set() for row in range(coarse_nFreeDOF_global)]
             for cj in range(self.nc):
@@ -941,7 +941,7 @@ class AdaptiveForwardIntegrator:
     #end init
     def initialize(self,DTSET=None,t0=0.0):
         """
-        
+
         """
         self.tLast = t0
         self.DTSET = DTSET #if adapting, this is dt0 only
@@ -966,7 +966,7 @@ class AdaptiveForwardIntegrator:
             self.mlvTran.chooseDT(self.DTSET)
             #mwf debug
             #print """fint t=%g tOut=%g DTSET=%s DT=%g """ % (t,tOut,self.DTSET,self.mlvTran.DT)
-            
+
             failedFlag=self.mlNL.solveMultilevel(uList=self.mlvTran.uList,
                                                  rList=self.mlvTran.rList)
 
@@ -975,7 +975,7 @@ class AdaptiveForwardIntegrator:
             self.mlvTran.updateTimeHistory(t)
             #mwf debug
             #print """after solve failedFlag= %s """ % failedFlag
-            
+
         else:
             lastStep = False
             nlSolveFailed = False
@@ -1004,7 +1004,7 @@ class AdaptiveForwardIntegrator:
                                                              rList=self.mlvTran.rList)
                     if nlSolveFailed == False:
                         self.mlvTran.updateStage()
-                        istage += 1                        
+                        istage += 1
                     #mwf debug
                     print """adaptfint t=%g istage=%d failed=%s """ % (t,istage,nlSolveFailed)
                 #end stages
@@ -1014,7 +1014,7 @@ class AdaptiveForwardIntegrator:
                 if nlSolveFailed and self.resetAfterNLfail:
                     for l in range(len(self.mlvTran.uList)):
                         self.mlvTran.uList[l].flat[:] = self.uListSave[l].flat[:] #reuse last time step
-                    
+
                 #
                 if stepOk and not nlSolveFailed:
                     t += self.mlvTran.DT
@@ -1029,7 +1029,7 @@ class AdaptiveForwardIntegrator:
                         nDTfailures += 1
                     failedFlag = (nDTfailures > self.maxDTfailures or
                                   nNLfailures > self.maxNLfailures)
-                    
+
             #end while t < tOut
             self.tLast = t
         #end else do time integration
@@ -1038,7 +1038,7 @@ class AdaptiveForwardIntegrator:
         #Profiling.log(self.mlNL.info(),level=5)
 
         return failedFlag,t
-    
+
     #end calculateSolution
     def writeProgress(self,tn,dt,T):
         """
@@ -1066,18 +1066,18 @@ class AdaptiveForwardIntegrator:
         otherwise, just sets time step to be uniform one
 
         includes adjustment if stepping exactly to output as well
-             
+
         """
         lastStep = False
         stepOk   = True
         if not self.stepAdapt:
             self.mlvTran.chooseDT(self.DTSET)
             if self.stepExact and abs(t+self.mlvTran.DT) > abs(tOut - t*1.0e-8):
-                    self.mlvTran.resetDT()
-                    self.mlvTran.chooseDT(tOut-t)
-                    lastStep = True
-                    #mwf debug
-                    print """adaptfint adjusting DT to %g """ % self.mlvTran.DT
+                self.mlvTran.resetDT()
+                self.mlvTran.chooseDT(tOut-t)
+                lastStep = True
+                #mwf debug
+                print """adaptfint adjusting DT to %g """ % self.mlvTran.DT
             #end stepExact
             return stepOk,lastStep
         #short circuit MultilevelTransport's choose step by asking finest level
@@ -1132,12 +1132,12 @@ class AdaptiveBackwardEuler(TimeIntegration.BackwardEuler):
             print "AdaptBackwardEuler chooseDT NLfail DT=%s " % (self.DT)
         else:
             predFactor = 0.5
-            
+
             #compute error
-            error = 0.0 ; 
+            error = 0.0 ;
             if self.errorType == 'L2_global':
                 for ci in self.m_pred.keys():
-                    #compute predictor at current DT?
+                #compute predictor at current DT?
                     self.m_pred[ci].flat[:]  = self.mt_last[ci].flat[:]
                     self.m_pred[ci].flat[:] *= self.DT
                     self.m_pred[ci].flat[:] += self.m_last[ci].flat[:]
@@ -1146,7 +1146,7 @@ class AdaptiveBackwardEuler(TimeIntegration.BackwardEuler):
                                                           self.m_pred[ci])
                     normci = Norms.L2normSFEM(self.error_weights[ci],
                                               self.m_tmp[ci])
-                    
+
                     errorci= diffci/(normci*self.rtol + self.atol)
                     error  = max(errorci,error)
                 #end ci
@@ -1160,7 +1160,7 @@ class AdaptiveBackwardEuler(TimeIntegration.BackwardEuler):
                                                           self.m_tmp[ci],
                                                           self.m_pred[ci])
                     normci = max(abs(self.m_tmp[ci].flat))
-                    
+
                     errorci= diffci/(normci*self.rtol + self.atol)
                     error  = max(errorci,error)
                 #end ci
@@ -1226,7 +1226,7 @@ def checkOrder(A):
 import NumericalFlux,cnumericalFlux
 class RusanovNumericalFlux_Diagonal_Diffusion_LDG(NumericalFlux.Advection_DiagonalUpwind_Diffusion_LDG):
     """
-    apply numerical flus f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a) where 
+    apply numerical flus f_{num}(a,b) = 1/2(f(a)+f(b)-\bar{\lambda}(b-a) where
     \lambda >= max |f^{\prime}| for a<= u <= b
     this one applies flux to each component of flux separately
     """
@@ -1334,9 +1334,9 @@ class RusanovNumericalFlux_Diagonal_Diffusion_LDG(NumericalFlux.Advection_Diagon
             for (eN,ebN,k),g,x in zip(self.DOFBoundaryConditionsDictList[ci].keys(),
                                       self.DOFBoundaryConditionsDictList[ci].values(),
                                       self.DOFBoundaryPointDictList[ci].values()):
-               #mwf debug
-               #print "Rusanov_DiagonalUpwind computing bcs eN=%d ebN=%d k=%d g=%s" % (eN,ebN,k,g(x,self.vt.T))
-               self.ebq[('u',ci)][eN,ebN,k]=g(x,self.vt.T)
+                #mwf debug
+                #print "Rusanov_DiagonalUpwind computing bcs eN=%d ebN=%d k=%d g=%s" % (eN,ebN,k,g(x,self.vt.T))
+                self.ebq[('u',ci)][eN,ebN,k]=g(x,self.vt.T)
         self.vt.coefficients.evaluate(self.vt.T,self.ebq)
         for ci in range(self.nc):
             if ebq.has_key(('f',ci)):
@@ -1381,7 +1381,7 @@ class RusanovNumericalFlux_Diagonal_Diffusion_LDG(NumericalFlux.Advection_Diagon
                                                                             ebq[('df',ci,ci)],
                                                                             ebq_global[('advectiveFlux',ci)],
                                                                             ebq_global[('dadvectiveFlux_left',ci,ci)])
- 
+
 #
 
 ########################################################################

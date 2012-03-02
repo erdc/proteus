@@ -58,47 +58,47 @@ class OneLevelMCorr(OneLevelTransport):
         import Comm
         """
         Allocate storage and initialize some variables.
-        
+
         uDict   -- a dictionary of FiniteElementFunction objects
-        
+
         phiDict -- a dictionary of FiniteElementFunction objects
-        
+
         testSpaceDict -- a dictionary of FiniteElementSpace objects
-        
+
         dofBoundaryConditionsDict -- a dictionary of DOFBoundaryConditions objects for
         the Dirichlet conditions
-                
+
         coefficients -- a TransportCoefficients object
-        
+
         elementQuadratureDict -- a dictionary of dictionaries of quadrature rules for each
         element integral in each component equation
-        
+
         elementBoundaryQuadratureDict -- a dictionary of dictionaries of quadrature rules
         for each element boundary integral in each component equation
-        
+
         stabilization
-        
+
         shockCapturing
-        
+
         numericalFlux
-        
+
         The constructor sets the input arguments, calculates
         dimensions, and allocates storage. The meanings of variable
         suffixes are
-        
+
         _global          -- per physical domain
         _element         -- per element
         _elementBoundary -- per element boundary
-        
+
         The prefix n means 'number of'.
-        
+
         Storage is divided into quantities required at different sets
         of points or geometric entities. Each type of storage has a
         dictionary for all the quantities of that type. The names
         and dimensions of the storage dictionaries are
-        
+
         e          -- at element
-        q          -- at element quadrature, unique to elements        
+        q          -- at element quadrature, unique to elements
         ebq        -- at element boundary quadrature, unique to elements
         ebq_global -- at element boundary quadrature, unique to element boundary
         ebqe       -- at element boundary quadrature, unique to global, exterior element boundary
@@ -117,7 +117,7 @@ class OneLevelMCorr(OneLevelTransport):
         self.timeTerm=True#allow turning off  the  time derivative
         #self.lowmem=False
         self.testIsTrial=True
-        self.phiTrialIsTrial=True            
+        self.phiTrialIsTrial=True
         self.u = uDict
         self.ua = {}#analytical solutions
         self.phi  = phiDict
@@ -158,42 +158,42 @@ class OneLevelMCorr(OneLevelTransport):
         #determine whether  the stabilization term is nonlinear
         self.stabilizationIsNonlinear = False
         #cek come back
-	if self.stabilization != None:
-	    for ci in range(self.nc):
-		if coefficients.mass.has_key(ci):
-		    for flag in coefficients.mass[ci].values():
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  coefficients.advection.has_key(ci):
-		    for  flag  in coefficients.advection[ci].values():
-			if flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if  coefficients.diffusion.has_key(ci):
-		    for diffusionDict in coefficients.diffusion[ci].values():
-			for  flag  in diffusionDict.values():
-			    if flag != 'constant':
-				self.stabilizationIsNonlinear=True
-		if  coefficients.potential.has_key(ci):
- 		    for flag in coefficients.potential[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if coefficients.reaction.has_key(ci):
-		    for flag in coefficients.reaction[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
-		if coefficients.hamiltonian.has_key(ci):
-		    for flag in coefficients.hamiltonian[ci].values():
-			if  flag == 'nonlinear':
-			    self.stabilizationIsNonlinear=True
+        if self.stabilization != None:
+            for ci in range(self.nc):
+                if coefficients.mass.has_key(ci):
+                    for flag in coefficients.mass[ci].values():
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  coefficients.advection.has_key(ci):
+                    for  flag  in coefficients.advection[ci].values():
+                        if flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if  coefficients.diffusion.has_key(ci):
+                    for diffusionDict in coefficients.diffusion[ci].values():
+                        for  flag  in diffusionDict.values():
+                            if flag != 'constant':
+                                self.stabilizationIsNonlinear=True
+                if  coefficients.potential.has_key(ci):
+                    for flag in coefficients.potential[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if coefficients.reaction.has_key(ci):
+                    for flag in coefficients.reaction[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
+                if coefficients.hamiltonian.has_key(ci):
+                    for flag in coefficients.hamiltonian[ci].values():
+                        if  flag == 'nonlinear':
+                            self.stabilizationIsNonlinear=True
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or 
-                                                 (numericalFluxType != None) or 
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or
+                                                 (numericalFluxType != None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
-	#
+        #
         #calculate some dimensions
         #
         self.nSpace_global    = self.u[0].femSpace.nSpace_global #assume same space dim for all variables
@@ -203,7 +203,7 @@ class OneLevelMCorr(OneLevelTransport):
         self.nDOF_test_element     = [femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
         self.nFreeDOF_global  = [dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
         self.nVDOF_element    = sum(self.nDOF_trial_element)
-        self.nFreeVDOF_global = sum(self.nFreeDOF_global) 
+        self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
         NonlinearEquation.__init__(self,self.nFreeVDOF_global)
         #
@@ -258,7 +258,7 @@ class OneLevelMCorr(OneLevelTransport):
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
         else:
-            for I in self.coefficients.elementBoundaryIntegralKeys: 
+            for I in self.coefficients.elementBoundaryIntegralKeys:
                 elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature
         #
         # find the union of all element quadrature points and
@@ -312,11 +312,11 @@ class OneLevelMCorr(OneLevelTransport):
         self.q['J'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global,self.nSpace_global),'d')
         self.q['inverse(J)'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global,self.nSpace_global),'d')
         self.ebqe['x'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
-	self.ebqe['g'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
-				       self.nElementBoundaryQuadraturePoints_elementBoundary,
-				       max(1,self.nSpace_global-1),
-				       max(1,self.nSpace_global-1)),
-				      'd')
+        self.ebqe['g'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,
+                                       self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                       max(1,self.nSpace_global-1),
+                                       max(1,self.nSpace_global-1)),
+                                      'd')
         self.ebqe['inverse(J)'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global,self.nSpace_global),'d')
         self.ebqe['hat(x)'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
         self.ebqe['bar(x)'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,3),'d')
@@ -352,15 +352,15 @@ class OneLevelMCorr(OneLevelTransport):
         #
         #
         log(memory("element and element boundary Jacobians","OneLevelTransport"),level=4)
-	self.inflowBoundaryBC = {}
-	self.inflowBoundaryBC_values = {}
-	self.inflowFlux = {}
- 	for cj in range(self.nc):
- 	    self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
- 	    self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
- 	    self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
+        self.inflowBoundaryBC = {}
+        self.inflowBoundaryBC_values = {}
+        self.inflowFlux = {}
+        for cj in range(self.nc):
+            self.inflowBoundaryBC[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,),'i')
+            self.inflowBoundaryBC_values[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nDOF_trial_element[cj]),'d')
+            self.inflowFlux[cj] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.internalNodes = set(range(self.mesh.nNodes_global))
-	#identify the internal nodes this is ought to be in mesh
+        #identify the internal nodes this is ought to be in mesh
         ##\todo move this to mesh
         for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
             ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
@@ -385,8 +385,8 @@ class OneLevelMCorr(OneLevelTransport):
         if self.stabilization and self.stabilization.usesGradientStabilization:
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
-             self.timeIntegration = TimeIntegrationClass(self)
-           
+            self.timeIntegration = TimeIntegrationClass(self)
+
         if options != None:
             self.timeIntegration.setFromOptions(options)
         log(memory("TimeIntegration","OneLevelTransport"),level=4)
@@ -394,8 +394,8 @@ class OneLevelMCorr(OneLevelTransport):
         self.calculateQuadrature()
         #lay out components/equations contiguously for now
         self.offset = [0]
-	for ci in range(1,self.nc):
-	    self.offset += [self.offset[ci-1]+self.nFreeDOF_global[ci-1]]
+        for ci in range(1,self.nc):
+            self.offset += [self.offset[ci-1]+self.nFreeDOF_global[ci-1]]
         self.stride = [1 for ci in range(self.nc)]
         #use contiguous layout of components for parallel, requires weak DBC's
         comm = Comm.get()
@@ -439,7 +439,7 @@ class OneLevelMCorr(OneLevelTransport):
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         import PostProcessingTools
-        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)  
+        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         log(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         import Archiver
@@ -485,15 +485,15 @@ class OneLevelMCorr(OneLevelTransport):
                                  self.u[0].femSpace.dofMap.l2g,
                                  self.mesh.elementDiametersArray,
                                  self.u[0].dof,
-                                 self.q[('v',0)], 
-                                 self.q[('grad(v)',0)], 
-                                 self.q[('w*dV_r',0)], 
-                                 self.q[('grad(w)*dV_a',0,0)], 
+                                 self.q[('v',0)],
+                                 self.q[('grad(v)',0)],
+                                 self.q[('w*dV_r',0)],
+                                 self.q[('grad(w)*dV_a',0,0)],
                                  self.coefficients.q_u_ls,
                                  self.coefficients.q_H_vof,
                                  self.q[('u',0)],
                                  self.q[('r',0)],
-                                 self.elementResidual[0], 
+                                 self.elementResidual[0],
                                  self.offset[0],self.stride[0],
                                  r)
         log("Global residual",level=9,data=r)
@@ -504,7 +504,7 @@ class OneLevelMCorr(OneLevelTransport):
         import superluWrappers
         import numpy
         import pdb
-	cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,jacobian)
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,jacobian)
 
         if isinstance(self.u[0].femSpace,C0_AffineLinearOnSimplexWithNodalBasis):
             cJacobian = cMCorr.calculateJacobian
@@ -518,7 +518,7 @@ class OneLevelMCorr(OneLevelTransport):
                 cJacobian = cMCorr2DQ.calculateJacobian
             elif self.nSpace_global == 1:
                 cJacobian = cMCorr1DQ.calculateJacobian
-				      
+
         #cMCorr.calculateJacobian(self.mesh.nElements_global,
         cJacobian(self.mesh.nElements_global,
                                  self.coefficients.epsFactHeaviside,
@@ -527,10 +527,10 @@ class OneLevelMCorr(OneLevelTransport):
                                  self.u[0].femSpace.dofMap.l2g,
                                  self.mesh.elementDiametersArray,
                                  self.u[0].dof,
-                                 self.q[('v',0)], 
-                                 self.q[('grad(v)',0)], 
-                                 self.q[('w*dV_r',0)], 
-                                 self.q[('grad(w)*dV_a',0,0)], 
+                                 self.q[('v',0)],
+                                 self.q[('grad(v)',0)],
+                                 self.q[('w*dV_r',0)],
+                                 self.q[('grad(w)*dV_a',0,0)],
                                  self.coefficients.q_u_ls,
                                  self.coefficients.q_H_vof,
                                  self.csrRowIndeces[(0,0)],self.csrColumnOffsets[(0,0)],
@@ -539,21 +539,21 @@ class OneLevelMCorr(OneLevelTransport):
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
-    
+
     def calculateElementQuadrature(self):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points.
-        
+
         This function should be called only when the mesh changes.
         """
-	#
+        #
         #get physical locations of quadrature points and jacobian information there
-	#assume all components live on the same mesh
+        #assume all components live on the same mesh
         #
         self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
                                                   self.q['x'])
-        if self.movingDomain: 
+        if self.movingDomain:
             if self.tLast_mesh != None:
                 self.q['xt'][:]=self.q['x']
                 self.q['xt']-=self.q['x_last']

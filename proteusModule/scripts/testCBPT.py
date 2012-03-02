@@ -14,8 +14,8 @@ def generateTrajectories(mesh,v,x_source,t_0,t_f):
         e_12= e_0
         e_1 = mesh.elementNeighborsArray[e_0,0]
         if e_1 == -1: e_1 = e_0
-        t_traj.append(t_12); x_traj.append(x_12); e_traj.append(e_12) 
-        t_traj.append(t_1); x_traj.append(x_1); e_traj.append(e_1) 
+        t_traj.append(t_12); x_traj.append(x_12); e_traj.append(e_12)
+        t_traj.append(t_1); x_traj.append(x_1); e_traj.append(e_1)
         t = t_1
     #
     t_traj = numpy.array(t_traj);  e_traj = numpy.array(e_traj,dtype='i')
@@ -30,7 +30,7 @@ def generateMassSource(t_0,t_f,timeflag=0):
         massSource_m = numpy.array([0.0,0.0,1.0,1.0,0.0,0.0,0.0])
     else:
         #constant source value is one
-        massSource_t = numpy.array([t_0-1,t_0,0.5*(t_0+t_f),t_f,t_f+1]) 
+        massSource_t = numpy.array([t_0-1,t_0,0.5*(t_0+t_f),t_f,t_f+1])
         massSource_m = numpy.array([1.0,1.0,1.0,1.0,1.0])
 
     return massSource_t,massSource_m
@@ -39,11 +39,11 @@ def generatePhysicalCoefficients(mesh,nflags,testflag=0):
     decay = numpy.zeros((mesh.nElements_global,nflags),'d'); retardation = numpy.ones((mesh.nElements_global,nflags),'d')
     if testflag == 1:
         #no decay, constant retardation
-        decay.fill(0.0) 
+        decay.fill(0.0)
         retardation.fill(1.5)
     elif testflag == 2:
         #decay, no retardation
-        decay.fill(-0.1) 
+        decay.fill(-0.1)
         retardation.fill(1.)
     else:
         pass
@@ -59,7 +59,7 @@ def test_onesource(nx=11,Lx=1.0,ndt=20,q=1.0,theta=1.0,timeflag=0,testflag=0,plo
     mesh.generateEdgeMeshFromRectangularGrid(nx,Lx)
 
     #assume uniform porosity and velocity to make tracking simple
-    v = q/theta; 
+    v = q/theta;
     #source located at inflow, track over [t_0,t_f] with one particle
     x_source = 0.0; t_0 = 0.0; t_f=1.0; n_p = 1;
 
@@ -104,4 +104,3 @@ def test_onesource(nx=11,Lx=1.0,ndt=20,q=1.0,theta=1.0,timeflag=0,testflag=0,plo
 #
 
 test_onesource()
-

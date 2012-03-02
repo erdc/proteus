@@ -1,0 +1,1 @@
+./configure --prefix=${PROTEUS_PREFIX} --disable-universalsdk  --enable-framework=${PROTEUS_PREFIX}/Library/Frameworks --enable-toolbox-glue CPPFLAGS="-I/${PROTEUS_PREFIX}/include" CXXFLAGS="-I${PROTEUS_PREFIX}/include" LDFLAGS="-L${PROTEUS_PREFIX}/lib"

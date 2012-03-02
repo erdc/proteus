@@ -14,7 +14,7 @@ class SC_base:
     TODO:
      Implementation:
       Get data file format straight
-       
+
     """
     def __init__(self,model,nOptions):
         import copy
@@ -77,7 +77,7 @@ class SC_base:
                 log("Time step reduced to machine precision",level=1)
         return retry
     def retryStep_errorFailure(self):
-        self.errorFailures += 1 
+        self.errorFailures += 1
         retry = False
         if self.errorFailures < self.maxErrorFailures:
             self.resetSolution()
@@ -299,7 +299,7 @@ class Osher_controller(SC_base):
         #self.substeps = [self.t_model_last]
         self.setSubsteps([self.t_model_last])
         self.nSteps=0
-        #cek using newton 
+        #cek using newton
         #reset the nonlinear solver to do 1 iteration
         #self.model.solver.maxIts=1
         #self.model.solver.convergenceTest = 'its'
@@ -344,7 +344,7 @@ class Osher_controller(SC_base):
             else:
                 log("Osher converged %12.5e" % (ssError))
             self.nSteps=0
-        
+
     def choose_dt_model(self):
         #don't modify dt_model
         self.solverFailures=0
@@ -355,7 +355,7 @@ class Osher_controller(SC_base):
         self.set_dt_allLevels()
         #self.substeps=[self.t_model_last]#set to last time step
         self.setSubsteps([self.t_model_last])#set to last time step
-        
+
 class Osher_PsiTC_controller(SC_base):
     def __init__(self,model,nOptions):
         SC_base.__init__(self,model,nOptions)
@@ -455,9 +455,9 @@ class Osher_PsiTC_controller2(SC_base):
             m.timeIntegration.isAdaptive=False
         self.nSteps=0
         self.nStepsOsher=nOptions.psitc['nStepsForce']
-	self.red_ratio=nOptions.psitc['reduceRatio']
+        self.red_ratio=nOptions.psitc['reduceRatio']
         self.start_ratio=nOptions.psitc['startRatio']
-	self.nStepsMax=nOptions.psitc['nStepsMax']		
+        self.nStepsMax=nOptions.psitc['nStepsMax']
     def stepExact_model(self,tOut):
         #pseudo time step
         for m in self.model.levelModelList:
@@ -481,9 +481,9 @@ class Osher_PsiTC_controller2(SC_base):
         self.t = tOut
         self.setSubsteps([tOut])
         self.nSteps=0
-	
 
-	
+
+
         log("Initializing time step on model %s to dt = %12.5e" % (self.model.name,
                                                                    self.dt_model),
             level=1)
@@ -498,8 +498,8 @@ class Osher_PsiTC_controller2(SC_base):
             self.res0 = self.model.solver.solverList[-1].norm_r0
             for m in self.model.levelModelList:
                 m.timeIntegration.choose_dt()
-		
-            self.dt_model = self.start_ratio*self.model.levelModelList[0].timeIntegration.dt		
+
+            self.dt_model = self.start_ratio*self.model.levelModelList[0].timeIntegration.dt
         res = self.model.solver.solverList[-1].norm_r0
         ssError = res/(self.res0*self.rtol + self.atol)
         for m in self.model.levelModelList:
@@ -511,13 +511,13 @@ class Osher_PsiTC_controller2(SC_base):
             self.nSteps+=1
             self.dt_model = m.timeIntegration.dt
             if self.nSteps >= self.nStepsOsher:#start ramping up the time step
-                self.dt_model = self.dt_model*self.red_ratio 
+                self.dt_model = self.dt_model*self.red_ratio
             #log("Osher-PsiTC dt %12.5e" %(self.dt_model),level=1)
             self.set_dt_allLevels()
             #physical time step
             self.t_model = self.substeps[0]
             self.substeps.append(self.substeps[0])
-          
+
 
             log("Osher-PsiTC iteration %d  dt = %12.5e  |res| = %12.5e %g  " %(self.nSteps,self.dt_model,res,(res/self.res0)*100.0),level=1)
         elif self.nSteps >= self.nStepsMax:
@@ -542,7 +542,7 @@ class Osher_PsiTC_controller2(SC_base):
 
 class Osher_FMM_controller(Osher_controller):
     """
-    TODO 
+    TODO
      setup so that can configure from options,
      test with Fast Sweeping
     """
@@ -616,7 +616,7 @@ class Osher_FMM_controller(Osher_controller):
             else:
                 log("Osher FMM finished")
             self.nSteps=0
-        
+
 class Min_dt_controller(SC_base):
     def __init__(self,model,nOptions):
         SC_base.__init__(self,model,nOptions)
@@ -747,7 +747,7 @@ class Min_dt_controller_FCT(Min_dt_controller):
     """
     controller try and implement a piece of FCT methodology where first step is
     a low order solution and the next step corrects is
-    
+
     """
     def __init__(self,model,nOptions):
         Min_dt_controller.__init__(self,model,nOptions)
@@ -758,7 +758,7 @@ class Min_dt_controller_FCT(Min_dt_controller):
     def setInitialGuess(self,uList,rList):
         for m in self.model.levelModelList:
             m.nonlinear_function_evaluations = 0
-            
+
     def errorFailure(self):
         #redo step if it was the low order (step)
         low_order_step = False
@@ -820,7 +820,7 @@ class FLCBDF_controller(SC_base):
             for flcbdf in flcbdfDict.values():
                 self.flcbdfListFlat.append(flcbdf)
     def setInitialGuess(self,uList,rList):
-         for m,u,r in zip(self.model.levelModelList,uList,rList):
+        for m,u,r in zip(self.model.levelModelList,uList,rList):
             for ci in range(m.coefficients.nc):
                 #pass#cek hack, looks like initial guess is bad
                 m.timeIntegration.flcbdf[('u',ci)].setInitialGuess(m.u[ci].dof)
@@ -994,7 +994,7 @@ class HeuristicNL_dt_controller(SC_base):
             unSave[:] = uSave
             uSave[:]=u
             rSave[:]=r
-        
+
 
     def retryStep_solverFailure(self):
         """
@@ -1004,7 +1004,7 @@ class HeuristicNL_dt_controller(SC_base):
         retry = False
         if self.solverFailures < self.maxSolverFailures:
             self.resetSolution()
-            #basic heuristic step selection just reduce by "failure factor" 
+            #basic heuristic step selection just reduce by "failure factor"
             self.dt_model *= self.dtNLfailureReduceFactor
             if self.dt_model > self.t_model_last*1.0e-8:
                 self.set_dt_allLevels()
@@ -1014,14 +1014,14 @@ class HeuristicNL_dt_controller(SC_base):
                 log("Time step reduced to machine precision",level=1)
         return retry
     def retryStep_errorFailure(self):
-        self.errorFailures += 1 
+        self.errorFailures += 1
         retry = False
         #do not allow adaption based on error failure
         return retry
     def choose_dt_model(self):
-        """ 
+        """
         choose dt after successful step
-        use finest level to pick for now  
+        use finest level to pick for now
         """
         ratio = 1.0
         if self.model.solver.solverList[-1].its < self.nonlinearIterationsFloor:
@@ -1053,42 +1053,42 @@ class GustafssonFullNewton_dt_controller(SC_base):
     """
     Try version of basic Gustafsson and Soederlind 97 time step selection strategy
       that accounts for nonlinear solver performance assuming a full Newton nonlinear
-      solver 
+      solver
 
     Also includes error control based on classical "deadbeat" control
     Right now, decisions based on finest level solve
 
     input: dt_prev
     output: dt
- 
+
     get time step estimate based on temporal error --> dt_e
     get convergence rate estimate from nonlinear solver --> a
     get number of iterations from nonlinear solver --> nnl
 
-    if nonlinear solver converges 
-  
+    if nonlinear solver converges
+
        r_a = phi(a_ref/a)
        r_a = min(r_a_max,max(r_a,r_a_min))
 
     else
-      
+
        if a_ref < a    #convergence rate ok but took too many iterations anyway
          r_a = phi(nnl_ref/nnl)
        else
          r_a = phi(a_ref/a)
        #
-       r_a = min(r_a_max,max(r_a,r_a_min))    
+       r_a = min(r_a_max,max(r_a,r_a_min))
     #
 
     dt = min(dt_e,r_a dt_prev)
 
-    Here, 
+    Here,
      a_ref   -- target convergence rate
      nnl_ref -- target number of nonlinear iterations
      r_a_max -- max growth rate
      r_a_min -- min growth rate
 
-     phi     -- limiter function, defaut is phi(x) = x  
+     phi     -- limiter function, defaut is phi(x) = x
 
     Also includes simple linear predictor for initial guess
 
@@ -1180,7 +1180,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
             unSave[:] = uSave
             uSave[:]=u
             rSave[:]=r
-        
+
 
     def retryStep_solverFailure(self):
         """
@@ -1234,7 +1234,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
         alpha_ref = self.nonlinearConvergenceRate_ref
         nnl_ref   = float(self.nonlinearIterations_ref)
         assert alpha >= 0.0 or nnl == 1, "invalid alpha = %s nnl = %d " % (alpha,nnl)
-        if alpha <= 0.0: 
+        if alpha <= 0.0:
             r_a = self.nonlinearGrowthRateMax #could use nnl here
         else:
             r_a = self.phi(alpha_ref/alpha)
@@ -1242,12 +1242,12 @@ class GustafssonFullNewton_dt_controller(SC_base):
         dtout = dt*r
         log("Gustafsson solver success dt_in= %s alpha=%s alpha_ref=%s nnl=%s nnl_ref=%s r_a=%s, dtout=%s " % (dt,alpha,alpha_ref,nnl,nnl_ref,r_a,dtout),level=1)
         return dtout
-        
+
     def retryStep_errorFailure(self):
         """
         figure out where to make sure that predictor gets called by timeIntegration to setup error estimates
         """
-        self.errorFailures += 1 
+        self.errorFailures += 1
         retry = False
         if self.errorFailures < self.maxErrorFailures:
             self.resetSolution()
@@ -1270,10 +1270,10 @@ class GustafssonFullNewton_dt_controller(SC_base):
             else:
                 log("Time step reduced to machine precision",level=1)
                 self.writeSolverStatisticsForStep()
-                
+
         else:
             self.writeSolverStatisticsForStep()
-            
+
         return retry
     def estimateError(self):
         #mwf debug
@@ -1282,7 +1282,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
         #put call for time integrator's estimate error directly?
         mFine = self.model.levelModelList[-1]
         if (not mFine.timeIntegration.provides_dt_estimate and
-            mFine.timeIntegration.error_estimate != None and 
+            mFine.timeIntegration.error_estimate != None and
             self.useTemporalErrorEstimate):
             error = mFine.timeIntegration.error_estimate
             localError = {}
@@ -1300,13 +1300,13 @@ class GustafssonFullNewton_dt_controller(SC_base):
         for m in self.model.levelModelList:
             m.timeIntegration.choose_dt()
         mFine = self.model.levelModelList[-1]
-        
+
         if (not mFine.timeIntegration.provides_dt_estimate and
             mFine.timeIntegration.error_estimate != None):
             ordInv = 1.0/(mFine.timeIntegration.timeOrder+1.)
             minErr = max(self.errorEstimate,self.timeEps)
-            r  = self.errorSafetyFactor*(self.timeErrorTolerance/minErr)**ordInv              
-            r_e = min(self.errorGrowthRateMax,max(self.errorGrowthRateMin,r))            
+            r  = self.errorSafetyFactor*(self.timeErrorTolerance/minErr)**ordInv
+            r_e = min(self.errorGrowthRateMax,max(self.errorGrowthRateMin,r))
             dt_e = r_e*dtIn
             log("Gustafsson choose_dt_fromError self t=%s dt=%s error= %s minErr= %s r_e=%s r= %s" % (self.t_model,self.dt_model,
                                                                                                       self.errorEstimate,
@@ -1327,7 +1327,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
             m.timeIntegration.initialize_dt(t0,tOut,m.q)
         if self.use_cfl_for_initial_dt:
             maxCFL = 1.0e-6
-            for ci in range(m.nc): 
+            for ci in range(m.nc):
                 if m.q.has_key(('cfl',ci)):
                     maxCFL=max(maxCFL,globalMax(m.q[('cfl',ci)].max()))
                     #mwf debug
@@ -1344,7 +1344,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
                                                                                                self.t_model_last),
             level=1)
     def choose_dt_model(self):
-        """ 
+        """
         choose dt after successful step
         use finest level to pick for now
 
@@ -1392,7 +1392,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
         self.t_model = self.t_model_last + self.dt_model
         for m in self.model.levelModelList:
             m.timeIntegration.set_dt(self.dt_model)
- 
+
     def stepExact_model(self,tOut):
         if self.t_model > tOut - tOut*1.0e-8:
             log("StepControl Gustafsson stepExact t_model= %s tOut= %s t_model_last= %s dt_model= %s setting to %s " % (self.t_model,tOut,self.t_model_last,

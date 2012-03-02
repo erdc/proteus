@@ -30,7 +30,7 @@ pz=1
 #number of levels in mesh
 nLevels = 1
 
-#no stabilization or shock capturing    
+#no stabilization or shock capturing
 subgridError = None
 
 shockCapturing = None
@@ -51,7 +51,7 @@ tolFac = 0.0
 #matrix type
 matrix = SparseMatrix
 
-#convenience flag 
+#convenience flag
 parallel = False#True
 
 if parallel:
@@ -61,7 +61,7 @@ if parallel:
     #-pc_type lu -pc_factor_mat_solver_package
     #can also set -pc_asm_overlap 2 with default asm type (restrict)
     levelLinearSolver = PETSc#
-    #pick number of layers to use in overlap 
+    #pick number of layers to use in overlap
     nLayersOfOverlapForParallel = 0
     #type of partition
     #parallelPartitioningType = MeshParallelPartitioningTypes.node
@@ -77,7 +77,7 @@ else:
     multilevelLinearSolver = LU
     levelLinearSolver = LU
     #numericalFluxType = Advection_DiagonalUpwind_Diffusion_IIPG_exterior
-    
+
 #linear solver parameters
 linearSmoother = None
 #linear solver relative convergence test
@@ -86,4 +86,3 @@ linTolFac = 0.0
 l_atol_res = 1.0e-10
 
 #conservativeFlux =  {0:'pwl'}
-

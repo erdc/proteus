@@ -4,8 +4,8 @@ from proteus.default_p import *
 Heterogeneous Poisson's equation, -div(a(x)u) = f(x), on unit domain [0,1]x[0,1]x[0,1]
 """
 
-##\page Tests Test Problems 
-# \ref poisson_3d_p.py "Heterogeneous Poisson's equation, -div(a(x)u) = f(x), on unit domain [0,1]x[0,1]x[0,1]" 
+##\page Tests Test Problems
+# \ref poisson_3d_p.py "Heterogeneous Poisson's equation, -div(a(x)u) = f(x), on unit domain [0,1]x[0,1]x[0,1]"
 #
 
 ##\ingroup test
@@ -25,7 +25,7 @@ sd=True
 Ident = numpy.zeros((nd,nd),'d')
 Ident[0,0]=1.0; Ident[1,1] = 1.0; Ident[2,2]=1.0
 
-#for computing exact 'Darcy' velocity 
+#for computing exact 'Darcy' velocity
 class velEx:
     def __init__(self,duex,aex):
         self.duex = duex
@@ -67,7 +67,7 @@ def getDBC5(x,flag):
     if x[0] in [0.0] or x[1] in [0.0,1.0] or x[2] in [0.0,1.0]:
         return lambda x,t: u5Ex().uOfXT(x,t)
 def getAdvFluxBC5(x,flag):
-   pass
+    pass
 #specify flux on (x=1,y,z)
 def getDiffFluxBC5(x,flag):
     if x[0] == 1.0:
@@ -94,8 +94,3 @@ fluxBoundaryConditions = {0:'setFlow'} #options are 'setFlow','noFlow','mixedFlo
 coefficients = TransportCoefficients.PoissonEquationCoefficients(aOfX,fOfX,nc,nd)
 #
 coefficients.variableNames=['u0']
-
-   
-
-
-

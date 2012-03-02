@@ -39,7 +39,7 @@ class  NS_base:
        nList [label="Numerics Specifiation [n]" URL="\ref proteus::default_n"];
        sList [label="Output Specification [n]" URL="\ref proteus::SimTools"];
        so [label="Coupling Specification " URL="\ref proteus::SO_base"];
-       ar [label="Archiver" URL="\ref proteus::AR_base"];       
+       ar [label="Archiver" URL="\ref proteus::AR_base"];
        NS -> pList [arrowhead="normal", style="dashed", color="purple"];
        NS -> nList [arrowhead="normal", style="dashed", color="purple"];
        NS -> so [arrowhead="normal", style="dashed", color="purple"];
@@ -81,8 +81,8 @@ class  NS_base:
             self.ar = dict([(i,Archiver.XdmfArchive(opts.dataDir,p.name,useTextArchive=opts.useTextArchive,
                                                     gatherAtClose=opts.gatherArchive,hotStart=opts.hotStart)) for i,p in enumerate(self.pList)])
         #by default do not save quadrature point info
-        self.archive_q          = dict([(i,False) for i in range(len(self.pList))]); 
-        self.archive_ebq_global = dict([(i,False) for i in range(len(self.pList))]); 
+        self.archive_q          = dict([(i,False) for i in range(len(self.pList))]);
+        self.archive_ebq_global = dict([(i,False) for i in range(len(self.pList))]);
         self.archive_ebqe       = dict([(i,False) for i in range(len(self.pList))]);
         if simFlagsList != None:
             assert len(simFlagsList) == len(self.pList), "len(simFlagsList) = %s should be %s " % (len(simFlagsList),len(self.pList))
@@ -113,7 +113,7 @@ class  NS_base:
             log("Building seperate meshes for each model")
             nListForMeshGeneration=nList
             pListForMeshGeneration=pList
-            
+
         for p,n in zip(pListForMeshGeneration,nListForMeshGeneration):
             log("Generating mesh for "+p.name)
             #support for old-style domain input
@@ -175,25 +175,25 @@ class  NS_base:
                                                                    p.L[0],p.L[1],p.L[2],
                                                                    refinementLevels=n.nLevels,
                                                                    nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                   parallelPartitioningType=n.parallelPartitioningType)        
+                                                                   parallelPartitioningType=n.parallelPartitioningType)
                     elif (n.hex):
                         if not hasattr(n,'px'):
-                           n.px=0
-                           n.py=0
-                           n.pz=0
+                            n.px=0
+                            n.py=0
+                            n.pz=0
                         mlMesh = MeshTools.MultilevelHexahedralMesh(nnx,nny,nnz,
                                                                    n.px,n.py,n.pz,
                                                                    p.L[0],p.L[1],p.L[2],
                                                                    refinementLevels=n.nLevels,
                                                                    nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                    parallelPartitioningType=n.parallelPartitioningType)
-                    else : 
+                    else :
                         mlMesh = MeshTools.MultilevelTetrahedralMesh(nnx,nny,nnz,
                                                                    p.L[0],p.L[1],p.L[2],
                                                                    refinementLevels=n.nLevels,
                                                                    nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                    parallelPartitioningType=n.parallelPartitioningType)
-                                                                                                                                    
+
             elif isinstance(p.domain,Domain.PlanarStraightLineGraphDomain):
                 log("Calling Triangle to generate 2D mesh for"+p.name)
                 tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
@@ -254,7 +254,7 @@ class  NS_base:
                                                       parallelPartitioningType=n.parallelPartitioningType)
             elif isinstance(p.domain,Domain.MeshTetgenDomain):
                 mesh=MeshTools.TetrahedralMesh()
-	        log("Reading coarse mesh from tetgen file")
+                log("Reading coarse mesh from tetgen file")
                 mesh.generateFromTetgenFiles(p.domain.meshfile,1)
                 mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
@@ -310,7 +310,7 @@ class  NS_base:
                     except:
                         log("NumericalSolution ViewMesh failed for mesh level %s" % l)
         if so.useOneMesh:
-            for p in pList[1:]: mlMesh_nList.append(mlMesh)            
+            for p in pList[1:]: mlMesh_nList.append(mlMesh)
         Profiling.memory("Mesh")
         self.modelList=[]
         self.lsList=[]
@@ -318,9 +318,9 @@ class  NS_base:
         self.modelSpinUpList = []
         #
         for p in pList:
-	    p.coefficients.opts = self.opts
-	    print p.name
-	    print p.coefficients.opts.dataDir
+            p.coefficients.opts = self.opts
+            print p.name
+            print p.coefficients.opts.dataDir
             if p.coefficients.sdInfo == {}:
                 for ci,ckDict in p.coefficients.diffusion.iteritems():
                     for ck in ckDict.keys():
@@ -328,7 +328,7 @@ class  NS_base:
                             p.coefficients.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=p.nd**2+1,step=p.nd,dtype='i'),
                                                               numpy.array([range(p.nd) for row in range(p.nd)],dtype='i').flatten())
                             log("Numerical Solution Sparse diffusion information key "+`(ci,ck)`+' = '+`p.coefficients.sdInfo[(ci,ck)]`)
-                
+
         for p,n,s,mlMesh,index in zip(pList,nList,sList,mlMesh_nList,range(len(pList))):
             if so.needEBQ_GLOBAL:
                 n.needEBQ_GLOBAL = True
@@ -341,12 +341,12 @@ class  NS_base:
             for l in range(n.nLevels):
                 #if mlMesh.meshList[l].hasGeometricInfo != True:
                 #    mlMesh.meshList[l].computeGeometricInfo()
-   
-		#fac = (mlMesh.meshList[l].h/mlMesh.meshList[0].h)**2
-		fac = 1.0            
-		tolList.append(n.tolFac*fac)
+
+                #fac = (mlMesh.meshList[l].h/mlMesh.meshList[0].h)**2
+                fac = 1.0
+                tolList.append(n.tolFac*fac)
                 linTolList.append(n.linTolFac*fac)
-		
+
             log("Setting up MultilevelTransport for "+p.name)
             #pdb.set_trace()
             model = Transport.MultilevelTransport(p,n,mlMesh,OneLevelTransportType=p.LevelModelType)
@@ -448,7 +448,7 @@ class  NS_base:
                                                                        pFile=p,nFile=n,
                                                                        analyticalSolution=p.analyticalSolution))
                 model.simTools = self.simOutputList[-1]
-                self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables] 
+                self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
         else:
             for p,n,s,model,index in zip(pList,nList,sList,self.modelList,range(len(pList))):
                 self.simOutputList.append(SimTools.SimulationProcessor(pFile=p,nFile=n))
@@ -476,7 +476,7 @@ class  NS_base:
         log("Setting initial conditions",level=0)
         for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
             if self.opts.hotStart:
-                log("Setting initial conditions from hot start file for "+p.name) 
+                log("Setting initial conditions from hot start file for "+p.name)
                 tCount = len(self.ar[index].ar_old.tree.getroot()[-1][-1]) - 1
                 time = float(self.ar[index].ar_old.tree.getroot()[-1][-1][-1][0].attrib['Value'])
                 if len(self.ar[index].ar_old.tree.getroot()[-1][-1]) > 1:
@@ -493,7 +493,7 @@ class  NS_base:
                         lm.timeIntegration.t = time
                         lm.timeIntegration.dt = dt
             elif p.initialConditions != None:
-                log("Setting initial conditions for "+p.name) 
+                log("Setting initial conditions for "+p.name)
                 m.setInitialConditions(p.initialConditions,self.tnList[0])
                 #It's only safe to calculate the solution and solution
                 #gradients because the models aren't attached yet
@@ -530,7 +530,7 @@ class  NS_base:
                     lm.timeIntegration.initializeSpaceHistory()
                     #recalculate coefficients
                     lm.getResidual(lu,lr)
-                    #calculate consistent time derivative 
+                    #calculate consistent time derivative
                     lm.estimate_mt()
                     #post-process velocity
                     #lm.calculateAuxiliaryQuantitiesAfterStep()
@@ -554,7 +554,7 @@ class  NS_base:
                     log("Spin-Up Step Failed t=%12.5e, dt=%12.5e for model %s, CONTINUING ANYWAY!" %  (m.stepController.t_model,
                                                                                                      m.stepController.dt_model,
                                                                                                      m.name))
-                    
+
                 else:
                     if n.restrictFineSolutionToAllMeshes:
                         log("Using interpolant of fine mesh an all meshes")
@@ -583,7 +583,7 @@ class  NS_base:
                 #post-process velocity
                 #lm.calculateAuxiliaryQuantitiesAfterStep()
                 lm.timeTerm=True
-                #calculate consistent 
+                #calculate consistent
                 lm.estimate_mt()
                 #
             log("Choosing initial time step for model "+p.name)
@@ -624,11 +624,11 @@ class  NS_base:
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             log("==============================================================",level=0)
             log("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
-	    log("==============================================================",level=0)
+            log("==============================================================",level=0)
             #
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
-               self.systemStepController.stepExact_system(self.tn)
-            while self.systemStepController.t_system_last < self.tn: 
+                self.systemStepController.stepExact_system(self.tn)
+            while self.systemStepController.t_system_last < self.tn:
                 #
                 log("System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,
                                                               self.systemStepController.dt_system),level=3)
@@ -637,11 +637,11 @@ class  NS_base:
                        not systemStepFailed):
                     #
                     log("Split operator iteration %i" % (self.systemStepController.its,),level=3)
-		     
+
                     #
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
                         #
-			log("Model: %s" % (model.name),level=1)
+                        log("Model: %s" % (model.name),level=1)
                         log("Fractional step %12.5e for model %s" % (self.t_stepSequence,model.name),level=3)
                         #
                         for m in model.levelModelList:
@@ -733,7 +733,7 @@ class  NS_base:
                     else:
                         self.firstStep=False
                         systemStepFailed=False
-                        self.systemStepController.sequenceTaken()                
+                        self.systemStepController.sequenceTaken()
                         for index,model in enumerate(self.modelList):
                             self.viewSolution(model,index)
                         if self.archiveFlag == ArchiveFlags.EVERY_MODEL_STEP:
@@ -742,13 +742,13 @@ class  NS_base:
                                 self.archiveSolution(model,index,self.systemStepController.t_system)
                             if not self.opts.cacheArchive:
                                 self.ar[index].sync()
-                #end system split operator sequence 
+                #end system split operator sequence
                 if systemStepFailed:
                     log("System Step Failed")
                     #go ahead and update as if the time step had succeeded
                     self.postStep(model)
                     self.systemStepController.modelStepTaken(model,self.t_stepSequence)
-                    self.systemStepController.sequenceTaken()                
+                    self.systemStepController.sequenceTaken()
                     self.systemStepController.updateTimeHistory()
                     #you're dead if retrySequence didn't work
                     #go ahead and calculate auxiliary variables for failed solution
@@ -769,7 +769,7 @@ class  NS_base:
                     log("Step Taken, Model step t=%12.5e, dt=%12.5e for model %s" % (model.stepController.t_model,
                                                                                      model.stepController.dt_model,
                                                                                      model.name))
-            
+
                 #
                 if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
                     self.tCount+=1
@@ -873,7 +873,7 @@ class  NS_base:
             model.levelModelList[-1].archiveExteriorElementBoundaryQuadratureValues(self.ar[index],self.tnList[0],self.tCount,
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=True,meshChanged=True)
-                                                              
+
     ##save model's solution values to archive
     def archiveSolution(self,model,index,t=None):
         if self.archiveFlag == ArchiveFlags.UNDEFINED:
@@ -924,7 +924,7 @@ class  NS_base:
                                                                                     initialPhase=False,meshChanged=True)
         if not self.opts.cacheArchive:
             self.ar[index].sync()
-    ## clean up archive 
+    ## clean up archive
     def closeArchive(self,model,index):
         if self.archiveFlag == None:
             return
@@ -935,26 +935,24 @@ class  NS_base:
         else:
             log("Closing solution archive for "+model.name)
             self.ar[index].close()
-            
+
     def initializeViewSolution(self,model):
         """
         """
         model.viewer.preprocess(model,model.stepController.t_model_last)
         model.simTools.preprocess(model,model.stepController.t_model_last)
-    ## run time visualization for model       
+    ## run time visualization for model
     def viewSolution(self,model,initialCondition=False):
         """
-        
+
         """
         #mwf looking at last solns
         if (model.viewer.viewerType != 'matlab' or model.stepController.t_model_last <= self.tnList[0] or
             model.stepController.t_model_last >= self.tnList[-1]):
             model.viewer.processTimeLevel(model,model.stepController.t_model_last)
             model.simTools.processTimeLevel(model,model.stepController.t_model_last)
-     
+
     ## clean up runtime visualization
     def finalizeViewSolution(self,model):
         model.viewer.postprocess(model,model.stepController.t_model_last)
         model.simTools.postprocess(model,model.stepController.t_model_last)
-
-

@@ -8,14 +8,13 @@ for n in nFiles:
     nf.close()
     nf = open(n,'w')
     for line in lines:
-        start=line.find('2d_p import *
+        start=line.find('2d_p import *')
         if start != -1:
             line = line[:start+2]+'_p import *\n'
-        start = line.find('1d_p import *
+        start = line.find('1d_p import *')
         if start != -1:
             line = line[:start+2]+'_p import *\n'
         start = line.find('ladr')
-
         if start != -1:
             line = line[:start]+'ladr'+line[start+6:]+'\n'
         #stdout.write(line)

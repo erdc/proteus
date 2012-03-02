@@ -42,7 +42,7 @@ class TriangleBaseMesh:
         self.vorrepDefaultInit = []
         self.vorrepDefaultInit.append(True)
         assert(nbase in [0,1])
-        self.nbase  = nbase 
+        self.nbase  = nbase
         self.baseFlags = baseFlags
         if self.nbase == 0 and self.baseFlags.find('z') == -1:
             print """WARNING TriangleMesh base numbering= %d
@@ -69,12 +69,12 @@ number of holes         = %d
 number of regions       = %d
 number of edges         = %d
         """
-            
+
         #end init
     def resetDefaultTrirep(self,index=0,verbose=0):
         """
         reset the Triangle mesh representation if it has been set to something nontrivial
-        
+
         """
         assert(index in range(0,len(self.trirep)))
         #delete the existing representation if it has been initialized
@@ -118,7 +118,7 @@ number of edges         = %d
            elements (triangles)
            edges
            neighbors
-           
+
         First set the _global arrays for
             nodes
             elements
@@ -134,7 +134,7 @@ number of edges         = %d
         meshout = MeshTools.TriangularMesh()
         meshout.generateFromTriangleMesh(self.trirep[0],self.nbase)
         return meshout
-    
+
 #         #get basic information to make sure I can proceed
 #         #with current mesh representation
 #         nNodes_global = triInfo[0]; nElems_global = triInfo[2];
@@ -145,7 +145,7 @@ number of edges         = %d
 
 #         #subtract off base since proteus.Mesh wants base 0 more or less
 #         nbase = self.nbase
-#         #should also check? base zero, 
+#         #should also check? base zero,
 #         #get the minimum array information
 #         ##nodes
 #         nodeArray = triangleWrappers.getPoints(self.trirep[0])
@@ -153,7 +153,7 @@ number of edges         = %d
 #         meshout.nodeArray = numpy.zeros((meshout.nNodes_global,3),
 #                                           'd')
 #         for nN in range(nNodes_global):
-#             meshout.nodeArray[nN,:spaceDim] = nodeArray[nN,:spaceDim] 
+#             meshout.nodeArray[nN,:spaceDim] = nodeArray[nN,:spaceDim]
 #             #cek added because refinement still depends on list interface
 #             #mwf commented  out 01/29/08
 #             #meshout.nodeList.append(MeshTools.Node(nN,meshout.nodeArray[nN,0],meshout.nodeArray[nN,1]))
@@ -177,7 +177,7 @@ number of edges         = %d
 #             #                     meshout.nodeList[meshout.elementNodesArray[eN,2]]])
 #         #end eN
 #         #cek added finalize call to build lists and arrays
-#         #mwf commented out 01/29/08 
+#         #mwf commented out 01/29/08
 #         #meshout.finalize()
 #         ##proteusMesh keeps elements per node
 # #         nodeElementsDict={}
@@ -206,8 +206,8 @@ number of edges         = %d
 
 # #         ##now build the element <--> element boundary arrays
 # #         meshout.nElementBoundaries_element = spaceDim+1
-# #         #make sure Triangle keeps all edges and not just boundary ones 
-# #         meshout.nElementBoundaries_global  = nEdges_global 
+# #         #make sure Triangle keeps all edges and not just boundary ones
+# #         meshout.nElementBoundaries_global  = nEdges_global
 
 # #         #maps element, local edge number to global edge number
 # #         meshout.elementBoundariesArray = numpy.zeros((nElems_global,spaceDim+1),
@@ -235,7 +235,7 @@ number of edges         = %d
 # #             n0 = edgeArray[edgeN,0]-nbase; n1 = edgeArray[edgeN,1]-nbase
 # #             edgeDict[(n0,n1)] = edgeN #global edge number
 # #         #end for
-        
+
 # #         for eN in range(nElems_global):
 # #             locNodes = elemArray[eN,:spaceDim+1]-nbase #global node numbers
 # #             edgeOrientedSame = [False,False,False]
@@ -278,7 +278,7 @@ number of edges         = %d
 # #                 elementBoundaryElementsCardArray[eI] += 1
 # #             #end eI
 
-            
+
 # #             for eiloc in range(meshout.nElementBoundaries_element):
 # #                 eI     = eI_global[eiloc]
 # #                 #first visited labelling
@@ -403,13 +403,13 @@ number of edges         = %d
         if self.makeVoronoi:
             self.resetDefaultVorrep(index=0,verbose=verbose)
         #end vorrep initialized
-        
+
         if self.makeVoronoi:
             triangleWrappers.applyTriangulate(flags,tri0,self.trirep[0],self.vorrep[0])
             #handles no longer contain trivial representations
             self.trirepDefaultInit[0] = False
             self.vorrepDefaultInit[0] = False
-            
+
         else:
             triangleWrappers.applyTriangulateNoVoronoi(flags,tri0,self.trirep[0])
             #handle no longer contains trivial representations
@@ -450,9 +450,9 @@ number of edges         = %d
             triangleWrappers.setPoints(tri0,nodes)
         else:
             triangleWrappers.setPointsAndMarkers(tri0,nodes,nodesM)
-        if not nodesA == None: 
+        if not nodesA == None:
             triangleWrappers.setPointAttributes(tri0,nodesA)
-        
+
         #run triangleWrappers on it using the base flags and whatever else was
         #added
         flags = flagsAdd+self.baseFlags
@@ -514,17 +514,17 @@ number of edges         = %d
 
         #now create an initial representation
         tri0 = triangleWrappers.new()
-        
+
         if nodesM == None:
             triangleWrappers.setPoints(tri0,nodes)
         else:
             triangleWrappers.setPointsAndMarkers(tri0,nodes,nodesM)
-        if not nodesA == None: 
+        if not nodesA == None:
             triangleWrappers.setPointAttributes(tri0,nodesA)
         #end if
-        
+
         triangleWrappers.setTriangles(tri0,triangles)
-        if not trianglesA == None: 
+        if not trianglesA == None:
             triangleWrappers.setTriangleAttributes(tri0,trianglesA)
 
         #run triangulate on it using the base flags and whatever else was
@@ -569,12 +569,12 @@ number of edges         = %d
         polyDataInfo,polyData = reader.readPoly(filebase,nbase=self.nbase,
                                                 verbose=verbose)
 
-        if verbose > 3:    
+        if verbose > 3:
             for type in ['node','segment','hole','region']:
                 print 'Poly: ',type,'Info= \n',polyDataInfo[type],'\n'
             #end for
         #end if
-            
+
         nodes,nodesA,nodesM = (polyData['node']['nodes'],
                                polyData['node']['nodeAttributes'],
                                polyData['node']['nodeMarkers'])
@@ -585,14 +585,14 @@ number of edges         = %d
 
         if verbose > 3:
             print """Poly file read:
-            nodes   = \n%s\n nodeAttributes= \n%s\n nodeMarkers= \n%s\n 
-            segments= \n%s\n segmentMarkers= \n%s\n 
+            nodes   = \n%s\n nodeAttributes= \n%s\n nodeMarkers= \n%s\n
+            segments= \n%s\n segmentMarkers= \n%s\n
             holes   = \n%s\n
             regions = \n%s\n
             """ % (nodes,nodesA,nodesM,segments,segmentsM,holes,regions)
         #end if
         tri0 = triangleWrappers.new()
-    
+
         if nodesM == None:
             triangleWrappers.setPoints(tri0,nodes)
         else:
@@ -600,7 +600,7 @@ number of edges         = %d
             nodesMtmp[:] = nodesM
             nodesM = nodesMtmp
             triangleWrappers.setPointsAndMarkers(tri0,nodes,nodesM)
-        if not nodesA == None: 
+        if not nodesA == None:
             triangleWrappers.setPointAttributes(tri0,nodesA)
         #end if
         print "segmenat Markers ===================",segmentsM
@@ -653,7 +653,7 @@ number of edges         = %d
     def writeToFile(self,filebase,verbose=0):
         """
         Just write out basic files for triangulateion
-        Still need to write out Voronoi diagram 
+        Still need to write out Voronoi diagram
         """
         TriangleUtils.writeOutTriangulation(self.trirep[0],filebase,
                                             self.nbase,verbose)
@@ -668,13 +668,13 @@ number of edges         = %d
         self.writeToFile(filebase)
         globshowme= TriangleUtils.showmeCmdBase
         showmecmd = """%s  %s """ % (globshowme,filebase)
-        
+
         failure = 0
         failure = TriangleFileUtils.checkFileExists(globshowme)
         failure = os.system(showmecmd)
 
         return failure
-    
+
     #end viewShowme
 #end TriangleBaseMesh
 
@@ -706,13 +706,13 @@ def TriangleCall3(filebase="trimesh",baseFlags="zen",
                                                                   filebase+'.ele')
         #end verbose
         mesh.readFromNodeAndEleFiles(filebase,flagsAdd,verbose=verbose)
-        
+
     else:
         if verbose > 0:
             print """flagsAdd= %s trying to read %s """ % (flagsAdd,
                                                            filebase+'.node')
         #end verbose
-        
+
         mesh.readFromNodeFile(filebase,flagsAdd,verbose=verbose)
     #end if on flags
 
@@ -749,13 +749,13 @@ def exProteusMesh0(filebase="trimesh",baseFlags="zen",
                                                                   filebase+'.ele')
         #end verbose
         mesh.readFromNodeAndEleFiles(filebase,flagsAdd,verbose=verbose)
-        
+
     else:
         if verbose > 0:
             print """flagsAdd= %s trying to read %s """ % (flagsAdd,
                                                            filebase+'.node')
         #end verbose
-        
+
         mesh.readFromNodeFile(filebase,flagsAdd,verbose=verbose)
     #end if on flags
     if viewMesh > 0:
@@ -768,7 +768,7 @@ def exProteusMesh0(filebase="trimesh",baseFlags="zen",
         proteusMesh.viewMeshGnuplotPipe("gnuMesh")
     matmesh = "matlabMesh"
     proteusMesh.buildMatlabMeshDataStructures(matmesh)
-    
+
 #end exAdh
 def exProteusMesh1(baseFlags="zen",viewMesh=1,verbose=0):
     """
@@ -788,7 +788,7 @@ def exProteusMesh1(baseFlags="zen",viewMesh=1,verbose=0):
     proteusMesh.writeEdgesGnuplot2("gnuMesh") #uses array interface
     if viewMesh > 0:
         proteusMesh.viewMeshGnuplotPipe("gnuMesh")
-    
+
     nbase = 0
     if baseFlags.find('z') == -1:
         nbase=1
@@ -816,7 +816,7 @@ def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
     import LinearAlgebraTools
     import LinearSolvers
     import NonlinearSolvers
-    
+
     nbase = 0
     if baseFlags.find('z') == -1:
         nbase=1
@@ -838,13 +838,13 @@ def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
                                                                   filebase+'.ele')
         #end verbose
         mesh.readFromNodeAndEleFiles(filebase,flagsAdd,verbose=verbose)
-        
+
     else:
         if verbose > 0:
             print """flagsAdd= %s trying to read %s """ % (flagsAdd,
                                                            filebase+'.node')
         #end verbose
-        
+
         mesh.readFromNodeFile(filebase,flagsAdd,verbose=verbose)
     #end if on flags
     if viewMesh > 0:
@@ -857,7 +857,7 @@ def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
         proteusMesh.viewMeshGnuplotPipe("gnuMesh")
     matmesh = "matlabMesh"
     proteusMesh.buildMatlabMeshDataStructures(matmesh)
-    
+
     #####
     #solve a simple poisson equation with Dirichlet bc's on left and right?
     nd = 2
@@ -976,12 +976,12 @@ def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
     system.updateCoefficients()
     system.updateQuadrature()
     system.matType = matType
-    
+
     ### create nonlinear system for solving problem
     if verbose > 0:
         print 'creating nonlinear system'
     #end verbose
-    
+
     jacobian = MatType(system.dim,system.dim,min(7,system.dim))
     #mwf add following Chris example
     jacobian = system.initializeJacobian(jacobian)
@@ -1007,7 +1007,7 @@ def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
     #end verbose
     nlSolver.solve(y,r)
 
-        
+
     if verbose > 0:
         print 'nonlinear solver done'
     #end if
@@ -1016,7 +1016,7 @@ def exProteusLaplace1(filebase="trimesh",baseFlags="zen",
     FemSpace.writeFunctionMatlab(u,"ex1soln")
     #can view results in matlab with
     #matlabMesh; ex1soln; pdeplot(p,e,t,'xydata',u,'contour','on')
-    
+
 #end exAdh
 
 
@@ -1051,8 +1051,8 @@ if __name__ == '__main__':
                             .poly file,  and .node file
                       1 --- TriangleCall3 with spiral
                       2 --- exProteusMesh0 with spiral
-                      3 --- exProteusMesh0 with la 
-                      4 --- exProteusMesh0 with user specified file, and flags 
+                      3 --- exProteusMesh0 with la
+                      4 --- exProteusMesh0 with user specified file, and flags
                       5 --- exProteusMesh1 convert proteusMesh for rectangle
                       6 --- solve simple laplace equation with dirichlet bcs
                             on the la mesh
@@ -1072,7 +1072,7 @@ if __name__ == '__main__':
     baseFlags= str(options.baseFlags)
     filebase = str(options.filebase)
     tribase  = str(options.tribase)
-    
+
     sys.path.insert(0,proteusDir)
 
     if testNum == 0:
@@ -1131,15 +1131,15 @@ def testGenerateTriangulationFromPointSet(points):
     input: point-set
 
     generate triangle representation of the points
-    
-    output: an array contaning the points, and element to Node connectivity 
+
+    output: an array contaning the points, and element to Node connectivity
     """
     #mwf debug
     #import pdb
     #pdb.set_trace()
     #default representation for holding input points
     tri0 = triangleWrappers.new()
-    
+
     triangleWrappers.setPoints(tri0,points[:,:2])
 
     flags = "qz" #just use simple quality mesh generation, number from zero
@@ -1156,8 +1156,8 @@ def testGenerateTriangulationFromPointSet(points):
     nodeArray2d = triangleWrappers.getPointsCopy(tri1)
     elementNodesArray = triangleWrappers.getTrianglesCopy(tri1)
 
-    
-    
+
+
     #clean up
     del tri0
     del tri1
@@ -1169,7 +1169,7 @@ def testGenerateSSIPtriangulation(points):
     input: vertices and SSIP points belonging to a single element
 
     generate triangle representation of the points
-    
+
     output: an array contaning the points, and element quadrature weights for the points
 
     test with input
@@ -1177,14 +1177,14 @@ import numpy
 from proteus import TriangleTools
 points = numpy.array([[0.0,0.0,0.0],[0.5,0.4,0.],[1.0,0.0,0.0],[0.2,0.3,0.0],[0.0,1.0,0.0]])
 dV,x = TriangleTools.testGenerateSSIPtriangulation(points)
-    
+
     """
     #mwf debug
     #import pdb
     #pdb.set_trace()
     #default representation for holding input points
     tri0 = triangleWrappers.new()
-    
+
     triangleWrappers.setPoints(tri0,points[:,:2])
 
     flags = "z"#"qz" #just use simple quality mesh generation, number from zero
@@ -1205,8 +1205,8 @@ dV,x = TriangleTools.testGenerateSSIPtriangulation(points)
     #subElementQuadrature.setOrder(2)  #order(1)
     #What about vertex quadrature
     subElementQuadrature = Quadrature.LobattoTriangle()
-    subElementQuadrature.setOrder(3)  
-    
+    subElementQuadrature.setOrder(3)
+
     nSubQuadraturePoints = len(subElementQuadrature.weights)
     nElements = elementNodesArray.shape[0]
     nQuadraturePoints = nElements*nSubQuadraturePoints
@@ -1239,20 +1239,20 @@ dV,x = TriangleTools.testGenerateSSIPtriangulation(points)
     jacobianArray    = numpy.zeros((nElements,nSubQuadraturePoints,nSpace,nSpace),'d')
     jacobianDetArray = numpy.zeros((nElements,nSubQuadraturePoints),'d')
     jacobianInvArray = numpy.zeros((nElements,nSubQuadraturePoints,nSpace,nSpace),'d')
- 
+
     cfemIntegrals.parametricMaps_getJacobianValues(grad_psi,
                                                    elementNodesArray,
                                                    nodeArray,
                                                    jacobianArray,
                                                    jacobianDetArray,
                                                    jacobianInvArray)
-    
+
 
     jacobianDetArrayAbs = numpy.absolute(jacobianDetArray)
     #weights and points shaped like nSubElements x nQuadraturePointsSubElement
     q_sub_dV = numpy.zeros((nElements,nSubQuadraturePoints),'d')
     q_sub_x  = numpy.zeros((nElements,nSubQuadraturePoints,3),'d')
-    
+
     cfemIntegrals.calculateIntegrationWeights(jacobianDetArrayAbs,
                                               weights_ref,
                                               q_sub_dV)
@@ -1261,12 +1261,11 @@ dV,x = TriangleTools.testGenerateSSIPtriangulation(points)
                                            elementNodesArray,
                                            nodeArray,
                                            q_sub_x)
-    
-        
+
+
     #clean up
     del tri0
     del tri1
 
-    #exit 
+    #exit
     return q_sub_dV,q_sub_x
-

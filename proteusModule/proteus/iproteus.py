@@ -103,7 +103,7 @@ parser.add_option("-l", "--log",
                   action="store",
                   type="int",
                   dest="logLevel",
-                  default=1)    
+                  default=1)
 parser.add_option("-A", "--logAllProcesses",
                   help="Log events from every MPI process",
                   action="store_true",
@@ -162,7 +162,7 @@ if opts.logLevel > 0:
     #mwf looks like just gets .py.log if no sso file given
     #Profiling.openLog(args[0][-3:]+".log",opts.logLevel)
     if len(args) == 0:
-        Profiling.openLog("proteus.log",opts.logLevel)        
+        Profiling.openLog("proteus.log",opts.logLevel)
     elif len(args[0].split(' ')) == 1:
         Profiling.openLog(args[0].split('.')[0]+".log",opts.logLevel)
     else:
@@ -314,7 +314,7 @@ if __name__ == '__main__':
             else:
                 simFlags['plotOptions'] = {'ensight':{'on':True}}
             #control convention on case file for multiple models, doesn't effect parun right now
-            simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ `comm.rank()`  
+            simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ `comm.rank()`
     if opts.batchFileName != "":
         log("Reading batch file = ",opts.batchFileName)
         #try to split batch file into executable blocks delimited by
@@ -354,7 +354,7 @@ if __name__ == '__main__':
             lines = '\n'.join(batchBlocks.pop(0))
             exec lines
             run     = True
-            running = len(batchBlocks) > 0        
+            running = len(batchBlocks) > 0
         else:
             userInput = False
             run = True

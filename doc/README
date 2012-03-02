@@ -1,0 +1,12 @@
+This is the root directory of the documentation. The documentation is
+built from reStructuredText and the python docstrings using sphinx. To
+build the html type 'make html' or see the Makefile for additional
+formats. The documentation starts in index.rst and is organized as a
+tree using the toctree entry in each .rst file. The api, scripts, and
+test docs are/will be generated from the docstrings using the sphinx
+autodoc extension. See the files in api and tests for examples. Note
+that for autodoc to work the python interpreter must have access to
+the files. The scripts and test/problemDescriptions paths are thus
+appended in conf.py so that these modules, though not part of the
+proteus module, are accessible to python during the sphinx build
+process.

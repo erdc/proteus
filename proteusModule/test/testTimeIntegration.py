@@ -18,7 +18,7 @@ class PhiDummy:
 
 class dUdtEqMinusLambda:
     """
-    test problem for TimeIntegration classes. Integrates the 
+    test problem for TimeIntegration classes. Integrates the
     canonical test problem
 
        du/dt = -lambda . u
@@ -69,7 +69,7 @@ class dUdtEqMinusLambda:
         self.q['m'].flat[:] = self.q['u'].flat[:]
         #reaction term is actually where right hand side is implemented
         self.q['r']= lam*self.q['m']
-        # #  end array initialization 
+        # #  end array initialization
         if TimeIntegrationClass == SSPRKintegration:
             self.timeIntegrator = TimeIntegrationClass(self,order)
         else:
@@ -90,7 +90,7 @@ class dUdtEqMinusLambda:
         self.q['dm'].flat[:]= 1.0
         self.q['r'].flat[:] = self.lam*self.q['u'].flat[:]
         self.q['dr'].flat[:]= self.lam
-        
+
     #end updateCoefficients
     def initializeTimeIntegration(self):
         """
@@ -100,7 +100,7 @@ class dUdtEqMinusLambda:
         self.timeIntegrator.setInitialStageValues()
         self.timeIntegrator.updateTimeHistory()
     #end initializeTimeIntegration
-    
+
     def getResidual(self,u,r):
         """
         evaluate residual r = du/dt + r(u)
@@ -143,7 +143,7 @@ class dUdtEqMinusLambda:
             jacobian[i,i] += self.q['dmt'][i] + self.q['dr'][i]
         #end i
         endAssembly(jacobian)
-#end dUdt 
+#end dUdt
 
 
 if __name__ == '__main__':
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     import numpy
     from TimeIntegrationTools import *
     from LinearSolvers import *
-    
+
     from optparse import OptionParser
     parser = OptionParser()
     #options controlling simulation behavior
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     parser.add_option('-C','--cfl',
                       default=0.1,
                       help="""target cfl number [0.1]""")
-    
+
     parser.add_option('-L','--lamScale',
                       default=1.0,
                       help="""basic \lambda in \dot{\vec u}=-\mat{\Lamda}\vec u
@@ -173,7 +173,7 @@ if __name__ == '__main__':
                               1 -- Forward Euler
                               2 -- SSPRK order 1--5
                        """)
-    
+
     parser.add_option('-n','--neq',
                       default=1,
                       help="""number of equations in system
@@ -197,7 +197,7 @@ if __name__ == '__main__':
     parser.add_option('-T','--tend',
                       default=1.0,
                       help="""stopping time in simulation [1.0]""")
-    
+
 
 
     parser.add_option('-v','--verbose',
@@ -229,18 +229,18 @@ if __name__ == '__main__':
         TimeIntegrationClass = SSPRKintegration
         order   = int(options.rkOrder)
         nstages = order
-    #end 
+    #end
     #estimate a stable maximum time step?
 
     #initial time
     t0= 0.0
-    
+
     #initial condition and solution
     u0 = Numeric.zeros(dim,Numeric.Float)
     u  = Numeric.zeros(dim,Numeric.Float)
     u0.flat[:] = 1.0
     u.flat[:]  = 1.0
-    
+
     #use lambda to determine max allowable step
     cfl= Numeric.ones(dim,Numeric.Float)
     cfl.flat[:] = lam.flat[:]
@@ -249,7 +249,7 @@ if __name__ == '__main__':
 
     ode.updateCoefficients()
     ode.timeIntegrator.chooseDT()
-    
+
     r0 = Numeric.ones(dim,Numeric.Float)
     r  = Numeric.ones(dim,Numeric.Float)
 
@@ -270,7 +270,7 @@ if __name__ == '__main__':
         print 'ode.q[dm]= ',ode.q['dm']
         print 'ode.q[dr]= ',ode.q['dr']
     #end if
-    
+
 
     # # create nonlinear system for solving problem
     if verbose > 0:
@@ -279,15 +279,15 @@ if __name__ == '__main__':
     MatType = Mat
     matType = 'dense'
     linearSolverType=  'DenseLU'
-   
+
     jacobian = MatType(ode.dim,ode.dim,ode.dim)
-    
+
     # # create linear system for solving problem
     if verbose > 5:
         print 'creating linear system'
         print 'initial jacobian mat =\n',jacobian
     #end verbose
-    
+
     linearSolver = DenseLU(jacobian)
     printNLinfo = False
     if verbose > 10:
@@ -310,7 +310,7 @@ if __name__ == '__main__':
     LIerr = 0.0
     errT  = 0.0
     while t < T and nsteps < ntMax:
-        
+
         ode.timeIntegrator.chooseDT()
         dtMin = min(T-t,ode.timeIntegrator.DT)
         if not adaptDT:
@@ -324,7 +324,7 @@ if __name__ == '__main__':
             ode.timeIntegrator.updateTimeHistory()
         #end if
         t += ode.timeIntegrator.DT #do this before or after solve?
-        
+
         for i in range(nstages):
             ode.getResidual(u,r)
             #solve system for new time level
@@ -357,4 +357,3 @@ if __name__ == '__main__':
 
     print """reached t= %g \n\tu  = %s \n\tuex= %s
     err= %g L2err= %g LIe= %g""" % (t,u,uex,errT,L2err,LIerr)
-    
