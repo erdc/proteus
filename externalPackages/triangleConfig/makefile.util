@@ -19,7 +19,7 @@ LIB = ../lib/
 
 # CC should be set to the name of your favorite C compiler.
 
-CC = icc -fPIC
+CC = mpicc -fPIC
 
 # CSWITCHES is a list of all switches passed to the C compiler.  I strongly
 #   recommend using the best level of optimization.  I also strongly
@@ -74,7 +74,7 @@ CC = icc -fPIC
 #
 #   CSWITCHES = -O -DNO_TIMER -DLINUX -I/usr/X11R6/include -L/usr/X11R6/lib
 #mwf no fpu_control
-CSWITCHES = -O -I/usr/X11/include -L/usr/X11/lib64
+CSWITCHES = -O -I/usr/X11R6/include -L/usr/X11R6/lib64
 
 # TRILIBDEFS is a list of definitions used to compile an object code version
 #   of Triangle (triangle.o) to be called by another program.  The file
