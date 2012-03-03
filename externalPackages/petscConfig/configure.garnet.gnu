@@ -1,4 +1,5 @@
 ${PROTEUS_PYTHON} ./config/configure.py --prefix=${PROTEUS_PREFIX} \
+--useThreads=0 \
 --PETSC_ARCH=${PROTEUS_ARCH} \
 --PETSC_DIR=${PROTEUS}/externalPackages/petsc \
 --with-clanguage=C \
