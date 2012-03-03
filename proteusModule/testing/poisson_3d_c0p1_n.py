@@ -60,7 +60,7 @@ if parallel:
     #can also set -pc_asm_overlap 2 with default asm type (restrict)
     #levelLinearSolver = PETSc#
     #pick number of layers to use in overlap
-    nLayersOfOverlapForParallel = 1
+    nLayersOfOverlapForParallel = 0
     #type of partition
     parallelPartitioningType = MeshParallelPartitioningTypes.node
     #parallelPartitioningType = MeshParallelPartitioningTypes.element
