@@ -1,6 +1,9 @@
 ${PROTEUS_PYTHON} ./config/configure.py \
 --with-pic=1 \
+--with-pthreads=1 \
+--with-batch=1 \
 --with-shared-libraries=1 \
+--known-mpi-shared-libraries=1 \
 --with-mpi-compilers=1 \
 --with-cc=mpicc \
 --with-cxx=mpicxx \
