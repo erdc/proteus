@@ -7,7 +7,7 @@ ${PROTEUS_PYTHON} ./config/configure.py \
 --with-fc=mpif90 \
 --with-mpi-compilers=1 \
 --with-shared-libraries=1 \
---with-blas-lapack-dir=${TACC_ATLAS_DIR} \
+--with-blas-lapack-lib=\[${TACC_MKL_LIB}/libmkl_lapack.so,${TACC_MKL_LIB}/libmkl_intel_lp64.so,${TACC_MKL_LIB}/libmkl_sequential.so,${TACC_MKL_LIB}/libmkl_core.so\] \
 --download-cmake=1 \
 --download-metis=1 \
 --download-parmetis=1 \
