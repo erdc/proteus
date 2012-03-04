@@ -10,8 +10,9 @@ except:
 setup(
     cmdclass = {'build_ext':build_ext},
     ext_package='proteus',
-    ext_modules = [Extension("waveFunctions",['proteus/waveFunctions.pyx','proteus/transportCoefficients.c'],
+    package_dir={'proteus':'src'},
+    ext_modules = [Extension("waveFunctions",['src/waveFunctions.pyx','src/transportCoefficients.c'],
                             include_dirs=[numpy.get_include(),'include']),
-                   Extension("subsurfaceTransportFunctions",['proteus/subsurfaceTransportFunctions.pyx'],
+                   Extension("subsurfaceTransportFunctions",['src/subsurfaceTransportFunctions.pyx'],
                             include_dirs=[numpy.get_include(),'include'])]
     )

@@ -229,6 +229,8 @@ Detailed Documentation
    :maxdepth: 2
 
    api/index.rst
+   api2/index.rst
+..   api-mprans/index.rst
 .. scripts/index.rst
 .. tests/index.rst
 .. TODO.rst

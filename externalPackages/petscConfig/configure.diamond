@@ -8,7 +8,7 @@ ${PROTEUS_PYTHON} ./config/configure.py \
 --with-cc=mpicc \
 --with-cxx=mpicxx \
 --with-fc=mpif90 \
---with-blas-lapack-lib=[/opt/intel/cmkl/10.2.4.032/lib/em64t/libmkl_lapack.a,/opt/intel/cmkl/10.2.4.032/lib/em64t/libmkl_intel_lp64.a,/opt/intel/cmkl/10.2.4.032/lib/em64t/libmkl_sequential.a,/opt/intel/cmkl/10.2.4.032/lib/em64t/libmkl_core.a] \
+--with-blas-lapack-lib=[/opt/intel/cmkl/10.2.4.032/lib/em64t/libmkl_lapack.a,/opt/intel/cmkl/10.2.4.032/lib/em64t/libmkl_intel_lp64.a,/opt/intel/cmkl/10.2.4.032/lib/em64t/libmkl_sequential.a,/opt/intel/cmkl/10.2.4.032/lib/em64t/libmkl_core.a\] \
 --with-clanguage=C \
 --download-cmake=1 \
 --download-metis=1 \
