@@ -11,21 +11,21 @@
 # CXX should be set to the name of your favorite C++ compiler.
 # ===========================================================
 
-#CXX = g++
-CXX = icpc
+CXX = mpicxx
+#CXX = icpc
 #CXX = CC
 
 # CXXFLAGS is the level of optimiztion, default is -O. One should try
 # -O2, -O3 ... to find the best optimization level.
 # ===================================================================
 
-CXXFLAGS = -g
+CXXFLAGS = -g -fPIC
 
 # PREDCXXFLAGS is for compiling J. Shewchuk's predicates. It should
 # always be equal to -O0 (no optimization). Otherwise, TetGen may not
 # work properly.
 
-PREDCXXFLAGS = -O0 
+PREDCXXFLAGS = -O0 -fPIC
 
 # SWITCHES is a list of switches to compile TetGen.
 # =================================================
@@ -58,8 +58,7 @@ tetgen:	tetgen.cxx predicates.o
 
 tetlib: tetgen.cxx predicates.o
 	$(CXX) $(CXXFLAGS) $(SWITCHES) -DTETLIBRARY -c tetgen.cxx
-	libtool -static -o libtet.a tetgen.o predicates.o
-#	mv -f libtet.a $(PYADH)/$(PYADH_ARCH)/lib
+	ar r libtet.a tetgen.o predicates.o
 
 predicates.o: predicates.cxx
 	$(CXX) $(PREDCXXFLAGS) -c predicates.cxx
