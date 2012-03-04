@@ -1,5 +1,4 @@
-./configure --prefix=${PROTEUS_PREFIX} CC="gcc" CXX="g++"
-#CC="pgcc -DPROTEUS_FFI64_HACK -g -DNCURSES_ENABLE_STDBOOL_H=0 -O0 -Kieee -alias=ansi" \
-#LINKFORSHARED="-Wl,-export-dynamic" \
-#CXX="pgCC -DPROTEUS_FFI64_HACK -g" \
-#--with-cxx-main="pgCC -DPROTEUS_FFI64_HACK -g"
+./configure --prefix=${PROTEUS_PREFIX} CC="pgcc -DPROTEUS_FFI64_HACK -g -DNCURSES_ENABLE_STDBOOL_H=0 -O0 -Kieee -alias=ansi" \
+LINKFORSHARED="-Wl,-export-dynamic" \
+CXX="pgCC -DPROTEUS_FFI64_HACK -g" \
+--with-cxx-main="pgCC -DPROTEUS_FFI64_HACK -g"
