@@ -132,4 +132,4 @@
 [mkl]
 library_dirs = os.getenv('TACC_MKL_LIB')
 lapack_libs = mkl_lapack
-mkl_libs = mkl_intel_lp64,mkl_sequential,mkl_core
+mkl_libs = mkl_intel_lp64,mkl_sequential,mkl_core,pthread,m
