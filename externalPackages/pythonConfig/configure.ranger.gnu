@@ -1,1 +1,1 @@
-./configure --prefix=${PROTEUS_PREFIX}
+./configure --prefix=${PROTEUS_PREFIX} --with-threads

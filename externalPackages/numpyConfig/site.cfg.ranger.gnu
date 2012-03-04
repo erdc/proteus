@@ -55,9 +55,9 @@
 # This is a good place to add general library and include directories like
 # /usr/local/{lib,include}
 #
-[DEFAULT]
-library_dirs = os.getenv('TACC_ATLAS_LIB')
-include_dirs = os.getenv('TACC_ATLAS_INCLUDE')
+#[DEFAULT]
+#library_dirs = os.getenv('TACC_ATLAS_LIB')
+#include_dirs = os.getenv('TACC_ATLAS_INCLUDE')
 
 # Optimized BLAS and LAPACK
 # -------------------------
@@ -129,7 +129,7 @@ libraries = lapack,f77blas,cblas,atlas
 # lapack_libs = mkl_lapack
 #
 # For 10.*, on 32 bits machines:
-# [mkl]
-# library_dirs = /opt/intel/mkl/10.0.1.014/lib/32/
-# lapack_libs = mkl_lapack
-# mkl_libs = mkl, guide
+[mkl]
+library_dirs = os.getenv('TACC_MKL_LIB')
+lapack_libs = mkl_lapack
+mkl_libs = mkl_intel_lp64,mkl_sequential,mkl_core,pthread,m
