@@ -1,4 +1,4 @@
-CC=icc CXX=icpc ./configure --prefix=${PROTEUS_PREFIX} --with-threads --with-pth
+./configure --prefix=${PROTEUS_PREFIX} --with-threads --with-pth
 #CC="icc -DPROTEUS_FFI64_HACK -fno-strict-aliasing -g" \
 #CXX="icpc -DPROTEUS_FFI64_HACK -fno-strict-aliasing -g"
 #--with-threads --without-gcc \
