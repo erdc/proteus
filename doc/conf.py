@@ -213,3 +213,5 @@ intersphinx_mapping = {'http://docs.python.org/': None}
 todo_include_todos = True
 
 graphviz_output_format = 'svg'
+
+mathjax_path = "https://d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
