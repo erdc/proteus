@@ -131,7 +131,7 @@
 #cek there's something screwy about the mkl libs and loader that requires preoloading
 #mkl_mc3 and mkl_def
 [mkl]
-include_dirs = /opt/intel/cmkl/10.2.0.013/include
-library_dirs = /opt/intel/cmkl/10.2.0.013/lib/em64t
+include_dirs = /opt/intel/cmkl/10.2.4.032/include
+library_dirs = /opt/intel/cmkl/10.2.4.032/lib/em64t
 lapack_libs = mkl_lapack
 mkl_libs =  mkl_mc3,mkl_def,mkl_intel_lp64,mkl_sequential,mkl_core
