@@ -3,7 +3,7 @@
 #
 module swap pgi gcc
 module swap mvapich openmpi
-module load atlas
+module load mkl
 setenv PROTEUS_ARCH ranger.gnu
 setenv PROTEUS_PREFIX ${PROTEUS}/${PROTEUS_ARCH}
 setenv PROTEUS_PYTHON ${PROTEUS}/${PROTEUS_ARCH}/bin/python
