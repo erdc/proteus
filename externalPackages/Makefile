@@ -564,7 +564,7 @@ editConfig_qt:
 	echo "no qt customization implemented"
 
 config_qt:
-	cd ${QT_VERSION} && echo "yes\n" > yes.txt && echo "yes\n" | ${PROTEUS_PYTHON} configure.py > ../config_qt_progress 2>&1
+	cd ${QT_VERSION} && echo "yes\n" > yes.txt && echo "yes\n" | ${PROTEUS_PYTHON} configure.py --assume-shared > ../config_qt_progress 2>&1
 
 build_qt:
 	cd ${QT_VERSION} && make > ../build_qt_progress 2>&1

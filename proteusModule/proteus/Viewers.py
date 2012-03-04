@@ -8,7 +8,6 @@ Some simple modules for doing runtime visualization
 """
 import  subprocess
 import numpy
-from proteus import default_p,default_n,default_s
 
 cmdFile=None
 datFile=None
@@ -86,9 +85,15 @@ def newWindow():
 
 class V_base:
     def __init__(self,
-                 p=default_p,
-                 n=default_n,
-                 s=default_s):
+                 p=None,
+                 n=None,
+                 s=None):
+        if p == None:
+            import default_p as p
+        if n == None:
+            import default_n as n
+        if s == None:
+            import default_s as s
         global cmdFile,datFile,datFilename,viewerPipe,viewerType,plotNumber,windowNumber,meshDataStructuresWritten
         self.cmdFile=cmdFile
         self.datFile=datFile

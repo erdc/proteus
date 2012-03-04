@@ -5,6 +5,7 @@ try:
 except:
     print "Using defaultConfig.py"
     from defaultConfig import *
+print PROTEUS_GRAPHICAL_VTK_INCLUDE_DIR
 setup(name='proteusGraphical',
       version='0.0.4',
       description='Python tools for visualization',
