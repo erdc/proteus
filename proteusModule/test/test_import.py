@@ -1,5 +1,4 @@
 def test_import():
-    print "hello"
     import proteus
     successful_import=True
     for m in proteus.__all__:
