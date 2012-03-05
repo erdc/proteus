@@ -15,7 +15,7 @@ setup(name='proteusGraphical',
       packages = ['proteusGraphical'],
       ext_package='proteusGraphical',
       ext_modules=[Extension('cvtkviewers',
-                             ['proteusGraphical/cvtkviewersModule.cpp','proteusGraphical/vtkviewers.cpp',PROTEUS+'/proteusModule/proteus/mesh.cpp',PROTEUS+'/proteusModule/proteus/meshio.cpp'],
+                             ['proteusGraphical/cvtkviewersModule.cpp','proteusGraphical/vtkviewers.cpp',PROTEUS+'/proteusModule/src/mesh.cpp',PROTEUS+'/proteusModule/src/meshio.cpp'],
                              define_macros=[('PROTEUS_TRIANGLE_H',PROTEUS_TRIANGLE_H)]+PROTEUS_GRAPHICAL_VTK_DEFINES,
                              include_dirs=[numpy.get_include(),PROTEUS_GRAPHICAL,PROTEUS+'/proteusModule/include',
                                            PROTEUS_GRAPHICAL_VTK_INCLUDE_DIR
