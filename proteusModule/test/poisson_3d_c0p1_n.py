@@ -45,15 +45,15 @@ tolFac = 0.0
 matrix = SparseMatrix
 
 #convenience flag
-parallel = True#False
+parallel = True
 
 if parallel:
-    multilevelLinearSolver = KSP_petsc4py#PETSc
+    multilevelLinearSolver = PETSc
     #for petsc do things lie
     #"-ksp_type cg -pc_type asm -pc_asm_type basic -ksp_atol  1.0e-10 -ksp_rtol 1.0e-10 -ksp_monitor_draw" or
     #-pc_type lu -pc_factor_mat_solver_package
     #can also set -pc_asm_overlap 2 with default asm type (restrict)
-    levelLinearSolver = KSP_petsc4py#PETSc#
+    levelLinearSolver = PETSc#
     #for petsc do things lie
     #"-ksp_type cg -pc_type asm -pc_asm_type basic -ksp_atol  1.0e-10 -ksp_rtol 1.0e-10 -ksp_monitor_draw" or
     #-pc_type lu -pc_factor_mat_solver_package
