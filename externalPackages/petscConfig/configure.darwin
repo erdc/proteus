@@ -1,7 +1,7 @@
 ${PROTEUS_PYTHON} ./config/configure.py \
 --with-pic \
 --with-clanguage=C \
---download-openmpi=1 \
+--download-mpich=1 \
 --with-shared-libraries=1 \
 --with-pic=1 \
 --with-x=0 \
