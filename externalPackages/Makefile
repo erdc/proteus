@@ -454,7 +454,7 @@ install_mpi4py:
 distclean_mpi4py:
 	touch install_mpi4py
 	mv -f install_mpi4py install_mpi4py_last
-	cd ${MPI4PY_VERSION} && make -k clean
+	cd ${MPI4PY_VERSION} && make -k clean && rm -rf build
 
 get_petsc4py:
 	hg clone https://petsc4py.googlecode.com/hg/ petsc4py-dev
