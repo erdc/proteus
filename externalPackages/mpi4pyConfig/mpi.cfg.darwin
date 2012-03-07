@@ -16,7 +16,7 @@
 # ---------------------
 [mpi]
 
-mpi_dir              = /usr
+mpi_dir              = $(PROTEUS_PREFIX)
 ## mpi_dir              = /usr/local
 ## mpi_dir              = /usr/local/mpi
 ## mpi_dir              = /opt
