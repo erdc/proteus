@@ -8,6 +8,6 @@ setenv CXX clang++
 setenv F90 gfortran
 setenv F77 gfortran
 setenv FC  gfortran
-setenv LD_LIBRARY_PATH ${PROTEUS_PREFIX}/lib:/usr/openmpi-1.4.4/lib
-setenv DYLD_LIBRARY_PATH ${PROTEUS_PREFIX}/lib:/usr/openmpi-1.4.4/lib
+setenv LD_LIBRARY_PATH ${PROTEUS_PREFIX}/lib
+setenv DYLD_LIBRARY_PATH ${PROTEUS_PREFIX}/lib
 setenv PATH ${PROTEUS_PREFIX}/Library/Frameworks/Python.framework/Versions/Current/bin:${PROTEUS_PREFIX}/bin:${PATH}

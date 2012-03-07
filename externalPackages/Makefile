@@ -6,9 +6,9 @@
 #
 include versionsConfig/versions.${PROTEUS_ARCH}
 
-all: install pip
+all: install
 
-pip:
+pip: easy_install
 	${PROTEUS_PYTHON} distribute_setup.py
 	easy_install pip
 
@@ -482,7 +482,7 @@ install_petsc4py: install_petsc
 distclean_petsc4py:
 	touch install_petsc4py
 	mv -f install_petsc4py install_petsc4py_last
-	cd ${PETSC4PY_VERSION} && PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' make -k clean
+	cd ${PETSC4PY_VERSION} && make -k clean && rm -rf build
 
 #cython
 newConfig_cython:
