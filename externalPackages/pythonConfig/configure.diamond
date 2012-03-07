@@ -1,4 +1,4 @@
-./configure --prefix=${PROTEUS_PREFIX} CC=gcc
+./configure --prefix=${PROTEUS_PREFIX} CC=gcc CXX=g++ LD=gcc
 #CC="icc -DNDEBUG -DPROTEUS_FFI64_HACK -fp-model precise -fno-strict-aliasing -O3" \
 #CXX="icpc -DPROTEUS_FFI64_HACK -DNDEBUG -fp-model precise -fno-strict-aliasing -O3" \
 #--with-threads \
