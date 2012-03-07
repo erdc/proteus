@@ -25,7 +25,8 @@ TMGLIB       = tmglib$(PLAT).a
 SUPERLULIB   = libsuperlu$(PLAT).a
 BLASDEF = -DUSE_VENDOR_BLAS
 #not used in building superlulib
-BLASLIB = -L${TACC_MKL_LIB} -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+BLASLIB = -L${PROTEUS_PREFIX}/lib -lblas 
+#-L${TACC_MKL_LIB} -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 PREFIX = ${PROTEUS_PREFIX}
 #
 #  The archiver and the flag(s) to use when building archive (library)

@@ -1,3 +1,4 @@
+#!/bin/bash
 ${PROTEUS_PYTHON} ./config/configure.py \
 --with-x=0 \
 --with-pic=1 \
@@ -8,7 +9,7 @@ ${PROTEUS_PYTHON} ./config/configure.py \
 --with-cxx=mpicxx \
 --with-fc=mpif90 \
 --with-clanguage=C \
---with-blas-lapack-lib=[${TACC_MKL_LIB}/libmkl_lapack.so,${TACC_MKL_LIB}/libmkl_intel_lp64.so,${TACC_MKL_LIB}/libmkl_sequential.so,${TACC_MKL_LIB}/libmkl_core.so] \
+--download-f-blas-lapack=1 \
 --with-mpiexec=ibrun \
 --download-cmake=1 \
 --download-metis=1 \
