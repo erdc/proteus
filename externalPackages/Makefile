@@ -466,13 +466,13 @@ newConfig_petsc4py:
 	echo "no petsc4py customization implemented"
 
 editConfig_petsc4py:
-	echo "no petsc4py customization implemented"
+	cd petsc4pyConfig && ${EDITOR} config.petsc4py.${PROTEUS_ARCH} build.petsc4py.${PROTEUS_ARCH}
 
 config_petsc4py:
-	cd ${PETSC4PY_VERSION} && ${PROTEUS}/externalPackages/numpyConfig/config.petsc4py.${PROTEUS_ARCH} > ../config_petsc4py_progress  2>&1
+	cd ${PETSC4PY_VERSION} && ${PROTEUS}/externalPackages/petsc4pyConfig/config.petsc4py.${PROTEUS_ARCH} > ../config_petsc4py_progress  2>&1
 
 build_petsc4py:
-	cd ${PETSC4PY_VERSION} && ${PROTEUS}/externalPackages/numpyConfig/build.petsc4py.${PROTEUS_ARCH} > ../build_petsc4py_progress  2>&1
+	cd ${PETSC4PY_VERSION} && ${PROTEUS}/externalPackages/petsc4pyConfig/build.petsc4py.${PROTEUS_ARCH} > ../build_petsc4py_progress  2>&1
 
 install_petsc4py: install_petsc
 	make config_petsc4py build_petsc4py
