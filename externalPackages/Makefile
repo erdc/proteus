@@ -6,9 +6,9 @@
 #
 include versionsConfig/versions.${PROTEUS_ARCH}
 
-all: install pip
+all: install
 
-pip:
+pip: easy_install
 	${PROTEUS_PYTHON} distribute_setup.py
 	easy_install pip
 
@@ -454,7 +454,7 @@ install_mpi4py:
 distclean_mpi4py:
 	touch install_mpi4py
 	mv -f install_mpi4py install_mpi4py_last
-	cd ${MPI4PY_VERSION} && make -k clean
+	cd ${MPI4PY_VERSION} && make -k clean && rm -rf build
 
 get_petsc4py:
 	hg clone https://petsc4py.googlecode.com/hg/ petsc4py-dev
@@ -482,7 +482,7 @@ install_petsc4py: install_petsc
 distclean_petsc4py:
 	touch install_petsc4py
 	mv -f install_petsc4py install_petsc4py_last
-	cd ${PETSC4PY_VERSION} && PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' make -k clean
+	cd ${PETSC4PY_VERSION} && make -k clean && rm -rf build
 
 #cython
 newConfig_cython:
@@ -564,7 +564,7 @@ editConfig_qt:
 	echo "no qt customization implemented"
 
 config_qt:
-	cd ${QT_VERSION} && echo "yes\n" > yes.txt && echo "yes\n" | ${PROTEUS_PYTHON} configure.py > ../config_qt_progress 2>&1
+	cd ${QT_VERSION} && echo "yes\n" > yes.txt && echo "yes\n" | ${PROTEUS_PYTHON} configure.py --assume-shared > ../config_qt_progress 2>&1
 
 build_qt:
 	cd ${QT_VERSION} && make > ../build_qt_progress 2>&1

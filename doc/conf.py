@@ -128,7 +128,7 @@ html_short_title = u"Proteus"
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = "triton.ico"
+html_favicon = "tritonBorder.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -213,3 +213,5 @@ intersphinx_mapping = {'http://docs.python.org/': None}
 todo_include_todos = True
 
 graphviz_output_format = 'svg'
+
+mathjax_path = "https://d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
