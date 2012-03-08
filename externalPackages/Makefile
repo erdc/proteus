@@ -469,10 +469,10 @@ editConfig_petsc4py:
 	echo "no petsc4py customization implemented"
 
 config_petsc4py:
-	cd ${PETSC4PY_VERSION} && PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' ${PROTEUS_PYTHON} setup.py config > ../config_petsc4py_progress  2>&1
+	cd ${PETSC4PY_VERSION} && ${PROTEUS}/externalPackages/numpyConfig/config.petsc4py.${PROTEUS_ARCH} > ../config_petsc4py_progress  2>&1
 
 build_petsc4py:
-	cd ${PETSC4PY_VERSION} && PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' ${PROTEUS_PYTHON} setup.py build > ../build_petsc4py_progress  2>&1
+	cd ${PETSC4PY_VERSION} && ${PROTEUS}/externalPackages/numpyConfig/build.petsc4py.${PROTEUS_ARCH} > ../build_petsc4py_progress  2>&1
 
 install_petsc4py: install_petsc
 	make config_petsc4py build_petsc4py
@@ -482,7 +482,7 @@ install_petsc4py: install_petsc
 distclean_petsc4py:
 	touch install_petsc4py
 	mv -f install_petsc4py install_petsc4py_last
-	cd ${PETSC4PY_VERSION} && make -k clean && rm -rf build
+	cd ${PETSC4PY_VERSION} && PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' make -k clean && rm -rf build
 
 #cython
 newConfig_cython:
