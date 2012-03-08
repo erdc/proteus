@@ -4,7 +4,6 @@ ${PROTEUS_PYTHON} ./config/configure.py \
 --with-shared-libraries=1 \
 --with-pic=1 \
 --with-x=0 \
---with-valgrind=${HOME} \
 --prefix=${PROTEUS_PREFIX} \
 --PETSC_ARCH=${PROTEUS_ARCH} \
 --PETSC_DIR=${PROTEUS}/externalPackages/petsc \
@@ -18,3 +17,5 @@ ${PROTEUS_PYTHON} ./config/configure.py \
 --download-superlu=1 \
 --download-superlu_dist=1 \
 --download-hypre=1
+
+#--with-valgrind=${HOME} \
