@@ -3,11 +3,10 @@
 #
 module swap PrgEnv-gnu PrgEnv-pgi
 module load acml
-module load gcc #load gcc compiler in addition to pgi
 module swap xt-mpich2 xt-mpich2/5.3.1
-module swap gcc gcc/4.6.0
 module swap xt-libsci xt-libsci/11.0.00
 module swap xt-asyncpe xt-asyncpe/5.00
+module load gcc/4.6.0
 export PROTEUS_ARCH=garnet.pgi
 export PROTEUS_PREFIX=${PROTEUS}/${PROTEUS_ARCH}
 export PROTEUS_PYTHON=${PROTEUS_PREFIX}/bin/python

@@ -25,7 +25,7 @@ clean:
 	${PROTEUS_PYTHON} setup.py clean
 
 cleaner: clean
-	/bin/rm -rf build proteus/*.pyc proteus/*.so proteus/*.a
+	/bin/rm -rf build src/*.pyc src/*.so src/*.a
 
 mpkg:
 	bdist_mpkg --readme=README --license=COPYING --welcome=INTRODUCTION
