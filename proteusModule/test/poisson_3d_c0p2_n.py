@@ -45,7 +45,7 @@ tolFac = 0.0
 matrix = SparseMatrix
 
 #convenience flag
-parallel = False
+parallel = True
 
 if parallel:
     multilevelLinearSolver = KSP_petsc4py#o rPETSc
@@ -55,10 +55,10 @@ if parallel:
     #can also set -pc_asm_overlap 2 with default asm type (restrict)
     levelLinearSolver = KSP_petsc4py#PETSc#
     #pick number of layers to use in overlap
-    nLayersOfOverlapForParallel = 1
+    nLayersOfOverlapForParallel = 0
     #type of partition
-    #parallelPartitioningType = MeshParallelPartitioningTypes.node
-    parallelPartitioningType = MeshParallelPartitioningTypes.element
+    parallelPartitioningType = MeshParallelPartitioningTypes.node
+    #parallelPartitioningType = MeshParallelPartitioningTypes.element
     #have to have a numerical flux in parallel
     numericalFluxType = Advection_DiagonalUpwind_Diffusion_IIPG_exterior
     #for true residual test

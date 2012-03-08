@@ -3144,7 +3144,6 @@ void updateGlobalExteriorNumericalDiffusiveFluxJacobian_sd(int scale_penalty,
                                    colind[m]];
                           max_a = fmax(max_a,a[ebNE*nQuadraturePoints_elementBoundary*nnz+
                                                k*nnz+
-                                               I*nSpace+
                                                m]);
                                        
                         }
