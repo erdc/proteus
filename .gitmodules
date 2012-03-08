@@ -52,9 +52,6 @@
 [submodule "externalPackages/petsc"]
 	path = externalPackages/petsc
 	url = git@github.com:erdc-cm/petsc.git
-[submodule "externalPackages/petsc-BuildSystem"]
-	path = externalPackages/petsc-BuildSystem
-	url = git@github.com:erdc-cm/petsc-BuildSystem.git
 [submodule "externalPackages/clawpack/pyclaw"]
 	path = externalPackages/clawpack/pyclaw
 	url = git@github.com:clawpack/pyclaw.git
