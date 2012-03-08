@@ -5274,10 +5274,11 @@ DaetkPetscSys_init(DaetkPetscSys *self, PyObject *args, PyObject *kwds)
   char **argv;
   PyObject *sys_argv;
   /*mwf add for petsc database?*/
+  int isInitialized;
   char *petscDatabaseFilename(0);
   if(!PyArg_ParseTuple(args,
-                       "O|s",
-                       &sys_argv,&petscDatabaseFilename))
+                       "iO|s",
+                       &isInitialized,&sys_argv,&petscDatabaseFilename))
     return -1;
   argc = PyList_Size(sys_argv);
   argv = new char* [argc+1];//don't  know why needs one past end cek
@@ -5287,6 +5288,8 @@ DaetkPetscSys_init(DaetkPetscSys *self, PyObject *args, PyObject *kwds)
     }
   argv[argc] = new char[1];
   argv[argc] = '\0';
+  if (isInitialized)
+    Daetk::Petsc::Sys::initialized=true;
   if (petscDatabaseFilename)
     self->petscSys = new Daetk::Petsc::Sys(argc,argv,(char*)("Initializing petsc for Proteus, with options database\n"),
 					   petscDatabaseFilename);
