@@ -14,9 +14,9 @@ elementQuadrature = SimplexGaussQuadrature(nd,4)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 
 #number of nodes in x,y,z
-nnx = 7
-nny = 7
-nnz = 7
+nnx = 20
+nny = 20
+nnz = 20
 #if unstructured would need triangleOptions flag to be set
 
 
@@ -60,10 +60,10 @@ if parallel:
     #can also set -pc_asm_overlap 2 with default asm type (restrict)
     #levelLinearSolver = PETSc#
     #pick number of layers to use in overlap
-    nLayersOfOverlapForParallel = 2
+    nLayersOfOverlapForParallel = 0
     #type of partition
-    #parallelPartitioningType = MeshParallelPartitioningTypes.node
-    parallelPartitioningType = MeshParallelPartitioningTypes.element
+    parallelPartitioningType = MeshParallelPartitioningTypes.node
+    #parallelPartitioningType = MeshParallelPartitioningTypes.element
     #have to have a numerical flux in parallel
     numericalFluxType = Advection_DiagonalUpwind_Diffusion_IIPG_exterior
     #for true residual test
