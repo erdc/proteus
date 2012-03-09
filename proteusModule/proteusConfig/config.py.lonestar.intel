@@ -9,7 +9,7 @@ PROTEUS_EXTRA_LINK_ARGS=[ '-Wl,--start-group',
                         os.getenv('TACC_MKL_LIB')+'/libmkl_sequential.a',
                         os.getenv('TACC_MKL_LIB')+'/libmkl_core.a',
                         '-Wl,--end-group',
-                        '-lpthread','-L'+os.getenv('ICC_LIB'),'-lsvml','-lirc','-lpdbx','-lm']
+                        '-lpthread','-L'+os.getenv('ICC_LIB'),'-lsvml','-lirc','-lpdbx','-lstdc++','-lm']
 PROTEUS_EXTRA_FC_COMPILE_ARGS=['-fPIC','-Wall','-DANSI_DECLARATORS','-DREAL=double','-DVOID=void']
 PROTEUS_EXTRA_FC_LINK_ARGS=[ '-Wl,--start-group',
                         os.getenv('TACC_MKL_LIB')+'/libmkl_intel_lp64.a',
@@ -49,4 +49,7 @@ PROTEUS_LAPACK_LIB = 'm'
 PROTEUS_LAPACK_INTEGER = 'int'
 PROTEUS_PETSC_LIB_DIRS = []
 PROTEUS_PETSC_LIBS = []
+PROTEUS_PETSC_INCLUDE_DIRS = []
+PROTEUS_PETSC_LIB_DIRS = ['/home1/01020/cekees/proteus/lonestar.intel/lib', '/opt/apps/limic2/0.5.4/lib', '/opt/ofed/lib64', '/opt/apps/intel11_1/mvapich2/1.6/lib', '/opt/apps/intel/11.1/lib/intel64', '/usr/lib/gcc/x86_64-redhat-linux/4.1.2']
+PROTEUS_PETSC_LIBS = ['petsc', 'cmumps', 'dmumps', 'smumps', 'zmumps', 'mumps_common', 'pord', 'scalapack', 'blacs', 'superlu_dist_3.0', 'parmetis', 'metis', 'superlu_4.3', 'pthread', 'flapack', 'fblas', 'imf', 'dl', 'mpich', 'opa', 'limic2', 'pthread', 'rdmacm', 'ibverbs', 'ibumad', 'rt', 'svml', 'ipgo', 'decimal', 'gcc_s', 'irc', 'irc_s', 'mpichf90', 'ifport', 'ifcore', 'm', 'm', 'imf', 'dl', 'mpich', 'opa', 'limic2', 'pthread', 'rdmacm', 'ibverbs', 'ibumad', 'rt', 'svml', 'ipgo', 'decimal', 'gcc_s', 'irc', 'irc_s', 'dl']
 PROTEUS_PETSC_INCLUDE_DIRS = []
