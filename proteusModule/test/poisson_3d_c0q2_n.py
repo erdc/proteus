@@ -10,13 +10,13 @@ nDTout = 1
 #finite element spaces
 femSpaces = {0:C0_AffineLagrangeOnCubeWithNodalBasis}
 #numerical quadrature choices
-elementQuadrature = CubeGaussQuadrature(nd,3)
-elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,3)
+elementQuadrature = CubeGaussQuadrature(nd,5)
+elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,5)
 
 #number of nodes in x,y,z
-nnx = 5
-nny = 5
-nnz = 5
+nnx = 7
+nny = 7
+nnz = 7
 #if unstructured would need triangleOptions flag to be set
 
 
@@ -39,7 +39,7 @@ shockCapturing = None
 multilevelNonlinearSolver  = Newton
 levelNonlinearSolver = Newton
 #linear problem so force 1 iteration allowed
-maxNonlinearIts = 1
+maxNonlinearIts = 2
 maxLineSearches = 1
 fullNewtonFlag = True
 #absolute nonlinear solver residual tolerance
@@ -52,7 +52,7 @@ tolFac = 0.0
 matrix = SparseMatrix
 
 #convenience flag
-parallel = False#True
+parallel = True
 
 if parallel:
     multilevelLinearSolver = KSP_petsc4py#o rPETSc
@@ -62,7 +62,7 @@ if parallel:
     #can also set -pc_asm_overlap 2 with default asm type (restrict)
     levelLinearSolver = KSP_petsc4py#PETSc#
     #pick number of layers to use in overlap
-    nLayersOfOverlapForParallel = 1
+    nLayersOfOverlapForParallel = 0
     #type of partition
     #parallelPartitioningType = MeshParallelPartitioningTypes.node
     parallelPartitioningType = MeshParallelPartitioningTypes.element
@@ -78,8 +78,6 @@ else:
     levelLinearSolver = LU
     numericalFluxType = Advection_DiagonalUpwind_Diffusion_IIPG_exterior
 
-#linear solver parameters
-linearSmoother = None
 #linear solver relative convergence test
 linTolFac = 0.0
 #linear solver absolute convergence test

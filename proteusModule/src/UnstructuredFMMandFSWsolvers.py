@@ -3,13 +3,9 @@ Fast marching and fast sweeping solvers
 """
 import numpy
 import math
-
-from proteus import FemTools, MeshTools, EGeometry
-
-from proteus.StupidHeap import StupidHeap as SHeap
-
-
-
+import sys,atexit
+import FemTools,MeshTools,EGeometry
+import StupidHeap as SHeap
 
 ########################################################################
 #solvers
@@ -644,7 +640,6 @@ if __name__ == "__main__":
     method = 'FSW'
     dim = 2
     #now need for mpi
-    import proteus
     from proteus import Comm
     comm = proteus.Comm.get()
 
