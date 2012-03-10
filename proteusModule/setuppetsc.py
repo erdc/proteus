@@ -45,6 +45,11 @@ class my_build_ext(petsc_build_ext):
         pkgpath=''#cek hack
         return pkgpath, newext
 
+if 'PROTEUS_PETSC_EXTRA_LINK_ARGS' in dir():
+    PROTEUS_EXTRA_LINK_ARGS = PROTEUS_EXTRA_LINK_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS
+if 'PROTEUS_PETSC_EXTRA_LINK_ARGS' in dir():
+    PROTEUS_EXTRA_COMPILE_ARGS = PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS
+
 setup(name='proteus',
       ext_package='proteus',
       package_dir={'proteus':'src'},
