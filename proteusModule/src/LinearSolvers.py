@@ -6,7 +6,11 @@ import lapackWrappers
 import superluWrappers
 from math import *
 from Profiling import logEvent
-import petsc4py
+#PETSc import, forces comm init if not already done
+from petsc4py import PETSc as p4pyPETSc
+import Comm
+Comm.set_isInitialized()
+#end PETSc import
 
 class LinearSolver:
     """
@@ -238,8 +242,8 @@ class LinearSolver:
             self.xGhosted = self.par_b.duplicate()
             self.yGhosted = self.par_b.duplicate()
         self.xGhosted.setArray(x.getArray())
-        self.xGhosted.ghostUpdateBegin(petsc4py.PETSc.InsertMode.INSERT,petsc4py.PETSc.ScatterMode.FORWARD)
-        self.xGhosted.ghostUpdateEnd(petsc4py.PETSc.InsertMode.INSERT,petsc4py.PETSc.ScatterMode.FORWARD)
+        self.xGhosted.ghostUpdateBegin(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
+        self.xGhosted.ghostUpdateEnd(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
         self.yGhosted.zeroEntries()
         self.solve(u=self.yGhosted.getLocalForm().getArray(),b=self.xGhosted.getLocalForm().getArray(),initialGuessIsZero=True)
         y.setArray(self.yGhosted.getArray())
@@ -380,7 +384,7 @@ class KSP_petsc4py(LinearSolver):
                                                convergenceTest='its',
                                                computeRates=False,
                                                printInfo=False)
-                self.pc = petsc4py.PETSc.PC().createPython(self.pccontext)
+                self.pc = p4pyPETSc.PC().createPython(self.pccontext)
             elif Preconditioner == GaussSeidel:
                 self.pccontext= Preconditioner(connectionList,
                                                L,
@@ -393,10 +397,10 @@ class KSP_petsc4py(LinearSolver):
                                                convergenceTest='its',
                                                computeRates=False,
                                                printInfo=False)
-                self.pc = petsc4py.PETSc.PC().createPython(self.pccontext)
+                self.pc = p4pyPETSc.PC().createPython(self.pccontext)
             elif Preconditioner == LU:
                 self.pccontext= Preconditioner(L)
-                self.pc = petsc4py.PETSc.PC().createPython(self.pccontext)
+                self.pc = p4pyPETSc.PC().createPython(self.pccontext)
             elif Preconditioner == StarILU:
                 self.pccontext= Preconditioner(connectionList,
                                                L,
@@ -408,7 +412,7 @@ class KSP_petsc4py(LinearSolver):
                                                convergenceTest='its',
                                                computeRates=False,
                                                printInfo=False)
-                self.pc = petsc4py.PETSc.PC().createPython(self.pccontext)
+                self.pc = p4pyPETSc.PC().createPython(self.pccontext)
             elif Preconditioner == StarBILU:
                 self.pccontext= Preconditioner(connectionList,
                                                L,
@@ -421,7 +425,7 @@ class KSP_petsc4py(LinearSolver):
                                                convergenceTest='its',
                                                computeRates=False,
                                                printInfo=False)
-                self.pc = petsc4py.PETSc.PC().createPython(self.pccontext)
+                self.pc = p4pyPETSc.PC().createPython(self.pccontext)
             elif Preconditioner == SimpleNavierStokes3D:
                 self.preconditioner = SimpleNavierStokes3D(par_L)
                 self.pc = self.preconditioner.pc
@@ -436,11 +440,11 @@ class KSP_petsc4py(LinearSolver):
         self.par_firstAssembly=True
         self.par_L   = par_L
         self.petsc_L = par_L
-        self.ksp     = petsc4py.PETSc.KSP().create()
+        self.ksp     = p4pyPETSc.KSP().create()
         self.csr_rep_owned = self.petsc_L.csr_rep_owned
         self.csr_rep = self.petsc_L.csr_rep
         #shell for main operator
-        self.Lshell = petsc4py.PETSc.Mat().create()
+        self.Lshell = p4pyPETSc.Mat().create()
         sizes = self.petsc_L.getSizes()
         self.Lshell.setSizes([[sizes[0][0],None],[sizes[0][1],None]])
         self.Lshell.setType('python')
@@ -468,18 +472,17 @@ class KSP_petsc4py(LinearSolver):
             self.ksp.setOptionsPrefix(prefix)
         self.ksp.setFromOptions()
     def prepare(self,b=None):
-        from petsc4py import PETSc
         self.petsc_L.zeroEntries()
         assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
         if self.par_fullOverlap == True:
-            self.petsc_L.setValuesLocalCSR(self.csr_rep_owned[0],self.csr_rep_owned[1],self.csr_rep_owned[2],PETSc.InsertMode.INSERT_VALUES)
+            self.petsc_L.setValuesLocalCSR(self.csr_rep_owned[0],self.csr_rep_owned[1],self.csr_rep_owned[2],p4pyPETSc.InsertMode.INSERT_VALUES)
         else:
             if self.par_firstAssembly:
-                self.petsc_L.setOption(PETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,False)
+                self.petsc_L.setOption(p4pyPETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,False)
                 self.par_firstAssembly = False
             else:
-                self.petsc_L.setOption(PETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,True)
-            self.petsc_L.setValuesLocalCSR(self.csr_rep[0],self.csr_rep[1],self.csr_rep[2],PETSc.InsertMode.ADD_VALUES)
+                self.petsc_L.setOption(p4pyPETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,True)
+            self.petsc_L.setValuesLocalCSR(self.csr_rep[0],self.csr_rep[1],self.csr_rep[2],p4pyPETSc.InsertMode.ADD_VALUES)
         self.petsc_L.assemblyBegin()
         self.petsc_L.assemblyEnd()
         if self.pc != None:
@@ -490,7 +493,7 @@ class KSP_petsc4py(LinearSolver):
         self.ksp.setUp()
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
 #         if self.petsc_L.isSymmetric(tol=1.0e-14):
-#            self.petsc_L.setOption(petsc4py.PETSc.Mat.Option.SYMMETRIC, True)
+#            self.petsc_L.setOption(p4pyPETSc.Mat.Option.SYMMETRIC, True)
 #            print "Matrix is symmetric"
 #         else:
 #            print "MATRIX IS NONSYMMETRIC"
@@ -507,7 +510,7 @@ class KSP_petsc4py(LinearSolver):
             self.matcontext.par_b = par_b
 
         self.ksp.setInitialGuessNonzero(False)
-        self.ksp.view(petsc4py.PETSc.Viewer.STDOUT())
+        self.ksp.view(p4pyPETSc.Viewer.STDOUT())
         self.ksp.solve(par_b,par_u)
         #mwf debug
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
@@ -539,12 +542,12 @@ class SimpleNavierStokes3D:
         print "pressure",self.pressureDOF
         self.velocityDOF = numpy.arange(range[0]+neqns/4,range[0]+neqns,dtype="i")
         print "velocity",self.velocityDOF
-        self.pc = petsc4py.PETSc.PC().create()
+        self.pc = p4pyPETSc.PC().create()
         self.pc.setType('fieldsplit')
-        self.isp = petsc4py.PETSc.IS()
-        self.isp.createGeneral(self.pressureDOF,comm=petsc4py.PETSc.COMM_WORLD)
-        self.isv = petsc4py.PETSc.IS()
-        self.isv.createGeneral(self.velocityDOF,comm=petsc4py.PETSc.COMM_WORLD)
+        self.isp = p4pyPETSc.IS()
+        self.isp.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
+        self.isv = p4pyPETSc.IS()
+        self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.fieldSplitSetIS(self.isv)
         self.pc.fieldSplitSetIS(self.isp)
 
@@ -559,12 +562,12 @@ class SimpleDarcyFC:
         #print "saturation",self.saturationDOF
         self.pressureDOF = numpy.arange(range[0]+neqns/2,range[0]+neqns,dtype="i")
         #print "pressure",self.pressureDOF
-        self.pc = petsc4py.PETSc.PC().create()
+        self.pc = p4pyPETSc.PC().create()
         self.pc.setType('fieldsplit')
-        self.isp = petsc4py.PETSc.IS()
-        self.isp.createGeneral(self.saturationDOF,comm=petsc4py.PETSc.COMM_WORLD)
-        self.isv = petsc4py.PETSc.IS()
-        self.isv.createGeneral(self.pressureDOF,comm=petsc4py.PETSc.COMM_WORLD)
+        self.isp = p4pyPETSc.IS()
+        self.isp.createGeneral(self.saturationDOF,comm=p4pyPETSc.COMM_WORLD)
+        self.isv = p4pyPETSc.IS()
+        self.isv.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.fieldSplitSetIS(self.isp)
         self.pc.fieldSplitSetIS(self.isv)
 

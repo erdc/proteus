@@ -546,8 +546,8 @@ class Osher_FMM_controller(Osher_controller):
      setup so that can configure from options,
      test with Fast Sweeping
     """
-    from proteus import UnstructuredFMMandFSWsolvers,NonlinearSolvers
     def __init__(self,model,nOptions,maxOsherSteps=4):
+        import UnstructuredFMMandFSWsolvers,NonlinearSolvers
         Osher_controller.__init__(self,model,nOptions)
         self.nStepsMax = maxOsherSteps
         self.finishWithFMM = True#False#True
@@ -1047,8 +1047,6 @@ class HeuristicNL_dt_controller(SC_base):
     def errorFailure(self):
         return False
 
-from LinearAlgebraTools import WeightedNorm
-from flcbdfWrappers import globalMax
 class GustafssonFullNewton_dt_controller(SC_base):
     """
     Try version of basic Gustafsson and Soederlind 97 time step selection strategy
@@ -1103,6 +1101,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
       Decide if retryStep_solverFailure should retry predictor as well, right now does not
     """
     def __init__(self,model,nOptions):
+        from LinearAlgebraTools import WeightedNorm
         import copy
         SC_base.__init__(self,model,nOptions)
         self.nonlinearGrowthRateMax = 2    #r_a_max
@@ -1321,6 +1320,7 @@ class GustafssonFullNewton_dt_controller(SC_base):
         TODO: Figure out good strategy for picking initial dt since we don't necessarily want
          time integration to be responsible for this right now
         """
+        from flcbdfWrappers import globalMax
         self.saveSolution()
         self.t_model_last=t0
         for m in self.model.levelModelList:

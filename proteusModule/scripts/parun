@@ -27,10 +27,6 @@ import sys
 import pstats
 import pdb
 #remove blankent import statements until after Comm initialized for petsc4py
-# try:
-#     from proteusGraphical import *
-# except:
-#     pass
 try:
     import cProfile as profiler
 except:
