@@ -1726,7 +1726,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       nodeNeighborsOffsets_subdomain[nN+1]=offset;
       sort(&nodeNeighbors_subdomain[nodeNeighborsOffsets_subdomain[nN]],&nodeNeighbors_subdomain[nodeNeighborsOffsets_subdomain[nN+1]]);
       int weight= (nodeNeighborsOffsets_subdomain[nN+1] - nodeNeighborsOffsets_subdomain[nN]);
-      for (int k=nodeNeighbors_subdomain[nN];k<nodeNeighbors_subdomain[nN+1];k++)
+      for (int k=nodeNeighborsOffsets_subdomain[nN];k<nodeNeighborsOffsets_subdomain[nN+1];k++)
 	weights_subdomain[k] = weight;
     }
   //
