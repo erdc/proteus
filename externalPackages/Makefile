@@ -288,7 +288,7 @@ install_petsc:
 distclean_petsc:
 	touch install_petsc
 	mv -f install_petsc install_petsc_last
-	cd ${PETSC_VERSION} && make -k clean && rm -rf externalpackages ${PROTEUS_ARCH}
+	cd ${PETSC_VERSION} && PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' make -k clean && rm -rf externalpackages ${PROTEUS_ARCH}
 
 #daetk
 newConfig_daetk:
@@ -480,7 +480,7 @@ install_petsc4py: install_petsc
 distclean_petsc4py:
 	touch install_petsc4py
 	mv -f install_petsc4py install_petsc4py_last
-	cd ${PETSC4PY_VERSION} && PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' make -k clean && rm -rf build
+	cd ${PETSC4PY_VERSION} && make -k clean PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' && rm -rf build
 
 #cython
 newConfig_cython:

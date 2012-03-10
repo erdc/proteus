@@ -18,19 +18,13 @@ import socket
 import cPickle
 import numpy
 import proteus
-#remove blankent import statements until after Comm initialized for petsc4py
-# from proteus import *
+#not blanket import statements until after Comm initialized for petsc4py
 from proteus import Profiling,Comm
 from warnings import *
 import optparse
 import sys
 import pstats
 import pdb
-#remove blankent import statements until after Comm initialized for petsc4py
-try:
-    from proteusGraphical import *
-except:
-    pass
 
 try:
     import cProfile as profiler
@@ -153,7 +147,7 @@ parser.add_option("-H","--hotStart",
                   action="store_true",
                   help="""Use the last step in the archive as the intial condition and continue appending to the archive""")
 
-(opts,args) = parser.parse_args(args=[])#sys.argv[1:])
+(opts,args) = parser.parse_args(args=[])
 
 if opts.debug:
     pdb.set_trace()
@@ -186,13 +180,11 @@ if opts.petscOptionsFile != None:
 
 comm = Comm.init(argv=petsc_argv)
 #blanket import statements can go below here now that petsc4py should be initialized
-from proteus import *
 Profiling.procID=comm.rank()
 log("Initialized MPI")
-try:
+if opts.viewer is not False:
     from proteusGraphical import *
-except:
-    pass
+from proteus import *
 
 log("Adding "+str(opts.probDir)+" to path for loading modules")
 probDir = str(opts.probDir)

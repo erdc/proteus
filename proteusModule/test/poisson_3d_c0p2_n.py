@@ -14,9 +14,9 @@ elementQuadrature = SimplexGaussQuadrature(nd,4)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 
 #number of nodes in x,y,z
-nnx = 11
-nny = 11
-nnz = 11
+nnx = 7
+nny = 7
+nnz = 7
 #if unstructured would need triangleOptions flag to be set
 
 
@@ -32,7 +32,7 @@ shockCapturing = None
 multilevelNonlinearSolver  = Newton
 levelNonlinearSolver = Newton
 #linear problem so force 1 iteration allowed
-maxNonlinearIts = 1
+maxNonlinearIts = 2
 maxLineSearches = 1
 fullNewtonFlag = True
 #absolute nonlinear solver residual tolerance
@@ -76,4 +76,4 @@ linTolFac = 0.0
 #linear solver absolute convergence test
 l_atol_res = 1.0e-10
 
-conservativeFlux =  {0:'pwl'}
+#conservativeFlux =  {0:'pwl'}

@@ -11,7 +11,11 @@ import numpy
 from superluWrappers import *
 import flcbdfWrappers
 from Profiling import logEvent
-from petsc4py import PETSc
+#PETSc import, forces comm init if not already done
+from petsc4py import PETSc as p4pyPETSc
+import Comm
+Comm.set_isInitialized()
+#end PETSc import
 
 class ParVec:
     """
@@ -39,14 +43,14 @@ class ParVec:
     def scatter_reverse_add(self):
         self.cparVec.scatter_reverse_add()
 
-class ParVec_petsc4py(PETSc.Vec):
+class ParVec_petsc4py(p4pyPETSc.Vec):
     """
     Parallel vector using petsc4py's wrappers for PETSc
     """
     def __init__(self,array=None,bs=None,n=None,N=None,nghosts=None,subdomain2global=None,blockVecType="simple"):
         if array == None:
             return#cek hack, don't know why init gets called by PETSc.Vec duplicate function
-        PETSc.Vec.__init__(self)
+        p4pyPETSc.Vec.__init__(self)
         blockSize = max(1,bs)
         self.dim_proc = n*blockSize
         self.nghosts = nghosts
@@ -76,7 +80,7 @@ class ParVec_petsc4py(PETSc.Vec):
                     self.subdomain2global=subdomain2globalTotal
                 else:
                     self.subdomain2global=subdomain2global
-                self.petsc_l2g = PETSc.LGMap()
+                self.petsc_l2g = p4pyPETSc.LGMap()
                 self.petsc_l2g.create(self.subdomain2global)
                 self.setLGMap(self.petsc_l2g)
 
@@ -85,27 +89,27 @@ class ParVec_petsc4py(PETSc.Vec):
                 ghosts = subdomain2global[n:]
                 self.createGhostWithArray(ghosts,array,size=(blockSize*n,blockSize*N),bsize=blockSize)
                 self.subdomain2global = subdomain2global
-                self.petsc_l2g = PETSc.LGMap()
+                self.petsc_l2g = p4pyPETSc.LGMap()
                 self.petsc_l2g.create(self.subdomain2global)
                 self.setLGMap(self.petsc_l2g)
         self.setFromOptions()
     def scatter_forward_insert(self):
-        self.ghostUpdateBegin(PETSc.InsertMode.INSERT,PETSc.ScatterMode.FORWARD)
-        self.ghostUpdateEnd(PETSc.InsertMode.INSERT,PETSc.ScatterMode.FORWARD)
+        self.ghostUpdateBegin(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
+        self.ghostUpdateEnd(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
     def scatter_reverse_add(self):
-        self.ghostUpdateBegin(PETSc.InsertMode.ADD_VALUES,PETSc.ScatterMode.REVERSE)
-        self.ghostUpdateEnd(PETSc.InsertMode.ADD_VALUES,PETSc.ScatterMode.REVERSE)
+        self.ghostUpdateBegin(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
+        self.ghostUpdateEnd(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
 
-class ParMat_petsc4py(PETSc.Mat):
+class ParMat_petsc4py(p4pyPETSc.Mat):
     """
     Parallel matrix based on petsc4py's wrappers for PETSc.
     """
     def __init__(self,ghosted_csr_mat,par_bs,par_n,par_N,par_nghost,subdomain2global,blockVecType="simple"):
-        PETSc.Mat.__init__(self)
+        p4pyPETSc.Mat.__init__(self)
         self.ghosted_csr_mat=ghosted_csr_mat
         self.blockVecType = blockVecType
         assert self.blockVecType == "simple", "petsc4py wrappers require self.blockVecType=simple"
-        self.create(PETSc.COMM_WORLD)
+        self.create(p4pyPETSc.COMM_WORLD)
         blockSize = max(1,par_bs)
         if blockSize >= 1 and blockVecType != "simple":
             ## \todo fix block aij in ParMat_petsc4py
@@ -130,7 +134,7 @@ class ParMat_petsc4py(PETSc.Mat):
         self.csr_rep = ghosted_csr_mat.getCSRrepresentation()
         blockOwned = blockSize*par_n
         self.csr_rep_owned = ghosted_csr_mat.getSubMatCSRrepresentation(0,blockOwned)
-        self.petsc_l2g = PETSc.LGMap()
+        self.petsc_l2g = p4pyPETSc.LGMap()
         self.petsc_l2g.create(self.subdomain2global)
         self.colind_global = self.petsc_l2g.apply(self.csr_rep_owned[1]) #prealloc needs global indices
         self.setPreallocationCSR([self.csr_rep_owned[0],self.colind_global,self.csr_rep_owned[2]])
@@ -185,7 +189,6 @@ class SparseMatShell:
     """
     Build a parallel matrix shell using the subdomain CSR data structures (must have overlapping subdomains)
     """
-    from petsc4py import PETSc
     def __init__(self,ghosted_csr_mat):
         self.ghosted_csr_mat=ghosted_csr_mat
         self.par_b = None
@@ -199,8 +202,8 @@ class SparseMatShell:
             self.xGhosted = self.par_b.duplicate()
             self.yGhosted = self.par_b.duplicate()
         self.xGhosted.setArray(x.getArray())
-        self.xGhosted.ghostUpdateBegin(PETSc.InsertMode.INSERT,PETSc.ScatterMode.FORWARD)
-        self.xGhosted.ghostUpdateEnd(PETSc.InsertMode.INSERT,PETSc.ScatterMode.FORWARD)
+        self.xGhosted.ghostUpdateBegin(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
+        self.xGhosted.ghostUpdateEnd(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
         self.yGhosted.zeroEntries()
         self.ghosted_csr_mat.matvec(self.xGhosted.getLocalForm().getArray(),self.yGhosted.getLocalForm().getArray())
         y.setArray(self.yGhosted.getArray())
