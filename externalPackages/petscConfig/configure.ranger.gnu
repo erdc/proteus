@@ -1,4 +1,5 @@
 ${PROTEUS_PYTHON} ./config/configure.py \
+--useThreads=0 \
 --with-pic=1 \
 --with-pthread=1 \
 --with-clanguage=C \
