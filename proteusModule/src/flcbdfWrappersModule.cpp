@@ -5288,8 +5288,9 @@ DaetkPetscSys_init(DaetkPetscSys *self, PyObject *args, PyObject *kwds)
     }
   argv[argc] = new char[1];
   argv[argc] = '\0';
-  if (isInitialized)
-    Daetk::Petsc::Sys::initialized=true;
+  //cek need to think more about how to handle petsc4py and daetk. 
+//  if (isInitialized)
+  //  Daetk::Petsc::Sys::initialized=true;
   if (petscDatabaseFilename)
     self->petscSys = new Daetk::Petsc::Sys(argc,argv,(char*)("Initializing petsc for Proteus, with options database\n"),
 					   petscDatabaseFilename);
