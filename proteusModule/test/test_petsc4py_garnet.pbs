@@ -1,0 +1,9 @@
+#PBS -A ERDCV00898ENQ
+#PBS -l walltime=00:60:00
+#PBS -l ncpus=128
+#PBS -q debug
+#PBS -N testPetsc4py
+#PBS -j oe
+#PBS -l application=proteus
+cd ${PROTEUS}/externalPackages/petsc4py/test
+aprun -n 128 ${PROTEUS_PYTHON} runtests.py -v --exclude test_da --exclude test_ts --exclude test_vec --exclude test_object
