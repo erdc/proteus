@@ -1,5 +1,5 @@
 #PBS -A ERDCV00898ENQ
-#PBS -l walltime=00:60:00
+#PBS -l walltime=001:00:00
 #PBS -l ncpus=128
 #PBS -q debug
 #PBS -N testProteus
