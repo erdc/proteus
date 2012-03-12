@@ -11,6 +11,7 @@ try:
 except:
     hasQt=False
 
+hasQt=True
 useCoPro=False
 
 if useCoPro:
@@ -87,7 +88,7 @@ class Window:
                     self.iren = QVTKRenderWindowInteractor(self.frameWidget)
                     self.iren.Initialize()
                     if comm.size() > 1:
-                       self.iren.Disable() 
+                        self.iren.Disable() 
                     else:
                         self.iren.SetInteractorStyle(vtkInteractorStyleTrackballCamera())
                     self.renWin = self.iren.GetRenderWindow()
@@ -106,7 +107,7 @@ class Window:
                     self.iren = QVTKRenderWindowInteractor()
                     self.iren.Initialize()
                     if comm.size() > 1:
-                       self.iren.Disable() 
+                        self.iren.Disable() 
                     else:
                         self.iren.SetInteractorStyle(vtkInteractorStyleTrackballCamera())
                     self.renWin = self.iren.GetRenderWindow()
@@ -2147,7 +2148,7 @@ def viewParticles_2D(window,
         if 'streamlines' in viewTypes and window.vod.has_key('vectors'):
             #
             #mwf debug
-            pdb.set_trace()
+            #pdb.set_trace()
             streamer = vtk.vtkStreamTracer()
             window.vod['streamLineFilter'] = streamer
             streamer.SetInput(window.vod['dataSet'])
