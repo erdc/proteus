@@ -5,6 +5,7 @@ import Profiling
 log = Profiling.logEvent
 #mwf add Comm for saving info about time step in separate file
 import Comm
+from flcbdfWrappers import globalMax
 
 class SC_base:
     """
@@ -1320,7 +1321,6 @@ class GustafssonFullNewton_dt_controller(SC_base):
         TODO: Figure out good strategy for picking initial dt since we don't necessarily want
          time integration to be responsible for this right now
         """
-        from flcbdfWrappers import globalMax
         self.saveSolution()
         self.t_model_last=t0
         for m in self.model.levelModelList:
