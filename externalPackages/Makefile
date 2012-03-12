@@ -480,7 +480,7 @@ install_petsc4py: install_petsc
 distclean_petsc4py:
 	touch install_petsc4py
 	mv -f install_petsc4py install_petsc4py_last
-	cd ${PETSC4PY_VERSION} && make -k clean PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' && rm -rf build
+	cd ${PETSC4PY_VERSION} && PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' ${PROTEUS_PYTHON} setup.py clean && rm -rf build
 
 #cython
 newConfig_cython:
