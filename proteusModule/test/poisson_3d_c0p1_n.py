@@ -62,8 +62,8 @@ if parallel:
     #pick number of layers to use in overlap
     nLayersOfOverlapForParallel = 0
     #type of partition
-    parallelPartitioningType = MeshParallelPartitioningTypes.node
-    #parallelPartitioningType = MeshParallelPartitioningTypes.element
+    #parallelPartitioningType = MeshParallelPartitioningTypes.node
+    parallelPartitioningType = MeshParallelPartitioningTypes.element
     #have to have a numerical flux in parallel
     numericalFluxType = Advection_DiagonalUpwind_Diffusion_IIPG_exterior
     #for true residual test
