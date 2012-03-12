@@ -1,0 +1,15 @@
+#!/bin/tcsh
+#$ -V # Inherit the submission environment
+#$ -cwd # Start job in submission directory
+#$ -N testProteus # Job Name
+#$ -j y # Combine stderr and stdout
+#$ -o $JOB_NAME.o$JOB_ID # Name of the output file (eg. myMPI.oJobID)
+#$ -pe 16way 32 # Requests 16 tasks/node, 32 cores total
+#$ -q development # Queue name "normal"
+#$ -l h_rt=00:30:00 # Run time (hh:mm:ss) - 1.5 hours
+#$ -M cekees@gmail.com # Use email notification address
+#$ -m be # Email at Begin and End of job
+set echo # Echo commands, use "set echo" with csh
+#mkdir ${WORK}/$JOB_NAME.$JOB_ID
+cd ${HOME}/proteus_test
+ibrun tacc_affinity ${PROTEUS_PYTHON} test_poisson.py

@@ -1726,7 +1726,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       nodeNeighborsOffsets_subdomain[nN+1]=offset;
       sort(&nodeNeighbors_subdomain[nodeNeighborsOffsets_subdomain[nN]],&nodeNeighbors_subdomain[nodeNeighborsOffsets_subdomain[nN+1]]);
       int weight= (nodeNeighborsOffsets_subdomain[nN+1] - nodeNeighborsOffsets_subdomain[nN]);
-      for (int k=nodeNeighbors_subdomain[nN];k<nodeNeighbors_subdomain[nN+1];k++)
+      for (int k=nodeNeighborsOffsets_subdomain[nN];k<nodeNeighborsOffsets_subdomain[nN+1];k++)
 	weights_subdomain[k] = weight;
     }
   //
@@ -5288,8 +5288,9 @@ DaetkPetscSys_init(DaetkPetscSys *self, PyObject *args, PyObject *kwds)
     }
   argv[argc] = new char[1];
   argv[argc] = '\0';
-  if (isInitialized)
-    Daetk::Petsc::Sys::initialized=true;
+  //cek need to think more about how to handle petsc4py and daetk. 
+//  if (isInitialized)
+  //  Daetk::Petsc::Sys::initialized=true;
   if (petscDatabaseFilename)
     self->petscSys = new Daetk::Petsc::Sys(argc,argv,(char*)("Initializing petsc for Proteus, with options database\n"),
 					   petscDatabaseFilename);
