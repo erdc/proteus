@@ -18,7 +18,7 @@ def init(petscDatabaseFilename=None,argv=sys.argv):
         from petsc4py import PETSc
         narg = len(argv)
         for i,s in enumerate(argv):
-            if s[0] is '-':
+            if len(s) > 0 and s[0] is '-':
                 name = s
                 if i+1 < narg and  argv[i+1][0] is not '-':
                     value = argv[i+1]
