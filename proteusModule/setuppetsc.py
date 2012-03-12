@@ -45,6 +45,12 @@ class my_build_ext(petsc_build_ext):
         pkgpath=''#cek hack
         return pkgpath, newext
 
+if 'PROTEUS_PETSC_EXTRA_LINK_ARGS' in dir():
+    PROTEUS_EXTRA_LINK_ARGS = PROTEUS_EXTRA_LINK_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS
+print "PROTEUS_EXTRA_LINK_ARGS",PROTEUS_EXTRA_LINK_ARGS
+if 'PROTEUS_PETSC_EXTRA_LINK_ARGS' in dir():
+    PROTEUS_EXTRA_COMPILE_ARGS = PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS
+print "PROTEUS_EXTRA_COMPILE_ARGS",PROTEUS_EXTRA_COMPILE_ARGS
 setup(name='proteus',
       ext_package='proteus',
       package_dir={'proteus':'src'},
@@ -65,8 +71,13 @@ setup(name='proteus',
                                                  ('PETSCVEC_BOUNDS_CHECK',1),
                                                  ('F77_POST_UNDERSCORE',1),
                                                  ('USE_BLAS',1)],
-                                  include_dirs=['include',numpy.get_include(),PROTEUS_SUPERLU_INCLUDE_DIR,PROTEUS_TRIANGLE_INCLUDE_DIR]+PROTEUS_DAETK_INCLUDE_DIR+PROTEUS_PETSC_INCLUDE_DIRS+
-                                  [PROTEUS_MPI_INCLUDE_DIR],
+                                  include_dirs=['include',
+                                                numpy.get_include(),
+                                                PROTEUS_SUPERLU_INCLUDE_DIR,
+                                                PROTEUS_TRIANGLE_INCLUDE_DIR] + \
+                                      PROTEUS_DAETK_INCLUDE_DIR + \
+                                      PROTEUS_PETSC_INCLUDE_DIRS + \
+                                      [PROTEUS_MPI_INCLUDE_DIR],
                                   library_dirs=[PROTEUS_DAETK_LIB_DIR]+PROTEUS_PETSC_LIB_DIRS+[PROTEUS_MPI_LIB_DIR],
                                   libraries=['m',PROTEUS_DAETK_LIB]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS,
                                   extra_link_args=PROTEUS_EXTRA_LINK_ARGS,
