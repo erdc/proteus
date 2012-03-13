@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+import sys,os,pexpect
+
+np=16
+nn=np/8
+qcmd="qsub -l application=proteus -l walltime=001:00:00 -l select=%(nn)i:ncpus=8:mpiprocs=8 -l place=scatter:excl -A ERDCV00898ENQ -q debug -V -I" %  {"nn":nn}
+PROTEUS = os.getenv('PROTEUS')
+PROTEUS_PYTHON = os.getenv('PROTEUS_PYTHON')
+print sys.argv
+pcmd="mpirun -n %(np)i %(PROTEUS_PYTHON)s %(PYTHON_SCRIPT)s" % {"np":np,
+                                                                "PROTEUS":PROTEUS,
+                                                                "PROTEUS_PYTHON":PROTEUS_PYTHON,
+                                                                "PYTHON_SCRIPT":sys.argv[1]}
+child = pexpect.spawn(qcmd,timeout=60*60)
+child.logfile = sys.stdout
+child.expect("read")
+child.sendline(pcmd)
+child.expect("PEXPECT_EXIT")
+child.sendline("exit")
