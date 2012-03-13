@@ -16,16 +16,16 @@
 # ---------------------
 [mpi]
 
-mpi_dir              = /opt/cray/mpt/5.1.2/xt/gemini/mpich2-gnu
-mpicc                = gcc
-mpicxx               = g++
+mpi_dir              = 
+mpicc                = cc
+mpicxx               = CC
 
 ## define_macros        =
 ## undef_macros         =
-include_dirs         = %(mpi_dir)s/include
-libraries            = mpich
-library_dirs         = %(mpi_dir)s/lib
-runtime_library_dirs = %(mpi_dir)s/lib
+#include_dirs         = %(mpi_dir)s/include
+#libraries            = mpich
+#library_dirs         = %(mpi_dir)s/lib
+#runtime_library_dirs = %(mpi_dir)s/lib
 
 ## extra_compile_args   =
 ## extra_link_args      =
