@@ -225,6 +225,6 @@ setup(name='proteus',
                              include_dirs=[numpy.get_include(),'include'])
                    ],
       data_files=[('proteusConfig',['config.py'])],
-      scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond','scripts/run_script_lonestar','run_script_ranger'],
+      scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond','scripts/run_script_lonestar','scripts/run_script_ranger'],
       requires=['numpy']
       )
