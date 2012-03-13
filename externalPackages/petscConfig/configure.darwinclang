@@ -16,6 +16,7 @@ ${PROTEUS_PYTHON} ./config/configure.py \
 --download-mumps=1 \
 --download-superlu=1 \
 --download-superlu_dist=1 \
---with-valgrind=${HOME} \
 --download-hypre=1
+
+#--with-valgrind=${HOME} \
 
