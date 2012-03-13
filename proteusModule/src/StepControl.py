@@ -707,6 +707,7 @@ class Min_dt_cfl_controller(Min_dt_controller):
                 self.cfl[ci] = model.levelModelList[-1].q[('cfl',ci)]
 
     def initialize_dt_model(self,t0,tOut):
+        from flcbdfWrappers import globalMax
         self.saveSolution()
         m = self.model.levelModelList[-1]
         maxCFL = 1.0e-6
@@ -724,6 +725,7 @@ class Min_dt_cfl_controller(Min_dt_controller):
                                                                    self.dt_model),
             level=1)
     def choose_dt_model(self):
+        from flcbdfWrappers import globalMax
         self.solverFailures=0
         self.errorFailures=0
         self.saveSolution()

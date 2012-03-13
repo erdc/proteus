@@ -8,6 +8,6 @@ setenv CXX clang++
 setenv F90 gfortran
 setenv F77 gfortran
 setenv FC  gfortran
-setenv LD_LIBRARY_PATH ${PROTEUS_PREFIX}/lib
-setenv DYLD_LIBRARY_PATH ${PROTEUS_PREFIX}/lib
+setenv LD_LIBRARY_PATH ${PROTEUS_PREFIX}/lib:${PROTEUS_PREFIX}/lib/paraview-3.14
+setenv DYLD_LIBRARY_PATH ${PROTEUS_PREFIX}/lib:${PROTEUS_PREFIX}/lib/paraview-3.14
 setenv PATH ${PROTEUS_PREFIX}/Library/Frameworks/Python.framework/Versions/Current/bin:${PROTEUS_PREFIX}/bin:${PATH}
