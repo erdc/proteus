@@ -12,7 +12,7 @@ pcmd="aprun -n %(np)i %(PROTEUS_PYTHON)s %(PYTHON_SCRIPT)s" % {"np":np,
 child = pexpect.spawn(qcmd,timeout=30*60)
 child.logfile = sys.stdout
 index = child.expect(["May I insert the commands?",pexpect.TIMEOUT],timeout=60)
-if index = 0:
+if index == 0:
     child.sendline("yes")
 child.sendline(pcmd)
 index = child.expect(["job status: r","job status: Eqw",pexpect.TIMEOUT])
