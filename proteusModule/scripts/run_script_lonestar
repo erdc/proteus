@@ -15,5 +15,5 @@ child.expect("job status: r")
 child.sendline(pcmd)
 child.expect(["PEXPECT_EXIT",pexpect.EOF,pexpect.TIMEOUT],timeout=10*60)
 child.sendline("exit")
-child.kill()
+child.close()
 
