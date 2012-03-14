@@ -6,11 +6,16 @@
 #
 include versionsConfig/versions.${PROTEUS_ARCH}
 
-all: install
+all: install pip pexpect
 
 pip: easy_install
-	${PROTEUS_PYTHON} distribute_setup.py
 	easy_install pip
+
+easy_install:
+	${PROTEUS_PYTHON} distribute_setup.py
+
+pexpect:
+	pip install pexpect
 
 install: install_core
 
