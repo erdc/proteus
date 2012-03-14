@@ -11,9 +11,14 @@ pcmd="aprun -n %(np)i %(PROTEUS_PYTHON)s %(PYTHON_SCRIPT)s" % {"np":np,
                                                                 "PYTHON_SCRIPT":sys.argv[1]}
 child = pexpect.spawn(qcmd,timeout=30*60)
 child.logfile = sys.stdout
-child.expect("job status: r")
+index = child.expect(["May I insert the commands?",pexpect.TIMEOUT],timeout=60)
+if index = 0:
+    child.sendline("yes")
 child.sendline(pcmd)
-child.expect(["PEXPECT_EXIT",pexpect.EOF,pexpect.TIMEOUT],timeout=10*60)
-child.sendline("exit")
+index = child.expect(["job status: r","job status: Eqw",pexpect.TIMEOUT])
+if index == 0:
+    child.sendline(pcmd)
+    child.expect(["PEXPECT_EXIT",pexpect.EOF,pexpect.TIMEOUT],timeout=10*60)
+    child.sendline("exit")
 child.close()
 
