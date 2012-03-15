@@ -5,7 +5,7 @@ np=16
 qcmd="idev -pe 16 %(np)i -t 00:10:00" %  {"np":np}
 PROTEUS = os.getenv('PROTEUS')
 PROTEUS_PYTHON = os.getenv('PROTEUS_PYTHON')
-pcmd="mpirun -n %(np)i %(PROTEUS_PYTHON)s %(PYTHON_SCRIPT)s" % {"np":np,
+pcmd="ibrun %(PROTEUS_PYTHON)s %(PYTHON_SCRIPT)s" % {"np":np,
                                                                 "PROTEUS":PROTEUS,
                                                                 "PROTEUS_PYTHON":PROTEUS_PYTHON,
                                                                 "PYTHON_SCRIPT":sys.argv[1]}
@@ -16,6 +16,7 @@ if index == 0:
     child.sendline("yes")
 index = child.expect(["job status: r","job status: Eqw",pexpect.TIMEOUT])
 if index == 0:
+    time.sleep(10)
     child.sendline(pcmd)
     child.expect(["PEXPECT_EXIT",pexpect.EOF,pexpect.TIMEOUT],timeout=10*60)
     child.sendline("exit")
