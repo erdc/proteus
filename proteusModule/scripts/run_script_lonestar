@@ -5,16 +5,15 @@ np=24
 qcmd="idev -pe 12 %(np)i -t 01:00:00" %  {"np":np}
 PROTEUS = os.getenv('PROTEUS')
 PROTEUS_PYTHON = os.getenv('PROTEUS_PYTHON')
-pcmd="aprun -n %(np)i %(PROTEUS_PYTHON)s %(PYTHON_SCRIPT)s" % {"np":np,
+pcmd="mpirun -n %(np)i %(PROTEUS_PYTHON)s %(PYTHON_SCRIPT)s" % {"np":np,
                                                                 "PROTEUS":PROTEUS,
                                                                 "PROTEUS_PYTHON":PROTEUS_PYTHON,
                                                                 "PYTHON_SCRIPT":sys.argv[1]}
 child = pexpect.spawn(qcmd,timeout=30*60)
 child.logfile = sys.stdout
-index = child.expect(["May I insert the commands?",pexpect.TIMEOUT],timeout=60)
+index = child.expect(["May I insert the commands?",pexpect.TIMEOUT],timeout=10)
 if index == 0:
     child.sendline("yes")
-child.sendline(pcmd)
 index = child.expect(["job status: r","job status: Eqw",pexpect.TIMEOUT])
 if index == 0:
     child.sendline(pcmd)
