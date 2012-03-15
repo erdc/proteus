@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import sys,os,pexpect
 
-np=24
-qcmd="idev -pe 12 %(np)i -t 01:00:00" %  {"np":np}
+np=12
+qcmd="idev -pe 12 %(np)i -t 00:10:00" %  {"np":np}
 PROTEUS = os.getenv('PROTEUS')
 PROTEUS_PYTHON = os.getenv('PROTEUS_PYTHON')
 pcmd="mpirun -n %(np)i %(PROTEUS_PYTHON)s %(PYTHON_SCRIPT)s" % {"np":np,
