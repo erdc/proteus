@@ -1,2 +1,2 @@
 #!/bin/csh
-python setup.py install --hdf5=${PYADH}/${PYADH_ARCH}
+${PROTEUS_PYTHON} setup.py install --hdf5=${PYADH}/${PYADH_ARCH}
