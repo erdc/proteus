@@ -1,1 +1,1 @@
-python setup.py install --hdf5=${PROTEUS_PREFIX}
+${PROTEUS_PYTHON} setup.py install --hdf5=${PROTEUS_PREFIX}
