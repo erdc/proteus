@@ -6,9 +6,11 @@
 #PBS -j oe
 #PBS -l application=proteus
 echo "testing numpy"
-aprun -n 1 ${PROTEUS_PYTHON} -c "import numpy; numpy.test()"
+echo "import numpy; numpy.test()" > np.py
+aprun -n 1 ${PROTEUS_PYTHON} np.py
 echo "testing tables"
-aprun -n 1 ${PROTEUS_PYTHON} -c "import tables; tables.test()"
+echo "import tables; tables.test()" pyt.py
+aprun -n 1 ${PROTEUS_PYTHON} pyt.py
 echo "testing mpi4py"
 cd ${PROTEUS}/externalPackages/mpi4py/test
 aprun -n 128 ${PROTEUS_PYTHON} runtests.py --exclude test_spawn --exclude test_cco_buf -v
