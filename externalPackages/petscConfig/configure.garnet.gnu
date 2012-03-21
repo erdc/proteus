@@ -1,4 +1,5 @@
-${PROTEUS_PYTHON} ./config/configure.py --prefix=${PROTEUS_PREFIX} \
+${PROTEUS_PYTHON} ./config/configure.py \
+--prefix=${PROTEUS_PREFIX} \
 --PETSC_ARCH=${PROTEUS_ARCH} \
 --PETSC_DIR=${PROTEUS}/externalPackages/petsc \
 --with-clanguage=C \
@@ -7,16 +8,9 @@ ${PROTEUS_PYTHON} ./config/configure.py --prefix=${PROTEUS_PREFIX} \
 --without-fortran \
 --with-pic=1 \
 --with-blas-lapack-lib="-lsci" \
---with-cmake=${PROTEUS_PREFIX} \
---with-metis=${PROTEUS_PREFIX} \
---with-parmetis=${PROTEUS_PREFIX} 
-
-#--download-cmake=1 \
-#--download-metis=1 \
-#--download-parmetis=1 
-
-
-
+--download-cmake=1 \
+--download-metis=1 \
+--download-parmetis=1 
 
 #--with-shared-libraries=0 \
 #--with-fc="ftn" \
