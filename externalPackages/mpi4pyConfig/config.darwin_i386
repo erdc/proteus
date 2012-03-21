@@ -5,4 +5,4 @@ setenv MPICXX 'mpicxx -arch i386'
 #had to 
 #add extra_args[-1]='/Users/mfarthin/Public/code/pyadh/darwin_i386/Python.framework/Versions/2.6/lib'
 #to mpidistutils.py:1306 to get python executable to build
-python setup.py config
+${PROTEUS_PYTHON} setup.py config

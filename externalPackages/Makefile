@@ -5,17 +5,18 @@
 #3. Set up the name of the package in versions.txt
 #
 include versionsConfig/versions.${PROTEUS_ARCH}
+REHASH=hash
 
 all: install pip pexpect
 
 pip: easy_install
-	easy_install pip
+	${REHASH} && easy_install pip
 
 easy_install:
 	${PROTEUS_PYTHON} distribute_setup.py
 
 pexpect:
-	pip install pexpect
+	${REHASH} && pip install pexpect
 
 install: install_core
 

@@ -1,2 +1,2 @@
 #!/bin/csh
-/usr/local/usp/pyadh/bin/python setup.py install --hdf5=/usr/local/usp/pyadh/
+${PROTEUS_PYTHON} setup.py install --hdf5=/usr/local/usp/pyadh/
