@@ -4,18 +4,19 @@ ${PROTEUS_PYTHON} ./config/configure.py \
 --PETSC_ARCH=${PROTEUS_ARCH} \
 --PETSC_DIR=${PROTEUS}/externalPackages/petsc \
 --with-clanguage=C \
---with-cc=cc \
---with-cxx=CC \
---with-fortran=ftn \
---with-pic=1 \
+--CC=cc \
+--CXX=CC \
+--FC=ftn \
+--with-batch=1 \
+--known-mpi-shared-libraries=0 \
+--with-shared-libraries=0 \
 --with-blas-lapack-lib=[/opt/xt-libsci/10.4.9/gnu/lib/45] \
 --download-cmake=1 \
---download-metis=1 \
 --download-superlu_dist=1 \
+--download-metis=1 \
 --download-parmetis=1 
 
-#--with-shared-libraries=0 \
-#--with-fc="ftn" \
+#--with-fortran=ftn \
 #--useThreads=0 \
 #\
 #--download-blacs=1 \
