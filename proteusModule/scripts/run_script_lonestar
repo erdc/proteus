@@ -1,15 +1,17 @@
 #!/usr/bin/env python
-import sys,os,pexpect,time
+import sys,os,pexpect,time,shutil
 
 np=12
 qcmd="idev -pe 12 %(np)i -t 00:10:00" %  {"np":np,"WORK":os.getenv('WORK')}
 PROTEUS = os.getenv('PROTEUS')
 WORK = os.getenv('WORK')
 PROTEUS_PYTHON = os.getenv('PROTEUS_PYTHON')
+shutil.copy(sys.argv[1],WORK)
+script_name=os.path.basename(sys.argv[1])
 pcmd="mpirun -n %(np)i %(PROTEUS_PYTHON)s %(PYTHON_SCRIPT)s" % {"np":np,
                                                                 "PROTEUS":PROTEUS,
                                                                 "PROTEUS_PYTHON":PROTEUS_PYTHON,
-                                                                "PYTHON_SCRIPT":sys.argv[1]}
+                                                                "PYTHON_SCRIPT":script_name}
 child = pexpect.spawn(qcmd,timeout=30*60,cwd=WORK)
 child.logfile = sys.stdout
 index = child.expect(["May I insert the commands?",pexpect.TIMEOUT],timeout=10)
