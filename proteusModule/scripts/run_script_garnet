@@ -13,10 +13,10 @@ pcmd="aprun -n %(np)i %(PROTEUS_PYTHON)s %(PYTHON_SCRIPT)s" % {"np":np,
                                                                 "PYTHON_SCRIPT":sys.argv[1]}
 child = pexpect.spawn(qcmd,timeout=30*60)
 child.logfile = sys.stdout
-child.expect("CCM Start success")
+child.expect("CCM Start success",timeout=60*60)
 child.sendline(ecmd)
 child.sendline(pcmd)
-child.expect(["PEXPECT_EXIT",pexpect.EOF,pexpect.TIMEOUT],timeout=10*60)
+child.expect(["PEXPECT_EXIT",pexpect.EOF,pexpect.TIMEOUT],timeout=20*60)
 child.sendline("exit")
 child.close()
 
