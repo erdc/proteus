@@ -17,7 +17,7 @@ child.logfile = sys.stdout
 index = child.expect(["May I insert the commands?",pexpect.TIMEOUT],timeout=10)
 if index == 0:
     child.sendline("yes")
-index = child.expect(["job status: r","job status: Eqw",pexpect.TIMEOUT])
+index = child.expect(["job status: r","job status: Eqw",pexpect.TIMEOUT],timeout=30*60)
 if index == 0:
     time.sleep(10)
     child.sendline(pcmd)
