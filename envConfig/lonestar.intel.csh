@@ -2,6 +2,7 @@
 #intel
 #
 module load mkl
+module swap mvapich2 mvapich2/1.8
 setenv PROTEUS_ARCH lonestar.intel
 setenv PROTEUS_PREFIX ${PROTEUS}/${PROTEUS_ARCH}
 setenv PROTEUS_PYTHON ${PROTEUS_PREFIX}/bin/python
