@@ -467,7 +467,7 @@ update_petsc4py:
 	cd petsc4py-dev && hg pull -u
 
 newConfig_petsc4py:
-	echo "no petsc4py customization implemented"
+	cd petsc4pyConfig && cp config.petsc4py.${PROTEUS_ARCH_OLD} config.petsc4py.${PROTEUS_ARCH} && cp build.petsc4py.${PROTEUS_ARCH_OLD} build.petsc4py.${PROTEUS_ARCH} 
 
 editConfig_petsc4py:
 	cd petsc4pyConfig && ${EDITOR} config.petsc4py.${PROTEUS_ARCH} build.petsc4py.${PROTEUS_ARCH}
