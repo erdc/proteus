@@ -71,8 +71,21 @@ http://groups.google.com/group/proteus-dev/subscribe
 
 .. _running-sec:
 
+Buildbot
+==========
+
+The buildbot status page shows the results of builds and tests on a
+variet of desktop and HPC architectures. It currently only shows
+results for the master branch on github.
+ 
+.. raw:: html
+
+  <iframe src="https://proteus.usace.army.mil/buildbot/waterfall?num_events=0" frameborder=1 width=1000 height=400>
+  </iframe>
+
+
 Running
-=========================
+=========
 
 If you have successfully compiled Proteus then you should be able to do::
 
