@@ -1319,14 +1319,14 @@ class ShallowWater(TC_base):
         grad_b = None
         if c['x'].shape[0:-1] == self.q_grad_b.shape[0:-1]:
             grad_b = self.q_grad_b
-        elif  c['x'].shape[0:-1] == self.ebq_grad_b.shape[0:-1]:
-            grad_b = self.ebq_grad_b
-        elif  c['x'].shape[0:-1] == self.ebq_global_grad_b.shape[0:-1]:
-            grad_b = self.ebq_global_grad_b
         elif  c['x'].shape[0:-1] == self.ebqe_grad_b.shape[0:-1]:
             grad_b = self.ebqe_grad_b
         elif  c['x'].shape[0:-1] == self.ip_grad_b.shape[0:-1]:
             grad_b = self.ip_grad_b
+        elif  c['x'].shape[0:-1] == self.ebq_grad_b.shape[0:-1]:
+            grad_b = self.ebq_grad_b
+        elif  c['x'].shape[0:-1] == self.ebq_global_grad_b.shape[0:-1]:
+            grad_b = self.ebq_global_grad_b
         assert grad_b != None
         #total elevation
         if not c.has_key(('H',0)) and c.has_key(('u',0)):

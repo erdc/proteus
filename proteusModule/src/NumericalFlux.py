@@ -3765,6 +3765,19 @@ class ShallowWater_2D(NF_base):
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions,
                  getPeriodicBoundaryConditions)
+    def setDirichletValues(self,ebqe):
+        for ci in range(self.nc):
+            self.ebqe[('u',ci)].flat[:] = ebqe[('u',ci)].flat[:]
+            for (ebNE,k),g,x in zip(self.DOFBoundaryConditionsDictList[ci].keys(),
+                                    self.DOFBoundaryConditionsDictList[ci].values(),
+                                    self.DOFBoundaryPointDictList[ci].values()):
+                self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t)
+        for ci in range(self.nc):
+            for bci in self.periodicBoundaryConditionsDictList[ci].values():
+                self.ebqe[('u',ci)][bci[0]]=ebqe[('u',ci)][bci[1]]
+                self.ebqe[('u',ci)][bci[1]]=ebqe[('u',ci)][bci[0]]
+        if self.vt.movingDomain:
+            self.vt.coefficients.updateToMovingDomain(self.vt.timeIntegration.t,self.ebqe)
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         cnumericalFlux.calculateInteriorNumericalFluxShallowWater_2D(self.h_eps,
                                                                      self.tol_u,
