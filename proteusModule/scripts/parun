@@ -26,6 +26,12 @@ import optparse
 import sys
 import pstats
 import pdb
+#from traits.api import HasTraits,Float
+#class Rectangle(HasTraits):
+#    width = Float(1.0)
+
+#rect = Rectangle(width=3.0)
+#rect.configure_traits()
 #remove blankent import statements until after Comm initialized for petsc4py
 try:
     import cProfile as profiler
@@ -34,6 +40,11 @@ except:
 
 usage = "usage: %prog [options] soModule.py [[soFile.sso] [pModule.py nModule.py]]"
 parser = optparse.OptionParser(usage=usage)
+parser.add_option("-I", "--inspect",
+                  help="Inspect namespace at 't0','user_step'",
+                  action="store",
+                  dest="inspect",
+                  default='')
 parser.add_option("-i", "--interactive",
                   help="Read input from stdin",
                   action="store_true",
@@ -292,6 +303,7 @@ log("Running Proteus version "+proteus.__version__,level=0)
 if opts.viewer:
     log("Starting viewer")
     Viewers.viewerOn(so.name+`comm.rank()`,opts.viewer)
+
 log("Setting simulation processing defaults")
 for p,simFlags in zip(pList,simFlagsList):
     pNameProc = p.name + `comm.rank()`
@@ -404,6 +416,15 @@ while running:
                 stats.print_stats(30)
         else:
             ns = NumericalSolution.NS_base(so,pList,nList,sList,opts,simFlagsList)
+            #if comm.isMaster():
+            #    ns.frameWidget = vtkViewers.QtGui.QFrame(vtkViewers.g.mainWindow)
+            #    ns.hbox = vtkViewers.QtGui.QHBoxLayout()
+            #    ns.frameWidget.setLayout(ns.hbox)
+            #    vtkViewers.g.tabWidget.addTab(ns.frameWidget,"NumericalSolution")
+            #    vtkViewers.g.tabWidget.setCurrentWidget(ns.frameWidget)
+            #    ui = ns.edit_traits(parent=ns.frameWidget,kind='panel')
+            #    ui.control.setParent(ns.frameWidget)
+            #    #ns.edit_traits()
             ns.calculateSolution(runName)
         log("Completed %s run number %i" %(so.name,runNumber))
         import gc
