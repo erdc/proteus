@@ -34,9 +34,6 @@
 [submodule "externalPackages/numexpr"]
 	path = externalPackages/numexpr
 	url = git@github.com:erdc-cm/numexpr.git
-[submodule "externalPackages/nose"]
-	path = externalPackages/nose
-	url = git@github.com:erdc-cm/nose.git
 [submodule "externalPackages/daetk"]
 	path = externalPackages/daetk
 	url = git@github.com:erdc-cm/daetk.git
