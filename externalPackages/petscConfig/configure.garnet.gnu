@@ -9,11 +9,13 @@ ${PROTEUS_PYTHON} ./config/configure.py \
 --CC=cc \
 --CXX=CC \
 --with-fortran=0 \
+---with-blas-lapack-dir=[/opt/xt-libsci/11.0.06/gnu/46/interlagos/lib] \
+---with-blas-lapack-lib=[-lsci_gnu] \
 --with-pic=1 \
---with-blas-lapack-dir=[/opt/xt-libsci/10.4.9/gnu/lib/45] \
---with-blas-lapack-lib=[-lsci] \
 --download-cmake=1 \
 --download-metis=1 \
+--download-superlu=1 \
+--download-superlu_dist=1 \
 --download-parmetis=1 
 
 #--with-pthread=0 \

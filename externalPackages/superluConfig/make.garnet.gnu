@@ -34,11 +34,11 @@ ARCH         = ar
 ARCHFLAGS    = -cru
 RANLIB       = ranlib
 
-CC           = gcc -fPIC
+CC           = cc -fPIC
 CFLAGS       = -O3
-FORTRAN	     = fortran -fPIC
+FORTRAN	     = ftn -fPIC
 FFLAGS       = -O3
-LOADER       = gcc -fPIC
+LOADER       = cc -fPIC
 LOADOPTS     = 
 
 #
