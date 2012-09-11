@@ -56,8 +56,8 @@
 # /usr/local/{lib,include}
 #
 #[DEFAULT]
-#library_dirs = os.getenv('TACC_ACML_INCLUDE')
-#include_dirs = os.getenv('TACC_ACML_LIB')
+#library_dirs = /opt/acml/5.1.0/gfortran64/lib
+#include_dirs = /opt/acml/5.1.0/gfortran64/include
 
 # Optimized BLAS and LAPACK
 # -------------------------
@@ -72,12 +72,12 @@
 # is important for the BLAS C interface):
 #
 [blas_opt]
-#library_dirs = /opt/acml/4.4.0/gnu64/lib
-libraries = sci
+library_dirs = /opt/xt-libsci/11.0.06/gnu/46/interlagos/lib
+libraries = sci_intel
 #
 [lapack_opt]
-#library_dirs = /opt/acml/4.4.0/gnu64/lib
-libraries = sci
+library_dirs = /opt/xt-libsci/11.0.06/gnu/46/interlagos/lib
+libraries = sci_intel
 #
 # If your ATLAS was compiled with pthreads, the names of the libraries might be
 # different:
@@ -132,6 +132,6 @@ libraries = sci
 #
 # For 10.*, on 32 bits machines:
 # [mkl]
-# library_dirs = /opt/intel/mkl/10.0.1.014/lib/32/
-# lapack_libs = mkl_lapack
-# mkl_libs = mkl, guide
+library_dirs = /opt/xt-libsci/11.0.06/gnu/46/interlagos/lib
+lapack_libs = sci_intel
+mkl_libs = sci_intel,irc
