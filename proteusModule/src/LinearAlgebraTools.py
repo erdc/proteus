@@ -119,7 +119,7 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
             self.subdomain2global = subdomain2global #no need to include extra block dofs?
         else:
             self.setType('aij')
-            self.setSizes([[par_n*blockSize,par_N*blockSize],[par_n*blockSize,par_N*blockSize]],bsize=blockSize)
+            self.setSizes([[par_n*blockSize,par_N*blockSize],[par_n*blockSize,par_N*blockSize]],bsize=1)
             if blockSize > 1: #have to build in block dofs
                 subdomain2globalTotal = numpy.zeros((blockSize*subdomain2global.shape[0],),'i')
                 for j in range(blockSize):
@@ -205,7 +205,8 @@ class SparseMatShell:
         self.xGhosted.ghostUpdateBegin(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
         self.xGhosted.ghostUpdateEnd(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
         self.yGhosted.zeroEntries()
-        self.ghosted_csr_mat.matvec(self.xGhosted.getLocalForm().getArray(),self.yGhosted.getLocalForm().getArray())
+        with self.xGhosted.localForm() as xlf, self.yGhosted.localForm() as ylf:
+            self.ghosted_csr_mat.matvec(xlf,ylf)
         y.setArray(self.yGhosted.getArray())
 
 def l2Norm(x):
