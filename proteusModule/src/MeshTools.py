@@ -2900,6 +2900,7 @@ class Mesh3DM(Mesh):
         self.nElements_global = self.nTetrahedra_global
         self.elementNodesArray = self.tetrahedronArray
         self.elementMaterialTypes = self.tetrahedronMaterialArray
+        self.arGridCollection=None
         print "Number of tetrahedra:"+`self.nElements_global`
         print "Number of nodes     :"+`self.nNodes_global`
 
