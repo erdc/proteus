@@ -131,7 +131,7 @@ libraries = sci
 # lapack_libs = mkl_lapack
 #
 # For 10.*, on 32 bits machines:
-#[mkl]
-#library_dirs = /opt/intel/mkl/10.0.1.014/lib/32/
-#lapack_libs = mkl_lapack
-#mkl_libs = mkl_intel_lp64,mkl_sequential,mkl_core
+[mkl]
+library_dirs = /opt/xt-libsci/11.0.06/pgi/119/interlagos
+lapack_libs = sci_pgi
+mkl_libs = sci_pgi

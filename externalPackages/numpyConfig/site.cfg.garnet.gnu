@@ -72,12 +72,12 @@
 # is important for the BLAS C interface):
 #
 [blas_opt]
-library_dirs = /opt/xt-libsci/11.0.06/gnu/46/interlagos/lib
-libraries = sci_intel
+#library_dirs = /opt/xt-libsci/11.0.06/gnu/46/interlagos/lib
+libraries = sci_gnu
 #
 [lapack_opt]
-library_dirs = /opt/xt-libsci/11.0.06/gnu/46/interlagos/lib
-libraries = sci_intel
+#library_dirs = /opt/xt-libsci/11.0.06/gnu/46/interlagos/lib
+libraries = sci_gnu
 #
 # If your ATLAS was compiled with pthreads, the names of the libraries might be
 # different:
@@ -131,7 +131,7 @@ libraries = sci_intel
 # lapack_libs = mkl_lapack
 #
 # For 10.*, on 32 bits machines:
-# [mkl]
-library_dirs = /opt/xt-libsci/11.0.06/gnu/46/interlagos/lib
-lapack_libs = sci_intel
-mkl_libs = sci_intel,irc
+[mkl]
+#library_dirs = 
+lapack_libs = sci_gnu
+#mkl_libs = 

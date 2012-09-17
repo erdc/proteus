@@ -1,5 +1,1 @@
 CC=gcc CXX=g++ LD=gcc ./configure --prefix=${PROTEUS_PREFIX}
-#CC="pgcc -DPROTEUS_FFI64_HACK -g -DNCURSES_ENABLE_STDBOOL_H=0 -O0 -Kieee -alias=ansi -noswitcherror" \
-#LINKFORSHARED="-Wl,-export-dynamic -noswitcherror" \
-#CXX="pgCC -DPROTEUS_FFI64_HACK -g -noswitcherror" \
-#--with-cxx-main="pgCC -DPROTEUS_FFI64_HACK -g -noswitcherror"
