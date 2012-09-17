@@ -46,9 +46,6 @@
 [submodule "externalPackages/mpi4py"]
 	path = externalPackages/mpi4py
 	url = git@github.com:erdc-cm/mpi4py
-[submodule "externalPackages/petsc"]
-	path = externalPackages/petsc
-	url = git@github.com:erdc-cm/petsc.git
 [submodule "externalPackages/clawpack/pyclaw"]
 	path = externalPackages/clawpack/pyclaw
 	url = git@github.com:clawpack/pyclaw.git
@@ -64,3 +61,6 @@
 [submodule "externalPackages/python"]
 	path = externalPackages/python
 	url = git@github.com:erdc-cm/python.git
+[submodule "externalPackages/nose"]
+	path = externalPackages/nose
+	url = git://github.com/nose-devs/nose.git

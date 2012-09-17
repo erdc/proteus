@@ -245,7 +245,8 @@ class LinearSolver:
         self.xGhosted.ghostUpdateBegin(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
         self.xGhosted.ghostUpdateEnd(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
         self.yGhosted.zeroEntries()
-        self.solve(u=self.yGhosted.getLocalForm().getArray(),b=self.xGhosted.getLocalForm().getArray(),initialGuessIsZero=True)
+        with self.yGhosted.localForm() as ylf,self.xGhosted.localForm() as xlf:
+            self.solve(u=ylf.getArray(),b=xlf.getArray(),initialGuessIsZero=True)
         y.setArray(self.yGhosted.getArray())
 
 class LU(LinearSolver):
@@ -461,7 +462,7 @@ class KSP_petsc4py(LinearSolver):
                 ksp.buildResidual(self.r_work)
                 truenorm = self.r_work.norm()
                 if its == 0: self.rnorm0 = truenorm
-                #print "duh_conv its= %s rnorm= %s truenorm= %s self.rnorm0= %s ksp.resnorm= %s " % (its,rnorm,truenorm,self.rnorm0,ksp.getResidualNorm())
+                print "duh_conv its= %s rnorm= %s truenorm= %s self.rnorm0= %s ksp.resnorm= %s " % (its,rnorm,truenorm,self.rnorm0,ksp.getResidualNorm())
                 return truenorm < self.rnorm0*ksp.rtol + ksp.atol
             self.ksp.setConvergenceTest(converged_trueRes)
         else:
