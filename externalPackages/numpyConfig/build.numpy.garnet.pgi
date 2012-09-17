@@ -1,1 +1,1 @@
-CC='gcc' CXX='g++' F77='gfortan' F90='gfortran' FC='gfortran' ${PROTEUS_PYTHON} setup.py build install
+${PROTEUS_PYTHON} setup.py build install

@@ -6,12 +6,12 @@ newConfig:
 build_ext:
 	${PROTEUS_PYTHON} setup.py build_ext
 	${PROTEUS_PYTHON} setuppyx.py build_ext 
-	${PROTEUS_PYTHON} setupf.py build_ext 
+#	${PROTEUS_PYTHON} setupf.py build_ext 
 	${PROTEUS_PYTHON} setuppetsc.py build_ext --petsc-dir=${PROTEUS_PREFIX} --petsc-arch=''
 
 install:
 	${PROTEUS_PYTHON} setuppyx.py install
-	${PROTEUS_PYTHON} setupf.py install
+#	${PROTEUS_PYTHON} setupf.py install
 	${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install
 	${PROTEUS_PYTHON} setup.py install
 
