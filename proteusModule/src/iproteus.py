@@ -33,6 +33,11 @@ except:
 
 usage = "usage: %prog [options] [module_so.py] [module_p.py module_n.py]"
 parser = optparse.OptionParser(usage=usage)
+parser.add_option("-I", "--inspect",
+                  help="Inspect namespace at 't0','user_step'",
+                  action="store",
+                  dest="inspect",
+                  default='')
 parser.add_option("-i", "--interactive",
                   help="Read input from stdin",
                   action="store_true",
