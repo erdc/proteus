@@ -18,8 +18,28 @@ import Archiver
 import Viewers
 from Archiver import ArchiveFlags
 import Domain
+import IPython
+from IPython.utils import io
+#from traits.api import HasTraits
+# Global to control whether the kernel starting is active.
+embed_ok = True
 
-class  NS_base:
+# Convenience functions to exit and permanently kill the kernel.
+def exit_kernel():
+    ip = get_ipython()
+    io.rprint('Exiting embedded kernel, returning control to calling code...')
+    ip.exit_now = True
+
+
+def kill_kernel():
+    global embed_ok
+    
+    embed_ok = False
+    io.rprint('Disabling embedding of kernel.')
+    exit_kernel()
+
+
+class  NS_base:#(HasTraits):
     r"""
     The base class for managing the numerical solution of  PDE's.
 
@@ -54,6 +74,7 @@ class  NS_base:
         import Comm
         import pdb
         comm=Comm.get()
+        self.comm=comm
         message = "Initializing NumericalSolution for "+so.name+"\n System includes: \n"
         for p in pList:
             message += p.name+"\n"
@@ -510,6 +531,7 @@ class  NS_base:
                 log("New tnList"+`self.tnList`)
             else:
                 pass
+        
         log("Attaching models and running spin-up step if requested")
         for p,n,m,simOutput in zip(self.pList,self.nList,self.modelList,self.simOutputList):
             m.attachModels(self.modelList)
@@ -620,7 +642,9 @@ class  NS_base:
         #schemes. The next loop is for each model to step, potentially
         #adaptively, to the time in the stepSequence. Lastly there is
         #a loop for substeps(stages).
-        import pdb
+        if self.comm.isMaster():
+            if embed_ok and self.opts.inspect=="t0":
+                IPython.embed_kernel()
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             log("==============================================================",level=0)
             log("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)

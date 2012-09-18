@@ -80,11 +80,14 @@ ParVec_init(ParVec *self, PyObject *args, PyObject *kwds)
     {
       if (bs==1)
         {
-          VecCreateMPIWithArray(Py_PETSC_COMM_WORLD,n,N,self->array,&self->v);
+          VecCreateMPIWithArray(Py_PETSC_COMM_WORLD,bs,n,N,self->array,&self->v);
         }
       else
         {
-          VecCreateMPIWithArray(Py_PETSC_COMM_WORLD,bs*n,bs*N,self->array,&self->v);
+	  if (useBlockVec)
+	    VecCreateMPIWithArray(Py_PETSC_COMM_WORLD,bs,n,N,self->array,&self->v);
+	  else
+	    VecCreateMPIWithArray(Py_PETSC_COMM_WORLD,1,bs*n,bs*N,self->array,&self->v);
         }
       if (useBlockVec)
 	VecSetBlockSize(self->v,bs);
@@ -1333,7 +1336,7 @@ DaetkPetscSys_size(DaetkPetscSys *self,
     //and non-conforming finite elements
     MPI_Status status;
     PetscBT nodeMask; 
-    PetscBTCreate(mesh.nNodes_global,nodeMask);
+    PetscBTCreate(mesh.nNodes_global,&nodeMask);
     if (rank > 0) 
       {
         MPI_Recv(nodeMask,PetscBTLength(mesh.nNodes_global),MPI_CHAR,rank-1,0,Py_PETSC_COMM_WORLD,&status);
@@ -1350,7 +1353,7 @@ DaetkPetscSys_size(DaetkPetscSys *self,
     //ship off the mask
     if (rank < size-1)
       MPI_Send(nodeMask,PetscBTLength(mesh.nNodes_global),MPI_CHAR,rank+1,0,Py_PETSC_COMM_WORLD);
-    ierr = PetscBTDestroy(nodeMask);
+    ierr = PetscBTDestroy(&nodeMask);
     if (ierr)
       cerr<<"Error in PetscBTDestroy"<<endl;
     //get the number of nodes on each processor
@@ -1805,7 +1808,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   //   
   MPI_Status status;
   PetscBT elementMask;
-  PetscBTCreate(mesh.nElements_global,elementMask);
+  PetscBTCreate(mesh.nElements_global,&elementMask);
   //get the owned element information 
   if (rank > 0)
     {
@@ -1854,7 +1857,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   //pass off newly marked info
   if (rank < size-1)
     MPI_Send(elementMask,PetscBTLength(mesh.nElements_global),MPI_CHAR,rank+1,0,Py_PETSC_COMM_WORLD);
-  ierr = PetscBTDestroy(elementMask);
+  ierr = PetscBTDestroy(&elementMask);
   if (ierr)
     cerr<<"Error in PetscBTDestroy"<<endl;
 
@@ -1913,7 +1916,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
       }
   MPI_Status status_elementBoundaries;
   PetscBT elementBoundaryMask; 
-  PetscBTCreate(mesh.nElementBoundaries_global,elementBoundaryMask);
+  PetscBTCreate(mesh.nElementBoundaries_global,&elementBoundaryMask);
   if (rank > 0) 
     {
       MPI_Recv(elementBoundaryMask,PetscBTLength(mesh.nElementBoundaries_global),MPI_CHAR,rank-1,0,Py_PETSC_COMM_WORLD,&status_elementBoundaries);
@@ -1996,7 +1999,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   //ship off the mask
   if (rank < size-1)
     MPI_Send(elementBoundaryMask,PetscBTLength(mesh.nElementBoundaries_global),MPI_CHAR,rank+1,0,Py_PETSC_COMM_WORLD);
-  ierr = PetscBTDestroy(elementBoundaryMask);
+  ierr = PetscBTDestroy(&elementBoundaryMask);
   if (ierr)
     cerr<<"Error in PetscBTDestroy for elementBoundaries"<<endl;
   //get the number of elementBoundaries on each processor
@@ -2815,7 +2818,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     //and non-conforming finite elements
     MPI_Status status;
     PetscBT nodeMask; 
-    PetscBTCreate(mesh.nNodes_global,nodeMask);
+    PetscBTCreate(mesh.nNodes_global,&nodeMask);
     if (rank > 0) 
       {
         MPI_Recv(nodeMask,PetscBTLength(mesh.nNodes_global),MPI_CHAR,rank-1,0,Py_PETSC_COMM_WORLD,&status);
@@ -2832,7 +2835,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     //ship off the mask
     if (rank < size-1)
       MPI_Send(nodeMask,PetscBTLength(mesh.nNodes_global),MPI_CHAR,rank+1,0,Py_PETSC_COMM_WORLD);
-    ierr = PetscBTDestroy(nodeMask);
+    ierr = PetscBTDestroy(&nodeMask);
     if (ierr)
       cerr<<"Error in PetscBTDestroy"<<endl;
     //get the number of nodes on each processor
@@ -2910,7 +2913,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     //4b. repeat process to build global face numbering
     MPI_Status status_elementBoundaries;
     PetscBT elementBoundaryMask; 
-    PetscBTCreate(mesh.nElementBoundaries_global,elementBoundaryMask);
+    PetscBTCreate(mesh.nElementBoundaries_global,&elementBoundaryMask);
     if (rank > 0) 
       {
         MPI_Recv(elementBoundaryMask,PetscBTLength(mesh.nElementBoundaries_global),MPI_CHAR,rank-1,0,Py_PETSC_COMM_WORLD,&status_elementBoundaries);
@@ -2949,7 +2952,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
     //ship off the mask
     if (rank < size-1)
       MPI_Send(elementBoundaryMask,PetscBTLength(mesh.nElementBoundaries_global),MPI_CHAR,rank+1,0,Py_PETSC_COMM_WORLD);
-    ierr = PetscBTDestroy(elementBoundaryMask);
+    ierr = PetscBTDestroy(&elementBoundaryMask);
     if (ierr)
       cerr<<"Error in PetscBTDestroy for elementBoundaries"<<endl;
     //get the number of elementBoundaries on each processor
