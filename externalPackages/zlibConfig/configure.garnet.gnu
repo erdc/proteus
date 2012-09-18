@@ -1,1 +1,1 @@
-CC=gcc CXX=g++ LD=gcc ./configure --shared --prefix=${PROTEUS_PREFIX}
+CC=gcc CXX=g++ CFLAGS="-fPIC" ./configure --shared --prefix=${PROTEUS_PREFIX}
