@@ -133,6 +133,7 @@ class AR_base:
         except:
             pass
     def allGather(self):
+        self.comm.barrier()
         if self.rank==0:
             #replace the bottom level grid with a spatial collection
             XDMF_all=self.tree.getroot()
@@ -157,7 +158,7 @@ class AR_base:
                         del Grid[0]#Time
                         Grid_all.append(Grid)
                 xmlFile.close()
-            f = open(os.path.join(self.dataDir,self.filename+"all_"+str(self.size)+".xmf"),"w")
+            f = open(os.path.join(self.dataDir,self.filename+"_all"+str(self.size)+".xmf"),"w")
             indentXML(self.tree.getroot())
             self.tree.write(f)
             f.close()

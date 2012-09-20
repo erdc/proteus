@@ -519,11 +519,11 @@ class Mesh:
             self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
             topology = SubElement(self.arGrid,"Topology",
                                   {"Type":Xdmf_ElementTopology,
-                                   "NumberOfElements":str(self.nElements_global)})
+                                   "NumberOfElements":str(self.nElements_owned)})
             elements = SubElement(topology,"DataItem",
                                   {"Format":ar.dataItemFormat,
                                    "DataType":"Int",
-                                   "Dimensions":"%i %i" % (self.nElements_global,self.nNodes_element)})
+                                   "Dimensions":"%i %i" % (self.nElements_owned,self.nNodes_element)})
             geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
             nodes    = SubElement(geometry,"DataItem",
                                   {"Format":ar.dataItemFormat,
@@ -534,13 +534,13 @@ class Mesh:
                 elements.text = ar.hdfFilename+":/elements"+name+`tCount`
                 nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
                 if init or meshChanged:
-                    ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray)
+                    ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
                     ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
                 if init or meshChanged:
-                    numpy.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray,fmt='%d')
+                    numpy.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray[:self.nElements_owned],fmt='%d')
                     numpy.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
             #
             #element boundary topology and geometry
@@ -578,45 +578,45 @@ class Mesh:
             #
             #ghost nodes and elements
             #
-            ghostNodesSet = SubElement(self.arGrid,"Set",{"SetType":"Node",
-                                                          "Ghost":"1"})
-            nGhostNodes = self.nNodes_global-self.nNodes_owned
-            ghostNodesArray = numpy.arange(self.nNodes_owned,self.nNodes_global,1,dtype='i')
-            if nGhostNodes > 0:
-                ghostNodes = SubElement(ghostNodesSet,"DataItem",
-                                        {"Format":ar.dataItemFormat,
-                                         "DataType":"Int",
-                                         "Dimensions":"%i" % (nGhostNodes,)})
-            nGhostElements = self.nElements_global - self.nElements_owned
-            ghostElementsArray = numpy.arange(self.nElements_owned,self.nElements_global,1,dtype='i')
-            if nGhostElements > 0:
-                ghostElementsSet = SubElement(self.arGrid,"Set",{"SetType":"Cell",
-                                                                 "Ghost":"1"})
-                ghostElements = SubElement(ghostElementsSet,"DataItem",
-                                           {"Format":ar.dataItemFormat,
-                                            "DataType":"Int",
-                                            "Dimensions":"%i" % (self.nElements_global-self.nElements_owned,)})
+            # ghostNodesSet = SubElement(self.arGrid,"Set",{"SetType":"Node",
+            #                                               "Ghost":"1"})
+            # nGhostNodes = self.nNodes_global-self.nNodes_owned
+            # ghostNodesArray = numpy.arange(self.nNodes_owned,self.nNodes_global,1,dtype='i')
+            # if nGhostNodes > 0:
+            #     ghostNodes = SubElement(ghostNodesSet,"DataItem",
+            #                             {"Format":ar.dataItemFormat,
+            #                              "DataType":"Int",
+            #                              "Dimensions":"%i" % (nGhostNodes,)})
+            # nGhostElements = self.nElements_global - self.nElements_owned
+            # ghostElementsArray = numpy.arange(self.nElements_owned,self.nElements_global,1,dtype='i')
+            # if nGhostElements > 0:
+            #     ghostElementsSet = SubElement(self.arGrid,"Set",{"SetType":"Cell",
+            #                                                      "Ghost":"1"})
+            #     ghostElements = SubElement(ghostElementsSet,"DataItem",
+            #                                {"Format":ar.dataItemFormat,
+            #                                 "DataType":"Int",
+            #                                 "Dimensions":"%i" % (self.nElements_global-self.nElements_owned,)})
 
-            if ar.hdfFile != None:
-                if nGhostElements > 0:
-                    ghostElements.text = ar.hdfFilename+":/ghostElements"+name+`tCount`
-                if nGhostNodes > 0:
-                    ghostNodes.text = ar.hdfFilename+":/ghostNodes"+name+`tCount`
-                if init or meshChanged:
-                    if nGhostElements > 0:
-                        ar.hdfFile.createArray("/",'ghostElements'+name+`tCount`,ghostElementsArray)
-                    if nGhostNodes > 0:
-                        ar.hdfFile.createArray("/",'ghostNodes'+name+`tCount`,ghostNodesArray)
-            else:
-                if nGhostElements > 0:
-                    SubElement(ghostElements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/ghostElements"+name+".txt"})
-                if nGhostNodes > 0:
-                    SubElement(ghostNodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/ghostNodes"+name+".txt"})
-                if init or meshChanged:
-                    if nGhostElements > 0:
-                        numpy.savetxt(ar.textDataDir+"/ghostElements"+name+".txt",ghostElementsArray,fmt='%d')
-                    if nGhostNodes > 0:
-                        numpy.savetxt(ar.textDataDir+"/ghostNodes"+name+".txt",ghostNodesArray,fmt='%d')
+            # if ar.hdfFile != None:
+            #     if nGhostElements > 0:
+            #         ghostElements.text = ar.hdfFilename+":/ghostElements"+name+`tCount`
+            #     if nGhostNodes > 0:
+            #         ghostNodes.text = ar.hdfFilename+":/ghostNodes"+name+`tCount`
+            #     if init or meshChanged:
+            #         if nGhostElements > 0:
+            #             ar.hdfFile.createArray("/",'ghostElements'+name+`tCount`,ghostElementsArray)
+            #         if nGhostNodes > 0:
+            #             ar.hdfFile.createArray("/",'ghostNodes'+name+`tCount`,ghostNodesArray)
+            # else:
+            #     if nGhostElements > 0:
+            #         SubElement(ghostElements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/ghostElements"+name+".txt"})
+            #     if nGhostNodes > 0:
+            #         SubElement(ghostNodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/ghostNodes"+name+".txt"})
+            #     if init or meshChanged:
+            #         if nGhostElements > 0:
+            #             numpy.savetxt(ar.textDataDir+"/ghostElements"+name+".txt",ghostElementsArray,fmt='%d')
+            #         if nGhostNodes > 0:
+            #             numpy.savetxt(ar.textDataDir+"/ghostNodes"+name+".txt",ghostNodesArray,fmt='%d')
 
             # Add the local->global index maps for collect.py and for
             # reverse mapping in hotstarts from a global XDMF file.
@@ -638,20 +638,20 @@ class Mesh:
                                      {"Format":ar.dataItemFormat,
                                       "DataType":"Int",
                                       "Precision":"4",
-                                      "Dimensions":str(self.nElements_global)})
+                                      "Dimensions":str(self.nElements_owned)})
 
                 if ar.hdfFile != None:
                     nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+name+`tCount`
                     elemMap.text = ar.hdfFilename+":/cellMapL2G"+name+`tCount`
                     if init or meshChanged:
                         ar.hdfFile.createArray("/",'nodeMapL2G'+name+`tCount`,self.globalMesh.nodeNumbering_subdomain2global)
-                        ar.hdfFile.createArray("/",'cellMapL2G'+name+`tCount`,self.globalMesh.elementNumbering_subdomain2global)
+                        ar.hdfFile.createArray("/",'cellMapL2G'+name+`tCount`,self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
                 else:
                     SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodeMapL2G"+name+".txt"})
                     SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/cellMapL2G"+name+".txt"})
                     if init or meshChanged:
                         numpy.savetxt(ar.textDataDir+"/nodeMapL2G"+name+".txt",self.globalMesh.nodeNumbering_subdomain2global)
-                        numpy.savetxt(ar.textDataDir+"/cellMapL2G"+name+".txt",self.globalMesh.elementNumbering_subdomain2global)
+                        numpy.savetxt(ar.textDataDir+"/cellMapL2G"+name+".txt",self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
             #
             #material types
             #
@@ -665,10 +665,14 @@ class Mesh:
             elementMaterialTypes = SubElement(self.arGrid,"Attribute",{"Name":"elementMaterialTypes",
                                                                        "AttributeType":"Scalar",
                                                                        "Center":"Cell"})
+            # elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
+            #                                         {"Format":ar.dataItemFormat,
+            #                                          "DataType":"Int",
+            #                                          "Dimensions":"%i" % (self.nElements_global,)})
             elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
                                                     {"Format":ar.dataItemFormat,
                                                      "DataType":"Int",
-                                                     "Dimensions":"%i" % (self.nElements_global,)})
+                                                     "Dimensions":"%i" % (self.nElements_owned,)})
             if EB:
                 ebnodeMaterialTypes = SubElement(self.arEBGrid,"Attribute",{"Name":"ebnodeMaterialTypes",
                                                                       "AttributeType":"Scalar",
@@ -688,7 +692,7 @@ class Mesh:
                 nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
                 ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
                 elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
-                ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes)
+                ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
                 if EB:
                     ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
                     #ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
@@ -697,7 +701,7 @@ class Mesh:
             else:
                 numpy.savetxt(ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt",self.nodeMaterialTypes)
                 SubElement(nodeMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt"})
-                numpy.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes)
+                numpy.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes[:self.nElements_owned])
                 SubElement(elementMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt"})
             #done with material types
     def buildFromC(self,cmesh):
@@ -2763,11 +2767,11 @@ class Mesh2DM(Mesh):
             self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
             topology = SubElement(self.arGrid,"Topology",
                                   {"Type":Xdmf_ElementTopology,
-                                   "NumberOfElements":str(self.nElements_global)})
+                                   "NumberOfElements":str(self.nElements_owned)})
             elements = SubElement(topology,"DataItem",
                                   {"Format":ar.dataItemFormat,
                                    "DataType":"Int",
-                                   "Dimensions":"%i %i" % (self.nElements_global,self.nNodes_element)})
+                                   "Dimensions":"%i %i" % (self.nElements_owned,self.nNodes_element)})
             geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
             nodes    = SubElement(geometry,"DataItem",
                                   {"Format":ar.dataItemFormat,
@@ -2781,23 +2785,23 @@ class Mesh2DM(Mesh):
             elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
                                                     {"Format":ar.dataItemFormat,
                                                      "DataType":"Int",
-                                                     "Dimensions":"%i" % (self.nElements_global,)})
+                                                     "Dimensions":"%i" % (self.nElements_owned,)})
             if ar.hdfFile != None:
                 elements.text = ar.hdfFilename+":/elements"+name+`tCount`
                 nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
                 elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
                 if init or meshChanged:
-                    ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray)
+                    ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
                     ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
-                    ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes)
+                    ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
                 SubElement(elementMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt"})
                 if init or meshChanged:
-                    numpy.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray,fmt='%d')
+                    numpy.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray[:self.nElements_owned],fmt='%d')
                     numpy.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
-                    numpy.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes)
+                    numpy.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes[:self.nElements_owned])
 #      def writeBoundaryMeshEnsight(self,filename,description=None):
 #          base=1
 #          #write the casefile
@@ -3111,11 +3115,11 @@ class Mesh3DM(Mesh):
             self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
             topology = SubElement(self.arGrid,"Topology",
                                   {"Type":Xdmf_ElementTopology,
-                                   "NumberOfElements":str(self.nElements_global)})
+                                   "NumberOfElements":str(self.nElements_owned)})
             elements = SubElement(topology,"DataItem",
                                   {"Format":ar.dataItemFormat,
                                    "DataType":"Int",
-                                   "Dimensions":"%i %i" % (self.nElements_global,self.nNodes_element)})
+                                   "Dimensions":"%i %i" % (self.nElements_owned,self.nNodes_element)})
             geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
             nodes    = SubElement(geometry,"DataItem",
                                   {"Format":ar.dataItemFormat,
@@ -3129,23 +3133,23 @@ class Mesh3DM(Mesh):
             elementMaterialTypesValues = SubElement(elementMaterialTypes,"DataItem",
                                                     {"Format":ar.dataItemFormat,
                                                      "DataType":"Int",
-                                                     "Dimensions":"%i" % (self.nElements_global,)})
+                                                     "Dimensions":"%i" % (self.nElements_owned,)})
             if ar.hdfFile != None:
                 elements.text = ar.hdfFilename+":/elements"+name+`tCount`
                 nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
                 elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
                 if init or meshChanged:
-                    ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray)
+                    ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
                     ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
-                    ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes)
+                    ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
                 SubElement(elementMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt"})
                 if init or meshChanged:
-                    numpy.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray,fmt='%d')
+                    numpy.savetxt(ar.textDataDir+"/elements"+name+".txt",self.elementNodesArray[:self.nElements_owned],fmt='%d')
                     numpy.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
-                    numpy.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes)
+                    numpy.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes[:self.nElements_owned])
 class MultilevelTetrahedralMesh(MultilevelMesh):
     def __init__(self,nx,ny,nz,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.element):
