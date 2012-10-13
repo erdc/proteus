@@ -18,25 +18,25 @@ import Archiver
 import Viewers
 from Archiver import ArchiveFlags
 import Domain
-import IPython
-from IPython.utils import io
+#import IPython
+#from IPython.utils import io
 #from traits.api import HasTraits
 # Global to control whether the kernel starting is active.
 embed_ok = True
 
 # Convenience functions to exit and permanently kill the kernel.
-def exit_kernel():
-    ip = get_ipython()
-    io.rprint('Exiting embedded kernel, returning control to calling code...')
-    ip.exit_now = True
+#def exit_kernel():
+#    ip = get_ipython()
+#    io.rprint('Exiting embedded kernel, returning control to calling code...')
+#    ip.exit_now = True
 
 
-def kill_kernel():
-    global embed_ok
-    
-    embed_ok = False
-    io.rprint('Disabling embedding of kernel.')
-    exit_kernel()
+#def kill_kernel():
+#    global embed_ok
+#    
+#    embed_ok = False
+#    io.rprint('Disabling embedding of kernel.')
+#    exit_kernel()
 
 
 class  NS_base:#(HasTraits):
@@ -642,9 +642,9 @@ class  NS_base:#(HasTraits):
         #schemes. The next loop is for each model to step, potentially
         #adaptively, to the time in the stepSequence. Lastly there is
         #a loop for substeps(stages).
-        if self.comm.isMaster():
-            if embed_ok and self.opts.inspect=="t0":
-                IPython.embed_kernel()
+        #if self.comm.isMaster():
+        #    if embed_ok and self.opts.inspect=="t0":
+        #        IPython.embed_kernel()
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             log("==============================================================",level=0)
             log("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
