@@ -1,2 +1,1 @@
-#!/bin/bash
-PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' ${PROTEUS_PYTHON} setup.py config
+${PROTEUS_PYTHON} setup.py config --petsc-dir=${PROTEUS_PREFIX} --petsc-arch=''

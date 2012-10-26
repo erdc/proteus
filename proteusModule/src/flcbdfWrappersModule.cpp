@@ -173,7 +173,7 @@ ParVec_scatter_reverse_addAll(ParVec *self, PyObject* args)
 static PyObject*
 ParVec_printType(ParVec *self, PyObject* args)
 {
-  const VecType type;
+  VecType type;
   VecGetType(self->v,&type);
   Py_INCREF(Py_None); 
   return Py_None;
