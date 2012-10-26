@@ -120,6 +120,7 @@ install_python:
 	make config_python build_python
 	cd ${PYTHON_VERSION} && PREFIXAPPS=${PROTEUS_PREFIX} make install > ../install_python_progress 2>&1
 	cat config_python_progress build_python_progress install_python_progress > install_python
+	cd ${PYTHON_VERSION} && PREFIXAPPS=${PROTEUS_PREFIX} make frameworkinstall > ../install_python_progress 2>&1
 
 distclean_python:
 	touch install_python
@@ -284,17 +285,17 @@ config_petsc:
 	cd ${PETSC_VERSION} && ../petscConfig/configure.${PROTEUS_ARCH}  > ../config_petsc_progress 2>&1
 
 build_petsc:
-	cd ${PETSC_VERSION} && make > ../build_petsc_progress 2>&1
+	cd ${PETSC_VERSION} && make PETSC_DIR=${PROTEUS}/externalPackages/${PETSC_VERSION} PETSC_ARCH=${PROTEUS_ARCH} all > ../build_petsc_progress 2>&1
 
 install_petsc:
 	make config_petsc build_petsc
-	cd ${PETSC_VERSION} && make install > ../install_petsc_progress 2>&1
+	cd ${PETSC_VERSION} && make PETSC_DIR=${PROTEUS}/externalPackages/${PETSC_VERSION} PETSC_ARCH=${PROTEUS_ARCH} install > ../install_petsc_progress 2>&1
 	cat config_petsc_progress build_petsc_progress install_petsc_progress > install_petsc
 
 distclean_petsc:
 	touch install_petsc
 	mv -f install_petsc install_petsc_last
-	cd ${PETSC_VERSION} && PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' make -k clean && rm -rf externalpackages ${PROTEUS_ARCH}
+	cd ${PETSC_VERSION} && make PETSC_DIR=${PROTEUS}/externalPackages/${PETSC_VERSION} PETSC_ARCH=${PROTEUS_ARCH}  -k clean && rm -rf externalpackages ${PROTEUS_ARCH}
 
 #daetk
 newConfig_daetk:
@@ -458,7 +459,7 @@ install_mpi4py:
 distclean_mpi4py:
 	touch install_mpi4py
 	mv -f install_mpi4py install_mpi4py_last
-	cd ${MPI4PY_VERSION} && make -k clean && rm -rf build
+	cd ${MPI4PY_VERSION} && make -k fullclean && rm -rf build
 
 get_petsc4py:
 	hg clone https://petsc4py.googlecode.com/hg/ petsc4py-dev
@@ -480,13 +481,13 @@ build_petsc4py:
 
 install_petsc4py: install_petsc
 	make config_petsc4py build_petsc4py
-	cd ${PETSC4PY_VERSION} && PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' ${PROTEUS_PYTHON} setup.py install > ../install_petsc4py_progress 2>&1
+	cd ${PETSC4PY_VERSION} && PETSC_DIR=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setup.py install > ../install_petsc4py_progress 2>&1
 	cat config_petsc4py_progress build_petsc4py_progress install_petsc4py_progress > install_petsc4py
 
 distclean_petsc4py:
 	touch install_petsc4py
 	mv -f install_petsc4py install_petsc4py_last
-	cd ${PETSC4PY_VERSION} && PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' ${PROTEUS_PYTHON} setup.py clean && rm -rf build
+	cd ${PETSC4PY_VERSION} && make fullclean && rm -rf build
 
 #cython
 newConfig_cython:
