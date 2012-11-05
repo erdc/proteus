@@ -462,7 +462,6 @@ class KSP_petsc4py(LinearSolver):
                 ksp.buildResidual(self.r_work)
                 truenorm = self.r_work.norm()
                 if its == 0: self.rnorm0 = truenorm
-                print "duh_conv its= %s rnorm= %s truenorm= %s self.rnorm0= %s ksp.resnorm= %s " % (its,rnorm,truenorm,self.rnorm0,ksp.getResidualNorm())
                 return truenorm < self.rnorm0*ksp.rtol + ksp.atol
             self.ksp.setConvergenceTest(converged_trueRes)
         else:
