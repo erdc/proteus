@@ -2,3 +2,15 @@
 *.xmf
 *.h5
 *~
+data*txt
+*.log
+*.out
+*.dat
+*.cmd
+*.ele
+*.face
+*.node
+*.bak
+*.log.*
+install_*
+config_*
