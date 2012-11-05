@@ -549,8 +549,10 @@ class SimpleNavierStokes3D:
         self.isp.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.isv = p4pyPETSc.IS()
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
-        self.pc.fieldSplitSetIS(self.isv)
-        self.pc.fieldSplitSetIS(self.isp)
+        #self.pc.setFieldSplitIS(self.isv)
+        self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
+        #self.pc.setFieldSplitIS(self.velocityDOF)
+        #self.pc.setFieldSplitIS(self.pressureDOF)
 
 class SimpleDarcyFC:
     def __init__(self,L):
@@ -569,8 +571,8 @@ class SimpleDarcyFC:
         self.isp.createGeneral(self.saturationDOF,comm=p4pyPETSc.COMM_WORLD)
         self.isv = p4pyPETSc.IS()
         self.isv.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
-        self.pc.fieldSplitSetIS(self.isp)
-        self.pc.fieldSplitSetIS(self.isv)
+        self.pc.setFieldSplitIS(self.isp)
+        self.pc.setFieldSplitIS(self.isv)
 
 class Jacobi(LinearSolver):
     """
