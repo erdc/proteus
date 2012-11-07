@@ -4,23 +4,20 @@ ${PROTEUS_PYTHON} ./config/configure.py \
 --PETSC_DIR=${PROTEUS}/externalPackages/petsc \
 --with-clanguage=C \
 --with-c++-support=1 \
+--with-shared-libraries=1 \
 --with-x=0 \
 --with-pic=1 \
 --download-mpich=1 \
---with-mpi-compilers=1 \
 --CC=/usr/bin/clang \
 --CXX=/usr/bin/clang++ \
 --FC=/usr/local/bin/gfortran \
 --with-cmake=/usr/bin/cmake \
 --download-metis=1 \
---download-parmetis=1 
-
-#--download-superlu=1 \
-#--download-superlu_dist=1 \
-#--download-spooles=1 \
-#--download-hypre=1 \
-#--download-blacs=1 \
-#--download-scalapack=1 \
-#--download-mumps=1
-
-#--with-shared-libraries=1 \
+--download-parmetis=1 \
+--download-superlu=1 \
+--download-superlu_dist=1 \
+--download-spooles=1 \
+--download-hypre=1 \
+--download-blacs=1 \
+--download-scalapack=1 \
+--download-mumps=1
