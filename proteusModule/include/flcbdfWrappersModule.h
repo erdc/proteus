@@ -1,5 +1,6 @@
 #ifndef FLCBDFWRAPPERSMODULE_H
 #define FLCBDFWRAPPERSMODULE_H 
+#include <cstddef>
 #include "Python.h"
 #include "numpy/arrayobject.h"
 #include "superluWrappersModule.h"
