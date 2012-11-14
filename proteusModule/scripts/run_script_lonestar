@@ -20,6 +20,10 @@ if index == 0:
 index = child.expect(["job status: r","job status: Eqw",pexpect.TIMEOUT],timeout=30*60)
 if index == 0:
     time.sleep(10)
+    index2 = child.expect(["Are you sure you want to continue connecting (yes/no)?",pexpect.TIMEOUT],timeout=10)
+    if index2 == 0:
+        child.sendline("yes")
+    time.sleep(10)
     child.sendline(pcmd)
     child.expect(["PEXPECT_EXIT",pexpect.EOF,pexpect.TIMEOUT],timeout=10*60)
     child.sendline("exit")
