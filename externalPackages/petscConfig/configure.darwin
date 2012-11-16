@@ -10,5 +10,6 @@ ${PROTEUS_PYTHON} ./config/configure.py \
 --with-pic=1 \
 --CC=/usr/bin/mpicc \
 --CXX=/usr/bin/mpicxx \
+--download-cmake=1 \
 --download-metis=1 \
 --download-parmetis=1
