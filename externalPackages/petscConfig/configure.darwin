@@ -5,6 +5,7 @@ ${PROTEUS_PYTHON} ./config/configure.py \
 --with-clanguage=C \
 --with-c++-support=1 \
 --with-shared-libraries=1 \
+--with-fortran=0 \
 --with-x=0 \
 --with-pic=1 \
 --CC=/usr/bin/mpicc \
