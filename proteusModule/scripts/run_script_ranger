@@ -2,6 +2,7 @@
 import sys,os,pexpect,time
 
 np=16
+qcmduninstall = "idev -uninstall"
 qcmd="idev -pe 16 %(np)i -t 00:10:00" %  {"np":np}
 PROTEUS = os.getenv('PROTEUS')
 PROTEUS_PYTHON = os.getenv('PROTEUS_PYTHON')
@@ -9,6 +10,7 @@ pcmd="ibrun %(PROTEUS_PYTHON)s %(PYTHON_SCRIPT)s" % {"np":np,
                                                                 "PROTEUS":PROTEUS,
                                                                 "PROTEUS_PYTHON":PROTEUS_PYTHON,
                                                                 "PYTHON_SCRIPT":sys.argv[1]}
+child = pexpect.spawn(qcmduninstall)
 child = pexpect.spawn(qcmd,timeout=30*60)
 child.logfile = sys.stdout
 index = child.expect(["May I insert the commands?",pexpect.TIMEOUT],timeout=10)
