@@ -7,7 +7,7 @@ ${PROTEUS_PYTHON} ./config/configure.py \
 --with-shared-libraries=1 \
 --with-x=0 \
 --with-pic=1 \
---download-mpich=1 \
+--download-mpich=http://www.mpich.org/files/tarballs/3.0rc1/mpich-3.0rc1.tar.gz \
 --CC=/usr/bin/clang \
 --CXX=/usr/bin/clang++ \
 --FC=/usr/local/bin/gfortran \
