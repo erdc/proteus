@@ -251,7 +251,7 @@ def ViewMesh(mesh,title="Mesh",viewMaterialTypes=True,hardcopy=False):
 
         mrange = window.vod['vtkMesh'].GetCellData().GetScalars().GetRange()
         window.vod['meshMapper'] = vtk.vtkDataSetMapper()
-        window.vod['meshMapper'].SetInput(window.vod['vtkMesh'])
+        window.vod['meshMapper'].SetInputData(window.vod['vtkMesh'])
         window.vod['meshMapper'].SetScalarRange(mrange)
         window.vod['meshActor'] = vtk.vtkActor()
         window.vod['meshActor'].SetMapper(window.vod['meshMapper'])
@@ -288,7 +288,7 @@ def ViewMesh(mesh,title="Mesh",viewMaterialTypes=True,hardcopy=False):
     else:
         #view mesh this way
         window.vod['meshMapper'] = vtk.vtkDataSetMapper()
-        window.vod['meshMapper'].SetInput(window.vod['vtkMesh'])
+        window.vod['meshMapper'].SetInputData(window.vod['vtkMesh'])
         window.vod['meshActor'] = vtk.vtkActor()
         window.vod['meshActor'].SetMapper(window.vod['meshMapper'])
         window.vod['meshActor'].GetProperty().SetRepresentationToWireframe()
@@ -334,7 +334,7 @@ def ViewBoundaryMesh(mesh,title="Boundary Mesh",viewBoundaryMaterialTypes=True,h
     ren = window.vod['ren_colormapped']
     #view mesh this way
     window.vod['meshMapper'] = vtk.vtkPolyDataMapper()
-    window.vod['meshMapper'].SetInput(window.vod['pdata'])
+    window.vod['meshMapper'].SetInputData(window.vod['pdata'])
     window.vod['meshMapper'].SetScalarRange(brange)
     window.vod['meshActor'] = vtk.vtkActor()
     window.vod['meshActor'].SetMapper(window.vod['meshMapper'])
@@ -514,7 +514,7 @@ def viewScalar_tri3_2D(mesh, scalars, title, winNum, viewTypes=['colorMapped','h
         window.vod['dataSet'].GetPointData().SetScalars(window.vod['scalars'])
         #mapper
         window.vod['dataSetMapper'] = vtk.vtkDataSetMapper()
-        window.vod['dataSetMapper'].SetInput(window.vod['dataSet'])
+        window.vod['dataSetMapper'].SetInputData(window.vod['dataSet'])
         window.vod['dataSetMapper'].SetScalarVisibility(1)
         window.vod['lut'] = vtk.vtkLookupTable()
         range = window.vod['scalars'].GetRange()
@@ -533,7 +533,7 @@ def viewScalar_tri3_2D(mesh, scalars, title, winNum, viewTypes=['colorMapped','h
         window.vod['scalars'] = cvtkviewers.prepareScalarValueArray(scalars)
         window.vod['dataSet'].GetPointData().SetScalars(window.vod['scalars'])
         #mapper
-        window.vod['dataSetMapper'].SetInput(window.vod['dataSet'])
+        window.vod['dataSetMapper'].SetInputData(window.vod['dataSet'])
         window.vod['scalars'].Modified()
         window.vod['lut'].SetTableRange(window.vod['scalars'].GetRange())
     else:
@@ -588,7 +588,7 @@ def viewScalar_tri6_2D(mesh, dofMap, scalars, title, winNum, viewTypes=['colorMa
         window.vod['dataSet'].GetPointData().SetScalars(window.vod['scalars'])
         #mapper
         window.vod['dataSetMapper'] = vtk.vtkDataSetMapper()
-        window.vod['dataSetMapper'].SetInput(window.vod['dataSet'])
+        window.vod['dataSetMapper'].SetInputData(window.vod['dataSet'])
         window.vod['dataSetMapper'].SetScalarVisibility(1)
         window.vod['lut'] = vtk.vtkLookupTable()
         window.vod['lut'].SetTableRange(window.vod['scalars'].GetRange())
@@ -634,7 +634,7 @@ def viewScalar_pointSet_2D(nodes, scalars, title, winNum,IsoSurface = True, Paus
         window.vod['polyData'] = vtk.vtkPolyData()
         window.vod['polyData'].SetPoints(window.vod['points'])
 	window.vod['delny'] = vtk.vtkDelaunay2D()
-	window.vod['delny'].SetInput(window.vod['polyData'])
+	window.vod['delny'].SetInputData(window.vod['polyData'])
 	window.vod['delny'].SetTolerance(0.001)
         window.vod['polyData'] = window.vod['delny'].GetOutput()
         window.vod['polyData'].Update()
@@ -646,7 +646,7 @@ def viewScalar_pointSet_2D(nodes, scalars, title, winNum,IsoSurface = True, Paus
 	window.vod['dataSet'].GetPointData().SetScalars(window.vod['scalars'])
         #mapper
         window.vod['dataSetMapper'] = vtk.vtkDataSetMapper()
-        window.vod['dataSetMapper'].SetInput(window.vod['dataSet'])
+        window.vod['dataSetMapper'].SetInputData(window.vod['dataSet'])
         window.vod['dataSetMapper'].SetScalarVisibility(1)
         window.vod['lut'] = vtk.vtkLookupTable()
         window.vod['lut'].SetTableRange(window.vod['scalars'].GetRange())
@@ -671,7 +671,7 @@ def viewScalar_2D(window,windowCreated,viewTypes,Adapted=False,Hardcopy=True):
             ren = window.vod['ren_colorMapped']
             if window.isMaster:
                 window.vod['axesActor_colorMapped'] = vtk.vtkCubeAxesActor2D()
-                window.vod['axesActor_colorMapped'].SetInput(window.vod['dataSet'])
+                window.vod['axesActor_colorMapped'].SetInputData(window.vod['dataSet'])
                 window.vod['axesActor_colorMapped'].SetCamera(window.vod['ren_colorMapped'].GetActiveCamera())
                 window.vod['axesActor_colorMapped'].SetFlyModeToClosestTriad()
                 window.vod['axesActor_colorMapped'].SetZAxisVisibility(0)
@@ -691,7 +691,7 @@ def viewScalar_2D(window,windowCreated,viewTypes,Adapted=False,Hardcopy=True):
             ren.ResetCamera()
         if 'contour' in viewTypes:
             window.vod['algo_contour'] = vtk.vtkContourGrid()
-            window.vod['algo_contour'].SetInput(window.vod['dataSet'])
+            window.vod['algo_contour'].SetInputData(window.vod['dataSet'])
             window.vod['algo_contour'].GenerateValues(10,window.vod['dataSet'].GetPointData().GetScalars().GetRange())            
             window.vod['contourMapper'] = vtk.vtkPolyDataMapper()
             window.vod['contourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
@@ -701,7 +701,7 @@ def viewScalar_2D(window,windowCreated,viewTypes,Adapted=False,Hardcopy=True):
             window.vod['actorcontour'] = vtk.vtkActor()
             window.vod['actorcontour'].SetMapper(window.vod['contourMapper'])
             window.vod['axesActor_contour'] = vtk.vtkCubeAxesActor2D()
-            window.vod['axesActor_contour'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_contour'].SetInputData(window.vod['dataSet'])
             window.vod['axesActor_contour'].SetCamera(window.vod['ren_contour'].GetActiveCamera())
             window.vod['axesActor_contour'].SetFlyModeToClosestTriad()
             window.vod['axesActor_contour'].SetZAxisVisibility(0)
@@ -722,7 +722,7 @@ def viewScalar_2D(window,windowCreated,viewTypes,Adapted=False,Hardcopy=True):
             ren.ResetCamera()
         if 'warp' in viewTypes:
             window.vod['algo_geo'] = vtk.vtkGeometryFilter()
-            window.vod['algo_geo'].SetInput(window.vod['dataSet'])
+            window.vod['algo_geo'].SetInputData(window.vod['dataSet'])
             window.vod['algo_warp'] = vtk.vtkWarpScalar()
             window.vod['algo_warp'].SetInputConnection(window.vod['algo_geo'].GetOutputPort())
             window.vod['warpMapper'] = vtk.vtkPolyDataMapper()
@@ -732,7 +732,7 @@ def viewScalar_2D(window,windowCreated,viewTypes,Adapted=False,Hardcopy=True):
             window.vod['warpActor'] = vtk.vtkActor()
             window.vod['warpActor'].SetMapper(window.vod['warpMapper'])
             window.vod['axesActor_warp'] = vtk.vtkCubeAxesActor2D()
-            window.vod['axesActor_warp'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_warp'].SetInputData(window.vod['dataSet'])
             window.vod['axesActor_warp'].SetCamera(window.vod['ren_warp'].GetActiveCamera())
             window.vod['axesActor_warp'].SetFlyModeToClosestTriad()
             window.vod['axesActor_warp'].SetZAxisVisibility(0)
@@ -771,24 +771,24 @@ def viewScalar_2D(window,windowCreated,viewTypes,Adapted=False,Hardcopy=True):
     elif Adapted:
         if 'colorMapped' in viewTypes:
             window.vod['gridActor_colorMapped'].SetMapper(window.vod['dataSetMapper'])
-            window.vod['axesActor_colorMapped'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_colorMapped'].SetInputData(window.vod['dataSet'])
             window.vod['legendActor_colorMapped'].SetLookupTable(window.vod['lut'])
             ren = window.vod['ren_colorMapped']
             ren.ResetCamera()
         if 'contour' in viewTypes:
-            window.vod['algo_contour'].SetInput(window.vod['dataSet'])
+            window.vod['algo_contour'].SetInputData(window.vod['dataSet'])
             window.vod['algo_contour'].GenerateValues(10,window.vod['dataSet'].GetPointData().GetScalars().GetRange())            
             window.vod['contourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
             window.vod['contourMapper'].SetLookupTable(window.vod['lut'])
-            window.vod['axesActor_contour'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_contour'].SetInputData(window.vod['dataSet'])
             ren = window.vod['ren_contour']
             ren.ResetCamera()
         if 'warp' in viewTypes:
-            window.vod['algo_geo'].SetInput(window.vod['dataSet'])
+            window.vod['algo_geo'].SetInputData(window.vod['dataSet'])
             window.vod['algo_warp'].SetInputConnection(window.vod['algo_geo'].GetOutputPort())
             window.vod['warpMapper'].SetInputConnection(window.vod['algo_warp'].GetOutputPort())
             window.vod['warpMapper'].SetLookupTable(window.vod['lut'])
-            window.vod['axesActor_warp'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_warp'].SetInputData(window.vod['dataSet'])
             ren = window.vod['ren_warp']
             ren.ResetCamera()
 
@@ -802,7 +802,7 @@ def viewScalar_2D(window,windowCreated,viewTypes,Adapted=False,Hardcopy=True):
             window.vod['w2if'] = vtk.vtkWindowToImageFilter()
             window.vod['writer'] = vtk.vtkPNGWriter()
             window.vod['w2if'].SetInput(window.renWin)
-            window.vod['writer'].SetInput(window.vod['w2if'].GetOutput())   
+            window.vod['writer'].SetInputConnection(window.vod['w2if'].GetOutputPort())   
             filename = window.name+`window.hardCopies`+'.png'
             window.vod['writer'].SetFileName(filename)
             window.hardCopies+=1
@@ -876,12 +876,12 @@ def viewVector_tri3_2D(mesh, u,v, title,IsoSurface = True, Pause = True, Hardcop
         window.vod['dataSet'].GetPointData().SetVectors(window.vod['vectors'])
         #mapper
         window.vod['normFilter'] = vtk.vtkVectorNorm()
-        window.vod['normFilter'].SetInput(window.vod['dataSet'])
+        window.vod['normFilter'].SetInputData(window.vod['dataSet'])
         window.vod['normFilter'].SetAttributeModeToUsePointData()
         window.vod['normFilter'].Update()
         window.vod['dataSetMapper'] = vtk.vtkDataSetMapper()
         #window.vod['dataSetMapper'].SetInputConnection(window.vod['normFilter'].GetOutputPort())
-        window.vod['dataSetMapper'].SetInput(window.vod['normFilter'].GetOutput())
+        window.vod['dataSetMapper'].SetInputData(window.vod['normFilter'].GetOutput())
         window.vod['dataSetMapper'].SetScalarVisibility(1)
         window.vod['lut'] = vtk.vtkLookupTable()
         #window.vod['lut'].SetTableRange(window.vod['normFilter'].GetOutput().GetPointData().GetScalars().GetRange())
@@ -899,7 +899,7 @@ def viewVector_tri3_2D(mesh, u,v, title,IsoSurface = True, Pause = True, Hardcop
         window.vod['vectors'] = cvtkviewers.prepareVectorValueArray(window.vectors)
         window.vod['dataSet'].GetPointData().SetVectors(window.vod['vectors'])
         #mapper
-        window.vod['normFilter'].SetInput(window.vod['dataSet'])
+        window.vod['normFilter'].SetInputData(window.vod['dataSet'])
         window.vod['normFilter'].Update()
         window.vod['dataSetMapper'].SetInputConnection(window.vod['normFilter'].GetOutputPort())
         window.vod['lut'].SetTableRange(window.vod['normFilter'].GetOutput().GetPointData().GetScalars().GetRange())
@@ -958,7 +958,7 @@ def viewVector_tri6_2D(mesh, dofMap,u,v, title,IsoSurface = True, Pause = True, 
         window.vod['dataSet'].GetPointData().SetVectors(window.vod['vectors'])
         #mapper
         window.vod['normFilter'] = vtk.vtkVectorNorm()
-        window.vod['normFilter'].SetInput(window.vod['dataSet'])
+        window.vod['normFilter'].SetInputData(window.vod['dataSet'])
         window.vod['normFilter'].SetAttributeModeToUsePointData()
         window.vod['normFilter'].Update()
         window.vod['dataSetMapper'] = vtk.vtkDataSetMapper()
@@ -1013,7 +1013,7 @@ def viewVector_pointSet_2D(nodes, vectors, title,IsoSurface = True, Pause = True
         window.vod['polyData'] = vtk.vtkPolyData()
         window.vod['polyData'].SetPoints(window.vod['points'])
 	window.vod['delny'] = vtk.vtkDelaunay2D()
-	window.vod['delny'].SetInput(window.vod['polyData'])
+	window.vod['delny'].SetInputData(window.vod['polyData'])
 	window.vod['delny'].SetTolerance(0.001)
         window.vod['polyData'] = window.vod['delny'].GetOutput()
         window.vod['polyData'].Update()
@@ -1025,7 +1025,7 @@ def viewVector_pointSet_2D(nodes, vectors, title,IsoSurface = True, Pause = True
 	window.vod['dataSet'].GetPointData().SetVectors(window.vod['vectors'])
         #mapper
         window.vod['normFilter'] = vtk.vtkVectorNorm()
-        window.vod['normFilter'].SetInput(window.vod['dataSet'])
+        window.vod['normFilter'].SetInputData(window.vod['dataSet'])
         window.vod['normFilter'].SetAttributeModeToUsePointData()
         window.vod['normFilter'].Update()
         window.vod['dataSetMapper'] = vtk.vtkDataSetMapper()
@@ -1057,7 +1057,7 @@ def viewVector_2D(window,
         #this should be a loop over viewTypes
         if 'arrows' in viewTypes:
             window.vod['glyph'] = vtk.vtkGlyph3D()
-            window.vod['glyph'].SetInput(window.vod['dataSet'])
+            window.vod['glyph'].SetInputData(window.vod['dataSet'])
             window.vod['glyph'].SetScaleModeToScaleByVector()
             window.vod['arrow'] = vtk.vtkArrowSource()
             window.vod['glyph'].SetSource(window.vod['arrow'].GetOutput())
@@ -1078,7 +1078,7 @@ def viewVector_2D(window,
             #
             lineWidget = vtk.vtkLineWidget()
             window.vod['lineWidget'] = lineWidget
-            lineWidget.SetInput(window.vod['dataSet'])
+            lineWidget.SetInputData(window.vod['dataSet'])
             lineWidget.SetAlignToYAxis()
             lineWidget.SetResolution(50)
             lineWidget.PlaceWidget()
@@ -1087,7 +1087,7 @@ def viewVector_2D(window,
             #
             streamer = vtk.vtkStreamTracer()
             window.vod['streamLineFilter'] = streamer
-            streamer.SetInput(window.vod['dataSet'])
+            streamer.SetInputData(window.vod['dataSet'])
             streamer.SetIntegratorTypeToRungeKutta45()
             streamer.SetIntegrationDirectionToBoth()
             streamer.SetSource(seeds)
@@ -1107,7 +1107,7 @@ def viewVector_2D(window,
             window.vod['gridActor_colorMapped'] = vtk.vtkActor()
             window.vod['gridActor_colorMapped'].SetMapper(window.vod['dataSetMapper'])
             window.vod['axesActor_colorMapped'] = vtk.vtkCubeAxesActor2D()
-            window.vod['axesActor_colorMapped'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_colorMapped'].SetInputData(window.vod['dataSet'])
             window.vod['axesActor_colorMapped'].SetCamera(window.vod['ren_streamlines'].GetActiveCamera())
             window.vod['axesActor_colorMapped'].SetFlyModeToClosestTriad()
             window.vod['axesActor_colorMapped'].SetZAxisVisibility(0)
@@ -1133,7 +1133,7 @@ def viewVector_2D(window,
             ren = window.vod['ren_colorMapped']
             if window.isMaster:
                 window.vod['axesActor_colorMapped'] = vtk.vtkCubeAxesActor2D()
-                window.vod['axesActor_colorMapped'].SetInput(window.vod['dataSet'])
+                window.vod['axesActor_colorMapped'].SetInputData(window.vod['dataSet'])
                 window.vod['axesActor_colorMapped'].SetCamera(window.vod['ren_colorMapped'].GetActiveCamera())
                 window.vod['axesActor_colorMapped'].SetFlyModeToClosestTriad()
                 window.vod['axesActor_colorMapped'].SetZAxisVisibility(0)
@@ -1162,7 +1162,7 @@ def viewVector_2D(window,
             window.vod['actorcontour'] = vtk.vtkActor()
             window.vod['actorcontour'].SetMapper(window.vod['contourMapper'])
             window.vod['axesActor_contour'] = vtk.vtkCubeAxesActor2D()
-            window.vod['axesActor_contour'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_contour'].SetInputData(window.vod['dataSet'])
             window.vod['axesActor_contour'].SetCamera(window.vod['ren_contour'].GetActiveCamera())
             window.vod['axesActor_contour'].SetFlyModeToClosestTriad()
             window.vod['axesActor_contour'].SetZAxisVisibility(0)
@@ -1193,7 +1193,7 @@ def viewVector_2D(window,
             window.vod['warpActor'] = vtk.vtkActor()
             window.vod['warpActor'].SetMapper(window.vod['warpMapper'])
             window.vod['axesActor_warp'] = vtk.vtkCubeAxesActor2D()
-            window.vod['axesActor_warp'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_warp'].SetInputData(window.vod['dataSet'])
             window.vod['axesActor_warp'].SetCamera(window.vod['ren_warp'].GetActiveCamera())
             window.vod['axesActor_warp'].SetFlyModeToClosestTriad()
             window.vod['axesActor_warp'].SetZAxisVisibility(0)
@@ -1262,7 +1262,7 @@ def viewScalar_tet4_3D(mesh, scalars, title, winNum, viewTypes=['colorMapped'],I
         window.vod['dataSet'].GetPointData().SetScalars(window.vod['scalars'])
         #mapper
         window.vod['dataSetMapper'] = vtk.vtkDataSetMapper()
-        window.vod['dataSetMapper'].SetInput(window.vod['dataSet'])
+        window.vod['dataSetMapper'].SetInputData(window.vod['dataSet'])
         window.vod['dataSetMapper'].SetScalarVisibility(1)
         window.vod['lut'] = vtk.vtkLookupTable()
         window.vod['lut'].SetTableRange(window.vod['scalars'].GetRange())
@@ -1278,7 +1278,7 @@ def viewScalar_tet4_3D(mesh, scalars, title, winNum, viewTypes=['colorMapped'],I
         window.vod['scalars'] = cvtkviewers.prepareScalarValueArray(scalars)
         window.vod['dataSet'].GetPointData().SetScalars(window.vod['scalars'])
         #mapper
-        window.vod['dataSetMapper'].SetInput(window.vod['dataSet'])
+        window.vod['dataSetMapper'].SetInputData(window.vod['dataSet'])
         window.vod['scalars'].Modified()
         window.vod['lut'].SetTableRange(window.vod['scalars'].GetRange())
     else:
@@ -1328,7 +1328,7 @@ def viewScalar_tet10_3D(mesh, dofMap, scalars, title, winNum, viewTypes=['colorM
         window.vod['dataSet'].GetPointData().SetScalars(window.vod['scalars'])
         #mapper
         window.vod['dataSetMapper'] = vtk.vtkDataSetMapper()
-        window.vod['dataSetMapper'].SetInput(window.vod['dataSet'])
+        window.vod['dataSetMapper'].SetInputData(window.vod['dataSet'])
         window.vod['dataSetMapper'].SetScalarVisibility(1)
         window.vod['lut'] = vtk.vtkLookupTable()
         window.vod['lut'].SetTableRange(window.vod['scalars'].GetRange())
@@ -1362,7 +1362,7 @@ def viewScalar_pointSet_3D(nodes, scalars, title, winNum,IsoSurface = True, Paus
         window.vod['polyData'] = vtk.vtkPolyData()
         window.vod['polyData'].SetPoints(window.vod['points'])
 	window.vod['delny'] = vtk.vtkDelaunay3D()
-	window.vod['delny'].SetInput(window.vod['polyData'])
+	window.vod['delny'].SetInputData(window.vod['polyData'])
 	window.vod['delny'].SetTolerance(0.001)
         #form the mesh
         window.vod['dataSet'] = window.vod['delny'].GetOutput()
@@ -1374,7 +1374,7 @@ def viewScalar_pointSet_3D(nodes, scalars, title, winNum,IsoSurface = True, Paus
 	window.vod['dataSet'].GetPointData().SetScalars(window.vod['scalars'])
         #mapper
         window.vod['dataSetMapper'] = vtk.vtkDataSetMapper()
-        window.vod['dataSetMapper'].SetInput(window.vod['dataSet'])
+        window.vod['dataSetMapper'].SetInputData(window.vod['dataSet'])
         window.vod['dataSetMapper'].SetScalarVisibility(1)
         window.vod['lut'] = vtk.vtkLookupTable()
         window.vod['lut'].SetTableRange(window.vod['scalars'].GetRange())
@@ -1397,7 +1397,7 @@ def viewScalar_3D(window,windowCreated,viewTypes,Adapted=False):
             window.vod['gridActor_colorMapped'] = vtk.vtkActor()
             window.vod['gridActor_colorMapped'].SetMapper(window.vod['dataSetMapper'])
             window.vod['axesActor_colorMapped'] = vtk.vtkCubeAxesActor2D()
-            window.vod['axesActor_colorMapped'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_colorMapped'].SetInputData(window.vod['dataSet'])
             window.vod['axesActor_colorMapped'].SetCamera(window.vod['ren_colorMapped'].GetActiveCamera())
             window.vod['axesActor_colorMapped'].SetFlyModeToClosestTriad()
             tp=window.vod['axesActor_colorMapped'].GetAxisTitleTextProperty()
@@ -1417,7 +1417,7 @@ def viewScalar_3D(window,windowCreated,viewTypes,Adapted=False):
             ren.ResetCamera()
         if 'contour' in viewTypes:
             window.vod['algo_contour'] = vtk.vtkContourGrid()
-            window.vod['algo_contour'].SetInput(window.vod['dataSet'])
+            window.vod['algo_contour'].SetInputData(window.vod['dataSet'])
             window.vod['algo_contour'].GenerateValues(10,window.vod['dataSet'].GetPointData().GetScalars().GetRange())            
             window.vod['contourMapper'] = vtk.vtkPolyDataMapper()
             window.vod['contourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
@@ -1427,7 +1427,7 @@ def viewScalar_3D(window,windowCreated,viewTypes,Adapted=False):
             window.vod['actorcontour'] = vtk.vtkActor()
             window.vod['actorcontour'].SetMapper(window.vod['contourMapper'])
             window.vod['axesActor_contour'] = vtk.vtkCubeAxesActor2D()
-            window.vod['axesActor_contour'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_contour'].SetInputData(window.vod['dataSet'])
             window.vod['axesActor_contour'].SetCamera(window.vod['ren_contour'].GetActiveCamera())
             window.vod['axesActor_contour'].SetFlyModeToClosestTriad()
             tp=window.vod['axesActor_contour'].GetAxisTitleTextProperty()
@@ -1447,7 +1447,7 @@ def viewScalar_3D(window,windowCreated,viewTypes,Adapted=False):
             ren.ResetCamera()
         if 'warp' in viewTypes:
             window.vod['algo_geo'] = vtk.vtkGeometryFilter()
-            window.vod['algo_geo'].SetInput(window.vod['dataSet'])
+            window.vod['algo_geo'].SetInputData(window.vod['dataSet'])
             window.vod['algo_warp'] = vtk.vtkWarpScalar()
             window.vod['algo_warp'].SetInputConnection(window.vod['algo_geo'].GetOutputPort())
             window.vod['warpMapper'] = vtk.vtkPolyDataMapper()
@@ -1457,7 +1457,7 @@ def viewScalar_3D(window,windowCreated,viewTypes,Adapted=False):
             window.vod['warpActor'] = vtk.vtkActor()
             window.vod['warpActor'].SetMapper(window.vod['warpMapper'])
             window.vod['axesActor_warp'] = vtk.vtkCubeAxesActor2D()
-            window.vod['axesActor_warp'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_warp'].SetInputData(window.vod['dataSet'])
             window.vod['axesActor_warp'].SetCamera(window.vod['ren_warp'].GetActiveCamera())
             window.vod['axesActor_warp'].SetFlyModeToClosestTriad()
             tp=window.vod['axesActor_warp'].GetAxisTitleTextProperty()
@@ -1478,24 +1478,24 @@ def viewScalar_3D(window,windowCreated,viewTypes,Adapted=False):
     elif Adapted:
         if 'colorMapped' in viewTypes:
             window.vod['gridActor_colorMapped'].SetMapper(window.vod['dataSetMapper'])
-            window.vod['axesActor_colorMapped'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_colorMapped'].SetInputData(window.vod['dataSet'])
             window.vod['legendActor_colorMapped'].SetLookupTable(window.vod['lut'])
             ren = window.vod['ren_colorMapped']
             ren.ResetCamera()
         if 'contour' in viewTypes:
-            window.vod['algo_contour'].SetInput(window.vod['dataSet'])
+            window.vod['algo_contour'].SetInputData(window.vod['dataSet'])
             window.vod['algo_contour'].GenerateValues(10,window.vod['dataSet'].GetPointData().GetScalars().GetRange())            
             window.vod['contourMapper'].SetInputConnection(window.vod['algo_contour'].GetOutputPort())
             window.vod['contourMapper'].SetLookupTable(window.vod['lut'])
-            window.vod['axesActor_contour'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_contour'].SetInputData(window.vod['dataSet'])
             ren = window.vod['ren_contour']
             ren.ResetCamera()
         if 'warp' in viewTypes:
-            window.vod['algo_geo'].SetInput(window.vod['dataSet'])
+            window.vod['algo_geo'].SetInputData(window.vod['dataSet'])
             window.vod['algo_warp'].SetInputConnection(window.vod['algo_geo'].GetOutputPort())
             window.vod['warpMapper'].SetInputConnection(window.vod['algo_warp'].GetOutputPort())
             window.vod['warpMapper'].SetLookupTable(window.vod['lut'])
-            window.vod['axesActor_warp'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_warp'].SetInputData(window.vod['dataSet'])
             ren = window.vod['ren_warp']
             ren.ResetCamera()
         
@@ -1547,7 +1547,7 @@ def viewVector_tet4_3D(mesh, u,v, w,title,IsoSurface = True, Pause = True, Hardc
         window.vod['dataSet'].GetPointData().SetVectors(window.vod['vectors'])
         #mapper
         window.vod['normFilter'] = vtk.vtkVectorNorm()
-        window.vod['normFilter'].SetInput(window.vod['dataSet'])
+        window.vod['normFilter'].SetInputData(window.vod['dataSet'])
         window.vod['normFilter'].SetAttributeModeToUsePointData()
         window.vod['normFilter'].Update()
         window.vod['dataSetMapper'] = vtk.vtkDataSetMapper()
@@ -1608,7 +1608,7 @@ def viewVector_tet10_3D(mesh, dofMap, u,v, w,title,IsoSurface = True, Pause = Tr
         window.vod['dataSet'].GetPointData().SetVectors(window.vod['vectors'])
         #mapper
         window.vod['normFilter'] = vtk.vtkVectorNorm()
-        window.vod['normFilter'].SetInput(window.vod['dataSet'])
+        window.vod['normFilter'].SetInputData(window.vod['dataSet'])
         window.vod['normFilter'].SetAttributeModeToUsePointData()
         window.vod['normFilter'].Update()
         window.vod['dataSetMapper'] = vtk.vtkDataSetMapper()
@@ -1661,7 +1661,7 @@ def viewVector_pointSet_3D(nodes, vectors, title,IsoSurface = True, Pause = True
         window.vod['polyData'].SetPoints(window.vod['points'])
         window.vod['polyData'].Update()
 	window.vod['delny'] = vtk.vtkDelaunay3D()
-	window.vod['delny'].SetInput(window.vod['polyData'])
+	window.vod['delny'].SetInputData(window.vod['polyData'])
 	window.vod['delny'].SetTolerance(0.0)
         #form the mesh
         window.vod['dataSet'] = window.vod['delny'].GetOutput()
@@ -1670,7 +1670,7 @@ def viewVector_pointSet_3D(nodes, vectors, title,IsoSurface = True, Pause = True
 	window.vod['dataSet'].GetPointData().SetVectors(window.vod['vectors'])
         #mapper
         window.vod['normFilter'] = vtk.vtkVectorNorm()
-        window.vod['normFilter'].SetInput(window.vod['dataSet'])
+        window.vod['normFilter'].SetInputData(window.vod['dataSet'])
         window.vod['normFilter'].SetAttributeModeToUsePointData()
         window.vod['normFilter'].Update()
         window.vod['dataSetMapper'] = vtk.vtkDataSetMapper()
@@ -1701,7 +1701,7 @@ def viewVector_3D(window,
         #this should be a loop over viewTypes
         if 'arrows' in viewTypes:
             window.vod['glyph'] = vtk.vtkGlyph3D()
-            window.vod['glyph'].SetInput(window.vod['dataSet'])
+            window.vod['glyph'].SetInputData(window.vod['dataSet'])
             window.vod['glyph'].SetScaleModeToScaleByVector()
             window.vod['arrow'] = vtk.vtkArrowSource()
             window.vod['glyph'].SetSource(window.vod['arrow'].GetOutput())
@@ -1722,7 +1722,7 @@ def viewVector_3D(window,
             #
             planeWidget = vtk.vtkPlaneWidget()
             window.vod['planeWidget'] = planeWidget
-            planeWidget.SetInput(window.vod['dataSet'])
+            planeWidget.SetInputData(window.vod['dataSet'])
             planeWidget.NormalToXAxisOn()
             planeWidget.SetResolution(10)
             planeWidget.PlaceWidget()
@@ -1730,7 +1730,7 @@ def viewVector_3D(window,
             #
             streamer = vtk.vtkStreamTracer()
             window.vod['streamLineFilter'] = streamer
-            streamer.SetInput(window.vod['dataSet'])
+            streamer.SetInputData(window.vod['dataSet'])
             streamer.SetIntegratorTypeToRungeKutta45()
             streamer.SetIntegrationDirectionToBoth()
             streamer.SetSource(seeds)
@@ -1757,7 +1757,7 @@ def viewVector_3D(window,
 #             window.vod['gridActor_colorMapped'] = vtk.vtkActor()
 #             window.vod['gridActor_colorMapped'].SetMapper(window.vod['dataSetMapper'])
             window.vod['axesActor_colorMapped'] = vtk.vtkCubeAxesActor2D()
-            window.vod['axesActor_colorMapped'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_colorMapped'].SetInputData(window.vod['dataSet'])
             window.vod['axesActor_colorMapped'].SetCamera(window.vod['ren_streamlines'].GetActiveCamera())
             window.vod['axesActor_colorMapped'].SetFlyModeToClosestTriad()
             tp=window.vod['axesActor_colorMapped'].GetAxisTitleTextProperty()
@@ -1780,7 +1780,7 @@ def viewVector_3D(window,
             window.vod['gridActor_colorMapped'] = vtk.vtkActor()
             window.vod['gridActor_colorMapped'].SetMapper(window.vod['dataSetMapper'])
             window.vod['axesActor_colorMapped'] = vtk.vtkCubeAxesActor2D()
-            window.vod['axesActor_colorMapped'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_colorMapped'].SetInputData(window.vod['dataSet'])
             window.vod['axesActor_colorMapped'].SetCamera(window.vod['ren_colorMapped'].GetActiveCamera())
             window.vod['axesActor_colorMapped'].SetFlyModeToClosestTriad()
             tp=window.vod['axesActor_colorMapped'].GetAxisTitleTextProperty()
@@ -1809,7 +1809,7 @@ def viewVector_3D(window,
             window.vod['actorcontour'] = vtk.vtkActor()
             window.vod['actorcontour'].SetMapper(window.vod['contourMapper'])
             window.vod['axesActor_contour'] = vtk.vtkCubeAxesActor2D()
-            window.vod['axesActor_contour'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_contour'].SetInputData(window.vod['dataSet'])
             window.vod['axesActor_contour'].SetCamera(window.vod['ren_contour'].GetActiveCamera())
             window.vod['axesActor_contour'].SetFlyModeToClosestTriad()
             tp=window.vod['axesActor_contour'].GetAxisTitleTextProperty()
@@ -1839,7 +1839,7 @@ def viewVector_3D(window,
             window.vod['warpActor'] = vtk.vtkActor()
             window.vod['warpActor'].SetMapper(window.vod['warpMapper'])
             window.vod['axesActor_warp'] = vtk.vtkCubeAxesActor2D()
-            window.vod['axesActor_warp'].SetInput(window.vod['dataSet'])
+            window.vod['axesActor_warp'].SetInputData(window.vod['dataSet'])
             window.vod['axesActor_warp'].SetCamera(window.vod['ren_warp'].GetActiveCamera())
             window.vod['axesActor_warp'].SetFlyModeToClosestTriad()
             tp=window.vod['axesActor_warp'].GetAxisTitleTextProperty()
@@ -1901,7 +1901,7 @@ def viewVector_3D(window,
     
 #     # Create the mapper and actor for the main mesh
 #     aTetraMapper = vtk.vtkDataSetMapper()
-#     aTetraMapper.SetInput(mesh)
+#     aTetraMapper.SetInputData(mesh)
 #     aTetraActor = vtk.vtkActor()
 #     aTetraActor.SetMapper(aTetraMapper)
 #     aTetraActor.GetProperty().SetOpacity(0.1)
@@ -1936,10 +1936,10 @@ def viewVector_3D(window,
     
 #     # Define the cutter that will make our slice
 #     cutter = vtk.vtkCutter()
-#     cutter.SetInput(mesh)
+#     cutter.SetInputData(mesh)
 #     cutter.SetCutFunction(plane)
 #     cutMapper = vtk.vtkPolyDataMapper()
-#     cutMapper.SetInput(cutter.GetOutput())
+#     cutMapper.SetInputData(cutter.GetOutput())
 #     cutActor = vtk.vtkActor()
 #     cutActor.SetMapper(cutMapper)
 #     cutActor.GetProperty().SetOpacity(0.3)
@@ -1976,7 +1976,7 @@ def viewVector_3D(window,
 #         textActor.SetTextScaleModeToProp()
 #     except AttributeError:
 #         textActor.ScaledTextOn() 
-#     textActor.SetInput(planeText)
+#     textActor.SetInputData(planeText)
 #     textActor.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
 #     textActor.GetPositionCoordinate().SetValue(0.8,0.02)
 #     textActor.SetWidth(0.2)
@@ -1996,7 +1996,7 @@ def viewVector_3D(window,
 # 		g.CutPlaneOrigin = o
 # 		g.CutPlaneNormal = n
 # 		planeText = "Plane Data:\n   pX = %10.1e \n   pY = %10.1e \n   pZ = %10.1e \n   nX = %10.1e \n   nY = %10.1e \n   nZ = %10.1e" % (plane.GetOrigin()[0],plane.GetOrigin()[1],plane.GetOrigin()[2],plane.GetNormal()[0],plane.GetNormal()[1],plane.GetNormal()[2])
-# 		textActor.SetInput(planeText)
+# 		textActor.SetInputData(planeText)
 # 		cutWarper.SetNormal(n)
 # 		isoActor.SetPosition(0-n[0]*dist,0-n[1]*dist,0-n[2]*dist)
 		
@@ -2007,7 +2007,7 @@ def viewVector_3D(window,
 # 	planeWidget.SetNormal(g.CutPlaneNormal)
 # 	planeWidget.SetInteractor(renWin.GetInteractor())
 # 	planeWidget.SetPlaceFactor(1.25)
-# 	planeWidget.SetInput(mesh)
+# 	planeWidget.SetInputData(mesh)
 # 	planeWidget.PlaceWidget()
 # 	planeWidget.AddObserver("InteractionEvent", myCallback)
    
@@ -2073,7 +2073,7 @@ def viewScalar_pointCloud_2D(nodes, scalars, title, winNum, nodeArray = None, el
         window.vod['dataSet'].GetPointData().SetScalars(window.vod['scalars'])
         #mapper
         window.vod['dataSetMapper'] = vtk.vtkDataSetMapper()
-        window.vod['dataSetMapper'].SetInput(window.vod['dataSet'])
+        window.vod['dataSetMapper'].SetInputData(window.vod['dataSet'])
         window.vod['dataSetMapper'].SetScalarVisibility(0)
         #background mesh
         if nodeArray == None or elementNodesArray == None:
@@ -2083,7 +2083,7 @@ def viewScalar_pointCloud_2D(nodes, scalars, title, winNum, nodeArray = None, el
                                                                                        elementNodesArray)
             window.vod['dataSet_background'].Update()
             window.vod['dataSetMapper_background']=vtk.vtkDataSetMapper()
-            window.vod['dataSetMapper_background'].SetInput(window.vod['dataSet_background'])
+            window.vod['dataSetMapper_background'].SetInputData(window.vod['dataSet_background'])
 
         if vectors != None:
             window.w=numpy.zeros(vectors.shape[:-1],'d')
@@ -2126,7 +2126,7 @@ def viewParticles_2D(window,
             window.vod['actor_background'].GetProperty().SetRepresentationToWireframe()
         if 'spheres' in viewTypes:
             window.vod['glyph'] = vtk.vtkGlyph3D()
-            window.vod['glyph'].SetInput(window.vod['dataSet'])
+            window.vod['glyph'].SetInputData(window.vod['dataSet'])
             window.vod['glyph'].SetColorModeToColorByScalar()
             window.vod['glyph'].SetScaleModeToDataScalingOff()
             #window.vod['glyph'].SetScaleFactor(0.1)
@@ -2151,7 +2151,7 @@ def viewParticles_2D(window,
             #pdb.set_trace()
             streamer = vtk.vtkStreamTracer()
             window.vod['streamLineFilter'] = streamer
-            streamer.SetInput(window.vod['dataSet'])
+            streamer.SetInputData(window.vod['dataSet'])
             streamer.SetIntegratorTypeToRungeKutta45()
             streamer.SetIntegrationDirectionToForward()
             #need to pass in a time argument
@@ -2172,7 +2172,7 @@ def viewParticles_2D(window,
 #             window.vod['gridActor_colorMapped'] = vtk.vtkActor()
 #             window.vod['gridActor_colorMapped'].SetMapper(window.vod['dataSetMapper'])
 #             window.vod['axesActor_colorMapped'] = vtk.vtkCubeAxesActor2D()
-#             window.vod['axesActor_colorMapped'].SetInput(window.vod['dataSet'])
+#             window.vod['axesActor_colorMapped'].SetInputData(window.vod['dataSet'])
 #             window.vod['axesActor_colorMapped'].SetCamera(window.vod['ren_streamlines'].GetActiveCamera())
 #             window.vod['axesActor_colorMapped'].SetFlyModeToClosestTriad()
 #             window.vod['axesActor_colorMapped'].SetZAxisVisibility(0)
@@ -2196,7 +2196,7 @@ def viewParticles_2D(window,
 #             window.vod['gridActor_colorMapped'] = vtk.vtkActor()
 #             window.vod['gridActor_colorMapped'].SetMapper(window.vod['dataSetMapper'])
 #             window.vod['axesActor_colorMapped'] = vtk.vtkCubeAxesActor2D()
-#             window.vod['axesActor_colorMapped'].SetInput(window.vod['dataSet'])
+#             window.vod['axesActor_colorMapped'].SetInputData(window.vod['dataSet'])
 #             window.vod['axesActor_colorMapped'].SetCamera(window.vod['ren_colorMapped'].GetActiveCamera())
 #             window.vod['axesActor_colorMapped'].SetFlyModeToClosestTriad()
 #             window.vod['axesActor_colorMapped'].SetZAxisVisibility(0)
@@ -2226,7 +2226,7 @@ def viewParticles_2D(window,
 #             window.vod['actorcontour'] = vtk.vtkActor()
 #             window.vod['actorcontour'].SetMapper(window.vod['contourMapper'])
 #             window.vod['axesActor_contour'] = vtk.vtkCubeAxesActor2D()
-#             window.vod['axesActor_contour'].SetInput(window.vod['dataSet'])
+#             window.vod['axesActor_contour'].SetInputData(window.vod['dataSet'])
 #             window.vod['axesActor_contour'].SetCamera(window.vod['ren_contour'].GetActiveCamera())
 #             window.vod['axesActor_contour'].SetFlyModeToClosestTriad()
 #             window.vod['axesActor_contour'].SetZAxisVisibility(0)
@@ -2327,7 +2327,7 @@ def viewScalar_pointCloud_3D(nodes, scalars, title, winNum, nodeArray = None, el
         window.vod['dataSet'].GetPointData().SetScalars(window.vod['scalars'])
         #mapper
         window.vod['dataSetMapper'] = vtk.vtkDataSetMapper()
-        window.vod['dataSetMapper'].SetInput(window.vod['dataSet'])
+        window.vod['dataSetMapper'].SetInputData(window.vod['dataSet'])
         window.vod['dataSetMapper'].SetScalarVisibility(0)
         #background mesh
         if nodeArray == None or elementNodesArray == None:
@@ -2337,7 +2337,7 @@ def viewScalar_pointCloud_3D(nodes, scalars, title, winNum, nodeArray = None, el
                                                                                        elementNodesArray)
             window.vod['dataSet_background'].Update()
             window.vod['dataSetMapper_background']=vtk.vtkDataSetMapper()
-            window.vod['dataSetMapper_background'].SetInput(window.vod['dataSet_background'])
+            window.vod['dataSetMapper_background'].SetInputData(window.vod['dataSet_background'])
 
         if vectors != None:
             window.vectors=numpy.column_stack((vectors.flat[::3],vectors.flat[1::3],vectors.flat[2::3])).flatten()
@@ -2380,7 +2380,7 @@ def viewParticles_3D(window,
             window.vod['actor_background'].GetProperty().SetRepresentationToWireframe()
         if 'spheres' in viewTypes or True:
             window.vod['glyph'] = vtk.vtkGlyph3D()
-            window.vod['glyph'].SetInput(window.vod['dataSet'])
+            window.vod['glyph'].SetInputData(window.vod['dataSet'])
             window.vod['glyph'].SetColorModeToColorByScalar()
             window.vod['glyph'].SetScaleModeToDataScalingOff()
             #window.vod['glyph'].SetScaleFactor(0.1)
@@ -2403,7 +2403,7 @@ def viewParticles_3D(window,
             #
             streamer = vtk.vtkStreamTracer()
             window.vod['streamLineFilter'] = streamer
-            streamer.SetInput(window.vod['dataSet'])
+            streamer.SetInputData(window.vod['dataSet'])
             streamer.SetIntegratorTypeToRungeKutta45()
             streamer.SetIntegrationDirectionToForward()
             #supposed to use SetSourceConnection?
@@ -2422,7 +2422,7 @@ def viewParticles_3D(window,
 #             window.vod['gridActor_colorMapped'] = vtk.vtkActor()
 #             window.vod['gridActor_colorMapped'].SetMapper(window.vod['dataSetMapper'])
 #             window.vod['axesActor_colorMapped'] = vtk.vtkCubeAxesActor2D()
-#             window.vod['axesActor_colorMapped'].SetInput(window.vod['dataSet'])
+#             window.vod['axesActor_colorMapped'].SetInputData(window.vod['dataSet'])
 #             window.vod['axesActor_colorMapped'].SetCamera(window.vod['ren_streamlines'].GetActiveCamera())
 #             window.vod['axesActor_colorMapped'].SetFlyModeToClosestTriad()
 #             window.vod['axesActor_colorMapped'].SetZAxisVisibility(0)
