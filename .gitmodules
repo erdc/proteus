@@ -67,3 +67,9 @@
 [submodule "externalPackages/petsc"]
 	path = externalPackages/petsc
 	url = git@github.com:erdc-cm/petsc-dev.git
+[submodule "externalPackages/adh"]
+	path = externalPackages/adh
+	url = git@github.com:erdc-cm/adh.git
+[submodule "externalPackages/stwave"]
+	path = externalPackages/stwave
+	url = git@github.com:erdc-cm/stwave.git

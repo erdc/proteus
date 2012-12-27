@@ -1,3 +1,4 @@
+from IPython.core.display import *
 """
 A class hierarchy and tools for building domains of PDE's.
 """
@@ -15,8 +16,94 @@ class D_base:
         self.nd=nd
         self.name=name
         self.units=units
-        self.x=[]#minx,miny,minz
-        self.L=[]#bounding box when self.x is origin
+        self.x=[0.0,0.0,0.0]#minx,miny,minz
+        self.L=[1.0,1.0,1.0]#bounding box when self.x is origin
+        #graphical represetnations
+        self._png_data = None
+        self._svg_data = None
+        self._js_data = None
+        self._html_data = None
+        self._math_data = None
+    def _repr(self):
+        if self.L == None:
+            return "domain "+`self.name`+"is uninitialized"
+        else:
+            return "domain "+`self.name`+" lower left corner, x = ",`self.x`+"; dimensions, L = "+`self.L`
+    def _graph_data(self,format):
+        """
+        Build a graph of the domain
+        """
+        if format == 'math':
+            data = r"\left(%(x)s,%(xr)s\right) \times \left(%(y)s,%(yr)s\right) \times \left(%(z)s,%(zr)s\right)" % {'x':self.x[0],
+                                                                         'y':self.x[1],
+                                                                         'z':self.x[2],
+                                                                         'xr':self.x[0]+self.L[0],
+                                                                         'yr':self.x[1]+self.L[1],
+                                                                         'zr':self.x[2]+self.L[2]}
+            self._math_data = data
+        return data
+    def _repr_pretty(self):
+        if self.L == None:
+            return self._repr()
+        else:
+            return r"(%(x)s,%(xr)s) x (%(y)s,%(yr)s) x (%(z)s,%(zr)s)" % {'x':self.x[0],
+                                                                         'y':self.x[1],
+                                                                         'z':self.x[2],
+                                                                         'xr':self.x[0]+self.L[0],
+                                                                         'yr':self.x[1]+self.L[1],
+                                                                         'zr':self.x[2]+self.L[2]}
+    @property
+    def pretty(self):
+        return self._repr_pretty()
+    def _repr_png_(self):
+        if self._png_data is None:
+            self._png_data = self._graph_data('png')
+        return self._png_data
+    @property
+    def png(self):
+        return Image(self._repr_png_(), embed=True)
+    def _repr_svg_(self):
+        if self._svg_data is None:
+            self._svg_data = self._graph_data('svg')
+        return self._svg_data
+    @property
+    def svg(self):
+        return SVG(self._repr_svg_(), embed=True)
+    def _repr_html_(self):
+        if self._html_data is None:
+            self._html_data = self._graph_data('html')
+        return self._html_data
+    @property
+    def html(self):
+        return HTML(self._repr_html_(), embed=True)
+    def _repr_javascript_(self):
+        if self._javascript_data is None:
+            self._javascript_data = self._graph_data('javascript')
+        return self._javascript_data
+    @property
+    def javascript(self):
+        return Javascript(self._repr_javascript_(), embed=True)
+    def _repr_math_(self):
+        if self._math_data is None:
+            self._math_data = self._graph_data('math')
+        return self._math_data
+    @property
+    def math(self):
+        return Math(self._repr_math_())
+    def _repr_latex_(self):
+        if self._latex_data is None:
+            self._latex_data = self._graph_data('latex')
+        return self._latex_data
+    @property
+    def latex(self):
+        return Latex(self._repr_latex_())
+    def _repr_json_(self):
+        if self._json_data is None:
+            self._json_data = self._graph_data('json')
+        return self._json_data
+    @property
+    def json(self):
+        return JSON(self._repr_json_(), embed=True)
     def writeAsymptote(self, fileprefix):
         """
         Write a representation of the domain to file using the Asymptote vector graphics language.

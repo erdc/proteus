@@ -264,7 +264,7 @@ class NonlinearSolver:
             self.computeAverages()
         if self.printInfo == True:
             print self.info()
-        #print self.convergedFlag
+        print "convertedFlag ",self.convergedFlag,self.convergenceTest
         return self.convergedFlag
     def failed(self):
         self.failedFlag = False
@@ -619,11 +619,11 @@ class Newton(NonlinearSolver):
                 #raw_input("wait")
             if self.maxIts>1:
                 log("   Newton it %d norm(r) = %12.5e  %12.5g \t\t norm(r)/(rtol*norm(r0)+atol) = %g"
-                             % (self.its-1,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                             % (self.its,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             return self.failedFlag
         if self.maxIts>1:
             log("   Newton it %d norm(r) = %12.5e  %12.5g \t\t norm(r)/(rtol*norm(r0)+atol) = %g"
-                           % (self.its-1,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                           % (self.its,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
 class NewtonNS(NonlinearSolver):
     """
     A simple iterative solver that is Newton's method
