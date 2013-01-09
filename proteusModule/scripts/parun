@@ -394,6 +394,7 @@ while running:
         runName = so.name+`runNumber`
         if opts.profile:
             profiler.run('ns = NumericalSolution.NS_base(so,pList,nList,sList,opts,simFlagsList)',so.name+'_init_prof'+`comm.rank()`)
+            comm.beginSequential()
             stats = pstats.Stats(so.name+'_init_prof'+`comm.rank()`)
             stats.strip_dirs()
             stats.dump_stats(so.name+'_init_prof_c'+`comm.rank()`)
@@ -403,7 +404,9 @@ while running:
             stats.sort_stats('time')
             if Profiling.verbose:
                 stats.print_stats(30)
+            comm.endSequential()
             profiler.run('ns.calculateSolution(runName)',so.name+'_run_prof'+`comm.rank()`)
+            comm.beginSequential()
             runNumber+=1
             stats = pstats.Stats(so.name+'_run_prof'+`comm.rank()`)
             stats.strip_dirs()
@@ -414,6 +417,7 @@ while running:
             stats.sort_stats('time')
             if Profiling.verbose:
                 stats.print_stats(30)
+            comm.endSequential()
         else:
             ns = NumericalSolution.NS_base(so,pList,nList,sList,opts,simFlagsList)
             #if comm.isMaster():
