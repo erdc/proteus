@@ -718,6 +718,13 @@ class SimulationProcessor:
                             err = -12345.0
                             exa = 1.0
                             if hasAnalyticalSolution[ci]:
+                                # *** HACK *** 12/10/2012
+                                if not m.q.has_key(('u',ci)):
+                                    m.q[('u',ci)]=m.q[('u',1)].copy()
+                                    
+                                m.q['abs(det(J))']=m.q[('u',ci)].copy()
+                                m.q['abs(det(J))'][:]=1.0
+
                                 err = Norms.L2errorSFEMvsAF2(self.analyticalSolution[ci],
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
@@ -775,6 +782,9 @@ class SimulationProcessor:
                         if calcLIu:
                             err = -12345.0
                             exa = 0.0
+                            print 'm.name', m.name
+                            print 'm.q', m.q
+
                             if hasAnalyticalSolution[ci]:
                                 err = Norms.LIerrorSFEMvsAF(self.analyticalSolution[ci],
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
