@@ -5,9 +5,7 @@
 #PBS -q debug
 #PBS -N testProteus
 #PBS -j oe
-##PBS -V
 #PBS -l application=proteus
-##PBS -l ccm=1 #does not seem to work
 source /opt/modules/default/etc/modules.sh
 source ${PROTEUS}/envConfig/garnet.gnu.bash
 cd $PBS_O_WORKDIR
