@@ -215,7 +215,7 @@ nList = []
 sList = []
 if len(args) < 1:
     raise RuntimeError("No input file specified")
-print "importing"
+log("Importing input modules")
 if len(args) == 1:#arg should be an sso file or an so module
     if args[0][-3:] == '.py':
         log("Loading so module = "+args[0])
