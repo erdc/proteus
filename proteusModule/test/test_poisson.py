@@ -85,7 +85,9 @@ if __name__ == '__main__':
     test_c0p1()
     test_c0p2()
     Profiling.logEvent("Closing Log")
-    if comm.isMaster():
+    try:
         Profiling.closeLog()
+    except:
+        pass
 #    test_c0q1()
 #    test_c0q2()
