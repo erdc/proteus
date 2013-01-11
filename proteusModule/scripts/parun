@@ -399,10 +399,10 @@ while running:
             stats.strip_dirs()
             stats.dump_stats(so.name+'_init_prof_c'+`comm.rank()`)
             stats.sort_stats('cumulative')
-            if Profiling.verbose:
+            if Profiling.verbose and comm.isMaster():
                 stats.print_stats(30)
             stats.sort_stats('time')
-            if Profiling.verbose:
+            if Profiling.verbose and comm.isMaster():
                 stats.print_stats(30)
             comm.endSequential()
             profiler.run('ns.calculateSolution(runName)',so.name+'_run_prof'+`comm.rank()`)
@@ -412,10 +412,10 @@ while running:
             stats.strip_dirs()
             stats.dump_stats(so.name+'_run_prof_c'+`comm.rank()`)
             stats.sort_stats('cumulative')
-            if Profiling.verbose:
+            if Profiling.verbose and comm.isMaster():
                 stats.print_stats(30)
             stats.sort_stats('time')
-            if Profiling.verbose:
+            if Profiling.verbose and comm.isMaster():
                 stats.print_stats(30)
             comm.endSequential()
         else:
