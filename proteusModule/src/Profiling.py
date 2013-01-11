@@ -41,7 +41,7 @@ def closeLog():
     try:
         logFile.close()
     except:
-        print "failed closing logFile"
+        pass
 
 def logEvent(stringIn,level=1,data=None):
     global logLevel,procID,logAllProcesses,flushBuffer
