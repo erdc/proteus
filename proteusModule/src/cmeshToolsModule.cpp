@@ -603,12 +603,12 @@ static PyObject* cmeshToolsLocallyRefineMultilevelMesh(PyObject* self,
 					     IDATA(elementTagArray));
 	}
       finestLevel = MULTILEVELMESH(cmultilevelMesh).nLevels;
-      std::cout<<"eb info"<<std::endl;
+      //std::cout<<"eb info"<<std::endl;
       constructElementBoundaryElementsArray_triangle(MULTILEVELMESH(cmultilevelMesh).meshArray[finestLevel-1]);
-      std::cout<<"geo info"<<std::endl;
+      //std::cout<<"geo info"<<std::endl;
       allocateGeometricInfo_triangle(MULTILEVELMESH(cmultilevelMesh).meshArray[finestLevel-1]);
       computeGeometricInfo_triangle(MULTILEVELMESH(cmultilevelMesh).meshArray[finestLevel-1]);
-      std::cout<<"eb types"<<std::endl;
+      //std::cout<<"eb types"<<std::endl;
       if (finestLevel > 1)
 	assignElementBoundaryMaterialTypesFromParent(MULTILEVELMESH(cmultilevelMesh).meshArray[finestLevel-2],
 						     MULTILEVELMESH(cmultilevelMesh).meshArray[finestLevel-1],
@@ -1686,7 +1686,7 @@ static PyObject* SparsityInfo_getCSR(SparsityInfo *self,
       std::sort(&colind_[rowptr_[I]],&colind_[rowptr_[I+1]]);
       max_nonzeros = std::max(max_nonzeros,rowptr_[I+1] - rowptr_[I]);
     }
-  std::cout<<"Proteus: Maximum nonzeros in any row is "<<max_nonzeros<<std::endl;
+  //std::cout<<"Proteus: Maximum nonzeros in any row is "<<max_nonzeros<<std::endl;
   return Py_BuildValue("(O,O,i,O)",PyArray_Return(rowptr),PyArray_Return(colind),nnz,PyArray_Return(nzval));
 }
 
