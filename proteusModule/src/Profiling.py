@@ -36,6 +36,13 @@ def openLog(filename,level):
     logFile=open(filename,'w')
     logLevel = level
 
+def closeLog():
+    global logFile
+    try:
+        logFile.close()
+    except:
+        print "failed closing logFile"
+
 def logEvent(stringIn,level=1,data=None):
     global logLevel,procID,logAllProcesses,flushBuffer
     if logAllProcesses or procID==0:
