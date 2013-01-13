@@ -2948,7 +2948,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 		}
 	    }
         }
-    std::cout<<"Done marking element boundares "<<elementBoundaries_subdomain_owned.size()<<std::endl;
+    //std::cout<<"Done marking element boundares "<<elementBoundaries_subdomain_owned.size()<<std::endl;
     //ship off the mask
     if (rank < size-1)
       MPI_Send(elementBoundaryMask,PetscBTLength(mesh.nElementBoundaries_global),MPI_CHAR,rank+1,0,Py_PETSC_COMM_WORLD);
