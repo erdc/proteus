@@ -37,14 +37,14 @@ class SC_base:
         self.stepExact = True
         #keep track of time step history ...
         #should push this into base class at some point
-        comm  = Comm.get()
-        rank = comm.rank()
-        dname = "data_dt_%s_p%d.txt" % (model.levelModelList[0].name,rank)
-        self.datafile = open(dname,'w')
-        dheader = \
-"""
- k |  Step Size   |      tn      |errf|nlsf|ilsf|func|jacs|NLit|L_IT|linS|"""
-        self.datafile.write(dheader)
+        #comm  = Comm.get()
+        #rank = comm.rank()
+        #dname = "data_dt_%s_p%d.txt" % (model.levelModelList[0].name,rank)
+        #self.datafile = open(dname,'w')
+        #dheader = \
+#"""
+# k |  Step Size   |      tn      |errf|nlsf|ilsf|func|jacs|NLit|L_IT|linS|"""
+        #self.datafile.write(dheader)
     def setInitialGuess(self,uList,rList):
         pass
     def set_dt_allLevels(self):

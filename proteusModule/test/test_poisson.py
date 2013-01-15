@@ -10,6 +10,8 @@ This module solves equations of the form
 
 """
 from proteus.iproteus import *
+from proteus import Comm
+comm = Comm.get()
 Profiling.logLevel=7
 Profiling.verbose=True
 def test_c0p1():
@@ -18,10 +20,11 @@ def test_c0p1():
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0p1_n]
     so = default_so
-    so.name = pList[0].name = "poisson_3d_c0p1"
+    so.name = pList[0].name = "poisson_3d_c0p1"+"pe"+`comm.size()`
     so.sList=[default_s]
     opts.logLevel=7
     opts.verbose=True
+    opts.profile=True
     nList[0].linearSolver=default_n.KSP_petsc4py
     nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
     #nList[0].linearSolver=default_n.LU
@@ -36,7 +39,7 @@ def test_c0p2():
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0p2_n]
     so = default_so
-    so.name = pList[0].name = "poisson_3d_c0p2"
+    so.name = pList[0].name = "poisson_3d_c0p2"+"pe"+`comm.size()`
     so.sList=[default_s]
     opts.logLevel=7
     opts.verbose=True
@@ -52,7 +55,7 @@ def test_c0p2():
 #     pList = [poisson_3d_p]
 #     nList = [poisson_3d_c0q1_n]
 #     so = default_so
-#     so.name = pList[0].name = "poisson_3d_c0q1"
+#     so.name = pList[0].name = "poisson_3d_c0q1"+"pe"+`comm.size()`
 #     so.sList=[default_s]
 #     opts.logLevel=7
 #     opts.verbose=True
@@ -68,7 +71,7 @@ def test_c0p2():
 #     pList = [poisson_3d_p]
 #     nList = [poisson_3d_c0q2_n]
 #     so = default_so
-#     so.name = pList[0].name = "poisson_3d_c0q2"
+#     so.name = pList[0].name = "poisson_3d_c0q2"+"pe"+`comm.size()`
 #     so.sList=[default_s]
 #     opts.logLevel=7
 #     opts.verbose=True
@@ -81,5 +84,10 @@ def test_c0p2():
 if __name__ == '__main__':
     test_c0p1()
     test_c0p2()
+    Profiling.logEvent("Closing Log")
+    try:
+        Profiling.closeLog()
+    except:
+        pass
 #    test_c0q1()
 #    test_c0q2()

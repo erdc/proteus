@@ -433,7 +433,7 @@ class Sequential_MinAdaptiveModelStep(SO_base):
             if model.levelModelList[-1].timeIntegration.isAdaptive:
                 self.controllerList.append(model)
                 self.maxFailures = model.stepController.maxSolverFailures
-        print "controllers",[c.name for c in self.controllerList]
+        #print "controllers",[c.name for c in self.controllerList]
         self.stepFailures=0
         self.updateAfterModelStep=False
     def converged(self):
@@ -561,7 +561,7 @@ class ISO_fixed_MinAdaptiveModelStep(SO_base):
             if model.levelModelList[-1].timeIntegration.isAdaptive:
                 self.controllerList.append(model)
                 self.maxFailures = model.stepController.maxSolverFailures
-        print "controllers",[c.name for c in self.controllerList]
+        #print "controllers",[c.name for c in self.controllerList]
         self.stepFailures=0
         self.updateAfterModelStep=False
     def converged(self):
@@ -690,7 +690,7 @@ class Sequential_MinAdaptiveModelStep_SS(SO_base):
             if model.levelModelList[-1].timeIntegration.isAdaptive:
                 self.controllerList.append(model)
                 self.maxFailures = model.stepController.maxSolverFailures
-        print "controllers",[c.name for c in self.controllerList]
+        #print "controllers",[c.name for c in self.controllerList]
         self.stepFailures=0
         self.updateAfterModelStep=False
     def converged(self):

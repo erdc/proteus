@@ -236,7 +236,7 @@ extern "C"
                                               Mesh& mesh)
   {
     regularMeshNodes(nx,ny,nz,Lx,Ly,Lz,mesh);  	   
-    std::cout<<"regularHexahedralToTetrahedralMeshNodes is Deprecated\n";    
+    //std::cout<<"regularHexahedralToTetrahedralMeshNodes is Deprecated\n";    
     return 0;                                     
   }                                            
     
@@ -359,7 +359,7 @@ extern "C"
 
     for(int i=0;i<mesh.nNodes_global;i++)
       mesh.weights[i] = 1.0;
-    std::cout<<"NURBS MESH BUILD"<<std::endl;             
+    //std::cout<<"NURBS MESH BUILD"<<std::endl;             
     return 0;
   }
 
@@ -369,7 +369,7 @@ extern "C"
     mesh.nElementBoundaries_element = 2;
     using namespace std;
     double start,stop;
-    cout<<"Constructing element boundary map"<<endl;
+    //cout<<"Constructing element boundary map"<<endl;
     map<NodeTuple<1>,
       ElementNeighbors> elementBoundaryElements;
     start=CurrentTime();
@@ -390,11 +390,11 @@ extern "C"
             }
         }
     stop = CurrentTime();
-    cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
-    cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    //cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
 
-    cout<<"Allocating Arrays"<<endl;
+    //cout<<"Allocating Arrays"<<endl;
     start = CurrentTime();
     set<int> interiorElementBoundaries,exteriorElementBoundaries;
     mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
@@ -404,9 +404,9 @@ extern "C"
     //mwf added
     mesh.elementBoundariesArray= new int[mesh.nElements_global*mesh.nElementBoundaries_element];
     stop = CurrentTime();
-    cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
 
-    cout<<"Populating Arrays"<<endl;
+    //cout<<"Populating Arrays"<<endl;
     start = CurrentTime();
     int ebN=0;
     for(map<NodeTuple<1>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
@@ -517,7 +517,7 @@ extern "C"
       }
 
 
-    cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     return 0;
   }
 
@@ -527,7 +527,7 @@ extern "C"
     mesh.nNodes_elementBoundary = 2;
     mesh.nElementBoundaries_element = 3;
     double start,stop;
-    cout<<"Constructing element boundary map"<<endl;
+    //cout<<"Constructing element boundary map"<<endl;
     map<NodeTuple<2>,
       ElementNeighbors> elementBoundaryElements;
     start=CurrentTime();
@@ -549,11 +549,11 @@ extern "C"
             }
         }
     stop = CurrentTime();
-    cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
-    cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    //cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
     
-    cout<<"Allocating Arrays"<<endl;
+    //cout<<"Allocating Arrays"<<endl;
     start = CurrentTime();
     set<int> interiorElementBoundaries,exteriorElementBoundaries;
     mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
@@ -562,9 +562,9 @@ extern "C"
     mesh.elementNeighborsArray = new int[mesh.nElements_global*mesh.nElementBoundaries_element];
     mesh.elementBoundariesArray= new int[mesh.nElements_global*mesh.nElementBoundaries_element];
     stop = CurrentTime();
-    cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
 
-    cout<<"Populating arrays"<<endl;
+    //cout<<"Populating arrays"<<endl;
     start = CurrentTime();
     int ebN=0;
     for(map<NodeTuple<2>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
@@ -686,7 +686,7 @@ extern "C"
 	      mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
 	  }
       }
-    cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     return 0;
   }
 
@@ -699,7 +699,7 @@ extern "C"
     map<NodeTuple<3>,
       ElementNeighbors> elementBoundaryElements;
     start=CurrentTime();
-    cout<<"Extracting boundary elements"<<endl;
+    //cout<<"Extracting boundary elements"<<endl;
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
@@ -719,11 +719,11 @@ extern "C"
             }
         }
     stop = CurrentTime();
-    cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
-    cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    //cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
 
-    cout<<"Allocating Arrays"<<endl;
+    //cout<<"Allocating Arrays"<<endl;
     start = CurrentTime();
     set<int> interiorElementBoundaries,exteriorElementBoundaries;
     mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
@@ -733,9 +733,9 @@ extern "C"
     //mwf added
     mesh.elementBoundariesArray= new int[mesh.nElements_global*mesh.nElementBoundaries_element];
     stop = CurrentTime();
-    cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
 
-    cout<<"Generating elementBoundaryElementsArray and elementBoundaryNodesArray"<<endl;
+    //cout<<"Generating elementBoundaryElementsArray and elementBoundaryNodesArray"<<endl;
     start = CurrentTime();
     int ebN=0;
     for(map<NodeTuple<3>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
@@ -775,7 +775,7 @@ extern "C"
     for (set<int>::iterator ebN=exteriorElementBoundaries.begin();ebN != exteriorElementBoundaries.end(); ebN++,ebNE++)
       mesh.exteriorElementBoundariesArray[ebNE] = *ebN;
     set<NodeTuple<2> > edges;
-    std::cout<<"extracting edges"<<std::endl;
+    //std::cout<<"extracting edges"<<std::endl;
     for (int eN=0;eN<mesh.nElements_global;eN++)
       {
         int nodes[2];
@@ -861,7 +861,7 @@ extern "C"
 	      mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
 	  }
       }
-    cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     return 0;
   }
 
@@ -884,7 +884,7 @@ extern "C"
     
     
     
-    cout<<"Extracting boundary elements"<<endl;
+    //cout<<"Extracting boundary elements"<<endl;
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
@@ -906,11 +906,11 @@ extern "C"
             }
         }        
     stop = CurrentTime();
-    cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
-    cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    //cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
 
-    cout<<"Allocating Arrays"<<endl;
+    //cout<<"Allocating Arrays"<<endl;
     start = CurrentTime();
     set<int> interiorElementBoundaries,exteriorElementBoundaries;
     mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
@@ -920,9 +920,9 @@ extern "C"
     //mwf added
     mesh.elementBoundariesArray= new int[mesh.nElements_global*mesh.nElementBoundaries_element];
     stop = CurrentTime();
-    cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
 
-    cout<<"Generating elementBoundaryElementsArray and elementBoundaryNodesArray"<<endl;
+    //cout<<"Generating elementBoundaryElementsArray and elementBoundaryNodesArray"<<endl;
     start = CurrentTime();
     int ebN=0;
     for(map<NodeTuple<4>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
@@ -971,7 +971,7 @@ extern "C"
     
     
     
-    std::cout<<"Extracting edges"<<std::endl;
+    //std::cout<<"Extracting edges"<<std::endl;
     for (int eN=0;eN<mesh.nElements_global;eN++)
       {
 	int nodes[2];
@@ -996,7 +996,7 @@ extern "C"
         edge_p++;
       }
 
-    std::cout<<"Extracting nodeStar"<<std::endl;      
+    //std::cout<<"Extracting nodeStar"<<std::endl;      
     vector<set<int> > nodeStar(mesh.nNodes_global);
     for (int edgeN=0;edgeN<mesh.nEdges_global;edgeN++)
       {
@@ -1020,7 +1020,7 @@ extern "C"
       mesh.max_nNodeNeighbors_node=max(mesh.max_nNodeNeighbors_node,mesh.nodeStarOffsets[nN+1]-mesh.nodeStarOffsets[nN]);
     //mwf repeat for node-->elements arrays
 
-    std::cout<<"Extracting nodeElementsStar"<<std::endl;   
+    //std::cout<<"Extracting nodeElementsStar"<<std::endl;   
     vector<set<int> > nodeElementsStar(mesh.nNodes_global);
     for (int eN = 0; eN < mesh.nElements_global; eN++)
       {
@@ -1041,7 +1041,7 @@ extern "C"
 	  }
       }
 
-    std::cout<<"Set material types"<<std::endl;     
+    //std::cout<<"Set material types"<<std::endl;     
     //mwf end node-->elements construction
     mesh.elementBoundaryMaterialTypes = new int[mesh.nElementBoundaries_global];
     //if nodeMaterial is DEFAULT, go ahead and set to interior or exterior
@@ -1070,7 +1070,7 @@ extern "C"
 	      mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
 	  }
       }
-    cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     return 0;
   }
 
@@ -1109,7 +1109,7 @@ extern "C"
     
     
     
-    cout<<"Extracting boundary elements"<<endl;
+    //cout<<"Extracting boundary elements"<<endl;
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
@@ -1131,11 +1131,11 @@ extern "C"
             }
         }
     stop = CurrentTime();
-    cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
-    cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    //cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
 
-    cout<<"Allocating Arrays"<<endl;
+    //cout<<"Allocating Arrays"<<endl;
     start = CurrentTime();
     set<int> interiorElementBoundaries,exteriorElementBoundaries;
     mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
@@ -1145,9 +1145,9 @@ extern "C"
     //mwf added
     mesh.elementBoundariesArray= new int[mesh.nElements_global*mesh.nElementBoundaries_element];
     stop = CurrentTime();
-    cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
 
-    cout<<"Generating elementBoundaryElementsArray and elementBoundaryNodesArray"<<endl;
+    //cout<<"Generating elementBoundaryElementsArray and elementBoundaryNodesArray"<<endl;
     start = CurrentTime();
     int ebN=0;
     for(map<NodeTuple<4>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
@@ -1199,7 +1199,7 @@ extern "C"
     
     
     
-    std::cout<<"extracting edges"<<std::endl;
+    //std::cout<<"extracting edges"<<std::endl;
     for (int eN=0;eN<mesh.nElements_global;eN++)
       {
 	int nodes[2];
@@ -1293,7 +1293,7 @@ extern "C"
 	      mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
 	  }
       }
-    cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     return 0;
   }
   
@@ -1329,7 +1329,7 @@ extern "C"
                        {n3,n0,n4,n7},
                        {n4,n5,n6,n7}};
     
-    cout<<"Extracting boundary elements"<<endl;
+    //cout<<"Extracting boundary elements"<<endl;
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
@@ -1354,11 +1354,11 @@ extern "C"
             }
         }
      stop = CurrentTime();
-    cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
-    cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    //cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
 
-    cout<<"Allocating Arrays"<<endl;
+    //cout<<"Allocating Arrays"<<endl;
     start = CurrentTime();
     set<int> interiorElementBoundaries,exteriorElementBoundaries;
     mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
@@ -1366,9 +1366,9 @@ extern "C"
     mesh.elementBoundaryLocalElementBoundariesArray = new int[mesh.nElementBoundaries_global*2];
     mesh.elementNeighborsArray = new int[mesh.nElements_global*mesh.nElementBoundaries_element];
     stop = CurrentTime();
-    cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
 
-    cout<<"Generating elementBoundaryElementsArray and elementBoundaryNodesArray"<<endl;
+    //cout<<"Generating elementBoundaryElementsArray and elementBoundaryNodesArray"<<endl;
     start = CurrentTime();
     for(map<NodeTuple<4>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
         eb != elementBoundaryElements.end();
@@ -1411,7 +1411,7 @@ extern "C"
     //    assert(mesh.edgeNodesArray);
 
     //     set<NodeTuple<2> > edges;
-    //     std::cout<<"extracting edges"<<std::endl;
+    //     //std::cout<<"extracting edges"<<std::endl;
     //     for (int eN=0;eN<mesh.nElements_global;eN++)
     //       {
     //         int nodes[2];
@@ -1499,7 +1499,7 @@ extern "C"
 	      mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
 	  }
       }
-    cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     return 0;
   }
 
@@ -1510,7 +1510,7 @@ extern "C"
     assert(mesh.elementBoundariesArray);
     using namespace std;
     double start,stop;
-    cout<<"Constructing element boundary map"<<endl;
+    //cout<<"Constructing element boundary map"<<endl;
     map<NodeTuple<1>,
       ElementNeighbors> elementBoundaryElements;
     map<NodeTuple<1>,
@@ -1536,11 +1536,11 @@ extern "C"
             }
         }
     stop = CurrentTime();
-    cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
-    cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    //cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
 
-    cout<<"Allocating Arrays"<<endl;
+    //cout<<"Allocating Arrays"<<endl;
     start = CurrentTime();
     set<int> interiorElementBoundaries,exteriorElementBoundaries;
     mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
@@ -1548,9 +1548,9 @@ extern "C"
     mesh.elementBoundaryLocalElementBoundariesArray = new int[mesh.nElementBoundaries_global*2];
     mesh.elementNeighborsArray = new int[mesh.nElements_global*mesh.nElementBoundaries_element];
     stop = CurrentTime();
-    cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
 
-    cout<<"Populating Arrays"<<endl;
+    //cout<<"Populating Arrays"<<endl;
     start = CurrentTime();
     for(map<NodeTuple<1>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
         eb != elementBoundaryElements.end();
@@ -1660,7 +1660,7 @@ extern "C"
       }
 
 
-    cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     return 0;
   }
 
@@ -1671,7 +1671,7 @@ extern "C"
     mesh.nElementBoundaries_element = 3;
     assert(mesh.elementBoundariesArray);
     double start,stop;
-    cout<<"Constructing element boundary map"<<endl;
+    //cout<<"Constructing element boundary map"<<endl;
     map<NodeTuple<2>,
       ElementNeighbors> elementBoundaryElements;
     map<NodeTuple<2>,
@@ -1698,11 +1698,11 @@ extern "C"
             }
         }
     stop = CurrentTime();
-    cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
-    cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    //cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
     
-    cout<<"Allocating Arrays"<<endl;
+    //cout<<"Allocating Arrays"<<endl;
     start = CurrentTime();
     set<int> interiorElementBoundaries,exteriorElementBoundaries;
     mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
@@ -1710,9 +1710,9 @@ extern "C"
     mesh.elementBoundaryLocalElementBoundariesArray = new int[mesh.nElementBoundaries_global*2];
     mesh.elementNeighborsArray = new int[mesh.nElements_global*mesh.nElementBoundaries_element];
     stop = CurrentTime();
-    cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
 
-    cout<<"Populating arrays"<<endl;
+    //cout<<"Populating arrays"<<endl;
     start = CurrentTime();
     for(map<NodeTuple<2>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
         eb != elementBoundaryElements.end();
@@ -1834,7 +1834,7 @@ extern "C"
 	      mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
 	  }
       }
-    cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     return 0;
   }
 
@@ -1850,7 +1850,7 @@ extern "C"
     map<NodeTuple<3>,
       int> elementBoundaryIds;
     start=CurrentTime();
-    cout<<"Extracting boundary elements"<<endl;
+    //cout<<"Extracting boundary elements"<<endl;
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
@@ -1873,11 +1873,11 @@ extern "C"
             }
         }
     stop = CurrentTime();
-    cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
-    cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    //cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
 
-    cout<<"Allocating Arrays"<<endl;
+    //cout<<"Allocating Arrays"<<endl;
     start = CurrentTime();
     set<int> interiorElementBoundaries,exteriorElementBoundaries;
     mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
@@ -1885,9 +1885,9 @@ extern "C"
     mesh.elementBoundaryLocalElementBoundariesArray = new int[mesh.nElementBoundaries_global*2];
     mesh.elementNeighborsArray = new int[mesh.nElements_global*mesh.nElementBoundaries_element];
     stop = CurrentTime();
-    cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
 
-    cout<<"Generating elementBoundaryElementsArray and elementBoundaryNodesArray"<<endl;
+    //cout<<"Generating elementBoundaryElementsArray and elementBoundaryNodesArray"<<endl;
     start = CurrentTime();
     for(map<NodeTuple<3>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
         eb != elementBoundaryElements.end();
@@ -1926,7 +1926,7 @@ extern "C"
     for (set<int>::iterator ebN=exteriorElementBoundaries.begin();ebN != exteriorElementBoundaries.end(); ebN++,ebNE++)
       mesh.exteriorElementBoundariesArray[ebNE] = *ebN;
     set<NodeTuple<2> > edges;
-    std::cout<<"extracting edges"<<std::endl;
+    //std::cout<<"extracting edges"<<std::endl;
     for (int eN=0;eN<mesh.nElements_global;eN++)
       {
         int nodes[2];
@@ -2012,7 +2012,7 @@ extern "C"
 	      mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
 	  }
       }
-    cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     return 0;
   }
 
@@ -2025,7 +2025,7 @@ extern "C"
     assert(mesh.elementBoundariesArray);
     using namespace std;
     double start,stop;
-    cout<<"Constructing element boundary map"<<endl;
+    //cout<<"Constructing element boundary map"<<endl;
     map<NodeTuple<1>,
       ElementNeighbors> elementBoundaryElements;
     map<NodeTuple<1>,
@@ -2051,11 +2051,11 @@ extern "C"
             }
         }
     stop = CurrentTime();
-    cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
-    cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    //cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
 
-    cout<<"Allocating Arrays"<<endl;
+    //cout<<"Allocating Arrays"<<endl;
     start = CurrentTime();
     set<int> interiorElementBoundaries,exteriorElementBoundaries;
     mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
@@ -2063,9 +2063,9 @@ extern "C"
     mesh.elementBoundaryLocalElementBoundariesArray = new int[mesh.nElementBoundaries_global*2];
     mesh.elementNeighborsArray = new int[mesh.nElements_global*mesh.nElementBoundaries_element];
     stop = CurrentTime();
-    cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
 
-    cout<<"Populating Arrays"<<endl;
+    //cout<<"Populating Arrays"<<endl;
     start = CurrentTime();
     for(map<NodeTuple<1>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
         eb != elementBoundaryElements.end();
@@ -2169,7 +2169,7 @@ extern "C"
       }
 
 
-    cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     return 0;
   }
 
@@ -2180,7 +2180,7 @@ extern "C"
     mesh.nElementBoundaries_element = 3;
     assert(mesh.elementBoundariesArray);
     double start,stop;
-    cout<<"Constructing element boundary map"<<endl;
+    //cout<<"Constructing element boundary map"<<endl;
     map<NodeTuple<2>,
       ElementNeighbors> elementBoundaryElements;
     map<NodeTuple<2>,
@@ -2207,11 +2207,11 @@ extern "C"
             }
         }
     stop = CurrentTime();
-    cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
-    cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    //cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
     
-    cout<<"Allocating Arrays"<<endl;
+    //cout<<"Allocating Arrays"<<endl;
     start = CurrentTime();
     set<int> interiorElementBoundaries,exteriorElementBoundaries;
     mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
@@ -2219,9 +2219,9 @@ extern "C"
     mesh.elementBoundaryLocalElementBoundariesArray = new int[mesh.nElementBoundaries_global*2];
     mesh.elementNeighborsArray = new int[mesh.nElements_global*mesh.nElementBoundaries_element];
     stop = CurrentTime();
-    cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
 
-    cout<<"Populating arrays"<<endl;
+    //cout<<"Populating arrays"<<endl;
     start = CurrentTime();
     for(map<NodeTuple<2>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
         eb != elementBoundaryElements.end();
@@ -2344,7 +2344,7 @@ extern "C"
 	      mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
 	  }
       }
-    cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     return 0;
   }
 
@@ -2360,7 +2360,7 @@ extern "C"
     map<NodeTuple<3>,
       int> elementBoundaryIds;
     start=CurrentTime();
-    cout<<"Extracting boundary elements"<<endl;
+    //cout<<"Extracting boundary elements"<<endl;
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
@@ -2383,11 +2383,11 @@ extern "C"
             }
         }
     stop = CurrentTime();
-    cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
-    cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    //cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
 
-    cout<<"Allocating Arrays"<<endl;
+    //cout<<"Allocating Arrays"<<endl;
     start = CurrentTime();
     set<int> interiorElementBoundaries,exteriorElementBoundaries;
     mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
@@ -2395,9 +2395,9 @@ extern "C"
     mesh.elementBoundaryLocalElementBoundariesArray = new int[mesh.nElementBoundaries_global*2];
     mesh.elementNeighborsArray = new int[mesh.nElements_global*mesh.nElementBoundaries_element];
     stop = CurrentTime();
-    cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
 
-    cout<<"Generating elementBoundaryElementsArray and elementBoundaryNodesArray"<<endl;
+    //cout<<"Generating elementBoundaryElementsArray and elementBoundaryNodesArray"<<endl;
     start = CurrentTime();
     for(map<NodeTuple<3>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
         eb != elementBoundaryElements.end();
@@ -2437,7 +2437,7 @@ extern "C"
       mesh.exteriorElementBoundariesArray[ebNE] = *ebN;
     assert(mesh.edgeNodesArray);
     //     set<NodeTuple<2> > edges;
-    //     std::cout<<"extracting edges"<<std::endl;
+    //     //std::cout<<"extracting edges"<<std::endl;
     //     for (int eN=0;eN<mesh.nElements_global;eN++)
     //       {
     //         int nodes[2];
@@ -2523,7 +2523,7 @@ extern "C"
 	      mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
 	  }
       }
-    cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     return 0;
   }
 
@@ -2547,7 +2547,7 @@ extern "C"
                        {3,0,4,7},
                        {4,5,6,7}};    
     
-    cout<<"Extracting boundary elements"<<endl;
+    //cout<<"Extracting boundary elements"<<endl;
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
         {
@@ -2572,11 +2572,11 @@ extern "C"
             }
         }
     stop = CurrentTime();
-    cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for building element boundary elements map= "<<(stop-start)<<"s"<<endl;
     mesh.nElementBoundaries_global = elementBoundaryElements.size();
-    cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
+    //cout<<"nElementBoundaries_global = "<<mesh.nElementBoundaries_global<<endl;
 
-    cout<<"Allocating Arrays"<<endl;
+    //cout<<"Allocating Arrays"<<endl;
     start = CurrentTime();
     set<int> interiorElementBoundaries,exteriorElementBoundaries;
     mesh.elementBoundaryNodesArray =  new int[mesh.nElementBoundaries_global*mesh.nNodes_elementBoundary];
@@ -2584,9 +2584,9 @@ extern "C"
     mesh.elementBoundaryLocalElementBoundariesArray = new int[mesh.nElementBoundaries_global*2];
     mesh.elementNeighborsArray = new int[mesh.nElements_global*mesh.nElementBoundaries_element];
     stop = CurrentTime();
-    cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for allocating arrays = "<<(stop-start)<<"s"<<endl;
 
-    cout<<"Generating elementBoundaryElementsArray and elementBoundaryNodesArray"<<endl;
+    //cout<<"Generating elementBoundaryElementsArray and elementBoundaryNodesArray"<<endl;
     start = CurrentTime();
     for(map<NodeTuple<4>,ElementNeighbors>::iterator eb=elementBoundaryElements.begin();
         eb != elementBoundaryElements.end();
@@ -2627,7 +2627,7 @@ extern "C"
       mesh.exteriorElementBoundariesArray[ebNE] = *ebN;
     assert(mesh.edgeNodesArray);
     //     set<NodeTuple<2> > edges;
-    //     std::cout<<"extracting edges"<<std::endl;
+    //     //std::cout<<"extracting edges"<<std::endl;
     //     for (int eN=0;eN<mesh.nElements_global;eN++)
     //       {
     //         int nodes[2];
@@ -2714,7 +2714,7 @@ extern "C"
 	      mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
 	  }
       }
-    cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
+    //cout<<"Elapsed time for populating arrays = "<<(stop-start)<<"s"<<endl;
     return 0;
   }
 
@@ -2847,10 +2847,10 @@ extern "C"
 	      nNperElemInv*mesh.nodeArray[mesh.elementNodesArray[eN*mesh.nNodes_element + nN]*3 + 2];
 	  }
       }
-    printf("volume = %12.5e \n",mesh.volume);
-    printf("h = %12.5e \n",mesh.h);
-    printf("hMin = %12.5e \n",mesh.hMin);
-    printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
+    //printf("volume = %12.5e \n",mesh.volume);
+    //printf("h = %12.5e \n",mesh.h);
+    //printf("hMin = %12.5e \n",mesh.hMin);
+    //printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
     return 0;
   }
   inline double hexahedronVolume(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, const double* nodeArray)
@@ -2935,10 +2935,10 @@ extern "C"
 
       }
 
-    printf("volume = %12.5e \n",mesh.volume);
-    printf("h = %12.5e \n",mesh.h);
-    printf("hMin = %12.5e \n",mesh.hMin);
-    printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
+    //printf("volume = %12.5e \n",mesh.volume);
+    //printf("h = %12.5e \n",mesh.h);
+    //printf("hMin = %12.5e \n",mesh.hMin);
+    //printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
     return 0;
   }
 
@@ -3038,10 +3038,10 @@ extern "C"
 	      nNperElemBInv*mesh.nodeArray[mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary+nN]*3 + 2];
 	  }
       }
-    printf("volume = %12.5e \n",mesh.volume);
-    printf("h = %12.5e \n",mesh.h);
-    printf("hMin = %12.5e \n",mesh.hMin);
-    printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
+    //printf("volume = %12.5e \n",mesh.volume);
+    //printf("h = %12.5e \n",mesh.h);
+    //printf("hMin = %12.5e \n",mesh.hMin);
+    //printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
     return 0;
   }
   
@@ -3110,10 +3110,10 @@ extern "C"
       }
     
     mesh.sigmaMax = 1.0;
-    printf("volume = %12.5e \n",mesh.volume);
-    printf("h = %12.5e \n",mesh.h);
-    printf("hMin = %12.5e \n",mesh.hMin);
-    printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
+    //printf("volume = %12.5e \n",mesh.volume);
+    //printf("h = %12.5e \n",mesh.h);
+    //printf("hMin = %12.5e \n",mesh.hMin);
+    //printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
     return 0;
   }
   //allocate node and element-node connectivity tables so they can be filled in externally
@@ -3150,7 +3150,7 @@ extern "C"
     multilevelMesh.meshArray[0] = mesh; //shallow copy
     for(int i=1;i<nLevels;i++)
       {
-        cout<<"Refinement Level "<<i<<endl;
+        //cout<<"Refinement Level "<<i<<endl;
         set<Node> newNodeSet;
         set<Node>::iterator nodeItr;
         pair<set<Node>::iterator,bool> ret;
@@ -3234,7 +3234,7 @@ extern "C"
     multilevelMesh.meshArray[0] = mesh; //shallow copy
     for(int i=1;i<nLevels;i++)
       {
-        cout<<"Refinement Level "<<i<<endl;
+        //cout<<"Refinement Level "<<i<<endl;
         set<Node> newNodeSet;
         set<Node>::iterator nodeItr;
         pair<set<Node>::iterator,bool> ret;
@@ -3345,7 +3345,7 @@ extern "C"
     multilevelMesh.meshArray[0] = mesh; //shallow copy
     for(int i=1;i<nLevels;i++)
       {
-        cout<<"Refinement Level "<<i<<endl;
+        //cout<<"Refinement Level "<<i<<endl;
         set<Node> newNodeSet;
         set<Node>::iterator nodeItr;
         pair<set<Node>::iterator,bool> ret;
@@ -3533,7 +3533,7 @@ extern "C"
             multilevelMesh.meshArray[i].nodeArray[nodeItr->nN*3+2] = nodeItr->z;
           }
         /** \todo Add option to re-order mesh nodes on elements to make determinant positive? */
-	//         cout<<"re-ordeing nodes llllllllllllllllllll"<<endl;
+	//         //cout<<"re-ordeing nodes llllllllllllllllllll"<<endl;
 	//         for (int eN=0;eN<multilevelMesh.meshArray[i].nElements_global;eN++)
 	//           {
 	//             register int n0,n1,n2,n3;
@@ -3585,7 +3585,7 @@ extern "C"
 	//             det = fabs(t[0][0]*(t[1][1]*t[2][2] - t[1][2]*t[2][1]) -   
 	//                        t[0][1]*(t[1][0]*t[2][2] - t[1][2]*t[2][0]) +   
 	//                        t[0][2]*(t[1][0]*t[2][1] - t[1][1]*t[2][0]));
-	//             cout<<"det "<<det<<endl;
+	//             //cout<<"det "<<det<<endl;
             
 	//           }
 	//mwftodo need to come up with convention for assigning new node ids
@@ -3804,19 +3804,19 @@ int readElements(std::istream& meshFile, Mesh& mesh)
     {
       elementType = "E2E";
       mesh.nNodes_element = 2;
-      cout<<"Reading 1D edge mesh"<<endl;
+      //cout<<"Reading 1D edge mesh"<<endl;
     }
   else if(word == "MESH2D")
     {
       elementType = "E3T";
       mesh.nNodes_element = 3;
-      cout<<"Reading 2D triangular mesh"<<endl;
+      //cout<<"Reading 2D triangular mesh"<<endl;
     }
   else if (word == "MESH3D")
     {
       elementType = "E4T";
       mesh.nNodes_element = 4;
-      cout<<"Reading 3D tetrahedral mesh"<<endl;
+      //cout<<"Reading 3D tetrahedral mesh"<<endl;
     }
   else
     {
@@ -3841,7 +3841,7 @@ int readElements(std::istream& meshFile, Mesh& mesh)
       materialTypes.push_back(type);
       meshFile>>word;
     }
-  cout<<"Number of  elements = "<<elementNodesVector.size()<<endl;
+  //cout<<"Number of  elements = "<<elementNodesVector.size()<<endl;
   mesh.nElements_global = elementNodesVector.size();
   mesh.elementNodesArray = new int[mesh.nElements_global*mesh.nNodes_element];
   mesh.elementMaterialTypes = new int[mesh.nElements_global];
@@ -3868,7 +3868,7 @@ int writeNodes(std::ostream& meshFile, const Mesh& mesh)
 
 int writeElements(std::ostream& meshFile, const Mesh& mesh)
 {
-  std::cout<<"printing mesh "<<mesh.nElements_global<<"\t"<<mesh.nNodes_element<<std::endl;
+  //std::cout<<"printing mesh "<<mesh.nElements_global<<"\t"<<mesh.nNodes_element<<std::endl;
   meshFile<<"Try to write something"<<std::endl;
   using namespace std;
   string elementType;
@@ -4046,7 +4046,7 @@ int readTriangleMesh(Mesh& mesh, const char* filebase, int triangleIndexBase)
 						 DEFAULT_NODE_MATERIAL);
   if (failed)
     {
-      cout<<"readTriangleMesh call failed"<<endl;
+      //cout<<"readTriangleMesh call failed"<<endl;
       return failed;
     }
   
@@ -4134,7 +4134,7 @@ int readTriangleElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, i
 					      INTERIOR_ELEMENT_BOUNDARY_MATERIAL);
   if (failed)
     {
-      cout<<"readTriangleElementBoundary call failed"<<endl;
+      //cout<<"readTriangleElementBoundary call failed"<<endl;
       return failed;
     }
   if (!elementBoundaryMaterialTypesInFile)
@@ -4194,7 +4194,7 @@ int readTetgenMesh(Mesh& mesh, const char* filebase, int tetgenIndexBase)
 					       DEFAULT_NODE_MATERIAL);
   if (failed)
     {
-      cout<<"readTetgenMesh call failed"<<endl;
+      //cout<<"readTetgenMesh call failed"<<endl;
       return failed;
     }
   
@@ -4251,15 +4251,15 @@ int readTetgenElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, int
 					    INTERIOR_ELEMENT_BOUNDARY_MATERIAL);
   if (failed)
     {
-      cout<<"readTetgenElementBoundary call failed"<<endl;
+      //cout<<"readTetgenElementBoundary call failed"<<endl;
       return failed;
     }
   if (!elementBoundaryMaterialTypesInFile)
     return failed;
   //mwf debug
-  std::cout<<"readTetgenElementBoundaryMaterialTypes filebase= "<<filebase<<" after read failed= "<<failed
-	   <<" nElementBoundaries_file= "<<nElementBoundaries_file<<" mesh.nElementBoundaries_global= "<<mesh.nElementBoundaries_global 
-	   <<" mesh.nExteriorElementBoundaries_global= "<<mesh.nExteriorElementBoundaries_global<<std::endl;
+  //std::cout<<"readTetgenElementBoundaryMaterialTypes filebase= "<<filebase<<" after read failed= "<<failed
+  // <<" nElementBoundaries_file= "<<nElementBoundaries_file<<" mesh.nElementBoundaries_global= "<<mesh.nElementBoundaries_global 
+  //   <<" mesh.nExteriorElementBoundaries_global= "<<mesh.nExteriorElementBoundaries_global<<std::endl;
    assert(mesh.nElementBoundaries_global == nElementBoundaries_file ||
      	 mesh.nExteriorElementBoundaries_global <= nElementBoundaries_file);
 
@@ -4458,7 +4458,7 @@ int readHex(Mesh& mesh, const char* filebase, int indexBase)
   std::string meshFilename= std::string(filebase)+".mesh";
   std::ifstream meshFile(meshFilename.c_str());
 
-  std::cout<<"Reading hex mesh: "<<meshFilename<<std::endl;
+  //std::cout<<"Reading hex mesh: "<<meshFilename<<std::endl;
 
   if (!meshFile.good())
     {
@@ -4886,7 +4886,7 @@ extern "C"
 						refined);
 	  }//eN_parent is tagged and not already refined
       }//elements on original mesh
-    std::cout<<"Done with refinement"<<std::endl;
+    //std::cout<<"Done with refinement"<<std::endl;
     //now have to allocate c interface data and copy over
     assert(elementParentsArray_tmp.size() == unsigned(nElements_new));
     //parent array : nElementsNew --> new level
@@ -5037,7 +5037,7 @@ extern "C"
     int eN_new = multilevelMesh.meshArray[i-1].nElements_global;
     while (!newElementsForUniform.empty() || !newElementsForTrisection.empty())
       {
-        std::cout<<"new uniform"<<std::endl;
+        //std::cout<<"new uniform"<<std::endl;
         for(set<int>::iterator eN_uniform_itr = newElementsForUniform.begin(); eN_uniform_itr != newElementsForUniform.end(); eN_uniform_itr++)
           {
             int eN_parent = *eN_uniform_itr;
@@ -5175,7 +5175,7 @@ extern "C"
         newElementsForUniform.clear();
         newElementsForUniform = nextElementsForUniform;
         nextElementsForUniform.clear();
-        std::cout<<"new trisection"<<std::endl;
+        //std::cout<<"new trisection"<<std::endl;
         for(map<int,vector<int> >::iterator eN_trisection_itr = newElementsForTrisection.begin(); eN_trisection_itr != newElementsForTrisection.end(); eN_trisection_itr++)
           {
             int eN_parent = eN_trisection_itr->first,
@@ -5281,7 +5281,7 @@ extern "C"
         newElementsForTrisection = nextElementsForTrisection;
         nextElementsForTrisection.clear();
       }
-    std::cout<<"building trisected elements"<<std::endl;
+    //std::cout<<"building trisected elements"<<std::endl;
     for(map<int,vector<int> >::iterator eN_trisection_itr = elementsForTrisection.begin(); eN_trisection_itr != elementsForTrisection.end(); eN_trisection_itr++)
       {
         int eN_parent = eN_trisection_itr->first,
@@ -5361,7 +5361,7 @@ extern "C"
         newElements.push_back(newElement);
       }
 
-    std::cout<<"building bisected elements"<<std::endl;
+    //std::cout<<"building bisected elements"<<std::endl;
     //now we just have to bisect remaining elements
     for(map<int,int>::iterator eN_bisect_itr = elementsForBisection.begin(); eN_bisect_itr != elementsForBisection.end(); eN_bisect_itr++)
       {
@@ -5438,7 +5438,7 @@ extern "C"
       }
     //elementsForBisection.
     //assert(elementsForBisection.empty());
-    std::cout<<"finishing mesh"<<std::endl;
+    //std::cout<<"finishing mesh"<<std::endl;
     //now the mesh should be conforming so build the mesh arrays
     multilevelMesh.meshArray[i].nNodes_element=3;
     multilevelMesh.meshArray[i].nElements_global  = eN_new;
@@ -5736,9 +5736,9 @@ bool newestNodeBisect(int eN,
 	for (int I = 0; I < 3; I++)
 	  x[I] += 0.5*nodeArray[3*IB[nN+1]+I];
 #ifdef DEBUG_REFINE
-      std::cout<<"eN= "<<eN<<" base= "<<ebN_base<<" eN_neig= "<<eN_neig
-	       <<" newNode nN= "<<newNodeNumber<<" x= ["<<x[0]
-	       <<","<<x[1]<<"]"<<std::endl;
+      //std::cout<<"eN= "<<eN<<" base= "<<ebN_base<<" eN_neig= "<<eN_neig
+      //<<" newNode nN= "<<newNodeNumber<<" x= ["<<x[0]
+      //       <<","<<x[1]<<"]"<<std::endl;
 #endif		    
       //insert new node, bm, at end of array, x coord then y coord
       for (int I = 0; I < 3; I++)
@@ -5786,15 +5786,15 @@ bool newestNodeBisect(int eN,
       N2[2] = -1;
 
 #ifdef DEBUG_REFINE
-      std::cout<<"eN= "<<eN<<" adding ";
-      std::cout<<"\n\t E1= ["<<E1[0]<<","<<E1[1]
-	       <<","<<E1[2]<<"]"<<std::endl;
-      std::cout<<"\n\t N1= ["<<N1[0]<<","<<N1[1]
-	       <<","<<N1[2]<<"]"<<std::endl;
-      std::cout<<"\n\t E2= ["<<E2[0]<<","<<E2[1]
-	       <<","<<E2[2]<<"]"<<std::endl;
-      std::cout<<"\n\t N2= ["<<N2[0]<<","<<N2[1]
-	       <<","<<N2[2]<<"]"<<std::endl;
+      //std::cout<<"eN= "<<eN<<" adding ";
+      //std::cout<<"\n\t E1= ["<<E1[0]<<","<<E1[1]
+      //       <<","<<E1[2]<<"]"<<std::endl;
+      //std::cout<<"\n\t N1= ["<<N1[0]<<","<<N1[1]
+      //       <<","<<N1[2]<<"]"<<std::endl;
+      //std::cout<<"\n\t E2= ["<<E2[0]<<","<<E2[1]
+      //      <<","<<E2[2]<<"]"<<std::endl;
+      //std::cout<<"\n\t N2= ["<<N2[0]<<","<<N2[1]
+      //       <<","<<N2[2]<<"]"<<std::endl;
 #endif		    
 
       for (int ebN = 0; ebN < nElementBoundaries_element; ebN++)
@@ -6078,7 +6078,7 @@ bool add4TnodesForRefinement2d(int eN,//element to be refined
   const int nElementBoundaries_element = 3; //2d only
   bool refinedAlready = refined[eN];
 #ifdef DEBUG_REFINE
-  std::cout<<"Entering add4TnodesRef eN= "<<eN<<" refined = "<<refined[eN]<<std::endl;
+  //std::cout<<"Entering add4TnodesRef eN= "<<eN<<" refined = "<<refined[eN]<<std::endl;
 #endif
   refined[eN] = true;
   int eN_longest_local = findLocalLongestEdge2d(eN,
@@ -6092,9 +6092,9 @@ bool add4TnodesForRefinement2d(int eN,//element to be refined
 #ifdef DEBUG_REFINE
       if (edgeMidNodesArray[ebN] >= 0 && !refinedAlready)
 	{
-	  std::cout<<"WARNING add4Tnodes for refinement eN="<<eN<<" ebN_loc="<<ebN_local
-		   <<" ebN= "<<ebN<<" already bisected edgeMidNodesArray[ebN] = "
-		   <<edgeMidNodesArray[ebN]<<" not tagged as already refined"<<std::endl;
+	  //std::cout<<"WARNING add4Tnodes for refinement eN="<<eN<<" ebN_loc="<<ebN_local
+	  //   <<" ebN= "<<ebN<<" already bisected edgeMidNodesArray[ebN] = "
+	  //   <<edgeMidNodesArray[ebN]<<" not tagged as already refined"<<std::endl;
 	}
 #endif
       assert(edgeMidNodesArray[ebN] < 0 || refinedAlready);//otherwise this element should be tagged already
@@ -6143,12 +6143,12 @@ bool add4TnodesForConformity2d(int eN, int ebN_longest,
   assert(eN >= 0);
 #ifdef DEBUG_REFINE
   //mwf debug
-  std::cout<<"Entering add4Tnodes4Conf eN= "<<eN<<" refined = "<<refined[eN]
-	   <<"eN_neig= "<<eN_neig<<" refined= ";
-  if (eN_neig >= 0)
-    std::cout<<refined[eN_neig]<<std::endl;
-  else
-    std::cout<<" on boundary "<<std::endl;
+  //std::cout<<"Entering add4Tnodes4Conf eN= "<<eN<<" refined = "<<refined[eN]
+  //<<"eN_neig= "<<eN_neig<<" refined= ";
+  //if (eN_neig >= 0)
+    //std::cout<<refined[eN_neig]<<std::endl;
+  //else
+    //std::cout<<" on boundary "<<std::endl;
 #endif
   //going to have to refine this one regardless
   refined[eN] = true;
@@ -6510,17 +6510,17 @@ bool subdivideTriangle4T(int eN_parent,
 	  eN_new++;
 	}//2T
 #ifdef DEBUG_REFINE
-      std::cout<<"subdivide4T eN_parent = "<<eN_parent<<" case= "<<refCase<<std::endl;
+      //std::cout<<"subdivide4T eN_parent = "<<eN_parent<<" case= "<<refCase<<std::endl;
       int child_start = elementChildrenOffsets[eN_parent]; 
       int child_end   = elementChildrenOffsets[eN_parent+1];
-      std::cout<<"child elements --- "<<std::endl;
+      //std::cout<<"child elements --- "<<std::endl;
       for (int i = child_start; i < child_end; i++)
 	{
 	  int eN_child = elementChildrenArray[i];
-	  std::cout<<"eN_child= "<<eN_child<<" nodes= ";
-	  for (int nN = 0; nN < 3; nN++)
-	    std::cout<<elementNodesArray_child[eN_child*3+nN]<<" ";
-	  std::cout<<std::endl;
+	  //std::cout<<"eN_child= "<<eN_child<<" nodes= ";
+	  //for (int nN = 0; nN < 3; nN++)
+	    //std::cout<<elementNodesArray_child[eN_child*3+nN]<<" ";
+	  //std::cout<<std::endl;
 	}
 #endif
     }//element refined
