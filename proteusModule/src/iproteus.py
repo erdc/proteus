@@ -204,7 +204,6 @@ if __name__ == '__main__':
     log("Loading problem-specific modules")
     if len(args) < 1:
         raise RuntimeError("No input file specified")
-    print "importing"
     if len(args) == 1:#arg should be an sso file or an so module
         if args[0][-3:] == '.py':
             log("Loading so module = "+args[0])
@@ -409,6 +408,8 @@ if __name__ == '__main__':
             log("Collecting garbage")
             gc.collect()
             log("Done with garbage")
+            if comm.isMaster():
+                Profiling.closeLog()
     if opts.viewer:
         if comm.isMaster():
             try:
