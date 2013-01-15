@@ -510,7 +510,6 @@ class KSP_petsc4py(LinearSolver):
             self.matcontext.par_b = par_b
 
         self.ksp.setInitialGuessNonzero(False)
-        self.ksp.view(p4pyPETSc.Viewer.STDOUT())
         self.ksp.solve(par_b,par_u)
         #mwf debug
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
