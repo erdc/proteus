@@ -1,15 +1,20 @@
+#!/bin/bash
 #PBS -A ERDCV00898ENQ
-#PBS -l walltime=00:60:00
+#PBS -l walltime=01:00:00
 #PBS -l ncpus=128
 #PBS -q debug
 #PBS -N testMpi4py
 #PBS -j oe
 #PBS -l application=proteus
+source /opt/modules/default/etc/modules.sh
+source ${PROTEUS}/envConfig/garnet.gnu.bash
+cd $PBS_O_WORKDIR
+export MPICH_RANK_REORDER_METHOD=2
 echo "testing numpy"
 echo "import numpy; numpy.test()" > np.py
 aprun -n 1 ${PROTEUS_PYTHON} np.py
 echo "testing tables"
-echo "import tables; tables.test()" pyt.py
+echo "import tables; tables.test()" > pyt.py
 aprun -n 1 ${PROTEUS_PYTHON} pyt.py
 echo "testing mpi4py"
 cd ${PROTEUS}/externalPackages/mpi4py/test
