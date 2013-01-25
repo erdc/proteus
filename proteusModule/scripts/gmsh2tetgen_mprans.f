@@ -50,8 +50,8 @@
       write(*,*) ctmp, " ", NNode
       allocate(xg(NNode,NSD))
       do i = 1, NNode
-        read(meshf,*) ( xg(i,j), j = 1, NSD), itmp    
-      end do	  
+        read(meshf,*) ( xg(i,j), j = 1, NSD), itmp
+      end do  
       read(meshf,*) ctmp
       
       ! Edges
@@ -109,8 +109,8 @@
         
       end do   
       write(*,*) "Gross nodes: ",NNode       
-      NNode = itmp	    
-      write(*,*) "Net nodes: ",NNode	   
+      NNode = itmp          
+      write(*,*) "Net nodes: ",NNode       
   
       !==================================
       ! output elements/nodes/faces
@@ -120,10 +120,10 @@
       fname = 'mesh.ele' 
       open(meshf, file = fname, status = 'unknown')
       write(*,*) "Writing ", fname  
-      write(meshf,*) NElem, NSHL, 0	    
+      write(meshf,*) NElem, NSHL, 0         
       do i = 1, NElem
         write(meshf,'(5I8)') i, (o2n(IEN(i,j)), j = 1, NSHL)
-      end do	  
+      end do      
       close(meshf)
       
       fname = 'mesh.node'
@@ -141,7 +141,7 @@
       write(meshf,*) NFace,1  
       do i = 1, NFace
         write(meshf,'(5I8)')i,(o2n(Face_IEN(i,j)), j=1,NSHLb),FaceID(i)
-      end do	   
+      end do
       close(meshf)
 
       !==============================
@@ -205,7 +205,7 @@
           write(meshf,'(a,x,I10,x,a)') 'POINTS ',NNode, 'float'
 
           do i = 1, NNode
-            write(meshf,'(3E17.8)') (real(xg(n2o(i),j)), j = 1, NSD)	
+            write(meshf,'(3E17.8)') (real(xg(n2o(i),j)), j = 1, NSD)
           end do
 
           write(meshf,'(a,x,I10,x,I10)') 'CELLS ',hNFace, hNFace*4
