@@ -1330,7 +1330,6 @@ public:
   {
     double h,
       num,
-      den,
       n_grad_u;
     h = elementDiameter;
     n_grad_u = 0.0;
@@ -1999,7 +1998,6 @@ public:
   {
     double h,
       num,
-      den,
       n_grad_u;
     h = elementDiameter;
     n_grad_u = 0.0;
