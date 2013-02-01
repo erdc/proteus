@@ -1330,7 +1330,6 @@ public:
   {
     double h,
       num,
-      den,
       n_grad_u;
     h = elementDiameter;
     n_grad_u = 0.0;
@@ -1398,6 +1397,76 @@ public:
 						       const double& v)
   {
     return dflux_left*v;
+  }
+
+  inline double ExteriorElementBoundaryScalarDiffusionAdjoint(const int& isDOFBoundary,
+							      const int& isFluxBoundary,
+							      const double& sigma,
+							      const double& u,
+							      const double& bc_u,
+							      const double normal[3],
+							      const double& a,
+							      const double grad_w_dS[3])
+  {
+    double tmp=0.0;
+    for(int I=0;I<3;I++)
+      {
+	tmp += normal[I]*grad_w_dS[I];
+      }
+    tmp *= (1.0-isFluxBoundary)*isDOFBoundary*sigma*(u-bc_u)*a;
+    return tmp;
+  }
+  
+  inline double ExteriorElementBoundaryScalarDiffusionAdjointJacobian(const int& isDOFBoundary,
+								      const int& isFluxBoundary,
+								      const double& sigma,
+								      const double& v,
+								      const double normal[3],
+								      const double& a,
+								      const double grad_w_dS[3])
+  {
+    double tmp=0.0;
+    for(int I=0;I<3;I++)
+      {
+	tmp += normal[I]*grad_w_dS[I];
+      }
+    tmp *= (1.0-isFluxBoundary)*isDOFBoundary*sigma*v*a;
+    return tmp;
+  }
+
+  inline double ExteriorElementBoundaryDiffusionAdjoint(const int& isDOFBoundary,
+							const int& isFluxBoundary,
+							const double& sigma,
+							const double& u,
+							const double& bc_u,
+							const double normal[3],
+							int* rowptr,
+							int* colind,
+							double* a,
+							const double grad_w_dS[3])
+  {
+    double tmp=0.0;
+    for(int I=0;I<3;I++)
+      for (int m=rowptr[I];m<rowptr[I+1];m++)
+	tmp += (1.0-isFluxBoundary)*isDOFBoundary*sigma*(u-bc_u)*a[m]*normal[colind[m]]*grad_w_dS[I];
+    return tmp;
+  }
+
+  inline double ExteriorElementBoundaryDiffusionAdjointJacobian(const int& isDOFBoundary,
+								const int& isFluxBoundary,
+								const double& sigma,
+								const double& v,
+								const double normal[3],
+								int* rowptr,
+								int* colind,
+								double* a,
+								const double grad_w_dS[3])
+  {
+    double tmp=0.0;
+    for(int I=0;I<3;I++)
+      for (int m=rowptr[I];m<rowptr[I+1];m++)
+	tmp += (1.0-isFluxBoundary)*isDOFBoundary*sigma*v*a[m]*normal[colind[m]]*grad_w_dS[I];
+    return tmp;
   }
 
   inline void calculateMapping_element(const int eN,
@@ -1999,7 +2068,6 @@ public:
   {
     double h,
       num,
-      den,
       n_grad_u;
     h = elementDiameter;
     n_grad_u = 0.0;
@@ -2068,6 +2136,77 @@ public:
   {
     return dflux_left*v;
   }
+
+  inline double ExteriorElementBoundaryScalarDiffusionAdjoint(const int& isDOFBoundary,
+							      const int& isFluxBoundary,
+							      const double& sigma,
+							      const double& u,
+							      const double& bc_u,
+							      const double normal[2],
+							      const double& a,
+							      const double grad_w_dS[2])
+  {
+    double tmp=0.0;
+    for(int I=0;I<2;I++)
+      {
+	tmp += normal[I]*grad_w_dS[I];
+      }
+    tmp *= (1.0-isFluxBoundary)*isDOFBoundary*sigma*(u-bc_u)*a;
+    return tmp;
+  }
+
+  inline double ExteriorElementBoundaryScalarDiffusionAdjointJacobian(const int& isDOFBoundary,
+								      const int& isFluxBoundary,
+								      const double& sigma,
+								      const double& v,
+								      const double normal[2],
+								      const double& a,
+								      const double grad_w_dS[2])
+  {
+    double tmp=0.0;
+    for(int I=0;I<2;I++)
+      {
+	tmp += normal[I]*grad_w_dS[I];
+      }
+    tmp *= (1.0-isFluxBoundary)*isDOFBoundary*sigma*v*a;
+    return tmp;
+  }
+						
+  inline double ExteriorElementBoundaryDiffusionAdjoint(const int& isDOFBoundary,
+							const int& isFluxBoundary,
+							const double& sigma,
+							const double& u,
+							const double& bc_u,
+							const double normal[2],
+							int* rowptr,
+							int* colind,
+							double* a,
+							const double grad_w_dS[2])
+  {
+    double tmp=0.0;
+    for(int I=0;I<2;I++)
+      for (int m=rowptr[I];m<rowptr[I+1];m++)
+	tmp += (1.0-isFluxBoundary)*isDOFBoundary*sigma*(u-bc_u)*a[m]*normal[colind[m]]*grad_w_dS[I];
+    return tmp;
+  }
+
+  inline double ExteriorElementBoundaryDiffusionAdjointJacobian(const int& isDOFBoundary,
+								const int& isFluxBoundary,
+								const double& sigma,
+								const double& v,
+								const double normal[2],
+								int* rowptr,
+								int* colind,
+								double* a,
+								const double grad_w_dS[2])
+  {
+    double tmp=0.0;
+    for(int I=0;I<2;I++)
+      for (int m=rowptr[I];m<rowptr[I+1];m++)
+	tmp += (1.0-isFluxBoundary)*isDOFBoundary*sigma*v*a[m]*normal[colind[m]]*grad_w_dS[I];
+    return tmp;
+  }
+
   inline void calculateMapping_element(const int eN,
 				       const int k,
 				       double* mesh_dof,
