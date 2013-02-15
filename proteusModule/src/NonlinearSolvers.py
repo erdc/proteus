@@ -619,11 +619,11 @@ class Newton(NonlinearSolver):
                 #raw_input("wait")
             if self.maxIts>1:
                 log("   Newton it %d norm(r) = %12.5e  %12.5g \t\t norm(r)/(rtol*norm(r0)+atol) = %g"
-                             % (self.its-1,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                             % (self.its,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             return self.failedFlag
         if self.maxIts>1:
             log("   Newton it %d norm(r) = %12.5e  %12.5g \t\t norm(r)/(rtol*norm(r0)+atol) = %g"
-                           % (self.its-1,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                           % (self.its,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
 class NewtonNS(NonlinearSolver):
     """
     A simple iterative solver that is Newton's method
@@ -717,7 +717,7 @@ class NewtonNS(NonlinearSolver):
         #print self.atol_r, self.rtol_r
         if self.convergenceTest == 'r' or self.convergenceTest == 'rits':
             if (self.its != 0 and
-                self.norm_cont_r < self.rtol_r*self.norm_cont_r0 + self.atol_r and
+                self.norm_cont_r < self.atol_r and #cek enforce mass conservation using atol_r only
                 self.norm_mom_r  < self.rtol_r*self.norm_mom_r0  + self.atol_r):
                 self.convergedFlag = True
 
@@ -762,14 +762,14 @@ class NewtonNS(NonlinearSolver):
         self.gammaK_max=0.0
         while (not self.converged(r) and
                not self.failed()):
-            log("   Newton it %d Mom.  norm(r) = %12.5e   %g" % (self.its,self.norm_mom_r,100*self.norm_mom_r/self.norm_mom_r0),level=1)
-            log("   Newton it %d Cont. norm(r) = %12.5e   %g" % (self.its,self.norm_cont_r,100*self.norm_cont_r/self.norm_cont_r0),level=1)
+            log("   Newton it %d Mom.  norm(r) = %12.5e   %g" % (self.its-1,self.norm_mom_r,100*self.norm_mom_r/self.norm_mom_r0),level=1)
+            log("   Newton it %d Cont. norm(r) = %12.5e   %g" % (self.its-1,self.norm_cont_r,100*self.norm_cont_r/self.norm_cont_r0),level=1)
 
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
-                log("Start assembeling jacobian",level=4)
+                log("Start assembling jacobian",level=4)
                 self.F.getJacobian(self.J)
-                log("Done  assembeling jacobian",level=4)
+                log("Done  assembling jacobian",level=4)
 
                 #mwf commented out print numpy.transpose(self.J)
                 if self.linearSolver.computeEigenvalues:
