@@ -73,3 +73,6 @@
 [submodule "externalPackages/stwave"]
 	path = externalPackages/stwave
 	url = git@github.com:erdc-cm/stwave.git
+[submodule "externalPackages/adcirc"]
+	path = externalPackages/adcirc
+	url = git@github.com:erdc-cm/adcirc.git
