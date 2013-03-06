@@ -126,6 +126,8 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
     *elementBoundaryDiametersArray,
     *elementBarycentersArray,
     *elementBoundaryBarycentersArray,
+    *nodeDiametersArray,
+    *nodeSupportArray,
     *newestNodeBases,
     *elementIJK,             //NURBS
     *weights,                 //NURBS
@@ -258,6 +260,18 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
 							    PyArray_DOUBLE,
 							    (char*)MESH(cmesh).elementBoundaryBarycentersArray);
 
+  dims[0] = MESH(cmesh).nNodes_global;
+  nodeDiametersArray = PyArray_FromDimsAndData(1,
+					       dims,
+					       PyArray_DOUBLE,
+					       (char*)MESH(cmesh).nodeDiametersArray);
+  
+  dims[0] = MESH(cmesh).nNodes_global;
+  nodeSupportArray = PyArray_FromDimsAndData(1,
+					     dims,
+					     PyArray_DOUBLE,
+					     (char*)MESH(cmesh).nodeSupportArray);
+  
 // NURBS
   //mwf elementIJK,weights  V_KNOT,W_KNOT,U_KNOT unitialized? switched to MESH(cmesh).
   dims[0] = 0;
@@ -292,7 +306,7 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
 							    (char*)MESH(cmesh).W_KNOT);							    
 // NURBS
 
-  return Py_BuildValue("iiiiiiiiiiiOOOOOOOOOOOOOOOOOiiiiiiOOOOOOOOOOdddd",
+  return Py_BuildValue("iiiiiiiiiiiOOOOOOOOOOOOOOOOOiiiiiiOOOOOOOOOOOOdddd",
                        MESH(cmesh).nElements_global,
                        MESH(cmesh).nNodes_global,
                        MESH(cmesh).nNodes_element,
@@ -333,6 +347,8 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
                        elementBoundaryDiametersArray,
 		       elementBarycentersArray,
                        elementBoundaryBarycentersArray,
+		       nodeDiametersArray,
+		       nodeSupportArray,
                        MESH(cmesh).h,
                        MESH(cmesh).hMin,
                        MESH(cmesh).sigmaMax,
