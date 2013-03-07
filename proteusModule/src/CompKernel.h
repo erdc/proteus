@@ -646,8 +646,8 @@ public:
     jacDet = jac[XX]*jac[YY] - jac[XY]*jac[YX];
     oneOverJacDet = 1.0/jacDet;
     jacInv[XX] = oneOverJacDet*jac[YY];
-    jacInv[YX] = -oneOverJacDet*jac[XY];
-    jacInv[XY] = -oneOverJacDet*jac[YX];
+    jacInv[XY] = -oneOverJacDet*jac[XY];
+    jacInv[YX] = -oneOverJacDet*jac[YX];
     jacInv[YY] = oneOverJacDet*jac[XX];
   }
   
