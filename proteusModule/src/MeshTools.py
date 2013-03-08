@@ -405,6 +405,8 @@ class Mesh:
         #physical coordinates of element barycenters and elementBoundary barycenters
         self.elementBarycentersArray=None
         self.elementBoundaryBarycentersArray=None
+        self.nodeDiametersArray=None
+        self.nodeSupportArray=None
         #unique labels for classes of elements, elementBoundaries, nodes,
         self.elementMaterialTypes=None
         self.elementBoundaryMaterialTypes=None
@@ -433,6 +435,7 @@ class Mesh:
         self.nLayersOfOverlap = None
         self.parallelPartitioningType = MeshParallelPartitioningTypes.element
     def partitionMesh(self,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.element):
+        import pdb
         import cmeshTools
         import Comm
         import flcbdfWrappers
@@ -749,6 +752,8 @@ class Mesh:
          self.elementBoundaryDiametersArray,
          self.elementBarycentersArray,
          self.elementBoundaryBarycentersArray,
+         self.nodeDiametersArray,
+         self.nodeSupportArray,
          self.h,
          self.hMin,
          self.sigmaMax,
