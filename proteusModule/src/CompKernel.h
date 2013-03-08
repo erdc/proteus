@@ -86,6 +86,12 @@ public:
 				       double& x,
 				       double& y,
 				       double& z);
+  inline void calculateH_element(const int eN,
+				 const int k,
+				 double* h_dof,
+				 int* mesh_l2g,
+				 double* mesh_trial_ref,
+				 double& h);
   inline void calculateMappingVelocity_element(const int eN,
 					       const int k,
 					       double* mesh_velocity_dof,
@@ -242,6 +248,21 @@ public:
     jacInv[ZZ] = oneOverJacDet*(jac[XX]*jac[YY] - jac[XY]*jac[YX]);
   }
   
+  inline void calculateH_element(const int eN,
+				 const int k,
+				 double* h_dof,
+				 int* mesh_l2g,
+				 double* mesh_trial_ref,
+				 double& h)
+  {
+    h=0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      {
+	int eN_j=eN*NDOF_MESH_TRIAL_ELEMENT+j;
+	h += h_dof[mesh_l2g[eN_j]]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
+      }
+  }
+
   inline void calculateMappingVelocity_element(const int eN,
 					       const int k,
 					       double* mesh_velocity_dof,
@@ -461,6 +482,7 @@ public:
 			     y,
 			     0.0);
   }
+
   inline void calculateMappingVelocity_element(const int eN,
 					       const int k,
 					       double* mesh_velocity_dof,
@@ -624,9 +646,24 @@ public:
     jacDet = jac[XX]*jac[YY] - jac[XY]*jac[YX];
     oneOverJacDet = 1.0/jacDet;
     jacInv[XX] = oneOverJacDet*jac[YY];
-    jacInv[YX] = -oneOverJacDet*jac[XY];
-    jacInv[XY] = -oneOverJacDet*jac[YX];
+    jacInv[XY] = -oneOverJacDet*jac[XY];
+    jacInv[YX] = -oneOverJacDet*jac[YX];
     jacInv[YY] = oneOverJacDet*jac[XX];
+  }
+  
+  inline void calculateH_element(const int eN,
+				 const int k,
+				 double* h_dof,
+				 int* mesh_l2g,
+				 double* mesh_trial_ref,
+				 double& h)
+  {
+    h=0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      {
+	int eN_j=eN*NDOF_MESH_TRIAL_ELEMENT+j;
+	h += h_dof[mesh_l2g[eN_j]]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
+      }
   }
   
   inline void calculateMappingVelocity_element(const int eN,
@@ -1485,6 +1522,21 @@ public:
     mapping.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
   }
 
+  inline void calculateH_element(const int eN,
+				 const int k,
+				 double* h_dof,
+				 int* mesh_l2g,
+				 double* mesh_trial_ref,
+				 double& h)
+  {
+    mapping.calculateH_element(eN,
+			       k,
+			       h_dof,
+			       mesh_l2g,
+			       mesh_trial_ref,
+			       h);
+  }
+
   inline void calculateMappingVelocity_element(const int eN,
 					       const int k,
 					       double* meshVelocity_dof,
@@ -2220,6 +2272,21 @@ public:
 				       double& y)
   {
     mapping.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y);
+  }
+
+  inline void calculateH_element(const int eN,
+				 const int k,
+				 double* h_dof,
+				 int* mesh_l2g,
+				 double* mesh_trial_ref,
+				 double& h)
+  {
+    mapping.calculateH_element(eN,
+			       k,
+			       h_dof,
+			       mesh_l2g,
+			       mesh_trial_ref,
+			       h);
   }
 
   inline void calculateMapping_element(const int eN,
