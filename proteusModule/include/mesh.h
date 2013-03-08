@@ -66,6 +66,7 @@ extern "C"
       
     double *nodeArray,*elementDiametersArray,*elementInnerDiametersArray,*elementBoundaryDiametersArray;
     double *elementBarycentersArray, *elementBoundaryBarycentersArray;
+    double *nodeDiametersArray,*nodeSupportArray;
     double h,hMin,sigmaMax,volume;
     //for adaptive mesh refinement
     int * newestNodeBases;
@@ -120,6 +121,8 @@ extern "C"
     mesh.nodeArray=NULL;
     mesh.elementBarycentersArray=NULL;
     mesh.elementBoundaryBarycentersArray=NULL;
+    mesh.nodeDiametersArray=NULL;
+    mesh.nodeSupportArray=NULL;
     mesh.newestNodeBases=NULL;
 
     // NURBS
@@ -178,6 +181,8 @@ extern "C"
     if(mesh.elementDiametersArray!=NULL) delete [] mesh.elementDiametersArray;
     if(mesh.elementBarycentersArray!=NULL) delete [] mesh.elementBarycentersArray;
     if(mesh.elementBoundaryBarycentersArray!=NULL) delete [] mesh.elementBoundaryBarycentersArray;
+    if(mesh.nodeDiametersArray!=NULL) delete [] mesh.nodeDiametersArray;
+    if(mesh.nodeSupportArray!=NULL) delete [] mesh.nodeSupportArray;
     if(mesh.newestNodeBases!=NULL) delete [] mesh.newestNodeBases;
    
     // NURBS
