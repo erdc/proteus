@@ -18,8 +18,8 @@ class ShockCapturing_base:
         self.numDiff_last=[]
         for ci in range(self.nc):
             if self.lag:
-                self.numDiff_last.append(cq[('numDiff',ci,ci)])
-                self.numDiff.append(numpy.zeros(cq[('u',ci)].shape,'d'))
+                self.numDiff.append(cq[('numDiff',ci,ci)])
+                self.numDiff_last.append(numpy.zeros(cq[('u',ci)].shape,'d'))
             else:
                 self.numDiff_last.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(cq[('numDiff',ci,ci)])
@@ -200,8 +200,8 @@ class ResGradDelayLag_SC(ResGrad_SC):
         self.cq_numDiff=[]
         for ci in range(self.nc):
             if self.lag:
-                self.numDiff_last.append(cq[('numDiff',ci,ci)])
-                self.numDiff.append(numpy.zeros(cq[('u',ci)].shape,'d'))
+                self.numDiff.append(cq[('numDiff',ci,ci)])
+                self.numDiff_last.append(numpy.zeros(cq[('u',ci)].shape,'d'))
             elif self.lag == False and self.nStepsToDelay != None:
                 self.cq_numDiff.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(cq[('numDiff',ci,ci)])
@@ -249,8 +249,8 @@ class ResGradQuadDelayLag_SC(ResGradQuad_SC):
         self.cq_numDiff=[]
         for ci in range(self.nc):
             if self.lag:
-                self.numDiff_last.append(cq[('numDiff',ci,ci)])
-                self.numDiff.append(numpy.zeros(cq[('u',ci)].shape,'d'))
+                self.numDiff.append(cq[('numDiff',ci,ci)])
+                self.numDiff_last.append(numpy.zeros(cq[('u',ci)].shape,'d'))
             elif self.lag == False and self.nStepsToDelay != None:
                 self.cq_numDiff.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(cq[('numDiff',ci,ci)])

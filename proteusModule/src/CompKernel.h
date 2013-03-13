@@ -1297,8 +1297,7 @@ public:
     for (int I=0;I<NSPACE;I++)
       n_grad_u += grad_u[I]*grad_u[I];
     num = shockCapturingDiffusion*0.5*h*fabs(strong_residual);
-    den = sqrt(n_grad_u) + 1.0e-8;
-    //cek hack shockCapturingDiffusion*fabs(strong_residual)*grad_phi_G_grad_phi
+    den = sqrt(n_grad_u) + 1.0e-6;
     numDiff = num/den;
   }
 
@@ -1313,7 +1312,6 @@ public:
     for (int I=0;I<NSPACE;I++)
       for (int J=0;J<NSPACE;J++)
         den += grad_u[I]*G[I*NSPACE+J]*grad_u[J];
-
     numDiff = shockCapturingDiffusion*fabs(strong_residual)/(sqrt(den) + 1.0e-6);
   }
 
@@ -1330,9 +1328,8 @@ public:
       for (int J=0;J<NSPACE;J++)
         den += grad_u[I]*G[I*NSPACE+J]*grad_u[J];
 
-    double h2_uref_1 = 1.0/(sqrt(den) + 1.0e-6);
-    double h2_uref_2 = 1.0/(uref*sqrt(G_dd_G));
-
+    double h2_uref_1 = 1.0/(sqrt(den)+1.0e-6);
+    double h2_uref_2 = 1.0/(uref*sqrt(G_dd_G)+1.0e-6);
     numDiff = shockCapturingDiffusion*fabs(strong_residual)*pow(h2_uref_1, 2.0-beta)*pow(h2_uref_2,beta-1.0);
   }
 
