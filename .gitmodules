@@ -79,3 +79,6 @@
 [submodule "externalPackages/pygrib"]
 	path = externalPackages/pygrib
 	url = git@github.com:erdc-cm/pygrib.git
+[submodule "externalPackages/jasper"]
+	path = externalPackages/jasper
+	url = git@github.com:erdc-cm/jasper.git
