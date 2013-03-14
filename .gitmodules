@@ -85,3 +85,6 @@
 [submodule "externalPackages/grib_api"]
 	path = externalPackages/grib_api
 	url = git@github.com:erdc-cm/grib_api.git
+[submodule "externalPackages/pyproj"]
+	path = externalPackages/pyproj
+	url = git@github.com:erdc-cm/pyproj.git
