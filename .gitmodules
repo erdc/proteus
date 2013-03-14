@@ -76,3 +76,6 @@
 [submodule "externalPackages/adcirc"]
 	path = externalPackages/adcirc
 	url = git@github.com:erdc-cm/adcirc.git
+[submodule "externalPackages/pygrib"]
+	path = externalPackages/pygrib
+	url = git@github.com:erdc-cm/pygrib.git
