@@ -1596,6 +1596,7 @@ DaetkPetscSys_size(DaetkPetscSys *self,
           mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+nN] = 
             nodeNumbering_global2subdomain[elementNodesArray_new[eN_global*mesh.nNodes_element + nN]];
       }
+
     if (mesh.subdomainp->nNodes_element == 2)
       {
         constructElementBoundaryElementsArray_edge(*mesh.subdomainp);
@@ -2478,6 +2479,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   mesh.subdomainp->px = mesh.px;
   mesh.subdomainp->py = mesh.py;
   mesh.subdomainp->pz = mesh.pz;
+
   if (mesh.subdomainp->px != 0)
     {
       //constructElementBoundaryElementsArray_tetrahedron(*mesh.subdomainp);
@@ -2948,7 +2950,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 		}
 	    }
         }
-    std::cout<<"Done marking element boundares "<<elementBoundaries_subdomain_owned.size()<<std::endl;
+    //std::cout<<"Done marking element boundares "<<elementBoundaries_subdomain_owned.size()<<std::endl;
     //ship off the mask
     if (rank < size-1)
       MPI_Send(elementBoundaryMask,PetscBTLength(mesh.nElementBoundaries_global),MPI_CHAR,rank+1,0,Py_PETSC_COMM_WORLD);
@@ -3478,6 +3480,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
    mesh.subdomainp->px = mesh.px;
    mesh.subdomainp->py = mesh.py;
    mesh.subdomainp->pz = mesh.pz; 
+
   if (mesh.px != 0)    
       {  
         //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);

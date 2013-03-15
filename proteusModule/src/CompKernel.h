@@ -86,6 +86,12 @@ public:
 				       double& x,
 				       double& y,
 				       double& z);
+  inline void calculateH_element(const int eN,
+				 const int k,
+				 double* h_dof,
+				 int* mesh_l2g,
+				 double* mesh_trial_ref,
+				 double& h);
   inline void calculateMappingVelocity_element(const int eN,
 					       const int k,
 					       double* mesh_velocity_dof,
@@ -242,6 +248,21 @@ public:
     jacInv[ZZ] = oneOverJacDet*(jac[XX]*jac[YY] - jac[XY]*jac[YX]);
   }
   
+  inline void calculateH_element(const int eN,
+				 const int k,
+				 double* h_dof,
+				 int* mesh_l2g,
+				 double* mesh_trial_ref,
+				 double& h)
+  {
+    h=0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      {
+	int eN_j=eN*NDOF_MESH_TRIAL_ELEMENT+j;
+	h += h_dof[mesh_l2g[eN_j]]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
+      }
+  }
+
   inline void calculateMappingVelocity_element(const int eN,
 					       const int k,
 					       double* mesh_velocity_dof,
@@ -461,6 +482,7 @@ public:
 			     y,
 			     0.0);
   }
+
   inline void calculateMappingVelocity_element(const int eN,
 					       const int k,
 					       double* mesh_velocity_dof,
@@ -624,9 +646,24 @@ public:
     jacDet = jac[XX]*jac[YY] - jac[XY]*jac[YX];
     oneOverJacDet = 1.0/jacDet;
     jacInv[XX] = oneOverJacDet*jac[YY];
-    jacInv[YX] = -oneOverJacDet*jac[XY];
-    jacInv[XY] = -oneOverJacDet*jac[YX];
+    jacInv[XY] = -oneOverJacDet*jac[XY];
+    jacInv[YX] = -oneOverJacDet*jac[YX];
     jacInv[YY] = oneOverJacDet*jac[XX];
+  }
+  
+  inline void calculateH_element(const int eN,
+				 const int k,
+				 double* h_dof,
+				 int* mesh_l2g,
+				 double* mesh_trial_ref,
+				 double& h)
+  {
+    h=0.0;
+    for (int j=0;j<NDOF_MESH_TRIAL_ELEMENT;j++)
+      {
+	int eN_j=eN*NDOF_MESH_TRIAL_ELEMENT+j;
+	h += h_dof[mesh_l2g[eN_j]]*mesh_trial_ref[k*NDOF_MESH_TRIAL_ELEMENT+j];
+      }
   }
   
   inline void calculateMappingVelocity_element(const int eN,
@@ -1330,7 +1367,6 @@ public:
   {
     double h,
       num,
-      den,
       n_grad_u;
     h = elementDiameter;
     n_grad_u = 0.0;
@@ -1400,6 +1436,76 @@ public:
     return dflux_left*v;
   }
 
+  inline double ExteriorElementBoundaryScalarDiffusionAdjoint(const int& isDOFBoundary,
+							      const int& isFluxBoundary,
+							      const double& sigma,
+							      const double& u,
+							      const double& bc_u,
+							      const double normal[3],
+							      const double& a,
+							      const double grad_w_dS[3])
+  {
+    double tmp=0.0;
+    for(int I=0;I<3;I++)
+      {
+	tmp += normal[I]*grad_w_dS[I];
+      }
+    tmp *= (1.0-isFluxBoundary)*isDOFBoundary*sigma*(u-bc_u)*a;
+    return tmp;
+  }
+  
+  inline double ExteriorElementBoundaryScalarDiffusionAdjointJacobian(const int& isDOFBoundary,
+								      const int& isFluxBoundary,
+								      const double& sigma,
+								      const double& v,
+								      const double normal[3],
+								      const double& a,
+								      const double grad_w_dS[3])
+  {
+    double tmp=0.0;
+    for(int I=0;I<3;I++)
+      {
+	tmp += normal[I]*grad_w_dS[I];
+      }
+    tmp *= (1.0-isFluxBoundary)*isDOFBoundary*sigma*v*a;
+    return tmp;
+  }
+
+  inline double ExteriorElementBoundaryDiffusionAdjoint(const int& isDOFBoundary,
+							const int& isFluxBoundary,
+							const double& sigma,
+							const double& u,
+							const double& bc_u,
+							const double normal[3],
+							int* rowptr,
+							int* colind,
+							double* a,
+							const double grad_w_dS[3])
+  {
+    double tmp=0.0;
+    for(int I=0;I<3;I++)
+      for (int m=rowptr[I];m<rowptr[I+1];m++)
+	tmp += (1.0-isFluxBoundary)*isDOFBoundary*sigma*(u-bc_u)*a[m]*normal[colind[m]]*grad_w_dS[I];
+    return tmp;
+  }
+
+  inline double ExteriorElementBoundaryDiffusionAdjointJacobian(const int& isDOFBoundary,
+								const int& isFluxBoundary,
+								const double& sigma,
+								const double& v,
+								const double normal[3],
+								int* rowptr,
+								int* colind,
+								double* a,
+								const double grad_w_dS[3])
+  {
+    double tmp=0.0;
+    for(int I=0;I<3;I++)
+      for (int m=rowptr[I];m<rowptr[I+1];m++)
+	tmp += (1.0-isFluxBoundary)*isDOFBoundary*sigma*v*a[m]*normal[colind[m]]*grad_w_dS[I];
+    return tmp;
+  }
+
   inline void calculateMapping_element(const int eN,
 				       const int k,
 				       double* mesh_dof,
@@ -1414,6 +1520,21 @@ public:
 				       double& z)
   {
     mapping.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y,z);
+  }
+
+  inline void calculateH_element(const int eN,
+				 const int k,
+				 double* h_dof,
+				 int* mesh_l2g,
+				 double* mesh_trial_ref,
+				 double& h)
+  {
+    mapping.calculateH_element(eN,
+			       k,
+			       h_dof,
+			       mesh_l2g,
+			       mesh_trial_ref,
+			       h);
   }
 
   inline void calculateMappingVelocity_element(const int eN,
@@ -1999,7 +2120,6 @@ public:
   {
     double h,
       num,
-      den,
       n_grad_u;
     h = elementDiameter;
     n_grad_u = 0.0;
@@ -2068,6 +2188,77 @@ public:
   {
     return dflux_left*v;
   }
+
+  inline double ExteriorElementBoundaryScalarDiffusionAdjoint(const int& isDOFBoundary,
+							      const int& isFluxBoundary,
+							      const double& sigma,
+							      const double& u,
+							      const double& bc_u,
+							      const double normal[2],
+							      const double& a,
+							      const double grad_w_dS[2])
+  {
+    double tmp=0.0;
+    for(int I=0;I<2;I++)
+      {
+	tmp += normal[I]*grad_w_dS[I];
+      }
+    tmp *= (1.0-isFluxBoundary)*isDOFBoundary*sigma*(u-bc_u)*a;
+    return tmp;
+  }
+
+  inline double ExteriorElementBoundaryScalarDiffusionAdjointJacobian(const int& isDOFBoundary,
+								      const int& isFluxBoundary,
+								      const double& sigma,
+								      const double& v,
+								      const double normal[2],
+								      const double& a,
+								      const double grad_w_dS[2])
+  {
+    double tmp=0.0;
+    for(int I=0;I<2;I++)
+      {
+	tmp += normal[I]*grad_w_dS[I];
+      }
+    tmp *= (1.0-isFluxBoundary)*isDOFBoundary*sigma*v*a;
+    return tmp;
+  }
+						
+  inline double ExteriorElementBoundaryDiffusionAdjoint(const int& isDOFBoundary,
+							const int& isFluxBoundary,
+							const double& sigma,
+							const double& u,
+							const double& bc_u,
+							const double normal[2],
+							int* rowptr,
+							int* colind,
+							double* a,
+							const double grad_w_dS[2])
+  {
+    double tmp=0.0;
+    for(int I=0;I<2;I++)
+      for (int m=rowptr[I];m<rowptr[I+1];m++)
+	tmp += (1.0-isFluxBoundary)*isDOFBoundary*sigma*(u-bc_u)*a[m]*normal[colind[m]]*grad_w_dS[I];
+    return tmp;
+  }
+
+  inline double ExteriorElementBoundaryDiffusionAdjointJacobian(const int& isDOFBoundary,
+								const int& isFluxBoundary,
+								const double& sigma,
+								const double& v,
+								const double normal[2],
+								int* rowptr,
+								int* colind,
+								double* a,
+								const double grad_w_dS[2])
+  {
+    double tmp=0.0;
+    for(int I=0;I<2;I++)
+      for (int m=rowptr[I];m<rowptr[I+1];m++)
+	tmp += (1.0-isFluxBoundary)*isDOFBoundary*sigma*v*a[m]*normal[colind[m]]*grad_w_dS[I];
+    return tmp;
+  }
+
   inline void calculateMapping_element(const int eN,
 				       const int k,
 				       double* mesh_dof,
@@ -2081,6 +2272,21 @@ public:
 				       double& y)
   {
     mapping.calculateMapping_element(eN,k,mesh_dof,mesh_l2g,mesh_trial_ref,mesh_grad_trial_ref,jac,jacDet,jacInv,x,y);
+  }
+
+  inline void calculateH_element(const int eN,
+				 const int k,
+				 double* h_dof,
+				 int* mesh_l2g,
+				 double* mesh_trial_ref,
+				 double& h)
+  {
+    mapping.calculateH_element(eN,
+			       k,
+			       h_dof,
+			       mesh_l2g,
+			       mesh_trial_ref,
+			       h);
   }
 
   inline void calculateMapping_element(const int eN,
