@@ -5,7 +5,7 @@ import gc
 import os
 import inspect
 
-global memLast,memLog,logFile,logLevel,verbose,procID,logAllProcesses,flushBuffer
+global memLast,memLog,logFile,logLevel,verbose,procID,logAllProcesses,flushBuffer, preInitBuffer
 
 memMax=0.0
 memLast=0.0
@@ -17,6 +17,7 @@ logAllProcesses=False
 verbose=False
 procID=None
 flushBuffer=False
+preInitBuffer=[]
 
 def memProfOn():
     global memLog
@@ -33,31 +34,44 @@ def verboseOn_callback(option,opt,value,parser):
 def openLog(filename,level):
     global logFile
     global logLevel
+    global preInitBuffer
     logFile=open(filename,'w')
     logLevel = level
+    for (string,level,data) in preInitBuffer:
+        logEvent(string,level,data)
+
+def closeLog():
+    global logFile
+    try:
+        logFile.close()
+    except:
+        pass
 
 def logEvent(stringIn,level=1,data=None):
-    global logLevel,procID,logAllProcesses,flushBuffer
-    if logAllProcesses or procID==0:
-        if level < logLevel:
-            if logAllProcesses and procID != None and stringIn != None:
-                string = "Proc %d : " % procID
-                string += stringIn
-            else:
-                string = stringIn
-            if string!=None:
-                if data != None:
-                    string += `data`
-                string+='\n'
-                global logFile,verbose
-                logFile.write(string)
-                if flushBuffer:
-                    logFile.flush()
-                if verbose:
-                    import sys
-                    sys.stdout.write(string)
+    global logLevel,procID,logAllProcesses,flushBuffer,preInitBuffer
+    if procID != None:
+        if logAllProcesses or procID==0:
+            if level < logLevel:
+                if logAllProcesses and procID != None and stringIn != None:
+                    string = "Proc %d : " % procID
+                    string += stringIn
+                else:
+                    string = stringIn
+                if string!=None:
+                    if data != None:
+                        string += `data`
+                    string+='\n'
+                    global logFile,verbose
+                    logFile.write(string)
                     if flushBuffer:
-                        sys.stdout.flush()
+                        logFile.flush()
+                    if verbose:
+                        import sys
+                        sys.stdout.write(string)
+                        if flushBuffer:
+                            sys.stdout.flush()
+    elif procID==None:
+        preInitBuffer.append((stringIn,level,data))
 
 def memory(message=None,className='',memSaved=None):
     global memLog

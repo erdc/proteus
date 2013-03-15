@@ -428,12 +428,11 @@ class KSP_petsc4py(LinearSolver):
                                                printInfo=False)
                 self.pc = p4pyPETSc.PC().createPython(self.pccontext)
             elif Preconditioner == SimpleNavierStokes3D:
-                self.preconditioner = SimpleNavierStokes3D(par_L)
+                self.preconditioner = SimpleNavierStokes3D(par_L,prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleDarcyFC:
                 self.preconditioner = SimpleDarcyFC(par_L)
                 self.pc = self.preconditioner.pc
-                self.pc.setFromOptions()
         assert type(L).__name__ == 'SparseMatrix', "petsc4py PETSc can only be called with a local sparse matrix"
         assert isinstance(par_L,ParMat_petsc4py)
         self.solverName  = "PETSc"
@@ -461,16 +460,26 @@ class KSP_petsc4py(LinearSolver):
             def converged_trueRes(ksp,its,rnorm):
                 ksp.buildResidual(self.r_work)
                 truenorm = self.r_work.norm()
-                if its == 0: self.rnorm0 = truenorm
-                return truenorm < self.rnorm0*ksp.rtol + ksp.atol
+                logEvent("        KSP it %i norm(r) = %e; atol=%e rtol=%e " % (its,truenorm,ksp.atol,ksp.rtol))
+                if its == 0: 
+                    self.rnorm0 = truenorm
+                    return False
+                else:
+                    return truenorm < self.rnorm0*ksp.rtol + ksp.atol
             self.ksp.setConvergenceTest(converged_trueRes)
         else:
             self.r_work = None
-        if Preconditioner != None:
-            self.ksp.setPC(self.pc)
         if prefix != None:
             self.ksp.setOptionsPrefix(prefix)
+        if Preconditioner != None:
+            self.ksp.setPC(self.pc)
         self.ksp.setFromOptions()
+    def setResTol(self,rtol,atol):
+        self.rtol_r = rtol
+        self.atol_r = atol
+        self.ksp.rtol = rtol
+        self.ksp.atol = atol
+        logEvent("KSP atol %e rtol %e" % (self.ksp.atol,self.ksp.rtol))
     def prepare(self,b=None):
         self.petsc_L.zeroEntries()
         assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
@@ -510,39 +519,33 @@ class KSP_petsc4py(LinearSolver):
             self.matcontext.par_b = par_b
 
         self.ksp.setInitialGuessNonzero(False)
-        self.ksp.view(p4pyPETSc.Viewer.STDOUT())
         self.ksp.solve(par_b,par_u)
-        #mwf debug
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
                                                                                                              self.ksp.converged,
                                                                                                              self.ksp.its,
                                                                                                              self.ksp.norm,
                                                                                                              self.ksp.reason))
-        #import Comm
-        #comm = Comm.get()
-        #print "rank %s after solve u= %s " % (comm.rank(),u)
-        #comm.barrier()
     def converged(self,r):
         """
         decide on convention to match norms, convergence criteria
         """
-        #rnorm = self.norm(r)
-        #return self.ksp.callConvergenceTest(self.ksp.its,rnorm)
         return self.ksp.converged
 
 class SimpleNavierStokes3D:
-    def __init__(self,L):
+    def __init__(self,L,prefix=None):
         sizes = L.getSizes()
         range = L.getOwnershipRange()
-        print "sizes",sizes
+        #print "sizes",sizes
         neqns = sizes[0][0]
-        print "neqns",neqns
+        #print "neqns",neqns
         self.pressureDOF = numpy.arange(range[0],range[0]+neqns/4,dtype="i")
-        print "pressure",self.pressureDOF
+        #print "pressure",self.pressureDOF
         self.velocityDOF = numpy.arange(range[0]+neqns/4,range[0]+neqns,dtype="i")
-        print "velocity",self.velocityDOF
+        #print "velocity",self.velocityDOF
         self.pc = p4pyPETSc.PC().create()
+        if prefix:
+            self.pc.setOptionsPrefix(prefix)
         self.pc.setType('fieldsplit')
         self.isp = p4pyPETSc.IS()
         self.isp.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
@@ -550,6 +553,8 @@ class SimpleNavierStokes3D:
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
         #self.pc.setFieldSplitIS(self.isv)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
+        self.pc.setFromOptions()
+        #self.pc.setFieldSplitIS(('pressure',self.isp),('velocity',self.isv))
         #self.pc.setFieldSplitIS(self.velocityDOF)
         #self.pc.setFieldSplitIS(self.pressureDOF)
 
