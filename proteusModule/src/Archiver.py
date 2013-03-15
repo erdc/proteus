@@ -127,12 +127,15 @@ class AR_base:
         self.xmlFile.close()
         if self.hdfFile != None:
             self.hdfFile.close()
+        self.comm.barrier()
+        log("Done Closing Archive")
         try:
             if self.gatherAtClose:
                 self.allGather()
         except:
             pass
     def allGather(self):
+        log("Gathering Archive")
         self.comm.barrier()
         if self.rank==0:
             #replace the bottom level grid with a spatial collection
@@ -162,6 +165,7 @@ class AR_base:
             indentXML(self.tree.getroot())
             self.tree.write(f)
             f.close()
+        log("Done Gathering Archive")
     def sync(self):
         log("Syncing Archive",level=3)
         self.clear_xml()

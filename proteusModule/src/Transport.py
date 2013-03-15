@@ -4332,7 +4332,6 @@ class OneLevelTransport(NonlinearEquation):
                 needNumericalFluxJacobian_int = int(needNumericalFluxJacobian)
                 hasOutflowBoundary = int(self.fluxBoundaryConditions[ci] == 'outFlow')
                 needsOutflowJacobian_int = int(needOutflowJacobian == True)
-                print hasNumericalFlux,hasDiffusionInMixedForm,needNumericalFluxJacobian_int,
                 memory()
                 self.csrRowIndeces[(ci,cj)] = numpy.zeros((self.mesh.nElements_global,
                                                              self.nDOF_test_element[ci]),'i')
@@ -5448,7 +5447,6 @@ class MultilevelTransport:
         self.name = problem.name
         #cek temporary fix to get everything weaned off the old BC's
         if numerics.numericalFluxType == None:
-            print "using default numerical flux with strong BC's"
             numerics.numericalFluxType = NumericalFlux.StrongDirichletFactory(problem.fluxBoundaryConditions)
         self.OneLevelTransportType=OneLevelTransportType
         phiSpaces = None
@@ -5580,13 +5578,11 @@ class MultilevelTransport:
             log("Setting Boundary Conditions-2")
             if options == None or options.periodicDirichletConditions == None or options.parallelPeriodic==True:
                 log("Setting Boundary Conditions-2a")
-                print useWeakDirichletConditions
                 dirichletConditionsDict=dict([(cj,DOFBoundaryConditions(
                     trialSpace,dirichletConditionsSetterDict[cj],useWeakDirichletConditions))
                                               for (cj,trialSpace) in trialSpaceDict.iteritems()])
             else:
                 log("Setting Boundary Conditions-2b")
-                print trialSpaceDict
                 dirichletConditionsDict=dict([(cj,DOFBoundaryConditions(
                     trialSpace,dirichletConditionsSetterDict[cj],useWeakDirichletConditions,options.periodicDirichletConditions[cj]))
                                               for (cj,trialSpace) in trialSpaceDict.iteritems()])
@@ -5771,7 +5767,6 @@ class MultilevelTransport:
                 par_nghost = 0
                 subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
                 max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
-                print "Here"
                 log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                 par_u = ParVec(u,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
                 par_r = ParVec(r,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])

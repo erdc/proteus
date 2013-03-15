@@ -165,13 +165,6 @@ parser.add_option("-H","--hotStart",
 if opts.debug:
     pdb.set_trace()
 
-if opts.logLevel > 0:
-    #mwf looks like just gets .py.log if no sso file given
-    #Profiling.openLog(args[0][-3:]+".log",opts.logLevel)
-    if len(args[0].split(' ')) == 1:
-        Profiling.openLog(args[0].split('.')[0]+".log",opts.logLevel)
-    else:
-        Profiling.openLog(args[0][-3:]+".log",opts.logLevel)
 log = Profiling.logEvent
 
 if opts.dataDir != '':
@@ -197,6 +190,7 @@ if opts.petscOptionsFile != None:
 
 comm = Comm.init(argv=petsc_argv)
 
+
 #blanket import statements can go below here now that petsc4py should be initialized
 from proteus import *
 try:
@@ -215,7 +209,7 @@ nList = []
 sList = []
 if len(args) < 1:
     raise RuntimeError("No input file specified")
-print "importing"
+log("Importing input modules")
 if len(args) == 1:#arg should be an sso file or an so module
     if args[0][-3:] == '.py':
         log("Loading so module = "+args[0])
@@ -286,6 +280,15 @@ elif len(args) == 2: #p and n modules provided
         pass
 else:
     raise RuntimeError("Too many input files specified")
+Profiling.procID=comm.rank()
+if sList[0].logAllProcesses or opts.logAllProcesses:
+    Profiling.logAllProcesses = True
+Profiling.flushBuffer=sList[0].flushBuffer
+if opts.logLevel > 0:
+    if len(args[0].split(' ')) == 1:
+        Profiling.openLog(args[0].split('.')[0]+".log",opts.logLevel)
+    else:
+        Profiling.openLog(args[0][-3:]+".log",opts.logLevel)
 if opts.batchFileName != "":
     log("Attaching input stream to batch file = "+opts.batchFileName)
     inputStream = open(opts.batchFileName,'r')
@@ -295,10 +298,6 @@ else:
 simFlagsList = []
 for i in range(len(pList)):
     simFlagsList.append({})
-Profiling.procID=comm.rank()
-if sList[0].logAllProcesses or opts.logAllProcesses:
-    Profiling.logAllProcesses = True
-Profiling.flushBuffer=sList[0].flushBuffer
 log("Running Proteus version "+proteus.__version__,level=0)
 if opts.viewer:
     log("Starting viewer")
@@ -399,10 +398,10 @@ while running:
             stats.strip_dirs()
             stats.dump_stats(so.name+'_init_prof_c'+`comm.rank()`)
             stats.sort_stats('cumulative')
-            if Profiling.verbose:
+            if Profiling.verbose and comm.isMaster():
                 stats.print_stats(30)
             stats.sort_stats('time')
-            if Profiling.verbose:
+            if Profiling.verbose and comm.isMaster():
                 stats.print_stats(30)
             comm.endSequential()
             profiler.run('ns.calculateSolution(runName)',so.name+'_run_prof'+`comm.rank()`)
@@ -412,10 +411,10 @@ while running:
             stats.strip_dirs()
             stats.dump_stats(so.name+'_run_prof_c'+`comm.rank()`)
             stats.sort_stats('cumulative')
-            if Profiling.verbose:
+            if Profiling.verbose and comm.isMaster():
                 stats.print_stats(30)
             stats.sort_stats('time')
-            if Profiling.verbose:
+            if Profiling.verbose and comm.isMaster():
                 stats.print_stats(30)
             comm.endSequential()
         else:

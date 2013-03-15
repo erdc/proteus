@@ -126,6 +126,8 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
     *elementBoundaryDiametersArray,
     *elementBarycentersArray,
     *elementBoundaryBarycentersArray,
+    *nodeDiametersArray,
+    *nodeSupportArray,
     *newestNodeBases,
     *elementIJK,             //NURBS
     *weights,                 //NURBS
@@ -258,6 +260,18 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
 							    PyArray_DOUBLE,
 							    (char*)MESH(cmesh).elementBoundaryBarycentersArray);
 
+  dims[0] = MESH(cmesh).nNodes_global;
+  nodeDiametersArray = PyArray_FromDimsAndData(1,
+					       dims,
+					       PyArray_DOUBLE,
+					       (char*)MESH(cmesh).nodeDiametersArray);
+  
+  dims[0] = MESH(cmesh).nNodes_global;
+  nodeSupportArray = PyArray_FromDimsAndData(1,
+					     dims,
+					     PyArray_DOUBLE,
+					     (char*)MESH(cmesh).nodeSupportArray);
+  
 // NURBS
   //mwf elementIJK,weights  V_KNOT,W_KNOT,U_KNOT unitialized? switched to MESH(cmesh).
   dims[0] = 0;
@@ -292,7 +306,7 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
 							    (char*)MESH(cmesh).W_KNOT);							    
 // NURBS
 
-  return Py_BuildValue("iiiiiiiiiiiOOOOOOOOOOOOOOOOOiiiiiiOOOOOOOOOOdddd",
+  return Py_BuildValue("iiiiiiiiiiiOOOOOOOOOOOOOOOOOiiiiiiOOOOOOOOOOOOdddd",
                        MESH(cmesh).nElements_global,
                        MESH(cmesh).nNodes_global,
                        MESH(cmesh).nNodes_element,
@@ -333,6 +347,8 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
                        elementBoundaryDiametersArray,
 		       elementBarycentersArray,
                        elementBoundaryBarycentersArray,
+		       nodeDiametersArray,
+		       nodeSupportArray,
                        MESH(cmesh).h,
                        MESH(cmesh).hMin,
                        MESH(cmesh).sigmaMax,
@@ -603,12 +619,12 @@ static PyObject* cmeshToolsLocallyRefineMultilevelMesh(PyObject* self,
 					     IDATA(elementTagArray));
 	}
       finestLevel = MULTILEVELMESH(cmultilevelMesh).nLevels;
-      std::cout<<"eb info"<<std::endl;
+      //std::cout<<"eb info"<<std::endl;
       constructElementBoundaryElementsArray_triangle(MULTILEVELMESH(cmultilevelMesh).meshArray[finestLevel-1]);
-      std::cout<<"geo info"<<std::endl;
+      //std::cout<<"geo info"<<std::endl;
       allocateGeometricInfo_triangle(MULTILEVELMESH(cmultilevelMesh).meshArray[finestLevel-1]);
       computeGeometricInfo_triangle(MULTILEVELMESH(cmultilevelMesh).meshArray[finestLevel-1]);
-      std::cout<<"eb types"<<std::endl;
+      //std::cout<<"eb types"<<std::endl;
       if (finestLevel > 1)
 	assignElementBoundaryMaterialTypesFromParent(MULTILEVELMESH(cmultilevelMesh).meshArray[finestLevel-2],
 						     MULTILEVELMESH(cmultilevelMesh).meshArray[finestLevel-1],
@@ -1686,7 +1702,7 @@ static PyObject* SparsityInfo_getCSR(SparsityInfo *self,
       std::sort(&colind_[rowptr_[I]],&colind_[rowptr_[I+1]]);
       max_nonzeros = std::max(max_nonzeros,rowptr_[I+1] - rowptr_[I]);
     }
-  std::cout<<"Proteus: Maximum nonzeros in any row is "<<max_nonzeros<<std::endl;
+  //std::cout<<"Proteus: Maximum nonzeros in any row is "<<max_nonzeros<<std::endl;
   return Py_BuildValue("(O,O,i,O)",PyArray_Return(rowptr),PyArray_Return(colind),nnz,PyArray_Return(nzval));
 }
 
