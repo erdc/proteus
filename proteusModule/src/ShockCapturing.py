@@ -246,16 +246,16 @@ class ResGradQuadDelayLag_SC(ResGradQuad_SC):
         self.mesh=mesh
         self.numDiff=[]
         self.numDiff_last=[]
-        self.cq_numDiff=[]
         for ci in range(self.nc):
             if self.lag:
                 self.numDiff.append(cq[('numDiff',ci,ci)])
                 self.numDiff_last.append(numpy.zeros(cq[('u',ci)].shape,'d'))
             elif self.lag == False and self.nStepsToDelay != None:
-                self.cq_numDiff.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(cq[('numDiff',ci,ci)])
+                self.numDiff_last.append(cq[('numDiff',ci,ci)])
             else:
                 self.numDiff.append(cq[('numDiff',ci,ci)])
+                self.numDiff_last.append(cq[('numDiff',ci,ci)])
     def updateShockCapturingHistory(self):
         self.nSteps += 1
         if self.lag:
@@ -266,8 +266,7 @@ class ResGradQuadDelayLag_SC(ResGradQuad_SC):
             self.numDiff = []
             self.numDiff_last=[]
             for ci in range(self.nc):
-                self.numDiff_last.append(self.cq_numDiff[ci])
-                self.numDiff.append(numpy.zeros(self.cq_numDiff[ci].shape,'d'))
+                self.numDiff_last[ci] = numpy.zeros(self.numDiff[ci].shape,'d')
 
 class NavierStokes_SC(ResGradQuad_SC):
     def __init__(self,coefficients,nd,shockCapturingFactor=0.25,lag=True,nStepsToDelay=None):
