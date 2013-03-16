@@ -430,6 +430,9 @@ class KSP_petsc4py(LinearSolver):
             elif Preconditioner == SimpleNavierStokes3D:
                 self.preconditioner = SimpleNavierStokes3D(par_L,prefix)
                 self.pc = self.preconditioner.pc
+            elif Preconditioner == SimpleNavierStokes2D:
+                self.preconditioner = SimpleNavierStokes2D(par_L,prefix)
+                self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleDarcyFC:
                 self.preconditioner = SimpleDarcyFC(par_L)
                 self.pc = self.preconditioner.pc
@@ -542,6 +545,52 @@ class SimpleNavierStokes3D:
         self.pressureDOF = numpy.arange(range[0],range[0]+neqns/4,dtype="i")
         #print "pressure",self.pressureDOF
         self.velocityDOF = numpy.arange(range[0]+neqns/4,range[0]+neqns,dtype="i")
+        #print "velocity",self.velocityDOF
+        self.pc = p4pyPETSc.PC().create()
+        if prefix:
+            self.pc.setOptionsPrefix(prefix)
+        self.pc.setType('fieldsplit')
+        self.isp = p4pyPETSc.IS()
+        self.isp.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
+        self.isv = p4pyPETSc.IS()
+        self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
+        #self.pc.setFieldSplitIS(self.isv)
+        self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
+        self.pc.setFromOptions()
+        #self.pc.setFieldSplitIS(('pressure',self.isp),('velocity',self.isv))
+        #self.pc.setFieldSplitIS(self.velocityDOF)
+        #self.pc.setFieldSplitIS(self.pressureDOF)
+
+class SimpleDarcyFC:
+    def __init__(self,L):
+        sizes = L.getSizes()
+        range = L.getOwnershipRange()
+        print "sizes",sizes
+        neqns = sizes[0][0]
+        print "neqns",neqns
+        self.saturationDOF = numpy.arange(range[0],range[0]+neqns/2,dtype="i")
+        #print "saturation",self.saturationDOF
+        self.pressureDOF = numpy.arange(range[0]+neqns/2,range[0]+neqns,dtype="i")
+        #print "pressure",self.pressureDOF
+        self.pc = p4pyPETSc.PC().create()
+        self.pc.setType('fieldsplit')
+        self.isp = p4pyPETSc.IS()
+        self.isp.createGeneral(self.saturationDOF,comm=p4pyPETSc.COMM_WORLD)
+        self.isv = p4pyPETSc.IS()
+        self.isv.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
+        self.pc.setFieldSplitIS(self.isp)
+        self.pc.setFieldSplitIS(self.isv)
+
+class SimpleNavierStokes2D:
+    def __init__(self,L,prefix=None):
+        sizes = L.getSizes()
+        range = L.getOwnershipRange()
+        #print "sizes",sizes
+        neqns = sizes[0][0]
+        #print "neqns",neqns
+        self.pressureDOF = numpy.arange(range[0],range[0]+neqns/3,dtype="i")
+        #print "pressure",self.pressureDOF
+        self.velocityDOF = numpy.arange(range[0]+neqns/3,range[0]+neqns,dtype="i")
         #print "velocity",self.velocityDOF
         self.pc = p4pyPETSc.PC().create()
         if prefix:
