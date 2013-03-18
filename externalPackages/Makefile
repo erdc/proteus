@@ -282,7 +282,7 @@ editConfig_petsc:
 	cd petscConfig && ${EDITOR} configure.${PROTEUS_ARCH}
 
 config_petsc:
-	cd ${PETSC_VERSION} && ../petscConfig/configure.${PROTEUS_ARCH}  > ../config_petsc_progress 2>&1
+	cd ${PETSC_VERSION} && PETSC_DIR=${PROTEUS}/externalPackages/${PETSC_VERSION} ../petscConfig/configure.${PROTEUS_ARCH}  > ../config_petsc_progress 2>&1
 
 build_petsc:
 	cd ${PETSC_VERSION} && make PETSC_DIR=${PROTEUS}/externalPackages/${PETSC_VERSION} PETSC_ARCH=${PROTEUS_ARCH} all > ../build_petsc_progress 2>&1
