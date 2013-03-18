@@ -1596,6 +1596,7 @@ DaetkPetscSys_size(DaetkPetscSys *self,
           mesh.subdomainp->elementNodesArray[eN*mesh.subdomainp->nNodes_element+nN] = 
             nodeNumbering_global2subdomain[elementNodesArray_new[eN_global*mesh.nNodes_element + nN]];
       }
+
     if (mesh.subdomainp->nNodes_element == 2)
       {
         constructElementBoundaryElementsArray_edge(*mesh.subdomainp);
@@ -2478,6 +2479,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   mesh.subdomainp->px = mesh.px;
   mesh.subdomainp->py = mesh.py;
   mesh.subdomainp->pz = mesh.pz;
+
   if (mesh.subdomainp->px != 0)
     {
       //constructElementBoundaryElementsArray_tetrahedron(*mesh.subdomainp);
@@ -3478,6 +3480,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
    mesh.subdomainp->px = mesh.px;
    mesh.subdomainp->py = mesh.py;
    mesh.subdomainp->pz = mesh.pz; 
+
   if (mesh.px != 0)    
       {  
         //constructElementBoundaryElementsArrayWithGivenElementBoundaryNumbers_tetrahedron(*mesh.subdomainp);

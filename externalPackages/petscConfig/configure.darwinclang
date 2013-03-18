@@ -1,14 +1,11 @@
 ${PROTEUS_PYTHON} ./config/configure.py \
 --prefix=${PROTEUS_PREFIX} \
 --PETSC_ARCH=${PROTEUS_ARCH} \
---PETSC_DIR=${PROTEUS}/externalPackages/petsc \
---with-clanguage=C \
---CC=/usr/bin/clang \
---CXX=/usr/bin/clang++ \
---FC=/usr/local/bin/gfortran \
+--PETSC_DIR=${PETSC_DIR} \
+--CC=/usr/local/bin/mpicc \
+--CXX=/usr/local/bin/mpiCC \
+--FC=/usr/local/bin/mpif90 \
 --with-shared-libraries=1 \
---download-mpich=1 \
---download-cmake=1 \
 --download-metis=1 \
 --download-parmetis=1 \
 --download-superlu=1 \
