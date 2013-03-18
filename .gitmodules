@@ -88,3 +88,6 @@
 [submodule "externalPackages/pyproj"]
 	path = externalPackages/pyproj
 	url = git@github.com:erdc-cm/pyproj.git
+[submodule "externalPackages/netcdf"]
+	path = externalPackages/netcdf
+	url = git@github.com:erdc-cm/netCDF.git
