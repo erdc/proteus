@@ -91,3 +91,6 @@
 [submodule "externalPackages/netcdf"]
 	path = externalPackages/netcdf
 	url = git@github.com:erdc-cm/netCDF.git
+[submodule "externalPackages/netcdf4-python"]
+	path = externalPackages/netcdf4-python
+	url = git@github.com:erdc-cm/netCDF4-Python.git
