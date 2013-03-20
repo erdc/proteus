@@ -66,4 +66,4 @@
 	url = git://github.com/nose-devs/nose.git
 [submodule "externalPackages/petsc-dev"]
 	path = externalPackages/petsc-dev
-	url = https://bitbucket.org/petsc/petsc
+	url = git@github.com:petsc/petsc.git
