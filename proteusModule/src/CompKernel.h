@@ -775,7 +775,7 @@ public:
   
     metricTensor[HXHX] = boundaryJac[XHX]*boundaryJac[XHX]+boundaryJac[YHX]*boundaryJac[YHX];
   
-    metricTensorDetSqrt=fabs(metricTensor[HXHX]);
+    metricTensorDetSqrt=sqrt(metricTensor[HXHX]);
   }
 
   inline void calculateMappingVelocity_elementBoundary(const int eN,
