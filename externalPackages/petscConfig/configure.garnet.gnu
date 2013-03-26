@@ -2,7 +2,7 @@ ${PROTEUS_PYTHON} ./config/configure.py \
 --useThreads=0 \
 --prefix=${PROTEUS_PREFIX} \
 --PETSC_ARCH=${PROTEUS_ARCH} \
---PETSC_DIR=${PROTEUS}/externalPackages/petsc \
+--PETSC_DIR=${PROTEUS}/externalPackages/petsc-dev \
 --with-clanguage=C \
 --CC=cc \
 --CXX=CC \
