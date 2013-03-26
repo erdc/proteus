@@ -775,7 +775,7 @@ public:
   
     metricTensor[HXHX] = boundaryJac[XHX]*boundaryJac[XHX]+boundaryJac[YHX]*boundaryJac[YHX];
   
-    metricTensorDetSqrt=fabs(metricTensor[HXHX]);
+    metricTensorDetSqrt=sqrt(metricTensor[HXHX]);
   }
 
   inline void calculateMappingVelocity_elementBoundary(const int eN,
@@ -1297,8 +1297,7 @@ public:
     for (int I=0;I<NSPACE;I++)
       n_grad_u += grad_u[I]*grad_u[I];
     num = shockCapturingDiffusion*0.5*h*fabs(strong_residual);
-    den = sqrt(n_grad_u) + 1.0e-8;
-    //cek hack shockCapturingDiffusion*fabs(strong_residual)*grad_phi_G_grad_phi
+    den = sqrt(n_grad_u+1.0e-12);
     numDiff = num/den;
   }
 
@@ -1313,8 +1312,7 @@ public:
     for (int I=0;I<NSPACE;I++)
       for (int J=0;J<NSPACE;J++)
         den += grad_u[I]*G[I*NSPACE+J]*grad_u[J];
-
-    numDiff = shockCapturingDiffusion*fabs(strong_residual)/(sqrt(den) + 1.0e-6);
+    numDiff = shockCapturingDiffusion*fabs(strong_residual)/(sqrt(den+1.0e-12));
   }
 
   inline void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
@@ -1330,9 +1328,8 @@ public:
       for (int J=0;J<NSPACE;J++)
         den += grad_u[I]*G[I*NSPACE+J]*grad_u[J];
 
-    double h2_uref_1 = 1.0/(sqrt(den) + 1.0e-6);
-    double h2_uref_2 = 1.0/(uref*sqrt(G_dd_G));
-
+    double h2_uref_1 = 1.0/(sqrt(den+1.0e-12));
+    double h2_uref_2 = 1.0/(uref*sqrt(G_dd_G+1.0e-12));
     numDiff = shockCapturingDiffusion*fabs(strong_residual)*pow(h2_uref_1, 2.0-beta)*pow(h2_uref_2,beta-1.0);
   }
 
@@ -1373,7 +1370,7 @@ public:
     for (int I=0;I<NSPACE;I++)
       n_grad_u += grad_u[I]*grad_u[I];
     num = shockCapturingDiffusion*0.5*h*fabs(strong_residual);
-    gradNorm = sqrt(n_grad_u) + 1.0e-8;
+    gradNorm = sqrt(n_grad_u+1.0e-12);
     //cek hack shockCapturingDiffusion*fabs(strong_residual)*grad_phi_G_grad_phi    
     numDiff = num/gradNorm_last;
   }
@@ -1441,12 +1438,12 @@ public:
 							      const double& sigma,
 							      const double& u,
 							      const double& bc_u,
-							      const double normal[3],
+							      const double normal[NSPACE],
 							      const double& a,
-							      const double grad_w_dS[3])
+							      const double grad_w_dS[NSPACE])
   {
     double tmp=0.0;
-    for(int I=0;I<3;I++)
+    for(int I=0;I<NSPACE;I++)
       {
 	tmp += normal[I]*grad_w_dS[I];
       }
@@ -1458,12 +1455,12 @@ public:
 								      const int& isFluxBoundary,
 								      const double& sigma,
 								      const double& v,
-								      const double normal[3],
+								      const double normal[NSPACE],
 								      const double& a,
-								      const double grad_w_dS[3])
+								      const double grad_w_dS[NSPACE])
   {
     double tmp=0.0;
-    for(int I=0;I<3;I++)
+    for(int I=0;I<NSPACE;I++)
       {
 	tmp += normal[I]*grad_w_dS[I];
       }
@@ -1476,14 +1473,14 @@ public:
 							const double& sigma,
 							const double& u,
 							const double& bc_u,
-							const double normal[3],
+							const double normal[NSPACE],
 							int* rowptr,
 							int* colind,
 							double* a,
-							const double grad_w_dS[3])
+							const double grad_w_dS[NSPACE])
   {
     double tmp=0.0;
-    for(int I=0;I<3;I++)
+    for(int I=0;I<NSPACE;I++)
       for (int m=rowptr[I];m<rowptr[I+1];m++)
 	tmp += (1.0-isFluxBoundary)*isDOFBoundary*sigma*(u-bc_u)*a[m]*normal[colind[m]]*grad_w_dS[I];
     return tmp;
@@ -1493,14 +1490,14 @@ public:
 								const int& isFluxBoundary,
 								const double& sigma,
 								const double& v,
-								const double normal[3],
+								const double normal[NSPACE],
 								int* rowptr,
 								int* colind,
 								double* a,
-								const double grad_w_dS[3])
+								const double grad_w_dS[NSPACE])
   {
     double tmp=0.0;
-    for(int I=0;I<3;I++)
+    for(int I=0;I<NSPACE;I++)
       for (int m=rowptr[I];m<rowptr[I+1];m++)
 	tmp += (1.0-isFluxBoundary)*isDOFBoundary*sigma*v*a[m]*normal[colind[m]]*grad_w_dS[I];
     return tmp;
@@ -1765,7 +1762,7 @@ public:
     for (int I=0;I<2;I++)
       for (int J=0;J<2;J++)
 	h += v[I]*G[I*2+J]*v[J];
-    h = 1.0/sqrt(h+1.0e-16);//cek hack
+    h = 1.0/sqrt(h+1.0e-12);
   }
   inline void valFromDOF(const double* dof,const int* l2g_element,const double* trial_ref,double& val)
   {
@@ -2050,7 +2047,7 @@ public:
     for (int I=0;I<2;I++)
       n_grad_u += grad_u[I]*grad_u[I];
     num = shockCapturingDiffusion*0.5*h*fabs(strong_residual);
-    den = sqrt(n_grad_u) + 1.0e-8;
+    den = sqrt(n_grad_u+1.0e-12);
     //cek hack shockCapturingDiffusion*fabs(strong_residual)*grad_phi_G_grad_phi
     numDiff = num/den;
   }
@@ -2067,7 +2064,7 @@ public:
       for (int J=0;J<2;J++)
         den += grad_u[I]*G[I*2+J]*grad_u[J];
 
-    numDiff = shockCapturingDiffusion*fabs(strong_residual)/(sqrt(den) + 1.0e-6);
+    numDiff = shockCapturingDiffusion*fabs(strong_residual)/(sqrt(den+1.0e-12));
   }
 
   inline void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
@@ -2083,9 +2080,8 @@ public:
       for (int J=0;J<2;J++)
         den += grad_u[I]*G[I*2+J]*grad_u[J];
 
-    double h2_uref_1 = 1.0/(sqrt(den) + 1.0e-6);
-    double h2_uref_2 = 1.0/(uref*sqrt(G_dd_G));
-
+    double h2_uref_1 = 1.0/(sqrt(den+1.0e-12));
+    double h2_uref_2 = 1.0/(uref*sqrt(G_dd_G+1.0e-12));
     numDiff = shockCapturingDiffusion*fabs(strong_residual)*pow(h2_uref_1, 2.0-beta)*pow(h2_uref_2,beta-1.0);
   }
 
@@ -2126,7 +2122,7 @@ public:
     for (int I=0;I<2;I++)
       n_grad_u += grad_u[I]*grad_u[I];
     num = shockCapturingDiffusion*0.5*h*fabs(strong_residual);
-    gradNorm = sqrt(n_grad_u) + 1.0e-8;
+    gradNorm = sqrt(n_grad_u+1.0e-12);
     //cek hack shockCapturingDiffusion*fabs(strong_residual)*grad_phi_G_grad_phi    
     numDiff = num/gradNorm_last;
   }

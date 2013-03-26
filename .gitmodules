@@ -64,6 +64,6 @@
 [submodule "externalPackages/nose"]
 	path = externalPackages/nose
 	url = git://github.com/nose-devs/nose.git
-[submodule "externalPackages/petsc"]
-	path = externalPackages/petsc
-	url = git@github.com:erdc-cm/petsc-dev.git
+[submodule "externalPackages/petsc-dev"]
+	path = externalPackages/petsc-dev
+	url = git@bitbucket.org:petsc/petsc.git

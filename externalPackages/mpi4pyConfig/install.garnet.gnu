@@ -1,1 +1,1 @@
-${PROTEUS_PYTHON} setup.py install
+${PROTEUS_PYTHON} setup.py install install_exe

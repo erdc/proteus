@@ -272,8 +272,10 @@ class NonlinearSolver:
             self.solveCalls_failed +=1
             self.recordedIts_failed +=self.its
             self.failedFlag = True
-        self.its+=1
-        self.convergingIts+=1
+            log("   Newton it %d == maxIts FAILED convergenceTest = %s" % (self.its,self.convergenceTest))
+        else:
+            self.its+=1
+            self.convergingIts+=1
         return self.failedFlag
     def computeAverages(self):
         self.recordedIts+=self.its
@@ -425,9 +427,8 @@ class Newton(NonlinearSolver):
         self.gammaK_max=0.0
         while (not self.converged(r) and
                not self.failed()):
-            if self.maxIts>1:
-                log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g"
-                            % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+                % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
                 self.F.getJacobian(self.J)
@@ -617,13 +618,11 @@ class Newton(NonlinearSolver):
                     Viewers.newPlot()
                     Viewers.newWindow()
                 #raw_input("wait")
-            if self.maxIts>1:
-                log("   Newton it %d norm(r) = %12.5e  %12.5g \t\t norm(r)/(rtol*norm(r0)+atol) = %g"
-                             % (self.its,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+                % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             return self.failedFlag
-        if self.maxIts>1:
-            log("   Newton it %d norm(r) = %12.5e  %12.5g \t\t norm(r)/(rtol*norm(r0)+atol) = %g"
-                           % (self.its,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+        log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+            % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
 class NewtonNS(NonlinearSolver):
     """
     A simple iterative solver that is Newton's method
@@ -762,8 +761,8 @@ class NewtonNS(NonlinearSolver):
         self.gammaK_max=0.0
         while (not self.converged(r) and
                not self.failed()):
-            log("   Newton it %d Mom.  norm(r) = %12.5e   %g" % (self.its-1,self.norm_mom_r,100*self.norm_mom_r/self.norm_mom_r0),level=1)
-            log("   Newton it %d Cont. norm(r) = %12.5e   %g" % (self.its-1,self.norm_cont_r,100*self.norm_cont_r/self.norm_cont_r0),level=1)
+            log("   Newton it %d Mom.  norm(r) = %12.5e   tol = %12.5e" % (self.its-1,self.norm_mom_r,self.atol_r),level=1)
+            log("   Newton it %d Cont. norm(r) = %12.5e   tol = %12.5e" % (self.its-1,self.norm_cont_r,self.rtol_r*self.norm_mom_r0  + self.atol_r),level=1)
 
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
@@ -921,8 +920,8 @@ class NewtonNS(NonlinearSolver):
                     Viewers.newWindow()
                 #raw_input("wait")
             # return self.failedFlag
-        log("   Final       Mom.  norm(r) = %12.5e   %g" % (self.norm_mom_r,100*self.norm_mom_r/self.norm_mom_r0),level=1)
-        log("   Final       Cont. norm(r) = %12.5e   %g" % (self.norm_cont_r,100*self.norm_cont_r/self.norm_cont_r0),level=1)
+        log("   Final       Mom.  norm(r) = %12.5e   %12.5e" % (self.norm_mom_r,self.rtol_r*self.norm_mom_r0  + self.atol_r),level=1)
+        log("   Final       Cont. norm(r) = %12.5e   %12.5e" % (self.norm_cont_r,self.rtol_r*self.norm_mom_r0  + self.atol_r),level=1)
         #return self.failedFlag
         #memory()
         log(memory("NSNewton","NSNewton"),level=4)
