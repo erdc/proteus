@@ -15,6 +15,6 @@ ${PROTEUS_PYTHON} ./config/configure.py \
 --download-superlu_dist=1 \
 --download-hypre=1 \
 --PETSC_ARCH=${PROTEUS_ARCH} \
---PETSC_DIR=${PROTEUS}/externalPackages/petsc \
+--PETSC_DIR=${PROTEUS}/externalPackages/petsc-dev \
 --prefix=${PROTEUS_PREFIX}
 #--with-blas-lapack-lib=[mkl_lapack,mkl_mc3,mkl_def,mkl_intel_lp64,mkl_sequential,mkl_core] \
