@@ -16,7 +16,7 @@ easy_install:
 	${PROTEUS_PYTHON} distribute_setup.py
 
 pexpect:
-	${REHASH} && pip install pexpect
+	${REHASH} && easy_install pexpect
 
 install: install_core
 
