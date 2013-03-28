@@ -125,6 +125,15 @@ def memory(message=None,className='',memSaved=None):
         if memHardlimit:
             if mem > memHardlimit:
                 import sys
+                if className == None:
+                    className = "UnknownClass"
+                if caller == None:
+                    caller="UnknownCaller"
+                if line == None:
+                    line = "Unknown Line"
+                if message == None:
+                    message = ''
+                print filename.split("/")[-1],className,caller,`line`,message,memInc,mem,memHardlimit
                 sys.exit("ERROR: MEMORY HARDLIMIT REACHED, EXIT From "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %d MB in routine, %d MB in program, %d MB is Hardlimit" % (memInc,mem,memHardlimit))
         if message:
             return "In "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %d MB in routine, %d MB in program" % (memInc,mem)
