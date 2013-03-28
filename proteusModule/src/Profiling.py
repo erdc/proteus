@@ -5,9 +5,9 @@ import gc
 import os
 import inspect
 
-global memHardlimit,memLast,memLog,logFile,logLevel,verbose,procID,logAllProcesses,flushBuffer, preInitBuffer
+global memHardLimit,memLast,memLog,logFile,logLevel,verbose,procID,logAllProcesses,flushBuffer, preInitBuffer
 
-memHardlimit=0.0
+memHardLimit=0.0
 memMax=0.0
 memLast=0.0
 memLog=False
@@ -24,16 +24,18 @@ def memProfOn():
     global memLog
     memLog = True
 
-def memHardlimitOn(value):
-    global memHardlimit
-    memHardlimit = value*1024.0
+def memHardLimitOn(value):
+    global memHardLimit
+    if not memLog:
+        memProfOn()
+    memHardLimit = value*1024.0
 
 #these are so the optparser can turn these on and off
 def memProfOn_callback(option,opt,value,parser):
     memProfOn()
 
-def memHardlimitOn_callback(option,opt,value,parser):
-    memHardlimitOn(value)
+def memHardLimitOn_callback(option,opt,value,parser):
+    memHardLimitOn(value)
 
 def verboseOn_callback(option,opt,value,parser):
     global verbose
@@ -122,8 +124,8 @@ def memory(message=None,className='',memSaved=None):
         filename = inspect.stack()[1][1]
         if className:
             className += '.'
-        if memHardlimit:
-            if mem > memHardlimit:
+        if memHardLimit:
+            if mem > memHardLimit:
                 import sys
                 if className == None:
                     className = "UnknownClass"
@@ -133,8 +135,7 @@ def memory(message=None,className='',memSaved=None):
                     line = "Unknown Line"
                 if message == None:
                     message = ''
-                print filename.split("/")[-1],className,caller,`line`,message,memInc,mem,memHardlimit
-                sys.exit("ERROR: MEMORY HARDLIMIT REACHED, EXIT From "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %d MB in routine, %d MB in program, %d MB is Hardlimit" % (memInc,mem,memHardlimit))
+                sys.exit("ERROR: MEMORY HARDLIMIT REACHED, EXIT From "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %d MB in routine, %d MB in program, %d MB is hard limit" % (memInc,mem,memHardLimit))
         if message:
             return "In "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %d MB in routine, %d MB in program" % (memInc,mem)
 
