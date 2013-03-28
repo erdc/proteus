@@ -91,26 +91,32 @@ def memory(message=None,className='',memSaved=None):
     if memLog:
         gc.collect()
         try:
-            import memory_profiler
-            mem = memory_usage(-1,interval=0.1,timeout=0.1)[0]
+            from memory_profiler import memory_usage
+            memList = memory_usage(-1)
+            if len(memList) < 1:
+                memList = memory_usage(-1,timeout=10)
+                assert(len(memList) > 0)
+            mem = memList[-1]
         except:
-            try:
-                mem = int(os.popen('ps -p %d -o rss|tail -1' % os.getpid()).read())/1024.0
-            except:
-                try:
-                    #CLE doesn't have full ps functionality
-                    #try to find first occurence of pid, then get memory usage slot
-                    #mwf debug
-                    #import pdb
-                    #pdb.set_trace()
-                    plist = os.popen('ps ').read()
-                    pr = plist.split('%s' % os.getpid())
-                    #print 'pr = %s ' % pr
-                    #print 'pr[1] = %s ' % pr[1]
-                    mem = int(pr[1].split()[1])/1024.0
-                except:
-                    logEvent("memory function doesn't work on this platform\n")
-                    mem = 0
+            raise
+        # except:
+#             try:
+#                 mem = int(os.popen('ps -p %d -o rss|tail -1' % os.getpid()).read())/1024.0
+#             except:
+#                 try:
+#                     #CLE doesn't have full ps functionality
+#                     #try to find first occurence of pid, then get memory usage slot
+#                     #mwf debug
+#                     #import pdb
+#                     #pdb.set_trace()
+#                     plist = os.popen('ps ').read()
+#                     pr = plist.split('%s' % os.getpid())
+#                     #print 'pr = %s ' % pr
+#                     #print 'pr[1] = %s ' % pr[1]
+#                     mem = int(pr[1].split()[1])/1024.0
+#                 except:
+#                     logEvent("memory function doesn't work on this platform\n")
+#                     mem = 0
         if mem > memMax:
             memMax = mem
         if memSaved != None:
@@ -127,6 +133,7 @@ def memory(message=None,className='',memSaved=None):
         if memHardLimit:
             if mem > memHardLimit:
                 import sys
+                from mpi4py import MPI
                 if className == None:
                     className = "UnknownClass"
                 if caller == None:
@@ -135,7 +142,9 @@ def memory(message=None,className='',memSaved=None):
                     line = "Unknown Line"
                 if message == None:
                     message = ''
-                sys.exit("ERROR: MEMORY HARDLIMIT REACHED, EXIT From "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %d MB in routine, %d MB in program, %d MB is hard limit" % (memInc,mem,memHardLimit))
+                logEvent("PROTEUS ERROR: MEMORY HARDLIMIT REACHED, EXIT From "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %d MB in routine, %d MB in program, %d MB is hard limit" % (memInc,mem,memHardLimit))
+                MPI.COMM_WORLD.Abort(1)
+                sys.exit("MPI.COMM_WORLD.Abort(1); exit(1)")
         if message:
             return "In "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %d MB in routine, %d MB in program" % (memInc,mem)
 
@@ -146,26 +155,28 @@ def memorySummary():
     if memLog:
         gc.collect()
         try:
-            import memory_profiler
-            mem = memory_usage(-1,interval=0.1,timeout=0.1)[0]
+            from memory_profile import memory_usage
+            mem = memory_usage(-1)[0]
         except:
-            try:
-                mem = int(os.popen('ps -p %d -o vsz|tail -1' % os.getpid()).read())/1024.0
-            except:
-                try:
-                    #CLE doesn't have full ps functionality
-                    #try to find first occurence of pid, then get memory usage slot
-                    #mwf debug
-                    #import pdb
-                    #pdb.set_trace()
-                    plist = os.popen('ps ').read()
-                    pr = plist.split('%s' % os.getpid())
-                    #print 'pr = %s ' % pr
-                    #print 'pr[1] = %s ' % pr[1]
-                    mem = int(pr[1].split()[1])/1024.0
-                except:
-                    logEvent("memory function doesn't work on this platform\n")
-                    mem = 0
+            raise
+        # except:
+#             try:
+#                 mem = int(os.popen('ps -p %d -o vsz|tail -1' % os.getpid()).read())/1024.0
+#             except:
+#                 try:
+#                     #CLE doesn't have full ps functionality
+#                     #try to find first occurence of pid, then get memory usage slot
+#                     #mwf debug
+#                     #import pdb
+#                     #pdb.set_trace()
+#                     plist = os.popen('ps ').read()
+#                     pr = plist.split('%s' % os.getpid())
+#                     #print 'pr = %s ' % pr
+#                     #print 'pr[1] = %s ' % pr[1]
+#                     mem = int(pr[1].split()[1])/1024.0
+#                 except:
+#                     logEvent("memory function doesn't work on this platform\n")
+#                     mem = 0
         if mem > 0:
             for pair in memList:
                 logEvent(`pair[0]`+"  %"+`100.0*pair[1]/memMax`)
