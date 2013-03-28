@@ -570,6 +570,7 @@ class  NS_base:#(HasTraits):
                                                         rList=m.rList,
                                                         par_uList=m.par_uList,
                                                         par_rList=m.par_rList)
+                Profiling.memory("solver.solveMultilevel")
                 if solverFailed:
                     log("Spin-Up Step Failed t=%12.5e, dt=%12.5e for model %s, CONTINUING ANYWAY!" %  (m.stepController.t_model,
                                                                                                      m.stepController.dt_model,
@@ -700,6 +701,7 @@ class  NS_base:#(HasTraits):
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,
                                                                             par_rList=model.par_rList)
+                                Profiling.memory("solver.solveMultilevel")
                                 #self.viewSolution(model,index)
                                 if self.opts.wait:
                                     raw_input("Hit any key to continue")
