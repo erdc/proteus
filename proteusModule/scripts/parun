@@ -104,11 +104,11 @@ parser.add_option("-m", "--memory",
                   help="Track memory usage of the  run",
                   action="callback",
                   callback=Profiling.memProfOn_callback)
-parser.add_option("-M", "--memoryHardlimit",
+parser.add_option("-M", "--memoryHardLimit",
                   help="Abort program if you reach the per-MPI-process memory hardlimit (in GB)",
                   action="callback",
                   type="float",
-                  callback=Profiling.memHardlimitOn_callback,
+                  callback=Profiling.memHardLimitOn_callback,
                   default = -1.0,
                   dest = "memHardLimit")
 parser.add_option("-l", "--log",
