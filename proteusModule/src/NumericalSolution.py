@@ -858,10 +858,12 @@ class  NS_base:#(HasTraits):
         self.writeVectors=True
         if self.so.useOneArchive:
             model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],self.tnList[0],self.tCount,initialPhase=True,
-                                                                   writeVectors=self.writeVectors,meshChanged=True,femSpaceWritten=self.femSpaceWritten)
+                                                                   writeVectors=self.writeVectors,meshChanged=True,femSpaceWritten=self.femSpaceWritten,
+                                                                   writeVelocityPostProcessor=self.opts.writeVPP)
         else:
             model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],self.tnList[0],self.tCount,initialPhase=True,
-                                                                   writeVectors=self.writeVectors,meshChanged=True)
+                                                                   writeVectors=self.writeVectors,meshChanged=True,
+                                                                   writeVelocityPostProcessor=self.opts.writeVPP)
         #could just pull the code and flags out from SimTools rathter than asking it to parse them
         #uses values in simFlags['storeQuantities']
         #q dictionary
@@ -903,11 +905,13 @@ class  NS_base:#(HasTraits):
                 self.femSpaceWritten={}
             model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],t,self.tCount,
                                                                    initialPhase=False,
-                                                                   writeVectors=self.writeVectors,meshChanged=True,femSpaceWritten=self.femSpaceWritten)
+                                                                   writeVectors=self.writeVectors,meshChanged=True,femSpaceWritten=self.femSpaceWritten,
+                                                                   writeVelocityPostProcessor=self.opts.writeVPP)
         else:
             model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],t,self.tCount,
                                                                    initialPhase=False,
-                                                                   writeVectors=self.writeVectors,meshChanged=True)
+                                                                   writeVectors=self.writeVectors,meshChanged=True,
+                                                                   writeVelocityPostProcessor=self.opts.writeVPP)
         model.levelModelList[-1].archiveAnalyticalSolutions(self.ar[index],self.pList[index].analyticalSolution,
                                                             t,
                                                             self.tCount)
