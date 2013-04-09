@@ -7,7 +7,7 @@
 include versionsConfig/versions.${PROTEUS_ARCH}
 REHASH=hash
 
-all: install pip pexpect
+all: install pip pexpect psutil memory_profiler
 
 pip: easy_install
 	${REHASH} && easy_install pip
@@ -16,7 +16,13 @@ easy_install:
 	${PROTEUS_PYTHON} distribute_setup.py
 
 pexpect:
-	${REHASH} && pip install pexpect
+	${REHASH} && easy_install pexpect
+
+psutil:
+	${REHASH} && easy_install -U psutil
+
+memory_profiler:
+	${REHASH} && easy_install -U memory_profiler
 
 install: install_core
 
