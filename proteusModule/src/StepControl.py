@@ -237,7 +237,7 @@ class PsiTCtte_controller(SC_base):
         if self.nssteps == 0:
             self.res0 = self.model.solver.solverList[-1].norm_r0
         res = self.model.solver.solverList[-1].norm_r0
-        print "res dt",res,self.dt_model,self.res0,self.rtol,self.atol
+        #print "res dt",res,self.dt_model,self.res0,self.rtol,self.atol
         ssError = res/(self.res0*self.rtol + self.atol)
         #print "ssError",ssError
         for m in self.model.levelModelList:

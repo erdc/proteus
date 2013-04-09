@@ -3844,7 +3844,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                       self.ebq['sqrt(det(g))'],
                                                                       self.ebq[('w',ci)],
                                                                       self.ebq[('w*dS_'+I,ci,ck)])
-                if not self.ebq.has_key(('w*dS_f',ci)):
+                if not self.ebq.has_key(('w*dS_f',ci)) and len(self.elementBoundaryIntegralKeys) > 0:
                     for ck in range(self.nc):
                         try:
                             self.ebq[('w*dS_f',ci)] = self.ebq[('w*dS_a',ci,ck)]

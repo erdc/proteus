@@ -82,7 +82,7 @@ class TI_base:
         self.alpha_bdf = 0.0
         self.beta_bdf  = {}
         self.m_tmp  = {}
-        for ci in transport.coefficients.mass.keys():
+        for ci in self.massComponents:
             if transport.q.has_key(('m',ci)):
                 self.m_tmp[ci] = transport.q[('m',ci)].copy()
                 self.beta_bdf[ci] = transport.q[('m',ci)].copy()
@@ -228,7 +228,7 @@ class BackwardEuler(TI_base):
         self.m_tmp={}
         self.m_ip_last={}
         self.m_ip_tmp={}
-        for ci in transport.coefficients.mass.keys():
+        for ci in self.massComponents:
             if transport.q.has_key(('m_last',ci)):
                 self.m_last[ci] = transport.q[('m_last',ci)]
             else:
@@ -244,14 +244,14 @@ class BackwardEuler(TI_base):
         self.m_history = []; self.m_history.append({})
         self.alpha_bdf = 1.0
         self.beta_bdf  = {}
-        for ci in transport.coefficients.mass.keys():
+        for ci in self.massComponents:
             self.m_history[0][ci] = self.m_last[ci]
             self.beta_bdf[ci] = numpy.copy(self.m_tmp[ci])
 
     def calculateElementCoefficients(self,q):
         #for bdf interface
         self.calculateCoefs()
-        for ci in self.m_last.keys():
+        for ci in self.massComponents:
             self.m_tmp[ci][:] = q[('m',ci)]
             q[('mt',ci)][:]   = q[('m',ci)]
             q[('mt',ci)] -= self.m_last[ci]
@@ -284,14 +284,14 @@ class BackwardEuler(TI_base):
         """
         Push necessary information into time history arrays
         """
-        for ci in self.m_last.keys():
+        for ci in self.massComponents:
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
         if self.integrateInterpolationPoints:
             for ci in self.m_last.keys():
                 self.m_ip_last[ci].flat[:] = self.m_ip_tmp[ci].flat
     def updateTimeHistory(self,resetFromDOF=False):
         self.tLast = self.t
-        for ci in self.m_last.keys():
+        for ci in self.massComponents:
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
         if self.integrateInterpolationPoints:
             for ci in self.m_last.keys():
@@ -306,7 +306,7 @@ class BackwardEuler(TI_base):
 
 class BackwardEuler_cfl(BackwardEuler):
     """
-    Take a fraction of the max (over all components and elements) CFL
+    Take a fraction of the max (over all components and elements)
     """
     def __init__(self,transport,runCFL=0.9,integrateInterpolationPoints=False):
         BackwardEuler.__init__(self,transport,integrateInterpolationPoints=integrateInterpolationPoints)
@@ -338,7 +338,7 @@ class BackwardEuler_cfl(BackwardEuler):
         self.choose_dt()
         self.t = t0+self.dt
     def updateTimeHistory(self,resetFromDOF=False):
-        for ci in self.m_last.keys():
+        for ci in self.massComponents:
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
         self.dtLast = self.dt
         self.tLast = self.t
@@ -371,8 +371,18 @@ class FLCBDF(TI_base):
         self.calls=0
         self.m={}
         self.m_tmp={}
+        self.beta_bdf={}
+        self.alpha_bdf=0.0
+        print "mass components=====================",self.massComponents
         for ci in self.massComponents:
             self.m_tmp[ci] = transport.q[('m',ci)]
+            self.m[ci]=transport.q[('m',ci)]
+            self.beta_bdf[ci] = transport.q[('m',ci)].copy()
+            self.beta_bdf[ci][:]=0.0
+        self.beta_bdf_dummy = self.beta_bdf[ci].copy()#cek hack assumes all components have same quadrature
+        self.beta_bdf_dummy[:]=0.0
+        self.beta_bdf_dummy2 = self.beta_bdf[ci].copy()#cek hack assumes all components have same quadrature
+        self.beta_bdf_dummy2[:]=0.0
         self.isAdaptive=True
         self.provides_initialGuess = True
     def initialize_dt(self,t0,tOut,q):
@@ -390,14 +400,21 @@ class FLCBDF(TI_base):
         for ci in range(self.nc): self.flcbdf[('u',ci)].initialize_dt(t0,tOut,self.transport.u[ci].dof,self.Ddof_Dt[ci])
         self.t = self.tLast + self.dt
     def initializeTimeHistory(self,resetFromDOF=False):
+        log("Initializing FLCBDF time history")
         self.initCalls +=1
         for ci in self.massComponents:
             self.flcbdf[ci].initializeTimeHistory(self.transport.q[('m',ci)],self.transport.q[('mt',ci)])
         for ci in range(self.nc): self.flcbdf[('u',ci)].initializeTimeHistory(self.transport.u[ci].dof,self.Ddof_Dt[ci])
+    def calculateCoefs(self):
+        log("Calculating alpha_bdf and beta_bdf for FLCBDF")
+        for ci in self.massComponents:
+            self.alpha_bdf = self.flcbdf[ci].getCurrentAlpha()
+            self.flcbdf[ci].calculate_yprime(self.beta_bdf_dummy,self.beta_bdf_dummy,self.beta_bdf[ci],self.beta_bdf_dummy2)
     def calculateElementCoefficients(self,q):
         #mwf debug
-        #import pdb
-        #pdb.set_trace()
+        import pdb
+        pdb.set_trace()
+        
         for ci in self.massComponents:
             #! \todo fix dm,dmt calculation for non-diagonal nonlinearity
             #mwf hack what to do if no diagonal dependence at all?
@@ -417,6 +434,7 @@ class FLCBDF(TI_base):
                     #import pdb
                     #pdb.set_trace()
                     alpha = self.flcbdf[ci].getCurrentAlpha()
+                    self.alpha_bdf = alpha
                     q[('dmt',ci,cj)].flat[:] = q[('dm',ci,cj)].flat
                     q[('dmt',ci,cj)] *= alpha
                     #mwf debug
@@ -426,6 +444,7 @@ class FLCBDF(TI_base):
                     #import pdb
                     #pdb.set_trace()
                     alpha = self.flcbdf[ci].getCurrentAlpha()
+                    self.alpha_bdf = alpha
                     q[('dmt_sge',ci,cj)].flat[:] = q[('dm_sge',ci,cj)].flat
                     q[('dmt_sge',ci,cj)] *= alpha
 
@@ -439,22 +458,24 @@ class FLCBDF(TI_base):
 #                     except:
 #                         pass
 #                 assert mwfHackedAyprime, "couldn't find a key for dm,%s " % ci
-            self.m[ci]=q[('m',ci)]
             if numpy.isnan(q[('mt',ci)]).any():
                 import pdb
                 pdb.set_trace()
         for ci in range(self.nc):
             self.flcbdf[('u',ci)].calculate_yprime(self.transport.u[ci].dof,self.dummy[ci],self.Ddof_Dt[ci],self.dummy[ci])
     def choose_dt(self):
+        log("choosing dt for FLCBDF")
         self.dt = min([self.flcbdf[ci].choose_dt(self.tLast,self.tLast+100.0*self.dt) for ci in self.massComponents])
         for ci in range(self.nc): self.flcbdf[('u',ci)].choose_dt(self.tLast,self.tLast+100.0*self.dt)
         self.t = self.tLast + self.dt
     def set_dt(self,DTSET):
+        log("setting dt for FLCBDF")
         self.dt = DTSET
         self.t = self.tLast + self.dt
         for ci in self.massComponents: self.flcbdf[ci].set_dt(DTSET)
         for ci in range(self.nc): self.flcbdf[('u',ci)].set_dt(DTSET)
     def updateTimeHistory(self,resetFromDOF=False):
+        log("updating time history for FLCBDF")
         self.tLast = self.t
         for ci in self.massComponents: self.flcbdf[ci].stepTaken(self.m[ci])
         for ci in range(self.nc): self.flcbdf[('u',ci)].stepTaken(self.transport.u[ci].dof)
@@ -471,6 +492,7 @@ class FLCBDF(TI_base):
         """
         pass
     def lastStepErrorOk(self):
+        log("checking error for FLCBDF")
         OK=True
         for ci in self.massComponents:
             OK = (OK and bool(self.flcbdf[ci].lastStepErrorOk(self.m[ci])))
@@ -491,11 +513,11 @@ class PsiTCtte(BackwardEuler_cfl):
         self.dt_history = numpy.ones(nhist,'d')
         self.dt_history.fill(-12345.0)
         self.dt_tmp = -12345.0
-        for ci in transport.coefficients.mass.keys():
+        for ci in self.massComponents:
             self.mt_tmp[ci] = numpy.array(transport.q[('mt',ci)])
         for it in range(nhist):
             self.mt_history[it] = {}
-            for ci in transport.coefficients.mass.keys():
+            for ci in self.massComponents:
                 self.mt_history[it][ci] = numpy.array(transport.q[('mt',ci)])
         #mwf for keeping track of calls to update history calls
         #cek todo should get rid of this flag if no longer needed
@@ -564,11 +586,11 @@ class PsiTCtte_new(BackwardEuler):
         self.dt_history = numpy.ones(nhist,'d')
         self.dt_history.fill(-12345.0)
         self.dt_tmp = -12345.0
-        for ci in transport.coefficients.mass.keys():
+        for ci in self.massComponents:
             self.mt_tmp[ci] = numpy.array(transport.q[('mt',ci)])
         for it in range(nhist):
             self.mt_history[it] = {}
-            for ci in transport.coefficients.mass.keys():
+            for ci in self.massComponents:
                 self.mt_history[it][ci] = numpy.array(transport.q[('mt',ci)])
     def calculateElementCoefficients(self,q):
         BackwardEuler.calculateElementCoefficients(self,q)
@@ -595,13 +617,13 @@ class PsiTCtte_new(BackwardEuler):
         self.dt_history[1] = self.dt_history[0]
         self.dt_history[0] = self.dt_tmp
         self.nsteps += 1
-        for ci in self.m_last.keys():
+        for ci in self.massComponents:
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
             self.mt_history[1][ci].flat[:]= self.mt_history[0][ci].flat[:]
             self.mt_history[0][ci].flat[:]= self.mt_tmp[ci].flat[:]
         log("PsiTC choose_dt dt=%f" % self.dt)
     def resetTimeHistory(self,resetFromDOF=False):
-        for ci in self.m_last.keys():
+        for ci in self.massComponents:
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
     def updateTimeHistory(self,resetFromDOF=False):
         self.nsteps=0
@@ -628,7 +650,7 @@ class ForwardEuler(TI_base):
         self.runCFL=runCFL
         self.dtLast=None
         self.dtRatioMax = 2.0 #come up with better value
-        for ci in range(self.nc):
+        for ci in self.massComponents:
             if transport.q.has_key(('m',ci)):
                 self.m_last[ci] = numpy.array(transport.q[('m',ci)])
                 self.m_tmp[ci] = numpy.array(transport.q[('m',ci)])
@@ -671,7 +693,7 @@ class ForwardEuler(TI_base):
             for cj in elementBoundaryJacobian[ci].keys():
                 elementBoundaryJacobian[ci][cj].fill(0.0)
     def calculateElementCoefficients(self,q):
-        for ci in range(self.nc):
+        for ci in self.massComponents:
             if q.has_key(('m',ci)):
                 self.m_tmp[ci] = q[('m',ci)]
                 q[('mt',ci)][:] =q[('m',ci)]
@@ -765,7 +787,7 @@ class ForwardEuler_A(TI_base):
             for ci in range(self.nc):
                 self.uLimDof[ci]=numpy.zeros((transport.u[ci].dof.shape),'d')
 
-        for ci in transport.coefficients.mass.keys():
+        for ci in self.massComponents:
             self.m_last[ci] = numpy.array(transport.q[('m',ci)])
             self.m_tmp[ci] = numpy.array(transport.q[('m',ci)])
 
@@ -813,7 +835,7 @@ class ForwardEuler_A(TI_base):
                 self.cfl[ci] = transport.q[('cfl',ci)]
         self.isAdaptive=True
     def calculateElementCoefficients(self,q):
-        for ci in self.m_tmp.keys():
+        for ci in self.massComponents:
             self.m_tmp[ci][:] = q[('m',ci)]
             q[('mt',ci)][:] =q[('m',ci)]
             q[('mt',ci)] -= self.m_last[ci]
@@ -913,7 +935,7 @@ class ForwardEuler_A(TI_base):
     def updateTimeHistory(self,resetFromDOF=False):
         self.tLast = self.t
         self.dtLast = self.dt
-        for ci in self.m_last.keys():
+        for ci in self.massComponents:
             self.m_last[ci][:] = self.m_tmp[ci]
         for ci in self.f_last.keys():
             self.f_last[ci][:] = self.f_tmp[ci]
@@ -990,7 +1012,7 @@ class ForwardEuler_A(TI_base):
         """
         Push necessary information into time history arrays
         """
-        for ci in self.m_last.keys():
+        for ci in self.massComponents:
             self.m_last[ci][:] = self.m_tmp[ci]
         for ci in self.f_last.keys():
             self.f_last[ci][:] = self.f_tmp[ci]
@@ -1141,7 +1163,7 @@ class OuterTheta(TI_base):
         self.q_last={}
         self.q_tmp={}
         self.m_last={}
-        for ci in transport.coefficients.mass.keys():
+        for ci in self.massComponents:
             self.massIsImplicit[ci] = True
             self.q_last[('m',ci)] = numpy.array(transport.q[('m',ci)])
             self.q_tmp[('m',ci)] = numpy.array(transport.q[('m',ci)])
@@ -1241,7 +1263,7 @@ class OuterTheta(TI_base):
     def updateTimeHistory(self,resetFromDOF=False):
         self.tLast = self.t
         self.dtLast = self.dt
-        for ci in self.transport.coefficients.mass.keys():
+        for ci in self.self.massComponents:
             self.q_last[('m',ci)][:] = self.q_tmp[('m',ci)]
         for ci in self.transport.coefficients.advection.keys():
             self.q_last[('f',ci)][:] = self.q_tmp[('f',ci)]
@@ -1333,13 +1355,13 @@ class VBDF(TI_base):
         for n in range(self.max_order):
             self.m_history.append({})
             self.mt_history.append({})
-            for ci in transport.coefficients.mass.keys():
+            for ci in self.massComponents:
                 if transport.q.has_key(('m',ci)):
                     self.m_history[n][ci] = numpy.array(transport.q[('m',ci)])
                     self.mt_history[n][ci] = numpy.zeros(transport.q[('m',ci)].shape,'d')
                 else:
                     assert False, "transport.q needs key ('m',%s) " % ci
-        for ci in transport.coefficients.mass.keys():
+        for ci in self.massComponents:
             self.m_pred[ci] = numpy.array(transport.q[('m',ci)])
             self.error_estimate[ci]  = numpy.array(transport.q[('m',ci)])
             self.m_tmp[ci]  = numpy.array(transport.q[('m',ci)])
@@ -1354,7 +1376,7 @@ class VBDF(TI_base):
         self.calculateCoefs()
         #mwf debug
         log("VBDF calculateElementCoefficients t= %s dt= %s alpha= %s " % (self.t,self.dt,self.alpha_bdf))
-        for ci in self.m_tmp.keys():
+        for ci in self.massComponents:
             self.m_tmp[ci][:] = q[('m',ci)]
             self.mt_tmp[ci][:]= q[('m',ci)]#self.alpha_bdf*q[('m',ci)]
             self.mt_tmp[ci] *= self.alpha_bdf
@@ -1410,14 +1432,13 @@ class VBDF(TI_base):
         log("VBDF initialTimeHistory call %s tLast=%s t=%s dt= %s dt_history[0] = %s " % (self.nUpdatesTimeHistoryCalled,
                                                                                           self.tLast,self.t,self.dt,self.dt_history[0]),1)
         for n in range(self.max_order-1):
-            for ci in self.m_tmp.keys():
+            for ci in self.massComponents:
                 self.m_history[n+1][ci].flat[:] =self.m_history[n][ci].flat
                 self.mt_history[n+1][ci].flat[:]=self.mt_history[n][ci].flat
             #
-        for ci in self.m_tmp.keys():
+        for ci in self.massComponents:
             self.m_history[0][ci].flat[:] = self.m_tmp[ci].flat
             self.mt_history[0][ci].flat[:]= self.mt_tmp[ci].flat
-
         self.needToCalculateBDFCoefs = True
 
     def updateTimeHistory(self,resetFromDOF=False):
@@ -1429,14 +1450,14 @@ class VBDF(TI_base):
                                                                                                self.tLast,self.t,self.dt,self.dt_history[0]),1)
         self.tLast = self.t
         for n in range(self.max_order-1):
-            for ci in self.m_tmp.keys():
+            for ci in self.massComponents:
                 self.m_history[n+1][ci].flat[:] =self.m_history[n][ci].flat
                 self.mt_history[n+1][ci].flat[:]=self.mt_history[n][ci].flat
             #
             self.dt_history[n+1]   =self.dt_history[n]
         #
         self.dt_history[0] = self.dt
-        for ci in self.m_tmp.keys():
+        for ci in self.massComponents:
             self.m_history[0][ci].flat[:] = self.m_tmp[ci].flat
             self.mt_history[0][ci].flat[:]= self.mt_tmp[ci].flat
 
@@ -1477,16 +1498,18 @@ class VBDF(TI_base):
                 self.error_estimate[ci].flat[:] = self.m_tmp[ci].flat
                 self.error_estimate[ci]   -= self.m_pred[ci]
                 self.error_estimate[ci]   *= 0.5
+                
     def calculatePredictor(self):
         #mwf debug
         #import pdb
         #pdb.set_trace()
         #for now just first order predictor
-        for ci in self.m_tmp.keys():
+        for ci in self.massComponents:
             self.m_pred[ci].flat[:] = self.mt_history[0][ci].flat
             self.m_pred[ci]   *= self.dt
             self.m_pred[ci]   += self.m_history[0][ci]
         log("VBDF calculatePredictor tLast= %s t= %s dt= %s " % (self.tLast,self.t,self.dt),1)
+
     def calculateCoefs(self):
         if self.needToCalculateBDFCoefs:
             dtInv = 1.0/self.dt
@@ -1496,7 +1519,7 @@ class VBDF(TI_base):
 
                 b0        =-(1.0+r)*dtInv
                 b1        =r*r/(1.0+r)*dtInv
-                for ci in self.m_tmp.keys():
+                for ci in self.massComponents:
                     self.beta_bdf[ci].flat[:] = self.m_history[0][ci].flat
                     self.beta_bdf[ci]   *= b0
                     self.work[ci].flat[:]     = self.m_history[1][ci].flat
@@ -1504,7 +1527,7 @@ class VBDF(TI_base):
                     self.beta_bdf[ci]   += self.work[ci]
             else: #default is first order
                 self.alpha_bdf = dtInv
-                for ci in self.m_tmp.keys():
+                for ci in self.massComponents:
                     self.beta_bdf[ci].flat[:] = self.m_history[0][ci].flat
                     self.beta_bdf[ci]   *= -dtInv
                 #
@@ -3983,7 +4006,7 @@ class CentralDifference_2ndD(TI_base):
         self.mt1_tmp={}
         self.m_ip_last={}
         self.m_ip_tmp={}
-        for ci in transport.coefficients.mass.keys():
+        for ci in self.massComponents:
             if transport.q.has_key(('m_last',ci)):
                 self.m_last[ci] = transport.q[('m_last',ci)]
             else:
@@ -4008,13 +4031,13 @@ class CentralDifference_2ndD(TI_base):
         self.m_history = []; self.m_history.append({})
         self.alpha_bdf = 1.0
         self.beta_bdf  = {}
-        for ci in transport.coefficients.mass.keys():
+        for ci in self.massComponents:
             self.m_history[0][ci] = self.m_last[ci]
             self.beta_bdf[ci] = numpy.copy(self.m_tmp[ci])
     def calculateElementCoefficients(self,q):
         #for bdf interface
         self.calculateCoefs()
-        for ci in self.m_last.keys():
+        for ci in self.massComponents:
             self.m_tmp[ci][:] = q[('m',ci)]
             self.mt1_tmp[ci][:]   = q[('m',ci)]
             self.mt1_tmp[ci] -= self.m_last[ci]
@@ -4036,12 +4059,12 @@ class CentralDifference_2ndD(TI_base):
         """
         Push necessary information into time history arrays
         """
-        for ci in self.m_last.keys():
+        for ci in self.massComponents:
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
             self.mt1_last[ci].flat[:] = self.mt1_tmp[ci].flat
     def updateTimeHistory(self,resetFromDOF=False):
         self.tLast = self.t
-        for ci in self.m_last.keys():
+        for ci in self.massComponents:
             self.m_last[ci].flat[:] = self.m_tmp[ci].flat
             self.mt1_last[ci].flat[:] = self.mt1_tmp[ci].flat
     def calculateCoefs(self):
