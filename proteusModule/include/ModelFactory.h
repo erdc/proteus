@@ -290,5 +290,8 @@ namespace proteus
 	    }	  		      
 	}
     }
+  else
+    abort();
+  return NULL;
 }
 #endif
