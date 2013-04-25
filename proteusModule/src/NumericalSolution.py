@@ -577,6 +577,9 @@ class  NS_base:#(HasTraits):
                                                                                              m.name))
         self.tCount=0#time step counter
         for p,n,m,simOutput,index in zip(self.pList,self.nList,self.modelList,self.simOutputList,range(len(self.pList))):
+            log("Archiving initial conditions")
+            self.archiveInitialSolution(m,index)
+            self.initializeViewSolution(m)
             log("Estimating initial time derivative and initializing time history for model "+p.name)
             #now the models are attached so we can calculate the coefficients
             for lm,lu,lr in zip(m.levelModelList,
@@ -609,8 +612,6 @@ class  NS_base:#(HasTraits):
                 #lm.calculateAuxiliaryQuantitiesAfterStep()
             log("Initializing time history for model step controller")
             m.stepController.initializeTimeHistory()
-            self.archiveInitialSolution(m,index)
-            self.initializeViewSolution(m)
             log("Auxiliary variable calculations for model %s" % (m.name,))
             for av in self.auxiliaryVariables[m.name]:
                 av.calculate()
