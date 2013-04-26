@@ -1,3 +1,4 @@
+PETSC_DIR=${PROTEUS}/${PROTEUS_ARCH}
 include ${PETSC_DIR}/conf/variables
 
 petsc-config:
