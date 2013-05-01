@@ -289,9 +289,11 @@ namespace proteus
 		abort();
 	    }	  		      
 	}
+      else
+        {
+          abort();
+        }
+      return NULL;
     }
-  else
-    abort();
-  return NULL;
 }
 #endif
