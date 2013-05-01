@@ -174,8 +174,8 @@ static PyObject*
 ParVec_printType(ParVec *self, PyObject* args)
 {
   VecType type;
-  //VecGetType(self->v,const_cast<VecType *> (&type));
-  VecGetType(self->v,(const VecType *) (&type));
+  VecGetType(self->v,const_cast<VecType *> (&type));
+  //VecGetType(self->v,(const VecType *) (&type));
   Py_INCREF(Py_None); 
   return Py_None;
 }
