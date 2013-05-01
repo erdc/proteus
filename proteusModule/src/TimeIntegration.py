@@ -411,10 +411,6 @@ class FLCBDF(TI_base):
             self.alpha_bdf = self.flcbdf[ci].getCurrentAlpha()
             self.flcbdf[ci].calculate_yprime(self.beta_bdf_dummy,self.beta_bdf_dummy,self.beta_bdf[ci],self.beta_bdf_dummy2)
     def calculateElementCoefficients(self,q):
-        #mwf debug
-        import pdb
-        pdb.set_trace()
-        
         for ci in self.massComponents:
             #! \todo fix dm,dmt calculation for non-diagonal nonlinearity
             #mwf hack what to do if no diagonal dependence at all?
