@@ -156,7 +156,7 @@ class OneLevelTransport(NonlinearEquation):
         self.testIsTrial=True
         self.phiTrialIsTrial=True
         #trial-dup try to share trial and test information?
-        self.uniform_trial_and_test_spaces = True#False
+        self.uniform_trial_and_test_spaces = False
         self.unique_test_trial_range = range(coefficients.nc)
         self.duplicate_test_trial_range = range(0)
         if self.uniform_trial_and_test_spaces:
@@ -191,8 +191,6 @@ class OneLevelTransport(NonlinearEquation):
         self.dirichletConditions = dofBoundaryConditionsDict
         self.dirichletNodeSetList=None #explicit Dirichlet  conditions for now, no Dirichlet BC constraints
         self.coefficients = coefficients
-        #import pdb
-        #pdb.set_trace()
         self.coefficients.initializeMesh(self.mesh)
         self.nc = self.coefficients.nc
         self.stabilization = stabilization
@@ -1723,9 +1721,6 @@ class OneLevelTransport(NonlinearEquation):
         #mwf debug
         #imax = numpy.argmax(r); imin = numpy.argmin(r)
         #print "getResidual max,index r[%s]= %s min,index= r[%s] r= %s " % (imax,r[imax],imin,r[imin])
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
     def getJacobian(self,jacobian):
         import superluWrappers
         import numpy
@@ -2408,9 +2403,6 @@ class OneLevelTransport(NonlinearEquation):
                         #mwf hack for now assume only term surviving gradient of
                         #L*w_h are mass and reaction terms
                         if self.lowmem:
-                            #mwf debug
-                            #import pdb
-                            #pdb.set_trace()
                             cfemIntegrals.updateNumericalDiffusion_lowmem(self.q[('dmt_sge',ci,cj)],#check this
                                                                           self.q[('grad(subgridError)',ci)],
                                                                           self.q[('grad(w)*dV_f',ci)],
