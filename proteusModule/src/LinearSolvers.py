@@ -287,7 +287,7 @@ class LU(LinearSolver):
             lapackWrappers.denseFactorPrepare(self.n,
                                               self.L,
                                               self.denseFactor)
-    #mwf may need to reconcile argument
+        #
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
         (r,b) = self.solveInitialize(u,r,b,initialGuessIsZero)
         self.du[:]=u
@@ -529,12 +529,21 @@ class KSP_petsc4py(LinearSolver):
                                                                                                              self.ksp.its,
                                                                                                              self.ksp.norm,
                                                                                                              self.ksp.reason))
+        self.its = self.ksp.its
+        if self.printInfo:
+            self.info()
     def converged(self,r):
         """
         decide on convention to match norms, convergence criteria
         """
         return self.ksp.converged
+    def failed(self):
+        failedFlag = LinearSolver.failed(self)
+        failedFlag = failedFlag or self.ksp.reason < 0
+        return failedFlag
 
+    def info(self):
+        self.ksp.view()
 class SimpleNavierStokes3D:
     def __init__(self,L,prefix=None):
         sizes = L.getSizes()
