@@ -509,7 +509,6 @@ class KSP_petsc4py(LinearSolver):
 #            print "Matrix is symmetric"
 #         else:
 #            print "MATRIX IS NONSYMMETRIC"
-        #mwf debug
         logEvent("before ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s " % (self.ksp.rtol,
                                                                                                    self.ksp.atol,
                                                                                                    self.ksp.converged,
@@ -539,7 +538,7 @@ class KSP_petsc4py(LinearSolver):
         return self.ksp.converged
     def failed(self):
         failedFlag = LinearSolver.failed(self)
-        failedFlag = failedFlag or self.ksp.reason < 0
+        failedFlag = failedFlag or (not self.ksp.converged) 
         return failedFlag
 
     def info(self):
@@ -1314,7 +1313,7 @@ def multilevelLinearSolverChooser(linearOperatorList,
                                                       rtol_r = relativeToleranceList[l],
                                                       atol_r = absoluteTolerance,
                                                       computeRates = computeLevelSolverRates,
-                                                      printInfo = printLevelSolverInfo,
+                                                      printInfo = printLevelLinearSolverInfo,
                                                       prefix=solver_options_prefix,
                                                       Preconditioner=smootherType,
                                                       connectionList = connectivityListList[l],
