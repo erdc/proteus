@@ -152,6 +152,12 @@ parser.add_option("-H","--hotStart",
                   action="store_true",
                   help="""Use the last step in the archive as the intial condition and continue appending to the archive""")
 
+parser.add_option("-B","--writeVelocityPostProcessor",
+                  default=False,
+                  dest="writeVPP",
+                  action="store_true",
+                  help="""Use the last step in the archive as the intial condition and continue appending to the archive""")
+
 (opts,args) = parser.parse_args(args=[])
 
 if opts.debug:
