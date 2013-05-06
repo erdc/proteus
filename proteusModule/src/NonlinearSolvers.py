@@ -765,6 +765,7 @@ class NewtonNS(NonlinearSolver):
         self.norm_r_hist = []
         self.norm_du_hist = []
         self.gammaK_max=0.0
+        self.linearSolverFailed = False
         while (not self.converged(r) and
                not self.failed()):
             log("   Newton it %d Mom.  norm(r) = %12.5e   tol = %12.5e" % (self.its-1,self.norm_mom_r,self.atol_r),level=1)
@@ -776,7 +777,6 @@ class NewtonNS(NonlinearSolver):
                 self.F.getJacobian(self.J)
                 log("Done  assembling jacobian",level=4)
 
-                #mwf commented out print numpy.transpose(self.J)
                 if self.linearSolver.computeEigenvalues:
 
                     log("Performing eigen analyses",level=4)
@@ -796,7 +796,9 @@ class NewtonNS(NonlinearSolver):
                     self.setLinearSolverTolerance(r)
 
             log("Start linear solve",level=4)
-            self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+            if not self.linearSolverFailed:
+                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                self.linearSolverFailed = self.linearSolver.failed() 
             self.linearSolver.printPerformance()
             #print self.du
             u-=self.du
@@ -995,6 +997,7 @@ class SSPRKNewton(Newton):
         self.norm_r_hist = []
         self.norm_du_hist = []
         self.gammaK_max=0.0
+        self.linearSolverFailed = False
         while (not self.converged(r) and
                not self.failed()):
             print "SSPRKNewton it", self.its, "norm(r)", self.norm_r
@@ -1018,7 +1021,9 @@ class SSPRKNewton(Newton):
             if not self.directSolver:
                 if self.EWtol:
                     self.setLinearSolverTolerance(r)
-            self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+            if not self.linearSolverFailed:
+                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                self.linearSolverFailed = self.linearSolver.failed() 
             #print self.du
             u-=self.du
             if par_u != None:
@@ -1210,6 +1215,7 @@ class PicardNewton(Newton):
         self.norm_r_hist = []
         self.norm_du_hist = []
         self.gammaK_max=0.0
+        self.linearSolverFailed = False
         while (not self.converged(r) and
                not self.failed()):
             if self.maxIts>1:
@@ -1238,7 +1244,9 @@ class PicardNewton(Newton):
             if not self.directSolver:
                 if self.EWtol:
                     self.setLinearSolverTolerance(r)
-            self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+            if not self.linearSolverFailed:
+                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                self.linearSolverFailed = self.linearSolver.failed() 
             #print self.du
             u-=self.du
             if par_u != None:
