@@ -120,6 +120,7 @@ class NonlinearSolver:
         self.lineSearch = True
         #need some information for parallel assembly options?
         self.par_fullOverlap = True #whether or not partitioning has overlap or not
+        self.linearSolverFailed = False
     def norm(self,u):
         return self.norm_function(u[:self.F.dim_proc])
     def unorm(self,u):
@@ -268,6 +269,9 @@ class NonlinearSolver:
         return self.convergedFlag
     def failed(self):
         self.failedFlag = False
+        if self.linearSolverFailed == True:
+            self.failedFlag = True
+            return self.failedFlag
         if self.its == self.maxIts and self.convergenceTest in ['r','u']:
             self.solveCalls_failed +=1
             self.recordedIts_failed +=self.its
@@ -425,6 +429,7 @@ class Newton(NonlinearSolver):
         self.norm_r_hist = []
         self.norm_du_hist = []
         self.gammaK_max=0.0
+        self.linearSolverFailed = False
         while (not self.converged(r) and
                not self.failed()):
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
@@ -432,7 +437,6 @@ class Newton(NonlinearSolver):
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
                 self.F.getJacobian(self.J)
-                #mwf commented out print numpy.transpose(self.J)
                 if self.linearSolver.computeEigenvalues:
                     self.JLast[:]=self.J
                     self.J_t_J[:]=self.J
@@ -444,11 +448,14 @@ class Newton(NonlinearSolver):
                     self.kappa_current = self.norm_2_J_current*self.norm_2_Jinv_current
                     self.betaK_current = self.norm_2_Jinv_current
                 self.linearSolver.prepare(b=r)
+                self.linearSolverFailed = self.linearSolver.failed() 
             self.du[:]=0.0
             if not self.directSolver:
                 if self.EWtol:
                     self.setLinearSolverTolerance(r)
-            self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+            if not self.linearSolverFailed:
+                self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                self.linearSolverFailed = self.linearSolver.failed() 
             #print self.du
             u-=self.du
             if par_u != None:
