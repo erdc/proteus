@@ -19,7 +19,7 @@ verbose=False
 procID=None
 flushBuffer=False
 preInitBuffer=[]
-
+logDir = '.'
 def memProfOn():
     global memLog
     memLog = True
@@ -41,11 +41,17 @@ def verboseOn_callback(option,opt,value,parser):
     global verbose
     verbose=True
 
-def openLog(filename,level):
+def openLog(filename,level,logLocation=None):
     global logFile
     global logLevel
     global preInitBuffer
-    logFile=open(filename,'w')
+    global logDir
+    logDir = logLocation
+    filename_full = filename
+    import os
+    if logDir != None:
+        filename_full = os.path.join(logLocation,filename)
+    logFile=open(filename_full,'w')
     logLevel = level
     for (string,level,data) in preInitBuffer:
         logEvent(string,level,data)

@@ -178,7 +178,7 @@ if opts.debug:
     pdb.set_trace()
 
 log = Profiling.logEvent
-
+logDir = None
 if opts.dataDir != '':
     if not os.path.exists(opts.dataDir):
     	try: 
@@ -186,7 +186,8 @@ if opts.dataDir != '':
         except os.error:
              print "Failed to create: " + opts.dataDir 
              opts.dataDir=''
-
+    logDir = opts.dataDir
+    
 log("Initializing MPI")
 if opts.petscOptions != None:
     petsc_argv = sys.argv[:1]+opts.petscOptions.split()
@@ -298,9 +299,9 @@ if sList[0].logAllProcesses or opts.logAllProcesses:
 Profiling.flushBuffer=sList[0].flushBuffer
 if opts.logLevel > 0:
     if len(args[0].split(' ')) == 1:
-        Profiling.openLog(args[0].split('.')[0]+".log",opts.logLevel)
+        Profiling.openLog(args[0].split('.')[0]+".log",opts.logLevel,logLocation=logDir)
     else:
-        Profiling.openLog(args[0][-3:]+".log",opts.logLevel)
+        Profiling.openLog(args[0][-3:]+".log",opts.logLevel,logLocation=logDir)
 if opts.batchFileName != "":
     log("Attaching input stream to batch file = "+opts.batchFileName)
     inputStream = open(opts.batchFileName,'r')
