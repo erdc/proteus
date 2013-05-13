@@ -3210,8 +3210,8 @@ extern "C"
                      multilevelMesh.meshArray[i-1].nodeArray + multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + 1]*3,
                      midpoints[0]);
             midpoints[0].nN = nN_new;
-            midpoints[nN_midpoint].flag = 0.5*(multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + nN_element_0]] +
-                                               multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + nN_element_1]]);
+            midpoints[0].flag = 0.5*(multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + 0]] +
+                                     multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + 1]]);
 
             newNodeSet.insert(midpoints[0]);
             nN_new++;
