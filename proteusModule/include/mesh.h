@@ -390,6 +390,7 @@ class Node
 public:
   int nN;
   double  x,y,z;
+  int flag;
 };
 
 inline void midpoint(const double* left, const double* right, Node& midpoint)
