@@ -3210,6 +3210,9 @@ extern "C"
                      multilevelMesh.meshArray[i-1].nodeArray + multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + 1]*3,
                      midpoints[0]);
             midpoints[0].nN = nN_new;
+            midpoints[nN_midpoint].flag = 0.5*(multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + nN_element_0]] +
+                                               multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + nN_element_1]]);
+
             newNodeSet.insert(midpoints[0]);
             nN_new++;
             //the two new edges
@@ -3236,7 +3239,6 @@ extern "C"
             multilevelMesh.meshArray[i].nodeArray[nodeItr->nN*3+1] = nodeItr->y;
             multilevelMesh.meshArray[i].nodeArray[nodeItr->nN*3+2] = nodeItr->z;
           }
-	//mwftodo need to come up with convention for assigning new node ids
 	multilevelMesh.meshArray[i].nodeMaterialTypes = new int[multilevelMesh.meshArray[i].nNodes_global];
 	std::copy(multilevelMesh.meshArray[i-1].nodeMaterialTypes,
 		  multilevelMesh.meshArray[i-1].nodeMaterialTypes+multilevelMesh.meshArray[i-1].nNodes_global,
@@ -3248,11 +3250,14 @@ extern "C"
 		 DEFAULT_NODE_MATERIAL,
 		 (multilevelMesh.meshArray[i].nNodes_global-multilevelMesh.meshArray[i-1].nNodes_global)*sizeof(int));
 
+        for(nodeItr=newNodeSet.begin();nodeItr!=newNodeSet.end();nodeItr++)
+          {
+            multilevelMesh.meshArray[i].nodeMaterialTypes[nodeItr->nN] = nodeItr->flag;
+          }
       }
     return 0;
   }
 
-  //mwftodo get global refinement to preserve element boundary type   
   int globallyRefineTriangularMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh)
   {
     using namespace  std;
@@ -3306,6 +3311,8 @@ extern "C"
                   if(nodeItr == newNodeSet.end())
                     {
                       midpoints[nN_midpoint].nN = nN_new;
+                      midpoints[nN_midpoint].flag = 0.5*(multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*3 + nN_element_0]] +
+                                                         multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*3 + nN_element_1]]);
                       newNodeSet.insert(midpoints[nN_midpoint]);
                       nN_new++;
                     }
@@ -3346,7 +3353,6 @@ extern "C"
             multilevelMesh.meshArray[i].nodeArray[nodeItr->nN*3+1] = nodeItr->y;
             multilevelMesh.meshArray[i].nodeArray[nodeItr->nN*3+2] = nodeItr->z;
           }
-	//mwftodo need to come up with convention for assigning new node ids
 	multilevelMesh.meshArray[i].nodeMaterialTypes = new int[multilevelMesh.meshArray[i].nNodes_global];
 	std::copy(multilevelMesh.meshArray[i-1].nodeMaterialTypes,
 		  multilevelMesh.meshArray[i-1].nodeMaterialTypes+multilevelMesh.meshArray[i-1].nNodes_global,
@@ -3358,6 +3364,10 @@ extern "C"
 		 DEFAULT_NODE_MATERIAL,
 		 (multilevelMesh.meshArray[i].nNodes_global-multilevelMesh.meshArray[i-1].nNodes_global)*sizeof(int));
 	
+        for(nodeItr=newNodeSet.begin();nodeItr!=newNodeSet.end();nodeItr++)
+          {
+            multilevelMesh.meshArray[i].nodeMaterialTypes[nodeItr->nN] = nodeItr->flag;
+          }
 	
       }
     return 0;
@@ -3432,6 +3442,8 @@ extern "C"
                   if(nodeItr == newNodeSet.end())
                     {
                       midpoints[nN_midpoint].nN = nN_new;
+                      midpoints[nN_midpoint].flag = 0.5*(multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*4 + nN_element_0]] +
+                                                         multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*4 + nN_element_1]]);
                       newNodeSet.insert(midpoints[nN_midpoint]);
                       nN_new++;
                     }
@@ -3631,6 +3643,11 @@ extern "C"
 	  memset(multilevelMesh.meshArray[i].nodeMaterialTypes+multilevelMesh.meshArray[i-1].nNodes_global,
 		 DEFAULT_NODE_MATERIAL,
 		 (multilevelMesh.meshArray[i].nNodes_global-multilevelMesh.meshArray[i-1].nNodes_global)*sizeof(int));
+
+        for(nodeItr=newNodeSet.begin();nodeItr!=newNodeSet.end();nodeItr++)
+          {
+            multilevelMesh.meshArray[i].nodeMaterialTypes[nodeItr->nN] = nodeItr->flag;
+          }
       }
     return 0;
   }
