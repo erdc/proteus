@@ -14,6 +14,7 @@ except:
 import copy
 import cfemIntegrals
 import math
+import os
 
 log = Profiling.logEvent
 class AV_base:
@@ -47,9 +48,14 @@ class AV_base:
 class GatherDOF(AV_base):
     def __init__(self,filename):
         self.filename=filename
+        self.firstCall = True
     def calculate(self):
         import Comm
         comm = Comm.get()
+        if self.firstCall:
+            self.firstCall = False
+            self.filename = os.path.join(Profiling.logDir,self.filename)
+
         self.fineGridModel=self.model.levelModelList[-1]
         comm.beginSequential()
         print "writing for dof processsor ",comm.rank()
@@ -353,7 +359,8 @@ class VelocityAverage(AV_base):
     def __init__(self):
         pass
     def attachModel(self,model,ar):
-        self.Vfile = open('velocity_average.txt','w')
+        filename = os.path.join(Profiling.logDir,'velocity_average.txt')
+        self.Vfile = open(filename,'w')
         self.model=model
         self.ar=ar
         self.writer = Archiver.XdmfWriter()
@@ -473,13 +480,17 @@ class ConservationHistoryMC(AV_base):
     def __init__(self,filename):
         import Comm
         self.comm = Comm.get()
+        self.filename=filename
         AV_base.__init__(self)
-        self.massVOFFile = open(filename+"massVOF",'w')
-        self.massLSFile = open(filename+"massLS",'w')
-        self.massErrorVOFFile = open(filename+"massErrorVOF",'w')
-        self.massErrorLSFile = open(filename+"massErrorLS",'w')
-        self.fluxFile = open(filename+"flux",'w')
-        self.timeFile = open(filename+"time",'w')
+    def attachModel(self,model,ar):
+        AV_base.attachModel(self,model,ar)
+        self.filename = os.path.join(Profiling.logDir,self.filename)
+        self.massVOFFile = open(self.filename+"massVOF",'w')
+        self.massLSFile = open(self.filename+"massLS",'w')
+        self.massErrorVOFFile = open(self.filename+"massErrorVOF",'w')
+        self.massErrorLSFile = open(self.filename+"massErrorLS",'w')
+        self.fluxFile = open(self.filename+"flux",'w')
+        self.timeFile = open(self.filename+"time",'w')
     def calculate(self):
         if self.comm.isMaster():
             c = self.model.levelModelList[-1].coefficients
@@ -495,11 +506,15 @@ class ConservationHistoryLS(AV_base):
     def __init__(self,filename):
         import Comm
         self.comm = Comm.get()
+        self.filename=filename
         AV_base.__init__(self)
-        self.massFile = open(filename+"massLS",'w')
-        self.massErrorFile = open(filename+"massErrorLS",'w')
-        self.fluxFile = open(filename+"flux",'w')
-        self.timeFile = open(filename+"time",'w')
+    def attachModel(self,model,ar):
+        AV_base.attachModel(self,model,ar)
+        self.filename = os.path.join(Profiling.logDir,self.filename)
+        self.massFile = open(self.filename+"massLS",'w')
+        self.massErrorFile = open(self.filename+"massErrorLS",'w')
+        self.fluxFile = open(self.filename+"flux",'w')
+        self.timeFile = open(self.filename+"time",'w')
     def calculate(self):
         if self.comm.isMaster():
             c = self.model.levelModelList[-1].coefficients
@@ -513,7 +528,8 @@ class VelocityNormOverRegion(AV_base):
     def __init__(self,regionIdList=[1]):
         self.regionIdList=  regionIdList #which elements to select for norms
     def attachModel(self,model,ar):
-        self.Vfile = open('velocity_norm_%s.txt' % model.name,'w')
+        filename=os.path.join(Profiling.logDir,'velocity_norm_%s.txt')
+        self.Vfile = open(filename % model.name,'w')
         self.model=model
         self.ar=ar
         self.writer = Archiver.XdmfWriter()
@@ -557,7 +573,8 @@ class MassOverRegion(AV_base):
         self.regionIdList=  regionIdList #which elements to select for mass integral, None means all
         self.ci=ci
     def attachModel(self,model,ar):
-        self.ofile = open('total_mass_comp_%s_%s.txt' % (self.ci,model.name),'w')
+        filename=os.path.join(Profiling.logDir,'total_mass_comp_%s_%s.txt' )
+        self.ofile = open(filename % (self.ci,model.name),'w')
         self.model=model
         self.ar=ar
         self.writer = Archiver.XdmfWriter()
@@ -622,6 +639,8 @@ class PT123velocityGenerator(AV_base):
         self.nodal_vf_file=None
     def attachModel(self,model,ar):
         AV_base.attachModel(self,model,ar)
+        self.filebase=os.path.join(Profiling.logDir,self.filebase)
+
         #write mesh out first and don't rewrite for now
         self.nd  = model.levelModelList[-1].nSpace_global
         self.mesh= model.levelModelList[-1].mesh
