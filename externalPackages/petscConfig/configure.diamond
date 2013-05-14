@@ -1,4 +1,5 @@
 ${PROTEUS_PYTHON} ./config/configure.py \
+--with-debugging=0 \
 --with-clanguage=C \
 --with-pic=1 \
 --with-shared-libraries=0 \
