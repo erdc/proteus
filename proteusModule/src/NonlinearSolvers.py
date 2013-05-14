@@ -381,16 +381,16 @@ class Newton(NonlinearSolver):
             self.u0 = numpy.zeros(self.F.dim,'d')
     def setLinearSolverTolerance(self,r):
         self.norm_r = self.norm(r)
-        gamma  = 0.9
-        etaMax = 0.9999
+        gamma  = 0.01
+        etaMax = 0.01
         if self.norm_r == 0.0:
-            etaMin = 0.1*self.atol_r
+            etaMin = 0.01*self.atol_r
         else:
-            etaMin = 0.1*(self.rtol_r*self.norm_r0 + self.atol_r)/self.norm_r
+            etaMin = 0.01*(self.rtol_r*self.norm_r0 + self.atol_r)/self.norm_r
         if self.its > 1:
             etaA = gamma * self.norm_r**2/self.norm_r_last**2
             if self.its > 2:
-                if gamma*self.etaLast**2 < 0.1:
+                if gamma*self.etaLast**2 < 0.01:
                     etaC = min(etaMax,etaA)
                 else:
                     etaC = min(etaMax,max(etaA,gamma*self.etaLast**2))
@@ -682,16 +682,16 @@ class NewtonNS(NonlinearSolver):
             self.u0 = numpy.zeros(self.F.dim,'d')
     def setLinearSolverTolerance(self,r):
         self.norm_r = self.norm(r)
-        gamma  = 0.9
-        etaMax = 0.9999
+        gamma  = 0.01
+        etaMax = 0.01
         if self.norm_r == 0.0:
-            etaMin = 0.1*self.atol_r
+            etaMin = 0.01*self.atol_r
         else:
-            etaMin = 0.1*(self.rtol_r*self.norm_r0 + self.atol_r)/self.norm_r
+            etaMin = 0.01*(self.rtol_r*self.norm_r0 + self.atol_r)/self.norm_r
         if self.its > 1:
             etaA = gamma * self.norm_r**2/self.norm_r_last**2
             if self.its > 2:
-                if gamma*self.etaLast**2 < 0.1:
+                if gamma*self.etaLast**2 < 0.01:
                     etaC = min(etaMax,etaA)
                 else:
                     etaC = min(etaMax,max(etaA,gamma*self.etaLast**2))
