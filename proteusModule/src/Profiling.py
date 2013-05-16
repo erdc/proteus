@@ -46,11 +46,11 @@ def openLog(filename,level,logLocation=None):
     global logLevel
     global preInitBuffer
     global logDir
-    logDir = logLocation
     filename_full = filename
     import os
-    if logDir != None:
-        filename_full = os.path.join(logLocation,filename)
+    if logLocation != None:
+        logDir = logLocation
+        filename_full = os.path.join(logDir,filename)
     logFile=open(filename_full,'w')
     logLevel = level
     for (string,level,data) in preInitBuffer:
