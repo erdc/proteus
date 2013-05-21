@@ -1676,7 +1676,6 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   int ierr,size,rank;
   ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);
-
   /***********************************************************************
     partition domain based on nodes rather than elements, basically repeats
     partitionElements with this one modification
