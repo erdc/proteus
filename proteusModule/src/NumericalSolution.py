@@ -255,8 +255,10 @@ class  NS_base:#(HasTraits):
                 comm.barrier()
                 log("Generating %i-level mesh from coarse Tetgen mesh" % (n.nLevels,))
                 nbase = 1
+                #import pdb
+                #pdb.set_trace()
                 mesh=MeshTools.TetrahedralMesh()
-                mesh.generateFromTetgenFiles(p.domain.polyfile,nbase)
+                mesh.generateFromTetgenFiles(p.domain.polyfile,nbase,parallel = comm.size() > 1)
                 mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                              parallelPartitioningType=n.parallelPartitioningType)

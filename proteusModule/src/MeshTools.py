@@ -2344,14 +2344,20 @@ class TetrahedralMesh(Mesh):
     def refine(self,oldMesh):
         return self.refineFreudenthalBey(oldMesh)
 
-    def generateFromTetgenFiles(self,filebase,base,skipGeometricInit=True):
+    def generateFromTetgenFiles(self,filebase,base,skipGeometricInit=True,parallel=False):
         import cmeshTools
         self.cmesh = cmeshTools.CMesh()
-        cmeshTools.generateFromTetgenFiles(self.cmesh,filebase,base)
+        log(memory("Initializing CMesh"),level=4)
+        if parallel:
+            cmeshTools.generateFromTetgenFilesParallel(self.cmesh,filebase,base)
+        else:
+            cmeshTools.generateFromTetgenFiles(self.cmesh,filebase,base)            
+        log(memory("calling cmeshTools.generateFromTetgenFiles","cmeshTools"),level=4)
         if skipGeometricInit == False:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
             cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
         self.buildFromC(self.cmesh)
+        log(memory("calling buildFromC"),level=4)
     def generateFrom3DMFile(self,filebase,base=1):
         import cmeshTools
         self.cmesh = cmeshTools.CMesh()
@@ -3196,8 +3202,11 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
         self.cmultilevelMesh = None
         if self.useC:
             self.meshList.append(mesh0)
+            log("cmeshTools.CMultilevelMesh")
             self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+            log("buildFromC")
             self.buildFromC(self.cmultilevelMesh)
+            log("partitionMesh")
             self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
             for l in range(1,refinementLevels):
                 self.meshList.append(TetrahedralMesh())
