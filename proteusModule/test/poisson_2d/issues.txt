@@ -1,2 +1,3 @@
 c0pk: p2 not converging with element partitioning even if increase number of layers 
 c0pk: p2 not converging with cg
+dgp1: linear solver options used in petsc.options not converging for SIPG
