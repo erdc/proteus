@@ -18,6 +18,7 @@ elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 nn = 21
 nLevels = 2
 if parallel:
+    nn = nn*2**(nLevels-1)
     nLevels = 1
 
 subgridError = None
@@ -30,7 +31,7 @@ maxNonlinearIts = 1
 
 fullNewtonFlag = True
 
-tolFac = 1.0e-8
+tolFac = 0.0
 
 nl_atol_res = 1.0e-8
 
@@ -55,8 +56,6 @@ else:
     multilevelLinearSolver = LU
     levelLinearSolver = LU
     linearSolverConvergenceTest= 'r'
-
-linearSmoother = StarILU
 
 linTolFac = 0.0
 l_atol_res = 1.0e-10

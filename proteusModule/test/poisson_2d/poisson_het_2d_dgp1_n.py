@@ -19,10 +19,11 @@ elementQuadrature = SimplexGaussQuadrature(nd,4)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 
 nn = 11
+nLevels = 3
 if parallel:
     nLevels = 1
-else:
-    nLevels = 3
+    nn = nn*2**(nLevels-1)
+    nLevels = 1
 
 subgridError = None
 
