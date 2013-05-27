@@ -143,7 +143,10 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
                                               dims, 
                                               PyArray_INT, 
                                               (char*)MESH(cmesh).elementNodesArray);
-  dims[0] = MESH(cmesh).nodeElementOffsets[MESH(cmesh).nNodes_global];
+  if (MESH(cmesh).nodeElementOffsets)
+    dims[0] = MESH(cmesh).nodeElementOffsets[MESH(cmesh).nNodes_global];
+  else
+    dims[0] = 0;
   nodeElementsArray = PyArray_FromDimsAndData(1,
                                               dims,
                                               PyArray_INT, 
@@ -159,7 +162,6 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
                                                   dims,
                                                   PyArray_INT,
                                                   (char*)MESH(cmesh).elementNeighborsArray);
-
   dims[0] = MESH(cmesh).nElements_global;
   dims[1] = MESH(cmesh).nElementBoundaries_element;
   elementBoundariesArray = PyArray_FromDimsAndData(2,
@@ -200,7 +202,10 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
                                            dims,
                                            PyArray_INT,
                                            (char*)MESH(cmesh).edgeNodesArray);
-  dims[0] = MESH(cmesh).nodeStarOffsets[MESH(cmesh).nNodes_global];
+  if (MESH(cmesh).nodeStarOffsets != NULL)
+    dims[0] = MESH(cmesh).nodeStarOffsets[MESH(cmesh).nNodes_global];
+  else
+    dims[0] = 0;
   nodeStarArray = PyArray_FromDimsAndData(1,
                                           dims,
                                           PyArray_INT,
@@ -236,7 +241,6 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
                                       dims,
                                       PyArray_DOUBLE,
                                       (char*)MESH(cmesh).elementDiametersArray);
-
   dims[0] = MESH(cmesh).nElements_global;
   elementInnerDiametersArray = PyArray_FromDimsAndData(1,
                                       dims,
@@ -886,6 +890,26 @@ cmeshToolsGenerateFromTetgenFiles(PyObject* self,
 
   failed = readTetgenMesh(MESH(cmesh),filebase,base);
   constructElementBoundaryElementsArray_tetrahedron(MESH(cmesh));
+  failed = readTetgenElementBoundaryMaterialTypes(MESH(cmesh),filebase,base);
+
+  Py_INCREF(Py_None); 
+  return Py_None;
+}
+static PyObject* 
+cmeshToolsGenerateFromTetgenFilesParallel(PyObject* self,
+					  PyObject* args)
+{
+  PyObject *cmesh;
+  const char *filebase;
+  int base,failed;
+  if (!PyArg_ParseTuple(args,
+                        "Osi",
+                        &cmesh,
+                        &filebase,
+			&base))
+    return NULL;
+
+  failed = readTetgenMesh(MESH(cmesh),filebase,base);
   failed = readTetgenElementBoundaryMaterialTypes(MESH(cmesh),filebase,base);
 
   Py_INCREF(Py_None); 
@@ -1940,6 +1964,10 @@ static PyMethodDef cmeshToolsMethods[] = {
    cmeshToolsGenerateFromTetgenFiles,       
    METH_VARARGS,                        
    "just read from tetgen node and element files directly"},  /*doc string for method*/
+   {"generateFromTetgenFilesParallel",            
+   cmeshToolsGenerateFromTetgenFilesParallel,       
+   METH_VARARGS,                        
+   "just read from tetgen node and element files directly, skip some connectivity because it gets rebuilt on subdomains for parallel"},  /*doc string for method*/
    {"writeTetgenFiles",            
    cmeshToolsWriteTetgenFiles,       
    METH_VARARGS,                        
