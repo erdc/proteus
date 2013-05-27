@@ -1,3 +1,4 @@
 c0pk: p2 not converging with element partitioning even if increase number of layers 
 c0pk: p2 not converging with cg
-dgp1: linear solver options used in petsc.options not converging for SIPG
+dgpk: p1 and p2 linear solver options used in petsc.options not converging for SIPG. superlu_dist works
+      p2 LDG not converging in parallel regardless of overlap, using superlu_dist

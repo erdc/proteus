@@ -3,13 +3,17 @@ from proteus.default_n import *
 from poisson_het_2d_p import *
 
 parallel = True
-numerical_flux_flag = 'SIPG'
+numerical_flux_flag = 'NIPG'
+polynomial_order = 2
 
 
 timeIntegration = NoIntegration
 nDTout = 1
 
-femSpaces = dict((i,DG_AffineLinearOnSimplexWithNodalBasis) for i in range(nc))
+if polynomial_order == 2:
+    femSpaces = dict((i,DG_AffineQuadraticOnSimplexWithNodalBasis) for i in range(nc))
+else:
+    femSpaces = dict((i,DG_AffineLinearOnSimplexWithNodalBasis) for i in range(nc))
 
 elementQuadrature = SimplexGaussQuadrature(nd,4)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
@@ -18,7 +22,7 @@ nn = 11
 if parallel:
     nLevels = 1
 else:
-    nLevels = 4
+    nLevels = 3
 
 subgridError = None
 
@@ -26,12 +30,12 @@ shockCapturing = None
 
 if numerical_flux_flag == 'SIPG':
     numericalFluxType = Advection_DiagonalUpwind_Diffusion_SIPG
-elif numerical_flux_flag == 'NIPG':
-    numericalFluxType = Advection_DiagonalUpwind_Diffusion_NIPG
+elif numerical_flux_flag == 'IIPG':
+    numericalFluxType = Advection_DiagonalUpwind_Diffusion_IIPG
 elif numerical_flux_flag == 'LDG':
     numericalFluxType = Diffusion_LDG
 else:
-    numericalFluxType = Advection_DiagonalUpwind_Diffusion_IIPG
+    numericalFluxType = Advection_DiagonalUpwind_Diffusion_NIPG
 
 multilevelNonlinearSolver  = NLNI
 
@@ -68,5 +72,8 @@ else:
 
 linTolFac = 0.0
 
-cfluxtag  = 'dg' #'dg-point-eval','dg'
+if polynomial_order == 2:
+    cfluxtag  = 'dg-point-eval' #'dg-point-eval','dg'
+else:
+    cfluxtag  = 'dg'
 conservativeFlux = dict((i,cfluxtag) for i in range(nc))
