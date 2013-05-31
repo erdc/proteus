@@ -121,6 +121,7 @@ class NonlinearSolver:
         #need some information for parallel assembly options?
         self.par_fullOverlap = True #whether or not partitioning has overlap or not
         self.linearSolverFailed = False
+        self.failedFlag = False
     def norm(self,u):
         return self.norm_function(u[:self.F.dim_proc])
     def unorm(self,u):
