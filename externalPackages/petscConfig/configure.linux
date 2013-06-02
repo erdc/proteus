@@ -1,9 +1,13 @@
-${PROTEUS_PYTHON} ./config/configure.py --with-clanguage=C \
---with-cc=mpicc --with-cxx=mpicxx --with-fc=mpif90 --with-mpi-compilers \
+${PROTEUS_PYTHON} ./config/configure.py \
+--prefix=${PROTEUS_PREFIX} \
 --PETSC_ARCH=${PROTEUS_ARCH} \
---PETSC_DIR=${PROTEUS}/externalPackages/petsc \
---with-pic \
---with-shared-libraries \
+--PETSC_DIR=${PETSC_DIR} \
+--with-clanguage=C \
+--CC=mpicc \
+--CXX=mpicxx \
+--FC=mpif90 \
+--with-pic=1 \
+--with-shared-libraries=1 \
 --with-cmake=/usr/bin/cmake \
 --download-parmetis=1 \
 --download-metis=1 \
