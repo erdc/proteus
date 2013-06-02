@@ -2,7 +2,7 @@ import os
 
 PROTEUS_INCLUDE_DIR = os.getenv('PROTEUS_PREFIX')+'/include'
 PROTEUS_LIB_DIR = os.getenv('PROTEUS_PREFIX')+'/lib'
-PROTEUS_EXTRA_COMPILE_ARGS= ['-DF77_POST_UNDERSCORE','-DUSE_BLAS','-DCMRVEC_BOUNDS_CHECK','-DMV_VECTOR_BOUNDS_CHECK']
+PROTEUS_EXTRA_COMPILE_ARGS= ['-DF77_POST_UNDERSCORE','-DUSE_BLAS','-DCMRVEC_BOUNDS_CHECK','-DMV_VECTOR_BOUNDS_CHECK','-DPETSC_INCLUDE_AS_C']
 PROTEUS_EXTRA_LINK_ARGS=['-lblas']
 PROTEUS_EXTRA_FC_COMPILE_ARGS= ['-Wall']
 PROTEUS_EXTRA_FC_LINK_ARGS=['-lblas']
@@ -36,3 +36,12 @@ PROTEUS_TRIANGLE_LIB ='tri'
 PROTEUS_DAETK_INCLUDE_DIR = [PROTEUS_INCLUDE_DIR]
 PROTEUS_DAETK_LIB_DIR = PROTEUS_LIB_DIR
 PROTEUS_DAETK_LIB ='daetk'
+PROTEUS_PETSC_LIB_DIRS = ['/home/cekees/proteus/linux/lib', '/usr/lib/gcc/i686-linux-gnu/4.7', '/usr/lib/i386-linux-gnu', '/lib/i386-linux-gnu']
+PROTEUS_PETSC_LIBS = ['petsc', 'HYPRE', 'mpichcxx', 'stdc++', 'superlu_dist_3.3', 'lapack', 'blas', 'X11', 'parmetis', 'metis', 'pthread', 'm', 'mpichf90', 'gfortran', 'm', 'gfortran', 'm', 'quadmath', 'm', 'mpichcxx', 'stdc++', 'dl', 'mpich', 'opa', 'mpl', 'rt', 'cr', 'pthread', 'gcc_s', 'dl']
+PROTEUS_PETSC_INCLUDE_DIRS = []
+PROTEUS_PETSC_LIB_DIRS = ['/home/cekees/proteus/linux/lib', '/usr/lib/gcc/i686-linux-gnu/4.7', '/usr/lib/i386-linux-gnu', '/lib/i386-linux-gnu']
+PROTEUS_PETSC_LIBS = ['petsc', 'HYPRE', 'mpichcxx', 'stdc++', 'superlu_dist_3.3', 'lapack', 'blas', 'X11', 'parmetis', 'metis', 'pthread', 'm', 'mpichf90', 'gfortran', 'm', 'gfortran', 'm', 'quadmath', 'm', 'mpichcxx', 'stdc++', 'dl', 'mpich', 'opa', 'mpl', 'rt', 'cr', 'pthread', 'gcc_s', 'dl']
+PROTEUS_PETSC_INCLUDE_DIRS = []
+PROTEUS_PETSC_LIB_DIRS = ['/home/cekees/proteus/linux/lib', '/usr/lib/gcc/i686-linux-gnu/4.7', '/usr/lib/i386-linux-gnu', '/lib/i386-linux-gnu']
+PROTEUS_PETSC_LIBS = ['petsc', 'HYPRE', 'mpichcxx', 'stdc++', 'superlu_dist_3.3', 'lapack', 'blas', 'X11', 'parmetis', 'metis', 'pthread', 'm', 'mpichf90', 'gfortran', 'm', 'gfortran', 'm', 'quadmath', 'm', 'mpichcxx', 'stdc++', 'dl', 'mpich', 'opa', 'mpl', 'rt', 'cr', 'pthread', 'gcc_s', 'dl']
+PROTEUS_PETSC_INCLUDE_DIRS = []
