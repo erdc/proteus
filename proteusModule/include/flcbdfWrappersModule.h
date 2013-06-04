@@ -20,8 +20,22 @@ namespace Daetk
 #define PROTEUSREDEFINECPP
 #endif
 #include "mpi.h"
+#ifdef PETSC_INCLUDE_AS_C
+#include "petsc.h"
+#include "petscmat.h"
+#include "petscao.h"
+#include "petscbt.h"
+#include "petscksp.h"
+#endif
 #ifdef PROTEUSREDEFINECPP
 #define __cplusplus
+#endif
+#ifndef PETSC_INCLUDE_AS_C
+#include "petsc.h"
+#include "petscmat.h"
+#include "petscao.h"
+#include "petscbt.h"
+#include "petscksp.h"
 #endif
 #include "petscconf.h"
 	/*cek try adding forward declarations since I can't find the header for these intel functions */
@@ -33,11 +47,6 @@ namespace Daetk
           #include <string.h>
           extern void* _intel_fast_memcpy(void* s1, const void* s2, size_t n);
 #endif
-#include "petsc.h"
-#include "petscmat.h"
-#include "petscao.h"
-#include "petscbt.h"
-#include "petscksp.h"
 /*mwf debug*/
 /*#include "parmetis.h" cek hack on lonestar*/
       }
