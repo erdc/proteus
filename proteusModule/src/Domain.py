@@ -53,6 +53,11 @@ class RectangularDomain(D_base):
         unitesize=4.0/self.L[0]
         f = open(fileprefix+".poly",'w')
         if self.nd==2:
+            self.boundaryLegend = {'left':4,
+                                   'right':2,
+                                   'top':3,
+                                   'bottom':1}
+
             fileString="""
 # vertices
 4 2 0 1
