@@ -97,3 +97,6 @@
 [submodule "externalPackages/adh-externals"]
 	path = externalPackages/adh-externals
 	url = git@github.com:erdc-cm/adh-externals.git
+[submodule "externalPackages/petsc-dev"]
+	path = externalPackages/petsc-dev
+	url = git@bitbucket.org:petsc/petsc.git
