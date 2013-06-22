@@ -261,7 +261,7 @@ extern "C"
 
   int edgeMeshElements(const int& nx, Mesh& mesh);
   int regularEdgeMeshNodes(const int& nx, const double& Lx, Mesh& mesh);
-  int globallyRefineEdgeMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh);
+  int globallyRefineEdgeMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh, bool averageNewNodeFlags=false);
   int locallyRefineEdgeMesh(MultilevelMesh& multilevelMesh, 
 			    int * elementTagArray);
   int locallyRefineTriangleMesh(MultilevelMesh& multilevelMesh, 
@@ -274,7 +274,7 @@ extern "C"
 
   int regularRectangularToTriangularMeshElements(const int& nx,const int& ny,Mesh& mesh, int triangleFlag);
   int regularRectangularToTriangularMeshNodes(const int& nx, const int& ny, const double& Lx, const double& Ly, Mesh& mesh);
-  int globallyRefineTriangularMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh);
+  int globallyRefineTriangularMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh, bool averageNewNodeFlags=false);
 
 
   int regularMeshNodes(const int& nx,const int& ny,const int& nz, const double& Lx, const double& Ly, const double& Lz, Mesh& mesh);
@@ -283,7 +283,7 @@ extern "C"
   int regularHexahedralMeshElements(const int& nx,const int& ny,const int& nz,const int& px,const int& py,const int& pz, Mesh& mesh);
   int regularNURBSMeshElements(const int& nx,const int& ny,const int& nz,const int& px,const int& py,const int& pz,Mesh& mesh);
   
-  int globallyRefineTetrahedralMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh);
+  int globallyRefineTetrahedralMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh, bool averageNewNodeFlags=false);
 
   int constructElementBoundaryElementsArray_edge(Mesh& mesh);
   int constructElementBoundaryElementsArray_triangle(Mesh& mesh);

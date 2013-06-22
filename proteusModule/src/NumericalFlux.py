@@ -814,7 +814,7 @@ class Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
                                                                                   self.mesh.exteriorElementBoundariesArray,
                                                                                   self.mesh.elementBoundaryElementsArray,
                                                                                   self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                                  self.isDOFBoundary[ci],#mwf added
+                                                                                  self.isDOFBoundary[ci],
                                                                                   ebqe['n'],
                                                                                   self.ebqe[('a',ci,ck)],
                                                                                   self.ebqe[('grad(phi)',ck)],
@@ -828,7 +828,7 @@ class Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
                         cnumericalFlux.calculateExteriorNumericalDiffusiveFlux(self.mesh.exteriorElementBoundariesArray,
                                                                                self.mesh.elementBoundaryElementsArray,
                                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                               self.isDOFBoundary[ci],#mwf added
+                                                                               self.isDOFBoundary[ci],
                                                                                ebqe['n'],
                                                                                self.ebqe[('a',ci,ck)],
                                                                                self.ebqe[('grad(phi)',ck)],
@@ -873,7 +873,7 @@ class Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
                                                                                                    self.mesh.exteriorElementBoundariesArray,
                                                                                                    self.mesh.elementBoundaryElementsArray,
                                                                                                    self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                                                   self.isDOFBoundary[ck],#mwf added
+                                                                                                   self.isDOFBoundary[ck],
                                                                                                    ebqe['n'],
                                                                                                    ebqe[('a',ci,ck)],
                                                                                                    ebqe[('da',ci,ck,cj)],
@@ -888,7 +888,7 @@ class Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
                                                                                                 self.mesh.exteriorElementBoundariesArray,
                                                                                                 self.mesh.elementBoundaryElementsArray,
                                                                                                 self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                                                self.isDOFBoundary[ck],#mwf added
+                                                                                                self.isDOFBoundary[ck],
                                                                                                 ebqe['n'],
                                                                                                 ebqe[('a',ci,ck)],
                                                                                                 ebqe[('da',ci,ck,cj)],
@@ -1002,7 +1002,7 @@ class Curvature_exterior(NF_base):
                                                                                        self.mesh.exteriorElementBoundariesArray,
                                                                                        self.mesh.elementBoundaryElementsArray,
                                                                                        self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                                       self.isDOFBoundary[ci],#mwf added
+                                                                                       self.isDOFBoundary[ci],
                                                                                        ebqe['n'],
                                                                                        self.ebqe[('a',ci,ck)],
                                                                                        self.ebqe[('grad(phi)',ck)],
@@ -1016,7 +1016,7 @@ class Curvature_exterior(NF_base):
                         cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_free(self.mesh.exteriorElementBoundariesArray,
                                                                                     self.mesh.elementBoundaryElementsArray,
                                                                                     self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                                    self.isDOFBoundary[ci],#mwf added
+                                                                                    self.isDOFBoundary[ci],
                                                                                     ebqe['n'],
                                                                                     self.ebqe[('a',ci,ck)],
                                                                                     self.ebqe[('grad(phi)',ck)],
@@ -1049,7 +1049,7 @@ class Curvature_exterior(NF_base):
                                                                                                         self.mesh.exteriorElementBoundariesArray,
                                                                                                         self.mesh.elementBoundaryElementsArray,
                                                                                                         self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                                                        self.isDOFBoundary[ck],#mwf added
+                                                                                                        self.isDOFBoundary[ck],
                                                                                                         ebqe['n'],
                                                                                                         ebqe[('a',ci,ck)],
                                                                                                         ebqe[('da',ci,ck,cj)],
@@ -1064,7 +1064,7 @@ class Curvature_exterior(NF_base):
                                                                                                      self.mesh.exteriorElementBoundariesArray,
                                                                                                      self.mesh.elementBoundaryElementsArray,
                                                                                                      self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                                                     self.isDOFBoundary[ck],#mwf added
+                                                                                                     self.isDOFBoundary[ck],
                                                                                                      ebqe['n'],
                                                                                                      ebqe[('a',ci,ck)],
                                                                                                      ebqe[('da',ci,ck,cj)],
@@ -1654,7 +1654,7 @@ class Diffusion_IIPG_exterior(NF_base):
                                                                                   self.mesh.exteriorElementBoundariesArray,
                                                                                   self.mesh.elementBoundaryElementsArray,
                                                                                   self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                                  self.isDOFBoundary[ck],#mwf added
+                                                                                  self.isDOFBoundary[ck],
                                                                                   ebqe['n'],
                                                                                   self.ebqe[('a',ci,ck)],
                                                                                   self.ebqe[('grad(phi)',ck)],
@@ -1668,7 +1668,7 @@ class Diffusion_IIPG_exterior(NF_base):
                         cnumericalFlux.calculateExteriorNumericalDiffusiveFlux(self.mesh.exteriorElementBoundariesArray,
                                                                                self.mesh.elementBoundaryElementsArray,
                                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                               self.isDOFBoundary[ck],#mwf added
+                                                                               self.isDOFBoundary[ck],
                                                                                ebqe['n'],
                                                                                self.ebqe[('a',ci,ck)],
                                                                                self.ebqe[('grad(phi)',ck)],
@@ -1693,7 +1693,7 @@ class Diffusion_IIPG_exterior(NF_base):
                                                                                                    self.mesh.exteriorElementBoundariesArray,
                                                                                                    self.mesh.elementBoundaryElementsArray,
                                                                                                    self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                                                   self.isDOFBoundary[ck],#mwf added
+                                                                                                   self.isDOFBoundary[ck],
                                                                                                    ebqe['n'],
                                                                                                    ebqe[('a',ci,ck)],
                                                                                                    ebqe[('da',ci,ck,cj)],
@@ -1709,7 +1709,7 @@ class Diffusion_IIPG_exterior(NF_base):
                                                                                                 self.mesh.elementBoundaryElementsArray,
                                                                                                 self.mesh.elementBoundaryLocalElementBoundariesArray,
 
-                                                                                                self.isDOFBoundary[ck],#mwf added
+                                                                                                self.isDOFBoundary[ck],
                                                                                                 ebqe['n'],
                                                                                                 ebqe[('a',ci,ck)],
                                                                                                 ebqe[('da',ci,ck,cj)],
@@ -1814,7 +1814,7 @@ class DarcySplitPressure_IIPG_exterior(NF_base):
                                                                                                    self.mesh.exteriorElementBoundariesArray,
                                                                                                    self.mesh.elementBoundaryElementsArray,
                                                                                                    self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                                                   self.isDOFBoundary[ck],#mwf added
+                                                                                                   self.isDOFBoundary[ck],
                                                                                                    ebqe['n'],
                                                                                                    ebqe[('a',ci,ck)],
                                                                                                    ebqe[('da',ci,ck,cj)],
@@ -1830,7 +1830,7 @@ class DarcySplitPressure_IIPG_exterior(NF_base):
                                                                                                 self.mesh.elementBoundaryElementsArray,
                                                                                                 self.mesh.elementBoundaryLocalElementBoundariesArray,
 
-                                                                                                self.isDOFBoundary[ck],#mwf added
+                                                                                                self.isDOFBoundary[ck],
                                                                                                 ebqe['n'],
                                                                                                 ebqe[('a',ci,ck)],
                                                                                                 ebqe[('da',ci,ck,cj)],
