@@ -10,7 +10,8 @@ coefficients = MiscibleDisplacementCoefficients_Flow(conductivities,sources,
                                                      nd=nd,
                                                      viscosity_a=mu_a,
                                                      viscosity_b=mu_b,
-                                                     materialValuesLocallyConstant=True)
+                                                     materialValuesLocallyConstant=True,
+                                                     concentration_model_id=1)
 
 
 initialConditions = initialConditions_flow

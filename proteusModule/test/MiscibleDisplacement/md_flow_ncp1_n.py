@@ -3,14 +3,10 @@ from proteus.default_n import *
 from md_flow_p import *
 
 parallel = False
-polynomial_order = 1
 timeIntegration = NoIntegration
 nDTout = 1
 
-if polynomial_order == 2:
-    femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
-else:    
-    femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
+femSpaces = {0:NC_AffineLinearOnSimplexWithNodalBasis}
 
 elementQuadrature = SimplexGaussQuadrature(nd,gw_quad_order)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,gw_quad_order)
@@ -52,9 +48,6 @@ linearSmoother = StarILU
 linTolFac = 0.0
 l_atol_res = 1.0e-10
 
-cfluxtag  = 'pwl'#'pwl-bdm'#'sun-rt0','sun-gs-rt0','pwc','pwl','pwl-bdm','point-eval'
+cfluxtag  = 'p1-nc'
 conservativeFlux =  {0:cfluxtag}
-#need this for sun-wheeler-gs
-if cfluxtag == 'sun-gs-rt0':
-    numericalFluxType = Advection_DiagonalUpwind_Diffusion_SIPG_exterior
 
