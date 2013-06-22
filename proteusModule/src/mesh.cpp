@@ -3169,7 +3169,7 @@ extern "C"
   }
 
   //mwftodo get global refinement to preserve element boundary type   
-  int globallyRefineEdgeMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh)
+  int globallyRefineEdgeMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh, bool averageNewNodeFlags)
   {
     using namespace  std;
     multilevelMesh.nLevels = nLevels;
@@ -3210,8 +3210,14 @@ extern "C"
                      multilevelMesh.meshArray[i-1].nodeArray + multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + 1]*3,
                      midpoints[0]);
             midpoints[0].nN = nN_new;
-            midpoints[0].flag = 0.5*(multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + 0]] +
-                                     multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + 1]]);
+            if (multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + 0]] ==
+                multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + 1]])
+              midpoints[0].flag = multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + 0]];
+            else if (averageNewNodeFlags)
+              midpoints[0].flag = 0.5*(multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + 0]] +
+                                       multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*2 + 1]]);
+            else
+              midpoints[0].flag = DEFAULT_NODE_MATERIAL;
 
             newNodeSet.insert(midpoints[0]);
             nN_new++;
@@ -3258,7 +3264,7 @@ extern "C"
     return 0;
   }
 
-  int globallyRefineTriangularMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh)
+  int globallyRefineTriangularMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh, bool averageNewNodeFlags)
   {
     using namespace  std;
     multilevelMesh.nLevels = nLevels;
@@ -3311,8 +3317,15 @@ extern "C"
                   if(nodeItr == newNodeSet.end())
                     {
                       midpoints[nN_midpoint].nN = nN_new;
-                      midpoints[nN_midpoint].flag = 0.5*(multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*3 + nN_element_0]] +
-                                                         multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*3 + nN_element_1]]);
+                      if (multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*3 + nN_element_0]] ==
+                          multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*3 + nN_element_1]])
+                        midpoints[nN_midpoint].flag = multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*3 + nN_element_0]];
+                      else if (averageNewNodeFlags)
+                        midpoints[nN_midpoint].flag = 0.5*(multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*3 + nN_element_0]] +
+                                                           multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*3 + nN_element_1]]);
+                      else
+                        midpoints[nN_midpoint].flag = DEFAULT_NODE_MATERIAL;
+
                       newNodeSet.insert(midpoints[nN_midpoint]);
                       nN_new++;
                     }
@@ -3366,6 +3379,9 @@ extern "C"
 	
         for(nodeItr=newNodeSet.begin();nodeItr!=newNodeSet.end();nodeItr++)
           {
+            //mwf hack 
+            std::cout<<"refined triangular mesh: nN parent= "<<multilevelMesh.meshArray[i-1].nNodes_global<<" nN child= "<<multilevelMesh.meshArray[i].nNodes_global
+                     <<" nodeItr->nN,flag,x= "<<nodeItr->nN<<" , "<<nodeItr->flag <<" , " << nodeItr->x <<" , "<< nodeItr->y << " , "<< nodeItr->z << std::endl;
             multilevelMesh.meshArray[i].nodeMaterialTypes[nodeItr->nN] = nodeItr->flag;
           }
 	
@@ -3374,7 +3390,7 @@ extern "C"
   }
 
   //mwftodo get global refinement to preserve element boundary type   
-  int globallyRefineTetrahedralMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh)
+  int globallyRefineTetrahedralMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh, bool averageNewNodeFlags)
   {
     using namespace std;
     multilevelMesh.nLevels = nLevels;
@@ -3442,8 +3458,15 @@ extern "C"
                   if(nodeItr == newNodeSet.end())
                     {
                       midpoints[nN_midpoint].nN = nN_new;
-                      midpoints[nN_midpoint].flag = 0.5*(multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*4 + nN_element_0]] +
-                                                         multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*4 + nN_element_1]]);
+                      if (multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*4 + nN_element_0]] ==
+                          multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*4 + nN_element_1]])
+                        midpoints[nN_midpoint].flag = multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*4 + nN_element_0]];
+                      else if (averageNewNodeFlags)
+                        midpoints[nN_midpoint].flag = 0.5*(multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*4 + nN_element_0]] +
+                                                           multilevelMesh.meshArray[i-1].nodeMaterialTypes[multilevelMesh.meshArray[i-1].elementNodesArray[eN_parent*4 + nN_element_1]]);
+                      else
+                        midpoints[nN_midpoint].flag = DEFAULT_NODE_MATERIAL;
+
                       newNodeSet.insert(midpoints[nN_midpoint]);
                       nN_new++;
                     }

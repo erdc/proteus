@@ -16,7 +16,7 @@ elementQuadrature = SimplexGaussQuadrature(nd,4)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 
 nnx = nny = int(L[0]/he)
-nLevels = 1
+nLevels = 2
 if parallel:
     nLevels = 1
 
