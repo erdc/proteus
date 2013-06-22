@@ -11,7 +11,8 @@ coefficients = MiscibleDisplacementCoefficients_Flow(conductivities,sources,
                                                      viscosity_a=mu_a,
                                                      viscosity_b=mu_b,
                                                      materialValuesLocallyConstant=True,
-                                                     concentration_model_id=1)
+                                                     concentration_model_id=1,
+                                                     timeVaryingCoefficients = fabs(mu_a) > 0.)
 
 
 initialConditions = initialConditions_flow
