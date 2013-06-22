@@ -2,10 +2,6 @@ from proteus import *
 from proteus.default_n import *
 from md_flow_p import *
 
-#mwf debug
-import pdb
-pdb.set_trace()
-
 parallel = False
 polynomial_order = 1
 timeIntegration = NoIntegration
@@ -20,7 +16,7 @@ elementQuadrature = SimplexGaussQuadrature(nd,4)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 
 nnx = nny = int(L[0]/he)
-nLevels = 2
+nLevels = 1
 if parallel:
     nLevels = 1
 

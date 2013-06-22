@@ -6,7 +6,7 @@ flow equation for simple miscible displacement example
 """
 from miscible_displacement import *
 
-coefficients = MiscibleDisplacementCoefficients_Flow(permeabilities,sources,
+coefficients = MiscibleDisplacementCoefficients_Flow(conductivities,sources,
                                                      nd=nd,
                                                      viscosity_a=mu_a,
                                                      viscosity_b=mu_b,
@@ -15,7 +15,7 @@ coefficients = MiscibleDisplacementCoefficients_Flow(permeabilities,sources,
 
 initialConditions = initialConditions_flow
 
-dirichletConditions = {0:pressure_bc}
+dirichletConditions = {0:head_bc}
 fluxBoundaryConditions = {0:'setFlow'}
 
 advectiveFluxBoundaryConditions =  {0:noflux}
