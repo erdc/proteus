@@ -7,12 +7,18 @@ common definitions for simple miscible displacement problem
     
     \deld \vec q = s(x,t)
 
-          \vec q =-\frac{K(x,t)}{\mu(c(x,t))} \grad p
+          \vec q =-\frac{K(x,t)}{\hat{\mu}(c(x,t))} \grad h
 
     Transport equation      
     \pd{\theta c}{t} + \deld \left[\vec q c - \theta\ten{D}\nabla c\right] = s_c(x,t) 
 
-    where \mu(c) = a*c + b
+    Here K is the Saturated Conductivity, K = k\varrho_0 |g|/\mu_0
+      and
+      \hat{\mu} = \mu/\mu_0
+    where \mu is the dynamic viscosity, \varrho is the density, and the subscript 0 means a reference value
+    
+     We'll assume \hat{\mu}(c) = a*c + b
+     
 """
 from proteus import *
 from proteus import SubsurfaceTransportCoefficients as STC
@@ -27,13 +33,13 @@ class MiscibleDisplacementCoefficients_Flow(STC.SinglePhaseDarcyCoefficients):
     
     \deld \vec q = s(x,t)
 
-          \vec q =-\frac{K(x,t)}{\mu(c(x,t))} \grad p
+          \vec q =-\frac{K(x,t)}{\hat{\mu}(c(x,t))} \grad h
 
     Base class does most of the work for evaluating coefficients
     """
 
     def __init__(self,
-                 K_types,     #permeability function (x,t) that varies by element type
+                 K_types,     #conductivity function (x,t) that varies by element type
                  source_types,#source function (x,t) that varies by element type                 
                  nd=2,        #number of space dimensions
                  viscosity_a=0.0, viscosity_b=1.0,#mu = a*c + b
@@ -131,7 +137,11 @@ name = "MiscibleDisplacement"
 L = (1000,1000,1) #m
 nd= 2
 
+
 #temporal domain
+#for converting from seconds to days
+days2sec = 60.*60.*24.
+
 ndays = 10.0
 T = ndays*24.0*60.*60. #seconds
 
@@ -147,7 +157,7 @@ domain = Domain.PlanarStraightLineGraphDomain(fileprefix='mesh',name='md_mesh')
 domain.boundaryTags = regular_domain.boundaryLegend
 
 genMesh = True
-refinement_level = 10 #define characteristic length
+refinement_level = 5 #define characteristic length
 he = L[0]/float(refinement_level)
 
 triangleOptions = "VApq30Dena{area:8.8f}".format(area=(he**2)/2.0)
@@ -156,19 +166,19 @@ triangleOptions = "VApq30Dena{area:8.8f}".format(area=(he**2)/2.0)
 ### Material Properties ###
 #homogeneous for now
 nmaterial = 1
-k_0 = 1.0e-8 #m^2
-f_0 = 0.0    #1/s
+K_0 = 2.0# m/d
+f_0 = 0.0#1/d
 
 Ident = np.zeros((nd,nd),'d')
 Ident[0,0]=1.0; Ident[1,1] = 1.0
 
-permeabilities = {1:lambda x,t: k_0*Ident}
+conductivities = {1:lambda x,t: K_0*Ident}
 sources = {1:lambda x,t: f_0}
 #check about this
 sources[0] = sources[1]
-permeabilities[0] = permeabilities[1]
+conductivities[0] = conductivities[1]
 #constant viscosity
-mu_b= 1.0e-3 #Pa*s or kg/(m*s)
+mu_b= 1.0#[-]
 mu_a= 0.0
 
 
@@ -177,21 +187,27 @@ mu_a= 0.0
 #Pressure boundary condition on bottom left and top right
 #no flow everywhere else
 inflow_length = L[1]*0.1
-outflow_length= L[1]*0.1
+outflow_length= L[1]*0.9
 
-pressure_inflow = 100.e3 #Pa or kg/(m*s^2)
-pressure_outflow= 0.0
+#piezometric head
+head_inflow = 1.0#1000.e3 #Pa or kg/(m*s^2)
+head_outflow= 0.0
 
 ## Transport Equation
 concentration_inflow = 1.0 # kg/m^3 ?
 concentration_background = 0.0 
 #
-def pressure_bc(x,flag):
-    print "flag = %s left= %s " % (flag, domain.boundaryTags['left'])
+def head_bc(x,flag):
     if flag == domain.boundaryTags['left'] and x[1] <= inflow_length:
-        return lambda x,t: pressure_inflow
-    if flag == domain.boundaryTags['right'] and x[1] >= outflow_length:
-        return lambda x,t: pressure_outflow
+        print "left flag bc x={} ".format(x)
+    if x[0] <= 0.0 and x[1] <= inflow_length:
+        print "left coord bc x={} flag= {}".format(x,flag)
+        if flag != domain.boundaryTags['left']:
+            assert x[1] <= 0.0 or x[1] >= L[1]
+        return lambda x,t: head_inflow
+    #if flag == domain.boundaryTags['right'] and x[1] >= outflow_length:
+    if x[0] >= L[0] and x[1] >= outflow_length:
+        return lambda x,t: head_outflow
 
 def noflux(x,flag):
     if flag in [domain.boundaryTags['bottom'],domain.boundaryTags['top']]:
@@ -214,7 +230,7 @@ class ConstantIC:
         return self.val
 
 ##Flow Equation
-initialConditions_flow = {0:ConstantIC(pressure_outflow)}
+initialConditions_flow = {0:ConstantIC(head_outflow)}
 ##Transport Equation
 initialConditions_trans = {0:ConstantIC(concentration_background)}
 
