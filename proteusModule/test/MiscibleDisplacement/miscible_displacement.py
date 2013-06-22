@@ -17,7 +17,7 @@ common definitions for simple miscible displacement problem
       \hat{\mu} = \mu/\mu_0
     where \mu is the dynamic viscosity, \varrho is the density, and the subscript 0 means a reference value
     
-     We'll assume \hat{\mu}(c) = a*c + b
+     We'll assume \hat{\mu}(c) = a*(c-c_0) + b
      
 """
 from proteus import *
@@ -43,6 +43,7 @@ class MiscibleDisplacementCoefficients_Flow(STC.SinglePhaseDarcyCoefficients):
                  source_types,#source function (x,t) that varies by element type                 
                  nd=2,        #number of space dimensions
                  viscosity_a=0.0, viscosity_b=1.0,#mu = a*c + b
+                 visc_ref_conc= 0.0,
                  concentration_model_id=None,  #which number is the model for the concentration transport equation? 
                  timeVaryingCoefficients=False, #do the coefficients vary in time?
                  materialValuesLocallyConstant=False): #are the material functions constants? e.g., K_j(x,t) = K^0_j ?
@@ -54,29 +55,29 @@ class MiscibleDisplacementCoefficients_Flow(STC.SinglePhaseDarcyCoefficients):
         self.concentration_model_id = concentration_model_id; self.concentration_model = None
         self.viscosity_a = viscosity_a 
         self.viscosity_b = viscosity_b 
-        
+        self.visc_ref_conc= visc_ref_conc
         STC.SinglePhaseDarcyCoefficients.__init__(self,K_types,source_types,nc=1,nd=nd,
                                                   timeVaryingCoefficients=timeVaryingCoefficients,
                                                   materialValuesLocallyConstant=materialValuesLocallyConstant)
         
-        self.variableNames=['p']
+        self.variableNames=['h']
         
-        def attachModels(self,modelList):
-            if self.concentration_model_id != None: #grab a reference to the model that solves for concentration 
-                assert 0 <= self.concentration_model_id and self.concentration_model_id < len(modelList)
-                self.concentration_model = modelList[self.concentration_model_id]
-                #assumes that the first unknown in the transport equation is the concentration of our species of interest
-                #get references to the quadrature dictionaries ...
-                #element quadrature points
-                self.q_c    = self.concentration_model.q[('u',0)]
-                #exterior boundary of domain
-                self.ebqe_c = self.concentration_model.ebqe[('u',0)]
-                #element boundary points treated as unique per element (e.g., for DG) 
-                if self.concentration_model.ebq.has_key(('u',0)):
-                    self.ebq_c = self.concentration_model.ebq[('u',0)]
-                #element boundary points treated as unique per element boundary
-                if self.concentration_model.ebq_global.has_key(('u',0)):
-                    self.ebq_global_c = self.concentration_model.ebq_global[('u',0)]
+    def attachModels(self,modelList):
+        if self.concentration_model_id != None: #grab a reference to the model that solves for concentration 
+            assert 0 <= self.concentration_model_id and self.concentration_model_id < len(modelList)
+            self.concentration_model = modelList[self.concentration_model_id]
+            #assumes that the first unknown in the transport equation is the concentration of our species of interest
+            #get references to the quadrature dictionaries ...
+            #element quadrature points
+            self.q_c    = self.concentration_model.q[('u',0)]
+            #exterior boundary of domain
+            self.ebqe_c = self.concentration_model.ebqe[('u',0)]
+            #element boundary points treated as unique per element (e.g., for DG) 
+            if self.concentration_model.ebq.has_key(('u',0)):
+                self.ebq_c = self.concentration_model.ebq[('u',0)]
+            #element boundary points treated as unique per element boundary
+            if self.concentration_model.ebq_global.has_key(('u',0)):
+                self.ebq_global_c = self.concentration_model.ebq_global[('u',0)]
 
     def initializeElementQuadrature(self,t,cq):
         #call parent classes function, then initialize quadrature point for concentration and viscosity values
@@ -114,12 +115,12 @@ class MiscibleDisplacementCoefficients_Flow(STC.SinglePhaseDarcyCoefficients):
             mu = self.ebq_mu; conc = self.ebq_c;
         else:
             raise NotImplementedError
-        #mwf debug
-        #import pdb
-        #pdb.set_trace()
-        #mu = a*c + b
-        mu[:] = conc; mu[mu < 0] = 0.0  #trim negative values
+        #mu = a*(c-c_0) + b
+        mu[:] = conc; mu -= self.visc_ref_conc; mu[mu < 0] = 0.0  #trim negative values
         mu *= self.viscosity_a; mu += self.viscosity_b
+        #mwf debug
+        #print "Flow evaluate t={} mu_a= {} mu_b= {} conc.max() = {} conc.min= {} mu.max()= {} mu.min()= {} ".format(t,self.viscosity_a,self.viscosity_b,conc.max(),conc.min(),
+        #                                                                                                                       mu.max(),mu.min())
 
         #check for divide by zero
         assert np.absolute(mu).min() > 0.0, "problem, viscosity has a zero value about to divide by min |mu| = {}".format(np.absolute(mu).min())
@@ -187,8 +188,8 @@ alpha_T_types = np.array([alpha_T_0,alpha_T_0])
 #sources[0] = sources[1]
 #conductivities[0] = conductivities[1]
 #constant viscosity
-mu_b= 1.0#[-]
-mu_a= 0.0
+mu_b= 1.0 #[-] 
+mu_a= 5.0
 
 d_mol = np.array([1.3e-9])
 
