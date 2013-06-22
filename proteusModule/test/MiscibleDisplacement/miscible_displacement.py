@@ -142,9 +142,9 @@ nd= 2
 #for converting from seconds to days
 days2sec = 60.*60.*24.
 
-ndays = 10.0
-T = ndays*24.0*60.*60. #seconds
-
+ndays = 5000.0#3650.0
+T = ndays #[d]
+nDTout = 50
 
 #just a simple rectangular domain for now
 regular_domain = Domain.RectangularDomain(L[:nd],
@@ -156,8 +156,9 @@ unstructured_mesh = True
 domain = Domain.PlanarStraightLineGraphDomain(fileprefix='mesh',name='md_mesh')
 domain.boundaryTags = regular_domain.boundaryLegend
 
+
 genMesh = True
-refinement_level = 5 #define characteristic length
+refinement_level = 32 #define characteristic length
 he = L[0]/float(refinement_level)
 
 triangleOptions = "VApq30Dena{area:8.8f}".format(area=(he**2)/2.0)
@@ -166,31 +167,40 @@ triangleOptions = "VApq30Dena{area:8.8f}".format(area=(he**2)/2.0)
 ### Material Properties ###
 #homogeneous for now
 nmaterial = 1
-K_0 = 2.0# m/d
-f_0 = 0.0#1/d
+K_0 = 4.0# m/d
+f_0 = 0.0#1/d 
+porosity_0 = 0.35 #[-]
+alpha_L_0   = 0.01 #[m]
+alpha_T_0   = 0.001 #[m]
 
 Ident = np.zeros((nd,nd),'d')
 Ident[0,0]=1.0; Ident[1,1] = 1.0
 
 conductivities = {1:lambda x,t: K_0*Ident}
 sources = {1:lambda x,t: f_0}
+#transport heterogeneity is handled as constants only
+omega_types   = np.array([porosity_0, porosity_0])
+alpha_L_types = np.array([alpha_L_0,alpha_L_0])
+alpha_T_types = np.array([alpha_T_0,alpha_T_0])
+
 #check about this
-sources[0] = sources[1]
-conductivities[0] = conductivities[1]
+#sources[0] = sources[1]
+#conductivities[0] = conductivities[1]
 #constant viscosity
 mu_b= 1.0#[-]
 mu_a= 0.0
 
+d_mol = np.array([1.3e-9])
 
 ### Boundary Conditions ###
 ## Flow Equation
 #Pressure boundary condition on bottom left and top right
 #no flow everywhere else
 inflow_length = L[1]*0.1
-outflow_length= L[1]*0.9
+outflow_length= L[1]*0.8
 
 #piezometric head
-head_inflow = 1.0#1000.e3 #Pa or kg/(m*s^2)
+head_inflow = 100.0 #[m]
 head_outflow= 0.0
 
 ## Transport Equation
@@ -199,14 +209,8 @@ concentration_background = 0.0
 #
 def head_bc(x,flag):
     if flag == domain.boundaryTags['left'] and x[1] <= inflow_length:
-        print "left flag bc x={} ".format(x)
-    if x[0] <= 0.0 and x[1] <= inflow_length:
-        print "left coord bc x={} flag= {}".format(x,flag)
-        if flag != domain.boundaryTags['left']:
-            assert x[1] <= 0.0 or x[1] >= L[1]
         return lambda x,t: head_inflow
-    #if flag == domain.boundaryTags['right'] and x[1] >= outflow_length:
-    if x[0] >= L[0] and x[1] >= outflow_length:
+    if flag == domain.boundaryTags['right'] and x[1] >= outflow_length:
         return lambda x,t: head_outflow
 
 def noflux(x,flag):
@@ -215,6 +219,22 @@ def noflux(x,flag):
     if flag == domain.boundaryTags['left'] and x[1] > inflow_length:
         return lambda x,t: 0.0
     if flag == domain.boundaryTags['right'] and x[1] < outflow_length:
+        return lambda x,t: 0.0
+
+
+def advective_flux(x,flag):
+    if flag in [domain.boundaryTags['bottom'],domain.boundaryTags['top']]:
+        return lambda x,t: 0.0
+    if flag == domain.boundaryTags['left'] and x[1] > inflow_length:
+        return lambda x,t: 0.0
+    if flag == domain.boundaryTags['right'] and x[1] < outflow_length:
+        return lambda x,t: 0.0
+    if flag == domain.boundaryTags['right'] and x[1] < outflow_length:
+        return None
+
+def dispersive_flux(x,flag):
+    if flag in [domain.boundaryTags['bottom'],domain.boundaryTags['top'],
+                domain.boundaryTags['left'], domain.boundaryTags['right']]:
         return lambda x,t: 0.0
 
 #
@@ -235,3 +255,19 @@ initialConditions_flow = {0:ConstantIC(head_outflow)}
 initialConditions_trans = {0:ConstantIC(concentration_background)}
 
 
+# numerics
+parallel = False
+
+nnx = nny = int(L[0]/he)
+nLevels = 1
+if parallel:
+    nLevels = 1
+
+# parallel partitioning
+if parallel:
+    nLayersOfOverlapForParallel = 1     
+    parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.node
+    numericalFluxType = NumericalFlux.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
+
+# 
+gw_quad_order = 3
