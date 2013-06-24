@@ -97,3 +97,6 @@
 [submodule "externalPackages/petsc-dev"]
 	path = externalPackages/petsc-dev
 	url = git@bitbucket.org:petsc/petsc.git
+[submodule "externalPackages/mpi4py"]
+	path = externalPackages/mpi4py
+	url = git@github.com:erdc-cm/mpi4py.git
