@@ -1,3 +1,0 @@
-#!/bin/csh
-setenv PYADH_ARCH darwin_x86
-${PYADH_PYTHON} setup.py install --hdf5=${PYADH}/${PYADH_ARCH}

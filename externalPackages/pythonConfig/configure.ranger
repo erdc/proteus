@@ -1,1 +1,0 @@
-./configure --prefix=${PYADH}/${PYADH_ARCH} CC="${CC} -DPROTEUS_FFI64_HACK"

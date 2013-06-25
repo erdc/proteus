@@ -1,8 +1,0 @@
-#!/bin/csh
-setenv CC '/usr/bin/mpicc'
-unsetenv CFLAGS
-setenv CXX '/usr/bin/mpicc'
-unsetenv CXXFLAGS
-setenv LD '/usr/bin/mpicc'
-unsetenv LDFLAGS
-./configure --enable-shared --prefix=${PYADH}/${PYADH_ARCH}

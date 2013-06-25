@@ -1,2 +1,0 @@
-#!/bin/bash
-CFLAGS='-noswitcherror' CXXFLAGS='-noswitcherror' PETSC_DIR=${PROTEUS_PREFIX} PETSC_ARCH='' ${PROTEUS_PYTHON} setup.py build

@@ -1,1 +1,0 @@
-${PROTEUS_PYTHON} setup.py build --mpicc=${PROTEUS_PREFIX}/bin/mpicc --mpicxx=${PROTEUS_PREFIX}/bin/mpicxx

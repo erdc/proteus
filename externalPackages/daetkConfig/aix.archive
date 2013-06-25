@@ -1,2 +1,0 @@
-$(ARCHIVE): $(OBJS) $(OBJS_ADD)
-	$(CXX) $(CXXFLAGS) $(OBJS)  $(OBJS_ADD) -o $(ARCHIVE)

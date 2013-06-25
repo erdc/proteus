@@ -1,4 +1,0 @@
-${PROTEUS_PYTHON} ./config/configure.py --with-pic --with-clanguage=C --with-shared --with-dynamic --download-parmetis=ifneeded --download-spooles=ifneeded --prefix=${PROTEUS_PREFIX} --with-cc=/usr/bin/mpicc --with-cxx=/usr/bin/mpicxx --without-fortran \
---PETSC_ARCH=${PROTEUS_ARCH} \
---PETSC_DIR=${PROTEUS}/externalPackages/petsc
-

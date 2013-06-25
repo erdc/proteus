@@ -1,5 +1,0 @@
-#!/bin/tcsh
-setenv CC gcc
-setenv CXX g++
-unsetenv LD
-./configure --prefix=${PYADH}/${PYADH_ARCH}

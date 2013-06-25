@@ -1,1 +1,0 @@
-${PROTEUS_PYTHON} setup.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch=''

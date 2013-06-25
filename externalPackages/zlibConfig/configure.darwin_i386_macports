@@ -1,4 +1,0 @@
-#!/bin/csh
-#zlib configuration for pyadh
-setenv PYADH_ARCH darwin_i386_macports
-./configure --shared --prefix=${PYADH}/${PYADH_ARCH}

@@ -1,1 +1,0 @@
-./configure --prefix=${PROTEUS_PREFIX} --with-zlib=${PROTEUS_PREFIX} --with-szlib=${PROTEUS_PREFIX} CC="/usr/bin/gcc -arch x86_64" CXX="/usr/bin/g++ -arch x86_64" --disable-cxx --disable-fortran --disable-parallel --enable-shared --enable-static --with-pthread

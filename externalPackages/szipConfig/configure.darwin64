@@ -1,1 +1,0 @@
-CC="/usr/bin/gcc -arch x86_64" CFLAGS="-arch x86_64" CXX="/usr/bin/g++ -arch x86_64" CXXFLAGS="-arch x86_64" ./configure --enable-shared --prefix=${PROTEUS_PREFIX}

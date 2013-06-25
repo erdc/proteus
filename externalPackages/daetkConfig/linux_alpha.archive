@@ -1,6 +1,0 @@
-$(ARCHIVE): $(OBJS) $(OBJS_ADD)
-	$(LD) $(CXXFLAGS) $(OBJS) $(OBJS_ADD) $(BLAS) $(LDFLAGS) \
-        $(SYSLIBS) -o /dev/null
-	$(AR) $(ARFLAGS) $(ARCHIVE) $(OBJS) $(OBJS_ADD)
-	$(AR) d $(ARCHIVE) dummyMain.o
-	$(RANLIB) $(ARCHIVE)

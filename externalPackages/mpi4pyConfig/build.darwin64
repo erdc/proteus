@@ -1,1 +1,0 @@
-${PROTEUS_PYTHON} setup.py build config --mpicc="mpicc -arch x86_64" --mpicxx="mpicxx -arch x86_64" --mpild="mpicc -arch x86_64"

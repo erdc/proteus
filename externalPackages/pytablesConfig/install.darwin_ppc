@@ -1,3 +1,0 @@
-#!/bin/tcsh
-${PROTEUS_PYTHON} setup_darwin_ppc.py install --hdf5=${PYADH}/${PYADH_ARCH} --lflags="-L${PYADH}/${PYADH_ARCH}/lib -lz -lsz" 
-

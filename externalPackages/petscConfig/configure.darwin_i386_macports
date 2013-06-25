@@ -1,6 +1,0 @@
-${PROTEUS_PYTHON} ./config/configure.py --prefix=${PYADH}/${PYADH_ARCH}--with-clanguage=C --with-cc=/opt/local/bin/openmpicc --with-cxx=/opt/local/bin/openmpicxx --with-fc=/opt/local/bin/openmpif90 --with-mpi-compilers --without-shared --without-dynamic --download-blacs=ifneeded --download-hypre=ifneeded --download-mumps=ifneeded --download-scalapack=ifneeded --download-parmetis=ifneeded --download-plapack=ifneeded --download-superlu=ifneeded --download-superlu_dist=ifneeded --download-umfpack=ifneeded --download-jostle=ifneeded --download-scotch=ifneeded --download-chaco=ifneeded \
---PETSC_ARCH=${PROTEUS_ARCH} \
---PETSC_DIR=${PROTEUS}/externalPackages/petsc
-
-
-

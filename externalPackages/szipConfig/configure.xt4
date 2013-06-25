@@ -1,5 +1,0 @@
-#!/bin/csh
-setenv CC cc
-unsetenv CXX CC
-unsetenv LD cc
-./configure --disable-shared --prefix=/usr/local/usp/pyadh

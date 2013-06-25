@@ -1,1 +1,0 @@
-${PROTEUS_PYTHON} setup.py config --mpicxx=${PROTEUS_PREFIX}/bin/mpicxx --mpicc=${PROTEUS_PREFIX}/bin/mpicc --mpif90=${PROTEUS_PREFIX}/bin/mpif90

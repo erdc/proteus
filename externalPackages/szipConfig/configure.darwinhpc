@@ -1,1 +1,0 @@
-LD="" CC="/usr/local/bin/gcc"  CFLAGS="" CXX="/usr/local/bin/g++"  CXXFLAGS="" ./configure --enable-shared --prefix=${PROTEUS_PREFIX}

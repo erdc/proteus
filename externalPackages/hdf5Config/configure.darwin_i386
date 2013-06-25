@@ -1,8 +1,0 @@
-#/bin/csh
-setenv CC '/usr/bin/mpicc'
-unsetenv CFLAGS
-unsetenv LDFLAGS 
-setenv CXX '/usr/bin/mpicxx'
-unsetenv CXXFLAGS 
-setenv LD '/usr/bin/mpicc'
-./configure --disable-fortran --disable-cxx --with-zlib=${PYADH}/${PYADH_ARCH} --with-szlib=${PYADH}/${PYADH_ARCH} --enable-shared --prefix=${PYADH}/${PYADH_ARCH}

@@ -1,1 +1,0 @@
-CC=/usr/bin/gcc CXX=/usr/bin/g++ ${PROTEUS_PYTHON} setup.py build install

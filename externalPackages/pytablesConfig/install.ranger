@@ -1,1 +1,0 @@
-${PROTEUS_PYTHON} setup.py install --hdf5=${PYADH}/${PYADH_ARCH} --lflags="-L${PYADH}/${PYADH_ARCH}/lib -lhdf5 -lsz -lz -Wl,-rpath,${PYADH}/${PYADH_ARCH}/lib"

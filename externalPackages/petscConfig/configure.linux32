@@ -1,7 +1,0 @@
-${PROTEUS_PYTHON} ./config/configure.py --with-pic --with-clanguage=C --with-cc=mpicc --with-cxx=mpicxx --with-fc=mpif90 --with-mpi-compilers --without-shared --without-dynamic --download-parmetis=${HOME}/Desktop/ParMetis-dev-p3.tar.gz --download-spooles=${HOME}/Desktop/spooles-2.2-dec-2008.tar.gz  \
---prefix=${PROTEUS_PREFIX} \
---PETSC_ARCH=${PROTEUS_ARCH} \
---PETSC_DIR=${PROTEUS}/externalPackages/petsc
-
-
-
