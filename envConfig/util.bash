@@ -1,9 +1,0 @@
-export PROTEUS_ARCH=util
-unset CC
-unset CXX
-unset FC
-unset F77
-unset F90
-export PROTEUS_PREFIX=${PROTEUS}/${PROTEUS_ARCH}
-export PROTEUS_PYTHON=${PROTEUS_PREFIX}/bin/python
-export PATH=${PROTEUS_PREFIX}/bin:${PATH}
