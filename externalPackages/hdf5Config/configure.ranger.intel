@@ -1,1 +1,0 @@
-CC='icc -gcc' CXX='icpc -gcc' F77='gfortran' F90='ifort' ./configure --enable-shared --with-pic --with-zlib=${PROTEUS_PREFIX} --with-szlib=${PROTEUS_PREFIX} --disable-parallel --enable-threadsafe --with-pthread --prefix=${PROTEUS_PREFIX} LDFLAGS="-L${PROTEUS_PREFIX}/lib" LIBS="-lsz -lz" CFLAGS="-I${PROTEUS_PREFIX}/include"

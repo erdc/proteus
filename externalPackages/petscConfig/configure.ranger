@@ -1,6 +1,0 @@
-${PROTEUS_PYTHON} ./config/configure.py --with-pic --with-clanguage=C --with-cc=mpicc --with-cxx=mpicxx --with-fc=mpif90 --with-mpi-compilers --without-shared --without-dynamic --download-parmetis=ifneeded --download-spooles=ifneeded --with-blas-lapack-lib=[${TACC_ACML_LIB}/libacml.a] \
---PETSC_ARCH=${PROTEUS_ARCH} \
---PETSC_DIR=${PROTEUS}/externalPackages/petsc
-
-
-

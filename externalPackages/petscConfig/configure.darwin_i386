@@ -1,4 +1,0 @@
-${PROTUES_PYTHON} ./config/configure.py --PETSC_DIR=${PYADH}/externalPackages/petsc --PETSC_ARCH=${PYADH_ARCH} --with-clanguage=C --with-cc='/usr/bin/mpicc' --with-cxx='/usr/bin/mpicxx' --without-fortran  --with-mpi-compilers --with-shared --with-dynamic --with-x=0 --download-parmetis=ifneeded --download-spooles=ifneeded \
---PETSC_ARCH=${PROTEUS_ARCH} \
---PETSC_DIR=${PROTEUS}/externalPackages/petsc
-

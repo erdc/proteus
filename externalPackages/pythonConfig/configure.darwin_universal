@@ -1,1 +1,0 @@
-./configure --with-cxx-main --prefix=${PYADH}/${PYADH_ARCH} --enable-framework=${PYADH}/${PYADH_ARCH}  --with-universal-archs="all" --disable-universalsdk --disable-toolbox-glue

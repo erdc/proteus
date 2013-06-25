@@ -1,4 +1,0 @@
-#!/bin/bash
-CC=/usr/bin/gcc
-CXX=/usr/bin/g++
-./configure --uname='Darwin' --shared --prefix=${PROTEUS_PREFIX}

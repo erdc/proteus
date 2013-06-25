@@ -1,4 +1,0 @@
-#!/bin/csh
-#hdf5 configuration for pyadh
-setenv PYADH_ARCH darwin_i386_macports
-./configure --with-zlib=${PYADH}/${PYADH_ARCH} --with-szlib=${PYADH}/${PYADH_ARCH} --enable-shared --prefix=${PYADH}/${PYADH_ARCH}

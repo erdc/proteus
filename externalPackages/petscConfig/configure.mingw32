@@ -1,3 +1,0 @@
-${PROTEUS_PYTHON} config/configure.py --with-mpi=0 --with-cc="gcc -mno-cygwin" --with-cxx="g++ -mno-cygwin" --with-fc="g77 -mno-cygwin" --with-x=0 --with-blas-lapack-lib="[/cygdrive/c/Software/pyadh/mingw32/lib/liblapack_MINGW32.a, /cygdrive/c/Software/pyadh/mingw32/lib/libblas_MINGW32.a]" \
---PETSC_ARCH=${PROTEUS_ARCH} \
---PETSC_DIR=${PROTEUS}/externalPackages/petsc

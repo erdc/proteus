@@ -1,1 +1,0 @@
-CC='gcc' CFLAGS='-fPIC' CXX='g++' CXXFLAGS='-fPIC' ./configure --enable-shared --with-pic --prefix=${PROTEUS_PREFIX}

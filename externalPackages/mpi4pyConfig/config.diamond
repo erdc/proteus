@@ -1,1 +1,0 @@
-${PROTEUS_PYTHON} setup.py config --mpicc=mpiicc --mpicxx=mpiicpc

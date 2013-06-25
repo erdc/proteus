@@ -1,5 +1,0 @@
-#! /bin/csh
-setenv CC '/usr/bin/mpicc'
-setenv CXX '/usr/bin/mpicxx'
-setenv LD '/usr/bin/mpicc'
-./configure --shared --prefix=${PYADH}/${PYADH_ARCH}

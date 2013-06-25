@@ -1,5 +1,0 @@
-#!/bin/tcsh
-setenv PYADH_ARCH darwin_i386_macports
-setenv CC '/opt/local/bin/openmpicc -march=i386'
-setenv CXX '/opt/local/bin/openmpicxx -march=i386'
-./configure --with-cxx-main --prefix=${PYADH}/${PYADH_ARCH} --enable-framework=${PYADH}/${PYADH_ARCH}  --disable-universal-archs --disable-universalsdk --disable-toolbox-glue >& configure.out.macports_framework_darwin_i386_macports

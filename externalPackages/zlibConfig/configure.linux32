@@ -1,6 +1,0 @@
-#!/bin/csh
-setenv CC "gcc -m32"
-setenv CXX "g++ -m32"
-setenv F77 "gfortran -m32"
-unsetenv LD
-./configure --shared --prefix=${PYADH}/${PYADH_ARCH}

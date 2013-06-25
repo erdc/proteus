@@ -1,3 +1,0 @@
-#!/bin/csh
-setenv PYADH_ARCH linux32
-${PROTEUS_PYTHON} setup.py install --hdf5=${PYADH}/${PYADH_ARCH}
