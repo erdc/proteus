@@ -7,7 +7,7 @@ except:
 
 from distutils import sysconfig
 import sys
-sys.path.append(os.getenv('PROTEUS')+'/externalPackages/petsc4py')
+sys.path.append(os.getenv('PROTEUS_PREFIX')+'/lib/petsc4py-config')
 from conf.petscconf import Extension as PetscExtension
 from conf.petscconf import build_ext as petsc_build_ext
 from conf.petscconf import config, build, build_src
