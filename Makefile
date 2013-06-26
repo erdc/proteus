@@ -1,31 +1,35 @@
-all: install_externalPackages install_proteusModule
+all: install
 
-clean: clean_externalPackages clean_proteusModule
+install:
+        ${PROTEUS_PYTHON} setuppyx.py install
+	${PROTEUS_PYTHON} setupf.py install
+        ${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install
+        ${PROTEUS_PYTHON} setup.py install
 
-cleaner:
-	rm -rf ${PROTEUS_PREFIX}    
-	make -k clean
+build_ext:
+	${PROTEUS_PYTHON} setup.py build_ext
+	${PROTEUS_PYTHON} setuppyx.py build_ext 
+	${PROTEUS_PYTHON} setupf.py build_ext 
+	${PROTEUS_PYTHON} setuppetsc.py build_ext --petsc-dir=${PROTEUS_PREFIX} --petsc-arch=''
 
-install_externalPackages:
-	cd externalPackages && make all
+docs:
+        doxygen proteus-doc.conf
 
-install_proteusModule:
-	cd proteusModule && cp proteusConfig/config.py.${PROTEUS_ARCH} config.py && make PETSC_DIR=${PROTEUS_PREFIX} petsc-config install
+clean:
+        ${PROTEUS_PYTHON} setuppyx.py clean
+	${PROTEUS_PYTHON} setupf.py clean
+        ${PROTEUS_PYTHON} setuppetsc.py clean
+        ${PROTEUS_PYTHON} setup.py clean
 
-clean_externalPackages:
-	cd externalPackages && make -k distclean
-
-clean_proteusModule:
-	cd proteusModule && make -k cleaner
+cleaner: clean
+	rm -rf ${PROTEUS_PREFIX}
+	rm -rf build src/*.pyc src/*.so src/*.a
 
 newConfig:
-	cd externalPackages && make newConfig
-	cd proteusModule && make newConfig
+	cd proteusConfig && cp config.py.${PROTEUS_ARCH_OLD} config.py.${PROTEUS_ARCH}
 
-spkg:
-	rm -rf proteus
-	mkdir proteus
-	cp spkg-install Makefile SPKG.txt proteus
-	svn export proteusModule proteus/proteusModule
-	svn export externalPackages proteus/externalPackages
-	tar cjf proteus.spkg proteus
+stack:
+	echo "You must run git submodule update --init to build hashstack"
+	cp hashstack/config.yml.${PROTEUS_ARCH} hashstack/config.yml 
+	cp hashstack/packages.yml.${PROTEUS_ARCH} hashstack/package.yml
+	cd hashstack && ./update -v && ./update --copy ${PROTEUS_PREFIX}
