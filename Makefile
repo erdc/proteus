@@ -1,10 +1,10 @@
 all: install
 
 install:
-        ${PROTEUS_PYTHON} setuppyx.py install
+	${PROTEUS_PYTHON} setuppyx.py install
 	${PROTEUS_PYTHON} setupf.py install
-        ${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install
-        ${PROTEUS_PYTHON} setup.py install
+	${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install
+	${PROTEUS_PYTHON} setup.py install
 
 build_ext:
 	${PROTEUS_PYTHON} setup.py build_ext
@@ -13,13 +13,13 @@ build_ext:
 	${PROTEUS_PYTHON} setuppetsc.py build_ext --petsc-dir=${PROTEUS_PREFIX} --petsc-arch=''
 
 docs:
-        doxygen proteus-doc.conf
+	doxygen proteus-doc.conf
 
 clean:
-        ${PROTEUS_PYTHON} setuppyx.py clean
+	${PROTEUS_PYTHON} setuppyx.py clean
 	${PROTEUS_PYTHON} setupf.py clean
-        ${PROTEUS_PYTHON} setuppetsc.py clean
-        ${PROTEUS_PYTHON} setup.py clean
+	${PROTEUS_PYTHON} setuppetsc.py clean
+	${PROTEUS_PYTHON} setup.py clean
 
 cleaner: clean
 	rm -rf ${PROTEUS_PREFIX}
@@ -31,5 +31,5 @@ newConfig:
 stack:
 	echo "You must run git submodule update --init to build hashstack"
 	cp hashstack/config.yml.${PROTEUS_ARCH} hashstack/config.yml 
-	cp hashstack/packages.yml.${PROTEUS_ARCH} hashstack/package.yml
+	cp hashstack/packages.yml.${PROTEUS_ARCH} hashstack/packages.yml
 	cd hashstack && ./update -v && ./update --copy ${PROTEUS_PREFIX}
