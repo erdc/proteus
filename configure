@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -e
+
+cp proteusConfig/config.py.$PROTEUS_ARCH config.py
+echo "edit config.py to fine tune configuration"
