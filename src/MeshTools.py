@@ -4081,7 +4081,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         self.generateFromExistingCoarseMesh(self.coarseMesh,1)
         #allocate some arrays based on the bathymetry data
         self.nPoints_global = self.domain.bathy.shape[0]
-        self.pointElementsArray = np.zeros((self.nPoints_global,),'i')
+        self.pointElementsArray = -np.ones((self.nPoints_global,),'i')
         self.pointNodeWeightsArray = np.zeros((self.nPoints_global,3),'d')
         #
         self.locatePoints(self.meshList[-1])
@@ -4117,8 +4117,9 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         mesh.elementMeanZ = np.zeros((mesh.nElements_global,),'d')
         for pN in range(self.nPoints_global):
             eN = self.pointElementsArray[pN]
-            if mesh.nPoints_element[eN] > 0:
-                mesh.elementMeanZ[eN] += self.domain.bathy[pN,2]/float(mesh.nPoints_element[eN])#arithmetic mean assumes points are evenly spaced
+            if eN >= 0:
+                if mesh.nPoints_element[eN] > 0:
+                    mesh.elementMeanZ[eN] += self.domain.bathy[pN,2]/float(mesh.nPoints_element[eN])#arithmetic mean assumes points are evenly spaced
         for eN in range(mesh.nElements_global):
             if mesh.nPoints_element[eN] == 0:
                 for nN in mesh.elementNodesArray[eN]:
@@ -4176,6 +4177,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         maps.useC = False
         mesh.nPoints_element = np.zeros((mesh.nElements_global,),'i')
         mesh.nodeSupportArray = np.zeros((mesh.nNodes_global,),'d')
+        self.pointElementsArray[:] = -1
         for eN in range(mesh.nElements_global):
             #map points to reference space and test if it lies in the reference triangle
             xiArray = np.zeros((2,),'d')
@@ -4221,7 +4223,8 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
                     self.pointNodeWeightsArray[pN,1] = interpolationSpace.basis[1](xiArray)
                     self.pointNodeWeightsArray[pN,2] = interpolationSpace.basis[2](xiArray)
         for pN in range(self.nPoints_global):
-            mesh.nPoints_element[self.pointElementsArray[pN]] += 1
+            if self.pointElementsArray[pN] >= 0:
+                mesh.nPoints_element[self.pointElementsArray[pN]] += 1
     def tagElements(self,mesh):
         """
         loop over points and calculate whether the interpolation error is within the tolerance
@@ -4233,14 +4236,15 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         errorMax = 0.0
         for pN in range(self.nPoints_global):
             eN = self.pointElementsArray[pN]
-            zInterp = self.pointNodeWeightsArray[pN,0]*mesh.nodeArray[mesh.elementNodesArray[eN,0],2] +  \
-                      self.pointNodeWeightsArray[pN,1]*mesh.nodeArray[mesh.elementNodesArray[eN,1],2] +  \
-                      self.pointNodeWeightsArray[pN,2]*mesh.nodeArray[mesh.elementNodesArray[eN,2],2] 
-            error = fabs(zInterp - self.domain.bathy[pN,2])
-            #print "error",error
-            errorMax = max(error,errorMax)
-            if error > self.domain.tol:
-                mesh.elementTags[eN] = 1
+            if eN >= 0:
+                zInterp = self.pointNodeWeightsArray[pN,0]*mesh.nodeArray[mesh.elementNodesArray[eN,0],2] +  \
+                          self.pointNodeWeightsArray[pN,1]*mesh.nodeArray[mesh.elementNodesArray[eN,1],2] +  \
+                          self.pointNodeWeightsArray[pN,2]*mesh.nodeArray[mesh.elementNodesArray[eN,2],2] 
+                error = fabs(zInterp - self.domain.bathy[pN,2])
+                print "error",error,zInterp,self.domain.bathy[pN,2],self.pointNodeWeightsArray[pN]
+                errorMax = max(error,errorMax)
+                if error > self.domain.tol:
+                    mesh.elementTags[eN] = 1
         print mesh.elementTags
         return errorMax
 # #         mfile.close()
