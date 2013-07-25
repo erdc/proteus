@@ -4061,12 +4061,188 @@ class MultilevelTriangularMesh(MultilevelMesh):
             print """locallyRefine not implemented for self.useC= %s """ % (self.useC)
         #
 
+class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
+    def __init__(self,domain,triangleOptions):
+        import numpy as np
+        import TriangleTools
+        self.domain = domain
+        self.triangleOptions = triangleOptions
+        log("Calling Triangle to generate 2D mesh for "+self.domain.name)
+        tmesh = TriangleTools.TriangleBaseMesh(baseFlags=self.triangleOptions,
+                                               nbase=1,
+                                               verbose=10)
+        tmesh.readFromPolyFile(domain.polyfile)
+        log("Converting to Proteus Mesh")
+        self.coarseMesh=tmesh.convertToProteusMesh(verbose=1)
+        MultilevelTriangularMesh.__init__(self,0,0,0,skipInit=True)
+                                                    #nLayersOfOverlap=0,
+                                                    #parallelPartitioningType=n.parallelPartitioningType)
+        log("Generating %i-level mesh from coarse Triangle mesh" % (1,))
+        self.generateFromExistingCoarseMesh(self.coarseMesh,1)
+        #allocate some arrays based on the bathymetry data
+        self.nPoints_global = self.domain.bathy.shape[0]
+        self.pointElementsArray = np.zeros((self.nPoints_global,),'i')
+        self.pointNodeWeightsArray = np.zeros((self.nPoints_global,3),'d')
+        #
+        self.locatePoints(self.meshList[-1])
+        self.setMeshBathymetry(self.meshList[-1])
+        self.tagElements(self.meshList[-1])
+        levels = 0
+        error = domain.tol+1.0;
+        while error > domain.tol:
+            levels += 1
+            print "localling refining"
+            self.locallyRefine(self.meshList[-1].elementTags)
+            print "locating points"
+            self.locatePoints(self.meshList[-1])
+            print "updating mesh bathymetry"
+            self.setMeshBathymetry(self.meshList[-1])
+            print "tagging elements"
+            error = self.tagElements(self.meshList[-1])
+            print "error = ",error
+            if levels > 5:
+                error = 0.5*domain.tol
+            
+    def setMeshBathymetry(self,mesh):
+        """
+        calculate the arithmetic mean bathymetry of points inside each triangle and then assign the area-weighted average of the element means to each node
 
+        todo: fix case when elements have no points
+        """
+        import numpy as np
+        from FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
+        interpolationSpace = LinearOnSimplexWithNodalBasis(nd=2)
+        maps = AffineMaps(mesh,interpolationSpace.referenceElement,interpolationSpace)
+        maps.useC = False
+        mesh.elementMeanZ = np.zeros((mesh.nElements_global,),'d')
+        for pN in range(self.nPoints_global):
+            eN = self.pointElementsArray[pN]
+            if mesh.nPoints_element[eN] > 0:
+                mesh.elementMeanZ[eN] += self.domain.bathy[pN,2]/float(mesh.nPoints_element[eN])#arithmetic mean assumes points are evenly spaced
+        for eN in range(mesh.nElements_global):
+            if mesh.nPoints_element[eN] == 0:
+                for nN in mesh.elementNodesArray[eN]:
+                    mesh.elementMeanZ[eN] += mesh.nodeArray[nN,2]/3.0
+        mesh.nodeArray[:,2] = 0.0
+        sumArray = mesh.nodeArray[:,2].copy()
+        sumArray[:]=0.0
+        for eN in range(mesh.nElements_global):
+            #calculate triangle area and assign weighted average of element means to node
+            xiArray = np.zeros((2,),'d')
+            #
+            grad_psi = numpy.zeros((interpolationSpace.dim,
+                                    interpolationSpace.referenceElement.dim),
+                                   'd')
+            dx = numpy.zeros((interpolationSpace.referenceElement.dim),
+                             'd')
+            jacobian = numpy.zeros((interpolationSpace.referenceElement.dim,
+                                    interpolationSpace.referenceElement.dim),
+                                   'd')
+            inverseJacobian = numpy.zeros((interpolationSpace.referenceElement.dim,
+                                           interpolationSpace.referenceElement.dim),
+                                          'd')
+            for j in interpolationSpace.range_dim:
+                grad_psi[j,:] = interpolationSpace.basisGradients[j](xiArray)#evalute at zero because we can (psi is linear)
+            jacobian.flat[:]=0.0
+            inverseJacobian.flat[:]=0.0
+            for j in interpolationSpace.range_dim:
+                J = mesh.elementNodesArray[eN,j]
+                for m in interpolationSpace.referenceElement.range_dim:
+                    for n in interpolationSpace.referenceElement.range_dim:
+                        jacobian[m,n] += mesh.nodeArray[J,m]*grad_psi[j,n]
+            J = mesh.elementNodesArray[eN,0]
+            inverseJacobian = inv(jacobian)
+            area = 0.5*det(jacobian)
+            sumArray[mesh.elementNodesArray[eN,0]] += area/mesh.nodeSupportArray[mesh.elementNodesArray[eN,0]]
+            sumArray[mesh.elementNodesArray[eN,1]] += area/mesh.nodeSupportArray[mesh.elementNodesArray[eN,1]]
+            sumArray[mesh.elementNodesArray[eN,2]] += area/mesh.nodeSupportArray[mesh.elementNodesArray[eN,2]]
+            mesh.nodeArray[mesh.elementNodesArray[eN,0],2] += area*mesh.elementMeanZ[eN]/mesh.nodeSupportArray[mesh.elementNodesArray[eN,0]]
+            mesh.nodeArray[mesh.elementNodesArray[eN,1],2] += area*mesh.elementMeanZ[eN]/mesh.nodeSupportArray[mesh.elementNodesArray[eN,1]]
+            mesh.nodeArray[mesh.elementNodesArray[eN,2],2] += area*mesh.elementMeanZ[eN]/mesh.nodeSupportArray[mesh.elementNodesArray[eN,2]]
+        print sumArray
+    def locatePoints(self,mesh):
+        """
+        locate the element containing each point
 
+        this should only be used on very coarse meshes
+        """
+        import numpy as np
+        from FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
+        interpolationSpace = LinearOnSimplexWithNodalBasis(nd=2)
+        print interpolationSpace.basis[0]([0.0,0.0]),interpolationSpace.basis[0]([0.0,1.0]),interpolationSpace.basis[0]([1.0,0.0])
+        print interpolationSpace.basis[1]([0.0,0.0]),interpolationSpace.basis[1]([0.0,1.0]),interpolationSpace.basis[1]([1.0,0.0])
+        print interpolationSpace.basis[2]([0.0,0.0]),interpolationSpace.basis[2]([0.0,1.0]),interpolationSpace.basis[2]([1.0,0.0])
+        maps = AffineMaps(mesh,interpolationSpace.referenceElement,interpolationSpace)
+        maps.useC = False
+        mesh.nPoints_element = np.zeros((mesh.nElements_global,),'i')
+        mesh.nodeSupportArray = np.zeros((mesh.nNodes_global,),'d')
+        for eN in range(mesh.nElements_global):
+            #map points to reference space and test if it lies in the reference triangle
+            xiArray = np.zeros((2,),'d')
+            xiArray[:] = 0.0
+            #
+            grad_psi = numpy.zeros((interpolationSpace.dim,
+                                    interpolationSpace.referenceElement.dim),
+                                   'd')
+            dx = numpy.zeros((interpolationSpace.referenceElement.dim),
+                             'd')
+            jacobian = numpy.zeros((interpolationSpace.referenceElement.dim,
+                                    interpolationSpace.referenceElement.dim),
+                                   'd')
+            inverseJacobian = numpy.zeros((interpolationSpace.referenceElement.dim,
+                                           interpolationSpace.referenceElement.dim),
+                                          'd')
+            for j in interpolationSpace.range_dim:
+                grad_psi[j,:] = interpolationSpace.basisGradients[j](xiArray[0])#evalute at zero because we can (psi is linear)
+            jacobian.flat[:]=0.0
+            inverseJacobian.flat[:]=0.0
+            for j in interpolationSpace.range_dim:
+                J = mesh.elementNodesArray[eN,j]
+                for m in interpolationSpace.referenceElement.range_dim:
+                    for n in interpolationSpace.referenceElement.range_dim:
+                        jacobian[m,n] += mesh.nodeArray[J,m]*grad_psi[j,n]
+            J = mesh.elementNodesArray[eN,0]
+            inverseJacobian = inv(jacobian)
+            area = 0.5*det(jacobian)
+            mesh.nodeSupportArray[mesh.elementNodesArray[eN,0]] += area 
+            mesh.nodeSupportArray[mesh.elementNodesArray[eN,1]] += area 
+            mesh.nodeSupportArray[mesh.elementNodesArray[eN,2]] += area 
+            for pN in range(self.nPoints_global):#can optimize by skipping previously found points
+                xiArray[:] = 0.0
+                dx[:]=self.domain.bathy[pN,:2]
+                for m in interpolationSpace.referenceElement.range_dim:
+                    dx[m]-=mesh.nodeArray[J,m]
+                for m in interpolationSpace.referenceElement.range_dim:
+                    for n in interpolationSpace.referenceElement.range_dim:
+                        xiArray[m] += inverseJacobian[m,n]*dx[n]
+                if xiArray[0] >=0.0 and xiArray[1] >= 0.0 and 1.0 - xiArray[0] - xiArray[1] >= 0.0:
+                    self.pointElementsArray[pN] = eN
+                    self.pointNodeWeightsArray[pN,0] = interpolationSpace.basis[0](xiArray)
+                    self.pointNodeWeightsArray[pN,1] = interpolationSpace.basis[1](xiArray)
+                    self.pointNodeWeightsArray[pN,2] = interpolationSpace.basis[2](xiArray)
+        for pN in range(self.nPoints_global):
+            mesh.nPoints_element[self.pointElementsArray[pN]] += 1
+    def tagElements(self,mesh):
+        """
+        loop over points and calculate whether the interpolation error is within the tolerance
 
-
-
-
+        this should only be used on very coarse meshes
+        """
+        import numpy as np
+        mesh.elementTags = np.zeros((mesh.nElements_global,),'i')
+        errorMax = 0.0
+        for pN in range(self.nPoints_global):
+            eN = self.pointElementsArray[pN]
+            zInterp = self.pointNodeWeightsArray[pN,0]*mesh.nodeArray[mesh.elementNodesArray[eN,0],2] +  \
+                      self.pointNodeWeightsArray[pN,1]*mesh.nodeArray[mesh.elementNodesArray[eN,1],2] +  \
+                      self.pointNodeWeightsArray[pN,2]*mesh.nodeArray[mesh.elementNodesArray[eN,2],2] 
+            error = fabs(zInterp - self.domain.bathy[pN,2])
+            #print "error",error
+            errorMax = max(error,errorMax)
+            if error > self.domain.tol:
+                mesh.elementTags[eN] = 1
+        print mesh.elementTags
+        return errorMax
 # #         mfile.close()
 # #         return p,e,t
 # class MultilevelTriangularMesh(MultilevelMesh):
