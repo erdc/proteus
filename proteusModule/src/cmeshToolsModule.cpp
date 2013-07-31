@@ -540,8 +540,11 @@ static PyObject* cmeshToolsBuildPythonMultilevelMeshInterface(PyObject* self,
   PyList_Append(meshList,mesh);
   elementChildrenArrayList = PyList_New(0);
   elementChildrenOffsetsList = PyList_New(0);
-  elementParentsArrayList  = PyList_New(1); //put in one empty entry
-  int n,dims[1]; 
+  elementParentsArrayList  = PyList_New(0); //put in one empty entry
+  int n,dims[1];
+  npy_intp newdims[1];
+  newdims[0]=0;
+  PyList_Append(elementParentsArrayList,PyArray_SimpleNew(1,newdims,PyArray_INT));
   for(n=1;n<MULTILEVELMESH(cmultilevelMesh).nLevels;n++)
     {
       mesh = CMesh_FromMesh(&MULTILEVELMESH(cmultilevelMesh).meshArray[n]);
