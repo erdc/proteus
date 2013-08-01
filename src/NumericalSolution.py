@@ -808,6 +808,7 @@ class  NS_base:#(HasTraits):
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)
             self.closeArchive(model,index)
+        return systemStepFailed
     #
     #try to make preStep and postStep just manipulate "current values" and let the step controllers manage the history setting
     ##intermodel transfer before a solution step

@@ -3380,8 +3380,8 @@ extern "C"
         for(nodeItr=newNodeSet.begin();nodeItr!=newNodeSet.end();nodeItr++)
           {
             //mwf hack 
-            std::cout<<"refined triangular mesh: nN parent= "<<multilevelMesh.meshArray[i-1].nNodes_global<<" nN child= "<<multilevelMesh.meshArray[i].nNodes_global
-                     <<" nodeItr->nN,flag,x= "<<nodeItr->nN<<" , "<<nodeItr->flag <<" , " << nodeItr->x <<" , "<< nodeItr->y << " , "<< nodeItr->z << std::endl;
+            //std::cout<<"refined triangular mesh: nN parent= "<<multilevelMesh.meshArray[i-1].nNodes_global<<" nN child= "<<multilevelMesh.meshArray[i].nNodes_global
+            //         <<" nodeItr->nN,flag,x= "<<nodeItr->nN<<" , "<<nodeItr->flag <<" , " << nodeItr->x <<" , "<< nodeItr->y << " , "<< nodeItr->z << std::endl;
             multilevelMesh.meshArray[i].nodeMaterialTypes[nodeItr->nN] = nodeItr->flag;
           }
 	
