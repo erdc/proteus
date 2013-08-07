@@ -1,24 +1,20 @@
 from proteus import *
 from proteus.default_n import *
-from poisson_3d_p import *
-hex=None
+from poisson_3d_tetgen_p import *
+
 #steady-state so no time integration
 timeIntegration = NoIntegration
 #number of output timesteps
 nDTout = 1
 
 #finite element spaces
-femSpaces = {0:C0_AffineQuadraticOnSimplexWithNodalBasis}
+femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
 #numerical quadrature choices
 elementQuadrature = SimplexGaussQuadrature(nd,4)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 
-#number of nodes in x,y,z
-nnx = 7
-nny = 7
-nnz = 7
-#if unstructured would need triangleOptions flag to be set
-
+logEvent("""Mesh generated using: tetgen -%s %s"""  % (triangleOptions,domain.polyfile+".poly"))
+triangleOptions="VApq1.35q12feena%e" % ((he**3)/6.0,)
 
 #number of levels in mesh
 nLevels = 1
