@@ -12,6 +12,12 @@ from conf.petscconf import Extension as PetscExtension
 from conf.petscconf import build_ext as petsc_build_ext
 from conf.petscconf import config, build, build_src
 from conf.petscconf import test, sdist
+from distutils import sysconfig
+cv = sysconfig.get_config_vars()
+cv["OPT"] = cv["OPT"].replace("-DNDEBUG","-DDEBUG")
+cv["OPT"] = cv["OPT"].replace("-O3","-g")
+cv["CFLAGS"] = cv["CFLAGS"].replace("-DNDEBUG","-DDEBUG")
+cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","-g")
 
 class my_build_ext(petsc_build_ext):
     def build_configuration(self, arch_list):
