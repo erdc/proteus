@@ -158,6 +158,13 @@ parser.add_option("-B","--writeVelocityPostProcessor",
                   action="store_true",
                   help="""Use the last step in the archive as the intial condition and continue appending to the archive""")
 
+parser.add_option("-F","--generatePartitionedMeshFromFiles",
+                  default=False,
+                  dest="generatePartitionedMeshFromFiles",
+                  action="store_true",
+                  help="""generate a parallel mesh directly from files (saves memory overhead of storing global mesh)""")
+
+
 (opts,args) = parser.parse_args(args=[])
 
 if opts.debug:
