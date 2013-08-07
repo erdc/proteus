@@ -503,6 +503,76 @@ class Mesh:
         # #cmeshTools.deleteMeshDataStructures(self.cmesh)
         # log(memory("Without global mesh","Mesh"),level=1)
         # comm.endSequential()
+    def partitionMeshFromFiles(self,filebase,base,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.element):
+        import pdb
+        import cmeshTools
+        import Comm
+        import flcbdfWrappers
+        comm = Comm.get()
+        self.comm=comm
+        log(memory("partitionMesh 1","MeshTools"),level=4)
+        log("Partitioning mesh among %d processors using partitioningType = %d" % (comm.size(),parallelPartitioningType))
+        self.subdomainMesh=self.__class__()
+        self.subdomainMesh.globalMesh = self
+        self.subdomainMesh.cmesh=cmeshTools.CMesh()
+        self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
+        log(memory("partitionMesh 2","MeshTools"),level=4)
+        if parallelPartitioningType == MeshParallelPartitioningTypes.node:
+            #mwf for now always gives 1 layer of overlap
+            (self.elementOffsets_subdomain_owned,
+             self.elementNumbering_subdomain2global,
+             self.elementNumbering_global2original,
+             self.nodeOffsets_subdomain_owned,
+             self.nodeNumbering_subdomain2global,
+             self.nodeNumbering_global2original,
+             self.elementBoundaryOffsets_subdomain_owned,
+             self.elementBoundaryNumbering_subdomain2global,
+             self.elementBoundaryNumbering_global2original,
+             self.edgeOffsets_subdomain_owned,
+             self.edgeNumbering_subdomain2global,
+             self.edgeNumbering_global2original) = flcbdfWrappers.partitionNodesFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+        else:
+            (self.elementOffsets_subdomain_owned,
+             self.elementNumbering_subdomain2global,
+             self.elementNumbering_global2original,
+             self.nodeOffsets_subdomain_owned,
+             self.nodeNumbering_subdomain2global,
+             self.nodeNumbering_global2original,
+             self.elementBoundaryOffsets_subdomain_owned,
+             self.elementBoundaryNumbering_subdomain2global,
+             self.elementBoundaryNumbering_global2original,
+             self.edgeOffsets_subdomain_owned,
+             self.edgeNumbering_subdomain2global,
+             self.edgeNumbering_global2original) = flcbdfWrappers.partitionElementsFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+        #
+        log(memory("partitionMesh 3","MeshTools"),level=4)
+        self.buildFromC(self.cmesh)
+        self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
+        self.subdomainMesh.nElements_owned = self.elementOffsets_subdomain_owned[comm.rank()+1] - self.elementOffsets_subdomain_owned[comm.rank()]
+        self.subdomainMesh.nNodes_owned = self.nodeOffsets_subdomain_owned[comm.rank()+1] - self.nodeOffsets_subdomain_owned[comm.rank()]
+        self.subdomainMesh.nElementBoundaries_owned = self.elementBoundaryOffsets_subdomain_owned[comm.rank()+1] - self.elementBoundaryOffsets_subdomain_owned[comm.rank()]
+        self.subdomainMesh.nEdges_owned = self.edgeOffsets_subdomain_owned[comm.rank()+1] - self.edgeOffsets_subdomain_owned[comm.rank()]
+
+        comm.barrier()
+        log(memory("partitionMesh 4","MeshTools"),level=4)
+        log("Number of Subdomain Elements Owned= "+str(self.subdomainMesh.nElements_owned))
+        log("Number of Subdomain Elements = "+str(self.subdomainMesh.nElements_global))
+        log("Number of Subdomain Nodes Owned= "+str(self.subdomainMesh.nNodes_owned))
+        log("Number of Subdomain Nodes = "+str(self.subdomainMesh.nNodes_global))
+        log("Number of Subdomain elementBoundaries Owned= "+str(self.subdomainMesh.nElementBoundaries_owned))
+        log("Number of Subdomain elementBoundaries = "+str(self.subdomainMesh.nElementBoundaries_global))
+        log("Number of Subdomain Edges Owned= "+str(self.subdomainMesh.nEdges_owned))
+        log("Number of Subdomain Edges = "+str(self.subdomainMesh.nEdges_global))
+        comm.barrier()
+        log("Finished partitioning")
+        # comm.beginSequential()
+        # from Profiling import memory
+        # memory()
+        # log(memory("Partitioning Mesh","Mesh"),level=1)
+        # del self.cmesh
+        # #cmeshTools.deleteMeshDataStructures(self.cmesh)
+        # log(memory("Without global mesh","Mesh"),level=1)
+        # comm.endSequential()
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0, EB=False):
         if self.arGridCollection != None:
             init = False
@@ -3225,7 +3295,25 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                 self.meshList[l].subdomainMesh = self.meshList[l]
                 log(self.meshList[-1].meshInfo())
             self.buildArrayLists()
-
+    def generatePartitionedMeshFromTetgenFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
+                                               parallelPartitioningType=MeshParallelPartitioningTypes.node):
+        import cmeshTools
+        assert(refinementLevels==1)
+        assert(parallelPartitioningType==MeshParallelPartitioningTypes.node)
+        assert(nLayersOfOverlap<=1)
+        mesh0.cmesh = cmeshTools.CMesh()
+        #blow away or just trust garbage collection
+        self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
+        self.meshList = []
+        self.elementParents = None
+        self.cmultilevelMesh = None
+        self.meshList.append(mesh0)
+        log("cmeshTools.CMultilevelMesh")
+        self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+        log("buildFromC")
+        self.buildFromC(self.cmultilevelMesh)
+        log("partitionMesh")
+        self.meshList[0].partitionMeshFromFiles(filebase,base,nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
 
     def refine(self):
         self.meshList.append(TetrahedralMesh())
