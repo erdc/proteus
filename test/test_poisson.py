@@ -25,6 +25,7 @@ def test_c0p1():
     opts.logLevel=7
     opts.verbose=True
     opts.profile=True
+    opts.gatherArchive=True
     nList[0].linearSolver=default_n.KSP_petsc4py
     nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
     #nList[0].linearSolver=default_n.LU
@@ -43,6 +44,7 @@ def test_c0p2():
     so.sList=[default_s]
     opts.logLevel=7
     opts.verbose=True
+    opts.gatherArchive=True
     nList[0].linearSolver=default_n.KSP_petsc4py
     nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
