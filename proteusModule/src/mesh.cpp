@@ -2472,7 +2472,6 @@ extern "C"
     for (int nN=0,offset=0;nN<mesh.nNodes_global;nN++)
       for (set<int>::iterator nN_star=nodeStar[nN].begin();nN_star!=nodeStar[nN].end();nN_star++,offset++)
         mesh.nodeStarArray[offset] = *nN_star;
-    stop = CurrentTime();
     mesh.max_nNodeNeighbors_node=0;
     for (int nN=0;nN<mesh.nNodes_global;nN++)
       mesh.max_nNodeNeighbors_node=max(mesh.max_nNodeNeighbors_node,mesh.nodeStarOffsets[nN+1]-mesh.nodeStarOffsets[nN]);
@@ -4517,6 +4516,9 @@ int readTetgenElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, int
   assert(mesh.elementBoundaryMaterialTypes);
   //assume node numberings in triangle and mesh same but not necessarily 
   //	element boundaries
+  std::cout<<"mesh.nelementBoundaries_global"<<mesh.nElementBoundaries_global<<std::endl
+	   <<mesh.elementBoundaryNodesArray<<std::endl
+	   <<mesh.elementBoundaryMaterialTypes<<std::endl;
   if (mesh.nElementBoundaries_global == nElementBoundaries_file)
     {
       map<NodeTuple<3>,int>  tetgenElementBoundaryMaterialTypes;
@@ -4558,6 +4560,7 @@ int readTetgenElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, int
 	}
       for (int ebNE = 0; ebNE < mesh.nExteriorElementBoundaries_global; ebNE++)
 	{
+	  std::cout<<"ebNE "<<ebNE<<std::endl;
 	  int ebN = mesh.exteriorElementBoundariesArray[ebNE];
 	  register int nodes[3];
 	  nodes[0] = mesh.elementBoundaryNodesArray[ebN*3+0];
@@ -6764,14 +6767,14 @@ bool subdivideTriangle4T(int eN_parent,
       int child_start = elementChildrenOffsets[eN_parent]; 
       int child_end   = elementChildrenOffsets[eN_parent+1];
       //std::cout<<"child elements --- "<<std::endl;
-      for (int i = child_start; i < child_end; i++)
-	{
-	  int eN_child = elementChildrenArray[i];
-	  //std::cout<<"eN_child= "<<eN_child<<" nodes= ";
-	  //for (int nN = 0; nN < 3; nN++)
-	    //std::cout<<elementNodesArray_child[eN_child*3+nN]<<" ";
-	  //std::cout<<std::endl;
-	}
+      // for (int i = child_start; i < child_end; i++)
+      // 	{
+      // 	  int eN_child = elementChildrenArray[i];
+      // 	  //std::cout<<"eN_child= "<<eN_child<<" nodes= ";
+      // 	  //for (int nN = 0; nN < 3; nN++)
+      // 	    //std::cout<<elementNodesArray_child[eN_child*3+nN]<<" ";
+      // 	  //std::cout<<std::endl;
+      // 	}
 #endif
     }//element refined
   return failed;

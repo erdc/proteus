@@ -2415,11 +2415,16 @@ class TetrahedralMesh(Mesh):
         return self.refineFreudenthalBey(oldMesh)
 
     def generateFromTetgenFiles(self,filebase,base,skipGeometricInit=True,parallel=False):
+        print "hello-------------------------"
         import cmeshTools
+        print "hello-------------------------2"
+        log(memory("declaring CMesh"),level=4)
         self.cmesh = cmeshTools.CMesh()
         log(memory("Initializing CMesh"),level=4)
         if parallel:
+            print "hello-------------------------3"
             cmeshTools.generateFromTetgenFilesParallel(self.cmesh,filebase,base)
+            print "hello-------------------------4"
         else:
             cmeshTools.generateFromTetgenFiles(self.cmesh,filebase,base)            
         log(memory("calling cmeshTools.generateFromTetgenFiles","cmeshTools"),level=4)
