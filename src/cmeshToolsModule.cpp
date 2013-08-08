@@ -912,7 +912,10 @@ cmeshToolsGenerateFromTetgenFilesParallel(PyObject* self,
 			&base))
     return NULL;
 
+  printf("helll readTetgenMesh\n");
   failed = readTetgenMesh(MESH(cmesh),filebase,base);
+  constructElementBoundaryElementsArray_tetrahedron(MESH(cmesh));
+  printf("helll readTetgenMeshBelemntBou\n");
   failed = readTetgenElementBoundaryMaterialTypes(MESH(cmesh),filebase,base);
 
   Py_INCREF(Py_None); 
