@@ -46,7 +46,7 @@ def test_c0p2():
     opts.logLevel=7
     opts.verbose=True
     opts.profile=True
-    opts.generatePartitionedMeshFromFiles = False
+    opts.generatePartitionedMeshFromFiles = True
     opts.gatherArchive=True
     nList[0].linearSolver=default_n.KSP_petsc4py
     nList[0].multilevelLinearSolver=default_n.KSP_petsc4py

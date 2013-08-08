@@ -14,9 +14,9 @@ elementQuadrature = SimplexGaussQuadrature(nd,4)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
 
 #number of nodes in x,y,z
-nnx = 7
-nny = 7
-nnz = 7
+nnx = 11
+nny = 11
+nnz = 11
 #if unstructured would need triangleOptions flag to be set
 
 
