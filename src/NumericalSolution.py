@@ -258,6 +258,7 @@ class  NS_base:#(HasTraits):
                         os.rename(edgefile,tmp)
                         assert os.path.exists(tmp)
                 comm.barrier()
+                log("Initializing mesh and MultilevelMesh")
                 nbase = 1
                 mesh=MeshTools.TetrahedralMesh()
                 mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
@@ -269,8 +270,9 @@ class  NS_base:#(HasTraits):
                                                                   nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                   parallelPartitioningType=n.parallelPartitioningType)
                 else:
+                    log("Generating coarse global mesh from Tetgen files")                    
                     mesh.generateFromTetgenFiles(p.domain.polyfile,nbase,parallel = comm.size() > 1)
-                    log("Generating %i-level mesh from coarse Tetgen mesh" % (n.nLevels,))
+                    log("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (n.nLevels,))
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
