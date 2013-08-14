@@ -11,7 +11,7 @@
 # CXX should be set to the name of your favorite C++ compiler.
 # ===========================================================
 
-CXX = CC
+CXX = g++
 #CXX = icpc
 #CXX = CC
 
@@ -38,14 +38,14 @@ PREDCXXFLAGS = -O0
 #   down the speed of TetGen.  They can be skipped by define the -DNDEBUG
 #   switch.
 
-SWITCHES = -Wall -DSELF_CHECK
+#SWITCHES = -DNDEBUG
 
-# SWITCHES = -Wall -Wabi -Wctor-dtor-privacy \
-#            -Woverloaded-virtual -Wno-pmf-conversions -Wsign-promo \
-#            -Wsynth  -Wchar-subscripts -Wconversion -Wsign-compare \
-#            -Wcomment  -Wimplicit -Wmissing-braces -Wparentheses \
-#            -Wreturn-type -Wswitch -Wswitch-default \
-#            -Wswitch-enum -Wtrigraphs -W -DSELF_CHECK
+SWITCHES = -Wall -Wabi -Wctor-dtor-privacy \
+            -Woverloaded-virtual -Wno-pmf-conversions -Wsign-promo \
+            -Wsynth  -Wchar-subscripts -Wconversion -Wsign-compare \
+            -Wcomment  -Wimplicit -Wmissing-braces -Wparentheses \
+            -Wreturn-type -Wswitch -Wswitch-default \
+            -Wswitch-enum -Wtrigraphs -W -DSELF_CHECK
 
 # RM should be set to the name of your favorite rm (file deletion program).
 

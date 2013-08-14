@@ -1,4 +1,5 @@
 ${PROTEUS_PYTHON} ./config/configure.py \
+--with-debugging=0 \
 --useThreads=0 \
 --prefix=${PROTEUS_PREFIX} \
 --PETSC_ARCH=${PROTEUS_ARCH} \
