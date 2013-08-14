@@ -2336,6 +2336,10 @@ class OneLevelTransport(NonlinearEquation):
                 else:
                     if not self.q.has_key(('grad(w)*dV_f',ck)):
                         self.q[('grad(w)*dV_f',ck)] = self.q[('grad(w)*dV_a',ci,ck)]
+                    if 'rho_split' in dir(self.numericalFlux):
+                        rho_split = self.numericalFlux.rho_split
+                    else:
+                        rho_split = 0
                     if self.sd:
                         #tjp need to zero velocity because this just updates
                         #import pdb
@@ -2346,7 +2350,8 @@ class OneLevelTransport(NonlinearEquation):
                                                                         self.numericalFlux.qV[ck],
                                                                         self.q[('grad(w)*dV_f',ck)],
                                                                         self.q[('velocity',ck)],#added for ldg coupling tjp
-                                                                        self.elementResidual[ci])
+                                                                        self.elementResidual[ci],
+                                                                        rho_split)
                     else:
                         cfemIntegrals.updateDiffusion_MixedForm_weak(self.numericalFlux.aTilde[(ci,ck)],
                                                                      self.numericalFlux.qV[ck],
