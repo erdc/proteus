@@ -4,15 +4,14 @@ from proteus.MeshTools import *
 from proteus.FemTools import *
 from proteus import Quadrature
 import sys
-try:
-    from vtk.qt4.QVTKRenderWindowInteractor import *
-    from PyQt4 import QtGui,Qt,QtCore
-    hasQt=True
-except:
-    hasQt=False
 
 hasQt=True
 useCoPro=False
+
+if hasQt:
+    from vtk.qt4.QVTKRenderWindowInteractor import *
+    from PyQt4 import QtGui,Qt,QtCore
+
 
 if useCoPro:
     def initializeCoProcessor(comm,controller):
@@ -50,7 +49,7 @@ from proteus import flcbdfWrappers
 #see if something is wrong with quadratics
 #see if something is wrong with 3d pointSet
 #
-useMainWindow = True
+useMainWindow = False#True
 #
 #Utilities and high level functions
 #
@@ -60,6 +59,8 @@ class Window:
         comm = proteus.Comm.get()
         self.hardCopies=0
         #mwf vtk on laptop needs update
+        #import pdb
+        #pdb.set_trace()
         skipComm = False
         self.comm = comm
         self.compManager = vtkCompositeRenderManager()
@@ -86,13 +87,15 @@ class Window:
                     self.frameWidget = QtGui.QFrame(g.mainWindow)
                     self.hbox = QtGui.QHBoxLayout()
                     self.iren = QVTKRenderWindowInteractor(self.frameWidget)
-                    self.iren.Initialize()
                     if comm.size() > 1:
                         self.iren.Disable() 
                     else:
                         self.iren.SetInteractorStyle(vtkInteractorStyleTrackballCamera())
-                    self.renWin = self.iren.GetRenderWindow()
+                    #self.renWin = self.iren.GetRenderWindow()
+                    self.renWin = self.compManager.MakeRenderWindow()
                     self.renWin.SetWindowName(name)
+                    self.iren.SetRenderWindow(self.renWin)
+                    self.iren.Initialize()
                     self.hbox.addWidget(self.iren)
                     self.frameWidget.setLayout(self.hbox)
                     g.tabWidget.addTab(self.frameWidget,title)
@@ -105,25 +108,30 @@ class Window:
                 else:
                     #self.iren = vtkRenderWindowInteractor()#QVTKRenderWindowInteractor()
                     self.iren = QVTKRenderWindowInteractor()
-                    self.iren.Initialize()
                     if comm.size() > 1:
                         self.iren.Disable() 
                     else:
                         self.iren.SetInteractorStyle(vtkInteractorStyleTrackballCamera())
-                    self.renWin = self.iren.GetRenderWindow()
-                    #self.renWin = self.compManager.MakeRenderWindow()
-                    #self.iren.SetRenderWindow(self.renWin)
+                    #self.renWin = self.iren.GetRenderWindow()
+                    self.renWin = self.compManager.MakeRenderWindow()
+                    self.iren.SetRenderWindow(self.renWin)
                     self.renWin.SetWindowName(name)
+                    self.iren.Initialize()
                     self.iren.show()
             else:
+                self.ren = vtkRenderer()
                 self.iren = vtkRenderWindowInteractor()
                 self.iren.SetInteractorStyle(vtkInteractorStyleTrackballCamera())
-                self.iren.Initialize()
                 self.renWin = self.compManager.MakeRenderWindow()
+                self.renWin.AddRenderer(self.ren)
                 self.iren.SetRenderWindow(self.renWin)
                 self.renWin.SetWindowName(name)
+                self.iren.Initialize()
         else:
             self.renWin = self.compManager.MakeRenderWindow()
+            if not hasQt:
+                self.ren = vtkRenderer()
+                self.renWin.AddRenderer(self.ren)
             self.renWin.OffScreenRenderingOn()
 
 windowDict={}
@@ -1410,6 +1418,7 @@ def viewScalar_3D(window,windowCreated,viewTypes,Adapted=False):
             tp.SetColor(0,0,0)
             window.vod['legendActor_colorMapped']= createLegendActor(window.vod['lut'])
             window.vod['legendActor_colorMapped'].SetLookupTable(window.vod['lut'])
+            window.vod['legendActor_colorMapped'].SetTitle('')
             ren = window.vod['ren_colorMapped']
             ren.AddActor(window.vod['gridActor_colorMapped'])
             ren.AddActor(window.vod['legendActor_colorMapped'])

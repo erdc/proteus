@@ -1,7 +1,7 @@
 ${PROTEUS_PYTHON} ./config/configure.py --with-clanguage=C \
 --with-cc=mpicc --with-cxx=mpicxx --with-fc=mpif90 --with-mpi-compilers \
 --PETSC_ARCH=${PROTEUS_ARCH} \
---PETSC_DIR=${PROTEUS}/externalPackages/petsc \
+--PETSC_DIR=${PROTEUS}/externalPackages/petsc-dev \
 --with-pic \
 --with-shared-libraries \
 --with-cmake=cmake \
