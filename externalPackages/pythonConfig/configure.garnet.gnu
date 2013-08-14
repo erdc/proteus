@@ -1,1 +1,2 @@
-./configure --prefix=${PROTEUS_PREFIX} --with-threads
+./configure --prefix=${PROTEUS_PREFIX} --enable-shared
+

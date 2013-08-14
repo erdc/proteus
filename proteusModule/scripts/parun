@@ -12,6 +12,8 @@
 #   \brief A driver for both single and mult-model simulations
 #
 #
+import ctypes
+libmpi = ctypes.CDLL('/opt/cray/mpt/5.4.5/xt/gemini/mpich2-gnu/46/lib/libmpich_gnu.so',mode=ctypes.RTLD_GLOBAL);
 import os
 import sys
 import socket

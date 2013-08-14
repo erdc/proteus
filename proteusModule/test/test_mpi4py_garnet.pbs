@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -A ERDCV00898ENQ
 #PBS -l walltime=01:00:00
-#PBS -l ncpus=128
+#PBS -l ncpus=512
 #PBS -q debug
 #PBS -N testMpi4py
 #PBS -j oe
@@ -18,4 +18,4 @@ echo "import tables; tables.test()" > pyt.py
 aprun -n 1 ${PROTEUS_PYTHON} pyt.py
 echo "testing mpi4py"
 cd ${PROTEUS}/externalPackages/mpi4py/test
-aprun -n 128 ${PROTEUS_PYTHON} runtests.py --exclude test_spawn --exclude test_cco_buf -v
+aprun -n 512 ${PROTEUS_PYTHON} runtests.py --exclude test_spawn --exclude test_cco_buf --exclude test_cco_vec -v
