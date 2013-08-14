@@ -4580,17 +4580,17 @@ void calculateConservationResidualPWL_primative(int nElements_global,
   int ebNI,ebNE,ebN,eN,left_eN,right_eN,ebN_element,left_ebN_element,right_ebN_element,nN,k,I;
   register double flux,divergence=0.0;
   memset(conservationResidual,0,sizeof(double)*nElements_global);
-  /* /\*initialize residual with element residual and assume external flux terms are in the element residual*\/ */
-  /* for (eN=0;eN<nElements_global;eN++) */
-  /*  { */
-  /*    for (nN=0;nN<nNodes_element;nN++) */
-  /*      { */
-  /* 	 conservationResidual[eN] */
-  /* 	   += */
-  /* 	   elementResidual[eN*nNodes_element+ */
-  /* 			   nN]; */
-  /*      } */
-  /*  } */
+  /*initialize residual with element residual and assume external flux terms are in the element residual*/
+/*   for (eN=0;eN<nElements_global;eN++) */
+/*    { */
+/*      for (nN=0;nN<nNodes_element;nN++) */
+/*        { */
+/*   	 conservationResidual[eN] */
+/*   	   += */
+/*   	   elementResidual[eN*nNodes_element+ */
+/*   			   nN]; */
+/*        } */
+/*    } */
   /*calculate interior element boundary fluxes and update residual*/
   for (ebNI=0;ebNI<nInteriorElementBoundaries_global;ebNI++)
     {
@@ -4632,7 +4632,7 @@ void calculateConservationResidualPWL_primative(int nElements_global,
 	  flux=0.0;
 	  for (I=0;I<nSpace;I++)
             {
-              flux += 
+              flux +=
                 vConservative[ebN*nQuadraturePoints_elementBoundary*nSpace+
 			      k*nSpace+
 			      I]
@@ -4648,7 +4648,6 @@ void calculateConservationResidualPWL_primative(int nElements_global,
 	  divergence += flux;
 	}
     }
-  printf("Divergence %12.5e\n",divergence);
 }
 
 void calculateConservationJacobianPWL_opt(int nNodes_owned,
