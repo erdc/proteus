@@ -889,7 +889,7 @@ cmeshToolsGenerateFromTetgenFiles(PyObject* self,
     return NULL;
 
   failed = readTetgenMesh(MESH(cmesh),filebase,base);
-  constructElementBoundaryElementsArray_tetrahedron(MESH(cmesh));
+  //constructElementBoundaryElementsArray_tetrahedron(MESH(cmesh));
   failed = readTetgenElementBoundaryMaterialTypes(MESH(cmesh),filebase,base);
 
   Py_INCREF(Py_None); 

@@ -94,6 +94,7 @@ def memory(message=None,className='',memSaved=None):
     global memLast
     global memList
     global memMax
+    global logAllProcesses
     if memLog:
         gc.collect()
         try:
@@ -148,6 +149,7 @@ def memory(message=None,className='',memSaved=None):
                     line = "Unknown Line"
                 if message == None:
                     message = ''
+                logAllProcesses=True
                 logEvent("PROTEUS ERROR: MEMORY HARDLIMIT REACHED, EXIT From "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %d MB in routine, %d MB in program, %d MB is hard limit" % (memInc,mem,memHardLimit))
                 MPI.COMM_WORLD.Abort(1)
                 sys.exit("MPI.COMM_WORLD.Abort(1); exit(1)")

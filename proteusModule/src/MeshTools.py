@@ -500,8 +500,8 @@ class Mesh:
         # memory()
         # log(memory("Partitioning Mesh","Mesh"),level=1)
         # del self.cmesh
-        # #cmeshTools.deleteMeshDataStructures(self.cmesh)
-        # log(memory("Without global mesh","Mesh"),level=1)
+        cmeshTools.deleteMeshDataStructures(self.cmesh)
+        log(memory("Without global mesh","Mesh"),level=1)
         # comm.endSequential()
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0, EB=False):
         if self.arGridCollection != None:
@@ -2356,6 +2356,7 @@ class TetrahedralMesh(Mesh):
         if skipGeometricInit == False:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
             cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
+            log(memory("Memory used after computing geometric info"),level=4)
         self.buildFromC(self.cmesh)
         log(memory("calling buildFromC"),level=4)
     def generateFrom3DMFile(self,filebase,base=1):
