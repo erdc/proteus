@@ -358,6 +358,32 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
                        MESH(cmesh).sigmaMax,
                        MESH(cmesh).volume);
 }
+
+static PyObject* cmeshToolsBuildPythonMeshInterfaceNoArrays(PyObject* self,
+							    PyObject* args)
+{
+  PyObject *cmesh;
+  if (!PyArg_ParseTuple(args,
+                        "O",
+                        &cmesh))
+    return NULL;
+  return Py_BuildValue("iiiiiiiiiiidddd",
+                       MESH(cmesh).nElements_global,
+                       MESH(cmesh).nNodes_global,
+                       MESH(cmesh).nNodes_element,
+                       MESH(cmesh).nNodes_elementBoundary,
+                       MESH(cmesh).nElementBoundaries_element,
+                       MESH(cmesh).nElementBoundaries_global,
+                       MESH(cmesh).nInteriorElementBoundaries_global,
+                       MESH(cmesh).nExteriorElementBoundaries_global,
+                       MESH(cmesh).max_nElements_node,
+                       MESH(cmesh).nEdges_global,
+                       MESH(cmesh).max_nNodeNeighbors_node,
+                       MESH(cmesh).h,
+                       MESH(cmesh).hMin,
+                       MESH(cmesh).sigmaMax,
+                       MESH(cmesh).volume);
+}
 static PyObject* cmeshToolsBuildLevel0PythonMeshInterface(PyObject* self,
 							  PyObject* args)
 {
@@ -912,10 +938,8 @@ cmeshToolsGenerateFromTetgenFilesParallel(PyObject* self,
 			&base))
     return NULL;
 
-  printf("helll readTetgenMesh\n");
   failed = readTetgenMesh(MESH(cmesh),filebase,base);
   constructElementBoundaryElementsArray_tetrahedron(MESH(cmesh));
-  printf("helll readTetgenMeshBelemntBou\n");
   failed = readTetgenElementBoundaryMaterialTypes(MESH(cmesh),filebase,base);
 
   Py_INCREF(Py_None); 
@@ -1901,7 +1925,11 @@ static PyMethodDef cmeshToolsMethods[] = {
   { "buildPythonMeshInterface",
     cmeshToolsBuildPythonMeshInterface,
     METH_VARARGS, 
-    "Provide handles to the C storage of the mesh"},
+    "Provide handles to the C storage of the mesh without any storage (used for global mesh in parallel)"},
+  { "buildPythonMeshInterfaceNoArrays",
+    cmeshToolsBuildPythonMeshInterfaceNoArrays,
+    METH_VARARGS, 
+    "Provide handles to the C storage of the mesh without any storage (used for global mesh in parallel)"},
   { "buildPythonMultilevelMeshInterface",
     cmeshToolsBuildPythonMultilevelMeshInterface,
     METH_VARARGS, 
