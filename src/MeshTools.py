@@ -546,7 +546,7 @@ class Mesh:
              self.edgeNumbering_global2original) = flcbdfWrappers.partitionElementsFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
         #
         log(memory("partitionMesh 3","MeshTools"),level=4)
-        self.buildFromC(self.cmesh)
+        self.buildFromCNoArrays(self.cmesh)
         self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
         self.subdomainMesh.nElements_owned = self.elementOffsets_subdomain_owned[comm.rank()+1] - self.elementOffsets_subdomain_owned[comm.rank()]
         self.subdomainMesh.nNodes_owned = self.nodeOffsets_subdomain_owned[comm.rank()+1] - self.nodeOffsets_subdomain_owned[comm.rank()]
@@ -835,6 +835,28 @@ class Mesh:
         self.nElementBoundaries_owned = self.nElementBoundaries_global
         self.nEdges_owned = self.nEdges_global
         log(memory("buildFromC","MeshTools"),level=4)
+    def buildFromCNoArrays(self,cmesh):
+        import cmeshTools
+        #
+        log(memory("buildFromC","MeshTools"),level=4)
+        self.cmesh = cmesh
+        (self.nElements_global,
+         self.nNodes_global,
+         self.nNodes_element,
+         self.nNodes_elementBoundary,
+         self.nElementBoundaries_element,
+         self.nElementBoundaries_global,
+         self.nInteriorElementBoundaries_global,
+         self.nExteriorElementBoundaries_global,
+         self.max_nElements_node,
+         self.nEdges_global,
+         self.max_nNodeNeighbors_node,
+         self.h,
+         self.hMin,
+         self.sigmaMax,
+         self.volume) = cmeshTools.buildPythonMeshInterfaceNoArrays(self.cmesh)
+        self.hasGeometricInfo = False
+        log(memory("buildFromCNoArrays","MeshTools"),level=4)
     def buildNodeStarArrays(self):
         if self.nodeStarArray == None:
             #cek old
@@ -2415,16 +2437,12 @@ class TetrahedralMesh(Mesh):
         return self.refineFreudenthalBey(oldMesh)
 
     def generateFromTetgenFiles(self,filebase,base,skipGeometricInit=True,parallel=False):
-        print "hello-------------------------"
         import cmeshTools
-        print "hello-------------------------2"
         log(memory("declaring CMesh"),level=4)
         self.cmesh = cmeshTools.CMesh()
         log(memory("Initializing CMesh"),level=4)
         if parallel:
-            print "hello-------------------------3"
             cmeshTools.generateFromTetgenFilesParallel(self.cmesh,filebase,base)
-            print "hello-------------------------4"
         else:
             cmeshTools.generateFromTetgenFiles(self.cmesh,filebase,base)            
         log(memory("calling cmeshTools.generateFromTetgenFiles","cmeshTools"),level=4)
