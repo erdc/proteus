@@ -598,13 +598,12 @@ editConfig_ipython:
 	echo "no ipython customization implemented"
 
 config_ipython:
-	pip install --upgrade pyzmq pygments tornado pexpect Sphinx
 	cd ${IPYTHON_VERSION} && ${PROTEUS_PYTHON} setup.py config > ../config_ipython_progress 2>&1
 
 build_ipython:
 	cd ${IPYTHON_VERSION} && ${PROTEUS_PYTHON} setup.py build > ../build_ipython_progress 2>&1
 
-install_ipython: install_qt install_matplotlib
+install_ipython:
 	make config_ipython build_ipython
 	cd ${IPYTHON_VERSION} && ${PROTEUS_PYTHON} setup.py install > ../install_ipython_progress 2>&1
 	cat config_ipython_progress build_ipython_progress install_ipython_progress > install_ipython

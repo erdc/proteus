@@ -1,3 +1,4 @@
+IPYTHON_VERSION    = ipython
 CYTHON_VERSION     = cython
 PYTHON_VERSION     = python
 SPHINX_VERSION     = Sphinx-0.6.5
