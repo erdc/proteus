@@ -4516,9 +4516,6 @@ int readTetgenElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, int
   assert(mesh.elementBoundaryMaterialTypes);
   //assume node numberings in triangle and mesh same but not necessarily 
   //	element boundaries
-  std::cout<<"mesh.nelementBoundaries_global"<<mesh.nElementBoundaries_global<<std::endl
-	   <<mesh.elementBoundaryNodesArray<<std::endl
-	   <<mesh.elementBoundaryMaterialTypes<<std::endl;
   if (mesh.nElementBoundaries_global == nElementBoundaries_file)
     {
       map<NodeTuple<3>,int>  tetgenElementBoundaryMaterialTypes;

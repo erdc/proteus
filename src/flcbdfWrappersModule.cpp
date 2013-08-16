@@ -3091,6 +3091,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   vector<set<int> > nodeElementBoundariesStar(nNodes_subdomain_new[rank]);
   map<int,int> elementBoundaryMaterialTypesMap;
   map<int,vector<int> > elementBoundariesMap;
+  set<int> supportedElementBoundaries;
   for (int ieb = 0; ieb < nElementBoundaries_global; ieb++)
     {
       int neb,nn0,nn1,nn2; int ebId(0);
@@ -3108,16 +3109,19 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       if (nn0_new >= nodeOffsets_new[rank] && nn0_new < nodeOffsets_new[rank+1])
 	{
 	  nodeElementBoundariesStar[nn0_new-nodeOffsets_new[rank]].insert(neb);
+	  supportedElementBoundaries.insert(neb);
 	}
       int nn1_new = nodeNumbering_global_old2new[nn1];
       if (nn1_new >= nodeOffsets_new[rank] && nn1_new < nodeOffsets_new[rank+1])
 	{
 	  nodeElementBoundariesStar[nn1_new-nodeOffsets_new[rank]].insert(neb);
+	  supportedElementBoundaries.insert(neb);
 	}
       int nn2_new = nodeNumbering_global_old2new[nn2];
       if (nn2_new >= nodeOffsets_new[rank] && nn2_new < nodeOffsets_new[rank+1])
 	{
 	  nodeElementBoundariesStar[nn2_new-nodeOffsets_new[rank]].insert(neb);
+	  supportedElementBoundaries.insert(neb);
 	}
       int nodes[3] = {nn0_new,nn1_new,nn2_new};
       NodeTuple<3> nodeTuple(nodes);      
@@ -3210,8 +3214,13 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       for (int offset = nodeElementBoundaryOffsets[nN]; offset < nodeElementBoundaryOffsets[nN+1];offset++)
 	{
 	  int ebN_global_old = nodeElementBoundariesArray[offset];
-	  if (!PetscBTLookupSet(elementBoundaryMask,ebN_global_old))
-	    elementBoundaries_subdomain_owned.insert(ebN_global_old);
+	  if (supportedElementBoundaries.count(ebN_global_old)) 
+	    {
+	      if (!PetscBTLookupSet(elementBoundaryMask,ebN_global_old))
+		{
+		  elementBoundaries_subdomain_owned.insert(ebN_global_old);
+		}
+	    }
 	}
     }
 
@@ -3284,6 +3293,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   map<int,int> edgeMaterialTypesMap;
   map<int,vector<int> > elementEdgesMap;
   map<int,pair<int,int> > edgeNodesMap;
+  set<int> supportedEdges;
   for (int ied = 0; ied < nEdges_global; ied++)
     {
       int ned,nn0,nn1; int edId(0);
@@ -3298,11 +3308,13 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       if (nn0_new >= nodeOffsets_new[rank] && nn0_new < nodeOffsets_new[rank+1])
 	{
 	  nodeEdgesStar.at(nn0_new-nodeOffsets_new[rank]).insert(ned);
+	  supportedEdges.insert(ned);
 	}
       int nn1_new = nodeNumbering_global_old2new[nn1];
       if (nn1_new >= nodeOffsets_new[rank] && nn1_new < nodeOffsets_new[rank+1])
 	{
 	  nodeEdgesStar.at(nn1_new-nodeOffsets_new[rank]).insert(ned);
+	  supportedEdges.insert(ned);
 	}
       int nodes[2] = {nn0_new,nn1_new};
       NodeTuple<2> nodeTuple(nodes);      
@@ -3387,8 +3399,13 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       for (int offset = nodeEdgeOffsets[nN]; offset < nodeEdgeOffsets[nN+1];offset++)
 	{
 	  int edN_global_old = nodeEdgesArray[offset];
-	  if (!PetscBTLookupSet(edgeMask,edN_global_old))
-	    edges_subdomain_owned.insert(edN_global_old);
+	  if (supportedEdges.count(edN_global_old))
+	    {
+	      if (!PetscBTLookupSet(edgeMask,edN_global_old))
+		{
+		  edges_subdomain_owned.insert(edN_global_old);
+		}
+	    }
 	}
     }
   newMesh.subdomainp->nEdges_global = edgeNodesMap.size();
@@ -3482,6 +3499,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 	    edges_overlap.insert(edN_star_new);
 	}
     }//nodes on this processor
+  //cek debugging, edge overlap seems to be messed up. Check global node tuples of edges vs global edge numbers
   assert(edges_overlap.size() + nEdges_subdomain_new[rank] == edgeNodesMap.size());
   //
   //enumerate the overlap
@@ -3691,6 +3709,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     {
       int edN_global_old = edgep->first;
       int edN_global_new = edgeNumbering_global_old2new[edN_global_old];
+      assert(edgeNumbering_global2subdomainMap.find(edN_global_new) != edgeNumbering_global2subdomainMap.end());
       int edN_subdomain  = edgeNumbering_global2subdomainMap[edN_global_new];
       newMesh.subdomainp->edgeNodesArray[edN_subdomain*2+0] = nodeNumbering_global2subdomainMap[edgep->second.first];
       newMesh.subdomainp->edgeNodesArray[edN_subdomain*2+1] = nodeNumbering_global2subdomainMap[edgep->second.second];
@@ -3700,7 +3719,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   //
 
   //now build rest of subdomain mesh connectivity information etc
-  bool callOld=false;
+  bool callOld=true;
   if(callOld)
     constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_tetrahedron(*newMesh.subdomainp);
   else
@@ -3813,7 +3832,6 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       vector<set<int> > nodeStar(newMesh.subdomainp->nNodes_global);
       for (int edgeN=0;edgeN<newMesh.subdomainp->nEdges_global;edgeN++)
 	{
-	  std::cout<<newMesh.subdomainp->edgeNodesArray[edgeN*2+0]<<'\t'<<newMesh.subdomainp->edgeNodesArray[edgeN*2+1]<<std::endl;
 	  nodeStar[newMesh.subdomainp->edgeNodesArray[edgeN*2+0]].insert(newMesh.subdomainp->edgeNodesArray[edgeN*2+1]);
 	  nodeStar[newMesh.subdomainp->edgeNodesArray[edgeN*2+1]].insert(newMesh.subdomainp->edgeNodesArray[edgeN*2+0]);
 	}
@@ -3885,15 +3903,12 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   if (hasElementBoundaryMarkers)
     {
       assert(newMesh.subdomainp->elementBoundariesArray != NULL);
-      for (int eN=0;eN<newMesh.subdomainp->nElements_global;eN++)
+      for (map<int,int>::iterator ebmp = elementBoundaryMaterialTypesMap.begin(); ebmp != elementBoundaryMaterialTypesMap.end();ebmp++)
 	{
-	  int eN_global_new = elementNumbering_subdomain2global[eN];
-	  for (int ebN_element = 0; ebN_element < newMesh.nElementBoundaries_element; ebN_element++)
-	      {
-		int ebN_global_old = elementBoundariesMap[eN_global_new][ebN_element];
-		int ebN_subdomain = newMesh.subdomainp->elementBoundariesArray[eN*newMesh.nElementBoundaries_element+ebN_element];
-		newMesh.subdomainp->elementBoundaryMaterialTypes[ebN_subdomain] = elementBoundaryMaterialTypesMap[ebN_global_old];
-	      }
+	  int ebN_global_new = elementBoundaryNumbering_global_old2new[ebmp->first];
+	  assert(elementBoundaryNumbering_global2subdomainMap.find(ebN_global_new) != elementBoundaryNumbering_global2subdomainMap.end());
+	  int ebN_subdomain  = elementBoundaryNumbering_global2subdomainMap[ebN_global_new];
+	  newMesh.subdomainp->elementBoundaryMaterialTypes[ebN_subdomain] = ebmp->second;
 	}
     }
 
@@ -6366,7 +6381,6 @@ static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
   ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);
   partitionNodesFromTetgenFiles(filebase,indexBase,MESH(cmesh),nLayersOfOverlap);
- 
 
 //   Vec u2;
 //   int n = MESH(cmesh).nodeOffsets_subdomain_owned[rank+1] - MESH(cmesh).nodeOffsets_subdomain_owned[rank],

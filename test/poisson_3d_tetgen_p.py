@@ -279,6 +279,20 @@ def getDiffFluxBC5(x,flag):
     elif flag == 0:
         return lambda x,t: 0.0
 
+#dirichlet boundary condition functions on (x=0,y,z), (x,y=0,z), (x,y=1,z), (x,y,z=0), (x,y,z=1)
+# def getDBC5(x,flag):
+#     if x[0] in [0.0] or x[1] in [0.0,1.0] or x[2] in [0.0,1.0]:
+#         return lambda x,t: u5Ex().uOfXT(x,t)
+# def getAdvFluxBC5(x,flag):
+#     pass
+# #specify flux on (x=1,y,z)
+# def getDiffFluxBC5(x,flag):
+#     if x[0] == 1.0:
+#         n = numpy.zeros((nd,),'d'); n[0]=1.0
+#         return lambda x,t: numpy.dot(velEx(u5Ex(),a5).uOfXT(x,t),n)
+#     if not (x[0] in [0.0] or x[1] in [0.0,1.0] or x[2] in [0.0,1.0]):
+#         return lambda x,t: 0.0
+
 #store a,f in dictionaries since coefficients class allows for one entry per component
 aOfX = {0:a5}; fOfX = {0:f5}
 
