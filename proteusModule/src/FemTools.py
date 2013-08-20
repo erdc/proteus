@@ -288,10 +288,10 @@ class LocalFunctionSpace:
             self.basisGradientsTrace.append([])
         for fi in self.referenceElement.range_nElementBoundaries:
             for si in  range(self.dim):
-                self.basisTrace[fi].append(lambda xBar:
-                                          self.basis[si](self.referenceElement.boundaryMapList[fi](xBar)))
-                self.basisGradientsTrace[fi].append(lambda xBar:
-                                          self.basisGradients[si](self.referenceElement.boundaryMapList[fi](xBar)))
+                self.basisTrace[fi].append(lambda xBar,fiIn=fi,siIn=si:
+                                           self.basis[siIn](self.referenceElement.boundaryMapList[fiIn](xBar)))
+                self.basisGradientsTrace[fi].append(lambda xBar,fiIn=fi,siIn=si:
+                                                    self.basisGradients[siIn](self.referenceElement.boundaryMapList[fiIn](xBar)))
 
 class LinearOnSimplexWithNodalBasis(LocalFunctionSpace):
     """
@@ -1421,12 +1421,9 @@ class NodalInterpolationConditions(InterpolationConditions):
         #self.functionals.append(lambda f: f(referenceElement.nodeList[0]))
         #self.functionalsQuadrature.append(lambda fList: fList[0])
         #assert referenceElement.nNodes < 6,"Haven't implemented %d nodes for nodal interpolation conditions" % (referenceElement.nNodes,)
-
         for ni in referenceElement.range_nNodes:
-            self.functionals.append(lambda f: f(referenceElement.nodeList[ni]))
-            self.functionalsQuadrature.append(lambda fList: fList[ni])
-
-
+            self.functionals.append(lambda f,n=ni: f(referenceElement.nodeList[n]))
+            self.functionalsQuadrature.append(lambda fList,n=ni: fList[n])
         #for c based projection from interpolation conditions
         self.functionals_quadrature_map = numpy.arange(len(self.functionalsQuadrature),dtype='i')
 
@@ -6507,7 +6504,7 @@ class MultilevelProjectionOperators:
                                 J = coarseSpace.dofMap.l2g[coarse_eN,j]
                                 psi_j = psi[coarse_eN,fine_eN*nInterpolationPoints:(fine_eN+1)*nInterpolationPoints,j]
                                 F_ij = fineSpaceInterpolationFunctionals[i](psi_j)
-                                if abs(F_ij )> 1.0e-16:
+                                if abs(F_ij ) > 1.0e-16:
                                     #mwf orig F_ij > 1.e-16 changed to abs(F_ij)
                                     #mwf now account for nonconforming points?
                                     #cek old mesh interface
@@ -6527,6 +6524,7 @@ class MultilevelProjectionOperators:
                                         rbc[(J,I)] = F_ij
                                         pbc[(I,J)] = F_ij
                                     rbcColumnIndeces[J].add(I)
+                                    #check why this is being called, todo
                                     if fineDOFBoundaryConditions.global2freeGlobal.has_key(I):
                                         II = fineDOFBoundaryConditions.global2freeGlobal[I]*strideListList[l+1][cj]+offsetListList[l+1][cj]
                                         if coarseDOFBoundaryConditions.global2freeGlobal.has_key(J):

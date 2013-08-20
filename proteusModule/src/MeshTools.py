@@ -503,6 +503,76 @@ class Mesh:
         cmeshTools.deleteMeshDataStructures(self.cmesh)
         log(memory("Without global mesh","Mesh"),level=1)
         # comm.endSequential()
+    def partitionMeshFromFiles(self,filebase,base,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.element):
+        import pdb
+        import cmeshTools
+        import Comm
+        import flcbdfWrappers
+        comm = Comm.get()
+        self.comm=comm
+        log(memory("partitionMesh 1","MeshTools"),level=4)
+        log("Partitioning mesh among %d processors using partitioningType = %d" % (comm.size(),parallelPartitioningType))
+        self.subdomainMesh=self.__class__()
+        self.subdomainMesh.globalMesh = self
+        self.subdomainMesh.cmesh=cmeshTools.CMesh()
+        self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
+        log(memory("partitionMesh 2","MeshTools"),level=4)
+        if parallelPartitioningType == MeshParallelPartitioningTypes.node:
+            #mwf for now always gives 1 layer of overlap
+            (self.elementOffsets_subdomain_owned,
+             self.elementNumbering_subdomain2global,
+             self.elementNumbering_global2original,
+             self.nodeOffsets_subdomain_owned,
+             self.nodeNumbering_subdomain2global,
+             self.nodeNumbering_global2original,
+             self.elementBoundaryOffsets_subdomain_owned,
+             self.elementBoundaryNumbering_subdomain2global,
+             self.elementBoundaryNumbering_global2original,
+             self.edgeOffsets_subdomain_owned,
+             self.edgeNumbering_subdomain2global,
+             self.edgeNumbering_global2original) = flcbdfWrappers.partitionNodesFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+        else:
+            (self.elementOffsets_subdomain_owned,
+             self.elementNumbering_subdomain2global,
+             self.elementNumbering_global2original,
+             self.nodeOffsets_subdomain_owned,
+             self.nodeNumbering_subdomain2global,
+             self.nodeNumbering_global2original,
+             self.elementBoundaryOffsets_subdomain_owned,
+             self.elementBoundaryNumbering_subdomain2global,
+             self.elementBoundaryNumbering_global2original,
+             self.edgeOffsets_subdomain_owned,
+             self.edgeNumbering_subdomain2global,
+             self.edgeNumbering_global2original) = flcbdfWrappers.partitionElementsFromTetgenFiles(filebase,base,nLayersOfOverlap,self.cmesh,self.subdomainMesh.cmesh)
+        #
+        log(memory("partitionMesh 3","MeshTools"),level=4)
+        self.buildFromCNoArrays(self.cmesh)
+        self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
+        self.subdomainMesh.nElements_owned = self.elementOffsets_subdomain_owned[comm.rank()+1] - self.elementOffsets_subdomain_owned[comm.rank()]
+        self.subdomainMesh.nNodes_owned = self.nodeOffsets_subdomain_owned[comm.rank()+1] - self.nodeOffsets_subdomain_owned[comm.rank()]
+        self.subdomainMesh.nElementBoundaries_owned = self.elementBoundaryOffsets_subdomain_owned[comm.rank()+1] - self.elementBoundaryOffsets_subdomain_owned[comm.rank()]
+        self.subdomainMesh.nEdges_owned = self.edgeOffsets_subdomain_owned[comm.rank()+1] - self.edgeOffsets_subdomain_owned[comm.rank()]
+
+        comm.barrier()
+        log(memory("partitionMesh 4","MeshTools"),level=4)
+        log("Number of Subdomain Elements Owned= "+str(self.subdomainMesh.nElements_owned))
+        log("Number of Subdomain Elements = "+str(self.subdomainMesh.nElements_global))
+        log("Number of Subdomain Nodes Owned= "+str(self.subdomainMesh.nNodes_owned))
+        log("Number of Subdomain Nodes = "+str(self.subdomainMesh.nNodes_global))
+        log("Number of Subdomain elementBoundaries Owned= "+str(self.subdomainMesh.nElementBoundaries_owned))
+        log("Number of Subdomain elementBoundaries = "+str(self.subdomainMesh.nElementBoundaries_global))
+        log("Number of Subdomain Edges Owned= "+str(self.subdomainMesh.nEdges_owned))
+        log("Number of Subdomain Edges = "+str(self.subdomainMesh.nEdges_global))
+        comm.barrier()
+        log("Finished partitioning")
+        # comm.beginSequential()
+        # from Profiling import memory
+        # memory()
+        # log(memory("Partitioning Mesh","Mesh"),level=1)
+        # del self.cmesh
+        # #cmeshTools.deleteMeshDataStructures(self.cmesh)
+        # log(memory("Without global mesh","Mesh"),level=1)
+        # comm.endSequential()
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0, EB=False):
         if self.arGridCollection != None:
             init = False
@@ -765,6 +835,28 @@ class Mesh:
         self.nElementBoundaries_owned = self.nElementBoundaries_global
         self.nEdges_owned = self.nEdges_global
         log(memory("buildFromC","MeshTools"),level=4)
+    def buildFromCNoArrays(self,cmesh):
+        import cmeshTools
+        #
+        log(memory("buildFromC","MeshTools"),level=4)
+        self.cmesh = cmesh
+        (self.nElements_global,
+         self.nNodes_global,
+         self.nNodes_element,
+         self.nNodes_elementBoundary,
+         self.nElementBoundaries_element,
+         self.nElementBoundaries_global,
+         self.nInteriorElementBoundaries_global,
+         self.nExteriorElementBoundaries_global,
+         self.max_nElements_node,
+         self.nEdges_global,
+         self.max_nNodeNeighbors_node,
+         self.h,
+         self.hMin,
+         self.sigmaMax,
+         self.volume) = cmeshTools.buildPythonMeshInterfaceNoArrays(self.cmesh)
+        self.hasGeometricInfo = False
+        log(memory("buildFromCNoArrays","MeshTools"),level=4)
     def buildNodeStarArrays(self):
         if self.nodeStarArray == None:
             #cek old
@@ -2346,6 +2438,7 @@ class TetrahedralMesh(Mesh):
 
     def generateFromTetgenFiles(self,filebase,base,skipGeometricInit=True,parallel=False):
         import cmeshTools
+        log(memory("declaring CMesh"),level=4)
         self.cmesh = cmeshTools.CMesh()
         log(memory("Initializing CMesh"),level=4)
         if parallel:
@@ -3226,7 +3319,25 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                 self.meshList[l].subdomainMesh = self.meshList[l]
                 log(self.meshList[-1].meshInfo())
             self.buildArrayLists()
-
+    def generatePartitionedMeshFromTetgenFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
+                                               parallelPartitioningType=MeshParallelPartitioningTypes.node):
+        import cmeshTools
+        assert(refinementLevels==1)
+        assert(parallelPartitioningType==MeshParallelPartitioningTypes.node)
+        assert(nLayersOfOverlap<=1)
+        mesh0.cmesh = cmeshTools.CMesh()
+        #blow away or just trust garbage collection
+        self.nLayersOfOverlap=nLayersOfOverlap;self.parallelPartitioningType=parallelPartitioningType
+        self.meshList = []
+        self.elementParents = None
+        self.cmultilevelMesh = None
+        self.meshList.append(mesh0)
+        log("cmeshTools.CMultilevelMesh")
+        self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+        log("buildFromC")
+        self.buildFromC(self.cmultilevelMesh)
+        log("partitionMesh")
+        self.meshList[0].partitionMeshFromFiles(filebase,base,nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
 
     def refine(self):
         self.meshList.append(TetrahedralMesh())
@@ -4062,11 +4173,254 @@ class MultilevelTriangularMesh(MultilevelMesh):
             print """locallyRefine not implemented for self.useC= %s """ % (self.useC)
         #
 
+class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
+    def __init__(self,domain,triangleOptions,maxLevels=20,maxNodes=100000,normType="L2"):#L1,Linfty
+        import numpy as np
+        import TriangleTools
+        self.maxLevels=maxLevels
+        self.maxNodes=maxNodes
+        self.domain = domain
+        self.triangleOptions = triangleOptions
+        self.normType = normType
+        log("InterpolatedBathymetryMesh: Calling Triangle to generate 2D coarse mesh for "+self.domain.name)
+        tmesh = TriangleTools.TriangleBaseMesh(baseFlags=self.triangleOptions,
+                                               nbase=1,
+                                               verbose=10)
+        tmesh.readFromPolyFile(domain.polyfile)
+        log("InterpolatedBathymetryMesh: Converting to Proteus Mesh")
+        self.coarseMesh=tmesh.convertToProteusMesh(verbose=1)
+        MultilevelTriangularMesh.__init__(self,0,0,0,skipInit=True)
+                                                    #nLayersOfOverlap=0,
+                                                    #parallelPartitioningType=n.parallelPartitioningType)
+        self.generateFromExistingCoarseMesh(self.coarseMesh,1)
+        #allocate some arrays based on the bathymetry data
+        log("InterpolatedBathymetryMesh:Allocating data structures for bathymetry interpolation algorithm")
+        self.nPoints_global = self.domain.bathy.shape[0]
+        self.pointElementsArray = -np.ones((self.nPoints_global,),'i')
+        self.pointNodeWeightsArray = np.zeros((self.nPoints_global,3),'d')
+        #
+        log("InterpolatedBathymetryMesh:Locating bathymetry points, interpolating bathymetry, and tagging elements on coarse mesh")
+        self.locatePoints(self.meshList[-1])
+        self.setMeshBathymetry(self.meshList[-1])
+        self.tagElements(self.meshList[-1])
+        levels = 0
+        error = domain.tol+1.0;
+        while error >= domain.tol and self.meshList[-1].nNodes_global < self.maxNodes and levels < self.maxLevels:
+            levels += 1
+            log("InterpolatedBathymetryMesh: Locally refining, level = %i" % (levels,))
+            self.locallyRefine(self.meshList[-1].elementTags)
+            log("InterpolatedBathymetryMesh: Projecting bathymetry based on parent mesh only")
+            self.projectBathymetry()
+            log("InterpolatedBathymetryMesh: Locating points on child mesh")
+            self.locatePoints(self.meshList[-1])
+            log("InterpolatedBathymetryMesh: updating bathmetry")
+            self.setMeshBathymetry(self.meshList[-1])
+            log("InterpolatedBathymetryMesh: tagging elements and checking error")
+            error = self.tagElements(self.meshList[-1])
+            log("InterpolatedBathymetryMesh: error = %f tol = %f number of elements tagged = %i" % (error,domain.tol,self.meshList[-1].elementTags.sum()))
+            
+    def setMeshBathymetry(self,mesh):
+        """
+        calculate the arithmetic mean bathymetry of points inside each triangle and then assign the area-weighted average of the element means to each node
+        """
+        import numpy as np
+        from FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
+        interpolationSpace = LinearOnSimplexWithNodalBasis(nd=2)
+        maps = AffineMaps(mesh,interpolationSpace.referenceElement,interpolationSpace)
+        maps.useC = True
+        mesh.elementMeanZ = np.zeros((mesh.nElements_global,),'d')
+        for pN in range(self.nPoints_global):
+            eN = self.pointElementsArray[pN]
+            if eN >= 0:
+                if mesh.nPoints_element[eN] > 0:
+                    mesh.elementMeanZ[eN] += self.domain.bathy[pN,2]/float(mesh.nPoints_element[eN])#arithmetic mean assumes points are evenly spaced
+                    mesh.nodeArray[mesh.elementNodesArray[eN,0],2] = 0.0
+                    mesh.nodeArray[mesh.elementNodesArray[eN,1],2] = 0.0
+                    mesh.nodeArray[mesh.elementNodesArray[eN,2],2] = 0.0
+        #now we are using the prolongation operator to set the intial node locations, so if an element doesn't contain any points we shouldn't touch it.
+        #for eN in range(mesh.nElements_global):
+        #    if mesh.nPoints_element[eN] == 0:
+        #        for nN in mesh.elementNodesArray[eN]:
+        #            mesh.elementMeanZ[eN] += mesh.nodeArray[nN,2]/3.0
+        #mesh.nodeArray[:,2] = 0.0
+        sumArray = mesh.nodeArray[:,2].copy()
+        sumArray[:]=0.0
+        for eN in range(mesh.nElements_global):
+            if mesh.nPoints_element[eN] > 0:
+                #calculate triangle area and assign weighted average of element means to node
+                xiArray = np.zeros((2,),'d')
+                #
+                grad_psi = numpy.zeros((interpolationSpace.dim,
+                                        interpolationSpace.referenceElement.dim),
+                                       'd')
+                dx = numpy.zeros((interpolationSpace.referenceElement.dim),
+                                 'd')
+                jacobian = numpy.zeros((interpolationSpace.referenceElement.dim,
+                                        interpolationSpace.referenceElement.dim),
+                                       'd')
+                inverseJacobian = numpy.zeros((interpolationSpace.referenceElement.dim,
+                                               interpolationSpace.referenceElement.dim),
+                                              'd')
+                for j in interpolationSpace.range_dim:
+                    grad_psi[j,:] = interpolationSpace.basisGradients[j](xiArray)#evaluate at zero because we can (psi is linear)
+                jacobian.flat[:]=0.0
+                inverseJacobian.flat[:]=0.0
+                for j in interpolationSpace.range_dim:
+                    J = mesh.elementNodesArray[eN,j]
+                    for m in interpolationSpace.referenceElement.range_dim:
+                        for n in interpolationSpace.referenceElement.range_dim:
+                            jacobian[m,n] += mesh.nodeArray[J,m]*grad_psi[j,n]
+                J = mesh.elementNodesArray[eN,0]
+                inverseJacobian = inv(jacobian)
+                area = 0.5*det(jacobian)
+                sumArray[mesh.elementNodesArray[eN,0]] += area/mesh.nodeSupportArray[mesh.elementNodesArray[eN,0]]
+                sumArray[mesh.elementNodesArray[eN,1]] += area/mesh.nodeSupportArray[mesh.elementNodesArray[eN,1]]
+                sumArray[mesh.elementNodesArray[eN,2]] += area/mesh.nodeSupportArray[mesh.elementNodesArray[eN,2]]
+                mesh.nodeArray[mesh.elementNodesArray[eN,0],2] += area*mesh.elementMeanZ[eN]/mesh.nodeSupportArray[mesh.elementNodesArray[eN,0]]
+                mesh.nodeArray[mesh.elementNodesArray[eN,1],2] += area*mesh.elementMeanZ[eN]/mesh.nodeSupportArray[mesh.elementNodesArray[eN,1]]
+                mesh.nodeArray[mesh.elementNodesArray[eN,2],2] += area*mesh.elementMeanZ[eN]/mesh.nodeSupportArray[mesh.elementNodesArray[eN,2]]
+        #cek debug
+        #print "sum of a nodes element areas divided by node support shoudl be 1 ",sumArray
+    def locatePoints(self,mesh):
+        """
+        locate the element containing each point
 
+        this should only be used on very coarse meshes
+        """
+        import numpy as np
+        from FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
+        interpolationSpace = LinearOnSimplexWithNodalBasis(nd=2)
+        maps = AffineMaps(mesh,interpolationSpace.referenceElement,interpolationSpace)
+        maps.useC = False
+        mesh.nPoints_element = np.zeros((mesh.nElements_global,),'i')
+        mesh.nodeSupportArray = np.zeros((mesh.nNodes_global,),'d')
+        mesh.area_element =  np.zeros((mesh.nElements_global,),'d')
+        self.pointElementsArray[:] = -1
+        self.totalArea = 0.0
+        for eN in range(mesh.nElements_global):
+            #map points to reference space and test if it lies in the reference triangle
+            xiArray = np.zeros((2,),'d')
+            xiArray[:] = 0.0
+            #
+            grad_psi = numpy.zeros((interpolationSpace.dim,
+                                    interpolationSpace.referenceElement.dim),
+                                   'd')
+            dx = numpy.zeros((interpolationSpace.referenceElement.dim),
+                             'd')
+            jacobian = numpy.zeros((interpolationSpace.referenceElement.dim,
+                                    interpolationSpace.referenceElement.dim),
+                                   'd')
+            inverseJacobian = numpy.zeros((interpolationSpace.referenceElement.dim,
+                                           interpolationSpace.referenceElement.dim),
+                                          'd')
+            for j in interpolationSpace.range_dim:
+                grad_psi[j,:] = interpolationSpace.basisGradients[j](xiArray[0])#evalute at zero because we can (psi is linear)
+            jacobian.flat[:]=0.0
+            inverseJacobian.flat[:]=0.0
+            for j in interpolationSpace.range_dim:
+                J = mesh.elementNodesArray[eN,j]
+                for m in interpolationSpace.referenceElement.range_dim:
+                    for n in interpolationSpace.referenceElement.range_dim:
+                        jacobian[m,n] += mesh.nodeArray[J,m]*grad_psi[j,n]
+            J = mesh.elementNodesArray[eN,0]
+            inverseJacobian = inv(jacobian)
+            area = 0.5*det(jacobian)
+            mesh.area_element[eN] = area
+            self.totalArea += area
+            for pN in range(self.nPoints_global):#can optimize by skipping previously found points
+                xiArray[:] = 0.0
+                dx[:]=self.domain.bathy[pN,:2]
+                for m in interpolationSpace.referenceElement.range_dim:
+                    dx[m]-=mesh.nodeArray[J,m]
+                for m in interpolationSpace.referenceElement.range_dim:
+                    for n in interpolationSpace.referenceElement.range_dim:
+                        xiArray[m] += inverseJacobian[m,n]*dx[n]
+                if xiArray[0] >=0.0 and xiArray[1] >= 0.0 and 1.0 - xiArray[0] - xiArray[1] >= 0.0:
+                    self.pointElementsArray[pN] = eN
+                    self.pointNodeWeightsArray[pN,0] = interpolationSpace.basis[0](xiArray)
+                    self.pointNodeWeightsArray[pN,1] = interpolationSpace.basis[1](xiArray)
+                    self.pointNodeWeightsArray[pN,2] = interpolationSpace.basis[2](xiArray)
+        for pN in range(self.nPoints_global):
+            if self.pointElementsArray[pN] >= 0:
+                mesh.nPoints_element[self.pointElementsArray[pN]] += 1
+        for eN in range(mesh.nElements_global):
+            if mesh.nPoints_element[eN] > 0:
+                mesh.nodeSupportArray[mesh.elementNodesArray[eN,0]] += mesh.area_element[eN]
+                mesh.nodeSupportArray[mesh.elementNodesArray[eN,1]] += mesh.area_element[eN]
+                mesh.nodeSupportArray[mesh.elementNodesArray[eN,2]] += mesh.area_element[eN]
+        #cek debug
+        #print "Total Domain Area",self.totalArea
+    def projectBathymetry(self):
+        from proteus.FemTools import C0_AffineLinearOnSimplexWithNodalBasis,DOFBoundaryConditions,MultilevelProjectionOperators
+        mlMeshTemp = MultilevelMesh(levels=2)
+        mlMeshTemp.meshList = self.meshList[-2:]
+        mlMeshTemp.nLevels=2
+        mlMeshTemp.cmeshList = self.cmeshList[-2:]
+        mlMeshTemp.elementParentsArrayList = self.elementParentsArrayList[-2:]
+        mlMeshTemp.elementChildrenArrayList = self.elementChildrenArrayList[-1:]
+        mlMeshTemp.elementChildrenOffsetsList = self.elementChildrenOffsetsList[-1:]
+        nd=2
+        TrialSpaceTypeDict = {0:C0_AffineLinearOnSimplexWithNodalBasis}
+        trialSpaceDictParent = dict([ (cj,TrialSpaceType(mlMeshTemp.meshList[0],nd)) for (cj,TrialSpaceType) in TrialSpaceTypeDict.iteritems()])
+        trialSpaceDictChild = dict([ (cj,TrialSpaceType(mlMeshTemp.meshList[1],nd)) for (cj,TrialSpaceType) in TrialSpaceTypeDict.iteritems()])
+        trialSpaceDictList  = [trialSpaceDictParent,trialSpaceDictChild]
+        offsetListList=[[0],[0]]
+        strideListList=[[1],[1]]
+        def getDBC(x,flag):
+            return None
+        bcDictList=[dict([(0,DOFBoundaryConditions(trialSpaceDictParent[0],getPointwiseBoundaryConditions=getDBC,weakDirichletConditions=False))]),
+                    dict([(0,DOFBoundaryConditions(trialSpaceDictChild[0],getPointwiseBoundaryConditions=getDBC,weakDirichletConditions=False))])]
+        self.meshTransfers = MultilevelProjectionOperators(
+            mlMeshTemp,
+            trialSpaceDictList,
+            offsetListList,
+            strideListList,
+            bcDictList)
+        zParent = self.meshList[-2].nodeArray[:,2].copy()
+        zChild = self.meshList[-1].nodeArray[:,2].copy()
+        self.meshTransfers.prolongList[-1].matvec(zParent,zChild)
+        self.meshList[-1].nodeArray[:,2] = zChild
+    def tagElements(self,mesh):
+        """
+        loop over points and calculate whether the interpolation error is within the tolerance
 
-
-
-
+        this should only be used on very coarse meshes
+        """
+        import numpy as np
+        mesh.elementTags = np.zeros((mesh.nElements_global,),'i')
+        mesh.errorAverage_element =  np.zeros((mesh.nElements_global,),'d')
+        errorInfty = 0.0
+        for pN in range(self.nPoints_global):
+            eN = self.pointElementsArray[pN]
+            if eN >= 0:
+                zInterp = self.pointNodeWeightsArray[pN,0]*mesh.nodeArray[mesh.elementNodesArray[eN,0],2] +  \
+                          self.pointNodeWeightsArray[pN,1]*mesh.nodeArray[mesh.elementNodesArray[eN,1],2] +  \
+                          self.pointNodeWeightsArray[pN,2]*mesh.nodeArray[mesh.elementNodesArray[eN,2],2] 
+                errorPointwise = fabs(zInterp - self.domain.bathy[pN,2])
+                errorInfty = max(errorPointwise,errorInfty)
+                mesh.errorAverage_element[eN] += (errorPointwise/float(mesh.nPoints_element[eN]))
+                if errorPointwise > self.domain.tol:
+                    mesh.elementTags[eN] = 1
+        if self.normType == "L1":
+            mesh.elementTags[:] = 0
+            errorL1 = 0.0
+            for eN in range(mesh.nElements_global):
+                errorL1 += mesh.errorAverage_element[eN]*mesh.area_element[eN]
+                if mesh.errorAverage_element[eN] > self.domain.tol:
+                    mesh.elementTags[eN] = 1
+            errorL1 /= self.totalArea#normalize by domain error to make error have units of length
+            return errorL1
+        if self.normType == "L2":
+            mesh.elementTags[:] = 0
+            errorL2 = 0.0
+            for eN in range(mesh.nElements_global):
+                errorL2 += (mesh.errorAverage_element[eN])**2 * mesh.area_element[eN]
+                if mesh.errorAverage_element[eN] > self.domain.tol:
+                    mesh.elementTags[eN] = 1
+            errorL2 = sqrt(errorL2)/self.totalArea#normalize by domain error to make error have units of length
+            return errorL2
+        else:
+            return errorInf
 
 # #         mfile.close()
 # #         return p,e,t
@@ -4178,7 +4532,7 @@ class EdgeMesh(Mesh):
         self.oldToNewNode=[]
     def computeGeometricInfo(self):
         import cmeshTools
-        cmeshTooles.computeGeometricInfo_edge(self.cmesh)
+        cmeshTools.computeGeometricInfo_edge(self.cmesh)
     def generateEdgeMeshFromRectangularGrid(self,nx,Lx):
         import cmeshTools
         self.cmesh = cmeshTools.CMesh()
