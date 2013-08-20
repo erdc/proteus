@@ -358,6 +358,32 @@ static PyObject* cmeshToolsBuildPythonMeshInterface(PyObject* self,
                        MESH(cmesh).sigmaMax,
                        MESH(cmesh).volume);
 }
+
+static PyObject* cmeshToolsBuildPythonMeshInterfaceNoArrays(PyObject* self,
+							    PyObject* args)
+{
+  PyObject *cmesh;
+  if (!PyArg_ParseTuple(args,
+                        "O",
+                        &cmesh))
+    return NULL;
+  return Py_BuildValue("iiiiiiiiiiidddd",
+                       MESH(cmesh).nElements_global,
+                       MESH(cmesh).nNodes_global,
+                       MESH(cmesh).nNodes_element,
+                       MESH(cmesh).nNodes_elementBoundary,
+                       MESH(cmesh).nElementBoundaries_element,
+                       MESH(cmesh).nElementBoundaries_global,
+                       MESH(cmesh).nInteriorElementBoundaries_global,
+                       MESH(cmesh).nExteriorElementBoundaries_global,
+                       MESH(cmesh).max_nElements_node,
+                       MESH(cmesh).nEdges_global,
+                       MESH(cmesh).max_nNodeNeighbors_node,
+                       MESH(cmesh).h,
+                       MESH(cmesh).hMin,
+                       MESH(cmesh).sigmaMax,
+                       MESH(cmesh).volume);
+}
 static PyObject* cmeshToolsBuildLevel0PythonMeshInterface(PyObject* self,
 							  PyObject* args)
 {
@@ -540,8 +566,11 @@ static PyObject* cmeshToolsBuildPythonMultilevelMeshInterface(PyObject* self,
   PyList_Append(meshList,mesh);
   elementChildrenArrayList = PyList_New(0);
   elementChildrenOffsetsList = PyList_New(0);
-  elementParentsArrayList  = PyList_New(1); //put in one empty entry
-  int n,dims[1]; 
+  elementParentsArrayList  = PyList_New(0); //put in one empty entry
+  int n,dims[1];
+  npy_intp newdims[1];
+  newdims[0]=0;
+  PyList_Append(elementParentsArrayList,PyArray_SimpleNew(1,newdims,PyArray_INT));
   for(n=1;n<MULTILEVELMESH(cmultilevelMesh).nLevels;n++)
     {
       mesh = CMesh_FromMesh(&MULTILEVELMESH(cmultilevelMesh).meshArray[n]);
@@ -910,6 +939,7 @@ cmeshToolsGenerateFromTetgenFilesParallel(PyObject* self,
     return NULL;
 
   failed = readTetgenMesh(MESH(cmesh),filebase,base);
+  constructElementBoundaryElementsArray_tetrahedron(MESH(cmesh));
   failed = readTetgenElementBoundaryMaterialTypes(MESH(cmesh),filebase,base);
 
   Py_INCREF(Py_None); 
@@ -1895,7 +1925,11 @@ static PyMethodDef cmeshToolsMethods[] = {
   { "buildPythonMeshInterface",
     cmeshToolsBuildPythonMeshInterface,
     METH_VARARGS, 
-    "Provide handles to the C storage of the mesh"},
+    "Provide handles to the C storage of the mesh without any storage (used for global mesh in parallel)"},
+  { "buildPythonMeshInterfaceNoArrays",
+    cmeshToolsBuildPythonMeshInterfaceNoArrays,
+    METH_VARARGS, 
+    "Provide handles to the C storage of the mesh without any storage (used for global mesh in parallel)"},
   { "buildPythonMultilevelMeshInterface",
     cmeshToolsBuildPythonMultilevelMeshInterface,
     METH_VARARGS, 
