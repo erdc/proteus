@@ -1,3 +1,0 @@
-[submodule "hashstack"]
-	path = hashstack
-	url = https://github.com/hashdist/python-hpcmp2.git
