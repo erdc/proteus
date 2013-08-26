@@ -29,7 +29,7 @@ newConfig:
 	cd proteusConfig && cp config.py.${PROTEUS_ARCH_OLD} config.py.${PROTEUS_ARCH}
 
 stack:
-	echo "You must run git submodule update --init to build hashstack"
+	echo "You must clone https://github.com/hashdist/python-hpcmp2.git as the subdirectory 'hashstack' and checkout the proteus-1.0 branch before you build the stack"
 	cp hashstack/config.yml.${PROTEUS_ARCH} hashstack/config.yml 
 	cp hashstack/packages.yml.${PROTEUS_ARCH} hashstack/packages.yml
 	cd hashstack && ./update -v && ./update --copy ${PROTEUS_PREFIX}
