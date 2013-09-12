@@ -1,2 +1,4 @@
+cp ../pythonConfig/setup.py.${PROTEUS_ARCH} setup.py
+cp ../pythonConfig/Setup.${PROTEUS_ARCH} Modules/Setup.dist
 ./configure --prefix=${PROTEUS_PREFIX} CC=gcc CXX=g++ LD=gcc
 #just do it with gcc and rely on link compatibility with intel
