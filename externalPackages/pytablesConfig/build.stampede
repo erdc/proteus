@@ -1,0 +1,4 @@
+${PROTEUS_PYTHON} setup.py build --hdf5=${PROTEUS_PREFIX} --lflags="-Wl,-rpath,/org/groups/chg/povichtj/src_g/proteus/linux/lib" 
+
+
+
