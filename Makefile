@@ -1,10 +1,10 @@
 all: install
 
 install:
-	${PROTEUS_PYTHON} setuppyx.py install
-	${PROTEUS_PYTHON} setupf.py install
-	${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install
-	${PROTEUS_PYTHON} setup.py install
+	${PROTEUS_PYTHON} setuppyx.py install --prefix=${PROTEUS_PREFIX}
+	${PROTEUS_PYTHON} setupf.py install --prefix=${PROTEUS_PREFIX}
+	${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install --prefix=${PROTEUS_PREFIX}
+	${PROTEUS_PYTHON} setup.py install --prefix=${PROTEUS_PREFIX}
 
 build_ext:
 	${PROTEUS_PYTHON} setup.py build_ext
