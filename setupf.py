@@ -19,6 +19,9 @@ cv["OPT"] = cv["OPT"].replace("-O3","")
 cv["CFLAGS"] = cv["CFLAGS"].replace("-DNDEBUG","-DDEBUG")
 cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","")
 
+PROTEUS_EXTRA_FC_LINK_ARGS=[]
+PROTEUS_EXTRA_FC_COMPILE_ARGS=[]
+
 setup(name='ftracking',
       version='0.0.1',
       description='Fortran based Python tools for particle tracking',
