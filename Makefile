@@ -34,12 +34,15 @@ cleaner: clean
 newConfig:
 	cd proteusConfig && cp config.py.${PROTEUS_ARCH_OLD} config.py.${PROTEUS_ARCH}
 
-stack: hashstack boostrap.done
+stack: hashstack bootstrap.done
 	cp hashstack/config.yml.${PROTEUS_ARCH} hashstack/config.yml 
 	cp hashstack/packages.yml.${PROTEUS_ARCH} hashstack/packages.yml
 	cd hashstack && ./update -v && ./update --copy ${PROTEUS_PREFIX}
+	@echo "Stack complete, test with: make check"
+	@echo "or: make parallel_check"
 
 hashstack: 
+	@echo "No hashstack found.  Cloning hashstack from GitHub"
 	git clone -b proteus-cygwin-hacks-pre1.0 https://github.com/hashdist/hashstack.git
 
 bootstrap: bootstrap.done
