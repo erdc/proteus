@@ -225,7 +225,7 @@ class PlanarStraightLineGraphDomain(D_base):
     2D domains described by planar straight line graphs.
     """
     def __init__(self,fileprefix=None,vertices=None,segments=None,
-                 holes=None,regions=None,vertexFlags=None,segmentFlags=None,regionFlags=None,
+                 holes=None,regions=None,vertexFlags=None,segmentFlags=None,regionFlags=None,regionConstraints=None,
                  name="DefaultPSLGDomain",units="m"):
         """
         Construct the PSLG from lists of vertices, segments, etc. If no vertex or segment flags are given, then they are assigned as zero.
@@ -242,6 +242,9 @@ class PlanarStraightLineGraphDomain(D_base):
             self.vertexFlags=vertexFlags
             self.segmentFlags=segmentFlags
             self.regionFlags=regionFlags
+            self.regionConstraints=regionConstraints
+            if self.regionConstraints != None:
+                assert(self.regionFlags != None)
             if self.vertices != None:
                 self.getBoundingBox()
             if self.segmentFlags != None:
@@ -401,7 +404,9 @@ class PlanarStraightLineGraphDomain(D_base):
                     pf.write('%d %21.16e %21.16e ' % (rN+1,
                                                    r[0],
                                                    r[1]))
-                    if self.regionFlags != None:
+                    if self.regionConstraints != None:
+                        pf.write('%d %21.16e\n' % (self.regionFlags[rN],self.regionConstraints[rN]))                        
+                    elif self.regionFlags != None:
                         pf.write('%d\n' % (self.regionFlags[rN]))
                     else:
                         pf.write('\n')
