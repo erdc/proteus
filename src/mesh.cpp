@@ -4557,7 +4557,6 @@ int readTetgenElementBoundaryMaterialTypes(Mesh& mesh, const char* filebase, int
 	}
       for (int ebNE = 0; ebNE < mesh.nExteriorElementBoundaries_global; ebNE++)
 	{
-	  std::cout<<"ebNE "<<ebNE<<std::endl;
 	  int ebN = mesh.exteriorElementBoundariesArray[ebNE];
 	  register int nodes[3];
 	  nodes[0] = mesh.elementBoundaryNodesArray[ebN*3+0];
