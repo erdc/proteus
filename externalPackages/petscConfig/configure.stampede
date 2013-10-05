@@ -1,0 +1,18 @@
+${PROTEUS_PYTHON} ./config/configure.py --with-clanguage=C \
+--with-cc=mpicc --with-cxx=mpicxx --with-fc=mpif90 --with-mpi-compilers \
+--PETSC_ARCH=${PROTEUS_ARCH} \
+--PETSC_DIR=${PROTEUS}/externalPackages/petsc-dev \
+--with-pic \
+--with-mpiexec=ibrun \
+--with-shared-libraries \
+--with-cmake=/opt/apps/cmake/2.8.9/bin/cmake \
+--download-parmetis=1 \
+--download-metis=1 \
+--download-spooles=1 \
+--download-superlu_dist=1 \
+--download-hypre=1 \
+--with-debugging=0 \
+--download-mumps \
+--prefix=${PROTEUS_PREFIX} \
+--download-scalapack=1 \
+--download-f-blas-lapack=1
