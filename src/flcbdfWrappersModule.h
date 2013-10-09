@@ -11,7 +11,6 @@ extern "C"
 
 #include "cmeshToolsModule.h"
 #include "mesh.h"
-#include "mpi.h"
 
 namespace Daetk 
 {
@@ -19,16 +18,34 @@ namespace Daetk
   {
     namespace cc
     {
-
       extern "C"
       {
-
+/* hack on diamond */
+#define MYCPLUSPLUS __cplusplus
+#ifdef __cplusplus
+#undef __cplusplus
+#define PROTEUSREDEFINECPP
+#endif
+#include "mpi.h"
+#ifdef PETSC_INCLUDE_AS_C
 #include "petsc.h"
 #include "petscmat.h"
 #include "petscao.h"
 #include "petscbt.h"
 #include "petscksp.h"
-
+#endif
+#ifdef PROTEUSREDEFINECPP
+#define __cplusplus MYCPLUSPLUS
+#endif
+#ifndef PETSC_INCLUDE_AS_C
+#include "petsc.h"
+#include "petscmat.h"
+#include "petscao.h"
+#include "petscbt.h"
+#include "petscksp.h"
+#endif
+#include "petscconf.h"
+	/*cek try adding forward declarations since I can't find the header for these intel functions */
 #ifdef PETSC_HAVE__INTEL_FAST_MEMSET
           #include <string.h>
           extern void* _intel_fast_memset(void *b, int c, size_t len);
@@ -37,6 +54,8 @@ namespace Daetk
           #include <string.h>
           extern void* _intel_fast_memcpy(void* s1, const void* s2, size_t n);
 #endif
+/*mwf debug*/
+/*#include "parmetis.h" cek hack on lonestar*/
       }
     }
   }
