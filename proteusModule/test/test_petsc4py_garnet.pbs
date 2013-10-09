@@ -1,9 +1,14 @@
+#!/bin/bash
 #PBS -A ERDCV00898ENQ
 #PBS -l walltime=00:60:00
-#PBS -l ncpus=128
+#PBS -l select=2:ncpus=32:mpiprocs=32
+##PBS -l select=1:ncpus=32:mpiprocs=1
 #PBS -q debug
 #PBS -N testPetsc4py
 #PBS -j oe
 #PBS -l application=proteus
+source /opt/modules/default/etc/modules.sh
+source ${PROTEUS}/envConfig/garnet.gnu.bash
 cd ${PROTEUS}/externalPackages/petsc4py/test
-aprun -n 128 ${PROTEUS_PYTHON} runtests.py -v --exclude test_da --exclude test_ts --exclude test_vec --exclude test_object
+#aprun -n 128 ${PROTEUS_PYTHON} runtests.py --exclude test_da --exclude test_ts --exclude test_vec --exclude test_object
+aprun -n 64 ${PROTEUS_PYTHON} runtests.py 
