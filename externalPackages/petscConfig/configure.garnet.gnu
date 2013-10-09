@@ -1,13 +1,18 @@
+#!/bin/bash
+unset CC
+unset CXX
+unset CXX
 ${PROTEUS_PYTHON} ./config/configure.py \
+CC=cc \
+CXX=CC \
+FC=ftn \
 --with-debugging=0 \
 --useThreads=0 \
 --prefix=${PROTEUS_PREFIX} \
 --PETSC_ARCH=${PROTEUS_ARCH} \
 --PETSC_DIR=${PROTEUS}/externalPackages/petsc-dev \
 --with-clanguage=C \
---CC=cc \
---CXX=CC \
---FC=ftn \
+--with-mpi-compilers=1 \
 --with-blas-lapack-lib="-lsci_gnu" \
 --with-pic=1 \
 --download-cmake=1 \
