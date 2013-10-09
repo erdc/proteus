@@ -231,32 +231,45 @@ class  NS_base:#(HasTraits):
                                                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                       parallelPartitioningType=n.parallelPartitioningType)
             elif isinstance(p.domain,Domain.PiecewiseLinearComplexDomain):
+                from subprocess import call
+                import sys
                 if comm.rank() == 0 and (p.genMesh or not (os.path.exists(p.domain.polyfile+".ele") and
                                                            os.path.exists(p.domain.polyfile+".node") and
                                                            os.path.exists(p.domain.polyfile+".face"))):
                     log("Running tetgen to generate 3D mesh for "+p.name,level=1)
                     tetcmd = "tetgen -%s %s.poly" % (n.triangleOptions,p.domain.polyfile)
-                    failed = os.system(tetcmd)
-                    elefile = "%s.1.ele" % p.domain.polyfile
+                    log("Calling tetgen on rank 0 with command %s" % (tetcmd,))
+                    try:
+                        retcode = call(tetcmd, shell=True)
+                        if retcode < 0:
+                            print >>sys.stderr, "Child was terminated by signal", -retcode
+                        else:
+                            print >>sys.stderr, "Child returned", retcode
+                    except OSError as e:
+                        print >>sys.stderr, "TetGen Execution failed:", e
+                    #old sys call
+                    #failed = os.system(tetcmd)
+                    log("Done running tetgen")
+                    elefile  = "%s.1.ele" % p.domain.polyfile
                     nodefile = "%s.1.node" % p.domain.polyfile
                     facefile = "%s.1.face" % p.domain.polyfile
                     edgefile = "%s.1.edge" % p.domain.polyfile
-                    assert os.path.exists(elefile)
+                    assert os.path.exists(elefile), "no 1.ele"
                     tmp = "%s.ele" % p.domain.polyfile
                     os.rename(elefile,tmp)
-                    assert os.path.exists(tmp)
-                    assert os.path.exists(nodefile)
+                    assert os.path.exists(tmp), "no .ele"
+                    assert os.path.exists(nodefile), "no 1.node"
                     tmp = "%s.node" % p.domain.polyfile
                     os.rename(nodefile,tmp)
-                    assert os.path.exists(tmp)
+                    assert os.path.exists(tmp), "no .node"
                     if os.path.exists(facefile):
                         tmp = "%s.face" % p.domain.polyfile
                         os.rename(facefile,tmp)
-                        assert os.path.exists(tmp)
+                        assert os.path.exists(tmp), "no .face"
                     if os.path.exists(edgefile):
                         tmp = "%s.edge" % p.domain.polyfile
                         os.rename(edgefile,tmp)
-                        assert os.path.exists(tmp)
+                        assert os.path.exists(tmp), "no .edge"
                 comm.barrier()
                 log("Initializing mesh and MultilevelMesh")
                 nbase = 1
