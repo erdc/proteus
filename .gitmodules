@@ -42,10 +42,10 @@
 	url = git@github.com:erdc-cm/hdf5.git
 [submodule "externalPackages/petsc4py"]
 	path = externalPackages/petsc4py
-	url = git@github.com:erdc-cm/petsc4py
+	url = git@bitbucket.org:petsc/petsc4py.git
 [submodule "externalPackages/mpi4py"]
 	path = externalPackages/mpi4py
-	url = git@github.com:erdc-cm/mpi4py
+	url = git@bitbucket.org:mpi4py/mpi4py.git
 [submodule "externalPackages/clawpack/pyclaw"]
 	path = externalPackages/clawpack/pyclaw
 	url = git@github.com:clawpack/pyclaw.git
