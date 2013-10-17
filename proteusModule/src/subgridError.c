@@ -3984,7 +3984,7 @@ void calculateSubgridErrorShallowWater1D(int nElements_global,
       for (k=0;k<nQuadraturePoints_element;k++)
         {
           u = hu[eN*nQuadraturePoints_element+k]/fmax(h[eN*nQuadraturePoints_element+k],1.0e-8);
-          c = sqrt(g*h[eN*nQuadraturePoints_element+k]);
+          c = sqrt(fabs(g*h[eN*nQuadraturePoints_element+k]));
           cfl_1[eN*nQuadraturePoints_element+k] = (u-c)/elementDiameter[eN];
           cfl_2[eN*nQuadraturePoints_element+k] = (u+c)/elementDiameter[eN];
         }
@@ -4010,7 +4010,7 @@ void calculateSubgridErrorShallowWater2D(int nElements_global,
           u = hu[eN*nQuadraturePoints_element+k]/fmax(h[eN*nQuadraturePoints_element+k],1.0e-8);
           v = hv[eN*nQuadraturePoints_element+k]/fmax(h[eN*nQuadraturePoints_element+k],1.0e-8);
           speed = sqrt(u*u + v*v);
-          c = sqrt(g*h[eN*nQuadraturePoints_element+k]);
+          c = sqrt(fabs(g*h[eN*nQuadraturePoints_element+k]));
           cfl_1[eN*nQuadraturePoints_element+k] = (speed-c)/elementDiameter[eN];
           cfl_2[eN*nQuadraturePoints_element+k] = speed/elementDiameter[eN];
           cfl_3[eN*nQuadraturePoints_element+k] = (speed+c)/elementDiameter[eN];
