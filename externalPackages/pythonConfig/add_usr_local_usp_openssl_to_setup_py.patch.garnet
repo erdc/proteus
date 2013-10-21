@@ -1,0 +1,22 @@
+--- externalPackages/python/setup.py	2013-10-17 09:29:15.000000000 -0500
++++ externalPackages/pythonConfig/setup.py.diamond	2013-10-16 23:51:24.000000000 -0500
+@@ -711,7 +711,8 @@
+         # Detect SSL support for the socket module (via _ssl)
+         search_for_ssl_incs_in = [
+                               '/usr/local/ssl/include',
+-                              '/usr/contrib/ssl/include/'
++                              '/usr/contrib/ssl/include/',
++                              '/usr/local/usp/openssl/include'
+                              ]
+         ssl_incs = find_file('openssl/ssl.h', inc_dirs,
+                              search_for_ssl_incs_in
+@@ -723,7 +724,8 @@
+                 ssl_incs += krb5_h
+         ssl_libs = find_library_file(self.compiler, 'ssl',lib_dirs,
+                                      ['/usr/local/ssl/lib',
+-                                      '/usr/contrib/ssl/lib/'
++                                      '/usr/contrib/ssl/lib/',
++                                      '/usr/local/usp/openssl/lib/'
+                                      ] )
+ 
+         if (ssl_incs is not None and
