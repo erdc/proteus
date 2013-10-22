@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/csh
 #PBS -A ERDCV00898ENQ
 #PBS -l walltime=001:00:00
 #PBS -N testProteus
@@ -7,6 +7,8 @@
 #PBS -l select=3:ncpus=8:mpiprocs=8
 #PBS -l place=scatter:excl
 #PBS -l application=proteus
+source /usr/share/modules/init/csh
+source ${PROTEUS}/envConfig/diamond.csh
 cd ${PROTEUS}/proteusModule/test
 #${HOME}/BOB/mpirun -np 1 ${PROTEUS_PYTHON} -c "import nose; nose.test()"
 #mpirun -np 1 parun poisson_3d_p.py poisson_3d_c0p1_n.py -l 5 -v

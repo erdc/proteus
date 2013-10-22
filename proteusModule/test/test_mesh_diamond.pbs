@@ -15,11 +15,9 @@ cd ${PROTEUS}/proteusModule/test
 #${HOME}/BOB/mpirun -np 1 ${PROTEUS_PYTHON} test_import.py
 #${HOME}/BOB/mpirun -np 1 ${PROTEUS_PYTHON} test_poisson.py
 #${HOME}/BOB/mpirun -np 8 ${PROTEUS_PYTHON} test_poisson.py
-echo "test_import"
-mpirun -np 8 ${PROTEUS_PYTHON} test_import.py
 echo "testing poisson on 1 node (8 mpi tasks)"
-mpirun -np 8 ${PROTEUS_PYTHON} test_poisson.py
+mpirun -np 8 ${PROTEUS_PYTHON} test_meshPartitionFromTetgenFiles.py
 echo "testing poisson on 2 nodes (16 mpi tasks)"
-mpirun -np 16 ${PROTEUS_PYTHON} test_poisson.py
+mpirun -np 16 ${PROTEUS_PYTHON} test_meshPartitionFromTetgenFiles.py
 echo "testing poisson on 3 nodes (24 mpi tasks)"
-mpirun -np 24 ${PROTEUS_PYTHON} test_poisson.py
+mpirun -np 24 ${PROTEUS_PYTHON} test_meshPartitionFromTetgenFiles.py
