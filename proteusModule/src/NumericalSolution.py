@@ -254,22 +254,22 @@ class  NS_base:#(HasTraits):
                     nodefile = "%s.1.node" % p.domain.polyfile
                     facefile = "%s.1.face" % p.domain.polyfile
                     edgefile = "%s.1.edge" % p.domain.polyfile
-                    assert os.path.exists(elefile), "no 1.ele"
+                    assert os.path.exists(elefile), "no file=" % (elefile,)
                     tmp = "%s.ele" % p.domain.polyfile
                     os.rename(elefile,tmp)
-                    assert os.path.exists(tmp), "no .ele"
-                    assert os.path.exists(nodefile), "no 1.node"
+                    assert os.path.exists(tmp), "no file=%s"  % (tmp,)
+                    assert os.path.exists(nodefile), "no file=" % (nodefile,)
                     tmp = "%s.node" % p.domain.polyfile
                     os.rename(nodefile,tmp)
-                    assert os.path.exists(tmp), "no .node"
+                    assert os.path.exists(tmp), "no file=%s" % (nodefile,)
                     if os.path.exists(facefile):
                         tmp = "%s.face" % p.domain.polyfile
                         os.rename(facefile,tmp)
-                        assert os.path.exists(tmp), "no .face"
+                        assert os.path.exists(tmp), "no file= %s" % (facefile,)
                     if os.path.exists(edgefile):
                         tmp = "%s.edge" % p.domain.polyfile
                         os.rename(edgefile,tmp)
-                        assert os.path.exists(tmp), "no .edge"
+                        assert os.path.exists(tmp), "no file= %s" % (edgefile,)
                 comm.barrier()
                 log("Initializing mesh and MultilevelMesh")
                 nbase = 1

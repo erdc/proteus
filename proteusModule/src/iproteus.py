@@ -12,6 +12,9 @@
 #   \brief A driver for both single and mult-model simulations
 #
 #
+#cek hack on garnet
+#import ctypes
+#libmpi = ctypes.CDLL('/opt/cray/mpt/6.0.0/gni/mpich2-gnu/48/lib/libmpich_gnu_48.so',mode=ctypes.RTLD_GLOBAL);
 import os
 import sys
 import socket
