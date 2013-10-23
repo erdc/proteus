@@ -1,7 +1,7 @@
 #!/bin/csh
 #PBS -A ERDCV00898R40
 #PBS -l walltime=001:00:00
-#PBS -N testProteus
+#PBS -N testProteusMesh
 #PBS -q debug
 #PBS -j oe
 #PBS -l select=3:ncpus=8:mpiprocs=8
@@ -10,11 +10,6 @@
 source /usr/share/modules/init/csh
 source ${PROTEUS}/envConfig/diamond.csh
 cd ${PROTEUS}/proteusModule/test
-#${HOME}/BOB/mpirun -np 1 ${PROTEUS_PYTHON} -c "import nose; nose.test()"
-#mpirun -np 1 parun poisson_3d_p.py poisson_3d_c0p1_n.py -l 5 -v
-#${HOME}/BOB/mpirun -np 1 ${PROTEUS_PYTHON} test_import.py
-#${HOME}/BOB/mpirun -np 1 ${PROTEUS_PYTHON} test_poisson.py
-#${HOME}/BOB/mpirun -np 8 ${PROTEUS_PYTHON} test_poisson.py
 echo "testing poisson on 1 node (8 mpi tasks)"
 mpirun -np 8 ${PROTEUS_PYTHON} test_meshPartitionFromTetgenFiles.py
 echo "testing poisson on 2 nodes (16 mpi tasks)"
