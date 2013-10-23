@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=32:mpiprocs=32
+#PBS -A ERDCV00898ENQ
+#PBS -l walltime=001:00:00
+#PBS -q debug
+#PBS -N testProteus
+#PBS -j oe
+#PBS -l application=proteus
+source /opt/modules/default/etc/modules.sh
+source ${PROTEUS}/envConfig/garnet.gnu.bash
+cd $PBS_O_WORKDIR
+export MPICH_RANK_REORDER_METHOD=2
+#aprun -n 64 -N 32 ${PROTEUS_PYTHON} test_meshPartitionFromTetgenFiles.py
+aprun -n 32 ${PROTEUS_PYTHON} ${PROTEUS_PREFIX}/bin/parun poisson_3d_tetgenLarge_p.py poisson_3d_tetgenLarge_c0p1_n.py -l 5 -v -F
