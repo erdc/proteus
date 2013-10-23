@@ -1,23 +1,15 @@
 #!/bin/bash
-#PBS -l select=16:ncpus=32:mpiprocs=32
+#PBS -l select=2:ncpus=32:mpiprocs=32
 #PBS -A ERDCV00898ENQ
 #PBS -l walltime=001:00:00
 #PBS -q debug
-#PBS -N testProteus
+#PBS -N testProteusMesh
 #PBS -j oe
 #PBS -l application=proteus
 source /opt/modules/default/etc/modules.sh
 source ${PROTEUS}/envConfig/garnet.gnu.bash
 cd $PBS_O_WORKDIR
 export MPICH_RANK_REORDER_METHOD=2
-echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo "testing import"
-echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-aprun -n 1 -N 1 ${PROTEUS_PYTHON} test_import.py
-echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo "testing import on all mpi  processes"
-echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-aprun -n 512 -N 32 ${PROTEUS_PYTHON} test_import.py
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "testing poisson 1 way on 1 nodes"
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
@@ -39,9 +31,9 @@ echo "testing poisson 8 way on 2 nodes"
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 aprun -n 16 -N 8 ${PROTEUS_PYTHON} test_meshPartitionFromTetgenFiles.py
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-echo "testing poisson 32 way on 16 nodes"
+echo "testing poisson 4 way on 2 nodes"
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-aprun -n 512 ${PROTEUS_PYTHON} test_meshPartitionFromTetgenFiles.py
+aprun -n 8 -N 4 ${PROTEUS_PYTHON} test_meshPartitionFromTetgenFiles.py
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "done with test_proteus_garnet"
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
