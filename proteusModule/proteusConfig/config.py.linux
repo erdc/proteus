@@ -36,3 +36,6 @@ PROTEUS_TRIANGLE_LIB ='tri'
 PROTEUS_DAETK_INCLUDE_DIR = [PROTEUS_INCLUDE_DIR]
 PROTEUS_DAETK_LIB_DIR = PROTEUS_LIB_DIR
 PROTEUS_DAETK_LIB ='daetk'
+PROTEUS_PETSC_LIB_DIRS = ['/home/cekees/proteus-roams/linux/lib', '/home/cekees/proteus/hashstack/opt/mpich/hkvl/lib', '/usr/lib/gcc/x86_64-linux-gnu/4.6', '/usr/lib/x86_64-linux-gnu', '/lib/x86_64-linux-gnu']
+PROTEUS_PETSC_LIBS = ['petsc', 'superlu_dist_3.3', 'HYPRE', 'mpichcxx', 'stdc++', 'lapack', 'blas', 'X11', 'pthread', 'parmetis', 'metis', 'm', 'mpichf90', 'gfortran', 'm', 'gfortran', 'm', 'quadmath', 'm', 'mpichcxx', 'stdc++', 'dl', 'mpich', 'opa', 'mpl', 'rt', 'pthread', 'gcc_s', 'dl']
+PROTEUS_PETSC_INCLUDE_DIRS = []
