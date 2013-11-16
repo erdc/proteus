@@ -7,11 +7,10 @@ except:
 
 from distutils import sysconfig
 import sys
-sys.path.append(os.getenv('PROTEUS_PREFIX')+'/lib/petsc4py-config')
-from conf.petscconf import Extension as PetscExtension
-from conf.petscconf import build_ext as petsc_build_ext
-from conf.petscconf import config, build, build_src
-from conf.petscconf import test, sdist
+from petsc4py.conf.petscconf import Extension as PetscExtension
+from petsc4py.conf.petscconf import build_ext as petsc_build_ext
+from petsc4py.conf.petscconf import config, build, build_src
+from petsc4py.conf.petscconf import test, sdist
 from distutils import sysconfig
 cv = sysconfig.get_config_vars()
 cv["OPT"] = cv["OPT"].replace("-DNDEBUG","-DDEBUG")
