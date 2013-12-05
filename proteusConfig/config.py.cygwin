@@ -30,7 +30,7 @@ PROTEUS_DAETK_LIB ='daetk'
 
 PROTEUS_PETSC_INCLUDE_DIRS = [os.path.join(PROTEUS_PACKAGES, 'include')]
 PROTEUS_PETSC_LIB_DIRS = [os.path.join(PROTEUS_PACKAGES, 'lib')]
-PROTEUS_PETSC_LIBS =['petsc']
+PROTEUS_PETSC_LIBS =['petsc','blas']
 
 PROTEUS_MPI_INCLUDE_DIR = os.path.join('usr', 'include')
 PROTEUS_MPI_LIB_DIR = os.path.join('usr', 'lib')
