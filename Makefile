@@ -3,24 +3,25 @@ all: install
 #grab environment variables from shell if they are not set
 
 PROTEUS ?= $(shell pwd)
-PROTEUS_ARCH ?= $(shell uname -s)
+PROTEUS_ARCH ?= $(shell if uname -o >/dev/null 2>&1; then uname -o; else uname; fi)
 PROTEUS_PREFIX ?= "${PROTEUS}/${PROTEUS_ARCH}"
-PROTEUS_PYTHON = ${PROTEUS_PREFIX}/bin/python
+PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
+PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" PYTHONPATH="${PROTEUS_PREFIX}/lib/python2.7/site-packages"
 
 install: ${PROTEUS_PREFIX} config.py
-	PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppyx.py install
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppyx.py install
 	@echo "************************"
 	@echo "done installing cython extension modules"
 	@echo "************************"
-	PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setupf.py install
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setupf.py install
 	@echo "************************"
 	@echo "done installing f2py extension modules"
 	@echo "************************"
-	PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install
 	@echo "************************"
 	@echo "done insalling petsc-based extension modules"
 	@echo "************************"
-	PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setup.py install
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setup.py install
 	@echo "************************"
 	@echo "done installing standard extension modules"
 	@echo "************************"
@@ -65,16 +66,17 @@ check:
 	@echo PROTEUS: ${PROTEUS}
 	@echo PROTEUS_ARCH: ${PROTEUS_ARCH}
 	@echo PROTEUS_PREFIX: ${PROTEUS_PREFIX}
+	@echo PROTEUS_ENV: ${PROTEUS_ENV}
+
 	@echo "************************"
 	@echo "Hello world Check!"
-	${PROTEUS_PYTHON} -c "print 'hello world'"
+	${PROTEUS_ENV} python -c "print 'hello world'"
 	@echo "************************"
 	@echo "Proteus Partition Test"
-	${PROTEUS_PYTHON} test/test_meshParitionFromTetgenFiles.py
+	${PROTEUS_ENV} python test/test_meshParitionFromTetgenFiles.py
 	@echo "************************"
 
-parallel_check:
 	@echo "************************"
 	@echo "Parallel Proteus Partition Test"
-	mpirun -np 4 ${PROTEUS_PYTHON} test/test_meshParitionFromTetgenFiles.py
+	${PROTEUS_ENV} mpirun -np 4 python test/test_meshParitionFromTetgenFiles.py
 	@echo "************************"
