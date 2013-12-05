@@ -19,7 +19,7 @@ install: ${PROTEUS_PREFIX} config.py
 	@echo "************************"
 	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install
 	@echo "************************"
-	@echo "done insalling petsc-based extension modules"
+	@echo "done installing petsc-based extension modules"
 	@echo "************************"
 	${PROTEUS_ENV} ${PROTEUS_PYTHON} setup.py install
 	@echo "************************"
