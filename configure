@@ -2,6 +2,6 @@
 
 set -e
 
-PROTEUS_ARCH=$(if uname -o >/dev/null 2>&1; then uname -o; else uname; fi)
+PROTEUS_ARCH=$(python -c "import sys; print sys.platform")
 cp proteusConfig/config.py.$PROTEUS_ARCH config.py
 echo "edit config.py to fine tune configuration"

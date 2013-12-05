@@ -3,7 +3,7 @@ all: install
 #grab environment variables from shell if they are not set
 
 PROTEUS ?= $(shell pwd)
-PROTEUS_ARCH ?= $(shell if uname -o >/dev/null 2>&1; then uname -o; else uname; fi)
+PROTEUS_ARCH ?= $(shell python -c "import sys; print sys.platform")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" PYTHONPATH=${PROTEUS_PREFIX}/lib/python2.7/site-packages PROTEUS_PREFIX=${PROTEUS_PREFIX}
@@ -58,7 +58,7 @@ stack:
 
 config.py:
 	@echo "No config.py file found.  Running ./configure"
-	configure
+	./configure
 
 check:
 	@echo "************************"
