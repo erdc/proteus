@@ -1,11 +1,17 @@
 #ifndef FLCBDFWRAPPERSMODULE_H
 #define FLCBDFWRAPPERSMODULE_H 
 #include <cstddef>
+
+extern "C"
+{
 #include "Python.h"
 #include "numpy/arrayobject.h"
 #include "superluWrappersModule.h"
+}
+
 #include "cmeshToolsModule.h"
 #include "mesh.h"
+
 namespace Daetk 
 {
   namespace Petsc
@@ -15,6 +21,7 @@ namespace Daetk
       extern "C"
       {
 /* hack on diamond */
+#define MYCPLUSPLUS __cplusplus
 #ifdef __cplusplus
 #undef __cplusplus
 #define PROTEUSREDEFINECPP
@@ -28,7 +35,7 @@ namespace Daetk
 #include "petscksp.h"
 #endif
 #ifdef PROTEUSREDEFINECPP
-#define __cplusplus
+#define __cplusplus MYCPLUSPLUS
 #endif
 #ifndef PETSC_INCLUDE_AS_C
 #include "petsc.h"
