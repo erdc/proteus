@@ -26,10 +26,6 @@ install: ${PROTEUS_PREFIX} config.py
 	@echo "done installing standard extension modules"
 	@echo "************************"
 
-config.py:
-	cp proteusConfig/config.py.${PROTEUS_ARCH} config.py
-	@echo "config.py is now proteusConfig/config.py.${PROTEUS_ARCH}"
-
 docs:
 	doxygen proteus-doc.conf
 
@@ -58,7 +54,11 @@ hashdist:
 
 stack:
 	@echo "No stack found.  Cloning stack from GitHub"
-	git clone -b proteus https://github.com/hashdist/hashstack2.git stack
+	git clone https://github.com/hashdist/hashstack2.git stack
+
+config.py:
+	@echo "No config.py file found.  Running ./configure"
+	configure
 
 check:
 	@echo "************************"
