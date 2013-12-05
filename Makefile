@@ -6,7 +6,15 @@ PROTEUS ?= $(shell pwd)
 PROTEUS_ARCH ?= $(shell python -c "import sys; print sys.platform")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
-PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" PYTHONPATH=${PROTEUS_PREFIX}/lib/python2.7/site-packages PROTEUS_PREFIX=${PROTEUS_PREFIX}
+
+ifeq ($(PROTEUS_ARCH), darwin)
+PLATFORM_ENV = MACOSX_DEPLOYMENT_TARGET=$(shell sw_vers -productVersion)
+endif
+
+PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
+	PYTHONPATH=${PROTEUS_PREFIX}/lib/python2.7/site-packages \
+	PROTEUS_PREFIX=${PROTEUS_PREFIX} \
+	${PLATFORM_ENV}
 
 install: ${PROTEUS_PREFIX} config.py
 	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppyx.py install
