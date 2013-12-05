@@ -80,8 +80,8 @@ setup(name='proteus',
                                   include_dirs=['include',
                                                 numpy.get_include(),
                                                 PROTEUS_SUPERLU_INCLUDE_DIR,
-                                                PROTEUS_TRIANGLE_INCLUDE_DIR] + \
-                                      PROTEUS_DAETK_INCLUDE_DIR + \
+                                                PROTEUS_TRIANGLE_INCLUDE_DIR, 
+                                                PROTEUS_DAETK_INCLUDE_DIR] + \
                                       PROTEUS_PETSC_INCLUDE_DIRS + \
                                       [PROTEUS_MPI_INCLUDE_DIR],
                                   library_dirs=[PROTEUS_DAETK_LIB_DIR]+PROTEUS_PETSC_LIB_DIRS+[PROTEUS_MPI_LIB_DIR],
