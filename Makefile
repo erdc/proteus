@@ -16,7 +16,7 @@ PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
 	PROTEUS_PREFIX=${PROTEUS_PREFIX} \
 	${PLATFORM_ENV}
 
-install: ${PROTEUS_PREFIX} config.py
+install: ${PROTEUS_PREFIX}/artifact.json config.py
 	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppyx.py install
 	@echo "************************"
 	@echo "done installing cython extension modules"
@@ -48,7 +48,7 @@ distclean: clean
 	-rm -rf ${PROTEUS_PREFIX}
 	-rm -rf build src/*.pyc src/*.so src/*.a
 
-${PROTEUS_PREFIX}: stack hashdist
+${PROTEUS_PREFIX}/artifact.json: stack hashdist
 	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
 	cd stack && ${PROTEUS}/hashdist/bin/hit develop -k error -f ${PROTEUS_PREFIX}
 	@echo "Stack complete, test with: make check"
