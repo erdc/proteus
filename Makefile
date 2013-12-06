@@ -8,7 +8,7 @@ PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 
 ifeq ($(PROTEUS_ARCH), darwin)
-PLATFORM_ENV = MACOSX_DEPLOYMENT_TARGET=$(shell sw_vers -productVersion)
+PLATFORM_ENV = MACOSX_DEPLOYMENT_TARGET=$(shell sw_vers -productVersion | sed "s/\(10.[0-9]\).*/\1/")
 endif
 
 PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
