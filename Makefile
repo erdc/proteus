@@ -50,7 +50,7 @@ distclean: clean
 
 ${PROTEUS_PREFIX}/artifact.json: stack hashdist
 	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop -v -k error -f ${PROTEUS_PREFIX}
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop -k error -f ${PROTEUS_PREFIX}
 	@echo "Stack complete, test with: make check"
 	@echo "or: make parallel_check"
 	@echo "Please ensure that the following is prepended  to your path"
