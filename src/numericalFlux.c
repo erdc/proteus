@@ -7185,7 +7185,7 @@ void calculateGlobalExteriorNumericalAdvectiveFluxStokesP3D(int nExteriorElement
 }
 /**
    \brief Apply basic pressure boundary penalty term for Stokes
-   \TODO add penalty coefficient
+   \todo add penalty coefficient
  */
 
 void calculateExteriorNumericalAdvectiveFluxStokes2D(int nExteriorElementBoundaries_global,
@@ -7359,7 +7359,7 @@ void calculateExteriorNumericalAdvectiveFluxStokes2D(int nExteriorElementBoundar
 }
 /**
    \brief Apply basic pressure boundary penalty term for Stokes
-   \TODO add penalty coefficient?
+   \todo add penalty coefficient?
  */
 void calculateGlobalExteriorNumericalAdvectiveFluxStokes2D(int nExteriorElementBoundaries_global,
 							   int nQuadraturePoints_elementBoundary,
