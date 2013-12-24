@@ -16,7 +16,7 @@ PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
 	PROTEUS_PREFIX=${PROTEUS_PREFIX} \
 	${PLATFORM_ENV}
 
-install: ${PROTEUS_PREFIX}/artifact.json config.py
+install: profile config.py
 	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppyx.py install
 	@echo "************************"
 	@echo "done installing cython extension modules"
@@ -48,6 +48,16 @@ distclean: clean
 	-rm -rf ${PROTEUS_PREFIX}
 	-rm -rf build src/*.pyc src/*.so src/*.a
 
+hashdist:
+	@echo "No hashdist found.  Cloning hashdist from GitHub"
+	git clone https://github.com/hashdist/hashdist.git
+
+stack: 
+	@echo "No stack found.  Cloning stack from GitHub"
+	git clone https://github.com/hashdist/hashstack2.git stack
+
+profile: ${PROTEUS_PREFIX}/artifact.json
+
 ${PROTEUS_PREFIX}/artifact.json: stack hashdist
 	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
 	cd stack && ${PROTEUS}/hashdist/bin/hit develop -k error -f ${PROTEUS_PREFIX}
@@ -56,14 +66,6 @@ ${PROTEUS_PREFIX}/artifact.json: stack hashdist
 	@echo "or: make parallel_check"
 	@echo "Please ensure that the following is prepended  to your path"
 	@echo "${PROTEUS_PREFIX}/bin"
-
-hashdist:
-	@echo "No hashdist found.  Cloning hashdist from GitHub"
-	git clone https://github.com/hashdist/hashdist.git
-
-stack:
-	@echo "No stack found.  Cloning stack from GitHub"
-	git clone https://github.com/hashdist/hashstack2.git stack
 
 config.py:
 	@echo "No config.py file found.  Running ./configure"
@@ -89,3 +91,6 @@ check:
 	@echo "Parallel Proteus Partition Test"
 	${PROTEUS_ENV} mpirun -np 4 python test/test_meshParitionFromTetgenFiles.py
 	@echo "************************"
+
+doc: install
+	cd doc && make html
