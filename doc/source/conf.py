@@ -61,7 +61,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Proteus'
-copyright = u'2013, Proteus Development Team'
+copyright = u'2013, The Proteus Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -115,7 +115,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = 'sphinxdoc'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -127,19 +127,19 @@ html_theme = 'default'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-#html_title = None
+html_title = u"Proteus Computational Methods and Simulation Toolkit"
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-#html_short_title = None
+html_short_title = u"Proteus"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = None
+html_logo = "proteusSimple.ico"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-#html_favicon = None
+html_favicon = "tritonBorder.ico"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -160,7 +160,7 @@ html_static_path = ['_static']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+html_sidebars = {'index':'indexsidebar.html'}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
@@ -215,16 +215,19 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   ('index', 'Proteus.tex', u'Proteus Documentation',
-   u'Chris Kees and Matthew Farthing', 'manual'),
+   u'The Proteus Team', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-#latex_logo = None
+latex_logo = '_static/proteus.png'
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
 #latex_use_parts = False
+
+# Additional stuff for the LaTeX preamble.
+latex_preamble = '\input{macros}'
 
 # If true, show page references after internal links.
 #latex_show_pagerefs = False
@@ -245,7 +248,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'proteus', u'Proteus Documentation',
-     [u'Chris Kees and Matthew Farthing'], 1)
+     [u'The Proteus Team'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -279,10 +282,10 @@ texinfo_documents = [
 # -- Options for Epub output ----------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = u'Proteus'
-epub_author = u'Chris Kees and Matthew Farthing'
-epub_publisher = u'Chris Kees and Matthew Farthing'
-epub_copyright = u'2013, Chris Kees and Matthew Farthing'
+epub_title = u'Proteu'
+epub_author = u'The Proteus Team'
+epub_publisher = u'The Proteus Team'
+epub_copyright = u'2013, The Proteus Team'
 
 # The basename for the epub file. It defaults to the project name.
 #epub_basename = u'Proteus'
@@ -345,4 +348,8 @@ epub_copyright = u'2013, Chris Kees and Matthew Farthing'
 # If false, no index is generated.
 #epub_use_index = True
 
+todo_include_todos = True
 
+graphviz_output_format = 'svg'
+
+mathjax_path = "https://d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
