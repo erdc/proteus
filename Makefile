@@ -14,6 +14,7 @@ endif
 PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
 	PYTHONPATH=${PROTEUS_PREFIX}/lib/python2.7/site-packages \
 	PROTEUS_PREFIX=${PROTEUS_PREFIX} \
+	PROTEUS=${PROTEUS} \
 	${PLATFORM_ENV}
 
 install: profile config.py
@@ -33,9 +34,6 @@ install: profile config.py
 	@echo "************************"
 	@echo "done installing standard extension modules"
 	@echo "************************"
-
-docs:
-	doxygen proteus-doc.conf
 
 clean:
 	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppyx.py clean
@@ -93,4 +91,4 @@ check:
 	@echo "************************"
 
 doc: install
-	cd doc && make html
+	cd doc && ${PROTEUS_ENV} make html
