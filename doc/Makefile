@@ -64,6 +64,7 @@ proteus:
 build/html/capi/html/files.html:
 	-mkdir -p build/html/capi
 	doxygen
+	cp doxygenIndexRedirect.html build/html/capi/html/index.html
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
