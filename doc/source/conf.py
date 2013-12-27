@@ -352,4 +352,4 @@ todo_include_todos = True
 
 graphviz_output_format = 'svg'
 
-mathjax_path = "MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+mathjax_path = "https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
