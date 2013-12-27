@@ -134,7 +134,7 @@ html_short_title = u"Proteus"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "proteusSimple.ico"
+#html_logo = "usace_logo.png"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -176,7 +176,7 @@ html_sidebars = {'index':'indexsidebar.html'}
 #html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
-#html_show_sourcelink = True
+html_show_sourcelink = False
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
 #html_show_sphinx = True
@@ -282,7 +282,7 @@ texinfo_documents = [
 # -- Options for Epub output ----------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = u'Proteu'
+epub_title = u'Proteus'
 epub_author = u'The Proteus Team'
 epub_publisher = u'The Proteus Team'
 epub_copyright = u'2013, The Proteus Team'
@@ -352,4 +352,4 @@ todo_include_todos = True
 
 graphviz_output_format = 'svg'
 
-mathjax_path = "https://d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+mathjax_path = "MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
