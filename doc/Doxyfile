@@ -1211,12 +1211,12 @@ USE_MATHJAX            = YES
 # MathJax, but it is strongly recommended to install a local copy of MathJax 
 # before deployment.
 
-MATHJAX_RELPATH        = http://www.mathjax.org/mathjax
+MATHJAX_RELPATH        = https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/
 
 # The MATHJAX_EXTENSIONS tag can be used to specify one or MathJax extension 
 # names that should be enabled during MathJax rendering.
 
-MATHJAX_EXTENSIONS     = 
+MATHJAX_EXTENSIONS     = TeX-AMS-MML_HTMLorMML
 
 # When the SEARCHENGINE tag is enabled doxygen will generate a search box 
 # for the HTML output. The underlying search engine uses javascript 
