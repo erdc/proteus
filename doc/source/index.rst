@@ -89,8 +89,8 @@ Running
 
 If you have successfully compiled Proteus then you should be able to do::
 
-   %cd $PROTEUS/proteusModule/testing
-   %parun poisson_3d_p.py poisson_3d_c0p1_n.py
+   %cd $PROTEUS/test
+   %$PROTEUS_PREFIX/bin/parun poisson_3d_p.py poisson_3d_c0p1_n.py
 
 The solution will be saved in a file ending in .xmf, which can be
 opened with ParaView or Ensight.
