@@ -107,7 +107,7 @@ reactionLumping = False
 """Boolean to lump reaction term"""
 
 shockCapturing = None
-"""The shock capturing diffusion object of a type derived from :class:`proteus.ShockCapturing.SC_base`"""
+"""The shock capturing diffusion object of a type derived from :class:`proteus.ShockCapturing.ShockCapturing_base`"""
 
 numericalFluxType = None
 """A numerical flux class of type :class:`proteus.NumericalFlux.NF_base`"""
