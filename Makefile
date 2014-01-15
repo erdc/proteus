@@ -52,7 +52,7 @@ hashdist:
 
 stack: 
 	@echo "No stack found.  Cloning stack from GitHub"
-	git clone https://github.com/hashdist/hashstack2.git stack
+	git clone --branch roams https://github.com/erdc-cm/hashstack-private.git stack
 
 profile: ${PROTEUS_PREFIX}/artifact.json
 
