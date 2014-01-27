@@ -1,4 +1,6 @@
 from distutils.core import setup, Extension
+from Cython.Build import cythonize
+
 import numpy
 
 ## \file setup.py setup.py
@@ -29,10 +31,12 @@ setup(name='proteus',
       packages = ['proteus'],
       package_dir={'proteus':'src'},
       ext_package='proteus',
-      ext_modules=[Extension('_MeshAdaptPUMI',
-                             ['src/MeshAdaptPUMI/MeshAdaptPUMI_wrap.cxx',
-                              'src/MeshAdaptPUMI/MeshAdaptPUMI.cpp',
-                              'src/MeshAdaptPUMI/MeshConverter.cpp'],
+      ext_modules=cythonize(
+                   [Extension('MeshAdaptPUMI',
+
+                             sources = ['src/MeshAdaptPUMI.pyx',
+                                        'src/MeshAdaptPUMI/MeshAdaptPUMI.cpp',
+                                        'src/MeshAdaptPUMI/MeshConverter.cpp'],
                              define_macros=[('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H)],
                              include_dirs=[numpy.get_include(),'include',
                                            'src',
@@ -235,7 +239,7 @@ setup(name='proteus',
                    #Cython generated modules with just c code
                    Extension("waveFunctions",['src/waveFunctions.c','src/transportCoefficients.c'],
                              include_dirs=[numpy.get_include(),'include'])
-                   ],
+                   ]),
       data_files=[('proteusConfig',['config.py'])],
       scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond','scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec'],
       requires=['numpy']

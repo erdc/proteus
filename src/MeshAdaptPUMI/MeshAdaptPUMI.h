@@ -14,11 +14,10 @@ class MeshAdaptPUMIDrvr{
 
   Mesh mesh_proteus;
   int initProteusMesh(Mesh& mesh);
-  int deleteProteusMesh(Mesh& mesh);
 
   int readGeomModel(const std::string &acis_geom_file_name);
   int readPUMIMesh(const char* SMS_fileName);
-  int helloworld(const char* hello) { std::cout << hello << "\n";}
+  int helloworld(const char* hello) { std::cout << hello << "\n"; return 0;}
 
   //Functions to construct proteus mesh data structures
 //  int ConstructFromPUMIMesh(Mesh& mesh);
