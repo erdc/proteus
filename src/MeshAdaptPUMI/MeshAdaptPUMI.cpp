@@ -17,13 +17,8 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr() {
 
 int MeshAdaptPUMIDrvr::initProteusMesh(Mesh& mesh) {
   std::cout << "Initializing proteus mesh\n"; 
-  initializeMesh(mesh);
+  // do PUMI stuff to mesh object here.
   return 0;
-}
-
-int MeshAdaptPUMIDrvr::deleteProteusMesh(Mesh& mesh) {
-  std::cout << "Deleting proteus mesh\n";
-  deleteMesh(mesh);
 }
 
 int MeshAdaptPUMIDrvr::readGeomModel(const std::string &acis_geom_file_name)
