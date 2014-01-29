@@ -1,7 +1,9 @@
 #ifndef COMPKERNEL_H
 #define COMPKERNEL_H
 #include <cmath>
-
+/**
+ *   A class to provide indexing into Euclidean vectors and tensors.
+ */
 template<int NSPACE>
 class EIndex
 {
