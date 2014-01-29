@@ -1,7 +1,9 @@
 """
 Module for controlling MPI
 """
-import sys,flcbdfWrappers,petsc4py
+import sys
+from proteus import flcbdfWrappers
+import petsc4py
 
 initial_communicator = None
 isInitialized = 0

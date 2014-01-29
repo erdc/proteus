@@ -2,6 +2,10 @@
 
 set -e
 
-PROTEUS_ARCH=$(python -c "import sys; print sys.platform")
+if [ -z "$PROTEUS_ARCH" ]
+then
+    PROTEUS_ARCH=$(python -c "import sys; print sys.platform")
+fi
+
 cp proteusConfig/config.py.$PROTEUS_ARCH config.py
-echo "edit config.py to fine tune configuration"
+echo "Configuring using $PROTEUS_ARCH"
