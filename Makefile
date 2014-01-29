@@ -14,9 +14,10 @@ endif
 PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
 	PYTHONPATH=${PROTEUS_PREFIX}/lib/python2.7/site-packages \
 	PROTEUS_PREFIX=${PROTEUS_PREFIX} \
+	PROTEUS=${PROTEUS} \
 	${PLATFORM_ENV}
 
-install: ${PROTEUS_PREFIX}/artifact.json config.py
+install: profile config.py
 	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppyx.py install
 	@echo "************************"
 	@echo "done installing cython extension modules"
@@ -34,9 +35,6 @@ install: ${PROTEUS_PREFIX}/artifact.json config.py
 	@echo "done installing standard extension modules"
 	@echo "************************"
 
-docs:
-	doxygen proteus-doc.conf
-
 clean:
 	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppyx.py clean
 	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setupf.py clean
@@ -48,21 +46,24 @@ distclean: clean
 	-rm -rf ${PROTEUS_PREFIX}
 	-rm -rf build src/*.pyc src/*.so src/*.a
 
-${PROTEUS_PREFIX}/artifact.json: stack hashdist
-	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop -v -k error -f ${PROTEUS_PREFIX}
-	@echo "Stack complete, test with: make check"
-	@echo "or: make parallel_check"
-	@echo "Please ensure that the following is prepended  to your path"
-	@echo "${PROTEUS_PREFIX}/bin"
-
 hashdist:
 	@echo "No hashdist found.  Cloning hashdist from GitHub"
 	git clone https://github.com/hashdist/hashdist.git
 
-stack:
+stack: 
 	@echo "No stack found.  Cloning stack from GitHub"
 	git clone https://github.com/hashdist/hashstack2.git stack
+
+profile: ${PROTEUS_PREFIX}/artifact.json
+
+${PROTEUS_PREFIX}/artifact.json: stack hashdist
+	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop -k error -f ${PROTEUS_PREFIX}
+	-cp ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.exe.link ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.link
+	@echo "Stack complete, test with: make check"
+	@echo "or: make parallel_check"
+	@echo "Please ensure that the following is prepended  to your path"
+	@echo "${PROTEUS_PREFIX}/bin"
 
 config.py:
 	@echo "No config.py file found.  Running ./configure"
@@ -88,3 +89,6 @@ check:
 	@echo "Parallel Proteus Partition Test"
 	${PROTEUS_ENV} mpirun -np 4 python test/test_meshParitionFromTetgenFiles.py
 	@echo "************************"
+
+doc: install
+	cd doc && ${PROTEUS_ENV} make html
