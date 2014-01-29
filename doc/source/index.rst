@@ -89,8 +89,8 @@ Running
 
 If you have successfully compiled Proteus then you should be able to do::
 
-   %cd $PROTEUS/proteusModule/testing
-   %parun poisson_3d_p.py poisson_3d_c0p1_n.py
+   %cd $PROTEUS/test
+   %$PROTEUS_PREFIX/bin/parun poisson_3d_p.py poisson_3d_c0p1_n.py
 
 The solution will be saved in a file ending in .xmf, which can be
 opened with ParaView or Ensight.
@@ -233,17 +233,21 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`modindex`
-.. * :ref:`search`
+* :ref:`search`
 
 Detailed Documentation
 =======================
 
-.. toctree::
-   :maxdepth: 2
+Python Package
 
-   api/index.rst
-..   api2/index.rst
-..   api-mprans/index.rst
-.. scripts/index.rst
-.. tests/index.rst
-.. TODO.rst
+.. toctree::
+   :maxdepth: 1
+
+   api/modules
+   todo
+
+C+/C++/Fortran Libraries
+
+* `File List <capi/html/files.html>`_
+* `C++ Classes <capi/html/hierarchy.html>`_
+* `C/C++/Fortran Todo List <capi/html/todo.html>`_
