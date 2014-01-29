@@ -62,6 +62,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                 self.S_s_types[mat] = lambda x,t: 0.0
         else:
             self.S_s_types = S_s_types
+            assert timeVaryingCoefficients == True, "Transient Simulation (S_s > 0) requires timeVaryingCoefficients == True"
         self.nd = nd
         self.timeVaryingCoefficients=timeVaryingCoefficients
         self.materialValuesLocallyConstant = materialValuesLocallyConstant
