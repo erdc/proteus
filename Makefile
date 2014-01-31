@@ -3,7 +3,7 @@ all: install
 #grab environment variables from shell if they are not set
 
 PROTEUS ?= $(shell pwd)
-PROTEUS_ARCH ?= $(shell python -c "import sys; print sys.platform")
+PROTEUS_ARCH ?= linux2-64
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 
