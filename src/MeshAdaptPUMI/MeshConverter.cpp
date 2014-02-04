@@ -10,9 +10,9 @@ const int EXTERIOR_NODE_MATERIAL=1;
 const int INTERIOR_ELEMENT_BOUNDARY_MATERIAL=0;
 const int EXTERIOR_ELEMENT_BOUNDARY_MATERIAL=1;
 
-int MeshAdaptPUMIDrvr::ConstructFromPUMIMesh(CMesh* cmesh) {
+int MeshAdaptPUMIDrvr::ConstructFromSerialPUMIMesh(Mesh& mesh) {
 
-  Mesh mesh = MESH(cmesh);
+//  Mesh mesh = MESH(cmesh);
 
 //Current impementation is for serial only. Need to resolve things with Proteus developers for parallel implementation  
 
@@ -193,7 +193,7 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh) {
     mesh.elementBoundariesArray[leftRgnID*mesh.nElementBoundaries_element+leftLocalFaceNumber] = nF;
 
     //if only 1 region is adjacent to this face, that means it is an exterior face (or on part boundary, but parallel is for later) todo: parallel
-    if(iNumRgn==1 && RgnID[2]==-1 && LocalFaceNumber[2]==-1) { //last 2 checks are only for sanity
+    if(iNumRgn==1 && RgnID[1]==-1 && LocalFaceNumber[1]==-1) { //last 2 checks are only for sanity
       mesh.elementBoundaryElementsArray[nF*2+1] = -1; 
       mesh.elementBoundaryLocalElementBoundariesArray[nF*2+1] = -1;
       exteriorElementBoundaries.insert(nF); //exterior face as only 1 region adjacent
@@ -262,12 +262,18 @@ int MeshAdaptPUMIDrvr::ConstructEdges(Mesh& mesh) {
 //not completely comfortable with folllowing implementation
   mesh.nodeStarOffsets = new int[mesh.nNodes_global+1];
   mesh.nodeStarOffsets[0] = 0;
-  for (int nN=1;nN<mesh.nNodes_global+1;nN++)
+  for (int nN=1;nN<mesh.nNodes_global+1;nN++) {
      mesh.nodeStarOffsets[nN] = mesh.nodeStarOffsets[nN-1] + nodeStar[nN-1].size();
+     std::cout << "nodeStarOffesets: " << nN << ": " << mesh.nodeStarOffsets[nN] << "\n"; 
+  }
+  
   mesh.nodeStarArray = new int[mesh.nodeStarOffsets[mesh.nNodes_global]];
-  for (int nN=0,offset=0;nN<mesh.nNodes_global;nN++)
-      for (std::set<int>::iterator nN_star=nodeStar[nN].begin();nN_star!=nodeStar[nN].end();nN_star++,offset++)
+  for (int nN=0,offset=0;nN<mesh.nNodes_global;nN++) {
+      for (std::set<int>::iterator nN_star=nodeStar[nN].begin();nN_star!=nodeStar[nN].end();nN_star++,offset++) {
           mesh.nodeStarArray[offset] = *nN_star;
+          std::cout << "nodeStarArray: " << offset << ": " << mesh.nodeStarArray[offset] << std::endl;
+      }
+  }
 
   mesh.max_nNodeNeighbors_node=0;
   for (int nN=0;nN<mesh.nNodes_global;nN++)

@@ -47,10 +47,13 @@ int MeshAdaptPUMIDrvr::readPUMIMesh(const char* SMS_fileName){
 
   PUMI_Mesh_Create(PUMI_GModel, PUMI_MeshInstance);
 
-  if(PCU_Comm_Peers()==1)
+  if(PCU_Comm_Peers()==1) {
+     std::cout << "Reading serial mesh\n";
      PUMI_Mesh_LoadFromFile(PUMI_MeshInstance,SMS_fileName,0, "pumi"); //0 for serial for now
-  else
+  } else {
+     std::cout << "Reading parallel mesh\n";
      PUMI_Mesh_LoadFromFile(PUMI_MeshInstance,SMS_fileName,1, "pumi"); //0 for serial for now
+  }
 /*
   std::vector<pPart> meshes;
   int rank;
@@ -70,8 +73,11 @@ int MeshAdaptPUMIDrvr::readPUMIMesh(const char* SMS_fileName){
   }
   std::cout<<" loading PUMI mesh from files\n";
 
-  PUMI_Mesh_GetPart(PUMI_MeshInstance,0,PUMI_Part);
   int err = PUMI_Mesh_GetPart(PUMI_MeshInstance, 0, PUMI_Part);
+
+  comm_size = SCUTIL_CommSize();
+  comm_rank = SCUTIL_CommRank();
+
   
   return 0;
 }

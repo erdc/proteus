@@ -20,13 +20,8 @@ class MeshAdaptPUMIDrvr{
   int helloworld(const char* hello) { std::cout << hello << "\n"; return 0;}
 
   //Functions to construct proteus mesh data structures
-//  int ConstructFromPUMIMesh(Mesh& mesh);
-  int ConstructFromPUMIMesh(CMesh *cmesh);
-  int ConstructElements(Mesh& mesh);
-  int ConstructNodes(Mesh& mesh);
-  int ConstructBoundaries(Mesh& mesh);
-  int ConstructEdges(Mesh& mesh);
-  int ConstructMaterialArrays(Mesh& mesh);
+  int ConstructFromSerialPUMIMesh(Mesh& mesh);
+  int ConstructFromParallelPUMIMesh(Mesh& mesh);
 
   int MeshAdaptPUMI();
 
@@ -35,6 +30,24 @@ class MeshAdaptPUMIDrvr{
   pGeomMdl PUMI_GModel;
   std::vector<pPart> PUMI_Parts;
   pPart PUMI_Part;
+  int comm_size, comm_rank;
+  
+  pTag elementGlobNumberTag, nodeGlobNumberTag, faceGlobNumberTag, edgeGlobNumberTag;
+  pTag GlobNumberTag;
 //  pMMeshAdaptPUMI MA_Drvr;
+
+  int ConstructGlobalNumbering(Mesh& mesh);
+  int ConstructGlobalStructures(Mesh& mesh);
+
+  int ConstructElements(Mesh& mesh);
+  int ConstructNodes(Mesh& mesh);
+  int ConstructBoundaries(Mesh& mesh);
+  int ConstructEdges(Mesh& mesh);
+  int ConstructMaterialArrays(Mesh& mesh);
+  
+  int CalculateOwnedEnts(PUMI_EntType EntType, int &nOwnedEnt);
+  int CommunicateOwnedNumbers(int toSend, int *toReceive);
+  int SetOwnerGlobNumbering(pTag, PUMI_EntType, int);
+  int SetCopyGlobNumbering(pTag, int EntType);
 
 };
