@@ -19,6 +19,8 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int readGeomModel(char *)
         int readPUMIMesh(char *)
         int initProteusMesh(Mesh&)
+        int ConstructFromSerialPUMIMesh(Mesh&)
+        int ConstructFromParallelPUMIMesh(Mesh&)
 
 
 cdef class MeshAdaptPUMI:
@@ -36,3 +38,9 @@ cdef class MeshAdaptPUMI:
     def initProteusMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.initProteusMesh(cmesh_ptr.mesh)
+    def ConstructFromSerialPUMIMesh(self, cmesh):
+        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
+        return self.thisptr.ConstructFromSerialPUMIMesh(cmesh_ptr.mesh)
+    def ConstructFromParallelPUMIMesh(self, cmesh):
+        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
+        return self.thisptr.ConstructFromParallelPUMIMesh(cmesh_ptr.mesh)
