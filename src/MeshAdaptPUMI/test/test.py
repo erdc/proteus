@@ -9,8 +9,10 @@ from proteus import MeshAdaptPUMI
 from proteus import Archiver
 from tables import *
 
-#import mpi4py
-mpi = CDLL('libmpi.so.0', RTLD_GLOBAL)
+
+from petsc4py import PETSc
+#from mpi4py import MPI
+#mpi = CDLL('libmpi.so.0', RTLD_GLOBAL)
 #print dir(MeshAdaptPUMI)
 
 MeshAdaptPUMI = MeshAdaptPUMI.MeshAdaptPUMI()
