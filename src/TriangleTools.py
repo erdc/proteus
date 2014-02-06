@@ -603,7 +603,6 @@ number of edges         = %d
         if not nodesA == None:
             triangleWrappers.setPointAttributes(tri0,nodesA)
         #end if
-        print "segmenat Markers ===================",segmentsM
         if segmentsM == None:
             triangleWrappers.setSegments(tri0,segments)
         else:
