@@ -11,6 +11,10 @@ ifeq ($(PROTEUS_ARCH), darwin)
 PLATFORM_ENV = MACOSX_DEPLOYMENT_TARGET=$(shell sw_vers -productVersion | sed "s/\(10.[0-9]\).*/\1/")
 endif
 
+ifeq ($(PROTEUS_ARCH), Cygwin)
+BOOTSTRAP = cygwin_bootstrap.done
+endif
+
 PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
 	PYTHONPATH=${PROTEUS_PREFIX}/lib/python2.7/site-packages \
 	PROTEUS_PREFIX=${PROTEUS_PREFIX} \
@@ -34,6 +38,10 @@ install: profile config.py
 	@echo "************************"
 	@echo "done installing standard extension modules"
 	@echo "************************"
+	@echo "Install complete, test with: make check"
+	@echo "or: make parallel_check"
+	@echo "Please ensure that the following is prepended  to your path"
+	@echo "${PROTEUS_PREFIX}/bin"
 
 clean:
 	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppyx.py clean
@@ -54,16 +62,16 @@ stack:
 	@echo "No stack found.  Cloning stack from GitHub"
 	git clone https://github.com/hashdist/hashstack2.git stack
 
+cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
+	python hashstack/scripts/setup_cygstack.py hashstack/scripts/cygstack.txt
+        touch cygwin_bootstrap.done
+
 profile: ${PROTEUS_PREFIX}/artifact.json
 
-${PROTEUS_PREFIX}/artifact.json: stack hashdist
+${PROTEUS_PREFIX}/artifact.json: stack hashdist ${BOOTSTRAP}
 	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
 	cd stack && ${PROTEUS}/hashdist/bin/hit develop -k error -f ${PROTEUS_PREFIX}
 	-cp ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.exe.link ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.link
-	@echo "Stack complete, test with: make check"
-	@echo "or: make parallel_check"
-	@echo "Please ensure that the following is prepended  to your path"
-	@echo "${PROTEUS_PREFIX}/bin"
 
 config.py:
 	@echo "No config.py file found.  Running ./configure"
