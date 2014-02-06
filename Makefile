@@ -67,7 +67,7 @@ ${PROTEUS_PREFIX}/artifact.json: stack hashdist
 
 config.py:
 	@echo "No config.py file found.  Running ./configure"
-	./configure
+	PROTEUS_ARCH=${PROTEUS_ARCH} ./configure
 
 check:
 	@echo "************************"
