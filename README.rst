@@ -7,17 +7,8 @@ rapidly developing computer models and numerical methods.
 Installation
 =============
 
-Set the following environment variables and type 'make' in the root directory.
-
-::
-
-  setenv PROTEUS ${HOME}/proteus #or wherever you put it
-  setenv PROTEUS_ARCH linux
-  setenv PROTEUS_PREFIX ${PROTEUS}/${PROTEUS_ARCH}
-  setenv PROTEUS_PYTHON ${PROTEUS_PREFIX}/bin/python
-  setenv PATH .:${PROTEUS_PREFIX}/bin:${PATH}
-  setenv LD_LIBRARY_PATH ${PROTEUS_PREFIX}/lib
-  setenv DYLD_LIBRARY_PATH ${PROTEUS_PREFIX}/lib
+Make sure the following environment variables ``PROTEUS,
+PROTEUS_PREFIX, PROTEUS_ARCH,`` and  ``PROTEUS_PYTHON`` are undefined. Then, change to the root directory and type ``make; make check``.
 
 
 Developer Information
