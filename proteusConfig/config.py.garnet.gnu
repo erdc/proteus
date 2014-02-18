@@ -14,12 +14,12 @@ PROTEUS_SUPERLU_LIB = 'superlu_4.1'
 
 PROTEUS_BLAS_INCLUDE_DIR   = '.'
 PROTEUS_BLAS_H     = r'"proteus_blas.h"'
-PROTEUS_BLAS_LIB_DIR = '/opt/xt-libsci/11.0.06/gnu/46/interlagos/lib'
+PROTEUS_BLAS_LIB_DIR = '/opt/xt-libsci/11.1.01/gnu/47/interlagos/lib'
 PROTEUS_BLAS_LIB   = 'sci_gnu'
 
 PROTEUS_LAPACK_INCLUDE_DIR = '.'
 PROTEUS_LAPACK_H   = r'"proteus_lapack.h"'
-PROTEUS_LAPACK_LIB_DIR = '/opt/xt-libsci/11.0.06/gnu/46/interlagos/lib'
+PROTEUS_LAPACK_LIB_DIR = '/opt/xt-libsci/11.1.01/gnu/47/interlagos/lib'
 PROTEUS_LAPACK_LIB = 'sci_gnu'
 PROTEUS_LAPACK_INTEGER = 'int'
 
