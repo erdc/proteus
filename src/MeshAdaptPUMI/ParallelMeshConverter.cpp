@@ -10,11 +10,13 @@ const int EXTERIOR_NODE_MATERIAL=1;
 const int INTERIOR_ELEMENT_BOUNDARY_MATERIAL=0;
 const int EXTERIOR_ELEMENT_BOUNDARY_MATERIAL=1;
 
-int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh) {
+int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh) {
 
 //Current impementation is for serial only. Need to resolve things with Proteus developers for parallel implementation  
   
   mesh.subdomainp = new Mesh();
+
+  mesh.subdomainp = &subdomain_mesh;
   std::cout << "Constructing global data structures\n"; 
   int numGlobElem;
   PUMI_Mesh_GetNumEnt(PUMI_MeshInstance, PUMI_REGION, PUMI_ALLTOPO, &numGlobElem);
@@ -75,9 +77,28 @@ int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh) {
   ConstructElements(*mesh.subdomainp);
   ConstructBoundaries(*mesh.subdomainp);
   ConstructEdges(*mesh.subdomainp);
-  ConstructMaterialArrays(*mesh.subdomainp);
 //*/
   ConstructGlobalStructures(mesh); 
+
+  ConstructMaterialArrays(*mesh.subdomainp);
+
+   //chitak: debug
+/*  
+//debugging and checking
+   for(int i=0; i<mesh.subdomainp->nElements_global; i++) {
+     std::cout << "element, local: " << i << " global: " << mesh.elementNumbering_subdomain2global[i] << "\n";
+   }
+   MPI_Barrier(MPI_COMM_WORLD);
+   for(int i=0; i<mesh.subdomainp->nNodes_global; i++) {
+     std::cout << "nodes, local: " << i << " global: " << mesh.nodeNumbering_subdomain2global[i] << "\n";
+   }
+   for(int i=0; i<comm_size+1; i++) {
+      std::cout << "my rank: " << comm_rank << " element_subdomain_owned: " << mesh.elementOffsets_subdomain_owned[i] << "\n";
+   }
+   for(int i=0; i<comm_size+1; i++) {
+      std::cout << "my rank: " << comm_rank << " node_subdomain_owned: " << mesh.nodeOffsets_subdomain_owned[i] << "\n";
+   }
+*/
   return 0;
 } 
 
@@ -117,14 +138,6 @@ int MeshAdaptPUMIDrvr::ConstructGlobalStructures(Mesh &mesh) {
     PUMI_PartEntIter_Del(EntIt);
   } //type
 
-//debugging and checking
-   for(int i=0; i<mesh.subdomainp->nElements_global; i++) {
-     std::cout << "element, local: " << i << " global: " << mesh.elementNumbering_subdomain2global[i] << "\n";
-   }
-   MPI_Barrier(MPI_COMM_WORLD);
-   for(int i=0; i<mesh.subdomainp->nNodes_global; i++) {
-     std::cout << "nodes, local: " << i << " global: " << mesh.nodeNumbering_subdomain2global[i] << "\n";
-   }
 
 }
 
@@ -142,12 +155,33 @@ int MeshAdaptPUMIDrvr::ConstructGlobalNumbering(Mesh &mesh) {
  for (int type=partDim; type>-1; type--) {
   
    int nLocalOwned;
-   PUMI_Part_GetNumEnt(PUMI_Part, type, PUMI_ALLTOPO, &nLocalOwned); //we don't have overlapping elements, all elements are owned on a part
+   if(type==3){ //elements, we own all elements on a part
+     PUMI_Part_GetNumEnt(PUMI_Part, type, PUMI_ALLTOPO, &nLocalOwned); //we don't have overlapping elements, all elements are owned on a part
+   } else { //for vertices, edges, faces
+     CalculateOwnedEnts(static_cast<PUMI_EntType>(type), nLocalOwned);
+   }
 
    int nOwned[comm_size];
    CommunicateOwnedNumbers(nLocalOwned, nOwned);
 
-   int numOffset[comm_size+1];
+   int* numOffset;
+   if(type==3){
+     numOffset = mesh.elementOffsets_subdomain_owned;
+     elms_owned = nLocalOwned;
+   }
+   if(type==2){
+     numOffset = mesh.elementBoundaryOffsets_subdomain_owned;
+     faces_owned = nLocalOwned;
+   }
+   if(type==1){
+     numOffset = mesh.edgeOffsets_subdomain_owned;
+     edges_owned = nLocalOwned;
+   }
+   if(type==0){
+     numOffset = mesh.nodeOffsets_subdomain_owned;
+     vtx_owned = nLocalOwned;
+   }
+
    numOffset[0]=0;
    for(int i=1; i<comm_size+1; i++) {
      numOffset[i] = numOffset[i-1]+nOwned[i-1];
@@ -160,10 +194,6 @@ int MeshAdaptPUMIDrvr::ConstructGlobalNumbering(Mesh &mesh) {
    if(type!=3) 
      SetCopyGlobNumbering(GlobNumberTag, type);
 
-   if(type==3) mesh.elementOffsets_subdomain_owned = numOffset;
-   if(type==2) mesh.elementBoundaryOffsets_subdomain_owned = numOffset;
-   if(type==1) mesh.edgeOffsets_subdomain_owned = numOffset;
-   if(type==0) mesh.nodeOffsets_subdomain_owned = numOffset;
    //communicate numOffset to populate mesh.offset_owned etc
 
  } //loop on entity types
@@ -271,8 +301,7 @@ int MeshAdaptPUMIDrvr::SetCopyGlobNumbering(pTag globNumTag, int EntType) {
 
   pPartEntIter EntIt;
   pMeshEnt meshEnt;
-  PUMI_PartEntIter_InitPartBdry(PUMI_Part, PUMI_NONE, EntType, PUMI_ALLTOPO, EntIt);
-  std::cout << "Ent type: " << EntType << "\n" << std::endl;
+  PUMI_PartEntIter_InitPartBdry(PUMI_Part, -1, EntType, PUMI_ALLTOPO, EntIt);
   int isEnd = 0;
   int eN = 0;
 

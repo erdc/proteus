@@ -21,7 +21,7 @@ class MeshAdaptPUMIDrvr{
 
   //Functions to construct proteus mesh data structures
   int ConstructFromSerialPUMIMesh(Mesh& mesh);
-  int ConstructFromParallelPUMIMesh(Mesh& mesh);
+  int ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh);
 
   int MeshAdaptPUMI();
 
@@ -31,6 +31,7 @@ class MeshAdaptPUMIDrvr{
   std::vector<pPart> PUMI_Parts;
   pPart PUMI_Part;
   int comm_size, comm_rank;
+  int elms_owned, faces_owned, edges_owned, vtx_owned;
   
   pTag elementGlobNumberTag, nodeGlobNumberTag, faceGlobNumberTag, edgeGlobNumberTag;
   pTag GlobNumberTag;
