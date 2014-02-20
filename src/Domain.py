@@ -689,6 +689,15 @@ class MeshTetgenDomain(D_base):
         D_base.__init__(self,3,name=fileprefix)
         self.meshfile=fileprefix
 
+class PUMIDomain(D_base):
+  """
+  3d domains from PUMI mesh files
+  """
+  def __init__(self,fileprefix, modelfile):
+    D_base.__init__(self,3,name=fileprefix)
+    self.meshfile=fileprefix
+    self.modelfile=modelfile
+
 class PiecewiseLinearComplexDomain(D_base):
     """
     3D domains desribed by closed surfaces made up of general polygonal facets.

@@ -1,7 +1,8 @@
 #include "pumi.h"
 #include "pumi_mesh.h"
+#include "pumi_geom.h"
+#include "pumi_geom_geomsim.h"
 //#include "MeshAdapt.h"
-//#include "AcisModel.h"
 
 #include "mpi.h"
 
@@ -21,24 +22,26 @@ int MeshAdaptPUMIDrvr::initProteusMesh(Mesh& mesh) {
   return 0;
 }
 
-int MeshAdaptPUMIDrvr::readGeomModel(const std::string &acis_geom_file_name)
+int MeshAdaptPUMIDrvr::readGeomModel(const std::string &geom_sim_file)
 {
   PUMI_Init(MPI_COMM_WORLD);
-  FILE * pFile = fopen(acis_geom_file_name.c_str(), "r");
+  PUMI_Geom_RegisterGeomSim(); 
+  FILE * pFile = fopen(geom_sim_file.c_str(), "r");
   if (pFile)
   {
-    std::cerr<<"  saw acis model: "<<acis_geom_file_name<<"\n";
+    std::cerr<<"  saw simmetrix model: "<<geom_sim_file<<"\n";
+    PUMI_Geom_LoadFromFile(PUMI_GModel,geom_sim_file.c_str());
     fclose(pFile);
-    const char* SCOREC_TAGNAME = "SCORECTAG";
-//    PUMI_Geom_CreateFromAcisFile(PUMI_GModel,acis_geom_file_name.c_str(),SCOREC_TAGNAME); //create ACIS model from file
   }
   else
     PUMI_GModel = 0;
 
-  // print geometry info 
-//    std::cerr<<"[GFace Info] Total Number of Faces of this Model: "<<GM_numFaces(PUMI_GModel)<<std::endl;
-//    std::cerr<<"[GEdge Info] Total Number of Edges of this Model: "<<GM_numEdges(PUMI_GModel)<<std::endl;
-//    std::cerr<<"[GVert Info] Total Number of Vertices of this Model: "<<GM_numVertices(PUMI_GModel)<<std::endl;
+  // print geometry info
+  if(PUMI_GModel!=0) { 
+    std::cerr<<"[GFace Info] Total Number of Faces of this Model: "<<GM_numFaces(PUMI_GModel)<<std::endl;
+    std::cerr<<"[GEdge Info] Total Number of Edges of this Model: "<<GM_numEdges(PUMI_GModel)<<std::endl;
+    std::cerr<<"[GVert Info] Total Number of Vertices of this Model: "<<GM_numVertices(PUMI_GModel)<<std::endl;
+  }
     
     return 0;
 }
