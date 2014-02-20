@@ -1,15 +1,28 @@
+.PHONY: all check clean distclean doc install profile
+
 all: install
 
-#grab environment variables from shell if they are not set
+#We use environment variables from the invoking process if they have been set,
+#otherwise we try our best to determine them automatically.
 
 PROTEUS ?= $(shell pwd)
-PROTEUS_ARCH ?= $(shell python -c "import sys; print sys.platform")
+VER_CMD = git log -1 --pretty="%H"
+# shell hack for now to automatically detect Garnet front-end nodes
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
+PROTEUS_VERSION := $(shell ${VER_CMD})
 
 ifeq ($(PROTEUS_ARCH), darwin)
 PLATFORM_ENV = MACOSX_DEPLOYMENT_TARGET=$(shell sw_vers -productVersion | sed "s/\(10.[0-9]\).*/\1/")
 endif
+
+# The choice for default Fortran compiler needs to be overridden on the Garnet system
+ifeq ($(PROTEUS_ARCH), garnet.gnu)
+FC=ftn 
+F77=ftn 
+F90=ftn
+endif 
 
 PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
 	PYTHONPATH=${PROTEUS_PREFIX}/lib/python2.7/site-packages \
@@ -17,7 +30,57 @@ PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
 	PROTEUS=${PROTEUS} \
 	${PLATFORM_ENV}
 
-install: profile config.py
+clean:
+	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppyx.py clean
+	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setupf.py clean
+	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppetsc.py clean
+	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setup.py clean
+
+distclean: clean
+	-rm -f config.py configure.done stack.done
+	-rm -rf ${PROTEUS_PREFIX}
+	-rm -rf build src/*.pyc src/*.so src/*.a
+
+hashdist: 
+	@echo "No hashdist found.  Cloning hashdist from GitHub"
+	git clone https://github.com/hashdist/hashdist.git
+
+stack: 
+	@echo "No stack found.  Cloning stack from GitHub"
+	git clone https://github.com/hashdist/hashstack.git stack
+
+profile: ${PROTEUS_PREFIX}/artifact.json
+
+# A hashstack profile will be rebuilt if Make detects any files in the stack 
+# directory newer than the profile artifact file.
+${PROTEUS_PREFIX}/artifact.json: stack hashdist $(shell find stack -type f)
+	@echo "************************"
+	@echo "Building dependencies..."
+	@echo "************************"
+	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop -k error -f ${PROTEUS_PREFIX}
+        # workaround hack on Cygwin for hashdist launcher to work correctly
+	-cp ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.exe.link ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.link
+	@echo "************************"
+	@echo "Dependency build complete"
+	@echo "************************"
+
+#config.py file should be newer than proteusConfig/config.py.$PROTEUS_ARCH
+config.py: proteusConfig/config.py.${PROTEUS_ARCH}
+	@echo "************************"
+	@echo "Configuring..."
+	@echo "************************"
+	@echo "Copying proteusConfig/config.py.$PROTEUS_ARCH to ./config.py"
+	@cp proteusConfig/config.py.${PROTEUS_ARCH} config.py
+	@echo "************************"
+	@echo "Configure complete"
+	@echo "************************"
+
+# Proteus install should be triggered by an out-of-date hashstack profile, source tree, or modified setup files.
+install: profile config.py $(shell find src -type f) $(wildcard *.py)
+	@echo "************************"
+	@echo "Installing..."
+	@echo "************************"
 	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppyx.py install
 	@echo "************************"
 	@echo "done installing cython extension modules"
@@ -34,44 +97,28 @@ install: profile config.py
 	@echo "************************"
 	@echo "done installing standard extension modules"
 	@echo "************************"
-
-clean:
-	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppyx.py clean
-	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setupf.py clean
-	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppetsc.py clean
-	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setup.py clean
-
-distclean: clean
-	-rm -f config.py configure.done stack.done
-	-rm -rf ${PROTEUS_PREFIX}
-	-rm -rf build src/*.pyc src/*.so src/*.a
-
-hashdist:
-	@echo "No hashdist found.  Cloning hashdist from GitHub"
-	git clone https://github.com/hashdist/hashdist.git
-
-stack: 
-	@echo "No stack found.  Cloning stack from GitHub"
-	git clone https://github.com/hashdist/hashstack.git stack
-
-profile: ${PROTEUS_PREFIX}/artifact.json
-
-${PROTEUS_PREFIX}/artifact.json: stack hashdist
-	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop -k error -f ${PROTEUS_PREFIX}
-	-cp ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.exe.link ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.link
-	@echo "Stack complete, test with: make check"
-	@echo "or: make parallel_check"
-	@echo "Please ensure that the following is prepended  to your path"
-	@echo "${PROTEUS_PREFIX}/bin"
-
-config.py:
-	@echo "No config.py file found.  Running ./configure"
-	./configure
-
-check:
+	@echo "Installation complete"
 	@echo "************************"
-	@echo "SANITY ENVIRONMENT CHECK"
+	@echo "\n"
+	@echo "Proteus was built using the following configuration:"
+	@echo "Please include this information in all bug reports."
+	@echo "+======================================================================================================+"
+	@echo "PROTEUS          : ${PROTEUS}"
+	@echo "PROTEUS_ARCH     : ${PROTEUS_ARCH}"
+	@echo "PROTEUS_PREFIX   : ${PROTEUS_PREFIX}"
+	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}"
+	@echo "HASHSTACK_VERSION: $$(cd hashdist; ${VER_CMD})"
+	@echo "HASHDIST_VERSION : $$(cd stack; ${VER_CMD})"
+	@echo "+======================================================================================================+"
+	@echo "\n"
+	@echo "You should now verify that the install succeeded by running:"
+	@echo "\n"
+	@echo "make check"
+	@echo "\n"
+
+check: install
+	@echo "************************"
+	@echo "Sanity environment check"
 	@echo PROTEUS: ${PROTEUS}
 	@echo PROTEUS_ARCH: ${PROTEUS_ARCH}
 	@echo PROTEUS_PREFIX: ${PROTEUS_PREFIX}
