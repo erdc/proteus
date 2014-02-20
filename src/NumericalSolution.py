@@ -289,6 +289,21 @@ class  NS_base:#(HasTraits):
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
+            elif isinstance(p.domain,Domain.PUMIDomain):
+                mesh=MeshTools.TetrahedralMesh()
+                log("Reading mesh from PUMI files")
+                mesh.generateFromPUMI(p.domain.modelfile, p.domain.meshfile, parallel = comm.size() > 1)
+                mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
+                                                             nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                             parallelPartitioningType=n.parallelPartitioningType)
+                log("Generating %i-level mesh from coarse PUMI mesh" % (n.nLevels,))
+                if comm.size()==1:
+                  mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                      parallelPartitioningType=n.parallelPartitioningType)
+                else:
+                  mlMesh.generatePartitionedMeshFromPUMI(mesh,n.nLevels,nLayersOfOverlap=n.nLayersOfOverlapForParallel)
+
             elif isinstance(p.domain,Domain.MeshTetgenDomain):
                 mesh=MeshTools.TetrahedralMesh()
                 log("Reading coarse mesh from tetgen file")
@@ -546,7 +561,7 @@ class  NS_base:#(HasTraits):
             else:
                 pass
         
-        log("Attaching models and running spin-up step if requested")
+        log("Attaching models and running spin-up step if requested",level=0)
         for p,n,m,simOutput in zip(self.pList,self.nList,self.modelList,self.simOutputList):
             m.attachModels(self.modelList)
             if m in self.modelSpinUpList:
@@ -643,7 +658,7 @@ class  NS_base:#(HasTraits):
             if not self.opts.cacheArchive:
                 self.ar[index].sync()
         self.systemStepController.initialize_dt_system(self.tnList[0],self.tnList[1]) #may reset other dt's
-        log("Starting time stepping",level=0)
+        log("Starting time stepping",level=3)
         self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
         systemStepFailed=False
         stepFailed=False

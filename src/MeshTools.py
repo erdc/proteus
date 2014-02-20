@@ -434,6 +434,8 @@ class Mesh:
         self.arGrid=None
         self.nLayersOfOverlap = None
         self.parallelPartitioningType = MeshParallelPartitioningTypes.element
+    def printMesh(self):
+        print "Test print mesh"
     def partitionMesh(self,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.element):
         import pdb
         import cmeshTools
@@ -2192,6 +2194,8 @@ class TetrahedralMesh(Mesh):
         self.tetrahedronDict = dict([(T.nodes,T) for T in self.tetrahedronList])
         print "Building boundary maps"
         self.buildBoundaryMaps()
+    def printMesh(self):
+        print "Test print"
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0, EB=False):
         #print "Warning mwf hack for EB printing for tet writeMeshXdmf for now"
         #EB = True
@@ -2435,6 +2439,50 @@ class TetrahedralMesh(Mesh):
 
     def refine(self,oldMesh):
         return self.refineFreudenthalBey(oldMesh)
+
+    def generateFromPUMI(self, modelfile='geom.smd', meshfile='geom.sms',parallel=False):
+        import cmeshTools
+        import MeshAdaptPUMI
+        import flcbdfWrappers
+        import Comm
+        comm = Comm.get()
+        MeshAdaptPUMI = MeshAdaptPUMI.MeshAdaptPUMI()
+        self.cmesh = cmeshTools.CMesh()
+        log(memory("Initializing CMesh"),level=4)
+        MeshAdaptPUMI.helloworld("Does hello world")
+        MeshAdaptPUMI.readGeomModel(modelfile)
+        MeshAdaptPUMI.readPUMIMesh(meshfile)
+        if parallel:
+          self.subdomainMesh=TetrahedralMesh()
+          self.subdomainMesh.globalMesh = self
+          self.subdomainMesh.cmesh = cmeshTools.CMesh()
+
+          MeshAdaptPUMI.ConstructFromParallelPUMIMesh(self.cmesh, self.subdomainMesh.cmesh)
+          cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
+          cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
+          self.buildFromC(self.cmesh)
+          self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
+          (self.elementOffsets_subdomain_owned,
+           self.elementNumbering_subdomain2global,
+#           self.elementNumbering_global2original,
+           self.nodeOffsets_subdomain_owned,
+           self.nodeNumbering_subdomain2global,
+#           self.nodeNumbering_global2original,
+           self.elementBoundaryOffsets_subdomain_owned,
+           self.elementBoundaryNumbering_subdomain2global,
+#           self.elementBoundaryNumbering_global2original,
+           self.edgeOffsets_subdomain_owned,
+           self.edgeNumbering_subdomain2global) = flcbdfWrappers.convertPUMIPartitionToPython(self.cmesh, self.subdomainMesh.cmesh)
+#           self.edgeNumbering_global2original) = convertPUMIPartitionToPython(self.cmesh, self.subdomainMesh.cmesh)
+          self.subdomainMesh.nElements_owned = self.elementOffsets_subdomain_owned[comm.rank()+1] - self.elementOffsets_subdomain_owned[comm.rank()]
+          self.subdomainMesh.nNodes_owned = self.nodeOffsets_subdomain_owned[comm.rank()+1] - self.nodeOffsets_subdomain_owned[comm.rank()]
+          self.subdomainMesh.nElementBoundaries_owned = self.elementBoundaryOffsets_subdomain_owned[comm.rank()+1] - self.elementBoundaryOffsets_subdomain_owned[comm.rank()]
+          self.subdomainMesh.nEdges_owned = self.edgeOffsets_subdomain_owned[comm.rank()+1] - self.edgeOffsets_subdomain_owned[comm.rank()]
+        else:
+          MeshAdaptPUMI.ConstructFromSerialPUMIMesh(self.cmesh) 
+          self.buildFromC(self.cmesh)
+        log(memory("calling buildFromC"),level=4)
+        print "meshInfo says : \n", self.meshInfo()
 
     def generateFromTetgenFiles(self,filebase,base,skipGeometricInit=True,parallel=False):
         import cmeshTools
@@ -3318,6 +3366,15 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                 self.meshList[l].subdomainMesh = self.meshList[l]
                 log(self.meshList[-1].meshInfo())
             self.buildArrayLists()
+
+    def generatePartitionedMeshFromPUMI(self,mesh0,refinementLevels,nLayersOfOverlap=1):
+        import cmeshTools
+        self.meshList = []
+        self.cmultilevelMesh = None
+        self.elementParents = None
+        self.elementChildren=[]
+        self.meshList.append(mesh0)
+          
     def generatePartitionedMeshFromTetgenFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
                                                parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools
