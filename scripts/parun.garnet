@@ -13,7 +13,7 @@
 #
 #
 import ctypes
-libmpi = ctypes.CDLL('/opt/cray/mpt/5.5.4/gni/mpich2-gnu/47/lib/libmpich_gnu_47.so',mode=ctypes.RTLD_GLOBAL);
+libmpi = ctypes.CDLL('/opt/cray/mpt/6.0.0/gni/mpich2-gnu/48/lib/libmpich.so.2.0.0',mode=ctypes.RTLD_GLOBAL);
 import os
 import sys
 import socket
