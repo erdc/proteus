@@ -1193,9 +1193,6 @@ DaetkPetscSys_size(DaetkPetscSys *self,
     PetscMalloc(sizeof(PetscInt)*(nElements_subdomain+1),&elementNeighborsOffsets_subdomain);
     PetscMalloc(sizeof(PetscInt)*(nElements_subdomain*mesh.nElementBoundaries_element),&elementNeighbors_subdomain);
     PetscMalloc(sizeof(PetscInt)*(nElements_subdomain*mesh.nElementBoundaries_element),&weights_subdomain);
-//     valarray<int> elementNeighborsOffsets_subdomain(nElements_subdomain+1),
-//       elementNeighbors_subdomain(nElements_subdomain*mesh.nElementBoundaries_element);
-//     valarray<int> weights_subdomain(nElements_subdomain*mesh.nElementBoundaries_element);
     //this wastes a little space
     elementNeighborsOffsets_subdomain[0] = 0;
     for (int eN=0,offset=0; eN < nElements_subdomain; eN++)
@@ -1730,9 +1727,6 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain+1),&nodeNeighborsOffsets_subdomain);
   PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain*mesh.max_nNodeNeighbors_node),&nodeNeighbors_subdomain);
   PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain*mesh.max_nNodeNeighbors_node),&weights_subdomain);
-//   valarray<int> nodeNeighborsOffsets_subdomain(nNodes_subdomain+1),
-//     nodeNeighbors_subdomain(nNodes_subdomain*mesh.max_nNodeNeighbors_node);
-//   valarray<int> weights_subdomain(nNodes_subdomain*mesh.max_nNodeNeighbors_node);
   nodeNeighborsOffsets_subdomain[0] = 0;
   for (int nN = 0,offset=0; nN < nNodes_subdomain; nN++)
     {
@@ -2649,129 +2643,6 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 
 int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& newMesh, int nNodes_overlap)
 {
-#ifdef SKIP
-  PetscErrorCode ierr;
-  PetscMPIInt    rank,size;
-  PetscInt nNodes_global=8;
-  PetscInt max_nNodeNeighbors_node=7;
-  PetscInt *nodeNeighborsOffsets_subdomain,*nodeNeighbors_subdomain,*weights_subdomain;
-  MPI_Comm_rank(PETSC_COMM_WORLD,&rank);
-  MPI_Comm_size(PETSC_COMM_WORLD,&size);  
-  PetscInt nNodes_subdomain_old=4;
-  PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain_old+1),&nodeNeighborsOffsets_subdomain);
-  PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain_old*max_nNodeNeighbors_node),&nodeNeighbors_subdomain);
-  PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain_old*max_nNodeNeighbors_node),&weights_subdomain);
-  if (rank == 0){
-    nodeNeighborsOffsets_subdomain[0]=0;
-    nodeNeighbors_subdomain[0]=1;
-    weights_subdomain[0]=7;
-    nodeNeighbors_subdomain[1]=2;
-    weights_subdomain[1]=7;
-    nodeNeighbors_subdomain[2]=3;
-    weights_subdomain[2]=7;
-    nodeNeighbors_subdomain[3]=4;
-    weights_subdomain[3]=7;
-    nodeNeighbors_subdomain[4]=5;
-    weights_subdomain[4]=7;
-    nodeNeighbors_subdomain[5]=6;
-    weights_subdomain[5]=7;
-    nodeNeighbors_subdomain[6]=7;
-    weights_subdomain[6]=7;
-    nodeNeighborsOffsets_subdomain[1]=7;
-    nodeNeighbors_subdomain[7]=0;
-    weights_subdomain[7]=4;
-    nodeNeighbors_subdomain[8]=2;
-    weights_subdomain[8]=4;
-    nodeNeighbors_subdomain[9]=5;
-    weights_subdomain[9]=4;
-    nodeNeighbors_subdomain[10]=6;
-    weights_subdomain[10]=4;
-    nodeNeighborsOffsets_subdomain[2]=11;
-    nodeNeighbors_subdomain[11]=0;
-    weights_subdomain[11]=5;
-    nodeNeighbors_subdomain[12]=1;
-    weights_subdomain[12]=5;
-    nodeNeighbors_subdomain[13]=3;
-    weights_subdomain[13]=5;
-    nodeNeighbors_subdomain[14]=6;
-    weights_subdomain[14]=5;
-    nodeNeighbors_subdomain[15]=7;
-    weights_subdomain[15]=5;
-    nodeNeighborsOffsets_subdomain[3]=16;
-    nodeNeighbors_subdomain[16]=0;
-    weights_subdomain[16]=3;
-    nodeNeighbors_subdomain[17]=2;
-    weights_subdomain[17]=3;
-    nodeNeighbors_subdomain[18]=7;
-    weights_subdomain[18]=3;
-    nodeNeighborsOffsets_subdomain[4]=19;
-  }
-  if (rank == 1){
-    nodeNeighborsOffsets_subdomain[0]=0;
-    nodeNeighbors_subdomain[0]=0;
-    weights_subdomain[0]=4;
-    nodeNeighbors_subdomain[1]=5;
-    weights_subdomain[1]=4;
-    nodeNeighbors_subdomain[2]=6;
-    weights_subdomain[2]=4;
-    nodeNeighbors_subdomain[3]=7;
-    weights_subdomain[3]=4;
-    nodeNeighborsOffsets_subdomain[1]=4;
-    nodeNeighbors_subdomain[4]=0;
-    weights_subdomain[4]=4;
-    nodeNeighbors_subdomain[5]=1;
-    weights_subdomain[5]=4;
-    nodeNeighbors_subdomain[6]=4;
-    weights_subdomain[6]=4;
-    nodeNeighbors_subdomain[7]=6;
-    weights_subdomain[7]=4;
-    nodeNeighborsOffsets_subdomain[2]=8;
-    nodeNeighbors_subdomain[8]=0;
-    weights_subdomain[8]=6;
-    nodeNeighbors_subdomain[9]=1;
-    weights_subdomain[9]=6;
-    nodeNeighbors_subdomain[10]=2;
-    weights_subdomain[10]=6;
-    nodeNeighbors_subdomain[11]=4;
-    weights_subdomain[11]=6;
-    nodeNeighbors_subdomain[12]=5;
-    weights_subdomain[12]=6;
-    nodeNeighbors_subdomain[13]=7;
-    weights_subdomain[13]=6;
-    nodeNeighborsOffsets_subdomain[3]=14;
-    nodeNeighbors_subdomain[14]=0;
-    weights_subdomain[14]=5;
-    nodeNeighbors_subdomain[15]=2;
-    weights_subdomain[15]=5;
-    nodeNeighbors_subdomain[16]=3;
-    weights_subdomain[16]=5;
-    nodeNeighbors_subdomain[17]=4;
-    weights_subdomain[17]=5;
-    nodeNeighbors_subdomain[18]=6;
-    weights_subdomain[18]=5;
-    nodeNeighborsOffsets_subdomain[4]=19;
-  }
-
-  Mat petscAdjacency;
-  ierr = MatCreateMPIAdj(PETSC_COMM_WORLD,
-			 nNodes_subdomain_old, 
-			 nNodes_global,
-			 nodeNeighborsOffsets_subdomain, 
-			 nodeNeighbors_subdomain,
-			 weights_subdomain,
-			 &petscAdjacency);CHKERRQ(ierr);
-  MatPartitioning petscPartition;
-  ierr = MatPartitioningCreate(PETSC_COMM_WORLD,&petscPartition);CHKERRQ(ierr);
-  ierr = MatPartitioningSetAdjacency(petscPartition,petscAdjacency);CHKERRQ(ierr);
-  ierr = MatPartitioningSetFromOptions(petscPartition);CHKERRQ(ierr);
-  //ierr = MatPartitioningSetVertexWeights(petscPartition,vertex_weights_subdomain);CHKERRQ(ierr);
-  //ierr = MatPartitioningSetPartitionWeights(petscPartition,partition_weights);CHKERRQ(ierr);
-  IS nodePartitioningIS_new;
-  ierr = MatPartitioningApply(petscPartition,&nodePartitioningIS_new);CHKERRQ(ierr);
-  ierr = MatPartitioningView(petscPartition,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-  ierr = MatPartitioningDestroy(&petscPartition);CHKERRQ(ierr);
-  //ierr = PetscFinalize();
-#else
   using namespace std;
   PetscErrorCode ierr;
   PetscMPIInt size,rank;
@@ -2939,14 +2810,11 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   PetscReal *partition_weights;
   PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain_old+1),&nodeNeighborsOffsets_subdomain);
   PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain_old*max_nNodeNeighbors_node),&nodeNeighbors_subdomain);
-  PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain_old*(max_nNodeNeighbors_node+1)),&weights_subdomain);
+  PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain_old*max_nNodeNeighbors_node),&weights_subdomain);
   PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain_old),&vertex_weights_subdomain);
-  PetscMalloc(sizeof(PetscInt)*(size),&partition_weights);
+  PetscMalloc(sizeof(PetscReal)*(size),&partition_weights);
   for (int sd=0;sd<size;sd++)
     partition_weights[sd] = 1.0/double(size);
-  //valarray<int> nodeNeighborsOffsets_subdomain(nNodes_subdomain_old+1),
-  //  nodeNeighbors_subdomain(nNodes_subdomain_old*max_nNodeNeighbors_node);
-  //valarray<int> weights_subdomain(nNodes_subdomain_old*max_nNodeNeighbors_node);
   nodeNeighborsOffsets_subdomain[0] = 0;
   //I think we can simplify this now that nodeStarArray is local to the subdomain, could just use nodeStar instead of nodeStarArray
   for (int nN = 0,offset=0; nN < nNodes_subdomain_old; nN++)
@@ -2968,29 +2836,6 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   //
   //3. Generate new nodal partition using PETSc interface
   //
-  PetscSequentialPhaseBegin(Py_PETSC_COMM_WORLD,1);
-  if (rank == 0)
-    {
-      std::cout<<"PetscInt nNodes_subdomain_old="<<nNodes_subdomain_old<<";"<<std::endl
-	       <<"PetscInt nNodes_global="<<nNodes_global<<";"<<std::endl
-	       <<"PetscInt max_nNodeNeighbors_node="<<max_nNodeNeighbors_node<<std::endl
-	       <<"PetscInt *nodeNeighborsOffsets_subdomain,*nodeNeighbors_subdomain,*weights_subdomain;"<<std::endl
-	       <<"PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain_old+1),&nodeNeighborsOffsets_subdomain);"<<std::endl
-	       <<"PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain_old*max_nNodeNeighbors_node),&nodeNeighbors_subdomain);"<<std::endl
-	       <<"PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain_old*max_nNodeNeighbors_node),&weights_subdomain);"<<std::endl;
-    }
-  std::cout<<"if (rank == "<<rank<<"){"<<std::endl;
-  for (int i=0;i<nNodes_subdomain_old+1;i++)
-    {
-      std::cout<<"nodeNeighborsOffsets_subdomain["<<i<<"]="<<nodeNeighborsOffsets_subdomain[i]<<";"<<std::endl;
-      for (int j=nodeNeighborsOffsets_subdomain[i];j<nodeNeighborsOffsets_subdomain[i+1];j++)
-	{
-	  std::cout<<"nodeNeighbors_subdomain["<<j<<"]="<<nodeNeighbors_subdomain[j]<<";"<<std::endl;
-	  std::cout<<"weights_subdomain["<<j<<"]="<<weights_subdomain[j]<<";"<<std::endl;
-	}
-    }
-  std::cout<<"}"<<std::endl;
-  PetscSequentialPhaseEnd(Py_PETSC_COMM_WORLD,1);
   Mat petscAdjacency;
   ierr = MatCreateMPIAdj(Py_PETSC_COMM_WORLD,
 			 nNodes_subdomain_old, 
@@ -3003,16 +2848,12 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   ierr = MatPartitioningCreate(Py_PETSC_COMM_WORLD,&petscPartition);CHKERRQ(ierr);
   ierr = MatPartitioningSetAdjacency(petscPartition,petscAdjacency);CHKERRQ(ierr);
   ierr = MatPartitioningSetFromOptions(petscPartition);CHKERRQ(ierr);
-  //ierr = MatPartitioningSetVertexWeights(petscPartition,vertex_weights_subdomain);CHKERRQ(ierr);
-  //ierr = MatPartitioningSetPartitionWeights(petscPartition,partition_weights);CHKERRQ(ierr);
+  ierr = MatPartitioningSetVertexWeights(petscPartition,vertex_weights_subdomain);CHKERRQ(ierr);
+  ierr = MatPartitioningSetPartitionWeights(petscPartition,partition_weights);CHKERRQ(ierr);
   //get petsc index set that has the new subdomain number for each node
   IS nodePartitioningIS_new;
-  std::cout<<"SetFromOpt DONE"<<std::endl;
   ierr = MatPartitioningApply(petscPartition,&nodePartitioningIS_new);CHKERRQ(ierr);
-  //ierr = MatPartitioningView(petscPartition,PETSC_VIEWER_STDOUT_WORLD);CHKERRQ(ierr);
-  std::cout<<"PartApply DONE"<<std::endl;
   ierr = MatPartitioningDestroy(&petscPartition);CHKERRQ(ierr); //gets petscAdjacency too I believe
-  std::cout<<"PartDestroy DONE"<<std::endl;
 
   //determine the number of nodes per subdomain in new partitioning
   valarray<int> nNodes_subdomain_new(size);
@@ -3023,15 +2864,12 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   nodeOffsets_new[0] = 0;
   for (int sdN = 0; sdN < size; sdN++)
     {
-      std::cout<<sdN<<'\t'<<nNodes_subdomain_new[sdN]<<std::endl;
       nodeOffsets_new[sdN+1] = nodeOffsets_new[sdN] + nNodes_subdomain_new[sdN];
     }
-    std::cout<<"nodeOffsets_new DONE"<<std::endl;
 
   //get the new node numbers for nodes on this subdomain
   IS nodeNumberingIS_subdomain_old2new;
   ISPartitioningToNumbering(nodePartitioningIS_new,&nodeNumberingIS_subdomain_old2new);
-    std::cout<<"PartToNumbering DONE"<<std::endl;
 
   //collect new node numbers for whole mesh so that subdomain reordering and renumbering
   //can be done easily
@@ -3040,13 +2878,11 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   ISAllGather(nodeNumberingIS_subdomain_old2new,&nodeNumberingIS_global_old2new);
   const PetscInt * nodeNumbering_global_old2new;//needs restore call
   ISGetIndices(nodeNumberingIS_global_old2new,&nodeNumbering_global_old2new);
-    std::cout<<"ISGetIndices DONE"<<std::endl;
 
   //reverse mapping for node numbers too
   valarray<int> nodeNumbering_global_new2old(nNodes_global);
   for (int nN = 0; nN < nNodes_global; nN++)
     nodeNumbering_global_new2old[nodeNumbering_global_old2new[nN]] = nN;
-    std::cout<<"nodeNumbering_global_new2old DONE"<<std::endl;
   //
   //4. To build subdomain meshes, go through and collect elements containing
   //   the locally owned nodes. Assign processor ownership of elements 
@@ -4189,8 +4025,6 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 
   ISDestroy(&edgeNumberingIS_subdomain_new2old);
   ISDestroy(&edgeNumberingIS_global_new2old);
-#endif
-  //SKIP
   return 0;
 }
 
@@ -4248,9 +4082,6 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     PetscMalloc(sizeof(PetscInt)*(nElements_subdomain+1),&elementNeighborsOffsets_subdomain);
     PetscMalloc(sizeof(PetscInt)*(nElements_subdomain*mesh.nElementBoundaries_element),&elementNeighbors_subdomain);
     PetscMalloc(sizeof(PetscInt)*(nElements_subdomain*mesh.nElementBoundaries_element),&weights_subdomain);
-//     valarray<int> elementNeighborsOffsets_subdomain(nElements_subdomain+1),
-//       elementNeighbors_subdomain(nElements_subdomain*mesh.nElementBoundaries_element);
-//     valarray<int> weights_subdomain(nElements_subdomain*mesh.nElementBoundaries_element);
     //this wastes a little space
     elementNeighborsOffsets_subdomain[0] = 0;
     for (int eN=0,offset=0; eN < nElements_subdomain; eN++)
@@ -4268,11 +4099,6 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 	int weight = (elementNeighborsOffsets_subdomain[eN+1] - elementNeighborsOffsets_subdomain[eN]);
 	for (int k=elementNeighborsOffsets_subdomain[eN];k<elementNeighborsOffsets_subdomain[eN+1];k++)
 	  weights_subdomain[k] = weight;
-        // for (int o = offsetStart; o < offset; o++)
-        //   {
-	//     std::cout<<elementNeighbors_subdomain[o]<<'\t';
-        //   }
-	// std::cout<<std::endl;
       }
     //3. Generate the  new partitiong using PETSc, this is done in parallel using parmetis
     Mat petscAdjacency;
