@@ -131,7 +131,7 @@ class AR_base:
         log("Done Closing Archive")
         try:
             if self.gatherAtClose:
-              self.allGather()
+               self.allGather()
         except:
             pass
     def allGather(self):

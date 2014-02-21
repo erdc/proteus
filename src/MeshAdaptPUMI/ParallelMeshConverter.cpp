@@ -72,12 +72,10 @@ int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   }
 
   ConstructGlobalNumbering(mesh);
-///* 
   ConstructNodes(*mesh.subdomainp);
   ConstructElements(*mesh.subdomainp);
   ConstructBoundaries(*mesh.subdomainp);
   ConstructEdges(*mesh.subdomainp);
-//*/
   ConstructGlobalStructures(mesh); 
 
   ConstructMaterialArrays(*mesh.subdomainp);

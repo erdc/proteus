@@ -434,8 +434,6 @@ class Mesh:
         self.arGrid=None
         self.nLayersOfOverlap = None
         self.parallelPartitioningType = MeshParallelPartitioningTypes.element
-    def printMesh(self):
-        print "Test print mesh"
     def partitionMesh(self,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.element):
         import pdb
         import cmeshTools
@@ -2194,8 +2192,6 @@ class TetrahedralMesh(Mesh):
         self.tetrahedronDict = dict([(T.nodes,T) for T in self.tetrahedronList])
         print "Building boundary maps"
         self.buildBoundaryMaps()
-    def printMesh(self):
-        print "Test print"
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,tCount=0, EB=False):
         #print "Warning mwf hack for EB printing for tet writeMeshXdmf for now"
         #EB = True

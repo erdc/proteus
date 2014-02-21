@@ -15,7 +15,6 @@ int MeshAdaptPUMIDrvr::ConstructFromSerialPUMIMesh(Mesh& mesh) {
 //  Mesh mesh = MESH(cmesh);
 
 //Current impementation is for serial only. Need to resolve things with Proteus developers for parallel implementation  
-///*
   std::cout << "Constructing global data structures\n"; 
   int numGlobElem;
   PUMI_Mesh_GetNumEnt(PUMI_MeshInstance, PUMI_REGION, PUMI_ALLTOPO, &numGlobElem);
@@ -48,14 +47,12 @@ int MeshAdaptPUMIDrvr::ConstructFromSerialPUMIMesh(Mesh& mesh) {
   std::cerr << "Number of nodes " << mesh.nNodes_global << "\n";
   std::cerr << "Number of boundaries " << mesh.nElementBoundaries_global << "\n";
   std::cerr << "Number of edges " << mesh.nEdges_global << "\n";
-//*/
-///*  
+  
   ConstructNodes(mesh);
   ConstructElements(mesh);
   ConstructBoundaries(mesh);
   ConstructEdges(mesh);
   ConstructMaterialArrays(mesh);
-//*/
 
   return 0;
 }  
@@ -165,7 +162,7 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh) {
 
   std::cout << "Constructing boundary data structures\n" ; 
 ////////build face list (elementBoundary and nodeBoundary arrays) : this is a bit complex and should be verified
-//Enter at your own peril, for those who stray will be lost
+//Enter at your own peril for those who stray will be lost
 //
   std::set<int> interiorElementBoundaries,exteriorElementBoundaries; //do we need this? we can do this by looping over model faces, right?
 
@@ -217,7 +214,7 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh) {
 
       //following is tricky. it stores local face number of the face we are already on for this element (vecRgn[iVtx])
       std::vector<pMeshEnt> vecFace;
-      PUMI_MeshEnt_GetAdj(vecRgn[iRgn], PUMI_FACE, 0, vecFace); //chitak direction changed
+      PUMI_MeshEnt_GetAdj(vecRgn[iRgn], PUMI_FACE, 0, vecFace);
       int iNumFace = vecFace.size();
       for (int iFace = 0; iFace < iNumFace; ++iFace) {
          if(vecFace[iFace] == meshEnt) {//if face found
@@ -260,66 +257,8 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh) {
   PUMI_PartEntIter_Del(EntIt);
   assert(nF_owned=faces_owned-1);
   assert(nF_copy=mesh.nElementBoundaries_global-1);
-  
-  //chitak check for elementBoundariesArray: 
-//  for(int i=0; i<mesh.nElements_global*mesh.nElementBoundaries_element; i++) {
-//    printf("elementBoundariesArray: %d %d\n",i,mesh.elementBoundariesArray[i]);
- // }
-/*
-  std::map<NodeTuple<3>,
-      ElementNeighbors> elementBoundaryElements;
-  std::map<NodeTuple<3>,
-      int> elementBoundaryIds;
-    //cout<<"Extracting boundary elements"<<endl;
-    for(int eN=0;eN<mesh.nElements_global;eN++)
-      for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
-        {
-          register int ebN_global = mesh.elementBoundariesArray[eN*mesh.nElementBoundaries_element+ebN];
-          if(ebN==0) {
-            nodes[0] = mesh.elementNodesArray[eN*4+1];
-            nodes[1] = mesh.elementNodesArray[eN*4+2];
-            nodes[2] = mesh.elementNodesArray[eN*4+0];
-         } else if(ebN==1) {
-            nodes[0] = mesh.elementNodesArray[eN*4+1];
-            nodes[1] = mesh.elementNodesArray[eN*4+0];
-            nodes[2] = mesh.elementNodesArray[eN*4+3];
-         } else if(ebN==2)  {
-            nodes[0] = mesh.elementNodesArray[eN*4+3];
-            nodes[1] = mesh.elementNodesArray[eN*4+2];
-            nodes[2] = mesh.elementNodesArray[eN*4+1];
-         } else if (ebN==3) {
-            nodes[0] = mesh.elementNodesArray[eN*4+3];
-            nodes[1] = mesh.elementNodesArray[eN*4+0];
-            nodes[2] = mesh.elementNodesArray[eN*4+2];
-        }
-            nodes[0] = mesh.elementNodesArray[eN*4+(ebN+1)%4];
-            nodes[1] = mesh.elementNodesArray[eN*4+(ebN+2)%4];
-            nodes[2] = mesh.elementNodesArray[eN*4+(ebN+3)%4];
-//          nodes[0] = mesh.elementBoundaryNodesArray[ebN_global*3];
-//          nodes[1] = mesh.elementBoundaryNodesArray[ebN_global*3+1];
-//          nodes[2] = mesh.elementBoundaryNodesArray[ebN_global*3+2];
-              //chitak print
-              printf("elementBoundaryNodes %d %d %d %d %d %d\n",eN, ebN, ebN_global, nodes[0], nodes[1], nodes[2]);
-              printf("elementNodes %d %d %d %d\n", ebN_global, mesh.elementBoundaryNodesArray[ebN_global*3], mesh.elementBoundaryNodesArray[ebN_global*3+1],mesh.elementBoundaryNodesArray[ebN_global*3+2]);
-          NodeTuple<3> ebt(nodes);
-          if(elementBoundaryElements.find(ebt) != elementBoundaryElements.end())
-            {
-              elementBoundaryElements[ebt].right=eN;
-              elementBoundaryElements[ebt].right_ebN_element=ebN;
-              //chitak print
-//              printf("elementBoundaryIds %d %d\n",ebN_global, elementBoundaryIds[ebt]);
-              assert(elementBoundaryIds[ebt] == ebN_global);
-            }
-          else
-            {
-              elementBoundaryElements.insert(elementBoundaryElements.end(),std::make_pair(ebt,ElementNeighbors(eN,ebN)));
-              elementBoundaryIds.insert(elementBoundaryIds.end(),std::make_pair(ebt,ebN_global));
-            }
-        }
-
-//chitak end  
-*/
-
+ 
+  //construct interior and exterior element boundaries array 
   mesh.nInteriorElementBoundaries_global = interiorElementBoundaries.size();
   mesh.interiorElementBoundariesArray = new int[mesh.nInteriorElementBoundaries_global];
   mesh.nExteriorElementBoundaries_global = exteriorElementBoundaries.size();
@@ -482,34 +421,6 @@ int MeshAdaptPUMIDrvr::ConstructMaterialArrays(Mesh& mesh) {
   }
   PUMI_PartEntIter_Del(EntIt);
 
-   
-//below, older implementation from constructElementBoundaryElementsArrayWithGivenElementBoundaryAndEdgeNumbers_tetrahedron, appears wrong  
-/*  
-  //if nodeMaterial is DEFAULT, go ahead and set to interior or exterior
-  //depending on which boundary node belongs to. 
-  //If node on at least one exterior boundary then it's exterior
-  for (int ebNE = 0; ebNE < mesh.nExteriorElementBoundaries_global; ebNE++)    {
-    int ebN = mesh.exteriorElementBoundariesArray[ebNE];
-    mesh.elementBoundaryMaterialTypes[ebN] = EXTERIOR_ELEMENT_BOUNDARY_MATERIAL;
-    for (int nN_local = 0; nN_local < mesh.nNodes_elementBoundary; nN_local++) {
-      int nN = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary+nN_local];
-      if (mesh.nodeMaterialTypes[nN] == DEFAULT_NODE_MATERIAL)
-          mesh.nodeMaterialTypes[nN] = EXTERIOR_NODE_MATERIAL;
-//      printf("nodeMaterial: %d %d\n", nN, mesh.nodeMaterialTypes[nN]);
-    }
-  }
-  for (int ebNI = 0; ebNI < mesh.nInteriorElementBoundaries_global; ebNI++)  {
-    int ebN = mesh.interiorElementBoundariesArray[ebNI];
-    mesh.elementBoundaryMaterialTypes[ebN] = INTERIOR_ELEMENT_BOUNDARY_MATERIAL;
-    for (int nN_local = 0; nN_local < mesh.nNodes_elementBoundary; nN_local++)    {
-      int nN = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary+nN_local];
-//      std::cerr << ebN << " " << nN << "\n";
-      if (mesh.nodeMaterialTypes[nN] == DEFAULT_NODE_MATERIAL)
-          mesh.nodeMaterialTypes[nN] = INTERIOR_NODE_MATERIAL;
-//      printf("nodeMaterial: %d %d\n", nN, mesh.nodeMaterialTypes[nN]);
-    }
-  }
-*/
   return 0;
 
 }
