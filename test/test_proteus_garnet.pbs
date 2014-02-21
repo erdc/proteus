@@ -11,8 +11,8 @@ source /opt/modules/default/init/bash
 module swap PrgEnv-pgi PrgEnv-gnu
 module unload xt-libsci
 module load acml
+source ${PROTEUS_PREFIX}/bin/proteus_env.sh
 PROTEUS_PYTHON=$(which python)
-#source ${PROTEUS}/envConfig/garnet.gnu.bash
 
 cd $PBS_O_WORKDIR
 export MPICH_RANK_REORDER_METHOD=2
