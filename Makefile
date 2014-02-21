@@ -1,4 +1,4 @@
-.PHONY: all check clean distclean doc install profile
+.PHONY: all check clean distclean doc install profile proteus
 
 all: install
 
@@ -56,7 +56,7 @@ stack:
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	python hashstack/scripts/setup_cygstack.py hashstack/scripts/cygstack.txt
-        touch cygwin_bootstrap.done
+	touch cygwin_bootstrap.done
 
 profile: ${PROTEUS_PREFIX}/artifact.json
 
@@ -76,6 +76,26 @@ ${PROTEUS_PREFIX}/artifact.json: stack hashdist $(shell find stack -type f) ${BO
 	@echo "Dependency build complete"
 	@echo "************************"
 
+proteus: ${PROTEUS_PREFIX}/bin/proteus
+
+${PROTEUS_PREFIX}/bin/proteus ${PROTEUS_PREFIX}/bin/proteus_env.sh: profile
+	@echo "************************"
+	@echo "Installing proteus scripts..."
+	@echo "************************"
+
+	echo "#!/usr/bin/env sh" > ${PROTEUS_PREFIX}/bin/proteus
+	echo "${PROTEUS_ENV} \\" >> ${PROTEUS_PREFIX}/bin/proteus
+	echo 'python "$${@:1}"' >> ${PROTEUS_PREFIX}/bin/proteus
+	chmod a+x ${PROTEUS_PREFIX}/bin/proteus
+
+	echo "#!/usr/bin/env sh" > ${PROTEUS_PREFIX}/bin/proteus_env.sh
+	echo "${PROTEUS_ENV}" >> ${PROTEUS_PREFIX}/bin/proteus_env.sh
+	chmod a+x ${PROTEUS_PREFIX}/bin/proteus_env.sh
+
+	@echo "************************"
+	@echo "Proteus script successfully installed"
+	@echo "************************"
+
 
 #config.py file should be newer than proteusConfig/config.py.$PROTEUS_ARCH
 config.py: proteusConfig/config.py.${PROTEUS_ARCH}
@@ -90,7 +110,7 @@ config.py: proteusConfig/config.py.${PROTEUS_ARCH}
 
 
 # Proteus install should be triggered by an out-of-date hashstack profile, source tree, or modified setup files.
-install: profile config.py $(shell find src -type f) $(wildcard *.py)
+install: profile config.py $(shell find src -type f) $(wildcard *.py) proteus
 	@echo "************************"
 	@echo "Installing..."
 	@echo "************************"
@@ -139,15 +159,15 @@ check: install
 
 	@echo "************************"
 	@echo "Hello world Check!"
-	${PROTEUS_ENV} python -c "print 'hello world'"
+	${PROTEUS_PREFIX}/bin/proteus -c "print 'hello world'"
 	@echo "************************"
 	@echo "Proteus Partition Test"
-	${PROTEUS_ENV} python test/test_meshParitionFromTetgenFiles.py
+	${PROTEUS_PREFIX}/bin/proteus test/test_meshParitionFromTetgenFiles.py
 	@echo "************************"
 
 	@echo "************************"
 	@echo "Parallel Proteus Partition Test"
-	${PROTEUS_ENV} mpirun -np 4 python test/test_meshParitionFromTetgenFiles.py
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; mpirun -np 4 ${PROTEUS_PYTHON} test/test_meshParitionFromTetgenFiles.py
 	@echo "************************"
 
 doc: install
