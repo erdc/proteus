@@ -561,7 +561,7 @@ class  NS_base:#(HasTraits):
             else:
                 pass
         
-        log("Attaching models and running spin-up step if requested",level=0)
+        log("Attaching models and running spin-up step if requested",level=3)
         for p,n,m,simOutput in zip(self.pList,self.nList,self.modelList,self.simOutputList):
             m.attachModels(self.modelList)
             if m in self.modelSpinUpList:
@@ -658,7 +658,7 @@ class  NS_base:#(HasTraits):
             if not self.opts.cacheArchive:
                 self.ar[index].sync()
         self.systemStepController.initialize_dt_system(self.tnList[0],self.tnList[1]) #may reset other dt's
-        log("Starting time stepping",level=3)
+        log("Starting time stepping",level=0)
         self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
         systemStepFailed=False
         stepFailed=False
