@@ -10,8 +10,8 @@ nDTout = 1
 #finite element spaces
 femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
 #numerical quadrature choices
-elementQuadrature = SimplexGaussQuadrature(nd,4)
-elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
+elementQuadrature = SimplexGaussQuadrature(nd,3)
+elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 
 logEvent("""Mesh generated using: tetgen -%s %s"""  % (triangleOptions,domain.polyfile+".poly"))
 triangleOptions="VApq1.35q12feena%e" % ((he**3)/6.0,)
