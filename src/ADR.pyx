@@ -539,7 +539,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                         self.mesh.nElementBoundaries_element*
                                                         self.nElementBoundaryQuadraturePoints_elementBoundary)
         if type(self.u[0].femSpace) == C0_AffineLinearOnSimplexWithNodalBasis:
-            #print self.nQuadraturePoints_element
             if self.nSpace_global == 3:
                 assert(self.nQuadraturePoints_element == 5)
             elif self.nSpace_global == 2:
@@ -547,7 +546,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             elif self.nSpace_global == 1:
                 assert(self.nQuadraturePoints_element == 3)
 
-            #print self.nElementBoundaryQuadraturePoints_elementBoundary
             if self.nSpace_global == 3:
                 assert(self.nElementBoundaryQuadraturePoints_elementBoundary == 4)
             elif self.nSpace_global == 2:
@@ -734,7 +732,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         
 
         #no flux boundary conditions
-        print "u",self.u[0].dof
         self.adr.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -865,7 +862,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                                   self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
                                                        for cj in self.advectiveFluxBoundaryConditionsSetterDict.keys()])
         self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self.timeIntegration.t,self.ebqe)
-        print self.ebqe[('a',0,0)]
     def estimate_mt(self):
         pass
     def calculateAuxiliaryQuantitiesAfterStep(self):
