@@ -41,7 +41,8 @@ cdef extern from "ADR.h" namespace "proteus":
                                int* isDOFBoundary_u,
                                double* ebqe_bc_u_ext,
                                int* isFluxBoundary_u,
-                               double* ebqe_bc_flux_u_ext)
+                               double* ebqe_bc_flux_u_ext,
+                               double* ebqe_penalty)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -79,7 +80,8 @@ cdef extern from "ADR.h" namespace "proteus":
                                double* ebqe_bc_u_ext,
                                int* isFluxBoundary_u,
                                double* ebqe_bc_flux_u_ext,
-                               int* csrColumnOffsets_eb_u_u)
+                               int* csrColumnOffsets_eb_u_u,
+                               double* ebqe_penalty)
     cppADR_base* newADR(int nSpaceIn,
                         int nQuadraturePoints_elementIn,
                         int nDOF_mesh_trial_elementIn,
@@ -144,7 +146,8 @@ cdef class ADR:
                          numpy.ndarray isDOFBoundary_u,
                          numpy.ndarray ebqe_bc_u_ext,
                          numpy.ndarray isFluxBoundary_u,
-                         numpy.ndarray ebqe_bc_flux_u_ext):
+                         numpy.ndarray ebqe_bc_flux_u_ext,
+                         numpy.ndarray ebqe_penalty):
        self.thisptr.calculateResidual(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
@@ -181,7 +184,8 @@ cdef class ADR:
                                        <int*> isDOFBoundary_u.data,
                                        <double*> ebqe_bc_u_ext.data,
                                        <int*> isFluxBoundary_u.data,
-                                       <double*> ebqe_bc_flux_u_ext.data)
+                                       <double*> ebqe_bc_flux_u_ext.data,
+                                       <double*> ebqe_penalty.data)
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -220,7 +224,8 @@ cdef class ADR:
                          numpy.ndarray ebqe_bc_u_ext,
                          numpy.ndarray isFluxBoundary_u,
                          numpy.ndarray ebqe_bc_flux_u_ext,
-                         numpy.ndarray csrColumnOffsets_eb_u_u):
+                         numpy.ndarray csrColumnOffsets_eb_u_u,
+                         numpy.ndarray ebqe_penalty):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
        self.thisptr.calculateJacobian(<double*> mesh_trial_ref.data,
@@ -260,7 +265,8 @@ cdef class ADR:
                                        <double*> ebqe_bc_u_ext.data,
                                        <int*> isFluxBoundary_u.data,
                                        <double*> ebqe_bc_flux_u_ext.data,
-                                       <int*> csrColumnOffsets_eb_u_u.data)
+                                       <int*> csrColumnOffsets_eb_u_u.data,
+                                       <double*> ebqe_penalty.data)
 
 class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
     def __init__(self,vt,getPointwiseBoundaryConditions,
@@ -315,15 +321,14 @@ class Coefficients(TC_base):
                 cq[('r',ci)].flat[i] = -self.fOfX[ci](cq['x'].flat[3*i:3*(i+1)])
                 cq[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](cq['x'].flat[3*i:3*(i+1)]).flat
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
-        pass
-        # nd = self.nd
-        # for c in [cebq,cebq_global]:
-        #     for ci in range(self.nc):
-        #         if c.has_key(('f',ci)): c[('f',ci)].flat[:] = 0.0
-        #         if c.has_key(('r',ci)) and c.has_key(('a',ci,ci)):
-        #             for i in range(len(c[('u',ci)].flat)):
-        #                 c[('r',ci)].flat[i] = -self.fOfX[ci](c['x'].flat[3*i:3*(i+1)])
-        #                 c[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](c['x'].flat[3*i:3*(i+1)]).flat
+        nd = self.nd
+        for c in [cebq,cebq_global]:
+            for ci in range(self.nc):
+                if c.has_key(('f',ci)): c[('f',ci)].flat[:] = 0.0
+                if c.has_key(('r',ci)) and c.has_key(('a',ci,ci)):
+                    for i in range(len(c[('u',ci)].flat)):
+                        c[('r',ci)].flat[i] = -self.fOfX[ci](c['x'].flat[3*i:3*(i+1)])
+                        c[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](c['x'].flat[3*i:3*(i+1)]).flat
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         nd = self.nd
         for c in [cebqe]:
@@ -568,6 +573,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('f',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
         self.q[('r',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
 
+        self.ebqe['penalty'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.ebqe[('u',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.ebqe[('diffusiveFlux_bc_flag',0,0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'i')
         self.ebqe[('diffusiveFlux_bc',0,0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
@@ -575,6 +581,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[('advectiveFlux_bc',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.ebqe[('grad(u)',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         self.ebqe[('a',0,0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.coefficients.sdInfo[(0,0)][0][-1]),'d')
+        self.ebqe[('f',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
+        self.ebqe[('r',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
 
         self.points_elementBoundaryQuadrature= set()
         self.scalars_elementBoundaryQuadrature= set([('u',ci) for ci in range(self.nc)])
@@ -726,6 +734,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         
 
         #no flux boundary conditions
+        print "u",self.u[0].dof
         self.adr.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -765,7 +774,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.ebqe[('u',0)],
             self.ebqe[('diffusiveFlux_bc_flag',0,0)],
-            self.ebqe[('diffusiveFlux_bc',0,0)])
+            self.ebqe[('diffusiveFlux_bc',0,0)],
+            self.ebqe['penalty'])
         log("Global residual",level=9,data=r)
         self.coefficients.massConservationError = fabs(globalSum(sum(r.flat[:self.mesh.nElements_owned])))
         log("   Mass Conservation Error",level=3,data=self.coefficients.massConservationError)
@@ -814,7 +824,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.ebqe[('u',0)],
             self.ebqe[('diffusiveFlux_bc_flag',0,0)],
             self.ebqe[('diffusiveFlux_bc',0,0)],
-            self.csrColumnOffsets_eb[(0,0)])
+            self.csrColumnOffsets_eb[(0,0)],
+            self.ebqe['penalty'])
         log("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
@@ -854,6 +865,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                                                   self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
                                                        for cj in self.advectiveFluxBoundaryConditionsSetterDict.keys()])
         self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self.timeIntegration.t,self.ebqe)
+        print self.ebqe[('a',0,0)]
     def estimate_mt(self):
         pass
     def calculateAuxiliaryQuantitiesAfterStep(self):
