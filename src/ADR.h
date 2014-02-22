@@ -152,8 +152,6 @@ namespace proteus
 	      flux+= diffusiveVelocityComponent_I*n[I];
 	    }
 	  penaltyFlux = max_a*penalty*(u-bc_u);
-	  std::cout<<"max_a "<<max_a<<" penalty "<<penalty<<" u "<<u<<" bc_u "<<bc_u<<std::endl;
-	  std::cout<<"flux "<<flux<<" penalty flux "<<penaltyFlux<<std::endl;
 	  flux += penaltyFlux;
 	}
       else
@@ -564,7 +562,6 @@ namespace proteus
 					     u_ext,
 					     ebqe_penalty_ext[ebNE_kb],
 					     flux_diff_ext);
-	      std::cout<<"ebNE "<<ebNE<<"kb "<<kb<<"flux_diff_ext"<<flux_diff_ext<<std::endl;
 	      /* exteriorNumericalAdvectiveFlux(isDOFBoundary_u[ebNE_kb], */
 	      /* 				     isFluxBoundary_u[ebNE_kb], */
 	      /* 				     normal, */
