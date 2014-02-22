@@ -64,7 +64,7 @@ stack:
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	python hashstack/scripts/setup_cygstack.py hashstack/scripts/cygstack.txt
-        touch cygwin_bootstrap.done
+	touch cygwin_bootstrap.done
 
 profile: ${PROTEUS_PREFIX}/artifact.json
 
