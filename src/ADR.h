@@ -50,7 +50,8 @@ namespace proteus
 				   double* ebqe_bc_u_ext,
 				   int* isDiffusiveFluxBoundary_u,
 				   double* ebqe_bc_flux_u_ext,
-				   double* ebqe_penalty_ext)=0;
+				   double* ebqe_penalty_ext,
+				   const double eb_adjoint_sigma)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -91,7 +92,8 @@ namespace proteus
 				   int* isDiffusiveFluxBoundary_u,
 				   double* ebqe_bc_flux_u_ext,
 				   int* csrColumnOffsets_eb_u_u,
-				   double* ebqe_penalty_ext)=0;
+				   double* ebqe_penalty_ext,
+				   const double eb_adjoint_sigma)=0;
   };
   
   template<class CompKernelType,
@@ -340,7 +342,8 @@ namespace proteus
 			   double* ebqe_bc_u_ext,
 			   int* isDiffusiveFluxBoundary_u,
 			   double* ebqe_bc_flux_u_ext,
-			   double* ebqe_penalty_ext)
+			   double* ebqe_penalty_ext,
+			   const double eb_adjoint_sigma)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -577,19 +580,17 @@ namespace proteus
 	      for (int i=0;i<nDOF_test_element;i++)
 		{
 		  //int ebNE_kb_i = ebNE_kb*nDOF_test_element+i;
-		  double eb_adjoint_sigma=0.0;
-		  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_diff_ext,u_test_dS[i]);
- /* + */
- /* 		    ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_u[ebNE_kb], */
- /* 							       isDiffusiveFluxBoundary_u[ebNE_kb], */
- /* 							       eb_adjoint_sigma, */
- /* 							       u_ext, */
- /* 							       bc_u_ext, */
- /* 							       normal, */
- /* 							       sd_rowptr, */
- /* 							       sd_colind, */
- /* 							       a_ext, */
- /* 							       &u_grad_test_dS[i*nSpace]); */
+		  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_diff_ext,u_test_dS[i])+
+ 		    ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_u[ebNE_kb],
+ 							       isDiffusiveFluxBoundary_u[ebNE_kb],
+ 							       eb_adjoint_sigma,
+ 							       u_ext,
+ 							       bc_u_ext,
+ 							       normal,
+ 							       sd_rowptr,
+ 							       sd_colind,
+ 							       a_ext,
+ 							       &u_grad_test_dS[i*nSpace]);
 		}//i
 	    }//kb
 	  //
@@ -748,7 +749,8 @@ namespace proteus
 			   int* isDiffusiveFluxBoundary_u,
 			   double* ebqe_bc_flux_u_ext,
 			   int* csrColumnOffsets_eb_u_u,
-			   double* ebqe_penalty_ext)
+			   double* ebqe_penalty_ext,
+			   const double eb_adjoint_sigma)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -843,6 +845,7 @@ namespace proteus
 		dS,
 		u_test_dS[nDOF_test_element],
 		u_grad_trial_trace[nDOF_trial_element*nSpace],
+		u_grad_test_dS[nDOF_trial_element*nSpace],
 		normal[nSpace],x_ext,y_ext,z_ext,xt_ext,yt_ext,zt_ext,integralScaling,
 		//
 		G[nSpace*nSpace],G_dd_G,tr_G;
@@ -911,6 +914,8 @@ namespace proteus
 	      for (int j=0;j<nDOF_trial_element;j++)
 		{
 		  u_test_dS[j] = u_test_trace_ref[ebN_local_kb*nDOF_test_element+j]*dS;
+		  for (int I=0;I<nSpace;I++)
+		    u_grad_test_dS[j*nSpace+I] = u_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
 		}
 	      //
 	      //load the boundary values
@@ -969,6 +974,7 @@ namespace proteus
 									     u_trial_trace_ref[ebN_local_kb_j],
 									     &u_grad_trial_trace[j_nSpace],
 									     ebqe_penalty_ext[ebNE_kb]);
+		    
 		  //ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
 		}//j
 	      //
@@ -977,12 +983,23 @@ namespace proteus
 	      for (int i=0;i<nDOF_test_element;i++)
 		{
 		  register int eN_i = eN*nDOF_test_element+i;
+		  register int i_nSpace = i*nSpace;
 		  //register int ebNE_kb_i = ebNE_kb*nDOF_test_element+i;
 		  for (int j=0;j<nDOF_trial_element;j++)
 		    {
 		      register int ebN_i_j = ebN*4*nDOF_test_X_trial_element + i*nDOF_trial_element + j;
+		      register int ebN_local_kb_j=ebN_local_kb*nDOF_trial_element+j;
 
-		      globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i];
+		      globalJacobian[csrRowIndeces_u_u[eN_i] + csrColumnOffsets_eb_u_u[ebN_i_j]] += fluxJacobian_u_u[j]*u_test_dS[i]+
+			ck.ExteriorElementBoundaryDiffusionAdjointJacobian(isDOFBoundary_u[ebNE_kb],
+									   isDiffusiveFluxBoundary_u[ebNE_kb],
+									   eb_adjoint_sigma,
+									   u_trial_trace_ref[ebN_local_kb_j],
+									   normal,
+									   sd_rowptr,
+									   sd_colind,
+									   a_ext,
+									   &u_grad_test_dS[i_nSpace]);
 		    }//j
 		}//i
 	    }//kb
