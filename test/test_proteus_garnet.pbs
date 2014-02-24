@@ -7,12 +7,12 @@
 #PBS -j oe
 #PBS -l application=proteus
 
-export PROTEUS=/u/aron/proteus
-
-source /opt/modules/default/etc/modules.sh
-source ${PROTEUS}/proteus_env.sh
+source /opt/modules/default/init/bash
+module swap PrgEnv-pgi PrgEnv-gnu
+module unload xt-libsci
+module load acml
+source ${PROTEUS_PREFIX}/bin/proteus_env.sh
 PROTEUS_PYTHON=$(which python)
-#source ${PROTEUS}/envConfig/garnet.gnu.bash
 
 cd $PBS_O_WORKDIR
 export MPICH_RANK_REORDER_METHOD=2
@@ -48,7 +48,7 @@ aprun -n 16 -N 8 ${PROTEUS_PYTHON} test_meshPartitionFromTetgenFiles.py
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "testing poisson 32 way on 16 nodes"
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-#aprun -n 512 ${PROTEUS_PYTHON} test_meshPartitionFromTetgenFiles.py
+aprun -n 512 ${PROTEUS_PYTHON} test_meshPartitionFromTetgenFiles.py
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "done with test_proteus_garnet"
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
