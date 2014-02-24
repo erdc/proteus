@@ -13,14 +13,15 @@ try:
 except:
     raise RuntimeError("Missing or invalid config.py file. See proteusConfig for examples")
 
+
 ###to turn on debugging in c++
 ##\todo Finishing cleaning up setup.py/setup.cfg, config.py...
-from distutils import sysconfig
-cv = sysconfig.get_config_vars()
-cv["OPT"] = cv["OPT"].replace("-DNDEBUG","-DDEBUG")
-cv["OPT"] = cv["OPT"].replace("-O3","-g")
-cv["CFLAGS"] = cv["CFLAGS"].replace("-DNDEBUG","-DDEBUG")
-cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","-g")
+#from distutils import sysconfig
+#cv = sysconfig.get_config_vars()
+#cv["OPT"] = cv["OPT"].replace("-DNDEBUG","-DDEBUG")
+#cv["OPT"] = cv["OPT"].replace("-O3","-g")
+#cv["CFLAGS"] = cv["CFLAGS"].replace("-DNDEBUG","-DDEBUG")
+#cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","-g")
 
 setup(name='proteus',
       version='1.0.0',
@@ -36,7 +37,8 @@ setup(name='proteus',
 
                              sources = ['src/MeshAdaptPUMI.pyx',
                                         'src/MeshAdaptPUMI/MeshAdaptPUMI.cpp',
-                                        'src/MeshAdaptPUMI/MeshConverter.cpp'],
+                                        'src/MeshAdaptPUMI/MeshConverter.cpp',
+                                        'src/MeshAdaptPUMI/ParallelMeshConverter.cpp'],
                              define_macros=[('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H)],
                              include_dirs=[numpy.get_include(),'include',
                                            'src',

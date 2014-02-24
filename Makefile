@@ -58,7 +58,7 @@ profile: ${PROTEUS_PREFIX}/artifact.json
 
 ${PROTEUS_PREFIX}/artifact.json: stack hashdist
 	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop -k error -f ${PROTEUS_PREFIX}
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop -v -k error -f ${PROTEUS_PREFIX}
 	-cp ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.exe.link ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.link
 	@echo "Stack complete, test with: make check"
 	@echo "or: make parallel_check"
