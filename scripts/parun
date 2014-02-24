@@ -176,6 +176,12 @@ parser.add_option("-F","--generatePartitionedMeshFromFiles",
                   action="store_true",
                   help="""generate a parallel mesh directly from files (saves memory overhead of storing global mesh)""")
 
+parser.add_option("-S","--save_dof",
+                  default=False,
+                  dest="save_dof",
+                  action="store_true",
+                  help="""save the solution degrees of freedom after they have been calculated (for interactive plotting)""")
+
 (opts,args) = parser.parse_args()
 
 
