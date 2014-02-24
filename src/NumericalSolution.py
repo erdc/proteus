@@ -473,6 +473,11 @@ class  NS_base:#(HasTraits):
             if index in so.modelSpinUpList:
                 self.modelSpinUpList.append(model)
         log("Finished setting up models and solvers")
+        if self.opts.save_dof:
+            for m in self.modelList:
+                for lm in m.levelModelList:
+                    for ci in range(lm.coefficients.nc):
+                        lm.u[ci].dof_last = lm.u[ci].dof.copy()
         self.archiveFlag= so.archiveFlag
         log("Setting up SimTools for "+p.name)
         self.simOutputList = []
@@ -610,6 +615,9 @@ class  NS_base:#(HasTraits):
             for lm,lu,lr in zip(m.levelModelList,
                                 m.uList,
                                 m.rList):
+                if self.opts.save_dof:
+                    for ci in range(lm.coefficients.nc):
+                        lm.u[ci].dof_last[:] = lm.u[ci].dof
                 #calculate the coefficients, any explicit terms will be wrong
                 lm.timeTerm=False
                 lm.getResidual(lu,lr)
@@ -665,6 +673,11 @@ class  NS_base:#(HasTraits):
             log("==============================================================",level=0)
             log("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             log("==============================================================",level=0)
+            if self.opts.save_dof:
+                for m in self.modelList:
+                    for lm in m.levelModelList:
+                        for ci in range(lm.coefficients.nc):
+                            lm.u[ci].dof_last[:] = lm.u[ci].dof
             #
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                 self.systemStepController.stepExact_system(self.tn)
