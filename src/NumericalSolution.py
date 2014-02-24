@@ -290,13 +290,16 @@ class  NS_base:#(HasTraits):
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
             elif isinstance(p.domain,Domain.PUMIDomain):
+                import MeshAdaptPUMI 
+                p.domain.PUMIMesh = MeshAdaptPUMI.MeshAdaptPUMI()
                 mesh=MeshTools.TetrahedralMesh()
                 log("Reading mesh from PUMI files")
-                mesh.generateFromPUMI(p.domain.modelfile, p.domain.meshfile, parallel = comm.size() > 1)
+                mesh.readPUMIMesh(p.domain.PUMIMesh, p.domain.modelfile, p.domain.meshfile)
+                mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.numBC, p.domain.faceList, parallel = comm.size() > 1)
                 mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                              parallelPartitioningType=n.parallelPartitioningType)
-                log("Generating %i-level mesh from coarse PUMI mesh" % (n.nLevels,))
+                log("Generating %i-level mesh from PUMI mesh" % (n.nLevels,))
                 if comm.size()==1:
                   mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
                                                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
@@ -681,6 +684,21 @@ class  NS_base:#(HasTraits):
             log("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             log("==============================================================",level=0)
             #
+            
+            #implementation of PUMI adapt loop chitak
+            if isinstance(p.domain,Domain.PUMIDomain):
+#               if (self.tn%10==0):
+                  log("Entering PUMI adaptation loop",level=0)
+                  for m in self.modelList:
+                    for lm in m.levelModelList:
+                      for ci in range(lm.coefficients.nc):
+                        for nN in range(lm.mesh.nNodes_global):
+                           p.domain.PUMIMesh.TransferSolutionToPUMI(lm.u[ci].dof, ci)
+#                          print "dof: ", ci, lm.u[ci].dof[nN]
+                        
+#                  initiatePUMIAdaptLoop()
+#               copyDofsToPUMI
+
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                 self.systemStepController.stepExact_system(self.tn)
             while self.systemStepController.t_system_last < self.tn:
@@ -833,6 +851,16 @@ class  NS_base:#(HasTraits):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
                     if not self.opts.cacheArchive:
                         self.ar[index].sync()
+
+            #chitak temp check
+            for m in self.modelList:
+                  for lm in m.levelModelList:
+                     for ci in range(lm.coefficients.nc):
+#                        initializePUMIAdapt(lm.u, lm.coefficient.nc)
+                        for nN in range(lm.mesh.nNodes_global):
+                          r=1
+#                           print "dof: ", ci, lm.u[ci].dof[nN]
+                        
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
                 self.tCount+=1

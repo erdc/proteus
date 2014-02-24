@@ -2435,25 +2435,30 @@ class TetrahedralMesh(Mesh):
 
     def refine(self,oldMesh):
         return self.refineFreudenthalBey(oldMesh)
+     
+    def readPUMIMesh(self, PUMIMesh, modelfile='geom.smd', meshfile='geom.sms'):
+        import MeshAdaptPUMI
+        PUMIMesh.readGeomModel(modelfile)
+        PUMIMesh.readPUMIMesh(meshfile)
+        log('Done reading PUMI mesh',level=0)
 
-    def generateFromPUMI(self, modelfile='geom.smd', meshfile='geom.sms',parallel=False):
+    def convertFromPUMI(self, PUMIMesh, numBC, faceList, parallel=False):
         import cmeshTools
         import MeshAdaptPUMI
         import flcbdfWrappers
         import Comm
         comm = Comm.get()
-        MeshAdaptPUMI = MeshAdaptPUMI.MeshAdaptPUMI()
         self.cmesh = cmeshTools.CMesh()
         log(memory("Initializing CMesh"),level=4)
-        MeshAdaptPUMI.helloworld("Does hello world")
-        MeshAdaptPUMI.readGeomModel(modelfile)
-        MeshAdaptPUMI.readPUMIMesh(meshfile)
         if parallel:
           self.subdomainMesh=TetrahedralMesh()
           self.subdomainMesh.globalMesh = self
           self.subdomainMesh.cmesh = cmeshTools.CMesh()
+          PUMIMesh.ConstructFromParallelPUMIMesh(self.cmesh, self.subdomainMesh.cmesh)
+#          for i in range(len(faceList)):
+#            for j in range(len(faceList[i])):
+#              PUMIMesh.UpdateMaterialArrays(self.subdomainMesh.cmesh, i+1, faceList[i][j])
 
-          MeshAdaptPUMI.ConstructFromParallelPUMIMesh(self.cmesh, self.subdomainMesh.cmesh)
           cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
           cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
           self.buildFromC(self.cmesh)
@@ -2475,7 +2480,10 @@ class TetrahedralMesh(Mesh):
           self.subdomainMesh.nElementBoundaries_owned = self.elementBoundaryOffsets_subdomain_owned[comm.rank()+1] - self.elementBoundaryOffsets_subdomain_owned[comm.rank()]
           self.subdomainMesh.nEdges_owned = self.edgeOffsets_subdomain_owned[comm.rank()+1] - self.edgeOffsets_subdomain_owned[comm.rank()]
         else:
-          MeshAdaptPUMI.ConstructFromSerialPUMIMesh(self.cmesh) 
+          PUMIMesh.ConstructFromSerialPUMIMesh(self.cmesh) 
+          for i in range(len(faceList)):
+            for j in range(len(faceList[i])):
+              PUMIMesh.UpdateMaterialArrays(self.cmesh, i+1, faceList[i][j])
           self.buildFromC(self.cmesh)
         log(memory("calling buildFromC"),level=4)
         print "meshInfo says : \n", self.meshInfo()

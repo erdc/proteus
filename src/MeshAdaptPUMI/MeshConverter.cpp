@@ -2,6 +2,7 @@
 
 #include "MeshAdaptPUMI.h"
 #include "mesh.h"
+#include "modeler.h"
 
 const int DEFAULT_ELEMENT_MATERIAL=0;
 const int DEFAULT_NODE_MATERIAL=-1;
@@ -88,13 +89,13 @@ int MeshAdaptPUMIDrvr::ConstructNodes(Mesh& mesh) {
        nN_copy++;
     }
     
-    int VtxID = PUMI_MeshEnt_ID(meshEnt);
+    int vtxID = PUMI_MeshEnt_ID(meshEnt);
     double coords[3]={0.,0.,0.};
     double *xyz = coords;
     PUMI_MeshVtx_GetCoord(meshEnt, xyz);
     
     for(int i=0; i<3; i++) {
-      mesh.nodeArray[VtxID*3+i]= coords[i];
+      mesh.nodeArray[vtxID*3+i]= coords[i];
     }
     nN++;
     PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
@@ -142,8 +143,8 @@ int MeshAdaptPUMIDrvr::ConstructElements(Mesh& mesh) {
     PUMI_MeshEnt_GetAdj(meshEnt, PUMI_VERTEX, 0, vecVtx);
     int iNumVtx = vecVtx.size();
     for (int iVtx = 0; iVtx < iNumVtx; ++iVtx) {
-      int VtxID = PUMI_MeshEnt_ID(vecVtx[iVtx]);
-      mesh.elementNodesArray[elemID*mesh.nNodes_element+iVtx] = VtxID;  //populating the element nodes array 
+      int vtxID = PUMI_MeshEnt_ID(vecVtx[iVtx]);
+      mesh.elementNodesArray[elemID*mesh.nNodes_element+iVtx] = vtxID;  //populating the element nodes array 
 //      std::cerr << "Element nodes array: " << mesh.elementNodesArray[eN*mesh.nNodes_element+iVtx]<< "\n";
     }
     PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
@@ -198,8 +199,8 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh) {
     PUMI_MeshEnt_GetAdj(meshEnt, PUMI_VERTEX, 0, vecVtx);
     int iNumVtx = vecVtx.size();
     for (int iVtx = 0; iVtx < iNumVtx; ++iVtx) {
-      int VtxID = PUMI_MeshEnt_ID(vecVtx[iVtx]);
-      mesh.elementBoundaryNodesArray[faceID*mesh.nNodes_elementBoundary+iVtx] = VtxID;  //populating the element boundary (face) nodes array (3 is hardcode for tets)
+      int vtxID = PUMI_MeshEnt_ID(vecVtx[iVtx]);
+      mesh.elementBoundaryNodesArray[faceID*mesh.nNodes_elementBoundary+iVtx] = vtxID;  //populating the element boundary (face) nodes array (3 is hardcode for tets)
     }
 
 //get regions from adjacency
@@ -305,8 +306,8 @@ int MeshAdaptPUMIDrvr::ConstructEdges(Mesh& mesh) {
      PUMI_MeshEnt_GetAdj(meshEnt, PUMI_VERTEX, 0, vecVtx);
      int iNumVtx = vecVtx.size();
      for(int iVtx=0; iVtx<iNumVtx; iVtx++) {
-        int VtxID = PUMI_MeshEnt_ID(vecVtx[iVtx]);
-        mesh.edgeNodesArray[edgeID*2+iVtx] = VtxID; 
+        int vtxID = PUMI_MeshEnt_ID(vecVtx[iVtx]);
+        mesh.edgeNodesArray[edgeID*2+iVtx] = vtxID; 
      }
 
      PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
@@ -422,9 +423,42 @@ int MeshAdaptPUMIDrvr::ConstructMaterialArrays(Mesh& mesh) {
   PUMI_PartEntIter_Del(EntIt);
 
   return 0;
-
 }
 
+//function to update the material arrays for boundary conditions
+int MeshAdaptPUMIDrvr::UpdateMaterialArrays(Mesh& mesh, int bdryID, int geomTag) {
+ 
+    pPartEntIter EntIt;
+    pGeomEnt geomEnt;
+    pMeshEnt meshEnt;
 
+//    assert(!PUMI_Geom_FindEnt(PUMI_GModel, PUMI_FACE, geomTag, geomEnt));
+    geomEnt = GM_entityByTag(PUMI_GModel, PUMI_FACE, geomTag);
+//    printf("tag: %d bdryId %d\n", geomTag, bdryId);
+
+    PUMI_PartEntIter_InitRevClas(PUMI_Part, geomEnt, PUMI_FACE, EntIt);
+    int isEnd = 0;
+    int nG = 0;
+    //populate elementBoundary Material arrays
+    while (!PUMI_PartEntIter_GetNext(EntIt, meshEnt)) {
+       
+       int faceID = PUMI_MeshEnt_ID(meshEnt);
+//       printf("faceID: %d:\n", faceID);
+       mesh.elementBoundaryMaterialTypes[faceID] = bdryID;
+
+       std::vector<pMeshEnt> vecVtx;
+       PUMI_MeshEnt_GetAdj(meshEnt, PUMI_VERTEX, 0, vecVtx);
+       int iNumVtx = vecVtx.size();
+       for(int iVtx=0; iVtx<iNumVtx; iVtx++) {
+         int vtxID = PUMI_MeshEnt_ID(vecVtx[iVtx]);
+         mesh.nodeMaterialTypes[vtxID] = bdryID;
+       }
+       PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
+       nG++;
+    }
+    PUMI_PartEntIter_Del(EntIt);
+
+  return 0;
+}  
 
 

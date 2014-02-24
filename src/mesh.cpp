@@ -2858,10 +2858,10 @@ extern "C"
       {
 	mesh.nodeDiametersArray[nN] /= mesh.nodeSupportArray[nN];
       }
-    printf("volume = %12.5e \n",mesh.volume);
-    printf("h = %12.5e \n",mesh.h);
-    printf("hMin = %12.5e \n",mesh.hMin);
-    printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
+//    printf("volume = %12.5e \n",mesh.volume);
+//    printf("h = %12.5e \n",mesh.h);
+//    printf("hMin = %12.5e \n",mesh.hMin);
+//    printf("sigmaMax = %12.5e \n",mesh.sigmaMax);
     return 0;
   }
   inline double hexahedronVolume(int n0, int n1, int n2, int n3, int n4, int n5, int n6, int n7, const double* nodeArray)
