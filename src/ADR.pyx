@@ -42,7 +42,8 @@ cdef extern from "ADR.h" namespace "proteus":
                                double* ebqe_bc_u_ext,
                                int* isFluxBoundary_u,
                                double* ebqe_bc_flux_u_ext,
-                               double* ebqe_penalty)
+                               double* ebqe_penalty,
+                               double adjoint_sigma)
         void calculateJacobian(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -81,7 +82,8 @@ cdef extern from "ADR.h" namespace "proteus":
                                int* isFluxBoundary_u,
                                double* ebqe_bc_flux_u_ext,
                                int* csrColumnOffsets_eb_u_u,
-                               double* ebqe_penalty)
+                               double* ebqe_penalty,
+                               double adjoint_sigma)
     cppADR_base* newADR(int nSpaceIn,
                         int nQuadraturePoints_elementIn,
                         int nDOF_mesh_trial_elementIn,
@@ -147,7 +149,8 @@ cdef class ADR:
                          numpy.ndarray ebqe_bc_u_ext,
                          numpy.ndarray isFluxBoundary_u,
                          numpy.ndarray ebqe_bc_flux_u_ext,
-                         numpy.ndarray ebqe_penalty):
+                         numpy.ndarray ebqe_penalty,
+                         double adjoint_sigma):
        self.thisptr.calculateResidual(<double*> mesh_trial_ref.data,
                                        <double*> mesh_grad_trial_ref.data,
                                        <double*> mesh_dof.data,
@@ -185,7 +188,8 @@ cdef class ADR:
                                        <double*> ebqe_bc_u_ext.data,
                                        <int*> isFluxBoundary_u.data,
                                        <double*> ebqe_bc_flux_u_ext.data,
-                                       <double*> ebqe_penalty.data)
+                                       <double*> ebqe_penalty.data,
+                                       adjoint_sigma)
    def calculateJacobian(self,
                          numpy.ndarray mesh_trial_ref,
                          numpy.ndarray mesh_grad_trial_ref,
@@ -225,7 +229,8 @@ cdef class ADR:
                          numpy.ndarray isFluxBoundary_u,
                          numpy.ndarray ebqe_bc_flux_u_ext,
                          numpy.ndarray csrColumnOffsets_eb_u_u,
-                         numpy.ndarray ebqe_penalty):
+                         numpy.ndarray ebqe_penalty,
+                         double adjoint_sigma):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
        self.thisptr.calculateJacobian(<double*> mesh_trial_ref.data,
@@ -266,15 +271,34 @@ cdef class ADR:
                                        <int*> isFluxBoundary_u.data,
                                        <double*> ebqe_bc_flux_u_ext.data,
                                        <int*> csrColumnOffsets_eb_u_u.data,
-                                       <double*> ebqe_penalty.data)
+                                       <double*> ebqe_penalty.data,
+                                       adjoint_sigma)
 
-class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
+class NumericalFlux_IIPG(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
     def __init__(self,vt,getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions):
         proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior.__init__(self,vt,getPointwiseBoundaryConditions,
                                                                                         getAdvectiveFluxBoundaryConditions,
                                                                                         getDiffusiveFluxBoundaryConditions)
+
+class NumericalFlux_SIPG(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_SIPG_exterior):
+    def __init__(self,vt,getPointwiseBoundaryConditions,
+                 getAdvectiveFluxBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions):
+        proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_SIPG_exterior.__init__(self,vt,getPointwiseBoundaryConditions,
+                                                                                        getAdvectiveFluxBoundaryConditions,
+                                                                                        getDiffusiveFluxBoundaryConditions)
+
+class NumericalFlux_NIPG(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_NIPG_exterior):
+    def __init__(self,vt,getPointwiseBoundaryConditions,
+                 getAdvectiveFluxBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions):
+        proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_NIPG_exterior.__init__(self,vt,getPointwiseBoundaryConditions,
+                                                                                        getAdvectiveFluxBoundaryConditions,
+                                                                                        getDiffusiveFluxBoundaryConditions)
+
+NumericalFlux = NumericalFlux_SIPG
 
 class Coefficients(TC_base):
     from proteus.ctransportCoefficients import L2projectEvaluate
@@ -772,7 +796,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.ebqe[('u',0)],
             self.ebqe[('diffusiveFlux_bc_flag',0,0)],
             self.ebqe[('diffusiveFlux_bc',0,0)],
-            self.ebqe['penalty'])
+            self.ebqe['penalty'],
+            self.numericalFlux.boundaryAdjoint_sigma)
         log("Global residual",level=9,data=r)
         self.coefficients.massConservationError = fabs(globalSum(sum(r.flat[:self.mesh.nElements_owned])))
         log("   Mass Conservation Error",level=3,data=self.coefficients.massConservationError)
@@ -822,7 +847,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('diffusiveFlux_bc_flag',0,0)],
             self.ebqe[('diffusiveFlux_bc',0,0)],
             self.csrColumnOffsets_eb[(0,0)],
-            self.ebqe['penalty'])
+            self.ebqe['penalty'],
+            self.numericalFlux.boundaryAdjoint_sigma)
         log("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
