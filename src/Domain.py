@@ -697,6 +697,9 @@ class PUMIDomain(D_base):
     D_base.__init__(self,3,name=fileprefix)
     self.meshfile=fileprefix
     self.modelfile=modelfile
+    self.numBC=0
+    self.faceList=[]
+    self.PUMIMesh=None
 
 class PiecewiseLinearComplexDomain(D_base):
     """

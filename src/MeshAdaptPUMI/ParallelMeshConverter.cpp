@@ -184,10 +184,11 @@ int MeshAdaptPUMIDrvr::ConstructGlobalNumbering(Mesh &mesh) {
    for(int i=1; i<comm_size+1; i++) {
      numOffset[i] = numOffset[i-1]+nOwned[i-1];
    }
+/*   
    for(int i=0; i<comm_size; i++) {
       std::cout << "my rank: " << comm_rank <<" rank: " << i << " : Entity " << type << ": " << nOwned[i] << "\n";
    }
- 
+*/ 
    SetOwnerGlobNumbering(GlobNumberTag, static_cast<PUMI_EntType>(type), numOffset[comm_rank]);
    if(type!=3) 
      SetCopyGlobNumbering(GlobNumberTag, type);
@@ -228,7 +229,6 @@ int MeshAdaptPUMIDrvr::CalculateOwnedEnts(PUMI_EntType EntType, int &nOwnedEnt )
   int isEnd = 0;
   int eN = 0;
   
-  int nLocalOwnedNodes;
   while (!isEnd) {
     PUMI_PartEntIter_GetNext(EntIt, meshEnt);
 
@@ -304,7 +304,6 @@ int MeshAdaptPUMIDrvr::SetCopyGlobNumbering(pTag globNumTag, int EntType) {
   int eN = 0;
 
   PCU_Comm_Start (PCU_GLOBAL_METHOD);
-  int num_sent = 0, num_recvd = 0;
 //  std::pair<pMeshEnt, int>* msg_send = (std::pair<pMeshEnt, int>)malloc(sizeof(std::pair<pMeshEnt, int>));
   std::pair<pMeshEnt, int>* msg_send = new std::pair<pMeshEnt, int>;
   size_t msg_size = sizeof(std::pair<pMeshEnt,int>);

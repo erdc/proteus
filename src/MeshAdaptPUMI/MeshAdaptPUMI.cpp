@@ -1,14 +1,12 @@
 #include "pumi.h"
 #include "pumi_mesh.h"
 #include "pumi_geom.h"
-//#include "pumi_geom_geomsim.h"
+#include "pumi_geom_geomsim.h"
 //#include "MeshAdapt.h"
 
 #include "mpi.h"
 
 #include "MeshAdaptPUMI.h"
-
-//int PUMI_Geom_CreateFromAcisFile(pGModel & model,const char * fileName,const char * tagName);
 
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr() {
 }
@@ -26,12 +24,12 @@ int MeshAdaptPUMIDrvr::readGeomModel(const std::string &geom_sim_file)
 {
   PUMI_Init(MPI_COMM_WORLD);
 
-//  PUMI_Geom_RegisterGeomSim(); //commented out for erdc team
+  PUMI_Geom_RegisterGeomSim(); //commented out for erdc team
   FILE * pFile = fopen(geom_sim_file.c_str(), "r");
   if (pFile)
   {
     std::cerr<<"  saw simmetrix model: "<<geom_sim_file<<"\n";
-//    PUMI_Geom_LoadFromFile(PUMI_GModel,geom_sim_file.c_str()); //commented out for erdc team
+    PUMI_Geom_LoadFromFile(PUMI_GModel,geom_sim_file.c_str()); //commented out for erdc team
     fclose(pFile);
   }
   else
