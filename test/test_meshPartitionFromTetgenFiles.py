@@ -16,7 +16,7 @@ from proteus import Comm
 comm = Comm.get()
 Profiling.logLevel=7
 Profiling.verbose=True
-def test_c0p1():
+def test_c0p1(genMesh=True):
     import poisson_3d_tetgen_p
     import poisson_3d_tetgen_c0p1_n
     pList = [poisson_3d_tetgen_p]
@@ -29,6 +29,7 @@ def test_c0p1():
     opts.profile=True
     opts.generatePartitionedMeshFromFiles = True
     opts.gatherArchive=True
+    pList[0].genMesh=genMesh
     nList[0].linearSolver=default_n.KSP_petsc4py
     nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
     #nList[0].linearSolver=default_n.LU
@@ -37,7 +38,7 @@ def test_c0p1():
     ns.calculateSolution('poisson_3d_c0p1')
     assert(True)
 
-def test_c0p2():
+def test_c0p2(genMesh=True):
     import poisson_3d_tetgen_p
     import poisson_3d_tetgen_c0p2_n
     pList = [poisson_3d_tetgen_p]
@@ -50,6 +51,7 @@ def test_c0p2():
     opts.profile=True
     opts.generatePartitionedMeshFromFiles = True
     opts.gatherArchive=True
+    pList[0].genMesh=genMesh
     nList[0].linearSolver=default_n.KSP_petsc4py
     nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
@@ -89,8 +91,8 @@ def test_c0p2():
 #     assert(True)
 
 if __name__ == '__main__':
-    test_c0p1()
-    test_c0p2()
+    test_c0p1(genMesh=True)
+    test_c0p2(genMesh=False)
     Profiling.logEvent("Closing Log")
     try:
         Profiling.closeLog()
