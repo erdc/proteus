@@ -22,8 +22,12 @@ class MeshAdaptPUMIDrvr{
   //Functions to construct proteus mesh data structures
   int ConstructFromSerialPUMIMesh(Mesh& mesh);
   int ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh);
-
+ 
   int UpdateMaterialArrays(Mesh& mesh, int bdryID, int GeomTag);
+
+  //Fields
+  int TransferSolutionToPUMI(double* inArray, int nVar, int nN);
+  int TransferSolutionToProteus(double* outArray, int nVar, int nN);
   int MeshAdaptPUMI();
 
   private: 
@@ -34,8 +38,9 @@ class MeshAdaptPUMIDrvr{
   int comm_size, comm_rank;
   int elms_owned, faces_owned, edges_owned, vtx_owned;
 
-  pTag elementGlobNumberTag, nodeGlobNumberTag, faceGlobNumberTag, edgeGlobNumberTag;
   pTag GlobNumberTag;
+  pTag SolutionTag;
+  std::vector<std::vector<double> > SolutionVec;
 //  pMMeshAdaptPUMI MA_Drvr;
 
   int ConstructGlobalNumbering(Mesh& mesh);
