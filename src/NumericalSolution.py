@@ -689,12 +689,22 @@ class  NS_base:#(HasTraits):
             if isinstance(p.domain,Domain.PUMIDomain):
 #               if (self.tn%10==0):
                   log("Entering PUMI adaptation loop",level=0)
+                  ivar=0;
                   for m in self.modelList:
                     for lm in m.levelModelList:
-                      for ci in range(lm.coefficients.nc):
+                      for ci in range(lm.coefficients.nc):                        
+                        ivar=ivar+1
+                  tot_var=ivar
+                  soldof=numpy.zeros((ivar,lm.mesh.nNodes_global))
+                  ivar=-1
+                  for m in self.modelList:
+                    for lm in m.levelModelList:
+                      for ci in range(lm.coefficients.nc):                        
+                        ivar=ivar+1
                         for nN in range(lm.mesh.nNodes_global):
-                           p.domain.PUMIMesh.TransferSolutionToPUMI(lm.u[ci].dof, ci)
-#                          print "dof: ", ci, lm.u[ci].dof[nN]
+                           soldof[ivar][nN]=lm.u[ci].dof[nN]
+                           print "dof: ", soldof[ivar][nN]
+                  p.domain.PUMIMesh.TransferSolutionToPUMI(soldof)
                         
 #                  initiatePUMIAdaptLoop()
 #               copyDofsToPUMI

@@ -1,8 +1,8 @@
 # distutils: language = c++
 
 from cpython.ref cimport PyObject
-import numpy as np
 cimport numpy as np
+import numpy as np
 
 cdef extern from "mesh.h":
     struct Mesh:
@@ -23,7 +23,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int ConstructFromSerialPUMIMesh(Mesh&)
         int ConstructFromParallelPUMIMesh(Mesh&, Mesh&)
         int UpdateMaterialArrays(Mesh&, int, int)
-        int TransferSolutionToPUMI(double*, int)
+        int TransferSolutionToPUMI(double*, int, int)
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
@@ -50,5 +50,6 @@ cdef class MeshAdaptPUMI:
     def UpdateMaterialArrays(self, cmesh, bdryId, geomTag):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.UpdateMaterialArrays(cmesh_ptr.mesh, bdryId, geomTag)
-    def TransferSolutionToPUMI(self, np.ndarray[double,ndim=1,mode="c"] input not None, int index)
-        return self.thisptr.TransferSolutionToPUMI(&input[0], index)
+    def TransferSolutionToPUMI(self, np.ndarray[np.double_t,ndim=2,mode="c"] inArray):
+        inArray = np.ascontiguousarray(inArray)
+        return self.thisptr.TransferSolutionToPUMI(&inArray[0,0], inArray.shape[0], inArray.shape[1])
