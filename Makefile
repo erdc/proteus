@@ -64,13 +64,13 @@ stack:
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	python hashstack/scripts/setup_cygstack.py hashstack/scripts/cygstack.txt
-        touch cygwin_bootstrap.done
+	touch cygwin_bootstrap.done
 
 profile: ${PROTEUS_PREFIX}/artifact.json
 
 ${PROTEUS_PREFIX}/artifact.json: stack hashdist ${BOOTSTRAP}
 	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop -k error -f ${PROTEUS_PREFIX}
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop -k error -f ${PROTEUS_PREFIX} default.yaml
 	-cp ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.exe.link ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.link
 
 config.py:
