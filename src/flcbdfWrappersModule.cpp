@@ -1189,9 +1189,10 @@ DaetkPetscSys_size(DaetkPetscSys *self,
     //2. Extract subdomain element adjacency information could read
     //only the required portion from a file
     int nElements_subdomain = (elementOffsets_old[rank+1] - elementOffsets_old[rank]);
-    valarray<int> elementNeighborsOffsets_subdomain(nElements_subdomain+1),
-      elementNeighbors_subdomain(nElements_subdomain*mesh.nElementBoundaries_element);
-    valarray<int> weights_subdomain(nElements_subdomain*mesh.nElementBoundaries_element);
+    PetscInt *elementNeighborsOffsets_subdomain,*elementNeighbors_subdomain,*weights_subdomain;
+    PetscMalloc(sizeof(PetscInt)*(nElements_subdomain+1),&elementNeighborsOffsets_subdomain);
+    PetscMalloc(sizeof(PetscInt)*(nElements_subdomain*mesh.nElementBoundaries_element),&elementNeighbors_subdomain);
+    PetscMalloc(sizeof(PetscInt)*(nElements_subdomain*mesh.nElementBoundaries_element),&weights_subdomain);
     //this wastes a little space
     elementNeighborsOffsets_subdomain[0] = 0;
     for (int eN=0,offset=0; eN < nElements_subdomain; eN++)
@@ -1217,11 +1218,18 @@ DaetkPetscSys_size(DaetkPetscSys *self,
       }
     //3. Generate the  new partitiong using PETSc, this is done in parallel using parmetis
     Mat petscAdjacency;
-    MatCreateMPIAdj(Py_PETSC_COMM_WORLD, 
-                    nElements_subdomain, mesh.nElements_global, 
-                    &elementNeighborsOffsets_subdomain[0], &elementNeighbors_subdomain[0], 
-                    &weights_subdomain[0], 
-                    &petscAdjacency);
+//     MatCreateMPIAdj(Py_PETSC_COMM_WORLD, 
+//                     nElements_subdomain, mesh.nElements_global, 
+//                     &elementNeighborsOffsets_subdomain[0], &elementNeighbors_subdomain[0], 
+//                     &weights_subdomain[0], 
+//                     &petscAdjacency);
+    ierr = MatCreateMPIAdj(Py_PETSC_COMM_WORLD,
+			   nElements_subdomain, 
+			   mesh.nElements_global,
+			   elementNeighborsOffsets_subdomain, 
+			   elementNeighbors_subdomain,
+			   PETSC_NULL,//weights_subdomain,
+			   &petscAdjacency);CHKERRQ(ierr);
     MatPartitioning petscPartition;
     MatPartitioningCreate(Py_PETSC_COMM_WORLD,&petscPartition);
     MatPartitioningSetAdjacency(petscPartition,petscAdjacency);
@@ -1715,9 +1723,10 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   //2. Determine nodal connectivity on local processor, (local node star array)
   //
   int nNodes_subdomain = (nodeOffsets_old[rank+1] - nodeOffsets_old[rank]);
-  valarray<int> nodeNeighborsOffsets_subdomain(nNodes_subdomain+1),
-    nodeNeighbors_subdomain(nNodes_subdomain*mesh.max_nNodeNeighbors_node);
-  valarray<int> weights_subdomain(nNodes_subdomain*mesh.max_nNodeNeighbors_node);
+  PetscInt *nodeNeighborsOffsets_subdomain,*nodeNeighbors_subdomain,*weights_subdomain;
+  PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain+1),&nodeNeighborsOffsets_subdomain);
+  PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain*mesh.max_nNodeNeighbors_node),&nodeNeighbors_subdomain);
+  PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain*mesh.max_nNodeNeighbors_node),&weights_subdomain);
   nodeNeighborsOffsets_subdomain[0] = 0;
   for (int nN = 0,offset=0; nN < nNodes_subdomain; nN++)
     {
@@ -1737,11 +1746,18 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
   //3. Generate new nodal partition using PETSc interface
   //
   Mat petscAdjacency;
-  MatCreateMPIAdj(Py_PETSC_COMM_WORLD,
-		  nNodes_subdomain, mesh.nNodes_global,
-		  &nodeNeighborsOffsets_subdomain[0], &nodeNeighbors_subdomain[0],
-		  &weights_subdomain[0],//PETSC_NULL,//ignore weighting for now
-		  &petscAdjacency);
+//   MatCreateMPIAdj(Py_PETSC_COMM_WORLD,
+// 		  nNodes_subdomain, mesh.nNodes_global,
+// 		  &nodeNeighborsOffsets_subdomain[0], &nodeNeighbors_subdomain[0],
+// 		  &weights_subdomain[0],//PETSC_NULL,//ignore weighting for now
+// 		  &petscAdjacency);
+  ierr = MatCreateMPIAdj(Py_PETSC_COMM_WORLD,
+			 nNodes_subdomain, 
+			 mesh.nNodes_global,
+			 nodeNeighborsOffsets_subdomain, 
+			 nodeNeighbors_subdomain,
+			 PETSC_NULL,//weights_subdomain,
+			 &petscAdjacency);CHKERRQ(ierr);
   MatPartitioning petscPartition;
   MatPartitioningCreate(Py_PETSC_COMM_WORLD,&petscPartition);
   MatPartitioningSetAdjacency(petscPartition,petscAdjacency);
@@ -2628,9 +2644,11 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& newMesh, int nNodes_overlap)
 {
   using namespace std;
-  int ierr,size,rank;
-  ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);
-  ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);
+  PetscErrorCode ierr;
+  PetscMPIInt size,rank;
+  ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);CHKERRQ(ierr);
+  ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);CHKERRQ(ierr);
+
   /***********************************************************************
     partition domain based on the nodes without reading in the global mesh.
 
@@ -2786,9 +2804,17 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   for (int nN=0;nN<nNodes_subdomain_old;nN++)
     max_nNodeNeighbors_node=max(max_nNodeNeighbors_node,nodeStarOffsets[nN+1]-nodeStarOffsets[nN]);
   //build connectivity data structures for PETSc
-  valarray<int> nodeNeighborsOffsets_subdomain(nNodes_subdomain_old+1),
-    nodeNeighbors_subdomain(nNodes_subdomain_old*max_nNodeNeighbors_node);
-  valarray<int> weights_subdomain(nNodes_subdomain_old*max_nNodeNeighbors_node);
+  PetscBool isInitialized;
+  PetscInitialized(&isInitialized);
+  PetscInt *nodeNeighborsOffsets_subdomain,*nodeNeighbors_subdomain,*weights_subdomain,*vertex_weights_subdomain;
+  PetscReal *partition_weights;
+  PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain_old+1),&nodeNeighborsOffsets_subdomain);
+  PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain_old*max_nNodeNeighbors_node),&nodeNeighbors_subdomain);
+  PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain_old*max_nNodeNeighbors_node),&weights_subdomain);
+  PetscMalloc(sizeof(PetscInt)*(nNodes_subdomain_old),&vertex_weights_subdomain);
+  PetscMalloc(sizeof(PetscReal)*(size),&partition_weights);
+  for (int sd=0;sd<size;sd++)
+    partition_weights[sd] = 1.0/double(size);
   nodeNeighborsOffsets_subdomain[0] = 0;
   //I think we can simplify this now that nodeStarArray is local to the subdomain, could just use nodeStar instead of nodeStarArray
   for (int nN = 0,offset=0; nN < nNodes_subdomain_old; nN++)
@@ -2803,6 +2829,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       sort(&nodeNeighbors_subdomain[nodeNeighborsOffsets_subdomain[nN]],&nodeNeighbors_subdomain[nodeNeighborsOffsets_subdomain[nN+1]]);
       //weight nodes by size of star
       int weight= (nodeNeighborsOffsets_subdomain[nN+1] - nodeNeighborsOffsets_subdomain[nN]);
+      vertex_weights_subdomain[nN] = weight;
       for (int k=nodeNeighborsOffsets_subdomain[nN];k<nodeNeighborsOffsets_subdomain[nN+1];k++)
 	weights_subdomain[k] = weight;
     }
@@ -2810,22 +2837,23 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   //3. Generate new nodal partition using PETSc interface
   //
   Mat petscAdjacency;
-  MatCreateMPIAdj(Py_PETSC_COMM_WORLD,
-		  nNodes_subdomain_old, 
-		  nNodes_global,
-		  &nodeNeighborsOffsets_subdomain[0], 
-		  &nodeNeighbors_subdomain[0],
-		  &weights_subdomain[0],
-		  &petscAdjacency);
+  ierr = MatCreateMPIAdj(Py_PETSC_COMM_WORLD,
+			 nNodes_subdomain_old, 
+			 nNodes_global,
+			 nodeNeighborsOffsets_subdomain, 
+			 nodeNeighbors_subdomain,
+			 weights_subdomain,
+			 &petscAdjacency);CHKERRQ(ierr);
   MatPartitioning petscPartition;
-  MatPartitioningCreate(Py_PETSC_COMM_WORLD,&petscPartition);
-  MatPartitioningSetAdjacency(petscPartition,petscAdjacency);
-  MatPartitioningSetFromOptions(petscPartition);
-  
+  ierr = MatPartitioningCreate(Py_PETSC_COMM_WORLD,&petscPartition);CHKERRQ(ierr);
+  ierr = MatPartitioningSetAdjacency(petscPartition,petscAdjacency);CHKERRQ(ierr);
+  ierr = MatPartitioningSetFromOptions(petscPartition);CHKERRQ(ierr);
+  ierr = MatPartitioningSetVertexWeights(petscPartition,vertex_weights_subdomain);CHKERRQ(ierr);
+  ierr = MatPartitioningSetPartitionWeights(petscPartition,partition_weights);CHKERRQ(ierr);
   //get petsc index set that has the new subdomain number for each node
   IS nodePartitioningIS_new;
-  MatPartitioningApply(petscPartition,&nodePartitioningIS_new);
-  MatPartitioningDestroy(&petscPartition); //gets petscAdjacency too I believe
+  ierr = MatPartitioningApply(petscPartition,&nodePartitioningIS_new);CHKERRQ(ierr);
+  ierr = MatPartitioningDestroy(&petscPartition);CHKERRQ(ierr); //gets petscAdjacency too I believe
 
   //determine the number of nodes per subdomain in new partitioning
   valarray<int> nNodes_subdomain_new(size);
@@ -2835,7 +2863,9 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   valarray<int> nodeOffsets_new(size+1);
   nodeOffsets_new[0] = 0;
   for (int sdN = 0; sdN < size; sdN++)
-    nodeOffsets_new[sdN+1] = nodeOffsets_new[sdN] + nNodes_subdomain_new[sdN];
+    {
+      nodeOffsets_new[sdN+1] = nodeOffsets_new[sdN] + nNodes_subdomain_new[sdN];
+    }
 
   //get the new node numbers for nodes on this subdomain
   IS nodeNumberingIS_subdomain_old2new;
@@ -3995,7 +4025,6 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 
   ISDestroy(&edgeNumberingIS_subdomain_new2old);
   ISDestroy(&edgeNumberingIS_global_new2old);
-
   return 0;
 }
 
@@ -4049,9 +4078,10 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     //2. Extract subdomain element adjacency information could read
     //only the required portion from a file
     int nElements_subdomain = (elementOffsets_old[rank+1] - elementOffsets_old[rank]);
-    valarray<int> elementNeighborsOffsets_subdomain(nElements_subdomain+1),
-      elementNeighbors_subdomain(nElements_subdomain*mesh.nElementBoundaries_element);
-    valarray<int> weights_subdomain(nElements_subdomain*mesh.nElementBoundaries_element);
+    PetscInt *elementNeighborsOffsets_subdomain,*elementNeighbors_subdomain,*weights_subdomain;
+    PetscMalloc(sizeof(PetscInt)*(nElements_subdomain+1),&elementNeighborsOffsets_subdomain);
+    PetscMalloc(sizeof(PetscInt)*(nElements_subdomain*mesh.nElementBoundaries_element),&elementNeighbors_subdomain);
+    PetscMalloc(sizeof(PetscInt)*(nElements_subdomain*mesh.nElementBoundaries_element),&weights_subdomain);
     //this wastes a little space
     elementNeighborsOffsets_subdomain[0] = 0;
     for (int eN=0,offset=0; eN < nElements_subdomain; eN++)
@@ -4069,19 +4099,21 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 	int weight = (elementNeighborsOffsets_subdomain[eN+1] - elementNeighborsOffsets_subdomain[eN]);
 	for (int k=elementNeighborsOffsets_subdomain[eN];k<elementNeighborsOffsets_subdomain[eN+1];k++)
 	  weights_subdomain[k] = weight;
-        // for (int o = offsetStart; o < offset; o++)
-        //   {
-	//     std::cout<<elementNeighbors_subdomain[o]<<'\t';
-        //   }
-	// std::cout<<std::endl;
       }
     //3. Generate the  new partitiong using PETSc, this is done in parallel using parmetis
     Mat petscAdjacency;
-    MatCreateMPIAdj(Py_PETSC_COMM_WORLD, 
-                    nElements_subdomain, mesh.nElements_global, 
-                    &elementNeighborsOffsets_subdomain[0], &elementNeighbors_subdomain[0], 
-                    &weights_subdomain[0],//PETSC_NULL, 
-                    &petscAdjacency);
+//     MatCreateMPIAdj(Py_PETSC_COMM_WORLD, 
+//                     nElements_subdomain, mesh.nElements_global, 
+//                     &elementNeighborsOffsets_subdomain[0], &elementNeighbors_subdomain[0], 
+//                     &weights_subdomain[0],//PETSC_NULL, 
+//                     &petscAdjacency);
+  ierr = MatCreateMPIAdj(Py_PETSC_COMM_WORLD,
+			 nElements_subdomain, 
+			 mesh.nElements_global,
+			 elementNeighborsOffsets_subdomain, 
+			 elementNeighbors_subdomain,
+			 PETSC_NULL,//weights_subdomain,
+			 &petscAdjacency);CHKERRQ(ierr);
     MatPartitioning petscPartition;
     MatPartitioningCreate(Py_PETSC_COMM_WORLD,&petscPartition);
     MatPartitioningSetAdjacency(petscPartition,petscAdjacency);
