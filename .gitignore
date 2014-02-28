@@ -14,3 +14,13 @@ data*txt
 *.log.*
 install_*
 config_*
+build/
+config.py
+darwin/
+linux2/
+garnet.gnu/
+Cygwin
+mesh*
+src/subsurfaceTransportFunctions.c
+hashdist/
+stack/
