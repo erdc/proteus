@@ -12,6 +12,14 @@
 #   \brief A driver for both single and mult-model simulations
 #
 #
+try:
+    import  imp,sys,ctypes
+    config = imp.load_source('config', sys.prefix+'/proteusConfig/config.py')
+    mpi_preload_libs=[]
+    for lib in config.PROTEUS_PRELOAD_LIBS:
+        mpi_preload_libs.append(ctypes.CDLL(lib,mode=ctypes.RTLD_GLOBAL));
+except:
+    print "NO PROTEUS_PRELOAD_LIBS LOADED; CHECK config.py"
 import os
 import sys
 import socket
