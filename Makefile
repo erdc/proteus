@@ -33,6 +33,7 @@ PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
 	PYTHONPATH=${PROTEUS_PREFIX}/lib/python2.7/site-packages \
 	PROTEUS_PREFIX=${PROTEUS_PREFIX} \
 	PROTEUS=${PROTEUS} \
+	LD_LIBRARY_PATH="${PROTEUS_PREFIX}/lib:${LD_LIBRARY_PATH}" \
 	${PLATFORM_ENV}
 
 clean:
@@ -67,8 +68,19 @@ ${PROTEUS_PREFIX}/artifact.json: stack hashdist $(shell find stack -type f) ${BO
 	@echo "Building dependencies..."
 	@echo "************************"
 
+	@echo "Please include this information in all bug reports."
+	@echo "+======================================================================================================+"
+	@echo "PROTEUS          : ${PROTEUS}"
+	@echo "PROTEUS_ARCH     : ${PROTEUS_ARCH}"
+	@echo "PROTEUS_PREFIX   : ${PROTEUS_PREFIX}"
+	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}"
+	@echo "HASHDIST_VERSION : $$(cd hashdist; ${VER_CMD})"
+	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})"
+	@echo "+======================================================================================================+"
+	@echo ""
+
 	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop -k error default.yaml ${PROTEUS_PREFIX}
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop -f -k error default.yaml ${PROTEUS_PREFIX}
         # workaround hack on Cygwin for hashdist launcher to work correctly
 	-cp ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.exe.link ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.link
 
@@ -114,6 +126,16 @@ install: profile config.py $(shell find src -type f) $(wildcard *.py) proteus
 	@echo "************************"
 	@echo "Installing..."
 	@echo "************************"
+	@echo "Please include this information in all bug reports."
+	@echo "+======================================================================================================+"
+	@echo "PROTEUS          : ${PROTEUS}"
+	@echo "PROTEUS_ARCH     : ${PROTEUS_ARCH}"
+	@echo "PROTEUS_PREFIX   : ${PROTEUS_PREFIX}"
+	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}"
+	@echo "HASHDIST_VERSION : $$(cd hashdist; ${VER_CMD})"
+	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})"
+	@echo "+======================================================================================================+"
+	@echo ""
 	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppyx.py install
 	@echo "************************"
 	@echo "done installing cython extension modules"
@@ -132,7 +154,7 @@ install: profile config.py $(shell find src -type f) $(wildcard *.py) proteus
 	@echo "************************"
 	@echo "Installation complete"
 	@echo "************************"
-	@echo "\n"
+	@echo ""
 	@echo "Proteus was built using the following configuration:"
 	@echo "Please include this information in all bug reports."
 	@echo "+======================================================================================================+"
@@ -140,14 +162,17 @@ install: profile config.py $(shell find src -type f) $(wildcard *.py) proteus
 	@echo "PROTEUS_ARCH     : ${PROTEUS_ARCH}"
 	@echo "PROTEUS_PREFIX   : ${PROTEUS_PREFIX}"
 	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}"
-	@echo "HASHSTACK_VERSION: $$(cd hashdist; ${VER_CMD})"
-	@echo "HASHDIST_VERSION : $$(cd stack; ${VER_CMD})"
+	@echo "HASHDIST_VERSION : $$(cd hashdist; ${VER_CMD})"
+	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})"
 	@echo "+======================================================================================================+"
-	@echo "\n"
+	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}" > ${PROTEUS_PREFIX}/proteus.version
+	@echo "HASHDIST_VERSION : $$(cd hashdist; ${VER_CMD})" > ${PROTEUS_PREFIX}/hashdist.version
+	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})" > ${PROTEUS_PREFIX}/hashstack.version
+	@echo ""
 	@echo "You should now verify that the install succeeded by running:"
-	@echo "\n"
+	@echo ""
 	@echo "make check"
-	@echo "\n"
+	@echo ""
 
 check: install
 	@echo "************************"
