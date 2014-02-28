@@ -9,8 +9,8 @@ This module solves equations of the form
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
 """
-import ctypes
-libmpi = ctypes.CDLL('/opt/cray/mpt/6.0.0/gni/mpich2-gnu/48/lib/libmpich.so.2.0.0',mode=ctypes.RTLD_GLOBAL);
+import pdb
+pdb.set_trace()
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
