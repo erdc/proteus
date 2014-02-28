@@ -13,7 +13,7 @@
 #
 #
 import ctypes
-libmpi = ctypes.CDLL('/opt/cray/mpt/5.4.5/xt/gemini/mpich2-gnu/46/lib/libmpich_gnu.so',mode=ctypes.RTLD_GLOBAL);
+libmpi = ctypes.CDLL('/opt/cray/mpt/6.0.0/gni/mpich2-gnu/48/lib/libmpich.so.2.0.0',mode=ctypes.RTLD_GLOBAL);
 import os
 import sys
 import socket
@@ -172,6 +172,11 @@ parser.add_option("-B","--writeVelocityPostProcessor",
                   dest="writeVPP",
                   action="store_true",
                   help="""Use the last step in the archive as the intial condition and continue appending to the archive""")
+parser.add_option("-F","--generatePartitionedMeshFromFiles",
+                  default=False,
+                  dest="generatePartitionedMeshFromFiles",
+                  action="store_true",
+                  help="""generate a parallel mesh directly from files (saves memory overhead of storing global mesh)""")
 
 (opts,args) = parser.parse_args()
 
@@ -180,7 +185,7 @@ if opts.debug:
     pdb.set_trace()
 
 log = Profiling.logEvent
-
+logDir = None
 if opts.dataDir != '':
     if not os.path.exists(opts.dataDir):
     	try: 
@@ -188,7 +193,8 @@ if opts.dataDir != '':
         except os.error:
              print "Failed to create: " + opts.dataDir 
              opts.dataDir=''
-
+    logDir = opts.dataDir
+    
 log("Initializing MPI")
 if opts.petscOptions != None:
     petsc_argv = sys.argv[:1]+opts.petscOptions.split()
@@ -300,9 +306,9 @@ if sList[0].logAllProcesses or opts.logAllProcesses:
 Profiling.flushBuffer=sList[0].flushBuffer
 if opts.logLevel > 0:
     if len(args[0].split(' ')) == 1:
-        Profiling.openLog(args[0].split('.')[0]+".log",opts.logLevel)
+        Profiling.openLog(args[0].split('.')[0]+".log",opts.logLevel,logLocation=logDir)
     else:
-        Profiling.openLog(args[0][-3:]+".log",opts.logLevel)
+        Profiling.openLog(args[0][-3:]+".log",opts.logLevel,logLocation=logDir)
 if opts.batchFileName != "":
     log("Attaching input stream to batch file = "+opts.batchFileName)
     inputStream = open(opts.batchFileName,'r')
