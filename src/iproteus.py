@@ -13,7 +13,9 @@
 #
 #
 try:
-    import  imp,sys,ctypes
+    import  imp,sys,ctypes,os
+    if not os.getenv('PROTEUS_PREFIX'):
+        os.environ['PROTEUS_PREFIX'] = sys.prefix
     config = imp.load_source('config', sys.prefix+'/proteusConfig/config.py')
     mpi_preload_libs=[]
     for lib in config.PROTEUS_PRELOAD_LIBS:
