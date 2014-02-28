@@ -5,10 +5,12 @@ all: install
 #We use environment variables from the invoking process if they have been set,
 #otherwise we try our best to determine them automatically.
 
+SHELL=/usr/bin/env bash
+
 PROTEUS ?= $(shell pwd)
 VER_CMD = git log -1 --pretty="%H"
 # shell hack for now to automatically detect Garnet front-end nodes
-PROTEUS_ARCH ?= $(shell [ $$(hostname) = garnet* ] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 PROTEUS_VERSION := $(shell ${VER_CMD})
