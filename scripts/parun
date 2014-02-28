@@ -20,7 +20,6 @@ try:
         mpi_preload_libs.append(ctypes.CDLL(lib,mode=ctypes.RTLD_GLOBAL));
 except:
     print "NO PROTEUS_PRELOAD_LIBS LOADED; CHECK config.py"
-    pass
 import os
 import sys
 import socket
