@@ -12,8 +12,14 @@
 #   \brief A driver for both single and mult-model simulations
 #
 #
-import ctypes
-libmpi = ctypes.CDLL('/opt/cray/mpt/6.0.0/gni/mpich2-gnu/48/lib/libmpich.so.2.0.0',mode=ctypes.RTLD_GLOBAL);
+try:
+    import  imp,sys,ctypes
+    config = imp.load_source('config', sys.prefix+'/proteusConfig/config.py')
+    mpi_preload_libs=[]
+    for lib in config.PROTEUS_PRELOAD_LIBS:
+        mpi_preload_libs.append(ctypes.CDLL(lib,mode=ctypes.RTLD_GLOBAL));
+except:
+    print "NO PROTEUS_PRELOAD_LIBS LOADED; CHECK config.py"
 import os
 import sys
 import socket
