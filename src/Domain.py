@@ -700,6 +700,7 @@ class PUMIDomain(D_base):
     self.numBC=0
     self.faceList=[]
     self.PUMIMesh=None
+    self.initFlag=False
 
 class PiecewiseLinearComplexDomain(D_base):
     """

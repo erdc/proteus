@@ -290,11 +290,9 @@ class  NS_base:#(HasTraits):
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
             elif isinstance(p.domain,Domain.PUMIDomain):
-                import MeshAdaptPUMI 
-                p.domain.PUMIMesh = MeshAdaptPUMI.MeshAdaptPUMI()
+                #The mesh is read in from the driver python file
                 mesh=MeshTools.TetrahedralMesh()
-                log("Reading mesh from PUMI files")
-                mesh.readPUMIMesh(p.domain.PUMIMesh, p.domain.modelfile, p.domain.meshfile)
+                log("Converting PUMI mesh to Proteus")
                 mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.numBC, p.domain.faceList, parallel = comm.size() > 1)
                 mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
@@ -564,6 +562,27 @@ class  NS_base:#(HasTraits):
             else:
                 pass
         
+        #chitak, override the initial conditions
+        if (isinstance(p.domain, Domain.PUMIDomain) and p.domain.initFlag==True):
+          log("Setting initial conditions from PUMI interpolated solution")
+          ivar=0;
+          for m in self.modelList:
+            for lm in m.levelModelList:
+               for ci in range(lm.coefficients.nc):                        
+                       ivar=ivar+1
+          tot_var=ivar
+          soldof=numpy.zeros((tot_var,lm.mesh.nNodes_global))
+          p.domain.PUMIMesh.TransferSolutionToProteus(soldof)
+          ivar=-1
+          for m in self.modelList:
+            for lm in m.levelModelList:
+               for ci in range(lm.coefficients.nc):                       
+                 ivar=ivar+1
+                 for nN in range(lm.mesh.nNodes_global):
+                    lm.u[ci].dof[nN]=soldof[ivar,nN]
+               lm.setFreeDOF(m.uList[0])     
+               lm.calculateSolutionAtQuadrature()
+        
         log("Attaching models and running spin-up step if requested",level=3)
         for p,n,m,simOutput in zip(self.pList,self.nList,self.modelList,self.simOutputList):
             m.attachModels(self.modelList)
@@ -684,31 +703,6 @@ class  NS_base:#(HasTraits):
             log("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
             log("==============================================================",level=0)
             #
-            
-            #implementation of PUMI adapt loop chitak
-            if isinstance(p.domain,Domain.PUMIDomain):
-#               if (self.tn%10==0):
-                  log("Entering PUMI adaptation loop",level=0)
-                  ivar=0;
-                  for m in self.modelList:
-                    for lm in m.levelModelList:
-                      for ci in range(lm.coefficients.nc):                        
-                        ivar=ivar+1
-                  tot_var=ivar
-                  soldof=numpy.zeros((ivar,lm.mesh.nNodes_global))
-                  ivar=-1
-                  for m in self.modelList:
-                    for lm in m.levelModelList:
-                      for ci in range(lm.coefficients.nc):                        
-                        ivar=ivar+1
-                        for nN in range(lm.mesh.nNodes_global):
-                           soldof[ivar][nN]=lm.u[ci].dof[nN]
-                           print "dof: ", soldof[ivar][nN]
-                  p.domain.PUMIMesh.TransferSolutionToPUMI(soldof)
-                        
-#                  initiatePUMIAdaptLoop()
-#               copyDofsToPUMI
-
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                 self.systemStepController.stepExact_system(self.tn)
             while self.systemStepController.t_system_last < self.tn:
@@ -862,14 +856,6 @@ class  NS_base:#(HasTraits):
                     if not self.opts.cacheArchive:
                         self.ar[index].sync()
 
-            #chitak temp check
-            for m in self.modelList:
-                  for lm in m.levelModelList:
-                     for ci in range(lm.coefficients.nc):
-#                        initializePUMIAdapt(lm.u, lm.coefficient.nc)
-                        for nN in range(lm.mesh.nNodes_global):
-                          r=1
-#                           print "dof: ", ci, lm.u[ci].dof[nN]
                         
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
@@ -881,6 +867,30 @@ class  NS_base:#(HasTraits):
             if systemStepFailed:
                 break
         log("Finished calculating solution",level=3)
+
+        #chitak Adapt the mesh and transfer the solution
+        if isinstance(p.domain, Domain.PUMIDomain):
+          ivar=0;
+          for m in self.modelList:
+             for lm in m.levelModelList:
+                  for ci in range(lm.coefficients.nc):                        
+                          ivar=ivar+1
+          tot_var=ivar
+          soldof=numpy.zeros((ivar,lm.mesh.nNodes_global))
+          ivar=-1
+          for m in self.modelList:
+             for lm in m.levelModelList:
+                  for ci in range(lm.coefficients.nc):                        
+                          ivar=ivar+1
+                          for nN in range(lm.mesh.nNodes_global):
+                                soldof[ivar][nN]=lm.u[ci].dof[nN]
+
+          p.domain.PUMIMesh.TransferSolutionToPUMI(soldof)
+          p.domain.PUMIMesh.CalculateSizeField()
+          p.domain.PUMIMesh.AdaptPUMIMesh()
+          p.domain.initFlag=True #For next step to take initial conditions from solution
+          ##chitak end Adapt
+
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)
             self.closeArchive(model,index)

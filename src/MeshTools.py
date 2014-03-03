@@ -5,6 +5,7 @@ from EGeometry import *
 import numpy
 import array
 from Archiver import *
+from LinearAlgebraTools import ParVec_petsc4py
 
 from Profiling import logEvent,memory
 
@@ -495,6 +496,13 @@ class Mesh:
         log("Number of Subdomain Edges = "+str(self.subdomainMesh.nEdges_global))
         comm.barrier()
         log("Finished partitioning")
+        par_nodeDiametersArray = ParVec_petsc4py(self.subdomainMesh.nodeDiametersArray,
+                                                 bs=1,
+                                                 n=self.subdomainMesh.nNodes_owned,
+                                                 N=self.nNodes_global,
+                                                 nghosts=self.subdomainMesh.nNodes_global - self.subdomainMesh.nNodes_owned,
+                                                 subdomain2global=self.nodeNumbering_subdomain2global)
+        par_nodeDiametersArray.scatter_forward_insert()
         # comm.beginSequential()
         # from Profiling import memory
         # memory()
@@ -565,6 +573,13 @@ class Mesh:
         log("Number of Subdomain Edges = "+str(self.subdomainMesh.nEdges_global))
         comm.barrier()
         log("Finished partitioning")
+        par_nodeDiametersArray = ParVec_petsc4py(self.subdomainMesh.nodeDiametersArray,
+                                                 bs=1,
+                                                 n=self.subdomainMesh.nNodes_owned,
+                                                 N=self.nNodes_global,
+                                                 nghosts=self.subdomainMesh.nNodes_global - self.subdomainMesh.nNodes_owned,
+                                                 subdomain2global=self.nodeNumbering_subdomain2global)
+        par_nodeDiametersArray.scatter_forward_insert()
         # comm.beginSequential()
         # from Profiling import memory
         # memory()
@@ -2436,12 +2451,6 @@ class TetrahedralMesh(Mesh):
     def refine(self,oldMesh):
         return self.refineFreudenthalBey(oldMesh)
      
-    def readPUMIMesh(self, PUMIMesh, modelfile='geom.smd', meshfile='geom.sms'):
-        import MeshAdaptPUMI
-        PUMIMesh.readGeomModel(modelfile)
-        PUMIMesh.readPUMIMesh(meshfile)
-        log('Done reading PUMI mesh',level=0)
-
     def convertFromPUMI(self, PUMIMesh, numBC, faceList, parallel=False):
         import cmeshTools
         import MeshAdaptPUMI
@@ -2455,9 +2464,9 @@ class TetrahedralMesh(Mesh):
           self.subdomainMesh.globalMesh = self
           self.subdomainMesh.cmesh = cmeshTools.CMesh()
           PUMIMesh.ConstructFromParallelPUMIMesh(self.cmesh, self.subdomainMesh.cmesh)
-#          for i in range(len(faceList)):
-#            for j in range(len(faceList[i])):
-#              PUMIMesh.UpdateMaterialArrays(self.subdomainMesh.cmesh, i+1, faceList[i][j])
+          for i in range(len(faceList)):
+            for j in range(len(faceList[i])):
+              PUMIMesh.UpdateMaterialArrays(self.subdomainMesh.cmesh, i+1, faceList[i][j])
 
           cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
           cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
@@ -2479,6 +2488,13 @@ class TetrahedralMesh(Mesh):
           self.subdomainMesh.nNodes_owned = self.nodeOffsets_subdomain_owned[comm.rank()+1] - self.nodeOffsets_subdomain_owned[comm.rank()]
           self.subdomainMesh.nElementBoundaries_owned = self.elementBoundaryOffsets_subdomain_owned[comm.rank()+1] - self.elementBoundaryOffsets_subdomain_owned[comm.rank()]
           self.subdomainMesh.nEdges_owned = self.edgeOffsets_subdomain_owned[comm.rank()+1] - self.edgeOffsets_subdomain_owned[comm.rank()]
+          par_nodeDiametersArray = ParVec_petsc4py(self.subdomainMesh.nodeDiametersArray,
+                                                 bs=1,
+                                                 n=self.subdomainMesh.nNodes_owned,
+                                                 N=self.nNodes_global,
+                                                 nghosts=self.subdomainMesh.nNodes_global - self.subdomainMesh.nNodes_owned,
+                                                 subdomain2global=self.nodeNumbering_subdomain2global)
+          par_nodeDiametersArray.scatter_forward_insert()
         else:
           PUMIMesh.ConstructFromSerialPUMIMesh(self.cmesh) 
           for i in range(len(faceList)):
