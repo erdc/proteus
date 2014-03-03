@@ -18,6 +18,7 @@ int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
 
   mesh.subdomainp = &subdomain_mesh;
   std::cout << "Constructing global data structures\n"; 
+  
   int numGlobElem;
   PUMI_Mesh_GetNumEnt(PUMI_MeshInstance, PUMI_REGION, PUMI_ALLTOPO, &numGlobElem);
   mesh.nElements_global = numGlobElem;
@@ -76,9 +77,8 @@ int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   ConstructElements(*mesh.subdomainp);
   ConstructBoundaries(*mesh.subdomainp);
   ConstructEdges(*mesh.subdomainp);
-  ConstructGlobalStructures(mesh); 
-
   ConstructMaterialArrays(*mesh.subdomainp);
+  ConstructGlobalStructures(mesh); 
 
    //chitak: debug
 /*  
@@ -106,17 +106,16 @@ int MeshAdaptPUMIDrvr::ConstructGlobalStructures(Mesh &mesh) {
   mesh.elementBoundaryNumbering_subdomain2global = new int[mesh.subdomainp->nElementBoundaries_global];
   mesh.nodeNumbering_subdomain2global = new int[mesh.subdomainp->nNodes_global];
   mesh.edgeNumbering_subdomain2global = new int[mesh.subdomainp->nEdges_global];
-
+  
   int partDim;
   PUMI_Part_GetDim(PUMI_Part, &partDim);
   for (int type=partDim; type>-1; type--) {
-    
     int* temp_subdomain2global;
     if(type==3) temp_subdomain2global = mesh.elementNumbering_subdomain2global;
     if(type==2) temp_subdomain2global = mesh.elementBoundaryNumbering_subdomain2global;
     if(type==1) temp_subdomain2global = mesh.edgeNumbering_subdomain2global;
-    if(type==1) temp_subdomain2global = mesh.nodeNumbering_subdomain2global;
-    
+    if(type==0) temp_subdomain2global = mesh.nodeNumbering_subdomain2global;
+
     int isEnd = 0;
     int eN = 0;
     pPartEntIter EntIt;
@@ -124,14 +123,15 @@ int MeshAdaptPUMIDrvr::ConstructGlobalStructures(Mesh &mesh) {
     PUMI_PartEntIter_Init (PUMI_Part, type, PUMI_ALLTOPO, EntIt);
     while (!isEnd) {
       PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-
-      int entID = PUMI_MeshEnt_ID(meshEnt);
+      
       int globID;
       PUMI_MeshEnt_GetIntTag(PUMI_MeshInstance, meshEnt, GlobNumberTag, &globID);
       
+      int entID = PUMI_MeshEnt_ID(meshEnt);
       temp_subdomain2global[entID] = globID;
 
       PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
+      eN++;
     } //region loop
     PUMI_PartEntIter_Del(EntIt);
   } //type
@@ -147,7 +147,7 @@ int MeshAdaptPUMIDrvr::ConstructGlobalNumbering(Mesh &mesh) {
  mesh.elementBoundaryOffsets_subdomain_owned = new int[comm_size+1];
  mesh.edgeOffsets_subdomain_owned = new int[comm_size+1];
  mesh.nodeOffsets_subdomain_owned = new int[comm_size+1];
-
+ 
  int partDim;
  PUMI_Part_GetDim(PUMI_Part, &partDim);
  for (int type=partDim; type>-1; type--) {
@@ -279,9 +279,7 @@ int MeshAdaptPUMIDrvr::SetOwnerGlobNumbering(pTag globNumTag, PUMI_EntType EntTy
     int owned;
     PUMI_MeshEnt_IsOwned(meshEnt, PUMI_Part, &owned);
     if(owned) {
-//       locGlobNumbering[numOffset+eN] = eN; //global element numbering 
        PUMI_MeshEnt_SetIntTag(PUMI_MeshInstance, meshEnt, globNumTag, numOffset+eN);
-//       PUMI_MeshEnt_SetID(meshEnt, numOffset+eN);
        eN++;
     }
 

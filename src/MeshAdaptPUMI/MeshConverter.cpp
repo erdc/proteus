@@ -13,8 +13,6 @@ const int EXTERIOR_ELEMENT_BOUNDARY_MATERIAL=1;
 
 int MeshAdaptPUMIDrvr::ConstructFromSerialPUMIMesh(Mesh& mesh) {
 
-//  Mesh mesh = MESH(cmesh);
-
 //Current impementation is for serial only. Need to resolve things with Proteus developers for parallel implementation  
   std::cout << "Constructing global data structures\n"; 
   int numGlobElem;
@@ -287,7 +285,7 @@ int MeshAdaptPUMIDrvr::ConstructEdges(Mesh& mesh) {
   PUMI_PartEntIter_Init (PUMI_Part, PUMI_EDGE, PUMI_ALLTOPO, EntIt);
   int isEnd = 0;
   int nE = 0; int nE_owned = 0;
-  int nE_copy = 0;
+  int nE_copy = edges_owned;
   while (!isEnd) {
      PUMI_PartEntIter_GetNext(EntIt, meshEnt);
      
@@ -385,12 +383,11 @@ int MeshAdaptPUMIDrvr::ConstructMaterialArrays(Mesh& mesh) {
   int isEnd = 0;
   int nF = 0;
   //populate elementBoundary Material arrays
-  while (!isEnd) {
-     PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-     
-     int faceID = PUMI_MeshEnt_ID(meshEnt); 
+  while (!PUMI_PartEntIter_GetNext(EntIt, meshEnt)) {
+      
      int geomType; 
      PUMI_MeshEnt_GetGeomClasType (meshEnt, &geomType);
+     int faceID = PUMI_MeshEnt_ID(meshEnt); 
         
      if(geomType==2)
         mesh.elementBoundaryMaterialTypes[faceID] = EXTERIOR_ELEMENT_BOUNDARY_MATERIAL;
@@ -432,9 +429,7 @@ int MeshAdaptPUMIDrvr::UpdateMaterialArrays(Mesh& mesh, int bdryID, int geomTag)
     pGeomEnt geomEnt;
     pMeshEnt meshEnt;
 
-//    assert(!PUMI_Geom_FindEnt(PUMI_GModel, PUMI_FACE, geomTag, geomEnt));
     geomEnt = GM_entityByTag(PUMI_GModel, PUMI_FACE, geomTag);
-//    printf("tag: %d bdryId %d\n", geomTag, bdryId);
 
     PUMI_PartEntIter_InitRevClas(PUMI_Part, geomEnt, PUMI_FACE, EntIt);
     int isEnd = 0;
@@ -443,7 +438,6 @@ int MeshAdaptPUMIDrvr::UpdateMaterialArrays(Mesh& mesh, int bdryID, int geomTag)
     while (!PUMI_PartEntIter_GetNext(EntIt, meshEnt)) {
        
        int faceID = PUMI_MeshEnt_ID(meshEnt);
-//       printf("faceID: %d:\n", faceID);
        mesh.elementBoundaryMaterialTypes[faceID] = bdryID;
 
        std::vector<pMeshEnt> vecVtx;

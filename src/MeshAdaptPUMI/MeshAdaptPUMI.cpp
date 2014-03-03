@@ -2,13 +2,16 @@
 #include "pumi_mesh.h"
 #include "pumi_geom.h"
 #include "pumi_geom_geomsim.h"
-//#include "MeshAdapt.h"
+#include "MeshAdapt.h"
+#include "MA.h"
+#include "mMeshIO.h"
 
 #include "mpi.h"
 
 #include "MeshAdaptPUMI.h"
 
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr() {
+  numVar=0;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr() {
@@ -74,26 +77,25 @@ int MeshAdaptPUMIDrvr::readPUMIMesh(const char* SMS_fileName){
     exit(0);
   }
   std::cout<<" loading PUMI mesh from files\n";
-
+  
   int err = PUMI_Mesh_GetPart(PUMI_MeshInstance, 0, PUMI_Part);
 
   comm_size = SCUTIL_CommSize();
   comm_rank = SCUTIL_CommRank();
-
   
   return 0;
 }
 
-int MeshAdaptPUMIDrvr::MeshAdaptPUMI() {
+int MeshAdaptPUMIDrvr::AdaptPUMIMesh() {
 
   int return_verify;
 
   PUMI_Mesh_Verify(PUMI_MeshInstance,&return_verify);
-  if(return_verify){ std::cerr << "FMDB verify completed succesfully!\n"; } else { exit(0); }
-
-//  MA_NewMeshMeshAdaptPUMIDrvr_ModelType(MA_Drvr, PUMI_MeshInstance, Application, 2); // third param (0,1,2 : no snapping, non-parametric, parametric)
+  if(return_verify){ std::cerr << "PUMI verify completed succesfully!\n"; } else { exit(0); }
+  
+  pMAdapt MA_Drvr;
+  MA_NewMeshAdaptDrvr_ModelType(MA_Drvr, PUMI_MeshInstance, Application, 2); // third param (0,1,2 : no snapping, non-parametric, parametric)
  // set up size field on verts below
-//  PUMI_Mesh_FindTag(PUMI_MeshInstance, "NodeMeshSize", PUMI_SFTag); //todo: replace tags with apf
   double dVtxSize;
   pPartEntIter EntIt;
   pMeshEnt meshEnt;
@@ -104,10 +106,10 @@ int MeshAdaptPUMIDrvr::MeshAdaptPUMI() {
   while (!isEnd)
   {
     PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-//    if(SCUtil_SUCCESS == PUMI_MeshEnt_GetDblTag (PUMI_MeshInstance, meshEnt, PUMI_SFTag, &dVtxSize)){ todo: replace with apf
-//      MA_SetIsoVtxSize(MA_Drvr, (pVertex)meshEnt, dVtxSize);   // sets size field from tag data
+    if(SCUtil_SUCCESS == PUMI_MeshEnt_GetDblTag (PUMI_MeshInstance, meshEnt, SFTag, &dVtxSize)) {
+      MA_SetIsoVtxSize(MA_Drvr, (pVertex)meshEnt, dVtxSize);   // sets size field from tag data
       sizeCounter++;
-//    }
+    }
     PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
   }
   std::cerr<<" - set size field for "<<sizeCounter<<" vertices\n";
@@ -115,22 +117,34 @@ int MeshAdaptPUMIDrvr::MeshAdaptPUMI() {
   PUMI_PartEntIter_Del(EntIt);
   isEnd = 0;
 
+  DeleteMeshEntIDs();
 //  CBFunction CB = 0;
-//  CBFunction CB = TransferTopSCOREC;
+  CBFunction CB = TransferTopSCOREC;
 
-//  MA_SetCB(MA_Drvr, CB, (void*)this);   // called during mesh modification (see MA.h in meshMeshAdaptPUMI)
+  MA_SetCB(MA_Drvr, CB, (void*)this);   // called during mesh modification (see MA.h in meshMeshAdaptPUMI)
 
-  /// MeshAdaptPUMI the mesh
-//  MA_SetNumIt(MA_Drvr, 3);    // limits the number of iterations of meshMeshAdaptPUMI (splits, collapses, moves...)
+  /// Adapt the mesh
+  MA_SetNumIt(MA_Drvr, 3);    // limits the number of iterations of meshMeshAdaptPUMI (splits, collapses, moves...)
 
-//  MA_MeshAdaptPUMI(MA_Drvr);  // does the MeshAdaptPUMI
+  MA_Adapt(MA_Drvr);  // does the MeshAdaptPUMI
 
-//  MA_Del(MA_Drvr);  // deletes the meshMeshAdaptPUMI object
+  MA_Del(MA_Drvr);  // deletes the meshMeshAdaptPUMI object
 
   SCUTIL_Sync();
-
+  
+  PUMI_Mesh_DelTag (PUMI_MeshInstance, SFTag, 1);
+  if(comm_size>1)
+     PUMI_Mesh_DelTag (PUMI_MeshInstance, GlobNumberTag, 1);
+  
   PUMI_Mesh_Verify(PUMI_MeshInstance,&return_verify);
-  if(return_verify){ std::cerr << "FMDB verify completed succesfully!\n"; }
+
+  //partition the mesh
+  PUMI_Mesh_SetNumPart(PUMI_MeshInstance, comm_size);
+//  PUMI_Mesh_SetPtnParam(mesh, method, approach, imbTol, dbgLvl);
+//  PUMI_Mesh_GlobPtn(PUMI_MeshInstance);
+
+  exportMeshToVTK(PUMI_MeshInstance, "pumi_adapt.vtk");
+  if(return_verify){ std::cerr << "Adapted PUMI mesh verify completed succesfully!\n"; }
 
   return 0;
 }
