@@ -5,6 +5,9 @@
 #include "pumi_geom.h"
 #include "mesh.h"
 #include "cmeshToolsModule.h"
+#include "MeshTools.h"
+
+void TransferTopSCOREC(pPList oldEnts, pPList newRgn, void *userData, modType mtype, pEntity ent);
 
 class MeshAdaptPUMIDrvr{
  
@@ -28,20 +31,26 @@ class MeshAdaptPUMIDrvr{
   //Fields
   int TransferSolutionToPUMI(double* inArray, int nVar, int nN);
   int TransferSolutionToProteus(double* outArray, int nVar, int nN);
+  int CalculateSizeField();
+  int CommuSizeField();
+  int AdaptPUMIMesh();
   int MeshAdaptPUMI();
+
+  int InterpolateSolutionE( pEdge edge, double xi[2], int field_size, pTag pTagTag, double* result);
+  int TransferBottomE(pPList parent, pPList fresh, pPList VtxstoHandle, modType mtype);
 
   private: 
   pMeshMdl PUMI_MeshInstance;
   pGeomMdl PUMI_GModel;
-  std::vector<pPart> PUMI_Parts;
   pPart PUMI_Part;
+  std::vector<pPart> PUMI_Parts;
   int comm_size, comm_rank;
   int elms_owned, faces_owned, edges_owned, vtx_owned;
+  int numVar;
 
   pTag GlobNumberTag;
-  pTag SolutionTag;
+  pTag SolutionTag, SFTag;
   std::vector<std::vector<double> > SolutionVec;
-//  pMMeshAdaptPUMI MA_Drvr;
 
   int ConstructGlobalNumbering(Mesh& mesh);
   int ConstructGlobalStructures(Mesh& mesh);
@@ -56,5 +65,5 @@ class MeshAdaptPUMIDrvr{
   int CommunicateOwnedNumbers(int toSend, int *toReceive);
   int SetOwnerGlobNumbering(pTag, PUMI_EntType, int);
   int SetCopyGlobNumbering(pTag, int EntType);
-
+  int DeleteMeshEntIDs();
 };

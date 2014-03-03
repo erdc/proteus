@@ -24,6 +24,9 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int ConstructFromParallelPUMIMesh(Mesh&, Mesh&)
         int UpdateMaterialArrays(Mesh&, int, int)
         int TransferSolutionToPUMI(double*, int, int)
+        int TransferSolutionToProteus(double*, int, int)
+        int CalculateSizeField()
+        int AdaptPUMIMesh()
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
@@ -53,3 +56,10 @@ cdef class MeshAdaptPUMI:
     def TransferSolutionToPUMI(self, np.ndarray[np.double_t,ndim=2,mode="c"] inArray):
         inArray = np.ascontiguousarray(inArray)
         return self.thisptr.TransferSolutionToPUMI(&inArray[0,0], inArray.shape[0], inArray.shape[1])
+    def TransferSolutionToProteus(self, np.ndarray[np.double_t,ndim=2,mode="c"] outArray):
+        outArray = np.ascontiguousarray(outArray)
+        return self.thisptr.TransferSolutionToProteus(&outArray[0,0], outArray.shape[0], outArray.shape[1])
+    def CalculateSizeField(self):
+        return self.thisptr.CalculateSizeField()
+    def AdaptPUMIMesh(self):
+        return self.thisptr.AdaptPUMIMesh()
