@@ -43,6 +43,7 @@ hull_center = (0.5*hull_length,
 nLevels = 1
 
 he = L[0]/10.0
+#he*=0.5
 #he = hull_draft/1.0
 #he = hull_draft/6.0
 genMesh=True#False
@@ -229,93 +230,66 @@ nLayersOfOverlapForParallel = 0
 initialConditions = None
 #use sparse diffusion representation
 sd=True
-#identity tensor for defining analytical heterogeneity functions
-Ident = numpy.zeros((nd,nd),'d')
-Ident[0,0]=1.0; Ident[1,1] = 1.0; Ident[2,2]=1.0
 
-#for computing exact 'Darcy' velocity
-class velEx:
-    def __init__(self,duex,aex):
-        self.duex = duex
-        self.aex = aex
+velocity=1.0
+diffusion=0.01
+
+def a(x):
+    return numpy.array([[diffusion,0.0,0.0],[0.0,diffusion,0.0],[0.0,0.0,diffusion]],'d')
+def f(x):
+    return 0.0
+
+from proteus import AnalyticalSolutions
+class LinearAD_SteadyState(AnalyticalSolutions.SteadyState):
+    from math import exp,sqrt
+    r"""
+    The solution of the steady linear advection-diffusion equation
+
+    The boundary value problem is
+
+    .. math: (bu - au_x)_x = 0 \quad u(0) = 1 \quad u(1) = 0
+    """
+    def __init__(self,b=[1.0,0,0],a=5.0e-1):
+        self.b_ = b
+        self.a_ = a
+        bn = sqrt(b[0]**2 + b[1]**2 + b[2]**2)
+        self.bn=bn
+        if bn!=0.0:
+            self.D_ = (1.0/(exp(bn/a)-1.0))
+        else:
+            self.D_ = 0.0
+        self.C_ = -self.D_*exp(bn/a)
     def uOfX(self,X):
-        du = self.duex.duOfX(X)
-        A  = numpy.reshape(self.aex(X),(3,3))
-        return -numpy.dot(A,du)
-    def uOfXT(self,X,T):
-        return self.uOfX(X)
+        x=X
+        if self.D_ !=0.0:
+            return -self.D_*exp((self.b_[0]*x[0]+self.b_[1]*x[1]+ self.b_[2]*x[2])/self.a_) - self.C_
+        else:
+            return 1.0-(self.b_[0]*x[0]+self.b_[1]*x[1]+ self.b_[2]*x[2])/self.bn
 
-
-##################################################
-#define coefficients a(x)=[a_{ij}] i,j=0,2, right hand side f(x)  and analytical solution u(x)
-#u = x*x + y*y + z*z, a_00 = x + 5, a_11 = y + 5.0 + a_22 = z + 10.0
-#f = -2*x -2*(5+x) -2*y-2*(5+y) -2*z-2*(10+z)
-#
-
-def a5(x):
-    return numpy.array([[x[0] + 5.0,0.0,0.0],[0.0,x[1] + 5.0,0.0],[0.0,0.0,x[2]+10.0]],'d')
-def f5(x):
-    return -2.0*x[0] -2*(5.+x[0]) -2.*x[1]-2.*(5.+x[1]) -2.*x[2]-2.*(10+x[2])
-#'manufactured' analytical solution
-class u5Ex:
-    def __init__(self):
-        pass
-    def uOfX(self,x):
-        return x[0]**2+x[1]**2+x[2]**2
-    def uOfXT(self,X,T):
-        return self.uOfX(X)
-    def duOfX(self,X):
-        du = 2.0*numpy.reshape(X[0:3],(3,))
-        return du
-    def duOfXT(self,X,T):
-        return self.duOfX(X)
+import numpy as np
+sol = LinearAD_SteadyState(b=np.array([velocity,0.0,0.0]),a=diffusion)
 
 #dirichlet boundary condition functions on (x=0,y,z), (x,y=0,z), (x,y=1,z), (x,y,z=0), (x,y,z=1)
-def getDBC5(x,flag):
-    if flag in [boundaryTags['bottom'],boundaryTags['top'],boundaryTags['front'],boundaryTags['back'],boundaryTags['left']]:
-        return lambda x,t: u5Ex().uOfXT(x,t)
+def getDBC(x,flag):
+    if flag in [boundaryTags['left'],boundaryTags['right']]:
+        return lambda x,t: sol.uOfXT(x,t)
 
-def getAdvFluxBC5(x,flag):
-    if flag == boundaryTags['right']:
-        return lambda x,t: 0.0
-    elif flag == 0:
+def getAdvFluxBC(x,flag):
+    if flag not in [boundaryTags['left'],boundaryTags['right']]:
         return lambda x,t: 0.0
 
-#specify flux on (x=1,y,z)
-def getDiffFluxBC5(x,flag):
-    if flag == boundaryTags['right']:
-        n = numpy.zeros((nd,),'d'); n[0]=1.0
-        return lambda x,t: numpy.dot(velEx(u5Ex(),a5).uOfXT(x,t),n)
-    elif flag == 0:
+def getDiffFluxBC(x,flag):
+    if flag not in [boundaryTags['left'],boundaryTags['right']]:
         return lambda x,t: 0.0
 
-#dirichlet boundary condition functions on (x=0,y,z), (x,y=0,z), (x,y=1,z), (x,y,z=0), (x,y,z=1)
-# def getDBC5(x,flag):
-#     if x[0] in [0.0] or x[1] in [0.0,1.0] or x[2] in [0.0,1.0]:
-#         return lambda x,t: u5Ex().uOfXT(x,t)
-# def getAdvFluxBC5(x,flag):
-#     pass
-# #specify flux on (x=1,y,z)
-# def getDiffFluxBC5(x,flag):
-#     if x[0] == 1.0:
-#         n = numpy.zeros((nd,),'d'); n[0]=1.0
-#         return lambda x,t: numpy.dot(velEx(u5Ex(),a5).uOfXT(x,t),n)
-#     if not (x[0] in [0.0] or x[1] in [0.0,1.0] or x[2] in [0.0,1.0]):
-#         return lambda x,t: 0.0
-
-#store a,f in dictionaries since coefficients class allows for one entry per component
-aOfX = {0:a5}; fOfX = {0:f5}
-
-#one component
 nc = 1
 #load analytical solution, dirichlet conditions, flux boundary conditions into the expected variables
-analyticalSolution = {0:u5Ex()}
-analyticalSolutionVelocity = {0:velEx(analyticalSolution[0],aOfX[0])}
+analyticalSolution = {0:sol}
 #
-dirichletConditions = {0:getDBC5}
-advectiveFluxBoundaryConditions =  {0:getAdvFluxBC5}
-diffusiveFluxBoundaryConditions = {0:{0:getDiffFluxBC5}}
+dirichletConditions = {0:getDBC}
+advectiveFluxBoundaryConditions =  {0:getAdvFluxBC}
+diffusiveFluxBoundaryConditions = {0:{0:getDiffFluxBC}}
 fluxBoundaryConditions = {0:'setFlow'} #options are 'setFlow','noFlow','mixedFlow'
 
-coefficients = ADR.Coefficients(aOfX,fOfX,nc,nd)
+coefficients = ADR.Coefficients(aOfX={0:a},fOfX={0:f},velocity=np.array([velocity,0.0,0.0]),nc=nc,nd=nd)
 coefficients.variableNames=['u0']
