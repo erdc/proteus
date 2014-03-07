@@ -21,6 +21,12 @@ namespace proteus
 				   double* u_grad_trial_ref,
 				   double* u_test_ref,
 				   double* u_grad_test_ref,
+				   double* elementDiameter,
+				   double* cfl,
+				   double Ct_sge,
+				   double sc_uref,
+				   double sc_alpha,
+				   double useMetrics,
 				   //element boundary
 				   double* mesh_trial_trace_ref,
 				   double* mesh_grad_trial_trace_ref,
@@ -70,6 +76,12 @@ namespace proteus
 				   double* u_grad_trial_ref,
 				   double* u_test_ref,
 				   double* u_grad_test_ref,
+				   double* elementDiameter,
+				   double* cfl,
+				   double Ct_sge,
+				   double sc_uref,
+				   double sc_alpha,
+				   double useMetrics,
 				   //element boundary
 				   double* mesh_trial_trace_ref,
 				   double* mesh_grad_trial_trace_ref,
@@ -209,6 +221,149 @@ namespace proteus
       return tmp;
     }
 
+    inline
+    void calculateSubgridError_tau(const double& elementDiameter,
+				   const double& dmt,
+				   const double dH[nSpace],
+				   double& cfl,
+				   double& tau)
+    {
+      double h,nrm_v,oneByAbsdt;
+      h = elementDiameter;
+      nrm_v=0.0;
+      for(int I=0;I<nSpace;I++)
+	nrm_v+=dH[I]*dH[I];
+      nrm_v = sqrt(nrm_v);
+      cfl = nrm_v/h;
+      oneByAbsdt =  fabs(dmt);
+      tau = 1.0/(2.0*nrm_v/h + oneByAbsdt + 1.0e-8);
+    }
+
+    inline
+    void calculateSubgridError_tau(     const double&  Ct_sge,
+                                        const double   G[nSpace*nSpace],
+					const double&  A0,
+					const double   Ai[nSpace],
+					double& tau_v,
+					double& cfl)	
+    {
+      double v_d_Gv=0.0; 
+      for(int I=0;I<nSpace;I++) 
+         for (int J=0;J<nSpace;J++) 
+           v_d_Gv += Ai[I]*G[I*nSpace+J]*Ai[J];     
+    
+      tau_v = 1.0/sqrt(Ct_sge*A0*A0 + v_d_Gv + 1.0e-8);    
+    } 
+ 
+    inline 
+    void calculateNumericalDiffusion(const double& shockCapturingDiffusion,
+				     const double& elementDiameter,
+				     const double& strong_residual,
+				     const double grad_u[nSpace],
+				     double& numDiff)
+    {
+      double h,
+	num,
+	den,
+	n_grad_u;
+      h = elementDiameter;
+      n_grad_u = 0.0;
+      for (int I=0;I<nSpace;I++)
+	n_grad_u += grad_u[I]*grad_u[I];
+      num = shockCapturingDiffusion*0.5*h*fabs(strong_residual);
+      den = sqrt(n_grad_u) + 1.0e-8;
+      numDiff = num/den;
+    }
+
+    inline
+    void exteriorNumericalAdvectiveFlux(const int& isDOFBoundary_u,
+					const int& isFluxBoundary_u,
+					const double n[nSpace],
+					const double& bc_u,
+					const double& bc_flux_u,
+					const double& u,
+					const double velocity[nSpace],
+					double& flux)
+    {
+
+      double flow=0.0;
+      for (int I=0; I < nSpace; I++)
+	flow += n[I]*velocity[I];
+      //std::cout<<" isDOFBoundary_u= "<<isDOFBoundary_u<<" flow= "<<flow<<std::endl;
+      if (isDOFBoundary_u == 1)
+	{
+	  //std::cout<<"Dirichlet boundary u and bc_u "<<u<<'\t'<<bc_u<<std::endl;
+	  if (flow >= 0.0)
+	    {
+	      flux = u*flow;
+	      //flux = flow;
+	    }
+	  else
+	    {
+	      flux = bc_u*flow;
+	      //flux = flow;
+	    }
+	}
+      else if (isFluxBoundary_u == 1)
+	{
+	  flux = bc_flux_u;
+	  //std::cout<<"Flux boundary flux and flow"<<flux<<'\t'<<flow<<std::endl;
+	}
+      else
+	{
+	  //std::cout<<"No BC boundary flux and flow"<<flux<<'\t'<<flow<<std::endl;
+	  if (flow >= 0.0)
+	    {
+	      flux = u*flow;
+	    }
+	  else
+	    {
+	      std::cout<<"warning: VOF open boundary with no external trace, setting to zero for inflow"<<std::endl;
+	      flux = 0.0;
+	    }
+
+	}
+      //flux = flow;
+      //std::cout<<"flux error "<<flux-flow<<std::endl;
+      //std::cout<<"flux in computationa"<<flux<<std::endl;
+    }
+
+    inline
+    void exteriorNumericalAdvectiveFluxDerivative(const int& isDOFBoundary_u,
+						  const int& isFluxBoundary_u,
+						  const double n[nSpace],
+						  const double velocity[nSpace],
+						  double& dflux)
+    {
+      double flow=0.0;
+      for (int I=0; I < nSpace; I++)
+	flow += n[I]*velocity[I];
+      //double flow=n[0]*velocity[0]+n[1]*velocity[1]+n[2]*velocity[2];
+      dflux=0.0;//default to no flux
+      if (isDOFBoundary_u == 1)
+	{
+	  if (flow >= 0.0)
+	    {
+	      dflux = flow;
+	    }
+	  else
+	    {
+	      dflux = 0.0;
+	    }
+	}
+      else if (isFluxBoundary_u == 1)
+	{
+	  dflux = 0.0;
+	}
+      else
+	{
+	  if (flow >= 0.0)
+	    {
+	      dflux = flow;
+	    }
+	}
+    }
+
     inline void calculateElementResidual(//element
 					 double* mesh_trial_ref,
 					 double* mesh_grad_trial_ref,
@@ -219,6 +374,12 @@ namespace proteus
 					 double* u_grad_trial_ref,
 					 double* u_test_ref,
 					 double* u_grad_test_ref,
+					 double* elementDiameter,
+					 double* cfl,
+					 double Ct_sge,
+					 double sc_uref,
+					 double sc_alpha,
+					 double useMetrics,
 					 //element boundary
 					 double* mesh_trial_trace_ref,
 					 double* mesh_grad_trial_trace_ref,
@@ -261,6 +422,14 @@ namespace proteus
 	  //compute indeces and declare local storage
 	  register int eN_k = eN*nQuadraturePoints_element+k;
 	  register double u=0.0,grad_u[nSpace],
+	    m=0.0,dm=0.0,
+	    f[nSpace],df[nSpace],
+	    m_t=0.0,dm_t=0.0,
+	    pdeResidual_u=0.0,
+	    Lstar_u[nDOF_test_element],
+	    subgridError_u=0.0,
+	    tau=0.0,tau0=0.0,tau1=0.0,
+	    numDiff0=0.0,numDiff1=0.0,
 	    *a=NULL,
 	    r=0.0,
 	    jac[nSpace*nSpace],
@@ -311,6 +480,66 @@ namespace proteus
 	  //just set from pre-evaluated quadrature point values for now
 	  a = &q_a[eN_k*sd_rowptr[nSpace]];
 	  r = q_r[eN_k];
+	  for (int I=0;I<nSpace;I++)
+	    {
+	      f[I] = q_v[eN_k*nSpace+I]*u;
+	      df[I] = q_v[eN_k*nSpace+I];
+	    }
+	  //
+	  //moving mesh
+	  //
+	  /* double mesh_velocity[3]; */
+	  /* mesh_velocity[0] = xt; */
+	  /* mesh_velocity[1] = yt; */
+	  /* mesh_velocity[2] = zt; */
+	  /* for (int I=0;I<nSpace;I++) */
+	  /*   { */
+	  /*     f[I] -= MOVING_DOMAIN*m*mesh_velocity[I]; */
+	  /*     df[I] -= MOVING_DOMAIN*dm*mesh_velocity[I]; */
+	  /*   } */
+	  //
+	  //calculate time derivative at quadrature points
+	  //
+	  /* ck.bdf(alphaBDF, */
+	  /* 	     q_m_betaBDF[eN_k], */
+	  /* 	     m, */
+	  /* 	     dm, */
+	  /* 	     m_t, */
+	  /* 	     dm_t); */
+	  //
+	  //calculate subgrid error (strong residual and adjoint)
+	  //
+	  //calculate strong residual
+	  pdeResidual_u = ck.Advection_strong(df,grad_u) + ck.Reaction_strong(r);//ck.Mass_strong(m_t) + ck.Advection_strong(df,grad_u) + ck.Reaction_strong(r);
+	  //calculate adjoint
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      // register int eN_k_i_nSpace = (eN_k*nDOF_trial_element+i)*nSpace;
+	      // Lstar_u[i]  = ck.Advection_adjoint(df,&u_grad_test_dV[eN_k_i_nSpace]);
+	      register int i_nSpace = i*nSpace;
+	      Lstar_u[i]  = ck.Advection_adjoint(df,&u_grad_test_dV[i_nSpace]);
+	    }
+	  //calculate tau and tau*Res
+	  calculateSubgridError_tau(elementDiameter[eN],dm_t,df,cfl[eN_k],tau0);
+	  calculateSubgridError_tau(Ct_sge,
+				    G,
+				    dm_t,
+				    df,
+				    tau1,
+				    cfl[eN_k]);
+	  
+	  tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
+	  
+	  subgridError_u = -tau*pdeResidual_u;
+	  //
+	  //calculate shock capturing diffusion
+	  //
+	  
+	  
+	  ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter[eN],pdeResidual_u,grad_u,numDiff0);	      
+	  //ck.calculateNumericalDiffusion(shockCapturingDiffusion,G,pdeResidual_u,grad_u_old,numDiff1);
+	  ck.calculateNumericalDiffusion(shockCapturingDiffusion,sc_uref, sc_alpha,G,G_dd_G,pdeResidual_u,grad_u,numDiff1);
+	  q_numDiff_u[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
 	  // 
 	  //update element residual 
 	  // 
@@ -319,7 +548,9 @@ namespace proteus
 	      register int  i_nSpace=i*nSpace;
 	      
 	      elementResidual_u[i] += ck.Diffusion_weak(sd_rowptr,sd_colind,a,grad_u,&u_grad_test_dV[i_nSpace]) + 
-		ck.Reaction_weak(r,u_test_dV[i]);
+		ck.Reaction_weak(r,u_test_dV[i])+ 
+		ck.SubgridError(subgridError_u,Lstar_u[i]) + 
+		ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&u_grad_test_dV[i_nSpace]);
 	    }//i
 	}
     }
@@ -334,6 +565,12 @@ namespace proteus
 			   double* u_grad_trial_ref,
 			   double* u_test_ref,
 			   double* u_grad_test_ref,
+			   double* elementDiameter,
+			   double* cfl,
+			   double Ct_sge,
+			   double sc_uref,
+			   double sc_alpha,
+			   double useMetrics,
 			   //element boundary
 			   double* mesh_trial_trace_ref,
 			   double* mesh_grad_trial_trace_ref,
@@ -402,6 +639,12 @@ namespace proteus
 				   u_grad_trial_ref,
 				   u_test_ref,
 				   u_grad_test_ref,
+				   elementDiameter,
+				   cfl,
+				   Ct_sge,
+				   sc_uref,
+				   sc_alpha,
+				   useMetrics,
 				   mesh_trial_trace_ref,
 				   mesh_grad_trial_trace_ref,
 				   dS_ref,
@@ -470,17 +713,18 @@ namespace proteus
 		dm_ext=0.0,
 		*a_ext,
 		/* *da_exxt, */
-		/* f_ext[nSpace], */
-		/* df_ext[nSpace], */
+		f_ext[nSpace],
+		df_ext[nSpace],
 		r_ext=0.0,
 		/* dr_ext=0.0, */
 		flux_diff_ext=0.0,
+		flux_advect_ext=0.0,
 		bc_u_ext=0.0,
 		//bc_grad_u_ext[nSpace],
-		/* bc_m_ext=0.0, */
-		/* bc_dm_ext=0.0, */
-		/* bc_f_ext[nSpace], */
-		/* bc_df_ext[nSpace], */
+		bc_m_ext=0.0,
+		bc_dm_ext=0.0,
+		bc_f_ext[nSpace],
+		bc_df_ext[nSpace],
 		jac_ext[nSpace*nSpace],
 		jacDet_ext,
 		jacInv_ext[nSpace*nSpace],
@@ -555,6 +799,13 @@ namespace proteus
 	      //calculate the pde coefficients using the solution and the boundary values for the solution 
 	      // 
 	      a_ext = &ebqe_a[ebNE_kb*sd_rowptr[nSpace]];
+	      for (int I=0;I<nSpace;I++)
+		{
+		  f_ext[I] = ebqe_v[ebNE_kb*nSpace+I]*u_ext;
+		  df_ext[I] = ebqe_v[ebNE_kb*nSpace+I];
+		  bc_f_ext[I] = ebqe_v[ebNE_kb*nSpace+I]*bc_u_ext;
+		  bc_df_ext[I] = ebqe_v[ebNE_kb*nSpace+I];
+		}
 	      /* evaluateCoefficients(&ebqe_velocity_ext[ebNE_kb_nSpace], */
 	      /* 			   u_ext, */
 	      /* 			   //VRANS */
@@ -599,14 +850,14 @@ namespace proteus
 					     u_ext,
 					     ebqe_penalty_ext[ebNE_kb],
 					     flux_diff_ext);
-	      /* exteriorNumericalAdvectiveFlux(isDOFBoundary_u[ebNE_kb], */
-	      /* 				     isFluxBoundary_u[ebNE_kb], */
-	      /* 				     normal, */
-	      /* 				     bc_u_ext, */
-	      /* 				     ebqe_bc_flux_u_ext[ebNE_kb], */
-	      /* 				     u_ext, */
-	      /* 				     df_ext, */
-	      /* 				     flux_ext); */
+	      exteriorNumericalAdvectiveFlux(isDOFBoundary_u[ebNE_kb],
+	      				     isAdvectiveFluxBoundary_u[ebNE_kb],
+	      				     normal,
+	      				     bc_u_ext,
+	      				     ebqe_bc_flux_u_ext[ebNE_kb],
+	      				     u_ext,
+	      				     df_ext,
+	      				     flux_advect_ext);
 	      //ebqe_flux[ebNE_kb] = flux_ext;
 	      //
 	      //update residuals
@@ -614,7 +865,7 @@ namespace proteus
 	      for (int i=0;i<nDOF_test_element;i++)
 		{
 		  //int ebNE_kb_i = ebNE_kb*nDOF_test_element+i;
-		  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_diff_ext,u_test_dS[i])+
+		  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_diff_ext+flux_advect_ext,u_test_dS[i])+
  		    ck.ExteriorElementBoundaryDiffusionAdjoint(isDOFBoundary_u[ebNE_kb],
  							       isDiffusiveFluxBoundary_u[ebNE_kb],
  							       eb_adjoint_sigma,
@@ -648,6 +899,12 @@ namespace proteus
 					 double* u_grad_trial_ref,
 					 double* u_test_ref,
 					 double* u_grad_test_ref,
+					 double* elementDiameter,
+					 double* cfl,
+					 double Ct_sge,
+					 double sc_uref,
+					 double sc_alpha,
+					 double useMetrics,
 					 //element boundary
 					 double* mesh_trial_trace_ref,
 					 double* mesh_grad_trial_trace_ref,
@@ -687,6 +944,13 @@ namespace proteus
 	  //declare local storage
 	  register double u=0.0,
 	    grad_u[nSpace],
+	    m=0.0,dm=0.0,
+	    f[nSpace],df[nSpace],
+	    m_t=0.0,dm_t=0.0,
+	    dpdeResidual_u_u[nDOF_trial_element],
+	    Lstar_u[nDOF_test_element],
+	    dsubgridError_u_u[nDOF_trial_element],
+	    tau=0.0,tau0=0.0,tau1=0.0,
 	    *a=NULL,
 	    dr=0.0,
 	    jac[nSpace*nSpace],
@@ -735,7 +999,48 @@ namespace proteus
 	  //
 	  //evaluateCoefficients()
 	  a = &q_a[eN_k*sd_rowptr[nSpace]];
+	  for (int I=0;I<nSpace;I++)
+	    df[I] = q_v[eN_k*nSpace+I];
 	  dr = 0.0;
+
+	  //
+	  //calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
+	  //
+	  //calculate the adjoint times the test functions
+	  for (int i=0;i<nDOF_test_element;i++)
+	    {
+	      // int eN_k_i_nSpace = (eN_k*nDOF_trial_element+i)*nSpace;
+	      // Lstar_u[i]=ck.Advection_adjoint(df,&u_grad_test_dV[eN_k_i_nSpace]);	      
+	      register int i_nSpace = i*nSpace;
+	      Lstar_u[i]=ck.Advection_adjoint(df,&u_grad_test_dV[i_nSpace]);	      
+	    }
+	  //calculate the Jacobian of strong residual
+	  for (int j=0;j<nDOF_trial_element;j++)
+	    {
+	      //int eN_k_j=eN_k*nDOF_trial_element+j;
+	      //int eN_k_j_nSpace = eN_k_j*nSpace;
+	      int j_nSpace = j*nSpace;
+	      dpdeResidual_u_u[j]= ck.MassJacobian_strong(dm_t,u_trial_ref[k*nDOF_trial_element+j]) +
+		ck.AdvectionJacobian_strong(df,&u_grad_trial[j_nSpace]);
+	    }
+	  //tau and tau*Res
+	  calculateSubgridError_tau(elementDiameter[eN],
+				    dm_t,
+				    df,
+				    cfl[eN_k],
+				    tau0);
+	  
+	  calculateSubgridError_tau(Ct_sge,
+				    G,
+				    dm_t,
+				    df,
+				    tau1,
+				    cfl[eN_k]);
+	  tau = useMetrics*tau1+(1.0-useMetrics)*tau0;
+	  
+	  for(int j=0;j<nDOF_trial_element;j++)
+	    dsubgridError_u_u[j] = -tau*dpdeResidual_u_u[j];
+
 	  for(int i=0;i<nDOF_test_element;i++)
 	    {
 	      int i_nSpace=i*nSpace;
@@ -743,7 +1048,9 @@ namespace proteus
 		{ 
 		  int j_nSpace = j*nSpace;
 		  elementJacobian_u_u[i*nDOF_trial_element+j] += ck.SimpleDiffusionJacobian_weak(sd_rowptr,sd_colind,a,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]) +
-		    ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]); 		     
+		    ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
+		    ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
+		    ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); 		     
 		}//j
 	    }//i
 	}//k
@@ -758,6 +1065,12 @@ namespace proteus
 			   double* u_grad_trial_ref,
 			   double* u_test_ref,
 			   double* u_grad_test_ref,
+			   double* elementDiameter,
+			   double* cfl,
+			   double Ct_sge,
+			   double sc_uref,
+			   double sc_alpha,
+			   double useMetrics,
 			   //element boundary
 			   double* mesh_trial_trace_ref,
 			   double* mesh_grad_trial_trace_ref,
@@ -819,6 +1132,12 @@ namespace proteus
 				   u_grad_trial_ref,
 				   u_test_ref,
 				   u_grad_test_ref,
+				   elementDiameter,
+				   cfl,
+				   Ct_sge,
+				   sc_uref,
+				   sc_alpha,
+				   useMetrics,
 				   mesh_trial_trace_ref,
 				   mesh_grad_trial_trace_ref,
 				   dS_ref,
@@ -877,8 +1196,8 @@ namespace proteus
 		m_ext=0.0,
 		dm_ext=0.0,
 		*a_ext,
-		//		f_ext[nSpace],
-		//df_ext[nSpace],
+		f_ext[nSpace],
+		df_ext[nSpace],
 		r_ext=0.0,
 		dflux_u_u_ext=0.0,
 		bc_u_ext=0.0,
@@ -995,6 +1314,11 @@ namespace proteus
 	      /* 			   bc_f_ext, */
 	      /* 			   bc_df_ext); */
 	      a_ext = &ebqe_a[ebNE_kb*sd_rowptr[nSpace]];
+	      for (int I=0;I++;I<nSpace)
+		{
+		  df_ext[I] = ebqe_v[ebNE_kb*nSpace+I];
+		  bc_df_ext[I] = ebqe_v[ebNE_kb*nSpace+I];
+		}
 	      //
 	      //moving domain
 	      //
@@ -1005,11 +1329,11 @@ namespace proteus
 	      // 
 	      //calculate the numerical fluxes 
 	      // 
-	      /* exteriorNumericalAdvectiveFluxDerivative(isDOFBoundary_u[ebNE_kb], */
-	      /* 					       isFluxBoundary_u[ebNE_kb], */
-	      /* 					       normal, */
-	      /* 					       df_ext, */
-	      /* 					       dflux_u_u_ext); */
+	      exteriorNumericalAdvectiveFluxDerivative(isDOFBoundary_u[ebNE_kb],
+	      					       isAdvectiveFluxBoundary_u[ebNE_kb],
+	      					       normal,
+	      					       df_ext,
+	      					       dflux_u_u_ext);
 	      //
 	      //calculate the flux jacobian
 	      //
@@ -1025,9 +1349,8 @@ namespace proteus
 									     a_ext,
 									     u_trial_trace_ref[ebN_local_kb_j],
 									     &u_grad_trial_trace[j_nSpace],
-									     ebqe_penalty_ext[ebNE_kb]);
-		    
-		  //ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
+									     ebqe_penalty_ext[ebNE_kb]) +
+		    ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
 		}//j
 	      //
 	      //update the global Jacobian from the flux Jacobian
