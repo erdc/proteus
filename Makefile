@@ -98,8 +98,7 @@ ${PROTEUS_PREFIX}/bin/proteus ${PROTEUS_PREFIX}/bin/proteus_env.sh: profile
 	@echo "************************"
 
 	echo "#!/usr/bin/env bash" > ${PROTEUS_PREFIX}/bin/proteus
-	echo '${PROTEUS_ENV}' >> ${PROTEUS_PREFIX}/bin/proteus
-	echo 'python "$${@:1}"' >> ${PROTEUS_PREFIX}/bin/proteus
+	echo '${PROTEUS_ENV} python "$${@:1}"' >> ${PROTEUS_PREFIX}/bin/proteus
 	chmod a+x ${PROTEUS_PREFIX}/bin/proteus
 
 	echo "#!/usr/bin/env sh" > ${PROTEUS_PREFIX}/bin/proteus_env.sh
