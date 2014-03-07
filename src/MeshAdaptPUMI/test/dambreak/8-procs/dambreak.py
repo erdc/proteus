@@ -15,7 +15,6 @@ Profiling.logLevel=7
 #Refinement = 20#45min on a single core for spaceOrder=1, useHex=False
 #Refinement = 15#45min on a single core for spaceOrder=1, useHex=False
 Refinement = 2#45min on a single core for spaceOrder=1, useHex=False
-name='dambreak'
 genMesh=True
 useOldPETSc=False
 useSuperlu=False
@@ -102,10 +101,15 @@ else:
     else:
         domain = Domain.PUMIDomain(fileprefix="Dambreak.sms",modelfile="Dambreak.smd")
         domain.numBC=6
+        domain.numAdaptSteps=30
         domain.faceList=[[2],[4],[3],[5],[1],[6]]
+        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.06, hmin=0.005, numIter=5)
+        domain.PUMIMesh.readGeomModel("Dambreak.smd")
+        domain.PUMIMesh.readPUMIMesh("Dambreak.sms")
+
 
 # Time stepping
-T=1.0
+T=0.01 #changed from 1.0
 dt_fixed = 0.01
 dt_init = min(0.1*dt_fixed,0.001)
 runCFL=0.33
