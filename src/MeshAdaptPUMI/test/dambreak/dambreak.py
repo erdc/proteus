@@ -93,7 +93,7 @@ if useHex:
     hex=True    
     domain = Domain.RectangularDomain(L)
 else:
-    boundaries=['left','right','bottom','top','front','back']
+    boundaries=['bottom','top','front','back','left','right']
     boundaryTags=dict([(key,i+1) for (i,key) in enumerate(boundaries)])
     if structured:
         nnx=4*Refinement
@@ -105,7 +105,10 @@ else:
         #Following sets list of face tags of geometric model as mapped from boundary Tags, 
         #meaning if faceList=[[2,4],[1]] and boundaries=['left','right'], then faces with geometry tags 2 and 4 are set as 'left'
         #and face with geometric tag 4 is set as 'right'
-        domain.faceList=[[2],[4],[3],[5],[1],[6]]
+        #The order of boundaries list is important because the last ones take precendence over the first ones,
+        #which means that the geometric edge or vertex which lies on 2 or more geometric faces will be set with the boundaries tag of 
+        #the geomtric face which is latter in the order (email: chitak2@rpi.edu for any questions)
+        domain.faceList=[[3],[5],[1],[6],[2],[4]]
         #set max edge length, min edge length, number of meshadapt iterations and initialize the MeshAdaptPUMI object
         domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.06, hmin=0.005, numIter=5) 
         #read the geometry and mesh
