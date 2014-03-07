@@ -19,10 +19,8 @@ triangleOptions="VApq1.35q12feena%e" % ((he**3)/6.0,)
 #number of levels in mesh
 nLevels = 1
 
-#no stabilization or shock capturing
-subgridError = None
-
-shockCapturing = None
+subgridError      = ADR.SubgridError(coefficients=coefficients,nd=nd)
+shockCapturing    = ADR.ShockCapturing(coefficients,nd,shockCapturingFactor=0.99,lag=False)
 
 #nonlinear solver choices
 multilevelNonlinearSolver  = Newton
