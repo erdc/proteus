@@ -15,6 +15,12 @@ cdef extern from "ADR.h" namespace "proteus":
                                double* u_grad_trial_ref,
                                double* u_test_ref,
                                double* u_grad_test_ref,
+                               double* elementDiameter,
+                               double* cfl,
+                               double CT_sge,
+                               double sc_uref,
+                               double sc_alpha,
+                               double useMetrics,
                                double* mesh_trial_trace_ref,
                                double* mesh_grad_trial_trace_ref,
                                double* dS_ref,
@@ -61,6 +67,12 @@ cdef extern from "ADR.h" namespace "proteus":
                                double* u_grad_trial_ref,
                                double* u_test_ref,
                                double* u_grad_test_ref,
+                               double* elementDiameter,
+                               double* cfl,
+                               double CT_sge,
+                               double sc_uref,
+                               double sc_alpha,
+                               double useMetrics,
                                double* mesh_trial_trace_ref,
                                double* mesh_grad_trial_trace_ref,
                                double* dS_ref,
@@ -137,6 +149,12 @@ cdef class ADR:
                          numpy.ndarray u_grad_trial_ref,
                          numpy.ndarray u_test_ref,
                          numpy.ndarray u_grad_test_ref,
+                         numpy.ndarray elementDiameter,
+                         numpy.ndarray cfl,
+                         double CT_sge,
+                         double sc_uref,
+                         double sc_alpha,
+                         double useMetrics,
                          numpy.ndarray mesh_trial_trace_ref,
                          numpy.ndarray mesh_grad_trial_trace_ref,
                          numpy.ndarray dS_ref,
@@ -184,6 +202,12 @@ cdef class ADR:
                                        <double*> u_grad_trial_ref.data,
                                        <double*> u_test_ref.data,
                                        <double*> u_grad_test_ref.data,
+                                       <double*> elementDiameter.data,
+                                       <double*> cfl.data,
+                                       CT_sge,
+                                       sc_uref,
+                                       sc_alpha,
+                                       useMetrics,
                                        <double*> mesh_trial_trace_ref.data,
                                        <double*> mesh_grad_trial_trace_ref.data,
                                        <double*> dS_ref.data,
@@ -232,6 +256,12 @@ cdef class ADR:
                          numpy.ndarray u_grad_trial_ref,
                          numpy.ndarray u_test_ref,
                          numpy.ndarray u_grad_test_ref,
+                         numpy.ndarray elementDiameter,
+                         numpy.ndarray cfl,
+                         double CT_sge,
+                         double sc_uref,
+                         double sc_alpha,
+                         double useMetrics,
                          numpy.ndarray mesh_trial_trace_ref,
                          numpy.ndarray mesh_grad_trial_trace_ref,
                          numpy.ndarray dS_ref,
@@ -282,6 +312,12 @@ cdef class ADR:
                                        <double*> u_grad_trial_ref.data,
                                        <double*> u_test_ref.data,
                                        <double*> u_grad_test_ref.data,
+                                       <double*> elementDiameter.data,
+                                       <double*> cfl.data,
+                                       CT_sge,
+                                       sc_uref,
+                                       sc_alpha,
+                                       useMetrics,
                                        <double*> mesh_trial_trace_ref.data,
                                        <double*> mesh_grad_trial_trace_ref.data,
                                        <double*> dS_ref.data,
@@ -389,15 +425,22 @@ NumericalFlux = NumericalFlux_SIPG
 
 class Coefficients(TC_base):
     from proteus.ctransportCoefficients import L2projectEvaluate
-    def __init__(self,aOfX,fOfX,nc=1,nd=2,l2proj=None,
+    def __init__(self,aOfX,fOfX,velocity=None,nc=1,nd=2,l2proj=None,
                  timeVaryingCoefficients=False,                 
-                 forceStrongDirichlet=False):
+                 forceStrongDirichlet=False,
+                 useMetrics=0.0,
+                 sc_uref=1.0,
+                 sc_beta=1.0):
+        self.useMetrics = useMetrics
         self.forceStrongDirichlet=forceStrongDirichlet
         self.aOfX = aOfX
         self.fOfX = fOfX
+        self.velocity=velocity
         self.nd = nd
         self.l2proj = l2proj
         self.timeVaryingCoefficients=timeVaryingCoefficients
+        self.sc_uref=sc_uref
+        self.sc_beta=sc_beta
         mass = {}
         advection = {}
         diffusion = {}
@@ -427,7 +470,11 @@ class Coefficients(TC_base):
     def initializeElementQuadrature(self,t,cq):
         nd = self.nd
         for ci in range(self.nc):
-            cq[('df',ci,ci)].flat[:] = 0.0
+            if cq.has_key(('df',ci,ci)):
+                if self.velocity != None:
+                    cq[('df',ci,ci)][...,:] = self.velocity
+                else:
+                    cq[('df',ci,ci)].flat[:] = 0.0
             for i in range(len(cq[('r',ci)].flat)):
                 cq[('r',ci)].flat[i] = -self.fOfX[ci](cq['x'].flat[3*i:3*(i+1)])
                 cq[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](cq['x'].flat[3*i:3*(i+1)]).flat
@@ -435,7 +482,11 @@ class Coefficients(TC_base):
         nd = self.nd
         for c in [cebq,cebq_global]:
             for ci in range(self.nc):
-                if c.has_key(('df',ci,ci)): c[('df',ci,ci)].flat[:] = 0.0
+                if c.has_key(('df',ci,ci)):
+                    if self.velocity != None:
+                        c[('df',ci,ci)][...,:] = self.velocity
+                    else:
+                        c[('df',ci,ci)].flat[:] = 0.0
                 if c.has_key(('r',ci)) and c.has_key(('a',ci,ci)):
                     for i in range(len(c[('u',ci)].flat)):
                         c[('r',ci)].flat[i] = -self.fOfX[ci](c['x'].flat[3*i:3*(i+1)])
@@ -444,7 +495,11 @@ class Coefficients(TC_base):
         nd = self.nd
         for c in [cebqe]:
             for ci in range(self.nc):
-                if c.has_key(('df',ci,ci)): c[('df',ci,ci)].flat[:] = 0.0
+                if c.has_key(('df',ci,ci)):
+                    if self.velocity != None:
+                        c[('df',ci,ci)][...,:] = self.velocity
+                    else:
+                        c[('df',ci,ci)].flat[:] = 0.0
                 if c.has_key(('r',ci)) and c.has_key(('a',ci,ci)):
                     for i in range(len(c[('u',ci)].flat)):
                         c[('r',ci)].flat[i] = -self.fOfX[ci](c['x'].flat[3*i:3*(i+1)])
@@ -453,7 +508,10 @@ class Coefficients(TC_base):
         if self.timeVaryingCoefficients:
             nd = self.nd
             for ci in range(self.nc):
-                c[('df',ci,ci)].flat[:] = 0.0
+                if self.velocity != None:
+                    c[('df',ci,ci)][...,:] = self.velocity
+                else:
+                    c[('df',ci,ci)].flat[:] = 0.0
                 for i in range(len(c[('r',ci)].flat)):
                     c[('r',ci)].flat[i] = -self.fOfX[ci](c['x'].flat[3*i:3*(i+1)])
                     c[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](c['x'].flat[3*i:3*(i+1)]).flat
@@ -681,6 +739,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('a',0,0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.coefficients.sdInfo[(0,0)][0][-1]),'d')
         self.q[('df',0,0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
         self.q[('r',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q[('cfl',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('numDiff',0,0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
 
         self.ebqe['penalty'] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
@@ -853,7 +912,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,
-            self.u[0].femSpace.grad_psi,
+            self.u[0].femSpace.grad_psi,            
+            self.mesh.elementDiametersArray,
+            self.q[('cfl',0)],
+            self.shockCapturing.shockCapturingFactor,
+	    self.coefficients.sc_uref, 
+	    self.coefficients.sc_beta,
+	    self.coefficients.useMetrics, 
             #element boundary
             self.u[0].femSpace.elementMaps.psi_trace,
             self.u[0].femSpace.elementMaps.grad_psi_trace,
@@ -913,6 +978,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
+            self.mesh.elementDiametersArray,
+            self.q[('cfl',0)],
+            self.shockCapturing.shockCapturingFactor,
+	    self.coefficients.sc_uref, 
+	    self.coefficients.sc_beta,
+	    self.coefficients.useMetrics, 
             #element boundary
             self.u[0].femSpace.elementMaps.psi_trace,
             self.u[0].femSpace.elementMaps.grad_psi_trace,
