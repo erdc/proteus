@@ -886,7 +886,6 @@ class  NS_base:#(HasTraits):
                                 soldof[ivar][nN]=lm.u[ci].dof[nN]
 
           p.domain.PUMIMesh.TransferSolutionToPUMI(soldof)
-          p.domain.PUMIMesh.CalculateSizeField()
           p.domain.PUMIMesh.AdaptPUMIMesh()
           p.domain.initFlag=True #For next step to take initial conditions from solution
           ##chitak end Adapt
