@@ -15,7 +15,8 @@ cdef extern from "cmeshToolsModule.h":
 
 cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
     cdef cppclass MeshAdaptPUMIDrvr:
-        MeshAdaptPUMIDrvr()
+        MeshAdaptPUMIDrvr(double, double, int)
+        int numIter, numAdaptSteps
         int helloworld(char *)
         int readGeomModel(char *)
         int readPUMIMesh(char *)
@@ -30,8 +31,10 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
-    def __cinit__(self):
-        self.thisptr = new MeshAdaptPUMIDrvr()
+    cdef double hmax, hmin
+    cdef int numIter, numAdaptSteps
+    def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10):
+        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter)
     def __dealloc__(self):
         del self.thisptr
     def helloworld(self, string):

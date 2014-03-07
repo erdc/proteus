@@ -698,6 +698,7 @@ class PUMIDomain(D_base):
     self.meshfile=fileprefix
     self.modelfile=modelfile
     self.numBC=0
+    self.numAdaptSteps=1
     self.faceList=[]
     self.PUMIMesh=None
     self.initFlag=False
