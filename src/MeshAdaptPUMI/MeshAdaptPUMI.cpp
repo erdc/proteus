@@ -5,13 +5,22 @@
 #include "MeshAdapt.h"
 #include "MA.h"
 #include "mMeshIO.h"
+#include "apfSPR.h"
+#include "apfMesh.h"
+#include "apfPUMI.h"
+#include "maCallback.h"
 
 #include "mpi.h"
 
 #include "MeshAdaptPUMI.h"
 
-MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr() {
+MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter) {
+  PUMI_Init(MPI_COMM_WORLD);
   numVar=0;
+  hmin=Hmin; hmax=Hmax;
+  numIter=NumIter;
+  if(SCUTIL_CommRank()==0)
+     printf("Setting hmax=%lf, hmin=%lf, numIters(meshadapt)=%d\n",hmax, hmin, numIter);
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr() {
@@ -25,7 +34,6 @@ int MeshAdaptPUMIDrvr::initProteusMesh(Mesh& mesh) {
 
 int MeshAdaptPUMIDrvr::readGeomModel(const std::string &geom_sim_file)
 {
-  PUMI_Init(MPI_COMM_WORLD);
 
   PUMI_Geom_RegisterGeomSim(); //commented out for erdc team
   FILE * pFile = fopen(geom_sim_file.c_str(), "r");
@@ -53,10 +61,10 @@ int MeshAdaptPUMIDrvr::readPUMIMesh(const char* SMS_fileName){
   PUMI_Mesh_Create(PUMI_GModel, PUMI_MeshInstance);
 
   if(PCU_Comm_Peers()==1) {
-     std::cout << "Reading serial mesh\n";
+     std::cout << "Reading serial PUMI mesh\n";
      PUMI_Mesh_LoadFromFile(PUMI_MeshInstance,SMS_fileName,0, "pumi"); //0 for serial for now
   } else {
-     std::cout << "Reading parallel mesh\n";
+     std::cout << "Reading parallel PUMI mesh\n";
      PUMI_Mesh_LoadFromFile(PUMI_MeshInstance,SMS_fileName,1, "pumi"); //0 for serial for now
   }
 /*
@@ -76,7 +84,6 @@ int MeshAdaptPUMIDrvr::readPUMIMesh(const char* SMS_fileName){
     std::cout<<" PUMI mesh from file didn't verify, exiting!\n";
     exit(0);
   }
-  std::cout<<" loading PUMI mesh from files\n";
   
   int err = PUMI_Mesh_GetPart(PUMI_MeshInstance, 0, PUMI_Part);
 
@@ -118,13 +125,19 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh() {
   isEnd = 0;
 
   DeleteMeshEntIDs();
+  
+//  apf::Mesh* apf_mesh = apf::createMesh(PUMI_MeshInstance);
+//  getFieldFromTag(apf_mesh, PUMI_MeshInstance,"Solution");
+
+//  ma::FieldCallback(MA_Drvr, apf_mesh);
+  
 //  CBFunction CB = 0;
   CBFunction CB = TransferTopSCOREC;
 
   MA_SetCB(MA_Drvr, CB, (void*)this);   // called during mesh modification (see MA.h in meshMeshAdaptPUMI)
 
   /// Adapt the mesh
-  MA_SetNumIt(MA_Drvr, 3);    // limits the number of iterations of meshMeshAdaptPUMI (splits, collapses, moves...)
+  MA_SetNumIt(MA_Drvr, numIter);    // limits the number of iterations of meshMeshAdaptPUMI (splits, collapses, moves...)
 
   MA_Adapt(MA_Drvr);  // does the MeshAdaptPUMI
 
@@ -138,10 +151,13 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh() {
   
   PUMI_Mesh_Verify(PUMI_MeshInstance,&return_verify);
 
+//  getTagFromField(apf_mesh, PUMI_MeshInstance, "Solution");
+
   //partition the mesh
-  PUMI_Mesh_SetNumPart(PUMI_MeshInstance, comm_size);
+  PUMI_Mesh_SetNumPart(PUMI_MeshInstance, 1);
 //  PUMI_Mesh_SetPtnParam(mesh, method, approach, imbTol, dbgLvl);
-//  PUMI_Mesh_GlobPtn(PUMI_MeshInstance);
+  PUMI_Mesh_GlobPtn(PUMI_MeshInstance);
+  int err = PUMI_Mesh_GetPart(PUMI_MeshInstance, 0, PUMI_Part);
 
   exportMeshToVTK(PUMI_MeshInstance, "pumi_adapt.vtk");
   if(return_verify){ std::cerr << "Adapted PUMI mesh verify completed succesfully!\n"; }

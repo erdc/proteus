@@ -1,7 +1,12 @@
 #include "MeshAdaptPUMI.h"
 #include "mMeshIO.h"
+#include "apfSPR.h"
+#include "apfMesh.h"
+#include "apfPUMI.h"
 
 using namespace std;
+using namespace apf;
+
 int MeshAdaptPUMIDrvr::TransferSolutionToPUMI(double* inArray, int nVar, int nN) {
    
    int size;
@@ -84,3 +89,64 @@ int MeshAdaptPUMIDrvr::DeleteMeshEntIDs() {
 
   }
 }
+
+int MeshAdaptPUMIDrvr::getFieldFromTag(apf::Mesh* mesh, pMeshMdl mesh_pumi, const char* tag_name)
+{
+  pTag tag;
+  int rc = PUMI_Mesh_FindTag(mesh_pumi,tag_name,tag);
+  assert(rc == PUMI_SUCCESS);
+
+
+  presf = apf::createLagrangeField(mesh,"pres",apf::SCALAR,1);
+  velf = apf::createLagrangeField(mesh,"vel",apf::VECTOR,1);
+  voff = apf::createLagrangeField(mesh,"vof",apf::SCALAR,1);
+  phif = apf::createLagrangeField(mesh,"phi",apf::SCALAR,1);
+  phidf = apf::createLagrangeField(mesh,"phid",apf::SCALAR,1);
+  phiCorrf = apf::createLagrangeField(mesh,"phiCorr",apf::SCALAR,1);
+
+  pPart part;
+  PUMI_Mesh_GetPart(mesh_pumi,0,part);
+  for (mPart::iterall it = part->beginall(0);
+      it != part->endall(0); ++it)
+  {
+    pMeshEnt vertex = *it;
+    double* v = new double[numVar];
+    int really_unnecessary;
+    rc = PUMI_MeshEnt_GetDblArrTag(mesh_pumi,vertex,tag,
+        &v,&really_unnecessary);
+    assert(rc == PUMI_SUCCESS);
+    setScalar(presf,castEntity(vertex),0,v[0]);
+    PUMI_MeshEnt_DelTag(vertex,tag);
+    delete [] v;
+  }
+  return 0;
+}
+
+int MeshAdaptPUMIDrvr::getTagFromField(apf::Mesh* mesh, pMeshMdl mesh_pumi, const char* tag_name)
+{
+  pTag tag;
+  PUMI_Mesh_CreateTag(mesh_pumi,tag_name,PUMI_DBL,1,tag);
+  pPart part;
+  PUMI_Mesh_GetPart(mesh_pumi,0,part);
+  for (mPart::iterall it = part->beginall(0);
+      it != part->endall(0); ++it)
+  {
+    pMeshEnt vertex = *it;
+    double pres = getScalar(presf,castEntity(vertex),0);
+//    Vector3 vel = getVector(velf,castEntity(vertex),0);
+//    double vof = getScalar(voff,castEntity(vertex),0);
+//    double phi = getScalar(phif,castEntity(vertex),0);
+//    double phid = getScalar(phidf,castEntity(vertex),0);
+//    double phiCorr = getScalar(phiCorrf,castEntity(vertex),0);
+    
+    double* v = new double[1];
+    v[0]=pres;
+/*    
+    v[1]=vel[0]; v[2]=vel[1]; v[3]=vel[2];
+    v[4]=vof; v[5]=phi; v[6]=phid; v[7]=phiCorr; 
+*/    
+    PUMI_MeshEnt_SetDblArrTag(mesh_pumi,vertex,tag,v,1);
+  }
+  return 0;
+}
+

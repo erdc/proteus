@@ -6,13 +6,14 @@
 #include "mesh.h"
 #include "cmeshToolsModule.h"
 #include "MeshTools.h"
+#include "apf.h"
 
 void TransferTopSCOREC(pPList oldEnts, pPList newRgn, void *userData, modType mtype, pEntity ent);
 
 class MeshAdaptPUMIDrvr{
  
   public:
-  MeshAdaptPUMIDrvr(); 
+  MeshAdaptPUMIDrvr(double, double, int); 
   ~MeshAdaptPUMIDrvr();
 
   Mesh mesh_proteus;
@@ -39,6 +40,9 @@ class MeshAdaptPUMIDrvr{
   int InterpolateSolutionE( pEdge edge, double xi[2], int field_size, pTag pTagTag, double* result);
   int TransferBottomE(pPList parent, pPList fresh, pPList VtxstoHandle, modType mtype);
 
+  double hmax, hmin;
+  int numIter;
+
   private: 
   pMeshMdl PUMI_MeshInstance;
   pGeomMdl PUMI_GModel;
@@ -50,7 +54,7 @@ class MeshAdaptPUMIDrvr{
 
   pTag GlobNumberTag;
   pTag SolutionTag, SFTag;
-  std::vector<std::vector<double> > SolutionVec;
+  apf::Field *presf, *velf, *voff, *phif, *phidf, *phiCorrf;
 
   int ConstructGlobalNumbering(Mesh& mesh);
   int ConstructGlobalStructures(Mesh& mesh);
@@ -66,4 +70,8 @@ class MeshAdaptPUMIDrvr{
   int SetOwnerGlobNumbering(pTag, PUMI_EntType, int);
   int SetCopyGlobNumbering(pTag, int EntType);
   int DeleteMeshEntIDs();
+  int getFieldFromTag(apf::Mesh* apf_mesh, pMeshMdl mesh_pumi, const char* tag_name);
+  int getTagFromField(apf::Mesh* apf_mesh, pMeshMdl mesh_pumi, const char* tag_name);
+
+  int SmoothSizeField();
 };
