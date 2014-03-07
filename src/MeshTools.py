@@ -5,7 +5,7 @@ from EGeometry import *
 import numpy
 import array
 from Archiver import *
-
+from LinearAlgebraTools import ParVec_petsc4py
 from Profiling import logEvent,memory
 
 class Node:
@@ -495,6 +495,13 @@ class Mesh:
         log("Number of Subdomain Edges = "+str(self.subdomainMesh.nEdges_global))
         comm.barrier()
         log("Finished partitioning")
+        par_nodeDiametersArray = ParVec_petsc4py(self.subdomainMesh.nodeDiametersArray,
+                                                 bs=1,
+                                                 n=self.subdomainMesh.nNodes_owned,
+                                                 N=self.nNodes_global,
+                                                 nghosts=self.subdomainMesh.nNodes_global - self.subdomainMesh.nNodes_owned,
+                                                 subdomain2global=self.nodeNumbering_subdomain2global)
+        par_nodeDiametersArray.scatter_forward_insert()
         # comm.beginSequential()
         # from Profiling import memory
         # memory()
@@ -565,6 +572,13 @@ class Mesh:
         log("Number of Subdomain Edges = "+str(self.subdomainMesh.nEdges_global))
         comm.barrier()
         log("Finished partitioning")
+        par_nodeDiametersArray = ParVec_petsc4py(self.subdomainMesh.nodeDiametersArray,
+                                                 bs=1,
+                                                 n=self.subdomainMesh.nNodes_owned,
+                                                 N=self.nNodes_global,
+                                                 nghosts=self.subdomainMesh.nNodes_global - self.subdomainMesh.nNodes_owned,
+                                                 subdomain2global=self.nodeNumbering_subdomain2global)
+        par_nodeDiametersArray.scatter_forward_insert()
         # comm.beginSequential()
         # from Profiling import memory
         # memory()
@@ -3337,7 +3351,6 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
         self.buildFromC(self.cmultilevelMesh)
         log("partitionMesh")
         self.meshList[0].partitionMeshFromFiles(filebase,base,nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
-
     def refine(self):
         self.meshList.append(TetrahedralMesh())
         childrenDict = self.meshList[-1].refine(self.meshList[-2])
