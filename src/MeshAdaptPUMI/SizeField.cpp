@@ -1,5 +1,10 @@
 #include "MeshAdaptPUMI.h"
 #include "mMeshIO.h"
+#include "apf.h"
+#include "apfVector.h"
+#include "apfPUMI.h"
+#include "apfSPR.h"
+#include "apfMesh.h"
 
 struct commData {
   int numNeigh;
@@ -9,12 +14,14 @@ struct commData {
 pTag NumNeighTag;
 pTag NeighSFTag;
 
-int MeshAdaptPUMIDrvr::CalculateSizeField() {
+int MeshAdaptPUMIDrvr::CalculateSizeField(pMAdapt MA_Drvr) {
 
   PUMI_Mesh_CreateTag(PUMI_MeshInstance, "NodeMeshSize", SCUtil_DBL, 1, SFTag);
   PUMI_Mesh_SetAutoTagMigrOn(PUMI_MeshInstance, SFTag, PUMI_ALLTYPE);
 
   printf("Calculating size field\n");
+
+  double epsilon=0.03;
   
   pPartEntIter EntIt;
   pMeshEnt meshEnt;
@@ -29,9 +36,13 @@ int MeshAdaptPUMIDrvr::CalculateSizeField() {
      assert(ncount==numVar);
      
      double* size = new double[1];
-     if(sol[4]>0.0 && sol[4]<1.0) {
+     double phi = sqrt(sol[5]*sol[5]);
+     if(fabs(phi)<epsilon) {
        size[0] = hmin;
-     }  
+     } 
+     else if(phi<3*epsilon) {
+       size[0]=(hmin+hmax)/2;
+     } 
      else {
        size[0] = hmax;
      }
@@ -42,13 +53,99 @@ int MeshAdaptPUMIDrvr::CalculateSizeField() {
   }
   PUMI_PartEntIter_Del(EntIt);
   
-  for(int i=0; i<15; i++)
+  for(int i=0; i<1; i++)
      SmoothSizeField();
+
+  //set size field to the meshadaptor
+  PUMI_PartEntIter_Init (PUMI_Part, PUMI_VERTEX, PUMI_ALLTOPO, EntIt);
+  isEnd=0;
+  int sizeCounter=0;
+  double dVtxSize;
+  while (!isEnd)
+  {
+    PUMI_PartEntIter_GetNext(EntIt, meshEnt);
+    if(SCUtil_SUCCESS == PUMI_MeshEnt_GetDblTag (PUMI_MeshInstance, meshEnt, SFTag, &dVtxSize)) {
+      MA_SetIsoVtxSize(MA_Drvr, (pVertex)meshEnt, dVtxSize);   // sets size field from tag data
+      sizeCounter++;
+    }
+    PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
+  }
+  PUMI_PartEntIter_Del(EntIt);
+  std::cerr<<" - set size field for "<<sizeCounter<<" vertices\n";
+  
 
 //  PUMI_Mesh_WriteToFile(PUMI_MeshInstance, "Dambreak_debug.smb", 1);  
   exportMeshToVTK(PUMI_MeshInstance, "pumi.vtk"); 
   return 0;
 }
+
+int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f) {
+  
+  apf::Mesh* apf_mesh = apf::createMesh(PUMI_Part);
+  apf::Field* gradphi = recoverGradientByVolume(f);
+  apf::Field* metric = createLagrangeField(apf_mesh,"sizeMetric",apf::MATRIX,1);
+
+  pPartEntIter EntIt;
+  pMeshEnt meshEnt;
+  int isEnd = 0;
+  PUMI_PartEntIter_Init(PUMI_Part,PUMI_VERTEX,PUMI_ALLTOPO,EntIt);
+  while (!isEnd) {
+    PUMI_PartEntIter_GetNext(EntIt, meshEnt);
+    
+    double sizeMetric[3][3];
+    apf::MeshEntity* e = apf::castEntity(reinterpret_cast<mEntity*>(meshEnt));
+
+    apf::Vector3 gphi;
+    double vof;
+    apf::Matrix3x3 mtx;
+    getVector(gradphi, e, 0, gphi);
+    vof = getScalar(voff, e, 0);
+
+    double factor=hmin-hmax;
+
+    double abs_phi = gphi[0]*gphi[0]+gphi[1]*gphi[1]+gphi[2]*gphi[2];
+    apf::Vector3 normal_gphi = gphi.normalize();
+
+    for(int i=0;i<3;++i) {
+      for(int j=0;j<3;++j) {
+        sizeMetric[i][j]=0.0;
+        mtx[i][j]=0.0;
+      }
+    }     
+//    sizeMetric[0][0]=hmax; sizeMetric[1][1]=hmax; sizeMetric[2][2]=hmax;
+//    mtx[0][0]=hmax; mtx[1][1]=hmax; mtx[2][2]=hmax;
+//
+    apf::Vector3 y_axis=apf::Vector3(0.0,1.0,0.0); 
+    apf::Vector3 x_axis = apf::Vector3(1.0,0.0,0.0);
+    apf::Vector3 dir2=cross(normal_gphi,y_axis);
+    if(dir2.getLength()<1e-3)
+       dir2=cross(normal_gphi,x_axis);
+    apf::Vector3 dir3=cross(normal_gphi,dir2);
+    
+    if(vof>0.0 && vof<1.0) {
+//      for(int i=0;i<3;++i) {
+        for(int j=0;j<3;++j) {
+//          sizeMetric[i][j]=sizeMetric[i][j]+factor*gphi[i]*gphi[j]/abs_phi;
+//          mtx[i][j]=mtx[i][j]+factor*gphi[i]*gphi[j]/abs_phi;
+          sizeMetric[0][j]=hmin*normal_gphi[j];
+          sizeMetric[1][j]=hmax*dir2[j];
+          sizeMetric[2][j]=hmax*dir3[j];
+        }
+//      }
+    } else {
+      sizeMetric[0][0]=hmax; sizeMetric[1][1]=hmax; sizeMetric[2][2]=hmax;
+      mtx[0][0]=hmax; mtx[1][1]=hmax; mtx[2][2]=hmax;
+    } 
+    MA_SetAnisoVtxSize(MA_Drvr, pVertex(meshEnt), sizeMetric);
+//    apf::setMatrix(metric, e, 0, mtx);
+ 
+    PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
+  }
+  PUMI_PartEntIter_Del(EntIt);
+  
+  apf:: writeVtkFiles("sizeField", apf_mesh);
+  return 0;
+} 
 
 int MeshAdaptPUMIDrvr::SmoothSizeField() {
 
@@ -58,7 +155,6 @@ int MeshAdaptPUMIDrvr::SmoothSizeField() {
   pPartEntIter EntIt;
   pMeshEnt meshEnt;
   int isEnd = 0;
-  int eN = 0;
 
   PUMI_PartEntIter_Init(PUMI_Part,PUMI_VERTEX,PUMI_ALLTOPO,EntIt);
   while (!isEnd) {

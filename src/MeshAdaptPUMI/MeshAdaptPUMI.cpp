@@ -102,35 +102,16 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh() {
   
   pMAdapt MA_Drvr;
   MA_NewMeshAdaptDrvr_ModelType(MA_Drvr, PUMI_MeshInstance, Application, 2); // third param (0,1,2 : no snapping, non-parametric, parametric)
- // set up size field on verts below
-  double dVtxSize;
-  pPartEntIter EntIt;
-  pMeshEnt meshEnt;
-  PUMI_PartEntIter_Init (PUMI_Part, PUMI_VERTEX, PUMI_POINT, EntIt);
-  int isEnd = 0;
-  int sizeCounter = 0;
 
-  while (!isEnd)
-  {
-    PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-    if(SCUtil_SUCCESS == PUMI_MeshEnt_GetDblTag (PUMI_MeshInstance, meshEnt, SFTag, &dVtxSize)) {
-      MA_SetIsoVtxSize(MA_Drvr, (pVertex)meshEnt, dVtxSize);   // sets size field from tag data
-      sizeCounter++;
-    }
-    PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
-  }
-  std::cerr<<" - set size field for "<<sizeCounter<<" vertices\n";
-
-  PUMI_PartEntIter_Del(EntIt);
-  isEnd = 0;
-
-  DeleteMeshEntIDs();
+//  DeleteMeshEntIDs();
   
-//  apf::Mesh* apf_mesh = apf::createMesh(PUMI_MeshInstance);
-//  getFieldFromTag(apf_mesh, PUMI_MeshInstance,"Solution");
+  apf::Mesh* apf_mesh = apf::createMesh(PUMI_Part);
+  getFieldFromTag(apf_mesh, PUMI_MeshInstance,"Solution");
 
-//  ma::FieldCallback(MA_Drvr, apf_mesh);
+  ma::FieldCallback(MA_Drvr, apf_mesh);
   
+  CalculateAnisoSizeField(MA_Drvr, phif);
+//  CalculateSizeField(MA_Drvr);
 //  CBFunction CB = 0;
   CBFunction CB = TransferTopSCOREC;
 
@@ -160,7 +141,11 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh() {
   int err = PUMI_Mesh_GetPart(PUMI_MeshInstance, 0, PUMI_Part);
 
   exportMeshToVTK(PUMI_MeshInstance, "pumi_adapt.vtk");
-  if(return_verify){ std::cerr << "Adapted PUMI mesh verify completed succesfully!\n"; }
+  if(return_verify){ 
+    std::cerr << "Adapted PUMI mesh verify completed succesfully!\n"; 
+  } else {
+    exit(1);
+  }
 
   return 0;
 }

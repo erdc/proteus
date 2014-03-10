@@ -1,5 +1,5 @@
 #include <cstdlib>
-//#include "MA.h"
+#include "MA.h"
 #include "pumi_mesh.h"
 #include "pumi.h"
 #include "pumi_geom.h"
@@ -32,10 +32,12 @@ class MeshAdaptPUMIDrvr{
   //Fields
   int TransferSolutionToPUMI(double* inArray, int nVar, int nN);
   int TransferSolutionToProteus(double* outArray, int nVar, int nN);
-  int CalculateSizeField();
   int CommuSizeField();
   int AdaptPUMIMesh();
   int MeshAdaptPUMI();
+
+  int CalculateSizeField(pMAdapt);
+  int CalculateAnisoSizeField(pMAdapt, apf::Field*);
 
   int InterpolateSolutionE( pEdge edge, double xi[2], int field_size, pTag pTagTag, double* result);
   int TransferBottomE(pPList parent, pPList fresh, pPList VtxstoHandle, modType mtype);
