@@ -86,7 +86,6 @@ int MeshAdaptPUMIDrvr::DeleteMeshEntIDs() {
       PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
     } //region loop
     PUMI_PartEntIter_Del(EntIt);
-
   }
 }
 
@@ -95,7 +94,6 @@ int MeshAdaptPUMIDrvr::getFieldFromTag(apf::Mesh* mesh, pMeshMdl mesh_pumi, cons
   pTag tag;
   int rc = PUMI_Mesh_FindTag(mesh_pumi,tag_name,tag);
   assert(rc == PUMI_SUCCESS);
-
 
   presf = apf::createLagrangeField(mesh,"pres",apf::SCALAR,1);
   velf = apf::createLagrangeField(mesh,"vel",apf::VECTOR,1);
@@ -116,7 +114,9 @@ int MeshAdaptPUMIDrvr::getFieldFromTag(apf::Mesh* mesh, pMeshMdl mesh_pumi, cons
         &v,&really_unnecessary);
     assert(rc == PUMI_SUCCESS);
     setScalar(presf,castEntity(vertex),0,v[0]);
-    PUMI_MeshEnt_DelTag(vertex,tag);
+    setScalar(voff,castEntity(vertex),0,v[4]);
+    setScalar(phif,castEntity(vertex),0,v[5]);
+//    PUMI_MeshEnt_DelTag(vertex,tag);
     delete [] v;
   }
   return 0;
@@ -134,8 +134,8 @@ int MeshAdaptPUMIDrvr::getTagFromField(apf::Mesh* mesh, pMeshMdl mesh_pumi, cons
     pMeshEnt vertex = *it;
     double pres = getScalar(presf,castEntity(vertex),0);
 //    Vector3 vel = getVector(velf,castEntity(vertex),0);
-//    double vof = getScalar(voff,castEntity(vertex),0);
-//    double phi = getScalar(phif,castEntity(vertex),0);
+    double vof = getScalar(voff,castEntity(vertex),0);
+    double phi = getScalar(phif,castEntity(vertex),0);
 //    double phid = getScalar(phidf,castEntity(vertex),0);
 //    double phiCorr = getScalar(phiCorrf,castEntity(vertex),0);
     
