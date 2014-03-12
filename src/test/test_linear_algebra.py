@@ -110,12 +110,12 @@ def compute_norms(h,A,vecs):
     from proteus.LinearAlgebraTools import l2Norm, l1Norm, lInfNorm, rmsNorm
     from proteus.LinearAlgebraTools import wl2Norm, wl1Norm, wlInfNorm
     from proteus.LinearAlgebraTools import energyNorm
-
     for norm in [l2Norm, l1Norm, lInfNorm, rmsNorm]:
         yield norm.__name__, [norm(x) for x in vecs]
     for norm in [wl2Norm, wl1Norm, wlInfNorm]:
         yield norm.__name__, [norm(x, h) for x in vecs]
-    yield norm.__name__, [energyNorm(x, A) for x in vecs]
+    for norm in [energyNorm]:
+        yield norm.__name__, [energyNorm(x, A) for x in vecs]
 
 def test_norm_homogeneity():
     """test_norm_homogeneity
@@ -127,11 +127,13 @@ def test_norm_homogeneity():
     from proteus.LinearAlgebraTools import Vec
     from proteus.LinearAlgebraTools import Mat
 
-    h = 0.5
+    h = Vec(2)
+    h = [0.5,0.5]
 
     A = Mat(2,2)
-    A[0,:] = [1, 2]
-    A[1,:] = [3, 2]
+    #needs to be SPD
+    A[0,:] = [5, 2]
+    A[1,:] = [2, 6]
 
     v1 = Vec(2)
     v1[:] = [1, 1]
@@ -153,11 +155,13 @@ def test_norm_triangle_inequality():
     from proteus.LinearAlgebraTools import Vec
     from proteus.LinearAlgebraTools import Mat
 
-    h = 0.5
+    h = Vec(2)
+    h = [1.0,1.0]
 
+    #need an SPD matrix for this to be a norm
     A = Mat(2,2)
-    A[0,:] = [1, 2]
-    A[1,:] = [3, 2]
+    A[0,:] = [4, 2]
+    A[1,:] = [2, 5]
 
     v1 = Vec(2)
     v1[:] = [1, 1]
@@ -172,5 +176,7 @@ def test_norm_triangle_inequality():
         yield test, t1 <= t2 + t3
 
 if __name__ == '__main__':
+    from proteus import Comm
+    comm = Comm.init()
     import nose
     nose.main()
