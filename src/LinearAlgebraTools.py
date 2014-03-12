@@ -8,6 +8,7 @@ representations using PETSc.
 \todo LinearAlgebraTools: make better use of numpy.linalg and petsc4py to provide the needed functionality and improve test suite
 """
 import numpy
+import math
 from .superluWrappers import *
 from . import flcbdfWrappers
 from Profiling import logEvent
@@ -231,7 +232,7 @@ def l2Norm(x):
     """
     Compute the parallel l_2 norm
     """
-    return numpy.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
+    return math.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
 
 
 def l1Norm(x):
@@ -259,43 +260,40 @@ def wl2Norm(x,h):
     """
     Compute the parallel weighted l_2 norm with weight h
     """
-    return numpy.sqrt(flcbdfWrappers.globalSum(wDot(x,x,h)))
+    return math.sqrt(flcbdfWrappers.globalSum(wDot(x,x,h)))
 
 
 def wl1Norm(x,h):
     """
     Compute the parallel weighted l_1 norm with weight h
     """
-    return numpy.sum(flcbdfWrappers.globalSum(numpy.abs(h*x)))
+    return flcbdfWrappers.globalSum(numpy.sum(numpy.abs(h*x)))
 
 
 def wlInfNorm(x,h):
     """
     Compute the parallel weighted l_{\infty} norm with weight h
     """
-    return flcbdfWrappers.globalMax(numpy.max(h*numpy.abs(x)))
-
+    return flcbdfWrappers.globalMax(numpy.linalg.norm(h*x,numpy.inf))
 
 def energyDot(x,y,A):
     """
     Compute the "energy" dot product x^t A y (not parallel)
     """
-    numpy.dot(A*x,y)
-
+    return numpy.dot(numpy.dot(x,A),y)
 
 def energyNorm(x,A):
     """
     Compute the "energy" norm x^t A x (not parallel)
     """
-    numpy.sqrt(energyDot(x,x,A))
-
+    return math.sqrt(energyDot(x,x,A))
 
 def l2NormAvg(x):
     """
     Compute the arithmetic averaged l_2 norm (root mean squared norm)
     """
     scale = 1.0/flcbdfWrappers.globalSum(len(x.flat))
-    return scale*numpy.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
+    return scale*math.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
 
 
 rmsNorm = l2NormAvg
@@ -305,7 +303,7 @@ def l2Norm_local(x):
     """
     Compute the l_2 norm for just local (processor) system  (not parallel)
     """
-    return numpy.sqrt(numpy.dot(x,x))
+    return math.sqrt(numpy.dot(x,x))
 
 
 class WeightedNorm:
