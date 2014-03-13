@@ -30,7 +30,7 @@ To run with non-conforming P^1 on triangles
 parun sp_gw_p.py sp_gw_ncp1_n.py -v -l 2
 ::
 
-To run in parallel, set parallel flag to True in sp_gw_p.py and type
+To run in parallel, set the parallel flag to True in sp_gw_p.py and type
 ::
 mpirun -np 2 parun sp_gw_p.py sp_gw_c0p1_n.py -v -l 2 -O petsc.options
 gatherArchives.py -s 2 -f TransientSinglePhaseFlow

@@ -553,8 +553,6 @@ property float z
 
                     vertFlagDict[self.vertexFlags[vN]].append(vN+1)
 
-                #print  "vertexFlags"
-                #print  vertFlagDict
                 # Physical Surfaces
                 pvN=0
                 for pv in vertFlagDict:
