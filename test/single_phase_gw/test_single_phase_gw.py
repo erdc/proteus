@@ -43,7 +43,7 @@ def test_c0p1():
     #nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('single_phase_gw')
-    assert(True)
+
 def test_ncp1():
     import sp_gw_p
     import sp_gw_ncp1_n
@@ -69,7 +69,6 @@ def test_ncp1():
     #nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('single_phase_gw')
-    assert(True)
 
 
 
@@ -81,5 +80,3 @@ if __name__ == '__main__':
         Profiling.closeLog()
     except:
         pass
-#    test_c0q1()
-#    test_c0q2()
