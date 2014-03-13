@@ -34,7 +34,7 @@ def test_c0p1():
     #nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_2d_c0p1')
-    assert(True)
+
 def test_c0p2():
     import poisson_het_2d_p
     import poisson_het_2d_c0pk_n
@@ -61,7 +61,6 @@ def test_c0p2():
     #nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_2d_c0p2')
-    assert(True)
 
 
 
@@ -73,5 +72,3 @@ if __name__ == '__main__':
         Profiling.closeLog()
     except:
         pass
-#    test_c0q1()
-#    test_c0q2()
