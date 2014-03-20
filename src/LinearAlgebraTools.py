@@ -238,6 +238,15 @@ def l2Norm(x):
 def l1Norm(x):
     """
     Compute the parallel l_1 norm
+    
+    :math:'l_1' norm of a vector
+    
+    .. math:: \|\mathbf{x}_{l_1}\| = \sum_{i=0}^{n-1} |x_i|
+    
+    If Python is running in parallel, then the sum is over all dimensions on all processors so that the input must not contain "ghost" entries.
+    
+    :param:\mathbf{x}
+    
     """
     return flcbdfWrappers.globalSum(numpy.sum(numpy.abs(x)))
 
