@@ -833,6 +833,8 @@ public:
       for(int I=0;I<2;I++)
 	grad[I] += dof[l2g_element[j]]*grad_trial[j*2+I];
   }
+
+
   inline void calculateMapping_element(const int eN,
 				       const int k,
 				       double* mesh_dof,
@@ -1030,6 +1032,8 @@ public:
       for(int I=0;I<NSPACE;I++)
 	grad[I] += dof[l2g_element[j]]*grad_trial[j*NSPACE+I];
   }
+
+  
   inline void valFromElementDOF(const double* dof,const double* trial_ref,double& val)
   {
     val=0.0;
@@ -1068,6 +1072,7 @@ public:
 	  grad_test[i*NSPACE+I] += jacInv[J*NSPACE+I]*grad_test_ref[i*NSPACE+J];
   }
   
+
   inline void backwardEuler(const double& dt, const double& m_old, const double& m, const double& dm, double& mt, double& dmt)
   {  
     mt =(m-m_old)/dt;
