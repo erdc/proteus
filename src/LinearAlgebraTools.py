@@ -250,8 +250,16 @@ def lInfNorm(x):
 
 
 def wDot(x,y,h):
-    """
-    Compute the parallel weighted dot product with weight h
+    r"""
+    Compute the parallel weighted dot product with weight :math:h
+    .. math:: 
+       \sum_{i}h_{i}x_{i}y_{i}
+    
+    This should work faster than in standard mode.
+    :param x: the first vector
+    :param y: the second vector
+    :param h: the weights
+    :return: the weighted norm
     """
     return flcbdfWrappers.globalSum(numpy.sum(x*y*h))
 
