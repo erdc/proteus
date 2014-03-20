@@ -6,6 +6,8 @@ are CSR matrices. Parallel vector and matrix are built on top of those
 representations using PETSc.
 
 \todo LinearAlgebraTools: make better use of numpy.linalg and petsc4py to provide the needed functionality and improve test suite
+
+A great improvement to this docstring!
 """
 import numpy
 import math
