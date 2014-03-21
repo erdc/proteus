@@ -1,5 +1,0 @@
-./configure --prefix=${PROTEUS_PREFIX} \
-CC="icc -DNDEBUG -DPROTEUS_FFI64_HACK -pthread -fp-model precise -fno-strict-aliasing -xSSE4.2 -O3" \
-CXX="icpc -DPROTEUS_FFI64_HACK -DNDEBUG -pthread -fp-model precise -fno-strict-aliasing -xSSE4.2 -O3" \
---with-threads \
---with-cxx-main="icpc -DPROTEUS_FFI64_HACK -pthread -fp-model precise -fno-strict-aliasing -xSSE4.2 -O3"

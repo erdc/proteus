@@ -1,1 +1,0 @@
-${PROTEUS_PYTHON} setup.py build_src config --compiler=intel build_clib --compiler=intel build_ext --compiler=intel install

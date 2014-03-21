@@ -1,6 +1,0 @@
-#!/bin/tcsh
-setenv CC "gcc -m32"
-setenv CXX "g++ -m32"
-setenv F77 "gfortran -m32"
-unsetenv LD
-./configure --enable-shared --with-pic --with-zlib=${PYADH}/${PYADH_ARCH} --with-szlib=${PYADH}/${PYADH_ARCH} --disable-parallel --enable-threadsafe --with-pthread --prefix=${PYADH}/${PYADH_ARCH}

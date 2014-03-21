@@ -1,2 +1,0 @@
-${PROTEUS_PYTHON} setup.py config --mpicc="/opt/local/bin/openmpicc" --mpicxx="/opt/local/bin/openmpicxx" --mpild="/opt/local/bin/openmpicxx"
-

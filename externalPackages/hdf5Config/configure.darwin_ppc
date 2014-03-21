@@ -1,8 +1,0 @@
-#!/bin/csh
-setenv CC '/usr/bin/gcc -arch ppc'
-setenv CFLAGS '-arch ppc'
-setenv LDFLAGS '-arch ppc'
-setenv CXX '/usr/bin/g++ -arch ppc'
-setenv CXXFLAGS '-arch ppc'
-setenv LD '/usr/bin/gcc -arch ppc'
-./configure --disable-fortran --disable-cxx --with-zlib=${PYADH}/${PYADH_ARCH} --with-szlib=${PYADH}/${PYADH_ARCH} --enable-shared --prefix=${PYADH}/${PYADH_ARCH}

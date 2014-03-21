@@ -1,1 +1,0 @@
-CC=gcc LD=gcc ./configure --shared --prefix=${PROTEUS_PREFIX}

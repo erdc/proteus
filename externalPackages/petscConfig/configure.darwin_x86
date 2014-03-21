@@ -1,4 +1,0 @@
-${PROTEUS_PYTHON} ./config/configure.py --with-clanguage=C --with-cc='/usr/bin/mpicc -arch i386 -arch x86_64' --with-cxx='/usr/bin/mpicxx -arch i386 -arch x86_64'  --without-fortran  --with-mpi-compilers --with-shared --with-dynamic --download-parmetis=ifneeded \
---prefix=${PROTEUS_PREFIX} \
---PETSC_ARCH=${PROTEUS_ARCH} \
---PETSC_DIR=${PROTEUS}/externalPackages/petsc

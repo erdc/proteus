@@ -1,1 +1,0 @@
-./configure --prefix=${PROTEUS_PREFIX} --exec-prefix=${PROTEUS_PREFIX} --libdir=${PROTEUS_PREFIX}/lib --enable-unicode=ucs4 CFLAGS='-I${PROTEUS_PREFIX}/include' LDFLAGS='-L${PROTEUS_PREFIX}/lib64 -L${PROTEUS_PREFIX}/lib'

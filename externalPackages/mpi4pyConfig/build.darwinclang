@@ -1,1 +1,0 @@
-${PROTEUS_PYTHON} setup.py build  --mpicc=/usr/local/bin/mpicc --mpicxx=/usr/local/bin/mpicxx --mpif90=/usr/local/bin/mpif90

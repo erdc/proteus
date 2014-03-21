@@ -1,1 +1,0 @@
-./configure --enable-shared --with-pic --with-zlib=${PYADH}/${PYADH_ARCH} --with-szlib=${PYADH}/${PYADH_ARCH} --disable-parallel --enable-threadsafe --with-pthread --prefix=${PYADH}/${PYADH_ARCH}

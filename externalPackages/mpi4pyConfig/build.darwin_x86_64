@@ -1,8 +1,0 @@
-#!/bin/csh
-setenv MPILD 'mpicc -arch x86_64'
-setenv MPICC 'mpicc -arch x86_64'
-setenv MPICXX 'mpicxx -arch x86_64'
-#had to 
-#add extra_args[-1]='/Users/mfarthin/Public/code/pyadh/darwin_x86_64/Python.framework/Versions/2.6/lib'
-#to mpidistutils.py:1306 to get python executable to build
-${PROTEUS_PYTHON} setup.py build

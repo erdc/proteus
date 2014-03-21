@@ -1,5 +1,0 @@
-${PROTEUS_PYTHON} ./config/configure.py --with-clanguage=C --with-cc="/opt/local/bin/openmpicc" --with-cxx="/opt/local/bin/openmpicxx" --with-fc="/opt/local/bin/openmpif90"  --with-x=0 --with-mpi-compilers --with-pic --with-shared-libraries --download-metis=1 --download-parmetis=1 --download-spooles=1 --download-superlu_dist=1 --download-hypre=1 --prefix=${PROTEUS_PREFIX} \
---PETSC_ARCH=${PROTEUS_ARCH} \
---PETSC_DIR=${PROTEUS}/externalPackages/petsc
-
- 

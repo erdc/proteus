@@ -1,8 +1,0 @@
-#!/bin/csh
-setenv CC '/usr/bin/gcc -arch ppc'
-unsetenv CFLAGS
-unsetenv CXX '/usr/bin/g++ -arch ppc'
-unsetenv CXXFLAGS
-unsetenv LD '/usr/bin/gcc -arch ppc'
-unsetenv LDFLAGS
-./configure --enable-shared --prefix=${PYADH}/${PYADH_ARCH}

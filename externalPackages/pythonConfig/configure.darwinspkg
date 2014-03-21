@@ -1,1 +1,0 @@
-./configure --prefix=${PROTEUS_PREFIX} CPPFLAGS="-I/${PROTEUS_PREFIX}/include" LDFLAGS="-L${PROTEUS_PREFIX}/lib"

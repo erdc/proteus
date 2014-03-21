@@ -1,1 +1,0 @@
-LD="/usr/bin/clang" CC="/usr/bin/clang"  CFLAGS="" CXX="/usr/bin/clang++"  CXXFLAGS="" ./configure --enable-shared --prefix=${PROTEUS_PREFIX}

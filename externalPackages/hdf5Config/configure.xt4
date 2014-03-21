@@ -1,3 +1,0 @@
-#!/bin/csh
-
-./configure --disable-fortran --disable-cxx --with-zlib=/usr/local/usp/pyadh/ --with-szlib=/usr/local/usp/pyadh/ --disable-shared --enable-static --enable-static-exec --prefix=/usr/local/usp/pyadh/
