@@ -202,23 +202,7 @@ def SparseMat(nr,nc,nnz,nzval,colind,rowptr):
     import superluWrappers
     return superluWrappers.SparseMatrix(nr,nc,nnz,nzval,colind,rowptr)
 
-def SparseMatCopy(A,deepcopy=True):
-    """
-    Convenience function to create a copy of a new sparse matrix 
-    returns data array for matrix (nzval) because this is only stored
-    as a shallow reference in the superluWrapper
-    """
-    import superluWrappers
-    nr,nc = A.shape
-    rowptr,colind,nzval = A.getCSRrepresentation()
-    assert nr == rowptr.shape[0]-1
-    nnz= nzval.shape[0]
-    nzval_data = nzval
-    if deepcopy:
-        nzval_data = nzval.copy() 
-        return (superluWrappers.SparseMatrix(nr,nc,nnz,nzval_data,colind,rowptr),nzval_data)
-    else:
-        return (superluWrappers.SparseMatrix(nr,nc,nnz,nzval_data,colind,rowptr),nzval_data)
+
 class SparseMatShell:
     """
     Build a parallel matrix shell using the subdomain CSR data structures (must have overlapping subdomains)
