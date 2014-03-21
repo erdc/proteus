@@ -1720,7 +1720,16 @@ class Diffusion_IIPG_exterior(NF_base):
                                                                                                 ebqe['penalty'],
                                                                                                 fluxJacobian_exterior[ci][cj])
 
-
+class Diffusion_SIPG_exterior(Diffusion_IIPG_exterior):
+    def __init__(self,vt,getPointwiseBoundaryConditions,
+                 getAdvectiveFluxBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions):
+        Diffusion_IIPG_exterior.__init__(self,vt,getPointwiseBoundaryConditions,
+                                         getAdvectiveFluxBoundaryConditions,
+                                         getDiffusiveFluxBoundaryConditions)
+        self.includeBoundaryAdjoint=True
+        self.boundaryAdjoint_sigma=-1.0
+        
 class DarcySplitPressure_IIPG_exterior(NF_base):
     hasInterior=False
     """
