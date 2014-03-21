@@ -253,17 +253,42 @@ def l1Norm(x):
 
 def lInfNorm(x):
     """
-    Compute the parallel l_{\infty} norm
+    Compute the parallel :math:`l_{\infty}` norm
+
+    The :math:`l_{\infty}` norm of a vector :math:`\mathbf{x} \in
+    \mathbb{R}^n` is
+
+    .. math::
+
+       \|x\|_{\infty} = \max_i |x_i|
+       
+    This implemtation works for a distributed array with no ghost
+    components (each component must be on a single processor).
+    
+    :param x: numpy array of length n
+    :return: float
     """
     return flcbdfWrappers.globalMax(numpy.linalg.norm(x,numpy.inf))
 
 
 def wDot(x,y,h):
     """
-    Compute the parallel weighted dot product with weight h
+    Compute the parallel weighted dot product of vectors x and y using
+    weight vector h.
+    
+    The weighted dot product is defined for a weight vector
+    :math:`\mathbf{h}` as
+
+    .. math:: 
+
+       (\mathbf{x},\mathbf{y})_h = \sum_{i} h_{i} x_{i} y_{i}
+    
+    All weight vector components should be positive.
+
+    :param x,y,h: numpy arrays for vectors and weight 
+    :return: the weighted dot product
     """
     return flcbdfWrappers.globalSum(numpy.sum(x*y*h))
-
 
 def wl2Norm(x,h):
     """
