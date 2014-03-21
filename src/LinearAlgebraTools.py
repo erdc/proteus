@@ -263,19 +263,23 @@ def lInfNorm(x):
 
 
 def wDot(x,y,h):
-    r"""
-    Compute the parallel weighted dot product with weight :math:h
-    .. math:: 
-       \sum_{i}h_{i}x_{i}y_{i}
+    """
+    Compute the parallel weighted dot product of vectors x and y using
+    weight vector h.
     
-    This should work faster than in standard mode.
-    :param x: the first vector
-    :param y: the second vector
-    :param h: the weights
-    :return: the weighted norm
+    The weighted dot product is defined for a weight vector
+    :math:`\mathbf{h}` as
+
+    .. math:: 
+
+       (\mathbf{x},\mathbf{y})_h = \sum_{i} h_{i} x_{i} y_{i}
+    
+    All weight vector components should be positive.
+
+    :param x,y,h: numpy arrays for vectors and weight 
+    :return: the weighted dot product
     """
     return flcbdfWrappers.globalSum(numpy.sum(x*y*h))
-
 
 def wl2Norm(x,h):
     """
