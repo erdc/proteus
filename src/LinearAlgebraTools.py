@@ -244,9 +244,7 @@ def l1Norm(x):
 
 def lInfNorm(x):
     """
-    Compute the parallel l_{\infty} norm
-
-    compute the :math: 'l_{\infty}' norm of a vector in :math: '\mathbb{R}^n'
+    Compute the :math: 'l_{\infty}' norm of a vector in :math: '\mathbb{R}^n' in parallel
     """
     return flcbdfWrappers.globalMax(numpy.linalg.norm(x,numpy.inf))
 
