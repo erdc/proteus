@@ -5453,6 +5453,38 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                                          name,
                                                                                                                          tCount)
 
+    def initializeMassJacobian(self):
+        """
+        Setup the storage for the mass jacobian and return as a ```SparseMat``` or ```Mat``` based on self.matType
+        """
+        import superluWrappers
+        self.nzval_mass = None
+        if self.matType == superluWrappers.SparseMatrix:
+            self.nzval_mass = self.nzval.copy()
+            self.mass_jacobian = SparseMat(self.nFreeVDOF_global,self.nFreeVDOF_global,self.nnz,
+                                           self.nzval_mass,self.colind,self.rowptr)
+        elif self.matType == numpy.array:
+            self.mass_jacobian = Mat(self.nFreeVDOF_global,self.nFreeVDOF_global)
+        else:
+            raise TypeError("Matrix type must be sparse matrix or array")
+        return self.mass_jacobian
+
+    def initializeSpatialJacobian(self):
+        """
+        Setup the storage for the spatial jacobian and return as a ```SparseMat``` or ```Mat``` based on self.matType
+        """
+        import superluWrappers
+        self.nzval_space = None
+        if self.matType == superluWrappers.SparseMatrix:
+            self.nzval_space = self.nzval.copy()
+            self.space_jacobian = SparseMat(self.nFreeVDOF_global,self.nFreeVDOF_global,self.nnz,
+                                           self.nzval_space,self.colind,self.rowptr)
+        elif self.matType == numpy.array:
+            self.mass_jacobian = Mat(self.nFreeVDOF_global,self.nFreeVDOF_global)
+        else:
+            raise TypeError("Matrix type must be sparse matrix or array")
+        return self.space_jacobian
+
     def getMassJacobian(self,jacobian):
         """ 
         assemble the portion of the jacobian coming from the time derivative terms

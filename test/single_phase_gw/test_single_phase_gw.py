@@ -12,6 +12,11 @@ This module solves equations of the form
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
+import numpy as np
+import numpy.testing as npt
+from nose.tools import ok_ as ok
+from nose.tools import eq_ as eq
+
 Profiling.logLevel=7
 Profiling.verbose=True
 def test_c0p1():
@@ -42,7 +47,8 @@ def test_c0p1():
     #nList[0].linearSolver=default_n.LU
     #nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
-    ns.calculateSolution('single_phase_gw')
+    failed = ns.calculateSolution('single_phase_gw_c0p1')
+    assert (not failed)
 
 def test_ncp1():
     import sp_gw_p
@@ -50,7 +56,7 @@ def test_ncp1():
     pList = [sp_gw_p]
     nList = [sp_gw_ncp1_n]    
     so = default_so
-    so.name = pList[0].name = "single_phase_gw_c0p1"+"pe"+`comm.size()`
+    so.name = pList[0].name = "single_phase_gw_ncp1"+"pe"+`comm.size()`
     so.sList=[default_s]
     opts.logLevel=7
     opts.verbose=True
@@ -68,14 +74,17 @@ def test_ncp1():
     #nList[0].linearSolver=default_n.LU
     #nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
-    ns.calculateSolution('single_phase_gw')
+    failed = ns.calculateSolution('single_phase_gw_ncp1')
+    assert (not failed)
 
 def test_mass_and_stiff_jacobians():
     ###setup fine grid problem
     import sp_gw_p
     import sp_gw_c0p1_n
     pList = [sp_gw_p]
-    nList = [sp_gw_c0p1_n]    
+    nList = [sp_gw_c0p1_n] 
+    pList[0].ndays=500
+    pList[0].nDTout=1
     so = default_so
     so.name = pList[0].name = "single_phase_gw_c0p1"+"pe"+`comm.size()`
     so.sList=[default_s]
@@ -105,45 +114,37 @@ def test_mass_and_stiff_jacobians():
     #transport model on the final grid
     finest_model = ns.modelList[0].levelModelList[-1]
     #make a copy of the transport model's jacobian
-    mass_jacobian,mass_vals= LinearAlgebraTools.SparseMatCopy(finest_model.jacobian)
-    stiff_jacobian,stiff_vals= LinearAlgebraTools.SparseMatCopy(finest_model.jacobian)
+    mass_jacobian = finest_model.initializeMassJacobian()
+    stiff_jacobian= finest_model.initializeSpatialJacobian()
     #now try to assemble the mass jacobian
     finest_model.getMassJacobian(mass_jacobian)
     finest_model.getSpatialJacobian(stiff_jacobian)
-    mass_jacobian.fwrite('mass_jacobian.out')
-    stiff_jacobian.fwrite('stiff_jacobian.out')
-    finest_model.jacobian.fwrite('full_jacobian.out')
+    
     #just test to see that (mass/dt + stiff)*x = J*x
     dt = finest_model.timeIntegration.dt
     nr,nc=mass_jacobian.shape
     assert stiff_jacobian.shape[0] == nr
     assert stiff_jacobian.shape[1] == nc
     import numpy as np
-    x=np.random.rand(nc); 
-    m_split=np.zeros(nr,'d'); b_split=np.zeros(nr,'d')
-    b_full=np.zeros(nr,'d')
-    #J.x
-    finest_model.jacobian.matvec(x,b_full)
-    #M.x
-    mass_jacobian.matvec(x,m_split)
-    #M.x/dt
-    m_split /= dt
-    #K.x
-    stiff_jacobian.matvec(x,b_split)
-    b_split += m_split 
-    diff = b_full-b_split
-    err = np.dot(diff,diff)
-    tol = 1.0e-6
-    print 'err= ',err
-    assert err < tol
-    return mass_jacobian,stiff_jacobian,finest_model.jacobian
+    ntries=5
+    for i in range(ntries):
+        x=np.random.rand(nc); 
+        m_split=np.zeros(nr,'d'); b_split=np.zeros(nr,'d')
+        b_full=np.zeros(nr,'d')
+        #J.x
+        finest_model.jacobian.matvec(x,b_full)
+        #M.x
+        mass_jacobian.matvec(x,m_split)
+        #M.x/dt
+        m_split /= dt
+        #K.x
+        stiff_jacobian.matvec(x,b_split)
+        b_split += m_split 
+        npt.assert_almost_equal(b_split,b_full)
+
 
 
 if __name__ == '__main__':
-    test_c0p1()
-    test_ncp1()
-    Profiling.logEvent("Closing Log")
-    try:
-        Profiling.closeLog()
-    except:
-        pass
+    import nose
+    nose.main()
+    
