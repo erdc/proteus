@@ -237,7 +237,24 @@ def l2Norm(x):
 
 def l1Norm(x):
     """
-    Compute the parallel l_1 norm
+    Compute the parallel :math:`l_1` norm
+    
+    The :math:`l_1` norm of a vector :math:`\mathbf{x} \in
+    \mathbb{R}^n` is
+    
+    .. math:: 
+    
+       \| \mathbf{x} \|_{1} = \sum_{i=0} |x_i|
+    
+    If Python is running in parallel, then the sum is over all
+    dimensions on all processors so that the input must not contain
+    "ghost" entries.
+    
+    This implemtation works for a distributed array with no ghost
+    components (each component must be on a single processor).
+    
+    :param x: numpy array of length n
+    :return: float
     """
     return flcbdfWrappers.globalSum(numpy.sum(numpy.abs(x)))
 
