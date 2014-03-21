@@ -244,7 +244,20 @@ def l1Norm(x):
 
 def lInfNorm(x):
     """
-    Compute the parallel l_{\infty} norm
+    Compute the parallel :math:`l_{\infty}` norm
+
+    The :math:`l_{\infty}` norm of a vector :math:`\mathbf{x} \in
+    \mathbb{R}^n` is
+
+    .. math::
+
+       \|x\|_{\infty} = \max_i |x_i|
+       
+    This implemtation works for a distributed array with no ghost
+    components (each component must be on a single processor).
+    
+    :param x: numpy array of length n
+    :return: float
     """
     return flcbdfWrappers.globalMax(numpy.linalg.norm(x,numpy.inf))
 
