@@ -7,6 +7,8 @@ def test_wdot():
     import numpy as np
     import numpy.testing as npt
     from proteus.LinearAlgebraTools import wDot
+    from proteus import Comm
+    comm = Comm.init()
     x = np.array([-1, 2, 3])
     y = np.array([5, 6, 10])
     h = np.array([0.5, 1.2, 6.0])
