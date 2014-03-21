@@ -4,7 +4,7 @@ Test module for linear boundary value problems (serial)
 
 This module solves equations of the form
 
-.. _math::
+.. math::
 
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
