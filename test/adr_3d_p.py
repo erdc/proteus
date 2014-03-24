@@ -317,5 +317,5 @@ advectiveFluxBoundaryConditions =  {0:getAdvFluxBC5}
 diffusiveFluxBoundaryConditions = {0:{0:getDiffFluxBC5}}
 fluxBoundaryConditions = {0:'setFlow'} #options are 'setFlow','noFlow','mixedFlow'
 
-coefficients = ADR.Coefficients(aOfX,fOfX,nc,nd)
+coefficients = ADR.Coefficients(aOfX=aOfX,fOfX=fOfX,velocity=numpy.array([0.0,0.0,0.0]),nc=nc,nd=nd)
 coefficients.variableNames=['u0']
