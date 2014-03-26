@@ -137,19 +137,19 @@ install: profile config.py $(shell find src -type f) $(wildcard *.py) proteus
 	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})"
 	@echo "+======================================================================================================+"
 	@echo ""
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppyx.py install
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppyx.py install --prefix=${PROTEUS_PREFIX}
 	@echo "************************"
 	@echo "done installing cython extension modules"
 	@echo "************************"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setupf.py install
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setupf.py install --prefix=${PROTEUS_PREFIX}
 	@echo "************************"
 	@echo "done installing f2py extension modules"
 	@echo "************************"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install --prefix=${PROTEUS_PREFIX}
 	@echo "************************"
 	@echo "done installing petsc-based extension modules"
 	@echo "************************"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setup.py install
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setup.py install --prefix=${PROTEUS_PREFIX}
 	@echo "************************"
 	@echo "done installing standard extension modules"
 	@echo "************************"
