@@ -554,8 +554,8 @@ class KSP_petsc4py(LinearSolver):
         self.ksp.view()
 
 class SimpleNavierStokes3D:
-    def __init__(self,L,prefix=None,pp_hasNullSpace=True):
-        self.pp_hasNullSpace=pp_hasNullSpace
+    def __init__(self,L,prefix=None):
+        self.L = L
         sizes = L.getSizes()
         range = L.getOwnershipRange()
         #print "sizes",sizes
@@ -580,14 +580,10 @@ class SimpleNavierStokes3D:
         #self.pc.setFieldSplitIS(self.velocityDOF)
         #self.pc.setFieldSplitIS(self.pressureDOF)
     def setUp(self):
-        if self.pp_hasNullSpace:
+        if self.L.pde.pp_hasConstantNullSpace:
             self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
             self.kspList = self.pc.getFieldSplitSubKSP()
             self.kspList[1].setNullSpace(self.nsp)
-
-class SimpleNavierStokes3D_null_pp(SimpleNavierStokes3D):
-    def __init__(self,L,prefix=None):
-        SimpleNavierStokes3D.__init__(self,L,prefix,pp_hasNullSpace=True)
 
 class SimpleDarcyFC:
     def __init__(self,L):
@@ -612,8 +608,8 @@ class SimpleDarcyFC:
         pass
 
 class SimpleNavierStokes2D:
-    def __init__(self,L,prefix=None,pp_hasNullSpace=True):
-        self.pp_hasNullSpace = pp_hasNullSpace
+    def __init__(self,L,prefix=None):
+        self.L=L
         sizes = L.getSizes()
         range = L.getOwnershipRange()
         #print "sizes",sizes
@@ -635,14 +631,10 @@ class SimpleNavierStokes2D:
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
     def setUp(self):
-        if self.pp_hasNullSpace:
+        if self.L.pde.pp_hasConstantNullSpace:
             self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
             self.kspList = self.pc.getFieldSplitSubKSP()
             self.kspList[1].setNullSpace(self.nsp)
-
-class SimpleNavierStokes2D_null_pp(SimpleNavierStokes2D):
-    def __init__(self,L,prefix=None):
-        SimpleNavierStokes2D.__init__(self,L,prefix,pp_hasNullSpace=True)
 
 class SimpleDarcyFC:
     def __init__(self,L):
