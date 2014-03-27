@@ -5747,7 +5747,7 @@ class MultilevelTransport:
                     log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                     par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
                     log("Allocating matrix on rank %i" % comm.rank(),level=2)
-                    par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global)
+                    par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
                 else:
                     log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                     par_u = ParVec(u,par_bs,par_n,par_N,par_nghost,subdomain2global)
@@ -5785,7 +5785,7 @@ class MultilevelTransport:
                 log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                 par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
                 log("Allocating matrix on rank %i" % comm.rank(),level=2)
-                par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global)
+                par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
             else:
                 par_u = None
                 par_r = None
