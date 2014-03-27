@@ -373,6 +373,7 @@ class KSP_petsc4py(LinearSolver):
                               printInfo=printInfo)
         import petsc4py
         self.pccontext = None
+        self.preconditioner = None
         self.pc = None
         if Preconditioner != None:
             if Preconditioner == Jacobi:
@@ -431,6 +432,12 @@ class KSP_petsc4py(LinearSolver):
                 self.preconditioner = SimpleNavierStokes3D(par_L,prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleNavierStokes2D:
+                self.preconditioner = SimpleNavierStokes2D(par_L,prefix)
+                self.pc = self.preconditioner.pc
+            elif Preconditioner == SimpleNavierStokes3D_null_pp:
+                self.preconditioner = SimpleNavierStokes3D(par_L,prefix)
+                self.pc = self.preconditioner.pc
+            elif Preconditioner == SimpleNavierStokes2D_null_pp:
                 self.preconditioner = SimpleNavierStokes2D(par_L,prefix)
                 self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleDarcyFC:
@@ -500,6 +507,8 @@ class KSP_petsc4py(LinearSolver):
         if self.pc != None:
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
+            if self.preconditioner:
+                self.preconditioner.setUp()
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
         #self.ksp.setOperators(self.Lshell,self.petsc_L)
         self.ksp.setUp()
@@ -543,8 +552,10 @@ class KSP_petsc4py(LinearSolver):
 
     def info(self):
         self.ksp.view()
+
 class SimpleNavierStokes3D:
-    def __init__(self,L,prefix=None):
+    def __init__(self,L,prefix=None,pp_hasNullSpace=True):
+        self.pp_hasNullSpace=pp_hasNullSpace
         sizes = L.getSizes()
         range = L.getOwnershipRange()
         #print "sizes",sizes
@@ -568,6 +579,15 @@ class SimpleNavierStokes3D:
         #self.pc.setFieldSplitIS(('pressure',self.isp),('velocity',self.isv))
         #self.pc.setFieldSplitIS(self.velocityDOF)
         #self.pc.setFieldSplitIS(self.pressureDOF)
+    def setUp(self):
+        if self.pp_hasNullSpace:
+            self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
+            self.kspList = self.pc.getFieldSplitSubKSP()
+            self.kspList[1].setNullSpace(self.nsp)
+
+class SimpleNavierStokes3D_null_pp(SimpleNavierStokes3D):
+    def __init__(self,L,prefix=None):
+        SimpleNavierStokes3D.__init__(self,L,prefix,pp_hasNullSpace=True)
 
 class SimpleDarcyFC:
     def __init__(self,L):
@@ -588,9 +608,12 @@ class SimpleDarcyFC:
         self.isv.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(self.isp)
         self.pc.setFieldSplitIS(self.isv)
+    def setUp(self):
+        pass
 
 class SimpleNavierStokes2D:
-    def __init__(self,L,prefix=None):
+    def __init__(self,L,prefix=None,pp_hasNullSpace=True):
+        self.pp_hasNullSpace = pp_hasNullSpace
         sizes = L.getSizes()
         range = L.getOwnershipRange()
         #print "sizes",sizes
@@ -611,9 +634,15 @@ class SimpleNavierStokes2D:
         #self.pc.setFieldSplitIS(self.isv)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
-        #self.pc.setFieldSplitIS(('pressure',self.isp),('velocity',self.isv))
-        #self.pc.setFieldSplitIS(self.velocityDOF)
-        #self.pc.setFieldSplitIS(self.pressureDOF)
+    def setUp(self):
+        if self.pp_hasNullSpace:
+            self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
+            self.kspList = self.pc.getFieldSplitSubKSP()
+            self.kspList[1].setNullSpace(self.nsp)
+
+class SimpleNavierStokes2D_null_pp(SimpleNavierStokes2D):
+    def __init__(self,L,prefix=None):
+        SimpleNavierStokes2D.__init__(self,L,prefix,pp_hasNullSpace=True)
 
 class SimpleDarcyFC:
     def __init__(self,L):
@@ -634,6 +663,8 @@ class SimpleDarcyFC:
         self.isv.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(self.isp)
         self.pc.setFieldSplitIS(self.isv)
+    def setUp(self):
+        pass
 
 class Jacobi(LinearSolver):
     """
