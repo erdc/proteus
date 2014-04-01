@@ -435,7 +435,6 @@ class Mesh:
         self.nLayersOfOverlap = None
         self.parallelPartitioningType = MeshParallelPartitioningTypes.element
     def partitionMesh(self,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.element):
-        import pdb
         import cmeshTools
         import Comm
         import flcbdfWrappers
@@ -504,7 +503,6 @@ class Mesh:
         # log(memory("Without global mesh","Mesh"),level=1)
         # comm.endSequential()
     def partitionMeshFromFiles(self,filebase,base,nLayersOfOverlap=1,parallelPartitioningType=MeshParallelPartitioningTypes.element):
-        import pdb
         import cmeshTools
         import Comm
         import flcbdfWrappers
@@ -4419,7 +4417,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
             errorL2 = sqrt(errorL2)/self.totalArea#normalize by domain error to make error have units of length
             return errorL2
         else:
-            return errorInf
+            return errorInfty
 
 # #         mfile.close()
 # #         return p,e,t
