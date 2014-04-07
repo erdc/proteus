@@ -126,6 +126,10 @@ def test_mass_and_stiff_jacobians():
     assert stiff_jacobian.shape[0] == nr
     assert stiff_jacobian.shape[1] == nc
     import numpy as np
+    #get constant portion of the load vector
+    f = np.zeros((nr,),'d')
+    finest_model.getLoadVector(f)
+    
     ntries=5
     for i in range(ntries):
         x=np.random.rand(nc); 
