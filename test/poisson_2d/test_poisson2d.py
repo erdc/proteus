@@ -14,6 +14,10 @@ from proteus import Comm
 comm = Comm.get()
 Profiling.logLevel=7
 Profiling.verbose=True
+import numpy.testing as npt
+from nose.tools import ok_ as ok
+from nose.tools import eq_ as eq
+
 def test_c0p1():
     import poisson_het_2d_p
     import poisson_het_2d_c0pk_n
@@ -62,7 +66,7 @@ def test_c0p2():
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_2d_c0p2')
 
-def test_load_vector(use_weak_dirichlet=False):
+def compute_load_vector(use_weak_dirichlet=False):
     import poisson_het_2d_p
     import poisson_het_2d_c0pk_n
     pList = [poisson_het_2d_p]
@@ -98,16 +102,16 @@ def test_load_vector(use_weak_dirichlet=False):
     utmp = np.zeros((nr,),'d')
     finest_model.getResidual(utmp,r)
     finest_model.getLoadVector(f)
-    r_sum = r.sum()
-    f_sum = f.sum()
-    assert abs(r_sum-f_sum) < 1.0e-6, "expected near equality got r_sum=%s and f_sum= %s " % (r_sum,f_sum)
+    return r,f
+def test_load_vector():
+    for name,use_num_flux in zip(['Strong_Dir','Weak_Dir'],[False,True]):
+        r,f = compute_load_vector(use_num_flux)
+        test = npt.assert_almost_equal
+        test.descrption = 'test_load_vector_{}'.format(name)
+        yield test,r,f
 if __name__ == '__main__':
-    test_c0p1()
-    test_c0p2()
-    test_load_vector()
-    test_load_vector(use_weak_dirichlet=True)
-    Profiling.logEvent("Closing Log")
-    try:
-        Profiling.closeLog()
-    except:
-        pass
+    from proteus import Comm
+    comm = Comm.init()
+    import nose
+    nose.main()
+
