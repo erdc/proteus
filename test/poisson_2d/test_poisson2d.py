@@ -88,8 +88,6 @@ def test_load_vector():
     #cheating a little bit to get the global test space dimension from the global trial space
     nr = finest_model.u[0].femSpace.dim
     import numpy as np
-    import pdb
-    pdb.set_trace()
     r = np.zeros((nr,),'d')
     f = np.zeros((nr,),'d')
     utmp = np.zeros((nr,),'d')
@@ -99,8 +97,8 @@ def test_load_vector():
     f_sum = f.sum()
     assert abs(r_sum-f_sum) < 1.0e-6, "expected near equality got r_sum=%s and f_sum= %s " % (r_sum,f_sum)
 if __name__ == '__main__':
-    #test_c0p1()
-    #test_c0p2()
+    test_c0p1()
+    test_c0p2()
     test_load_vector()
     Profiling.logEvent("Closing Log")
     try:
