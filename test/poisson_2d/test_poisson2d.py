@@ -62,7 +62,7 @@ def test_c0p2():
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_2d_c0p2')
 
-def test_load_vector():
+def test_load_vector(use_weak_dirichlet=False):
     import poisson_het_2d_p
     import poisson_het_2d_c0pk_n
     pList = [poisson_het_2d_p]
@@ -77,6 +77,11 @@ def test_load_vector():
     nList[0].femSpaces[0]  = default_n.C0_AffineLinearOnSimplexWithNodalBasis
     nList[0].linearSolver=default_n.LU
     nList[0].multilevelLinearSolver=default_n.LU
+    if use_weak_dirichlet:
+        nList[0].linearSolver=default_n.KSP_petsc4py
+        nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
+        nList[0].numericalFluxType = default_n.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
+        
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_2d_c0p1')
     
@@ -100,6 +105,7 @@ if __name__ == '__main__':
     test_c0p1()
     test_c0p2()
     test_load_vector()
+    test_load_vector(use_weak_dirichlet=True)
     Profiling.logEvent("Closing Log")
     try:
         Profiling.closeLog()
