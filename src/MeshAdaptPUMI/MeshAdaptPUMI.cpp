@@ -19,6 +19,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter) {
   numVar=0;
   hmin=Hmin; hmax=Hmax;
   numIter=NumIter;
+  nAdapt=0;
   if(SCUTIL_CommRank()==0)
      printf("Setting hmax=%lf, hmin=%lf, numIters(meshadapt)=%d\n",hmax, hmin, numIter);
 }
@@ -67,15 +68,7 @@ int MeshAdaptPUMIDrvr::readPUMIMesh(const char* SMS_fileName){
      std::cout << "Reading parallel PUMI mesh\n";
      PUMI_Mesh_LoadFromFile(PUMI_MeshInstance,SMS_fileName,1, "pumi"); //0 for serial for now
   }
-/*
-  std::vector<pPart> meshes;
-  int rank;
-  FMDB_Mesh_GetAllPart(PUMI_MeshInstance, SCUTIL_CommRank(), meshes);
-  pMesh mesh = meshes.at(0);
-
-  Mesh_InitBLs(mesh, PUMI_GModel);
-*/
-
+  
   int isValid;
   PUMI_Mesh_Verify(PUMI_MeshInstance,&isValid);
   if(isValid) {
@@ -107,7 +100,6 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh() {
   
   apf::Mesh* apf_mesh = apf::createMesh(PUMI_Part);
   getFieldFromTag(apf_mesh, PUMI_MeshInstance,"Solution");
-
   ma::FieldCallback(MA_Drvr, apf_mesh);
   
   CalculateAnisoSizeField(MA_Drvr, phif);
@@ -119,11 +111,10 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh() {
 
   /// Adapt the mesh
   MA_SetNumIt(MA_Drvr, numIter);    // limits the number of iterations of meshMeshAdaptPUMI (splits, collapses, moves...)
-
+  double beta[3] = {2.0, 2.0, 2.0};
+  MA_AnisoSmooth(MA_Drvr, beta);
   MA_Adapt(MA_Drvr);  // does the MeshAdaptPUMI
-
   MA_Del(MA_Drvr);  // deletes the meshMeshAdaptPUMI object
-
   SCUTIL_Sync();
   
   PUMI_Mesh_DelTag (PUMI_MeshInstance, SFTag, 1);
@@ -146,6 +137,8 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh() {
   } else {
     exit(1);
   }
+
+  nAdapt++; //counter for number of adapt steps
 
   return 0;
 }

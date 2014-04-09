@@ -44,6 +44,7 @@ class MeshAdaptPUMIDrvr{
 
   double hmax, hmin;
   int numIter;
+  int nAdapt; //counter for number of adapt steps
 
   private: 
   pMeshMdl PUMI_MeshInstance;
@@ -55,7 +56,7 @@ class MeshAdaptPUMIDrvr{
   int numVar;
 
   pTag GlobNumberTag;
-  pTag SolutionTag, SFTag;
+  pTag SolutionTag, SFTag, SFDirTag;
   apf::Field *presf, *velf, *voff, *phif, *phidf, *phiCorrf;
 
   int ConstructGlobalNumbering(Mesh& mesh);
@@ -75,5 +76,5 @@ class MeshAdaptPUMIDrvr{
   int getFieldFromTag(apf::Mesh* apf_mesh, pMeshMdl mesh_pumi, const char* tag_name);
   int getTagFromField(apf::Mesh* apf_mesh, pMeshMdl mesh_pumi, const char* tag_name);
 
-  int SmoothSizeField();
+  int SmoothField(pTag tag, int num);
 };

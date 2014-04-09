@@ -82,6 +82,9 @@ int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
 
    //chitak: debug
 /*  
+  printf("chitak: node Offset %d %d %d\n", vtx_owned, mesh.nodeOffsets_subdomain_owned[comm_rank], mesh.nodeOffsets_subdomain_owned[comm_rank+1]);
+  printf("chitak: element Offset %d %d %d\n", elms_owned, mesh.elementOffsets_subdomain_owned[comm_rank],mesh.elementOffsets_subdomain_owned[comm_rank+1]);
+
 //debugging and checking
    for(int i=0; i<mesh.subdomainp->nElements_global; i++) {
      std::cout << "element, local: " << i << " global: " << mesh.elementNumbering_subdomain2global[i] << "\n";
@@ -117,7 +120,6 @@ int MeshAdaptPUMIDrvr::ConstructGlobalStructures(Mesh &mesh) {
     if(type==0) temp_subdomain2global = mesh.nodeNumbering_subdomain2global;
 
     int isEnd = 0;
-    int eN = 0;
     pPartEntIter EntIt;
     pMeshEnt meshEnt; 
     PUMI_PartEntIter_Init (PUMI_Part, type, PUMI_ALLTOPO, EntIt);
@@ -131,7 +133,6 @@ int MeshAdaptPUMIDrvr::ConstructGlobalStructures(Mesh &mesh) {
       temp_subdomain2global[entID] = globID;
 
       PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
-      eN++;
     } //region loop
     PUMI_PartEntIter_Del(EntIt);
   } //type
