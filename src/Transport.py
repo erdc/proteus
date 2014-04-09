@@ -1549,6 +1549,12 @@ class OneLevelTransport(NonlinearEquation):
         self.elementQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.elementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
+        #for model reduction
+        self.mass_jacobian = None
+        self.space_jacobian = None
+        self.nzval_mass = None
+        self.nzval_space = None
+    #end __init__
     def setInitialConditions(self,getInitialConditionsDict,T=0.0):
         self.timeIntegration.t = T
         #
@@ -5457,8 +5463,10 @@ class OneLevelTransport(NonlinearEquation):
         """
         Setup the storage for the mass jacobian and return as a ```SparseMat``` or ```Mat``` based on self.matType
         """
+        if self.mass_jacobian != None:
+            return self.mass_jacobian
+
         import superluWrappers
-        self.nzval_mass = None
         if self.matType == superluWrappers.SparseMatrix:
             self.nzval_mass = self.nzval.copy()
             self.mass_jacobian = SparseMat(self.nFreeVDOF_global,self.nFreeVDOF_global,self.nnz,
@@ -5473,14 +5481,15 @@ class OneLevelTransport(NonlinearEquation):
         """
         Setup the storage for the spatial jacobian and return as a ```SparseMat``` or ```Mat``` based on self.matType
         """
+        if self.space_jacobian != None:
+            return self.space_jacobian
         import superluWrappers
-        self.nzval_space = None
         if self.matType == superluWrappers.SparseMatrix:
             self.nzval_space = self.nzval.copy()
             self.space_jacobian = SparseMat(self.nFreeVDOF_global,self.nFreeVDOF_global,self.nnz,
                                            self.nzval_space,self.colind,self.rowptr)
         elif self.matType == numpy.array:
-            self.mass_jacobian = Mat(self.nFreeVDOF_global,self.nFreeVDOF_global)
+            self.space_jacobian = Mat(self.nFreeVDOF_global,self.nFreeVDOF_global)
         else:
             raise TypeError("Matrix type must be sparse matrix or array")
         return self.space_jacobian
