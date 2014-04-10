@@ -19,7 +19,7 @@ ifeq ($(PROTEUS_ARCH), darwin)
 PLATFORM_ENV = MACOSX_DEPLOYMENT_TARGET=$(shell sw_vers -productVersion | sed "s/\(10.[0-9]\).*/\1/")
 endif
 
-ifeq ($(PROTEUS_ARCH), Cygwin)
+ifeq ($(PROTEUS_ARCH), cygwin)
 BOOTSTRAP = cygwin_bootstrap.done
 endif
 
@@ -58,7 +58,7 @@ stack:
 	git clone https://github.com/hashdist/hashstack.git stack
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
-	python hashstack/scripts/setup_cygstack.py hashstack/scripts/cygstack.txt
+	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	touch cygwin_bootstrap.done
 
 profile: ${PROTEUS_PREFIX}/artifact.json
