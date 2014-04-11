@@ -69,7 +69,7 @@ del S_intermediate
 K = M_pod + DT*S_pod #generalized mass matrix
 K = np.linalg.inv(K) #its inverse
 
-archive = Archiver.XdmfArchive("/u/lozovskiy/Proteus/POD","heat_3d",readOnly=True)
+archive = Archiver.XdmfArchive(".","heat_3d",readOnly=True)
 
 #reading initial condition
 u = read_from_hdf5(archive.hdfFile,'/u0')
@@ -134,5 +134,27 @@ ax.zaxis.set_major_locator(LinearLocator(10))
 ax.zaxis.set_major_formatter(FormatStrFormatter('%.05f'))
 
 fig.colorbar(surf, shrink=0.5, aspect=5)
-plt.savefig("solution_reduced.png")
+plt.savefig("solution_reduced_t0_5.png")
 plt.show()
+
+#also look at final time step
+u_range = u_approx[4410:4851]
+u_range = u_range.reshape(21,21)
+
+fig.clf()
+ax = fig.gca(projection='3d')
+surf=ax.plot_surface(x, y, u_range, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+plt.xlabel('x'); plt.ylabel('y')
+plt.title('reduced solution at t = %s' % (nDTout*DT));
+
+ax.zaxis.set_major_locator(LinearLocator(10))
+ax.zaxis.set_major_formatter(FormatStrFormatter('%.05f'))
+
+fig.colorbar(surf, shrink=0.5, aspect=5)
+plt.savefig("solution_reduced_final.png")
+plt.show()
+
+#cleanup numerical solution files since calculateSolution wasn't called
+for index,model in enumerate(ns.modelList):
+    ns.closeArchive(model,index)
+

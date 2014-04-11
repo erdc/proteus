@@ -6,7 +6,7 @@ T = 1.0
 nDTout = 100
 DT = T/float(nDTout)
 
-archive = Archiver.XdmfArchive("/u/lozovskiy/Proteus/POD","heat_3d",readOnly=True)
+archive = Archiver.XdmfArchive(".","heat_3d",readOnly=True)
 
 import numpy as np
 
@@ -24,3 +24,4 @@ U, s, V = np.linalg.svd(S, full_matrices=False)
 print 'SVD done!'
 np.savetxt('SVD_basis', U, delimiter=' ')
 np.savetxt('Singular_values', s, delimiter=' ')
+
