@@ -1,4 +1,4 @@
-.PHONY: all check clean distclean doc install profile proteus
+.PHONY: all check clean distclean doc install profile proteus update
 
 all: install
 
@@ -49,15 +49,28 @@ distclean: clean
 	-rm -rf ${PROTEUS_PREFIX}
 	-rm -rf build src/*.pyc src/*.so src/*.a
 
+update:
+	@echo "Manually trying to update all repositories to most recent stable configuration"
+	git fetch origin; git checkout -q origin/stable/cygwin
+	@echo "Proteus repository updated to latest stable version"
+	cd stack; git fetch origin; git checkout -q origin/stable/cygwin
+	@echo "Stack repository updated to latest stable version"
+	cd hashdist; git fetch origin; git checkout -q origin/stable/cygwin
+	@echo "Hashdist repository updated to latest stable version"
+	@echo "+======================================================================================================+"
+	@echo "Warning, the HEAD has been detached in all repositories"
+	@echo "Type: git checkout -b branch_name to save changes" 
+	@echo "+======================================================================================================+"
+
 hashdist: 
-	@echo "No hashdist found.  Cloning hashdist from GitHub"
-	git clone https://github.com/hashdist/hashdist.git
+	@echo "No hashdist found.  Cloning stable hashdist from GitHub"
+	git clone -b cygwin/stable https://github.com/hashdist/hashdist.git
 
 stack: 
-	@echo "No stack found.  Cloning stack from GitHub"
-	git clone https://github.com/hashdist/hashstack.git stack
+	@echo "No stack found.  Cloning stable stack from GitHub"
+	git clone -b cygwin/stable https://github.com/hashdist/hashstack.git stack
 
-cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
+cygwin_bootstrap.done: stack/scripts/setup_cyg stack.py stack/scripts/cygstack.txt
 	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	touch cygwin_bootstrap.done
 
