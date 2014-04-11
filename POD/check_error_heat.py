@@ -12,7 +12,7 @@ def uex0(x,t):
     """
     return 128.0*(1.0-t)*x[...,1]*(1.0-x[...,1])*x[...,2]*(1.0-x[...,2])*x[...,0]*(1.0-x[...,0])
 
-archive = Archiver.XdmfArchive("/u/lozovskiy/Proteus/POD","heat_3d",readOnly=True)
+archive = Archiver.XdmfArchive(".","heat_3d",readOnly=True)
 
 label="/%s%d" % ('nodesSpatial_Domain',0)
 print 'trying to read from %s ' % label
@@ -33,3 +33,4 @@ for i in range(0,nDTout+1):
     err *= 1.0/9261.0 #9261 = 21^3
     L2approx = np.sqrt(err.sum())
     print "Trapezoidal approximation for error at dofs for nx=21 ny=21 nz=21 is %s " % L2approx
+
