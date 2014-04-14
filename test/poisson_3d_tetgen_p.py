@@ -212,10 +212,17 @@ else:
                                                  holes=holes)
     #go ahead and add a boundary tags member 
     domain.boundaryTags = boundaryTags
+    from proteus import Comm
+    comm = Comm.get()
     if vessel:
-        domain.writePoly("mesh_"+vessel)
+        polyfile="mesh_"+vessel
     else:
-        domain.writePoly("meshNoVessel")
+        polyfile="meshNoVessel"
+    if comm.isMaster():
+        domain.writePoly(polyfile)
+    else:
+        domain.polyfile=polyfile
+
 restrictFineSolutionToAllMeshes=False
 parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.node
 nLayersOfOverlapForParallel = 0
