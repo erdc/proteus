@@ -64,13 +64,13 @@ update:
 
 hashdist: 
 	@echo "No hashdist found.  Cloning stable hashdist from GitHub"
-	git clone -b cygwin/stable https://github.com/hashdist/hashdist.git
+	git clone -b stable/cygwin https://github.com/hashdist/hashdist.git
 
 stack: 
 	@echo "No stack found.  Cloning private stack from GitHub"
 	git clone --branch roams https://github.com/erdc-cm/hashstack-private.git stack
 
-cygwin_bootstrap.done: stack/scripts/setup_cyg stack.py stack/scripts/cygstack.txt
+cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	touch cygwin_bootstrap.done
 
