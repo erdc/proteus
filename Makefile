@@ -64,7 +64,7 @@ update:
 
 hashdist: 
 	@echo "No hashdist found.  Cloning stable hashdist from GitHub"
-	git clone -b cygwin/stable https://github.com/hashdist/hashdist.git
+	git clone -b stable/cygwin https://github.com/hashdist/hashdist.git
 
 stack: 
 	@echo "No stack found.  Cloning private stack from GitHub"
