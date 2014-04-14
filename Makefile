@@ -70,7 +70,7 @@ stack:
 	@echo "No stack found.  Cloning stable stack from GitHub"
 	git clone -b stable/cygwin https://github.com/hashdist/hashstack.git stack
 
-cygwin_bootstrap.done: stack/scripts/setup_cyg stack.py stack/scripts/cygstack.txt
+cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack.py stack/scripts/cygstack.txt
 	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	touch cygwin_bootstrap.done
 
