@@ -79,7 +79,15 @@ cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.tx
 	touch cygwin_bootstrap.done
 
 matlab_setup.done: stack stack/default.yaml hashdist
-	python setupmatlab.py stack/default.yaml ${MATLAB}
+	@python setupmatlab.py stack/default.yaml ${MATLAB}; if [ $$? -ne 0 ] ; then \
+	echo "+======================================================================================================+"; \
+	echo "Couldn't find matlab on PATH."; \
+	echo "Try either"; \
+	echo "    MATLAB=/path/to/matlab make"; \
+	echo "or "; \
+	echo "    NO_MATLAB=1 make"; \
+	echo "+======================================================================================================+"; \
+	false; fi
 	touch matlab_setup.done
 
 profile: ${PROTEUS_PREFIX}/artifact.json
