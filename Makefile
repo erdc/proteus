@@ -23,6 +23,10 @@ ifeq ($(PROTEUS_ARCH), cygwin)
 BOOTSTRAP = cygwin_bootstrap.done
 endif
 
+ifndef NO_MATLAB
+MATLAB_SETUP = matlab_setup.done
+endif
+
 # The choice for default Fortran compiler needs to be overridden on the Garnet system
 ifeq ($(PROTEUS_ARCH), garnet.gnu)
 FC=ftn 
@@ -74,11 +78,19 @@ cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.tx
 	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	touch cygwin_bootstrap.done
 
+matlab_setup.done: stack stack/default.yaml hashdist
+	python setupmatlab.py stack/default.yaml ${MATLAB}
+	touch matlab_setup.done
+
 profile: ${PROTEUS_PREFIX}/artifact.json
+
+stack/default.yaml: stack stack/examples/proteus.${PROTEUS_ARCH}.yaml
+	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
+
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
 # directory newer than the profile artifact file.
-${PROTEUS_PREFIX}/artifact.json: stack hashdist $(shell find stack -type f) ${BOOTSTRAP}
+${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find stack -type f) ${BOOTSTRAP} ${MATLAB_SETUP}
 	@echo "************************"
 	@echo "Building dependencies..."
 	@echo "************************"
@@ -94,7 +106,6 @@ ${PROTEUS_PREFIX}/artifact.json: stack hashdist $(shell find stack -type f) ${BO
 	@echo "+======================================================================================================+"
 	@echo ""
 
-	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
 	cd stack && ${PROTEUS}/hashdist/bin/hit develop -f -k error default.yaml ${PROTEUS_PREFIX}
         # workaround hack on Cygwin for hashdist launcher to work correctly
 	-cp ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.exe.link ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.link
