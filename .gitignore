@@ -25,3 +25,4 @@ src/subsurfaceTransportFunctions.c
 hashdist/
 stack/
 cygwin_bootstrap.done
+matlab_setup.done
