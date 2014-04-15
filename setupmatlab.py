@@ -51,6 +51,8 @@ def set_stack_parameters(profile_file, path_to_matlab, package_dict):
     profile['packages'].update(package_dict)
     sys.stdout.write('Appending HOST_MATLAB = {} to parameters\n'.format(path_to_matlab))
     if 'parameters' in profile:
+        if profile['parameters'] is None:
+            profile['parameters'] = {}
         profile['parameters']['HOST_MATLAB'] = path_to_matlab
     else:
         profile['parameters'] = {'HOST_MATLAB':path_to_matlab}
