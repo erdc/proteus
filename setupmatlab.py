@@ -32,12 +32,8 @@ def detect_matlab(where=''):
 
     # No where specified, try the PATH
 
-    try:
-        loc = subprocess.check_output(['which', 'matlab'])
-        return loc
-    except subprocess.CalledProcessError:
-        sys.stderr.write('Unable to find MATLAB using "which matlab", please add it to your PATH\n')
-        raise
+    loc = subprocess.check_output(['which', 'matlab'])
+    return loc
 
 
 def set_stack_parameters(profile_file, path_to_matlab, package_dict):
@@ -74,7 +70,14 @@ if __name__ == '__main__':
         sys.stderr.write("setupmatlab.py: You must specify a profile file to modify\n")
         sys.exit(1)
     profile_file = sys.argv[1]
-    if len(sys.argv) > 2:
-        setup_proteus(profile_file, path_to_matlab=sys.argv[2])
-    else:
-        setup_proteus(profile_file)
+    try:
+        if len(sys.argv) > 2:
+            setup_proteus(profile_file, path_to_matlab=sys.argv[2])
+        else:
+            setup_proteus(profile_file)
+    except subprocess.CalledProcessError:
+        sys.stderr.write('setupmatlab.py: Unable to find MATLAB using "which matlab", please add it to your PATH\n')
+        sys.exit(1)
+    except Exception:
+        sys.stderr.write('setupmatlab.py: Unable to find MATLAB in the given path: {}\n'.format(sys.argv[2]))
+        sys.exit(1)
