@@ -7,7 +7,7 @@ all: install
 
 SHELL=/usr/bin/env bash
 
-PROTEUS ?= $(shell pwd)
+PROTEUS ?= $(shell python -c "import os; print os.path.realpath(os.getcwd())")
 VER_CMD = git log -1 --pretty="%H"
 # shell hack for now to automatically detect Garnet front-end nodes
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
