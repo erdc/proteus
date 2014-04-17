@@ -53,12 +53,12 @@ distclean: clean
 	-rm -rf build src/*.pyc src/*.so src/*.a
 
 hashdist: 
-	@echo "No hashdist found.  Cloning hashdist from GitHub"
-	git clone https://github.com/hashdist/hashdist.git
+	@echo "No hashdist found.  Cloning stable Garnet hashdist from GitHub"
+	git clone -b stable/garnet https://github.com/hashdist/hashdist.git
 
 stack: 
-	@echo "No stack found.  Cloning stack from GitHub"
-	git clone https://github.com/hashdist/hashstack.git stack
+	@echo "No stack found.  Cloning stable Garnet stack from GitHub"
+	git clone -b stable/garnet https://github.com/hashdist/hashstack.git stack
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
