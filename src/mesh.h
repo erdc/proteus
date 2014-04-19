@@ -141,8 +141,22 @@ extern "C"
     mesh.hMin=0.0;
     mesh.sigmaMax=0.0;
     mesh.volume=0.0;
-    
-    
+   
+    //parallel
+    mesh.elementOffsets_subdomain_owned=NULL;
+    mesh.elementNumbering_subdomain2global=NULL;
+    mesh.elementNumbering_global2original=NULL;
+    mesh.nodeOffsets_subdomain_owned=NULL;
+    mesh.nodeNumbering_subdomain2global=NULL;
+    mesh.nodeNumbering_global2original=NULL;
+    mesh.elementBoundaryOffsets_subdomain_owned=NULL;
+    mesh.elementBoundaryNumbering_subdomain2global=NULL;
+    mesh.elementBoundaryNumbering_global2original=NULL;
+    mesh.edgeOffsets_subdomain_owned=NULL;
+    mesh.edgeNumbering_subdomain2global=NULL;
+    mesh.edgeNumbering_global2original=NULL;
+    mesh.subdomainp=NULL;
+
   }
 
   inline void deleteMesh(Mesh& mesh)
@@ -195,7 +209,20 @@ extern "C"
     if(mesh.W_KNOT!=NULL) delete [] mesh.W_KNOT;     
     // NURBS 
    
-   
+    //parallel
+    if(mesh.elementOffsets_subdomain_owned!=NULL) delete [] mesh.elementOffsets_subdomain_owned;
+    if(mesh.elementNumbering_subdomain2global!=NULL) delete [] mesh.elementNumbering_subdomain2global;
+    if(mesh.elementNumbering_global2original!=NULL) delete [] mesh.elementNumbering_global2original; 
+    if(mesh.nodeOffsets_subdomain_owned!=NULL) delete [] mesh.nodeOffsets_subdomain_owned;
+    if(mesh.nodeNumbering_subdomain2global!=NULL) delete [] mesh.nodeNumbering_subdomain2global;
+    if(mesh.nodeNumbering_global2original!=NULL) delete [] mesh.nodeNumbering_global2original;
+    if(mesh.elementBoundaryOffsets_subdomain_owned!=NULL) delete [] mesh.elementBoundaryOffsets_subdomain_owned;
+    if(mesh.elementBoundaryNumbering_subdomain2global!=NULL) delete [] mesh.elementBoundaryNumbering_subdomain2global;
+    if(mesh.elementBoundaryNumbering_global2original!=NULL) delete [] mesh.elementBoundaryNumbering_global2original;
+    if(mesh.edgeOffsets_subdomain_owned!=NULL) delete [] mesh.edgeOffsets_subdomain_owned;
+    if(mesh.edgeNumbering_subdomain2global!=NULL) delete [] mesh.edgeNumbering_subdomain2global; 
+    if(mesh.edgeNumbering_global2original!=NULL) delete [] mesh.edgeNumbering_global2original;
+    
     mesh.elementNodesArray=NULL;
     mesh.nodeElementsArray=NULL;
     mesh.nodeElementOffsets=NULL;
@@ -215,6 +242,22 @@ extern "C"
     mesh.nodeArray=NULL;
     mesh.elementBarycentersArray=NULL;
     mesh.elementBoundaryBarycentersArray=NULL;
+
+    //parallel
+    mesh.elementOffsets_subdomain_owned=NULL;
+    mesh.elementNumbering_subdomain2global=NULL;
+    mesh.elementNumbering_global2original=NULL;
+    mesh.nodeOffsets_subdomain_owned=NULL;
+    mesh.nodeNumbering_subdomain2global=NULL;
+    mesh.nodeNumbering_global2original=NULL;
+    mesh.elementBoundaryOffsets_subdomain_owned=NULL;
+    mesh.elementBoundaryNumbering_subdomain2global=NULL;
+    mesh.elementBoundaryNumbering_global2original=NULL;    
+    mesh.edgeOffsets_subdomain_owned=NULL;
+    mesh.edgeNumbering_subdomain2global=NULL;
+    mesh.edgeNumbering_global2original=NULL;
+    mesh.subdomainp=NULL;
+    
   }
   
   struct MultilevelMesh
