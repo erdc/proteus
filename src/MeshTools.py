@@ -4187,6 +4187,8 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
     def __init__(self,
                  domain,
                  triangleOptions,
+                 atol=1.0e-4,
+                 rtol=1.0e-4,
                  maxLevels=20,
                  maxNodes=100000,
                  bathyType="points",#"grid"
@@ -4197,6 +4199,8 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         from matplotlib import tri as mpl_tri
         from scipy import interpolate as scipy_interpolate
         import TriangleTools
+        self.atol = atol
+        self.rtol = rtol
         self.maxLevels=maxLevels
         self.maxNodes=maxNodes
         self.domain = domain
@@ -4244,8 +4248,8 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         log("InterpolatedBathymetryMesh: tagging elements for refinement")
         self.tagElements(self.meshList[-1])
         levels = 0
-        error = domain.tol+1.0;
-        while error >= domain.tol and self.meshList[-1].nNodes_global < self.maxNodes and levels < self.maxLevels:
+        error = 1.0;
+        while error >= 1.0 and self.meshList[-1].nNodes_global < self.maxNodes and levels < self.maxLevels:
             levels += 1
             log("InterpolatedBathymetryMesh: Locally refining, level = %i" % (levels,))
             self.locallyRefine(self.meshList[-1].elementTags)
@@ -4257,7 +4261,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
             self.setMeshBathymetry(self.meshList[-1])
             log("InterpolatedBathymetryMesh: tagging elements for refinement")
             error = self.tagElements(self.meshList[-1])
-            log("InterpolatedBathymetryMesh: error = %f tol = %f number of elements tagged = %i" % (error,domain.tol,self.meshList[-1].elementTags.sum()))
+            log("InterpolatedBathymetryMesh: error = %f atol = %f rtol = %f number of elements tagged = %i" % (error,self.atol,self.rtol,self.meshList[-1].elementTags.sum()))
     
     def setMeshBathymetry(self,mesh):
         if self.bathyAssignmentScheme == "interpolation":
@@ -4533,17 +4537,17 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
                 zInterp = self.pointNodeWeightsArray[pN,0]*mesh.nodeArray[mesh.elementNodesArray[eN,0],2] +  \
                           self.pointNodeWeightsArray[pN,1]*mesh.nodeArray[mesh.elementNodesArray[eN,1],2] +  \
                           self.pointNodeWeightsArray[pN,2]*mesh.nodeArray[mesh.elementNodesArray[eN,2],2] 
-                errorPointwise = fabs(zInterp - self.domain.bathy[pN,2])
+                errorPointwise = fabs(zInterp - self.domain.bathy[pN,2]) / (fabs(self.domain.bathy[pN,2])*self.rtol + self.atol)
                 errorInfty = max(errorPointwise,errorInfty)
                 mesh.errorAverage_element[eN] += (errorPointwise/float(mesh.nPoints_element[eN]))
-                if errorPointwise > self.domain.tol:
+                if errorPointwise >= 1.0:
                     mesh.elementTags[eN] = 1
         if self.errorNormType == "L1":
             mesh.elementTags[:] = 0
             errorL1 = 0.0
             for eN in range(mesh.nElements_global):
                 errorL1 += mesh.errorAverage_element[eN]*mesh.area_element[eN]
-                if mesh.errorAverage_element[eN] > self.domain.tol:
+                if mesh.errorAverage_element[eN] >= 1.0:
                     mesh.elementTags[eN] = 1
             errorL1 /= self.totalArea#normalize by domain error to make error have units of length
             return errorL1
@@ -4552,7 +4556,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
             errorL2 = 0.0
             for eN in range(mesh.nElements_global):
                 errorL2 += (mesh.errorAverage_element[eN])**2 * mesh.area_element[eN]
-                if mesh.errorAverage_element[eN] > self.domain.tol:
+                if mesh.errorAverage_element[eN] >= 1.0:
                     mesh.elementTags[eN] = 1
             errorL2 = sqrt(errorL2)/self.totalArea#normalize by domain error to make error have units of length
             return errorL2
