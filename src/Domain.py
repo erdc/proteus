@@ -625,12 +625,10 @@ class InterpolatedBathymetryDomain(PlanarStraightLineGraphDomain):
     def __init__(self,fileprefix=None,vertices=None,segments=None,
                  holes=None,regions=None,vertexFlags=None,segmentFlags=None,regionFlags=None,
                  name="DefaultInterpolatedBathymetry",units="m",
-                 tol=1.0e-2,
                  bathy=None,
                  bathyGridDim=None):
         PlanarStraightLineGraphDomain.__init__(self,fileprefix=fileprefix,vertices=vertices,segments=segments,
                                                holes=holes,regions=regions,vertexFlags=vertexFlags,segmentFlags=segmentFlags,regionFlags=regionFlags,name=name,units=units)
-        self.tol=tol
         self.bathy=bathy
         self.bathyGridDim=bathyGridDim
 
