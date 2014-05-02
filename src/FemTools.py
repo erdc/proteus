@@ -1645,7 +1645,7 @@ class MonomialInterpolationConditions(InterpolationConditions):
     """
     def __init__(self,referenceElement,monomialSpace):
         import LinearSolvers
-        self.quadrature=self.Quadrature.SimplexGaussQuadrature(referenceElement.dim,monomialSpace.kOrder*2)
+        self.quadrature=self.Quadrature.SimplexGaussQuadrature(referenceElement.dim,max(monomialSpace.kOrder*2,1))
         InterpolationConditions.__init__(self,monomialSpace.dim,referenceElement)
         self.quadraturePointArray = numpy.zeros((len(self.quadrature.weights),3),'d')
         for k,p in enumerate(self.quadrature.points):
