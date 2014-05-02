@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-r"""
+"""
 Test module for linear boundary value problems (serial)
 
 This module solves equations of the form
 
-.. math::
+.. _math::
 
   \nabla \cdot \left( a(x) \nabla u \right) = f(x)
 
@@ -145,7 +145,6 @@ def test_mass_and_stiff_jacobians():
         stiff_jacobian.matvec(x,b_split)
         b_split += m_split 
         npt.assert_almost_equal(b_split,b_full)
-
 
 
 if __name__ == '__main__':
