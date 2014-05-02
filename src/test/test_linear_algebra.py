@@ -117,6 +117,34 @@ def compute_norms(h,A,vecs):
     for norm in [energyNorm]:
         yield norm.__name__, [energyNorm(x, A) for x in vecs]
 
+
+def test_norm_zero():
+    """test_norm_zero
+
+    Norm of a zero vector better be close to zero.
+    """
+
+    from proteus.LinearAlgebraTools import Vec
+    from proteus.LinearAlgebraTools import Mat
+
+    h = Vec(2)
+    h = [0.5,0.5]
+
+    A = Mat(2,2)
+    #needs to be SPD
+    A[0,:] = [5, 2]
+    A[1,:] = [2, 6]
+
+    v = Vec(2)
+    v[:] = [0, 0]
+
+    for name, norms in compute_norms(h, A, [v]):
+        n = norms[0]
+        test = npt.assert_almost_equal
+        test.description = 'test_norm_zero[{}]'.format(name)
+        yield test, n, 0
+
+
 def test_norm_homogeneity():
     """test_norm_homogeneity
 
