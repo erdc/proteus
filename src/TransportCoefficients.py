@@ -1200,45 +1200,6 @@ class ShallowWater(TC_base):
                              variableNames,
                              sparseDiffusionTensors=sdInfo)
             #self.vectorComponents=[1,2]
-#         elif nd==3:
-#             variableNames=['p','u','v','w']
-#             mass = {1:{1:'linear'},
-#                     2:{2:'linear'},
-#                     3:{3:'linear'}}
-#             advection = {0:{1:'linear',
-#                             2:'linear',
-#                             3:'linear'},
-#                          1:{1:'nonlinear',
-#                             2:'nonlinear',
-#                             3:'nonlinear'},
-#                          2:{1:'nonlinear',
-#                             2:'nonlinear',
-#                             3:'nonlinear'},
-#                          3:{1:'nonlinear',
-#                             2:'nonlinear',
-#                             3:'nonlinear'}}
-#             diffusion = {1:{1:{1:'constant'}},
-#                          2:{2:{2:'constant'}},
-#                          3:{3:{3:'constant'}}}
-#             potential= {1:{1:'u'},
-#                         2:{2:'u'},
-#                         3:{3:'u'}}
-#             reaction = {1:{1:'constant'},
-#                         2:{2:'constant'},
-#                         3:{3:'constant'}}
-#             hamiltonian = {1:{0:'linear'},
-#                            2:{0:'linear'},
-#                            3:{0:'linear'}}
-#             TC_base.__init__(self,
-#                              4,
-#                              mass,
-#                              advection,
-#                              diffusion,
-#                              potential,
-#                              reaction,
-#                              hamiltonian,
-#                              variableNames)
-#             self.vectorComponents=[1,2,3]
         #save bathymetry slopes for different quadrature types
         for term in ['q_grad_b','ebq_grad_b','ebq_global_grad_b','ebqe_grad_b','ip_grad_b']:
             setattr(self,term,None)
