@@ -1727,13 +1727,13 @@ class OneLevelTransport(NonlinearEquation):
         #mwf debug
         #imax = numpy.argmax(r); imin = numpy.argmin(r)
         #print "getResidual max,index r[%s]= %s min,index= r[%s] r= %s " % (imax,r[imax],imin,r[imin])
-    def getJacobian(self,jacobian,skipMassTerms=False):
+    def getJacobian(self,jacobian):
         import superluWrappers
         import numpy
         ##\todo clean up update,calculate,get,intialize usage
         self.calculateElementBoundaryJacobian()
         self.calculateExteriorElementBoundaryJacobian()
-        self.calculateElementJacobian(skipMassTerms=skipMassTerms)
+        self.calculateElementJacobian()
         if self.scale_dt:
             for ci in self.elementJacobian.keys():
                 for cj in self.elementJacobian[ci].keys():
@@ -2668,7 +2668,7 @@ class OneLevelTransport(NonlinearEquation):
                                              self.q[('w*dV_m',ci)],
                                              self.elementSpatialResidual[ci],
                                              self.q[('mt',ci)])
-    def calculateElementJacobian(self,skipMassTerms=False):
+    def calculateElementJacobian(self):
         for ci in range(self.nc):
             for cj in self.coefficients.stencil[ci]:
                 self.elementJacobian[ci][cj].fill(0.0)
@@ -2826,46 +2826,16 @@ class OneLevelTransport(NonlinearEquation):
                                                                        self.q[('grad(v)Xgrad(w)*dV_numDiff',ci,ci,ci)],
                                                                        self.elementJacobian[ci][ci])
         self.timeIntegration.calculateElementSpatialJacobian(self.elementJacobian)
-        if not skipMassTerms:
-            for ci,cjDict in self.coefficients.mass.iteritems():
-                for cj in cjDict:
-                    if self.timeIntegration.massIsImplicit[ci]:
-                        if self.lowmem:
-                            cfemIntegrals.updateMassJacobian_weak_lowmem(self.q[('dmt',ci,cj)],
-                                                                         self.q[('v',cj)],
-                                                                         self.q[('w*dV_m',ci)],
-                                                                         self.elementJacobian[ci][cj])
-                        else:
-                            cfemIntegrals.updateMassJacobian_weak(self.q[('dmt',ci,cj)],
-                                                                  self.q[('vXw*dV_m',cj,ci)],
-                                                                  self.elementJacobian[ci][cj])
-            for cj in range(self.nc):
-                if self.timeIntegration.duStar_du[cj] != None:
-                    self.elementJacobian[ci][cj] *= self.timeIntegration.duStar_du[cj]
-        if self.dirichletNodeSetList != None:
-            for cj,nodeSetList in self.dirichletNodeSetList.iteritems():
-                for eN in range(self.mesh.nElements_global):
-                    for j in nodeSetList[eN]:
-                        self.elementJacobian[cj][cj][eN,j,:]=0.0
-                        self.elementJacobian[cj][cj][eN,j,j]=self.weakFactor*self.mesh.elementDiametersArray[eN]
-    def calculateElementMassJacobian(self):
-        """
-        calculate just the mass matrix terms for element jacobian (i.e., those that multiply the accumulation term)
-        does not include dt
-        """
-        for ci in range(self.nc):
-            for cj in self.coefficients.stencil[ci]:
-                self.elementJacobian[ci][cj].fill(0.0)
         for ci,cjDict in self.coefficients.mass.iteritems():
             for cj in cjDict:
                 if self.timeIntegration.massIsImplicit[ci]:
                     if self.lowmem:
-                        cfemIntegrals.updateMassJacobian_weak_lowmem(self.q[('dm',ci,cj)],
+                        cfemIntegrals.updateMassJacobian_weak_lowmem(self.q[('dmt',ci,cj)],
                                                                      self.q[('v',cj)],
                                                                      self.q[('w*dV_m',ci)],
                                                                      self.elementJacobian[ci][cj])
                     else:
-                        cfemIntegrals.updateMassJacobian_weak(self.q[('dm',ci,cj)],
+                        cfemIntegrals.updateMassJacobian_weak(self.q[('dmt',ci,cj)],
                                                               self.q[('vXw*dV_m',cj,ci)],
                                                               self.elementJacobian[ci][cj])
         for cj in range(self.nc):
@@ -2877,8 +2847,21 @@ class OneLevelTransport(NonlinearEquation):
                     for j in nodeSetList[eN]:
                         self.elementJacobian[cj][cj][eN,j,:]=0.0
                         self.elementJacobian[cj][cj][eN,j,j]=self.weakFactor*self.mesh.elementDiametersArray[eN]
-    
-    
+                        #self.elementJacobian[cj][cj][eN,j,j]=1.0
+        #cek debug
+        # for eN in range(self.mesh.nElements_global):
+        #     for i in range(self.nDOF_test_element[0]):
+        #         for j in range(self.nDOF_trial_element[0]):
+        #             print "element jacobian "+`eN`+'\t'+`i`+','+`j`
+        #             print self.elementJacobian[0][0][eN,i,j]
+        #             print self.elementJacobian[0][1][eN,i,j]
+        #             print self.elementJacobian[0][2][eN,i,j]
+        #             print self.elementJacobian[1][0][eN,i,j]
+        #             print self.elementJacobian[1][1][eN,i,j]
+        #             print self.elementJacobian[1][2][eN,i,j]
+        #             print self.elementJacobian[2][0][eN,i,j]
+        #             print self.elementJacobian[2][1][eN,i,j]
+        #             print self.elementJacobian[2][2][eN,i,j]
     def calculateElementBoundaryJacobian(self):
         evalElementBoundaryJacobian = False; evalElementBoundaryJacobian_hj = False
         for jDict in self.fluxJacobian.values():
