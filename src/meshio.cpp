@@ -739,26 +739,24 @@ write2dmMeshNodesAndElements(const char * filebase,
   meshFile <<"MESH2D"<<std::endl;
   for (int eN = 0; eN < nElements; eN++)
     {
-      meshFile << "E3T "<<eN + indexBase 
-	       <<" " <<elementNodesArray[eN*simplexDim + 0] + indexBase
-	       <<" " <<elementNodesArray[eN*simplexDim + 1] + indexBase
-	       <<" " <<elementNodesArray[eN*simplexDim + 2] + indexBase;
+      meshFile << "E3T"<<std::setw(11)<<eN + indexBase 
+	       <<std::setw(11)<<elementNodesArray[eN*simplexDim + 0] + indexBase
+	       <<std::setw(11)<<elementNodesArray[eN*simplexDim + 1] + indexBase
+	       <<std::setw(11)<<elementNodesArray[eN*simplexDim + 2] + indexBase;
       if (!elementMaterialTypes)
-	meshFile <<" 1 "<<std::endl;
+	meshFile <<std::setw(11)<<1<<std::endl;
       else
-	meshFile <<" "<<elementMaterialTypes[eN]+indexBase<<std::endl;
+	meshFile <<std::setw(11)<<elementMaterialTypes[eN]<<std::endl;
     }
-  meshFile << std::endl;
   meshFile << std::setiosflags(std::ios::scientific) << std::setprecision(8); 
   for (int nN = 0; nN < nNodes; nN++)
     {
-      meshFile <<"ND "<<nN + indexBase
-	       <<"  "<<nodeArray[nN*vertexDim + 0]
-	       <<"  "<<nodeArray[nN*vertexDim + 1]
-	       <<"  "<<nodeArray[nN*vertexDim + 2]
+      meshFile <<"ND"<<std::setw(11)<<nN + indexBase
+	       <<std::setw(17)<<nodeArray[nN*vertexDim + 0]
+	       <<std::setw(17)<<nodeArray[nN*vertexDim + 1]
+	       <<std::setw(17)<<nodeArray[nN*vertexDim + 2]
 	       <<std::endl;
     }
-  meshFile <<"END"<<std::endl;
   meshFile.close();
   return false;
 }
