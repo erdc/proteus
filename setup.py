@@ -1,5 +1,8 @@
 from distutils.core import setup, Extension
+from petsc4py.conf.petscconf import Extension as PetscExtension
+
 import numpy
+from Cython.Distutils import build_ext
 
 ## \file setup.py setup.py
 #  \brief The python script for building proteus
@@ -28,9 +31,13 @@ setup(name='proteus',
       url='http://proteus.usace.army.mil',
       packages = ['proteus'],
       package_dir={'proteus':'src'},
+      cmdclass = {'build_ext':build_ext},
       ext_package='proteus',
-      ext_modules=[Extension('ctracking',
-                             ['src/ctrackingModule.cpp','src/tracking.cpp'],
+      ext_modules=[Extension("waveFunctions",['src/waveFunctions.pyx','src/transportCoefficients.c'],
+                             include_dirs=[numpy.get_include(),'include']),
+                   Extension("subsurfaceTransportFunctions",['src/subsurfaceTransportFunctions.pyx'],
+                             include_dirs=[numpy.get_include(),'include']),
+                   Extension('ctracking',['src/ctrackingModule.cpp','src/tracking.cpp'],
                              define_macros=[('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H)],
                              include_dirs=[numpy.get_include(),'include',
                                            PROTEUS_SUPERLU_INCLUDE_DIR],
@@ -220,9 +227,26 @@ setup(name='proteus',
                              libraries=['m'],
                              extra_link_args=PROTEUS_EXTRA_LINK_ARGS,
                              extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS),
-                   #Cython generated modules with just c code
-                   Extension("waveFunctions",['src/waveFunctions.c','src/transportCoefficients.c'],
-                             include_dirs=[numpy.get_include(),'include'])
+                   PetscExtension('flcbdfWrappers',
+                                  ['src/flcbdfWrappersModule.cpp','src/mesh.cpp','src/meshio.cpp'],
+                                  define_macros=[('PROTEUS_TRIANGLE_H',PROTEUS_TRIANGLE_H),
+                                                 ('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H),
+                                                 ('CMRVEC_BOUNDS_CHECK',1),
+                                                 ('MV_VECTOR_BOUNDS_CHECK',1),
+                                                 ('PETSCVEC_BOUNDS_CHECK',1),
+                                                 ('F77_POST_UNDERSCORE',1),
+                                                 ('USE_BLAS',1)],
+                                  include_dirs=['include',
+                                                numpy.get_include(),
+                                                PROTEUS_SUPERLU_INCLUDE_DIR,
+                                                PROTEUS_TRIANGLE_INCLUDE_DIR,
+                                                PROTEUS_DAETK_INCLUDE_DIR] + \
+                                      PROTEUS_PETSC_INCLUDE_DIRS + \
+                                      [PROTEUS_MPI_INCLUDE_DIR],
+                                  library_dirs=[PROTEUS_DAETK_LIB_DIR]+PROTEUS_PETSC_LIB_DIRS+[PROTEUS_MPI_LIB_DIR],
+                                  libraries=['stdc++','m',PROTEUS_DAETK_LIB]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS,
+                                  extra_link_args=PROTEUS_EXTRA_LINK_ARGS,
+                                  extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS)
                    ],
       data_files=[('proteusConfig',['config.py'])],
       scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond','scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec'],
