@@ -9,6 +9,8 @@ SHELL=/usr/bin/env bash
 
 PROTEUS ?= $(shell python -c "import os; print os.path.realpath(os.getcwd())")
 VER_CMD = git log -1 --pretty="%H"
+PROTEUS_INSTALL_CMD = python setup.py install
+PROTEUS_DEVELOP_CMD = pip install -e .
 # shell hack for now to automatically detect Garnet front-end nodes
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
@@ -50,14 +52,12 @@ PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
 	${PLATFORM_ENV}
 
 clean:
-	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppyx.py clean
-	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppetsc.py clean
 	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setup.py clean
 
 distclean: clean
-	-rm -f config.py configure.done stack.done
+	-rm -f stack.done
 	-rm -rf ${PROTEUS_PREFIX}
-	-rm -rf build src/*.pyc src/*.so src/*.a
+	-rm -rf build src/*.pyc proteus/*.so proteus/*.a
 
 update:
 	@echo "Manually trying to update all repositories"
@@ -147,21 +147,8 @@ ${PROTEUS_PREFIX}/bin/proteus ${PROTEUS_PREFIX}/bin/proteus_env.sh: profile
 	@echo "Proteus script successfully installed"
 	@echo "************************"
 
-
-#config.py file should be newer than proteusConfig/config.py.$PROTEUS_ARCH
-config.py: proteusConfig/config.py.${PROTEUS_ARCH}
-	@echo "************************"
-	@echo "Configuring..."
-	@echo "************************"
-	@echo "Copying proteusConfig/config.py.$PROTEUS_ARCH to ./config.py"
-	@cp proteusConfig/config.py.${PROTEUS_ARCH} config.py
-	@echo "************************"
-	@echo "Configure complete"
-	@echo "************************"
-
-
 # Proteus install should be triggered by an out-of-date hashstack profile, source tree, or modified setup files.
-install: profile config.py $(shell find src -type f) $(wildcard *.py) proteus
+install: profile config.py $(shell find proteus -type f) $(wildcard *.py) proteus
 	@echo "************************"
 	@echo "Installing..."
 	@echo "************************"
@@ -175,15 +162,7 @@ install: profile config.py $(shell find src -type f) $(wildcard *.py) proteus
 	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})"
 	@echo "+======================================================================================================+"
 	@echo ""
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppyx.py install --prefix=${PROTEUS_PREFIX}
-	@echo "************************"
-	@echo "done installing cython extension modules"
-	@echo "************************"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install --prefix=${PROTEUS_PREFIX}
-	@echo "************************"
-	@echo "done installing petsc-based extension modules"
-	@echo "************************"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setup.py install --prefix=${PROTEUS_PREFIX}
+	${PROTEUS_ENV} ${PROTEUS_INSTALL_CMD}
 	@echo "************************"
 	@echo "done installing standard extension modules"
 	@echo "************************"
