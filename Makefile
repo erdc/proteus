@@ -90,5 +90,11 @@ check:
 	${PROTEUS_ENV} mpirun -np 4 python test/test_meshParitionFromTetgenFiles.py
 	@echo "************************"
 
+	@echo "************************"
+	@echo "SCOREC-Proteus Test"
+	${PROTEUS_ENV} python src/MeshAdaptPUMI/test/meshLoad/meshLoad.py
+	@echo "************************"
+
+
 doc: install
 	cd doc && ${PROTEUS_ENV} make html
