@@ -55,7 +55,6 @@ class MeshAdaptPUMIDrvr{
   int ConstructEdges(Mesh& mesh);
   int ConstructMaterialArrays(Mesh& mesh);
 
-  int SmoothField(apf::Field* f);
   void freeField(apf::Field*& f);
   void freeNumbering(apf::Numbering*& n);
 };

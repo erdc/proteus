@@ -1,12 +1,12 @@
 #include "MeshAdaptPUMI.h"
-#include "apf.h"
-#include "apfVector.h"
-#include "apfPUMI.h"
-#include "apfSPR.h"
-#include "apfMesh.h"
+#include <apf.h>
+#include <apfVector.h>
+#include <apfSPR.h>
+#include <apfMesh.h>
+#include <apfDynamicVector.h>
 
 enum {
-  PHI_IDX = 5;
+  PHI_IDX = 5
 };
 
 static void SmoothField(apf::Field* f);
@@ -30,8 +30,8 @@ static double isotropicFormula(double* solution, double hmin, double hmax)
 
 int MeshAdaptPUMIDrvr::CalculateSizeField()
 {
-  freeField(size_iso)
-  size_iso = apf::createLagrangeField(mesh, "proteus_size",apf::SCALAR,1);
+  freeField(size_iso);
+  size_iso = apf::createLagrangeField(m, "proteus_size",apf::SCALAR,1);
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* v;
   apf::NewArray<double> sol(apf::countComponents(solution));
@@ -43,14 +43,14 @@ int MeshAdaptPUMIDrvr::CalculateSizeField()
   m->end(it);
   for(int i=0; i < 3; i++)
     SmoothField(size_iso);
-  apf::writeVtkFIles("pumi_size", mesh);
+  apf::writeVtkFiles("pumi_size", m);
   return 0;
 }
 
 static apf::Field* extractPhi(apf::Field* solution)
 {
   apf::Mesh* m = apf::getMesh(solution);
-  apf::Field* phif = apf::createLagrangeField(mesh,"proteus_phi",apf::SCALAR,1);
+  apf::Field* phif = apf::createLagrangeField(m,"proteus_phi",apf::SCALAR,1);
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* v;
   apf::NewArray<double> tmp(apf::countComponents(solution));
@@ -72,8 +72,8 @@ static apf::Matrix3x3 hessianFormula(apf::Matrix3x3 const& g2phi)
 static apf::Field* computeHessianField(apf::Field* grad2phi)
 {
   apf::Mesh* m = apf::getMesh(grad2phi);
-  apf::Field* hessf = createLagrangeField(apf_mesh,"proteus_hess",apf::MATRIX,1);
-  apf::MeshIterator* it = apf_mesh->begin(0);
+  apf::Field* hessf = createLagrangeField(m,"proteus_hess",apf::MATRIX,1);
+  apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* v;
   while ((v = m->iterate(it))) {
     apf::Matrix3x3 g2phi;
@@ -118,12 +118,12 @@ static void curveFormula(apf::Matrix3x3 const& h, apf::Vector3 const& g,
 
 static apf::Field* getCurves(apf::Field* hessians, apf::Field* gradphi)
 {
-  apf::Field* curves;
-  curves = apf::createLagrangeField(mesh, "proteus_curves", apf::VECTOR, 1);
   apf::Mesh* m = apf::getMesh(hessians);
+  apf::Field* curves;
+  curves = apf::createLagrangeField(m, "proteus_curves", apf::VECTOR, 1);
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* v;
-  while ((e = m->iterate(it))) {
+  while ((v = m->iterate(it))) {
     apf::Matrix3x3 hessian;
     apf::getMatrix(hessians, v, 0, hessian);
     apf::Vector3 gphi;
@@ -167,7 +167,7 @@ static apf::Field* getSizeScales(apf::Field* phif, apf::Field* curves,
   scales = apf::createLagrangeField(m, "proteus_size_scale", apf::VECTOR, 1);
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* v;
-  while ((e = m->iterate(it))) {
+  while ((v = m->iterate(it))) {
     double phi = apf::getScalar(phif, v, 0);
     apf::Vector3 curve;
     apf::getVector(curves, v, 0, curve);
@@ -196,7 +196,7 @@ static apf::Field* getSizeFrames(apf::Field* gradphi)
     apf::setMatrix(frames, v, 0, frame);
   }
   m->end(it);
-  return scales;
+  return frames;
 }
 
 /*
@@ -225,14 +225,17 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField()
   apf::destroyField(gradphi);
   for (int i = 0; i < 2; ++i)
     SmoothField(size_scale);
+  apf::writeVtkFiles("pumi_size", m);
+  return 0;
 }
 
-static void getSelfAndNeighbors(apf::mesh* m, apf::meshEntity* v, apf::Up& vs)
+static void getSelfAndNeighbors(apf::Mesh* m, apf::MeshEntity* v, apf::Up& vs)
 {
   apf::Up es;
   m->getUp(v, es);
+  vs.n = es.n;
   for (int i = 0; i < es.n; ++i)
-    vs.e[i] = apf::getEdgeVertOppositeVert(m, es[i], v);
+    vs.e[i] = apf::getEdgeVertOppositeVert(m, es.e[i], v);
   vs.e[vs.n] = v;
   ++vs.n;
 }
@@ -268,10 +271,10 @@ static void SmoothField(apf::Field* f)
   m->end(it);
   apf::accumulate(sumf);
   apf::accumulate(numf);
-  apf::MeshIterator* it = m->begin(0);
+  it = m->begin(0);
   while ((v = m->iterate(it))) {
     apf::getComponents(sumf, v, 0, &sum[0]);
-    num = apf::getScalar(numf, v, 0);
+    double num = apf::getScalar(numf, v, 0);
     sum /= num;
     apf::setComponents(f, v, 0, &sum[0]);
   }
