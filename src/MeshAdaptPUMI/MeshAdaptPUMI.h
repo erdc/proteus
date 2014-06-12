@@ -40,7 +40,7 @@ class MeshAdaptPUMIDrvr{
 
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
-  apf::Field *presf, *velf, *voff, *phif, *phidf, *phiCorrf;
+  apf::Field* solution;
   apf::Field* sizef;
 
   int ConstructGlobalNumbering(Mesh& mesh);
