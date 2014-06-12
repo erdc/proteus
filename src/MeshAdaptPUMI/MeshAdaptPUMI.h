@@ -1,14 +1,6 @@
-#include <cstdlib>
-#include "MA.h"
-#include "pumi_mesh.h"
-#include "pumi.h"
-#include "pumi_geom.h"
 #include "mesh.h"
 #include "cmeshToolsModule.h"
-#include "MeshTools.h"
-#include "apf.h"
-
-void TransferTopSCOREC(pPList oldEnts, pPList newRgn, void *userData, modType mtype, pEntity ent);
+#include <apf.h>
 
 class MeshAdaptPUMIDrvr{
  
@@ -19,9 +11,7 @@ class MeshAdaptPUMIDrvr{
   Mesh mesh_proteus;
   int initProteusMesh(Mesh& mesh);
 
-  int readGeomModel(const std::string &acis_geom_file_name);
-  int readPUMIMesh(const char* SMS_fileName);
-  int helloworld(const char* hello) { std::cout << hello << "\n"; return 0;}
+  int loadModelAndMesh(const char* modelFile, const char* meshFile);
 
   //Functions to construct proteus mesh data structures
   int ConstructFromSerialPUMIMesh(Mesh& mesh);
@@ -34,30 +24,24 @@ class MeshAdaptPUMIDrvr{
   int TransferSolutionToProteus(double* outArray, int nVar, int nN);
   int CommuSizeField();
   int AdaptPUMIMesh();
-  int MeshAdaptPUMI();
 
   int CalculateSizeField(pMAdapt);
-  int CalculateAnisoSizeField(pMAdapt, apf::Field*);
-
-  int InterpolateSolutionE( pEdge edge, double xi[2], int field_size, pTag pTagTag, double* result);
-  int TransferBottomE(pPList parent, pPList fresh, pPList VtxstoHandle, modType mtype);
+  int CalculateAnisoSizeField(apf::Field*);
 
   double hmax, hmin;
   int numIter;
   int nAdapt; //counter for number of adapt steps
 
   private: 
-  pMeshMdl PUMI_MeshInstance;
-  pGeomMdl PUMI_GModel;
-  pPart PUMI_Part;
-  std::vector<pPart> PUMI_Parts;
+  apf::Mesh2* m;
   int comm_size, comm_rank;
   int elms_owned, faces_owned, edges_owned, vtx_owned;
   int numVar;
 
-  pTag GlobNumberTag;
-  pTag SolutionTag, SFTag, SFDirTag;
+  apf::GlobalNumbering* global[4];
+  apf::Numbering* local[4];
   apf::Field *presf, *velf, *voff, *phif, *phidf, *phiCorrf;
+  apf::Field* sizef;
 
   int ConstructGlobalNumbering(Mesh& mesh);
   int ConstructGlobalStructures(Mesh& mesh);
@@ -67,14 +51,6 @@ class MeshAdaptPUMIDrvr{
   int ConstructBoundaries(Mesh& mesh);
   int ConstructEdges(Mesh& mesh);
   int ConstructMaterialArrays(Mesh& mesh);
-  
-  int CalculateOwnedEnts(PUMI_EntType EntType, int &nOwnedEnt);
-  int CommunicateOwnedNumbers(int toSend, int *toReceive);
-  int SetOwnerGlobNumbering(pTag, PUMI_EntType, int);
-  int SetCopyGlobNumbering(pTag, int EntType);
-  int DeleteMeshEntIDs();
-  int getFieldFromTag(apf::Mesh* apf_mesh, pMeshMdl mesh_pumi, const char* tag_name);
-  int getTagFromField(apf::Mesh* apf_mesh, pMeshMdl mesh_pumi, const char* tag_name);
 
-  int SmoothField(pTag tag, int num);
+  int SmoothField(apf::Field* f);
 };
