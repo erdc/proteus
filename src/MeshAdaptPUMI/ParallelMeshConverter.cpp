@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <mpi.h>
+#include <PCU.h>
+#include <sstream>
 
 #include "MeshAdaptPUMI.h"
 #include "mesh.h"
@@ -25,28 +27,28 @@ int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   mesh.subdomainp = &subdomain_mesh;
   std::cout << "Constructing global data structures\n"; 
   
-  int numGlobElem = countTotal(mesh, 3);
+  int numGlobElem = countTotal(m, 3);
   mesh.nElements_global = numGlobElem;
 
-  int numLocElem = mesh->count(3);
+  int numLocElem = m->count(3);
   mesh.subdomainp->nElements_global = numLocElem;
 
-  int numGlobNodes = countTotal(mesh, 0);
+  int numGlobNodes = countTotal(m, 0);
   mesh.nNodes_global = numGlobNodes;
 
-  int numLocNodes = mesh->count(0);
+  int numLocNodes = m->count(0);
   mesh.subdomainp->nNodes_global = numLocNodes;
 
-  int numGlobFaces = countTotal(mesh, 2);
+  int numGlobFaces = countTotal(m, 2);
   mesh.nElementBoundaries_global = numGlobFaces;
 
-  int numLocFaces = mesh->count(2);
+  int numLocFaces = m->count(2);
   mesh.subdomainp->nElementBoundaries_global = numLocFaces;
 
-  int numGlobEdges = countTotal(mesh, 1);
+  int numGlobEdges = countTotal(m, 1);
   mesh.nEdges_global = numGlobEdges;
 
-  int numLocEdges = mesh->count(1);
+  int numLocEdges = m->count(1);
   mesh.subdomainp->nEdges_global = numLocEdges;
 //nNodes_element for now is constant for the entire mesh, Ask proteus about using mixed meshes
 //therefore currently this code only supports tet meshes
@@ -90,9 +92,9 @@ int MeshAdaptPUMIDrvr::ConstructGlobalNumbering(Mesh &mesh)
   mesh.edgeOffsets_subdomain_owned = new int[comm_size+1];
   mesh.nodeOffsets_subdomain_owned = new int[comm_size+1];
 
-  for (int dim = mesh->getDimension(); dim >= 0; --dim) {
+  for (int dim = 0; dim < m->getDimension(); ++dim) {
 
-    int nLocalOwned = apf::countOwned(mesh, dim);
+    int nLocalOwned = apf::countOwned(m, dim);
     int localOffset = nLocalOwned;
     PCU_Exscan_Ints(&localOffset, 1);
 
@@ -124,7 +126,7 @@ int MeshAdaptPUMIDrvr::ConstructGlobalNumbering(Mesh &mesh)
     std::string name = ss.str();
     /* this algorithm does global numbering properly,
        without O(#procs) runtime */
-    global[dim] = apf::makeGlobal(apf::numberOwnedDimension(mesh, name.c_str(), dim));
+    global[dim] = apf::makeGlobal(apf::numberOwnedDimension(m, name.c_str(), dim));
     apf::synchronize(global[dim]);
   } //loop on entity dimensions
 
@@ -140,10 +142,10 @@ int MeshAdaptPUMIDrvr::ConstructGlobalStructures(Mesh &mesh)
   
   for (int d = 0; d < m->getDimension(); ++d) {
     int* temp_subdomain2global;
-    if(type==3) temp_subdomain2global = mesh.elementNumbering_subdomain2global;
-    if(type==2) temp_subdomain2global = mesh.elementBoundaryNumbering_subdomain2global;
-    if(type==1) temp_subdomain2global = mesh.edgeNumbering_subdomain2global;
-    if(type==0) temp_subdomain2global = mesh.nodeNumbering_subdomain2global;
+    if(d==3) temp_subdomain2global = mesh.elementNumbering_subdomain2global;
+    if(d==2) temp_subdomain2global = mesh.elementBoundaryNumbering_subdomain2global;
+    if(d==1) temp_subdomain2global = mesh.edgeNumbering_subdomain2global;
+    if(d==0) temp_subdomain2global = mesh.nodeNumbering_subdomain2global;
 
     apf::MeshIterator* it = m->begin(d);
     apf::MeshEntity* e;
