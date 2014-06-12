@@ -35,7 +35,7 @@ setup(name='proteus',
       ext_modules=cythonize(
                    [Extension('MeshAdaptPUMI',
 
-                             sources = ['src/MeshAdaptPUMI.pyx', 'src/MeshAdaptPUMI/MeshAdaptPUMI.cpp', 'src/MeshAdaptPUMI/Eigen.cpp',
+                             sources = ['src/MeshAdaptPUMI.pyx', 'src/MeshAdaptPUMI/MeshAdaptPUMI.cpp',
                                         'src/MeshAdaptPUMI/MeshConverter.cpp', 'src/MeshAdaptPUMI/ParallelMeshConverter.cpp',
                                         'src/MeshAdaptPUMI/MeshFields.cpp', 'src/MeshAdaptPUMI/SizeField.cpp'],
                              define_macros=[('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H)],
