@@ -1,4 +1,7 @@
 #include <algorithm>
+#include <mpi.h>
+#include <PCU.h>
+#include <sstream>
 
 #include "MeshAdaptPUMI.h"
 #include "mesh.h"
@@ -10,48 +13,42 @@ const int EXTERIOR_NODE_MATERIAL=1;
 const int INTERIOR_ELEMENT_BOUNDARY_MATERIAL=0;
 const int EXTERIOR_ELEMENT_BOUNDARY_MATERIAL=1;
 
-//Construct Proteus mesh from partitioned PUMI mesh
-//Unlike the serial converter, we populate the subdomain data structures for Proteus along
-//with any other global info required
-int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh) {
+static int countTotal(apf::Mesh* m, int dim)
+{
+  int total = apf::countOwned(m, dim);
+  PCU_Add_Ints(&total, 1);
+  return total;
+}
 
-//Current impementation is for serial only. Need to resolve things with Proteus developers for parallel implementation  
-  initializeMesh(mesh);
+int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh)
+{
   mesh.subdomainp = new Mesh();
   mesh.subdomainp = &subdomain_mesh;
   initializeMesh(subdomain_mesh);
   std::cout << "Constructing global data structures\n"; 
   
-  int numGlobElem;
-  PUMI_Mesh_GetNumEnt(PUMI_MeshInstance, PUMI_REGION, PUMI_ALLTOPO, &numGlobElem);
+  int numGlobElem = countTotal(m, 3);
   mesh.nElements_global = numGlobElem;
 
-  int numLocElem;
-  PUMI_Part_GetNumEnt(PUMI_Part, PUMI_REGION, PUMI_ALLTOPO, &numLocElem);
+  int numLocElem = m->count(3);
   mesh.subdomainp->nElements_global = numLocElem;
 
-  int numGlobNodes;
-  PUMI_Mesh_GetNumEnt(PUMI_MeshInstance, PUMI_VERTEX, PUMI_ALLTOPO, &numGlobNodes);
+  int numGlobNodes = countTotal(m, 0);
   mesh.nNodes_global = numGlobNodes;
 
-  int numLocNodes;
-  PUMI_Part_GetNumEnt(PUMI_Part, PUMI_VERTEX, PUMI_ALLTOPO, &numLocNodes);
+  int numLocNodes = m->count(0);
   mesh.subdomainp->nNodes_global = numLocNodes;
 
-  int numGlobFaces;
-  PUMI_Mesh_GetNumEnt(PUMI_MeshInstance, PUMI_FACE, PUMI_ALLTOPO, &numGlobFaces);
+  int numGlobFaces = countTotal(m, 2);
   mesh.nElementBoundaries_global = numGlobFaces;
 
-  int numLocFaces;
-  PUMI_Part_GetNumEnt(PUMI_Part, PUMI_FACE, PUMI_ALLTOPO, &numLocFaces);
+  int numLocFaces = m->count(2);
   mesh.subdomainp->nElementBoundaries_global = numLocFaces;
 
-  int numGlobEdges;
-  PUMI_Mesh_GetNumEnt(PUMI_MeshInstance, PUMI_EDGE, PUMI_ALLTOPO, &numGlobEdges);
+  int numGlobEdges = countTotal(m, 1);
   mesh.nEdges_global = numGlobEdges;
 
-  int numLocEdges;
-  PUMI_Part_GetNumEnt(PUMI_Part, PUMI_EDGE, PUMI_ALLTOPO, &numLocEdges);
+  int numLocEdges = m->count(1);
   mesh.subdomainp->nEdges_global = numLocEdges;
 //nNodes_element for now is constant for the entire mesh, Ask proteus about using mixed meshes
 //therefore currently this code only supports tet meshes
@@ -83,265 +80,82 @@ int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   ConstructMaterialArrays(*mesh.subdomainp);
   ConstructGlobalStructures(mesh); 
 
-  PUMI_Mesh_DelTag (PUMI_MeshInstance, GlobNumberTag, 1);
-
-   //chitak: debug
-/*  
-  printf("chitak: node Offset %d %d %d\n", vtx_owned, mesh.nodeOffsets_subdomain_owned[comm_rank], mesh.nodeOffsets_subdomain_owned[comm_rank+1]);
-  printf("chitak: element Offset %d %d %d\n", elms_owned, mesh.elementOffsets_subdomain_owned[comm_rank],mesh.elementOffsets_subdomain_owned[comm_rank+1]);
-
-//debugging and checking
-   for(int i=0; i<mesh.subdomainp->nElements_global; i++) {
-     std::cout << "element, local: " << i << " global: " << mesh.elementNumbering_subdomain2global[i] << "\n";
-   }
-   MPI_Barrier(MPI_COMM_WORLD);
-   for(int i=0; i<mesh.subdomainp->nNodes_global; i++) {
-     std::cout << "nodes, local: " << i << " global: " << mesh.nodeNumbering_subdomain2global[i] << "\n";
-   }
-   for(int i=0; i<comm_size+1; i++) {
-      std::cout << "my rank: " << comm_rank << " element_subdomain_owned: " << mesh.elementOffsets_subdomain_owned[i] << "\n";
-   }
-   for(int i=0; i<comm_size+1; i++) {
-      std::cout << "my rank: " << comm_rank << " node_subdomain_owned: " << mesh.nodeOffsets_subdomain_owned[i] << "\n";
-   }
-*/
   return 0;
 } 
 
-//Construct global data structures like subdomain2global arrays
-int MeshAdaptPUMIDrvr::ConstructGlobalStructures(Mesh &mesh) {
+int MeshAdaptPUMIDrvr::ConstructGlobalNumbering(Mesh &mesh)
+{
+  /* N^2 data structures and algorithms are terrible for scalability.
+     Going along because Proteus is structured this way. */
+  mesh.elementOffsets_subdomain_owned = new int[comm_size+1];
+  mesh.elementBoundaryOffsets_subdomain_owned = new int[comm_size+1];
+  mesh.edgeOffsets_subdomain_owned = new int[comm_size+1];
+  mesh.nodeOffsets_subdomain_owned = new int[comm_size+1];
 
+  for (int dim = 0; dim < m->getDimension(); ++dim) {
+
+    int nLocalOwned = apf::countOwned(m, dim);
+    int localOffset = nLocalOwned;
+    PCU_Exscan_Ints(&localOffset, 1);
+
+    int* allOffsets;
+    if(dim==3){
+      allOffsets = mesh.elementOffsets_subdomain_owned;
+      elms_owned = nLocalOwned;
+    }
+    if(dim==2){
+      allOffsets = mesh.elementBoundaryOffsets_subdomain_owned;
+      faces_owned = nLocalOwned;
+    }
+    if(dim==1){
+      allOffsets = mesh.edgeOffsets_subdomain_owned;
+      edges_owned = nLocalOwned;
+    }
+    if(dim==0){
+      allOffsets = mesh.nodeOffsets_subdomain_owned;
+      vtx_owned = nLocalOwned;
+    }
+
+    /* one of the many reasons N^2 algorithms are bad */
+    MPI_Allgather(&localOffset, 1, MPI_INT,
+                  allOffsets, 1, MPI_INT, MPI_COMM_WORLD);
+
+    std::stringstream ss;
+    ss << "proteus_global_";
+    ss << dim;
+    std::string name = ss.str();
+    /* this algorithm does global numbering properly,
+       without O(#procs) runtime */
+    global[dim] = apf::makeGlobal(apf::numberOwnedDimension(m, name.c_str(), dim));
+    apf::synchronize(global[dim]);
+  } //loop on entity dimensions
+
+  return 0; 
+}
+
+int MeshAdaptPUMIDrvr::ConstructGlobalStructures(Mesh &mesh)
+{
   mesh.elementNumbering_subdomain2global = new int[mesh.subdomainp->nElements_global];
   mesh.elementBoundaryNumbering_subdomain2global = new int[mesh.subdomainp->nElementBoundaries_global];
   mesh.nodeNumbering_subdomain2global = new int[mesh.subdomainp->nNodes_global];
   mesh.edgeNumbering_subdomain2global = new int[mesh.subdomainp->nEdges_global];
   
-  int partDim;
-  PUMI_Part_GetDim(PUMI_Part, &partDim);
-  for (int type=partDim; type>-1; type--) {
+  for (int d = 0; d < m->getDimension(); ++d) {
     int* temp_subdomain2global;
-    if(type==3) temp_subdomain2global = mesh.elementNumbering_subdomain2global;
-    if(type==2) temp_subdomain2global = mesh.elementBoundaryNumbering_subdomain2global;
-    if(type==1) temp_subdomain2global = mesh.edgeNumbering_subdomain2global;
-    if(type==0) temp_subdomain2global = mesh.nodeNumbering_subdomain2global;
+    if(d==3) temp_subdomain2global = mesh.elementNumbering_subdomain2global;
+    if(d==2) temp_subdomain2global = mesh.elementBoundaryNumbering_subdomain2global;
+    if(d==1) temp_subdomain2global = mesh.edgeNumbering_subdomain2global;
+    if(d==0) temp_subdomain2global = mesh.nodeNumbering_subdomain2global;
 
-    int isEnd = 0;
-    pPartEntIter EntIt;
-    pMeshEnt meshEnt; 
-    PUMI_PartEntIter_Init (PUMI_Part, type, PUMI_ALLTOPO, EntIt);
-    while (!isEnd) {
-      PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-      int globID;
-      PUMI_MeshEnt_GetIntTag(PUMI_MeshInstance, meshEnt, GlobNumberTag, &globID);
-      int entID = PUMI_MeshEnt_ID(meshEnt);
-      temp_subdomain2global[entID] = globID;
-      PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
-    } //region loop
-    PUMI_PartEntIter_Del(EntIt);
-  } //type
-  return 0;
-}
-
-//Since PUMI does not store global numbering, we need to construct it first
-//What we do is that depending on the part ID and local number of the owned entities, we set
-//the global numbering. 0th part will have first N global numbers, 1st part will have N to M 
-//global numbers and so no. The copies inherit the global numbering from their owned entity
-//Also set the offsets array
-int MeshAdaptPUMIDrvr::ConstructGlobalNumbering(Mesh &mesh) {
- 
- PUMI_Mesh_CreateTag(PUMI_MeshInstance, "GlobNumbering", PUMI_INT, 1, GlobNumberTag);
- 
- mesh.elementOffsets_subdomain_owned = new int[comm_size+1];
- mesh.elementBoundaryOffsets_subdomain_owned = new int[comm_size+1];
- mesh.edgeOffsets_subdomain_owned = new int[comm_size+1];
- mesh.nodeOffsets_subdomain_owned = new int[comm_size+1];
- 
- int partDim;
- PUMI_Part_GetDim(PUMI_Part, &partDim);
- for (int type=partDim; type>-1; type--) {
-  
-   int nLocalOwned;
-   if(type==3){ //elements, we own all elements on a part
-     PUMI_Part_GetNumEnt(PUMI_Part, type, PUMI_ALLTOPO, &nLocalOwned); //assuming that we don't have overlapping elements, all elements are owned on a part
-   } else { //for vertices, edges, faces
-     CalculateOwnedEnts(static_cast<PUMI_EntType>(type), nLocalOwned);
-   }
-   int nOwned[comm_size];
-   CommunicateOwnedNumbers(nLocalOwned, nOwned);
-
-   int* numOffset;
-   if(type==3){
-     numOffset = mesh.elementOffsets_subdomain_owned;
-     elms_owned = nLocalOwned;
-   }
-   if(type==2){
-     numOffset = mesh.elementBoundaryOffsets_subdomain_owned;
-     faces_owned = nLocalOwned;
-   }
-   if(type==1){
-     numOffset = mesh.edgeOffsets_subdomain_owned;
-     edges_owned = nLocalOwned;
-   }
-   if(type==0){
-     numOffset = mesh.nodeOffsets_subdomain_owned;
-     vtx_owned = nLocalOwned;
-   }
-
-   numOffset[0]=0;
-   for(int i=1; i<comm_size+1; i++) {
-     numOffset[i] = numOffset[i-1]+nOwned[i-1];
-   }
-/*   
-   for(int i=0; i<comm_size; i++) {
-      std::cout << "my rank: " << comm_rank <<" rank: " << i << " : Entity " << type << ": " << nOwned[i] << "\n";
-   }
-*/ 
-   SetOwnerGlobNumbering(GlobNumberTag, static_cast<PUMI_EntType>(type), numOffset[comm_rank]);
-   if(type!=3) 
-     SetCopyGlobNumbering(GlobNumberTag, type);
-
-   //communicate numOffset to populate mesh.offset_owned etc
-
- } //loop on entity types
-
-/* 
-//debugging and checking :
-  pPartEntIter EntIt;
-  pMeshEnt meshEnt;
-  PUMI_PartEntIter_Init (PUMI_Part, PUMI_VERTEX, PUMI_ALLTOPO, EntIt);
-
-  int isEnd = 0;
-  int eN = 0;
-  while (!isEnd) {
-    PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-
-    int globNum;
-    PUMI_MeshEnt_GetIntTag(PUMI_MeshInstance, meshEnt, GlobNumberTag, &globNum);
-    std::cout << "rank: " << comm_rank << ": local num: " << eN << " Glob num: " << globNum << "\n";
-    PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
-    eN++;
+    apf::MeshIterator* it = m->begin(d);
+    apf::MeshEntity* e;
+    size_t i = 0;
+    while ((e = m->iterate(it)))
+      temp_subdomain2global[i++] = apf::getNumber(global[d], apf::Node(e, 0));
+    m->end(it);
+    apf::destroyGlobalNumbering(global[d]);
   }
 
-  PUMI_PartEntIter_Del(EntIt);
-*/
- return 0; 
-}
-
-//Calculate owned entities of a type
-int MeshAdaptPUMIDrvr::CalculateOwnedEnts(PUMI_EntType EntType, int &nOwnedEnt ) {  
-
-  pPartEntIter EntIt;
-  pMeshEnt meshEnt;
-  PUMI_PartEntIter_Init (PUMI_Part, EntType, PUMI_ALLTOPO, EntIt);
-
-  int isEnd = 0;
-  int eN = 0;
-  while (!isEnd) {
-    PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-    int owned;
-    PUMI_MeshEnt_IsOwned(meshEnt, PUMI_Part, &owned);
-    if(owned) {
-       eN++;
-    }
-    PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
-  } 
-  PUMI_PartEntIter_Del(EntIt);
-  nOwnedEnt = eN;
   return 0;
 }
 
-//Communicate the owned entities to build the offsets array
-int MeshAdaptPUMIDrvr::CommunicateOwnedNumbers(int toSend, int *toReceive) {
-  
-  MPI_Status status;
-
-  MPI_Send(&toSend, 1, MPI_INT, 0, 0, MPI_COMM_WORLD); //send local number of owned to process 0
-  if(comm_rank == 0) {
-    toReceive[0] = toSend;
-    for(int i=1; i<comm_size; i++) {
-      MPI_Recv(&toReceive[i], 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
-    }
-  }   
-  MPI_Bcast(&toReceive[0], comm_size, MPI_INT, 0, MPI_COMM_WORLD);
-  return 0;
-}
-
-//Set global numbers for owned entities
-int MeshAdaptPUMIDrvr::SetOwnerGlobNumbering(pTag globNumTag, PUMI_EntType EntType, int numOffset) {
-  
-  pPartEntIter EntIt;
-  pMeshEnt meshEnt;
-  PUMI_PartEntIter_Init(PUMI_Part, EntType, PUMI_ALLTOPO, EntIt);
-
-  int isEnd = 0;
-  int eN = 0;
-  while (!isEnd) {
-    PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-    int owned;
-    PUMI_MeshEnt_IsOwned(meshEnt, PUMI_Part, &owned);
-    if(owned) {
-       PUMI_MeshEnt_SetIntTag(PUMI_MeshInstance, meshEnt, globNumTag, numOffset+eN);
-       eN++;
-    }
-    PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
-  } //region loop
-
-  PUMI_PartEntIter_Del(EntIt);
-  MPI_Barrier(MPI_COMM_WORLD);
-  return 0;
-}
-
-//Set glonbal numbers for copies based on global numbers of owners
-int MeshAdaptPUMIDrvr::SetCopyGlobNumbering(pTag globNumTag, int EntType) {
-
- if (SCUTIL_CommSize() > 1) { //need to do this only for parallel
-
-  pPartEntIter EntIt;
-  pMeshEnt meshEnt;
-  PUMI_PartEntIter_InitPartBdry(PUMI_Part, -1, EntType, PUMI_ALLTOPO, EntIt);
-  int isEnd = 0;
-  int eN = 0;
-
-  PCU_Comm_Start (PCU_GLOBAL_METHOD);
-//  std::pair<pMeshEnt, int>* msg_send = (std::pair<pMeshEnt, int>)malloc(sizeof(std::pair<pMeshEnt, int>));
-  std::pair<pMeshEnt, int>* msg_send = new std::pair<pMeshEnt, int>;
-  size_t msg_size = sizeof(std::pair<pMeshEnt,int>);
-
-  while (!isEnd) {
-    PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-    int owned;
-    PUMI_MeshEnt_IsOwned(meshEnt, PUMI_Part, &owned);
-    if(owned) {
-      int ownGlobNum;
-      PUMI_MeshEnt_GetIntTag(PUMI_MeshInstance, meshEnt, globNumTag, &ownGlobNum);
-      msg_send->second =  ownGlobNum;
-
-      std::vector<std::pair<int, pMeshEnt> > VecRemCpy;
-      PUMI_MeshEnt_GetAllRmt(meshEnt, VecRemCpy);
-      for (int iRC = 0; iRC < VecRemCpy.size(); ++iRC)
-      {
-        msg_send->first = VecRemCpy[iRC].second;
-        PCU_Comm_Write (VecRemCpy[iRC].first, (void*)msg_send, msg_size);
-      }
-    }
-    PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
-    eN++;
-  }
-  PUMI_PartEntIter_Del(EntIt);
-  MPI_Barrier(MPI_COMM_WORLD);
-
-  delete msg_send;
-  PCU_Comm_Send ();
-
-  size_t recv_size;
-  int pid_from;
-  void* msg_recv;
-  while (PCU_Comm_Read (&pid_from,&msg_recv,&recv_size)) {
-     std::pair<pMeshEnt, int>& msg_pair = *(static_cast<std::pair<pMeshEnt, int> *>(msg_recv));
-     pMeshEnt copyEnt = msg_pair.first;
-     PUMI_MeshEnt_SetIntTag(PUMI_MeshInstance, copyEnt, globNumTag, msg_pair.second);
-  }
-
- } //if parallel
-  return 0;
-}
