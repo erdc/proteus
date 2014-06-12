@@ -30,6 +30,7 @@ static double isotropicFormula(double* solution, double hmin, double hmax)
 
 int MeshAdaptPUMIDrvr::CalculateSizeField()
 {
+  freeField(size_iso)
   size_iso = apf::createLagrangeField(mesh, "proteus_size",apf::SCALAR,1);
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* v;
@@ -212,9 +213,16 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f)
   apf::Field* gradphi = apf::recoverGradientByVolume(phif);
   apf::Field* grad2phi = apf::recoverGradientByVolume(gradphi);
   apf::Field* hess = computeHessianField(grad2phi);
+  apf::destroyField(grad2phi);
   apf::Field* curves = getCurves(hess, gradphi);
+  apf::destroyField(hess);
+  freeField(size_scale);
   size_scale = getSizeScales(phif, curves, hmin, hmax, nAdapt);
+  apf::destroyField(phif);
+  apf::destroyField(curves);
+  freeField(size_frame);
   size_frame = getSizeFrames(gradphi);
+  apf::destroyField(gradphi);
   for (int i = 0; i < 2; ++i)
     SmoothField(size_scale);
 }

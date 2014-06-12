@@ -1,15 +1,13 @@
 #include "mesh.h"
 #include "cmeshToolsModule.h"
-#include <apf.h>
+#include <apfMesh2.h>
+#include <apfNumbering.h>
 
 class MeshAdaptPUMIDrvr{
  
   public:
   MeshAdaptPUMIDrvr(double, double, int); 
   ~MeshAdaptPUMIDrvr();
-
-  Mesh mesh_proteus;
-  int initProteusMesh(Mesh& mesh);
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile);
 
@@ -25,7 +23,7 @@ class MeshAdaptPUMIDrvr{
   int CommuSizeField();
   int AdaptPUMIMesh();
 
-  int CalculateSizeField(pMAdapt);
+  int CalculateSizeField();
   int CalculateAnisoSizeField(apf::Field*);
 
   double hmax, hmin;
@@ -58,4 +56,5 @@ class MeshAdaptPUMIDrvr{
   int ConstructMaterialArrays(Mesh& mesh);
 
   int SmoothField(apf::Field* f);
+  void freeField(apf::Field*& f);
 };
