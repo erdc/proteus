@@ -16,12 +16,11 @@ void MeshAdaptPUMIDrvr::freeNumbering(apf::Numbering*& n)
     apf::destroyNumbering(n);
     n = 0;
   }
-  return 0;
 }
 
 int MeshAdaptPUMIDrvr::TransferSolutionToPUMI(double* inArray, int nVar, int nN)
 {
-  assert(nN == mesh->count(0));
+  assert(nN == static_cast<int>(m->count(0)));
   numVar = nVar;
   solution = apf::createPackedField(m, "proteus_solution", nVar);
   apf::NewArray<double> tmp(nVar);
@@ -40,7 +39,7 @@ int MeshAdaptPUMIDrvr::TransferSolutionToPUMI(double* inArray, int nVar, int nN)
 
 int MeshAdaptPUMIDrvr::TransferSolutionToProteus(double* outArray, int nVar, int nN)
 {
-  assert(nN == mesh->count(0));
+  assert(nN == static_cast<int>(m->count(0)));
   apf::NewArray<double> tmp(nVar);
   apf::MeshEntity* v;
   apf::MeshIterator* it = m->begin(0);
