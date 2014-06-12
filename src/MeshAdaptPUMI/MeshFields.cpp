@@ -7,6 +7,9 @@
 using namespace std;
 using namespace apf;
 
+//API To transfer dof arrays from Proteus to PUMI, called from Proteus
+//input Array comes from Proteus along with number of variables and the length of the array
+//It is a numpy array so the memory is layed out nicely
 int MeshAdaptPUMIDrvr::TransferSolutionToPUMI(double* inArray, int nVar, int nN) {
    
    int size;
@@ -19,43 +22,39 @@ int MeshAdaptPUMIDrvr::TransferSolutionToPUMI(double* inArray, int nVar, int nN)
 
    pMeshEnt meshEnt;
    pPartEntIter EntIt;
-
    PUMI_PartEntIter_Init (PUMI_Part, PUMI_VERTEX, PUMI_ALLTOPO, EntIt);
    int isEnd = 0;
    while (!isEnd) {
      PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-
      int vtxID = PUMI_MeshEnt_ID(meshEnt);
      double* sol  = new double[nVar];
      for(int j=0; j<nVar; j++) {
        sol[j]=inArray[j*nN+vtxID];
      }
-     
      PUMI_MeshEnt_SetDblArrTag(PUMI_MeshInstance, meshEnt, SolutionTag, sol, nVar);
-
      delete [] sol;
      PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
    }
    PUMI_PartEntIter_Del(EntIt);
-
    printf("Converted Proteus solution to PUMI tags\n");
-
 //   exportMeshToVTK(PUMI_MeshInstance, "pumi");   
+   return 0;
 }
 
+//API to transfer solution tags to Proteus dof arrays, called from Proteus
+//This is called after adaptation, before starting next solve step to use
+//the interpolated solution as the initial conditions
+//outArray is dof array in Proteus
 int MeshAdaptPUMIDrvr::TransferSolutionToProteus(double* outArray, int nVar, int nN) {
    
    pMeshEnt meshEnt;
    pPartEntIter EntIt;
-
    PUMI_PartEntIter_Init (PUMI_Part, PUMI_VERTEX, PUMI_ALLTOPO, EntIt);
    int isEnd = 0;
 //   outArray = new double[nVar*nN];
    while (!isEnd) {
      PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-
      int vtxID = PUMI_MeshEnt_ID(meshEnt);
-     
      double *sol = new double [nVar];
      int ncount;
      PUMI_MeshEnt_GetDblArrTag(PUMI_MeshInstance, meshEnt, SolutionTag, &sol, &ncount);
@@ -63,12 +62,16 @@ int MeshAdaptPUMIDrvr::TransferSolutionToProteus(double* outArray, int nVar, int
        outArray[j*nN+vtxID] = sol[j];
      }
      PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
+     delete [] sol;
    }
+   PUMI_PartEntIter_Del(EntIt);
+   PUMI_Mesh_SetAutoTagMigrOff(PUMI_MeshInstance, SolutionTag, PUMI_VERTEX);
    PUMI_Mesh_DelTag (PUMI_MeshInstance, SolutionTag, 1);
-
    printf("Converted PUMI tags to Proteus solution\n");
+   return 0;
 }
 
+//Cleaning up Ent IDs
 int MeshAdaptPUMIDrvr::DeleteMeshEntIDs() {
 
   int partDim;
@@ -81,14 +84,16 @@ int MeshAdaptPUMIDrvr::DeleteMeshEntIDs() {
     PUMI_PartEntIter_Init (PUMI_Part, type, PUMI_ALLTOPO, EntIt);
     while (!isEnd) {
       PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-
       PUMI_MeshEnt_DelID(meshEnt);
       PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
     } //region loop
     PUMI_PartEntIter_Del(EntIt);
   }
+  return 0;
 }
 
+//APF support, will play more role in the future, transfer the solution tags to apf fields
+//we should be using packed fields here
 int MeshAdaptPUMIDrvr::getFieldFromTag(apf::Mesh* mesh, pMeshMdl mesh_pumi, const char* tag_name)
 {
   pTag tag;
@@ -122,6 +127,7 @@ int MeshAdaptPUMIDrvr::getFieldFromTag(apf::Mesh* mesh, pMeshMdl mesh_pumi, cons
   return 0;
 }
 
+//Set solution tags from the apf field, should use packed fields here as well
 int MeshAdaptPUMIDrvr::getTagFromField(apf::Mesh* mesh, pMeshMdl mesh_pumi, const char* tag_name)
 {
   pTag tag;
@@ -138,7 +144,6 @@ int MeshAdaptPUMIDrvr::getTagFromField(apf::Mesh* mesh, pMeshMdl mesh_pumi, cons
     double phi = getScalar(phif,castEntity(vertex),0);
 //    double phid = getScalar(phidf,castEntity(vertex),0);
 //    double phiCorr = getScalar(phiCorrf,castEntity(vertex),0);
-    
     double* v = new double[1];
     v[0]=pres;
 /*    
@@ -146,6 +151,7 @@ int MeshAdaptPUMIDrvr::getTagFromField(apf::Mesh* mesh, pMeshMdl mesh_pumi, cons
     v[4]=vof; v[5]=phi; v[6]=phid; v[7]=phiCorr; 
 */    
     PUMI_MeshEnt_SetDblArrTag(mesh_pumi,vertex,tag,v,1);
+    delete [] v;
   }
   return 0;
 }

@@ -24,6 +24,7 @@ useRBLES   = 0.0
 useMetrics = 1.0
 applyCorrection=True
 useVF = 1.0
+#useOnlyVF = False
 useOnlyVF = False
 redist_Newton = False#True
 useRANS = 0 # 0 -- None
@@ -101,7 +102,7 @@ else:
     else:
         domain = Domain.PUMIDomain(fileprefix="Dambreak.sms",modelfile="Dambreak.smd") #initialize the domain
         domain.numBC=6 #set number of BCs 
-        domain.numAdaptSteps=30 #set number of adapt steps (loops)
+        domain.numAdaptSteps=100 #set number of adapt steps (loops)
         #Following sets list of face tags of geometric model as mapped from boundary Tags, 
         #meaning if faceList=[[2,4],[1]] and boundaries=['left','right'], then faces with geometry tags 2 and 4 are set as 'left'
         #and face with geometric tag 4 is set as 'right'
@@ -110,11 +111,10 @@ else:
         #the geomtric face which is latter in the order (email: chitak2@rpi.edu for any questions)
         domain.faceList=[[3],[5],[1],[6],[2],[4]]
         #set max edge length, min edge length, number of meshadapt iterations and initialize the MeshAdaptPUMI object
-        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.06, hmin=0.005, numIter=5) 
+        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.06, hmin=0.002, numIter=3) 
         #read the geometry and mesh
         domain.PUMIMesh.readGeomModel("Dambreak.smd")
         domain.PUMIMesh.readPUMIMesh("Dambreak.sms")
-
 
 # Time stepping
 T=0.01 #changed from 1.0

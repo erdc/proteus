@@ -18,6 +18,8 @@ nd = 3
 #if unstructured would need variable polyfile or meshfile set
 
 domain = Domain.PUMIDomain(fileprefix="cube.sms",modelfile="cube.smd")
+domain.numBC = 6
+domain.faceList = [[5],[3],[1],[6],[2],[4]]
 
 #steady-state so no initial conditions
 initialConditions = None

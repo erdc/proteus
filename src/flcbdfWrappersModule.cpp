@@ -4937,6 +4937,12 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     for (int i=0; i< mesh.subdomainp->nEdges_global; i++)
       mesh.edgeNumbering_subdomain2global[i] = edgeNumbering_subdomain2global[i];
 
+/*    //chitak print for debug
+    for (int nN=0;nN<mesh.subdomainp->nNodes_global;nN++)
+        std::cout<<"node subdomain to glob "<< nN << " " << mesh.nodeNumbering_subdomain2global[nN]<<std::endl;
+    for (int nN=0;nN<mesh.subdomainp->nElements_global;nN++)
+        std::cout<<"elem subdomain to glob "<< nN << " " << mesh.elementNumbering_subdomain2global[nN]<<std::endl;
+*/
     mesh.elementNumbering_global2original = new int[mesh.nElements_global];
     for (int eN=0;eN<mesh.nElements_global;eN++)
       mesh.elementNumbering_global2original[eN] = elementNumbering_global_new2old[eN];

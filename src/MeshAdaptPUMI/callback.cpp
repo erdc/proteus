@@ -143,6 +143,7 @@ int MeshAdaptPUMIDrvr::TransferBottomE(pPList parent, pPList fresh, pPList Vtxst
                 field[i] /= numVtx;
             }
             PUMI_MeshEnt_SetDblArrTag (PUMI_MeshInstance, vtx, SolutionTag, field, numVar);
+            PList_delete(vertices);
        }
     }
     return 0;

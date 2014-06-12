@@ -2458,9 +2458,8 @@ class TetrahedralMesh(Mesh):
         import Comm
         comm = Comm.get()
         self.cmesh = cmeshTools.CMesh()
-        log(memory("Initializing CMesh"),level=4)
         if parallel:
-          self.subdomainMesh=TetrahedralMesh()
+          self.subdomainMesh=self.__class__()
           self.subdomainMesh.globalMesh = self
           self.subdomainMesh.cmesh = cmeshTools.CMesh()
           PUMIMesh.ConstructFromParallelPUMIMesh(self.cmesh, self.subdomainMesh.cmesh)
@@ -2471,7 +2470,6 @@ class TetrahedralMesh(Mesh):
           cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
           cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
           self.buildFromC(self.cmesh)
-          self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
           (self.elementOffsets_subdomain_owned,
            self.elementNumbering_subdomain2global,
 #           self.elementNumbering_global2original,
@@ -2484,10 +2482,14 @@ class TetrahedralMesh(Mesh):
            self.edgeOffsets_subdomain_owned,
            self.edgeNumbering_subdomain2global) = flcbdfWrappers.convertPUMIPartitionToPython(self.cmesh, self.subdomainMesh.cmesh)
 #           self.edgeNumbering_global2original) = convertPUMIPartitionToPython(self.cmesh, self.subdomainMesh.cmesh)
+
+          self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
+#          print "chitak: ", len(self.subdomainMesh.elementBoundaryMaterialTypes)
           self.subdomainMesh.nElements_owned = self.elementOffsets_subdomain_owned[comm.rank()+1] - self.elementOffsets_subdomain_owned[comm.rank()]
           self.subdomainMesh.nNodes_owned = self.nodeOffsets_subdomain_owned[comm.rank()+1] - self.nodeOffsets_subdomain_owned[comm.rank()]
           self.subdomainMesh.nElementBoundaries_owned = self.elementBoundaryOffsets_subdomain_owned[comm.rank()+1] - self.elementBoundaryOffsets_subdomain_owned[comm.rank()]
           self.subdomainMesh.nEdges_owned = self.edgeOffsets_subdomain_owned[comm.rank()+1] - self.edgeOffsets_subdomain_owned[comm.rank()]
+          comm.barrier()
           par_nodeDiametersArray = ParVec_petsc4py(self.subdomainMesh.nodeDiametersArray,
                                                  bs=1,
                                                  n=self.subdomainMesh.nNodes_owned,
@@ -2495,14 +2497,17 @@ class TetrahedralMesh(Mesh):
                                                  nghosts=self.subdomainMesh.nNodes_global - self.subdomainMesh.nNodes_owned,
                                                  subdomain2global=self.nodeNumbering_subdomain2global)
           par_nodeDiametersArray.scatter_forward_insert()
+          comm.barrier()
         else:
           PUMIMesh.ConstructFromSerialPUMIMesh(self.cmesh) 
           for i in range(len(faceList)):
             for j in range(len(faceList[i])):
               PUMIMesh.UpdateMaterialArrays(self.cmesh, i+1, faceList[i][j])
           self.buildFromC(self.cmesh)
-        log(memory("calling buildFromC"),level=4)
         print "meshInfo says : \n", self.meshInfo()
+        #from Profiling import memory
+        #memory()
+        #log(memory("Partitioning Mesh","Mesh"),level=0)
 
     def generateFromTetgenFiles(self,filebase,base,skipGeometricInit=True,parallel=False):
         import cmeshTools
@@ -3390,10 +3395,11 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
     def generatePartitionedMeshFromPUMI(self,mesh0,refinementLevels,nLayersOfOverlap=1):
         import cmeshTools
         self.meshList = []
-        self.cmultilevelMesh = None
+        self.meshList.append(mesh0)
+        self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
+        self.buildFromC(self.cmultilevelMesh)
         self.elementParents = None
         self.elementChildren=[]
-        self.meshList.append(mesh0)
           
     def generatePartitionedMeshFromTetgenFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
                                                parallelPartitioningType=MeshParallelPartitioningTypes.node):

@@ -6,7 +6,9 @@
 #include "apfSPR.h"
 #include "apfMesh.h"
 #include "Eigen.h"
+#include "math.h"
 
+//structure to communicate while smoothing data
 struct commData {
   int numNeigh;
   double Size[20];
@@ -15,14 +17,16 @@ struct commData {
 pTag NumNeighTag;
 pTag NeighSFTag;
 
+//Function to calculate isotropic size field, currently works off tag data
+//Based on the distance from the interface, epsilon can be controlled to determine
+//thickness of refinement near the interface
 int MeshAdaptPUMIDrvr::CalculateSizeField(pMAdapt MA_Drvr) {
 
   PUMI_Mesh_CreateTag(PUMI_MeshInstance, "NodeMeshSize", SCUtil_DBL, 1, SFTag);
   PUMI_Mesh_SetAutoTagMigrOn(PUMI_MeshInstance, SFTag, PUMI_ALLTYPE);
 
   printf("Calculating size field\n");
-
-  double epsilon=0.03;
+  double epsilon=0.02;
   
   pPartEntIter EntIt;
   pMeshEnt meshEnt;
@@ -82,10 +86,19 @@ int MeshAdaptPUMIDrvr::CalculateSizeField(pMAdapt MA_Drvr) {
   std::cerr<<" - set size field for "<<sizeCounter<<" vertices\n";
 
 //  PUMI_Mesh_WriteToFile(PUMI_MeshInstance, "Dambreak_debug.smb", 1);  
+  PUMI_Mesh_SetAutoTagMigrOff (PUMI_MeshInstance, SFTag, PUMI_VERTEX);
+  PUMI_Mesh_DelTag (PUMI_MeshInstance, SFTag, 1);
   exportMeshToVTK(PUMI_MeshInstance, "pumi.vtk"); 
   return 0;
 }
 
+//Function to calculate anisotropic size field, currently uses tag data and apf
+//In future need to work with apf and call new meshadapt API instead
+//The idea is to set hmin in level set gradient's direction, the other 2 sizes are 
+//set based on the local curvatures (calculated from Hessian)
+//Currently directions are chosen perpendicular to the gradient, since for the dambreak
+//y axis is the thickness, it is a natural option as one of the directions, but will need to
+//have a more general formulation
 int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f) {
    
   PUMI_Mesh_CreateTag(PUMI_MeshInstance, "NodeMeshDir", SCUtil_DBL, 9, SFDirTag);
@@ -93,7 +106,7 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f) {
   PUMI_Mesh_SetAutoTagMigrOn(PUMI_MeshInstance, SFDirTag, PUMI_ALLTYPE);
   PUMI_Mesh_SetAutoTagMigrOn(PUMI_MeshInstance, SFTag, PUMI_ALLTYPE);
 
-  double epsilon=4*hmin+exp(-nAdapt/4)*hmin*5;
+  double epsilon=2*hmin+exp(-nAdapt/4)*hmin*2.5;
   printf("epsilon value for level set: %lf\n", epsilon);
   apf::Mesh* apf_mesh = apf::createMesh(PUMI_Part);
   apf::Field* gradphi = recoverGradientByVolume(f);
@@ -102,7 +115,7 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f) {
   apf::Field* sizes = createLagrangeField(apf_mesh,"sizes",apf::VECTOR,1);
   apf::Field* gradnorml = createLagrangeField(apf_mesh,"gradnorm",apf::VECTOR,1);
   apf::Field* hess = createLagrangeField(apf_mesh,"hess",apf::MATRIX,1);
-  apf::Field* cur = createLagrangeField(apf_mesh,"curve",apf::SCALAR,1);
+  apf::Field* cur = createLagrangeField(apf_mesh,"curve",apf::VECTOR,1);
   apf::Field* direction = createLagrangeField(apf_mesh,"dir",apf::MATRIX,1);
 
   apf::MeshIterator* it = apf_mesh->begin(0);
@@ -118,11 +131,21 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f) {
     gphiprod = tensorProduct(gphi, gphi);
     apf::Matrix3x3 h;
     h=(g2phi+g2phit)/2;
-//    h=h/0.001+gphiprod/hminsq;
-    setMatrix(hess, v, 0, h);
     getVector(gradphi, v, 0, gphi);
     apf::Vector3 normal_gphi = gphi.normalize();
     setVector(gradnorml, v, 0, normal_gphi);
+    apf::Vector3 curves;
+    double Km=((h[1][1]+h[2][2])*gphi[0]*gphi[0]+(h[0][0]+h[2][2])*gphi[1]*gphi[1]+(h[0][0]+h[1][1])*gphi[2]*gphi[2]
+               -2*gphi[0]*gphi[1]*h[0][1]-2*gphi[0]*gphi[2]*h[0][2]-2*gphi[1]*gphi[2]*h[1][2])/(pow(gphi[0]*gphi[0]+gphi[1]*gphi[1]+gphi[2]*gphi[2],1.5));
+    double Kg=(gphi[0]*gphi[0]*(h[1][1]*h[2][2]-h[1][2]*h[1][2])+gphi[1]*gphi[1]*(h[0][0]*h[2][2]-h[0][2]*h[0][2])+gphi[2]*gphi[2]*(h[0][0]*h[1][1]-h[0][1]*h[0][1])
+               +2*(gphi[0]*gphi[1]*(h[0][2]*h[1][2]-h[0][1]*h[2][2])+gphi[1]*gphi[2]*(h[0][1]*h[0][2]-h[1][2]*h[0][0])+gphi[0]*gphi[2]*(h[0][1]*h[1][2]-h[0][2]*h[1][1])))/
+               (pow(gphi[0]*gphi[0]+gphi[1]*gphi[1]+gphi[2]*gphi[2], 2));
+    curves[0]=Km;
+    curves[1]=Km+sqrt(Km*Km-Kg);
+    curves[2]=Km-sqrt(Km*Km-Kg);
+//    h=h/0.0004+gphiprod/hminsq;
+    setMatrix(hess, v, 0, h);
+    setVector(cur, v, 0, curves);
   }
   apf_mesh->end(it);
 
@@ -159,7 +182,6 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f) {
     phi = getScalar(phif, e, 0);
     apf::Vector3 normal_gphi = gphi.normalize();
     getMatrix(g2norml, e, 0, he);
-    double curve = he[0][0]+he[1][1]+he[2][2];
 
     double dot = dotProd(dir[0], normal_gphi);
     dot=acos(dot/(dir[0].getLength()*normal_gphi.getLength()));
@@ -189,24 +211,29 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f) {
     apf::Vector3 dir3=cross(normal_gphi,dir2);
     apf::Vector3 normal_dir3=dir3.normalize();
 
+    apf::Vector3 curves;
+    getVector(cur, e, 0, curves);
+
 ///*   
-//    for(int i=0;i<3;++i) {
+    for(int i=0;i<3;++i) {
       for(int j=0;j<3;++j) {
        sfdir[j]=normal_gphi[j];
        sfdir[j+3]=normal_dir2[j];
        sfdir[j+6]=normal_dir3[j];
 //         sfdir[i*3+j]=dir[i][j];
       }
-//    }
+    }
     setVector(sizes, e, 0, size);
 ///*    
 //      printf("sizes: %lf %lf\n", size[1], size[2]);    
 //    if(vof<1.0 && vof>0.0) {
     if(sqrt(phi*phi)<3*epsilon) {
       sf[0]=hmin;
-      sf[1]=sqrt(0.0004/size[1]);
-      sf[2]=sqrt(0.0004/size[2]);
-//        sf[0]=hmin; sf[1]=sqrt(0.001/(size[1]+size[2])); sf[2]=hmax/4;
+      sf[1]=sqrt(0.0004/fabs(curves[1]));
+      sf[2]=sqrt(0.0004/fabs(curves[2]));
+//      sf[0]=sqrt(0.0001/size[0]);    
+//      sf[1]=sqrt(0.0001/size[1]);
+//      sf[2]=sqrt(0.0001/size[2]);
     } else {
       sf[0]=sf[1]=sf[2]=hmax;
 //      sizeMetric[0][0]=hmax; sizeMetric[1][1]=hmax; sizeMetric[2][2]=hmax;
@@ -229,8 +256,8 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f) {
   for(int i=0; i<2; ++i)
      SmoothField(SFTag, 3);
 
-  for(int i=0; i<1; ++i)
-     SmoothField(SFDirTag, 9);
+//  for(int i=0; i<1; ++i)
+//     SmoothField(SFDirTag, 9);
 
   isEnd=0;
   PUMI_PartEntIter_Init(PUMI_Part,PUMI_VERTEX,PUMI_ALLTOPO,EntIt);
@@ -255,12 +282,17 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f) {
   }
   PUMI_PartEntIter_Del(EntIt);
   exportMeshToVTK(PUMI_MeshInstance, "pumi.vtk"); 
-  apf:: writeVtkFiles("sizeField", apf_mesh);
+//  apf:: writeVtkFiles("sizeField", apf_mesh);
+  PUMI_Mesh_SetAutoTagMigrOff (PUMI_MeshInstance, SFDirTag, PUMI_VERTEX);
+  PUMI_Mesh_SetAutoTagMigrOff (PUMI_MeshInstance, SFTag, PUMI_VERTEX);
   PUMI_Mesh_DelTag (PUMI_MeshInstance, SFDirTag, 1);
   PUMI_Mesh_DelTag (PUMI_MeshInstance, SFTag, 1);
+  apf::destroyMesh(apf_mesh);
   return 0;
 } 
 
+//Smooth fields, input is tag, and number of variables, all are smoothed based on the standard
+//averaging strategy, parallel support is there
 int MeshAdaptPUMIDrvr::SmoothField(pTag tag, int num) {
 
   PUMI_Mesh_CreateTag(PUMI_MeshInstance, "NumberOfNeighbors", SCUtil_INT, 1, NumNeighTag);
@@ -276,7 +308,6 @@ int MeshAdaptPUMIDrvr::SmoothField(pTag tag, int num) {
     PUMI_MeshEnt_IsOwned(meshEnt, PUMI_Part, &ownedSelf);
     double* Size = new double[num];
     int ncount;
-    
     int numNeighVert=0;
     if(ownedSelf) {
       numNeighVert++;

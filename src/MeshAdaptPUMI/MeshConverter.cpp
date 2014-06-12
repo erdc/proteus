@@ -11,9 +11,14 @@ const int EXTERIOR_NODE_MATERIAL=1;
 const int INTERIOR_ELEMENT_BOUNDARY_MATERIAL=0;
 const int EXTERIOR_ELEMENT_BOUNDARY_MATERIAL=1;
 
+//Main API to construct a serial pumi mesh, what we do is contruct the global mesh when working with serial
+//and let Proteus populate the subdomain data structures (though it will be exactly same)
 int MeshAdaptPUMIDrvr::ConstructFromSerialPUMIMesh(Mesh& mesh) {
 
-//Current impementation is for serial only. Need to resolve things with Proteus developers for parallel implementation  
+//Current impementation is for serial only. Need to resolve things with Proteus developers for parallel implementation 
+  initializeMesh(mesh); 
+  mesh.subdomainp = new Mesh();
+//  initializeMesh(*mesh.subdomainp); 
   std::cout << "Constructing global data structures\n"; 
   int numGlobElem;
   PUMI_Mesh_GetNumEnt(PUMI_MeshInstance, PUMI_REGION, PUMI_ALLTOPO, &numGlobElem);
@@ -56,6 +61,7 @@ int MeshAdaptPUMIDrvr::ConstructFromSerialPUMIMesh(Mesh& mesh) {
   return 0;
 }  
 
+//Construct node data structures for Proteus
 int MeshAdaptPUMIDrvr::ConstructNodes(Mesh& mesh) {
 //////build node array (coordinates?)
 
@@ -76,7 +82,10 @@ int MeshAdaptPUMIDrvr::ConstructNodes(Mesh& mesh) {
   int nN_copy = vtx_owned;
   while (!isEnd) {
     PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-    
+
+    //all owned ids are first and then all copies    
+    //so the node arrays inside Proteus will have
+    //[owned ids..., copy ids...]
     int owned;
     PUMI_MeshEnt_IsOwned(meshEnt, PUMI_Part, &owned);
     if(owned) {
@@ -108,6 +117,7 @@ int MeshAdaptPUMIDrvr::ConstructNodes(Mesh& mesh) {
 //
 } 
 
+//Construct element data structures for Proteus
 int MeshAdaptPUMIDrvr::ConstructElements(Mesh& mesh) {
 
   std::cout << "Constructing element data structures\n"; 
@@ -157,6 +167,7 @@ int MeshAdaptPUMIDrvr::ConstructElements(Mesh& mesh) {
 //end: build node list for the elements
 }
 
+//Construct face data structures for Proteus
 int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh) {
 
   std::cout << "Constructing boundary data structures\n" ; 
@@ -218,8 +229,8 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh) {
       for (int iFace = 0; iFace < iNumFace; ++iFace) {
          if(vecFace[iFace] == meshEnt) {//if face found
 //             LocalFaceNumber[iRgn] = iFace; //old method caused conflict in face numbers
-//following is going to look adhoc and arbitrary but it is needed to resolve a conflict between the way proteus handles faces and we handle faces
-//The order in which we retrieve faces from adjacency is different to what proteus expects them to be in their elementBoundaries array. To resolve this
+//Following 4 lines are going to look adhoc and arbitrary but are needed to resolve a conflict between the way proteus handles faces and we handle faces
+//The order in which we retrieve faces from adjacency is different than what proteus expects them to be in their elementBoundaries array. To resolve this
 //we need to change the local number of the face of an element to what proteus expects it to be and then it works. Whussh. magic.             
              if(iFace==0) LocalFaceNumber[iRgn]=3;
              if(iFace==1) LocalFaceNumber[iRgn]=2;
@@ -230,15 +241,12 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh) {
       assert(LocalFaceNumber[iRgn]!=-1);
       mesh.elementBoundaryLocalElementBoundariesArray[faceID*2+iRgn]=LocalFaceNumber[iRgn]; 
     }
-
     //left and right regions are shared by this face we are currntly on
     int leftRgnID = RgnID[0]; int leftLocalFaceNumber = LocalFaceNumber[0];
     int rightRgnID = RgnID[1]; int rightLocalFaceNumber = LocalFaceNumber[1];
-
     //left region is always there, so either rightRgnID will have an actual ID if this face is shared, or will contain -1 if it is an exterior face
     mesh.elementNeighborsArray[leftRgnID*mesh.nElementBoundaries_element+leftLocalFaceNumber] = rightRgnID; 
     mesh.elementBoundariesArray[leftRgnID*mesh.nElementBoundaries_element+leftLocalFaceNumber] = faceID;
-
     //if only 1 region is adjacent to this face, that means it is an exterior face (or on part boundary, but parallel is for later) todo: parallel
     if(iNumRgn==1) {
       assert(RgnID[1]==-1);
@@ -251,14 +259,12 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh) {
       mesh.elementBoundariesArray[rightRgnID*mesh.nElementBoundaries_element+rightLocalFaceNumber] = faceID;
       interiorElementBoundaries.insert(faceID);
     }
-
     PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
     nF++;
   }
   PUMI_PartEntIter_Del(EntIt);
   assert(nF_owned=faces_owned);
   assert(nF_copy=mesh.nElementBoundaries_global);
- 
   //construct interior and exterior element boundaries array 
   mesh.nInteriorElementBoundaries_global = interiorElementBoundaries.size();
   mesh.interiorElementBoundariesArray = new int[mesh.nInteriorElementBoundaries_global];
@@ -276,6 +282,7 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh) {
 //
 }
 
+//Construct edge data structures for Proteus
 int MeshAdaptPUMIDrvr::ConstructEdges(Mesh& mesh) {
 /////////build edge data structutes and interior and exterior element boundary array
 
@@ -326,14 +333,15 @@ int MeshAdaptPUMIDrvr::ConstructEdges(Mesh& mesh) {
       nodeStar[mesh.edgeNodesArray[edgeN*2+1]].insert(mesh.edgeNodesArray[edgeN*2+0]);
   }
 
-//not completely comfortable with folllowing implementation
+//not completely comfortable with folllowing implementation,it is just copy paste from Proteus basically.
+//What it is doing is calculating node, element star offsets snd populating the arrays
+//This does not need any PUMI calls and can be built off what we already built of Proteus mesh
   mesh.nodeStarOffsets = new int[mesh.nNodes_global+1];
   mesh.nodeStarOffsets[0] = 0;
   for (int nN=1;nN<mesh.nNodes_global+1;nN++) {
      mesh.nodeStarOffsets[nN] = mesh.nodeStarOffsets[nN-1] + nodeStar[nN-1].size();
 //     std::cout << "nodeStarOffesets: " << nN << ": " << mesh.nodeStarOffsets[nN] << "\n"; 
   }
-  
   mesh.nodeStarArray = new int[mesh.nodeStarOffsets[mesh.nNodes_global]];
   for (int nN=0,offset=0;nN<mesh.nNodes_global;nN++) {
       for (std::set<int>::iterator nN_star=nodeStar[nN].begin();nN_star!=nodeStar[nN].end();nN_star++,offset++) {
@@ -341,7 +349,6 @@ int MeshAdaptPUMIDrvr::ConstructEdges(Mesh& mesh) {
 //          std::cout << "nodeStarArray: " << offset << ": " << mesh.nodeStarArray[offset] << std::endl;
       }
   }
-
   mesh.max_nNodeNeighbors_node=0;
   for (int nN=0;nN<mesh.nNodes_global;nN++)
       mesh.max_nNodeNeighbors_node=std::max(mesh.max_nNodeNeighbors_node,mesh.nodeStarOffsets[nN+1]-mesh.nodeStarOffsets[nN]);
@@ -364,11 +371,11 @@ int MeshAdaptPUMIDrvr::ConstructEdges(Mesh& mesh) {
      }
   }
   //mwf end node-->elements construction
-  
   return 0;
 //end: build edge data structures (also added star data structures here itself)
 }
 
+//Construct material arrays for Proteus, these decide what boundary condition will be set
 int MeshAdaptPUMIDrvr::ConstructMaterialArrays(Mesh& mesh) {
 
   std::cout << "Constructing material data structures\n" ; 
@@ -416,17 +423,15 @@ int MeshAdaptPUMIDrvr::ConstructMaterialArrays(Mesh& mesh) {
      PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
   }
   PUMI_PartEntIter_Del(EntIt);
-
   return 0;
 }
 
 //function to update the material arrays for boundary conditions
+//This will set the MaterialType flags based on the face tags
 int MeshAdaptPUMIDrvr::UpdateMaterialArrays(Mesh& mesh, int bdryID, int geomTag) {
- 
     pPartEntIter EntIt;
     pGeomEnt geomEnt;
     pMeshEnt meshEnt;
-
     geomEnt = GM_entityByTag(PUMI_GModel, PUMI_FACE, geomTag);
     PUMI_PartEntIter_InitRevClas(PUMI_Part, geomEnt, PUMI_FACE, EntIt);
     //populate elementBoundary Material arrays
@@ -443,7 +448,6 @@ int MeshAdaptPUMIDrvr::UpdateMaterialArrays(Mesh& mesh, int bdryID, int geomTag)
        }
     }
     PUMI_PartEntIter_Del(EntIt);
-
 //Now we have to take care of vertices which are classified on geometric edges 
     std::vector <pGeomEnt> vecEdge;
     PUMI_GeomEnt_GetAdj(geomEnt, PUMI_EDGE, vecEdge);
@@ -455,7 +459,6 @@ int MeshAdaptPUMIDrvr::UpdateMaterialArrays(Mesh& mesh, int bdryID, int geomTag)
       }
       PUMI_PartEntIter_Del(EntIt);
     }
-
 //Now we have to take care of vertices which are classified on geometric vertices 
     std::vector <pGeomEnt> vecVtx;
     PUMI_GeomEnt_GetAdj(geomEnt, PUMI_VERTEX, vecVtx);
