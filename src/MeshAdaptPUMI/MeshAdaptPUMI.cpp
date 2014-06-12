@@ -2,10 +2,12 @@
 #include <ma.h>
 #include <apfSPR.h>
 #include <apfMDS.h>
+#include <PCU.h>
 
 #include "MeshAdaptPUMI.h"
 
-MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter) {
+MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter)
+{
   PCU_Comm_Init();
   numVar=0;
   hmin=Hmin; hmax=Hmax;
@@ -29,15 +31,16 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
   freeField(size_frame);
 }
 
-int loadModelAndMesh(const char* modelFile, const char* meshFile)
+int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshFile)
 {
-  m = loadMdsMesh(modelFile, meshFile);
+  m = apf::loadMdsMesh(modelFile, meshFile);
   m->verify();
   comm_size = PCU_Comm_Peers();
   comm_rank = PCU_Comm_Self();
+  return 0;
 }
 
-struct Anisotropic
+struct Anisotropic : public ma::AnisotropicFunction
 {
   Anisotropic(apf::Field* f, apf::Field* s)
   {
@@ -46,7 +49,7 @@ struct Anisotropic
   }
   apf::Field* frame;
   apf::Field* scale;
-  void getValue(Entity* vert, Matrix& r, Vector& h)
+  void getValue(ma::Entity* vert, ma::Matrix& r, ma::Vector& h)
   {
     apf::getMatrix(frame, vert, 0, r);
     apf::getVector(scale, vert, 0, h);
@@ -67,18 +70,14 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
   CalculateAnisoSizeField();
 
   /// Adapt the mesh
-  ma::Input* in = configureAnisotropic(mesh, size_frame, size_scale);
-  in->runPreZoltan = true;
-  in->runMidDiffusion = true;
-  in->runPostZoltan = true;
+  ma::Input* in = configureAnisotropic(m, size_frame, size_scale);
+  apf::destroyField(size_frame);
+  apf::destroyField(size_scale);
+  in->shouldRunPreZoltan = true;
+  in->shouldRunMidDiffusion = true;
+  in->shouldRunPostZoltan = true;
   in->maximumIterations = numIter;
   ma::adapt(in);
-  
-  apf::destroyField(sizef);
-  if(comm_size>1)
-    apf::destroyGlobalNumbering(global);
-  
-  m->verify();
 
   apf::writeVtkFiles("pumi_adapt", m);
 
