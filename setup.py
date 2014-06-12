@@ -37,7 +37,7 @@ setup(name='proteus',
 
                              sources = ['src/MeshAdaptPUMI.pyx', 'src/MeshAdaptPUMI/MeshAdaptPUMI.cpp', 'src/MeshAdaptPUMI/Eigen.cpp',
                                         'src/MeshAdaptPUMI/MeshConverter.cpp', 'src/MeshAdaptPUMI/ParallelMeshConverter.cpp',
-                                        'src/MeshAdaptPUMI/MeshFields.cpp', 'src/MeshAdaptPUMI/SizeField.cpp', 'src/MeshAdaptPUMI/callback.cpp'],
+                                        'src/MeshAdaptPUMI/MeshFields.cpp', 'src/MeshAdaptPUMI/SizeField.cpp'],
                              define_macros=[('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H)],
                              include_dirs=[numpy.get_include(),'include',
                                            'src',

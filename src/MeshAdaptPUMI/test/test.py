@@ -15,17 +15,13 @@ from petsc4py import PETSc
 #print dir(MeshAdaptPUMI)
 
 MeshAdaptPUMI = MeshAdaptPUMI.MeshAdaptPUMI()
-MeshAdaptPUMI.helloworld('hello: Entering MeshAdaptPUMI')
-MeshAdaptPUMI.readGeomModel('cube.smd')
-MeshAdaptPUMI.readPUMIMesh('cube.sms')
+MeshAdaptPUMI.loadModelAndMesh('???','geom.sms')
 
 mesh = MeshTools.TetrahedralMesh()
 mesh.cmesh = cmeshTools.CMesh()
-#cmesh = cmeshTools.CMesh()
 
-#mesh = MeshAdaptPUMIDrvr.mesh_proteus
 #MeshAdaptPUMI.initProteusMesh(mesh)
-MeshAdaptPUMI.ConstructFromSerialPUMIMesh(mesh.cmesh) #not working
+MeshAdaptPUMI.ConstructFromSerialPUMIMesh(mesh.cmesh)
 
 #mesh.cmesh2 = cmesh
 #cmeshTools.CMesh_FromMesh(mesh)
