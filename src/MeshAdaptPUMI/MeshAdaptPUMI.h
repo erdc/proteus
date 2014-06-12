@@ -24,7 +24,7 @@ class MeshAdaptPUMIDrvr{
   int AdaptPUMIMesh();
 
   int CalculateSizeField();
-  int CalculateAnisoSizeField(apf::Field*);
+  int CalculateAnisoSizeField();
 
   double hmax, hmin;
   int numIter;

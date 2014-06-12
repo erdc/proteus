@@ -207,7 +207,7 @@ static apf::Field* getSizeFrames(apf::Field* gradphi)
  y axis is the thickness, it is a natural option as one of the directions, but will need to
  have a more general formulation
  */
-int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f)
+int MeshAdaptPUMIDrvr::CalculateAnisoSizeField()
 {
   apf::Field* phif = extractPhi(solution);
   apf::Field* gradphi = apf::recoverGradientByVolume(phif);
