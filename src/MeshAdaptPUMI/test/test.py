@@ -16,9 +16,7 @@ from petsc4py import PETSc
 #print dir(MeshAdaptPUMI)
 
 MeshAdaptPUMI = MeshAdaptPUMI.MeshAdaptPUMI()
-MeshAdaptPUMI.helloworld('hello: Entering MeshAdaptPUMI')
-MeshAdaptPUMI.readGeomModel('yy')
-MeshAdaptPUMI.readPUMIMesh('geom.sms')
+MeshAdaptPUMI.loadModelAndMesh('???','geom.sms')
 
 #mesh = MeshTools.Mesh()
 mesh = MeshTools.TetrahedralMesh()
