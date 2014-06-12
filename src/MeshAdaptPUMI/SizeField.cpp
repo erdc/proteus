@@ -114,11 +114,30 @@ static apf::Field* computeGradNormal(apf::Field* gradphi)
   return gradnormf;
 }
 
+static void setDirectionsAndSizesFromHessians(apf::Field* hessians,
+    apf::Field*& directions,
+    apf::Field*& sizes)
+{
+  directions = apf::createLagrangeField(mesh, "proteus_directions", apf::MATRIX, 1);
+  sizes = apf::createLagrangeField(mesh, "proteus_sizes", apf::VECTOR, 1);
+  apf::Mesh* m = apf::getMesh(hessians);
+  apf::MeshIterator* it = m->begin(0);
+  apf::MeshEntity* v;
+  while ((e = m->iterate(it))) {
+    apf::Matrix3x3 hessian;
+    apf::getMatrix(hessians, v, 0, hessian);
+    apf::Matrix3x3 direction;
+    apf::Vector3 size;
+    int n = apf::eigen(hessian, &frame[0], &scale[0]); 
+    assert(n == 3);
+    apf::setMatrix(directions, v, 0, direction);
+    apf::setMatrix(sizes, v, 0, size);
+  }
+  m->end(it);
+}
+
 int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f)
 {
-  size_scale = apf::createLagrangeField(mesh, "proteus_scale", apf::VECTOR, 1);
-  size_frame = apf::createLagrangeField(mesh, "proteus_frame", apf::MATRIX, 1);
-
   apf::Field* phif = extractPhi(solution);
 
   apf::Field* gradphi = recoverGradientByVolume(phif);
@@ -131,10 +150,12 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f)
 
   apf::Field* hess = computeHessianField(grad2phi);
 
+  apf::Field* direction;
+  apf::Field* sizes;
+  setDirectionsAndSizesFromHessians(hess, direction, sizes);
+
   apf::Field* metric = createLagrangeField(apf_mesh,"sizeMetric",apf::MATRIX,1);
-  apf::Field* sizes = createLagrangeField(apf_mesh,"sizes",apf::VECTOR,1);
   apf::Field* cur = createLagrangeField(apf_mesh,"curve",apf::SCALAR,1);
-  apf::Field* direction = createLagrangeField(apf_mesh,"dir",apf::MATRIX,1);
   
   Matrix3x3 dir;
   Vector3 size;
@@ -150,11 +171,7 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f)
 
     apf::Vector3 gphi, hphi1, hphi2, hphi3;
     double phi,vof;
-    apf::Matrix3x3 mtx, he;
-    getMatrix(hess, e, 0, he);
-    eigen(he, dir, size, 1);
-    setMatrix(direction, e, 0, dir);
-    setVector(sizes, e, 0, size);
+    apf::Matrix3x3 mtx;
     for(int i=0; i<3; ++i) {
       size[i]=fabs(size[i]);
     }
@@ -168,13 +185,11 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f)
 
     double dot = dotProd(dir[0], normal_gphi);
     dot=acos(dot/(dir[0].getLength()*normal_gphi.getLength()));
-//    printf("angle between gradient and 1st hessian eigenvector %lf\n", dot*180/3.142);
 
     double* sfdir = new double[9]; int k=0;
     double *sf = new double[3];
     for(int i=0;i<3;++i) {
       for(int j=0;j<3;++j) {
-//        sizeMetric[i][j]=dir[i][j]*size[i];
         sizeMetric[i][j]=0.0;
         sfdir[k]=0.0;
         k++;
@@ -194,29 +209,19 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f)
     apf::Vector3 dir3=cross(normal_gphi,dir2);
     apf::Vector3 normal_dir3=dir3.normalize();
 
-///*   
-//    for(int i=0;i<3;++i) {
       for(int j=0;j<3;++j) {
        sfdir[j]=normal_gphi[j];
        sfdir[j+3]=normal_dir2[j];
        sfdir[j+6]=normal_dir3[j];
-//         sfdir[i*3+j]=dir[i][j];
       }
-//    }
     setVector(sizes, e, 0, size);
-///*    
-//      printf("sizes: %lf %lf\n", size[1], size[2]);    
-//    if(vof<1.0 && vof>0.0) {
     if(sqrt(phi*phi)<3*epsilon) {
       sf[0]=hmin;
       sf[1]=sqrt(0.0004/size[1]);
       sf[2]=sqrt(0.0004/size[2]);
-//        sf[0]=hmin; sf[1]=sqrt(0.001/(size[1]+size[2])); sf[2]=hmax/4;
     } else {
       sf[0]=sf[1]=sf[2]=hmax;
-//      sizeMetric[0][0]=hmax; sizeMetric[1][1]=hmax; sizeMetric[2][2]=hmax;
     }
-//*/   
     for(int i=0;i<3;++i) {
       if(sf[i]<hmin) 
         sf[i]=hmin;
