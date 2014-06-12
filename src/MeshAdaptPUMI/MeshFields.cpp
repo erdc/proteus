@@ -10,6 +10,14 @@ void MeshAdaptPUMIDrvr::freeField(apf::Field*& f)
   }
 }
 
+void MeshAdaptPUMIDrvr::freeNumbering(apf::Numbering*& n)
+{
+  if (n) {
+    apf::destroyNumbering(n);
+    n = 0;
+  }
+}
+
 int MeshAdaptPUMIDrvr::TransferSolutionToPUMI(double* inArray, int nVar, int nN)
 {
   assert(nN == mesh->count(0));

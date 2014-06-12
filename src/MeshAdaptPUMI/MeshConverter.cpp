@@ -69,11 +69,12 @@ int MeshAdaptPUMIDrvr::ConstructNodes(Mesh& mesh) {
     apf::Vector3 x;
     m->getPoint(e, 0, x);
     for(int j=0; j<3; j++)
-      mesh.nodeArray[i * 3 + j]= coords[j];
+      mesh.nodeArray[i * 3 + j]= x[j];
     ++i;
   }
   m->end(it);
 
+  freeNumbering(local[0]);
   local[0] = apf::numberOverlapNodes(m, "proteus_local_0");
   
   return 0;
@@ -93,13 +94,14 @@ int MeshAdaptPUMIDrvr::ConstructElements(Mesh& mesh)
     apf::Downward v;
     int iNumVtx = m->getDownward(e, 0, v);
     for (int j = 0; j < iNumVtx; ++j) {
-      int vtxID = apf::getNumber(local, v, 0, 0);
+      int vtxID = apf::getNumber(local[0], v[j], 0, 0);
       mesh.elementNodesArray[i * mesh.nNodes_element + j] = vtxID;
     }
     ++i;
   } //region loop
   m->end(it);
 
+  freeNumbering(local[3]);
   local[3] = apf::numberElements(m, "proteus_local_3");
 
   return 0;
@@ -164,7 +166,7 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh)
     int RgnID[2] = {-1,-1}; 
     int LocalFaceNumber[2] = {-1,-1};
     for (int iRgn = 0; iRgn < iNumRgn; ++iRgn) {
-      RgnID[iRgn] = apf::getNumber(local[3], rs.e[iRgn]);
+      RgnID[iRgn] = apf::getNumber(local[3], rs.e[iRgn], 0, 0);
       mesh.elementBoundaryElementsArray[i * 2 + iRgn]= RgnID[iRgn];
       LocalFaceNumber[iRgn] = getProteusFaceIdx(m, rs.e[iRgn], f);
       assert(LocalFaceNumber[iRgn]!=-1);
@@ -183,7 +185,7 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh)
       = rightRgnID;
     mesh.elementBoundariesArray[
       leftRgnID * mesh.nElementBoundaries_element + leftLocalFaceNumber]
-      = faceID;
+      = i;
 
     /* if only 1 region is adjacent to this face,
        that means it is an exterior face */
@@ -200,7 +202,7 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh)
         = leftRgnID;
       mesh.elementBoundariesArray[
         rightRgnID * mesh.nElementBoundaries_element + rightLocalFaceNumber]
-        = faceID;
+        = i;
       interiorElementBoundaries.insert(i);
     }
     i++;
@@ -335,7 +337,7 @@ int MeshAdaptPUMIDrvr::ConstructMaterialArrays(Mesh& mesh)
   it = m->begin(0);
   apf::MeshEntity* v;
   //populate elementBoundary Material arrays
-  size_t i = 0;
+  i = 0;
   while ((v = m->iterate(it))) {
     int geomType = m->getModelType(m->toModel(v));
     mesh.nodeMaterialTypes[i] = material_table[geomType];
