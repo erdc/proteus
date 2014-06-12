@@ -81,44 +81,6 @@ int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   return 0;
 } 
 
-int MeshAdaptPUMIDrvr::ConstructGlobalStructures(Mesh &mesh)
-{
-
-  mesh.elementNumbering_subdomain2global = new int[mesh.subdomainp->nElements_global];
-  mesh.elementBoundaryNumbering_subdomain2global = new int[mesh.subdomainp->nElementBoundaries_global];
-  mesh.nodeNumbering_subdomain2global = new int[mesh.subdomainp->nNodes_global];
-  mesh.edgeNumbering_subdomain2global = new int[mesh.subdomainp->nEdges_global];
-  
-  int partDim;
-  PUMI_Part_GetDim(PUMI_Part, &partDim);
-  for (int type=partDim; type>-1; type--) {
-    int* temp_subdomain2global;
-    if(type==3) temp_subdomain2global = mesh.elementNumbering_subdomain2global;
-    if(type==2) temp_subdomain2global = mesh.elementBoundaryNumbering_subdomain2global;
-    if(type==1) temp_subdomain2global = mesh.edgeNumbering_subdomain2global;
-    if(type==0) temp_subdomain2global = mesh.nodeNumbering_subdomain2global;
-
-    int isEnd = 0;
-    pPartEntIter EntIt;
-    pMeshEnt meshEnt; 
-    PUMI_PartEntIter_Init (PUMI_Part, type, PUMI_ALLTOPO, EntIt);
-    while (!isEnd) {
-      PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-      
-      int globID;
-      PUMI_MeshEnt_GetIntTag(PUMI_MeshInstance, meshEnt, GlobNumberTag, &globID);
-      
-      int entID = PUMI_MeshEnt_ID(meshEnt);
-      temp_subdomain2global[entID] = globID;
-
-      PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
-    } //region loop
-    PUMI_PartEntIter_Del(EntIt);
-  } //type
-
-
-}
-
 int MeshAdaptPUMIDrvr::ConstructGlobalNumbering(Mesh &mesh)
 {
   /* N^2 data structures and algorithms are terrible for scalability.
@@ -163,8 +125,35 @@ int MeshAdaptPUMIDrvr::ConstructGlobalNumbering(Mesh &mesh)
     /* this algorithm does global numbering properly,
        without O(#procs) runtime */
     global[dim] = apf::makeGlobal(apf::numberOwnedDimension(mesh, name.c_str(), dim));
+    apf::synchronize(global[dim]);
   } //loop on entity dimensions
 
   return 0; 
+}
+
+int MeshAdaptPUMIDrvr::ConstructGlobalStructures(Mesh &mesh)
+{
+  mesh.elementNumbering_subdomain2global = new int[mesh.subdomainp->nElements_global];
+  mesh.elementBoundaryNumbering_subdomain2global = new int[mesh.subdomainp->nElementBoundaries_global];
+  mesh.nodeNumbering_subdomain2global = new int[mesh.subdomainp->nNodes_global];
+  mesh.edgeNumbering_subdomain2global = new int[mesh.subdomainp->nEdges_global];
+  
+  for (int d = 0; d < m->getDimension(); ++d) {
+    int* temp_subdomain2global;
+    if(type==3) temp_subdomain2global = mesh.elementNumbering_subdomain2global;
+    if(type==2) temp_subdomain2global = mesh.elementBoundaryNumbering_subdomain2global;
+    if(type==1) temp_subdomain2global = mesh.edgeNumbering_subdomain2global;
+    if(type==0) temp_subdomain2global = mesh.nodeNumbering_subdomain2global;
+
+    apf::MeshIterator* it = m->begin(d);
+    apf::MeshEntity* e;
+    size_t i = 0;
+    while ((e = m->iterate(it)))
+      temp_subdomain2global[i++] = apf::getNumber(global[d], apf::Node(e, 0));
+    m->end(it);
+    apf::destroyGlobalNumbering(global[d]);
+  }
+
+  return 0;
 }
 
