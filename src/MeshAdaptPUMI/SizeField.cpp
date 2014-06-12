@@ -157,11 +157,8 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f)
     setVector(sizes, e, 0, size);
     for(int i=0; i<3; ++i) {
       size[i]=fabs(size[i]);
-//      printf("sizes: %lf\n", size[i]);
-//      size[i]=sqrt(0.001/size[i]);
     }
 
-//    getMatrix(g2norml, e, 0, he);
     getVector(gradphi, e, 0, gphi);
     vof = getScalar(voff, e, 0);
     phi = getScalar(phif, e, 0);
