@@ -2,6 +2,14 @@
 #include <apfSPR.h>
 #include <apfMesh.h>
 
+void MeshAdaptPUMIDrvr::freeField(apf::Field*& f)
+{
+  if (f) {
+    apf::destroyField(f);
+    f = 0;
+  }
+}
+
 int MeshAdaptPUMIDrvr::TransferSolutionToPUMI(double* inArray, int nVar, int nN)
 {
   assert(nN == mesh->count(0));
