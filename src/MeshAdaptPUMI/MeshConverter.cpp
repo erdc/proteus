@@ -349,49 +349,25 @@ int MeshAdaptPUMIDrvr::ConstructMaterialArrays(Mesh& mesh)
 //function to update the material arrays for boundary conditions
 int MeshAdaptPUMIDrvr::UpdateMaterialArrays(Mesh& mesh, int bdryID, int geomTag)
 {
-    pPartEntIter EntIt;
-    pGeomEnt geomEnt;
-    pMeshEnt meshEnt;
+  apf::ModelEntity* geomEnt = m->findModelEntity(2, geomTag);
+  apf::MeshIterator* it = m->begin(2);
+  apf::MeshEntity* f;
+  //populate elementBoundary Material arrays
+  size_t i = 0;
+  while ((f = m->iterate(it))) {
+    if (m->toModel(f) != geomEnt)
+      continue;
 
-    geomEnt = GM_entityByTag(PUMI_GModel, PUMI_FACE, geomTag);
-    PUMI_PartEntIter_InitRevClas(PUMI_Part, geomEnt, PUMI_FACE, EntIt);
-    //populate elementBoundary Material arrays
-    while (!PUMI_PartEntIter_GetNext(EntIt, meshEnt)) {
-       
-       int faceID = PUMI_MeshEnt_ID(meshEnt);
-       mesh.elementBoundaryMaterialTypes[faceID] = bdryID;
-       std::vector<pMeshEnt> vecVtx;
-       PUMI_MeshEnt_GetAdj(meshEnt, PUMI_VERTEX, 0, vecVtx);
-       int iNumVtx = vecVtx.size();
-       for(int iVtx=0; iVtx<iNumVtx; ++iVtx) {
-         int vtxID = PUMI_MeshEnt_ID(vecVtx[iVtx]);
-         mesh.nodeMaterialTypes[vtxID] = bdryID;
-       }
+    mesh.elementBoundaryMaterialTypes[i] = bdryID;
+    apf::Downward vs;
+    int iNumVtx = m->getDownward(f, 0, vs);
+    for(int iVtx=0; iVtx < iNumVtx; ++iVtx) {
+      int vtxID = apf::getNumber(local[0], vs[iVtx], 0, 0);
+      mesh.nodeMaterialTypes[vtxID] = bdryID;
     }
-    PUMI_PartEntIter_Del(EntIt);
+    ++i;
+  }
+  m->end(it);
 
-//Now we have to take care of vertices which are classified on geometric edges 
-    std::vector <pGeomEnt> vecEdge;
-    PUMI_GeomEnt_GetAdj(geomEnt, PUMI_EDGE, vecEdge);
-    for(int iEdge=0; iEdge<vecEdge.size(); ++iEdge) {
-      PUMI_PartEntIter_InitRevClas(PUMI_Part, vecEdge[iEdge], PUMI_VERTEX, EntIt);
-      while (!PUMI_PartEntIter_GetNext(EntIt, meshEnt)) {
-        int vtxID = PUMI_MeshEnt_ID(meshEnt);
-        mesh.nodeMaterialTypes[vtxID]=bdryID;
-      }
-      PUMI_PartEntIter_Del(EntIt);
-    }
-
-//Now we have to take care of vertices which are classified on geometric vertices 
-    std::vector <pGeomEnt> vecVtx;
-    PUMI_GeomEnt_GetAdj(geomEnt, PUMI_VERTEX, vecVtx);
-    for(int iVtx=0; iVtx<vecVtx.size(); ++iVtx) {
-      PUMI_PartEntIter_InitRevClas(PUMI_Part, vecVtx[iVtx], PUMI_VERTEX, EntIt);
-      while (!PUMI_PartEntIter_GetNext(EntIt, meshEnt)) {
-        int vtxID = PUMI_MeshEnt_ID(meshEnt);
-        mesh.nodeMaterialTypes[vtxID]=bdryID;
-      }
-      PUMI_PartEntIter_Del(EntIt);
-    }
   return 0;
-} 
+}
