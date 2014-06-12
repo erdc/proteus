@@ -9,11 +9,10 @@
 #include "apfMesh.h"
 #include "apfPUMI.h"
 #include "maCallback.h"
-
 #include "mpi.h"
-
 #include "MeshAdaptPUMI.h"
 
+//Constructor, which sets default values for some parameters, can be called with arguments
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter) {
   PUMI_Init(MPI_COMM_WORLD);
   numVar=0;
@@ -24,15 +23,19 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter) {
      printf("Setting hmax=%lf, hmin=%lf, numIters(meshadapt)=%d\n",hmax, hmin, numIter);
 }
 
+//Destructor
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr() {
+  //  PUMI_Mesh_Del(PUMI_MeshInstance);
 }
 
+//not usefule currently
 int MeshAdaptPUMIDrvr::initProteusMesh(Mesh& mesh) {
   std::cout << "Initializing proteus mesh\n"; 
   // do PUMI stuff to mesh object here.
   return 0;
 }
 
+//read the geomsim model, called from Proteus driver python script
 int MeshAdaptPUMIDrvr::readGeomModel(const std::string &geom_sim_file)
 {
 
@@ -57,6 +60,7 @@ int MeshAdaptPUMIDrvr::readGeomModel(const std::string &geom_sim_file)
     return 0;
 }
 
+//read pumi mesh, called from proteus python driver
 int MeshAdaptPUMIDrvr::readPUMIMesh(const char* SMS_fileName){
 
   PUMI_Mesh_Create(PUMI_GModel, PUMI_MeshInstance);
@@ -82,10 +86,10 @@ int MeshAdaptPUMIDrvr::readPUMIMesh(const char* SMS_fileName){
 
   comm_size = SCUTIL_CommSize();
   comm_rank = SCUTIL_CommRank();
-  
   return 0;
 }
 
+//main adapt driver
 int MeshAdaptPUMIDrvr::AdaptPUMIMesh() {
 
   int return_verify;
@@ -96,7 +100,7 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh() {
   pMAdapt MA_Drvr;
   MA_NewMeshAdaptDrvr_ModelType(MA_Drvr, PUMI_MeshInstance, Application, 2); // third param (0,1,2 : no snapping, non-parametric, parametric)
 
-//  DeleteMeshEntIDs();
+  DeleteMeshEntIDs();
   
   apf::Mesh* apf_mesh = apf::createMesh(PUMI_Part);
   getFieldFromTag(apf_mesh, PUMI_MeshInstance,"Solution");
@@ -126,20 +130,20 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh() {
 //  getTagFromField(apf_mesh, PUMI_MeshInstance, "Solution");
 
   //partition the mesh
+//  PUMI_Mesh_WriteToFile(PUMI_MeshInstance, "Dambreak_debug.sms", 1);
   PUMI_Mesh_SetNumPart(PUMI_MeshInstance, 1);
-//  PUMI_Mesh_SetPtnParam(mesh, method, approach, imbTol, dbgLvl);
+  PUMI_Mesh_SetPtnParam(PUMI_MeshInstance, PUMI_GRAPH, PUMI_REPARTITION, 1.03, 2);
   PUMI_Mesh_GlobPtn(PUMI_MeshInstance);
   int err = PUMI_Mesh_GetPart(PUMI_MeshInstance, 0, PUMI_Part);
 
   exportMeshToVTK(PUMI_MeshInstance, "pumi_adapt.vtk");
+  apf::destroyMesh(apf_mesh);
   if(return_verify){ 
     std::cerr << "Adapted PUMI mesh verify completed succesfully!\n"; 
   } else {
     exit(1);
   }
-
   nAdapt++; //counter for number of adapt steps
-
   return 0;
 }
 

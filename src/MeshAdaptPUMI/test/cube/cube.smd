@@ -441,7 +441,7 @@ AttDBVersion 10 8
 0
 1
 4
-74 file:///fasttmp/chitak/ProtoScorec/proteus/src/MeshAdaptPUMI/test/cube.smd24 model.nonmanifold.simple6 # 1 0 0 1 3 15
+79 file:///fasttmp/chitak/ProtoScorec/proteus/src/MeshAdaptPUMI/test/cube/cube.smd24 model.nonmanifold.simple6 # 1 0 0 1 3 15
 0 
 8 MeshSize
 8 Relative
@@ -450,7 +450,7 @@ AttDBVersion 10 8
 0
 2 -1
 0 
-3 0.1
+4 0.04
 3 1 1
 11 Mesh case 1
 7 Meshing
@@ -471,8 +471,8 @@ attributes 3503
 </index>
 <header>
 4
-74 file:///fasttmp/chitak/ProtoScorec/proteus/src/MeshAdaptPUMI/test/cube.smd24 model.nonmanifold.simple6 # 1 0 0 
+79 file:///fasttmp/chitak/ProtoScorec/proteus/src/MeshAdaptPUMI/test/cube/cube.smd24 model.nonmanifold.simple6 # 1 0 0 
 0
 0
 </header>
-4416 4468                                                                                                                      
+4422 4474                                                                                                                      

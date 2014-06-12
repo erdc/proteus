@@ -16,13 +16,13 @@ coefficients = VOF.Coefficients(LS_model=LS_model,V_model=0,RD_model=RD_model,ME
                                 epsFact=epsFact_vof,sc_uref=vof_sc_uref,sc_beta=vof_sc_beta)
  
 def getDBC_vof(x,flag):
-    if flag == boundaryTags['top'] or x[2] >= L[2] - 1.0e-7:
+    if flag == boundaryTags['top']:
         return lambda x,t: 1.0
 
 dirichletConditions = {0:getDBC_vof}
 
 def getAFBC_vof(x,flag):
-    if flag != boundaryTags['top'] or x[2] >= L[2] - 1.0e-7:
+    if flag != boundaryTags['top']:
         return lambda x,t: 0.0
 
 advectiveFluxBoundaryConditions = {0:getAFBC_vof}

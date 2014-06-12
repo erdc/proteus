@@ -53,6 +53,7 @@ def openLog(filename,level,logLocation=None):
         filename_full = os.path.join(logDir,filename)
     logFile=open(filename_full,'w')
     logLevel = level
+#    logLevel = 7
     for (string,level,data) in preInitBuffer:
         logEvent(string,level,data)
 

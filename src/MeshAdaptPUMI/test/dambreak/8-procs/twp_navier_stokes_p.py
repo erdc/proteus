@@ -28,19 +28,19 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
                                    turbulenceClosureModel=ns_closure)
 
 def getDBC_p(x,flag):
-    if flag == boundaryTags['top'] or x[2] >= L[2] - 1.0e-12:
+    if flag == boundaryTags['top']:
         return lambda x,t: 0.0
     
 def getDBC_u(x,flag):
-    if flag == boundaryTags['top'] or x[2] >= L[2] - 1.0e-12:
+    if flag == boundaryTags['top']:
         return lambda x,t: 0.0
 
 def getDBC_v(x,flag):
-    if flag == boundaryTags['top'] or x[2] >= L[2] - 1.0e-12:
+    if flag == boundaryTags['top']:
         return lambda x,t: 0.0
 
 def getDBC_w(x,flag):
-    if flag == boundaryTags['top'] or x[2] >= L[2] - 1.0e-12:
+    if flag == boundaryTags['top']:
         return lambda x,t: 0.0
     
 dirichletConditions = {0:getDBC_p,
@@ -49,19 +49,19 @@ dirichletConditions = {0:getDBC_p,
                        3:getDBC_w}
 
 def getAFBC_p(x,flag):
-    if flag != boundaryTags['top'] or x[2] < L[2] - 1.0e-12:
+    if flag != boundaryTags['top']:
         return lambda x,t: 0.0
 
 def getAFBC_u(x,flag):
-    if flag != boundaryTags['top'] or x[2] < L[2] - 1.0e-12:
+    if flag != boundaryTags['top']:
         return lambda x,t: 0.0
 
 def getAFBC_v(x,flag):
-    if flag != boundaryTags['top'] or x[2] < L[2] - 1.0e-12:
+    if flag != boundaryTags['top']:
         return lambda x,t: 0.0
 
 def getAFBC_w(x,flag):
-    if flag != boundaryTags['top'] or x[2] < L[2] - 1.0e-12:
+    if flag != boundaryTags['top']:
         return lambda x,t: 0.0
 
 def getDFBC_u(x,flag):

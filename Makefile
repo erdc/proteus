@@ -52,13 +52,13 @@ hashdist:
 
 stack: 
 	@echo "No stack found.  Cloning private stack from GitHub"
-	git clone -b scorec https://github.com/erdc-cm/hashstack-private.git stack
+	git clone https://github.com/erdc-cm/hashstack-private.git stack
 
 profile: ${PROTEUS_PREFIX}/artifact.json
 
 ${PROTEUS_PREFIX}/artifact.json: stack hashdist
 	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop -v -k error -f default.yaml ${PROTEUS_PREFIX}
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop -v -f ${PROTEUS_PREFIX}
 	-cp ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.exe.link ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.link
 	@echo "Stack complete, test with: make check"
 	@echo "or: make parallel_check"

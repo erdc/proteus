@@ -582,6 +582,7 @@ class  NS_base:#(HasTraits):
                     lm.u[ci].dof[nN]=soldof[ivar,nN]
                lm.setFreeDOF(m.uList[0])     
                lm.calculateSolutionAtQuadrature()
+          del soldof     
         
         log("Attaching models and running spin-up step if requested",level=3)
         for p,n,m,simOutput in zip(self.pList,self.nList,self.modelList,self.simOutputList):
@@ -886,6 +887,7 @@ class  NS_base:#(HasTraits):
                                 soldof[ivar][nN]=lm.u[ci].dof[nN]
 
           p.domain.PUMIMesh.TransferSolutionToPUMI(soldof)
+          del soldof
           p.domain.PUMIMesh.AdaptPUMIMesh()
           p.domain.initFlag=True #For next step to take initial conditions from solution
           ##chitak end Adapt
@@ -893,6 +895,12 @@ class  NS_base:#(HasTraits):
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)
             self.closeArchive(model,index)
+          
+        #Destroy the mesh data structures in C because garbage collection doesnt take care of it
+        #import cmeshTools
+        #m = self.modelList[0]
+        #lm = m.levelModelList[0]
+        #cmeshTools.deleteMeshDataStructures(lm.mesh.cmesh)
         return systemStepFailed
     #
     #try to make preStep and postStep just manipulate "current values" and let the step controllers manage the history setting

@@ -16,12 +16,12 @@ except:
 
 ###to turn on debugging in c++
 ##\todo Finishing cleaning up setup.py/setup.cfg, config.py...
-#from distutils import sysconfig
-#cv = sysconfig.get_config_vars()
-#cv["OPT"] = cv["OPT"].replace("-DNDEBUG","-DDEBUG")
-#cv["OPT"] = cv["OPT"].replace("-O3","-g")
-#cv["CFLAGS"] = cv["CFLAGS"].replace("-DNDEBUG","-DDEBUG")
-#cv["CFLAGS"] = cv["CFLAGS"].replace("-O3","-g")
+from distutils import sysconfig
+cv = sysconfig.get_config_vars()
+cv["OPT"] = cv["OPT"].replace("-DNDEBUG","-DDEBUG")
+cv["OPT"] = cv["OPT"].replace("-O1","-pg")
+cv["CFLAGS"] = cv["CFLAGS"].replace("-DNDEBUG","-DDEBUG")
+cv["CFLAGS"] = cv["CFLAGS"].replace("-O1","-pg")
 
 setup(name='proteus',
       version='1.0.0',
@@ -35,7 +35,7 @@ setup(name='proteus',
       ext_modules=cythonize(
                    [Extension('MeshAdaptPUMI',
 
-                             sources = ['src/MeshAdaptPUMI.pyx', 'src/MeshAdaptPUMI/MeshAdaptPUMI.cpp',
+                             sources = ['src/MeshAdaptPUMI.pyx', 'src/MeshAdaptPUMI/MeshAdaptPUMI.cpp', 'src/MeshAdaptPUMI/Eigen.cpp',
                                         'src/MeshAdaptPUMI/MeshConverter.cpp', 'src/MeshAdaptPUMI/ParallelMeshConverter.cpp',
                                         'src/MeshAdaptPUMI/MeshFields.cpp', 'src/MeshAdaptPUMI/SizeField.cpp', 'src/MeshAdaptPUMI/callback.cpp'],
                              define_macros=[('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H)],
