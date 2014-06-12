@@ -1,132 +1,140 @@
 #include "MeshAdaptPUMI.h"
-#include "mMeshIO.h"
 #include "apf.h"
 #include "apfVector.h"
 #include "apfPUMI.h"
 #include "apfSPR.h"
 #include "apfMesh.h"
-#include "Eigen.h"
 
-struct commData {
-  int numNeigh;
-  double Size[20];
+enum {
+  PHI_IDX = 5;
 };
 
-pTag NumNeighTag;
-pTag NeighSFTag;
-
-int MeshAdaptPUMIDrvr::CalculateSizeField(pMAdapt MA_Drvr) {
-
-  PUMI_Mesh_CreateTag(PUMI_MeshInstance, "NodeMeshSize", SCUtil_DBL, 1, SFTag);
-  PUMI_Mesh_SetAutoTagMigrOn(PUMI_MeshInstance, SFTag, PUMI_ALLTYPE);
-
-  printf("Calculating size field\n");
-
-  double epsilon=0.03;
-  
-  pPartEntIter EntIt;
-  pMeshEnt meshEnt;
-  PUMI_PartEntIter_Init (PUMI_Part, PUMI_VERTEX, PUMI_ALLTOPO, EntIt);
-  int isEnd = 0;
-  while (!isEnd) {
-     PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-
-     double* sol = new double [numVar];
-     int ncount;
-     PUMI_MeshEnt_GetDblArrTag(PUMI_MeshInstance, meshEnt, SolutionTag, &sol, &ncount);    
-     assert(ncount==numVar);
-     
-     double* size = new double[1];
-     double phi = sqrt(sol[5]*sol[5]);
-     if(fabs(phi)<epsilon) {
-       size[0] = hmin;
-     } 
-     else if(phi<3*epsilon) {
-       size[0]=(hmin+hmax)/2;
-     } 
-     else {
-       size[0] = hmax;
-     }
-/*     
-     if(sol[4]>0.0 && sol[4]<1.0) {
-        size[0]=hmin;
-     } else {
-        size[0]=hmax;
-     }     
-*/     
-     PUMI_MeshEnt_SetDblArrTag(PUMI_MeshInstance, meshEnt, SFTag, size, 1);
-     delete [] size;
-     delete [] sol;
-     PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
+static apf::Field* extractPhi(apf::Field* solution)
+{
+  apf::Mesh* m = apf::getMesh(solution);
+  apf::Field* phif = apf::createLagrangeField(mesh,"proteus_phi",apf::SCALAR,1);
+  apf::MeshIterator* it = m->begin(0);
+  apf::MeshEntity* v;
+  apf::NewArray<double> tmp(apf::countComponents(solution));
+  while ((v = m->iterate(it))) {
+    apf::getComponents(solution, v, 0, &tmp[0]);
+    double phi = tmp[PHI_IDX];
+    apf::setScalar(phif, v, 0, phi);
   }
-  PUMI_PartEntIter_Del(EntIt);
+  m->end(it);
+  return phif;
+}
+
+static double isotropicFormula(double* solution, double hmin, double hmax)
+{
+  static double const epsilon = 0.03;
+  double phi = sqrt(solution[PHI_IDX] * solution[PHI_IDX]);
+  double size;
+  if (fabs(phi) < epsilon)
+    size = hmin;
+  else if (phi < 3 * epsilon)
+    size = (hmin + hmax) / 2;
+  else
+    size = hmax;
+  return size;
+}
+
+int MeshAdaptPUMIDrvr::CalculateSizeField()
+{
+  size_iso = apf::createLagrangeField(mesh, "proteus_size",apf::SCALAR,1);
   
-  for(int i=0; i<3; i++)
-     SmoothField(SFTag, 1);
-
-  //set size field to the meshadaptor
-  PUMI_PartEntIter_Init (PUMI_Part, PUMI_VERTEX, PUMI_ALLTOPO, EntIt);
-  isEnd=0;
-  int sizeCounter=0;
-  double dVtxSize;
-  while (!isEnd)
-  {
-    PUMI_PartEntIter_GetNext(EntIt, meshEnt);
-    if(SCUtil_SUCCESS == PUMI_MeshEnt_GetDblTag (PUMI_MeshInstance, meshEnt, SFTag, &dVtxSize)) {
-      MA_SetIsoVtxSize(MA_Drvr, (pVertex)meshEnt, dVtxSize);   // sets size field from tag data
-      sizeCounter++;
-    }
-    PUMI_PartEntIter_IsEnd(EntIt, &isEnd);
+  apf::MeshIterator* it = m->begin(0);
+  apf::MeshEntity* v;
+  apf::NewArray<double> sol(apf::countComponents(solution));
+  while ((v = m->iterate(it))) {
+    apf::getComponents(solution, v, 0, &sol[0]);
+    double size = isotropicFormula(&sol[0], hmin, hmax);
+    apf::setScalar(size_iso, v, 0, size);
   }
-  PUMI_PartEntIter_Del(EntIt);
-  std::cerr<<" - set size field for "<<sizeCounter<<" vertices\n";
+  m->end(it);
+  
+  for(int i=0; i < 3; i++)
+    SmoothField(size_iso);
 
-//  PUMI_Mesh_WriteToFile(PUMI_MeshInstance, "Dambreak_debug.smb", 1);  
-  exportMeshToVTK(PUMI_MeshInstance, "pumi.vtk"); 
+  apf::writeVtkFIles("pumi_size", mesh);
   return 0;
 }
 
-int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f) {
-   
-  PUMI_Mesh_CreateTag(PUMI_MeshInstance, "NodeMeshDir", SCUtil_DBL, 9, SFDirTag);
-  PUMI_Mesh_CreateTag(PUMI_MeshInstance, "NodeMeshSize", SCUtil_DBL, 3, SFTag);
-  PUMI_Mesh_SetAutoTagMigrOn(PUMI_MeshInstance, SFDirTag, PUMI_ALLTYPE);
-  PUMI_Mesh_SetAutoTagMigrOn(PUMI_MeshInstance, SFTag, PUMI_ALLTYPE);
+static void anisotropicFormula(
+    apf::Vector3 const& gphi,
+    apf::Matrix3x3 const& g2phi,
+    double hmin,
+    double hmax,
+    int adapt_step,
+    apf::Vector3& scale,
+    apf::Matrix3x3& frame)
+{
+  static double const epsilon = 
+    4 * hmin + exp(-adapt_step / 4) * hmin * 5;
+  double hminsq = hmin * hmin;
+  apf::Matrix3x3 g2phit = apf::transpose(g2phi);
+  apf::Matrix3x3 gphiprod = apf::tensorProduct(gphi, gphi);
+  apf::Matrix3x3 hessian = (g2phi + g2phit) / 2;
+}
 
-  double epsilon=4*hmin+exp(-nAdapt/4)*hmin*5;
-  printf("epsilon value for level set: %lf\n", epsilon);
-  apf::Mesh* apf_mesh = apf::createMesh(PUMI_Part);
-  apf::Field* gradphi = recoverGradientByVolume(f);
-  apf::Field* grad2phi = recoverGradientByVolume(gradphi);
-  apf::Field* metric = createLagrangeField(apf_mesh,"sizeMetric",apf::MATRIX,1);
-  apf::Field* sizes = createLagrangeField(apf_mesh,"sizes",apf::VECTOR,1);
-  apf::Field* gradnorml = createLagrangeField(apf_mesh,"gradnorm",apf::VECTOR,1);
-  apf::Field* hess = createLagrangeField(apf_mesh,"hess",apf::MATRIX,1);
-  apf::Field* cur = createLagrangeField(apf_mesh,"curve",apf::SCALAR,1);
-  apf::Field* direction = createLagrangeField(apf_mesh,"dir",apf::MATRIX,1);
+static apf::Matrix3x3 hessianFormula(apf::Matrix3x3 const& g2phi)
+{
+  apf::Matrix3x3 g2phit = apf::transpose(g2phi);
+  return (g2phi + g2phit) / 2;
+}
 
+static apf::Field* computeHessianField(apf::Field* grad2phi)
+{
+  apf::Mesh* m = apf::getMesh(grad2phi);
+  apf::Field* hessf = createLagrangeField(apf_mesh,"proteus_hess",apf::MATRIX,1);
   apf::MeshIterator* it = apf_mesh->begin(0);
   apf::MeshEntity* v;
-  double hminsq = hmin*hmin;
-  while ((v = apf_mesh->iterate(it)))
-  { 
-    apf::Vector3 gphi;
-    apf::Matrix3x3 g2phi, g2phit;
-    getMatrix(grad2phi, v, 0, g2phi);
-    g2phit = transpose(g2phi);
-    apf::Matrix3x3 gphiprod; 
-    gphiprod = tensorProduct(gphi, gphi);
-    apf::Matrix3x3 h;
-    h=(g2phi+g2phit)/2;
-//    h=h/0.001+gphiprod/hminsq;
-    setMatrix(hess, v, 0, h);
-    getVector(gradphi, v, 0, gphi);
-    apf::Vector3 normal_gphi = gphi.normalize();
-    setVector(gradnorml, v, 0, normal_gphi);
+  while ((v = m->iterate(it))) {
+    apf::Matrix3x3 g2phi;
+    apf::getMatrix(grad2phi, v, 0, g2phi);
+    apf::Matrix3x3 hess = hessianFormula(g2phi);
+    apf::setMatrix(hessf, v, 0, hess);
   }
-  apf_mesh->end(it);
+  m->end(it);
+  return hessf;
+}
 
-  apf::Field* g2norml = recoverGradientByVolume(gradnorml);
+static apf::Field* computeGradNormal(apf::Field* gradphi)
+{
+  apf::Mesh* m = apf::getMesh(grad2phi);
+  apf::Field* gradnormf = createLagrangeField(apf_mesh,"proteus_gradnorm",apf::VECTOR,1);
+  apf::MeshIterator* it = apf_mesh->begin(0);
+  apf::MeshEntity* v;
+  while ((v = m->iterate(it))) {
+    apf::Vector3 gphi;
+    apf::getVector(gradphi, v, 0, gphi);
+    apf::setVector(gradnormf, v, 0, gphi.normalize());
+  }
+  m->end(it);
+  return gradnormf;
+}
+
+int MeshAdaptPUMIDrvr::CalculateAnisoSizeField(pMAdapt MA_Drvr, apf::Field* f)
+{
+  size_scale = apf::createLagrangeField(mesh, "proteus_scale", apf::VECTOR, 1);
+  size_frame = apf::createLagrangeField(mesh, "proteus_frame", apf::MATRIX, 1);
+
+  apf::Field* phif = extractPhi(solution);
+
+  apf::Field* gradphi = recoverGradientByVolume(phif);
+
+  apf::Field* gradnorm = computeGradNormal(gradphi);
+
+  apf::Field* grad2norm = recoverGradientByVolume(gradnorm);
+
+  apf::Field* grad2phi = recoverGradientByVolume(gradphi);
+
+  apf::Field* hess = computeHessianField(grad2phi);
+
+  apf::Field* metric = createLagrangeField(apf_mesh,"sizeMetric",apf::MATRIX,1);
+  apf::Field* sizes = createLagrangeField(apf_mesh,"sizes",apf::VECTOR,1);
+  apf::Field* cur = createLagrangeField(apf_mesh,"curve",apf::SCALAR,1);
+  apf::Field* direction = createLagrangeField(apf_mesh,"dir",apf::MATRIX,1);
   
   Matrix3x3 dir;
   Vector3 size;

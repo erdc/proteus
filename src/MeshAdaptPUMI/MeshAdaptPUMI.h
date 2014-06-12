@@ -41,7 +41,12 @@ class MeshAdaptPUMIDrvr{
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* solution;
-  apf::Field* sizef;
+  /* there is either an isotropic or an anisotropic size field */
+  /* this field stores isotropic size */
+  apf::Field* size_iso;
+  /* these fields store anisotropic size */
+  apf::Field* size_scale;
+  apf::Field* size_frame;
 
   int ConstructGlobalNumbering(Mesh& mesh);
   int ConstructGlobalStructures(Mesh& mesh);
