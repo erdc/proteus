@@ -21,8 +21,7 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr() {
 }
 
 int MeshAdaptPUMIDrvr::initProteusMesh(Mesh& mesh) {
-  std::cout << "Initializing proteus mesh\n"; 
-  // do PUMI stuff to mesh object here ???
+  /* consider deleting this function */
   return 0;
 }
 
