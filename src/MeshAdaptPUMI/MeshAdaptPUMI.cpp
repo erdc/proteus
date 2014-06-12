@@ -37,14 +37,37 @@ int loadModelAndMesh(const char* modelFile, const char* meshFile)
   comm_rank = PCU_Comm_Self();
 }
 
+struct Anisotropic
+{
+  Anisotropic(apf::Field* f, apf::Field* s)
+  {
+    frame = f;
+    scale = s;
+  }
+  apf::Field* frame;
+  apf::Field* scale;
+  void getValue(Entity* vert, Matrix& r, Vector& h)
+  {
+    apf::getMatrix(frame, vert, 0, r);
+    apf::getVector(scale, vert, 0, h);
+  }
+};
+
+static ma::Input* configureAnisotropic(apf::Mesh2* m,
+    apf::Field* frame, apf::Field* scale)
+{
+  Anisotropic sf(frame, scale);
+  return ma::configure(m, &sf);
+}
+
 int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
 {
   m->verify();
   
-  CalculateAnisoSizeField(MA_Drvr, phif);
+  CalculateAnisoSizeField();
 
   /// Adapt the mesh
-  ma::Input* in = ma::configure(m, sizef);
+  ma::Input* in = configureAnisotropic(mesh, size_frame, size_scale);
   in->runPreZoltan = true;
   in->runMidDiffusion = true;
   in->runPostZoltan = true;

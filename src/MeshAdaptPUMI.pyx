@@ -17,10 +17,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
     cdef cppclass MeshAdaptPUMIDrvr:
         MeshAdaptPUMIDrvr(double, double, int)
         int numIter, numAdaptSteps
-        int helloworld(char *)
-        int readGeomModel(char *)
-        int readPUMIMesh(char *)
-        int initProteusMesh(Mesh&)
+        int loadModelAndMesh(char *, char*)
         int ConstructFromSerialPUMIMesh(Mesh&)
         int ConstructFromParallelPUMIMesh(Mesh&, Mesh&)
         int UpdateMaterialArrays(Mesh&, int, int)
@@ -36,15 +33,8 @@ cdef class MeshAdaptPUMI:
         self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter)
     def __dealloc__(self):
         del self.thisptr
-    def helloworld(self, string):
-        return self.thisptr.helloworld(string)
-    def readGeomModel(self, geomName):
-        return self.thisptr.readGeomModel(geomName)
-    def readPUMIMesh(self, meshName):
-        return self.thisptr.readPUMIMesh(meshName)
-    def initProteusMesh(self, cmesh):
-        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
-        return self.thisptr.initProteusMesh(cmesh_ptr.mesh)
+    def loadModelAndMesh(self, geomName, meshName):
+        return self.thisptr.loadModelAndMesh(geomName, meshName)
     def ConstructFromSerialPUMIMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.ConstructFromSerialPUMIMesh(cmesh_ptr.mesh)
