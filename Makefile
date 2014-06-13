@@ -34,6 +34,12 @@ install: profile config.py
 	@echo "************************"
 	@echo "done installing standard extension modules"
 	@echo "************************"
+	cd mprans
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setup.py install
+	@echo "************************"
+	@echo "done installing mprans"
+	@echo "************************"
+	cd -
 
 clean:
 	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppyx.py clean
@@ -54,9 +60,13 @@ stack:
 	@echo "No stack found.  Cloning private stack from GitHub"
 	git clone https://github.com/erdc-cm/hashstack-private.git stack
 
+mprans: 
+	@echo "No mprans found.  Cloning mprans from GitHub"
+	git clone https://github.com/erdc-cm/proteus-mprans.git mprans
+
 profile: ${PROTEUS_PREFIX}/artifact.json
 
-${PROTEUS_PREFIX}/artifact.json: stack hashdist
+${PROTEUS_PREFIX}/artifact.json: stack hashdist mprans
 	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
 	cd stack && ${PROTEUS}/hashdist/bin/hit develop -v -f default.yaml ${PROTEUS_PREFIX}
 	-cp ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.exe.link ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.link
