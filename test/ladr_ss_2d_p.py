@@ -43,9 +43,9 @@ coefficients = ADR.Coefficients(aOfX=aOfX,fOfX=fOfX,velocity=B0_1c[0],nc=1,nd=nd
 
 def getDBC(x,flag):
     if x[0] <= 1.0e-8 or x[1] <= 1.0e-8:
-        return lambda x,t: 1.0 
+        return lambda x,t: ans.uOfX(x) 
     if x[0] >= 1.0 - 1.0e-8 or x[1] >= 1.0-1.0e-8:
-        return lambda x,t: 0.0
+        return lambda x,t: ans.uOfXT(x)
 
 dirichletConditions = {0:getDBC}
 
