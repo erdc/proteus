@@ -289,10 +289,8 @@ namespace proteus
       double flow=0.0;
       for (int I=0; I < nSpace; I++)
 	flow += n[I]*velocity[I];
-      //std::cout<<" isDOFBoundary_u= "<<isDOFBoundary_u<<" flow= "<<flow<<std::endl;
       if (isDOFBoundary_u == 1)
 	{
-	  //std::cout<<"Dirichlet boundary u and bc_u "<<u<<'\t'<<bc_u<<std::endl;
 	  if (flow >= 0.0)
 	    {
 	      flux = u*flow;
@@ -307,25 +305,20 @@ namespace proteus
       else if (isFluxBoundary_u == 1)
 	{
 	  flux = bc_flux_u;
-	  //std::cout<<"Flux boundary flux and flow"<<flux<<'\t'<<flow<<std::endl;
 	}
       else
 	{
-	  //std::cout<<"No BC boundary flux and flow"<<flux<<'\t'<<flow<<std::endl;
 	  if (flow >= 0.0)
 	    {
 	      flux = u*flow;
 	    }
 	  else
 	    {
-	      std::cout<<"warning: VOF open boundary with no external trace, setting to zero for inflow"<<std::endl;
 	      flux = 0.0;
 	    }
 
 	}
       //flux = flow;
-      //std::cout<<"flux error "<<flux-flow<<std::endl;
-      //std::cout<<"flux in computationa"<<flux<<std::endl;
     }
 
     inline
@@ -337,7 +330,9 @@ namespace proteus
     {
       double flow=0.0;
       for (int I=0; I < nSpace; I++)
-	flow += n[I]*velocity[I];
+	{
+	  flow += n[I]*velocity[I];
+	}
       //double flow=n[0]*velocity[0]+n[1]*velocity[1]+n[2]*velocity[2];
       dflux=0.0;//default to no flux
       if (isDOFBoundary_u == 1)
@@ -533,11 +528,8 @@ namespace proteus
 	  subgridError_u = -tau*pdeResidual_u;
 	  //
 	  //calculate shock capturing diffusion
-	  //
-	  
-	  
+	  //	  
 	  ck.calculateNumericalDiffusion(shockCapturingDiffusion,elementDiameter[eN],pdeResidual_u,grad_u,numDiff0);	      
-	  //ck.calculateNumericalDiffusion(shockCapturingDiffusion,G,pdeResidual_u,grad_u_old,numDiff1);
 	  ck.calculateNumericalDiffusion(shockCapturingDiffusion,sc_uref, sc_alpha,G,G_dd_G,pdeResidual_u,grad_u,numDiff1);
 	  q_numDiff_u[eN_k] = useMetrics*numDiff1+(1.0-useMetrics)*numDiff0;
 	  // 
@@ -547,9 +539,10 @@ namespace proteus
 	    { 
 	      register int  i_nSpace=i*nSpace;
 	      
-	      elementResidual_u[i] += ck.Diffusion_weak(sd_rowptr,sd_colind,a,grad_u,&u_grad_test_dV[i_nSpace]) + 
-		ck.Reaction_weak(r,u_test_dV[i])+ 
-		ck.SubgridError(subgridError_u,Lstar_u[i]) + 
+	      elementResidual_u[i] += ck.Advection_weak(f,&u_grad_test_dV[i_nSpace]) +
+		ck.Diffusion_weak(sd_rowptr,sd_colind,a,grad_u,&u_grad_test_dV[i_nSpace]) + 
+		ck.Reaction_weak(r,u_test_dV[i]) + 
+	        ck.SubgridError(subgridError_u,Lstar_u[i]) + 
 		ck.NumericalDiffusion(q_numDiff_u_last[eN_k],grad_u,&u_grad_test_dV[i_nSpace]);
 	    }//i
 	}
@@ -1047,7 +1040,8 @@ namespace proteus
 	      for(int j=0;j<nDOF_trial_element;j++) 
 		{ 
 		  int j_nSpace = j*nSpace;
-		  elementJacobian_u_u[i*nDOF_trial_element+j] += ck.SimpleDiffusionJacobian_weak(sd_rowptr,sd_colind,a,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]) +
+		  elementJacobian_u_u[i*nDOF_trial_element+j] += ck.AdvectionJacobian_weak(df,u_trial_ref[k*nDOF_trial_element+j],&u_grad_test_dV[i_nSpace]) +
+		    ck.SimpleDiffusionJacobian_weak(sd_rowptr,sd_colind,a,&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]) +
 		    ck.ReactionJacobian_weak(dr,u_trial_ref[k*nDOF_trial_element+j],u_test_dV[i]) +
 		    ck.SubgridErrorJacobian(dsubgridError_u_u[j],Lstar_u[i]) +
 		    ck.NumericalDiffusionJacobian(q_numDiff_u_last[eN_k],&u_grad_trial[j_nSpace],&u_grad_test_dV[i_nSpace]); 		     
@@ -1314,7 +1308,7 @@ namespace proteus
 	      /* 			   bc_f_ext, */
 	      /* 			   bc_df_ext); */
 	      a_ext = &ebqe_a[ebNE_kb*sd_rowptr[nSpace]];
-	      for (int I=0;I++;I<nSpace)
+	      for (int I=0;I<nSpace;I++)
 		{
 		  df_ext[I] = ebqe_v[ebNE_kb*nSpace+I];
 		  bc_df_ext[I] = ebqe_v[ebNE_kb*nSpace+I];
@@ -1349,7 +1343,7 @@ namespace proteus
 									     a_ext,
 									     u_trial_trace_ref[ebN_local_kb_j],
 									     &u_grad_trial_trace[j_nSpace],
-									     ebqe_penalty_ext[ebNE_kb]) +
+									     ebqe_penalty_ext[ebNE_kb]) + 
 		    ck.ExteriorNumericalAdvectiveFluxJacobian(dflux_u_u_ext,u_trial_trace_ref[ebN_local_kb_j]);
 		}//j
 	      //
