@@ -5,17 +5,19 @@ Vectors are just numpy arrays, as are dense matrices. Sparse matrices
 are CSR matrices. Parallel vector and matrix are built on top of those
 representations using PETSc.
 
-\todo LinearAlgebraTools: make better use of numpy.linalg and petsc4py to provide the needed functionality and add test suite
+\todo LinearAlgebraTools: make better use of numpy.linalg and petsc4py to provide the needed functionality and improve test suite
 """
 import numpy
-from superluWrappers import *
-import flcbdfWrappers
+import math
+from .superluWrappers import *
+from . import flcbdfWrappers
 from Profiling import logEvent
 #PETSc import, forces comm init if not already done
 from petsc4py import PETSc as p4pyPETSc
-import Comm
+from . import Comm
 Comm.set_isInitialized()
 #end PETSc import
+
 
 class ParVec:
     """
@@ -42,6 +44,7 @@ class ParVec:
         self.cparVec.scatter_forward_insert()
     def scatter_reverse_add(self):
         self.cparVec.scatter_reverse_add()
+
 
 class ParVec_petsc4py(p4pyPETSc.Vec):
     """
@@ -100,6 +103,7 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
         self.ghostUpdateBegin(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
         self.ghostUpdateEnd(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
 
+
 class ParMat_petsc4py(p4pyPETSc.Mat):
     """
     Parallel matrix based on petsc4py's wrappers for PETSc.
@@ -143,17 +147,29 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         self.setLGMap(self.petsc_l2g)
         self.setFromOptions()
 
+
 def Vec(n):
     """
     Build a vector of length n (using numpy)
+
+    For example:
+    >>> Vec(3)
+    array([ 0.,  0.,  0.])
     """
     return numpy.zeros((n,),'d')
 
-def Mat(n,m):
+
+def Mat(m,n):
     """
-    Build an n x m matrix (using numpy)
+    Build an m x n matrix (using numpy)
+
+    For example:
+    >>> Mat(2,3)
+    array([[ 0.,  0.,  0.],
+           [ 0.,  0.,  0.]])
     """
-    return numpy.zeros((n,m),'d')
+    return numpy.zeros((m,n),'d')
+
 
 def SparseMatFromDict(nr,nc,aDict):
     """
@@ -179,12 +195,14 @@ def SparseMatFromDict(nr,nc,aDict):
     rowptr[i+1] = k
     return (SparseMat(nr,nc,nnz,nzval,colind,rowptr),nzval)
 
+
 def SparseMat(nr,nc,nnz,nzval,colind,rowptr):
     """
     Build a nr x nc sparse matrix from the CSR data structures
     """
     import superluWrappers
     return superluWrappers.SparseMatrix(nr,nc,nnz,nzval,colind,rowptr)
+
 
 class SparseMatShell:
     """
@@ -210,27 +228,74 @@ class SparseMatShell:
             self.ghosted_csr_mat.matvec(xlf,ylf)
         y.setArray(self.yGhosted.getArray())
 
+
 def l2Norm(x):
     """
     Compute the parallel l_2 norm
     """
-    return numpy.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
+    return math.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
+
 
 def l1Norm(x):
     """
-    Compute the parallel l_1 norm
+    Compute the parallel :math:`l_1` norm
+    
+    The :math:`l_1` norm of a vector :math:`\mathbf{x} \in
+    \mathbb{R}^n` is
+    
+    .. math:: 
+    
+       \| \mathbf{x} \|_{1} = \sum_{i=0} |x_i|
+    
+    If Python is running in parallel, then the sum is over all
+    dimensions on all processors so that the input must not contain
+    "ghost" entries.
+    
+    This implemtation works for a distributed array with no ghost
+    components (each component must be on a single processor).
+    
+    :param x: numpy array of length n
+    :return: float
     """
     return flcbdfWrappers.globalSum(numpy.sum(numpy.abs(x)))
 
+
 def lInfNorm(x):
     """
-    Compute the parallel l_{\infty} norm
+    Compute the parallel :math:`l_{\infty}` norm
+
+    The :math:`l_{\infty}` norm of a vector :math:`\mathbf{x} \in
+    \mathbb{R}^n` is
+
+    .. math::
+
+       \|x\|_{\infty} = \max_i |x_i|
+       
+    This implemtation works for a distributed array with no ghost
+    components (each component must be on a single processor).
+    
+    :param x: numpy array of length n
+    :return: float
     """
     return flcbdfWrappers.globalMax(numpy.linalg.norm(x,numpy.inf))
 
+
 def wDot(x,y,h):
     """
-    Compute the parallel weighted dot product with weight h
+    Compute the parallel weighted dot product of vectors x and y using
+    weight vector h.
+    
+    The weighted dot product is defined for a weight vector
+    :math:`\mathbf{h}` as
+
+    .. math:: 
+
+       (\mathbf{x},\mathbf{y})_h = \sum_{i} h_{i} x_{i} y_{i}
+    
+    All weight vector components should be positive.
+
+    :param x,y,h: numpy arrays for vectors and weight 
+    :return: the weighted dot product
     """
     return flcbdfWrappers.globalSum(numpy.sum(x*y*h))
 
@@ -238,46 +303,51 @@ def wl2Norm(x,h):
     """
     Compute the parallel weighted l_2 norm with weight h
     """
-    return numpy.sqrt(flcbdfWrappers.globalSum(wDot(x,x,h)))
+    return math.sqrt(flcbdfWrappers.globalSum(wDot(x,x,h)))
+
 
 def wl1Norm(x,h):
     """
     Compute the parallel weighted l_1 norm with weight h
     """
-    return numpy.sum(flcbdfWrappers.globalSum(numpy.abs(h*x)))
+    return flcbdfWrappers.globalSum(numpy.sum(numpy.abs(h*x)))
+
 
 def wlInfNorm(x,h):
     """
     Compute the parallel weighted l_{\infty} norm with weight h
     """
-    return flcbdfWrappers.globalMax(numpy.max(h*numpy.abs(x)))
+    return flcbdfWrappers.globalMax(numpy.linalg.norm(h*x,numpy.inf))
 
 def energyDot(x,y,A):
     """
     Compute the "energy" dot product x^t A y (not parallel)
     """
-    numpy.dot(A*x,y)
+    return numpy.dot(numpy.dot(x,A),y)
 
 def energyNorm(x,A):
     """
     Compute the "energy" norm x^t A x (not parallel)
     """
-    numpy.sqrt(energyDot(x,x,A))
+    return math.sqrt(energyDot(x,x,A))
 
 def l2NormAvg(x):
     """
     Compute the arithmetic averaged l_2 norm (root mean squared norm)
     """
     scale = 1.0/flcbdfWrappers.globalSum(len(x.flat))
-    return scale*numpy.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
+    return scale*math.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
+
 
 rmsNorm = l2NormAvg
+
 
 def l2Norm_local(x):
     """
     Compute the l_2 norm for just local (processor) system  (not parallel)
     """
-    return numpy.sqrt(numpy.dot(x,x))
+    return math.sqrt(numpy.dot(x,x))
+
 
 class WeightedNorm:
     """
@@ -300,12 +370,19 @@ class WeightedNorm:
         value = numpy.linalg.norm(self.tmp.flat,type)
         return value/self.dim
 
+
 if __name__ == '__main__':
-    from LinearAlgebraTools import *
-    import Gnuplot
-    from Gnuplot import *
-    from math import *
-    from RandomArray import *
+    import doctest
+    doctest.testmod()
+    
+
+def test_MGV():
+    '''Non-working function (fix imports below)'''
+    #    from LinearAlgebraTools import *
+    #    import Gnuplot
+    #    from Gnuplot import *
+    #    from math import *
+    #    from RandomArray import *
     gf = Gnuplot.Gnuplot()
     gf("set terminal x11")
     ginit = Gnuplot.Gnuplot()
