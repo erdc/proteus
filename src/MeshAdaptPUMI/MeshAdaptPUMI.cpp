@@ -21,6 +21,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter)
   size_iso = 0;
   size_scale = 0;
   size_frame = 0;
+  gmi_register_mesh();
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
