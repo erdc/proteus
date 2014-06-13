@@ -73,9 +73,9 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
 
   /// Adapt the mesh
   ma::Input* in = configureAnisotropic(m, size_frame, size_scale);
-  in->shouldRunPreZoltan = true;
+  in->shouldRunPreDiffusion = true;
   in->shouldRunMidDiffusion = true;
-  in->shouldRunPostZoltan = true;
+  in->shouldRunPostDiffusion = true;
   in->shouldFixShape = false;
   in->maximumIterations = numIter;
   ma::adapt(in);
