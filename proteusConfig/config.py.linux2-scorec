@@ -34,11 +34,8 @@ PROTEUS_TRIANGLE_LIB ='tri'
 
 PROTEUS_SCOREC_INCLUDE_DIR = os.getenv('PROTEUS_PREFIX')+'/include'
 PROTEUS_SCOREC_LIB_DIR = os.getenv('PROTEUS_PREFIX')+'/lib'
-###PROTEUS_SCOREC_EXTRA_LINK_ARGS = ['-lpumi_util', '-lSpaACIS', '-lapf_pumi', '-lapf', '-lpumi_geom', '-lpumi_geom_acis', '-lmeshadapt', '-lpumi_mesh', '-lpcu', '-lzoltan', '-lparmetis', '-lmetis']
-###PROTEUS_SCOREC_EXTRA_LINK_ARGS = ['-lpumi_util', '-lapf_pumi', '-lapf', '-lpumi_geom', '-lpumi_geom_sim','-lpumi_mesh', '-lpcu', '-lzoltan', '-lparmetis', '-lmetis']
-PROTEUS_SCOREC_EXTRA_LINK_ARGS = ['-lpumi_util', '-lapf_pumi', '-lapf', '-lspr', '-lpumi_geom_sim', '-lmeshadapt', '-lpumi_mesh', '-lpumi_geom', '-lpcu', '-lzoltan', '-lparmetis', '-lmetis']
-###PROTEUS_SCOREC_EXTRA_LINK_ARGS = ['-lpumi_util', '-lapf_pumi', '-lapf', '-lpumi_geom', '-lpumi_mesh', '-lpcu', '-lzoltan', '-lparmetis', '-lmetis']
-PROTEUS_SCOREC_EXTRA_COMPILE_ARGS=['-DPUMI_PARALLEL','-DMA_PARALLEL','-g']
+PROTEUS_SCOREC_EXTRA_LINK_ARGS = ['-lma', '-lmds', '-lapf', '-lspr', '-lgmi', '-lpcu', '-lzoltan', '-lparmetis', '-lmetis']
+PROTEUS_SCOREC_EXTRA_COMPILE_ARGS=['-g']
 
 PROTEUS_DAETK_INCLUDE_DIR = [PROTEUS_INCLUDE_DIR]
 PROTEUS_DAETK_LIB_DIR = PROTEUS_LIB_DIR
