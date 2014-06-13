@@ -265,7 +265,7 @@ static void SmoothField(apf::Field* f)
     int num = 0;
     for (int i = 0; i < vs.n; ++i)
       if (m->isOwned(vs.e[i])) {
-        apf::getComponents(f, v, 0, &val[0]);
+        apf::getComponents(f, vs.e[i], 0, &val[0]);
         sum += val;
         ++num;
       }
