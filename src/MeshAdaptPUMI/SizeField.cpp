@@ -192,7 +192,11 @@ static apf::Field* getSizeFrames(apf::Field* gradphi)
     apf::Matrix3x3 frame;
 /* the anisotropic frame is just aligned
    to have grad(phi) along the first axis */
-    frame = apf::transpose(apf::getFrame(gphi));
+    frame = apf::getFrame(gphi);
+    for (int i = 0; i < 3; ++i)
+/* apf::getFrame does not normalize, we have to */
+      frame[i] = frame[i].normalize();
+    frame = apf::transpose(frame);
     apf::setMatrix(frames, v, 0, frame);
   }
   m->end(it);
