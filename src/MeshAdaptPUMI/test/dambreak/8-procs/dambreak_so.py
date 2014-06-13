@@ -2,9 +2,6 @@ from proteus.default_so import *
 import dambreak
 from proteus import MeshAdaptPUMI
 
-MeshAdaptPUMI = MeshAdaptPUMI.MeshAdaptPUMI()
-MeshAdaptPUMI.helloworld('hello: Entering MeshAdaptPUMI')
-
 if dambreak.useOnlyVF:
     pnList = [("twp_navier_stokes_p", "twp_navier_stokes_n"),
               ("vof_p",               "vof_n")]
