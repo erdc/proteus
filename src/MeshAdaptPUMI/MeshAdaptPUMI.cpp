@@ -9,6 +9,7 @@
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter)
 {
   PCU_Comm_Init();
+  PCU_Protect();
   numVar=0;
   hmin=Hmin; hmax=Hmax;
   numIter=NumIter;
@@ -72,13 +73,14 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
 
   /// Adapt the mesh
   ma::Input* in = configureAnisotropic(m, size_frame, size_scale);
-  apf::destroyField(size_frame);
-  apf::destroyField(size_scale);
   in->shouldRunPreZoltan = true;
   in->shouldRunMidDiffusion = true;
   in->shouldRunPostZoltan = true;
+  in->shouldFixShape = false;
   in->maximumIterations = numIter;
   ma::adapt(in);
+  freeField(size_frame);
+  freeField(size_scale);
 
   apf::writeVtkFiles("pumi_adapt", m);
 
