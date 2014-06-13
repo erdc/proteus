@@ -108,7 +108,8 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
     """
     Parallel matrix based on petsc4py's wrappers for PETSc.
     """
-    def __init__(self,ghosted_csr_mat,par_bs,par_n,par_N,par_nghost,subdomain2global,blockVecType="simple"):
+    def __init__(self,ghosted_csr_mat,par_bs,par_n,par_N,par_nghost,subdomain2global,blockVecType="simple",pde=None):
+        self.pde = pde
         p4pyPETSc.Mat.__init__(self)
         self.ghosted_csr_mat=ghosted_csr_mat
         self.blockVecType = blockVecType
