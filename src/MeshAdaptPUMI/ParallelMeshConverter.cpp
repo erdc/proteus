@@ -25,7 +25,8 @@ int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   mesh.subdomainp = new Mesh();
   mesh.subdomainp = &subdomain_mesh;
   initializeMesh(subdomain_mesh);
-  std::cout << "Constructing global data structures\n"; 
+  if (!PCU_Comm_Self())
+    std::cerr << "Constructing parallel proteus mesh\n"; 
   
   int numGlobElem = countTotal(m, 3);
   mesh.nElements_global = numGlobElem;
@@ -56,12 +57,17 @@ int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   mesh.subdomainp->nNodes_elementBoundary = 3; //hardcode: for tets, looks like number of nodes of a face
   mesh.subdomainp->nElementBoundaries_element = 4; //hardcode: for tets, looks like number of faces/element
   
-  std::cerr << "*******Local Proteus Mesh Stats*********\n";
-  std::cerr << "Rank: " << comm_rank << ": Number of elements " << mesh.subdomainp->nElements_global << "\n";
-  std::cerr << "Rank: " << comm_rank << ": Number of nodes " << mesh.subdomainp->nNodes_global << "\n";
-  std::cerr << "Rank: " << comm_rank << ": Number of boundaries " << mesh.subdomainp->nElementBoundaries_global << "\n";
-  std::cerr << "Rank: " << comm_rank << ": Number of edges " << mesh.subdomainp->nEdges_global << "\n";
-  std::cerr << "*****************************************\n";
+  for (int i = 0; i < PCU_Comm_Peers(); ++i) {
+    if (i == PCU_Comm_Self()) {
+      std::cerr << "*******Local Proteus Mesh Stats*********\n";
+      std::cerr << "Rank: " << comm_rank << ": Number of elements " << mesh.subdomainp->nElements_global << "\n";
+      std::cerr << "Rank: " << comm_rank << ": Number of nodes " << mesh.subdomainp->nNodes_global << "\n";
+      std::cerr << "Rank: " << comm_rank << ": Number of boundaries " << mesh.subdomainp->nElementBoundaries_global << "\n";
+      std::cerr << "Rank: " << comm_rank << ": Number of edges " << mesh.subdomainp->nEdges_global << "\n";
+      std::cerr << "*****************************************\n";
+    }
+    PCU_Barrier();
+  }
   
   if(comm_rank==0) {
     std::cerr << "*******Global Proteus Mesh Stats*********\n";
@@ -119,6 +125,7 @@ int MeshAdaptPUMIDrvr::ConstructGlobalNumbering(Mesh &mesh)
     /* one of the many reasons N^2 algorithms are bad */
     MPI_Allgather(&localOffset, 1, MPI_INT,
                   allOffsets, 1, MPI_INT, MPI_COMM_WORLD);
+    allOffsets[PCU_Comm_Peers()] = countTotal(m, dim);
 
     std::stringstream ss;
     ss << "proteus_global_";
