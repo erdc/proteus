@@ -34,12 +34,6 @@ install: profile config.py
 	@echo "************************"
 	@echo "done installing standard extension modules"
 	@echo "************************"
-	cd mprans
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setup.py install
-	@echo "************************"
-	@echo "done installing mprans"
-	@echo "************************"
-	cd -
 
 clean:
 	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppyx.py clean
