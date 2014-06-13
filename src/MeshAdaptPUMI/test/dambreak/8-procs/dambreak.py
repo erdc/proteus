@@ -102,7 +102,7 @@ else:
     else:
         domain = Domain.PUMIDomain(fileprefix="Dambreak_2_.smb",modelfile="Dambreak.dmg") #initialize the domain
         domain.numBC=6 #set number of BCs 
-        domain.numAdaptSteps=1 #set number of adapt steps (loops)
+        domain.numAdaptSteps=10 #set number of adapt steps (loops)
         #Following sets list of face tags of geometric model as mapped from boundary Tags, 
         #meaning if faceList=[[2,4],[1]] and boundaries=['left','right'], then faces with geometry tags 2 and 4 are set as 'left'
         #and face with geometric tag 4 is set as 'right'
