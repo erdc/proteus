@@ -23,30 +23,13 @@ try:
 except:
     print "NO PROTEUS_PRELOAD_LIBS LOADED; CHECK config.py"
 import os
-import sys
-import socket
-import cPickle
-import numpy
 import proteus
-#remove blankent import statements until after Comm initialized for petsc4py
-# from proteus import *
-from proteus import Profiling,Comm
+
+#remove blanket import statements until after Comm initialized for petsc4py
+from proteus import Profiling, Comm
 from warnings import *
 import optparse
 import sys
-import pstats
-import pdb
-#from traits.api import HasTraits,Float
-#class Rectangle(HasTraits):
-#    width = Float(1.0)
-
-#rect = Rectangle(width=3.0)
-#rect.configure_traits()
-#remove blankent import statements until after Comm initialized for petsc4py
-try:
-    import cProfile as profiler
-except:
-    import profile as profiler
 
 usage = "usage: %prog [options] soModule.py [[soFile.sso] [pModule.py nModule.py]]"
 parser = optparse.OptionParser(usage=usage)
@@ -83,25 +66,25 @@ parser.add_option("-P", "--petsc-options",
                   dest="petscOptions",
                   default=None)
 parser.add_option("-O", "--petsc-options-file",
-                  help="Text file of ptions to pass to PETSc",
+                  help="Text file of options to pass to PETSc",
                   action="store",
                   type="string",
                   dest="petscOptionsFile",
                   default=None)
 parser.add_option("-D", "--dataDir",
-                  help="Options to pass to PETSc",
+                  help="Data directory",
                   action="store",
                   type="string",
                   dest="dataDir",
                   default='')
 parser.add_option("-b", "--batchFile",
-                  help="Read input from a file",
+                  help="Text file of commands to execute",
                   action="store",
                   type="string",
                   dest="batchFileName",
                   default="")
 parser.add_option("-p", "--profile",
-                  help="Generate a profile of the  run",
+                  help="Generate a profile of the run",
                   action="store_true",
                   dest="profile",
                   default=False)
@@ -111,7 +94,7 @@ parser.add_option("-T", "--useTextArchive",
                   dest="useTextArchive",
                   default=False)
 parser.add_option("-m", "--memory",
-                  help="Track memory usage of the  run",
+                  help="Track memory usage of the run",
                   action="callback",
                   callback=Profiling.memProfOn_callback)
 parser.add_option("-M", "--memoryHardLimit",
@@ -122,7 +105,7 @@ parser.add_option("-M", "--memoryHardLimit",
                   default = -1.0,
                   dest = "memHardLimit")
 parser.add_option("-l", "--log",
-                  help="Store information about what the code is doing,0=none,10=everything",
+                  help="Store information about what the code is doing, 0=none, 10=everything",
                   action="store",
                   type="int",
                   dest="logLevel",
@@ -174,12 +157,14 @@ parser.add_option("-H","--hotStart",
                   default=False,
                   dest="hotStart",
                   action="store_true",
-                  help="""Use the last step in the archive as the intial condition and continue appending to the archive""")
+                  help="""Use the last step in the archive as the initial condition and continue appending to the
+                  archive""")
 parser.add_option("-B","--writeVelocityPostProcessor",
                   default=False,
                   dest="writeVPP",
                   action="store_true",
-                  help="""Use the last step in the archive as the intial condition and continue appending to the archive""")
+                  help="""Use the last step in the archive as the initial condition and continue appending to the
+                  archive""")
 parser.add_option("-F","--generatePartitionedMeshFromFiles",
                   default=False,
                   dest="generatePartitionedMeshFromFiles",
@@ -191,11 +176,18 @@ parser.add_option("-S","--save_dof",
                   dest="save_dof",
                   action="store_true",
                   help="""save the solution degrees of freedom after they have been calculated (for interactive plotting)""")
+parser.add_option("--setupOnly",
+                  default=False,
+                  dest="setupOnly",
+                  action="store_true",
+                  help="Don't actually compute a solution, just initialize the Numerical Solution")
+
 
 (opts,args) = parser.parse_args()
 
 
 if opts.debug:
+    import pdb
     pdb.set_trace()
 
 log = Profiling.logEvent
@@ -386,17 +378,25 @@ if opts.batchFileName != "":
     batchBlocks.pop()
     log("Batch file contains %i runs" % (len(batchBlocks),))
 
+run = True
 running = True
 runNumber=0
 while running:
+
+    if opts.setupOnly:
+        doCalculate = False
+    else:
+        doCalculate = True
+
     if opts.interactive:
         userInput = True
         sys.stdout.write("Enter python commands or (s)tart/(q)quit\n>>>")
+
     elif opts.batchFileName != "":
         userInput = False
         lines = '\n'.join(batchBlocks.pop(0))
         exec lines
-        run     = True
+        run = True
         running = len(batchBlocks) > 0        
     else:
         userInput = False
@@ -422,52 +422,29 @@ while running:
             userInput = False
             run = False
             running = False
+
     if run:
-        log("Starting %s run number %i" %(so.name,runNumber))
-        runName = so.name+`runNumber`
-        if opts.profile:
-            profiler.run('ns = NumericalSolution.NS_base(so,pList,nList,sList,opts,simFlagsList)',so.name+'_init_prof'+`comm.rank()`)
-            comm.beginSequential()
-            stats = pstats.Stats(so.name+'_init_prof'+`comm.rank()`)
-            stats.strip_dirs()
-            stats.dump_stats(so.name+'_init_prof_c'+`comm.rank()`)
-            stats.sort_stats('cumulative')
-            if Profiling.verbose and comm.isMaster():
-                stats.print_stats(30)
-            stats.sort_stats('time')
-            if Profiling.verbose and comm.isMaster():
-                stats.print_stats(30)
-            comm.endSequential()
-            profiler.run('ns.calculateSolution(runName)',so.name+'_run_prof'+`comm.rank()`)
-            comm.beginSequential()
-            runNumber+=1
-            stats = pstats.Stats(so.name+'_run_prof'+`comm.rank()`)
-            stats.strip_dirs()
-            stats.dump_stats(so.name+'_run_prof_c'+`comm.rank()`)
-            stats.sort_stats('cumulative')
-            if Profiling.verbose and comm.isMaster():
-                stats.print_stats(30)
-            stats.sort_stats('time')
-            if Profiling.verbose and comm.isMaster():
-                stats.print_stats(30)
-            comm.endSequential()
-        else:
-            ns = NumericalSolution.NS_base(so,pList,nList,sList,opts,simFlagsList)
-            #if comm.isMaster():
-            #    ns.frameWidget = vtkViewers.QtGui.QFrame(vtkViewers.g.mainWindow)
-            #    ns.hbox = vtkViewers.QtGui.QHBoxLayout()
-            #    ns.frameWidget.setLayout(ns.hbox)
-            #    vtkViewers.g.tabWidget.addTab(ns.frameWidget,"NumericalSolution")
-            #    vtkViewers.g.tabWidget.setCurrentWidget(ns.frameWidget)
-            #    ui = ns.edit_traits(parent=ns.frameWidget,kind='panel')
-            #    ui.control.setParent(ns.frameWidget)
-            #    #ns.edit_traits()
-            ns.calculateSolution(runName)
+        log("Starting %s run number %i" % (so.name, runNumber))
+        runName = so.name + str(runNumber)
+        dispatch = Profiling.Dispatcher(comm, opts.profile)
+        ns = dispatch(NumericalSolution.NS_base,
+                      (so, pList, nList, sList, opts, simFlagsList),
+                      {},
+                      runName + '_init_prof')
+
+        if doCalculate:
+            dispatch(ns.calculateSolution,
+                     (runName,),
+                     {},
+                     runName + '_run_prof')
+
         log("Completed %s run number %i" %(so.name,runNumber))
         import gc
         log("Collecting garbage")
         gc.collect()
         log("Done with garbage")
+        runNumber+=1
+
 if opts.viewer:
     if comm.isMaster():
         try:
