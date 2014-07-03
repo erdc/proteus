@@ -581,9 +581,10 @@ class SimpleNavierStokes3D:
         #self.pc.setFieldSplitIS(self.pressureDOF)
     def setUp(self):
         if self.L.pde.pp_hasConstantNullSpace:
-            self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
-            self.kspList = self.pc.getFieldSplitSubKSP()
-            self.kspList[1].setNullSpace(self.nsp)
+            if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
+                self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
+                self.kspList = self.pc.getFieldSplitSubKSP()
+                self.kspList[1].setNullSpace(self.nsp)
 
 class SimpleDarcyFC:
     def __init__(self,L):
@@ -632,9 +633,10 @@ class SimpleNavierStokes2D:
         self.pc.setFromOptions()
     def setUp(self):
         if self.L.pde.pp_hasConstantNullSpace:
-            self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
-            self.kspList = self.pc.getFieldSplitSubKSP()
-            self.kspList[1].setNullSpace(self.nsp)
+            if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
+                self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
+                self.kspList = self.pc.getFieldSplitSubKSP()
+                self.kspList[1].setNullSpace(self.nsp)
 
 class SimpleDarcyFC:
     def __init__(self,L):
