@@ -4,6 +4,8 @@ Tools for high level profiling and event logging
 import gc
 import inspect
 import pstats
+from time import time
+
 try:
     from cProfile import Profile
 except:
@@ -24,6 +26,9 @@ procID=None
 flushBuffer=False
 preInitBuffer=[]
 logDir = '.'
+
+startTime = time()
+
 def memProfOn():
     global memLog
     memLog = True
@@ -67,7 +72,7 @@ def closeLog():
     except:
         pass
 
-def logEvent(stringIn,level=1,data=None):
+def logEvent(stringIn, level=1, data=None):
     global logLevel,procID,logAllProcesses,flushBuffer,preInitBuffer
     if procID != None:
         if logAllProcesses or procID==0:
@@ -78,9 +83,10 @@ def logEvent(stringIn,level=1,data=None):
                 else:
                     string = stringIn
                 if string!=None:
-                    if data != None:
-                        string += `data`
-                    string+='\n'
+                    if data:
+                        string += repr(data)
+                    string +='\n'
+                    string = ("[%8d] " % (time() - startTime)) + string
                     global logFile,verbose
                     logFile.write(string)
                     if flushBuffer:
