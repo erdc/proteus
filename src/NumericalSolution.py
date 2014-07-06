@@ -1,45 +1,29 @@
 """
 A hierarchy of classes for managing comlete numerical solution implementations
 """
+
+import os
+import numpy
+from subprocess import check_call
+
 import LinearSolvers
-from LinearAlgebraTools import *
 import NonlinearSolvers
 import TriangleTools
 import MeshTools
 import Profiling
 import Transport
 import SimTools
-import os
-import SplitOperator
-log = Profiling.logEvent
-import numpy
-import cfemIntegrals
 import Archiver
 import Viewers
 from Archiver import ArchiveFlags
 import Domain
-#import IPython
-#from IPython.utils import io
-#from traits.api import HasTraits
+
+log = Profiling.logEvent
+
 # Global to control whether the kernel starting is active.
 embed_ok = True
 
-# Convenience functions to exit and permanently kill the kernel.
-#def exit_kernel():
-#    ip = get_ipython()
-#    io.rprint('Exiting embedded kernel, returning control to calling code...')
-#    ip.exit_now = True
-
-
-#def kill_kernel():
-#    global embed_ok
-#    
-#    embed_ok = False
-#    io.rprint('Disabling embedding of kernel.')
-#    exit_kernel()
-
-
-class  NS_base:#(HasTraits):
+class NS_base:  # (HasTraits):
     r"""
     The base class for managing the numerical solution of  PDE's.
 
@@ -70,9 +54,9 @@ class  NS_base:#(HasTraits):
        NS -> ar [arrowhead="normal", style="dashed", color="purple"];
        }
     """
-    def __init__(self,so,pList,nList,sList,opts,simFlagsList=None):
+
+    def __init__(self, so,pList,nList,sList,opts,simFlagsList=None):
         import Comm
-        import pdb
         comm=Comm.get()
         self.comm=comm
         message = "Initializing NumericalSolution for "+so.name+"\n System includes: \n"
@@ -87,9 +71,11 @@ class  NS_base:#(HasTraits):
         self.timeValues={}
         Profiling.memory("Memory used before initializing"+so.name)
         memBase = Profiling.memLast #save current memory usage for later
-        if not so.useOneMesh: so.useOneArchive=False
+        if not so.useOneMesh:
+            so.useOneArchive=False
+
         log("Setting Archiver(s)")
-        #pdb.set_trace()
+
         if so.useOneArchive:
             self.femSpaceWritten={}
             tmp  = Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
@@ -245,16 +231,9 @@ class  NS_base:#(HasTraits):
                     log("Running tetgen to generate 3D mesh for "+p.name,level=1)
                     tetcmd = "tetgen -%s %s.poly" % (n.triangleOptions,p.domain.polyfile)
                     log("Calling tetgen on rank 0 with command %s" % (tetcmd,))
-                    try:
-                        retcode = call(tetcmd, shell=True)
-                        if retcode < 0:
-                            print >>sys.stderr, "Child was terminated by signal", -retcode
-                        else:
-                            print >>sys.stderr, "Child returned", retcode
-                    except OSError as e:
-                        print >>sys.stderr, "TetGen Execution failed:", e
-                    #old sys call
-                    #failed = os.system(tetcmd)
+
+                    check_call(tetcmd, shell=True)
+
                     log("Done running tetgen")
                     elefile  = "%s.1.ele" % p.domain.polyfile
                     nodefile = "%s.1.node" % p.domain.polyfile
@@ -289,7 +268,7 @@ class  NS_base:#(HasTraits):
                                                                   nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                   parallelPartitioningType=n.parallelPartitioningType)
                 else:
-                    log("Generating coarse global mesh from Tetgen files")                    
+                    log("Generating coarse global mesh from Tetgen files")
                     mesh.generateFromTetgenFiles(p.domain.polyfile,nbase,parallel = comm.size() > 1)
                     log("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (n.nLevels,))
                     mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
@@ -389,7 +368,7 @@ class  NS_base:#(HasTraits):
                 linTolList.append(n.linTolFac*fac)
 
             log("Setting up MultilevelTransport for "+p.name)
-            #pdb.set_trace()
+
             model = Transport.MultilevelTransport(p,n,mlMesh,OneLevelTransportType=p.LevelModelType)
             self.modelList.append(model)
             model.name = p.name
@@ -401,8 +380,7 @@ class  NS_base:#(HasTraits):
             linear_solver_options_prefix = None
             if 'linear_solver_options_prefix' in dir(n):
                 linear_solver_options_prefix = n.linear_solver_options_prefix
-            #import pdb
-            #pdb.set_trace()
+
             (multilevelLinearSolver,directSolverFlag) = LinearSolvers.multilevelLinearSolverChooser(
                 linearOperatorList = model.jacobianList,
                 par_linearOperatorList = model.par_jacobianList,
@@ -517,6 +495,7 @@ class  NS_base:#(HasTraits):
         self.systemStepController = so.systemStepControllerType(self.modelList,stepExact=so.systemStepExact)
         self.systemStepController.setFromOptions(so)
         log("Finished NumericalSolution initialization")
+
     ## compute the solution
     def calculateSolution(self,runName):
         log("Setting initial conditions",level=0)
@@ -556,7 +535,7 @@ class  NS_base:#(HasTraits):
                 log("New tnList"+`self.tnList`)
             else:
                 pass
-        
+
         log("Attaching models and running spin-up step if requested")
         for p,n,m,simOutput in zip(self.pList,self.nList,self.modelList,self.simOutputList):
             m.attachModels(self.modelList)
@@ -584,9 +563,7 @@ class  NS_base:#(HasTraits):
                 log("Spin-Up Choosing initial time step for model "+p.name)
                 m.stepController.initialize_dt_model(self.tnList[0],self.tnList[1])
                 #mwf what if user wants spin-up to be over (t_0,t_1)?
-                #mwf debug
-                #import pdb
-                #pdb.set_trace()
+
                 if m.stepController.stepExact and m.stepController.t_model_last != self.tnList[1]:
                     log("Spin-up step exact called for model %s" % (m.name,),level=3)
                     m.stepController.stepExact_model(self.tnList[1])
@@ -647,8 +624,6 @@ class  NS_base:#(HasTraits):
                                 m.uList,
                                 m.rList):
                 lm.getResidual(lu,lr)
-                #post-process velocity
-                #lm.calculateAuxiliaryQuantitiesAfterStep()
             log("Initializing time history for model step controller")
             m.stepController.initializeTimeHistory()
             log("Auxiliary variable calculations for model %s" % (m.name,))
@@ -661,20 +636,19 @@ class  NS_base:#(HasTraits):
         self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
         systemStepFailed=False
         stepFailed=False
+
         #NS_base has a fairly complicated time stepping loop structure
         #to accommodate fairly general split operator approaches. The
         #outer loop is over user defined time intervals for the entire
         #system of models. The next loop is over potentially adaptive
         #steps for the entire system. The next loop is for iterations
-        #over the entire system such as for interative split
+        #over the entire system such as for interactive split
         #operator. The next loop is for a sequence of model steps such
-        #as for alternating split operater or fractional step
+        #as for alternating split operator or fractional step
         #schemes. The next loop is for each model to step, potentially
         #adaptively, to the time in the stepSequence. Lastly there is
         #a loop for substeps(stages).
-        #if self.comm.isMaster():
-        #    if embed_ok and self.opts.inspect=="t0":
-        #        IPython.embed_kernel()
+
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             log("==============================================================",level=0)
             log("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
@@ -684,25 +658,22 @@ class  NS_base:#(HasTraits):
                     for lm in m.levelModelList:
                         for ci in range(lm.coefficients.nc):
                             lm.u[ci].dof_last[:] = lm.u[ci].dof
-            #
             if self.systemStepController.stepExact and self.systemStepController.t_system_last != self.tn:
                 self.systemStepController.stepExact_system(self.tn)
             while self.systemStepController.t_system_last < self.tn:
-                #
+
                 log("System time step t=%12.5e, dt=%12.5e" % (self.systemStepController.t_system,
                                                               self.systemStepController.dt_system),level=3)
-                #
+
                 while (not self.systemStepController.converged() and
                        not systemStepFailed):
-                    #
                     log("Split operator iteration %i" % (self.systemStepController.its,),level=3)
 
-                    #
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
-                        #
+
                         log("Model: %s" % (model.name),level=1)
                         log("Fractional step %12.5e for model %s" % (self.t_stepSequence,model.name),level=3)
-                        #
+
                         for m in model.levelModelList:
                             if m.movingDomain and m.tLast_mesh != self.systemStepController.t_system_last:
                                 m.t_mesh = self.systemStepController.t_system_last
@@ -710,7 +681,7 @@ class  NS_base:#(HasTraits):
                                 m.tLast_mesh = m.t_mesh
                         self.preStep(model)
                         self.setWeakDirichletConditions(model)
-                        #
+
                         stepFailed = False
                         if model.stepController.stepExact and model.stepController.t_model_last != self.t_stepSequence:
                             log("Step exact called for model %s" % (model.name,),level=3)
@@ -718,27 +689,24 @@ class  NS_base:#(HasTraits):
                         while (model.stepController.t_model_last < self.t_stepSequence and
                                not stepFailed and
                                not self.systemStepController.exitModelStep[model]):
-                            #
+
                             log("Model step t=%12.5e, dt=%12.5e for model %s" % (model.stepController.t_model,
                                                                                  model.stepController.dt_model,
                                                                                  model.name),level=3)
-                            #
+
                             for self.tSubstep in model.stepController.substeps:
-                                #
+
                                 log("Model substep t=%12.5e for model %s" % (self.tSubstep,model.name),level=3)
                                 #TODO: model.stepController.substeps doesn't seem to be updated after a solver failure unless model.stepController.stepExact is true
                                 log("Model substep t=%12.5e for model %s model.timeIntegration.t= %12.5e" % (self.tSubstep,model.name,model.levelModelList[-1].timeIntegration.t),level=3)
-                                #
+
                                 model.stepController.setInitialGuess(model.uList,model.rList)
-                                #mwf hack!! force zero nonlinear solver iterations
-                                #for m in model.levelModelList:
-                                #    m.nonlinear_function_evaluations = 0
+
                                 solverFailed = model.solver.solveMultilevel(uList=model.uList,
                                                                             rList=model.rList,
                                                                             par_uList=model.par_uList,
                                                                             par_rList=model.par_rList)
                                 Profiling.memory("solver.solveMultilevel")
-                                #self.viewSolution(model,index)
                                 if self.opts.wait:
                                     raw_input("Hit any key to continue")
                                 if solverFailed:
@@ -756,14 +724,8 @@ class  NS_base:#(HasTraits):
                                 log("Step failed due to error failure")
                                 stepFailed = not self.systemStepController.retryModelStep_errorFailure(model)
                             else:
-                                #self.viewSolution(model)
-                                #self.archiveSolution(model)
                                 #set up next step
                                 self.systemStepController.modelStepTaken(model,self.t_stepSequence)
-                                #mwf debug
-                                #if self.t_stepSequence > 1.0e-8 + model.stepController.t_model:
-                                #    import pdb
-                                #    pdb.set_trace()
                                 log("Step Taken, t_stepSequence= %s Model step t=%12.5e, dt=%12.5e for model %s" % (self.t_stepSequence,
                                                                                                                     model.stepController.t_model,
                                                                                                                     model.stepController.dt_model,
@@ -830,7 +792,6 @@ class  NS_base:#(HasTraits):
                                                                                      model.stepController.dt_model,
                                                                                      model.name))
 
-                #
                 if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
                     self.tCount+=1
                     for index,model in enumerate(self.modelList):
@@ -868,6 +829,7 @@ class  NS_base:#(HasTraits):
             if preCopy != None and preCopy.has_key(('reset_uList')) and preCopy['reset_uList'] == True:
                 levelModel.setFreeDOF(model.uList[level])
                 levelModel.getResidual(model.uList[level],model.rList[level])
+
     ##intermodel transfer after a step
     def postStep(self,model):
         for level,levelModel in enumerate(model.levelModelList):
@@ -876,6 +838,7 @@ class  NS_base:#(HasTraits):
                 for u_ci_lhs,u_ci_rhs in zip(self.modelList[postCopy['uList_model']].levelModelList[level].u.values(),model.levelModelList[level].u.values()):
                     u_ci_lhs.dof[:] = u_ci_rhs.dof
                 self.modelList[postCopy['uList_model']].levelModelList[level].setFreeDOF(self.modelList[postCopy['uList_model']].uList[level])
+
     def setWeakDirichletConditions(self,model):
         if model.weakDirichletConditions != None:
             for levelModel in model.levelModelList:
@@ -885,6 +848,7 @@ class  NS_base:#(HasTraits):
             for ci in model.weakDirichletConditions:
                 for levelModel in model.levelModelList:
                     model.weakDirichletConditions[ci](levelModel)
+
     def restrictFromFineMesh(self,model):
         for level in range(len(model.levelModelList)-1,0,-1):
             for cj in range(model.levelModelList[-1].coefficients.nc):
@@ -892,6 +856,7 @@ class  NS_base:#(HasTraits):
                                                                                  model.levelModelList[level-1].u[cj].dof)
             model.levelModelList[level-1].setFreeDOF(model.uList[level-1])
             model.levelModelList[level-1].calculateCoefficients()
+
     ##save model's initial solution values to archive
     def archiveInitialSolution(self,model,index):
         import xml.etree.ElementTree as ElementTree
@@ -1006,7 +971,8 @@ class  NS_base:#(HasTraits):
         """
         model.viewer.preprocess(model,model.stepController.t_model_last)
         model.simTools.preprocess(model,model.stepController.t_model_last)
-    ## run time visualization for model
+
+    ## run time visualization for modela
     def viewSolution(self,model,initialCondition=False):
         """
 
@@ -1016,6 +982,7 @@ class  NS_base:#(HasTraits):
             model.stepController.t_model_last >= self.tnList[-1]):
             model.viewer.processTimeLevel(model,model.stepController.t_model_last)
             model.simTools.processTimeLevel(model,model.stepController.t_model_last)
+
 
     ## clean up runtime visualization
     def finalizeViewSolution(self,model):
