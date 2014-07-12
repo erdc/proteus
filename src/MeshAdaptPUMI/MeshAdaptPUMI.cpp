@@ -1,4 +1,5 @@
 #include <gmi_mesh.h>
+#include <gmi_sim.h>
 #include <ma.h>
 #include <apfSPR.h>
 #include <apfMDS.h>
@@ -23,6 +24,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter)
   size_scale = 0;
   size_frame = 0;
   gmi_register_mesh();
+  gmi_register_sim();
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
@@ -42,29 +44,6 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
   return 0;
 }
 
-struct Anisotropic : public ma::AnisotropicFunction
-{
-  Anisotropic(apf::Field* f, apf::Field* s)
-  {
-    frame = f;
-    scale = s;
-  }
-  apf::Field* frame;
-  apf::Field* scale;
-  void getValue(ma::Entity* vert, ma::Matrix& r, ma::Vector& h)
-  {
-    apf::getMatrix(frame, vert, 0, r);
-    apf::getVector(scale, vert, 0, h);
-  }
-};
-
-static ma::Input* configureAnisotropic(apf::Mesh2* m,
-    apf::Field* frame, apf::Field* scale)
-{
-  Anisotropic sf(frame, scale);
-  return ma::configure(m, &sf);
-}
-
 int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
 {
   m->verify();
@@ -72,7 +51,7 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
   CalculateAnisoSizeField();
 
   /// Adapt the mesh
-  ma::Input* in = configureAnisotropic(m, size_frame, size_scale);
+  ma::Input* in = ma::configure(m, size_scale, size_frame);
   in->shouldRunPreDiffusion = true;
   in->shouldRunMidDiffusion = true;
   in->shouldRunPostDiffusion = true;
