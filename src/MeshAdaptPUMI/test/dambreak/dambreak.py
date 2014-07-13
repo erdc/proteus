@@ -112,7 +112,7 @@ else:
         #set max edge length, min edge length, number of meshadapt iterations and initialize the MeshAdaptPUMI object
         domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.06, hmin=0.005, numIter=2) 
         #read the geometry and mesh
-        domain.PUMIMesh.loadModelAndMesh("Dambreak.dmg", "Dambreak.smb")
+        domain.PUMIMesh.loadModelAndMesh("Dambreak.smd", "Dambreak.smb")
 
 
 # Time stepping

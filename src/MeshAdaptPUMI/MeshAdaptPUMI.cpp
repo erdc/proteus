@@ -4,12 +4,16 @@
 #include <apfSPR.h>
 #include <apfMDS.h>
 #include <PCU.h>
+#include <SimUtil.h>
+#include <SimModel.h>
 
 #include "MeshAdaptPUMI.h"
 
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter)
 {
   PCU_Comm_Init();
+  Sim_readLicenseFile(0);
+  SimModel_start();
   numVar=0;
   hmin=Hmin; hmax=Hmax;
   numIter=NumIter;
@@ -33,6 +37,8 @@ MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
   freeField(size_iso);
   freeField(size_scale);
   freeField(size_frame);
+  SimModel_stop();
+  Sim_unregisterAllKeys();
 }
 
 int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshFile)
@@ -46,8 +52,6 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
 
 int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
 {
-  m->verify();
-  
   CalculateAnisoSizeField();
 
   /// Adapt the mesh
@@ -60,6 +64,7 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
   ma::adapt(in);
   freeField(size_frame);
   freeField(size_scale);
+  m->verify();
 
   apf::writeVtkFiles("pumi_adapt", m);
 
