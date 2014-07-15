@@ -52,5 +52,6 @@ int MeshAdaptPUMIDrvr::TransferSolutionToProteus(double* outArray, int nVar, int
   }
   m->end(it);
   apf::destroyField(solution);
+  return 0;
 }
 
