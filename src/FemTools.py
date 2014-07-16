@@ -5948,7 +5948,6 @@ class DOFBoundaryConditions:
                                 p = None
                                 if getPeriodicBoundaryConditions != None:
                                     p = getPeriodicBoundaryConditions(x,materialFlag)
-                                self.DOFBoundaryMaterialFlag[dofN]  = None
                                 if p != None:
                                     if self.periodicDOFDict.has_key(ptuple(p)):
                                         self.periodicDOFDict[ptuple(p)].add(dofN)
@@ -5984,7 +5983,6 @@ class DOFBoundaryConditions:
                         p = None
                         if getPeriodicBoundaryConditions != None:
                             p = getPeriodicBoundaryConditions(x)
-                        self.DOFBoundaryMaterialFlag[dofN]  = None
                         if p != None:
                             #print "periodic DOF bc ",tuple(p)
                             if self.periodicDOFDict.has_key(ptuple(p)):
@@ -6151,7 +6149,6 @@ class DOFBoundaryConditions_alt:
                             p = None
                             if getPeriodicBoundaryConditions != None:
                                 p = getPeriodicBoundaryConditions(x,materialFlag)
-                            self.DOFBoundaryMaterialFlag[dofN]  = None
                             if p != None:
                                 if self.periodicDOFDict.has_key(ptuple(p)):
                                     self.periodicDOFDict[ptuple(p)].add(dofN)
