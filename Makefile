@@ -34,6 +34,10 @@ ifdef VERBOSE
 HIT_FLAGS += -v
 endif
 
+ifdef DEBUG
+PROTEUS_ARCH := ${PROTEUS_ARCH}-debug
+endif
+
 PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
 	PYTHONPATH=${PROTEUS_PREFIX}/lib/python2.7/site-packages \
 	PROTEUS_PREFIX=${PROTEUS_PREFIX} \
