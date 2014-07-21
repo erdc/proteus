@@ -15,12 +15,12 @@ PROTEUS_SUPERLU_LIB = 'superlu_4.1'
 
 PROTEUS_BLAS_INCLUDE_DIR   = '.'
 PROTEUS_BLAS_H     = r'"proteus_blas.h"'
-PROTEUS_BLAS_LIB_DIR = '/opt/acml/5.3.0/gfortran64/lib/'
+PROTEUS_BLAS_LIB_DIR = '/opt/acml/5.3.1/gfortran64/lib/'
 PROTEUS_BLAS_LIB   = 'acml'
 
 PROTEUS_LAPACK_INCLUDE_DIR = '.'
 PROTEUS_LAPACK_H   = r'"proteus_lapack.h"'
-PROTEUS_LAPACK_LIB_DIR = '/opt/acml/5.3.0/gfortran64/lib/'
+PROTEUS_LAPACK_LIB_DIR = '/opt/acml/5.3.1/gfortran64/lib/'
 PROTEUS_LAPACK_LIB = 'acml'
 PROTEUS_LAPACK_INTEGER = 'int'
 
