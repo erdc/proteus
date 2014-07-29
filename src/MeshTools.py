@@ -2469,22 +2469,17 @@ class TetrahedralMesh(Mesh):
 
           cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
           cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
-          self.buildFromC(self.cmesh)
+          self.buildFromCNoArrays(self.cmesh)
           (self.elementOffsets_subdomain_owned,
            self.elementNumbering_subdomain2global,
-#           self.elementNumbering_global2original,
            self.nodeOffsets_subdomain_owned,
            self.nodeNumbering_subdomain2global,
-#           self.nodeNumbering_global2original,
            self.elementBoundaryOffsets_subdomain_owned,
            self.elementBoundaryNumbering_subdomain2global,
-#           self.elementBoundaryNumbering_global2original,
            self.edgeOffsets_subdomain_owned,
            self.edgeNumbering_subdomain2global) = flcbdfWrappers.convertPUMIPartitionToPython(self.cmesh, self.subdomainMesh.cmesh)
-#           self.edgeNumbering_global2original) = convertPUMIPartitionToPython(self.cmesh, self.subdomainMesh.cmesh)
 
           self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
-#          print "chitak: ", len(self.subdomainMesh.elementBoundaryMaterialTypes)
           self.subdomainMesh.nElements_owned = self.elementOffsets_subdomain_owned[comm.rank()+1] - self.elementOffsets_subdomain_owned[comm.rank()]
           self.subdomainMesh.nNodes_owned = self.nodeOffsets_subdomain_owned[comm.rank()+1] - self.nodeOffsets_subdomain_owned[comm.rank()]
           self.subdomainMesh.nElementBoundaries_owned = self.elementBoundaryOffsets_subdomain_owned[comm.rank()+1] - self.elementBoundaryOffsets_subdomain_owned[comm.rank()]
@@ -2503,7 +2498,10 @@ class TetrahedralMesh(Mesh):
           for i in range(len(faceList)):
             for j in range(len(faceList[i])):
               PUMIMesh.UpdateMaterialArrays(self.cmesh, i+1, faceList[i][j])
+          cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
+          cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
           self.buildFromC(self.cmesh)
+        PUMIMesh.dumpMesh(self.cmesh)
         print "meshInfo says : \n", self.meshInfo()
         #from Profiling import memory
         #memory()

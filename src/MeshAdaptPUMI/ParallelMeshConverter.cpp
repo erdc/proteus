@@ -6,6 +6,8 @@
 #include "MeshAdaptPUMI.h"
 #include "mesh.h"
 
+#include "DumpMesh.h"
+
 const int DEFAULT_ELEMENT_MATERIAL=0;
 const int DEFAULT_NODE_MATERIAL=-1;
 const int INTERIOR_NODE_MATERIAL=0;
@@ -98,7 +100,7 @@ int MeshAdaptPUMIDrvr::ConstructGlobalNumbering(Mesh &mesh)
   mesh.edgeOffsets_subdomain_owned = new int[comm_size+1];
   mesh.nodeOffsets_subdomain_owned = new int[comm_size+1];
 
-  for (int dim = 0; dim < m->getDimension(); ++dim) {
+  for (int dim = 0; dim <= m->getDimension(); ++dim) {
 
     int nLocalOwned = apf::countOwned(m, dim);
     int localOffset = nLocalOwned;
@@ -147,7 +149,7 @@ int MeshAdaptPUMIDrvr::ConstructGlobalStructures(Mesh &mesh)
   mesh.nodeNumbering_subdomain2global = new int[mesh.subdomainp->nNodes_global];
   mesh.edgeNumbering_subdomain2global = new int[mesh.subdomainp->nEdges_global];
   
-  for (int d = 0; d < m->getDimension(); ++d) {
+  for (int d = 0; d <= m->getDimension(); ++d) {
     int* temp_subdomain2global;
     if(d==3) temp_subdomain2global = mesh.elementNumbering_subdomain2global;
     if(d==2) temp_subdomain2global = mesh.elementBoundaryNumbering_subdomain2global;
@@ -163,6 +165,18 @@ int MeshAdaptPUMIDrvr::ConstructGlobalStructures(Mesh &mesh)
     apf::destroyGlobalNumbering(global[d]);
   }
 
+  return 0;
+}
+
+int MeshAdaptPUMIDrvr::dumpMesh(Mesh& mesh)
+{
+  std::stringstream ss;
+  ss << "dan_debug_" << PCU_Comm_Self() << ".txt";
+  std::string s = ss.str();
+  FILE* f = fopen(s.c_str(), "w");
+  dump_proteus_mesh(&mesh, f);
+  fclose(f);
+  fprintf(stderr,"dumped file %s\n", s.c_str());
   return 0;
 }
 

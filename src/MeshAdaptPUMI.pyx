@@ -24,6 +24,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int TransferSolutionToPUMI(double*, int, int)
         int TransferSolutionToProteus(double*, int, int)
         int AdaptPUMIMesh()
+        int dumpMesh(Mesh&)
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
@@ -53,3 +54,6 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.TransferSolutionToProteus(&outArray[0,0], outArray.shape[0], outArray.shape[1])
     def AdaptPUMIMesh(self):
         return self.thisptr.AdaptPUMIMesh()
+    def dumpMesh(self, cmesh):
+        cdef CMesh* cmesh_ptr = <CMesh*>cmesh
+        return self.thisptr.dumpMesh(cmesh_ptr.mesh)
