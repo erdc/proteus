@@ -176,7 +176,6 @@ int MeshAdaptPUMIDrvr::dumpMesh(Mesh& mesh)
   FILE* f = fopen(s.c_str(), "w");
   dump_proteus_mesh(&mesh, f);
   fclose(f);
-  fprintf(stderr,"dumped file %s\n", s.c_str());
   return 0;
 }
 
