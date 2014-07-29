@@ -12,6 +12,7 @@
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter)
 {
   PCU_Comm_Init();
+  PCU_Protect();
   Sim_readLicenseFile(0);
   SimModel_start();
   numVar=0;

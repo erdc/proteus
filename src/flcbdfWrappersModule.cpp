@@ -6395,13 +6395,6 @@ static PyObject* flcbdfWrappersConvertPUMIPartitionToPython(PyObject* self,
                                                               dims,
                                                               PyArray_INT,
                                                               (char*)MESH(cmesh).elementNumbering_subdomain2global);
-  /*
-  dims[0] = MESH(cmesh).nElements_global;
-  elementNumbering_global2original = PyArray_FromDimsAndData(1,
-                                                             dims,
-                                                             PyArray_INT,
-                                                             (char*)MESH(cmesh).elementNumbering_global2original);
-  */
   dims[0] = size+1;
   nodeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
                                                         dims,
@@ -6413,13 +6406,6 @@ static PyObject* flcbdfWrappersConvertPUMIPartitionToPython(PyObject* self,
                                                            dims,
                                                            PyArray_INT,
                                                            (char*)MESH(cmesh).nodeNumbering_subdomain2global);
- /* 
-  dims[0] = MESH(cmesh).nNodes_global;
-  nodeNumbering_global2original = PyArray_FromDimsAndData(1,
-                                                          dims,
-                                                          PyArray_INT,
-                                                          (char*)MESH(cmesh).nodeNumbering_global2original);
- */ 
   dims[0] = size+1;
   elementBoundaryOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
 								   dims,
@@ -6431,13 +6417,6 @@ static PyObject* flcbdfWrappersConvertPUMIPartitionToPython(PyObject* self,
 								      dims,
 								      PyArray_INT,
 								      (char*)MESH(cmesh).elementBoundaryNumbering_subdomain2global);
-/*  
-  dims[0] = MESH(cmesh).nElementBoundaries_global;
-  elementBoundaryNumbering_global2original = PyArray_FromDimsAndData(1,
-								     dims,
-								     PyArray_INT,
-								     (char*)MESH(cmesh).elementBoundaryNumbering_global2original);
-*/ 
   dims[0] = size+1;
   edgeOffsets_subdomain_owned = PyArray_FromDimsAndData(1,
 							dims,
@@ -6449,25 +6428,14 @@ static PyObject* flcbdfWrappersConvertPUMIPartitionToPython(PyObject* self,
 							   dims,
 							   PyArray_INT,
 							   (char*)MESH(cmesh).edgeNumbering_subdomain2global);
-/*  
-  dims[0] = MESH(cmesh).nEdges_global;
-  edgeNumbering_global2original = PyArray_FromDimsAndData(1,
-							  dims,
-							  PyArray_INT,
-							  (char*)MESH(cmesh).edgeNumbering_global2original);
-*/
-//  return Py_BuildValue("OOOOOOOOOOOO",
   return Py_BuildValue("OOOOOOOO",
                        elementOffsets_subdomain_owned,
                        elementNumbering_subdomain2global,
-//                       elementNumbering_global2original,
                        nodeOffsets_subdomain_owned,
                        nodeNumbering_subdomain2global,
-//                       nodeNumbering_global2original,
-		       elementBoundaryOffsets_subdomain_owned,
+                       elementBoundaryOffsets_subdomain_owned,
                        elementBoundaryNumbering_subdomain2global,
-//                       elementBoundaryNumbering_global2original,
-		       edgeOffsets_subdomain_owned,
+                       edgeOffsets_subdomain_owned,
                        edgeNumbering_subdomain2global);
 
 }                      

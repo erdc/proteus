@@ -23,6 +23,8 @@ class MeshAdaptPUMIDrvr{
   int CommuSizeField();
   int AdaptPUMIMesh();
 
+  int dumpMesh(Mesh& mesh);
+
   int CalculateSizeField();
   int CalculateAnisoSizeField();
 
