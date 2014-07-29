@@ -162,6 +162,7 @@ static void dump_proteus_parallel_arrays(Mesh* m, FILE* f)
 
 void dump_proteus_mesh(Mesh* m, FILE* f)
 {
+  fprintf(stderr,"%d dumping mesh file\n", PCU_Comm_Self());
   if (PCU_Comm_Peers() > 1) {
     fprintf(f, "PARALLEL HEADER\n");
     dump_proteus_mesh_header(m, f);
