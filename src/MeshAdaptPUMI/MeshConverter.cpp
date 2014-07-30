@@ -383,25 +383,29 @@ int MeshAdaptPUMIDrvr::ConstructMaterialArrays(Mesh& mesh)
 }
 
 //function to update the material arrays for boundary conditions
-int MeshAdaptPUMIDrvr::UpdateMaterialArrays(Mesh& mesh, int bdryID, int geomTag)
+int MeshAdaptPUMIDrvr::UpdateMaterialArrays(Mesh& mesh,
+    int proteus_material,
+    int scorec_tag)
 {
-  apf::ModelEntity* geomEnt = m->findModelEntity(2, geomTag);
+  apf::ModelEntity* geomEnt = m->findModelEntity(2, scorec_tag);
+
+  //populate elementBoundary Material arrays
   apf::MeshIterator* it = m->begin(2);
   apf::MeshEntity* f;
-  //populate elementBoundary Material arrays
   while ((f = m->iterate(it))) {
     if (m->toModel(f) == geomEnt) {
       int i = localNumber(f);
-      mesh.elementBoundaryMaterialTypes[i] = bdryID;
-      apf::Downward vs;
-      int iNumVtx = m->getDownward(f, 0, vs);
-      for(int iVtx=0; iVtx < iNumVtx; ++iVtx) {
-        int vtxID = localNumber(vs[iVtx]);
-        mesh.nodeMaterialTypes[vtxID] = bdryID;
-      }
+      mesh.elementBoundaryMaterialTypes[i] = proteus_material;
     }
   }
   m->end(it);
+
+  apf::DynamicArray<apf::Node> nodes;
+  apf::getNodesOnClosure(m, geomEnt, nodes);
+  for (size_t i = 0; i < nodes.getSize(); ++i) {
+    int vtxId = localNumber(nodes[i].entity);
+    mesh.nodeMaterialTypes[vtxId] = proteus_material;
+  }
 
   return 0;
 }
