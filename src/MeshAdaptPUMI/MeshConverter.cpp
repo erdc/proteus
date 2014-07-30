@@ -89,7 +89,6 @@ void MeshAdaptPUMIDrvr::numberLocally()
     freeNumbering(local[d]);
     local[d] = numberOwnedEntitiesFirst(m, d);
   }
-  apf::writeVtkFiles("number", m);
 }
 
 int MeshAdaptPUMIDrvr::localNumber(apf::MeshEntity* e)
