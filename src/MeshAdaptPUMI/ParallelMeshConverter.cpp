@@ -81,6 +81,7 @@ int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   }
 
   ConstructGlobalNumbering(mesh);
+  numberLocally();
   ConstructNodes(*mesh.subdomainp);
   ConstructElements(*mesh.subdomainp);
   ConstructBoundaries(*mesh.subdomainp);
@@ -158,9 +159,10 @@ int MeshAdaptPUMIDrvr::ConstructGlobalStructures(Mesh &mesh)
 
     apf::MeshIterator* it = m->begin(d);
     apf::MeshEntity* e;
-    size_t i = 0;
-    while ((e = m->iterate(it)))
-      temp_subdomain2global[i++] = apf::getNumber(global[d], apf::Node(e, 0));
+    while ((e = m->iterate(it))) {
+      int i = localNumber(e);
+      temp_subdomain2global[i] = apf::getNumber(global[d], apf::Node(e, 0));
+    }
     m->end(it);
     apf::destroyGlobalNumbering(global[d]);
   }

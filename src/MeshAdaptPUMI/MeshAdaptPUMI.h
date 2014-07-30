@@ -23,6 +23,8 @@ class MeshAdaptPUMIDrvr{
   int CommuSizeField();
   int AdaptPUMIMesh();
 
+  void numberLocally();
+  int localNumber(apf::MeshEntity* e);
   int dumpMesh(Mesh& mesh);
 
   int CalculateSizeField();
