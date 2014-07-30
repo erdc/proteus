@@ -360,15 +360,14 @@ int MeshAdaptPUMIDrvr::UpdateMaterialArrays(Mesh& mesh, int bdryID, int geomTag)
   //populate elementBoundary Material arrays
   size_t i = 0;
   while ((f = m->iterate(it))) {
-    if (m->toModel(f) != geomEnt)
-      continue;
-
-    mesh.elementBoundaryMaterialTypes[i] = bdryID;
-    apf::Downward vs;
-    int iNumVtx = m->getDownward(f, 0, vs);
-    for(int iVtx=0; iVtx < iNumVtx; ++iVtx) {
-      int vtxID = apf::getNumber(local[0], vs[iVtx], 0, 0);
-      mesh.nodeMaterialTypes[vtxID] = bdryID;
+    if (m->toModel(f) == geomEnt) {
+      mesh.elementBoundaryMaterialTypes[i] = bdryID;
+      apf::Downward vs;
+      int iNumVtx = m->getDownward(f, 0, vs);
+      for(int iVtx=0; iVtx < iNumVtx; ++iVtx) {
+        int vtxID = apf::getNumber(local[0], vs[iVtx], 0, 0);
+        mesh.nodeMaterialTypes[vtxID] = bdryID;
+      }
     }
     ++i;
   }
