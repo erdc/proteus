@@ -2,6 +2,9 @@
 
 #include "MeshAdaptPUMI.h"
 #include "mesh.h"
+#include <apfShape.h>
+
+#include <sstream>
 
 const int DEFAULT_ELEMENT_MATERIAL=0;
 const int DEFAULT_NODE_MATERIAL=-1;
@@ -9,6 +12,32 @@ const int INTERIOR_NODE_MATERIAL=0;
 const int EXTERIOR_NODE_MATERIAL=1;
 const int INTERIOR_ELEMENT_BOUNDARY_MATERIAL=0;
 const int EXTERIOR_ELEMENT_BOUNDARY_MATERIAL=1;
+
+static apf::Numbering* numberOwnedEntitiesFirst(apf::Mesh* m, int dimension)
+{
+  std::stringstream ss;
+  ss << "proteus_number_" << dimension;
+  std::string s = ss.str();
+  apf::FieldShape* shape;
+  if (dimension) /* this switch is just to help rendering */
+    shape = apf::getConstant(dimension);
+  else
+    shape = m->getShape();
+  apf::Numbering* n = createNumbering(m, s.c_str(), shape, 1);
+  apf::MeshEntity* e;
+  apf::MeshIterator* it = m->begin(dimension);
+  int i = 0;
+  while ((e = m->iterate(it)))
+    if (m->isOwned(e))
+      apf::number(n, e, 0, 0, i++);
+  m->end(it);
+  it = m->begin(dimension);
+  while ((e = m->iterate(it)))
+    if (!m->isOwned(e))
+      apf::number(n, e, 0, 0, i++);
+  m->end(it);
+  return n;
+}
 
 //Main API to construct a serial pumi mesh, what we do is contruct the global mesh when working with serial
 //and let Proteus populate the subdomain data structures (though it will be exactly same)
@@ -44,6 +73,7 @@ int MeshAdaptPUMIDrvr::ConstructFromSerialPUMIMesh(Mesh& mesh)
   std::cerr << "Number of boundaries " << mesh.nElementBoundaries_global << "\n";
   std::cerr << "Number of edges " << mesh.nEdges_global << "\n";
   
+  numberLocally();
   ConstructNodes(mesh);
   ConstructElements(mesh);
   ConstructBoundaries(mesh);
@@ -51,7 +81,21 @@ int MeshAdaptPUMIDrvr::ConstructFromSerialPUMIMesh(Mesh& mesh)
   ConstructMaterialArrays(mesh);
 
   return 0;
-}  
+}
+
+void MeshAdaptPUMIDrvr::numberLocally()
+{
+  for (int d = 0; d <= m->getDimension(); ++d) {
+    freeNumbering(local[d]);
+    local[d] = numberOwnedEntitiesFirst(m, d);
+  }
+  apf::writeVtkFiles("number", m);
+}
+
+int MeshAdaptPUMIDrvr::localNumber(apf::MeshEntity* e)
+{
+  return getNumber(local[apf::getDimension(m, e)], e, 0, 0);
+}
 
 //Construct node data structures for Proteus
 int MeshAdaptPUMIDrvr::ConstructNodes(Mesh& mesh) {
@@ -67,19 +111,15 @@ int MeshAdaptPUMIDrvr::ConstructNodes(Mesh& mesh) {
 
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* e;
-  size_t i = 0;
   while ((e = m->iterate(it))) {
+    int i = localNumber(e);
     apf::Vector3 x;
     m->getPoint(e, 0, x);
     for(int j=0; j<3; j++)
       mesh.nodeArray[i * 3 + j]= x[j];
-    ++i;
   }
   m->end(it);
 
-  freeNumbering(local[0]);
-  local[0] = apf::numberOverlapNodes(m, "proteus_local_0");
-  
   return 0;
 } 
 
@@ -92,20 +132,16 @@ int MeshAdaptPUMIDrvr::ConstructElements(Mesh& mesh)
 
   apf::MeshIterator* it = m->begin(m->getDimension());
   apf::MeshEntity* e;
-  size_t i = 0;
   while ((e = m->iterate(it))) {
+    int i = localNumber(e);
     apf::Downward v;
     int iNumVtx = m->getDownward(e, 0, v);
     for (int j = 0; j < iNumVtx; ++j) {
-      int vtxID = apf::getNumber(local[0], v[j], 0, 0);
+      int vtxID = localNumber(v[j]);
       mesh.elementNodesArray[i * mesh.nNodes_element + j] = vtxID;
     }
-    ++i;
   } //region loop
   m->end(it);
-
-  freeNumbering(local[3]);
-  local[3] = apf::numberElements(m, "proteus_local_3");
 
   return 0;
 }
@@ -152,13 +188,13 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh)
 
   apf::MeshIterator* it = m->begin(2);
   apf::MeshEntity* f;
-  size_t i = 0;
   while ((f = m->iterate(it))) {
+    int i = localNumber(f);
 // get vertices from adjacency
     apf::Downward vs;
     int iNumVtx = m->getDownward(f, 0, vs);
     for (int iVtx = 0; iVtx < iNumVtx; ++iVtx) {
-      int vtxID = apf::getNumber(local[0], vs[iVtx], 0, 0);
+      int vtxID = localNumber(vs[iVtx]);
       mesh.elementBoundaryNodesArray[
         i * mesh.nNodes_elementBoundary + iVtx] = vtxID;
     }
@@ -169,7 +205,7 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh)
     int RgnID[2] = {-1,-1}; 
     int LocalFaceNumber[2] = {-1,-1};
     for (int iRgn = 0; iRgn < iNumRgn; ++iRgn) {
-      RgnID[iRgn] = apf::getNumber(local[3], rs.e[iRgn], 0, 0);
+      RgnID[iRgn] = localNumber(rs.e[iRgn]);
       mesh.elementBoundaryElementsArray[i * 2 + iRgn]= RgnID[iRgn];
       LocalFaceNumber[iRgn] = getProteusFaceIdx(m, rs.e[iRgn], f);
       assert(LocalFaceNumber[iRgn]!=-1);
@@ -208,7 +244,6 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh)
         = i;
       interiorElementBoundaries.insert(i);
     }
-    i++;
   }
   m->end(it);
  
@@ -290,15 +325,14 @@ int MeshAdaptPUMIDrvr::ConstructEdges(Mesh& mesh)
 
   apf::MeshIterator* it = m->begin(1);
   apf::MeshEntity* e;
-  size_t i = 0;
   while ((e = m->iterate(it))) {
+    int i = localNumber(e);
     apf::MeshEntity* v[2];
     m->getDownward(e, 0, v);
     for(int iVtx=0; iVtx < 2; ++iVtx) {
-      int vtxID = apf::getNumber(local[0], v[iVtx], 0, 0);
+      int vtxID = localNumber(v[iVtx]);
       mesh.edgeNodesArray[i * 2 + iVtx] = vtxID;
     }
-    i++;
   }
   m->end(it);
   
@@ -328,11 +362,10 @@ int MeshAdaptPUMIDrvr::ConstructMaterialArrays(Mesh& mesh)
     EXTERIOR_ELEMENT_BOUNDARY_MATERIAL,
     INTERIOR_ELEMENT_BOUNDARY_MATERIAL
   };
-  size_t i = 0;
   while ((f = m->iterate(it))) {
+    int i = localNumber(f);
     int geomType = m->getModelType(m->toModel(f));
     mesh.elementBoundaryMaterialTypes[i] = material_table[geomType];
-    i++;
   }
   m->end(it);
   
@@ -340,11 +373,10 @@ int MeshAdaptPUMIDrvr::ConstructMaterialArrays(Mesh& mesh)
   it = m->begin(0);
   apf::MeshEntity* v;
   //populate elementBoundary Material arrays
-  i = 0;
   while ((v = m->iterate(it))) {
+    int i = localNumber(v);
     int geomType = m->getModelType(m->toModel(v));
     mesh.nodeMaterialTypes[i] = material_table[geomType];
-    i++;
   }
   m->end(it);
 
@@ -358,18 +390,17 @@ int MeshAdaptPUMIDrvr::UpdateMaterialArrays(Mesh& mesh, int bdryID, int geomTag)
   apf::MeshIterator* it = m->begin(2);
   apf::MeshEntity* f;
   //populate elementBoundary Material arrays
-  size_t i = 0;
   while ((f = m->iterate(it))) {
     if (m->toModel(f) == geomEnt) {
+      int i = localNumber(f);
       mesh.elementBoundaryMaterialTypes[i] = bdryID;
       apf::Downward vs;
       int iNumVtx = m->getDownward(f, 0, vs);
       for(int iVtx=0; iVtx < iNumVtx; ++iVtx) {
-        int vtxID = apf::getNumber(local[0], vs[iVtx], 0, 0);
+        int vtxID = localNumber(vs[iVtx]);
         mesh.nodeMaterialTypes[vtxID] = bdryID;
       }
     }
-    ++i;
   }
   m->end(it);
 
