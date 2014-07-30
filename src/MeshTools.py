@@ -2501,7 +2501,6 @@ class TetrahedralMesh(Mesh):
           cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
           cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
           self.buildFromC(self.cmesh)
-        PUMIMesh.dumpMesh(self.cmesh)
         print "meshInfo says : \n", self.meshInfo()
         #from Profiling import memory
         #memory()
