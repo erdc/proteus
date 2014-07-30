@@ -2469,7 +2469,7 @@ class TetrahedralMesh(Mesh):
 
           cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
           cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
-          self.buildFromC(self.cmesh)
+          self.buildFromCNoArrays(self.cmesh)
           (self.elementOffsets_subdomain_owned,
            self.elementNumbering_subdomain2global,
            self.nodeOffsets_subdomain_owned,

@@ -47,7 +47,7 @@ static void dump_proteus_subdomain(Mesh* m, FILE* f)
   fprintf(f, "elementNodesArray:\n");
   print_int_2d(m->elementNodesArray, m->nElements_global,
                m->nNodes_element, f);
-  fprintf(f, "nodeElementOffsets:");
+  fprintf(f, "nodeElementOffsets:\n");
   if (!m->nodeElementOffsets)
     fprintf(f, " NULL\n");
   else {
