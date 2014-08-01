@@ -100,7 +100,7 @@ else:
         nnx=4*Refinement
         nny=2*Refinement
     else:
-        domain = Domain.PUMIDomain(fileprefix="Dambreak_2_.smb",modelfile="Dambreak.dmg") #initialize the domain
+        domain = Domain.PUMIDomain(fileprefix="Dambreak_2_.smb",modelfile="Dambreak.smd") #initialize the domain
         domain.numBC=6 #set number of BCs 
         domain.numAdaptSteps=10 #set number of adapt steps (loops)
         #Following sets list of face tags of geometric model as mapped from boundary Tags, 
@@ -113,7 +113,7 @@ else:
         #set max edge length, min edge length, number of meshadapt iterations and initialize the MeshAdaptPUMI object
         domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.06, hmin=0.002, numIter=1) 
         #read the geometry and mesh
-        domain.PUMIMesh.loadModelAndMesh("Dambreak.dmg", "Dambreak_2_.smb")
+        domain.PUMIMesh.loadModelAndMesh("Dambreak.smd", "Dambreak_2_.smb")
 
 # Time stepping
 T=0.01 #changed from 1.0
