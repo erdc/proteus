@@ -26,12 +26,11 @@ int MeshAdaptPUMIDrvr::TransferSolutionToPUMI(double* inArray, int nVar, int nN)
   apf::NewArray<double> tmp(nVar);
   apf::MeshEntity* v;
   apf::MeshIterator* it = m->begin(0);
-  size_t i = 0;
   while ((v = m->iterate(it))) {
+    int i = localNumber(v);
     for(int j = 0; j < nVar; j++)
       tmp[j] = inArray[j * nN + i];
     apf::setComponents(solution, v, 0, &tmp[0]); 
-    ++i;
   }
   m->end(it);
   return 0;
@@ -43,12 +42,11 @@ int MeshAdaptPUMIDrvr::TransferSolutionToProteus(double* outArray, int nVar, int
   apf::NewArray<double> tmp(nVar);
   apf::MeshEntity* v;
   apf::MeshIterator* it = m->begin(0);
-  size_t i = 0;
   while ((v = m->iterate(it))) {
+    int i = localNumber(v);
     apf::getComponents(solution, v, 0, &tmp[0]); 
     for(int j = 0; j < nVar; j++)
       outArray[j * nN + i] = tmp[j];
-    ++i;
   }
   m->end(it);
   apf::destroyField(solution);
