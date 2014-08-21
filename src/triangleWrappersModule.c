@@ -1,6 +1,10 @@
 #include "Python.h"
 #include "numpy/arrayobject.h"
 
+// uncomment or define for extra-verbose output
+// #define DEBUG_UTIL 1
+// #define DEBUG_ARRAY_OPS 1
+
 /** \file triangleWrappersModule.c
     \defgroup triangleWrappers triangleWrappers
     \brief Python interface to triangle
@@ -19,7 +23,29 @@
 /*Triangle package's interface: triangulateio */
 #include PROTEUS_TRIANGLE_H
 
+/*
+  Transfer memory flag ownership from input to output triangulations.
 
+  Note, there is a subtle potential invalid memory access here.
+  After memory is transferred from the src to the dst, if dst is destroyed,
+  src will no longer contain valid references to holelist and regionlist.
+
+  It is the caller's responsibility to responsibly use the memory in src.
+ */
+void transfer_memory_flags(struct triangulateio *src, struct triangulateio *dst)
+{
+#ifdef DEBUG_UTIL
+	 printf("transfering holelist@%p and regionlist@%p ownership from @%p to @%p\n",
+		src->holelist, src->regionlist, src, dst);
+#endif
+
+  dst->holelistmemflag = src->holelistmemflag;
+  dst->regionlistmemflag = src->regionlistmemflag;
+
+  // src is no longer owner of the memory
+  src->holelistmemflag = 0;
+  src->regionlistmemflag = 0;
+}
 
 /*taken directly from ellipt2d*/
 typedef void (*destr)(void *);
@@ -83,6 +109,10 @@ void destroy_triangulateio(struct triangulateio *object){
     }
   if( object->regionlist && object->regionlistmemflag == 1) 
     {
+#ifdef DEBUG_UTIL
+	 printf("freeing regionlist@%p\n",
+		object->regionlist);
+#endif
       free( object->regionlist            );
       object->regionlist = NULL;
     }
@@ -156,6 +186,11 @@ copyToTriangulateioDoubleArray1or2dim(double ** ptriArray,
        {
 	 if (*ptriArray) free(*ptriArray);
 	 *ptriArray = (REAL*)malloc(dim0*dim1*sizeof(REAL));
+#ifdef DEBUG_UTIL
+	 printf("ptriArray malloc'd! %dx%d address = %p\n",
+		dim0,dim1,*ptriArray);
+#endif
+
        }
      if (triSizeSet == 1)
        *triSize1 = dim1;
@@ -170,7 +205,7 @@ copyToTriangulateioDoubleArray1or2dim(double ** ptriArray,
  /*now copy over data*/
  araw = (double *) array->data;
 #ifdef DEBUG_UTIL
- printf("copyToTriDoubleArray dim0= %d dim1= %d triSizeSet= %d ptriArray= %x\n",
+ printf("copyToTriDoubleArray dim0= %d dim1= %d triSizeSet= %d ptriArray= %p\n",
 	dim0,dim1,triSizeSet,*ptriArray);
 #endif
 
@@ -179,7 +214,7 @@ copyToTriangulateioDoubleArray1or2dim(double ** ptriArray,
      for (j = 0; j < dim1; j++)
        {
 	 (*ptriArray)[i*dim1 + j] = araw[i*dim1 + j];
-#ifdef DEBUG_UTIL
+#ifdef DEBUG_ARRAY_OPS
 	 printf("ptriArray[%d,%d]= %g \n",i,j,(*ptriArray)[i*dim1+j]);
 #endif
        }
@@ -255,16 +290,13 @@ copyToTriangulateioIntegerArray1or2dim(int ** ptriArray,
 
  /*now copy over data*/
  araw = (int *) array->data;
-#ifdef DEBUG_UTIL
-	dim0,dim1,triSizeSet,*ptriArray);
-#endif
 
  for (i = 0; i < dim0; i++)
    {
      for (j = 0; j < dim1; j++)
        {
 	 (*ptriArray)[i*dim1 + j] = araw[i*dim1 + j];
-#ifdef DEBUG_UTIL
+#ifdef DEBUG_ARRAY_OPS
 	 printf("ptriArray[%d,%d]= %d \n",i,j,(*ptriArray)[i*dim1+j]);
 #endif
        }
@@ -339,10 +371,10 @@ getCopyOfTriangulateioDoubleArray1or2dim(double *triArray,
 	      return NULL;
 	    }
 	}/*end shallow copy*/
-#ifdef DEBUG_UTIL
+#ifdef DEBUG_ARRAY_OPS
       araw  = (double *) array->data;
       /*mwf debug*/
-      printf("in getCopyOfDoubleArray1or2dim triArray= %x dim=%dx%d \n",triArray,
+      printf("in getCopyOfDoubleArray1or2dim triArray= %p dim=%dx%d \n",triArray,
 	     dims[0],dims[1]);
       for (i=0; i < dims[0]; i++)
 	{
@@ -422,7 +454,7 @@ getCopyOfTriangulateioIntegerArray1or2dim(int *triArray,
 	      return NULL;
 	    }
 	}/*end shallow copy*/
-#ifdef DEBUG_UTIL
+#ifdef DEBUG_ARRAY_OPS
       araw  = (int *) array->data;
       /*mwf debug*/
       printf("in getCopyOfDoubleArray1or2dim triArray= %x dim=%dx%d \n",triArray,
@@ -647,6 +679,8 @@ triangulate_APPLY_TRIANGULATE(PyObject *self, PyObject *args)
   vor = (struct triangulateio*)PyCObject_AsVoidPtr(address2);
 
   triangulate(flags,in,out,vor);
+  // Now transfer memory flags from the input object
+  transfer_memory_flags(in, out);
 
 #ifdef DEBUG
   printf("ApplyTriangulate done\n");
@@ -703,6 +737,8 @@ triangulate_APPLY_TRIANGULATE_NO_VORONOI(PyObject *self, PyObject *args)
   vor = (struct triangulateio *) NULL;
 
   triangulate(flags,in,out,vor);
+  // Now transfer memory flags from the input object to the output
+  transfer_memory_flags(in, out);
 
 #ifdef DEBUG
   printf("ApplyTriangulate done\n");
@@ -1994,7 +2030,7 @@ triangulate_GET_REGIONLIST(PyObject *self, PyObject *args){
   nd  = 2;                                  /*trianglelist is 2d array*/
   dim0= object->numberofregions;            /*dimensions of array to copy*/
   dim1= 4;                                  /*dimensions of array to copy*/
-  deepCopy = 0;                             /*shallow or deep copy here*/
+  deepCopy = 1;                             /*shallow or deep copy here*/
   rval = getCopyOfTriangulateioDoubleArray1or2dim(triArray,dim0,dim1,deepCopy);
   return rval;
 }
