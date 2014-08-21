@@ -1645,7 +1645,7 @@ class MonomialInterpolationConditions(InterpolationConditions):
     """
     def __init__(self,referenceElement,monomialSpace):
         import LinearSolvers
-        self.quadrature=self.Quadrature.SimplexGaussQuadrature(referenceElement.dim,monomialSpace.kOrder*2)
+        self.quadrature=self.Quadrature.SimplexGaussQuadrature(referenceElement.dim,max(monomialSpace.kOrder*2,1))
         InterpolationConditions.__init__(self,monomialSpace.dim,referenceElement)
         self.quadraturePointArray = numpy.zeros((len(self.quadrature.weights),3),'d')
         for k,p in enumerate(self.quadrature.points):
@@ -5948,7 +5948,6 @@ class DOFBoundaryConditions:
                                 p = None
                                 if getPeriodicBoundaryConditions != None:
                                     p = getPeriodicBoundaryConditions(x,materialFlag)
-                                self.DOFBoundaryMaterialFlag[dofN]  = None
                                 if p != None:
                                     if self.periodicDOFDict.has_key(ptuple(p)):
                                         self.periodicDOFDict[ptuple(p)].add(dofN)
@@ -5984,7 +5983,6 @@ class DOFBoundaryConditions:
                         p = None
                         if getPeriodicBoundaryConditions != None:
                             p = getPeriodicBoundaryConditions(x)
-                        self.DOFBoundaryMaterialFlag[dofN]  = None
                         if p != None:
                             #print "periodic DOF bc ",tuple(p)
                             if self.periodicDOFDict.has_key(ptuple(p)):
@@ -6151,7 +6149,6 @@ class DOFBoundaryConditions_alt:
                             p = None
                             if getPeriodicBoundaryConditions != None:
                                 p = getPeriodicBoundaryConditions(x,materialFlag)
-                            self.DOFBoundaryMaterialFlag[dofN]  = None
                             if p != None:
                                 if self.periodicDOFDict.has_key(ptuple(p)):
                                     self.periodicDOFDict[ptuple(p)].add(dofN)
