@@ -898,6 +898,22 @@ class Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
                                                                                                 ebqe[('grad(v)',cj)],
                                                                                                 ebqe['penalty'],
                                                                                                 fluxJacobian_exterior[ci][cj])
+
+class Advection_DiagonalUpwind_Diffusion_NIPG_exterior(Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
+    def __init__(self,
+                 vt,
+                 getPointwiseBoundaryConditions,
+                 getAdvectiveFluxBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions):
+        Advection_DiagonalUpwind_Diffusion_IIPG_exterior.__init__(self,
+                                                                  vt,
+                                                                  getPointwiseBoundaryConditions,
+                                                                  getAdvectiveFluxBoundaryConditions,
+                                                                  getDiffusiveFluxBoundaryConditions)
+        self.penalty_constant = 10.0
+        self.includeBoundaryAdjoint=True
+        self.boundaryAdjoint_sigma=-1.0
+
 class Advection_DiagonalUpwind_Diffusion_SIPG_exterior(Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
     def __init__(self,
                  vt,
@@ -1720,7 +1736,16 @@ class Diffusion_IIPG_exterior(NF_base):
                                                                                                 ebqe['penalty'],
                                                                                                 fluxJacobian_exterior[ci][cj])
 
-
+class Diffusion_SIPG_exterior(Diffusion_IIPG_exterior):
+    def __init__(self,vt,getPointwiseBoundaryConditions,
+                 getAdvectiveFluxBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions):
+        Diffusion_IIPG_exterior.__init__(self,vt,getPointwiseBoundaryConditions,
+                                         getAdvectiveFluxBoundaryConditions,
+                                         getDiffusiveFluxBoundaryConditions)
+        self.includeBoundaryAdjoint=True
+        self.boundaryAdjoint_sigma=-1.0
+        
 class DarcySplitPressure_IIPG_exterior(NF_base):
     hasInterior=False
     """
