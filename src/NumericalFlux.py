@@ -898,6 +898,22 @@ class Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
                                                                                                 ebqe[('grad(v)',cj)],
                                                                                                 ebqe['penalty'],
                                                                                                 fluxJacobian_exterior[ci][cj])
+
+class Advection_DiagonalUpwind_Diffusion_NIPG_exterior(Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
+    def __init__(self,
+                 vt,
+                 getPointwiseBoundaryConditions,
+                 getAdvectiveFluxBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions):
+        Advection_DiagonalUpwind_Diffusion_IIPG_exterior.__init__(self,
+                                                                  vt,
+                                                                  getPointwiseBoundaryConditions,
+                                                                  getAdvectiveFluxBoundaryConditions,
+                                                                  getDiffusiveFluxBoundaryConditions)
+        self.penalty_constant = 10.0
+        self.includeBoundaryAdjoint=True
+        self.boundaryAdjoint_sigma=-1.0
+
 class Advection_DiagonalUpwind_Diffusion_SIPG_exterior(Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
     def __init__(self,
                  vt,
@@ -1720,7 +1736,16 @@ class Diffusion_IIPG_exterior(NF_base):
                                                                                                 ebqe['penalty'],
                                                                                                 fluxJacobian_exterior[ci][cj])
 
-
+class Diffusion_SIPG_exterior(Diffusion_IIPG_exterior):
+    def __init__(self,vt,getPointwiseBoundaryConditions,
+                 getAdvectiveFluxBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions):
+        Diffusion_IIPG_exterior.__init__(self,vt,getPointwiseBoundaryConditions,
+                                         getAdvectiveFluxBoundaryConditions,
+                                         getDiffusiveFluxBoundaryConditions)
+        self.includeBoundaryAdjoint=True
+        self.boundaryAdjoint_sigma=-1.0
+        
 class DarcySplitPressure_IIPG_exterior(NF_base):
     hasInterior=False
     """
@@ -4287,3 +4312,201 @@ class Richards_SIPG_exterior(Richards_IIPG_exterior):
         self.boundaryAdjoint_sigma=1.0
         self.penalty_constant = 100.0
         self.penalty_power = 1.0
+
+class Advection_DiagonalUpwind_DiffusionWithUpwinding_IIPG_exterior(Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
+    """
+    Applies IIPG discretization but also uses upwinding on the diffusive flux for cases like Darcy flow
+    Right now hacked to for Tim's problem to test
+    
+    """
+    hasInterior=False
+    def __init__(self,vt,getPointwiseBoundaryConditions,
+                 getAdvectiveFluxBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions):
+        Advection_DiagonalUpwind_DiffusionWithUpwinding_IIPG_exterior.__init__(self,vt,getPointwiseBoundaryConditions,
+                 getAdvectiveFluxBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions)
+        self.fluxBoundaryFlags = {0:0,1:0}#default is no-flow
+        for ci in range(self.nc):
+            if vt.fluxBoundaryConditions[ci] == 'outFlow':
+                self.fluxBoundaryFlags[ci] = 1
+
+    def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
+        self.setDirichletValues(ebqe)
+        self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
+        for ci in range(self.nc):
+            cnumericalFlux.calculateExteriorNumericalAdvectiveFlux(self.mesh.exteriorElementBoundariesArray,
+                                                                   self.mesh.elementBoundaryElementsArray,
+                                                                   self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                   self.isDOFBoundary[ci],
+                                                                   inflowFlag[ci],
+                                                                   ebqe['n'],
+                                                                   self.ebqe[('u',ci)],
+                                                                   self.ebqe[('f',ci)],
+                                                                   self.ebqe[('df',ci,ci)],
+                                                                   ebqe[('u',ci)],
+                                                                   ebqe[('f',ci)],
+                                                                   ebqe[('df',ci,ci)],
+                                                                   ebqe[('advectiveFlux',ci)],
+                                                                   ebqe[('dadvectiveFlux_left',ci,ci)])
+            for ck in range(self.nc):
+                if ebqe.has_key(('a',ci,ck)) and not self.vt.coefficients.upwindDiffusionTerm[(ci,ck)]:
+                    if self.vt.sd:
+                        cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
+                                                                                  self.mesh.exteriorElementBoundariesArray,
+                                                                                  self.mesh.elementBoundaryElementsArray,
+                                                                                  self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                  self.isDOFBoundary[ci],
+                                                                                  ebqe['n'],
+                                                                                  self.ebqe[('a',ci,ck)],
+                                                                                  self.ebqe[('grad(phi)',ck)],
+                                                                                  self.ebqe[('u',ck)],
+                                                                                  ebqe[('a',ci,ck)],
+                                                                                  ebqe[('grad(phi)',ck)],
+                                                                                  ebqe[('u',ck)],
+                                                                                  ebqe[('penalty')],
+                                                                                  ebqe[('diffusiveFlux',ck,ci)])
+                    else:
+                        cnumericalFlux.calculateExteriorNumericalDiffusiveFlux(self.mesh.exteriorElementBoundariesArray,
+                                                                               self.mesh.elementBoundaryElementsArray,
+                                                                               self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                               self.isDOFBoundary[ci],
+                                                                               ebqe['n'],
+                                                                               self.ebqe[('a',ci,ck)],
+                                                                               self.ebqe[('grad(phi)',ck)],
+                                                                               self.ebqe[('u',ck)],
+                                                                               ebqe[('a',ci,ck)],
+                                                                               ebqe[('grad(phi)',ck)],
+                                                                               ebqe[('u',ck)],
+                                                                               ebqe[('penalty')],
+                                                                               ebqe[('diffusiveFlux',ck,ci)])
+                elif ebqe.has_key(('a',ci,ck)) and self.vt.coefficients.upwindDiffusionTerm[(ci,ck)]:
+                    if self.vt.sd:
+                        cnumericalFlux.calculateExteriorNumericalDiffusiveFluxWithUpwinding_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
+                                                                                               self.mesh.exteriorElementBoundariesArray,
+                                                                                               self.mesh.elementBoundaryElementsArray,
+                                                                                               self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                               self.isDOFBoundary[ci],
+                                                                                               self.fluxBoundaryFlags[ci],
+                                                                                               ebqe['n'],
+                                                                                               self.ebqe[('a',ci,ck)],
+                                                                                               self.ebqe[('grad(phi)',ck)],
+                                                                                               self.ebqe[('u',ck)],
+                                                                                               ebqe[('a',ci,ck)],
+                                                                                               ebqe[('grad(phi)',ck)],
+                                                                                               ebqe[('u',ck)],
+                                                                                               ebqe[('penalty')],
+                                                                                               ebqe[('diffusiveFlux',ck,ci)])
+                    else:
+                        assert False, "sparse diffusion required for upwinding flux term right now"
+                        cnumericalFlux.calculateExteriorNumericalDiffusiveFlux(self.mesh.exteriorElementBoundariesArray,
+                                                                               self.mesh.elementBoundaryElementsArray,
+                                                                               self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                               self.isDOFBoundary[ci],
+                                                                               ebqe['n'],
+                                                                               self.ebqe[('a',ci,ck)],
+                                                                               self.ebqe[('grad(phi)',ck)],
+                                                                               self.ebqe[('u',ck)],
+                                                                               ebqe[('a',ci,ck)],
+                                                                               ebqe[('grad(phi)',ck)],
+                                                                               ebqe[('u',ck)],
+                                                                               ebqe[('penalty')],
+                                                                               ebqe[('diffusiveFlux',ck,ci)])
+        #mwf add for inflow flux?
+        #for ci in range(self.nc):
+        #    cnumericalFlux.calculateExteriorInflowNumericalAdvectiveFlux(self.mesh.exteriorElementBoundariesArray,
+        #                                                                 self.mesh.elementBoundaryElementsArray,
+        #                                                                 self.mesh.elementBoundaryLocalElementBoundariesArray,
+        #                                                                 inflowFlag[ci],
+        #                                                                 ebqe[('inflowFlux',ci)],
+        #                                                                 ebqe['n'],
+        #                                                                 ebqe[('f',ci)],
+        #                                                                 ebqe[('df',ci,ci)],
+        #                                                                 ebqe[('advectiveFlux',ci)],
+        #                                                                 ebqe[('dadvectiveFlux_left',ci,ci)])
+    def updateInteriorNumericalFluxJacobian(self,l2g,q,ebq,ebq_global,dphi,fluxJacobian,fluxJacobian_eb,fluxJacobian_hj):
+        pass
+    def updateExteriorNumericalFluxJacobian(self,l2g,inflowFlag,q,ebqe,dphi,fluxJacobian_exterior,fluxJacobian_eb,fluxJacobian_hj):
+        for ci in range(self.nc):
+            if self.vt.timeIntegration.advectionIsImplicit[ci]:
+                cnumericalFlux.updateExteriorNumericalAdvectiveFluxJacobian(self.mesh.exteriorElementBoundariesArray,
+                                                                            self.mesh.elementBoundaryElementsArray,
+                                                                            self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                            inflowFlag[ci],
+                                                                            ebqe[('dadvectiveFlux_left',ci,ci)],
+                                                                            ebqe[('v',ci)],
+                                                                            fluxJacobian_exterior[ci][ci])
+            if self.vt.timeIntegration.diffusionIsImplicit[ci]:
+                for ck in range(self.nc):
+                    if ebqe.has_key(('a',ci,ck))  and not self.vt.coefficients.upwindDiffusionTerm[(ci,ck)]:
+                        for cj in range(self.nc):
+                            if dphi.has_key((ck,cj)):
+                                if self.vt.sd:
+                                    cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
+                                                                                                   dphi[(ck,cj)].femSpace.dofMap.l2g,
+                                                                                                   self.mesh.exteriorElementBoundariesArray,
+                                                                                                   self.mesh.elementBoundaryElementsArray,
+                                                                                                   self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                   self.isDOFBoundary[ck],
+                                                                                                   ebqe['n'],
+                                                                                                   ebqe[('a',ci,ck)],
+                                                                                                   ebqe[('da',ci,ck,cj)],
+                                                                                                   ebqe[('grad(phi)',ck)],
+                                                                                                   dphi[(ck,cj)].dof,
+                                                                                                   ebqe[('v',cj)],
+                                                                                                   ebqe[('grad(v)',cj)],
+                                                                                                   ebqe['penalty'],
+                                                                                                   fluxJacobian_exterior[ci][cj])
+                                else:
+                                    cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian(dphi[(ck,cj)].femSpace.dofMap.l2g,
+                                                                                                self.mesh.exteriorElementBoundariesArray,
+                                                                                                self.mesh.elementBoundaryElementsArray,
+                                                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                self.isDOFBoundary[ck],
+                                                                                                ebqe['n'],
+                                                                                                ebqe[('a',ci,ck)],
+                                                                                                ebqe[('da',ci,ck,cj)],
+                                                                                                ebqe[('grad(phi)',ck)],
+                                                                                                dphi[(ck,cj)].dof,
+                                                                                                ebqe[('v',cj)],
+                                                                                                ebqe[('grad(v)',cj)],
+                                                                                                ebqe['penalty'],
+                                                                                                fluxJacobian_exterior[ci][cj])
+
+                    elif ebqe.has_key(('a',ci,ck))  and self.vt.coefficients.upwindDiffusionTerm[(ci,ck)]:
+                        for cj in range(self.nc):
+                            if dphi.has_key((ck,cj)):
+                                if self.vt.sd:
+                                    cnumericalFlux.updateExteriorNumericalDiffusiveFluxWithUpwindingJacobian_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
+                                                                                                                dphi[(ck,cj)].femSpace.dofMap.l2g,
+                                                                                                                self.mesh.exteriorElementBoundariesArray,
+                                                                                                                self.mesh.elementBoundaryElementsArray,
+                                                                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                                self.isDOFBoundary[ck],
+                                                                                                                self.fluxBoundaryFlags[ci],
+                                                                                                                ebqe['n'],
+                                                                                                                ebqe[('a',ci,ck)],
+                                                                                                                ebqe[('da',ci,ck,cj)],
+                                                                                                                ebqe[('grad(phi)',ck)],
+                                                                                                                dphi[(ck,cj)].dof,
+                                                                                                                ebqe[('v',cj)],
+                                                                                                                ebqe[('grad(v)',cj)],
+                                                                                                                ebqe['penalty'],
+                                                                                                                fluxJacobian_exterior[ci][cj])
+                                else:
+                                    assert False, "upwding diffusion requires sparse diffusion right now"
+                                    cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian(dphi[(ck,cj)].femSpace.dofMap.l2g,
+                                                                                                self.mesh.exteriorElementBoundariesArray,
+                                                                                                self.mesh.elementBoundaryElementsArray,
+                                                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                self.isDOFBoundary[ck],
+                                                                                                ebqe['n'],
+                                                                                                ebqe[('a',ci,ck)],
+                                                                                                ebqe[('da',ci,ck,cj)],
+                                                                                                ebqe[('grad(phi)',ck)],
+                                                                                                dphi[(ck,cj)].dof,
+                                                                                                ebqe[('v',cj)],
+                                                                                                ebqe[('grad(v)',cj)],
+                                                                                                ebqe['penalty'],
+                                                                                                fluxJacobian_exterior[ci][cj])
+

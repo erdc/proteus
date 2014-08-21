@@ -1,3 +1,4 @@
+*.csv
 *.pyc
 *.xmf
 *.h5
@@ -24,3 +25,4 @@ mesh*
 src/subsurfaceTransportFunctions.c
 hashdist/
 stack/
+cygwin_bootstrap.done
