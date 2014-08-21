@@ -7,7 +7,7 @@ all: install
 
 SHELL=/usr/bin/env bash
 
-PROTEUS ?= $(shell pwd)
+PROTEUS ?= $(shell python -c "import os; print os.path.realpath(os.getcwd())")
 VER_CMD = git log -1 --pretty="%H"
 # shell hack for now to automatically detect Garnet front-end nodes
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
@@ -19,7 +19,7 @@ ifeq ($(PROTEUS_ARCH), darwin)
 PLATFORM_ENV = MACOSX_DEPLOYMENT_TARGET=$(shell sw_vers -productVersion | sed "s/\(10.[0-9]\).*/\1/")
 endif
 
-ifeq ($(PROTEUS_ARCH), Cygwin)
+ifeq ($(PROTEUS_ARCH), cygwin)
 BOOTSTRAP = cygwin_bootstrap.done
 endif
 
@@ -30,6 +30,13 @@ F77=ftn
 F90=ftn
 endif 
 
+ifdef VERBOSE
+HIT_FLAGS += -v
+endif
+
+ifdef DEBUG
+PROTEUS_ARCH := ${PROTEUS_ARCH}-debug
+endif
 
 PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
 	PYTHONPATH=${PROTEUS_PREFIX}/lib/python2.7/site-packages \
@@ -58,7 +65,7 @@ stack:
 	git clone https://github.com/hashdist/hashstack.git stack
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
-	python hashstack/scripts/setup_cygstack.py hashstack/scripts/cygstack.txt
+	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	touch cygwin_bootstrap.done
 
 profile: ${PROTEUS_PREFIX}/artifact.json
@@ -82,7 +89,7 @@ ${PROTEUS_PREFIX}/artifact.json: stack hashdist $(shell find stack -type f) ${BO
 	@echo ""
 
 	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop -f -k error default.yaml ${PROTEUS_PREFIX}
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -f -k error default.yaml ${PROTEUS_PREFIX}
         # workaround hack on Cygwin for hashdist launcher to work correctly
 	-cp ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.exe.link ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.link
 
@@ -137,19 +144,19 @@ install: profile config.py $(shell find src -type f) $(wildcard *.py) proteus
 	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})"
 	@echo "+======================================================================================================+"
 	@echo ""
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppyx.py install
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppyx.py install --prefix=${PROTEUS_PREFIX}
 	@echo "************************"
 	@echo "done installing cython extension modules"
 	@echo "************************"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setupf.py install
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setupf.py install --prefix=${PROTEUS_PREFIX}
 	@echo "************************"
 	@echo "done installing f2py extension modules"
 	@echo "************************"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install --prefix=${PROTEUS_PREFIX}
 	@echo "************************"
 	@echo "done installing petsc-based extension modules"
 	@echo "************************"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setup.py install
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setup.py install --prefix=${PROTEUS_PREFIX}
 	@echo "************************"
 	@echo "done installing standard extension modules"
 	@echo "************************"

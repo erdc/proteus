@@ -2,8 +2,14 @@
 Tools for high level profiling and event logging
 """
 import gc
-import os
 import inspect
+import pstats
+from time import time
+
+try:
+    from cProfile import Profile
+except:
+    from profile import Profile
 
 global memHardLimit,memLast,memLog,logFile,logLevel,verbose,procID,logAllProcesses,flushBuffer, preInitBuffer
 
@@ -20,6 +26,9 @@ procID=None
 flushBuffer=False
 preInitBuffer=[]
 logDir = '.'
+
+startTime = time()
+
 def memProfOn():
     global memLog
     memLog = True
@@ -63,7 +72,7 @@ def closeLog():
     except:
         pass
 
-def logEvent(stringIn,level=1,data=None):
+def logEvent(stringIn, level=1, data=None):
     global logLevel,procID,logAllProcesses,flushBuffer,preInitBuffer
     if procID != None:
         if logAllProcesses or procID==0:
@@ -74,9 +83,10 @@ def logEvent(stringIn,level=1,data=None):
                 else:
                     string = stringIn
                 if string!=None:
-                    if data != None:
-                        string += `data`
-                    string+='\n'
+                    if data:
+                        string += repr(data)
+                    string +='\n'
+                    string = ("[%8d] " % (time() - startTime)) + string
                     global logFile,verbose
                     logFile.write(string)
                     if flushBuffer:
@@ -96,33 +106,12 @@ def memory(message=None,className='',memSaved=None):
     global memMax
     if memLog:
         gc.collect()
-        try:
-            from memory_profiler import memory_usage
-            memList = memory_usage(-1)
-            if len(memList) < 1:
-                memList = memory_usage(-1,timeout=10)
-                assert(len(memList) > 0)
-            mem = memList[-1]
-        except:
-            raise
-        # except:
-#             try:
-#                 mem = int(os.popen('ps -p %d -o rss|tail -1' % os.getpid()).read())/1024.0
-#             except:
-#                 try:
-#                     #CLE doesn't have full ps functionality
-#                     #try to find first occurence of pid, then get memory usage slot
-#                     #mwf debug
-#                     #import pdb
-#                     #pdb.set_trace()
-#                     plist = os.popen('ps ').read()
-#                     pr = plist.split('%s' % os.getpid())
-#                     #print 'pr = %s ' % pr
-#                     #print 'pr[1] = %s ' % pr[1]
-#                     mem = int(pr[1].split()[1])/1024.0
-#                 except:
-#                     logEvent("memory function doesn't work on this platform\n")
-#                     mem = 0
+        from memory_profiler import memory_usage
+        memList = memory_usage(-1)
+        if len(memList) < 1:
+            memList = memory_usage(-1,timeout=10)
+            assert(len(memList) > 0)
+        mem = memList[-1]
         if mem > memMax:
             memMax = mem
         if memSaved != None:
@@ -160,29 +149,65 @@ def memorySummary():
     global memMax
     if memLog:
         gc.collect()
-        try:
-            from memory_profile import memory_usage
-            mem = memory_usage(-1)[0]
-        except:
-            raise
-        # except:
-#             try:
-#                 mem = int(os.popen('ps -p %d -o vsz|tail -1' % os.getpid()).read())/1024.0
-#             except:
-#                 try:
-#                     #CLE doesn't have full ps functionality
-#                     #try to find first occurence of pid, then get memory usage slot
-#                     #mwf debug
-#                     #import pdb
-#                     #pdb.set_trace()
-#                     plist = os.popen('ps ').read()
-#                     pr = plist.split('%s' % os.getpid())
-#                     #print 'pr = %s ' % pr
-#                     #print 'pr[1] = %s ' % pr[1]
-#                     mem = int(pr[1].split()[1])/1024.0
-#                 except:
-#                     logEvent("memory function doesn't work on this platform\n")
-#                     mem = 0
+        from memory_profile import memory_usage
+        mem = memory_usage(-1)[0]
         if mem > 0:
             for pair in memList:
                 logEvent(`pair[0]`+"  %"+`100.0*pair[1]/memMax`)
+
+
+class Dispatcher():
+    """
+    Profiles function calls.  Must be enabled like so:
+
+    dispatch = Dispatcher(comm, True)
+
+    A non-profiling dispatcher can be created like:
+
+    dispatch = Dispatcher()
+
+    Then, you can execute function calls using the following syntax:
+
+    ret = dispatch(func, args, kwargs)
+    """
+
+    def __init__(self, comm=None, on=False):
+        self.comm = comm
+        self.on = on
+
+    def __call__(self, func, func_args, func_kwargs, profile_name=''):
+        if not self.on:
+            return func(*func_args, **func_kwargs)
+        else:
+            return self.profile_function(func, func_args, func_kwargs, profile_name)
+
+    def profile_function(self, func, args, kwargs, profile_name):
+        """
+        Profile a Proteus function using the call: func(*args, **kwargs)
+
+        Returns the output of the function call.
+        """
+
+        comm = self.comm
+        if type(comm) is None:
+            raise ValueError("The Dispatcher does not have a valid Comm object")
+
+        prof = Profile()
+        func_return = prof.runcall(func, *args, **kwargs)
+        profile_rank_name = profile_name + str(comm.rank())
+        stripped_profile_name = profile_name + '_c' + str(comm.rank())
+
+        prof.dump_stats(profile_rank_name)
+        comm.beginSequential()
+        stats = pstats.Stats(profile_rank_name)
+        stats.strip_dirs()
+        stats.dump_stats(stripped_profile_name)
+        stats.sort_stats('cumulative')
+        if verbose and comm.isMaster():
+            stats.print_stats(30)
+            stats.sort_stats('time')
+            if verbose and comm.isMaster():
+                stats.print_stats(30)
+        comm.endSequential()
+
+        return func_return
