@@ -14,5 +14,9 @@ setup(
     ext_modules = [Extension("waveFunctions",['src/waveFunctions.pyx','src/transportCoefficients.c'],
                             include_dirs=[numpy.get_include(),'include']),
                    Extension("subsurfaceTransportFunctions",['src/subsurfaceTransportFunctions.pyx'],
-                            include_dirs=[numpy.get_include(),'include'])]
+                            include_dirs=[numpy.get_include(),'include']),
+                   Extension("ADR",['src/ADR.pyx'],
+                             depends=['src/ADR.h'],
+                             language="c++",
+                             include_dirs=[numpy.get_include(),'include'])]
     )
