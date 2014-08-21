@@ -1838,6 +1838,7 @@ cnumericalFluxCalculateExteriorNumericalDiffusiveFlux(PyObject* self,
   Py_INCREF(Py_None);
   return Py_None;
 }
+
 /*
 static PyObject*
 cnumericalFluxCalculateExteriorNumericalDiffusiveFlux(PyObject* self, 
@@ -1983,6 +1984,89 @@ cnumericalFluxCalculateExteriorNumericalDiffusiveFlux_sd(PyObject* self,
   Py_INCREF(Py_None);
   return Py_None;
 }
+static PyObject*
+cnumericalFluxCalculateExteriorNumericalDiffusiveFluxWithUpwinding_sd(PyObject* self, 
+								      PyObject* args)
+{
+  PyObject *exteriorElementBoundaries,*elementBoundaryElements,*elementBoundaryLocalElementBoundaries,*isDOFBoundary,*fluxBoundaryFlag,
+    *n,*bc_a,*bc_grad_phi,*bc_u,*a,*grad_phi,*u,*penalty,*diffusiveFlux,*rowptr,*colind;
+  int scale_penalty = 0;
+  double penalty_floor = 0.0;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOOOOOOOO|id",
+		       &rowptr,
+		       &colind,
+                       &exteriorElementBoundaries,
+                       &elementBoundaryElements,
+                       &elementBoundaryLocalElementBoundaries,
+                       &isDOFBoundary,
+		       &fluxBoundaryFlag,
+                       &n,
+                       &bc_a,
+                       &bc_grad_phi,
+                       &bc_u,
+                       &a,
+                       &grad_phi,
+                       &u,
+                       &penalty,
+                       &diffusiveFlux,
+                       &scale_penalty,
+                       &penalty_floor))
+    return NULL;
+  if (ND(grad_phi) > 3)
+    {
+      assert(ND(grad_phi) == 4);
+      assert(0); /*not implemented*/
+      /* calculateExteriorNumericalDiffusiveFluxWithUpwinding_sd(scale_penalty,penalty_floor, */
+      /* 							      SHAPE(exteriorElementBoundaries)[0], */
+      /* 							      SHAPE(grad_phi)[1], */
+      /* 							      SHAPE(grad_phi)[2], */
+      /* 							      SHAPE(grad_phi)[3], */
+      /* 							      IDATA(rowptr), */
+      /* 							      IDATA(colind), */
+      /* 							      IDATA(exteriorElementBoundaries), */
+      /* 							      IDATA(elementBoundaryElements), */
+      /* 							      IDATA(elementBoundaryLocalElementBoundaries), */
+      /* 							      IDATA(isDOFBoundary), */
+      /* 							      IDATA(fluxBoundaryFlag), */
+      /* 							      DDATA(n), */
+      /* 							      DDATA(bc_a), */
+      /* 							      DDATA(bc_grad_phi), */
+      /* 							      DDATA(bc_u), */
+      /* 							      DDATA(a), */
+      /* 							      DDATA(grad_phi), */
+      /* 							      DDATA(u), */
+      /* 							      DDATA(penalty), */
+      /* 							      DDATA(diffusiveFlux)); */
+    }
+  else
+    {
+      assert(ND(grad_phi) == 3);
+      calculateGlobalExteriorNumericalDiffusiveFlux_sd(scale_penalty,penalty_floor,
+                                                       SHAPE(exteriorElementBoundaries)[0],
+						       SHAPE(grad_phi)[1],
+						       SHAPE(grad_phi)[2],
+						       IDATA(rowptr),
+						       IDATA(colind),
+						       IDATA(exteriorElementBoundaries),
+						       IDATA(elementBoundaryElements),
+						       IDATA(elementBoundaryLocalElementBoundaries),
+						       IDATA(isDOFBoundary),
+						       IDATA(fluxBoundaryFlag),
+						       DDATA(n),
+						       DDATA(bc_a),
+						       DDATA(bc_grad_phi),
+						       DDATA(bc_u),
+						       DDATA(a),
+						       DDATA(grad_phi),
+						       DDATA(u),
+						       DDATA(penalty),
+						       DDATA(diffusiveFlux));
+ 
+    }
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
 /*
 static PyObject*
 cnumericalFluxCalculateExteriorNumericalDiffusiveFlux_sd(PyObject* self, 
@@ -2645,6 +2729,91 @@ cnumericalFluxUpdateExteriorNumericalDiffusiveFluxJacobian_free_sd(PyObject* sel
 								 DDATA(penalty),
 								 DDATA(fluxJacobian));
       
+    }
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyObject*
+cnumericalFluxUpdateExteriorNumericalDiffusiveFluxWithUpwindingJacobian_sd(PyObject* self, 
+									   PyObject* args)
+{
+  PyObject *exteriorElementBoundaries,*elementBoundaryElements,*elementBoundaryLocalElementBoundaries,*l2g,*isDOFBoundary,*fluxBoundaryFlag,
+    *n,*a,*da,*grad_phi,*dphi,*v,*grad_v,*penalty,*fluxJacobian,*rowptr,*colind;
+  int scale_penalty = 0;
+  double penalty_floor = 0.0;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOOOOOOOOO|id",
+		       &rowptr,
+		       &colind,
+                       &l2g,
+                       &exteriorElementBoundaries,
+                       &elementBoundaryElements,
+                       &elementBoundaryLocalElementBoundaries,
+                       &isDOFBoundary,
+                       &fluxBoundaryFlag,
+                       &n,
+                       &a,
+                       &da,
+                       &grad_phi,
+                       &dphi,
+                       &v,
+                       &grad_v,
+                       &penalty,
+                       &fluxJacobian,
+                       &scale_penalty,
+                       &penalty_floor))
+    return NULL;
+  if (ND(grad_v) > 4)
+    {
+      assert(ND(grad_v) == 5);
+      assert(0); /*not implemented*/
+      /* updateExteriorNumericalDiffusiveFluxWithUpwindingJacobian_sd(scale_penalty,penalty_floor, */
+      /* 								   SHAPE(exteriorElementBoundaries)[0], */
+      /* 								   SHAPE(grad_v)[1], */
+      /* 								   SHAPE(grad_v)[2], */
+      /* 								   SHAPE(grad_v)[3], */
+      /* 								   SHAPE(grad_v)[4], */
+      /* 								   IDATA(rowptr), */
+      /* 								   IDATA(colind), */
+      /* 								   IDATA(l2g), */
+      /* 								   IDATA(exteriorElementBoundaries), */
+      /* 								   IDATA(elementBoundaryElements), */
+      /* 								   IDATA(elementBoundaryLocalElementBoundaries), */
+      /* 								   IDATA(isDOFBoundary), */
+      /* 								   DDATA(n), */
+      /* 								   DDATA(a), */
+      /* 								   DDATA(da), */
+      /* 								   DDATA(grad_phi), */
+      /* 								   DDATA(dphi), */
+      /* 								   DDATA(v), */
+      /* 								   DDATA(grad_v), */
+      /* 								   DDATA(penalty), */
+      /* 								   DDATA(fluxJacobian)); */
+    }
+  else
+    {
+      assert(ND(grad_v) == 4);
+      updateGlobalExteriorNumericalDiffusiveFluxWithUpwindingJacobian_sd(scale_penalty,penalty_floor,
+									 SHAPE(exteriorElementBoundaries)[0],
+									 SHAPE(grad_v)[1],
+									 SHAPE(grad_v)[2],
+									 SHAPE(grad_v)[3],
+									 IDATA(rowptr),
+									 IDATA(colind),
+									 IDATA(l2g),
+									 IDATA(exteriorElementBoundaries),
+									 IDATA(elementBoundaryElements),
+									 IDATA(elementBoundaryLocalElementBoundaries),
+									 IDATA(isDOFBoundary),
+									 DDATA(n),
+									 DDATA(a),
+									 DDATA(da),
+									 DDATA(grad_phi),
+									 DDATA(dphi),
+									 DDATA(v),
+									 DDATA(grad_v),
+									 DDATA(penalty),
+									 DDATA(fluxJacobian));
     }
   Py_INCREF(Py_None);
   return Py_None;
@@ -5700,6 +5869,10 @@ static PyMethodDef cnumericalFluxMethods[] = {
    cnumericalFluxCalculateExteriorNumericalDiffusiveFlux_free_sd,
    METH_VARARGS,
    "calculate the numerical diffusive flux on exterior element boundaries"},
+  {"calculateExteriorNumericalDiffusiveFluxWithUpwinding_sd",
+   cnumericalFluxCalculateExteriorNumericalDiffusiveFluxWithUpwinding_sd,
+   METH_VARARGS,
+   "calculate the numerical diffusive flux on exterior element boundaries but upwind based on potential"},
   {"updateExteriorNumericalDiffusiveFluxJacobian",
    cnumericalFluxUpdateExteriorNumericalDiffusiveFluxJacobian,
    METH_VARARGS,
@@ -5716,6 +5889,10 @@ static PyMethodDef cnumericalFluxMethods[] = {
    cnumericalFluxUpdateExteriorNumericalDiffusiveFluxJacobian_free_sd,
    METH_VARARGS,
    "update the Jacobian  of the numerical flux with the Jacobian of the diffusive flux on exterior element boundaries"},
+  {"updateExteriorNumericalDiffusiveFluxWithUpwindingJacobian_sd",
+   cnumericalFluxUpdateExteriorNumericalDiffusiveFluxWithUpwindingJacobian_sd,
+   METH_VARARGS,
+   "update the Jacobian  of the numerical flux with the Jacobian of the diffusive flux on exterior element boundaries when upwinding diffusion"},
   { "calculateInteriorNumericalDiffusiveFlux_LDG_upwind",
     cnumericalFluxCalculateInteriorNumericalDiffusiveFlux_LDG_upwind,
     METH_VARARGS, 
