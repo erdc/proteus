@@ -1,5 +1,4 @@
 #include "MeshAdaptPUMI.h"
-#include <apfSPR.h>
 #include <apfMesh.h>
 
 void MeshAdaptPUMIDrvr::freeField(apf::Field*& f)

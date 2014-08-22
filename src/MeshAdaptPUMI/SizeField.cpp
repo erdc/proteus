@@ -1,7 +1,6 @@
 #include "MeshAdaptPUMI.h"
 #include <apf.h>
 #include <apfVector.h>
-#include <apfSPR.h>
 #include <apfMesh.h>
 #include <apfDynamicVector.h>
 
