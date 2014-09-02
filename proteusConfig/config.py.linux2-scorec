@@ -44,7 +44,7 @@ PROTEUS_SCOREC_EXTRA_LINK_ARGS = [
     '-lSimMeshing',
     '-lSimModel',
     '-lSimMeshTools',
-    '-lSimPartitionWrapper-openmpi']
+    '-lSimPartitionWrapper-openmpi16']
 PROTEUS_SCOREC_EXTRA_COMPILE_ARGS=['-g', '-I'+os.getenv('SIM_INCLUDE_DIR')]
 
 PROTEUS_DAETK_INCLUDE_DIR = [PROTEUS_INCLUDE_DIR]
