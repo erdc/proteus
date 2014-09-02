@@ -57,7 +57,7 @@ periodicDirichletConditions = None
 """Dictionary of periodic boundary conditions for each component"""
 
 fluxBoundaryConditions = {}
-r"""Dictionary of flux boundary condition flags for each component ('outflow','noflow','setflow','mixedflow')"""
+r"""Dictionary of flux boundary condition flags for each component ('outFlow','noFlow','setFlow','mixedFlow')"""
 
 advectiveFluxBoundaryConditions =  {}
 """Dictionary of advective flux boundary conditions setter functions"""
