@@ -54,13 +54,17 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
 {
   CalculateAnisoSizeField();
 
+  for (int d = 0; d <= m->getDimension(); ++d)
+    freeNumbering(local[d]);
+
   /// Adapt the mesh
   ma::Input* in = ma::configure(m, size_scale, size_frame);
-  in->shouldRunPreDiffusion = true;
-  in->shouldRunMidDiffusion = true;
-  in->shouldRunPostDiffusion = true;
-  in->shouldFixShape = false;
+  in->shouldRunPreParma = true;
+  in->shouldRunMidParma = true;
+  in->shouldRunPostParma = true;
   in->maximumIterations = numIter;
+  in->shouldSnap = true;
+  in->shouldFixShape = false;
   ma::adapt(in);
   freeField(size_frame);
   freeField(size_scale);
