@@ -36,16 +36,30 @@ PROTEUS_SCOREC_INCLUDE_DIR = os.getenv('PROTEUS_PREFIX')+'/include'
 PROTEUS_SCOREC_LIB_DIR = os.getenv('PROTEUS_PREFIX')+'/lib'
 PROTEUS_SCOREC_EXTRA_LINK_ARGS = [
     '-lgmi_sim',
-    '-lma',
-    '-lmds',
+    '-lapf_sim',
     '-lspr',
+    '-lma',
+    '-lparma',
+    '-lapf_zoltan',
+    '-lmds',
+    '-lapf',
+    '-lgmi',
+    '-lpcu',
+    '-lzoltan',
+    '-lparmetis',
+    '-lmetis',
     '-L'+os.getenv('SIM_LIB_DIR'),
     '-lSimPartitionedMesh-mpi',
     '-lSimMeshing',
     '-lSimModel',
     '-lSimMeshTools',
-    '-lSimPartitionWrapper-openmpi16']
-PROTEUS_SCOREC_EXTRA_COMPILE_ARGS=['-g', '-I'+os.getenv('SIM_INCLUDE_DIR')]
+    '-lSimPartitionWrapper-mpich3',
+    '-L'+os.getenv('MPI_ROOT')+'/lib',
+    '-lmpi']
+PROTEUS_SCOREC_EXTRA_COMPILE_ARGS = [
+    '-g',
+    '-I'+os.getenv('SIM_INCLUDE_DIR'),
+    '-I'+os.getenv('MPI_ROOT')+'/include']
 
 PROTEUS_DAETK_INCLUDE_DIR = [PROTEUS_INCLUDE_DIR]
 PROTEUS_DAETK_LIB_DIR = PROTEUS_LIB_DIR
