@@ -677,7 +677,7 @@ class NS_base:  # (HasTraits):
                         for m in model.levelModelList:
                             if m.movingDomain and m.tLast_mesh != self.systemStepController.t_system_last:
                                 m.t_mesh = self.systemStepController.t_system_last
-                                m.calculateQuadrature()
+                                m.updateAfterMeshMotion()
                                 m.tLast_mesh = m.t_mesh
                         self.preStep(model)
                         self.setWeakDirichletConditions(model)
