@@ -382,23 +382,24 @@ class Newton(NonlinearSolver):
             self.u0 = numpy.zeros(self.F.dim,'d')
     def setLinearSolverTolerance(self,r):
         self.norm_r = self.norm(r)
-        gamma  = 0.01
+        gamma  = 0.009
         etaMax = 0.01
         if self.norm_r == 0.0:
-            etaMin = 0.01*self.atol_r
+            etaMin = 0.5*self.atol_r
         else:
-            etaMin = 0.01*(self.rtol_r*self.norm_r0 + self.atol_r)/self.norm_r
+            etaMin = 0.5*(self.rtol_r*self.norm_r0 + self.atol_r)/self.norm_r
+        log("etaMin "+`etaMin`)
         if self.its > 1:
             etaA = gamma * self.norm_r**2/self.norm_r_last**2
-            if self.its > 2:
-                if gamma*self.etaLast**2 < 0.01:
-                    etaC = min(etaMax,etaA)
-                else:
-                    etaC = min(etaMax,max(etaA,gamma*self.etaLast**2))
-            else:
+            log("etaA "+`etaA`)
+            log("gama*self.etaLast**2 "+ `gamma*self.etaLast**2`)
+            if gamma*self.etaLast**2 < 0.1:
                 etaC = min(etaMax,etaA)
+            else:
+                etaC = min(etaMax,max(etaA,gamma*self.etaLast**2))
         else:
             etaC = etaMax
+        log("etaC "+`etaC`)
         eta = min(etaMax,max(etaC,etaMin))
         self.etaLast = eta
         self.norm_r_last = self.norm_r
