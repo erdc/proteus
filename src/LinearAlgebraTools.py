@@ -19,6 +19,12 @@ Comm.set_isInitialized()
 #end PETSc import
 
 
+def _petsc_view(obj, filename):
+    """Saves object to disk using a PETSc binary viewer.
+    """
+    viewer = p4pyPETSc.Viewer().createBinary(filename, 'w')
+    viewer(obj)
+
 class ParVec:
     """
     A parallel vector built on top of daetk's wrappers for petsc
@@ -103,6 +109,11 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
         self.ghostUpdateBegin(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
         self.ghostUpdateEnd(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
 
+    def save(self, filename):
+        """Saves to disk using a PETSc binary viewer.
+        """
+        _petsc_view(self, filename)
+
 
 class ParMat_petsc4py(p4pyPETSc.Mat):
     """
@@ -146,6 +157,11 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         self.setUp()
         self.setLGMap(self.petsc_l2g)
         self.setFromOptions()
+
+    def save(self, filename):
+        """Saves to disk using a PETSc binary viewer.
+        """
+        _petsc_view(self, filename)
 
 
 def Vec(n):

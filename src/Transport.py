@@ -5828,4 +5828,20 @@ class MultilevelTransport:
                 models.append(mOther.levelModelList[l])
             m.coefficients.attachModels(models)
 
+    def viewJacobian(self, file_prefix='./dump_', b=None):
+        """
+        Save parallel Jacobian list and (optionally) right-hand side b to disk if they
+        possess save methods, otherwise, do nothing.
+        """
+
+        for idx, par_jacobian in enumerate(self.par_jacobianList):
+            if hasattr(par_jacobian, 'save'):
+                filename = file_prefix + 'par_j' + '_' + str(idx)
+                log('Saving Parallel Jacobian to %s' % filename)
+                par_jacobian.save(filename)
+        if b and hasattr(b, 'save'):
+            filename = file_prefix + 'b'
+            log('Saving right-hand-side to %s' % filename)
+            b.save(filename)
+
 ## @}
