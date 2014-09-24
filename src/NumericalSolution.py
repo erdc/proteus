@@ -122,7 +122,11 @@ class NS_base:  # (HasTraits):
             pListForMeshGeneration=pList
 
         for p,n in zip(pListForMeshGeneration,nListForMeshGeneration):
-            log("Generating mesh for "+p.name)
+            if opts.hotStart:
+                p.genMesh = False
+                log("Hotstarting, using existing mesh "+p.name)
+            else:
+                log("Generating mesh for "+p.name)
             #support for old-style domain input
             if p.domain == None:
                 if p.nd == 1:
@@ -502,17 +506,17 @@ class NS_base:  # (HasTraits):
         for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
             if self.opts.hotStart:
                 log("Setting initial conditions from hot start file for "+p.name)
-                tCount = len(self.ar[index].ar_old.tree.getroot()[-1][-1]) - 1
-                time = float(self.ar[index].ar_old.tree.getroot()[-1][-1][-1][0].attrib['Value'])
-                if len(self.ar[index].ar_old.tree.getroot()[-1][-1]) > 1:
-                    dt = time - float(self.ar[index].ar_old.tree.getroot()[-1][-1][-2][0].attrib['Value'])
+                tCount = len(self.ar[index].tree.getroot()[-1][-1]) - 1
+                time = float(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Value'])
+                if len(self.ar[index].tree.getroot()[-1][-1]) > 1:
+                    dt = time - float(self.ar[index].tree.getroot()[-1][-1][-2][0].attrib['Value'])
                 else:
                     log("Only one step in hot start file, setting dt to 1.0")
                     dt = 1.0
                 log("Last time step in hot start file was t = "+`time`)
                 for lm,lu,lr in zip(m.levelModelList,m.uList,m.rList):
                     for cj in range(lm.coefficients.nc):
-                        lm.u[cj].femSpace.readFunctionXdmf(self.ar[index].ar_old,lm.u[cj],tCount)
+                        lm.u[cj].femSpace.readFunctionXdmf(self.ar[index].ar,lm.u[cj],tCount)
                         lm.setFreeDOF(lu)
                         lm.timeIntegration.tLast = time
                         lm.timeIntegration.t = time
@@ -534,7 +538,13 @@ class NS_base:  # (HasTraits):
                 self.tnList = [time + i*dtout for i in range(ndtout)]
                 log("New tnList"+`self.tnList`)
             else:
-                pass
+                tnListNew=[time]
+                for n,t in enumerate(self.tnList):
+                    if time < t-1.0e-8:
+                        tnListNew.append(t)
+                self.tnList=tnListNew
+                log("Hotstarting, new tnList is"+`self.tnList`)
+
 
         log("Attaching models and running spin-up step if requested")
         for p,n,m,simOutput in zip(self.pList,self.nList,self.modelList,self.simOutputList):
