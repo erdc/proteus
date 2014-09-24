@@ -2892,9 +2892,9 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   for (int nN = 0; nN < nNodes_global; nN++)
     nodeNumbering_global_new2old[nodeNumbering_global_old2new[nN]] = nN;
   PetscLogEventEnd(repartition_nodes_event,0,0,0,0);
-  int build_subdomains_event;
-  PetscLogEventRegister("Build subdomains",0,&build_subdomains_event);
-  PetscLogEventBegin(build_subdomains_event,0,0,0,0);
+  int build_subdomains_reread_elements_event;
+  PetscLogEventRegister("Build subdomains reread elements",0,&build_subdomains_reread_elements_event);
+  PetscLogEventBegin(build_subdomains_reread_elements_event,0,0,0,0);
   //
   //4. To build subdomain meshes, go through and collect elements containing
   //   the locally owned nodes. Assign processor ownership of elements 
@@ -3010,6 +3010,10 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       elementFile2 >> eatline;
     }
   elementFile2.close();
+  PetscLogEventEnd(build_subdomains_reread_elements_event,0,0,0,0);
+  int build_subdomains_send_marked_elements_event;
+  PetscLogEventRegister("Build subdomains send  marked elements",0,&build_subdomains_send_marked_elements_event);
+  PetscLogEventBegin(build_subdomains_send_marked_elements_event,0,0,0,0);
   //
   //done with the element file
   //
@@ -3062,6 +3066,10 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   if (ierr)
     cerr<<"Error in PetscBTDestroy"<<endl;
 
+  PetscLogEventEnd(build_subdomains_send_marked_elements_event,0,0,0,0);
+  int build_subdomains_global_numbering_elements_event;
+  PetscLogEventRegister("Build subdomains global numbering elements",0,&build_subdomains_global_numbering_elements_event);
+  PetscLogEventBegin(build_subdomains_global_numbering_elements_event,0,0,0,0);
   //
   //5. Generate global element numbering corresponding to new subdomain ownership
   //
@@ -3102,7 +3110,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     {
       elementNumbering_global_old2new[elementNumbering_global_new2old[eN]] = eN;
     }
-  PetscLogEventEnd(build_subdomains_event,0,0,0,0);
+  PetscLogEventEnd(build_subdomains_global_numbering_elements_event,0,0,0,0);
   int build_subdomains_faces_event;
   PetscLogEventRegister("Build subdomains faces",0,&build_subdomains_faces_event);
   PetscLogEventBegin(build_subdomains_faces_event,0,0,0,0);
