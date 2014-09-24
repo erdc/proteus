@@ -2892,9 +2892,9 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   for (int nN = 0; nN < nNodes_global; nN++)
     nodeNumbering_global_new2old[nodeNumbering_global_old2new[nN]] = nN;
   PetscLogEventEnd(repartition_nodes_event,0,0,0,0);
-  int build_subdomains_reread_elements_event;
-  PetscLogEventRegister("Build subdomains reread elements",0,&build_subdomains_reread_elements_event);
-  PetscLogEventBegin(build_subdomains_reread_elements_event,0,0,0,0);
+  int receive_element_mask_event;
+  PetscLogEventRegister("Receive element mask",0,&receive_element_mask_event);
+  PetscLogEventBegin(receive_element_mask_event,0,0,0,0);
   //
   //4. To build subdomain meshes, go through and collect elements containing
   //   the locally owned nodes. Assign processor ownership of elements 
@@ -2907,6 +2907,10 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     {
       MPI_Recv(elementMask,PetscBTLength(nElements_global),MPI_CHAR,rank-1,0,Py_PETSC_COMM_WORLD,&status);
     }
+  PetscLogEventEnd(receive_element_mask_event,0,0,0,0);
+  int build_subdomains_reread_elements_event;
+  PetscLogEventRegister(" reread elements",0,&build_subdomains_reread_elements_event);
+  PetscLogEventBegin(build_subdomains_reread_elements_event,0,0,0,0);
   //
   //mark the unmarked elements on this subdomain and store element numbers (in old numbering)
   //
@@ -3012,7 +3016,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   elementFile2.close();
   PetscLogEventEnd(build_subdomains_reread_elements_event,0,0,0,0);
   int build_subdomains_send_marked_elements_event;
-  PetscLogEventRegister("Build subdomains send  marked elements",0,&build_subdomains_send_marked_elements_event);
+  PetscLogEventRegister(" send  marked elements",0,&build_subdomains_send_marked_elements_event);
   PetscLogEventBegin(build_subdomains_send_marked_elements_event,0,0,0,0);
   //
   //done with the element file
@@ -3068,7 +3072,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 
   PetscLogEventEnd(build_subdomains_send_marked_elements_event,0,0,0,0);
   int build_subdomains_global_numbering_elements_event;
-  PetscLogEventRegister("Build subdomains global numbering elements",0,&build_subdomains_global_numbering_elements_event);
+  PetscLogEventRegister(" global numbering elements",0,&build_subdomains_global_numbering_elements_event);
   PetscLogEventBegin(build_subdomains_global_numbering_elements_event,0,0,0,0);
   //
   //5. Generate global element numbering corresponding to new subdomain ownership
@@ -3112,7 +3116,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     }
   PetscLogEventEnd(build_subdomains_global_numbering_elements_event,0,0,0,0);
   int build_subdomains_faces_event;
-  PetscLogEventRegister("Build subdomains faces",0,&build_subdomains_faces_event);
+  PetscLogEventRegister(" faces",0,&build_subdomains_faces_event);
   PetscLogEventBegin(build_subdomains_faces_event,0,0,0,0);
   //
   //4b,5b. repeat process to build global face (elementBoundary) numbering
@@ -3321,7 +3325,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     }
   PetscLogEventEnd(build_subdomains_faces_event,0,0,0,0);
   int build_subdomains_edges_event;
-  PetscLogEventRegister("Build subdomains edges",0,&build_subdomains_edges_event);
+  PetscLogEventRegister(" edges",0,&build_subdomains_edges_event);
   PetscLogEventBegin(build_subdomains_edges_event,0,0,0,0);
   
   //
@@ -3586,7 +3590,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 
   PetscLogEventEnd(build_subdomains_edges_event,0,0,0,0);
   int build_subdomains_renumber_event;
-  PetscLogEventRegister("Build subdomains renumber",0,&build_subdomains_renumber_event);
+  PetscLogEventRegister(" renumber",0,&build_subdomains_renumber_event);
   PetscLogEventBegin(build_subdomains_renumber_event,0,0,0,0);
   //
   //8. Build subdomain meshes in new numbering, assumes memory not allocated in subdomain mesh
@@ -3976,7 +3980,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 
   PetscLogEventEnd(build_subdomains_renumber_event,0,0,0,0);
   int build_subdomains_cleanup_event;
-  PetscLogEventRegister("Build subdomains cleanup",0,&build_subdomains_cleanup_event);
+  PetscLogEventRegister(" cleanup",0,&build_subdomains_cleanup_event);
   PetscLogEventBegin(build_subdomains_cleanup_event,0,0,0,0);
   //transfer information about owned nodes and elements to mesh
   if (newMesh.nodeOffsets_subdomain_owned) 
