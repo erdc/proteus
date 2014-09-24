@@ -2644,6 +2644,7 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& newMesh, int nNodes_overlap)
 {
   using namespace std;
+  PetscBarrier(NULL);
   PetscErrorCode ierr;
   PetscMPIInt size,rank;
   ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);CHKERRQ(ierr);
