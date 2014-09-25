@@ -64,7 +64,7 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
   in->shouldRunPostParma = true;
   in->maximumIterations = numIter;
   in->shouldSnap = true;
-  in->shouldFixShape = false;
+  in->shouldFixShape = true;
   ma::adapt(in);
   freeField(size_frame);
   freeField(size_scale);
