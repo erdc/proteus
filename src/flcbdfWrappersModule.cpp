@@ -2644,7 +2644,6 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& newMesh, int nNodes_overlap)
 {
   using namespace std;
-  PetscBarrier(NULL);
   PetscErrorCode ierr;
   PetscMPIInt size,rank;
   ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);CHKERRQ(ierr);
@@ -2932,6 +2931,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   assert(nNodesPerSimplex == simplexDim); 
   set<int> elements_subdomain_owned;
   vector<int> element_nodes_new(4);
+  int element_nodes_new_array[4];
   vector<set<int> > nodeElementsStar(nNodes_subdomain_new[rank]);
   vector<set<int> > nodeStarNew(nNodes_subdomain_new[rank]);
   map<int,vector<int> > elementNodesArrayMap;
@@ -2953,7 +2953,9 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 	  assert(0 <= nv && nv < nNodes_global);
 	  element_nodes_old[iv] = nv;
 	  element_nodes_new[iv] = nodeNumbering_global_old2new[nv];
+	  element_nodes_new_array[iv] = element_nodes_new[iv];
 	}
+      NodeTuple<4> nodeTuple(element_nodes_new_array);      
       for (int iv = 0; iv < simplexDim; iv++)
 	{
 	  int nN_star_new = element_nodes_new[iv];
@@ -3009,8 +3011,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 	}
       if (elementNodesArrayMap.find(ne) != elementNodesArrayMap.end())//this element contains a node owned by this subdomain
 	{
-	  nth_element(element_nodes_new.begin(),element_nodes_new.begin()+1,element_nodes_new.end()); 
-	  if (element_nodes_new[1] >= nodeOffsets_new[rank] && element_nodes_new[1] < nodeOffsets_new[rank+1])
+	  if (nodeTuple.nodes[1] >= nodeOffsets_new[rank] && nodeTuple.nodes[1] < nodeOffsets_new[rank+1])
 	    elements_subdomain_owned.insert(ne);
 	  if (hasElementMarkers > 0)
 	    {
@@ -3022,6 +3023,9 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       elementFile2 >> eatline;
     }
   elementFile2.close();
+  int nElements_owned_new=elements_subdomain_owned.size();
+  MPI_Allreduce(&nElements_owned_new,&nElements_owned_new,1,MPI_INT,MPI_SUM,Py_PETSC_COMM_WORLD);
+  assert(nElements_owned_new == nElements_global);
   PetscLogEventEnd(build_subdomains_reread_elements_event,0,0,0,0);
   int build_subdomains_send_marked_elements_event;
   PetscLogEventRegister("Mark/send eles",0,&build_subdomains_send_marked_elements_event);
@@ -3231,6 +3235,10 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     }
   //done reading element boundaries
   elementBoundaryFile.close();
+  int nElementBoundaries_owned_new=elementBoundaries_subdomain_owned.size();
+  MPI_Allreduce(&nElementBoundaries_owned_new,&nElementBoundaries_owned_new,1,MPI_INT,MPI_SUM,Py_PETSC_COMM_WORLD);
+  assert(nElementBoundaries_owned_new == nElementBoundaries_global);
+
   //now get the element boundaries on the outside of the star
   for (map<int,vector<int> >::iterator elementBoundariesp=elementBoundariesMap.begin();
        elementBoundariesp!=elementBoundariesMap.end();
@@ -3419,6 +3427,9 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 	}
     }//end iv
   edgeFile.close();
+  int nEdges_owned_new=edges_subdomain_owned.size();
+  MPI_Allreduce(&nEdges_owned_new,&nEdges_owned_new,1,MPI_INT,MPI_SUM,Py_PETSC_COMM_WORLD);
+  assert(nEdges_owned_new == nEdges_global);
   //done with edge file
   //
   //just as with faces, we need to add edges along outer boundaries of star
