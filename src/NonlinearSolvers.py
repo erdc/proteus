@@ -385,9 +385,9 @@ class Newton(NonlinearSolver):
         gamma  = 0.0001
         etaMax = 0.001
         if self.norm_r == 0.0:
-            etaMin = 0.00001*self.atol_r
+            etaMin = 0.0001
         else:
-            etaMin = 0.00001*(self.rtol_r*self.norm_r0 + self.atol_r)/self.norm_r
+            etaMin = 0.0001*(self.rtol_r*self.norm_r0 + self.atol_r)/self.norm_r
         log("etaMin "+`etaMin`)
         if self.its > 1:
             etaA = gamma * self.norm_r**2/self.norm_r_last**2
@@ -403,7 +403,7 @@ class Newton(NonlinearSolver):
         eta = min(etaMax,max(etaC,etaMin))
         self.etaLast = eta
         self.norm_r_last = self.norm_r
-        self.linearSolver.setResTol(rtol=eta,atol=0.0)
+        self.linearSolver.setResTol(rtol=eta,atol=self.atol_r)
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         import Viewers
         """
