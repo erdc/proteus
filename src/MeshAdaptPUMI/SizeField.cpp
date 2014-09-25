@@ -147,13 +147,24 @@ static void scaleFormula(double phi, double hmin, double hmax,
     apf::Vector3& scale)
 {
   double epsilon = 2 * hmin + exp( -adapt_step / 4) * hmin * 2.5;
-  if (fabs(phi) < 3 * epsilon) {
-    scale[0] = hmin;
-    scale[1] = sqrt(.0004 / fabs(curves[1]));
-    scale[2] = sqrt(.0004 / fabs(curves[2]));
-  } else {
+//  if (fabs(phi) < 3 * epsilon) {
+//    scale[0] = hmin;
+//    scale[1] = sqrt(.0004 / fabs(curves[1]));
+//    scale[2] = sqrt(.0004 / fabs(curves[2]));
+//  } else {
+//    scale = apf::Vector3(1,1,1) * hmax;
+//  }
+
+ if (fabs(phi) < 1.5* epsilon) {
+    scale[0] =  hmin ;
+    scale[1] =  2*hmin;
+    scale[2] =  2*hmin;
+ }else if(fabs(phi) < 3* epsilon){
+    scale = apf::Vector3(1,1,1) * 4* hmin;
+ }else{
     scale = apf::Vector3(1,1,1) * hmax;
-  }
+ }
+
   for (int i = 0; i < 3; ++i)
     clamp(scale[i], hmin, hmax);
 }
