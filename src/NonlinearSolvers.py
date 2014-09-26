@@ -403,7 +403,7 @@ class Newton(NonlinearSolver):
         eta = min(etaMax,max(etaC,etaMin))
         self.etaLast = eta
         self.norm_r_last = self.norm_r
-        self.linearSolver.setResTol(rtol=eta,atol=self.atol_r)
+        self.linearSolver.setResTol(rtol=eta,atol=self.linearSolver.atol_r)
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         import Viewers
         """
