@@ -538,7 +538,6 @@ class Newton(NonlinearSolver):
                 print "lambda_i_min",min(self.linearSolver.eigenvalues_i)
             if self.lineSearch:
                 norm_r_cur = self.norm(r)
-                norm_r_last = 2.0*norm_r_cur
                 ls_its = 0
                     #print norm_r_cur,self.atol_r,self.rtol_r
     #                 while ( (norm_r_cur >= 0.99 * self.norm_r + self.atol_r) and
