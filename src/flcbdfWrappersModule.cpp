@@ -27,6 +27,17 @@ typedef struct
 
 extern "C"
 {
+
+static int
+ensure_comm()
+{
+  if (Py_PETSC_COMM_WORLD == MPI_COMM_NULL) {
+    PyErr_SetString(PyExc_RuntimeError, "flcbdfWrappersModule is not initialized!");
+    return 0;
+  }
+  return 1;
+}
+
 static PyObject*
 ParVec_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
@@ -40,6 +51,11 @@ ParVec_init(ParVec *self, PyObject *args, PyObject *kwds)
 {
   int bs,n,N,nghost,useBlockVec;
   PyObject *subdomain2global,*array;
+
+  if (!ensure_comm()) {
+    return -1;
+  }
+
   if(!PyArg_ParseTuple(args,
                        "iiiiOOi",
                        &bs,
@@ -274,6 +290,11 @@ ParMat_init(ParMat *self, PyObject *args, PyObject *kwds)
 {
   int bs,n,N,nghost,max_nNeighbors;
   PyObject *subdomain2global,*L;
+
+  if (!ensure_comm()) {
+    return -1;
+  }
+
   if(!PyArg_ParseTuple(args,
                        "iiiiiOO",
                        &bs,
@@ -473,12 +494,18 @@ CKSP_init(CKSP *self, PyObject *args, PyObject *kwds)
 {
   PyObject *par_L;
   char* prefix(0);
+
+  if (!ensure_comm()) {
+    return -1;
+  }
+
   if(!PyArg_ParseTuple(args,
                        "O|s",
                        &par_L,
 		       &prefix))
     
     return -1;
+
   KSPCreate(Py_PETSC_COMM_WORLD,&self->ksp);
   if (prefix)
     KSPSetOptionsPrefix(self->ksp,prefix);
@@ -628,6 +655,9 @@ CKSP_info(CKSP *self, PyObject* args)
   PetscReal*   res;
   double       first,last,rel_res; 
 
+  if (!ensure_comm()) {
+    return NULL;
+  }
 
   KSPGetResidualHistory(self->ksp, &res, &its);
 
@@ -1144,6 +1174,11 @@ DaetkPetscSys_size(DaetkPetscSys *self,
   {
     using namespace std;
     int ierr,size,rank;
+
+    if (!ensure_comm()) {
+      return NULL;
+    }
+
     ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);
     ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);
 
@@ -1682,6 +1717,11 @@ int partitionNodes(Mesh& mesh, int nNodes_overlap)
 {
   using namespace std;
   int ierr,size,rank;
+
+  if (!ensure_comm()) {
+    return -1;
+  }
+
   ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);
   /***********************************************************************
@@ -2646,6 +2686,11 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   using namespace std;
   PetscErrorCode ierr;
   PetscMPIInt size,rank;
+
+  if (!ensure_comm()) {
+    return -1;
+  }
+
   ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);CHKERRQ(ierr);
   ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);CHKERRQ(ierr);
 
@@ -4033,6 +4078,11 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   {
     using namespace std;
     int ierr,size,rank;
+
+    if (!ensure_comm()) {
+      return -1;
+    }
+
     ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);
     ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);
 
@@ -5066,6 +5116,11 @@ int buildQuadraticSubdomain2GlobalMappings_1d(Mesh& mesh,
 {
   using namespace std;
   int ierr,size,rank;
+
+  if (!ensure_comm()) {
+    return -1;
+  }
+
   ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);
 
@@ -5217,6 +5272,11 @@ int buildQuadraticSubdomain2GlobalMappings_2d(Mesh& mesh,
 {
   using namespace std;
   int ierr,size,rank;
+
+  if (!ensure_comm()) {
+    return -1;
+  }
+
   ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);
 
@@ -5375,6 +5435,11 @@ int buildQuadraticSubdomain2GlobalMappings_3d(Mesh& mesh,
 {
   using namespace std;
   int ierr,size,rank;
+
+  if (!ensure_comm()) {
+      return -1;
+  }
+
   ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);
 
@@ -5661,6 +5726,11 @@ int buildQuadraticCubeSubdomain2GlobalMappings_3d(Mesh& mesh,
 {
   using namespace std;
   int ierr,size,rank;
+
+  if (!ensure_comm()) {
+    return -1;
+  }
+
   ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);
 
@@ -6048,6 +6118,10 @@ int buildDiscontinuousGalerkinSubdomain2GlobalMappings(Mesh& mesh,
   ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);
 
+  if (!ensure_comm()) {
+    return -1;
+  }
+
   //DG dofs stored element wise
   //[...,eN_0,eN_1,..,eN_ndof_local,...]
   //assume a processor owns a dof if it owns that element
@@ -6086,6 +6160,11 @@ static PyObject* flcbdfWrappersGlobalSum(PyObject* self, PyObject* args)
 {
   using namespace std;
   double value,value_new;
+
+  if (!ensure_comm()) {
+    return NULL;
+  }
+
   if (!PyArg_ParseTuple(args,
                         "d",
                         &value))
@@ -6098,10 +6177,16 @@ static PyObject* flcbdfWrappersGlobalMax(PyObject* self, PyObject* args)
 {
   using namespace std;
   double value,value_new;
+
+  if (!ensure_comm()) {
+      return NULL;
+  }
+
   if (!PyArg_ParseTuple(args,
                         "d",
                         &value))
     return NULL;
+
   MPI_Allreduce(&value,&value_new,1,MPI_DOUBLE,MPI_MAX,Py_PETSC_COMM_WORLD);
   return Py_BuildValue("d",value_new);
 }
@@ -6109,6 +6194,11 @@ static PyObject* flcbdfWrappersGlobalMin(PyObject* self, PyObject* args)
 {
   using namespace std;
   double value,value_new;
+
+  if (!ensure_comm()) {
+    return NULL;
+  }
+
   if (!PyArg_ParseTuple(args,
                         "d",
                         &value))
@@ -6145,6 +6235,12 @@ static PyObject* flcbdfWrappersPartitionElements(PyObject* self,
   MESH(cmesh).subdomainp=&MESH(subdomain_cmesh);
   PETSC_COMM_WORLD = Py_PETSC_COMM_WORLD;
   int ierr,size,rank;
+
+  if (!ensure_comm()) {
+    return NULL;
+  }
+
+
   ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);
   partitionElements(MESH(cmesh),nLayersOfOverlap);
@@ -6272,6 +6368,11 @@ static PyObject* flcbdfWrappersPartitionNodes(PyObject* self,
                         &cmesh,
                         &subdomain_cmesh))
     return NULL;
+
+  if (!ensure_comm()) {
+      return NULL;
+  }
+
   MESH(cmesh).subdomainp=&MESH(subdomain_cmesh);
   PETSC_COMM_WORLD = Py_PETSC_COMM_WORLD;
   int ierr,size,rank;
@@ -6409,6 +6510,11 @@ static PyObject* flcbdfWrappersPartitionNodesFromTetgenFiles(PyObject* self,
     return NULL;
   MESH(cmesh).subdomainp=&MESH(subdomain_cmesh);
   PETSC_COMM_WORLD = Py_PETSC_COMM_WORLD;
+
+  if (!ensure_comm()) {
+    return NULL;
+  }
+
   int ierr,size,rank;
   ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);
   ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);
@@ -6986,6 +7092,7 @@ initflcbdfWrappers(void)
   PyFLCBDFWrappers_API[0] = (void*)(&Py_PETSC_COMM_WORLD);
   c_api_object = PyCObject_FromVoidPtr((void*)PyFLCBDFWrappers_API,NULL);
   PyModule_AddObject(m,"_C_API",c_api_object);
+  Py_PETSC_COMM_WORLD = MPI_COMM_NULL;
 }
 }
 /** @} */
