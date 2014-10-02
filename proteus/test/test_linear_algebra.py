@@ -100,16 +100,24 @@ def test_mat_vec_math():
     v1 = Vec(2)
     v1[:] = [1, 1]
 
-    m1 = Mat(3,2)
-    m1[0,:] = [1, 2]
-    m1[1,:] = [3, 2]
-    m1[2,:] = [4, 5]
+    m1 = Mat(3, 2)
+    m1[0, :] = [1, 2]
+    m1[1, :] = [3, 2]
+    m1[2, :] = [4, 5]
 
     # m1*v1
     dot_product = np.asarray([3, 5, 9])
     npt.assert_almost_equal(dot_product, m1.dot(v1))
 
-def compute_norms(h,A,vecs):
+
+def test_superlu_mat():
+    """test_superlu_mat
+
+    Simple verification of functionality of SuperLU SparseMat operators.
+    """
+
+
+def compute_norms(h, A, vecs):
     from proteus.LinearAlgebraTools import l2Norm, l1Norm, lInfNorm, rmsNorm
     from proteus.LinearAlgebraTools import wl2Norm, wl1Norm, wlInfNorm
     from proteus.LinearAlgebraTools import energyNorm
@@ -237,6 +245,16 @@ def test_norm_triangle_inequality():
         test = ok
         test.description = 'test_norm_triangle_inequality[{}]'.format(name)
         yield test, t1 <= t2 + t3
+
+
+def test_petsc_binary_io():
+    """test_petsc_binary_io
+
+    Verifies that binary save/loads on PETSc Mats and Vecs works correctly.
+    """
+
+    from proteus.LinearAlgebraTools import ParVec_petsc4py
+    from proteus.LinearAlgebraTools import ParMat_petsc4py
 
 if __name__ == '__main__':
     import nose
