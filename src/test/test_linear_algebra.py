@@ -239,7 +239,5 @@ def test_norm_triangle_inequality():
         yield test, t1 <= t2 + t3
 
 if __name__ == '__main__':
-    from proteus import Comm
-    comm = Comm.init()
     import nose
     nose.main()

@@ -17,10 +17,11 @@ import pdb
 import petsc4py
 Profiling.openLog("proteus.log",7)
 print sys.argv[:1]
-comm = Comm.init(argv=sys.argv[:1])
-comm = Comm.init(argv=sys.argv[:1])
+Comm.argv = sys.argv[:1]
+comm = Comm.init()
+comm = Comm.init()
 #petsc4py.init(sys.argv[:1])
 print comm.rank(),comm.size()
-print "Hellow World from",comm.rank()
+print "Hello World from",comm.rank()
 from proteus import *
 Profiling.procID=comm.rank()
