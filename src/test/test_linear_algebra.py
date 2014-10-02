@@ -3,6 +3,7 @@ import numpy.testing as npt
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
 
+
 def test_vec_create():
     """test_vec_create
 
@@ -26,6 +27,7 @@ def test_vec_create():
         x[:] = range(1, n+1)
         eq(np.count_nonzero(x), n)
 
+
 def test_mat_create():
     """test_mat_create
 
@@ -40,7 +42,7 @@ def test_mat_create():
         # Matrix containing m*n entries
         eq(x.size, m*n)
         # Two-dimensional
-        eq(x.shape, (m,n))
+        eq(x.shape, (m, n))
         # Of type double-precision
         eq(x.dtype, np.double)
         # All entries are zero
@@ -50,6 +52,7 @@ def test_mat_create():
         # Assign a column
         x[:, 0] = range(1, m+1)
         eq(np.count_nonzero(x), m+n-1)
+
 
 def test_vec_scalar_math():
     """test_vec_scalar_math
@@ -118,6 +121,37 @@ def compute_norms(h,A,vecs):
         yield norm.__name__, [energyNorm(x, A) for x in vecs]
 
 
+def test_norm_correctness():
+    from math import sqrt
+    from proteus.LinearAlgebraTools import Mat
+    from proteus.LinearAlgebraTools import l2Norm, l1Norm, lInfNorm, rmsNorm
+    from proteus.LinearAlgebraTools import wl2Norm, wl1Norm, wlInfNorm
+    from proteus.LinearAlgebraTools import energyNorm
+
+    x = np.ones(2)
+    h = np.ones(2)
+    A = Mat(2, 2)
+    A[0, 0] = 1
+    A[1, 1] = 1
+
+    test = npt.assert_almost_equal
+    test.description = 'test_correctness_l1Norm'
+    yield test, l1Norm(x), 2
+    test.description = 'test_correctness_l2Norm'
+    yield test, l2Norm(x), sqrt(2)
+    test.description = 'test_correctness_lInfNorm'
+    yield test, lInfNorm(x), 1
+    test.description = 'test_correctness_rmsNorm'
+    yield test, rmsNorm(x), sqrt(2)/2
+    test.description = 'test_correctness_wl1Norm'
+    yield test, wl1Norm(x, h), 2
+    test.description = 'test_correctness_wl2Norm'
+    yield test, wl2Norm(x, h), sqrt(2)
+    test.description = 'test_correctness_wlInfNorm'
+    yield test, wlInfNorm(x, h), 1
+    test.description = 'test_correctness_energyNorm'
+    yield test, energyNorm(x, A), sqrt(2)
+
 def test_norm_zero():
     """test_norm_zero
 
@@ -128,12 +162,12 @@ def test_norm_zero():
     from proteus.LinearAlgebraTools import Mat
 
     h = Vec(2)
-    h = [0.5,0.5]
+    h[:] = [0.5, 0.5]
 
-    A = Mat(2,2)
+    A = Mat(2, 2)
     #needs to be SPD
-    A[0,:] = [5, 2]
-    A[1,:] = [2, 6]
+    A[0, :] = [5, 2]
+    A[1, :] = [2, 6]
 
     v = Vec(2)
     v[:] = [0, 0]
@@ -156,12 +190,12 @@ def test_norm_homogeneity():
     from proteus.LinearAlgebraTools import Mat
 
     h = Vec(2)
-    h = [0.5,0.5]
+    h[:] = [0.5,0.5]
 
     A = Mat(2,2)
     #needs to be SPD
-    A[0,:] = [5, 2]
-    A[1,:] = [2, 6]
+    A[0, :] = [5, 2]
+    A[1, :] = [2, 6]
 
     v1 = Vec(2)
     v1[:] = [1, 1]
@@ -172,6 +206,7 @@ def test_norm_homogeneity():
             test = npt.assert_almost_equal
             test.description = 'test_norm_homogeneity[{}]'.format(name)
             yield test, abs(a)*t1, t2
+
 
 def test_norm_triangle_inequality():
     """test_norm_triangle_inequality
@@ -184,12 +219,12 @@ def test_norm_triangle_inequality():
     from proteus.LinearAlgebraTools import Mat
 
     h = Vec(2)
-    h = [1.0,1.0]
+    h[:] = [1.0, 1.0]
 
     #need an SPD matrix for this to be a norm
-    A = Mat(2,2)
-    A[0,:] = [4, 2]
-    A[1,:] = [2, 5]
+    A = Mat(2, 2)
+    A[0, :] = [4, 2]
+    A[1, :] = [2, 5]
 
     v1 = Vec(2)
     v1[:] = [1, 1]
