@@ -29,7 +29,8 @@ if __name__ == '__main__':
     if opts.petscOptions != None:
         sys.argv = sys.argv[:-1]+opts.petscOptions.split()
         print sys.argv
-    comm = Comm.init(sys.argv)
+    Comm.argv = sys.argv
+    comm = Comm.init()
     #cmesh = cmeshTools.CMesh()
 #     multilevelMesh = MeshTools.MultilevelEdgeMesh(3,1,1,
 #                                                   1.0,1.0,1.0,
