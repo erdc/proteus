@@ -1,540 +1,0 @@
-Script started on Tue 30 Sep 2014 02:37:10 PM EDT
-behaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ exitParavieww [Ahaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lscd phasttaPartialSlip/RUNS/Capillary/Capillary-180Deg/Debug/[Atest/dambreak-Farhad/4-Procs-SuperLU$ df ~ -h [K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ du -sh **[Aehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ cd ..[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ cd ..ls 4th-iisoscale-adapt-4-time-Refined-Freezed-FalsePhase/[AMI/test/dambreak-Farhad/4-Procs-SuperLU$ rm */pumi*[K[Aaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ rm */Pro*[K[Ahaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ rm */PUMI*[Aaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lscd 2-Proocs/[Aff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lscd ..ls[Krm PUMI--to-Proteus-t* Proteus-to-PUMI-t*  pumi_*[AhAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lscd 4-Proocs/[Aff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lscd dambrreak-Farhad/[Ardash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ du -sh d[4@ambreak-Farhad/[K[Aalderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ cd ..[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ cd ..du -sh 44th-isoscale-adapt-each-5-time-Freez-at-T10/[AaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ cd ..[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ cd ..ls[Krm PUMI--to-Proteus-t*[Aash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lsrm Proteeus-to-PUMI-t* pumi_*[AroteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lscd 4th-iisoscale-adapt-each-5-time-Freez-at-T10/[AshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ du -sh 5[12@th-isoscale-adaprt-each-4-Refined-MemoryCrash-atT4/4th-isoscale-adapt-each-5-time-Freez-at-T10/[K3rd-isoscale-adapt-each-5-time/[K1st-try-Aniso/[K[Aash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lsdu -sh **[Aehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lsrm -r 2nnd-try-isoscal-adapt-each-time/[Aec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ du -sh ../../dambreak-Farhad/[K[AoteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lsrm PUMI--to-Proteus-t*[Aash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lsrm pumi__Before_adapt_t*[Ah:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lsrm pumi__After_adapt_t*[Ash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lsrm Proteeus-to-PUMI-t*[Aash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lscd 1-Proocs/[Aff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ du -sh *[K[Aehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lsrm -r 0--First/ 0-Second/[A:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lscd dambrreak-Farhad/[Ardash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ du -sh *[K[Aehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lscd test//[Aehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ du -sh test/[Af@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lscd MeshAAdaptPUMI[Alderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lscd src/ [Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ du -sh **[Aehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lscd proteeusScorec-sep9-14/eus[K[Aaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ du -sh *[K[Aehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ cd ..[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ cd ..ls[Kcd proteeusScorec-Aug1/[Ash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ls[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ lscd ~top[Kssh baldderdash[Abalderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ ssh bladerdash[Abalderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ top[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ top   l lsssh bladderdash[Abalderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ top[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ topssh -X mmonopoly[Aalderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ top[K
-[K[Abehaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ top   mpirun  -np 4 ~/proteusScorec/linux2-scorec/bin/parun dambreak_so.py -O petsc.options-S s  
-petsc.options               petsc.options-marin         petsc.options-Xing
-petsc.options-ksp           petsc.options.superlu_dist  
-behaff@balderdash:~/proteusScorec/src/MeshAdaptPUMI/test/dambreak-Farhad/4-Procs-SuperLU$ mpirun --np 4 ~/proteusScorec/linux2-scorec/bin/parun dambreak_so.py -O petsc.options.superlu_dist -v -l  5
-Setting hmax=0.096000, hmin=0.012000, numIters(meshadapt)=2
-model Dambreak.smd loaded in 0.010503 seconds
-mesh Dambreak.smb loaded in 0.073248 seconds
-mesh entity counts: v 21705 e 140147 f 230956 r 112513
-mesh verified in 0.066567 seconds
-Initializing MPI
-PETSc options from commandline
-['/users/behaff/proteusScorec/linux2-scorec/bin/parun', '-rans2p_ksp_type', 'preonly', '-rans2p_pc_type', 'lu', '-rans2p_pc_factor_mat_solver_package', 'superlu_dist', '-ncls_ksp_type', 'preonly', '-ncls_pc_type', 'lu', '-ncls_pc_factor_mat_solver_package', 'superlu_dist', '-vof_ksp_type', 'preonly', '-vof_pc_type', 'lu', '-vof_pc_factor_mat_solver_package', 'superlu_dist', '-rdls_ksp_type', 'preonly', '-rdls_pc_type', 'lu', '-rdls_pc_factor_mat_solver_package', 'superlu_dist', '-mcorr_ksp_type', 'preonly', '-mcorr_pc_type', 'lu', '-mcorr_pc_factor_mat_solver_package', 'superlu_dist', '-kappa_ksp_type', 'preonly', '-kappa_pc_type', 'lu', '-kappa_pc_factor_mat_solver_package', 'superlu_dist', '-dissipation_ksp_type', 'preonly', '-dissipation_pc_type', 'lu', '-dissipation_pc_factor_mat_solver_package', 'superlu_dist']
-Adding . to path for loading modules
-Loading problem-specific modules
-Importing input modules
-Loading so module = dambreak_so.py
-Loading p module = twp_navier_stokes_p
-Loading n module = twp_navier_stokes_n
-Loading p module = vof_p
-Loading n module = vof_n
-Loading p module = ls_p
-Loading n module = ls_n
-Loading p module = redist_p
-Loading n module = redist_n
-Loading p module = ls_consrv_p
-Loading n module = ls_consrv_n
-Attaching input stream to stdin
-Running Proteus version 0.9.0
-Setting simulation processing defaults
-Starting dambreak_p run number 0
-loop number: 1
-Initializing NumericalSolution for dambreak_p1
- System includes: 
-twp_navier_stokes_p
-vof_p
-ls_p
-redist_p
-ls_consrv_p
-
-Setting Archiver(s)
-Setting up MultilevelMesh
-Building one multilevel mesh for all models
-Generating mesh for twp_navier_stokes_p
-Converting PUMI mesh to Proteus
-Constructing parallel proteus mesh
-*******Local Proteus Mesh Stats*********
-Rank: 0: Number of elements 28154
-Rank: 0: Number of nodes 5767
-Rank: 0: Number of boundaries 58378
-Rank: 0: Number of edges 35990
-*****************************************
-*******Local Proteus Mesh Stats*********
-Rank: 1: Number of elements 28155
-Rank: 1: Number of nodes 5665
-Rank: 1: Number of boundaries 58191
-Rank: 1: Number of edges 35700
-*****************************************
-*******Local Proteus Mesh Stats*********
-Rank: 2: Number of elements 27888
-Rank: 2: Number of nodes 5655
-Rank: 2: Number of boundaries 57720
-Rank: 2: Number of edges 35486
-*****************************************
-*******Local Proteus Mesh Stats*********
-Rank: 3: Number of elements 28316
-Rank: 3: Number of nodes 5835
-Rank: 3: Number of boundaries 58795
-Rank: 3: Number of edges 36313
-*****************************************
-*******Global Proteus Mesh Stats*********
-: Number of elements 112513
-: Number of nodes 21705
-: Number of boundaries 230956
-: Number of edges 140147
-*****************************************
-meshInfo says : 
-meshInfo says : 
-meshInfo says : 
-*** Global ***
-Number of tetrahedra : 112513
-Number of triangles  : 230956
-Number of edges      : 140147
-Number of nodes      : 21705
-max(sigma_k)         : 0
-min(h_k)             : 0
-
-*** Local ***
-Number of tetrahedra : 27888
-Number of triangles  : 57720
-Number of edges      : 35486
-Number of nodes      : 5655
-max(sigma_k)         : 11
-min(h_k)             : 0
-meshInfo says : 
-*** Global ***
-Number of tetrahedra : 112513
-Number of triangles  : 230956
-Number of edges      : 140147
-Number of nodes      : 21705
-max(sigma_k)         : 0
-min(h_k)             : 0
-
-*** Local ***
-Number of tetrahedra : 28154
-Number of triangles  : 58378
-Number of edges      : 35990
-Number of nodes      : 5767
-max(sigma_k)         : 11
-min(h_k)             : 0
-
-*** Global ***
-Number of tetrahedra : 112513
-Number of triangles  : 230956
-Number of edges      : 140147
-Number of nodes      : 21705
-max(sigma_k)         : 0
-min(h_k)             : 0
-
-*** Local ***
-Number of tetrahedra : 28155
-Number of triangles  : 58191
-Number of edges      : 35700
-Number of nodes      : 5665
-max(sigma_k)         : 9
-min(h_k)             : 0
-
-
-*** Global ***
-Number of tetrahedra : 112513
-Number of triangles  : 230956
-Number of edges      : 140147
-Number of nodes      : 21705
-max(sigma_k)         : 0
-min(h_k)             : 0
-
-*** Local ***
-Number of tetrahedra : 28316
-Number of triangles  : 58795
-Number of edges      : 36313
-Number of nodes      : 5835
-max(sigma_k)         : 10
-min(h_k)             : 0
-
-Generating tetrahedral mesh
-Generating 1-level mesh from PUMI mesh
-*** Global ***
-Number of tetrahedra : 112513
-Number of triangles  : 230956
-Number of edges      : 140147
-Number of nodes      : 21705
-max(sigma_k)         : 0
-min(h_k)             : 0
-
-*** Local ***
-Number of tetrahedra : 28154
-Number of triangles  : 58378
-Number of edges      : 35990
-Number of nodes      : 5767
-max(sigma_k)         : 11
-min(h_k)             : 0
-
-Setting up MultilevelTransport for twp_navier_stokes_p
-Building Transport for each mesh
-Generating Trial Space
-Generating Test Space
-Allocating u
-Allocating phi
-Setting Boundary Conditions
-Setting Boundary Conditions-1
-Setting Boundary Conditions-2
-Setting Boundary Conditions-2a
-Setting Boundary Conditions-3
-Setting Boundary Conditions-4
-Initializing OneLevelTransport
-Updating local to global mappings
-Building time integration object
-Calculating numerical quadrature formulas
-Element Quadrature
-Element Boundary Quadrature
-Global Exterior Element Boundary Quadrature
-Allocating residual and solution vectors
-Allocating Jacobian
-Building sparse matrix structure
-Allocating parallel storage
-Allocating ghosted parallel vectors on rank 0
-Allocating un-ghosted parallel vectors on rank 0
-Allocating matrix on rank 0
-Building Mesh Transfers
-Setting twp_navier_stokes_p stepController to proteus.StepControl.Min_dt_controller
-Setting up MultilevelLinearSolver fortwp_navier_stokes_p
-multilevelLinearSolverChooser type= proteus.LinearSolvers.LU
-Setting up MultilevelNonLinearSolver for twp_navier_stokes_p
-Setting up MultilevelTransport for vof_p
-Building Transport for each mesh
-Generating Trial Space
-Generating Test Space
-Allocating u
-Allocating phi
-Setting Boundary Conditions
-Setting Boundary Conditions-1
-Setting Boundary Conditions-2
-Setting Boundary Conditions-2a
-Setting Boundary Conditions-3
-Setting Boundary Conditions-4
-Initializing OneLevelTransport
-Updating local to global mappings
-Building time integration object
-Calculating numerical quadrature formulas
-Element Quadrature
-Element Boundary Quadrature
-Global Exterior Element Boundary Quadrature
-Allocating residual and solution vectors
-Allocating Jacobian
-Building sparse matrix structure
-Allocating parallel storage
-Allocating ghosted parallel vectors on rank 0
-Allocating un-ghosted parallel vectors on rank 0
-Allocating matrix on rank 0
-Building Mesh Transfers
-Setting vof_p stepController to proteus.StepControl.Min_dt_controller
-Setting up MultilevelLinearSolver forvof_p
-multilevelLinearSolverChooser type= proteus.LinearSolvers.LU
-Setting up MultilevelNonLinearSolver for vof_p
-Setting up MultilevelTransport for ls_p
-Building Transport for each mesh
-Generating Trial Space
-Generating Test Space
-Allocating u
-Allocating phi
-Setting Boundary Conditions
-Setting Boundary Conditions-1
-Setting Boundary Conditions-2
-Setting Boundary Conditions-2a
-Setting Boundary Conditions-3
-Setting Boundary Conditions-4
-Initializing OneLevelTransport
-Updating local to global mappings
-Building time integration object
-Calculating numerical quadrature formulas
-Element Quadrature
-Element Boundary Quadrature
-Global Exterior Element Boundary Quadrature
-Allocating residual and solution vectors
-Allocating Jacobian
-Building sparse matrix structure
-Allocating parallel storage
-Allocating ghosted parallel vectors on rank 0
-Allocating un-ghosted parallel vectors on rank 0
-Allocating matrix on rank 0
-Building Mesh Transfers
-Setting ls_p stepController to proteus.StepControl.Min_dt_controller
-Setting up MultilevelLinearSolver forls_p
-multilevelLinearSolverChooser type= proteus.LinearSolvers.LU
-Setting up MultilevelNonLinearSolver for ls_p
-Setting up MultilevelTransport for redist_p
-Building Transport for each mesh
-Generating Trial Space
-Generating Test Space
-Allocating u
-Allocating phi
-Setting Boundary Conditions
-Setting Boundary Conditions-1
-Setting Boundary Conditions-2
-Setting Boundary Conditions-2a
-Setting Boundary Conditions-3
-Setting Boundary Conditions-4
-Initializing OneLevelTransport
-Updating local to global mappings
-Building time integration object
-Calculating numerical quadrature formulas
-Element Quadrature
-Element Boundary Quadrature
-Global Exterior Element Boundary Quadrature
-Allocating residual and solution vectors
-Allocating Jacobian
-Building sparse matrix structure
-Allocating parallel storage
-Allocating ghosted parallel vectors on rank 0
-Allocating un-ghosted parallel vectors on rank 0
-Allocating matrix on rank 0
-Building Mesh Transfers
-Setting redist_p stepController to proteus.mprans.RDLS.PsiTC
-Setting up MultilevelLinearSolver forredist_p
-multilevelLinearSolverChooser type= proteus.LinearSolvers.LU
-Setting up MultilevelNonLinearSolver for redist_p
-Setting up MultilevelTransport for ls_consrv_p
-Building Transport for each mesh
-Generating Trial Space
-Generating Test Space
-Allocating u
-Allocating phi
-Setting Boundary Conditions
-Setting Boundary Conditions-1
-Setting Boundary Conditions-2
-Setting Boundary Conditions-2a
-Setting Boundary Conditions-3
-Setting Boundary Conditions-4
-Initializing OneLevelTransport
-Updating local to global mappings
-Building time integration object
-Calculating numerical quadrature formulas
-Element Quadrature
-Element Boundary Quadrature
-Global Exterior Element Boundary Quadrature
-Allocating residual and solution vectors
-Allocating Jacobian
-Building sparse matrix structure
-Allocating parallel storage
-Allocating ghosted parallel vectors on rank 0
-Allocating un-ghosted parallel vectors on rank 0
-Allocating matrix on rank 0
-Building Mesh Transfers
-Setting ls_consrv_p stepController to proteus.StepControl.SC_base
-Setting up MultilevelLinearSolver forls_consrv_p
-multilevelLinearSolverChooser type= proteus.LinearSolvers.LU
-Setting up MultilevelNonLinearSolver for ls_consrv_p
-Finished setting up models and solvers
-Setting up SimTools for ls_consrv_p
-Using tnList from so = dambreak_p1
-Time sequence[0.0, 0.0006000000000000001, 0.006, 0.012]
-Setting dambreak_p1 systemStepController to object of type proteus.SplitOperator.Sequential_MinAdaptiveModelStep
-Finished NumericalSolution initialization
-Setting initial conditions
-Setting initial conditions for twp_navier_stokes_p
-Setting initial conditions on model twp_navier_stokes_p
-Setting initial conditions for vof_p
-Setting initial conditions on model vof_p
-Setting initial conditions for ls_p
-Setting initial conditions on model ls_p
-Setting initial conditions for redist_p
-Setting initial conditions on model redist_p
-Setting initial conditions for ls_consrv_p
-Setting initial conditions on model ls_consrv_p
-Attaching models and running spin-up step if requested
-Attaching models in LevelSetConservation
-Archiving initial conditions
-Writing initial mesh for  model = twp_navier_stokes_p
-Writing initial conditions for  model = twp_navier_stokes_p
-Estimating initial time derivative and initializing time history for model twp_navier_stokes_p
-Maximum CFL = 0.0
-RANS2P.SubgridError: switched to lagged subgrid error
-RANS2P: max numDiff_1 1.490852e-02 numDiff_2 1.490852e-02 numDiff_3 1.490852e-02
-Maximum CFL = 0.0
-Choosing initial time step for model twp_navier_stokes_p
-Initializing time step on model twp_navier_stokes_p to dt =  3.30000e+05
-Maximum CFL = 0.0
-Initializing time history for model step controller
-Auxiliary variable calculations for model twp_navier_stokes_p
-Syncing Archive
-Archiving initial conditions
-Writing initial mesh for  model = vof_p
-Writing initial conditions for  model = vof_p
-Estimating initial time derivative and initializing time history for model vof_p
-VOF: max numDiff 3.103842e+01
-Choosing initial time step for model vof_p
-Initializing time step on model vof_p to dt =  3.30000e+05
-Initializing time history for model step controller
-Auxiliary variable calculations for model vof_p
-Syncing Archive
-Archiving initial conditions
-Writing initial mesh for  model = ls_p
-Writing initial conditions for  model = ls_p
-Estimating initial time derivative and initializing time history for model ls_p
-NCLS: max numDiff 3.364003e-03
-Choosing initial time step for model ls_p
-Initializing time step on model ls_p to dt =  3.30000e+05
-Initializing time history for model step controller
-Auxiliary variable calculations for model ls_p
-Syncing Archive
-Archiving initial conditions
-Writing initial mesh for  model = redist_p
-Writing initial conditions for  model = redist_p
-Estimating initial time derivative and initializing time history for model redist_p
-RDLS: max numDiff 1.484872e-01
-Choosing initial time step for model redist_p
-Initializing time step on model redist_p to dt =  4.39497e-03
-Initializing time history for model step controller
-Auxiliary variable calculations for model redist_p
-Syncing Archive
-Archiving initial conditions
-Writing initial mesh for  model = ls_consrv_p
-Writing initial conditions for  model = ls_consrv_p
-Estimating initial time derivative and initializing time history for model ls_consrv_p
-   Mass Conservation Error2.621957460647251e-05
-   Mass Conservation Error2.621957460647251e-05
-Choosing initial time step for model ls_consrv_p
-Initializing time step on model ls_consrv_p to dt =  6.00000e-04
-   Mass Conservation Error2.621957460647251e-05
-Initializing time history for model step controller
-Auxiliary variable calculations for model ls_consrv_p
-Syncing Archive
-Initializing time step on system Default System to dt =  3.30000e+05
-Initializing step sequence for system Default System to [(330000.00000000006, <proteus.Transport.MultilevelTransport instance at 0x3752d88>), (330000.00000000006, <proteus.Transport.MultilevelTransport instance at 0x94bcb48>), (330000.00000000006, <proteus.Transport.MultilevelTransport instance at 0xa5c63b0>), (330000.00000000006, <proteus.Transport.MultilevelTransport instance at 0xa5d8bd8>), (330000.00000000006, <proteus.Transport.MultilevelTransport instance at 0xa561518>)]
-Starting time stepping
-==============================================================
-Solving over interval [ 0.00000e+00, 6.00000e-04]
-==============================================================
-Min_dt_controller setSubsteps tList=[0.0006000000000000001] self.t_model=0.0006 self.substeps= [0.0006000000000000001] 
-Min_dt_controller setSubsteps tList=[0.0006000000000000001] self.t_model=0.0006 self.substeps= [0.0006000000000000001] 
-Min_dt_controller setSubsteps tList=[0.0006000000000000001] self.t_model=0.0006 self.substeps= [0.0006000000000000001] 
-System time step t= 6.00000e-04, dt= 6.00000e-04
-Split operator iteration 0
-Model: twp_navier_stokes_p
-Fractional step  6.00000e-04 for model twp_navier_stokes_p
-Model step t= 6.00000e-04, dt= 6.00000e-04 for model twp_navier_stokes_p
-Model substep t= 6.00000e-04 for model twp_navier_stokes_p
-Model substep t= 6.00000e-04 for model twp_navier_stokes_p model.timeIntegration.t=  6.00000e-04
-Maximum CFL = 0.0
-   Newton it 0 Mom.  norm(r) =  1.58305e-02   tol =  1.36619e-07
-   Newton it 0 Cont. norm(r) =  3.02769e-03   tol =  1.36619e-07
-Start assembling jacobian
-Done  assembling jacobian
-Start linear solve
-Maximum CFL = 0.0
-residual increase 242628926715.0
-   Newton it 1 Mom.  norm(r) =  2.22322e+11   tol =  1.36619e-07
-   Newton it 1 Cont. norm(r) =  9.71685e+10   tol =  1.36619e-07
-Start assembling jacobian
-Done  assembling jacobian
-Start linear solve
-Maximum CFL = 0.0
-residual increase 8.79022172591e+49
-   Newton it 2 Mom.  norm(r) =  4.85900e+48   tol =  1.36619e-07
-   Newton it 2 Cont. norm(r) =  8.77678e+49   tol =  1.36619e-07
-Start assembling jacobian
-Done  assembling jacobian
-Start linear solve
-Maximum CFL = 0.0
-residual increase 1.39120976548e+95
-   Newton it 3 Mom.  norm(r) =  1.39121e+95   tol =  1.36619e-07
-   Newton it 3 Cont. norm(r) =  5.97959e+91   tol =  1.36619e-07
-Start assembling jacobian
-Done  assembling jacobian
-Start linear solve
-Maximum CFL = 0.0
-residual increase inf
-   Newton it 4 Mom.  norm(r) =          inf   tol =  1.36619e-07
-   Newton it 4 Cont. norm(r) =          inf   tol =  1.36619e-07
-Start assembling jacobian
-Done  assembling jacobian
-Start linear solve
-Maximum CFL = 0.0
-residual increase nan
-   Newton it 5 Mom.  norm(r) =          nan   tol =  1.36619e-07
-   Newton it 5 Cont. norm(r) =          nan   tol =  1.36619e-07
-Start assembling jacobian
-Done  assembling jacobian
-Start linear solve
-Maximum CFL = 0.0
-residual increase nan
-   Newton it 6 Mom.  norm(r) =          nan   tol =  1.36619e-07
-   Newton it 6 Cont. norm(r) =          nan   tol =  1.36619e-07
-Start assembling jacobian
-Done  assembling jacobian
-Start linear solve
-Maximum CFL = 0.0
-residual increase nan
-   Newton it 7 Mom.  norm(r) =          nan   tol =  1.36619e-07
-   Newton it 7 Cont. norm(r) =          nan   tol =  1.36619e-07
-Start assembling jacobian
-Done  assembling jacobian
-Start linear solve
-Maximum CFL = 0.0
-residual increase nan
-   Newton it 8 Mom.  norm(r) =          nan   tol =  1.36619e-07
-   Newton it 8 Cont. norm(r) =          nan   tol =  1.36619e-07
-Start assembling jacobian
-Done  assembling jacobian
-Start linear solve
-Maximum CFL = 0.0
-residual increase nan
-   Newton it 9 Mom.  norm(r) =          nan   tol =  1.36619e-07
-   Newton it 9 Cont. norm(r) =          nan   tol =  1.36619e-07
-Start assembling jacobian
-Done  assembling jacobian
-Start linear solve
-Maximum CFL = 0.0
-residual increase nan
-   Newton it 10 Mom.  norm(r) =          nan   tol =  1.36619e-07
-   Newton it 10 Cont. norm(r) =          nan   tol =  1.36619e-07
-Start assembling jacobian
-Done  assembling jacobian
-Start linear solve
-Maximum CFL = 0.0
-residual increase nan
-   Newton it 11 Mom.  norm(r) =          nan   tol =  1.36619e-07
-   Newton it 11 Cont. norm(r) =          nan   tol =  1.36619e-07
-Start assembling jacobian
-Done  assembling jacobian
-Start linear solve
-Maximum CFL = 0.0
-residual increase nan
-   Newton it 12 Mom.  norm(r) =          nan   tol =  1.36619e-07
-   Newton it 12 Cont. norm(r) =          nan   tol =  1.36619e-07
-Start assembling jacobian
-Done  assembling jacobian
-Start linear solve
-Maximum CFL = 0.0
-residual increase nan
-   Newton it 13 Mom.  norm(r) =          nan   tol =  1.36619e-07
-   Newton it 13 Cont. norm(r) =          nan   tol =  1.36619e-07
-Start assembling jacobian
-Done  assembling jacobian
-Start linear solve
-Maximum CFL = 0.0
-residual increase nan
-   Newton it 14 Mom.  norm(r) =          nan   tol =  1.36619e-07
-   Newton it 14 Cont. norm(r) =          nan   tol =  1.36619e-07
-Start assembling jacobian
-Done  assembling jacobian
-Start linear solve
