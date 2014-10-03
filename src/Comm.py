@@ -61,20 +61,24 @@ class Comm():
         """Return true if this process is the 'master' for this communicator"""
         return self.comm.rank == 0
 
-    def beginSequential(self, ng):
-        """Begin a block of code to be completed sequentially
+    def beginSequential(self, ng=1):
+        """Begin a block of code to be completed sequentially by each process
         """
 
-        num_barriers = min(self.comm.rank, ng-1)
-        for i in range(num_barriers):
+        if ng != 1:
+            raise NotImplementedError("Only ng = 1 allowed")
+
+        for i in range(self.comm.rank):
             self.comm.Barrier()
         return
 
-    def endSequential(self, ng):
+    def endSequential(self, ng=1):
         """End a block of code to be completed sequentially by each process
         """
 
-        num_barriers = min(self.comm.size, ng) - self.comm.rank - 1
-        for i in range(num_barriers):
+        if ng != 1:
+            raise NotImplementedError("Only ng = 1 allowed")
+
+        for i in range(self.comm.size - self.comm.rank - 1):
             self.comm.Barrier()
         return
