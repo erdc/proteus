@@ -12,11 +12,6 @@ import math
 from .superluWrappers import *
 from Profiling import logEvent
 from petsc4py import PETSc as p4pyPETSc
-
-# these lines are necessary to use flcbdfwrappers safely
-from . import Comm
-Comm.init()
-
 from . import flcbdfWrappers
 
 class ParVec:

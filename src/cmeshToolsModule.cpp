@@ -1887,7 +1887,7 @@ static PyTypeObject SparsityInfoType = {
 // 				    &argv,
 // 				    petscDatabaseFilename,
 // 				    (char*)("Initializing petsc for Proteus, with options database\n"));
-//   Py_PETSC_COMM_WORLD = Daetk::Petsc::cc::PETSC_COMM_WORLD;
+//   PROTEUS_COMM_WORLD = Daetk::Petsc::cc::PETSC_COMM_WORLD;
 //   delete [] argv;
 //   return Py_None;
 // }
