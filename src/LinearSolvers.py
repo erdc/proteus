@@ -4,6 +4,7 @@ A hierarchy of classes for linear algebraic system solvers.
 from LinearAlgebraTools import *
 import lapackWrappers
 import superluWrappers
+from petsc4py import PETSc as p4pyPETSc
 from math import *
 from Profiling import logEvent
 
