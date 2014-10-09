@@ -212,7 +212,8 @@ if opts.petscOptionsFile != None:
     log("PETSc options from commandline")
     log(str(petsc_argv))
 
-comm = Comm.init(argv=petsc_argv)
+Comm.argv = petsc_argv
+comm = Comm.init()
 #blanket import statements can go below here now that petsc4py should be initialized
 Profiling.procID=comm.rank()
 log("Initialized MPI")
