@@ -4962,7 +4962,8 @@ if __name__=='__main__':
     #pdb.set_trace()
 
     #initialize mpi
-    comm = Comm.init(argv=sys.argv[:1])
+    Comm.argv = sys.argv[:1]
+    comm = Comm.init()
 
     probDir = str(opts.probDir)
     if probDir not in sys.path:

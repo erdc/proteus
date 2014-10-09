@@ -10,14 +10,9 @@ representations using PETSc.
 import numpy
 import math
 from .superluWrappers import *
-from . import flcbdfWrappers
 from Profiling import logEvent
-#PETSc import, forces comm init if not already done
 from petsc4py import PETSc as p4pyPETSc
-from . import Comm
-Comm.set_isInitialized()
-#end PETSc import
-
+from . import flcbdfWrappers
 
 class ParVec:
     """
