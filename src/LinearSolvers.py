@@ -508,7 +508,7 @@ class KSP_petsc4py(LinearSolver):
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
         #self.ksp.setOperators(self.Lshell,self.petsc_L)
         self.ksp.setUp()
-    def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
+    def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
 #         if self.petsc_L.isSymmetric(tol=1.0e-14):
 #            self.petsc_L.setOption(p4pyPETSc.Mat.Option.SYMMETRIC, True)
 #            print "Matrix is symmetric"
@@ -524,8 +524,9 @@ class KSP_petsc4py(LinearSolver):
             self.pccontext.par_u = par_u
         if self.matcontext != None:
             self.matcontext.par_b = par_b
-
-        self.ksp.setInitialGuessNonzero(False)
+        
+        if not initialGuessIsZero:
+            self.ksp.setInitialGuessNonzero(True)
         self.ksp.solve(par_b,par_u)
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
