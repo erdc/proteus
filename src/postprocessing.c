@@ -4648,7 +4648,6 @@ void calculateConservationResidualPWL_primative(int nElements_global,
 	  divergence += flux;
 	}
     }
-  printf("Divergence %12.5e\n",divergence);
 }
 
 void calculateConservationJacobianPWL_opt(int nNodes_owned,
