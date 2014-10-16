@@ -122,7 +122,11 @@ class NS_base:  # (HasTraits):
             pListForMeshGeneration=pList
 
         for p,n in zip(pListForMeshGeneration,nListForMeshGeneration):
-            log("Generating mesh for "+p.name)
+            if opts.hotStart:
+                p.genMesh = False
+                log("Hotstarting, using existing mesh "+p.name)
+            else:
+                log("Generating mesh for "+p.name)
             #support for old-style domain input
             if p.domain == None:
                 if p.nd == 1:
@@ -502,21 +506,22 @@ class NS_base:  # (HasTraits):
         for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
             if self.opts.hotStart:
                 log("Setting initial conditions from hot start file for "+p.name)
-                tCount = len(self.ar[index].ar_old.tree.getroot()[-1][-1]) - 1
-                time = float(self.ar[index].ar_old.tree.getroot()[-1][-1][-1][0].attrib['Value'])
-                if len(self.ar[index].ar_old.tree.getroot()[-1][-1]) > 1:
-                    dt = time - float(self.ar[index].ar_old.tree.getroot()[-1][-1][-2][0].attrib['Value'])
+                tCount = len(self.ar[index].tree.getroot()[-1][-1]) - 1
+                time = float(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Value'])
+                if len(self.ar[index].tree.getroot()[-1][-1]) > 1:
+                    dt = time - float(self.ar[index].tree.getroot()[-1][-1][-2][0].attrib['Value'])
                 else:
                     log("Only one step in hot start file, setting dt to 1.0")
                     dt = 1.0
                 log("Last time step in hot start file was t = "+`time`)
                 for lm,lu,lr in zip(m.levelModelList,m.uList,m.rList):
                     for cj in range(lm.coefficients.nc):
-                        lm.u[cj].femSpace.readFunctionXdmf(self.ar[index].ar_old,lm.u[cj],tCount)
+                        lm.u[cj].femSpace.readFunctionXdmf(self.ar[index],lm.u[cj],tCount)
                         lm.setFreeDOF(lu)
                         lm.timeIntegration.tLast = time
                         lm.timeIntegration.t = time
                         lm.timeIntegration.dt = dt
+                self.tCount = tCount+1
             elif p.initialConditions != None:
                 log("Setting initial conditions for "+p.name)
                 m.setInitialConditions(p.initialConditions,self.tnList[0])
@@ -534,8 +539,14 @@ class NS_base:  # (HasTraits):
                 self.tnList = [time + i*dtout for i in range(ndtout)]
                 log("New tnList"+`self.tnList`)
             else:
-                pass
-
+                tnListNew=[time]
+                for n,t in enumerate(self.tnList):
+                    if time < t-1.0e-8:
+                        tnListNew.append(t)
+                self.tnList=tnListNew
+                log("Hotstarting, new tnList is"+`self.tnList`)
+        else:
+            self.tCount=0#time step counter
         log("Attaching models and running spin-up step if requested")
         for p,n,m,simOutput in zip(self.pList,self.nList,self.modelList,self.simOutputList):
             m.attachModels(self.modelList)
@@ -588,10 +599,12 @@ class NS_base:  # (HasTraits):
                     log("Spin-Up Step Taken, Model step t=%12.5e, dt=%12.5e for model %s" % (m.stepController.t_model,
                                                                                              m.stepController.dt_model,
                                                                                              m.name))
-        self.tCount=0#time step counter
         for p,n,m,simOutput,index in zip(self.pList,self.nList,self.modelList,self.simOutputList,range(len(self.pList))):
-            log("Archiving initial conditions")
-            self.archiveInitialSolution(m,index)
+            if not self.opts.hotStart:
+                log("Archiving initial conditions")
+                self.archiveInitialSolution(m,index)
+            else:
+                self.ar[index].domain = self.ar[index].tree.find("Domain")
             self.initializeViewSolution(m)
             log("Estimating initial time derivative and initializing time history for model "+p.name)
             #now the models are attached so we can calculate the coefficients
@@ -866,14 +879,13 @@ class NS_base:  # (HasTraits):
         log("Writing initial conditions for  model = "+model.name,level=3)
         if not self.so.useOneArchive or index==0:
             self.ar[index].domain = ElementTree.SubElement(self.ar[index].tree.getroot(),"Domain")
-        self.writeVectors=True
         if self.so.useOneArchive:
             model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],self.tnList[0],self.tCount,initialPhase=True,
-                                                                   writeVectors=self.writeVectors,meshChanged=True,femSpaceWritten=self.femSpaceWritten,
+                                                                   writeVectors=True,meshChanged=True,femSpaceWritten=self.femSpaceWritten,
                                                                    writeVelocityPostProcessor=self.opts.writeVPP)
         else:
             model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],self.tnList[0],self.tCount,initialPhase=True,
-                                                                   writeVectors=self.writeVectors,meshChanged=True,
+                                                                   writeVectors=True,meshChanged=True,
                                                                    writeVelocityPostProcessor=self.opts.writeVPP)
         #could just pull the code and flags out from SimTools rathter than asking it to parse them
         #uses values in simFlags['storeQuantities']
@@ -916,12 +928,12 @@ class NS_base:  # (HasTraits):
                 self.femSpaceWritten={}
             model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],t,self.tCount,
                                                                    initialPhase=False,
-                                                                   writeVectors=self.writeVectors,meshChanged=True,femSpaceWritten=self.femSpaceWritten,
+                                                                   writeVectors=True,meshChanged=True,femSpaceWritten=self.femSpaceWritten,
                                                                    writeVelocityPostProcessor=self.opts.writeVPP)
         else:
             model.levelModelList[-1].archiveFiniteElementSolutions(self.ar[index],t,self.tCount,
                                                                    initialPhase=False,
-                                                                   writeVectors=self.writeVectors,meshChanged=True,
+                                                                   writeVectors=True,meshChanged=True,
                                                                    writeVelocityPostProcessor=self.opts.writeVPP)
         model.levelModelList[-1].archiveAnalyticalSolutions(self.ar[index],self.pList[index].analyticalSolution,
                                                             t,
