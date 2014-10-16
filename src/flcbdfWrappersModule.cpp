@@ -2696,6 +2696,9 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 
   ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);CHKERRQ(ierr);
   ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);CHKERRQ(ierr);
+  PetscLogStage partitioning_stage;
+  PetscLogStageRegister("Mesh Partition",&partitioning_stage);
+  PetscLogStagePush(partitioning_stage);
 
   /***********************************************************************
     partition domain based on the nodes without reading in the global mesh.
@@ -2740,7 +2743,9 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   //
   //read nodes for tetgen format
   //first just read the number of nodes and whether or not there are node tags
-
+  int read_elements_event;
+  PetscLogEventRegister("Read eles",0,&read_elements_event);
+  PetscLogEventBegin(read_elements_event,0,0,0,0);
   std::ifstream vertexFile(vertexFileName.c_str());  
   if (!vertexFile.good())
     {
@@ -2837,6 +2842,10 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       elementFile >> eatline;
     }//end ie
   elementFile.close();
+  PetscLogEventEnd(read_elements_event,0,0,0,0);
+  int repartition_nodes_event;
+  PetscLogEventRegister("Repart nodes",0,&repartition_nodes_event);
+  PetscLogEventBegin(repartition_nodes_event,0,0,0,0);
   //done reading element file for first time; will need to read again after node partitioning
   //build compact data structure for nodeStar
   valarray<int> nodeStarOffsets(nNodes_subdomain_old+1);
@@ -2931,18 +2940,18 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   valarray<int> nodeNumbering_global_new2old(nNodes_global);
   for (int nN = 0; nN < nNodes_global; nN++)
     nodeNumbering_global_new2old[nodeNumbering_global_old2new[nN]] = nN;
+  PetscLogEventEnd(repartition_nodes_event,0,0,0,0);
+  int receive_element_mask_event;
+  PetscLogEventRegister("Recv. ele mask",0,&receive_element_mask_event);
+  PetscLogEventBegin(receive_element_mask_event,0,0,0,0);
   //
   //4. To build subdomain meshes, go through and collect elements containing
   //   the locally owned nodes. Assign processor ownership of elements 
   //  
-  MPI_Status status;
-  PetscBT elementMask;
-  PetscBTCreate(nElements_global,&elementMask);
-  //get the owned element information from the preceding processor
-  if (rank > 0)
-    {
-      MPI_Recv(elementMask,PetscBTLength(nElements_global),MPI_CHAR,rank-1,0,PROTEUS_COMM_WORLD,&status);
-    }
+  PetscLogEventEnd(receive_element_mask_event,0,0,0,0);
+  int build_subdomains_reread_elements_event;
+  PetscLogEventRegister("Reread eles",0,&build_subdomains_reread_elements_event);
+  PetscLogEventBegin(build_subdomains_reread_elements_event,0,0,0,0);
   //
   //mark the unmarked elements on this subdomain and store element numbers (in old numbering)
   //
@@ -2961,7 +2970,9 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   elementFile2 >> eatcomments >> nElements_global >> nNodesPerSimplex >> hasElementMarkers >> eatline;
   assert(nElements_global > 0);
   assert(nNodesPerSimplex == simplexDim); 
+  set<int> elements_subdomain_owned;
   vector<int> element_nodes_new(4);
+  int element_nodes_new_array[4];
   vector<set<int> > nodeElementsStar(nNodes_subdomain_new[rank]);
   vector<set<int> > nodeStarNew(nNodes_subdomain_new[rank]);
   map<int,vector<int> > elementNodesArrayMap;
@@ -2983,7 +2994,9 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 	  assert(0 <= nv && nv < nNodes_global);
 	  element_nodes_old[iv] = nv;
 	  element_nodes_new[iv] = nodeNumbering_global_old2new[nv];
+	  element_nodes_new_array[iv] = element_nodes_new[iv];
 	}
+      NodeTuple<4> nodeTuple(element_nodes_new_array);      
       for (int iv = 0; iv < simplexDim; iv++)
 	{
 	  int nN_star_new = element_nodes_new[iv];
@@ -3037,15 +3050,31 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 	      elementNodesArrayMap[ne] = element_nodes_new;
 	    }
 	}
-      if (hasElementMarkers > 0 && elementNodesArrayMap.find(ne) != elementNodesArrayMap.end())//this element contains a node owned by this subdomain
+      if (elementNodesArrayMap.find(ne) != elementNodesArrayMap.end())//this element contains a node owned by this subdomain
 	{
-	  elementFile2 >> elementId_double;
-          elementId = static_cast<long int>(elementId_double);
-	  elementMaterialTypesMap[ne] = elementId;
+	  if (nodeTuple.nodes[1] >= nodeOffsets_new[rank] && nodeTuple.nodes[1] < nodeOffsets_new[rank+1])
+	    elements_subdomain_owned.insert(ne);
+	  if (hasElementMarkers > 0)
+	    {
+	      elementFile2 >> elementId_double;
+	      elementId = static_cast<long int>(elementId_double);
+	      elementMaterialTypesMap[ne] = elementId;
+	    }
 	}
       elementFile2 >> eatline;
     }
   elementFile2.close();
+  int nElements_owned_subdomain(elements_subdomain_owned.size()),
+    nElements_owned_new=0;
+  MPI_Allreduce(&nElements_owned_subdomain,&nElements_owned_new,1,MPI_INT,MPI_SUM,PROTEUS_COMM_WORLD);
+  std::cout<<"nElements_owned_new "<<nElements_owned_new
+	   <<'\t'
+	   <<"nElements_global "<<nElements_global<<std::endl;
+  assert(nElements_owned_new == nElements_global);
+  PetscLogEventEnd(build_subdomains_reread_elements_event,0,0,0,0);
+  int build_subdomains_send_marked_elements_event;
+  PetscLogEventRegister("Mark/send eles",0,&build_subdomains_send_marked_elements_event);
+  PetscLogEventBegin(build_subdomains_send_marked_elements_event,0,0,0,0);
   //
   //done with the element file
   //
@@ -3076,28 +3105,10 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 	nodeStarArrayNew[offset] = *nN_star;
 	}
     }
-  //now build the set of owned elements by grabbing any untagged element in nodeElements for nodes on this subdomain
-  set<int> elements_subdomain_owned;
-  for (int nN = 0; nN < nNodes_subdomain_new[rank]; nN++)
-    {
-      for (int eN_star_offset = nodeElementOffsets[nN]; 
-	   eN_star_offset < nodeElementOffsets[nN+1]; eN_star_offset++)
-	{
-	  int eN_star_old = nodeElementsArray[eN_star_offset];
-	  if (!PetscBTLookupSet(elementMask,eN_star_old))
-	    {
-	      elements_subdomain_owned.insert(eN_star_old);
-	    }
-	}
-    }
-
-  //pass off newly marked elements to next rank
-  if (rank < size-1)
-    MPI_Send(elementMask,PetscBTLength(nElements_global),MPI_CHAR,rank+1,0,PROTEUS_COMM_WORLD);
-  ierr = PetscBTDestroy(&elementMask);
-  if (ierr)
-    cerr<<"Error in PetscBTDestroy"<<endl;
-
+  PetscLogEventEnd(build_subdomains_send_marked_elements_event,0,0,0,0);
+  int build_subdomains_global_numbering_elements_event;
+  PetscLogEventRegister("Global ele nmbr",0,&build_subdomains_global_numbering_elements_event);
+  PetscLogEventBegin(build_subdomains_global_numbering_elements_event,0,0,0,0);
   //
   //5. Generate global element numbering corresponding to new subdomain ownership
   //
@@ -3138,6 +3149,10 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     {
       elementNumbering_global_old2new[elementNumbering_global_new2old[eN]] = eN;
     }
+  PetscLogEventEnd(build_subdomains_global_numbering_elements_event,0,0,0,0);
+  int build_subdomains_faces_event;
+  PetscLogEventRegister("Subd faces",0,&build_subdomains_faces_event);
+  PetscLogEventBegin(build_subdomains_faces_event,0,0,0,0);
   //
   //4b,5b. repeat process to build global face (elementBoundary) numbering
   //
@@ -3166,6 +3181,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     }
   newMesh.nElementBoundaries_global = nElementBoundaries_global;
   //note, these will be in the new element numbering
+  set<int> elementBoundaries_subdomain_owned;
   vector<set<int> > nodeElementBoundariesStar(nNodes_subdomain_new[rank]);
   map<int,int> elementBoundaryMaterialTypesMap;
   map<int,vector<int> > elementBoundariesMap;
@@ -3206,6 +3222,8 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       elementBoundaryFile >> eatline;
       if (elementBoundaryElementsMap.find(nodeTuple) != elementBoundaryElementsMap.end())//this element boundary is on an element in the subdomain
 	{
+	  if (nodeTuple.nodes[1] >= nodeOffsets_new[rank] && nodeTuple.nodes[1] < nodeOffsets_new[rank+1])
+	    elementBoundaries_subdomain_owned.insert(neb);
 	  if (ihasElementBoundaryMarkers > 0)
 	    elementBoundaryMaterialTypesMap[neb]=ebId;
 	  int eN_left = elementNumbering_global_old2new[elementBoundaryElementsMap[nodeTuple].left];
@@ -3241,6 +3259,14 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     }
   //done reading element boundaries
   elementBoundaryFile.close();
+  int nElementBoundaries_owned_subdomain=elementBoundaries_subdomain_owned.size(),
+    nElementBoundaries_owned_new=0;
+  MPI_Allreduce(&nElementBoundaries_owned_subdomain,&nElementBoundaries_owned_new,1,MPI_INT,MPI_SUM,PROTEUS_COMM_WORLD);
+  std::cout<<nElementBoundaries_owned_new
+	   <<'\t'
+	   <<nElementBoundaries_global<<std::endl;
+  assert(nElementBoundaries_owned_new == nElementBoundaries_global);
+
   //now get the element boundaries on the outside of the star
   for (map<int,vector<int> >::iterator elementBoundariesp=elementBoundariesMap.begin();
        elementBoundariesp!=elementBoundariesMap.end();
@@ -3276,38 +3302,6 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 	}
     }
 
-  //get tagged elementBoundaries from preceding rank
-  MPI_Status status_elementBoundaries;
-  PetscBT elementBoundaryMask; 
-  PetscBTCreate(nElementBoundaries_global,&elementBoundaryMask);
-  if (rank > 0) 
-    {
-      MPI_Recv(elementBoundaryMask,PetscBTLength(nElementBoundaries_global),MPI_CHAR,rank-1,0,PROTEUS_COMM_WORLD,&status_elementBoundaries);
-    }
-  //mark the unmarked faces on this subdomain and store the global face numbers
-  //going through owned elements can pick up owned elementBoundaries on "outside" of owned nodes nodeStars 
-  set<int> elementBoundaries_subdomain_owned;
-  for (int nN = 0; nN < nNodes_subdomain_new[rank]; nN++)
-    {
-      for (int offset = nodeElementBoundaryOffsets[nN]; offset < nodeElementBoundaryOffsets[nN+1];offset++)
-	{
-	  int ebN_global_old = nodeElementBoundariesArray[offset];
-	  if (supportedElementBoundaries.count(ebN_global_old)) 
-	    {
-	      if (!PetscBTLookupSet(elementBoundaryMask,ebN_global_old))
-		{
-		  elementBoundaries_subdomain_owned.insert(ebN_global_old);
-		}
-	    }
-	}
-    }
-
-  //ship off the mask
-  if (rank < size-1)
-    MPI_Send(elementBoundaryMask,PetscBTLength(nElementBoundaries_global),MPI_CHAR,rank+1,0,PROTEUS_COMM_WORLD);
-  ierr = PetscBTDestroy(&elementBoundaryMask);
-  if (ierr)
-    cerr<<"Error in PetscBTDestroy for elementBoundaries"<<endl;
   //get the number of elementBoundaries owned on each processor
   valarray<int> nElementBoundaries_subdomain_new(size),
     elementBoundaryOffsets_new(size+1);
@@ -3343,6 +3337,10 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     {
       elementBoundaryNumbering_global_old2new[elementBoundaryNumbering_global_new2old[ebN]] = ebN;
     }
+  PetscLogEventEnd(build_subdomains_faces_event,0,0,0,0);
+  int build_subdomains_edges_event;
+  PetscLogEventRegister("Subd edges",0,&build_subdomains_edges_event);
+  PetscLogEventBegin(build_subdomains_edges_event,0,0,0,0);
   
   //
   //4c,5c. Repeate the process for edges
@@ -3367,6 +3365,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       hasEdgeMarkers = true;
     }
   newMesh.nEdges_global = nEdges_global;
+  set<int> edges_subdomain_owned;
   vector<set<int> > nodeEdgesStar(nNodes_subdomain_new[rank]);
   map<int,int> edgeMaterialTypesMap;
   map<int,vector<int> > elementEdgesMap;
@@ -3399,6 +3398,8 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
       edgeFile >> eatline;
       if (edgeElementsMap.find(nodeTuple) != edgeElementsMap.end())//this edge is on an element in the subdomain
 	{
+	  if (nodeTuple.nodes[0] >= nodeOffsets_new[rank] && nodeTuple.nodes[0] < nodeOffsets_new[rank+1])
+	    edges_subdomain_owned.insert(ned);
 	  //pick up all the edges on the subdomain and store their nodes
 	  edgeNodesMap[ned].first = nodeTuple.nodes[0];
 	  edgeNodesMap[ned].second = nodeTuple.nodes[1];
@@ -3423,6 +3424,13 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 	}
     }//end iv
   edgeFile.close();
+  int nEdges_owned_subdomain=edges_subdomain_owned.size(),
+    nEdges_owned_new=0;
+  MPI_Allreduce(&nEdges_owned_subdomain,&nEdges_owned_new,1,MPI_INT,MPI_SUM,PROTEUS_COMM_WORLD);
+  std::cout<<nEdges_owned_new
+	   <<'\t'
+	   <<nEdges_global<<std::endl;
+  assert(nEdges_owned_new == nEdges_global);
   //done with edge file
   //
   //just as with faces, we need to add edges along outer boundaries of star
@@ -3462,37 +3470,7 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 	  nodeEdgesArray[offset] = *edN_star;
 	}
     }
-  //get edge tags from previous processors
-  MPI_Status status_edges;
-  PetscBT edgeMask; 
-  PetscBTCreate(nEdges_global,&edgeMask);
-  if (rank > 0) 
-    {
-      MPI_Recv(edgeMask,PetscBTLength(nEdges_global),MPI_CHAR,rank-1,0,PROTEUS_COMM_WORLD,&status_edges);
-    }
-  //mark the unmarked edges on this subdomain and store the global face numbers
-  set<int> edges_subdomain_owned;
-  for (int nN = 0; nN < nNodes_subdomain_new[rank]; nN++)
-    {
-      for (int offset = nodeEdgeOffsets[nN]; offset < nodeEdgeOffsets[nN+1];offset++)
-	{
-	  int edN_global_old = nodeEdgesArray[offset];
-	  if (supportedEdges.count(edN_global_old))
-	    {
-	      if (!PetscBTLookupSet(edgeMask,edN_global_old))
-		{
-		  edges_subdomain_owned.insert(edN_global_old);
-		}
-	    }
-	}
-    }
   newMesh.subdomainp->nEdges_global = edgeNodesMap.size();
-  //ship off the mask
-  if (rank < size-1)
-    MPI_Send(edgeMask,PetscBTLength(nEdges_global),MPI_CHAR,rank+1,0,PROTEUS_COMM_WORLD);
-  ierr = PetscBTDestroy(&edgeMask);
-  if (ierr)
-    cerr<<"Error in PetscBTDestroy for edges"<<endl;
   //get the number of edges on each processor
   valarray<int> nEdges_subdomain_new(size),
     edgeOffsets_new(size+1);
@@ -3604,6 +3582,10 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   //7. add any addtional overlap, skip for now
   //
 
+  PetscLogEventEnd(build_subdomains_edges_event,0,0,0,0);
+  int build_subdomains_renumber_event;
+  PetscLogEventRegister("Subd's renumber",0,&build_subdomains_renumber_event);
+  PetscLogEventBegin(build_subdomains_renumber_event,0,0,0,0);
   //
   //8. Build subdomain meshes in new numbering, assumes memory not allocated in subdomain mesh
   //   
@@ -3990,6 +3972,10 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 	}
     }
 
+  PetscLogEventEnd(build_subdomains_renumber_event,0,0,0,0);
+  int build_subdomains_cleanup_event;
+  PetscLogEventRegister("Cleanup",0,&build_subdomains_cleanup_event);
+  PetscLogEventBegin(build_subdomains_cleanup_event,0,0,0,0);
   //transfer information about owned nodes and elements to mesh
   if (newMesh.nodeOffsets_subdomain_owned) 
     delete [] newMesh.nodeOffsets_subdomain_owned;
@@ -4073,6 +4059,9 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
 
   ISDestroy(&edgeNumberingIS_subdomain_new2old);
   ISDestroy(&edgeNumberingIS_global_new2old);
+  PetscLogEventEnd(build_subdomains_cleanup_event,0,0,0,0);
+  PetscLogStagePop();
+  PetscLogView(PETSC_VIEWER_STDOUT_WORLD);
   return 0;
 }
 
