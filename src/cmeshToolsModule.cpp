@@ -805,6 +805,7 @@ static PyObject* cmeshToolsGenerateTriangularMeshFromRectangularGrid(PyObject* s
   regularRectangularToTriangularMeshElements(nx,ny,MESH(cmesh),triangleFlag);
   regularRectangularToTriangularMeshNodes(nx,ny,Lx,Ly,MESH(cmesh));
   constructElementBoundaryElementsArray_triangle(MESH(cmesh));
+  regularRectangularToTriangularElementBoundaryMaterials(Lx,Ly,MESH(cmesh));
   Py_INCREF(Py_None); 
   return Py_None;
 }
@@ -831,6 +832,7 @@ static PyObject* cmeshToolsGenerateHexahedralMeshFromRectangularGrid(PyObject* s
   regularHexahedralMeshElements(nx,ny,nz,px,py,pz,MESH(cmesh));
   regularMeshNodes(nx,ny,nz,Lx,Ly,Lz,MESH(cmesh));
   constructElementBoundaryElementsArray_hexahedron(MESH(cmesh));
+  regularHexahedralToTetrahedralElementBoundaryMaterials(Lx,Ly,Lz,MESH(cmesh));
   Py_INCREF(Py_None); 
   return Py_None;
 }
