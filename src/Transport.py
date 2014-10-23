@@ -3515,6 +3515,8 @@ class OneLevelTransport(NonlinearEquation):
         self.calculateElementBoundaryQuadrature()
         log("Global Exterior Element Boundary Quadrature",level=3)
         self.calculateExteriorElementBoundaryQuadrature()
+    def updateAfterMeshMotion(self):
+        self.calculateQuadrature()#not always the right thing to do (e.g. for optimized models)
     def calculateElementQuadrature(self):
         """
         Calculate the physical location and weights of the quadrature rules
