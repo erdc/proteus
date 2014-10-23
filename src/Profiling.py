@@ -55,14 +55,19 @@ def openLog(filename,level,logLocation=None):
     global logLevel
     global preInitBuffer
     global logDir
+    global procID
+    global logAllProcesses
     filename_full = filename
     import os
     if logLocation != None:
         logDir = logLocation
         filename_full = os.path.join(logDir,filename)
-    logFile=open(filename_full,'w')
+    if  procID == None or procID == 0:
+        logFile=open(filename_full,'w')
+    elif logAllProcesses:
+        logFile=open(filename_full+`procID`,'w')
     logLevel = level
-    for (string,level,data) in preInitBuffer:
+    for string,level,data in preInitBuffer:
         logEvent(string,level,data)
 
 def closeLog():
@@ -83,7 +88,7 @@ def logEvent(stringIn, level=1, data=None):
                 else:
                     string = stringIn
                 if string!=None:
-                    if data:
+                    if data!=None:
                         string += repr(data)
                     string +='\n'
                     string = ("[%8d] " % (time() - startTime)) + string
