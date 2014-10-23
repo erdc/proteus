@@ -38,8 +38,6 @@ class AR_base:
         self.dataDir=dataDir
         self.filename=filename
         self.hdfFileGlb=None # The global XDMF file for hotStarts
-        if hotStart:
-            self.filename+="hot"
         self.comm=comm
         self.rank = comm.rank()
         self.size = comm.size()
@@ -52,19 +50,18 @@ class AR_base:
             self.hasTables=False
         self.xmlHeader = "<?xml version=\"1.0\" ?>\n<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>\n"
         if hotStart:
-            self.ar_old =  AR_base(dataDir,filename,useTextArchive,gatherAtClose=False,hotStart=False,readOnly=True)
-            self.xmlFile=open(os.path.join(self.dataDir,filename+"hot"+str(self.rank)+".xmf"),"w")
-            self.tree=ElementTree(Element("Xdmf",
-                                          {"Version":"2.0",
-                                           "xmlns:xi":"http://www.w3.org/2001/XInclude"}))
+            xmlFile_old=open(os.path.join(self.dataDir,filename+str(self.rank)+".xmf"),"r")
+            self.tree=ElementTree(file=xmlFile_old)
+            xmlFile_old.close()
+            self.xmlFile=open(os.path.join(self.dataDir,filename+str(self.rank)+".xmf"),"a")
             if self.hasTables and not useTextArchive:
-                self.hdfFilename=filename+"hot"+str(self.rank)+".h5"
+                self.hdfFilename=filename+str(self.rank)+".h5"
                 self.hdfFile=tables.openFile(os.path.join(self.dataDir,self.hdfFilename),
-                                             mode = "w",
+                                             mode = "a",
                                              title = filename+" Data")
                 self.dataItemFormat="HDF"
             else:
-                self.textDataDir=filename+"hot_Data"
+                self.textDataDir=filename+"_Data"
                 if not os.path.exists(self.textDataDir):
                     try:
                         os.mkdir(self.textDataDir)
