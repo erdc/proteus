@@ -351,7 +351,7 @@ ParMat_init(ParMat *self, PyObject *args, PyObject *kwds)
     }
   //cek hack
   //PetscOptionsPrint(stdout);
-  ISLocalToGlobalMappingCreate(PROTEUS_COMM_WORLD,bs*SHAPE(subdomain2global)[0],&indices[0],PETSC_COPY_VALUES,&self->subdomain2globalIS);
+  ISLocalToGlobalMappingCreate(PROTEUS_COMM_WORLD,1, bs*SHAPE(subdomain2global)[0],&indices[0],PETSC_COPY_VALUES,&self->subdomain2globalIS);
   MatSetLocalToGlobalMapping(self->m,self->subdomain2globalIS,self->subdomain2globalIS);
   return 0;
 }
@@ -625,7 +625,7 @@ CKSP_prepare(CKSP *self, PyObject* args)
     }
   MatAssemblyBegin(PETSCMAT(par_L),MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(PETSCMAT(par_L),MAT_FINAL_ASSEMBLY);
-  KSPSetOperators(self->ksp,PETSCMAT(par_L),PETSCMAT(par_L),DIFFERENT_NONZERO_PATTERN);
+  KSPSetOperators(self->ksp,PETSCMAT(par_L),PETSCMAT(par_L));
   KSPSetUp(self->ksp);
   Py_INCREF(Py_None); 
   return Py_None;
