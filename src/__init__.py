@@ -60,4 +60,5 @@ __all__ = ["Archiver",
            "cmeshTools",
            "cnumericalFlux",
            "cfmmfsw",
-           "cTwophaseDarcyCoefficients"]
+           "cTwophaseDarcyCoefficients",
+           "ADR"]
