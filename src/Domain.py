@@ -38,26 +38,29 @@ class RectangularDomain(D_base):
                  name="DefaultRectangularDomain",
                  units="m"):
         D_base.__init__(self,len(L),name,units)
+        self.boundaryTags = {'left':3,
+                             'right':5,
+                             'front':2,
+                             'back':6,
+                             'top':4,
+                             'bottom':1}
+        if self.nd==2:
+            self.boundaryTags = {'left':4,
+                                 'right':2,
+                                 'top':3,
+                                 'bottom':1}
+
         self.x=x
         self.L=L
     def writePoly(self,fileprefix):
         """
         Write the RectangularDomain using the poly format.
         """
-        self.boundaryLegend = {'left':3,
-                               'right':5,
-                               'front':2,
-                               'back':6,
-                               'top':4,
-                               'bottom':1}
+        self.boundaryLegend = self.boundaryTags
         unitesize=4.0/self.L[0]
         f = open(fileprefix+".poly",'w')
         if self.nd==2:
-            self.boundaryLegend = {'left':4,
-                                   'right':2,
-                                   'top':3,
-                                   'bottom':1}
-
+            self.boundaryLegend = self.boundaryTags
             fileString="""
 # vertices
 4 2 0 1

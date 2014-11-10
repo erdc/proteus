@@ -1,6 +1,6 @@
 from proteus import *
 from proteus.default_n import *
-from poisson_3d_tetgen_p import *
+from adr_bl_3d_p import *
 
 #steady-state so no time integration
 timeIntegration = NoIntegration
@@ -13,26 +13,24 @@ femSpaces = {0:C0_AffineLinearOnSimplexWithNodalBasis}
 elementQuadrature = SimplexGaussQuadrature(nd,3)
 elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 
-triangleOptions="VApq1.35q12feena%e" % ((he**3)/6.0,)
 logEvent("""Mesh generated using: tetgen -%s %s"""  % (triangleOptions,domain.polyfile+".poly"))
+triangleOptions="VApq1.35q12feena%e" % ((he**3)/6.0,)
 
 #number of levels in mesh
 nLevels = 1
 
-#no stabilization or shock capturing
-subgridError = None
-
-shockCapturing = None
+subgridError      = ADR.SubgridError(coefficients=coefficients,nd=nd)
+shockCapturing    = ADR.ShockCapturing(coefficients,nd,shockCapturingFactor=0.99,lag=False)
 
 #nonlinear solver choices
 multilevelNonlinearSolver  = Newton
 levelNonlinearSolver = Newton
 #linear problem so force 1 iteration allowed
-maxNonlinearIts = 2
+maxNonlinearIts = 10
 maxLineSearches = 1
 fullNewtonFlag = True
 #absolute nonlinear solver residual tolerance
-nl_atol_res = 1.0e-8
+nl_atol_res = 1.0e-6
 #relative nonlinear solver convergence tolerance as a function of h
 #(i.e., tighten relative convergence test as we refine)
 tolFac = 0.0
@@ -61,7 +59,7 @@ if parallel:
     parallelPartitioningType = MeshParallelPartitioningTypes.node
     #parallelPartitioningType = MeshParallelPartitioningTypes.element
     #have to have a numerical flux in parallel
-    numericalFluxType = Advection_DiagonalUpwind_Diffusion_IIPG_exterior
+    numericalFluxType = ADR.NumericalFlux
     #for true residual test
     linearSolverConvergenceTest = 'r-true'
     #to allow multiple models to set different ksp options
@@ -70,11 +68,11 @@ if parallel:
 else:
     multilevelLinearSolver = LU
     levelLinearSolver = LU
-    numericalFluxType = Advection_DiagonalUpwind_Diffusion_IIPG_exterior
+    numericalFluxType = ADR.NumericalFlux
 
 #linear solver relative convergence test
 linTolFac = 0.0
 #linear solver absolute convergence test
-l_atol_res = 1.0e-10
+l_atol_res = 1.0e-8
 
 #conservativeFlux =  {0:'pwl'}

@@ -805,6 +805,7 @@ static PyObject* cmeshToolsGenerateTriangularMeshFromRectangularGrid(PyObject* s
   regularRectangularToTriangularMeshElements(nx,ny,MESH(cmesh),triangleFlag);
   regularRectangularToTriangularMeshNodes(nx,ny,Lx,Ly,MESH(cmesh));
   constructElementBoundaryElementsArray_triangle(MESH(cmesh));
+  regularRectangularToTriangularElementBoundaryMaterials(Lx,Ly,MESH(cmesh));
   Py_INCREF(Py_None); 
   return Py_None;
 }
@@ -831,6 +832,7 @@ static PyObject* cmeshToolsGenerateHexahedralMeshFromRectangularGrid(PyObject* s
   regularHexahedralMeshElements(nx,ny,nz,px,py,pz,MESH(cmesh));
   regularMeshNodes(nx,ny,nz,Lx,Ly,Lz,MESH(cmesh));
   constructElementBoundaryElementsArray_hexahedron(MESH(cmesh));
+  regularHexahedralToTetrahedralElementBoundaryMaterials(Lx,Ly,Lz,MESH(cmesh));
   Py_INCREF(Py_None); 
   return Py_None;
 }
@@ -1887,7 +1889,7 @@ static PyTypeObject SparsityInfoType = {
 // 				    &argv,
 // 				    petscDatabaseFilename,
 // 				    (char*)("Initializing petsc for Proteus, with options database\n"));
-//   Py_PETSC_COMM_WORLD = Daetk::Petsc::cc::PETSC_COMM_WORLD;
+//   PROTEUS_COMM_WORLD = Daetk::Petsc::cc::PETSC_COMM_WORLD;
 //   delete [] argv;
 //   return Py_None;
 // }
