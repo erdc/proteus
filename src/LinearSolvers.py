@@ -471,7 +471,11 @@ class KSP_petsc4py(LinearSolver):
                     self.rnorm0 = truenorm
                     return False
                 else:
-                    return truenorm < self.rnorm0*ksp.rtol + ksp.atol
+                    if truenorm < self.rnorm0*ksp.rtol:
+                        return p4pyPETSc.KSP.ConvergedReason.CONVERGED_RTOL
+                    if truenorm < ksp.atol:
+                        return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
+                    return False
             self.ksp.setConvergenceTest(converged_trueRes)
         else:
             self.r_work = None
