@@ -588,6 +588,12 @@ class Mesh:
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0, EB=False):
         if self.arGridCollection != None:
             init = False
+        elif not init:
+            grids = ar.domain.findall("Grid")
+            self.arGridCollection = grids[0]
+            if EB:
+                assert(len(grids) > 1)
+                self.arEBGridCollection = grids[1]
         if init:
             self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
                                                                "GridType":"Collection",
@@ -2871,10 +2877,12 @@ class Mesh2DM(Mesh):
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Triangle",tCount=0):
         if self.arGridCollection != None:
             init = False
+        elif not init:
+            self.arGridCollection = ar.domain.find("Grid")
         if init:
             self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
-                                                               "GridType":"Collection",
-                                                               "CollectionType":"Temporal"})
+                                                                "GridType":"Collection",
+                                                                "CollectionType":"Temporal"})
         if self.arGrid == None or self.arTime.get('Value') != str(t):
             #
             #topology and geometry
@@ -3219,6 +3227,8 @@ class Mesh3DM(Mesh):
     def writeMeshXdmf(self,ar,name='',t=0.0,init=False,meshChanged=False,Xdmf_ElementTopology="Tetrahedron",tCount=0):
         if self.arGridCollection != None:
             init = False
+        elif not init:
+            self.arGridCollection = ar.domain.find("Grid")
         if init:
             self.arGridCollection = SubElement(ar.domain,"Grid",{"Name":"Mesh "+name,
                                                                "GridType":"Collection",

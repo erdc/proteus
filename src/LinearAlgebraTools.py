@@ -10,14 +10,15 @@ representations using PETSc.
 import numpy
 import math
 from .superluWrappers import *
-from . import flcbdfWrappers
 from Profiling import logEvent
-#PETSc import, forces comm init if not already done
 from petsc4py import PETSc as p4pyPETSc
-from . import Comm
-Comm.set_isInitialized()
-#end PETSc import
+from . import flcbdfWrappers
 
+def _petsc_view(obj, filename):
+    """Saves object to disk using a PETSc binary viewer.
+    """
+    viewer = p4pyPETSc.Viewer().createBinary(filename, 'w')
+    viewer(obj)
 
 class ParVec:
     """
@@ -103,12 +104,18 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
         self.ghostUpdateBegin(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
         self.ghostUpdateEnd(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
 
+    def save(self, filename):
+        """Saves to disk using a PETSc binary viewer.
+        """
+        _petsc_view(self, filename)
+
 
 class ParMat_petsc4py(p4pyPETSc.Mat):
     """
     Parallel matrix based on petsc4py's wrappers for PETSc.
     """
-    def __init__(self,ghosted_csr_mat,par_bs,par_n,par_N,par_nghost,subdomain2global,blockVecType="simple"):
+    def __init__(self,ghosted_csr_mat,par_bs,par_n,par_N,par_nghost,subdomain2global,blockVecType="simple",pde=None):
+        self.pde = pde
         p4pyPETSc.Mat.__init__(self)
         self.ghosted_csr_mat=ghosted_csr_mat
         self.blockVecType = blockVecType
@@ -145,6 +152,11 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         self.setUp()
         self.setLGMap(self.petsc_l2g)
         self.setFromOptions()
+
+    def save(self, filename):
+        """Saves to disk using a PETSc binary viewer.
+        """
+        _petsc_view(self, filename)
 
 
 def Vec(n):

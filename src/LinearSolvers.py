@@ -4,13 +4,9 @@ A hierarchy of classes for linear algebraic system solvers.
 from LinearAlgebraTools import *
 import lapackWrappers
 import superluWrappers
+from petsc4py import PETSc as p4pyPETSc
 from math import *
 from Profiling import logEvent
-#PETSc import, forces comm init if not already done
-from petsc4py import PETSc as p4pyPETSc
-import Comm
-Comm.set_isInitialized()
-#end PETSc import
 
 class LinearSolver:
     """
@@ -373,6 +369,7 @@ class KSP_petsc4py(LinearSolver):
                               printInfo=printInfo)
         import petsc4py
         self.pccontext = None
+        self.preconditioner = None
         self.pc = None
         if Preconditioner != None:
             if Preconditioner == Jacobi:
@@ -433,6 +430,12 @@ class KSP_petsc4py(LinearSolver):
             elif Preconditioner == SimpleNavierStokes2D:
                 self.preconditioner = SimpleNavierStokes2D(par_L,prefix)
                 self.pc = self.preconditioner.pc
+            elif Preconditioner == SimpleNavierStokes3D_null_pp:
+                self.preconditioner = SimpleNavierStokes3D(par_L,prefix)
+                self.pc = self.preconditioner.pc
+            elif Preconditioner == SimpleNavierStokes2D_null_pp:
+                self.preconditioner = SimpleNavierStokes2D(par_L,prefix)
+                self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleDarcyFC:
                 self.preconditioner = SimpleDarcyFC(par_L)
                 self.pc = self.preconditioner.pc
@@ -468,7 +471,11 @@ class KSP_petsc4py(LinearSolver):
                     self.rnorm0 = truenorm
                     return False
                 else:
-                    return truenorm < self.rnorm0*ksp.rtol + ksp.atol
+                    if truenorm < self.rnorm0*ksp.rtol:
+                        return p4pyPETSc.KSP.ConvergedReason.CONVERGED_RTOL
+                    if truenorm < ksp.atol:
+                        return p4pyPETSc.KSP.ConvergedReason.CONVERGED_ATOL
+                    return False
             self.ksp.setConvergenceTest(converged_trueRes)
         else:
             self.r_work = None
@@ -500,10 +507,12 @@ class KSP_petsc4py(LinearSolver):
         if self.pc != None:
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
+            if self.preconditioner:
+                self.preconditioner.setUp()
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
         #self.ksp.setOperators(self.Lshell,self.petsc_L)
         self.ksp.setUp()
-    def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=False):
+    def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
 #         if self.petsc_L.isSymmetric(tol=1.0e-14):
 #            self.petsc_L.setOption(p4pyPETSc.Mat.Option.SYMMETRIC, True)
 #            print "Matrix is symmetric"
@@ -519,8 +528,9 @@ class KSP_petsc4py(LinearSolver):
             self.pccontext.par_u = par_u
         if self.matcontext != None:
             self.matcontext.par_b = par_b
-
-        self.ksp.setInitialGuessNonzero(False)
+        
+        if not initialGuessIsZero:
+            self.ksp.setInitialGuessNonzero(True)
         self.ksp.solve(par_b,par_u)
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
@@ -543,8 +553,10 @@ class KSP_petsc4py(LinearSolver):
 
     def info(self):
         self.ksp.view()
+
 class SimpleNavierStokes3D:
     def __init__(self,L,prefix=None):
+        self.L = L
         sizes = L.getSizes()
         range = L.getOwnershipRange()
         #print "sizes",sizes
@@ -568,6 +580,12 @@ class SimpleNavierStokes3D:
         #self.pc.setFieldSplitIS(('pressure',self.isp),('velocity',self.isv))
         #self.pc.setFieldSplitIS(self.velocityDOF)
         #self.pc.setFieldSplitIS(self.pressureDOF)
+    def setUp(self):
+        if self.L.pde.pp_hasConstantNullSpace:
+            if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
+                self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
+                self.kspList = self.pc.getFieldSplitSubKSP()
+                self.kspList[1].setNullSpace(self.nsp)
 
 class SimpleDarcyFC:
     def __init__(self,L):
@@ -588,9 +606,12 @@ class SimpleDarcyFC:
         self.isv.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(self.isp)
         self.pc.setFieldSplitIS(self.isv)
+    def setUp(self):
+        pass
 
 class SimpleNavierStokes2D:
     def __init__(self,L,prefix=None):
+        self.L=L
         sizes = L.getSizes()
         range = L.getOwnershipRange()
         #print "sizes",sizes
@@ -611,9 +632,12 @@ class SimpleNavierStokes2D:
         #self.pc.setFieldSplitIS(self.isv)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
-        #self.pc.setFieldSplitIS(('pressure',self.isp),('velocity',self.isv))
-        #self.pc.setFieldSplitIS(self.velocityDOF)
-        #self.pc.setFieldSplitIS(self.pressureDOF)
+    def setUp(self):
+        if self.L.pde.pp_hasConstantNullSpace:
+            if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
+                self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
+                self.kspList = self.pc.getFieldSplitSubKSP()
+                self.kspList[1].setNullSpace(self.nsp)
 
 class SimpleDarcyFC:
     def __init__(self,L):
@@ -634,6 +658,8 @@ class SimpleDarcyFC:
         self.isv.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(self.isp)
         self.pc.setFieldSplitIS(self.isv)
+    def setUp(self):
+        pass
 
 class Jacobi(LinearSolver):
     """
