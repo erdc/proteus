@@ -1,3 +1,4 @@
+*.csv
 *.pyc
 *.xmf
 *.h5
