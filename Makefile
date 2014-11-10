@@ -23,7 +23,7 @@ ifeq ($(PROTEUS_ARCH), cygwin)
 BOOTSTRAP = cygwin_bootstrap.done
 endif
 
-ifndef NO_MATLAB
+ifdef MATLAB
 MATLAB_SETUP = matlab_setup.done
 endif
 
@@ -57,38 +57,38 @@ distclean: clean
 	-rm -rf build src/*.pyc src/*.so src/*.a
 
 update:
-	@echo "Manually trying to update all repositories to most recent stable configuration"
-	git fetch origin; git checkout -q origin/stable/cygwin
-	@echo "Proteus repository updated to latest stable version"
-	cd stack; git fetch origin; git checkout -q origin/stable/cygwin
-	@echo "Stack repository updated to latest stable version"
-	cd hashdist; git fetch origin; git checkout -q origin/stable/cygwin
-	@echo "Hashdist repository updated to latest stable version"
+	@echo "Manually trying to update all repositories"
+	git fetch origin; git checkout -q origin/master
+	@echo "Proteus repository updated to latest versions"
+	cd stack; git fetch origin; git checkout -q origin/master
+	@echo "Stack repository updated to latest versions"
+	cd hashdist; git fetch origin; git checkout -q origin/master
+	@echo "HashDist repository updated to latest versions"
 	@echo "+======================================================================================================+"
 	@echo "Warning, the HEAD has been detached in all repositories"
 	@echo "Type: git checkout -b branch_name to save changes" 
 	@echo "+======================================================================================================+"
 
 hashdist: 
-	@echo "No hashdist found.  Cloning stable hashdist from GitHub"
-	git clone -b stable/cygwin https://github.com/hashdist/hashdist.git
+	@echo "No hashdist found.  Cloning hashdist from GitHub"
+	git clone https://github.com/hashdist/hashdist.git
 
 stack: 
-	@echo "No stack found.  Cloning private stack from GitHub"
-	git clone --branch roams https://github.com/erdc-cm/hashstack-private.git stack
+	@echo "No stack found.  Cloning stack from GitHub"
+	git clone https://github.com/hashdist/hashstack.git stack
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	touch cygwin_bootstrap.done
 
 matlab_setup.done: stack stack/default.yaml hashdist
+	@echo "User requests MATLAB install"
+	@echo "MATLAB environment variable set to ${MATLAB}"
 	@python setupmatlab.py stack/default.yaml ${MATLAB}; if [ $$? -ne 0 ] ; then \
 	echo "+======================================================================================================+"; \
 	echo "Couldn't find matlab on PATH."; \
-	echo "Try either"; \
+	echo "Try"; \
 	echo "    MATLAB=/path/to/matlab make"; \
-	echo "or "; \
-	echo "    NO_MATLAB=1 make"; \
 	echo "+======================================================================================================+"; \
 	false; fi
 	touch matlab_setup.done
