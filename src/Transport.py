@@ -5519,9 +5519,13 @@ class MultilevelTransport:
         self.par_rList=[]
         self.trialSpaceDictList=[]
         self.trialSpaceListDict={}
+        global_trialSpaceDictList=[]
+        global_trialSpaceListDict={}
         self.testSpaceDictList=[]
         self.bcDictList=[]
         self.bcListDict={}
+        global_bcDictList=[]
+        global_bcListDict={}
         self.levelModelList=[]
         self.offsetListList=[]
         self.strideListList=[]
@@ -5538,6 +5542,8 @@ class MultilevelTransport:
         for  cj in TrialSpaceTypeDict.keys():
             self.trialSpaceListDict[cj]=[]
             self.bcListDict[cj]=[]
+            global_trialSpaceListDict[cj]=[]
+            global_bcListDict[cj]=[]
         for mesh in mlMesh.meshList:
             #import pdb
             #pdb.set_trace()
@@ -5546,6 +5552,8 @@ class MultilevelTransport:
             log("Generating Trial Space",level=2)
             trialSpaceDict = dict([ (cj,TrialSpaceType(sdmesh,nd)) for (cj,TrialSpaceType) in TrialSpaceTypeDict.iteritems()])
             self.trialSpaceDictList.append(trialSpaceDict)
+            global_trialSpaceDict = dict([ (cj,TrialSpaceType(mesh,nd)) for (cj,TrialSpaceType) in TrialSpaceTypeDict.iteritems()])
+            global_trialSpaceDictList.append(global_trialSpaceDict)
             log("Generating Test Space",level=2)
             testSpaceDict = dict([(ci,TestSpaceType(sdmesh,nd)) for (ci,TestSpaceType) in TestSpaceTypeDict.iteritems()])
             self.testSpaceDictList.append(testSpaceDict)
@@ -5580,17 +5588,27 @@ class MultilevelTransport:
                 dirichletConditionsDict=dict([(cj,DOFBoundaryConditions(
                     trialSpace,dirichletConditionsSetterDict[cj],useWeakDirichletConditions))
                                               for (cj,trialSpace) in trialSpaceDict.iteritems()])
+                global_dirichletConditionsDict=dict([(cj,DOFBoundaryConditions(
+                    trialSpace,dirichletConditionsSetterDict[cj],useWeakDirichletConditions))
+                                              for (cj,trialSpace) in global_trialSpaceDict.iteritems()])
             else:
                 log("Setting Boundary Conditions-2b")
                 dirichletConditionsDict=dict([(cj,DOFBoundaryConditions(
                     trialSpace,dirichletConditionsSetterDict[cj],useWeakDirichletConditions,options.periodicDirichletConditions[cj]))
                                               for (cj,trialSpace) in trialSpaceDict.iteritems()])
+                global_dirichletConditionsDict=dict([(cj,DOFBoundaryConditions(
+                    trialSpace,dirichletConditionsSetterDict[cj],useWeakDirichletConditions,options.periodicDirichletConditions[cj]))
+                                              for (cj,trialSpace) in global_trialSpaceDict.iteritems()])
             log("Setting Boundary Conditions-3")
             self.bcDictList.append(dirichletConditionsDict)
+            global_bcDictList.append(global_dirichletConditionsDict)
             log("Setting Boundary Conditions-4")
             for cj in TrialSpaceTypeDict.keys():
                 self.trialSpaceListDict[cj].append(trialSpaceDict[cj])
                 self.bcListDict[cj].append(dirichletConditionsDict[cj])
+            for cj in TrialSpaceTypeDict.keys():
+                global_trialSpaceListDict[cj].append(global_trialSpaceDict[cj])
+                global_bcListDict[cj].append(global_dirichletConditionsDict[cj])
             #cek try setting parallel periodic conditions
             #
             import Comm
@@ -5802,10 +5820,10 @@ class MultilevelTransport:
         MultilevelProjectionOperatorType = MultilevelProjectionOperators
         self. meshTransfers = MultilevelProjectionOperatorType(
             mlMesh,
-            self.trialSpaceDictList,
+            global_trialSpaceDictList,
             self.offsetListList,
             self.strideListList,
-            self.bcDictList)
+            global_bcDictList)
         log(memory("mesh transfers","MultilevelTransport"),level=4)
         #mwf hack keep reference to mlMesh in Transport ctor for now
         self.mlMeshSave = mlMesh
