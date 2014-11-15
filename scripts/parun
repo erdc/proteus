@@ -209,8 +209,17 @@ if opts.petscOptions != None:
 else:
     petsc_argv=sys.argv[:1]
 if opts.petscOptionsFile != None:
+
     petsc_argv=[sys.argv[0]]
-    petsc_argv += open(opts.petscOptionsFile).read().split()
+    with open(opts.petscOptionsFile) as petsc_file:
+        data = petsc_file.readlines()
+    def strip_comments(line):
+        if '#' in line:
+            line = line[:line.index('#')]
+        return line
+
+    stripped_data = [strip_comments(line) for line in data]
+    petsc_argv += '\n'.join(stripped_data).split()
     log("PETSc options from commandline")
     log(str(petsc_argv))
 
