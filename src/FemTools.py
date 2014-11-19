@@ -27,6 +27,8 @@ class ReferenceElement:
         self.boundaryMapInverseList=[]
         self.boundaryJacobianList=[]
         self.boundaryUnitNormalList=[]
+    def onElement(self,xi):
+        raise NotImplementedError
 
 class ReferenceSimplex(ReferenceElement):
     """
@@ -143,6 +145,9 @@ class ReferenceSimplex(ReferenceElement):
             self.boundaryUnitNormalList.append(numpy.array([0.0,
                                                               0.0,
                                                               -1.0]))
+    def onElement(self,xi):
+        return (xi >= 0).all() and sum(xi) <= 1
+
 class ReferenceCube(ReferenceElement):
     """
     The unit cube in :math:`R^n, n<=3`
@@ -262,6 +267,8 @@ class ReferenceCube(ReferenceElement):
                                                           [0.0,1.0],
                                                           [0.0,0.0]]))
             self.boundaryUnitNormalList.append(numpy.array([0.0,0.0,1.0]))
+    def onElement(self,xi):
+        return (xi >= 0.0).all() and (xi <= 1.0).all()
 
 class LocalFunctionSpace:
     """
@@ -2184,6 +2191,16 @@ class ElementMaps:
         given on the physical elements. Return the value of the inverse map.
         """
         pass
+    def getInverseValue(self,
+                        eN,
+                        x):
+        """
+        Evaluate the element inverse map at a point, x,
+        given in physical coorindates. Return the value of the inverse map, xi, in reference coordinates.
+
+        Note: The mapped point may not lie on the reference  element
+        """
+        pass
     def getBasisValuesTraceRef(self,
                                xiArray):
         """
@@ -2800,6 +2817,40 @@ class AffineMaps(ParametricMaps):
                     for m in self.referenceElement.range_dim:
                         for n in self.referenceElement.range_dim:
                             xiArray[eN,k,m] += inverseJacobian[m,n]*dx[n]
+    def getInverseValue(self,
+                        eN,
+                        x):
+        xi=numpy.zeros((self.referenceElement.dim,),'d')
+        grad_psi = numpy.zeros((self.localFunctionSpace.dim,
+                                  self.referenceElement.dim),
+                                 'd')
+        dx = numpy.zeros((self.referenceElement.dim),
+                           'd')
+        jacobian = numpy.zeros((self.referenceElement.dim,
+                                  self.referenceElement.dim),
+                                 'd')
+        inverseJacobian = numpy.zeros((self.referenceElement.dim,
+                                         self.referenceElement.dim),
+                                        'd')
+        for j in self.localFunctionSpace.range_dim:
+            grad_psi[j,:] = self.localFunctionSpace.basisGradients[j](xi)
+        jacobian.flat[:]=0.0
+        inverseJacobian.flat[:]=0.0
+        for j in self.localFunctionSpace.range_dim:
+            J = self.meshDOFMap.l2g[eN,j]
+            for m in self.referenceElement.range_dim:
+                for n in self.referenceElement.range_dim:
+                    jacobian[m,n] += self.mesh.nodeArray[J,m]*grad_psi[j,n]
+        J = self.meshDOFMap.l2g[eN,0]
+        inverseJacobian = inv(jacobian)
+        for m in self.referenceElement.range_dim:
+            dx[m]=x[m]
+        for m in self.referenceElement.range_dim:
+            dx[m]-=self.mesh.nodeArray[J,m]
+        for m in self.referenceElement.range_dim:
+            for n in self.referenceElement.range_dim:
+                xi[m] += inverseJacobian[m,n]*dx[n]
+        return xi
     def getInverseValuesTrace(self,
                               inverseJacobian,
                               xArray,
