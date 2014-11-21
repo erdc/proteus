@@ -16,6 +16,7 @@ data*txt
 *.ele
 *.face
 *.node
+*.poly
 *.bak
 *.log.*
 install_*
@@ -27,6 +28,7 @@ linux2/
 garnet.gnu/
 Cygwin
 mesh*
+proteus.egg-info/
 proteus/subsurfaceTransportFunctions.c
 hashdist/
 stack/
