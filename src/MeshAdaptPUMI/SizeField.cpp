@@ -3,6 +3,9 @@
 #include <apfVector.h>
 #include <apfMesh.h>
 #include <apfDynamicVector.h>
+#include <string>
+#include <iostream>
+#include <sstream>
 
 enum {
   PHI_IDX = 5
@@ -10,8 +13,7 @@ enum {
 
 static void SmoothField(apf::Field* f);
 
-/* Based on the distance from the interface
-   epsilon can be controlled to determine
+/* Based on the distance from the interface epsilon can be controlled to determine
    thickness of refinement near the interface */
 static double isotropicFormula(double* solution, double hmin, double hmax)
 {
@@ -84,9 +86,7 @@ static apf::Field* computeHessianField(apf::Field* grad2phi)
   return hessf;
 }
 
-/* curves based on hessian and gradient of phi.
-   vector and matrix operators should be able
-   to simplify this from its current component-based form */
+// Gaussian, Mean and principal curvatures based on Hessian and gradient of phi. 
 static void curveFormula(apf::Matrix3x3 const& h, apf::Vector3 const& g,
     apf::Vector3& curve)
 {
@@ -98,7 +98,7 @@ static void curveFormula(apf::Matrix3x3 const& h, apf::Vector3 const& g,
              + g[0] * g[2] * h[0][2]
              + g[1] * g[2] * h[1][2];
 
-  double Km = (a - 2 * b) / pow(g * g, 1.5);
+  double Km = 0.5* (a - 2 * b) / pow(g * g, 1.5);
 
   double c =   g[0] * g[0] * (h[1][1] * h[2][2] - h[1][2] * h[1][2])
              + g[1] * g[1] * (h[0][0] * h[2][2] - h[0][2] * h[0][2])
@@ -110,9 +110,9 @@ static void curveFormula(apf::Matrix3x3 const& h, apf::Vector3 const& g,
 
   double Kg = (c + 2 * d) / pow(g * g, 2);
 
-  curve[0] = Km;
-  curve[1] = Km + sqrt(Km * Km - Kg);
-  curve[2] = Km - sqrt(Km * Km - Kg);
+  curve[0] = Km;                  //Mean curvature= (k_1+k_2)/2, Not used in normal direction
+  curve[1] = Km+ sqrt(Km*Km- Kg); //k_1, First principal curvature  (maximum curvature)
+  curve[2] = Km- sqrt(Km*Km- Kg); //k_2, Second principal curvature (minimum curvature)
 }
 
 static apf::Field* getCurves(apf::Field* hessians, apf::Field* gradphi)
@@ -146,24 +146,19 @@ static void scaleFormula(double phi, double hmin, double hmax,
     apf::Vector3 const& curves,
     apf::Vector3& scale)
 {
-  double epsilon = 2 * hmin + exp( -adapt_step / 4) * hmin * 2.5;
-//  if (fabs(phi) < 3 * epsilon) {
-//    scale[0] = hmin;
-//    scale[1] = sqrt(.0004 / fabs(curves[1]));
-//    scale[2] = sqrt(.0004 / fabs(curves[2]));
-//  } else {
-//    scale = apf::Vector3(1,1,1) * hmax;
-//  }
+  double epsilon = 7.0* hmin; 
+  if (fabs(phi) < epsilon) {
+     scale[0] = hmin;
+     scale[1] = sqrt(0.002/ fabs(curves[1]));
+     scale[2] = sqrt(0.002/ fabs(curves[2]));
+  }else if(fabs(phi) < 4 * epsilon){
+     scale[0] = 2 * hmin;
+     scale[1] = 2 * sqrt(0.002/ fabs(curves[1])); 
+     scale[2] = 2 * sqrt(0.002/ fabs(curves[2])); 
+  }else{
+     scale = apf::Vector3(1,1,1) * hmax; 
+ }	  
 
- if (fabs(phi) < 1.5* epsilon) {
-    scale[0] =  hmin ;
-    scale[1] =  2*hmin;
-    scale[2] =  2*hmin;
- }else if(fabs(phi) < 3* epsilon){
-    scale = apf::Vector3(1,1,1) * 4* hmin;
- }else{
-    scale = apf::Vector3(1,1,1) * hmax;
- }
 
   for (int i = 0; i < 3; ++i)
     clamp(scale[i], hmin, hmax);
@@ -189,7 +184,13 @@ static apf::Field* getSizeScales(apf::Field* phif, apf::Field* curves,
   return scales;
 }
 
-static apf::Field* getSizeFrames(apf::Field* gradphi)
+struct SortingStruct
+  {
+  int i;
+  double m;
+  };
+
+static apf::Field* getSizeFrames(apf::Field* hessians, apf::Field* gradphi)     
 {
   apf::Mesh* m = apf::getMesh(gradphi);
   apf::Field* frames;
@@ -197,15 +198,42 @@ static apf::Field* getSizeFrames(apf::Field* gradphi)
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* v;
   while ((v = m->iterate(it))) {
-    apf::Vector3 gphi;
+
+//  Finding the eigenvalues and eigenvectors of the Hessian of the distance field.
+//  Largest eigenvalue and the corresponding eigenvector, represent the principal curvature and principal
+//  direction; respectively.	
+    apf::Matrix3x3 hessian;                                                     
+    apf::getMatrix(hessians, v, 0, hessian);                                    
+    apf::Vector3 eigenVector[3];         
+    double eigenValue[3];                                                       
+	int n= apf::eigen(hessian, eigenVector, eigenValue);                        
+ 
+//  Sorting EigenValues by decreasing absolute value 
+    SortingStruct s[3] =
+    {{0,fabs(eigenValue[0])},{1,fabs(eigenValue[1])},{2,fabs(eigenValue[2])}};
+    if (s[2].m > s[1].m)
+       std::swap(s[1],s[2]);
+    if (s[1].m > s[0].m)
+       std::swap(s[0],s[1]);
+    if (s[2].m > s[1].m)
+       std::swap(s[1],s[2]);
+    int largest = s[0].i;
+    int medium  = s[1].i;
+    int smallest= s[2].i;
+
+// 1st Frame Size (normal):         First dferivative of the phi and not the Hessian (to be more accurate)	
+// 2nd Frame Size (1st tangential): Hessian's eigenvector corresponding to Hessian's larget eigenvalue
+// 3rd Frame Size (2nd tangenital): Cross product of the normal vector and the 1st tangential vector	
+	apf::Vector3 gphi;
     apf::getVector(gradphi, v, 0, gphi);
-    apf::Matrix3x3 frame;
-/* the anisotropic frame is just aligned
-   to have grad(phi) along the first axis */
-    frame = apf::getFrame(gphi);
-    for (int i = 0; i < 3; ++i)
-/* apf::getFrame does not normalize, we have to */
-      frame[i] = frame[i].normalize();
+	apf::Matrix3x3 frameHess;
+    frameHess[0] = gphi;                            
+	frameHess[1] = eigenVector[largest];            
+    frameHess[2] = cross(frameHess[0],frameHess[1]);
+
+	apf::Matrix3x3 frame;
+    for (int i = 0; i < 3; ++i)       
+       frame[i] = frameHess[i].normalize(); 
     frame = apf::transpose(frame);
     apf::setMatrix(frames, v, 0, frame);
   }
@@ -213,14 +241,6 @@ static apf::Field* getSizeFrames(apf::Field* gradphi)
   return frames;
 }
 
-/*
- Function to calculate anisotropic size field
- The idea is to set hmin in level set gradient's direction, the other 2 sizes are
- set based on the local curvatures (calculated from Hessian)
- Currently directions are chosen perpendicular to the gradient, since for the dambreak
- y axis is the thickness, it is a natural option as one of the directions, but will need to
- have a more general formulation
- */
 int MeshAdaptPUMIDrvr::CalculateAnisoSizeField()
 {
   apf::Field* phif = extractPhi(solution);
@@ -229,17 +249,30 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField()
   apf::Field* hess = computeHessianField(grad2phi);
   apf::destroyField(grad2phi);
   apf::Field* curves = getCurves(hess, gradphi);
-  apf::destroyField(hess);
   freeField(size_scale);
+  
   size_scale = getSizeScales(phif, curves, hmin, hmax, nAdapt);
   apf::destroyField(phif);
   apf::destroyField(curves);
   freeField(size_frame);
-  size_frame = getSizeFrames(gradphi);
+  size_frame = getSizeFrames(hess,gradphi); 
+
+  apf::destroyField(hess);                    
   apf::destroyField(gradphi);
   for (int i = 0; i < 2; ++i)
     SmoothField(size_scale);
-  apf::writeVtkFiles("pumi_size", m);
+ 
+  //apf::writeVtkFiles("pumi_size", m);
+  std::stringstream s1;
+  s1 << "SizeField_t" << nAdapt;
+  std::string str1 = s1.str();
+  apf::writeVtkFiles(str1.c_str(), m);
+
+  std::stringstream s2;
+  s2 << "SizeField_t" << nAdapt<<".smb";
+  std::string str2 = s2.str();
+  m->writeNative(str2.c_str());
+
   return 0;
 }
 
