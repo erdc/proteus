@@ -1,5 +1,10 @@
 *.csv
 *.pyc
+*.so
+*.dylib
+*.info
+*.petsc_mat
+*.petsc_vec
 *.xmf
 *.h5
 *~
@@ -11,6 +16,7 @@ data*txt
 *.ele
 *.face
 *.node
+*.poly
 *.bak
 *.log.*
 install_*
@@ -22,7 +28,8 @@ linux2/
 garnet.gnu/
 Cygwin
 mesh*
-src/subsurfaceTransportFunctions.c
+proteus.egg-info/
+proteus/subsurfaceTransportFunctions.c
 hashdist/
 stack/
 cygwin_bootstrap.done
