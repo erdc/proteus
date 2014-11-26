@@ -211,6 +211,8 @@ needEBQ = False
 
 auxiliaryVariables=[]
 
+periodicDirichletConditions=None
+
 restrictFineSolutionToAllMeshes=False
 parallelPartitioningType = MeshParallelPartitioningTypes.element
 #default number of layers to use > 1 with element partition means
