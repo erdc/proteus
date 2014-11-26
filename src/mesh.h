@@ -125,6 +125,20 @@ extern "C"
     mesh.nodeSupportArray=NULL;
     mesh.newestNodeBases=NULL;
 
+    //parallel
+    mesh.elementOffsets_subdomain_owned=NULL;
+    mesh.elementNumbering_subdomain2global=NULL;
+    mesh.elementNumbering_global2original=NULL;
+    mesh.nodeOffsets_subdomain_owned=NULL;
+    mesh.nodeNumbering_subdomain2global=NULL;
+    mesh.nodeNumbering_global2original=NULL;
+    mesh.elementBoundaryOffsets_subdomain_owned=NULL;
+    mesh.elementBoundaryNumbering_subdomain2global=NULL;
+    mesh.elementBoundaryNumbering_global2original=NULL;
+    mesh.edgeOffsets_subdomain_owned=NULL;
+    mesh.edgeNumbering_subdomain2global=NULL;
+    mesh.edgeNumbering_global2original=NULL;
+
     // NURBS
     mesh.nx=mesh.ny=mesh.nz=0;
     mesh.px=mesh.py=mesh.pz=0;    
@@ -274,12 +288,14 @@ extern "C"
 
   int regularRectangularToTriangularMeshElements(const int& nx,const int& ny,Mesh& mesh, int triangleFlag);
   int regularRectangularToTriangularMeshNodes(const int& nx, const int& ny, const double& Lx, const double& Ly, Mesh& mesh);
+  int regularRectangularToTriangularElementBoundaryMaterials(const double& Lx, const double& Ly, Mesh& mesh);
   int globallyRefineTriangularMesh(const int& nLevels, Mesh& mesh, MultilevelMesh& multilevelMesh, bool averageNewNodeFlags=false);
 
 
   int regularMeshNodes(const int& nx,const int& ny,const int& nz, const double& Lx, const double& Ly, const double& Lz, Mesh& mesh);
   int regularHexahedralToTetrahedralMeshNodes(const int& nx,const int& ny,const int& nz, const double& Lx, const double& Ly, const double& Lz, Mesh& mesh);
   int regularHexahedralToTetrahedralMeshElements(const int& nx,const int& ny,const int& nz,Mesh& mesh);
+  int regularHexahedralToTetrahedralElementBoundaryMaterials(const double& Lx, const double& Ly, const double& Lz, Mesh& mesh);
   int regularHexahedralMeshElements(const int& nx,const int& ny,const int& nz,const int& px,const int& py,const int& pz, Mesh& mesh);
   int regularNURBSMeshElements(const int& nx,const int& ny,const int& nz,const int& px,const int& py,const int& pz,Mesh& mesh);
   
