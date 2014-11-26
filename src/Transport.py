@@ -3515,6 +3515,8 @@ class OneLevelTransport(NonlinearEquation):
         self.calculateElementBoundaryQuadrature()
         log("Global Exterior Element Boundary Quadrature",level=3)
         self.calculateExteriorElementBoundaryQuadrature()
+    def updateAfterMeshMotion(self):
+        self.calculateQuadrature()#not always the right thing to do (e.g. for optimized models)
     def calculateElementQuadrature(self):
         """
         Calculate the physical location and weights of the quadrature rules
@@ -5747,7 +5749,7 @@ class MultilevelTransport:
                     log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                     par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
                     log("Allocating matrix on rank %i" % comm.rank(),level=2)
-                    par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global)
+                    par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
                 else:
                     log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                     par_u = ParVec(u,par_bs,par_n,par_N,par_nghost,subdomain2global)
@@ -5785,7 +5787,7 @@ class MultilevelTransport:
                 log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                 par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
                 log("Allocating matrix on rank %i" % comm.rank(),level=2)
-                par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global)
+                par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
             else:
                 par_u = None
                 par_r = None
@@ -5827,5 +5829,21 @@ class MultilevelTransport:
             for mOther in modelList:
                 models.append(mOther.levelModelList[l])
             m.coefficients.attachModels(models)
+
+    def viewJacobian(self, file_prefix='./dump_', b=None):
+        """
+        Save parallel Jacobian list and (optionally) right-hand side b to disk if they
+        possess save methods, otherwise, do nothing.
+        """
+
+        for idx, par_jacobian in enumerate(self.par_jacobianList):
+            if hasattr(par_jacobian, 'save'):
+                filename = file_prefix + 'par_j' + '_' + str(idx)
+                log('Saving Parallel Jacobian to %s' % filename)
+                par_jacobian.save(filename)
+        if b and hasattr(b, 'save'):
+            filename = file_prefix + 'b'
+            log('Saving right-hand-side to %s' % filename)
+            b.save(filename)
 
 ## @}
