@@ -138,6 +138,33 @@ extern "C"
     return 0;
   }
   
+  int regularRectangularToTriangularElementBoundaryMaterials(const double& Lx, const double& Ly, Mesh& mesh)
+  {
+    for (int ebNE = 0; ebNE < mesh.nExteriorElementBoundaries_global; ebNE++)
+      {
+	int ebN,nN_0,nN_1;
+	double x_0,y_0,x_1,y_1,epsilon=1.0e-8;
+	ebN = mesh.exteriorElementBoundariesArray[ebNE];
+	nN_0 = mesh.elementBoundaryNodesArray[ebN*2 + 0];
+	nN_1 = mesh.elementBoundaryNodesArray[ebN*2 + 1];
+	x_0 = mesh.nodeArray[nN_0*3+0];
+	y_0 = mesh.nodeArray[nN_0*3+1];
+	x_1 = mesh.nodeArray[nN_1*3+0];
+	y_1 = mesh.nodeArray[nN_1*3+1];
+	if (y_0 <= epsilon && y_1 <= epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 1;
+	else if (y_0 >= Ly - epsilon && y_1 >= Ly -  epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 3;
+	else if (x_0 <= epsilon && x_1 <= epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 4;
+	else if (x_0 >= Lx - epsilon && x_1 >= Lx - epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 2;
+	else
+	  assert(false);
+      }
+    return 0;
+  }
+
   int regularRectangularToTriangularMeshNodes(const int& nx, const int& ny, const double& Lx, const double& Ly, Mesh& mesh)
   {
     const double hx=Lx/(nx-1.0),hy=Ly/(ny-1.0);
@@ -155,6 +182,16 @@ extern "C"
           nN = i*nx+j;
           mesh.nodeArray[3*nN+0]=j*hx;
           mesh.nodeArray[3*nN+1]=i*hy;
+	  if (i==0)
+	    mesh.nodeMaterialTypes[nN] = 1;
+	  else if(i==ny-1)
+	    mesh.nodeMaterialTypes[nN] = 3;
+	  else if (j==0)
+	    mesh.nodeMaterialTypes[nN] = 4;
+	  else if(j==nx-1)
+	    mesh.nodeMaterialTypes[nN] = 2;
+	  else
+	    mesh.nodeMaterialTypes[nN] = 0;
         }
     return 0;
   }
@@ -194,6 +231,50 @@ extern "C"
     return 0;
   }
   
+  int regularHexahedralToTetrahedralElementBoundaryMaterials(const double& Lx, const double& Ly, const double& Lz, Mesh& mesh)
+  {
+    for (int ebNE = 0; ebNE < mesh.nExteriorElementBoundaries_global; ebNE++)
+      {
+	int ebN,nN_0,nN_1,nN_2;
+	double x_0,y_0,z_0,
+	  x_1,y_1,z_1,
+	  x_2,y_2,z_2,
+	  epsilon=1.0e-8;
+	ebN = mesh.exteriorElementBoundariesArray[ebNE];
+	nN_0 = mesh.elementBoundaryNodesArray[ebN*3 + 0];
+	nN_1 = mesh.elementBoundaryNodesArray[ebN*3 + 1];
+	nN_2 = mesh.elementBoundaryNodesArray[ebN*3 + 2];
+
+	x_0 = mesh.nodeArray[nN_0*3+0];
+	y_0 = mesh.nodeArray[nN_0*3+1];
+	z_0 = mesh.nodeArray[nN_0*3+2];
+
+	x_1 = mesh.nodeArray[nN_1*3+0];
+	y_1 = mesh.nodeArray[nN_1*3+1];	
+	z_1 = mesh.nodeArray[nN_1*3+2];
+
+	x_2 = mesh.nodeArray[nN_2*3+0];
+	y_2 = mesh.nodeArray[nN_2*3+1];	
+	z_2 = mesh.nodeArray[nN_2*3+2];
+
+	if (z_0 <= epsilon && z_1 <= epsilon && z_2 <= epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 1;
+	else if (z_0 >= Lz - epsilon && z_1 >= Lz -  epsilon && z_2 >= Lz -  epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 4;
+	else if (y_0 <= epsilon && y_1 <= epsilon && y_2 <= epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 2;
+	else if (y_0 >= Ly - epsilon && y_1 >= Ly -  epsilon && y_2 >= Ly -  epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 6;
+	else if (x_0 <= epsilon && x_1 <= epsilon && x_2 <= epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 3;
+	else if (x_0 >= Lx - epsilon && x_1 >= Lx - epsilon && x_2 >= Lx - epsilon)
+	  mesh.elementBoundaryMaterialTypes[ebN] = 5;
+	else
+	  assert(false);
+      }
+    return 0;
+  }
+
   int regularMeshNodes(const int& nx, 
                        const int& ny, 
                        const int& nz,
@@ -223,6 +304,20 @@ extern "C"
 	    mesh.nodeArray[3*nN+0]=k*hx;
 	    mesh.nodeArray[3*nN+1]=j*hy;
 	    mesh.nodeArray[3*nN+2]=i*hz;
+	    if (i==0)
+	      mesh.nodeMaterialTypes[nN] = 1;
+	    else if(i==nz-1)
+	      mesh.nodeMaterialTypes[nN] = 4;
+	    else if (j==0)
+	      mesh.nodeMaterialTypes[nN] = 2;
+	    else if(j==ny-1)
+	      mesh.nodeMaterialTypes[nN] = 6;
+	    else if (k==0)
+	      mesh.nodeMaterialTypes[nN] = 3;
+	    else if(k==nx-1)
+	      mesh.nodeMaterialTypes[nN] = 5;
+	    else
+	      mesh.nodeMaterialTypes[nN] = 0;
 	  }
     return 0;
   }

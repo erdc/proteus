@@ -1,23 +1,27 @@
 """
 A hierarchy of classes for nonlinear algebraic system solvers.
 """
+
+import numpy
 from math import *
 import math #to disambiguate math.log and log
 from LinearAlgebraTools import *
 from LinearSolvers import *
 from Profiling import *
+
 log = logEvent
 
 #mwf hack for Eikonal equation solvers
 import FemTools
-import UnstructuredFMMandFSWsolvers
 from UnstructuredFMMandFSWsolvers import FMMEikonalSolver
 from UnstructuredFMMandFSWsolvers import FSWEikonalSolver
+import csmoothers
 
 class NonlinearEquation:
     """
     The base class for nonlinear equations.
     """
+
     def __init__(self,dim=0,dim_proc=None):
         self.dim=dim
         if dim_proc==None:
@@ -27,19 +31,25 @@ class NonlinearEquation:
         #mwf decide if we can keep solver statistics here
         self.nonlinear_function_evaluations = 0
         self.nonlinear_function_jacobian_evaluations = 0
-    ##evaluate r=F(u)
+
     def getResidual(u,r):
+        """Evaluate the residual r = F(u)"""
         pass
-    ##evaulate J=F'
+
     def getJacobian(jacobian,usePicard=False):
+        """"""
         pass
+
     def resetNonlinearFunctionStatistics(self):
         self.nonlinear_function_evaluations = 0
         self.nonlinear_function_jacobian_evaluations = 0
+
+
 class NonlinearSolver:
     """
     The base class for nonlinear solvers.
     """
+
     def __init__(self,
                  F,J=None,du=None,
                  rtol_r  = 1.0e-4,
@@ -122,18 +132,25 @@ class NonlinearSolver:
         self.par_fullOverlap = True #whether or not partitioning has overlap or not
         self.linearSolverFailed = False
         self.failedFlag = False
+
     def norm(self,u):
         return self.norm_function(u[:self.F.dim_proc])
+
     def unorm(self,u):
         return self.unorm_function(u[:self.F.dim_proc])
+
     def fullNewtonOff(self):
         self.fullNewton=False
+
     def fullNewtonOn(self):
         self.fullNewton=True
+
     def fullResidualOff(self):
         self.fullResidual=False
+
     def fullResidualOn(self):
         self.fullResidual=True
+
     def computeResidual(self,u,r,b):
         if self.fullResidual:
             self.F.getResidual(u,r)
@@ -146,6 +163,7 @@ class NonlinearSolver:
                 self.J.matvec(u,r)
             if b != None:
                 r-=b
+
     def solveInitialize(self,u,r,b):
         if r == None:
             if self.r == None:
@@ -168,6 +186,7 @@ class NonlinearSolver:
         self.gustafsson_norm_du_last = -12345.0
         #mwf end hack for conv. rate
         return r
+
     def computeConvergenceRates(self):
         if self.convergenceHistoryIsCorrupt:
             return
@@ -244,6 +263,7 @@ class NonlinearSolver:
                 self.last_log_ratio_r = log_ratio_r_current
                 self.lastNorm_du = self.norm_du
             self.lastNorm_r = self.norm_r
+
     def converged(self,r):
         self.convergedFlag = False
         self.norm_r = self.norm(r)
@@ -268,6 +288,7 @@ class NonlinearSolver:
             print self.info()
         #print self.convergedFlag
         return self.convergedFlag
+
     def failed(self):
         self.failedFlag = False
         if self.linearSolverFailed == True:
@@ -282,6 +303,7 @@ class NonlinearSolver:
             self.its+=1
             self.convergingIts+=1
         return self.failedFlag
+
     def computeAverages(self):
         self.recordedIts+=self.its
         if self.solveCalls == 0:
@@ -304,6 +326,7 @@ class NonlinearSolver:
             self.duReductionFactor_avg/=self.solveCalls
             self.rReductionOrder_avg/=self.solveCalls
             self.duReductionOrder_avg/=self.solveCalls
+
     def info(self):
         self.infoString =  "************Start Nonlinear Solver Info ************ \n"
         self.infoString += "its                   = %i \n" % self.its
@@ -331,11 +354,14 @@ class NonlinearSolver:
             self.infoString += "CONVERGENCE HISTORY IS CORRUPT!!!\n"
         self.infoString += "************End Nonlinear Solver Info ************\n"
         return self.infoString
+
+
 class Newton(NonlinearSolver):
     """
     A simple iterative solver that is Newton's method
     if you give it the right Jacobian
     """
+
     def __init__(self,
                  linearSolver,
                  F,J=None,du=None,par_du=None,
@@ -380,31 +406,32 @@ class Newton(NonlinearSolver):
             self.JLsolver=LU(self.J_t_J,computeEigenvalues=True)
             self.dJLsolver=LU(self.dJ_t_dJ,computeEigenvalues=True)
             self.u0 = numpy.zeros(self.F.dim,'d')
+
     def setLinearSolverTolerance(self,r):
         self.norm_r = self.norm(r)
-        gamma  = 0.01
-        etaMax = 0.01
+        gamma  = 0.0001
+        etaMax = 0.001
         if self.norm_r == 0.0:
-            etaMin = 0.01*self.atol_r
+            etaMin = 0.0001
         else:
-            etaMin = 0.01*(self.rtol_r*self.norm_r0 + self.atol_r)/self.norm_r
+            etaMin = 0.0001*(self.rtol_r*self.norm_r0 + self.atol_r)/self.norm_r
+        log("etaMin "+`etaMin`)
         if self.its > 1:
             etaA = gamma * self.norm_r**2/self.norm_r_last**2
-            if self.its > 2:
-                if gamma*self.etaLast**2 < 0.01:
-                    etaC = min(etaMax,etaA)
-                else:
-                    etaC = min(etaMax,max(etaA,gamma*self.etaLast**2))
-            else:
+            log("etaA "+`etaA`)
+            log("gama*self.etaLast**2 "+ `gamma*self.etaLast**2`)
+            if gamma*self.etaLast**2 < 0.1:
                 etaC = min(etaMax,etaA)
+            else:
+                etaC = min(etaMax,max(etaA,gamma*self.etaLast**2))
         else:
             etaC = etaMax
+        log("etaC "+`etaC`)
         eta = min(etaMax,max(etaC,etaMin))
         self.etaLast = eta
         self.norm_r_last = self.norm_r
-        self.linearSolver.setResTol(rtol=eta,atol=0.0)
+        self.linearSolver.setResTol(rtol=eta,atol=self.linearSolver.atol_r)
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        import Viewers
         """
         Solve F(u) = b
 
@@ -412,7 +439,8 @@ class Newton(NonlinearSolver):
         u -- solution
         r -- F(u) - b
         """
-        import sys
+
+        import Viewers
         if self.linearSolver.computeEigenvalues:
             self.u0[:]=u
         r=self.solveInitialize(u,r,b)
@@ -510,7 +538,6 @@ class Newton(NonlinearSolver):
                 print "lambda_i_min",min(self.linearSolver.eigenvalues_i)
             if self.lineSearch:
                 norm_r_cur = self.norm(r)
-                norm_r_last = 2.0*norm_r_cur
                 ls_its = 0
                     #print norm_r_cur,self.atol_r,self.rtol_r
     #                 while ( (norm_r_cur >= 0.99 * self.norm_r + self.atol_r) and
@@ -533,7 +560,6 @@ class Newton(NonlinearSolver):
                                 par_r.scatter_reverse_add()
                             else:
                                 par_r.scatter_forward_insert()
-                        norm_r_last = norm_r_cur
                         norm_r_cur = self.norm(r)
                         log("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
                                                                                norm_r_cur,
@@ -543,46 +569,6 @@ class Newton(NonlinearSolver):
                         log("Linesearches = %i" % ls_its,level=3)
         else:
             if self.linearSolver.computeEigenvalues:
-#                 N = len(self.linearSolver.eigenvalues_r)
-#                 print "N",len(self.linearSolver.eigenvalues_r)
-#                 print "lambda_max",max(self.linearSolver.eigenvalues_r)
-#                 print "lambda_i_max",max(self.linearSolver.eigenvalues_i)
-#                 print "norm_J",self.norm_2_J
-#                 print "lambda_min",min(self.linearSolver.eigenvalues_r)
-#                 print "lambda_i_min",min(self.linearSolver.eigenvalues_i)
-#                 print "1.0/norm_Jinv",1.0/norm_2_Jinv
-#                 print "kappa",kappa
-#                 print "kappa2",max(self.linearSolver.eigenvalues_r)/min(self.linearSolver.eigenvalues_r)
-#                 print "beta",beta
-#                 print "eta",eta
-#                 print "gamma",gamma
-#                 print "K",K
-#                 print "beta0 eta0 gamma", beta0*eta0*gamma
-#                 print "beta0 eta0 K", beta0*eta0*K
-#                 if beta0*eta0*gamma < 0.5:
-#                     rMinus = ((1.0+sqrt(1.0-2.0*beta0*eta0*gamma))/(beta0*gamma))/(W*self.norm(u))
-#                     print "r_{-}",N,rMinus
-#                     #print "q-factor Kantorovich estimate",beta0*gamma*rMinus
-#                 if beta0*eta0*K < 0.5:
-#                     rMinus = ((1.0+sqrt(1.0-2.0*beta0*eta0*K))/(beta0*K))/(W*self.norm(u))
-#                     print "r_{-}",N,rMinus
-#                     #print "q-factor Kantorovich estimate",beta0*K*rMinus
-#                 print "beta eta gamma", beta*eta*gamma
-#                 print "beta eta K", beta*eta*K
-#                 if beta*eta*gamma < 0.5:
-#                     rMinus = ((1.0+sqrt(1.0-2.0*beta*eta*gamma))/(beta*gamma))/(W*self.norm(u))
-#                     print "r_{-}",N,rMinus
-#                     #print "q-factor Kantorovich estimate",beta*gamma*rMinus
-#                 if beta*eta*K < 0.5:
-#                     rMinus = ((1.0+sqrt(1.0-2.0*beta*eta*K))/(beta*K))/(W*self.norm(u))
-#                     print "r_{-}",N,rMinus
-#                     #print "q-factor Kantorovich estimate",beta*K*rMinus
-#                 if not self.convergenceHistoryIsCorrupt:
-#                     #print "q-factor iteration estimates,du",self.duReductionFactor,self.duReductionFactor_avg
-#                     print "q-order iteration estimates,du",self.duReductionOrder,self.duReductionOrder_avg
-#                     #print "q-factor iteration estimates,r",self.rReductionFactor,self.rReductionFactor_avg
-#                     print "q-order iteration estimates,r",self.rReductionOrder,self.rReductionOrder_avg
-#                 print "r0",W*self.norm(u0-u)
                 if self.betaK_0*self.etaK_0*self.gammaK_max <= 0.5:
                     print "r_{-,0}     ",(1.0+sqrt(1.0-2.0*self.betaK_0*self.etaK_0*self.gammaK_max))/(self.betaK_0*self.gammaK_max)
                 if self.betaK_1*self.etaK_1*self.gammaK_max <= 0.5 and self.its > 1:
@@ -630,11 +616,13 @@ class Newton(NonlinearSolver):
             return self.failedFlag
         log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+
 class NewtonNS(NonlinearSolver):
     """
     A simple iterative solver that is Newton's method
     if you give it the right Jacobian
     """
+
     def __init__(self,
                  linearSolver,
                  F,J=None,du=None,par_du=None,
@@ -681,6 +669,7 @@ class NewtonNS(NonlinearSolver):
             self.JLsolver=LU(self.J_t_J,computeEigenvalues=True)
             self.dJLsolver=LU(self.dJ_t_dJ,computeEigenvalues=True)
             self.u0 = numpy.zeros(self.F.dim,'d')
+
     def setLinearSolverTolerance(self,r):
         self.norm_r = self.norm(r)
         gamma  = 0.01
@@ -736,7 +725,6 @@ class NewtonNS(NonlinearSolver):
 
 
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        import Viewers
         """
         Solve F(u) = b
 
@@ -744,7 +732,8 @@ class NewtonNS(NonlinearSolver):
         u -- solution
         r -- F(u) - b
         """
-        import sys
+
+        import Viewers
         if self.linearSolver.computeEigenvalues:
             self.u0[:]=u
         r=self.solveInitialize(u,r,b)
@@ -927,18 +916,17 @@ class NewtonNS(NonlinearSolver):
                     Viewers.viewerPipe.write(cmd)
                     Viewers.newPlot()
                     Viewers.newWindow()
-                #raw_input("wait")
-            # return self.failedFlag
+
         log("   Final       Mom.  norm(r) = %12.5e   %12.5e" % (self.norm_mom_r,self.rtol_r*self.norm_mom_r0  + self.atol_r),level=1)
         log("   Final       Cont. norm(r) = %12.5e   %12.5e" % (self.norm_cont_r,self.rtol_r*self.norm_mom_r0  + self.atol_r),level=1)
-        #return self.failedFlag
-        #memory()
+
         log(memory("NSNewton","NSNewton"),level=4)
 
 class SSPRKNewton(Newton):
     """
     Version of Newton for SSPRK so doesn't refactor unnecessarily
     """
+
     def __init__(self,
                  linearSolver,
                  F,J=None,du=None,par_du=None,
@@ -955,7 +943,6 @@ class SSPRKNewton(Newton):
                  directSolver=False,
                  EWtol=True,
                  maxLSits = 100):
-        import copy
         self.par_du = par_du
         if par_du != None:
             F.dim_proc = par_du.dim_proc
@@ -978,7 +965,6 @@ class SSPRKNewton(Newton):
         self.isFactored = False
 
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        import Viewers
         """
         Solve F(u) = b
 
@@ -986,7 +972,9 @@ class SSPRKNewton(Newton):
         u -- solution
         r -- F(u) - b
         """
-        import sys
+
+        import Viewers
+
         if self.linearSolver.computeEigenvalues:
             self.u0[:]=u
         r=self.solveInitialize(u,r,b)
@@ -1145,13 +1133,10 @@ class SSPRKNewton(Newton):
                     Viewers.viewerPipe.write(cmd)
                     Viewers.newPlot()
                     Viewers.newWindow()
-                #raw_input("wait")
             return self.failedFlag
-        #else
-    #def
+
     def resetFactorization(self,needToRefactor=True):
         self.isFactored = not needToRefactor
-#class
 
 class PicardNewton(Newton):
     def __init__(self,
@@ -1189,8 +1174,8 @@ class PicardNewton(Newton):
         self.picardIts = 1
         self.picardTol = 1000.0
         self.usePicard = True
+
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
-        import Viewers
         """
         Solve F(u) = b
 
@@ -1198,7 +1183,9 @@ class PicardNewton(Newton):
         u -- solution
         r -- F(u) - b
         """
-        import sys
+
+        import Viewers
+
         if self.linearSolver.computeEigenvalues:
             self.u0[:]=u
         r=self.solveInitialize(u,r,b)
@@ -1302,7 +1289,6 @@ class PicardNewton(Newton):
                 print "lambda_i_min",min(self.linearSolver.eigenvalues_i)
             if self.lineSearch:
                 norm_r_cur = self.norm(r)
-                norm_r_last = 2.0*norm_r_cur
                 ls_its = 0
                 #print norm_r_cur,self.atol_r,self.rtol_r
 #                 while ( (norm_r_cur >= 0.99 * self.norm_r + self.atol_r) and
@@ -1324,7 +1310,6 @@ class PicardNewton(Newton):
                             par_r.scatter_reverse_add()
                         else:
                             par_r.scatter_forward_insert()
-                    norm_r_last = norm_r_cur
                     norm_r_cur = self.norm(r)
                     log("""ls #%d norm_r_cur=%s atol=%g rtol=%g""" % (ls_its,
                                                                            norm_r_cur,
@@ -1334,46 +1319,6 @@ class PicardNewton(Newton):
                     log("Linesearches = %i" % ls_its,level=3)
         else:
             if self.linearSolver.computeEigenvalues:
-#                 N = len(self.linearSolver.eigenvalues_r)
-#                 print "N",len(self.linearSolver.eigenvalues_r)
-#                 print "lambda_max",max(self.linearSolver.eigenvalues_r)
-#                 print "lambda_i_max",max(self.linearSolver.eigenvalues_i)
-#                 print "norm_J",self.norm_2_J
-#                 print "lambda_min",min(self.linearSolver.eigenvalues_r)
-#                 print "lambda_i_min",min(self.linearSolver.eigenvalues_i)
-#                 print "1.0/norm_Jinv",1.0/norm_2_Jinv
-#                 print "kappa",kappa
-#                 print "kappa2",max(self.linearSolver.eigenvalues_r)/min(self.linearSolver.eigenvalues_r)
-#                 print "beta",beta
-#                 print "eta",eta
-#                 print "gamma",gamma
-#                 print "K",K
-#                 print "beta0 eta0 gamma", beta0*eta0*gamma
-#                 print "beta0 eta0 K", beta0*eta0*K
-#                 if beta0*eta0*gamma < 0.5:
-#                     rMinus = ((1.0+sqrt(1.0-2.0*beta0*eta0*gamma))/(beta0*gamma))/(W*self.norm(u))
-#                     print "r_{-}",N,rMinus
-#                     #print "q-factor Kantorovich estimate",beta0*gamma*rMinus
-#                 if beta0*eta0*K < 0.5:
-#                     rMinus = ((1.0+sqrt(1.0-2.0*beta0*eta0*K))/(beta0*K))/(W*self.norm(u))
-#                     print "r_{-}",N,rMinus
-#                     #print "q-factor Kantorovich estimate",beta0*K*rMinus
-#                 print "beta eta gamma", beta*eta*gamma
-#                 print "beta eta K", beta*eta*K
-#                 if beta*eta*gamma < 0.5:
-#                     rMinus = ((1.0+sqrt(1.0-2.0*beta*eta*gamma))/(beta*gamma))/(W*self.norm(u))
-#                     print "r_{-}",N,rMinus
-#                     #print "q-factor Kantorovich estimate",beta*gamma*rMinus
-#                 if beta*eta*K < 0.5:
-#                     rMinus = ((1.0+sqrt(1.0-2.0*beta*eta*K))/(beta*K))/(W*self.norm(u))
-#                     print "r_{-}",N,rMinus
-#                     #print "q-factor Kantorovich estimate",beta*K*rMinus
-#                 if not self.convergenceHistoryIsCorrupt:
-#                     #print "q-factor iteration estimates,du",self.duReductionFactor,self.duReductionFactor_avg
-#                     print "q-order iteration estimates,du",self.duReductionOrder,self.duReductionOrder_avg
-#                     #print "q-factor iteration estimates,r",self.rReductionFactor,self.rReductionFactor_avg
-#                     print "q-order iteration estimates,r",self.rReductionOrder,self.rReductionOrder_avg
-#                 print "r0",W*self.norm(u0-u)
                 if self.betaK_0*self.etaK_0*self.gammaK_max <= 0.5:
                     print "r_{-,0}     ",(1.0+sqrt(1.0-2.0*self.betaK_0*self.etaK_0*self.gammaK_max))/(self.betaK_0*self.gammaK_max)
                 if self.betaK_1*self.etaK_1*self.gammaK_max <= 0.5 and self.its > 1:
@@ -1415,20 +1360,16 @@ class PicardNewton(Newton):
                     Viewers.viewerPipe.write(cmd)
                     Viewers.newPlot()
                     Viewers.newWindow()
-                #raw_input("wait")
             if self.maxIts>1:
                 log("   Newton it %d norm(r) = %12.5e  %12.5g \t\t norm(r)/(rtol*norm(r0)+atol) = %g"
                              % (self.its-1,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             return self.failedFlag
-        if self.maxIts>1:
-            log("   Newton it %d norm(r) = %12.5e  %12.5g \t\t norm(r)/(rtol*norm(r0)+atol) = %g"
-                           % (self.its-1,self.norm_r,100*(self.norm_r/self.norm_r0),(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
 
 class NLJacobi(NonlinearSolver):
     """
     Nonlinear Jacobi iteration.
     """
-    import csmoothers
+
     def __init__(self,
                  F,J,du,
                  weight=4.0/5.0,
@@ -1459,6 +1400,7 @@ class NLJacobi(NonlinearSolver):
         self.w=weight
         self.node_order=numpy.arange(self.F.dim,dtype='i')
         self.node_order=numpy.arange(self.F.dim-1,-1,-1,dtype='i')
+
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         r=self.solveInitialize(u,r,b)
         while (not self.converged(r) and
@@ -1469,12 +1411,12 @@ class NLJacobi(NonlinearSolver):
                 if type(self.J).__name__ == 'ndarray':
                     self.M = self.w/numpy.diagonal(self.J)
                 elif type(self.J).__name__ == 'SparseMatrix':
-                    self.csmoothers.jacobi_NR_prepare(self.J,self.w,1.0e-16,self.M)
+                    csmoothers.jacobi_NR_prepare(self.J,self.w,1.0e-16,self.M)
             if type(self.J).__name__ == 'ndarray':
                 self.du[:]=r
                 self.du*=self.M
             elif type(self.J).__name__ == "SparseMatrix":
-                self.csmoothers.jacobi_NR_solve(self.J,self.M,r,self.node_order,self.du)
+                csmoothers.jacobi_NR_solve(self.J,self.M,r,self.node_order,self.du)
             u -= self.du
             self.computeResidual(u,r,b)
         else:
@@ -1484,7 +1426,7 @@ class NLGaussSeidel(NonlinearSolver):
     """
     Nonlinear Gauss-Seidel.
     """
-    import csmoothers
+
     def __init__(self,
                  connectionList,
                  F,J,du,
@@ -1520,6 +1462,7 @@ class NLGaussSeidel(NonlinearSolver):
         self.sym = sym
         self.node_order=numpy.arange(self.F.dim,dtype='i')
         self.node_order=numpy.arange(self.F.dim-1,-1,-1,dtype='i')
+
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         r=self.solveInitialize(u,r,b)
         while (not self.converged(r) and
@@ -1531,7 +1474,7 @@ class NLGaussSeidel(NonlinearSolver):
                     self.M = self.w/numpy.diagonal(self.J)
                 elif type(self.J).__name__ == 'SparseMatrix':
                     dtol = min(numpy.absolute(r))*1.0e-8
-                    self.csmoothers.gauss_seidel_NR_prepare(self.J,self.w,dtol,self.M)
+                    csmoothers.gauss_seidel_NR_prepare(self.J,self.w,dtol,self.M)
             if type(self.J).__name__ == 'ndarray':
                 self.du[:]=0.0
                 for i in range(self.F.dim):
@@ -1549,7 +1492,7 @@ class NLGaussSeidel(NonlinearSolver):
                             rhat -= self.J[i,j]*self.du[j]
                     self.du[i] = self.M[i]*rhat
             elif type(self.J).__name__ == "SparseMatrix":
-                self.csmoothers.gauss_seidel_NR_solve(self.J,self.M,r,self.node_order,self.du)
+                csmoothers.gauss_seidel_NR_solve(self.J,self.M,r,self.node_order,self.du)
             u -= self.du
             self.computeResidual(u,r,b)
         else:
@@ -1559,7 +1502,7 @@ class NLStarILU(NonlinearSolver):
     """
     Nonlinear alternating Schwarz on node stars.
     """
-    import csmoothers
+
     def __init__(self,
                  connectionList,
                  F,J,du,
@@ -1617,8 +1560,8 @@ class NLStarILU(NonlinearSolver):
                     self.subdomainIndecesList[i][J].update([i,j])
         elif type(self.J).__name__ == 'SparseMatrix':
             self.node_order=numpy.arange(self.F.dim-1,-1,-1,dtype='i')
-            #self.node_order=numpy.arange(self.F.dim,dtype='i')
             self.asmFactorObject = self.csmoothers.ASMFactor(self.J)
+
     def prepareSubdomains(self):
         if type(self.J).__name__ == 'ndarray':
             self.subdomainSolvers=[]
@@ -1635,6 +1578,7 @@ class NLStarILU(NonlinearSolver):
                 self.subdomainSolvers[i].prepare()
         elif type(self.J).__name__ == 'SparseMatrix':
             self.csmoothers.asm_NR_prepare(self.J,self.asmFactorObject)
+
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         r=self.solveInitialize(u,r,b)
         while (not self.converged(r) and
@@ -1701,9 +1645,12 @@ class FasTwoLevel(NonlinearSolver):
                                  convergenceTest,
                                  computeRates,
                                  printInfo)
+
         class dummyL:
+
             def __init__(self):
                 self.shape = [F.dim,F.dim]
+
         self.linearSolver = LinearSolver(dummyL())#dummy
         self.prolong = prolong
         self.restrict = restrict
@@ -1718,22 +1665,27 @@ class FasTwoLevel(NonlinearSolver):
         self.cdu = Vec(prolong.shape[1])
         self.cu = Vec(prolong.shape[1])
         self.cError = 'FAS-chord'#'linear'#'FAS'#'FAS-chord'#'linear'
+
     def fullNewtonOff(self):
         self.preSmoother.fullNewtonOff()
         self.postSmoother.fullNewtonOff()
         self.coarseSolver.fullNewtonOff()
+
     def fullNewtonOn(self):
         self.preSmoother.fullNewtonOn()
         self.postSmoother.fullNewtonOn()
         self.coarseSolver.fullNewtonOn()
+
     def fullResidualOff(self):
         self.preSmoother.fullResidualOff()
         self.postSmoother.fullResidualOff()
         self.coarseSolver.fullResidualOff()
+
     def fullResidualOn(self):
         self.preSmoother.fullResidualOn()
         self.postSmoother.fullResidualOn()
         self.coarseSolver.fullResidualOn()
+
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         r=self.solveInitialize(u,r,b)
         while (not self.converged(r) and
@@ -1785,6 +1737,7 @@ class FAS:
     """
     A generic nonlinear multigrid W cycle using the Full Approximation Scheme (FAS).
     """
+
     def __init__(self,
                  prolongList,
                  restrictList,
@@ -1822,6 +1775,7 @@ class MultilevelNonlinearSolver:
     """
     A generic multilevel solver.
     """
+
     def __init__(self,
                  fList,
                  levelNonlinearSolverList,
@@ -1833,6 +1787,7 @@ class MultilevelNonlinearSolver:
         for l in range(self.nLevels):
             self.solverList[l].computeRates = computeRates
             self.solverList[l].printInfo = printInfo
+
     def solveMultilevel(self,uList,rList,bList=None,par_uList=None,par_rList=None):
         if bList == None:
             bList = [None for r in rList]
@@ -1849,9 +1804,11 @@ class MultilevelNonlinearSolver:
                                      par_u = par_u,
                                      par_r = par_r)
         return self.solverList[-1].failedFlag
+
     def updateJacobian(self):
         for l in range(self.nLevels):
             self.solverList[l].updateJacobian = True
+
     def info(self):
         self.infoString="********************Start Multilevel Nonlinear Solver Info*********************\n"
         for l in range(self.nLevels):
@@ -1873,8 +1830,8 @@ class EikonalSolver:
       Debug change in use truncation approach for positive and negative solutions
       Debug local Reconstruction
 
-
     """
+
     def __init__(self,
                  levelSolverType,
                  F,
@@ -1887,7 +1844,7 @@ class EikonalSolver:
                  eikonalVariable   = 0, #which variable in F is to be used for ic
                  localReconstruction = None,#'localPWL'
                  printInfo=False):
-        self.linearSolver = LinearSolver(J)#dummy
+        self.linearSolver = None # unneeded
         self.solverType = levelSolverType
         assert self.solverType == FMMEikonalSolver or self.solverType == FSWEikonalSolver, "unrecognized solver type"
         self.F = F
@@ -1965,11 +1922,10 @@ class EikonalSolver:
 
             self.C0P1space.getBasisValues(refPoints,self.C0P1shapeValues)
 
-        #if
         #for compatibility with generic multilevel solver, these are ignored
         self.updateJacobian = False
         self.computeRates = False
-    #end init
+
     def solve(self,u,r,b=None):
         if (self.localReconstruction == 'localPWL' and
             self.eikonalVariableFemSpace == FemTools.C0_AffineLinearOnSimplexWithNodalBasis):
@@ -1983,8 +1939,6 @@ class EikonalSolver:
         self.phi0m.flat[:] = numpy.abs(numpy.minimum(self.phidof, 0.0))
         #mwf debug
         #print "entering EikonalSolve u=%s \n phi0p=%s \n phi0m=%s " % (u,self.phi0p,self.phi0m)
-        #import pdb
-        #pdb.set_trace()
         #negative direction first
         failedFlagM = self.baseSolver.solve(self.phi0m,self.phidof,zeroTol=self.frontTolerance,verbose=0)
         #save for later
@@ -2002,12 +1956,13 @@ class EikonalSolver:
         self.F.updateTimeHistory(self.F.timeIntegration.t,resetFromDOF=False)
         failedFlag = failedFlagP or failedFlagM
         return failedFlag
-    #solve
+
     def info(self):
         myinfo = """EikonalSolver type=%s
         atol=%s rtol=%s maxits=%s eikonalVariable=%s """ % (self.solverType,self.absoluteTolerance,self.relativeTolerance,
                                                             self.maxIts,self.eikonalVariable)
         return myinfo
+
     def convertToC0P1Rep(self,dofin,dofout,interpType='min'):
         """
         allow input FEM space to be something besides C0P1 and then convert to expected
@@ -2051,12 +2006,13 @@ class EikonalSolver:
         #DG P[1,2] --> C0 P1
         else:
             assert False, "space= %s not supported" % self.eikonalVariableFemSpace
-    #def
+
     def convertFromC0P1Rep(self,dofin,dofout):
         """
         allow output FEM space to be something besides C0P1 and convert from C0P1 to expected
         representation here
         """
+
         #mwf debug
         #print """into convert from c0p1 rep dofin.shape=%s dofout.shape=%s """ %(dofin.shape,dofout.shape)
         if self.eikonalVariableFemSpace == FemTools.C0_AffineLinearOnSimplexWithNodalBasis:
@@ -2082,7 +2038,7 @@ class EikonalSolver:
             inFEM.getValues(self.C0P1shapeValues,self.eikonalVarInterpCondVals)
             outFEM= FemTools.FiniteElementFunction(self.F.u[self.eikonalVariable].femSpace,dof=dofout)
             outFEM.projectFromInterpolationConditions(self.eikonalVarInterpCondVals)
-    #def
+
 class MultilevelEikonalSolver:
     """
     Attempt a wrapper for multilevel Eikonal equation solves with restricted interface
@@ -2122,6 +2078,7 @@ class NLNI(MultilevelNonlinearSolver):
     """
     Nonlinear nested iteration.
     """
+
     def __init__(self,
                  fList=[],
                  solverList=[],
@@ -2154,6 +2111,7 @@ class NLNI(MultilevelNonlinearSolver):
         self.atol = atol
         self.printInfo = printInfo
         self.infoString=''
+
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         #\todo this is broken because prolong isn't right
         currentMesh = self.levelDict[u.shape[0]]
@@ -2185,6 +2143,7 @@ class NLNI(MultilevelNonlinearSolver):
         if self.tolList != None:
             self.revertToFixedIteration(self.solverList[currentMesh])
         return self.solverList[currentMesh].failedFlag
+
     def solveMultilevel(self,uList,rList,bList=None,par_uList=None,par_rList=None):
         if bList == None:
             bList = [None for r in rList]
@@ -2226,8 +2185,10 @@ class NLNI(MultilevelNonlinearSolver):
             rList[l][:]=self.rList[l]
         self.infoString+="********************End Multilevel Nonlinear Solver Info*********************\n"
         return self.solverList[-1].failedFlag
+
     def info(self):
         return self.infoString
+
     def switchToResidualConvergence(self,solver,rtol):
         self.saved_ctest = solver.convergenceTest
         self.saved_rtol_r = solver.rtol_r
@@ -2239,6 +2200,7 @@ class NLNI(MultilevelNonlinearSolver):
         solver.atol_r = self.atol
         solver.maxIts = self.maxIts
         solver.printInfo = self.printInfo
+
     def revertToFixedIteration(self,solver):
         solver.convergenceTest = self.saved_ctest
         solver.rtol_r = self.saved_rtol_r
@@ -2246,8 +2208,6 @@ class NLNI(MultilevelNonlinearSolver):
         solver.maxIts = self.saved_maxIts
         solver.printInfo = self.saved_printInfo
 
-#mwf hack
-import testStuff
 
 def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                      jacobianList,
@@ -2374,7 +2334,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                       printInfo=printSmootherInfo,
                                                       fullNewton=smootherFullNewtonFlag))
                 else:
-                    print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!smootherType unrecognized"
+                    raise RuntimeError("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!smootherType unrecognized")
             else:
                 if smootherType == NLJacobi:
                     if relaxationFactor == None:
@@ -2418,22 +2378,10 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                              fullNewton = smootherFullNewtonFlag,
                                              norm = nonlinearSolverNorm)
                 else:
-                    raise RuntimeError,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!smootherType unrecognized"
+                    raise RuntimeError("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!smootherType unrecognized")
                 preSmootherList.append([])
                 postSmootherList.append([])
-#               coarseSolver = Newton(F=nonlinearOperatorList[l],
-#                                     J= jacobianList[l],
-#                                     linearSolver= LU(jacobianList[l]),
-#                                     rtol_r=relativeToleranceList[0],
-#                                     atol_r=absoluteTolerance,
-#                                     convergenceTest=solverConvergenceTest,
-#                                     maxIts=maxSolverIts,
-#                                       computeRates = computeCoarseSolverRates,
-#                                     printInfo=printCoarseSolverInfo,
-#                                     fullNewton=levelSolverFullNewtonFlag,
-#                                     directSolver=True,
-#                                       EWtol=EWtol)
-#                 coarseSolver.lineSearch = False
+
         levelNonlinearSolver = FAS(prolongList = prolongList,
                                    restrictList = restrictList,
                                    restrictSumList = restrictionRowSumList,
@@ -2630,5 +2578,3 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
     for levelSolver in multilevelNonlinearSolver.solverList:
         levelSolver.par_fullOverlap = parallelUsesFullOverlap
     return multilevelNonlinearSolver
-
-## @}
