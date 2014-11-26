@@ -80,10 +80,10 @@ namespace Daetk
 extern "C"
 {
 #ifdef FLCBDF_WRAPPERS_MODULE
-  static Daetk::Petsc::cc::MPI_Comm Py_PETSC_COMM_WORLD;
+  static Daetk::Petsc::cc::MPI_Comm PROTEUS_COMM_WORLD;
 #else
   static void **PyFLCBDFWrappers_API;
-  #define Py_PETSC_COMM_WORLD \
+  #define PROTEUS_COMM_WORLD \
     *(Daetk::Petsc::cc::MPI_Comm*)(PyFLCBDFWrappers_API[0])
   static int
   import_flcbdfWrappers(void)

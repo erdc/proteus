@@ -1,4 +1,4 @@
-.PHONY: all check clean distclean doc install profile proteus
+.PHONY: all check clean distclean doc install profile proteus update
 
 all: install
 
@@ -7,7 +7,7 @@ all: install
 
 SHELL=/usr/bin/env bash
 
-PROTEUS ?= $(shell pwd)
+PROTEUS ?= $(shell python -c "import os; print os.path.realpath(os.getcwd())")
 VER_CMD = git log -1 --pretty="%H"
 # shell hack for now to automatically detect Garnet front-end nodes
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
@@ -19,8 +19,12 @@ ifeq ($(PROTEUS_ARCH), darwin)
 PLATFORM_ENV = MACOSX_DEPLOYMENT_TARGET=$(shell sw_vers -productVersion | sed "s/\(10.[0-9]\).*/\1/")
 endif
 
-ifeq ($(PROTEUS_ARCH), Cygwin)
+ifeq ($(PROTEUS_ARCH), cygwin)
 BOOTSTRAP = cygwin_bootstrap.done
+endif
+
+ifdef MATLAB
+MATLAB_SETUP = matlab_setup.done
 endif
 
 # The choice for default Fortran compiler needs to be overridden on the Garnet system
@@ -30,6 +34,13 @@ F77=ftn
 F90=ftn
 endif 
 
+ifdef VERBOSE
+HIT_FLAGS += -v
+endif
+
+ifdef DEBUG
+PROTEUS_ARCH := ${PROTEUS_ARCH}-debug
+endif
 
 PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
 	PYTHONPATH=${PROTEUS_PREFIX}/lib/python2.7/site-packages \
@@ -40,7 +51,6 @@ PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
 
 clean:
 	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppyx.py clean
-	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setupf.py clean
 	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppetsc.py clean
 	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setup.py clean
 
@@ -48,6 +58,19 @@ distclean: clean
 	-rm -f config.py configure.done stack.done
 	-rm -rf ${PROTEUS_PREFIX}
 	-rm -rf build src/*.pyc src/*.so src/*.a
+
+update:
+	@echo "Manually trying to update all repositories"
+	git fetch origin; git checkout -q origin/master
+	@echo "Proteus repository updated to latest versions"
+	cd stack; git fetch origin; git checkout -q origin/master
+	@echo "Stack repository updated to latest versions"
+	cd hashdist; git fetch origin; git checkout -q origin/master
+	@echo "HashDist repository updated to latest versions"
+	@echo "+======================================================================================================+"
+	@echo "Warning, the HEAD has been detached in all repositories"
+	@echo "Type: git checkout -b branch_name to save changes" 
+	@echo "+======================================================================================================+"
 
 hashdist: 
 	@echo "No hashdist found.  Cloning hashdist from GitHub"
@@ -58,14 +81,30 @@ stack:
 	git clone https://github.com/hashdist/hashstack.git stack
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
-	python hashstack/scripts/setup_cygstack.py hashstack/scripts/cygstack.txt
+	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	touch cygwin_bootstrap.done
+
+matlab_setup.done: stack stack/default.yaml hashdist
+	@echo "User requests MATLAB install"
+	@echo "MATLAB environment variable set to ${MATLAB}"
+	@python setupmatlab.py stack/default.yaml ${MATLAB}; if [ $$? -ne 0 ] ; then \
+	echo "+======================================================================================================+"; \
+	echo "Couldn't find matlab on PATH."; \
+	echo "Try"; \
+	echo "    MATLAB=/path/to/matlab make"; \
+	echo "+======================================================================================================+"; \
+	false; fi
+	touch matlab_setup.done
 
 profile: ${PROTEUS_PREFIX}/artifact.json
 
+stack/default.yaml: stack stack/examples/proteus.${PROTEUS_ARCH}.yaml
+	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
+
+
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
 # directory newer than the profile artifact file.
-${PROTEUS_PREFIX}/artifact.json: stack hashdist $(shell find stack -type f) ${BOOTSTRAP}
+${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find stack -type f) ${BOOTSTRAP} ${MATLAB_SETUP}
 	@echo "************************"
 	@echo "Building dependencies..."
 	@echo "************************"
@@ -81,8 +120,7 @@ ${PROTEUS_PREFIX}/artifact.json: stack hashdist $(shell find stack -type f) ${BO
 	@echo "+======================================================================================================+"
 	@echo ""
 
-	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop -f -k error default.yaml ${PROTEUS_PREFIX}
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -f -k error default.yaml ${PROTEUS_PREFIX}
         # workaround hack on Cygwin for hashdist launcher to work correctly
 	-cp ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.exe.link ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.link
 
@@ -137,19 +175,15 @@ install: profile config.py $(shell find src -type f) $(wildcard *.py) proteus
 	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})"
 	@echo "+======================================================================================================+"
 	@echo ""
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppyx.py install
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppyx.py install --prefix=${PROTEUS_PREFIX}
 	@echo "************************"
 	@echo "done installing cython extension modules"
 	@echo "************************"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setupf.py install
-	@echo "************************"
-	@echo "done installing f2py extension modules"
-	@echo "************************"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install --prefix=${PROTEUS_PREFIX}
 	@echo "************************"
 	@echo "done installing petsc-based extension modules"
 	@echo "************************"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setup.py install
+	${PROTEUS_ENV} ${PROTEUS_PYTHON} setup.py install --prefix=${PROTEUS_PREFIX}
 	@echo "************************"
 	@echo "done installing standard extension modules"
 	@echo "************************"
