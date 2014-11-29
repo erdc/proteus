@@ -89,6 +89,11 @@ int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   ConstructMaterialArrays(*mesh.subdomainp);
   ConstructGlobalStructures(mesh); 
 
+  std::stringstream ss;
+  ss << "ToProteus_t" << nAdapt<<".smb";
+  std::string s = ss.str();
+  m->writeNative(s.c_str());
+
   return 0;
 } 
 
