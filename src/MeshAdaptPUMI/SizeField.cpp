@@ -3,6 +3,7 @@
 #include <apfVector.h>
 #include <apfMesh.h>
 #include <apfDynamicVector.h>
+#include <apfCavityOp.h>
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -276,56 +277,61 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField()
   return 0;
 }
 
-static void getSelfAndNeighbors(apf::Mesh* m, apf::MeshEntity* v, apf::Up& vs)
+struct Smoother : public apf::CavityOp
 {
-  apf::Up es;
-  m->getUp(v, es);
-  vs.n = es.n;
-  for (int i = 0; i < es.n; ++i)
-    vs.e[i] = apf::getEdgeVertOppositeVert(m, es.e[i], v);
-  vs.e[vs.n] = v;
-  ++vs.n;
-}
-
+  Smoother(apf::Field* f):
+    apf::CavityOp(apf::getMesh(f))
+  {
+    field = f;
+    int nc = apf::countComponents(f);
+    newField = apf::createPackedField(mesh, "proteus_smooth_new", nc);
+    sum.setSize(nc);
+    value.setSize(nc);
+    nApplied = 0;
+  }
+  ~Smoother()
+  {
+    copyData(field, newField);
+    apf::destroyField(newField);
+  }
+  virtual Outcome setEntity(apf::MeshEntity* e)
+  {
+    if (apf::hasEntity(newField, e))
+      return SKIP;
+    if ( ! this->requestLocality(&e, 1))
+      return REQUEST;
+    vertex = e;
+    return OK;
+  }
+  virtual void apply()
+  {
 /* the smoothing function used here is the average of the
    vertex value and neighboring vertex values, with the
    center vertex weighted equally as the neighbors */
+    apf::Up edges;
+    mesh->getUp(vertex, edges);
+    apf::getComponents(field, vertex, 0, &sum[0]);
+    for (int i = 0; i < edges.n; ++i) {
+      apf::MeshEntity* ov = apf::getEdgeVertOppositeVert(
+          mesh, edges.e[i], vertex);
+      apf::getComponents(field, ov, 0, &value[0]);
+      sum += value;
+    }
+    sum /= edges.n + 1;
+    apf::setComponents(newField, vertex, 0, &sum[0]);
+    ++nApplied;
+  }
+  apf::Field* field;
+  apf::Field* newField;
+  apf::MeshEntity* vertex;
+  apf::DynamicVector sum;
+  apf::DynamicVector value;
+  apf::MeshTag* emptyTag;
+  int nApplied;
+};
+
 static void SmoothField(apf::Field* f)
 {
-  apf::Mesh* m = apf::getMesh(f);
-  int nc = apf::countComponents(f);
-  apf::Field* sumf = apf::createPackedField(m, "proteus_sum", nc);
-  apf::Field* numf = apf::createLagrangeField(m,"proteus_num",apf::SCALAR,1);
-  apf::DynamicVector sum(nc);
-  apf::DynamicVector val(nc);
-  apf::MeshIterator* it = m->begin(0);
-  apf::MeshEntity* v;
-  while ((v = m->iterate(it))) {
-    apf::Up vs;
-    getSelfAndNeighbors(m, v, vs);
-    for (int i = 0; i < nc; ++i)
-      sum[i] = 0;
-    int num = 0;
-    for (int i = 0; i < vs.n; ++i)
-      if (m->isOwned(vs.e[i])) {
-        apf::getComponents(f, vs.e[i], 0, &val[0]);
-        sum += val;
-        ++num;
-      }
-    apf::setComponents(sumf, v, 0, &sum[0]);
-    apf::setScalar(numf, v, 0, num);
-  }
-  m->end(it);
-  apf::accumulate(sumf);
-  apf::accumulate(numf);
-  it = m->begin(0);
-  while ((v = m->iterate(it))) {
-    apf::getComponents(sumf, v, 0, &sum[0]);
-    double num = apf::getScalar(numf, v, 0);
-    sum /= num;
-    apf::setComponents(f, v, 0, &sum[0]);
-  }
-  m->end(it);
-  apf::destroyField(sumf);
-  apf::destroyField(numf);
+  Smoother op(f);
+  op.applyToDimension(0);
 }
