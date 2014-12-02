@@ -598,7 +598,7 @@ namespace proteus
 			      double& mom_w_ham,
 			      double dmom_w_ham_grad_p[nSpace])
     {
-      double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0,nu_t1,nu_t;
+      double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
       H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
       d_rho = (1.0-useVF)*smoothedDirac(eps_rho,phi);
       H_mu = (1.0-useVF)*smoothedHeaviside(eps_mu,phi) + useVF*fmin(1.0,fmax(0.0,vf));
