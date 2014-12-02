@@ -188,7 +188,45 @@ install: profile config.py $(shell find proteus -type f) $(wildcard *.py) proteu
 	@echo "make check"
 	@echo ""
 
-check: install
+develop: profile config.py
+	@echo "************************"
+	@echo "Installing development version"
+	@echo "************************"
+	@echo "Please include this information in all bug reports."
+	@echo "+======================================================================================================+"
+	@echo "PROTEUS          : ${PROTEUS}"
+	@echo "PROTEUS_ARCH     : ${PROTEUS_ARCH}"
+	@echo "PROTEUS_PREFIX   : ${PROTEUS_PREFIX}"
+	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}"
+	@echo "HASHDIST_VERSION : $$(cd hashdist; ${VER_CMD})"
+	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})"
+	@echo "+======================================================================================================+"
+	@echo ""
+	${PROTEUS_ENV} ${PROTEUS_DEVELOP_CMD}
+	@echo "************************"
+	@echo "Development installation complete"
+	@echo "************************"
+	@echo ""
+	@echo "Proteus was built using the following configuration:"
+	@echo "Please include this information in all bug reports."
+	@echo "+======================================================================================================+"
+	@echo "PROTEUS          : ${PROTEUS}"
+	@echo "PROTEUS_ARCH     : ${PROTEUS_ARCH}"
+	@echo "PROTEUS_PREFIX   : ${PROTEUS_PREFIX}"
+	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}"
+	@echo "HASHDIST_VERSION : $$(cd hashdist; ${VER_CMD})"
+	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})"
+	@echo "+======================================================================================================+"
+	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}" > ${PROTEUS_PREFIX}/proteus.version
+	@echo "HASHDIST_VERSION : $$(cd hashdist; ${VER_CMD})" > ${PROTEUS_PREFIX}/hashdist.version
+	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})" > ${PROTEUS_PREFIX}/hashstack.version
+	@echo ""
+	@echo "You should now verify that the install succeeded by running:"
+	@echo ""
+	@echo "make check"
+	@echo ""
+
+check:
 	@echo "************************"
 	@echo "Sanity environment check"
 	@echo PROTEUS: ${PROTEUS}
