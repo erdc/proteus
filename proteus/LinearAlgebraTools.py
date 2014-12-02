@@ -347,7 +347,7 @@ def l2NormAvg(x):
     Compute the arithmetic averaged l_2 norm (root mean squared norm)
     """
     scale = 1.0/flcbdfWrappers.globalSum(len(x.flat))
-    return scale*math.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
+    return math.sqrt(scale*flcbdfWrappers.globalSum(numpy.dot(x,x)))
 
 
 rmsNorm = l2NormAvg
