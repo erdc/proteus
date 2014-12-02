@@ -188,7 +188,7 @@ install: profile config.py $(shell find proteus -type f) $(wildcard *.py) proteu
 	@echo "make check"
 	@echo ""
 
-develop: profile config.py
+develop: proteus profile config.py
 	@echo "************************"
 	@echo "Installing development version"
 	@echo "************************"
