@@ -9,11 +9,43 @@ SHELL=/usr/bin/env bash
 
 PROTEUS ?= $(shell python -c "import os; print os.path.realpath(os.getcwd())")
 VER_CMD = git log -1 --pretty="%H"
+PROTEUS_INSTALL_CMD = python setup.py install
+PROTEUS_DEVELOP_CMD = pip install -e .
 # shell hack for now to automatically detect Garnet front-end nodes
 PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 PROTEUS_VERSION := $(shell ${VER_CMD})
+
+define show_info
+	@echo "Please include this information in all bug reports."
+	@echo "+======================================================================================================+"
+	@echo "PROTEUS          : ${PROTEUS}"
+	@echo "PROTEUS_ARCH     : ${PROTEUS_ARCH}"
+	@echo "PROTEUS_PREFIX   : ${PROTEUS_PREFIX}"
+	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}"
+	@echo "HASHDIST_VERSION : $$(cd hashdist; ${VER_CMD})"
+	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})"
+	@echo "+======================================================================================================+"
+	@echo ""
+endef
+
+define howto
+	@echo "Proteus and its dependencies have been installed!"
+	@echo ""
+	@echo "You may want to add the installation directory to your PATH:"
+	@echo "${PROTEUS_PREFIX}/bin"
+	@echo ""
+	@echo "On bash or zsh:"
+	@echo 'export PATH=${PROTEUS_PREFIX}/bin:$${PATH}'
+	@echo ""
+	@echo "You can also invoke the Python interpreter directly:"
+	@echo "${PROTEUS_PREFIX}/bin/python"
+	@echo ""
+	@echo "You should now verify that the install succeeded by running:"
+	@echo "make check"
+	@echo ""
+endef
 
 ifeq ($(PROTEUS_ARCH), darwin)
 PLATFORM_ENV = MACOSX_DEPLOYMENT_TARGET=$(shell sw_vers -productVersion | sed "s/\(10.[0-9]\).*/\1/")
@@ -42,22 +74,15 @@ ifdef DEBUG
 PROTEUS_ARCH := ${PROTEUS_ARCH}-debug
 endif
 
-PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}" \
-	PYTHONPATH=${PROTEUS_PREFIX}/lib/python2.7/site-packages \
-	PROTEUS_PREFIX=${PROTEUS_PREFIX} \
-	PROTEUS=${PROTEUS} \
-	LD_LIBRARY_PATH="${PROTEUS_PREFIX}/lib:${LD_LIBRARY_PATH}" \
-	${PLATFORM_ENV}
+PROTEUS_ENV ?= PATH="${PROTEUS_PREFIX}/bin:${PATH}"
 
 clean:
-	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppyx.py clean
-	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setuppetsc.py clean
 	-PROTEUS_PREFIX=${PROTEUS_PREFIX} ${PROTEUS_PYTHON} setup.py clean
 
 distclean: clean
-	-rm -f config.py configure.done stack.done
+	-rm -f stack.done
 	-rm -rf ${PROTEUS_PREFIX}
-	-rm -rf build src/*.pyc src/*.so src/*.a
+	-rm -rf build src/*.pyc proteus/*.so proteus/*.a
 
 update:
 	@echo "Manually trying to update all repositories"
@@ -109,16 +134,7 @@ ${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find 
 	@echo "Building dependencies..."
 	@echo "************************"
 
-	@echo "Please include this information in all bug reports."
-	@echo "+======================================================================================================+"
-	@echo "PROTEUS          : ${PROTEUS}"
-	@echo "PROTEUS_ARCH     : ${PROTEUS_ARCH}"
-	@echo "PROTEUS_PREFIX   : ${PROTEUS_PREFIX}"
-	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}"
-	@echo "HASHDIST_VERSION : $$(cd hashdist; ${VER_CMD})"
-	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})"
-	@echo "+======================================================================================================+"
-	@echo ""
+	$(call show_info)
 
 	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -f -k error default.yaml ${PROTEUS_PREFIX}
         # workaround hack on Cygwin for hashdist launcher to work correctly
@@ -147,43 +163,13 @@ ${PROTEUS_PREFIX}/bin/proteus ${PROTEUS_PREFIX}/bin/proteus_env.sh: profile
 	@echo "Proteus script successfully installed"
 	@echo "************************"
 
-
-#config.py file should be newer than proteusConfig/config.py.$PROTEUS_ARCH
-config.py: proteusConfig/config.py.${PROTEUS_ARCH}
-	@echo "************************"
-	@echo "Configuring..."
-	@echo "************************"
-	@echo "Copying proteusConfig/config.py.$PROTEUS_ARCH to ./config.py"
-	@cp proteusConfig/config.py.${PROTEUS_ARCH} config.py
-	@echo "************************"
-	@echo "Configure complete"
-	@echo "************************"
-
-
 # Proteus install should be triggered by an out-of-date hashstack profile, source tree, or modified setup files.
-install: profile config.py $(shell find src -type f) $(wildcard *.py) proteus
+install: profile config.py $(shell find proteus -type f) $(wildcard *.py) proteus
 	@echo "************************"
 	@echo "Installing..."
 	@echo "************************"
-	@echo "Please include this information in all bug reports."
-	@echo "+======================================================================================================+"
-	@echo "PROTEUS          : ${PROTEUS}"
-	@echo "PROTEUS_ARCH     : ${PROTEUS_ARCH}"
-	@echo "PROTEUS_PREFIX   : ${PROTEUS_PREFIX}"
-	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}"
-	@echo "HASHDIST_VERSION : $$(cd hashdist; ${VER_CMD})"
-	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})"
-	@echo "+======================================================================================================+"
-	@echo ""
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppyx.py install --prefix=${PROTEUS_PREFIX}
-	@echo "************************"
-	@echo "done installing cython extension modules"
-	@echo "************************"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setuppetsc.py build --petsc-dir=${PROTEUS_PREFIX} --petsc-arch='' install --prefix=${PROTEUS_PREFIX}
-	@echo "************************"
-	@echo "done installing petsc-based extension modules"
-	@echo "************************"
-	${PROTEUS_ENV} ${PROTEUS_PYTHON} setup.py install --prefix=${PROTEUS_PREFIX}
+	$(call show_info)
+	${PROTEUS_ENV} ${PROTEUS_INSTALL_CMD}
 	@echo "************************"
 	@echo "done installing standard extension modules"
 	@echo "************************"
@@ -191,25 +177,24 @@ install: profile config.py $(shell find src -type f) $(wildcard *.py) proteus
 	@echo "************************"
 	@echo ""
 	@echo "Proteus was built using the following configuration:"
-	@echo "Please include this information in all bug reports."
-	@echo "+======================================================================================================+"
-	@echo "PROTEUS          : ${PROTEUS}"
-	@echo "PROTEUS_ARCH     : ${PROTEUS_ARCH}"
-	@echo "PROTEUS_PREFIX   : ${PROTEUS_PREFIX}"
-	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}"
-	@echo "HASHDIST_VERSION : $$(cd hashdist; ${VER_CMD})"
-	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})"
-	@echo "+======================================================================================================+"
-	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}" > ${PROTEUS_PREFIX}/proteus.version
-	@echo "HASHDIST_VERSION : $$(cd hashdist; ${VER_CMD})" > ${PROTEUS_PREFIX}/hashdist.version
-	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})" > ${PROTEUS_PREFIX}/hashstack.version
-	@echo ""
-	@echo "You should now verify that the install succeeded by running:"
-	@echo ""
-	@echo "make check"
-	@echo ""
+	$(call show_info)
+	$(call howto)
 
-check: install
+develop: proteus profile config.py
+	@echo "************************"
+	@echo "Installing development version"
+	@echo "************************"
+	$(call show_info)
+	${PROTEUS_ENV} ${PROTEUS_DEVELOP_CMD}
+	@echo "************************"
+	@echo "Development installation complete"
+	@echo "************************"
+	@echo ""
+	@echo "Proteus was built using the following configuration:"
+	$(call show_info)
+	$(call howto)
+
+check:
 	@echo "************************"
 	@echo "Sanity environment check"
 	@echo PROTEUS: ${PROTEUS}
@@ -219,10 +204,10 @@ check: install
 
 	@echo "************************"
 	@echo "Hello world Check!"
-	${PROTEUS_PREFIX}/bin/proteus -c "print 'hello world'"
+	${PROTEUS_PREFIX}/bin/python -c "print 'hello world'"
 	@echo "************************"
 	@echo "Proteus Partition Test"
-	${PROTEUS_PREFIX}/bin/proteus test/test_meshParitionFromTetgenFiles.py
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; ${PROTEUS_PREFIX}/bin/python test/test_meshParitionFromTetgenFiles.py
 	@echo "************************"
 
 	@echo "************************"
@@ -231,4 +216,4 @@ check: install
 	@echo "************************"
 
 doc: install
-	cd doc && ${PROTEUS_ENV} make html
+	cd doc && ${PROTEUS_ENV} PROTEUS=${PWD} make html
