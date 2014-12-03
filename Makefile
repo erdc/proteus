@@ -216,4 +216,4 @@ check:
 	@echo "************************"
 
 doc: install
-	cd doc && ${PROTEUS_ENV} make html
+	cd doc && ${PROTEUS_ENV} PROTEUS=${PWD} make html
