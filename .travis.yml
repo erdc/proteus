@@ -9,11 +9,11 @@ before_install:
 install:
 - make hashdist
 - make stack
-- make profile
-- make install
+- make install 2>&1 | pv -i 15 -n | cat > log.txt
+- tail -n 60 log.txt
 script:
 - set -o pipefail
-- make check 2>&1 | pv -i 15 -n | cat > log.txt
+- make check 2>&1 | pv -i 15 -n | cat >> log.txt
 - tail -n 60 log.txt
 notifications:
 email: false
