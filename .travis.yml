@@ -7,7 +7,10 @@ before_install:
 - sudo apt-get update -qq
 - sudo apt-get install gfortran pv cmake swig libblas-dev liblapack-dev
 install:
-- git clone https://github.com/erdc-cm/proteus
+- make hashdist
+- make stack
+- make profile
+- make install
 script:
 - set -o pipefail
 - make check 2>&1 | pv -i 15 -n | cat > log.txt
