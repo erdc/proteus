@@ -9,7 +9,7 @@ before_install:
 install:
 - make hashdist
 - make stack
-- ./hashdist/bin/hit build -v stack/default.yaml petsc
+- ./hashdist/bin/hit build -v stack/examples/proteus.linux2.yaml petsc
 - make profile
 - make install
 script:
