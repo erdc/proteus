@@ -9,6 +9,7 @@ before_install:
 install:
 - make hashdist
 - make stack
+- cp .travisprofile.yml stack/examples/proteus.linux2.yaml
 - make install 2>&1 | pv -i 15 -n | cat > log.txt
 - tail -n 60 log.txt
 script:
