@@ -5,7 +5,7 @@ python:
 - 2.7
 before_install:
 - sudo apt-get update -qq
-- sudo apt-get install gfortran pv cmake swig libblas-dev liblapack-dev
+- sudo apt-get install gfortran pv cmake swig libblas-dev liblapack-dev mpich2
 install:
 - make hashdist
 - make stack
