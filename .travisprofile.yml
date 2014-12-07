@@ -27,7 +27,7 @@ packages:
     use: host-blas
   daetk:
   mpi:
-    use: host-mpi
+    use: mpich
   mpi4py:
   nose:
   hdf5:
