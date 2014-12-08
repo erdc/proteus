@@ -8,12 +8,9 @@ env:
 python:
 - 2.7
 before_install:
-- sudo apt-get update -qq
-- sudo apt-get install gfortran pv cmake swig libblas-dev liblapack-dev
-install:
 - make hashdist
 - make stack
-- cp .travisprofile.yml stack/examples/proteus.linux2.yaml
+install:
 - make install 2>&1 | pv -i 15 -n | cat > log.txt
 - tail -n 60 log.txt
 script:
