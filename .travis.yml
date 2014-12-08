@@ -1,3 +1,7 @@
+sudo: false
+cache:
+  directories:
+  - .hashdist
 language: python
 env:
 - TEST_PROFILE="test.proteus.yaml"
