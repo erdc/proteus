@@ -59,7 +59,7 @@ source/api/modules.rst: proteus
 	sphinx-apidoc --output-dir=source/api proteus --separate --force 
 
 proteus:
-	ln -s ../src proteus
+	ln -s ../proteus proteus
 
 build/html/capi/html/files.html:
 	-mkdir -p build/html/capi

@@ -146,7 +146,6 @@ def test_mass_and_stiff_jacobians():
         b_split += m_split 
         npt.assert_almost_equal(b_split,b_full)
 
-
 if __name__ == '__main__':
     import nose
     nose.main()
