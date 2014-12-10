@@ -1,3 +1,5 @@
+*.idea
+*.so
 *.csv
 *.pyc
 *.so
@@ -7,6 +9,7 @@
 *.petsc_vec
 *.xmf
 *.h5
+*.egg-info
 *~
 data*txt
 *.log
@@ -22,13 +25,13 @@ data*txt
 install_*
 config_*
 build/
-config.py
 darwin/
 linux2/
 garnet.gnu/
 Cygwin
 mesh*
 proteus.egg-info/
+proteus/ADR.cpp
 proteus/subsurfaceTransportFunctions.c
 hashdist/
 stack/
