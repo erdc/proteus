@@ -14979,3 +14979,218 @@ void updateExteriorNumericalStressFluxJacobian(int nExteriorElementBoundaries_gl
 	}
     }
 }
+
+/**
+   Allow upwinding on the diffusion term if this actually is part of an advective process.
+   Comes up in fully coupled Darcy flow and Transport formulations
+ */
+void calculateGlobalExteriorNumericalDiffusiveFluxWithUpwinding_sd(int scale_penalty,
+								   double penalty_floor,
+								   int nExteriorElementBoundaries_global,
+								   int nQuadraturePoints_elementBoundary,
+								   int nSpace,
+								   int* rowptr,
+								   int* colind,
+								   int* exteriorElementBoundaries,
+								   int* elementBoundaryElements,
+								   int* elementBoundaryLocalElementBoundaries,
+								   int* isDOFBoundary,
+								   int* fluxBoundaryFlag, /*0 no flow, 1 outflow */
+								   double* n,
+								   double* bc_a,
+								   double* bc_grad_phi,
+								   double* bc_u,
+								   double* a,
+								   double* grad_phi,
+								   double* u,
+								   double* penalty,
+								   double* flux)
+{
+  int ebNE,k,I,m,nnz=rowptr[nSpace];
+  double diffusiveVelocityComponent_I,penaltyFlux,max_a;
+  double potential_gradient=0.0;
+  for(ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
+    {
+      for(k=0;k<nQuadraturePoints_elementBoundary;k++)
+        {
+	  /*figure out if the potential gradient is pointing out or not to upwind*/
+	  potential_gradient=0.;
+	  for (I=0; I < nSpace; I++)
+	    {
+	      potential_gradient += grad_phi[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+					     k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	    }
+	  /* apply diffusive flux term if it's a Dirichlet boundary or outflow boundary and the potential gradient is out*/
+          if(isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k] == 1 || (potential_gradient > 0.0 && fluxBoundaryFlag == 1))
+            {
+              flux[ebNE*nQuadraturePoints_elementBoundary+k] = 0.0;
+              max_a=0.0;
+              for(I=0;I<nSpace;I++)
+                {
+                  diffusiveVelocityComponent_I=0.0;
+                  for(m=rowptr[I];m<rowptr[I+1];m++)
+                    {
+                      diffusiveVelocityComponent_I 
+                        -= 
+                        a[ebNE*nQuadraturePoints_elementBoundary*nnz+
+                          k*nnz+
+			  m]
+                        *
+                        grad_phi[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                                 k*nSpace+colind[m]];
+                      max_a = fmax(max_a,a[ebNE*nQuadraturePoints_elementBoundary*nnz+
+                                          k*nnz+
+					   m]);
+                    }
+                  flux[ebNE*nQuadraturePoints_elementBoundary+k] 
+                    += 
+                    diffusiveVelocityComponent_I
+                    *
+                    n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                      k*nSpace+
+                      I];
+                }
+              max_a = fmax(penalty_floor,max_a);
+	      if (isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k]==1)
+		{
+		  penaltyFlux = penalty[ebNE*nQuadraturePoints_elementBoundary+
+                                    k]
+		    *
+		    (u[ebNE*nQuadraturePoints_elementBoundary+
+		       k]
+		     -
+		     bc_u[ebNE*nQuadraturePoints_elementBoundary+
+			  k]);
+
+		  if (scale_penalty) penaltyFlux *= max_a;
+		  flux[ebNE*nQuadraturePoints_elementBoundary+k]  += penaltyFlux;
+		}
+            }
+        }
+    }
+}
+
+void updateGlobalExteriorNumericalDiffusiveFluxWithUpwindingJacobian_sd(int scale_penalty,
+									double penalty_floor,
+									int nExteriorElementBoundaries_global,
+									int nQuadraturePoints_elementBoundary,
+									int nDOF_trial_element,
+									int nSpace,
+									int* rowptr,
+									int* colind,
+									int* l2g,
+									int* exteriorElementBoundaries,
+									int* elementBoundaryElements,
+									int* elementBoundaryLocalElementBoundaries,
+									int* isDOFBoundary,
+									int* fluxBoundaryFlag, /*0 no flow, 1 outflow */
+									double* n,
+									double* a,
+									double* da,
+									double* grad_phi,
+									double* dphi,
+									double* v,
+									double* grad_v,
+									double* penalty,
+									double* fluxJacobian)
+{
+  int ebNE,ebN,eN_global,k,j,j_global,I,m,nnz=rowptr[nSpace];
+  double Jacobian,diffusiveVelocityComponent_I_Jacobian,diffusiveVelocityComponent_I_Jacobian2,max_a;
+  double potential_gradient=0.;
+  for(ebNE=0;ebNE<nExteriorElementBoundaries_global;ebNE++)
+    {
+      ebN = exteriorElementBoundaries[ebNE];
+      eN_global = elementBoundaryElements[ebN*2+0];
+      for(k=0;k<nQuadraturePoints_elementBoundary;k++)
+        {
+	  /*figure out if the potential gradient is pointing out or not to upwind*/
+	  potential_gradient=0.;
+	  for (I=0; I < nSpace; I++)
+	    {
+	      potential_gradient += grad_phi[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+					     k*nSpace + I]
+		*
+		n[ebNE*nQuadraturePoints_elementBoundary*nSpace +
+		  k*nSpace+
+		  I];
+	    }
+	  /* apply diffusive flux term if it's a Dirichlet boundary or outflow boundary and the potential gradient is out*/
+          if(isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k] >= 1 || (potential_gradient > 0.0 && fluxBoundaryFlag == 1))
+            {
+              for(j=0;j<nDOF_trial_element;j++)
+                {
+                  Jacobian=0.0;
+                  j_global = l2g[eN_global*nDOF_trial_element+j];
+                  max_a=0.0;
+                  for(I=0;I<nSpace;I++)
+                    {
+                      diffusiveVelocityComponent_I_Jacobian=0.0;
+                      diffusiveVelocityComponent_I_Jacobian2=0.0;
+                      for(m=rowptr[I];m<rowptr[I+1];m++)
+                        {
+                          diffusiveVelocityComponent_I_Jacobian 
+                            -= 
+                            da[ebNE*nQuadraturePoints_elementBoundary*nnz+
+                               k*nnz+
+                               m]
+                            *
+                            grad_phi[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                                     k*nSpace+
+                                     colind[m]];
+                          diffusiveVelocityComponent_I_Jacobian2 
+                            -= 
+                            a[ebNE*nQuadraturePoints_elementBoundary*nnz+
+                              k*nnz+
+                              m]
+                            *
+                            grad_v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
+                                   k*nDOF_trial_element*nSpace+
+                                   j*nSpace+
+                                   colind[m]];
+                          max_a = fmax(max_a,a[ebNE*nQuadraturePoints_elementBoundary*nnz+
+                                               k*nnz+
+                                               m]);
+                                       
+                        }
+                      Jacobian 
+                        += 
+                        (diffusiveVelocityComponent_I_Jacobian
+                         *
+                         v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                           k*nDOF_trial_element+
+                           j] 
+                         +
+                         diffusiveVelocityComponent_I_Jacobian2*
+                         dphi[j_global])
+                        *
+                        n[ebNE*nQuadraturePoints_elementBoundary*nSpace+
+                          k*nSpace+
+                          I];
+                    }
+                  max_a = fmax(penalty_floor,max_a);
+
+		  if(isDOFBoundary[ebNE*nQuadraturePoints_elementBoundary+k] == 1)
+		    {
+		      double penaltyJacobian = penalty[ebNE*nQuadraturePoints_elementBoundary+
+                                                   k]
+			*
+			v[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+			  k*nDOF_trial_element+
+			  j];
+		      if (scale_penalty) penaltyJacobian *= max_a;
+
+		      Jacobian += penaltyJacobian;
+		    }
+                  fluxJacobian[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element+
+                               k*nDOF_trial_element+
+                               j]
+                    += Jacobian;
+                }
+            }
+        }
+    }
+}
