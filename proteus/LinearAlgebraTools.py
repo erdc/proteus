@@ -214,7 +214,6 @@ def SparseMat(nr,nc,nnz,nzval,colind,rowptr):
     import superluWrappers
     return superluWrappers.SparseMatrix(nr,nc,nnz,nzval,colind,rowptr)
 
-
 class SparseMatShell:
     """
     Build a parallel matrix shell using the subdomain CSR data structures (must have overlapping subdomains)
