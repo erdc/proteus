@@ -9,6 +9,7 @@ from read_hdf5 import *
 physics.name = "heat_3d_reduction"
 so.name = physics.name
 ns = NumericalSolution.NS_base(so,[physics],[numerics],so.sList,opts)
+save_projected_soln = True #do we save the projection of the reduced order solution on the fine grid in xmf?
 
 #doing reduction in the remaining part of the code
 
@@ -75,9 +76,14 @@ archive = Archiver.XdmfArchive(".","heat_3d",readOnly=True)
 u = read_from_hdf5(archive.hdfFile,'/u0')
 u_pod = np.dot(U_transpose,u)
 
+
 f = np.zeros((nr,),'d') #rhs vector
 Model = ns.modelList[0].levelModelList[-1]
-
+ns.tCount=0
+if save_projected_soln:
+    Model.u[0].dof[:] = u
+    for index,model in enumerate(ns.modelList):
+        ns.archiveInitialSolution(model,index)
 import time
 start = time.time()
 
@@ -91,6 +97,14 @@ for i in range(1,nDTout+1):
     u_pod = np.dot(K,rhs)
 
     u_approx = np.dot(U,u_pod)
+
+    ns.tCount += 1
+    ns.tn_last = t
+    if save_projected_soln:
+        Model.u[0].dof[:] = u_approx
+        for index,model in enumerate(ns.modelList):
+            ns.archiveSolution(model,index,t)
+
     if (i == 50):
 	U_approx = u_approx
     label="/%s%d" % ('u',i)
