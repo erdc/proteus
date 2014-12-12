@@ -33,15 +33,31 @@ PROTEUS_EXTRA_COMPILE_ARGS= ['-Wall',
                              '-DCMRVEC_BOUNDS_CHECK',
                              '-DMV_VECTOR_BOUNDS_CHECK'] + platform_extra_compile_args
 
-PROTEUS_EXTRA_LINK_ARGS=['-lblas'] + platform_extra_link_args
+def get_flags(package):
+    """ Checks the ennvironment for presence of PACKAGE_DIR
+    
+    And either returns PACKAGE_DIR/[include, lib] or the Proteus include flags.
 
+    This supports building Proteus using packages provides via environment variables.
+    """
+    
+    package_dir_env = os.getenv(package.upper() + '_DIR'):
+    if package_dir_env:
+        include_dir = pjoin(package_dir_env, 'include')
+        lib_dir = pjoin(package_dir_env, 'lib')
+    else:
+        include_dir = PROTEUS_INCLUDE_DIR
+        lib_dir = PROTEUS_LIB_DIR
+    return include_dir, lib_dir
+
+PROTEUS_EXTRA_LINK_ARGS=['-lblas'] + platform_extra_link_args
 
 PROTEUS_EXTRA_FC_COMPILE_ARGS= ['-Wall']
 PROTEUS_EXTRA_FC_LINK_ARGS=['-lblas']
 
-PROTEUS_SUPERLU_INCLUDE_DIR = PROTEUS_INCLUDE_DIR
+
+PROTEUS_SUPERLU_INCLUDE_DIR, PROTEUS_SUPERLU_LIB_DIR = get_flags('superlu')
 PROTEUS_SUPERLU_H   = r'"slu_ddefs.h"'
-PROTEUS_SUPERLU_LIB_DIR = PROTEUS_LIB_DIR
 PROTEUS_SUPERLU_LIB = 'superlu_4.1'
 
 PROTEUS_BLAS_INCLUDE_DIR   = '.'
@@ -64,19 +80,21 @@ if platform_lapack_integer:
 else:
     PROTEUS_LAPACK_INTEGER = 'int'
 
-PROTEUS_TRIANGLE_INCLUDE_DIR = PROTEUS_INCLUDE_DIR
+
+PROTEUS_TRIANGLE_INCLUDE_DIR, PROTEUS_TRIANGLE_LIB_DIR = get_flags('triangle')
 PROTEUS_TRIANGLE_H = r'"triangle.h"'
-PROTEUS_TRIANGLE_LIB_DIR = PROTEUS_LIB_DIR
 PROTEUS_TRIANGLE_LIB ='tri'
 
-PROTEUS_DAETK_INCLUDE_DIR = [PROTEUS_LIB_DIR]
-PROTEUS_DAETK_LIB_DIR = PROTEUS_LIB_DIR
+PROTEUS_DAETK_INCLUDE_DIR, PROTEUS_DAETK_LIB_DIR = get_flags('daetk')
 PROTEUS_DAETK_LIB ='daetk'
+PROTEUS_DAETK_LIB_DIRS = [PROTEUS_DAETK_LIB_DIR]
 
-PROTEUS_MPI_INCLUDE_DIRS = []
-PROTEUS_MPI_LIB_DIRS = []
+PROTEUS_MPI_INCLUDE_DIR, PROTEUS_MPI_LIB_DIR = get_flags('mpi')
+PROTEUS_MPI_INCLUDE_DIRS = [PROTEUS_MPI_INCLUDE_DIR]
+PROTEUS_MPI_LIB_DIRS = [PROTEUS_MPI_LIB_DIR]
 PROTEUS_MPI_LIBS =[]
 
-PROTEUS_PETSC_LIB_DIRS = []
+PROTEUS_PETSC_INCLUDE_DIR, PROTEUS_PETSC_LIB_DIR = get_flags('petsc')
+PROTEUS_PETSC_LIB_DIRS = [PROTEUS_PETSC_LIB_DIR]
 PROTEUS_PETSC_LIBS = []
-PROTEUS_PETSC_INCLUDE_DIRS = []
+PROTEUS_PETSC_INCLUDE_DIRS = [PROTEUS_PETSC_INCLUDE_DIR]
