@@ -1,23 +1,32 @@
 sudo: false
+
 cache:
   directories:
   - $HOME/.hashdist
 
 language: python
+
 env:
 - TEST_PROFILE="test.proteus.yaml"
+
 python:
 - 2.7
+
 before_install:
 - pwd
 - ls $HOME/.hashdist
 - make hashdist
 - make stack
+
 install:
 - cp .travisprofile.yml stack/default.yaml
-- ./hashdist/bin/hit status stack/default.yaml
 - make profile
+- ./hashdist/bin/hit status stack/default.yaml
+- ls $HOME/.hashdist
+
 script:
 - make check
+
 notifications:
+
 email: false
