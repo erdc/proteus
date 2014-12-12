@@ -59,17 +59,17 @@ plt.show()
 
 #saving mass and stiffness matrices below
 
-Model = ns.modelList[0].levelModelList[-1]
-mj = Model.initializeMassJacobian()
-Model.getMassJacobian(mj)
-kj = Model.initializeSpatialJacobian()
-Model.getSpatialJacobian(kj)
+#Model = ns.modelList[0].levelModelList[-1]
+#mj = Model.initializeMassJacobian()
+#Model.getMassJacobian(mj)
+#kj = Model.initializeSpatialJacobian()
+#Model.getSpatialJacobian(kj)
 
-rowptr,colind,nzval = mj.getCSRrepresentation()
-np.savetxt('iam',rowptr,'%d', ' ')
-np.savetxt('jam',colind,'%d', ' ')
-np.savetxt('am',nzval,delimiter=' ')
-rowptr_s,colind_s,nzval_s = kj.getCSRrepresentation()
-np.savetxt('ias',rowptr_s,'%d',' ')
-np.savetxt('jas',colind_s,'%d',' ')
-np.savetxt('as',nzval_s,delimiter=' ')
+#rowptr,colind,nzval = mj.getCSRrepresentation()
+#np.savetxt('iam',rowptr,'%d', ' ')
+#np.savetxt('jam',colind,'%d', ' ')
+#np.savetxt('am',nzval,delimiter=' ')
+#rowptr_s,colind_s,nzval_s = kj.getCSRrepresentation()
+#np.savetxt('ias',rowptr_s,'%d',' ')
+#np.savetxt('jas',colind_s,'%d',' ')
+#np.savetxt('as',nzval_s,delimiter=' ')
