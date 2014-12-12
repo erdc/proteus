@@ -14,7 +14,7 @@ python:
 
 before_install:
 - pwd
-- ls $HOME/.hashdist
+- rm -rf $HOME/.hashdist
 - make hashdist
 - make stack
 
