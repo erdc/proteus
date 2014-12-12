@@ -619,7 +619,7 @@ class Newton(NonlinearSolver):
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
 
 class POD_Newton(Newton):
-    """A simple iterative solver that is Newton's method if you give it the right Jacobian"""
+    """Newton's method on the reduced order system based on POD"""
     def __init__(self,
                  linearSolver,
                  F,J=None,du=None,par_du=None,
