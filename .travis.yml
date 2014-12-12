@@ -12,6 +12,7 @@ before_install:
 - make stack
 install:
 - cp .travisprofile.yml stack/default.yaml
+- ./hashdist/bin/hit status stack/default.yaml
 - make profile
 script:
 - set -o pipefail
