@@ -16,8 +16,8 @@ extends:
 packages:
 
   launcher:
-  cmake:
-    use: host-cmake
+#  cmake:
+#    use: host-cmake
   python:
     host: false
     link: shared
@@ -25,21 +25,21 @@ packages:
       bzip2, sqlite
   blas:
     use: host-blas
-  daetk:
+#  daetk:
   mpi:
     use: mpich
-  mpi4py:
-  nose:
-  hdf5:
+#  mpi4py:
+#  nose:
+#  hdf5:
   petsc:
     build_with: |
       parmetis
     coptflags: -O2
     link: shared
     debug: false
-  petsc4py:
-    with_conf: true
-  pytables:
-  superlu:
-  tetgen:
-  triangle:
+#  petsc4py:
+#    with_conf: true
+#  pytables:
+#  superlu:
+#  tetgen:
+#  triangle:
