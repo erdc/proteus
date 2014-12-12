@@ -26,17 +26,17 @@ packages:
   blas:
     use: host-blas
 #  daetk:
-  mpi:
-    use: mpich
+#  mpi:
+#    use: mpich
 #  mpi4py:
 #  nose:
 #  hdf5:
-  petsc:
-    build_with: |
-      parmetis
-    coptflags: -O2
-    link: shared
-    debug: false
+#  petsc:
+#    build_with: |
+#      parmetis
+#    coptflags: -O2
+#    link: shared
+#    debug: false
 #  petsc4py:
 #    with_conf: true
 #  pytables:
