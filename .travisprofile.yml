@@ -16,8 +16,8 @@ extends:
 packages:
 
   launcher:
-#  cmake:
-#    use: host-cmake
+  cmake:
+    use: host-cmake
   python:
     host: false
     link: shared
