@@ -13,7 +13,7 @@ Order of execution for Burgers:
 
 burgers.py
 svd_burgers.py
-POD_burgers.py
+POD_newton_burgers.py
 
 Files required for include:
 burgers_init.py
