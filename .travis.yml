@@ -11,12 +11,10 @@ before_install:
 - make hashdist
 - make stack
 install:
-- cp .travisprofile.yml stack/default.yml
-- make profile 2>&1 | pv -i 15 -n | cat > log.txt
-- tail -n 60 log.txt
+- cp .travisprofile.yml stack/default.yaml
+- make profile
 script:
 - set -o pipefail
-- make check 2>&1 | pv -i 15 -n | cat >> log.txt
-- tail -n 60 log.txt
+- make check
 notifications:
 email: false
