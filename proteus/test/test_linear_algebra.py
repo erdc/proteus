@@ -3,6 +3,40 @@ import numpy.testing as npt
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
 
+from petsc4py import PETSc
+
+class MockMat():
+    """ petsc4py-based mock SuperLU Matrix for testing.  Filled like this:
+
+    [ 1 1     ]
+    [   1 2   ]
+    [     1 3 ]
+    [       1 ]
+    """
+
+
+    def __init__(self, n):
+        A = PETSc.Mat().create()
+        A.setSizes(n)
+        A.setType('aij')
+        A.setUp()
+        A.assemblyBegin()
+        for i in range(n):
+            A[i, i] = 1
+            if i + 1 < n:
+                A[i, i + 1] = i
+        A.assemblyEnd()
+        self.A = A
+
+    def getCSRrepresentation(self):
+        return self.A.getValuesCSR()
+
+    def getSubMatCSRrepresentation(self, start, end):
+        ids = range(start, end)
+        isg = PETSc.IS().createGeneral(ids)
+        B = self.A.getSubMatrix(isg)
+        return B.getValuesCSR()
+
 
 def test_vec_create():
     """test_vec_create
@@ -100,16 +134,24 @@ def test_mat_vec_math():
     v1 = Vec(2)
     v1[:] = [1, 1]
 
-    m1 = Mat(3,2)
-    m1[0,:] = [1, 2]
-    m1[1,:] = [3, 2]
-    m1[2,:] = [4, 5]
+    m1 = Mat(3, 2)
+    m1[0, :] = [1, 2]
+    m1[1, :] = [3, 2]
+    m1[2, :] = [4, 5]
 
     # m1*v1
     dot_product = np.asarray([3, 5, 9])
     npt.assert_almost_equal(dot_product, m1.dot(v1))
 
-def compute_norms(h,A,vecs):
+
+def test_superlu_mat():
+    """test_superlu_mat
+
+    Simple verification of functionality of SuperLU SparseMat operators.
+    """
+
+
+def compute_norms(h, A, vecs):
     from proteus.LinearAlgebraTools import l2Norm, l1Norm, lInfNorm, rmsNorm
     from proteus.LinearAlgebraTools import wl2Norm, wl1Norm, wlInfNorm
     from proteus.LinearAlgebraTools import energyNorm
@@ -142,7 +184,7 @@ def test_norm_correctness():
     test.description = 'test_correctness_lInfNorm'
     yield test, lInfNorm(x), 1
     test.description = 'test_correctness_rmsNorm'
-    yield test, rmsNorm(x), sqrt(2)/2
+    yield test, rmsNorm(x), 1
     test.description = 'test_correctness_wl1Norm'
     yield test, wl1Norm(x, h), 2
     test.description = 'test_correctness_wl2Norm'
@@ -237,6 +279,38 @@ def test_norm_triangle_inequality():
         test = ok
         test.description = 'test_norm_triangle_inequality[{}]'.format(name)
         yield test, t1 <= t2 + t3
+
+
+def test_petsc_binary_mat_io():
+    """test_petsc_binary_mat_io
+
+    Verifies that binary save/loads on PETSc Mats works correctly.
+    """
+
+    from proteus.LinearAlgebraTools import ParMat_petsc4py
+
+    n = 10
+    par_bs = 1
+    par_n = n
+    par_N = n
+    par_nghost = 0
+    subdomain2global = range(n)
+    ghosted_csr_mat = MockMat(n)
+
+    M = ParMat_petsc4py(ghosted_csr_mat, par_bs, par_n, par_N, par_nghost, subdomain2global)
+
+    M.save('M.petsc_mat')
+
+    from petsc4py import PETSc
+
+    viewer = PETSc.Viewer().createBinary('M.petsc_mat', 'r')
+    A = PETSc.Mat().load(viewer)
+
+    mi, mj, mv = M.csr_rep
+    ai, aj, av = A.getValuesCSR()
+    npt.assert_equal(mi, ai)
+    npt.assert_equal(mj, aj)
+    npt.assert_equal(mv, av)
 
 if __name__ == '__main__':
     import nose
