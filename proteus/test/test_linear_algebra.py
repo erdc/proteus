@@ -184,7 +184,7 @@ def test_norm_correctness():
     test.description = 'test_correctness_lInfNorm'
     yield test, lInfNorm(x), 1
     test.description = 'test_correctness_rmsNorm'
-    yield test, rmsNorm(x), sqrt(2)/2
+    yield test, rmsNorm(x), 1
     test.description = 'test_correctness_wl1Norm'
     yield test, wl1Norm(x, h), 2
     test.description = 'test_correctness_wl2Norm'
