@@ -16,6 +16,11 @@ Then, change to the root directory and type ``make; make check``.
 This will use the HashDist build system to automatically build all
 Proteus dependencies for you.
 
+After installation, you should receive instructions on how to update your 
+``PATH`` environment variable so that the Proteus-installed python and
+other packages are available.  You may want to put this command in your 
+bash startup profile.
+
 Developer Information
 ======================
 
