@@ -7,7 +7,7 @@ all: install
 
 SHELL=/usr/bin/env bash
 
-PROTEUS ?= $(shell python -c "import os; print os.path.realpath(os.getcwd())")
+PROTEUS ?= $(shell python -c "from __future__ import print_function; import os; print(os.path.realpath(os.getcwd()))")
 VER_CMD = git log -1 --pretty="%H"
 PROTEUS_INSTALL_CMD = python setup.py install
 PROTEUS_DEVELOP_CMD = pip install -e .
