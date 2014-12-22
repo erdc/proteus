@@ -3,6 +3,7 @@ A hierarchy of classes for nonlinear algebraic system solvers.
 """
 
 import numpy
+import numpy as np
 from math import *
 import math #to disambiguate math.log and log
 from LinearAlgebraTools import *
@@ -611,6 +612,102 @@ class Newton(NonlinearSolver):
                     Viewers.newPlot()
                     Viewers.newWindow()
                 #raw_input("wait")
+            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+                % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            return self.failedFlag
+        log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+            % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+
+class POD_Newton(Newton):
+    """Newton's method on the reduced order system based on POD"""
+    def __init__(self,
+                 linearSolver,
+                 F,J=None,du=None,par_du=None,
+                 rtol_r  = 1.0e-4,
+                 atol_r  = 1.0e-16,
+                 rtol_du = 1.0e-4,
+                 atol_du = 1.0e-16,
+                 maxIts  = 100,
+                 norm = l2Norm,
+                 convergenceTest = 'r',
+                 computeRates = True,
+                 printInfo = True,
+                 fullNewton=True,
+                 directSolver=False,
+                 EWtol=True,
+                 maxLSits = 100):
+        Newton.__init__(self,
+                linearSolver,
+                F,J,du,par_du,
+                rtol_r,
+                atol_r,
+                rtol_du,
+                atol_du,
+                maxIts,
+                norm,
+                convergenceTest,
+                computeRates,
+                printInfo,
+                fullNewton,
+                directSolver,
+                EWtol,
+                maxLSits)
+        self.DB = 11
+        U = np.loadtxt('SVD_basis')
+        self.U = U[:,0:self.DB]
+        self.U_transpose = self.U.conj().T
+        self.pod_J = np.zeros((self.DB,self.DB),'d')
+        self.pod_linearSolver = LU(self.pod_J)
+        self.J_rowptr,self.J_colind,self.J_nzval = self.J.getCSRrepresentation()
+        self.pod_du = np.zeros(self.DB)
+    def norm(self,u):
+        return self.norm_function(u)
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        """
+        Solve F(u) = b
+
+        b -- right hand side
+        u -- solution
+        r -- F(u) - b
+        """
+        pod_u = np.dot(self.U_transpose,u)
+        u[:] = np.dot(self.U,pod_u)
+        r=self.solveInitialize(u,r,b)
+        pod_r = np.dot(self.U_transpose,r)
+        self.norm_r0 = self.norm(pod_r)
+        self.norm_r_hist = []
+        self.norm_du_hist = []
+        self.gammaK_max=0.0
+        self.linearSolverFailed = False
+        while (not self.converged(pod_r) and
+               not self.failed()):
+            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+                % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+            if self.updateJacobian or self.fullNewton:
+                self.updateJacobian = False
+                self.F.getJacobian(self.J)
+                self.pod_J[:] = 0.0
+                for i in range(self.DB):
+                    for j in range(self.DB):
+                        for k in range(self.F.dim):
+                            for m in range(self.J_rowptr[k],self.J_rowptr[k+1]):
+                                self.pod_J[i,j] += self.U_transpose[i,k]*self.J_nzval[m]*self.U[self.J_colind[m],j]
+                #self.linearSolver.prepare(b=r)
+                self.pod_linearSolver.prepare(b=pod_r)
+            self.du[:]=0.0
+            self.pod_du[:]=0.0
+            if not self.linearSolverFailed:
+                #self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                #self.linearSolverFailed = self.linearSolver.failed()
+                self.pod_linearSolver.solve(u=self.pod_du,b=pod_r)
+                self.linearSolverFailed = self.pod_linearSolver.failed() 
+            #pod_u-=np.dot(self.U_transpose,self.du)
+            pod_u-=self.pod_du
+            u[:] = np.dot(self.U,pod_u)
+            self.computeResidual(u,r,b)
+            pod_r[:] = np.dot(self.U_transpose,r)
+            r[:] = np.dot(self.U,pod_r)
+        else:
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                 % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             return self.failedFlag
@@ -2414,6 +2511,28 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                    directSolver=linearDirectSolverFlag,
                                                    EWtol=EWtol,
                                                    maxLSits=maxLSits ))
+    elif levelNonlinearSolverType == POD_Newton:
+        for l in range(nLevels):
+            if par_duList != None and len(par_duList) > 0:
+                par_du=par_duList[l]
+            else:
+                par_du=None
+            levelNonlinearSolverList.append(POD_Newton(linearSolver=linearSolverList[l],
+                                                   F=nonlinearOperatorList[l],
+                                                   J=jacobianList[l],
+                                                   du=duList[l],
+                                                   par_du=par_du,
+                                                   rtol_r=relativeToleranceList[l],
+                                                   atol_r=absoluteTolerance,
+                                                   maxIts=maxSolverIts,
+                                                   norm = nonlinearSolverNorm,
+                                                   convergenceTest = levelSolverConvergenceTest,
+                                                   computeRates = computeLevelSolverRates,
+                                                   printInfo=printLevelSolverInfo,
+                                                   fullNewton=levelSolverFullNewtonFlag,
+                                                   directSolver=linearDirectSolverFlag,
+                                                   EWtol=EWtol,
+                                                   maxLSits=maxLSits ))
     elif levelNonlinearSolverType == NewtonNS:
         for l in range(nLevels):
             if par_duList != None and len(par_duList) > 0:
@@ -2557,6 +2676,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                          computeRates = computeSolverRates,
                                          printInfo=printSolverInfo)
     elif (multilevelNonlinearSolverType == Newton or
+          multilevelNonlinearSolverType == POD_Newton or
           multilevelNonlinearSolverType == NewtonNS or
           multilevelNonlinearSolverType == NLJacobi or
           multilevelNonlinearSolverType == NLGaussSeidel or
