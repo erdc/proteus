@@ -5795,7 +5795,94 @@ class OneLevelTransport(NonlinearEquation):
     #
     def getSpatialJacobian(self,jacobian):
         return self.getJacobian(jacobian,skipMassTerms=True)
-    
+    def getSpatialResidual(self,u,r):
+        """
+        Calculate the element spatial residuals and add in to the global residual
+        This is being used right now to test nonlinear pod and deim
+        """
+        r.fill(0.0)
+        #Load the Dirichlet conditions
+        for cj in range(self.nc):
+            for dofN,g in self.dirichletConditions[cj].DOFBoundaryConditionsDict.iteritems():
+                self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        if self.forceStrongConditions:
+            for cj in range(len(self.dirichletConditionsForceDOF)):
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                    self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        #Load the unknowns into the finite element dof
+        self.timeIntegration.calculateU(u)
+        self.setUnknowns(self.timeIntegration.u)
+        self.calculateCoefficients()
+        self.calculateElementResidual()
+        self.scale_dt = False
+        log("Element spatial residual",level=9,data=self.elementSpatialResidual)
+        if self.timeIntegration.dt < 1.0e-8*self.mesh.h:
+            self.scale_dt = True
+            log("Rescaling residual for small time steps")
+        else:
+            self.scale_dt = False
+        for ci in range(self.nc):
+            if self.scale_dt:
+                self.elementSpatialResidual[ci]*=self.timeIntegration.dt
+            cfemIntegrals.updateGlobalResidualFromElementResidual(self.offset[ci],
+                                                                  self.stride[ci],
+                                                                  self.l2g[ci]['nFreeDOF'],
+                                                                  self.l2g[ci]['freeLocal'],
+                                                                  self.l2g[ci]['freeGlobal'],
+                                                                  self.elementSpatialResidual[ci],
+                                                                  r);
+        log("Global spatial residual",level=9,data=r)
+        if self.forceStrongConditions:#
+            for cj in range(len(self.dirichletConditionsForceDOF)):#
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                    r[self.offset[cj]+self.stride[cj]*dofN] = 0
+    def getMassResidual(self,u,r):
+        """
+        Calculate the portion of the element residuals associated with the temporal term and assemble into a global residual
+        This is being used right now to test nonlinear pod and deim and is inefficient
+        """
+        r.fill(0.0)
+        #Load the Dirichlet conditions
+        for cj in range(self.nc):
+            for dofN,g in self.dirichletConditions[cj].DOFBoundaryConditionsDict.iteritems():
+                self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        if self.forceStrongConditions:
+            for cj in range(len(self.dirichletConditionsForceDOF)):
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                    self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        #Load the unknowns into the finite element dof
+        self.timeIntegration.calculateU(u)
+        self.setUnknowns(self.timeIntegration.u)
+        self.calculateCoefficients()
+        self.calculateElementResidual()
+        elementMassResidual = {}
+        for ci in range(self.nc):
+            elementMassResidual[ci]=np.copy(self.elementResidual[ci])
+            elementMassResidual[ci]-= self.elementSpatialResidual[ci]
+                                             
+        self.scale_dt = False
+        log("Element Mass residual",level=9,data=elementMassResidual)
+        if self.timeIntegration.dt < 1.0e-8*self.mesh.h:
+            self.scale_dt = True
+            log("Rescaling residual for small time steps")
+        else:
+            self.scale_dt = False
+        for ci in range(self.nc):
+            if self.scale_dt:
+                elementMassResidual[ci]*=self.timeIntegration.dt
+            cfemIntegrals.updateGlobalResidualFromElementResidual(self.offset[ci],
+                                                                  self.stride[ci],
+                                                                  self.l2g[ci]['nFreeDOF'],
+                                                                  self.l2g[ci]['freeLocal'],
+                                                                  self.l2g[ci]['freeGlobal'],
+                                                                  elementMassResidual[ci],
+                                                                  r);
+        log("Global mass residual",level=9,data=r)
+        if self.forceStrongConditions:#
+            for cj in range(len(self.dirichletConditionsForceDOF)):#
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                    r[self.offset[cj]+self.stride[cj]*dofN] = 0
+
 #end Transport definition
 class MultilevelTransport:
     """Nonlinear ADR on a multilevel mesh"""
