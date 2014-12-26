@@ -18,6 +18,7 @@ def get_burgers_ns(name,T=0.1,nDTout=10,archive_space_res=False):
     bu.DT=bu.T/float(bu.nDTout)
     bu.so.tnList = [i*bu.DT for i in range(bu.nDTout+1)]
     #request archiving of spatial residuals ...
+    simFlagsList=None
     if archive_space_res:
         simFlagsList=[{}]
         simFlagsList[0]['storeQuantities']=['pod_residuals']
@@ -62,8 +63,29 @@ def test_res_archive():
     failed = ns.calculateSolution("run_space_res_smoke_test")
     assert not failed
 
+def test_svd_space_res():
+    """
+    test SVD decomposition of spatial residuals by generating SVD, saving to file and reloading
+    """
+    from deim_utils import read_snapshots,generate_svd_decomposition
+
+    ns = get_burgers_ns("test_svd_space_res",T=0.1,nDTout=10,archive_space_res=True)
+    
+    failed = ns.calculateSolution("run_svd_space_res")
+    assert not failed
+    from proteus import Archiver
+    archive = Archiver.XdmfArchive(".","test_svd_space_res",readOnly=True)
+
+    U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'spatial_residual0','F_s')
+
+    S_svd = np.dot(U,np.dot(np.diag(s),V))
+    #now load back in and test
+    S = read_snapshots(archive,len(ns.tnList),'spatial_residual0')
+
+    npt.assert_almost_equal(S,S_svd)
+    
 if __name__ == "__main__":
     from proteus import Comm
     comm = Comm.init()
     import nose
-    nose.main(defaultTest='test_DEIM:test_res_archive')
+    nose.main(defaultTest='test_deim:test_svd_space_res')
