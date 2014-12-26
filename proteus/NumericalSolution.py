@@ -88,9 +88,10 @@ class NS_base:  # (HasTraits):
             self.ar = dict([(i,Archiver.XdmfArchive(opts.dataDir,p.name,useTextArchive=opts.useTextArchive,
                                                     gatherAtClose=opts.gatherArchive,hotStart=opts.hotStart)) for i,p in enumerate(self.pList)])
         #by default do not save quadrature point info
-        self.archive_q          = dict([(i,False) for i in range(len(self.pList))]);
-        self.archive_ebq_global = dict([(i,False) for i in range(len(self.pList))]);
-        self.archive_ebqe       = dict([(i,False) for i in range(len(self.pList))]);
+        self.archive_q                 = dict([(i,False) for i in range(len(self.pList))]);
+        self.archive_ebq_global        = dict([(i,False) for i in range(len(self.pList))]);
+        self.archive_ebqe              = dict([(i,False) for i in range(len(self.pList))]);
+        self.archive_spatial_residuals = dict([(i,False) for i in range(len(self.pList))]);
         if simFlagsList != None:
             assert len(simFlagsList) == len(self.pList), "len(simFlagsList) = %s should be %s " % (len(simFlagsList),len(self.pList))
             for index in range(len(self.pList)):
@@ -104,6 +105,8 @@ class NS_base:  # (HasTraits):
                         elif len(recType) > 1 and recType[0] == 'ebqe':
                             self.archive_ebqe[index] = True
                         #
+                        elif recType[0] == 'pod_residuals':
+                            self.archive_spatial_residuals[index]=True
                         else:
                             log("Warning Numerical Solution storeQuantity = %s not recognized won't archive" % quant)
                     #
@@ -914,6 +917,13 @@ class NS_base:  # (HasTraits):
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=True,meshChanged=True)
 
+        #for nonlinear POD 
+        if self.archive_spatial_residuals[index] == True:
+            res_space = {}
+            for ci in range(model.levelModelList[-1].coefficients.nc):
+                res_space[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
+                model.levelModelList[-1].getSpatialResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_space)
     ##save model's solution values to archive
     def archiveSolution(self,model,index,t=None):
         if self.archiveFlag == ArchiveFlags.UNDEFINED:
@@ -964,6 +974,14 @@ class NS_base:  # (HasTraits):
             model.levelModelList[-1].archiveExteriorElementBoundaryQuadratureValues(self.ar[index],t,self.tCount,
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=False,meshChanged=True)
+        #for nonlinear POD 
+        if self.archive_spatial_residuals[index] == True:
+            res_space = {}
+            for ci in range(model.levelModelList[-1].coefficients.nc):
+                res_space[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
+                model.levelModelList[-1].getSpatialResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],t,self.tCount,res_space)
+                
         if not self.opts.cacheArchive:
             self.ar[index].sync()
     ## clean up archive
