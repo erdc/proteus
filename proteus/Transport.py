@@ -5460,6 +5460,23 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                                          self.ebqe[key],
                                                                                                                          name,
                                                                                                                          tCount)
+    def archiveFiniteElementResiduals(self,archive,t,tCount,res_dict):
+        """
+        write assembled spatial residual stored in r at time t
+
+        ASSUMES archiveFiniteElementSolutions has already been called for t and tCount!!!
+
+        """
+        class dummy:
+            """
+            needed to satisfy api for writeFunctionXdmf
+            """
+            def __init__(self,ci,r):
+                self.dof=r
+                self.name='spatial_residual{0}'.format(ci)
+        for ci in range(self.coefficients.nc):
+            self.u[ci].femSpace.writeFunctionXdmf(archive,dummy(ci,res_dict[ci]),tCount)
+
 
     def initializeMassJacobian(self):
         """
