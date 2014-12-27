@@ -73,3 +73,27 @@ def calculate_deim_indices(Uin):
         U=U_new
     #
     return rho
+
+def deim_alg(Uin,m):
+    """
+    Basic procedure
+
+    - given $m$, dimension for $F$ reduced basis $\mathbf{U}_m$
+    - call DEIM algorithm to determine $\vec \rho$. 
+    - build $\mathbf{P}$ from $\rho$ as 
+      $$
+      \mathbf{P} = [\vec e_{\rho_1},\vec e_{\rho_2},\dots,\vec e_{\rho_m}]
+      $$
+    - invert $\mathbf{P}^T\mathbf{U}_m$
+    - return \rho and $\mathbf{P}_F=\mathbf{U}_m(\mathbf{P}^T\mathbf{U}_m)^{-1}$
+
+    
+    """
+    assert m <= Uin.shape[1]
+    Um = Uin[:,0:m]
+    rho = calculate_deim_indices(Um)
+    PtUm = Um[rho]
+    assert PtUm.shape == (m,m)
+    PtUmInv = np.linalg.inv(PtUm)
+    PF= np.dot(Um,PtUmInv)
+    return rho,PF
