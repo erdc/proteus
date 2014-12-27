@@ -162,26 +162,27 @@ def deim_approx(T=0.1,nDTout=10,m=5):
     Su = read_snapshots(archive,len(ns.tnList),'u')
     Sf = read_snapshots(archive,len(ns.tnList),'spatial_residual0')
 
-    steps_to_test = ns.tnList; errors = np.zeros(len(steps_to_test),'d')
+    steps_to_test = np.arange(len(ns.tnList)); errors = np.zeros(len(steps_to_test),'d')
+    F_deim = np.zeros((Sf.shape[0],len(steps_to_test)),'d')
     for i,istep in enumerate(steps_to_test):
         #solution on the fine grid
         u = Su[:,istep]
         #spatial residual evaluated from fine grid
         F = Sf[:,istep]
         #deim approximation on the fine grid 
-        F_deim = np.dot(PF,F[rho])
-        errors[i] = np.linalg.norm(F-F_deim)
+        F_deim[:,istep] = np.dot(PF,F[rho])
+        errors[i] = np.linalg.norm(F-F_deim[:,istep])
     #
     np.savetxt("deim_approx_errors_test_T={0}_nDT={1}_m={2}.dat".format(T,nDTout,m),errors)
         
-    return errors
+    return errors,F_deim
 
 def test_deim_approx_full(tol=1.0e-12):
     """
     check that get very small error if use full basis 
     """
     T = 0.1; nDTout=10; m=nDTout+1
-    errors = deim_approx(T=T,nDTout=nDTout,m=m)
+    errors,F_deim = deim_approx(T=T,nDTout=nDTout,m=m)
     assert errors.min() < tol
 
 if __name__ == "__main__":
@@ -189,3 +190,4 @@ if __name__ == "__main__":
     comm = Comm.init()
     import nose
     nose.main(defaultTest='test_deim:test_deim_approx_full')
+    
