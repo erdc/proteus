@@ -13,11 +13,12 @@
 	
 3. Add script for generating SVD for snapshots ..math::`\mathbf{F}_s = \mathbf{V}_f \mathbf{S}_f \mathbf{W}_f` and saves results to file 
 
-	- just test that SVD algorithm gives correct factorization
+	- just test that SVD algorithm gives correct factorization *DONE*
 	
 4. Implement DEIM algorithm,
-
-5  Implement script that reads in snapshot info from file, calls DEIM, computes the projection matrix ..math::`\mathbf{P}_F=\mathbf{V}_f(\mathbf{P}^T\mathbf{V}_f)^{-1}
+	- just test that applying to full basis returns a full set of indices? *DONE*
+	
+5  Implement script that reads in snapshot info from file, calls DEIM, computes the projection matrix ..math::`\mathbf{P}_F=\mathbf{V}_f(\mathbf{P}^T\mathbf{V}_f)^{-1}`
 
 	- evaluate by visualizing full evaluation compared to DEIM and computing errr on 'fine' grid
 

@@ -63,7 +63,7 @@ def test_res_archive():
     failed = ns.calculateSolution("run_space_res_smoke_test")
     assert not failed
 
-def test_svd_space_res():
+def test_svd_space_res(file_prefix='F_s'):
     """
     test SVD decomposition of spatial residuals by generating SVD, saving to file and reloading
     """
@@ -83,9 +83,50 @@ def test_svd_space_res():
     S = read_snapshots(archive,len(ns.tnList),'spatial_residual0')
 
     npt.assert_almost_equal(S,S_svd)
+
+def test_svd_soln():
+    """
+    test SVD decomposition of solution by generating SVD, saving to file and reloading
+    """
+    from deim_utils import read_snapshots,generate_svd_decomposition
+
+    ns = get_burgers_ns("test_svd_soln",T=0.1,nDTout=10,archive_space_res=True)
     
+    failed = ns.calculateSolution("run_svd_soln")
+    assert not failed
+    from proteus import Archiver
+    archive = Archiver.XdmfArchive(".","test_svd_soln",readOnly=True)
+
+    U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'u','soln')
+
+    S_svd = np.dot(U,np.dot(np.diag(s),V))
+    #now load back in and test
+    S = read_snapshots(archive,len(ns.tnList),'u')
+
+    npt.assert_almost_equal(S,S_svd)
+
+def test_deim_indices():
+    """
+    Taking a basis generated from snapshots
+    and tests that get the deim algorithm returns all of the indices 
+    """
+    import os
+    basis_file='F_s_SVD_basis'
+    if not os.path.isfile(basis_file):
+        test_svd_space_res(file_prefix='F_s')
+    U = np.loadtxt(basis_file)
+    from deim_utils import calculate_deim_indices
+    rho_half = calculate_deim_indices(U[:,:U.shape[1]/2])
+    assert rho_half.shape[0] == U.shape[1]/2
+
+    rho = calculate_deim_indices(U)    
+    assert rho.shape[0] == U.shape[1]
+
+    rho_uni = np.unique(rho)
+    assert rho_uni.shape[0] == rho.shape[0]
+
 if __name__ == "__main__":
     from proteus import Comm
     comm = Comm.init()
     import nose
-    nose.main(defaultTest='test_deim:test_svd_space_res')
+    nose.main(defaultTest='test_deim:test_deim_indices')
