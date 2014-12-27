@@ -97,3 +97,33 @@ def deim_alg(Uin,m):
     PtUmInv = np.linalg.inv(PtUm)
     PF= np.dot(Um,PtUmInv)
     return rho,PF
+
+def visualize_zslice(variable,nnx,nny,iz,x=None,y=None,name=None):
+    """
+    convenience function for plotting a slice
+    """
+    istart = nnx*nny*iz
+    iend   = nnx*nny*(iz+1)
+    v_slice= variable[istart:iend]
+    v_slice= v_slice.reshape(nnx,nny)
+    if x == None:
+        x = np.outer(np.arange(nnx),np.arange(nnx))
+    if y == None:
+        y = np.outer(np.arange(nny),np.arange(nny))
+    assert x.shape == v_slice.shape
+    assert y.shape == v_slice.shape
+
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    from matplotlib import cm
+    from matplotlib.ticker import LinearLocator, FormatStrFormatter
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    surf=ax.plot_surface(x,y,v_slice,rstride=1,cstride=1,cmap=cm.coolwarm,linewidth=0,antialiased=False)
+    plt.xlabel('x'); plt.ylabel('y')
+    if name == None:
+        name = 'deim_slice_z={0}.png'.format(iz)
+    plt.savefig(name)
+
+
+    return surf

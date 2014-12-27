@@ -18,8 +18,10 @@
 4. Implement DEIM algorithm,
 	- just test that applying to full basis returns a full set of indices? *DONE*
 	
-5  Implement script that reads in snapshot info from file, calls DEIM, computes the projection matrix ..math::`\mathbf{P}_F=\mathbf{V}_f(\mathbf{P}^T\mathbf{V}_f)^{-1}`
+5  Implement script that reads in snapshot info from file, calls DEIM, computes the projection matrix
+	..math:: `\mathbf{P}_F=\mathbf{V}_f(\mathbf{P}^T\mathbf{V}_f)^{-1}`
+
+	- make sure the error goes to essentially zero if use all of the basis vectors *DONE*
 
 	- evaluate by visualizing full evaluation compared to DEIM and computing errr on 'fine' grid
 
-	- make sure the error goes to essentially zero if use all of the basis vectors
