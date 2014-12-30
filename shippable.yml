@@ -19,9 +19,9 @@ install:
 - easy_install coverage
 
 script:
-- nosetests test --with-xunit --xunit-file=shippable/testresults/nosetests.xml --with-coverage --cover-package=petsc4py --cover-branches --cover-xml --cover-xml-file=shippable/codecoverage/coverage.xml
+- nosetests --with-xunit --xunit-file=shippable/testresults/nosetests.xml --with-coverage --cover-package=petsc4py --cover-branches --cover-xml --cover-xml-file=shippable/codecoverage/coverage.xml
 
-commit_container: cekees/proteus
+commit_container: erdccm/proteus
 
 notifications:
     email:
