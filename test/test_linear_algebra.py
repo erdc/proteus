@@ -2,6 +2,7 @@ import numpy as np
 import numpy.testing as npt
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
+from proteus.iproteus import *
 
 from petsc4py import PETSc
 
