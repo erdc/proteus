@@ -1,0 +1,29 @@
+language: python
+
+env:
+- TEST_PROFILE="test.proteus.yaml"
+
+python:
+- 2.7
+
+before_install:
+- sudo apt-get install gfortran cmake libblas-dev liblapack-dev
+- wget http://proteus.usace.army.mil/files/hashdist.tgz
+- tar xzf hashdist.tgz 
+- mv .hashdist $HOME
+
+install:
+- make
+- export  PATH=$PWD/linux2/bin:$PATH
+- export  LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
+- easy_install coverage
+
+script:
+- nosetests test --with-xunit --xunit-file=shippable/testresults/nosetests.xml --with-coverage --cover-package=petsc4py --cover-branches --cover-xml --cover-xml-file=shippable/codecoverage/coverage.xml
+
+commit_container: cekees/proteus
+
+notifications:
+    email:
+        - cekees@gmail.com
+
