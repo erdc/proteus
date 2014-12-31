@@ -124,7 +124,7 @@ class PointGauges(AV_base):
                     m[quantity_id, femFun.femSpace.dofMap.l2g[eN, i]] = psi(xi)
                 break
         else:
-            # just use nearest node for now if  we're given a point outside the domain.
+            # just use nearest node for now if we're given a point outside the domain.
             # the ideal thing would be to find the element with the nearest face
             m[quantity_id, node] = 1
 
