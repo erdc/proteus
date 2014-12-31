@@ -42,11 +42,11 @@ class PointGauges(AV_base):
 
         Example:
 
-        p = PointGauges(self, gauges=((('u', 'v'), ((0.5, 0.5, 0), (1, 0.5, 0))),
+        p = PointGauges(gauges=((('u', 'v'), ((0.5, 0.5, 0), (1, 0.5, 0))),
                                       (('p',), ((0.5, 0.5, 0),))),
                         activeTime=(0, 2.5),
                         sampleRate=0.2,
-                        fileName='combined_gauge_0_0.5_sample_all.csv'):
+                        fileName='combined_gauge_0_0.5_sample_all.csv')
 
         This creates a PointGauges object that will monitor the u and v fields at the locations [0.5, 0.5,
         0] and [1, 0.5, 0], and the p field at [0.5, 0.5, 0] at simulation time between = 0 and 2.5 with samples
