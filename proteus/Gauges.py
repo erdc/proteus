@@ -102,20 +102,18 @@ class PointGauges(AV_base):
         assert owning_proc is not None
         return owning_proc, nearest_node
 
-    def buildQuantityRow(self, m, quantity_id, quantity):
+    def buildQuantityRow(self, m, femFun, quantity_id, quantity):
         """ Builds up contributions to gauge operator from the underlying element space
         """
 
         location, node = quantity
-        # get the FiniteElementFunction object for this quantity
-        femFun = self.model.levelModelList[-1].u[quantity_id]
         # get the mesh for this quantity
         mesh = femFun.femSpace.mesh
         # search elements that contain the nearest node
         # use nearest node if the location is not found on any elements
         for eOffset in range(mesh.nodeElementOffsets[node], mesh.nodeElementOffsets[node + 1]):
             eN = femFun.femSpace.mesh.nodeElementsArray[eOffset]
-            # evalute the inverse map for element eN
+            # evaluate the inverse map for element eN
             xi = femFun.femSpace.elementMaps.getInverseValue(eN, location)
             # query whether xi lies within the reference element
             if femFun.femSpace.elementMaps.referenceElement.onElement(xi):
@@ -222,8 +220,6 @@ class PointGauges(AV_base):
         The operators are all local since the gauge measurements are calculated locally.
         """
 
-        num_owned_nodes = self.model.levelModelList[-1].mesh.nNodes_global
-
         self.m = []
         self.field_ids = []
         self.dofsVecs = []
@@ -231,7 +227,7 @@ class PointGauges(AV_base):
 
         for field in self.measuredFields:
             m = PETSc.Mat().create(PETSc.COMM_SELF)
-            m.setSizes([len(self.measuredQuantities[field]), num_owned_nodes])
+            m.setSizes([len(self.measuredQuantities[field]), self.num_owned_nodes])
             m.setType('aij')
             m.setUp()
             # matrices are a list in same order as fields
@@ -239,13 +235,15 @@ class PointGauges(AV_base):
             field_id = self.fieldNames.index(field)
             self.field_ids.append(field_id)
             # dofs are a list in same order as fields as well
-            dofs = self.model.levelModelList[-1].u[field_id].dof
+            dofs = self.u[field_id].dof
             dofsVec = PETSc.Vec().createWithArray(dofs, comm=PETSc.COMM_SELF)
             self.dofsVecs.append(dofsVec)
 
-        for field, m in zip(self.measuredFields, self.m):
+        for field, field_id, m in zip(self.measuredFields, self.field_ids, self.m):
+            # get the FiniteElementFunction object for this quantity
+            femFun = self.u[field_id]
             for quantity_id, quantity in enumerate(self.measuredQuantities[field]):
-                self.buildQuantityRow(m, quantity_id, quantity)
+                self.buildQuantityRow(m, femFun, quantity_id, quantity)
             gaugesVec = PETSc.Vec().create(comm=PETSc.COMM_SELF)
             gaugesVec.setSizes(len(self.measuredQuantities[field]))
             gaugesVec.setUp()
@@ -262,6 +260,9 @@ class PointGauges(AV_base):
         self.fieldNames = model.levelModelList[-1].coefficients.variableNames
         self.vertexFlags = model.levelModelList[-1].mesh.nodeMaterialTypes
         self.vertices = model.levelModelList[-1].mesh.nodeArray
+        self.num_owned_nodes = model.levelModelList[-1].mesh.nNodes_global
+        self.u = model.levelModelList[-1].u
+        self.timeIntegration = model.levelModelList[-1].timeIntegration
 
         self.m = {}
 
@@ -283,7 +284,7 @@ class PointGauges(AV_base):
 
     def get_time(self):
         """ Returns the current model time"""
-        return self.model.levelModelList[-1].timeIntegration.t
+        return self.timeIntegration.t
 
     def outputHeader(self):
         """ Outputs a single header for a CSV style file to self.file"""
