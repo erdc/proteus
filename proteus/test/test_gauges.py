@@ -74,13 +74,13 @@ def gauge_setup():
 
     model = Transport.MultilevelTransport(p,n,mlMesh)
 
-    return model, archive
+    return model, archive, p.initialConditions
 
 def test_gauges():
     tnList=[0.0,1.0,2.0]
-    model, archive = gauge_setup()
+    model, archive, initialConditions = gauge_setup()
 
-    p = PointGauges(gauges=((('u0',), ((0.5, 0.5, 0), (1, 0.5, 0)))),
+    p = PointGauges(gauges=((('u0',), ((0.5, 0.5, 0), (1, 0.5, 0))),),
                     activeTime=(0, 2.5),
                     sampleRate=0.2,
                     fileName='combined_gauge_0_0.5_sample_all.csv')
@@ -88,7 +88,7 @@ def test_gauges():
     p.attachModel(model,archive)
 
     m = model.levelModelList[-1]
-    m.setInitialConditions(p.initialConditions,tnList[0])
+    m.setInitialConditions(initialConditions,tnList[0])
     p.calculate()
 
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
@@ -96,12 +96,11 @@ def test_gauges():
     m.archiveFiniteElementSolutions(archive,tnList[0],tCount,initialPhase=True,writeVectors=True,meshChanged=True)
     for t in tnList[1:]:
         tCount +=1
-        m.setInitialConditions(p.initialConditions,t)
+        m.setInitialConditions(initialConditions,t)
         m.archiveFiniteElementSolutions(archive,t,tCount,initialPhase=False,writeVectors=True,meshChanged=True)
         p.calculate()
     archive.close()
 
 
 if __name__ == '__main__':
-    import nose
-    nose.main()
+    test_gauges()
