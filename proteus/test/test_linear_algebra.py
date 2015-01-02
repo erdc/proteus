@@ -1,4 +1,4 @@
-from .. import Comm
+from proteus import Comm
 import numpy as np
 import numpy.testing as npt
 from nose.tools import ok_ as ok
