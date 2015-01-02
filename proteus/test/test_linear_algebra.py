@@ -1,10 +1,10 @@
+from .. import Comm
 import numpy as np
 import numpy.testing as npt
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
-from proteus.iproteus import *
 
-from petsc4py import PETSc
+comm = Comm.init()
 
 class MockMat():
     """ petsc4py-based mock SuperLU Matrix for testing.  Filled like this:
