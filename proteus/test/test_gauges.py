@@ -1,10 +1,10 @@
-from math import ceil,sqrt,pow
-import xml.etree.ElementTree as ElementTree
+from math import ceil, sqrt, pow
 
 import numpy as np
+import numpy.testing as npt
+
 from proteus import (Comm,
                      Domain,
-                     Archiver,
                      TransportCoefficients,
                      MeshTools,
                      FemTools,
@@ -15,6 +15,8 @@ from proteus import default_p as p
 from proteus import default_n as n
 
 from proteus.Gauges import PointGauges
+
+from nose.tools import eq_
 
 def build1DMesh(p, nnx):
     return MeshTools.MultilevelEdgeMesh(nnx, 1, 1,
@@ -45,7 +47,7 @@ def gauge_setup():
 
     class LinearSolution:
         def uOfXT(self,x,t):
-            return (x[0]+10*x[1]+100*x[2])*(t+1.0);
+            return (x[0]+10*x[1]+100*x[2])*(t+1.0)
 
     p.initialConditions = {0:LinearSolution()}
     p.dirichletConditions = {0: lambda x,flag: None}
@@ -58,9 +60,6 @@ def gauge_setup():
     n.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(p.nd-1,3)
     n.numericalFluxType = NumericalFlux.NoFlux
 
-    #build multilevel model
-    archive = Archiver.XdmfArchive(dataDir=".",filename="test_gauges_archive")
-
     total_nodes = comm.size()
 
     if p.nd == 1:
@@ -69,38 +68,60 @@ def gauge_setup():
         nnx = nny = int(ceil(sqrt(total_nodes)))+1
         mlMesh = build2DMesh(p, nnx, nny)
     elif p.nd == 3:
-        nnx = nny = nnz = int(ceil(pow(total_nodes,1.0/3.0)))+1
+        nnx = nny = nnz = int(ceil(pow(total_nodes, 1.0/3.0)))+1
         mlMesh = build3DMesh(p, nnx, nny, nnz)
 
-    model = Transport.MultilevelTransport(p,n,mlMesh)
+    model = Transport.MultilevelTransport(p, n, mlMesh)
 
-    return model, archive, p.initialConditions
+    return model, p.initialConditions
 
-def test_gauges():
-    tnList=[0.0,1.0,2.0]
-    model, archive, initialConditions = gauge_setup()
+def run_gauge(p, time_list):
+    model, initialConditions = gauge_setup()
 
-    p = PointGauges(gauges=((('u0',), ((0.5, 0.5, 0), (1, 0.5, 0))),),
-                    activeTime=(0, 2.5),
-                    sampleRate=0.2,
-                    fileName='combined_gauge_0_0.5_sample_all.csv')
-
-    p.attachModel(model,archive)
+    p.attachModel(model, None)
 
     m = model.levelModelList[-1]
-    m.setInitialConditions(initialConditions,tnList[0])
+    m.setInitialConditions(initialConditions, time_list[0])
+    tCount = 0
     p.calculate()
 
-    archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
-    tCount = 0
-    m.archiveFiniteElementSolutions(archive,tnList[0],tCount,initialPhase=True,writeVectors=True,meshChanged=True)
-    for t in tnList[1:]:
+    for t in time_list[1:]:
         tCount +=1
-        m.setInitialConditions(initialConditions,t)
-        m.archiveFiniteElementSolutions(archive,t,tCount,initialPhase=False,writeVectors=True,meshChanged=True)
+        m.setInitialConditions(initialConditions, t)
         p.calculate()
-    archive.close()
 
+
+def parse_gauge_output(filename):
+    with open(filename) as f:
+        header = f.readline().split(',')
+        eq_(header[0].strip(), 'time')
+        gauge_names = [gauge_name.strip() for gauge_name in header[1:]]
+        f.seek(0)
+        data = np.genfromtxt(f, delimiter=",", skip_header=1)
+    return gauge_names, data
+
+def test_gauge_output():
+    filename = 'test_gauge_output.csv'
+
+    p = PointGauges(gauges=((('u0',), ((0, 0, 0), (1, 1, 1))),),
+                    fileName=filename)
+    time_list=[0.0, 1.0, 2.0]
+    run_gauge(p, time_list)
+
+    correct_gauge_names = ['u0 [        0         0         0]', 'u0 [        1         1         1]']
+    correct_data = np.asarray([[   0.,    0.,  111.],
+                               [   1.,    0.,  222.],
+                               [   2.,    0.,  333.]])
+
+    # synchronize processes before attempting to read file
+
+    from proteus import Comm
+    Comm.get().barrier()
+
+    gauge_names, data = parse_gauge_output(filename)
+
+    eq_(correct_gauge_names, gauge_names)
+    npt.assert_equal(correct_data, data)
 
 if __name__ == '__main__':
-    test_gauges()
+    test_gauge_output()
