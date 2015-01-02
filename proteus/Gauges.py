@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 from mpi4py import MPI
 from petsc4py import PETSc
@@ -52,6 +52,9 @@ class PointGauges(AV_base):
         0] and [1, 0.5, 0], and the p field at [0.5, 0.5, 0] at simulation time between = 0 and 2.5 with samples
         taken no more frequently than every 0.2 seconds.  Results will be saved to:
         combined_gauge_0_0.5_sample_all.csv.
+
+        Data is currently column-formatted, with 10 characters allotted to the time field, and 45 characters
+        allotted to each point field.
         """
 
 
@@ -63,7 +66,7 @@ class PointGauges(AV_base):
         # dictionary of dictionaries, outer dictionary is keyed by location (3-tuple)
         # inner dictionaries contain monitored fields, and closest node
         # closest_node is None if this process does not own the node
-        self.locations = {}
+        self.locations = OrderedDict()
         for gauge in gauges:
             fields, locations = gauge
             self.measuredFields.update(fields)
@@ -82,6 +85,7 @@ class PointGauges(AV_base):
         self.flags = {}
         self.files = {}
         self.outputWriterReady = False
+        self.last_output = None
 
     def findNearestNode(self, location):
         """Given a gauge location, attempts to locate the most suitable process for monitoring information about
@@ -273,13 +277,6 @@ class PointGauges(AV_base):
             self.initOutputWriter()
             self.buildGaugeOperators()
             self.outputHeader()
-            # this is currently broken for initial time, need to fix initial model time
-            # or enforce that calculate is called as soon as possible
-            # after model time is set up
-            # time = self.get_time()
-            time = 0
-            self.outputRow(time)
-            self.last_output = time
         return self
 
     def get_time(self):
@@ -296,7 +293,7 @@ class PointGauges(AV_base):
             for field in self.measuredFields:
                 for quantity in self.globalMeasuredQuantities[field]:
                     location, gaugeProc, quantityID = quantity
-                    self.file.write(",%s [%9.5g %9.5g %9.5g]" % (field, location[0], location[1], location[2]))
+                    self.file.write(",%12s [%9.5g %9.5g %9.5g]" % (field, location[0], location[1], location[2]))
             self.file.write('\n')
 
     def outputRow(self, time):
@@ -310,7 +307,7 @@ class PointGauges(AV_base):
         if self.gaugeComm.rank == 0:
             self.file.write("%10.4e" % time)
             for id in self.globalQuantitiesMap:
-                self.file.write(", %36.18e" % (self.globalQuantitiesBuf[id],))
+                self.file.write(", %43.18e" % (self.globalQuantitiesBuf[id],))
             self.file.write('\n')
             # disable this for better performance, but risk of data loss on crashes
             self.file.flush()
@@ -325,10 +322,17 @@ class PointGauges(AV_base):
 
         time = self.get_time()
 
-        if self.activeTime[0] <= time <= self.activeTime[1] and time >= self.last_output + self.sampleRate:
-            for field, m, dofsVec, gaugesVec in zip(self.measuredFields, self.m, self.dofsVecs, self.gaugesVecs):
-                m.mult(dofsVec, gaugesVec)
-            self.outputRow(time)
+        # check that gauge is in its active time region
+        if self.activeTime is not None and (self.activeTime[0] > time or self.activeTime[1] < time):
+            return
+
+        # check that gauge is ready to be sampled again
+        if self.last_output is not None and time < self.last_output + self.sampleRate:
+            return
+
+        for field, m, dofsVec, gaugesVec in zip(self.measuredFields, self.m, self.dofsVecs, self.gaugesVecs):
+            m.mult(dofsVec, gaugesVec)
+        self.outputRow(time)
 
 
 # this has not been ported to the new-style format
