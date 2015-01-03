@@ -12,7 +12,8 @@ physics.name = "burgers_3d"
 so.name = physics.name
 Profiling.logLevel=5
 Profiling.verbose=True
-ns = NumericalSolution.NS_base(so,[physics],[numerics],so.sList,opts)
+    
+ns = NumericalSolution.NS_base(so,[physics],[numerics],so.sList,opts,simFlagsList=simFlagsList)
 
 import time
 start = time.time()
