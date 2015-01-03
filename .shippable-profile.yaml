@@ -54,7 +54,6 @@ packages:
   netcdf4:
   netcdf4f:
   python-netcdf4:
-  vapory:
   scipy:
   ipython:
     sources:
