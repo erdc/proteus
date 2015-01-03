@@ -207,12 +207,12 @@ check:
 	${PROTEUS_PREFIX}/bin/python -c "print 'hello world'"
 	@echo "************************"
 	@echo "Proteus Partition Test"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; ${PROTEUS_PREFIX}/bin/python test/test_meshParitionFromTetgenFiles.py
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; ${PROTEUS_PREFIX}/bin/python proteus/test/ci/test_meshPartitionFromTetgenFiles.py
 	@echo "************************"
 
 	@echo "************************"
 	@echo "Parallel Proteus Partition Test"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; mpirun -np 4 ${PROTEUS_PYTHON} test/test_meshParitionFromTetgenFiles.py
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; mpirun -np 4 ${PROTEUS_PYTHON} proteus/test/ci/test_meshPartitionFromTetgenFiles.py
 	@echo "************************"
 
 doc: install
