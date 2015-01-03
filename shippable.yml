@@ -13,9 +13,11 @@ before_install:
 - mv .hashdist $HOME
 
 install:
+- make hashdist
+- make stack
 - make stack/default.yaml
 - cp .shippable-profile.yaml stack/default.yaml
-- make
+- make install
 - export  PATH=$PWD/linux2/bin:$PATH
 - export  LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
 
