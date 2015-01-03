@@ -1,10 +1,11 @@
-from proteus import Comm
+from proteus import Comm, Profiling
 import numpy as np
 import numpy.testing as npt
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
 
 comm = Comm.init()
+Profiling.procID = comm.rank()
 
 class MockMat():
     """ petsc4py-based mock SuperLU Matrix for testing.  Filled like this:
