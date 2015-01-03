@@ -55,12 +55,6 @@ packages:
   netcdf4f:
   python-netcdf4:
   vapory:
-  jasper:
-  grib_api:
-  pyproj:
-  pygrib:
-  adh:  
-  stwave:  
   scipy:
   ipython:
     sources:
@@ -68,18 +62,11 @@ packages:
         url: https://github.com/ellisonbg/ipython.git
 
   h5py:
-  pydap:
   leafletwidget: 
     sources:
       - key: git:f9147c5b13a69b80bc28d3574f7ba6b2c576aed2
         url: https://github.com/erdc-cm/leafletwidget.git
   geojson:
-  rdp:
-  ipython-widgetmode:
-  ipython-d3plot:
-  ipython-gridwidget:
-  shapely:
-  rtree:
   ode:
   ipdb:
   pip:
