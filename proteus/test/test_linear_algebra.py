@@ -17,6 +17,7 @@ class MockMat():
 
 
     def __init__(self, n):
+        from petsc4py import PETSc
         A = PETSc.Mat().create()
         A.setSizes(n)
         A.setType('aij')
@@ -33,6 +34,7 @@ class MockMat():
         return self.A.getValuesCSR()
 
     def getSubMatCSRrepresentation(self, start, end):
+        from petsc4py import PETSc
         ids = range(start, end)
         isg = PETSc.IS().createGeneral(ids)
         B = self.A.getSubMatrix(isg)
