@@ -16,6 +16,7 @@ from proteus import default_n as n
 
 from proteus.Gauges import PointGauges
 
+from proteus.test.util import setup_profiling
 from nose.tools import eq_
 
 def build1DMesh(p, nnx):
@@ -39,7 +40,7 @@ def build3DMesh(p, nnx, nny, nnz):
                                                parallelPartitioningType=MeshTools.MeshParallelPartitioningTypes.node)
 
 def gauge_setup():
-    comm = Comm.init()
+    comm = Comm.get()
 
     #Simplified Physics
     p.name="test_gauges"
@@ -100,6 +101,7 @@ def parse_gauge_output(filename):
         data = np.genfromtxt(f, delimiter=",", skip_header=1)
     return gauge_names, data
 
+
 def test_gauge_output():
     filename = 'test_gauge_output.csv'
 
@@ -123,5 +125,7 @@ def test_gauge_output():
     eq_(correct_gauge_names, gauge_names)
     npt.assert_equal(correct_data, data)
 
+
 if __name__ == '__main__':
+    setup_profiling()
     test_gauge_output()
