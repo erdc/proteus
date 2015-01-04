@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from read_hdf5 import *
+from burgers_init import use_deim
+from deim_utils import read_snapshots
 
 T = 1.0
 nDTout = 100
@@ -10,18 +12,17 @@ archive = Archiver.XdmfArchive(".","burgers_3d",readOnly=True)
 
 import numpy as np
 
-u = read_from_hdf5(archive.hdfFile,'/u0')
-S = np.reshape(u,(np.shape(u)[0],1))
-for i in range(1,nDTout+1):
-    time_level_to_read=i
-    label="/%s%d" % ('u',time_level_to_read)
-    print 'trying to read from %s ' % label
-    u = read_from_hdf5(archive.hdfFile,label)
-    u = np.reshape(u, (np.shape(u)[0],1))
-    S = np.append(S,u,axis=1)
-
+#generate snapshots for solution
+S = deim_utils.read_snapshots(archive,nDTout+1,'u',)
 U, s, V = np.linalg.svd(S, full_matrices=False)
-print 'SVD done!'
+print 'SVD for solution done!'
 np.savetxt('SVD_basis', U, delimiter=' ')
 np.savetxt('Singular_values', s, delimiter=' ')
 
+if burgers_init.use_deim:
+    Sf = deim_utils.read_snapshots(archive,nDTout+1,'spatial_residual0')
+    Uf,sf,Vf = np.linalg.svd(Sf,full_matrices=False)
+    print 'SVD for spatial residual done!'
+    np.savetxt('Fs_SVD_basis', Uf, delimiter=' ')
+    np.savetxt('Fs_Singular_values', sf, delimiter=' ')
+    

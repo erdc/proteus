@@ -154,3 +154,11 @@ so.tnList = [i*DT for i in range(nDTout+1)]
 
 Profiling.verbose = 1
 opts.logLevel = 2
+
+#whether or not to use deim approximation
+use_deim = False
+
+simFlagsList=None
+if use_deim:
+    simFlagsList=[{}]
+    simFlagsList[0]['storeQuantities']=['pod_residuals']
