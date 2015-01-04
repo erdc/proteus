@@ -29,7 +29,8 @@ def init():
     return new_comm
 
 def get():
-    assert(comm, "Call Comm.init() once before calling Comm.get()")
+    if comm is None:
+        return init()
     return comm
 
 class Comm():
