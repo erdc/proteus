@@ -5460,7 +5460,7 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                                          self.ebqe[key],
                                                                                                                          name,
                                                                                                                          tCount)
-    def archiveFiniteElementResiduals(self,archive,t,tCount,res_dict):
+    def archiveFiniteElementResiduals(self,archive,t,tCount,res_dict,res_name_base='spatial_residual'):
         """
         write assembled spatial residual stored in r at time t
 
@@ -5473,7 +5473,7 @@ class OneLevelTransport(NonlinearEquation):
             """
             def __init__(self,ci,r):
                 self.dof=r
-                self.name='spatial_residual{0}'.format(ci)
+                self.name=res_name_base+'{0}'.format(ci)
         for ci in range(self.coefficients.nc):
             self.u[ci].femSpace.writeFunctionXdmf(archive,dummy(ci,res_dict[ci]),tCount)
 

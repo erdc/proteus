@@ -635,7 +635,8 @@ class POD_Newton(Newton):
                  fullNewton=True,
                  directSolver=False,
                  EWtol=True,
-                 maxLSits = 100):
+                 maxLSits = 100,
+                 use_deim=False):
         Newton.__init__(self,
                 linearSolver,
                 F,J,du,par_du,
@@ -652,16 +653,61 @@ class POD_Newton(Newton):
                 directSolver,
                 EWtol,
                 maxLSits)
-        self.DB = 11
+        #setup reduced basis for solution 
+        self.DB = 11 #number of basis vectors for solution
         U = np.loadtxt('SVD_basis')
         self.U = U[:,0:self.DB]
         self.U_transpose = self.U.conj().T
+        #setup reduced basis for DEIM interpolants
+        self.use_deim = use_deim
+        self.DBf = self.DB
+        self.Uf  = None; self.Uf_transpose = None; 
+        self.rho_deim = None; self.Ut_Uf_PtUf_inv=None
+        if self.use_deim:
+            Uf = np.loadtxt('Fs_SVD_basis')
+            self.Uf = Uf[:,0:self.DBf]
+            self.Uf_transpose = self.Uf.conj().T
+            #returns rho --> deim indices and deim 'projection' matrix
+            #U(P^TU)^{-1}
+            self.rho_deim,Uf_PtUf_inv = deim_utils.deim_alg(self.Uf,self.DBf)
+            #go ahead and left multiply projection matrix by solution basis
+            #to get 'projection' from deim to coarse space
+            self.Ut_Uf_PtUf_inv = np.dot(self.U_transpose,Uf_PtUf_inv)
         self.pod_J = np.zeros((self.DB,self.DB),'d')
         self.pod_linearSolver = LU(self.pod_J)
         self.J_rowptr,self.J_colind,self.J_nzval = self.J.getCSRrepresentation()
         self.pod_du = np.zeros(self.DB)
     def norm(self,u):
         return self.norm_function(u)
+    def solveInitialize(self,u,r,b):
+        """
+        if using deim modifies base initialization by
+        splitting up residual evaluation into separate pieces
+        interpolated by deim (right now just does 'mass' and 'space')
+
+        NOT FINISHED
+        """
+        if r == None:
+            if self.r == None:
+                self.r = Vec(self.F.dim)
+            r=self.r
+        else:
+            self.r=r
+        self.computeResidual(u,r,b)
+        self.its = 0
+        self.norm_r0 = self.norm(r)
+        self.norm_r = self.norm_r0
+        self.ratio_r_solve = 1.0
+        self.ratio_du_solve = 1.0
+        self.last_log_ratio_r = 1.0
+        self.last_log_ratior_du = 1.0
+        #self.convergenceHistoryIsCorrupt=False
+        self.convergingIts = 0
+        #mwf begin hack for conv. rate
+        self.gustafsson_alpha = -12345.0
+        self.gustafsson_norm_du_last = -12345.0
+        #mwf end hack for conv. rate
+        return r
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         """
         Solve F(u) = b
@@ -671,7 +717,7 @@ class POD_Newton(Newton):
         r -- F(u) - b
         """
         pod_u = np.dot(self.U_transpose,u)
-        u[:] = np.dot(self.U,pod_u)
+        u[:] = np.dot(self.U,pod_u)           
         r=self.solveInitialize(u,r,b)
         pod_r = np.dot(self.U_transpose,r)
         self.norm_r0 = self.norm(pod_r)
