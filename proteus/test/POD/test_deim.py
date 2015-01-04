@@ -8,7 +8,7 @@ import numpy.testing as npt
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
 
-def get_burgers_ns(name,T=0.1,nDTout=10,archive_space_res=False):
+def get_burgers_ns(name,T=0.1,nDTout=10,archive_pod_res=False):
     import burgers_init as bu
     bu.physics.name=name
     bu.so.name = bu.physics.name
@@ -19,7 +19,7 @@ def get_burgers_ns(name,T=0.1,nDTout=10,archive_space_res=False):
     bu.so.tnList = [i*bu.DT for i in range(bu.nDTout+1)]
     #request archiving of spatial residuals ...
     simFlagsList=None
-    if archive_space_res:
+    if archive_pod_res:
         simFlagsList=[{}]
         simFlagsList[0]['storeQuantities']=['pod_residuals']
     ns = bu.NumericalSolution.NS_base(bu.so,[bu.physics],[bu.numerics],bu.so.sList,bu.opts,simFlagsList=simFlagsList)
@@ -58,7 +58,7 @@ def test_res_archive():
     """
     smoke test if numerical solution can archive 'spatial residuals' to xdmf  
     """
-    ns = get_burgers_ns("test_space_res_archive",T=0.1,nDTout=10,archive_space_res=True)
+    ns = get_burgers_ns("test_space_res_archive",T=0.1,nDTout=10,archive_pod_res=True)
     
     failed = ns.calculateSolution("run_space_res_smoke_test")
     assert not failed
@@ -69,18 +69,39 @@ def test_svd_space_res(file_prefix='F_s'):
     """
     from deim_utils import read_snapshots,generate_svd_decomposition
 
-    ns = get_burgers_ns("test_svd_space_res",T=0.1,nDTout=10,archive_space_res=True)
+    ns = get_burgers_ns("test_svd_space_res",T=0.1,nDTout=10,archive_pod_res=True)
     
     failed = ns.calculateSolution("run_svd_space_res")
     assert not failed
     from proteus import Archiver
     archive = Archiver.XdmfArchive(".","test_svd_space_res",readOnly=True)
 
-    U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'spatial_residual0','F_s')
+    U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'spatial_residual0',file_prefix)
 
     S_svd = np.dot(U,np.dot(np.diag(s),V))
     #now load back in and test
     S = read_snapshots(archive,len(ns.tnList),'spatial_residual0')
+
+    npt.assert_almost_equal(S,S_svd)
+
+def test_svd_mass_res(file_prefix='F_m'):
+    """
+    test SVD decomposition of mass residuals by generating SVD, saving to file and reloading
+    """
+    from deim_utils import read_snapshots,generate_svd_decomposition
+
+    ns = get_burgers_ns("test_svd_mass_res",T=0.1,nDTout=10,archive_pod_res=True)
+    
+    failed = ns.calculateSolution("run_svd_mass_res")
+    assert not failed
+    from proteus import Archiver
+    archive = Archiver.XdmfArchive(".","test_svd_mass_res",readOnly=True)
+
+    U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'mass_residual0',file_prefix)
+
+    S_svd = np.dot(U,np.dot(np.diag(s),V))
+    #now load back in and test
+    S = read_snapshots(archive,len(ns.tnList),'mass_residual0')
 
     npt.assert_almost_equal(S,S_svd)
 
@@ -90,7 +111,7 @@ def test_svd_soln():
     """
     from deim_utils import read_snapshots,generate_svd_decomposition
 
-    ns = get_burgers_ns("test_svd_soln",T=0.1,nDTout=10,archive_space_res=True)
+    ns = get_burgers_ns("test_svd_soln",T=0.1,nDTout=10,archive_pod_res=True)
     
     failed = ns.calculateSolution("run_svd_soln")
     assert not failed
@@ -125,26 +146,28 @@ def test_deim_indices():
     rho_uni = np.unique(rho)
     assert rho_uni.shape[0] == rho.shape[0]
 
-def deim_approx(T=0.1,nDTout=10,m=5):
+def deim_approx(T=0.1,nDTout=10,m=5,m_mass=5):
     """
     Follow basic setup for DEIM approximation
-    - generate a burgers solution, saving spatial residuals
+    - generate a burgers solution, saving spatial and 'mass' residuals
     - generate SVDs for snapshots
-    - pick $m$, dimension for snapshot reduced basis $\mathbf{U}_m$
-    - call DEIM algorithm to determine $\vec \rho$ and compute projection matrix 
-      $\mathbf{P}_F=\mathbf{U}_m(\mathbf{P}^T\mathbf{U}_m)^{-1}$
+    - for both residuals F_s and F_m
+      - pick $m$, dimension for snapshot reduced basis $\mathbf{U}_m$
+      - call DEIM algorithm to determine $\vec \rho$ and compute projection matrix 
+        $\mathbf{P}_F=\mathbf{U}_m(\mathbf{P}^T\mathbf{U}_m)^{-1}$
 
     For selected timesteps
     - extract fine grid solution from archive, $\vec y$
-    - evaluate $\vec F_s(\vec y)$ at indices in $\vec \rho \rightarrow \vec c$
-    - apply DEIM interpolant $\tilde{\vec F}_s = \mathbf{P}_F\vec c$
-    - compute error $\|F_s-\tilde{\vec F}_s\|
+    - for both residuals F=F_s and F_m
+      - evaluate $\vec F(\vec y)$ at indices in $\vec \rho \rightarrow \vec c$
+      - apply DEIM interpolant $\tilde{\vec F} = \mathbf{P}_F\vec c$
+      - compute error $\|F-\tilde{\vec F}\|
     - visualize
     """
 
     from deim_utils import read_snapshots,generate_svd_decomposition
     ##run fine grid problem
-    ns = get_burgers_ns("test_deim_approx",T=T,nDTout=nDTout,archive_space_res=True)
+    ns = get_burgers_ns("test_deim_approx",T=T,nDTout=nDTout,archive_pod_res=True)
     
     failed = ns.calculateSolution("run_deim_approx")
     assert not failed
@@ -153,17 +176,24 @@ def deim_approx(T=0.1,nDTout=10,m=5):
     archive = Archiver.XdmfArchive(".","test_deim_approx",readOnly=True)
     ##perform SVD on spatial residual
     U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'spatial_residual0','F_s')
+    U_m,s_m,V_m=generate_svd_decomposition(archive,len(ns.tnList),'mass_residual0','F_m')
 
     from deim_utils import deim_alg
     ##calculate DEIM indices and projection matrix
     rho,PF = deim_alg(U,m)
+    #also 'mass' term
+    rho_m,PF_m = deim_alg(U_m,m_mass)
 
     ##for comparison, grab snapshots of solution and residual
     Su = read_snapshots(archive,len(ns.tnList),'u')
     Sf = read_snapshots(archive,len(ns.tnList),'spatial_residual0')
+    Sm = read_snapshots(archive,len(ns.tnList),'mass_residual0')
 
-    steps_to_test = np.arange(len(ns.tnList)); errors = np.zeros(len(steps_to_test),'d')
+    steps_to_test = np.arange(len(ns.tnList)) 
+    errors = np.zeros(len(steps_to_test),'d'); errors_mass = errors.copy()
+
     F_deim = np.zeros((Sf.shape[0],len(steps_to_test)),'d')
+    Fm_deim = np.zeros((Sf.shape[0],len(steps_to_test)),'d')
     for i,istep in enumerate(steps_to_test):
         #solution on the fine grid
         u = Su[:,istep]
@@ -172,18 +202,25 @@ def deim_approx(T=0.1,nDTout=10,m=5):
         #deim approximation on the fine grid 
         F_deim[:,istep] = np.dot(PF,F[rho])
         errors[i] = np.linalg.norm(F-F_deim[:,istep])
+        #repeat for 'mass residual'
+        Fm= Sm[:,istep]
+        #deim approximation on the fine grid 
+        Fm_deim[:,istep] = np.dot(PF_m,Fm[rho])
+        errors_mass[i] = np.linalg.norm(Fm-Fm_deim[:,istep])
     #
-    np.savetxt("deim_approx_errors_test_T={0}_nDT={1}_m={2}.dat".format(T,nDTout,m),errors)
+    np.savetxt("deim_approx_errors_space_test_T={0}_nDT={1}_m={2}.dat".format(T,nDTout,m),errors)
+    np.savetxt("deim_approx_errors_mass_test_T={0}_nDT={1}_m={2}.dat".format(T,nDTout,m_mass),errors_mass)
         
-    return errors,F_deim
+    return errors,errors_mass,F_deim,Fm_deim
 
 def test_deim_approx_full(tol=1.0e-12):
     """
     check that get very small error if use full basis 
     """
     T = 0.1; nDTout=10; m=nDTout+1
-    errors,F_deim = deim_approx(T=T,nDTout=nDTout,m=m)
+    errors,errors_mass,F_deim,Fm_deim = deim_approx(T=T,nDTout=nDTout,m=m,m_mass=m)
     assert errors.min() < tol
+    assert errors_mass.min() < tol
 
 if __name__ == "__main__":
     from proteus import Comm
