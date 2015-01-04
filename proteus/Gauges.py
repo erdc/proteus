@@ -6,6 +6,7 @@ import numpy as np
 
 from . import Comm
 from .AuxiliaryVariables import AV_base
+from .Profiling import logEvent as log
 
 class PointGauges(AV_base):
     """ Monitor fields at specific values.
@@ -57,7 +58,6 @@ class PointGauges(AV_base):
         allotted to each point field.
         """
 
-
         AV_base.__init__(self)
         self.gauges = gauges
         self.measuredFields = set()
@@ -90,6 +90,9 @@ class PointGauges(AV_base):
     def findNearestNode(self, location):
         """Given a gauge location, attempts to locate the most suitable process for monitoring information about
         this location, as well as the node on the process closest to the location.
+
+        Returns a 2-tuple containing an identifier for the closest 'owning' process as well as the local id of the
+        node.
         """
 
         # determine local nearest node distance
@@ -100,6 +103,7 @@ class PointGauges(AV_base):
         # determine global nearest node
         comm = Comm.get().comm.tompi4py()
         global_min_distance, owning_proc = comm.allreduce(nearest_node_distance, op=MPI.MINLOC)
+        log("Gauges at location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2], owning_proc), 3)
         if comm.rank != owning_proc:
             nearest_node = None
 
@@ -111,6 +115,7 @@ class PointGauges(AV_base):
         """
 
         location, node = quantity
+
         # get the mesh for this quantity
         mesh = femFun.femSpace.mesh
         # search elements that contain the nearest node
@@ -148,6 +153,7 @@ class PointGauges(AV_base):
             self.file = open(self.fileName, 'w')
 
             self.quantityIDs = [0] * self.gaugeComm.size
+            # Assign quantity ids to processors
             for field in self.measuredFields:
                 for id in range(len(self.globalMeasuredQuantities[field])):
                     location, owningProc = self.globalMeasuredQuantities[field][id]
@@ -156,19 +162,24 @@ class PointGauges(AV_base):
                     self.quantityIDs[gaugeProc] += 1
                     assert gaugeProc >= 0
                     self.globalMeasuredQuantities[field][id] = location, gaugeProc, quantityID
+                    log("Gauge for %s[%d] at %e %e %e is at P[%d][%d]" % (field, id, location[0], location[1],
+                                                                          location[2], gaugeProc, quantityID), 5)
+
+            log("Quantity IDs:\n%s" % str(self.quantityIDs), 5)
 
             numGlobalQuantities = sum([len(self.globalMeasuredQuantities[field]) for field in self.measuredFields])
             self.globalQuantitiesBuf = np.zeros(numGlobalQuantities)
 
-            # determine mapping from global measured quantities to communication buffer
+            # determine mapping from global measured quantities to communication buffers
             self.globalQuantitiesMap = np.zeros(numGlobalQuantities, dtype=np.int)
             i = 0
             for field in self.measuredFields:
                 for location, gaugeProc, quantityID in self.globalMeasuredQuantities[field]:
-                    self.globalQuantitiesMap[i] = sum(self.quantityIDs[:gaugeProc - 1]) + quantityID
+                    self.globalQuantitiesMap[i] = sum(self.quantityIDs[:gaugeProc]) + quantityID
                     assert self.globalQuantitiesMap[i] < numGlobalQuantities
                     i += 1
 
+            log("Global Quantities Map: \n%s" % str(self.globalQuantitiesMap), 5)
             # a couple consistency checks
             assert sum(self.quantityIDs) == numGlobalQuantities
             assert all(quantityID > 0 for quantityID in self.quantityIDs)
@@ -192,6 +203,8 @@ class PointGauges(AV_base):
 
         self.isGaugeOwner = comm.rank in gaugeOwners
         gaugeComm = comm.Split(color=self.isGaugeOwner)
+
+        log("Gauge owner: %d" % self.isGaugeOwner, 5)
         if self.isGaugeOwner:
             self.gaugeComm = gaugeComm
             gaugeRank = self.gaugeComm.rank
@@ -199,6 +212,7 @@ class PointGauges(AV_base):
             self.gaugeComm = None
             gaugeRank = -1
         self.globalGaugeRanks = comm.allgather(gaugeRank)
+        log("Gauge ranks: \n%s" % str(self.globalGaugeRanks), 5)
 
     def identifyMeasuredQuantities(self):
         """ build measured quantities, a list of fields
@@ -215,8 +229,10 @@ class PointGauges(AV_base):
             l_d['nearest_node'] = nearestNode
             for field in l_d['fields']:
                 self.globalMeasuredQuantities[field].append((location, owningProc))
-                if l_d['nearest_node'] is not None:
-                    self.measuredQuantities[field].append((location, l_d['nearest_node']))
+                if nearestNode is not None:
+                    log("Gauge for %s[%d] at %e %e %e is closest to node %d" % (
+                    field, len(self.measuredQuantities[field]), location[0], location[1], location[2], nearestNode), 3)
+                    self.measuredQuantities[field].append((location, nearestNode))
 
     def buildGaugeOperators(self):
         """ Build the linear algebra operators needed to compute the gauges.
@@ -247,6 +263,9 @@ class PointGauges(AV_base):
             # get the FiniteElementFunction object for this quantity
             femFun = self.u[field_id]
             for quantity_id, quantity in enumerate(self.measuredQuantities[field]):
+                location, node = quantity
+                log("Gauge for: %s at %e %e %e is on local operator row %d" % (field, location[0], location[1],
+                                                                      location[2], quantity_id), 3)
                 self.buildQuantityRow(m, femFun, quantity_id, quantity)
             gaugesVec = PETSc.Vec().create(comm=PETSc.COMM_SELF)
             gaugesVec.setSizes(len(self.measuredQuantities[field]))
