@@ -61,7 +61,7 @@ def gauge_setup():
     n.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(p.nd-1,3)
     n.numericalFluxType = NumericalFlux.NoFlux
 
-    total_nodes = comm.size()
+    total_nodes = 2*comm.size()
 
     if p.nd == 1:
         mlMesh = build1DMesh(p, total_nodes+1)
