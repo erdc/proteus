@@ -1,8 +1,10 @@
 """
 Module for controlling MPI
 """
+
 import sys
 import petsc4py
+from .Profiling import logEvent as log
 
 comm = None
 argv = sys.argv
@@ -29,7 +31,9 @@ def init():
     return new_comm
 
 def get():
-    assert(comm, "Call Comm.init() once before calling Comm.get()")
+    if comm is None:
+        log("Comm.get called before init, init is being called for you.", 3)
+        return init()
     return comm
 
 class Comm():
