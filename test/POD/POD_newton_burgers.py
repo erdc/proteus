@@ -12,8 +12,12 @@ physics.name = "pod_burgers_3d"
 so.name = physics.name
 Profiling.logLevel=5
 Profiling.verbose=True
-numerics.multilevelNonlinearSolver = NonlinearSolvers.POD_Newton
-numerics.levelNonlinearSolver = NonlinearSolvers.POD_Newton
+if use_deim:
+    numerics.multilevelNonlinearSolver = NonlinearSolvers.POD_DEIM_Newton
+    numerics.levelNonlinearSolver = NonlinearSolvers.POD_DEIM_Newton
+else:
+    numerics.multilevelNonlinearSolver = NonlinearSolvers.POD_Newton
+    numerics.levelNonlinearSolver = NonlinearSolvers.POD_Newton
 numerics.tolFac = 0.0#relative tolerance
 numerics.nl_atol_res = 1.0e-4 #nonlinear solver rtolerance
 ns = NumericalSolution.NS_base(so,[physics],[numerics],so.sList,opts)
