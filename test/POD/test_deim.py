@@ -8,6 +8,8 @@ import numpy.testing as npt
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
 
+from proteus import deim_utils
+
 def get_burgers_ns(name,T=0.1,nDTout=10,archive_pod_res=False):
     import burgers_init as bu
     bu.physics.name=name
@@ -67,7 +69,7 @@ def test_svd_space_res(file_prefix='F_s'):
     """
     test SVD decomposition of spatial residuals by generating SVD, saving to file and reloading
     """
-    from deim_utils import read_snapshots,generate_svd_decomposition
+    from proteus.deim_utils import read_snapshots,generate_svd_decomposition
 
     ns = get_burgers_ns("test_svd_space_res",T=0.1,nDTout=10,archive_pod_res=True)
     
@@ -88,7 +90,7 @@ def test_svd_mass_res(file_prefix='F_m'):
     """
     test SVD decomposition of mass residuals by generating SVD, saving to file and reloading
     """
-    from deim_utils import read_snapshots,generate_svd_decomposition
+    from proteus.deim_utils import read_snapshots,generate_svd_decomposition
 
     ns = get_burgers_ns("test_svd_mass_res",T=0.1,nDTout=10,archive_pod_res=True)
     
@@ -109,7 +111,7 @@ def test_svd_soln():
     """
     test SVD decomposition of solution by generating SVD, saving to file and reloading
     """
-    from deim_utils import read_snapshots,generate_svd_decomposition
+    from proteus.deim_utils import read_snapshots,generate_svd_decomposition
 
     ns = get_burgers_ns("test_svd_soln",T=0.1,nDTout=10,archive_pod_res=True)
     
@@ -136,7 +138,7 @@ def test_deim_indices():
     if not os.path.isfile(basis_file):
         test_svd_space_res(file_prefix='F_s')
     U = np.loadtxt(basis_file)
-    from deim_utils import calculate_deim_indices
+    from proteus.deim_utils import calculate_deim_indices
     rho_half = calculate_deim_indices(U[:,:U.shape[1]/2])
     assert rho_half.shape[0] == U.shape[1]/2
 
@@ -165,7 +167,7 @@ def deim_approx(T=0.1,nDTout=10,m=5,m_mass=5):
     - visualize
     """
 
-    from deim_utils import read_snapshots,generate_svd_decomposition
+    from proteus.deim_utils import read_snapshots,generate_svd_decomposition
     ##run fine grid problem
     ns = get_burgers_ns("test_deim_approx",T=T,nDTout=nDTout,archive_pod_res=True)
     
@@ -178,7 +180,7 @@ def deim_approx(T=0.1,nDTout=10,m=5,m_mass=5):
     U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'spatial_residual0','F_s')
     U_m,s_m,V_m=generate_svd_decomposition(archive,len(ns.tnList),'mass_residual0','F_m')
 
-    from deim_utils import deim_alg
+    from proteus.deim_utils import deim_alg
     ##calculate DEIM indices and projection matrix
     rho,PF = deim_alg(U,m)
     #also 'mass' term
