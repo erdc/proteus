@@ -1,0 +1,71 @@
+# This profile file controls your <#> (HashDist) build environment.
+package_dirs:
+- roams_pkgs
+
+extends:
+- file: debian.yaml
+
+packages:
+  launcher:
+  cmake:
+    use: host-cmake
+  python:
+    host: false
+    link: shared
+    build_with: |
+      bzip2, sqlite
+  blas:
+    use: host-blas
+  daetk:
+  mpi:
+    use: mpich
+  mpi4py:
+  nose:
+  coverage:
+  hdf5:
+  matplotlib:
+  pyzmq:
+  parmetis:
+  petsc:
+    build_with: |
+      parmetis
+    download: |
+      superlu, superlu_dist, spooles, hypre, blacs, scalapack, mumps
+    coptflags: -O2
+    link: shared
+    debug: false
+  petsc4py:
+    with_conf: true
+  pytables:
+  sphinx:
+  superlu:
+  sympy:
+  tetgen:
+  triangle:
+  memory_profiler:
+  boost:
+    toolset: gcc
+    address_model: 64
+    build_with: |
+      python
+
+  cgal:
+  pycgal:
+  netcdf4:
+  netcdf4f:
+  python-netcdf4:
+  scipy:
+  ipython:
+    sources:
+      - key: git:68f6519cdfd23581ed7358fa1941ae1bbd76e5b3
+        url: https://github.com/ellisonbg/ipython.git
+
+  h5py:
+  leafletwidget: 
+    sources:
+      - key: git:f9147c5b13a69b80bc28d3574f7ba6b2c576aed2
+        url: https://github.com/erdc-cm/leafletwidget.git
+  geojson:
+  ode:
+  ipdb:
+  pip:
