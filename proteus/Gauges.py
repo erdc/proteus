@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 from mpi4py import MPI
 from petsc4py import PETSc
@@ -6,6 +6,7 @@ import numpy as np
 
 from . import Comm
 from .AuxiliaryVariables import AV_base
+from .Profiling import logEvent as log
 
 class PointGauges(AV_base):
     """ Monitor fields at specific values.
@@ -42,18 +43,20 @@ class PointGauges(AV_base):
 
         Example:
 
-        p = PointGauges(self, gauges=((('u', 'v'), ((0.5, 0.5, 0), (1, 0.5, 0))),
+        p = PointGauges(gauges=((('u', 'v'), ((0.5, 0.5, 0), (1, 0.5, 0))),
                                       (('p',), ((0.5, 0.5, 0),))),
                         activeTime=(0, 2.5),
                         sampleRate=0.2,
-                        fileName='combined_gauge_0_0.5_sample_all.csv'):
+                        fileName='combined_gauge_0_0.5_sample_all.csv')
 
         This creates a PointGauges object that will monitor the u and v fields at the locations [0.5, 0.5,
         0] and [1, 0.5, 0], and the p field at [0.5, 0.5, 0] at simulation time between = 0 and 2.5 with samples
         taken no more frequently than every 0.2 seconds.  Results will be saved to:
         combined_gauge_0_0.5_sample_all.csv.
-        """
 
+        Data is currently column-formatted, with 10 characters allotted to the time field, and 45 characters
+        allotted to each point field.
+        """
 
         AV_base.__init__(self)
         self.gauges = gauges
@@ -63,7 +66,7 @@ class PointGauges(AV_base):
         # dictionary of dictionaries, outer dictionary is keyed by location (3-tuple)
         # inner dictionaries contain monitored fields, and closest node
         # closest_node is None if this process does not own the node
-        self.locations = {}
+        self.locations = OrderedDict()
         for gauge in gauges:
             fields, locations = gauge
             self.measuredFields.update(fields)
@@ -82,10 +85,14 @@ class PointGauges(AV_base):
         self.flags = {}
         self.files = {}
         self.outputWriterReady = False
+        self.last_output = None
 
     def findNearestNode(self, location):
         """Given a gauge location, attempts to locate the most suitable process for monitoring information about
         this location, as well as the node on the process closest to the location.
+
+        Returns a 2-tuple containing an identifier for the closest 'owning' process as well as the local id of the
+        node.
         """
 
         # determine local nearest node distance
@@ -96,26 +103,26 @@ class PointGauges(AV_base):
         # determine global nearest node
         comm = Comm.get().comm.tompi4py()
         global_min_distance, owning_proc = comm.allreduce(nearest_node_distance, op=MPI.MINLOC)
+        log("Gauges at location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2], owning_proc), 3)
         if comm.rank != owning_proc:
             nearest_node = None
 
         assert owning_proc is not None
         return owning_proc, nearest_node
 
-    def buildQuantityRow(self, m, quantity_id, quantity):
+    def buildQuantityRow(self, m, femFun, quantity_id, quantity):
         """ Builds up contributions to gauge operator from the underlying element space
         """
 
         location, node = quantity
-        # get the FiniteElementFunction object for this quantity
-        femFun = self.model.levelModelList[-1].u[quantity_id]
+
         # get the mesh for this quantity
         mesh = femFun.femSpace.mesh
         # search elements that contain the nearest node
         # use nearest node if the location is not found on any elements
         for eOffset in range(mesh.nodeElementOffsets[node], mesh.nodeElementOffsets[node + 1]):
             eN = femFun.femSpace.mesh.nodeElementsArray[eOffset]
-            # evalute the inverse map for element eN
+            # evaluate the inverse map for element eN
             xi = femFun.femSpace.elementMaps.getInverseValue(eN, location)
             # query whether xi lies within the reference element
             if femFun.femSpace.elementMaps.referenceElement.onElement(xi):
@@ -124,7 +131,7 @@ class PointGauges(AV_base):
                     m[quantity_id, femFun.femSpace.dofMap.l2g[eN, i]] = psi(xi)
                 break
         else:
-            # just use nearest node for now if  we're given a point outside the domain.
+            # just use nearest node for now if we're given a point outside the domain.
             # the ideal thing would be to find the element with the nearest face
             m[quantity_id, node] = 1
 
@@ -146,6 +153,7 @@ class PointGauges(AV_base):
             self.file = open(self.fileName, 'w')
 
             self.quantityIDs = [0] * self.gaugeComm.size
+            # Assign quantity ids to processors
             for field in self.measuredFields:
                 for id in range(len(self.globalMeasuredQuantities[field])):
                     location, owningProc = self.globalMeasuredQuantities[field][id]
@@ -154,19 +162,24 @@ class PointGauges(AV_base):
                     self.quantityIDs[gaugeProc] += 1
                     assert gaugeProc >= 0
                     self.globalMeasuredQuantities[field][id] = location, gaugeProc, quantityID
+                    log("Gauge for %s[%d] at %e %e %e is at P[%d][%d]" % (field, id, location[0], location[1],
+                                                                          location[2], gaugeProc, quantityID), 5)
+
+            log("Quantity IDs:\n%s" % str(self.quantityIDs), 5)
 
             numGlobalQuantities = sum([len(self.globalMeasuredQuantities[field]) for field in self.measuredFields])
             self.globalQuantitiesBuf = np.zeros(numGlobalQuantities)
 
-            # determine mapping from global measured quantities to communication buffer
+            # determine mapping from global measured quantities to communication buffers
             self.globalQuantitiesMap = np.zeros(numGlobalQuantities, dtype=np.int)
             i = 0
             for field in self.measuredFields:
                 for location, gaugeProc, quantityID in self.globalMeasuredQuantities[field]:
-                    self.globalQuantitiesMap[i] = sum(self.quantityIDs[:gaugeProc - 1]) + quantityID
+                    self.globalQuantitiesMap[i] = sum(self.quantityIDs[:gaugeProc]) + quantityID
                     assert self.globalQuantitiesMap[i] < numGlobalQuantities
                     i += 1
 
+            log("Global Quantities Map: \n%s" % str(self.globalQuantitiesMap), 5)
             # a couple consistency checks
             assert sum(self.quantityIDs) == numGlobalQuantities
             assert all(quantityID > 0 for quantityID in self.quantityIDs)
@@ -190,6 +203,8 @@ class PointGauges(AV_base):
 
         self.isGaugeOwner = comm.rank in gaugeOwners
         gaugeComm = comm.Split(color=self.isGaugeOwner)
+
+        log("Gauge owner: %d" % self.isGaugeOwner, 5)
         if self.isGaugeOwner:
             self.gaugeComm = gaugeComm
             gaugeRank = self.gaugeComm.rank
@@ -197,6 +212,7 @@ class PointGauges(AV_base):
             self.gaugeComm = None
             gaugeRank = -1
         self.globalGaugeRanks = comm.allgather(gaugeRank)
+        log("Gauge ranks: \n%s" % str(self.globalGaugeRanks), 5)
 
     def identifyMeasuredQuantities(self):
         """ build measured quantities, a list of fields
@@ -213,16 +229,16 @@ class PointGauges(AV_base):
             l_d['nearest_node'] = nearestNode
             for field in l_d['fields']:
                 self.globalMeasuredQuantities[field].append((location, owningProc))
-                if l_d['nearest_node'] is not None:
-                    self.measuredQuantities[field].append((location, l_d['nearest_node']))
+                if nearestNode is not None:
+                    log("Gauge for %s[%d] at %e %e %e is closest to node %d" % (
+                    field, len(self.measuredQuantities[field]), location[0], location[1], location[2], nearestNode), 3)
+                    self.measuredQuantities[field].append((location, nearestNode))
 
     def buildGaugeOperators(self):
         """ Build the linear algebra operators needed to compute the gauges.
 
         The operators are all local since the gauge measurements are calculated locally.
         """
-
-        num_owned_nodes = self.model.levelModelList[-1].mesh.nNodes_global
 
         self.m = []
         self.field_ids = []
@@ -231,7 +247,7 @@ class PointGauges(AV_base):
 
         for field in self.measuredFields:
             m = PETSc.Mat().create(PETSc.COMM_SELF)
-            m.setSizes([len(self.measuredQuantities[field]), num_owned_nodes])
+            m.setSizes([len(self.measuredQuantities[field]), self.num_owned_nodes])
             m.setType('aij')
             m.setUp()
             # matrices are a list in same order as fields
@@ -239,13 +255,18 @@ class PointGauges(AV_base):
             field_id = self.fieldNames.index(field)
             self.field_ids.append(field_id)
             # dofs are a list in same order as fields as well
-            dofs = self.model.levelModelList[-1].u[field_id].dof
+            dofs = self.u[field_id].dof
             dofsVec = PETSc.Vec().createWithArray(dofs, comm=PETSc.COMM_SELF)
             self.dofsVecs.append(dofsVec)
 
-        for field, m in zip(self.measuredFields, self.m):
+        for field, field_id, m in zip(self.measuredFields, self.field_ids, self.m):
+            # get the FiniteElementFunction object for this quantity
+            femFun = self.u[field_id]
             for quantity_id, quantity in enumerate(self.measuredQuantities[field]):
-                self.buildQuantityRow(m, quantity_id, quantity)
+                location, node = quantity
+                log("Gauge for: %s at %e %e %e is on local operator row %d" % (field, location[0], location[1],
+                                                                      location[2], quantity_id), 3)
+                self.buildQuantityRow(m, femFun, quantity_id, quantity)
             gaugesVec = PETSc.Vec().create(comm=PETSc.COMM_SELF)
             gaugesVec.setSizes(len(self.measuredQuantities[field]))
             gaugesVec.setUp()
@@ -262,6 +283,9 @@ class PointGauges(AV_base):
         self.fieldNames = model.levelModelList[-1].coefficients.variableNames
         self.vertexFlags = model.levelModelList[-1].mesh.nodeMaterialTypes
         self.vertices = model.levelModelList[-1].mesh.nodeArray
+        self.num_owned_nodes = model.levelModelList[-1].mesh.nNodes_global
+        self.u = model.levelModelList[-1].u
+        self.timeIntegration = model.levelModelList[-1].timeIntegration
 
         self.m = {}
 
@@ -272,18 +296,11 @@ class PointGauges(AV_base):
             self.initOutputWriter()
             self.buildGaugeOperators()
             self.outputHeader()
-            # this is currently broken for initial time, need to fix initial model time
-            # or enforce that calculate is called as soon as possible
-            # after model time is set up
-            # time = self.get_time()
-            time = 0
-            self.outputRow(time)
-            self.last_output = time
         return self
 
     def get_time(self):
         """ Returns the current model time"""
-        return self.model.levelModelList[-1].timeIntegration.t
+        return self.timeIntegration.t
 
     def outputHeader(self):
         """ Outputs a single header for a CSV style file to self.file"""
@@ -295,7 +312,7 @@ class PointGauges(AV_base):
             for field in self.measuredFields:
                 for quantity in self.globalMeasuredQuantities[field]:
                     location, gaugeProc, quantityID = quantity
-                    self.file.write(",%s [%9.5g %9.5g %9.5g]" % (field, location[0], location[1], location[2]))
+                    self.file.write(",%12s [%9.5g %9.5g %9.5g]" % (field, location[0], location[1], location[2]))
             self.file.write('\n')
 
     def outputRow(self, time):
@@ -309,7 +326,7 @@ class PointGauges(AV_base):
         if self.gaugeComm.rank == 0:
             self.file.write("%10.4e" % time)
             for id in self.globalQuantitiesMap:
-                self.file.write(", %36.18e" % (self.globalQuantitiesBuf[id],))
+                self.file.write(", %43.18e" % (self.globalQuantitiesBuf[id],))
             self.file.write('\n')
             # disable this for better performance, but risk of data loss on crashes
             self.file.flush()
@@ -324,10 +341,17 @@ class PointGauges(AV_base):
 
         time = self.get_time()
 
-        if self.activeTime[0] <= time <= self.activeTime[1] and time >= self.last_output + self.sampleRate:
-            for field, m, dofsVec, gaugesVec in zip(self.measuredFields, self.m, self.dofsVecs, self.gaugesVecs):
-                m.mult(dofsVec, gaugesVec)
-            self.outputRow(time)
+        # check that gauge is in its active time region
+        if self.activeTime is not None and (self.activeTime[0] > time or self.activeTime[1] < time):
+            return
+
+        # check that gauge is ready to be sampled again
+        if self.last_output is not None and time < self.last_output + self.sampleRate:
+            return
+
+        for field, m, dofsVec, gaugesVec in zip(self.measuredFields, self.m, self.dofsVecs, self.gaugesVecs):
+            m.mult(dofsVec, gaugesVec)
+        self.outputRow(time)
 
 
 # this has not been ported to the new-style format
