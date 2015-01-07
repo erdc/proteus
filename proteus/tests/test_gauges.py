@@ -16,7 +16,7 @@ from proteus import default_n as n
 
 from proteus.Gauges import PointGauges
 
-from proteus.test.util import setup_profiling
+from .util import setup_profiling
 from nose.tools import eq_
 
 def build1DMesh(p, nnx):
