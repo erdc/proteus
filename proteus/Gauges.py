@@ -125,6 +125,10 @@ class Gauges(AV_base):
         self.files = {}
         self.outputWriterReady = False
         self.last_output = None
+        self.pointGaugeMats = []
+        self.field_ids = []
+        self.dofsVecs = []
+        self.pointGaugesVecs = []
 
     def findNearestNode(self, location):
         """Given a gauge location, attempts to locate the most suitable process for monitoring information about
@@ -254,9 +258,10 @@ class Gauges(AV_base):
         log("Gauge ranks: \n%s" % str(self.globalGaugeRanks), 5)
 
 
-    def getLineIntercepts(self, line, line_data):
+    def getLineSegments(self, line, line_data):
         """
-        Return all interceptions between a line and a Proteus mesh
+        Return all interceptions between a line and a Proteus mesh in the form of a dictionary of points,
+        as well as a list of line segments
         """
 
         # TODO: Turn this into a real function
@@ -264,7 +269,8 @@ class Gauges(AV_base):
         points = OrderedDict()
         for point in line:
             points[point] = line_data
-        return points
+
+        return points, [line]
 
     def identifyMeasuredQuantities(self):
         """ build measured quantities, a list of fields
@@ -279,12 +285,16 @@ class Gauges(AV_base):
         points = self.points
 
         for line, line_data in self.lines.iteritems():
-            line_points = self.getLineIntercepts(line, line_data)
+            line_points, segments = self.getLineSegments(line, line_data)
+            self.lines[line]['segments'] = segments
             for point, point_data in line_points.iteritems():
+                import ipdb
+                ipdb.set_trace()
                 if point in points:
-                    points[point].update(point_data)
+                    points[point]['fields'].update(point_data['fields'])
                 else:
-                    points[point] = point_data
+                    points[point] = OrderedDict((('fields', point_data['fields']),))
+
 
         for point, l_d in points.iteritems():
             owningProc, nearestNode = self.findNearestNode(point)
@@ -296,16 +306,12 @@ class Gauges(AV_base):
                     field, len(self.measuredQuantities[field]), point[0], point[1], point[2], nearestNode), 3)
                     self.measuredQuantities[field].append((point, nearestNode))
 
-    def buildGaugeOperators(self):
-        """ Build the linear algebra operators needed to compute the gauges.
 
-        The operators are all local since the gauge measurements are calculated locally.
+    def buildPointGaugeOperators(self):
+        """ Build the linear algebra operators needed to compute the point gauges.
+
+        The operators are all local since the point gauge measurements are calculated locally.
         """
-
-        self.m = []
-        self.field_ids = []
-        self.dofsVecs = []
-        self.gaugesVecs = []
 
         for field in self.fields:
             m = PETSc.Mat().create(PETSc.COMM_SELF)
@@ -313,7 +319,7 @@ class Gauges(AV_base):
             m.setType('aij')
             m.setUp()
             # matrices are a list in same order as fields
-            self.m.append(m)
+            self.pointGaugeMats.append(m)
             field_id = self.fieldNames.index(field)
             self.field_ids.append(field_id)
             # dofs are a list in same order as fields as well
@@ -321,7 +327,7 @@ class Gauges(AV_base):
             dofsVec = PETSc.Vec().createWithArray(dofs, comm=PETSc.COMM_SELF)
             self.dofsVecs.append(dofsVec)
 
-        for field, field_id, m in zip(self.fields, self.field_ids, self.m):
+        for field, field_id, m in zip(self.fields, self.field_ids, self.pointGaugeMats):
             # get the FiniteElementFunction object for this quantity
             femFun = self.u[field_id]
             for quantity_id, quantity in enumerate(self.measuredQuantities[field]):
@@ -329,13 +335,27 @@ class Gauges(AV_base):
                 log("Gauge for: %s at %e %e %e is on local operator row %d" % (field, location[0], location[1],
                                                                       location[2], quantity_id), 3)
                 self.buildQuantityRow(m, femFun, quantity_id, quantity)
-            gaugesVec = PETSc.Vec().create(comm=PETSc.COMM_SELF)
-            gaugesVec.setSizes(len(self.measuredQuantities[field]))
-            gaugesVec.setUp()
-            self.gaugesVecs.append(gaugesVec)
+            pointGaugesVec = PETSc.Vec().create(comm=PETSc.COMM_SELF)
+            pointGaugesVec.setSizes(len(self.measuredQuantities[field]))
+            pointGaugesVec.setUp()
+            self.pointGaugesVecs.append(pointGaugesVec)
 
-        for m in self.m:
+        for m in self.pointGaugeMats:
             m.assemble()
+
+    def buildLineGaugeOperators(self):
+        """ Build the linear algebra operators needed to compute the line gauges.
+
+        The operators are collective since the line gauge measurements may be across multiple processors.
+
+        Unlike point gauges, each line has its own communicator and field associated with it
+        """
+
+        for line in self.lines:
+            pass
+
+
+
 
     def attachModel(self, model, ar):
         """ Attach this gauge to the given simulation model.
@@ -349,14 +369,13 @@ class Gauges(AV_base):
         self.u = model.levelModelList[-1].u
         self.timeIntegration = model.levelModelList[-1].timeIntegration
 
-        self.m = {}
-
         self.identifyMeasuredQuantities()
         self.buildGaugeComm()
 
         if self.isGaugeOwner:
             self.initOutputWriter()
-            self.buildGaugeOperators()
+            self.buildPointGaugeOperators()
+            self.buildLineGaugeOperators()
             self.outputHeader()
         return self
 
@@ -382,7 +401,7 @@ class Gauges(AV_base):
 
         assert self.isGaugeOwner
 
-        self.localQuantitiesBuf = np.concatenate([gaugesVec.getArray() for gaugesVec in self.gaugesVecs])
+        self.localQuantitiesBuf = np.concatenate([gaugesVec.getArray() for gaugesVec in self.pointGaugesVecs])
         self.gaugeComm.Gatherv(self.localQuantitiesBuf, self.globalQuantitiesBuf)
 
         if self.gaugeComm.rank == 0:
@@ -411,6 +430,6 @@ class Gauges(AV_base):
         if self.last_output is not None and time < self.last_output + self.sampleRate:
             return
 
-        for field, m, dofsVec, gaugesVec in zip(self.fields, self.m, self.dofsVecs, self.gaugesVecs):
+        for field, m, dofsVec, gaugesVec in zip(self.fields, self.pointGaugeMats, self.dofsVecs, self.pointGaugesVecs):
             m.mult(dofsVec, gaugesVec)
         self.outputRow(time)
