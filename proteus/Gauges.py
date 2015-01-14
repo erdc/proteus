@@ -1,4 +1,5 @@
 from collections import defaultdict, OrderedDict
+from itertools import product
 
 from mpi4py import MPI
 from petsc4py import PETSc
@@ -51,7 +52,7 @@ def PointGauges(gauges, activeTime=None, sampleRate=0, fileName='point_gauges.cs
     return Gauges(fields, activeTime, sampleRate, fileName, points=points)
 
 
-def LineGauges(gauges, activeTime=None, sampleRate=0, fileName='point_gauges.csv'):
+def LineGauges(gauges, activeTime=None, sampleRate=0, fileName='line_gauges.csv'):
     """ Create a set of line gauges that will automatically be serialized as CSV data to the requested file.
 
     :param gauges: An iterable of "gauges".  Each gauge is specified by a 2-tuple, with the first element in the
@@ -61,22 +62,15 @@ def LineGauges(gauges, activeTime=None, sampleRate=0, fileName='point_gauges.csv
     See the Gauges class for an explanation of the other parameters.
     """
 
-    # build up dictionary of location information from gauges
-    # dictionary of dictionaries, outer dictionary is keyed by location (3-tuple)
-    # inner dictionaries contain monitored fields, and closest node
-    # closest_node is None if this process does not own the node
-    lines = OrderedDict()
+    # expand the product of fields and lines for each gauge
+
+    lines = list()
     fields = set()
     for gauge in gauges:
         gauge_fields, gauge_lines = gauge
         fields.update(gauge_fields)
-        for line in gauge_lines:
-            # initialize new dictionary of information at this location
-            if line not in lines:
-                l_d = {'fields': set()}
-                lines[line] = l_d
-            # add any currently unmonitored fields
-            lines[line]['fields'].update(gauge_fields)
+        lines.extend(product(gauge_fields, gauge_lines))
+
     return Gauges(fields, activeTime, sampleRate, fileName, lines=lines)
 
 
@@ -119,7 +113,7 @@ class Gauges(AV_base):
         self.sampleRate = sampleRate
         self.fileName = fileName
         self.points = points if points else OrderedDict()
-        self.lines = lines if lines else OrderedDict()
+        self.lines = lines if lines else []
         self.file = None  # only the root process should have a file open
         self.flags = {}
         self.files = {}
@@ -129,6 +123,7 @@ class Gauges(AV_base):
         self.field_ids = []
         self.dofsVecs = []
         self.pointGaugesVecs = []
+        self.segments = []
 
     def findNearestNode(self, location):
         """Given a gauge location, attempts to locate the most suitable process for monitoring information about
@@ -258,19 +253,35 @@ class Gauges(AV_base):
         log("Gauge ranks: \n%s" % str(self.globalGaugeRanks), 5)
 
 
-    def getLineSegments(self, line, line_data):
+    def addLineGaugePoints(self, lines):
+        """ Add all gauge points from each line into self.points
         """
-        Return all interceptions between a line and a Proteus mesh in the form of a dictionary of points,
-        as well as a list of line segments
+        points = self.points
+        for line in lines:
+            field, endpoints = line
+            line_points = self.getMeshIntercepts(endpoints)
+            for point in line_points:
+                if point in points:
+                    points[point]['fields'].update(field)
+                else:
+                    points[point] = {'fields':set(field,)}
+
+
+    def getMeshIntercepts(self, endpoints):
+        """
+        Return all interceptions between a line and a Proteus mesh as a list of points
         """
 
         # TODO: Turn this into a real function
 
-        points = OrderedDict()
-        for point in line:
-            points[point] = line_data
+        return endpoints
 
-        return points, [line]
+
+    def getSegments(self, point_list, points):
+        """
+        Return point indices forming segments of line, as well as line lengths
+        """
+
 
     def identifyMeasuredQuantities(self):
         """ build measured quantities, a list of fields
@@ -284,26 +295,16 @@ class Gauges(AV_base):
 
         points = self.points
 
-        for line, line_data in self.lines.iteritems():
-            line_points, segments = self.getLineSegments(line, line_data)
-            self.lines[line]['segments'] = segments
-            for point, point_data in line_points.iteritems():
-                import ipdb
-                ipdb.set_trace()
-                if point in points:
-                    points[point]['fields'].update(point_data['fields'])
-                else:
-                    points[point] = OrderedDict((('fields', point_data['fields']),))
-
-
         for point, l_d in points.iteritems():
             owningProc, nearestNode = self.findNearestNode(point)
             l_d['nearest_node'] = nearestNode
             for field in l_d['fields']:
                 self.globalMeasuredQuantities[field].append((point, owningProc))
                 if nearestNode is not None:
-                    log("Gauge for %s[%d] at %e %e %e is closest to node %d" % (
-                    field, len(self.measuredQuantities[field]), point[0], point[1], point[2], nearestNode), 3)
+                    point_id = len(self.measuredQuantities[field])
+                    log("Gauge for %s[%d] at %e %e %e is closest to node %d" % (field, point_id, point[0], point[1],
+                                                                                point[2], nearestNode), 3)
+                    l_d[field] = point_id
                     self.measuredQuantities[field].append((point, nearestNode))
 
 
@@ -351,11 +352,23 @@ class Gauges(AV_base):
         Unlike point gauges, each line has its own communicator and field associated with it
         """
 
-        for line in self.lines:
-            pass
+        self.lineGaugeVecs = []
 
+        for line, segments in zip(self.lines, self.segments):
+            field, endpoints = line
+            # create communicator based on ownership of data on this line
+            lineGaugesVec = PETSc.Vec().create(comm=PETSc.COMM_SELF)
+            lineGaugesVec.setSizes(len(segments))
+            lineGaugesVec.setUp()
+            # only processes owning a dof contributing to this segment continue
+            for segment in segments:
+                for point in segment:
+                    # Trapezoid Rule
+                    pointID = 0
+#                    lineGaugesVec[pointID] += segment['length']/2
+                    lineGaugesVec[pointID] += 5
 
-
+            lineGaugesVec.assemble()
 
     def attachModel(self, model, ar):
         """ Attach this gauge to the given simulation model.
@@ -369,7 +382,9 @@ class Gauges(AV_base):
         self.u = model.levelModelList[-1].u
         self.timeIntegration = model.levelModelList[-1].timeIntegration
 
+        self.addLineGaugePoints(self.lines)
         self.identifyMeasuredQuantities()
+
         self.buildGaugeComm()
 
         if self.isGaugeOwner:
@@ -430,6 +445,6 @@ class Gauges(AV_base):
         if self.last_output is not None and time < self.last_output + self.sampleRate:
             return
 
-        for field, m, dofsVec, gaugesVec in zip(self.fields, self.pointGaugeMats, self.dofsVecs, self.pointGaugesVecs):
+        for m, dofsVec, gaugesVec in zip(self.pointGaugeMats, self.dofsVecs, self.pointGaugesVecs):
             m.mult(dofsVec, gaugesVec)
         self.outputRow(time)
