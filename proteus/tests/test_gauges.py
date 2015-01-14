@@ -14,7 +14,7 @@ from proteus import (Comm,
 from proteus import default_p as p
 from proteus import default_n as n
 
-from proteus.Gauges import PointGauges
+from proteus.Gauges import PointGauges, LineGauges
 
 from .util import setup_profiling
 from nose.tools import eq_
@@ -109,6 +109,33 @@ def test_gauge_output():
                     fileName=filename)
     time_list=[0.0, 1.0, 2.0]
     run_gauge(p, time_list)
+
+    correct_gauge_names = ['u0 [        0         0         0]', 'u0 [        1         1         1]']
+    correct_data = np.asarray([[   0.,    0.,  111.],
+                               [   1.,    0.,  222.],
+                               [   2.,    0.,  333.]])
+
+    # synchronize processes before attempting to read file
+
+    from proteus import Comm
+    Comm.get().barrier()
+
+    gauge_names, data = parse_gauge_output(filename)
+
+    eq_(correct_gauge_names, gauge_names)
+    npt.assert_equal(correct_data, data)
+
+
+def test_line_gauge_output():
+    filename = 'test_line_gauge_output.csv'
+
+    lines = (((0, 0, 0), (1, 1, 1)),)
+    fields = ('u0', )
+
+    l = LineGauges(gauges=((fields, lines),),
+                   fileName=filename)
+    time_list=[0.0, 1.0, 2.0]
+    run_gauge(l, time_list)
 
     correct_gauge_names = ['u0 [        0         0         0]', 'u0 [        1         1         1]']
     correct_data = np.asarray([[   0.,    0.,  111.],
