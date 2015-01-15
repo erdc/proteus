@@ -264,8 +264,7 @@ class Gauges(AV_base):
                 if point in points:
                     points[point]['fields'].update(field)
                 else:
-                    points[point] = {'fields':set(field,)}
-
+                    points[point] = {'fields':set((field,))}
 
     def getMeshIntercepts(self, endpoints):
         """
@@ -306,7 +305,6 @@ class Gauges(AV_base):
                                                                                 point[2], nearestNode), 3)
                     l_d[field] = point_id
                     self.measuredQuantities[field].append((point, nearestNode))
-
 
     def buildPointGaugeOperators(self):
         """ Build the linear algebra operators needed to compute the point gauges.
@@ -353,6 +351,7 @@ class Gauges(AV_base):
         """
 
         self.lineGaugeVecs = []
+
 
         for line, segments in zip(self.lines, self.segments):
             field, endpoints = line
