@@ -37,11 +37,13 @@ def PointGauges(gauges, activeTime=None, sampleRate=0, fileName='point_gauges.cs
     # inner dictionaries contain monitored fields, and closest node
     # closest_node is None if this process does not own the node
     points = OrderedDict()
-    fields = set()
+    fields = list()
 
     for gauge in gauges:
         gauge_fields, gauge_points = gauge
-        fields.update(gauge_fields)
+        for field in gauge_fields:
+            if field not in fields:
+                fields.append(field)
         for point in gauge_points:
             # initialize new dictionary of information at this location
             if point not in points:
@@ -65,10 +67,12 @@ def LineGauges(gauges, activeTime=None, sampleRate=0, fileName='line_gauges.csv'
     # expand the product of fields and lines for each gauge
 
     lines = list()
-    fields = set()
+    fields = list()
     for gauge in gauges:
         gauge_fields, gauge_lines = gauge
-        fields.update(gauge_fields)
+        for field in gauge_fields:
+            if field not in fields:
+                fields.append(field)
         lines.extend(product(gauge_fields, gauge_lines))
 
     return Gauges(fields, activeTime, sampleRate, fileName, lines=lines)
@@ -122,7 +126,7 @@ class Gauges(AV_base):
         self.pointGaugeMats = []
         self.field_ids = []
         self.dofsVecs = []
-        self.pointGaugesVecs = []
+        self.pointGaugeVecs = []
         self.segments = []
 
     def findNearestNode(self, location):
@@ -253,34 +257,26 @@ class Gauges(AV_base):
         log("Gauge ranks: \n%s" % str(self.globalGaugeRanks), 5)
 
 
-    def addLineGaugePoints(self, lines):
+    def addLineGaugePoints(self, line, line_segments):
         """ Add all gauge points from each line into self.points
         """
         points = self.points
-        for line in lines:
-            field, endpoints = line
-            line_points = self.getMeshIntercepts(endpoints)
-            for point in line_points:
-                if point in points:
-                    points[point]['fields'].update(field)
-                else:
-                    points[point] = {'fields':set((field,))}
+
+        field, endpoints = line
+        for point in line_segments:
+            if point in points:
+                points[point]['fields'].update(field)
+            else:
+                points[point] = {'fields':set((field,))}
 
     def getMeshIntercepts(self, endpoints):
         """
-        Return all interceptions between a line and a Proteus mesh as a list of points
+        Return all interceptions between a line and a Proteus mesh as a list of points.
         """
 
         # TODO: Turn this into a real function
 
         return endpoints
-
-
-    def getSegments(self, point_list, points):
-        """
-        Return point indices forming segments of line, as well as line lengths
-        """
-
 
     def identifyMeasuredQuantities(self):
         """ build measured quantities, a list of fields
@@ -337,12 +333,12 @@ class Gauges(AV_base):
             pointGaugesVec = PETSc.Vec().create(comm=PETSc.COMM_SELF)
             pointGaugesVec.setSizes(len(self.measuredQuantities[field]))
             pointGaugesVec.setUp()
-            self.pointGaugesVecs.append(pointGaugesVec)
+            self.pointGaugeVecs.append(pointGaugesVec)
 
         for m in self.pointGaugeMats:
             m.assemble()
 
-    def buildLineGaugeOperators(self):
+    def buildLineGaugeOperators(self, lines, linesSegments):
         """ Build the linear algebra operators needed to compute the line gauges.
 
         The operators are collective since the line gauge measurements may be across multiple processors.
@@ -350,24 +346,36 @@ class Gauges(AV_base):
         Unlike point gauges, each line has its own communicator and field associated with it
         """
 
-        self.lineGaugeVecs = []
+        #create lineGaugesVec to store contributions to all lines from this process
+        self.lineGaugesVec = PETSc.Vec().create(comm=PETSc.COMM_SELF)
+        self.lineGaugesVec.setSizes(len(lines))
+        self.lineGaugesVec.setUp()
 
+        # create lineGaugeMats to store coefficients mapping contributions from each field
+        # to the line gauges
+        self.lineGaugeMats = []
+        # size of lineGaugeMats depends on number of local points for each field
+        for pointGaugesVec in self.pointGaugeVecs:
+            m = PETSc.Mat().create(comm=PETSc.COMM_SELF)
+            m.setSizes([len(lines), pointGaugesVec.getSize()])
+            m.setType('aij')
+            m.setUp()
+            self.lineGaugeMats.append(m)
 
-        for line, segments in zip(self.lines, self.segments):
+        # Assemble contributions from each point in each line segment
+        for lineIndex, (line, segments) in enumerate(zip(self.lines, linesSegments)):
             field, endpoints = line
-            # create communicator based on ownership of data on this line
-            lineGaugesVec = PETSc.Vec().create(comm=PETSc.COMM_SELF)
-            lineGaugesVec.setSizes(len(segments))
-            lineGaugesVec.setUp()
-            # only processes owning a dof contributing to this segment continue
-            for segment in segments:
-                for point in segment:
-                    # Trapezoid Rule
-                    pointID = 0
-#                    lineGaugesVec[pointID] += segment['length']/2
-                    lineGaugesVec[pointID] += 5
+            field_index = self.fields.index(field)
 
-            lineGaugesVec.assemble()
+            # Trapezoid Rule to calculate coefficients here
+            for p1, p2 in zip(segments[:-1], segments[1:]):
+                segmentLength = np.linalg.norm(np.asarray(p2)-np.asarray(p1))
+                for point in p1, p2:
+                    pointID = self.points[point][field]
+                    self.lineGaugeMats[field_index].setValue(lineIndex, pointID, segmentLength/2, addv=True)
+
+        for m in self.lineGaugeMats:
+            m.assemble()
 
     def attachModel(self, model, ar):
         """ Attach this gauge to the given simulation model.
@@ -381,7 +389,13 @@ class Gauges(AV_base):
         self.u = model.levelModelList[-1].u
         self.timeIntegration = model.levelModelList[-1].timeIntegration
 
-        self.addLineGaugePoints(self.lines)
+        linesSegments = []
+        for line in self.lines:
+            field, endpoints = line
+            lineSegments = self.getMeshIntercepts(endpoints)
+            self.addLineGaugePoints(line, lineSegments)
+            linesSegments.append(lineSegments)
+
         self.identifyMeasuredQuantities()
 
         self.buildGaugeComm()
@@ -389,7 +403,7 @@ class Gauges(AV_base):
         if self.isGaugeOwner:
             self.initOutputWriter()
             self.buildPointGaugeOperators()
-            self.buildLineGaugeOperators()
+            self.buildLineGaugeOperators(self.lines, linesSegments)
             self.outputHeader()
         return self
 
@@ -415,13 +429,22 @@ class Gauges(AV_base):
 
         assert self.isGaugeOwner
 
-        self.localQuantitiesBuf = np.concatenate([gaugesVec.getArray() for gaugesVec in self.pointGaugesVecs])
+        self.localQuantitiesBuf = np.concatenate([gaugesVec.getArray() for gaugesVec in self.pointGaugeVecs])
         self.gaugeComm.Gatherv(self.localQuantitiesBuf, self.globalQuantitiesBuf)
+
+        if self.lines:
+            lineGaugeBuf = self.lineGaugesVec.getArray()
+            globalGaugeBuf = lineGaugeBuf.copy()
+            self.gaugeComm.Reduce(lineGaugeBuf, globalGaugeBuf, op=MPI.SUM)
+        else:
+            globalGaugeBuf = []
 
         if self.gaugeComm.rank == 0:
             self.file.write("%10.4e" % time)
             for id in self.globalQuantitiesMap:
                 self.file.write(", %43.18e" % (self.globalQuantitiesBuf[id],))
+            for lineGauge in globalGaugeBuf:
+                self.file.write(", %43.18e" % (lineGauge))
             self.file.write('\n')
             # disable this for better performance, but risk of data loss on crashes
             self.file.flush()
@@ -444,6 +467,12 @@ class Gauges(AV_base):
         if self.last_output is not None and time < self.last_output + self.sampleRate:
             return
 
-        for m, dofsVec, gaugesVec in zip(self.pointGaugeMats, self.dofsVecs, self.pointGaugesVecs):
+        for m, dofsVec, gaugesVec in zip(self.pointGaugeMats, self.dofsVecs, self.pointGaugeVecs):
             m.mult(dofsVec, gaugesVec)
+
+        # this could be optimized out... but why?
+        self.lineGaugesVec.zeroEntries()
+        for m, dofsVec in zip(self.lineGaugeMats, self.pointGaugeVecs):
+            m.multAdd(dofsVec, self.lineGaugesVec, self.lineGaugesVec)
+
         self.outputRow(time)
