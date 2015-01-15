@@ -138,9 +138,9 @@ def test_line_gauge_output():
     run_gauge(l, time_list)
 
     correct_gauge_names = ['u0 [        0         0         0]', 'u0 [        1         1         1]']
-    correct_data = np.asarray([[   0.,    0.,  111.],
-                               [   1.,    0.,  222.],
-                               [   2.,    0.,  333.]])
+    correct_data = np.asarray([[   0.,    0.,  111., 96.12881982007268],
+                               [   1.,    0.,  222., 192.25763964014536],
+                               [   2.,    0.,  333., 288.3864594602181]])
 
     # synchronize processes before attempting to read file
 
