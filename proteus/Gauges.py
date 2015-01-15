@@ -371,8 +371,11 @@ class Gauges(AV_base):
             for p1, p2 in zip(segments[:-1], segments[1:]):
                 segmentLength = np.linalg.norm(np.asarray(p2)-np.asarray(p1))
                 for point in p1, p2:
-                    pointID = self.points[point][field]
-                    self.lineGaugeMats[field_index].setValue(lineIndex, pointID, segmentLength/2, addv=True)
+                    point_data = self.points[point]
+                    # only assign coefficients for locally owned points
+                    if field in point_data:
+                        pointID = point_data[field]
+                        self.lineGaugeMats[field_index].setValue(lineIndex, pointID, segmentLength/2, addv=True)
 
         for m in self.lineGaugeMats:
             m.assemble()
