@@ -275,7 +275,6 @@ class Gauges(AV_base):
         """
 
         # TODO: Turn this into a real function
-
         return endpoints
 
     def identifyMeasuredQuantities(self):
