@@ -2,6 +2,8 @@
 A set of functions for working with geometric data
 """
 
+from __future__ import division
+
 import numpy as np
 
 norm = np.linalg.norm
@@ -11,8 +13,7 @@ def distance(a, b):
 
 def intersectPoints(line, points):
     """
-    Given a line (defined as two points in three-space), identify all points (defined as points in three space) that
-    the line intersects.
+    Given a line segment (defined as two points), identify all points that the line segment intersects.
 
     This hasn't been vectorized.
     """
@@ -33,8 +34,8 @@ def intersectPoints(line, points):
 
 def intersectEdges(line, edges):
     """
-    Given a line (defined as two points in three-space), identify the locations of its intersections with all
-    given edges (defined as line segments in three space).  If the line and an edge overlap, the *furthest* point
+    Given a line segment (defined as two points), identify the locations of its intersections with all
+    given edges (defined as line segments).  If the line and an edge overlap, the *furthest* point
     along the line (closest to the second point) that is still on the edge is returned.
 
     This hasn't been vectorized.
@@ -95,9 +96,56 @@ def intersectEdges(line, edges):
 
     return [intersectEdge(line, edge) for edge in edges]
 
-def intersectFaces(line, faces):
+def intersectPolyhedron(line, polyhedron):
     """
-    Given a line (defined as two points in three-space), identify the locations of all faces (defined as simple
-    segments in three space) that the line intersects.
+    Given a line (defined as two points), identify the locations that it enters and exits the
+    polyhedron (defined as a collection of half-planes in three-space in normal, vertex form)
+
+    If the facets of the polyhedron are in edge form, the normal can be computed by taking the cross product of any
+    two non-parallel edges of the facet (in three-space).  Any vertex of the facet will work.
+
+    Implementation of algorithm described here: http://geomalgorithms.com/a13-_intersect-4.html
+
+    This hasn't been vectorized.
     """
-    pass
+
+    a, b = line
+    a, b = np.asarray(a), np.asarray(b)
+
+    if distance(a, b) == 0:
+        raise ValueError("Line segment must not have length 0")
+
+    v_l = b - a
+    t_e = 0  # location along line entering polyhedron (initial value 0)
+    t_l = 1  # location along line leaving polyhedron (initial value 1)
+
+    for plane in polyhedron:
+        n, v = plane
+        n, v = np.asarray(n), np.asarray(v)
+        ndotba = -n.dot(a - v)
+        d = n.dot(v_l)
+        if d == 0:
+            # the line segment is parallel to this face
+            if ndotba < 0:
+                # the line is outside the face
+                return None
+            else:
+                # the line is in or on the face, ignore this face
+                continue
+        t = ndotba / d
+        if d < 0:
+            # segment is entering polyhedron across this facet
+            t_e = max(t_e, t)
+            if t_e > t_l:
+                # segment enters polyhedron after leaving, no intersection
+                return None
+        else:
+            # segment is exiting polyhedron across this facet
+            t_l = min(t_l, t)
+            if t_l < t_e:
+                # segment exits polyhedron before entering, no intersection
+                return None
+
+    assert(t_e <= t_l)
+
+    return [a + t_e*v_l, a + t_l*v_l]
