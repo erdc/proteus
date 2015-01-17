@@ -8,6 +8,7 @@ import numpy as np
 from . import Comm
 from .AuxiliaryVariables import AV_base
 from .Profiling import logEvent as log
+from . import Geom
 
 def PointGauges(gauges, activeTime=None, sampleRate=0, fileName='point_gauges.csv'):
     """ Create a set of point gauges that will automatically be serialized as CSV data to the requested file.
@@ -269,12 +270,39 @@ class Gauges(AV_base):
             else:
                 points[point] = {'fields':set((field,))}
 
-    def getMeshIntercepts(self, endpoints):
+    def getMeshIntersections(self, line):
         """
-        Return all interceptions between a line and a Proteus mesh as a list of points.
+        Return all intersections between a line segment (field, two points) and a Proteus mesh
+
+        :param endpoints - a pair of points in 3-space defining the line segment
+
+
+        :return a list of pairs of intersections through the mesh
         """
 
-        # TODO: Turn this into a real function
+        import ipdb
+        ipdb.set_trace()
+        field, endpoints = line
+
+        # get Proteus mesh index for this field
+        field_id = self.fieldNames.index(field)
+        femFun = self.u[field_id]
+        mesh = femFun.femSpace.mesh
+
+        # assume that mesh is triangular or tetrahedral
+        # TODO: cekees - Need better mesh support here from Proteus
+
+        if 'TetrahedralMesh' in str(mesh):
+            getNormals = Geom.getTetrahedralNormals
+        elif 'TriangleMesh' in str(mesh):
+            getNormals = Geom.getTriangleNormals
+        else:
+            raise ValueError("Unrecognized Proteus mesh instance")
+
+        for element in mesh.elementNodesArray:
+            # element_vertices =
+
+
         return endpoints
 
     def identifyMeasuredQuantities(self):
@@ -307,15 +335,13 @@ class Gauges(AV_base):
         The operators are all local since the point gauge measurements are calculated locally.
         """
 
-        for field in self.fields:
+        for field, field_id in self.fields, self.field_ids:
             m = PETSc.Mat().create(PETSc.COMM_SELF)
             m.setSizes([len(self.measuredQuantities[field]), self.num_owned_nodes])
             m.setType('aij')
             m.setUp()
             # matrices are a list in same order as fields
             self.pointGaugeMats.append(m)
-            field_id = self.fieldNames.index(field)
-            self.field_ids.append(field_id)
             # dofs are a list in same order as fields as well
             dofs = self.u[field_id].dof
             dofsVec = PETSc.Vec().createWithArray(dofs, comm=PETSc.COMM_SELF)
@@ -364,7 +390,7 @@ class Gauges(AV_base):
         # Assemble contributions from each point in each line segment
         for lineIndex, (line, segments) in enumerate(zip(self.lines, linesSegments)):
             field, endpoints = line
-            field_index = self.fields.index(field)
+            fieldIndex = self.fields.index(field)
 
             # Trapezoid Rule to calculate coefficients here
             for p1, p2 in zip(segments[:-1], segments[1:]):
@@ -374,7 +400,7 @@ class Gauges(AV_base):
                     # only assign coefficients for locally owned points
                     if field in point_data:
                         pointID = point_data[field]
-                        self.lineGaugeMats[field_index].setValue(lineIndex, pointID, segmentLength/2, addv=True)
+                        self.lineGaugeMats[fieldIndex].setValue(lineIndex, pointID, segmentLength/2, addv=True)
 
         for m in self.lineGaugeMats:
             m.assemble()
@@ -391,10 +417,13 @@ class Gauges(AV_base):
         self.u = model.levelModelList[-1].u
         self.timeIntegration = model.levelModelList[-1].timeIntegration
 
+        for field in self.fields:
+            field_id = self.fieldNames.index(field)
+            self.field_ids.append(field_id)
+
         linesSegments = []
         for line in self.lines:
-            field, endpoints = line
-            lineSegments = self.getMeshIntercepts(endpoints)
+            lineSegments = self.getMeshIntersections(line)
             self.addLineGaugePoints(line, lineSegments)
             linesSegments.append(lineSegments)
 
