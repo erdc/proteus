@@ -8,7 +8,7 @@ python:
 
 before_install:
 - sudo apt-get install gfortran cmake libblas-dev liblapack-dev
-- wget http://proteus.usace.army.mil/files/hashdist.tgz
+- wget https://www.dropbox.com/s/5mjf94aitd9ai5w/hashdist.tgz
 - tar xzf hashdist.tgz 
 - mv .hashdist $HOME
 
