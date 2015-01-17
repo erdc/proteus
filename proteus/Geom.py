@@ -36,7 +36,7 @@ def intersectEdges(line, edges):
     """
     Given a line segment (defined as two points), identify the locations of its intersections with all
     given edges (defined as line segments).  If the line and an edge overlap, the *furthest* point
-    along the line (closest to the second point) that is still on the edge is returned.
+    along the line (closest to the second point) that is still on each edge is returned.
 
     This hasn't been vectorized.
     """
