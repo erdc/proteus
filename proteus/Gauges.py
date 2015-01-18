@@ -288,22 +288,24 @@ class Gauges(AV_base):
         field_id = self.fieldNames.index(field)
         femFun = self.u[field_id]
         mesh = femFun.femSpace.mesh
+        referenceElement = femFun.femSpace.elementMaps.referenceElement
 
-        # assume that mesh is triangular or tetrahedral
-        # TODO: cekees - Need better mesh support here from Proteus
-
-        if 'TetrahedralMesh' in str(mesh):
-            getNormals = Geom.getTetrahedralNormals
-        elif 'TriangleMesh' in str(mesh):
-            getNormals = Geom.getTriangleNormals
+        if referenceElement.dim == 2 and referenceElement.nNodes == 3:
+            toPolyhedron = Geom.triangleToPolyhedron
+        elif referenceElement.dim == 3 and referenceElement.nNodes == 4:
+            toPolyhedron = Geom.tetrahedronToPolyhedron
         else:
-            raise ValueError("Unrecognized Proteus mesh instance")
+            raise NotImplementedError("Unable to compute mesh intersections for this element type")
 
+        intersections = []
         for element in mesh.elementNodesArray:
-            # element_vertices =
+            # map nodes to physical vertices
+            elementVertices = mesh.nodeArray[element]
+            # get plane normals
+            polyhedron = toPolyhedron(elementVertices)
+            intersections.append(Geom.intersectPolyhedron(line, polyhedron))
 
-
-        return endpoints
+        return intersections
 
     def identifyMeasuredQuantities(self):
         """ build measured quantities, a list of fields

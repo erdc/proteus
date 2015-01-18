@@ -37,3 +37,19 @@ def test_intersect_polyhedron():
          ((0, 1, 0), (1, 1, 0)))
     npt.assert_equal(Geom.intersectPolyhedron(l, p),
                      ((0., 0., 0.), ((1., 1., 0.))))
+
+
+def test_triangle_vertices_to_normals():
+    npt.assert_equal(Geom.triangleVerticesToNormals(([0, 0, 0], [0, 1, 0], [1, 0, 0])),
+                     [(([-1.,  0.,  0.]), ([0, 0, 0])),
+                      (([-0., -1., -0.]), ([0, 0, 0])),
+                      (([ 1.,  1.,  0.]), ([0, 1, 0]))])
+
+def test_tetrahedron_vertices_to_normals():
+    npt.assert_equal(Geom.tetrahedronVerticesToNormals(([0, 0, 0], [0, 1, 0], [1, 0, 0], [0, 0, 1])),
+                                                       [(([ 0,  0, -1]), ([0, 0, 0])),
+                                                        (([-1,  0,  0]), ([0, 0, 0])),
+                                                        (([ 0, -1,  0]), ([0, 0, 0])),
+                                                        (([1, 1, 1]), ([0, 1, 0]))])
+
+

@@ -8,6 +8,57 @@ import numpy as np
 
 norm = np.linalg.norm
 
+def triangleVerticesToNormals(elementVertices):
+    """
+    Given a set of vertices to a triangle, return normals and a point corresponding to each normal
+    """
+    elementVertices = np.asarray(elementVertices)
+
+    if norm(elementVertices[:,2]) > 0:
+        raise ValueError("Expected triangles in 2D plane, got something else")
+    sets = ((0, 1), (0, 2), (1, 2))
+    outs = (2, 1, 0)
+    faces = []
+    rotate = np.asarray(((0., -1., 0.),
+                         (1., 0., 0.),
+                         (0., 0., 0.)))
+
+    for set, out in zip(sets, outs):
+        vertices = elementVertices[[set]]
+        ab = vertices[1] - vertices[0]
+        v_out = vertices[0] - elementVertices[out]
+        normal = rotate.dot(ab)
+        # normal should point *away* from remaining point
+        if normal.dot(v_out) < 0:
+            normal = -1*normal
+        faces.append((normal, vertices[0]))
+    return faces
+
+
+def tetrahedronVerticesToNormals(elementVertices):
+    """
+    Given a set of vertices to a tetrahedron, return normals and a point corresponding to each normal
+    """
+    elementVertices = np.asarray(elementVertices)
+
+    sets = ((0, 1, 2), (0, 1, 3), (0, 2, 3), (1, 2, 3))
+    outs = (3, 2, 1, 0)
+
+    faces = []
+
+    for set, out in zip(sets, outs):
+        vertices = elementVertices[[set]]
+        ab = vertices[1] - vertices[0]
+        ac = vertices[2] - vertices[0]
+        normal = np.cross(ab, ac)
+        v_out = vertices[0] - elementVertices[out]
+        # normal should point *away* from remaining point
+        if normal.dot(v_out) < 0:
+            normal = -1*normal
+        faces.append((normal, vertices[0]))
+    return faces
+
+
 def distance(a, b):
     return norm(b - a)
 
