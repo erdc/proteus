@@ -358,20 +358,50 @@ class Gauges(AV_base):
         for m in self.pointGaugeMats:
             m.assemble()
 
-    def pruneDuplicateSegments(self, segments):
-        # now prune duplicates across processors
-        # this could be optimized
+    def pruneDuplicateSegments(self, endpoints, segments):
+        """ prune duplicate segments across processors
+
+        this could be optimized
+        """
+
+        # validation of segment length
+        original_line = np.asarray(endpoints)
+        original_v = original_line[1] - original_line[0]
+        # running sum for computed global segments
+        segment_v = np.zeros(3)
+
         comm = Comm.get().comm.tompi4py()
         local_segments = comm.gather(segments)
+
+        def hash_segment(s):
+            """
+            :param s: Line segment to be hashed
+            :return: a hash of a truncated version of the line segment
+            """
+            asarray = np.asarray(s, dtype=np.single)
+            asarray.flags.writeable = False
+            return hash(asarray.data)
+
         if comm.rank == 0:
             global_segments = set()
             for proc, l_i in enumerate(local_segments):
-                # remove any segments that are already known
-                l_i.difference_update(global_segments)
-                # add remaining segments to known intersection list
-                global_segments.update(l_i)
-                log("Proc %d has segments %s" % (proc, l_i), 10)
-                log("Global segments %s" % (global_segments), 10)
+                # remove any segments that are already known (after iterating through)
+                remove_list = []
+                for segment in l_i:
+                    k = hash_segment(segment)
+                    # but add any unknown segments first
+                    if k not in global_segments:
+                        global_segments.add(k)
+                        e0, e1 = np.asarray(segment)
+                        segment_v += (e1-e0)
+                    else:
+                        remove_list.append(segment)
+                l_i.difference_update(remove_list)
+                log("Proc %d has segments %s" % (proc, l_i), 9)
+                log("Global segments %s" % (global_segments), 9)
+            if np.linalg.norm(original_v - segment_v)/np.linalg.norm(original_v) > 1e-8:
+                raise FloatingPointError("Line %s not properly segmented." % endpoints)
+
         segments = comm.scatter(local_segments)
         return segments
 
@@ -389,7 +419,8 @@ class Gauges(AV_base):
         else:
             raise NotImplementedError("Unable to compute mesh intersections for this element type")
         segments = Geom.getMeshIntersections(mesh, toPolyhedron, endpoints)
-        segments = self.pruneDuplicateSegments(segments)
+        segments = self.pruneDuplicateSegments(endpoints, segments)
+
         return segments
 
 
