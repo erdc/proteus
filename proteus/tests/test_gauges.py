@@ -195,6 +195,47 @@ def test_line_gauge_output():
     eq_(correct_gauge_names, gauge_names)
     npt.assert_allclose(correct_data, data)
 
+
+def test_2D_point_gauge_output():
+    filename = 'test_2D_line_gauge_output.csv'
+
+    lines = (((0, 0, 0), (1, 1, 0)),
+             ((0, 0, 0), (1, 0, 0)),
+             ((0, 0, 0), (0, 1, 0)),
+             ((0, 0.5, 0), (1, 0.5, 0)),
+             ((0, 1, 0), (1, 1, 0)),
+             ((0.5, 0, 0), (0.5, 1, 0)))
+    fields = ('u0', )
+
+    l = LineGauges(gauges=((fields, lines),),
+                   fileName=filename)
+
+    time_list=[0.0, 1.0, 2.0, 2.5]
+    run_gauge(l, time_list)
+
+    correct_gauge_names = ['u0 [        0         0         0] - [        1         1         0]',
+                           'u0 [        0         0         0] - [        1         0         0]',
+                           'u0 [        0         0         0] - [        0         1         0]',
+                           'u0 [        0       0.5         0] - [        1       0.5         0]',
+                           'u0 [        0         1         0] - [        1         1         0]',
+                           'u0 [      0.5         0         0] - [      0.5         1         0]']
+
+    correct_data = np.asarray([[0.,   7.77817459,  0.5,   5.,   5.5,  10.5,   5.5],
+                               [1.,  15.55634919,  1.,   10.,  11.,   21.,   11.],
+                               [2.,  23.33452378,  1.5,  15.,  16.5,  31.5,  16.5],
+                               [2.5, 27.22361108,  1.75, 17.5, 19.25, 36.75, 19.25]])
+
+    # synchronize processes before attempting to read file
+
+    Comm.get().barrier()
+
+    gauge_names, data = parse_gauge_output(filename)
+    eq_(correct_gauge_names, gauge_names)
+
+    npt.assert_allclose(correct_data, data)
+
+
+
 if __name__ == '__main__':
     setup_profiling()
     test_point_gauge_output()
