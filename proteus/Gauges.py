@@ -130,6 +130,8 @@ class Gauges(AV_base):
         self.pointGaugeVecs = []
         self.segments = []
 
+        self.isPointGauge = bool(points)
+        self.isLineGauge = bool(lines)
 
     def getLocalNearestNode(self, location):
         # determine local nearest node distance
@@ -184,6 +186,7 @@ class Gauges(AV_base):
             # the ideal thing would be to find the element with the nearest face
             m[quantity_id, node] = 1
 
+
     def initOutputWriter(self):
         """ Initialize communication strategy for collective output of gauge data.
 
@@ -201,7 +204,12 @@ class Gauges(AV_base):
         else:
             self.file = open(self.fileName, 'w')
 
+            if self.isLineGauge:
+                "Only need to set up mapping for point gauges"
+                return
+
             self.quantityIDs = [0] * self.gaugeComm.size
+            numGlobalQuantities = sum([len(self.globalMeasuredQuantities[field]) for field in self.fields])
             # Assign quantity ids to processors
             for field in self.fields:
                 for id in range(len(self.globalMeasuredQuantities[field])):
@@ -216,24 +224,21 @@ class Gauges(AV_base):
 
             log("Quantity IDs:\n%s" % str(self.quantityIDs), 5)
 
-            numGlobalQuantities = sum([len(self.globalMeasuredQuantities[field]) for field in self.fields])
-            numOutputQuantities = sum([len(self.globalOutputQuantities[field]) for field in self.fields])
-            self.globalQuantitiesBuf = np.zeros(numGlobalQuantities)
-
             # determine mapping from global measured quantities to communication buffers
-            self.globalOutputQuantitiesMap = np.zeros(numOutputQuantities, dtype=np.int)
+            self.globalQuantitiesMap = np.zeros(numGlobalQuantities, dtype=np.int)
             i = 0
             for field in self.fields:
-                for measured_id in self.globalOutputQuantities[field]:
-                    location, gaugeProc, quantityID = self.globalMeasuredQuantities[field][measured_id]
-                    self.globalOutputQuantitiesMap[i] = sum(self.quantityIDs[:gaugeProc]) + quantityID
-                    assert self.globalOutputQuantitiesMap[i] < numGlobalQuantities
+                for location, gaugeProc, quantityID in self.globalMeasuredQuantities[field]:
+                    self.globalQuantitiesMap[i] = sum(self.quantityIDs[:gaugeProc]) + quantityID
+                    assert self.globalQuantitiesMap[i] < numGlobalQuantities
                     i += 1
 
-            log("Global Quantities Map: \n%s" % str(self.globalOutputQuantitiesMap), 5)
             # a couple consistency checks
             assert sum(self.quantityIDs) == numGlobalQuantities
             assert all(quantityID > 0 for quantityID in self.quantityIDs)
+
+            self.globalQuantitiesBuf = np.zeros(numGlobalQuantities)
+            log("Global Quantities Map: \n%s" % str(self.globalQuantitiesMap), 5)
 
         self.outputWriterReady = True
 
@@ -295,7 +300,6 @@ class Gauges(AV_base):
 
         self.measuredQuantities = defaultdict(list)
         self.globalMeasuredQuantities = defaultdict(list)
-        self.globalOutputQuantities = defaultdict(list)
 
         points = self.points
 
@@ -307,10 +311,7 @@ class Gauges(AV_base):
                 comm = Comm.get().comm.tompi4py()
                 owningProc, nearestNode = comm.rank, l_d['nearest_node']
             for field in l_d['fields']:
-                measured_id = len(self.globalMeasuredQuantities[field])
                 self.globalMeasuredQuantities[field].append((point, owningProc))
-                if 'no_output' not in l_d or field not in l_d['no_output']:
-                    self.globalOutputQuantities[field].append(measured_id)
                 if nearestNode is not None:
                     point_id = len(self.measuredQuantities[field])
                     log("Gauge for %s[%d] at %e %e %e is closest to node %d" % (field, point_id, point[0], point[1],
@@ -352,6 +353,23 @@ class Gauges(AV_base):
         for m in self.pointGaugeMats:
             m.assemble()
 
+    def pruneDuplicateSegments(self, segments):
+        # now prune duplicates across processors
+        # this could be optimized
+        comm = Comm.get().comm.tompi4py()
+        local_segments = comm.gather(segments)
+        if comm.rank == 0:
+            global_segments = set()
+            for proc, l_i in enumerate(local_segments):
+                # remove any segments that are already known
+                l_i.difference_update(global_segments)
+                # add remaining segments to known intersection list
+                global_segments.update(l_i)
+                log("Proc %d has segments %s" % (proc, l_i), 10)
+                log("Global segments %s" % (global_segments), 10)
+        segments = comm.scatter(local_segments)
+        return segments
+
     def getMeshIntersections(self, line):
         field, endpoints = line
         # get Proteus mesh index for this field
@@ -365,7 +383,10 @@ class Gauges(AV_base):
             toPolyhedron = Geom.tetrahedronVerticesToNormals
         else:
             raise NotImplementedError("Unable to compute mesh intersections for this element type")
-        return Geom.getMeshIntersections(mesh, toPolyhedron, endpoints)
+        segments = Geom.getMeshIntersections(mesh, toPolyhedron, endpoints)
+        segments = self.pruneDuplicateSegments(segments)
+        return segments
+
 
     def buildLineGaugeOperators(self, lines, linesSegments):
         """ Build the linear algebra operators needed to compute the line gauges.
@@ -384,7 +405,7 @@ class Gauges(AV_base):
         # to the line gauges
         self.lineGaugeMats = []
 
-        if self.lines == []:
+        if not self.isLineGauge:
             return
 
         # size of lineGaugeMats depends on number of local points for each field
@@ -458,15 +479,16 @@ class Gauges(AV_base):
 
         if self.gaugeComm.rank == 0:
             self.file.write("%10s" % ('time',))
-            for field in self.fields:
-                for measured_id in self.globalOutputQuantities[field]:
-                    quantity = self.globalMeasuredQuantities[field][measured_id]
-                    location, gaugeProc, quantityID = quantity
-                    self.file.write(",%12s [%9.5g %9.5g %9.5g]" % (field, location[0], location[1], location[2]))
-            for line in self.lines:
-                self.file.write(",%12s [%9.5g %9.5g %9.5g] - [%9.5g %9.5g %9.5g]" % (
-                    line[0], line[1][0][0], line[1][0][1], line[1][0][2],
-                             line[1][1][0], line[1][1][1], line[1][1][2]))
+            if self.isPointGauge:
+                for field in self.fields:
+                    for quantity in self.globalMeasuredQuantities[field]:
+                        location, gaugeProc, quantityID = quantity
+                        self.file.write(",%12s [%9.5g %9.5g %9.5g]" % (field, location[0], location[1], location[2]))
+            elif self.isLineGauge:
+                for line in self.lines:
+                    self.file.write(",%12s [%9.5g %9.5g %9.5g] - [%9.5g %9.5g %9.5g]" % (
+                        line[0], line[1][0][0], line[1][0][1], line[1][0][2],
+                                 line[1][1][0], line[1][1][1], line[1][1][2]))
             self.file.write('\n')
 
     def outputRow(self, time):
@@ -474,8 +496,9 @@ class Gauges(AV_base):
 
         assert self.isGaugeOwner
 
-        self.localQuantitiesBuf = np.concatenate([gaugesVec.getArray() for gaugesVec in self.pointGaugeVecs])
-        self.gaugeComm.Gatherv(self.localQuantitiesBuf, self.globalQuantitiesBuf)
+        if self.isPointGauge:
+            self.localQuantitiesBuf = np.concatenate([gaugesVec.getArray() for gaugesVec in self.pointGaugeVecs])
+            self.gaugeComm.Gatherv(self.localQuantitiesBuf, self.globalQuantitiesBuf)
 
         if self.lines:
             lineGaugeBuf = self.lineGaugesVec.getArray()
@@ -486,10 +509,12 @@ class Gauges(AV_base):
 
         if self.gaugeComm.rank == 0:
             self.file.write("%10.4e" % time)
-            for id in self.globalOutputQuantitiesMap:
-                self.file.write(", %43.18e" % (self.globalQuantitiesBuf[id],))
-            for lineGauge in globalGaugeBuf:
-                self.file.write(", %80.18e" % (lineGauge))
+            if self.isPointGauge:
+                for id in self.globalQuantitiesMap:
+                    self.file.write(", %43.18e" % (self.globalQuantitiesBuf[id],))
+            if self.isLineGauge:
+                for lineGauge in globalGaugeBuf:
+                    self.file.write(", %80.18e" % (lineGauge))
             self.file.write('\n')
             # disable this for better performance, but risk of data loss on crashes
             self.file.flush()
