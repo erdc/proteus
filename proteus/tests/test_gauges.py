@@ -16,7 +16,7 @@ from proteus import default_n as n
 
 from proteus.Gauges import PointGauges, LineGauges
 
-from .util import setup_profiling
+from proteus.tests.util import setup_profiling
 from nose.tools import eq_
 
 def build1DMesh(p, nnx):
@@ -102,7 +102,7 @@ def parse_gauge_output(filename):
     return gauge_names, data
 
 
-def test_gauge_output():
+def test_point_gauge_output():
     filename = 'test_gauge_output.csv'
 
     p = PointGauges(gauges=((('u0',), ((0, 0, 0), (1, 1, 1))),),
@@ -117,7 +117,31 @@ def test_gauge_output():
 
     # synchronize processes before attempting to read file
 
-    from proteus import Comm
+    Comm.get().barrier()
+
+    gauge_names, data = parse_gauge_output(filename)
+
+    eq_(correct_gauge_names, gauge_names)
+    npt.assert_equal(correct_data, data)
+
+
+
+def test_point_gauge_output_2():
+    filename = 'test_gauge_output_2.csv'
+
+    p = PointGauges(gauges=((('u0',), ((0, 0, 0), (0.5, 0.5, 0.5), (1, 1, 1))),),
+                    fileName=filename)
+    time_list=[0.0, 1.0, 2.0]
+    run_gauge(p, time_list)
+
+    correct_gauge_names = ['u0 [        0         0         0]',
+                           'u0 [      0.5       0.5       0.5]',
+                           'u0 [        1         1         1]']
+    correct_data = np.asarray([[   0.,    0.,  55.5, 111.],
+                               [   1.,    0.,  111., 222.],
+                               [   2.,    0.,  166.5, 333.]])
+
+    # synchronize processes before attempting to read file
     Comm.get().barrier()
 
     gauge_names, data = parse_gauge_output(filename)
@@ -137,21 +161,20 @@ def test_line_gauge_output():
     time_list=[0.0, 1.0, 2.0]
     run_gauge(l, time_list)
 
-    correct_gauge_names = ['u0 [        0         0         0]', 'u0 [        1         1         1]']
-    correct_data = np.asarray([[   0.,    0.,  111., 96.12881982007268],
-                               [   1.,    0.,  222., 192.25763964014536],
-                               [   2.,    0.,  333., 288.3864594602181]])
+    correct_gauge_names = ['u0 [        0         0         0] - [        1         1         1]']
+    correct_data = np.asarray([[   0., 96.128819820072678],
+                               [   1., 192.25763964014536],
+                               [   2., 288.38645946021808]])
 
     # synchronize processes before attempting to read file
-
-    from proteus import Comm
     Comm.get().barrier()
 
     gauge_names, data = parse_gauge_output(filename)
-
     eq_(correct_gauge_names, gauge_names)
     npt.assert_equal(correct_data, data)
 
 if __name__ == '__main__':
     setup_profiling()
-    test_gauge_output()
+    test_point_gauge_output()
+    test_point_gauge_output_2()
+    test_line_gauge_output()
