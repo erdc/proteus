@@ -200,3 +200,30 @@ def intersectPolyhedron(line, polyhedron):
     assert(t_e <= t_l)
 
     return [a + t_e*v_l, a + t_l*v_l]
+
+
+def getMeshIntersections(mesh, toPolyhedron, endpoints):
+    """
+    Return all intersections between a line segment and a Proteus mesh
+
+
+    :param mesh - a Proteus mesh
+    :param toPolyhedron - a method for converting Proteus element vertices to polyhedra in normal/point form
+    :param endpoints - a pair of points in 3-space defining the line segment
+
+
+    :return a list of pairs of intersections through the mesh
+    """
+
+    intersections = set()
+    for element in mesh.elementNodesArray:
+        # map nodes to physical vertices
+        elementVertices = mesh.nodeArray[element]
+        # get plane normals
+        polyhedron = toPolyhedron(elementVertices)
+        elementIntersections = intersectPolyhedron(endpoints, polyhedron)
+        if elementIntersections:
+            for elementIntersection in elementIntersections:
+                intersections.update((tuple(elementIntersection),))
+
+    return intersections

@@ -270,44 +270,6 @@ class Gauges(AV_base):
             else:
                 points[point] = {'fields':set((field,))}
 
-    def getMeshIntersections(self, line):
-        """
-        Return all intersections between a line segment (field, two points) and a Proteus mesh
-
-        :param endpoints - a pair of points in 3-space defining the line segment
-
-
-        :return a list of pairs of intersections through the mesh
-        """
-
-        field, endpoints = line
-
-        # get Proteus mesh index for this field
-        field_id = self.fieldNames.index(field)
-        femFun = self.u[field_id]
-        mesh = femFun.femSpace.mesh
-        referenceElement = femFun.femSpace.elementMaps.referenceElement
-
-        if referenceElement.dim == 2 and referenceElement.nNodes == 3:
-            toPolyhedron = Geom.triangleVerticesToNormals
-        elif referenceElement.dim == 3 and referenceElement.nNodes == 4:
-            toPolyhedron = Geom.tetrahedronVerticesToNormals
-        else:
-            raise NotImplementedError("Unable to compute mesh intersections for this element type")
-
-        intersections = set()
-        for element in mesh.elementNodesArray:
-            # map nodes to physical vertices
-            elementVertices = mesh.nodeArray[element]
-            # get plane normals
-            polyhedron = toPolyhedron(elementVertices)
-            elementIntersections = Geom.intersectPolyhedron(endpoints, polyhedron)
-            if elementIntersections:
-                for elementIntersection in elementIntersections:
-                    intersections.update((tuple(elementIntersection),))
-
-        return intersections
-
     def identifyMeasuredQuantities(self):
         """ build measured quantities, a list of fields
 
@@ -365,6 +327,21 @@ class Gauges(AV_base):
 
         for m in self.pointGaugeMats:
             m.assemble()
+
+    def getMeshIntersections(self, line):
+        field, endpoints = line
+        # get Proteus mesh index for this field
+        field_id = self.fieldNames.index(field)
+        femFun = self.u[field_id]
+        mesh = femFun.femSpace.mesh
+        referenceElement = femFun.femSpace.elementMaps.referenceElement
+        if referenceElement.dim == 2 and referenceElement.nNodes == 3:
+            toPolyhedron = Geom.triangleVerticesToNormals
+        elif referenceElement.dim == 3 and referenceElement.nNodes == 4:
+            toPolyhedron = Geom.tetrahedronVerticesToNormals
+        else:
+            raise NotImplementedError("Unable to compute mesh intersections for this element type")
+        return Geom.getMeshIntersections(mesh, toPolyhedron, endpoints)
 
     def buildLineGaugeOperators(self, lines, linesSegments):
         """ Build the linear algebra operators needed to compute the line gauges.
