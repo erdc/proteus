@@ -211,7 +211,6 @@ def getMeshIntersections(mesh, toPolyhedron, endpoints):
     :param toPolyhedron - a method for converting Proteus element vertices to polyhedra in normal/point form
     :param endpoints - a pair of points in 3-space defining the line segment
 
-
     :return a list of pairs of intersections through the mesh
     """
 
@@ -223,7 +222,7 @@ def getMeshIntersections(mesh, toPolyhedron, endpoints):
         polyhedron = toPolyhedron(elementVertices)
         elementIntersections = intersectPolyhedron(endpoints, polyhedron)
         if elementIntersections:
-            for elementIntersection in elementIntersections:
-                intersections.update((tuple(elementIntersection),))
-
+            if np.array_equal(elementIntersections[0], elementIntersections[1]):
+                continue
+            intersections.update(((tuple(elementIntersections[0]), tuple(elementIntersections[1])),),)
     return intersections
