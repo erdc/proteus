@@ -280,8 +280,6 @@ class Gauges(AV_base):
         :return a list of pairs of intersections through the mesh
         """
 
-        import ipdb
-        ipdb.set_trace()
         field, endpoints = line
 
         # get Proteus mesh index for this field
@@ -291,19 +289,22 @@ class Gauges(AV_base):
         referenceElement = femFun.femSpace.elementMaps.referenceElement
 
         if referenceElement.dim == 2 and referenceElement.nNodes == 3:
-            toPolyhedron = Geom.triangleToPolyhedron
+            toPolyhedron = Geom.triangleVerticesToNormals
         elif referenceElement.dim == 3 and referenceElement.nNodes == 4:
-            toPolyhedron = Geom.tetrahedronToPolyhedron
+            toPolyhedron = Geom.tetrahedronVerticesToNormals
         else:
             raise NotImplementedError("Unable to compute mesh intersections for this element type")
 
-        intersections = []
+        intersections = set()
         for element in mesh.elementNodesArray:
             # map nodes to physical vertices
             elementVertices = mesh.nodeArray[element]
             # get plane normals
             polyhedron = toPolyhedron(elementVertices)
-            intersections.append(Geom.intersectPolyhedron(line, polyhedron))
+            elementIntersections = Geom.intersectPolyhedron(endpoints, polyhedron)
+            if elementIntersections:
+                for elementIntersection in elementIntersections:
+                    intersections.update((tuple(elementIntersection),))
 
         return intersections
 
@@ -337,7 +338,7 @@ class Gauges(AV_base):
         The operators are all local since the point gauge measurements are calculated locally.
         """
 
-        for field, field_id in self.fields, self.field_ids:
+        for field, field_id in zip(self.fields, self.field_ids):
             m = PETSc.Mat().create(PETSc.COMM_SELF)
             m.setSizes([len(self.measuredQuantities[field]), self.num_owned_nodes])
             m.setType('aij')
@@ -390,6 +391,7 @@ class Gauges(AV_base):
             self.lineGaugeMats.append(m)
 
         # Assemble contributions from each point in each line segment
+
         for lineIndex, (line, segments) in enumerate(zip(self.lines, linesSegments)):
             field, endpoints = line
             fieldIndex = self.fields.index(field)
@@ -398,7 +400,7 @@ class Gauges(AV_base):
             for p1, p2 in zip(segments[:-1], segments[1:]):
                 segmentLength = np.linalg.norm(np.asarray(p2)-np.asarray(p1))
                 for point in p1, p2:
-                    point_data = self.points[point]
+                    point_data = self.points[tuple(point)]
                     # only assign coefficients for locally owned points
                     if field in point_data:
                         pointID = point_data[field]
@@ -427,7 +429,7 @@ class Gauges(AV_base):
         for line in self.lines:
             lineSegments = self.getMeshIntersections(line)
             self.addLineGaugePoints(line, lineSegments)
-            linesSegments.append(lineSegments)
+            linesSegments.append(np.asarray(list(lineSegments)))
 
         self.identifyMeasuredQuantities()
 
