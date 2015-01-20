@@ -133,6 +133,11 @@ class Gauges(AV_base):
         self.isPointGauge = bool(points)
         self.isLineGauge = bool(lines)
 
+        if not (self.isPointGauge or self.isLineGauge):
+            raise ValueError("Need to provide points or lines")
+        if self.isPointGauge and self.isLineGauge:
+            raise ValueError("Must be one of point or line gauge but not both")
+
     def getLocalNearestNode(self, location):
         # determine local nearest node distance
         node_distances = np.linalg.norm(self.vertices - location, axis=1)
