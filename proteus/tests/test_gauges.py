@@ -171,7 +171,7 @@ def test_line_gauge_output():
 
     gauge_names, data = parse_gauge_output(filename)
     eq_(correct_gauge_names, gauge_names)
-    npt.assert_equal(correct_data, data)
+    npt.assert_allclose(correct_data, data)
 
 if __name__ == '__main__':
     setup_profiling()
