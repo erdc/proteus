@@ -152,7 +152,6 @@ def test_line_gauge_output():
     eq_(correct_gauge_names, gauge_names)
     npt.assert_equal(correct_data, data)
 
-
 if __name__ == '__main__':
     setup_profiling()
     test_gauge_output()
