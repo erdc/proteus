@@ -143,4 +143,4 @@ def test_mesh_intersections():
     mesh = mesh_type(nodeArray=nodeArray, elementNodesArray=elementNodesArray)
     toPolyhedron = Geom.tetrahedronVerticesToNormals
     eq_(Geom.getMeshIntersections(mesh, toPolyhedron, endpoints),
-        set([(1, 1, 1), (0, 0, 0), (0.5, 0.5, 0.5)]))
+        set([((0.5, 0.5, 0.5), (1, 1, 1)), ((0, 0, 0), (0.5, 0.5, 0.5))]))
