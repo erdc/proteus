@@ -39,12 +39,13 @@ def build3DMesh(p, nnx, nny, nnz):
                                                nLayersOfOverlap=0,
                                                parallelPartitioningType=MeshTools.MeshParallelPartitioningTypes.node)
 
-def gauge_setup():
+def gauge_setup(nd):
     comm = Comm.get()
 
     #Simplified Physics
     p.name="test_gauges"
-    p.nd = 3
+
+    p.nd = nd
 
     class LinearSolution:
         def uOfXT(self,x,t):
@@ -76,8 +77,8 @@ def gauge_setup():
 
     return model, p.initialConditions
 
-def run_gauge(p, time_list):
-    model, initialConditions = gauge_setup()
+def run_gauge(p, time_list, nd=3):
+    model, initialConditions = gauge_setup(nd)
 
     p.attachModel(model, None)
 
@@ -100,6 +101,27 @@ def parse_gauge_output(filename):
         f.seek(0)
         data = np.genfromtxt(f, delimiter=",", skip_header=1)
     return gauge_names, data
+
+def test_2D_point_gauge_output():
+    filename = 'test_2D_gauge_output.csv'
+    p = PointGauges(gauges=((('u0',), ((0, 0, 0), (1, 1, 0))),),
+                    fileName=filename)
+    time_list=[0.0, 1.0, 2.0]
+    run_gauge(p, time_list)
+
+    correct_gauge_names = ['u0 [        0         0         0]', 'u0 [        1         1         0]']
+    correct_data = np.asarray([[   0.,    0.,  11.],
+                               [   1.,    0.,  22.],
+                               [   2.,    0.,  33.]])
+
+    # synchronize processes before attempting to read file
+
+    Comm.get().barrier()
+
+    gauge_names, data = parse_gauge_output(filename)
+
+    eq_(correct_gauge_names, gauge_names)
+    npt.assert_equal(correct_data, data)
 
 
 def test_point_gauge_output():
