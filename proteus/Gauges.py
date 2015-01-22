@@ -1,3 +1,4 @@
+import math
 from collections import defaultdict, OrderedDict
 from itertools import product
 
@@ -373,12 +374,17 @@ class Gauges(AV_base):
         comm = Comm.get().comm.tompi4py()
         local_segments = comm.gather(segments)
 
+        def round_to_sig(x, sig=3):
+            # see http://stackoverflow.com/a/3413529/122022
+            return round(x, sig-int(math.floor(math.log10(abs(x) + int(x==0))))-1)
+
         def hash_segment(s):
             """
             :param s: Line segment to be hashed
             :return: a hash of a truncated version of the line segment
             """
-            asarray = np.asarray(s, dtype=np.single)
+            s_rounded = [[round_to_sig(x) for x in point] for point in s]
+            asarray = np.asarray(s_rounded, dtype=np.single)
             asarray.flags.writeable = False
             return hash(asarray.data)
 
@@ -399,8 +405,12 @@ class Gauges(AV_base):
                 l_i.difference_update(remove_list)
                 log("Proc %d has segments %s" % (proc, l_i), 9)
                 log("Global segments %s" % (global_segments), 9)
-            if np.linalg.norm(original_v - segment_v)/np.linalg.norm(original_v) > 1e-8:
-                raise FloatingPointError("Line %s not properly segmented." % endpoints)
+            err = np.linalg.norm(original_v - segment_v)/np.linalg.norm(original_v)
+            if err > 1e-8:
+                msg = "Segmented line %s is different from original length by factor %e" % (str(endpoints), err)
+                log(msg, 3)
+                if err > 1e-4:
+                    raise FloatingPointError(msg)
 
         segments = comm.scatter(local_segments)
         return segments
@@ -474,7 +484,6 @@ class Gauges(AV_base):
     def attachModel(self, model, ar):
         """ Attach this gauge to the given simulation model.
         """
-
         self.model = model
         self.fieldNames = model.levelModelList[-1].coefficients.variableNames
         self.vertexFlags = model.levelModelList[-1].mesh.nodeMaterialTypes
@@ -506,6 +515,11 @@ class Gauges(AV_base):
 
     def get_time(self):
         """ Returns the current model time"""
+
+        # workaround until https://github.com/erdc-cm/proteus/issues/198 is fixed
+        if self.timeIntegration.t >= 1e6:
+            log("Warning, assuming time %s is actually 0" % self.timeIntegration.t, 3)
+            return 0
         return self.timeIntegration.t
 
     def outputHeader(self):
