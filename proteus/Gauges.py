@@ -207,6 +207,7 @@ class Gauges(AV_base):
 
         if self.gaugeComm.rank != 0:
             self.globalQuantitiesBuf = None
+            self.globalQuantitiesCounts = None
         else:
             self.file = open(self.fileName, 'w')
 
@@ -214,36 +215,38 @@ class Gauges(AV_base):
                 "Only need to set up mapping for point gauges"
                 return
 
-            self.quantityIDs = [0] * self.gaugeComm.size
+            quantityIDs = [0] * self.gaugeComm.size
             numGlobalQuantities = sum([len(self.globalMeasuredQuantities[field]) for field in self.fields])
             # Assign quantity ids to processors
             for field in self.fields:
                 for id in range(len(self.globalMeasuredQuantities[field])):
                     location, owningProc = self.globalMeasuredQuantities[field][id]
                     gaugeProc = self.globalGaugeRanks[owningProc]
-                    quantityID = self.quantityIDs[gaugeProc]
-                    self.quantityIDs[gaugeProc] += 1
+                    quantityID = quantityIDs[gaugeProc]
+                    quantityIDs[gaugeProc] += 1
                     assert gaugeProc >= 0
                     self.globalMeasuredQuantities[field][id] = location, gaugeProc, quantityID
                     log("Gauge for %s[%d] at %e %e %e is at P[%d][%d]" % (field, id, location[0], location[1],
                                                                           location[2], gaugeProc, quantityID), 5)
 
-            log("Quantity IDs:\n%s" % str(self.quantityIDs), 5)
+            log("Quantity IDs:\n%s" % str(quantityIDs), 5)
 
             # determine mapping from global measured quantities to communication buffers
             self.globalQuantitiesMap = np.zeros(numGlobalQuantities, dtype=np.int)
             i = 0
             for field in self.fields:
                 for location, gaugeProc, quantityID in self.globalMeasuredQuantities[field]:
-                    self.globalQuantitiesMap[i] = sum(self.quantityIDs[:gaugeProc]) + quantityID
+                    self.globalQuantitiesMap[i] = sum(quantityIDs[:gaugeProc]) + quantityID
                     assert self.globalQuantitiesMap[i] < numGlobalQuantities
                     i += 1
 
             # a couple consistency checks
-            assert sum(self.quantityIDs) == numGlobalQuantities
-            assert all(quantityID > 0 for quantityID in self.quantityIDs)
+            assert sum(quantityIDs) == numGlobalQuantities
+            assert all(quantityID > 0 for quantityID in quantityIDs)
 
-            self.globalQuantitiesBuf = np.zeros(numGlobalQuantities)
+            # final ids also equal to the counts on each process
+            self.globalQuantitiesCounts = quantityIDs
+            self.globalQuantitiesBuf = np.zeros(numGlobalQuantities, dtype=np.double)
             log("Global Quantities Map: \n%s" % str(self.globalQuantitiesMap), 5)
 
         self.outputWriterReady = True
@@ -547,9 +550,17 @@ class Gauges(AV_base):
         assert self.isGaugeOwner
 
         if self.isPointGauge:
-            self.localQuantitiesBuf = np.concatenate([gaugesVec.getArray() for gaugesVec in self.pointGaugeVecs])
-            self.gaugeComm.Gatherv(self.localQuantitiesBuf, self.globalQuantitiesBuf)
-
+            self.localQuantitiesBuf = np.concatenate([gaugesVec.getArray() for gaugesVec in
+                                                      self.pointGaugeVecs]).astype(np.double)
+            log("Sending local array of type %s and shape %s to root on comm %s" % (
+                str(self.localQuantitiesBuf.dtype), str(self.localQuantitiesBuf.shape), str(self.gaugeComm)), 9)
+            if self.gaugeComm.rank == 0:
+                log("Receiving global array of type %s and shape %s on comm %s" % (
+                str(self.localQuantitiesBuf.dtype), str(self.globalQuantitiesBuf.shape), str(self.gaugeComm)), 9)
+            self.gaugeComm.Gatherv(sendbuf=[self.localQuantitiesBuf, MPI.DOUBLE],
+                                   recvbuf=[self.globalQuantitiesBuf, (self.globalQuantitiesCounts, None),
+                                            MPI.DOUBLE], root=0)
+            self.gaugeComm.Barrier()
         if self.lines:
             lineGaugeBuf = self.lineGaugesVec.getArray()
             globalGaugeBuf = lineGaugeBuf.copy()
@@ -577,8 +588,9 @@ class Gauges(AV_base):
         if not self.isGaugeOwner:
             return
 
-        time = self.get_time()
 
+        time = self.get_time()
+        log("Calculate called at time %g" % time)
         # check that gauge is in its active time region
         if self.activeTime is not None and (self.activeTime[0] > time or self.activeTime[1] < time):
             return

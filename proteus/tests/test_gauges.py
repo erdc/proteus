@@ -169,7 +169,7 @@ def test_point_gauge_output_2():
     gauge_names, data = parse_gauge_output(filename)
 
     eq_(correct_gauge_names, gauge_names)
-    npt.assert_equal(correct_data, data)
+    npt.assert_allclose(correct_data, data)
 
 
 def test_line_gauge_output():
@@ -196,7 +196,7 @@ def test_line_gauge_output():
     npt.assert_allclose(correct_data, data)
 
 
-def test_2D_point_gauge_output():
+def test_2D_line_gauge_output():
     filename = 'test_2D_line_gauge_output.csv'
 
     lines = (((0, 0, 0), (1, 1, 0)),
