@@ -5,6 +5,7 @@ from itertools import product
 from mpi4py import MPI
 from petsc4py import PETSc
 import numpy as np
+from numpy.linalg import norm
 
 from . import Comm
 from .AuxiliaryVariables import AV_base
@@ -141,7 +142,7 @@ class Gauges(AV_base):
 
     def getLocalNearestNode(self, location):
         # determine local nearest node distance
-        node_distances = np.linalg.norm(self.vertices - location, axis=1)
+        node_distances = norm(self.vertices - location, axis=1)
         nearest_node = np.argmin(node_distances)
         nearest_node_distance = node_distances[nearest_node]
         comm = Comm.get().comm.tompi4py()
@@ -291,6 +292,7 @@ class Gauges(AV_base):
                 segment[0][0], segment[0][1], segment[0][2],
                 segment[1][0], segment[1][1], segment[1][2]), 5)
             for point in segment:
+                point = tuple(point)
                 if point in points:
                     no_output = points[point]['no_output'] if 'no_output' in points[point] else set()
                     points[point]['no_output'] = no_output.union(set((field,)) - points[point]['fields'])
@@ -362,60 +364,70 @@ class Gauges(AV_base):
         for m in self.pointGaugeMats:
             m.assemble()
 
-    def pruneDuplicateSegments(self, endpoints, segments):
+    def pruneDuplicateSegments(self, endpoints, length_segments):
         """ prune duplicate segments across processors
+
+        endpoints - a pair of points in 3-space defining the line
+        length_segments - a pair of intersections augmented by length
 
         this could be optimized
         """
 
-        # validation of segment length
-        original_line = np.asarray(endpoints)
-        original_v = original_line[1] - original_line[0]
-        # running sum for computed global segments
-        segment_v = np.zeros(3)
+        eps = 1e-4
 
         comm = Comm.get().comm.tompi4py()
-        local_segments = comm.gather(segments)
 
-        def round_to_sig(x, sig=3):
-            # see http://stackoverflow.com/a/3413529/122022
-            return round(x, sig-int(math.floor(math.log10(abs(x) + int(x==0))))-1)
+        length_segments = sorted(length_segments)
+        length_segments = comm.gather(length_segments)
 
-        def hash_segment(s):
-            """
-            :param s: Line segment to be hashed
-            :return: a hash of a truncated version of the line segment
-            """
-            s_rounded = [[round_to_sig(x) for x in point] for point in s]
-            asarray = np.asarray(s_rounded, dtype=np.single)
-            asarray.flags.writeable = False
-            return hash(asarray.data)
 
-        if comm.rank == 0:
-            global_segments = set()
-            for proc, l_i in enumerate(local_segments):
-                # remove any segments that are already known (after iterating through)
-                remove_list = []
-                for segment in l_i:
-                    k = hash_segment(segment)
-                    # but add any unknown segments first
-                    if k not in global_segments:
-                        global_segments.add(k)
-                        e0, e1 = np.asarray(segment)
-                        segment_v += (e1-e0)
-                    else:
-                        remove_list.append(segment)
-                l_i.difference_update(remove_list)
-                log("Proc %d has segments %s" % (proc, l_i), 9)
-                log("Global segments %s" % (global_segments), 9)
-            err = np.linalg.norm(original_v - segment_v)/np.linalg.norm(original_v)
+        if comm.rank != 0:
+            selected_segments = None
+        else:
+            selected_segments = [[] for i in range(len(length_segments))]
+            segment_pos = 0
+            while segment_pos < (1 - eps):
+                # choose the longest line from those that start at segment_pos
+                longest_segment = 0, None, None
+                for proc_rank, proc_length_segments in enumerate(length_segments):
+                    segment_id = 0
+                    for segment_id, length_segment in enumerate(proc_length_segments):
+                        # ignore segments below current position (they will be discarded)
+                        start, end, segment = length_segment
+                        if start < (segment_pos - eps):
+                            continue
+                        # equality test
+                        elif start < (segment_pos + eps):
+                            segment_length = end - start
+                            if segment_length > longest_segment[0]:
+                                longest_segment = segment_length, proc_rank, segment
+                        else:
+                            break
+                    # discard any segments that start before our current position
+                    proc_length_segments[:] = proc_length_segments[segment_id:]
+
+                segment_length, proc_rank, segment = longest_segment
+                if segment_length == 0:
+                    print segment_pos
+                    print 'segments'
+                    for segment in selected_segments: print segment
+                    print 'length_segments'
+                    for length_segment in length_segments: print length_segment
+                    raise FloatingPointError("Unable to identify next segment while segmenting")
+                log("Identified best segment of length %g on %d: %s" % (segment_length, proc_rank, str(segment)), 9)
+                selected_segments[proc_rank].append(segment)
+                segment_pos += segment_length
+
+            err = abs(segment_pos - 1)
             if err > 1e-8:
-                msg = "Segmented line %s is different from original length by factor %e" % (str(endpoints), err)
+                msg = "Segmented line %s different from original length by ratio %e\n segments: %s" % (
+                    str(endpoints), err, str(selected_segments))
                 log(msg, 3)
-                if err > 1e-4:
+                if err > 10*eps:
                     raise FloatingPointError(msg)
 
-        segments = comm.scatter(local_segments)
+        log("Selected segments: %s" % str(selected_segments), 9)
+        segments = comm.scatter(selected_segments)
         return segments
 
     def getMeshIntersections(self, line):
@@ -431,9 +443,13 @@ class Gauges(AV_base):
             toPolyhedron = Geom.tetrahedronVerticesToNormals
         else:
             raise NotImplementedError("Unable to compute mesh intersections for this element type")
-        segments = Geom.getMeshIntersections(mesh, toPolyhedron, endpoints)
-        segments = self.pruneDuplicateSegments(endpoints, segments)
+        intersections = np.asarray(list(Geom.getMeshIntersections(mesh, toPolyhedron, endpoints)), dtype=np.double)
+        endpoints = np.asarray(endpoints, np.double)
+        length = norm(endpoints[1] - endpoints[0])
 
+        length_segments = [(norm(i[0]-endpoints[0])/length, norm(i[1]-endpoints[0])/length, i) for i in intersections]
+
+        segments = self.pruneDuplicateSegments(endpoints, length_segments)
         return segments
 
 
@@ -503,7 +519,7 @@ class Gauges(AV_base):
         for line in self.lines:
             lineSegments = self.getMeshIntersections(line)
             self.addLineGaugePoints(line, lineSegments)
-            linesSegments.append(np.asarray(list(lineSegments)))
+            linesSegments.append(lineSegments)
 
         self.identifyMeasuredQuantities()
 
