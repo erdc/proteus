@@ -121,7 +121,7 @@ def test_2D_point_gauge_output():
     gauge_names, data = parse_gauge_output(filename)
 
     eq_(correct_gauge_names, gauge_names)
-    npt.assert_equal(correct_data, data)
+    npt.assert_allclose(correct_data, data)
 
 
 def test_point_gauge_output():
@@ -144,7 +144,7 @@ def test_point_gauge_output():
     gauge_names, data = parse_gauge_output(filename)
 
     eq_(correct_gauge_names, gauge_names)
-    npt.assert_equal(correct_data, data)
+    npt.assert_allclose(correct_data, data)
 
 
 
