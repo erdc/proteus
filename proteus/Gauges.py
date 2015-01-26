@@ -182,11 +182,13 @@ class Gauges(AV_base):
         haveElement = int(local_element is not None)
         global_have_element, owning_proc = comm.allreduce(haveElement, op=MPI.MAXLOC)
         if global_have_element:
-            log("Gauges at location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2], owning_proc), 3)
+            log("Gauges on element at location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2],
+                                                                    owning_proc), 3)
         else:
             # gauge isn't on any of the elements, just use nearest node
             global_min_distance, owning_proc = comm.allreduce(nearest_node_distance, op=MPI.MINLOC)
-            log("Gauges at location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2], owning_proc), 3)
+            log("Off-element gauge location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2],
+                                                                 owning_proc), 3)
         if comm_rank != owning_proc:
             nearest_node = None
 
