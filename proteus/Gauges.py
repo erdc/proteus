@@ -148,20 +148,45 @@ class Gauges(AV_base):
         comm = Comm.get().comm.tompi4py()
         return comm.rank, nearest_node, nearest_node_distance
 
-    def findNearestNode(self, location):
+    def getLocalElement(self, femSpace, location, node):
+        """Given a location and its nearest node, determine if it is on a local element.
+
+        Returns None if location is not on any elements owned by this process
+        """
+
+        # search elements that contain the nearest node
+        for eOffset in range(femSpace.mesh.nodeElementOffsets[node], femSpace.mesh.nodeElementOffsets[node + 1]):
+            eN = femSpace.mesh.nodeElementsArray[eOffset]
+            # evaluate the inverse map for element eN
+            xi = femSpace.elementMaps.getInverseValue(eN, location)
+            # query whether xi lies within the reference element
+            if femSpace.elementMaps.referenceElement.onElement(xi):
+                return eN
+        # no elements found
+        return None
+
+
+    def findNearestNode(self, femSpace, location):
         """Given a gauge location, attempts to locate the most suitable process for monitoring information about
         this location, as well as the node on the process closest to the location.
 
-        Returns a 2-tuple containing an identifier for the closest 'owning' process as well as the local id of the
-        node.
+        Returns a 2-tuple containing an identifier for the closest 'owning' process as well as the local ids of the
+        node and nearest element.
         """
         comm = Comm.get().comm.tompi4py()
 
         comm_rank, nearest_node, nearest_node_distance = self.getLocalNearestNode(location)
-        # determine global nearest node
+        local_element = self.getLocalElement(femSpace, location, nearest_node)
 
-        global_min_distance, owning_proc = comm.allreduce(nearest_node_distance, op=MPI.MINLOC)
-        log("Gauges at location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2], owning_proc), 3)
+        # determine global nearest node
+        haveElement = int(local_element is not None)
+        global_have_element, owning_proc = comm.allreduce(haveElement, op=MPI.MAXLOC)
+        if global_have_element:
+            log("Gauges at location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2], owning_proc), 3)
+        else:
+            # gauge isn't on any of the elements, just use nearest node
+            global_min_distance, owning_proc = comm.allreduce(nearest_node_distance, op=MPI.MINLOC)
+            log("Gauges at location: [%g %g %g] assigned to %d" % (location[0], location[1], location[2], owning_proc), 3)
         if comm_rank != owning_proc:
             nearest_node = None
 
@@ -174,20 +199,14 @@ class Gauges(AV_base):
 
         location, node = quantity
 
-        # get the mesh for this quantity
-        mesh = femFun.femSpace.mesh
         # search elements that contain the nearest node
         # use nearest node if the location is not found on any elements
-        for eOffset in range(mesh.nodeElementOffsets[node], mesh.nodeElementOffsets[node + 1]):
-            eN = femFun.femSpace.mesh.nodeElementsArray[eOffset]
-            # evaluate the inverse map for element eN
-            xi = femFun.femSpace.elementMaps.getInverseValue(eN, location)
-            # query whether xi lies within the reference element
-            if femFun.femSpace.elementMaps.referenceElement.onElement(xi):
-                for i, psi in enumerate(femFun.femSpace.referenceFiniteElement.localFunctionSpace.basis):
-                    # assign quantity weights here
-                    m[quantity_id, femFun.femSpace.dofMap.l2g[eN, i]] = psi(xi)
-                break
+        localElement = self.getLocalElement(femFun.femSpace, location, node)
+        if localElement is not None:
+            for i, psi in enumerate(femFun.femSpace.referenceFiniteElement.localFunctionSpace.basis):
+                # assign quantity weights here
+                xi = femFun.femSpace.elementMaps.getInverseValue(localElement, location)
+                m[quantity_id, femFun.femSpace.dofMap.l2g[localElement, i]] = psi(xi)
         else:
             # just use nearest node for now if we're given a point outside the domain.
             # the ideal thing would be to find the element with the nearest face
@@ -316,7 +335,10 @@ class Gauges(AV_base):
 
         for point, l_d in points.iteritems():
             if 'nearest_node' not in l_d:
-                owningProc, nearestNode = self.findNearestNode(point)
+                # TODO: Clarify assumption here about all fields sharing the same element mesh
+                field_id = self.fieldNames.index(l_d['fields'].pop())
+                femSpace = self.u[field_id].femSpace
+                owningProc, nearestNode = self.findNearestNode(femSpace, point)
                 l_d['nearest_node'] = nearestNode
             else:
                 comm = Comm.get().comm.tompi4py()
