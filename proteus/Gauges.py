@@ -338,7 +338,7 @@ class Gauges(AV_base):
         for point, l_d in points.iteritems():
             if 'nearest_node' not in l_d:
                 # TODO: Clarify assumption here about all fields sharing the same element mesh
-                field_id = self.fieldNames.index(l_d['fields'].pop())
+                field_id = self.fieldNames.index(list(l_d['fields'])[0])
                 femSpace = self.u[field_id].femSpace
                 owningProc, nearestNode = self.findNearestNode(femSpace, point)
                 l_d['nearest_node'] = nearestNode
