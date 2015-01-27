@@ -16,7 +16,7 @@ from proteus import default_n as n
 
 from proteus.Gauges import PointGauges, LineGauges
 
-from proteus.tests.util import setup_profiling
+from proteus.tests.util import setup_profiling, silent_rm
 from nose.tools import eq_
 
 def build1DMesh(p, nnx):
@@ -104,6 +104,8 @@ def parse_gauge_output(filename):
 
 def test_2D_point_gauge_output():
     filename = 'test_2D_gauge_output.csv'
+    silent_rm(filename)
+
     p = PointGauges(gauges=((('u0',), ((0, 0, 0), (1, 1, 0))),),
                     fileName=filename)
     time_list=[0.0, 1.0, 2.0]
@@ -126,6 +128,7 @@ def test_2D_point_gauge_output():
 
 def test_point_gauge_output():
     filename = 'test_gauge_output.csv'
+    silent_rm(filename)
 
     p = PointGauges(gauges=((('u0',), ((0, 0, 0), (1, 1, 1))),),
                     fileName=filename)
@@ -150,6 +153,7 @@ def test_point_gauge_output():
 
 def test_point_gauge_output_2():
     filename = 'test_gauge_output_2.csv'
+    silent_rm(filename)
 
     p = PointGauges(gauges=((('u0',), ((0, 0, 0), (0.5, 0.5, 0.5), (1, 1, 1))),),
                     fileName=filename)
@@ -174,6 +178,7 @@ def test_point_gauge_output_2():
 
 def test_line_gauge_output():
     filename = 'test_line_gauge_output.csv'
+    silent_rm(filename)
 
     lines = (((0, 0, 0), (1, 1, 1)),)
     fields = ('u0', )
@@ -198,6 +203,7 @@ def test_line_gauge_output():
 
 def test_2D_line_gauge_output():
     filename = 'test_2D_line_gauge_output.csv'
+    silent_rm(filename)
 
     lines = (((0, 0, 0), (1, 1, 0)),
              ((0, 0, 0), (1, 0, 0)),
