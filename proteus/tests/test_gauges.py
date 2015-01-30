@@ -14,7 +14,7 @@ from proteus import (Comm,
 from proteus import default_p as p
 from proteus import default_n as n
 
-from proteus.Gauges import PointGauges, LineGauges
+from proteus.Gauges import PointGauges, LineIntegralGauges
 
 from proteus.tests.util import setup_profiling, silent_rm
 from nose.tools import eq_
@@ -183,7 +183,7 @@ def test_line_gauge_output():
     lines = (((0, 0, 0), (1, 1, 1)),)
     fields = ('u0', )
 
-    l = LineGauges(gauges=((fields, lines),),
+    l = LineIntegralGauges(gauges=((fields, lines),),
                    fileName=filename)
     time_list=[0.0, 1.0, 2.0]
     run_gauge(l, time_list)
@@ -213,7 +213,7 @@ def test_2D_line_gauge_output():
              ((0.5, 0, 0), (0.5, 1, 0)))
     fields = ('u0', )
 
-    l = LineGauges(gauges=((fields, lines),),
+    l = LineIntegralGauges(gauges=((fields, lines),),
                    fileName=filename)
 
     time_list=[0.0, 1.0, 2.0, 2.5]
