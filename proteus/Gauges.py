@@ -57,8 +57,8 @@ def PointGauges(gauges, activeTime=None, sampleRate=0, fileName='point_gauges.cs
     return Gauges(fields, activeTime, sampleRate, fileName, points=points)
 
 
-def LineGauges(gauges, activeTime=None, sampleRate=0, fileName='line_gauges.csv'):
-    """ Create a set of line gauges that will automatically be serialized as CSV data to the requested file.
+def LineIntegralGauges(gauges, activeTime=None, sampleRate=0, fileName='line_gauges.csv'):
+    """ Create a set of line integral gauges that will automatically be serialized as CSV data to the requested file.
 
     :param gauges: An iterable of "gauges".  Each gauge is specified by a 2-tuple, with the first element in the
     tuple a set of fields to be monitored, and the second element a list of pairs of endpoints of the gauges in
@@ -68,7 +68,6 @@ def LineGauges(gauges, activeTime=None, sampleRate=0, fileName='line_gauges.csv'
     """
 
     # expand the product of fields and lines for each gauge
-
     lines = list()
     fields = list()
     for gauge in gauges:
@@ -133,12 +132,12 @@ class Gauges(AV_base):
         self.segments = []
 
         self.isPointGauge = bool(points)
-        self.isLineGauge = bool(lines)
+        self.isLineIntegralGauge = bool(lines)
 
-        if not (self.isPointGauge or self.isLineGauge):
+        if not (self.isPointGauge or self.isLineIntegralGauge):
             raise ValueError("Need to provide points or lines")
-        if self.isPointGauge and self.isLineGauge:
-            raise ValueError("Must be one of point or line gauge but not both")
+        if self.isPointGauge and self.isLineIntegralGauge:
+            raise ValueError("Must be one of point or line integral gauge but not both")
 
     def getLocalNearestNode(self, location):
         # determine local nearest node distance
@@ -233,8 +232,8 @@ class Gauges(AV_base):
         else:
             self.file = open(self.fileName, 'w')
 
-            if self.isLineGauge:
-                "Only need to set up mapping for point gauges"
+            if self.isLineIntegralGauge:
+                #Only need to set up mapping for point gauges
                 return
 
             quantityIDs = [0] * self.gaugeComm.size
@@ -477,33 +476,31 @@ class Gauges(AV_base):
         return segments
 
 
-    def buildLineGaugeOperators(self, lines, linesSegments):
-        """ Build the linear algebra operators needed to compute the line gauges.
+    def buildLineIntegralGaugeOperators(self, lines, linesSegments):
+        """ Build the linear algebra operators needed to compute the line integral gauges.
 
-        The operators are collective since the line gauge measurements may be across multiple processors.
-
-        Unlike point gauges, each line has its own communicator and field associated with it
+        The operators are local to each process, contributions are currently summed in the output functions.
         """
 
-        #create lineGaugesVec to store contributions to all lines from this process
-        self.lineGaugesVec = PETSc.Vec().create(comm=PETSc.COMM_SELF)
-        self.lineGaugesVec.setSizes(len(lines))
-        self.lineGaugesVec.setUp()
+        #create lineIntegralGaugesVec to store contributions to all lines from this process
+        self.lineIntegralGaugesVec = PETSc.Vec().create(comm=PETSc.COMM_SELF)
+        self.lineIntegralGaugesVec.setSizes(len(lines))
+        self.lineIntegralGaugesVec.setUp()
 
-        # create lineGaugeMats to store coefficients mapping contributions from each field
-        # to the line gauges
-        self.lineGaugeMats = []
+        # create lineIntegralGaugeMats to store coefficients mapping contributions from each field
+        # to the line integral gauges
+        self.lineIntegralGaugeMats = []
 
-        if not self.isLineGauge:
+        if not self.isLineIntegralGauge:
             return
 
-        # size of lineGaugeMats depends on number of local points for each field
+        # size of lineIntegralGaugeMats depends on number of local points for each field
         for pointGaugesVec in self.pointGaugeVecs:
             m = PETSc.Mat().create(comm=PETSc.COMM_SELF)
             m.setSizes([len(lines), pointGaugesVec.getSize()])
             m.setType('aij')
             m.setUp()
-            self.lineGaugeMats.append(m)
+            self.lineIntegralGaugeMats.append(m)
 
         # Assemble contributions from each point in each line segment
 
@@ -519,9 +516,9 @@ class Gauges(AV_base):
                     # only assign coefficients for locally owned points
                     if field in point_data:
                         pointID = point_data[field]
-                        self.lineGaugeMats[fieldIndex].setValue(lineIndex, pointID, segmentLength/2, addv=True)
+                        self.lineIntegralGaugeMats[fieldIndex].setValue(lineIndex, pointID, segmentLength/2, addv=True)
 
-        for m in self.lineGaugeMats:
+        for m in self.lineIntegralGaugeMats:
             m.assemble()
 
     def attachModel(self, model, ar):
@@ -552,7 +549,7 @@ class Gauges(AV_base):
         if self.isGaugeOwner:
             self.initOutputWriter()
             self.buildPointGaugeOperators()
-            self.buildLineGaugeOperators(self.lines, linesSegments)
+            self.buildLineIntegralGaugeOperators(self.lines, linesSegments)
             self.outputHeader()
         return self
 
@@ -577,7 +574,7 @@ class Gauges(AV_base):
                     for quantity in self.globalMeasuredQuantities[field]:
                         location, gaugeProc, quantityID = quantity
                         self.file.write(",%12s [%9.5g %9.5g %9.5g]" % (field, location[0], location[1], location[2]))
-            elif self.isLineGauge:
+            elif self.isLineIntegralGauge:
                 for line in self.lines:
                     self.file.write(",%12s [%9.5g %9.5g %9.5g] - [%9.5g %9.5g %9.5g]" % (
                         line[0], line[1][0][0], line[1][0][1], line[1][0][2],
@@ -602,20 +599,20 @@ class Gauges(AV_base):
                                             MPI.DOUBLE], root=0)
             self.gaugeComm.Barrier()
         if self.lines:
-            lineGaugeBuf = self.lineGaugesVec.getArray()
-            globalGaugeBuf = lineGaugeBuf.copy()
-            self.gaugeComm.Reduce(lineGaugeBuf, globalGaugeBuf, op=MPI.SUM)
+            lineIntegralGaugeBuf = self.lineIntegralGaugesVec.getArray()
+            globalLineIntegralGaugeBuf = lineIntegralGaugeBuf.copy()
+            self.gaugeComm.Reduce(lineIntegralGaugeBuf, globalLineIntegralGaugeBuf, op=MPI.SUM)
         else:
-            globalGaugeBuf = []
+            globalLineIntegralGaugeBuf = []
 
         if self.gaugeComm.rank == 0:
             self.file.write("%10.4e" % time)
             if self.isPointGauge:
                 for id in self.globalQuantitiesMap:
                     self.file.write(", %43.18e" % (self.globalQuantitiesBuf[id],))
-            if self.isLineGauge:
-                for lineGauge in globalGaugeBuf:
-                    self.file.write(", %80.18e" % (lineGauge))
+            if self.isLineIntegralGauge:
+                for lineIntegralGauge in globalLineIntegralGaugeBuf:
+                    self.file.write(", %80.18e" % (lineIntegralGauge))
             self.file.write('\n')
             # disable this for better performance, but risk of data loss on crashes
             self.file.flush()
@@ -643,8 +640,8 @@ class Gauges(AV_base):
             m.mult(dofsVec, gaugesVec)
 
         # this could be optimized out... but why?
-        self.lineGaugesVec.zeroEntries()
-        for m, dofsVec in zip(self.lineGaugeMats, self.pointGaugeVecs):
-            m.multAdd(dofsVec, self.lineGaugesVec, self.lineGaugesVec)
+        self.lineIntegralGaugesVec.zeroEntries()
+        for m, dofsVec in zip(self.lineIntegralGaugeMats, self.pointGaugeVecs):
+            m.multAdd(dofsVec, self.lineIntegralGaugesVec, self.lineIntegralGaugesVec)
 
         self.outputRow(time)
