@@ -491,7 +491,8 @@ class Gauges(AV_base):
                     for segment in selected_segments: print segment
                     print 'length_segments'
                     for length_segment in length_segments: print length_segment
-                    raise FloatingPointError("Unable to identify next segment while segmenting")
+                    raise FloatingPointError("Unable to identify next segment while segmenting, are %s in domain?" %
+                                             str(endpoints))
                 log("Identified best segment of length %g on %d: %s" % (segment_length, proc_rank, str(segment)), 9)
                 selected_segments[proc_rank].append(segment)
                 segment_pos += segment_length
