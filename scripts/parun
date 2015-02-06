@@ -17,7 +17,7 @@ import os
 import proteus
 
 #remove blanket import statements until after Comm initialized for petsc4py
-from proteus import Profiling, Comm
+from proteus import Profiling, Comm, version
 from warnings import *
 import optparse
 import sys
@@ -176,7 +176,6 @@ parser.add_option("--setupOnly",
 
 (opts,args) = parser.parse_args()
 
-
 if opts.debug:
     import pdb
     pdb.set_trace()
@@ -191,7 +190,12 @@ if opts.dataDir != '':
              print "Failed to create: " + opts.dataDir 
              opts.dataDir=''
     logDir = opts.dataDir
-    
+
+log("Initializing Proteus")
+log("HashDist Version: " + version.hashdist)
+log("HashStack Version: " + version.hashstack)
+log("Proteus Version: " + version.proteus)
+
 log("Initializing MPI")
 if opts.petscOptions != None:
     petsc_argv = sys.argv[:1]+opts.petscOptions.split()
