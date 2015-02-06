@@ -1,4 +1,3 @@
-import math
 from collections import defaultdict, OrderedDict
 from itertools import product
 
@@ -10,7 +9,8 @@ from numpy.linalg import norm
 from . import Comm
 from .AuxiliaryVariables import AV_base
 from .Profiling import logEvent as log
-from . import Geom
+from proteus.MeshTools import triangleVerticesToNormals, tetrahedronVerticesToNormals, getMeshIntersections
+
 
 def PointGauges(gauges, activeTime=None, sampleRate=0, fileName='point_gauges.csv'):
     """ Create a set of point gauges that will automatically be serialized as CSV data to the requested file.
@@ -517,12 +517,12 @@ class Gauges(AV_base):
         mesh = femFun.femSpace.mesh
         referenceElement = femFun.femSpace.elementMaps.referenceElement
         if referenceElement.dim == 2 and referenceElement.nNodes == 3:
-            toPolyhedron = Geom.triangleVerticesToNormals
+            toPolyhedron = triangleVerticesToNormals
         elif referenceElement.dim == 3 and referenceElement.nNodes == 4:
-            toPolyhedron = Geom.tetrahedronVerticesToNormals
+            toPolyhedron = tetrahedronVerticesToNormals
         else:
             raise NotImplementedError("Unable to compute mesh intersections for this element type")
-        intersections = np.asarray(list(Geom.getMeshIntersections(mesh, toPolyhedron, endpoints)), dtype=np.double)
+        intersections = np.asarray(list(getMeshIntersections(mesh, toPolyhedron, endpoints)), dtype=np.double)
         endpoints = np.asarray(endpoints, np.double)
         length = norm(endpoints[1] - endpoints[0])
 
