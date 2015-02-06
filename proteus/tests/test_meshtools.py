@@ -4,33 +4,35 @@ import numpy.testing as npt
 import numpy as np
 from nose.tools import eq_
 
-from proteus import Geom
+from proteus.MeshTools import (triangleVerticesToNormals, tetrahedronVerticesToNormals, intersectPoints,
+                              intersectEdges, intersectPolyhedron, getMeshIntersections)
+
 
 def test_intersect_points():
-    npt.assert_equal(Geom.intersectPoints(([0, 1], [0, 2]), [[0, 1], [0., 1.5]]),
+    npt.assert_equal(intersectPoints(([0, 1], [0, 2]), [[0, 1], [0., 1.5]]),
                                           [([0, 1]), ([0., 1.5])])
 
-    npt.assert_equal(Geom.intersectPoints(([0, 1], [0, 1]), [[0, 1], [1., 2.]]),
+    npt.assert_equal(intersectPoints(([0, 1], [0, 1]), [[0, 1], [1., 2.]]),
                                           [([0, 1]), None])
 
 def test_intersect_edges():
     # check that overlaps grab furthest point on edge
-    npt.assert_equal(Geom.intersectEdges([(0, 1), (0, 2)], [[(0, 1), (0, 2)],]),
+    npt.assert_equal(intersectEdges([(0, 1), (0, 2)], [[(0, 1), (0, 2)],]),
                      [[0, 2]])
 
     # check 3D case
-    npt.assert_equal(Geom.intersectEdges([(3, 1, 1), (3, 1, 2)], [[(3, 1, 1), (3, 1, 4)],],),
+    npt.assert_equal(intersectEdges([(3, 1, 1), (3, 1, 2)], [[(3, 1, 1), (3, 1, 4)],],),
                      [[3, 1, 2]])
 
     # check a proper 3D intersection
-    npt.assert_equal(Geom.intersectEdges([(1, 1, 0), (1, 1, 2)], [[(5, 5, 5), (-1, -1, -1)],]),
+    npt.assert_equal(intersectEdges([(1, 1, 0), (1, 1, 2)], [[(5, 5, 5), (-1, -1, -1)],]),
                      [[1, 1, 1]])
 
 def test_intersect_polyhedron():
     # check 2-D triangle intersection
     l = ((-1, 0.5), (1, 0.5))
     p = (((-1, 0), (0, 0)), ((0, -1), (0, 0)), ((1, 1), (0.5, 0.5)))
-    npt.assert_equal(Geom.intersectPolyhedron(l, p),
+    npt.assert_equal(intersectPolyhedron(l, p),
                      ((0., 0.5), ((0.5, 0.5))))
 
     # check 2-D square intersection in 3 space
@@ -39,18 +41,18 @@ def test_intersect_polyhedron():
          ((0, -1, 0), (0, 0, 0)),
          ((1, 0, 0), (1, 1, 0)),
          ((0, 1, 0), (1, 1, 0)))
-    npt.assert_equal(Geom.intersectPolyhedron(l, p),
+    npt.assert_equal(intersectPolyhedron(l, p),
                      ((0., 0., 0.), ((1., 1., 0.))))
 
 
 def test_triangle_vertices_to_normals():
-    npt.assert_equal(Geom.triangleVerticesToNormals(([0, 0, 0], [0, 1, 0], [1, 0, 0])),
+    npt.assert_equal(triangleVerticesToNormals(([0, 0, 0], [0, 1, 0], [1, 0, 0])),
                      [(([-1.,  0.,  0.]), ([0, 0, 0])),
                       (([-0., -1., -0.]), ([0, 0, 0])),
                       (([ 1.,  1.,  0.]), ([0, 1, 0]))])
 
 def test_tetrahedron_vertices_to_normals():
-    npt.assert_equal(Geom.tetrahedronVerticesToNormals(([0, 0, 0], [0, 1, 0], [1, 0, 0], [0, 0, 1])),
+    npt.assert_equal(tetrahedronVerticesToNormals(([0, 0, 0], [0, 1, 0], [1, 0, 0], [0, 0, 1])),
                                                        [(([ 0,  0, -1]), ([0, 0, 0])),
                                                         (([-1,  0,  0]), ([0, 0, 0])),
                                                         (([ 0, -1,  0]), ([0, 0, 0])),
@@ -141,6 +143,6 @@ def test_mesh_intersections():
        [13, 22, 25, 26]])
 
     mesh = mesh_type(nodeArray=nodeArray, elementNodesArray=elementNodesArray)
-    toPolyhedron = Geom.tetrahedronVerticesToNormals
-    eq_(Geom.getMeshIntersections(mesh, toPolyhedron, endpoints),
+    toPolyhedron = tetrahedronVerticesToNormals
+    eq_(getMeshIntersections(mesh, toPolyhedron, endpoints),
         set([((0.5, 0.5, 0.5), (1, 1, 1)), ((0, 0, 0), (0.5, 0.5, 0.5))]))
