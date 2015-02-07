@@ -25,8 +25,10 @@ PROTEUS_LAPACK_LIB_DIR =  PROTEUS_LIB_DIR
 PROTEUS_LAPACK_LIB = 'lapack'
 PROTEUS_LAPACK_INTEGER = 'int'
 
-PROTEUS_MPI_INCLUDE_DIR = '.'
+PROTEUS_MPI_INCLUDE_DIR = '/apps/openmpi/1.6.4/gcc/4.4.6/include'
+PROTEUS_MPI_INCLUDE_DIRS = [PROTEUS_MPI_INCLUDE_DIR]
 PROTEUS_MPI_LIB_DIR = '.'
+PROTEUS_MPI_LIB_DIRS = ['/apps/openmpi/1.6.4/gcc/4.4.6/lib/openmpi','/apps/openmpi/1.6.4/gcc/4.4.6/lib','/apps/openmpi/1.6/gcc/4.4.6/lib/openmpi','/apps/openmpi/1.6/gcc/4.4.6/lib']
 PROTEUS_MPI_LIBS = ['m']
 
 PROTEUS_TRIANGLE_INCLUDE_DIR = PROTEUS_INCLUDE_DIR
