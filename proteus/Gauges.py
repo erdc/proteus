@@ -612,11 +612,7 @@ class Gauges(AV_base):
     def get_time(self):
         """ Returns the current model time"""
 
-        # workaround until https://github.com/erdc-cm/proteus/issues/198 is fixed
-        if self.timeIntegration.t >= 1e6:
-            log("Warning, assuming time %s is actually 0" % self.timeIntegration.t, 3)
-            return 0
-        return self.timeIntegration.t
+        return self.timeIntegration.tLast
 
     def outputHeader(self):
         """ Outputs a single header for a CSV style file to self.file"""
