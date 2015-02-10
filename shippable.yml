@@ -28,5 +28,7 @@ commit_container: erdccm/proteus
 
 notifications:
     email:
-        - cekees@gmail.com
+        on_success: change
+	on_failure: always
+
 
