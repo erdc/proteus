@@ -85,12 +85,15 @@ def run_gauge(p, time_list, nd=3, total_nodes=None):
 
     m = model.levelModelList[-1]
     m.setInitialConditions(initialConditions, time_list[0])
+    # behave like a time-stepping model, set tLast to this time
+    m.timeIntegration.tLast = time_list[0]
     tCount = 0
     p.calculate()
 
     for t in time_list[1:]:
         tCount +=1
         m.setInitialConditions(initialConditions, t)
+        m.timeIntegration.tLast = t
         p.calculate()
 
 def parse_gauge_output(filename):
