@@ -28,7 +28,7 @@ if [ -f gmsh.mesh ]; then
   echo =============================
   grep ille gmsh.log | grep -v no
 
-  $PROTEUS/proteusModule/scripts/gmsh2tetgen gmsh.mesh 
+  $PROTEUS/scripts/gmsh2tetgen gmsh.mesh 
   cp mesh.vtk ../$dir.vtk
   echo =============================
   ls -lhatr mesh.*
