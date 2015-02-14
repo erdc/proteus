@@ -28,11 +28,11 @@ if [ -f gmsh.mesh ]; then
   echo =============================
   grep ille gmsh.log | grep -v no
 
-  $PROTEUS/scripts/gmsh2tetgen gmsh.mesh 
+  gmsh2tetgen gmsh.mesh 
   cp mesh.vtk ../$dir.vtk
   echo =============================
   ls -lhatr mesh.*
-  $PROTEUS_PREFIX/bin/tetgen -en mesh.ele
+  tetgen -en mesh.ele
   echo =============================
   ls -lhatr mesh.*
   mv mesh.1.ele mesh.ele
