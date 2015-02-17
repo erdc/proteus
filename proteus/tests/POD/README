@@ -1,0 +1,10 @@
+Order of execution:
+
+heat.py
+check_error_heat.py
+svd.py
+POD.py
+
+Files required for include:
+heat_init.py
+read_hdf5.py
