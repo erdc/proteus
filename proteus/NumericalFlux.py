@@ -2436,10 +2436,13 @@ class RusanovNumericalFlux_Diagonal(Advection_DiagonalUpwind):
     """
     def __init__(self,vt,getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
-                 getDiffusiveFluxBoundaryConditions):
-        Advection_DiagonalUpwind.__init__(self,vt,getPointwiseBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions,
+                 getPeriodicConditions):
+        Advection_DiagonalUpwind.__init__(self,vt,
+                                          getPointwiseBoundaryConditions,
                                           getAdvectiveFluxBoundaryConditions,
-                                          getDiffusiveFluxBoundaryConditions)
+                                          getDiffusiveFluxBoundaryConditions,
+                                          getPeriodicConditions)
         self.safetyFactor=1.1
         #add extra terms that can be lagged specifically for advective flux. Time integrator has to do this though
         for ci in range(self.nc):
@@ -2484,6 +2487,10 @@ class RusanovNumericalFlux_Diagonal(Advection_DiagonalUpwind):
                 #mwf debug
                 #print "Rusanove_DiagonalUpwind computing bcs ebNE=%d k=%d x=%s g=%s " % (ebNE,k,x,g(x,self.vt.timeIntegration.t))
                 self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t)
+        for ci in range(self.nc):
+            for bci in self.periodicBoundaryConditionsDictList[ci].values():
+                self.ebqe[('u',ci)][bci[0]]=ebqe[('u',ci)][bci[1]]
+                self.ebqe[('u',ci)][bci[1]]=ebqe[('u',ci)][bci[0]]
         self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
         if self.vt.movingDomain:
             self.vt.coefficients.updateToMovingDomain(self.vt.timeIntegration.t,self.ebqe)
@@ -2675,10 +2682,12 @@ class ConvexOneSonicPointNumericalFlux(Advection_DiagonalUpwind):
     def __init__(self,vt,getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions,
+                 getPeriodicBoundaryConditions,
                  sonicPoint=0.0,sonicFlux=0.0):
         Advection_DiagonalUpwind.__init__(self,vt,getPointwiseBoundaryConditions,
                                           getAdvectiveFluxBoundaryConditions,
-                                          getDiffusiveFluxBoundaryConditions)
+                                          getDiffusiveFluxBoundaryConditions,
+                                          getPeriodicBoundaryConditions)
         self.sonicPoint = sonicPoint
         self.sonicFlux  = sonicFlux
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
