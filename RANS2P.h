@@ -950,7 +950,7 @@ namespace proteus
 #else
       viscosity = nu;
 #endif
-      H_s = (1.0-useVF)*smoothedHeaviside(eps_s,phi_s)+useVF*fmin(1.0,fmax(0.0,vf));
+      H_s = smoothedHeaviside(eps_s,phi_s);
 
       uc = sqrt(u*u+v*v*+w*w); 
       duc_du = u/(uc+1.0e-12);
@@ -2252,7 +2252,7 @@ namespace proteus
 
 	      calculateSubgridError_tau(Ct_sge,Cd_sge,
 			                G,G_dd_G,tr_G,
-					dmom_u_acc_u_t,
+					tmpR,//dmom_u_acc_u_t,
 					dmom_adv_sge,
 					mom_uu_diff_ten[1],
 					dmom_u_ham_grad_p[0],
@@ -3827,7 +3827,7 @@ namespace proteus
 					
 	      calculateSubgridError_tau(Ct_sge,Cd_sge,
 			                G,G_dd_G,tr_G,
-					dmom_u_acc_u_t,
+					tmpR,//dmom_u_acc_u_t,
 					dmom_adv_sge,
 					mom_uu_diff_ten[1],
                                         dmom_u_ham_grad_p[0],					
