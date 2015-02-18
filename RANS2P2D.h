@@ -951,7 +951,7 @@ namespace proteus
 #else
       viscosity = nu;
 #endif
-      H_s = (1.0-useVF)*smoothedHeaviside(eps_s,phi_s)+useVF*fmin(1.0,fmax(0.0,vf));
+      H_s = smoothedHeaviside(eps_s,phi_s);
 
       uc = sqrt(u*u+v*v*+w*w); 
       duc_du = u/(uc+1.0e-12);
