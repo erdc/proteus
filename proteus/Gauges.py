@@ -11,6 +11,7 @@ from .AuxiliaryVariables import AV_base
 from .Profiling import logEvent as log
 from proteus.MeshTools import triangleVerticesToNormals, tetrahedronVerticesToNormals, getMeshIntersections
 
+LINE_DUPLICATION_TOLERANCE = 1e-3
 
 def PointGauges(gauges, activeTime=None, sampleRate=0, fileName='point_gauges.csv'):
     """ Create a set of point gauges that will automatically be serialized as CSV data to the requested file.
@@ -451,7 +452,7 @@ class Gauges(AV_base):
         this could be optimized
         """
 
-        eps = 1e-4
+        eps = LINE_DUPLICATION_TOLERANCE
 
         comm = Comm.get().comm.tompi4py()
 
