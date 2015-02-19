@@ -11,6 +11,7 @@ from .AuxiliaryVariables import AV_base
 from .Profiling import logEvent as log
 from proteus.MeshTools import triangleVerticesToNormals, tetrahedronVerticesToNormals, getMeshIntersections
 
+PRUNE_MINIMUM_TOL = 1e-8
 
 def PointGauges(gauges, activeTime=None, sampleRate=0, fileName='point_gauges.csv'):
     """ Create a set of point gauges that will automatically be serialized as CSV data to the requested file.
@@ -451,42 +452,42 @@ class Gauges(AV_base):
         this could be optimized
         """
 
-        eps = 1e-4
+        eps = PRUNE_MINIMUM_TOL
 
         comm = Comm.get().comm.tompi4py()
 
         length_segments = sorted(length_segments)
         length_segments = comm.gather(length_segments)
 
-
         if comm.rank != 0:
             selected_segments = None
         else:
             selected_segments = [[] for i in range(len(length_segments))]
-            segment_pos = 0
-            while segment_pos < (1 - eps):
-                # choose the longest line from those that start at segment_pos
-                longest_segment = 0, None, None
+            segment_rel_pos = 0
+            endpoints = np.asarray(endpoints)
+            while segment_rel_pos < 1:
+                # choose the closest, then the longest line from those that start at segment_rel_pos
+                best_segment = 2, 0, None, None, None
                 for proc_rank, proc_length_segments in enumerate(length_segments):
                     segment_id = 0
                     for segment_id, length_segment in enumerate(proc_length_segments):
-                        # ignore segments below current position (they will be discarded)
                         start, end, segment = length_segment
-                        if start < (segment_pos - eps):
+                        segment_length = end - start
+                        if segment_length < PRUNE_MINIMUM_TOL:
                             continue
-                        # equality test
-                        elif start < (segment_pos + eps):
-                            segment_length = end - start
-                            if segment_length > longest_segment[0]:
-                                longest_segment = segment_length, proc_rank, segment
-                        else:
+                        segment_distance = abs(segment_rel_pos - start)
+                        if segment_distance < best_segment[0] or segment_distance == best_segment[0] \
+                                and segment_length > best_segment[1]:
+                            best_segment = segment_distance, segment_length, proc_rank, segment, end
+                        if start > segment_rel_pos + best_segment[0]:
                             break
                     # discard any segments that start before our current position
                     proc_length_segments[:] = proc_length_segments[segment_id:]
 
-                segment_length, proc_rank, segment = longest_segment
+                segment_distance, segment_length, proc_rank, segment, end = best_segment
                 if segment_length == 0:
-                    print segment_pos
+                    # Something has gone very wrong, begin dump of relevant data.
+                    print segment_rel_pos
                     print 'segments'
                     for segment in selected_segments: print segment
                     print 'length_segments'
@@ -495,14 +496,14 @@ class Gauges(AV_base):
                                              str(endpoints))
                 log("Identified best segment of length %g on %d: %s" % (segment_length, proc_rank, str(segment)), 9)
                 selected_segments[proc_rank].append(segment)
-                segment_pos += segment_length
+                segment_rel_pos = end
 
-            err = abs(segment_pos - 1)
+            err = abs(segment_rel_pos - 1)
             if err > 1e-8:
                 msg = "Segmented line %s different from original length by ratio %e\n segments: %s" % (
                     str(endpoints), err, str(selected_segments))
                 log(msg, 3)
-                if err > 10*eps:
+                if err > 10*PRUNE_MINIMUM_TOL:
                     raise FloatingPointError(msg)
 
         log("Selected segments: %s" % str(selected_segments), 9)
