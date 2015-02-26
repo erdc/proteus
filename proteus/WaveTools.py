@@ -10,7 +10,7 @@ codes.
 from math import pi,tanh,sqrt,exp,log,sin,cos,cosh,sinh
 import numpy as np
 from matplotlib  import pyplot
-import profiling as pr
+import Profiling as pr
 
 
 
@@ -71,53 +71,99 @@ def dispersion(w,d, niter = 1000, g = 9.81):
 class MonochromaticWaves:
     """Generate a monochromatic wave train in the linear regime
     """
-    def __init__(self,period,waveHeight,seaLevel,depth,meanVelocity,g,waveDir,wavelength=None):
+    def __init__(self,period,waveHeight,seaLevel,depth,meanVelocity,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, phi0 = 0.):
+        self.knownWaveTypes = ["Linear","Fenton","userDefined"]
+        self.waveType = waveType
+        self.g = g
+        self.gAbs = sqrt(sum(g * g))
+        self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
+        if waveType not in self.knownWaveTypes:
+            pr.logEvent("Wrong wavetype given: Valid wavetypes are %s") %(self.knownWaveTypes)
         dircheck = abs(sum(g * waveDir))
         if dircheck > 1e-6:
             pr.logEvent("Wave direction is not perpendicular to gravity vector. Check input")
             exit(1)
-        self.gAbs = sqrt(sum(g * g))
-        self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
         self.period = period
         self.waveHeight = waveHeight
         self.seaLevel = seaLevel
         self.depth = depth
         self.omega = 2.0*pi/period
-        if  wavelength==None:
-            self.k = dispersion(w=self.omega,d=self.depth,g=gAbs)
+        if  self.waveType is "Linear":
+            self.k = dispersion(w=self.omega,d=self.depth,g=self.gAbs)
             self.wavelength = 2.0*pi/self.k
         else:
-            self.k = 2.0*pi/wavelength
-            self.wavelength=wavelength
+            try:
+                self.k = 2.0*pi/wavelength
+                self.wavelength=wavelength
+            except:
+                pr.logEvent("Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments")  
         self.kDir = self.k * self.waveDir 
         self.amplitude = 0.5*self.waveHeight
         self.meanVelocity = meanVelocity
         self.vDir = self.g/self.gAbs
+        if (Ycoeff is None) or (Bcoeff is None):
+            if self.waveType is not "Linear":
+                pr.logEvent("Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves")                          
     def phase(self,x,y,z,t):        
         return x*self.kDir[0]+y*self.kDir[1]+z*self.kDir[2] - self.omega*t
 #    def theta(self,x,t):
 #        return self.k*x - self.omega*t + pi/2.0
-    def Z(self,x,y,z):
-        return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.seaLevel
 #    def Z(self,z):
 #        return z - self.seaLevel
     def eta(self,x,y,z,t):
-        return self.amplitude*cos(self.phase(x,y,z,t))
+        if self.waveType is linear:
+            return self.amplitude*cos(self.phase(x,y,z,t))
+        else:
+            HH = 0.
+            ii =0.
+            for Y in self.YCoeff:
+                ii+=1
+                HH+=Y*cos(ii*self.phase(x,y,z,t))
+            if self.waveType is "Fenton": return HH/self.k
+            else: return HH
+    def Z(self,x,y,z,t):
+        return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.seaLevel
     def UH(self,x,y,z,t):
-        return self.*self.amplitude*cosh(self.k*(self.Z(x,y,z)+self.depth))*cos(self.phase(x,y,z,t))/sinh(self.k*self.depth)
+        if(self.waveType is "Linear"):
+            return self.amplitude*self.omega*cosh(self.k*(self.Z(x,y,z)+self.depth))*cos(self.phase(x,y,z,t))/sinh(self.k*self.depth)
+        else:
+            UH = 0.
+            ii=0.
+            for B in self.Bcoeff:
+                ii+=1.
+                UH_t =B*cosh(self.k*(self.Z(x,y,z)+self.depth))*cos(self.phase(x,y,z,t))/cosh(self.k*self.depth)
+                if waveType is "Fenton":
+                    UH+=ii*UH_t
+                else:
+                    UH+=UH_t
+                    
     def UV(self,x,y,z,t):
-        return self.sigma*self.amplitude*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.theta(x,y,z,t))/sinh(self.k*self.depth)
+        if waveType is "Linear":
+            return self.sigma*self.amplitude*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.theta(x,y,z,t))/sinh(self.k*self.depth)
+        else:
+            UV = 0.
+            ii=0.
+            for B in self.Bcoeff:
+                ii+=1.
+                UH_t =B*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.phase(x,y,z,t))/cosh(self.k*self.depth)
+                if waveType is "Fenton":
+                    UH+=ii*UH_t
+                else:
+                    UH+=UH_t
+                    
     def uvector(x,y,z,t):
         return self.waveDir*self.UH(x,y,z,t) - self.vDir * self.UV(x,y,z,t) 
     def u(x,y,z,t):
         utemp =self.uvector(x,y,z,t)
         return utemp[0]
-    def u(x,y,z,t):
+    def v(x,y,z,t):
         utemp =self.uvector(x,y,z,t)
         return utemp[1]
-    def u(x,y,z,t):
+    def w(x,y,z,t):
         utemp =self.uvector(x,y,z,t)
         return utemp[2]
+
+'''
 class RandomWaves:
     """Generate approximate random wave solutions
 
@@ -218,7 +264,9 @@ if __name__ == '__main__':
                               seaLevel = 1.0,
                               depth = 1.0,
                               meanVelocity=0.0,
-                              g=9.9)
+                              g=np.array([0,-9.81,0]),
+                               waveDir = np.array([1,0,0])
+                               )
     fp = 1.0/1.94
     d = 1.0
     Hs = 0.1
@@ -260,3 +308,4 @@ if __name__ == '__main__':
         fig.set_size_inches(16.0,16.0*zmax/xmax)
         pyplot.savefig('frame%4.4d.png' % n)
     
+'''
