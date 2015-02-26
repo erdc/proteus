@@ -29,6 +29,15 @@ PROTEUS_PETSC_EXTRA_COMPILE_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_COMPILE_
 
 proteus_install_path = os.path.join(sysconfig.get_python_lib(), 'proteus')
 
+# handle non-system installations
+for arg in sys.argv:    
+    if arg.startswith('--root'):
+        proteus_install_path = proteus_install_path.partition(sys.prefix + '/')[-1]
+        break
+    if arg.startswith('--prefix'):
+        proteus_install_path = proteus_install_path.partition(sys.prefix + '/')[-1]
+        break
+
 setup(name='proteus',
       version='1.0.0',
       description='Python tools for multiphysics modeling',
