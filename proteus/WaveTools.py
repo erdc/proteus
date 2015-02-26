@@ -75,6 +75,7 @@ class MonochromaticWaves:
         self.waveHeight = waveHeight
         self.seaLevel = seaLevel
         self.depth = depth
+        self.tOffset = -0.25*self.period
         #
         self.omega = 2.0*pi/period
         if  wavelength==None:
@@ -87,7 +88,7 @@ class MonochromaticWaves:
         self.meanVelocity = meanVelocity
         self.sigma =self.omega - self.k*self.meanVelocity
     def theta(self,x,t):
-        return self.k*x - self.omega*t + pi/2.0
+        return self.k*x - self.omega*(t+self.tOffset)
     def Z(self,z):
         return z - self.seaLevel
     def eta(self,x,t):
