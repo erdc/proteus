@@ -10,6 +10,7 @@ codes.
 from math import pi,tanh,sqrt,exp,log,sin,cos,cosh,sinh
 import numpy as np
 from matplotlib  import pyplot
+import profiling as pr
 
 
 
@@ -57,7 +58,7 @@ def dispersion(w,d, niter = 1000, g = 9.81):
     """
     Kd = w*sqrt(d/g)
     for jj in range(niter):
-        #Kdn_1 = Kd
+       #Kdn_1 = Kd
         Kd = w*w*d/g/np.tanh(Kd)
         #Kdn_1 /=0.01*Kd
         #Kdn_1 -= 100.
@@ -70,33 +71,53 @@ def dispersion(w,d, niter = 1000, g = 9.81):
 class MonochromaticWaves:
     """Generate a monochromatic wave train in the linear regime
     """
-    def __init__(self,period,waveHeight,seaLevel,depth,meanVelocity,g=9.8,wavelength=None):
+    def __init__(self,period,waveHeight,seaLevel,depth,meanVelocity,g,waveDir,wavelength=None):
+        dircheck = abs(sum(g * waveDir))
+        if dircheck > 1e-6:
+            pr.logEvent("Wave direction is not perpendicular to gravity vector. Check input")
+            exit(1)
+        self.gAbs = sqrt(sum(g * g))
+        self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
         self.period = period
         self.waveHeight = waveHeight
         self.seaLevel = seaLevel
         self.depth = depth
-        #
         self.omega = 2.0*pi/period
         if  wavelength==None:
-            self.k = dispersion(w=self.omega,d=self.depth,g=g)
+            self.k = dispersion(w=self.omega,d=self.depth,g=gAbs)
             self.wavelength = 2.0*pi/self.k
         else:
             self.k = 2.0*pi/wavelength
             self.wavelength=wavelength
+        self.kDir = self.k * self.waveDir 
         self.amplitude = 0.5*self.waveHeight
         self.meanVelocity = meanVelocity
-        self.sigma =self.omega - self.k*self.meanVelocity
-    def theta(self,x,t):
-        return self.k*x - self.omega*t + pi/2.0
-    def Z(self,z):
-        return z - self.seaLevel
-    def eta(self,x,t):
-        return self.amplitude*cos(self.theta(x,t))
-    def u(self,x,z,t):
-        return self.sigma*self.amplitude*cosh(self.k*(self.Z(z)+self.depth))*cos(self.theta(x,t))/sinh(self.k*self.depth)
-    def w(self,x,z,t):
-        return self.sigma*self.amplitude*sinh(self.k*(self.Z(z)+self.depth))*sin(self.theta(x,t))/sinh(self.k*self.depth)
-
+        self.vDir = self.g/self.gAbs
+    def phase(self,x,y,z,t):        
+        return x*self.kDir[0]+y*self.kDir[1]+z*self.kDir[2] - self.omega*t
+#    def theta(self,x,t):
+#        return self.k*x - self.omega*t + pi/2.0
+    def Z(self,x,y,z):
+        return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.seaLevel
+#    def Z(self,z):
+#        return z - self.seaLevel
+    def eta(self,x,y,z,t):
+        return self.amplitude*cos(self.phase(x,y,z,t))
+    def UH(self,x,y,z,t):
+        return self.*self.amplitude*cosh(self.k*(self.Z(x,y,z)+self.depth))*cos(self.phase(x,y,z,t))/sinh(self.k*self.depth)
+    def UV(self,x,y,z,t):
+        return self.sigma*self.amplitude*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.theta(x,y,z,t))/sinh(self.k*self.depth)
+    def uvector(x,y,z,t):
+        return self.waveDir*self.UH(x,y,z,t) - self.vDir * self.UV(x,y,z,t) 
+    def u(x,y,z,t):
+        utemp =self.uvector(x,y,z,t)
+        return utemp[0]
+    def u(x,y,z,t):
+        utemp =self.uvector(x,y,z,t)
+        return utemp[1]
+    def u(x,y,z,t):
+        utemp =self.uvector(x,y,z,t)
+        return utemp[2]
 class RandomWaves:
     """Generate approximate random wave solutions
 
