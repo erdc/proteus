@@ -4980,6 +4980,9 @@ class MultilevelSimplicialMesh(MultilevelMesh):
 ## @}
 
 ###utility functions for reading meshes from Xdmf
+from xml.etree import ElementTree as ET
+import tables,os
+
 def findXMLgridElement(xmf,MeshTag='Spatial_Domain',id_in_collection=-1,verbose=0):
     """Try to find the element of the xml tree xmf that holds a uniform
     grid with the name given in MeshTag by searching through Temporal
@@ -4996,8 +4999,7 @@ def findXMLgridElement(xmf,MeshTag='Spatial_Domain',id_in_collection=-1,verbose=
             break
     if GridCollection == None:
         GridCollection = Domain[0]
-    if verbose > 0:
-        print "Trying GridCollection.tag= %s" % (GridCollection.tag)
+    logEvent("Trying GridCollection.tag= %s" % (GridCollection.tag),4)
     if GridCollection.attrib['GridType'] == 'Collection':
         Grid = GridCollection[-1]
     elif GridCollection.attrib['GridType'] == 'Uniform':
@@ -5006,6 +5008,108 @@ def findXMLgridElement(xmf,MeshTag='Spatial_Domain',id_in_collection=-1,verbose=
     assert Grid.attrib['GridType'] == 'Uniform'
 
     return Grid
+
+def extractPropertiesFromXdmfGridNode(Grid):
+    """unpack the Topology, Geometry, NodeMaterials, and ElementMaterials
+    nodes from xdmf node for a uniform grid
+    """
+    #Geometry first
+    Topology = None; Geometry  = None; NodeMaterials= None; ElementMaterials = None
+    for i,leaf in enumerate(Grid):
+        logEvent("Grid leaf %d tag= %s " % (i,leaf.tag),4)
+        if leaf.tag == 'Topology':
+            Topology = Grid[i]
+            logEvent("Topology found in leaf %d " % i,4)
+        elif leaf.tag == 'Geometry':
+            Geometry = Grid[i]
+            logEvent("Geometry found in leaf %d " % i,4)
+        elif leaf.tag == 'Attribute' and leaf.attrib['Name'] == 'nodeMaterialTypes':
+            NodeMaterials = Grid[i]
+            logEvent("NodeMaterials found in leaf %d " % i,4)
+        elif leaf.tag == 'Attribute' and leaf.attrib['Name'] == 'elementMaterialTypes':
+            ElementMaterials = Grid[i]
+            logEvent("ElementMaterials found in leaf %d " % i,4)
+
+    return Topology,Geometry,NodeMaterials,ElementMaterials
+
+def readUniformElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topologyid2name,topology2nodes):
+    """
+    Read xmdf element topology information when there are uniform elements in the mesh 
+    Type of element given by elementTopologyName
+    Heavy data stored in hdf5
+    topologyid2name -- lookup for number of nodes in a given element type
+    
+    returns 
+
+    nElements_global  -- the number of elements in the mesh
+    nNodes_element    -- number of nodes per element
+    elementNodesArray -- element --> node connectivity 
+                         stored as flattened array accessed using elementNodes_offset
+    elementNodes_offset -- offsets into the elementNodesArray storage for element connectivity
+                        -- element eN nodes are in 
+                           elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]
+
+    """
+
+    nNodes_element = topology2nodes[elementTopologyName]
+    entry = Topology[0].text.split(':')[-1]
+    logEvent("Reading  elementNodesArray from %s " % entry,3)
+
+    elementNodesArray = hdf5.getNode(entry).read()
+    assert elementNodesArray.shape[1] == nNodes_element
+    nElements_global = elementNodesArray.shape[0]
+    logEvent("nElements_global,nNodes_element= (%d,%d) " % (nElements_global,nNodes_element),3)
+
+    elementNodes_offset = numpy.arange(nElements_global*nNodes_element+1,step=nNodes_element,dtype='i')
+
+    return nElements_global, nNodes_element, elementNodesArray, elementNodes_offset
+
+def readMixedElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topologyid2name,topology2nodes):
+    """
+    Read xmdf element topology information when there are mixed elements in the mesh 
+    Heavy data stored in hdf5
+    topologyid2name -- lookup for number of nodes in a given element type
+    
+    returns 
+
+    nElements_global  -- the number of elements in the mesh
+    elementNodesArray -- element --> node connectivity 
+                         stored as flattened array accessed using elementNodes_offset
+    elementNodes_offset -- offsets into the elementNodesArray storage for element connectivity
+                        -- element eN nodes are in 
+                           elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]
+
+    """
+    assert elementTopologyName == 'Mixed'
+
+    entry = Topology[0].text.split(':')[-1]
+    logEvent("Reading xdmf_topology from %s " % entry,3)
+
+    xdmf_topology = hdf5.getNode(entry).read()
+    #build elementNodesArray and offsets now
+    nElements_global = 0
+    i = 0
+    while i < len(xdmf_topology):
+        nElements_global += 1
+        nNodes_local = topology2nodes[topologyid2name[xdmf_topology[i]]]
+        i += nNodes_local+1
+    #
+    logEvent("Mixed topology found %s elements " % nElements_global,3)
+    elementNodes_offset = numpy.zeros((nElements_global+1,),'i')
+
+    i = 0; eN = 0
+    while i < len(xdmf_topology):
+        nNodes_local = topology2nodes[topologyid2name[xdmf_topology[i]]]
+        elementNodes_offset[eN+1] = elementNodes_offset[eN] + nNodes_local
+        eN += 1; i += nNodes_local+1
+    elementNodesArray = numpy.zeros((elementNodes_offset[nElements_global],),'i')
+    i = 0; eN = 0
+    while i < len(self.xdmf_topology):
+        nNodes_local = topology2nodes[topologyid2name[xdmf_topology[i]]]
+        elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]][:] = xdmf_topology[i+1:i+1+nNodes_local][:]
+        eN += 1; i += nNodes_local+1
+    
+    return nElements_global, elementNodesArray, elementNodes_offset
 
 def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHDF5=True,verbose=0):
     """
@@ -5032,6 +5136,9 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
 
     returns a BasicMeshInfo object with the minimal information read
     """
+    assert os.path.isfile(xmf_archive_base+'.xmf')
+    assert os.path.isfile(heavy_file_base+'.h5')
+
     ###information about allowed Xdmf topologies
     #Xdmf cell type id to Name
     topologyid2name = {2:'Polyline',4:'Triangle',5:'Quadrilateral',6:'Tetrahedron',8:'Wedge',9:'Hexahedron',
@@ -5053,117 +5160,65 @@ def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHD
             self.elementMaterialTypes = None 
             self.nNodes_owned         = None
             self.nElements_owned      = None
+        #
+    #
     MeshInfo = BasicMeshInfo()
 
-    try:
-        from xml.etree import ElementTree as ET
-        import tables
-        xmf = ET.parse(xmf_archive_base+'.xmf')
-        hdf5= tables.openFile(heavy_file_base+'.h5',mode="r") 
-        assert hasHDF5
-        Grid = findXMLgridElement(xmf,MeshTag,id_in_collection=-1,verbose=verbose)
+    xmf = ET.parse(xmf_archive_base+'.xmf')
+    hdf5= tables.openFile(heavy_file_base+'.h5',mode="r") 
+    assert hasHDF5
 
-        #Geometry first
-        Topology = None; Geometry  = None; NodeMaterials= None; ElementMaterials = None
-        for i,leaf in enumerate(Grid):
-            if verbose > 3:
-                print "Grid leaf %d tag= %s " % (i,leaf.tag)
-            if leaf.tag == 'Topology':
-                Topology = Grid[i]
-                if verbose > 3:
-                    print "Topology found in leaf %d " % i
-            elif leaf.tag == 'Geometry':
-                Geometry = Grid[i]
-                if verbose > 3:
-                    print "Geometry found in leaf %d " % i
-            elif leaf.tag == 'Attribute' and leaf.attrib['Name'] == 'nodeMaterialTypes':
-                NodeMaterials = Grid[i]
-                if verbose > 3:
-                    print "NodeMaterials found in leaf %d " % i
-            elif leaf.tag == 'Attribute' and leaf.attrib['Name'] == 'elementMaterialTypes':
-                ElementMaterials = Grid[i]
-                if verbose > 3:
-                    print "ElementMaterials found in leaf %d " % i
-        assert Geometry != None
-        entry = Geometry[0].text.split(':')[-1]
-        if verbose > 1:
-            print "Reading nodeArray from %s " % entry
-        MeshInfo.nodeArray = hdf5.getNode(entry).read()
-        MeshInfo.nNodes_global = MeshInfo.nodeArray.shape[0]
-        if NodeMaterials != None:
-            entry = NodeMaterials[0].text.split(':')[-1]
-            if verbose > 1:
-                print "Reading nodeMaterialTypes from %s " % entry
-            MeshInfo.nodeMaterialTypes = hdf5.getNode(entry).read()
-        else:
-            MeshInfo.nodeMaterialTypes = numpy.zeros((MeshInfo.nNodes_global,),'i')
-        assert Topology != None
-        
-        if 'Type' in Topology.attrib:
-            MeshInfo.elementTopologyName = Topology.attrib['Type']
-        elif 'TopologyType' in Topology.attrib:
-            MeshInfo.elementTopologyName = Topology.attrib['TopologyType']
-        assert MeshInfo.elementTopologyName != None
+    Grid = findXMLgridElement(xmf,MeshTag,id_in_collection=-1,verbose=verbose)
 
-        if verbose > 0:
-            print "elementTopologyName= %s " % MeshInfo.elementTopologyName
-        assert MeshInfo.elementTopologyName in topologyid2name.values()
-        if MeshInfo.elementTopologyName != 'Mixed':
-            MeshInfo.nNodes_element = topology2nodes[MeshInfo.elementTopologyName]
-            entry = Topology[0].text.split(':')[-1]
-            if verbose > 1:
-                print "Reading  elementNodesArray from %s " % entry
-            MeshInfo.elementNodesArray = hdf5.getNode(entry).read()
-            assert MeshInfo.elementNodesArray.shape[1] == MeshInfo.nNodes_element
-            MeshInfo.nElements_global = MeshInfo.elementNodesArray.shape[0]
-            if verbose > 1:
-                print "nElements_global,nNodes_element= (%d,%d) " % (MeshInfo.nElements_global,MeshInfo.nNodes_element)
-            MeshInfo.elementNodes_offset = numpy.arange(MeshInfo.nElements_global*MeshInfo.nNodes_element+1,step=MeshInfo.nNodes_element,dtype='i')
-        else:
-            entry = Topology[0].text.split(':')[-1]
-            if verbose > 1:
-                print "Reading xdmf_topology from %s " % entry
-            xdmf_topology = hdf5.getNode(entry).read()
-            #build elementNodesArray and offsets now
-            MeshInfo.nElements_global = 0
-            i = 0
-            while i < len(xdmf_topology):
-                MeshInfo.nElements_global += 1
-                nNodes_local = topology2nodes[topologyid2name[xdmf_topology[i]]]
-                i += nNodes_local+1
-            #
-            if verbose > 2:
-                print "Mixed topology found %s elements " % MeshInfo.nElements_global
-            MeshInfo.elementNodes_offset = numpy.zeros((MeshInfo.nElements_global+1,),'i')
+    Topology,Geometry,NodeMaterials,ElementMaterials = extractPropertiesFromXdmfGridNode(Grid)
 
-            i = 0; eN = 0
-            while i < len(xdmf_topology):
-                nNodes_local = topology2nodes[topologyid2name[xdmf_topology[i]]]
-                MeshInfo.elementNodes_offset[eN+1] = MeshInfo.elementNodes_offset[eN] + nNodes_local
-                eN += 1; i += nNodes_local+1
-            MeshInfo.elementNodesArray = numpy.zeros((MeshInfo.elementNodes_offset[MeshInfo.nElements_global],),'i')
-            i = 0; eN = 0
-            while i < len(self.xdmf_topology):
-                nNodes_local = topology2nodes[topologyid2name[xdmf_topology[i]]]
-                MeshInfo.elementNodesArray[MeshInfo.elementNodes_offset[eN]:MeshInfo.elementNodes_offset[eN+1]][:] = xdmf_topology[i+1:i+1+nNodes_local][:]
-                eN += 1; i += nNodes_local+1
+    assert Geometry != None
+    entry = Geometry[0].text.split(':')[-1]
+    logEvent("Reading nodeArray from %s " % entry,3)
 
-        #
-        if ElementMaterials != None:
-            entry = ElementMaterials[0].text.split(':')[-1]
-            if verbose > 1:
-                print "Reading elementMaterialTypes from %s " % entry
-            MeshInfo.elementMaterialTypes = hdf5.getNode(entry).read()
-        else:
-            MeshInfo.elementMaterialTypes = numpy.zeros((MeshInfo.nElements_global,),'i')
-        #
-        ###only serial for now
-        MeshInfo.nNodes_owned = MeshInfo.nNodes_global
-        MeshInfo.nElements_owned = MeshInfo.nElements_global
-        hdf5.close()
-    except:
-        print "read from {0} failed ".format(xmf_archive_base)
-        raise
+    MeshInfo.nodeArray = hdf5.getNode(entry).read()
+    MeshInfo.nNodes_global = MeshInfo.nodeArray.shape[0]
+
+    if NodeMaterials != None:
+        entry = NodeMaterials[0].text.split(':')[-1]
+        logEvent("Reading nodeMaterialTypes from %s " % entry,4)
+        MeshInfo.nodeMaterialTypes = hdf5.getNode(entry).read()
+    else:
+        MeshInfo.nodeMaterialTypes = numpy.zeros((MeshInfo.nNodes_global,),'i')
+
+    assert Topology != None        
+    if 'Type' in Topology.attrib:
+        MeshInfo.elementTopologyName = Topology.attrib['Type']
+    elif 'TopologyType' in Topology.attrib:
+        MeshInfo.elementTopologyName = Topology.attrib['TopologyType']
+    assert MeshInfo.elementTopologyName != None
+
+    logEvent("elementTopologyName= %s " % MeshInfo.elementTopologyName,3)
+    assert MeshInfo.elementTopologyName in topologyid2name.values()
+
+    if MeshInfo.elementTopologyName != 'Mixed':
+        MeshInfo.nElements_global, MeshInfo.nNodes_element, \
+            MeshInfo.elementNodesArray, MeshInfo.elementNodes_offset = readUniformElementTopologyFromXdmf(MeshInfo.elementTopologyName,Topology,
+                                                                                                          hdf5,topologyid2name,topology2nodes)
+
+    else:
+        MeshInfo.nElements_global, MeshInfo.elementNodesArray, \
+            MeshInfo.elementNodes_offset = readMixedElementTopologyFromXdmf(MeshInfo.elementTopologyName,Topology,hdf5,topologyid2name,topology2nodes)
+
+    #
+    if ElementMaterials != None:
+        entry = ElementMaterials[0].text.split(':')[-1]
+        logEvent("Reading elementMaterialTypes from %s " % entry,3)
+        MeshInfo.elementMaterialTypes = hdf5.getNode(entry).read()
+
+    else:
+        MeshInfo.elementMaterialTypes = numpy.zeros((MeshInfo.nElements_global,),'i')
+    #
+    ###only serial for now
+    MeshInfo.nNodes_owned = MeshInfo.nNodes_global
+    MeshInfo.nElements_owned = MeshInfo.nElements_global
+    hdf5.close()
+
     return MeshInfo
 #
 def writeHexMesh(mesh_info,hexfile_base,index_base=0):
