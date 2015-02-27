@@ -386,132 +386,113 @@ if __name__ == '__main__':
     doctest.testmod()
     
 
-def test_MGV():
-    '''Non-working function (fix imports below)'''
-    #    from LinearAlgebraTools import *
-    #    import Gnuplot
-    #    from Gnuplot import *
-    #    from math import *
-    #    from RandomArray import *
-    gf = Gnuplot.Gnuplot()
-    gf("set terminal x11")
-    ginit = Gnuplot.Gnuplot()
-    ginit("set terminal x11")
-    gsol = Gnuplot.Gnuplot()
-    gsol("set terminal x11")
-    gres = Gnuplot.Gnuplot()
-    gres("set terminal x11")
-    n=2**8 + 1
-    h =1.0/(n-1.0)
-    freq=10
-    u = uniform(0,1,(n))
-    u[0]=0.0
-    u[n-1]=0.0
-    x = numpy.arange(0,1.0+h,h)
-    f = Gnuplot.Gnuplot()
-    f("set terminal x11")
-    f = (freq*2*pi)**2*numpy.sin(freq*2*pi*x)
-    AList=[]
-    N=n
-    pList=[]
-    rList=[]
-    resList=[]
-    while N >= 3:
-        resList.append(Vec(N-2))
-        A = SparseMat(N-2,N-2,3*(N-2),sym=True)
-        H = 1.0/(N-1.0)
-        beginAssembly(A)
-        for i in range(N-2):
-            A[i,i] = 2.0/H**2
-            if i > 0:
-                A[i,i-1] = -1.0/H**2
-            if i < N-3:
-                A[i,i+1] = -1.0/H**2
-        endAssembly(A)
-        AList.append(A)
-        cN = (N - 1)/2 + 1
-        r = SparseMat(cN-2,N-2,3*(N-2))
-        p = SparseMat(N-2,cN-2,3*(N-2))
-        for i in range(cN-2):
-            r[i,2*i]   = 1.0/4.0
-            r[i,2*i+1] = 2.0/4.0
-            r[i,2*i+2] = 1.0/4.0
-            p[2*i,i] = 1.0/2.0
-            p[2*i+1,i]= 2.0/2.0
-            p[2*i+2,i]= 1.0/2.0
-        r.to_csr()
-        rList.append(r)
-        p.to_csr()
-        pList.append(p)
-        N = cN
-    class Jacobi:
-        def __init__(self,A):
-            self.A=A
-            self.n=A.shape[0]
-            self.M=Vec(self.n)
-            for i in range(self.n):
-                self.M[i]=1.0/A[i,i]
-            self.res=Vec(self.n)
-            self.dx=Vec(self.n)
-        def apply(self,w,jits,b,x):
-            self.A.matvec(x,self.res)
-            self.res-=b
-            for it in range(jits):
-                self.dx[:] = self.M*self.res
-                self.dx*=w
-                x -= self.dx
-                self.A.matvec(x,self.res)
-                self.res -= b
-    jacobiList=[]
-    for A in AList:
-        jacobiList.append(Jacobi(A))
-    jits = 3
-    w = 2.0/3.0
-    class MGV:
-        def __init__(self,smootherList,AList,pList,rList,resList):
-            self.AList = AList
-            self.pList = pList
-            self.rList = rList
-            self.resList = resList
-            self.xList=[]
-            self.vList=[]
-            self.bList=[]
-            self.gpList=[]
-            for res in resList:
-                self.xList.append(Vec(len(res)))
-                self.vList.append(Vec(len(res)))
-                self.bList.append(Vec(len(res)))
-                self.gpList.append(Gnuplot.Gnuplot(debug=1)("set terminal x11"))
-            self.smootherList = smootherList
+# def test_MGV():
+#     n=2**8 + 1
+#     h =1.0/(n-1.0)
+#     freq=10
+#     u = numpy.random.uniform(0,1,(n))
+#     u[0]=0.0
+#     u[n-1]=0.0
+#     x = numpy.arange(0,1.0+h,h)
+#     AList=[]
+#     N=n
+#     pList=[]
+#     rList=[]
+#     resList=[]
+#     while N >= 3:
+#         resList.append(Vec(N-2))
+#         A = dict()#SparseMat(N-2,N-2,3*(N-2),sym=True)
+#         H = 1.0/(N-1.0)
+#         #beginAssembly(A)
+#         for i in range(N-2):
+#             A[(i,i)] = 2.0/H**2
+#             if i > 0:
+#                 A[(i,i-1)] = -1.0/H**2
+#             if i < N-3:
+#                 A[(i,i+1)] = -1.0/H**2
+#         #endAssembly(A)
+#         AList.append(SparseMatFromDict(N-2,N-2,A)[0])
+#         cN = (N - 1)/2 + 1
+#         r = dict()#SparseMat(cN-2,N-2,3*(N-2))
+#         p = dict()#SparseMat(N-2,cN-2,3*(N-2))
+#         for i in range(cN-2):
+#             r[(i,2*i)]   = 1.0/4.0
+#             r[(i,2*i+1)] = 2.0/4.0
+#             r[(i,2*i+2)] = 1.0/4.0
+#             p[(2*i,i)] = 1.0/2.0
+#             p[(2*i+1,i)]= 2.0/2.0
+#             p[(2*i+2,i)]= 1.0/2.0
+#         #r.to_csr()
+#         print cN-2,N-2,r.keys()
+#         if cN-2 > 0:
+#             rList.append(SparseMatFromDict(cN-2,N-2,r)[0])
+#         else:
+#             rList.append(None)
+#         #p.to_csr()
+#         pList.append(SparseMatFromDict(N-2,cN-2,p)[0])
+#         N = cN
+#     class Jacobi:
+#         def __init__(self,A):
+#             self.A=A
+#             self.n=A.shape[0]
+#             self.M=Vec(self.n)
+#             for i in range(self.n):
+#                 self.M[i]=1.0/A[i,i]
+#             self.res=Vec(self.n)
+#             self.dx=Vec(self.n)
+#         def apply(self,w,jits,b,x):
+#             self.A.matvec(x,self.res)
+#             self.res-=b
+#             for it in range(jits):
+#                 self.dx[:] = self.M*self.res
+#                 self.dx*=w
+#                 x -= self.dx
+#                 self.A.matvec(x,self.res)
+#                 self.res -= b
+#     jacobiList=[]
+#     for A in AList:
+#         jacobiList.append(Jacobi(A))
+#     jits = 3
+#     w = 2.0/3.0
+#     class MGV:
+#         def __init__(self,smootherList,AList,pList,rList,resList):
+#             self.AList = AList
+#             self.pList = pList
+#             self.rList = rList
+#             self.resList = resList
+#             self.xList=[]
+#             self.vList=[]
+#             self.bList=[]
+#             self.gpList=[]
+#             for res in resList:
+#                 self.xList.append(Vec(len(res)))
+#                 self.vList.append(Vec(len(res)))
+#                 self.bList.append(Vec(len(res)))
+#             self.smootherList = smootherList
 
-        def apply(self,w,nsPre,nsPost,level,b,x):
-            logEvent("Level = "+`level`)
-            if level == len(self.AList)-1:
-                self.smootherList[level].apply(1.0,1,b,x)
-            else:
-                #smooth
-                self.smootherList[level].apply(w,nsPre,b,x)
-                #restrict the defect
-                self.rList[level].matvec(self.smootherList[level].res,self.bList[level+1])
-                #V-cycle on the error equation
-                self.xList[level+1][:]=0.0
-                self.apply(w,nsPre,nsPost,level+1,self.bList[level+1],self.xList[level+1])
-                #self.gpList[level].plot(Gnuplot.Data(self.smootherList[level+1].res,title='residual'))
-                #prolong
-                self.pList[level].matvec(self.xList[level+1],self.vList[level])
-                #correct
-                x-=self.vList[level]
-                #smooth
-                self.smootherList[level].apply(w,nsPost,b,x)
-                self.resList[level][:]=self.smootherList[level].res
-    mgv = MGV(jacobiList,AList,pList,rList,resList)
-    rnorm=1.0
-    mgits = 0
-    while rnorm > 1.0e-10 and mgits < 20:
-        mgits +=1
-        mgv.apply(w,jits,jits,0,f[1:n-1],u[1:n-1])
-        rnorm = l2Norm(resList[0])
-    gsol.plot(Gnuplot.Data(x,u,title='numerical solution'),
-              Gnuplot.Data(x,numpy.sin(freq*2*pi*x),title='exact solution'))
-    #gres.plot(Gnuplot.Data(x[1:n-1],mgv.smootherList[0].res,title='final residual'))
-    raw_input('Please press return to continue... \n')
+#         def apply(self,w,nsPre,nsPost,level,b,x):
+#             logEvent("Level = "+`level`)
+#             if level == len(self.AList)-1:
+#                 self.smootherList[level].apply(1.0,1,b,x)
+#             else:
+#                 #smooth
+#                 self.smootherList[level].apply(w,nsPre,b,x)
+#                 #restrict the defect
+#                 self.rList[level].matvec(self.smootherList[level].res,self.bList[level+1])
+#                 #V-cycle on the error equation
+#                 self.xList[level+1][:]=0.0
+#                 self.apply(w,nsPre,nsPost,level+1,self.bList[level+1],self.xList[level+1])
+#                 #prolong
+#                 self.pList[level].matvec(self.xList[level+1],self.vList[level])
+#                 #correct
+#                 x-=self.vList[level]
+#                 #smooth
+#                 self.smootherList[level].apply(w,nsPost,b,x)
+#                 self.resList[level][:]=self.smootherList[level].res
+#     mgv = MGV(jacobiList,AList,pList,rList,resList)
+#     rnorm=1.0
+#     mgits = 0
+#     while rnorm > 1.0e-10 and mgits < 20:
+#         mgits +=1
+#         mgv.apply(w,jits,jits,0,f[1:n-1],u[1:n-1])
+#         rnorm = l2Norm(resList[0])
