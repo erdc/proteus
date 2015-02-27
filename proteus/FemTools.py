@@ -6,8 +6,8 @@ from MeshTools import *
 from LinearAlgebraTools import *
 from Quadrature import *
 import cfemIntegrals
-import RefUtils
 from Profiling import logEvent
+import numpy as np
 
 
 class ReferenceElement:

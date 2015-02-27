@@ -1,9 +1,11 @@
+from proteus import Comm, Profiling
 import numpy as np
 import numpy.testing as npt
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
 
-from petsc4py import PETSc
+comm = Comm.init()
+Profiling.procID = comm.rank()
 
 class MockMat():
     """ petsc4py-based mock SuperLU Matrix for testing.  Filled like this:
@@ -16,6 +18,7 @@ class MockMat():
 
 
     def __init__(self, n):
+        from petsc4py import PETSc
         A = PETSc.Mat().create()
         A.setSizes(n)
         A.setType('aij')
@@ -32,6 +35,7 @@ class MockMat():
         return self.A.getValuesCSR()
 
     def getSubMatCSRrepresentation(self, start, end):
+        from petsc4py import PETSc
         ids = range(start, end)
         isg = PETSc.IS().createGeneral(ids)
         B = self.A.getSubMatrix(isg)

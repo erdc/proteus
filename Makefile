@@ -1,4 +1,4 @@
-.PHONY: all check clean distclean doc install profile proteus update
+.PHONY: all check clean distclean doc install profile proteus update FORCE
 
 all: install
 
@@ -16,6 +16,8 @@ PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || pyt
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 PROTEUS_VERSION := $(shell ${VER_CMD})
+HASHDIST_VERSION := $(shell cd hashdist; ${VER_CMD})
+HASHSTACK_VERSION := $(shell cd stack; ${VER_CMD})
 
 define show_info
 	@echo "Please include this information in all bug reports."
@@ -24,8 +26,8 @@ define show_info
 	@echo "PROTEUS_ARCH     : ${PROTEUS_ARCH}"
 	@echo "PROTEUS_PREFIX   : ${PROTEUS_PREFIX}"
 	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}"
-	@echo "HASHDIST_VERSION : $$(cd hashdist; ${VER_CMD})"
-	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})"
+	@echo "HASHDIST_VERSION : ${HASHDIST_VERSION}"
+	@echo "HASHSTACK_VERSION: ${HASHSTACK_VERSION}"
 	@echo "+======================================================================================================+"
 	@echo ""
 endef
@@ -144,6 +146,17 @@ ${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find 
 	@echo "Dependency build complete"
 	@echo "************************"
 
+versions: ${PROTEUS_PREFIX}/versions.txt
+	@echo "************************"
+	@echo "Installing hashdist/hashstack versions..."
+	@echo "************************"
+
+	echo ${HASHDIST_VERSION} > ${PROTEUS_PREFIX}/hashdist_version.txt
+	echo ${HASHSTACK_VERSION} > ${PROTEUS_PREFIX}/hashstack_version.txt
+
+# this always runs
+${PROTEUS_PREFIX}/versions.txt: ${PROTEUS_PREFIX}/artifact.json FORCE
+
 proteus: ${PROTEUS_PREFIX}/bin/proteus
 
 ${PROTEUS_PREFIX}/bin/proteus ${PROTEUS_PREFIX}/bin/proteus_env.sh: profile
@@ -176,6 +189,11 @@ install: profile config.py $(shell find proteus -type f) $(wildcard *.py) proteu
 	@echo "Installation complete"
 	@echo "************************"
 	@echo ""
+	@echo "************************"
+	@echo "Installing proteus version information..."
+	@echo "************************"
+	@echo ${PROTEUS_VERSION} > ${PROTEUS_PREFIX}/proteus_version.txt
+
 	@echo "Proteus was built using the following configuration:"
 	$(call show_info)
 	$(call howto)
@@ -190,6 +208,10 @@ develop: proteus profile config.py
 	@echo "Development installation complete"
 	@echo "************************"
 	@echo ""
+	@echo "************************"
+	@echo "Installing proteus version information..."
+	@echo "************************"
+	@echo "${PWD}" > ${PROTEUS_PREFIX}/proteus_version.txt
 	@echo "Proteus was built using the following configuration:"
 	$(call show_info)
 	$(call howto)
@@ -207,12 +229,12 @@ check:
 	${PROTEUS_PREFIX}/bin/python -c "print 'hello world'"
 	@echo "************************"
 	@echo "Proteus Partition Test"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; ${PROTEUS_PREFIX}/bin/python test/test_meshParitionFromTetgenFiles.py
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; ${PROTEUS_PREFIX}/bin/python proteus/tests/ci/test_meshPartitionFromTetgenFiles.py
 	@echo "************************"
 
 	@echo "************************"
 	@echo "Parallel Proteus Partition Test"
-	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; mpirun -np 4 ${PROTEUS_PYTHON} test/test_meshParitionFromTetgenFiles.py
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; mpirun -np 4 ${PROTEUS_PYTHON} proteus/tests/ci/test_meshPartitionFromTetgenFiles.py
 	@echo "************************"
 
 doc: install
