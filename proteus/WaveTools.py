@@ -216,7 +216,7 @@ class RandomWaves:
         for i in range(self.N):
             self.fi[i] = self.fmin+self.df*i
         self.ki = dispersion(2.0*pi*self.fi,self.d,g=self.g)
-        self.wi = 2.*math.pi/ki
+        self.wi = 2.*pi/ki
         self.phi = 2.0*pi*np.random.random(self.fi.shape[0])
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
         fim_tmp = (0.5*(self.fi[1:]+self.fi[:-1])).tolist()
@@ -307,7 +307,7 @@ class directionalWaves:
                  normalWaveDir,# Normal to wave direction, on propagation plane
                  g,         #accelerationof gravity
                  spec_fun ,                  # spectral function
-                 thetamax = math.pi,         #max directional band, measured from lead wave direction, defaults to pi
+                 thetamax = pi,         #max directional band, measured from lead wave direction, defaults to pi
                  s =5 ,                              # dir function coefficient
                  dir_fun = cos2s               # directional function
                  ): #wave spectrum
@@ -410,7 +410,7 @@ class directionalWaves:
         return W
     
     
-
+"""
 if __name__ == '__main__':
     Tp = 5.0 #s peak period
     Hs = 2.0 #m significant wave height
@@ -483,5 +483,5 @@ if __name__ == '__main__':
         fig = pyplot.gcf()
         fig.set_size_inches(16.0,16.0*zmax/xmax)
         pyplot.savefig('frame%4.4d.png' % n)
-    
+"""    
 
