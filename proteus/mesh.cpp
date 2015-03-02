@@ -241,9 +241,9 @@ extern "C"
 	  x_2,y_2,z_2,
 	  epsilon=1.0e-8;
 	ebN = mesh.exteriorElementBoundariesArray[ebNE];
-	nN_0 = mesh.elementBoundaryNodesArray[ebN*3 + 0];
-	nN_1 = mesh.elementBoundaryNodesArray[ebN*3 + 1];
-	nN_2 = mesh.elementBoundaryNodesArray[ebN*3 + 2];
+	nN_0 = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary + 0];
+	nN_1 = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary + 1];
+	nN_2 = mesh.elementBoundaryNodesArray[ebN*mesh.nNodes_elementBoundary + 2];
 
 	x_0 = mesh.nodeArray[nN_0*3+0];
 	y_0 = mesh.nodeArray[nN_0*3+1];
