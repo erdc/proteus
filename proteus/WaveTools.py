@@ -48,6 +48,18 @@ def piersonMoskovitz(f,f0,alpha=8.1e-3,beta=0.74,g=9.8):
     """
     return (5.0/16.0)*Hs**2*(f0**4/f**5)*np.exp((-5.0/4.0)*(f0/f)**4)
 
+def cos2s(theta,s):
+    return cos(theta/2)**(2*s)
+
+def normInt(thetas,dir_fun,s,N):
+    G0 = 0.
+    theta = 0.
+    for ii in range(N):
+        G0+= dir_fun(theta,s)*dth
+        theta+=dth
+    return 1./G0
+    
+
 def dispersion(w,d, niter = 1000, g = 9.81):
     """Calculates wave vector k from linear dispersion relation
 
@@ -71,7 +83,7 @@ def dispersion(w,d, niter = 1000, g = 9.81):
 class MonochromaticWaves:
     """Generate a monochromatic wave train in the linear regime
     """
-    def __init__(self,period,waveHeight,seaLevel,depth,meanVelocity,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, phi0 = 0.):
+    def __init__(self,period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = 0.,phi0 = 0.):
         self.knownWaveTypes = ["Linear","Fenton","userDefined"]
         self.waveType = waveType
         self.g = g
@@ -85,7 +97,7 @@ class MonochromaticWaves:
             exit(1)
         self.period = period
         self.waveHeight = waveHeight
-        self.seaLevel = seaLevel
+        self.mwl = mwl
         self.depth = depth
         self.omega = 2.0*pi/period
         if  self.waveType is "Linear":
@@ -105,13 +117,13 @@ class MonochromaticWaves:
             if self.waveType is not "Linear":
                 pr.logEvent("Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves")                          
     def phase(self,x,y,z,t):        
-        return x*self.kDir[0]+y*self.kDir[1]+z*self.kDir[2] - self.omega*t
+        return x*self.kDir[0]+y*self.kDir[1]+z*self.kDir[2] - self.omega*t + phi0
 #    def theta(self,x,t):
 #        return self.k*x - self.omega*t + pi/2.0
 #    def Z(self,z):
-#        return z - self.seaLevel
+#        return z - self.mwl
     def eta(self,x,y,z,t):
-        if self.waveType is linear:
+        if self.waveType is "Linear":
             return self.amplitude*cos(self.phase(x,y,z,t))
         else:
             HH = 0.
@@ -122,7 +134,7 @@ class MonochromaticWaves:
             if self.waveType is "Fenton": return HH/self.k
             else: return HH
     def Z(self,x,y,z,t):
-        return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.seaLevel
+        return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.mwl
     def UH(self,x,y,z,t):
         if(self.waveType is "Linear"):
             return self.amplitude*self.omega*cosh(self.k*(self.Z(x,y,z)+self.depth))*cos(self.phase(x,y,z,t))/sinh(self.k*self.depth)
@@ -163,7 +175,7 @@ class MonochromaticWaves:
         utemp =self.uvector(x,y,z,t)
         return utemp[2]
 
-'''
+
 class RandomWaves:
     """Generate approximate random wave solutions
 
@@ -183,8 +195,13 @@ class RandomWaves:
                  bandFactor = 2.0, #controls width of band  around fp
                  N = 101,          #number of frequency bins
                  mwl = 0.0,        #mean water level
-                 g = 9.81,         #accelerationof gravity
-                 spec_fun = JONSWAP): #wave spectrum
+                 waveDir = np.array([1,0,0]),
+                 g = np.array([0, -9.81, 0]),         #accelerationof gravity
+                 spec_fun = JONSWAP
+                 ): 
+        self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
+        self.g = g
+        self.gAbs = sqrt(sum(g * g))
         self.Tp = Tp
         self.Hs = Hs
         self.d = d
@@ -192,7 +209,6 @@ class RandomWaves:
         self.bandFactor = bandFactor
         self.N = N
         self.mwl = mwl
-        self.g = g
         self.fmax = self.bandFactor*self.fp
         self.fmin = self.fp/self.bandFactor
         self.df = (self.fmax-self.fmin)/float(self.N-1)
@@ -200,19 +216,24 @@ class RandomWaves:
         for i in range(self.N):
             self.fi[i] = self.fmin+self.df*i
         self.ki = dispersion(2.0*pi*self.fi,self.d,g=self.g)
+        self.wi = 2.*math.pi/ki
         self.phi = 2.0*pi*np.random.random(self.fi.shape[0])
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
         fim_tmp = (0.5*(self.fi[1:]+self.fi[:-1])).tolist()
         self.fim = np.array([fim_tmp[0]-0.5*self.df]+fim_tmp+[fim_tmp[-1]+0.5*self.df])
         self.Si_Jm = spec_fun(self.fim,f0=self.fp,Hs=self.Hs,g=self.g,gamma=3.3)
         self.ai = np.sqrt((self.Si_Jm[1:]+self.Si_Jm[:-1])*(self.fim[1:]-self.fim[:-1]))
-    
-    def eta(self,x,t):
+        self.waves = MonochromaticWaves
+    def eta(self,x,y,z,t):
         """Free surface displacement
         
         :param x: floating point x coordinate
         :param t: time"""
-        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
+        Eta=0.
+        for ii in range(self.N):
+            Eta+=waves(period = 1./self.fi[ii], waveheight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=wi[ii], phi0 = phi[ii]).eta(x,y,z,t)
+        return Eta
+#        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
     
     def u(self,x,z,t):
         """x-component of velocity
@@ -221,19 +242,192 @@ class RandomWaves:
         :param z: floating point z coordinate (height above bottom)
         :param t: time
         """
-        Z = z - self.mwl
-        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
-                np.cosh(self.ki*(self.d+Z))/np.sinh(self.ki*self.d)).sum()
+        U=0.
+        for ii in range(self.N):
+            U+=waves(period = 1./self.fi[ii], waveheight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
+        return U
+#        Z = z - self.mwl
+#        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
+#                np.cosh(self.ki*(self.d+Z))/np.sinh(self.ki*self.d)).sum()
     
-    def w(self,x,z,t):
-        """z-component of velocity
-        
+    def v(self,x,z,t):
+        """x-component of velocity
+
         :param x: floating point x coordinate
         :param z: floating point z coordinate (height above bottom)
+        :param t: time
+        """
+        U=0.
+        for ii in range(self.N):
+            U+=waves(period = 1./self.fi[ii], waveheight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).v(x,y,z,t)
+        return U
+#        Z = z - self.mwl
+#        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
+#                np.cosh(self.ki*(self.d+Z))/np.sinh(self.ki*self.d)).sum()
+    
+    def w(self,x,z,t):
+        """x-component of velocity
+
+        :param x: floating point x coordinate
+        :param z: floating point z coordinate (height above bottom)
+        :param t: time
+        """
+        U=0.
+        for ii in range(self.N):
+            U+=waves(period = 1./self.fi[ii], waveheight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).w(x,y,z,t)
+        return U
+#        Z = z - self.mwl
+#        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
+#                np.cosh(self.ki*(self.d+Z))/np.sinh(self.ki*self.d)).sum()
+
+
+
+class directionalWaves:
+
+    """Generate approximate directiona random wave solutions
+
+    :param Tp: peak period [T]
+    :param Hs: significant wave height [L]
+    :param  d: depth [L]
+    :param fp: frequency [1/T]
+    :param bandFactor: width factor for band  around fp [-]
+    :param N: number of frequency bins [-]
+    :param mwl: mean water level [L]"""
+    
+    def __init__(self,
+                 Tp ,         #s peak period
+                 Hs ,         #m significant wave height
+                 d ,           #m depth
+                 fp ,      #peak  frequency
+                 bandFactor, #controls width of band  around fp
+                 N ,          #number of frequency bins
+                 M  ,         #half number of directional bins
+                 mwl,        #mean water level
+                 waveDir,   #main wave direction
+                 normalWaveDir# Normal to wave direction, on propagation plane
+                 g ,         #accelerationof gravity
+                 spec_fun ,                  # spectral function
+                 thetamax = math.pi         #max directional band, measured from lead wave direction, defaults to pi
+                 s =5 ,                              # dir function coefficient
+                 dir_fun = cos2s               # directional function
+                 ): #wave spectrum
+
+        
+"""
+    def __init__(self,
+                 Tp = 5.0,         #s peak period
+                 Hs = 2.0,         #m significant wave height
+                 d = 2.0,           #m depth
+                 fp = 1.0/5.0,      #peak  frequency
+                 bandFactor = 2.0, #controls width of band  around fp
+                 N = 101,          #number of frequency bins
+                 mwl = 0.0,        #mean water level
+                 waveDir = np.array([1,0,0]),
+                 g = np.array([0, -9.81, 0]),         #accelerationof gravity
+                 spec_fun = JONSWAP
+                 ): #wave spectrum
+"""
+
+        self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
+        self.normalWaveDir = normalWaveDir/sqrt(sum(normalWaveDir * normalWaveDir))
+        self.g = g
+        self.gAbs = sqrt(sum(g * g))
+        self.Tp = Tp
+        self.Hs = Hs
+        self.d = d
+        self.fp = fp
+        self.bandFactor = bandFactor
+        self.N = N
+        self.mwl = mwl
+        self.fmax = self.bandFactor*self.fp
+        self.fmin = self.fp/self.bandFactor
+        self.df = (self.fmax-self.fmin)/float(self.N-1)
+        self.fi=np.zeros(self.N,'d')
+        for i in range(self.N):
+            self.fi[i] = self.fmin+self.df*i
+        self.ki = dispersion(2.0*pi*self.fi,self.d,g=self.g)
+        self.wi = 2.*math.pi/ki
+        #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
+        fim_tmp = (0.5*(self.fi[1:]+self.fi[:-1])).tolist()
+        self.fim = np.array([fim_tmp[0]-0.5*self.df]+fim_tmp+[fim_tmp[-1]+0.5*self.df])
+        self.Si_Jm = spec_fun(self.fim,f0=self.fp,Hs=self.Hs,g=self.g,gamma=3.3)
+        self.ai = np.sqrt((self.Si_Jm[1:]+self.Si_Jm[:-1])*(self.fim[1:]-self.fim[:-1]))
+        self.waves = MonochromaticWaves
+        self.M = M
+        self.thetas = np.linspace(0,thetamax,M+1)        
+        self.dth = thetas[1]-thetas[0]
+        self.spread = dir_fun(thetas,s)
+        self.dirs = zeros((2*M + 1,3),'d')
+        for ii in range(1,M+1):
+            self.dirs[M+ii,:]= cos(self.thetas[ii])*waveDir + sin(self.thetas[ii])*normalWaveDir
+            self.dirs[ii-1,:] = cos(self.thetas[ii])*waveDir - sin(self.thetas[ii])*normalWaveDir
+        self.dirs[M,:] = self.waveDir
+        self.G_Int = normInt(self.dth,self.dir_fun,s,M+1)
+        
+    def eta(self,x,y,z,t):
+        """Free surface displacement
+        
+        :param x: floating point x coordinate
         :param t: time"""
-        Z = z - self.mwl
-        return (2.0*pi*self.fi*self.ai*np.sin(2.0*pi*self.fi*t-self.ki*x+self.phi)*
-                np.sinh(self.ki*(self.d+Z))/np.sinh(self.ki*self.d)).sum()
+        Eta=0.
+        for jj in range(self.2*M + 1):
+            if(jj<M):
+                spr = self.spread[M-jj]
+            else:
+                spr = self.spread[jj - M]
+            ai = self.ai * self * G_Int * spr
+            waveDir = self.dirs[jj]
+            phi = 2.0*pi*np.random.random(self.fi.shape[0])
+            for ii in range(self.N):
+                Eta+=waves(period = 1./self.fi[ii], waveheight = 2.*ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = waveDir,wavelength=wi[ii], phi0 = phi[ii]).eta(x,y,z,t)
+        return Eta
+#        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
+    
+    def u(self,x,z,t):
+        """x-component of velocity
+
+        :param x: floating point x coordinate
+        :param z: floating point z coordinate (height above bottom)
+        :param t: time
+        """
+        U=0.
+        for ii in range(self.N):
+            U+=waves(period = 1./self.fi[ii], waveheight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
+        return U
+#        Z = z - self.mwl
+#        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
+#                np.cosh(self.ki*(self.d+Z))/np.sinh(self.ki*self.d)).sum()
+    
+    def v(self,x,z,t):
+        """x-component of velocity
+
+        :param x: floating point x coordinate
+        :param z: floating point z coordinate (height above bottom)
+        :param t: time
+        """
+        U=0.
+        for ii in range(self.N):
+            U+=waves(period = 1./self.fi[ii], waveheight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).v(x,y,z,t)
+        return U
+#        Z = z - self.mwl
+#        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
+#                np.cosh(self.ki*(self.d+Z))/np.sinh(self.ki*self.d)).sum()
+    
+    def w(self,x,z,t):
+        """x-component of velocity
+
+        :param x: floating point x coordinate
+        :param z: floating point z coordinate (height above bottom)
+        :param t: time
+        """
+        U=0.
+        for ii in range(self.N):
+            U+=waves(period = 1./self.fi[ii], waveheight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).w(x,y,z,t)
+        return U
+#        Z = z - self.mwl
+#        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
+#                np.cosh(self.ki*(self.d+Z))/np.sinh(self.ki*self.d)).sum()
+    
 
 if __name__ == '__main__':
     Tp = 5.0 #s peak period
@@ -261,7 +455,7 @@ if __name__ == '__main__':
                         g = 9.8)#shouldn't mwl = d always?
     waves = MonochromaticWaves(period=1.94,
                               waveHeight=0.1,
-                              seaLevel = 1.0,
+                              mwl = 1.0,
                               depth = 1.0,
                               meanVelocity=0.0,
                               g=np.array([0,-9.81,0]),
@@ -308,4 +502,4 @@ if __name__ == '__main__':
         fig.set_size_inches(16.0,16.0*zmax/xmax)
         pyplot.savefig('frame%4.4d.png' % n)
     
-'''
+
