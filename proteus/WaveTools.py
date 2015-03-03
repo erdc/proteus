@@ -10,7 +10,7 @@ codes.
 from math import pi,tanh,sqrt,exp,log,sin,cos,cosh,sinh
 import numpy as np
 from matplotlib  import pyplot
-import Profiling as pr
+from Profiling import logEvent
 
 
 
@@ -60,7 +60,7 @@ def normInt(thetas,dir_fun,s,N):
     return 1./G0
     
 
-def dispersion(w,d, niter = 1000, g = 9.81):
+def dispersion(w,d, g = 9.81,niter = 1000):
     """Calculates wave vector k from linear dispersion relation
 
     :param w: cyclical frequency
@@ -68,7 +68,9 @@ def dispersion(w,d, niter = 1000, g = 9.81):
     :param niter: number  of solution iterations
     :param g: gravity [L/T^2
     """
+#    print("Initiating dispersion")
     Kd = w*sqrt(d/g)
+#    print("Initial dispersion value = %s" %str(Kd/d))
     for jj in range(niter):
        #Kdn_1 = Kd
         Kd = w*w*d/g/np.tanh(Kd)
@@ -78,6 +80,8 @@ def dispersion(w,d, niter = 1000, g = 9.81):
         #try: Kdn_1 = mean(Kdn_1)
         #except: continue
     #print "Solution convergence for dispersion relation %s percent" % Kdn_1
+#    print("Final k value = %s" %str(Kd/d))
+#    print("Wavelength= %s" %str(2.*pi*d/Kd))
     return(Kd/d)
 
 class MonochromaticWaves:
@@ -89,12 +93,13 @@ class MonochromaticWaves:
         self.g = g
         self.gAbs = sqrt(sum(g * g))
         self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
-        if waveType not in self.knownWaveTypes:
-            pr.logEvent("Wrong wavetype given: Valid wavetypes are %s") %(self.knownWaveTypes)
-        dircheck = abs(sum(g * waveDir))
-        if dircheck > 1e-6:
-            pr.logEvent("Wave direction is not perpendicular to gravity vector. Check input")
-            exit(1)
+        self.phi0=phi0
+        if self.waveType not in self.knownWaveTypes:
+            logEvent("Wrong wavetype given: Valid wavetypes are %s" %(self.knownWaveTypes), level=0)
+        self.dircheck = abs(sum(g * waveDir))
+        print self.dircheck
+        if self.dircheck > 1e-6:
+            logEvent("Wave direction is not perpendicular to gravity vector. Check input",level=0)
         self.period = period
         self.waveHeight = waveHeight
         self.mwl = mwl
@@ -117,11 +122,9 @@ class MonochromaticWaves:
             if self.waveType is not "Linear":
                 pr.logEvent("Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves")                          
     def phase(self,x,y,z,t):        
-        return x*self.kDir[0]+y*self.kDir[1]+z*self.kDir[2] - self.omega*t + phi0
-#    def theta(self,x,t):
-#        return self.k*x - self.omega*t + pi/2.0
-#    def Z(self,z):
-#        return z - self.mwl
+#        return y*self.kDir[1] - self.omega*t + self.phi0
+        return x*self.kDir[0]+y*self.kDir[1]+z*self.kDir[2] - self.omega*t + self.phi0
+    
     def eta(self,x,y,z,t):
         if self.waveType is "Linear":
             return self.amplitude*cos(self.phase(x,y,z,t))
@@ -215,7 +218,7 @@ class RandomWaves:
         self.fi=np.zeros(self.N,'d')
         for i in range(self.N):
             self.fi[i] = self.fmin+self.df*i
-        self.ki = dispersion(2.0*pi*self.fi,self.d,g=self.g)
+        self.ki = dispersion(2.0*pi*self.fi,self.d,g=self.gAbs)
         self.wi = 2.*pi/ki
         self.phi = 2.0*pi*np.random.random(self.fi.shape[0])
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
@@ -231,7 +234,7 @@ class RandomWaves:
         :param t: time"""
         Eta=0.
         for ii in range(self.N):
-            Eta+=waves(period = 1./self.fi[ii], waveheight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=wi[ii], phi0 = phi[ii]).eta(x,y,z,t)
+            Eta+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=wi[ii], phi0 = phi[ii]).eta(x,y,z,t)
         return Eta
 #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
     
@@ -244,7 +247,7 @@ class RandomWaves:
         """
         U=0.
         for ii in range(self.N):
-            U+=waves(period = 1./self.fi[ii], waveheight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
+            U+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
         return U
 #        Z = z - self.mwl
 #        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
@@ -259,7 +262,7 @@ class RandomWaves:
         """
         U=0.
         for ii in range(self.N):
-            U+=waves(period = 1./self.fi[ii], waveheight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).v(x,y,z,t)
+            U+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).v(x,y,z,t)
         return U
 #        Z = z - self.mwl
 #        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
@@ -274,7 +277,7 @@ class RandomWaves:
         """
         U=0.
         for ii in range(self.N):
-            U+=waves(period = 1./self.fi[ii], waveheight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).w(x,y,z,t)
+            U+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).w(x,y,z,t)
         return U
 #        Z = z - self.mwl
 #        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
@@ -330,7 +333,7 @@ class directionalWaves:
         self.fi=np.zeros(self.N,'d')
         for i in range(self.N):
             self.fi[i] = self.fmin+self.df*i
-        self.ki = dispersion(2.0*pi*self.fi,self.d,g=self.g)
+        self.ki = dispersion(2.0*pi*self.fi,self.d,g=self.gAbs)
         self.wi = 2.*math.pi/ki
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
         fim_tmp = (0.5*(self.fi[1:]+self.fi[:-1])).tolist()
@@ -366,7 +369,7 @@ class directionalWaves:
         Eta=0.
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                Eta+=waves(period = 1./self.fi[ii], waveheight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).eta(x,y,z,t)
+                Eta+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).eta(x,y,z,t)
         return Eta
     #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
     
@@ -380,7 +383,7 @@ class directionalWaves:
         U=0.
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                U+=waves(period = 1./self.fi[ii], waveheight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).u(x,y,z,t)
+                U+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).u(x,y,z,t)
         return U
     
     def v(self,x,z,t):
@@ -393,7 +396,7 @@ class directionalWaves:
         V=0.
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                V+=waves(period = 1./self.fi[ii], waveheight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).v(x,y,z,t)
+                V+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).v(x,y,z,t)
         return V
     
     def w(self,x,z,t):
@@ -406,19 +409,72 @@ class directionalWaves:
         W=0.
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                W+=waves(period = 1./self.fi[ii], waveheight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).w(x,y,z,t)
+                W+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).w(x,y,z,t)
         return W
     
     
-"""
+
 if __name__ == '__main__':
+    from matplotlib.pyplot import *
+    import os as os
+    def etaCalc(x,y,z,t,wave_fun):
+        eta = np.zeros((len(x),len(y),len(z),len(t)),float)
+        for n,T in enumerate(t):
+            for J,xi in enumerate(x):
+                for I,yi in enumerate(y):
+                    for K,zi in enumerate(z):
+                        eta[J,I,K,n] = wave_fun.eta(xi,yi,zi,T)
+        return eta
+    def plotSeriesAlongAxis(x,t,ts,ifig,string):
+       # print(x)
+        fig = figure(ifig)
+        for i,xi in enumerate(x):
+            line1 = plot(t,ts[i,:])
+            
+        savefig("etaTimeseriesalong%s.png" %string)
+
+
+    print "Loading variables"
     Tp = 5.0 #s peak period
     Hs = 2.0 #m significant wave height
-    d = Hs #m depth
-    fp = 1.0/Tp #peak  frequency
-    bandFactor = 2.0 #controls width of band  around fp
-    N = 101 # number of frequency bins
     mwl = 0.0 #mean water level    Hs = 2.0
+    depth = 10.0
+    waveDir = np.array([0,1,0])
+    g = np.array([0,0,-9.81])
+    print "Setting space and time arrays"
+    li =2.*pi/dispersion(2.*pi/Tp,depth,g=9.81)
+
+    x = np.linspace(0,li,50)
+    y = np.linspace(0,li,50)
+    z = np.linspace(-10,10,5)
+    t=np.linspace(0,Tp,25)
+    print "Calculating waves"
+    waves = MonochromaticWaves(period = Tp, waveHeight = Hs,mwl = mwl, depth = depth,g = g, waveDir = waveDir)
+    eta = etaCalc(x,y,z,t,waves)
+    print "Plotting free surface elevation"
+
+    plotSeriesAlongAxis(x,t,eta[:,0,0,:],0,"X")
+    plotSeriesAlongAxis(y,t,eta[0,:,0,:],1,"Y")
+    plotSeriesAlongAxis(z,t,eta[0,0,:,:],2,"Z")
+    #Rotating the waves
+    print "Plotting free surface elevation for dir = [0.707,0.707,0]"
+    waves = MonochromaticWaves(period = Tp, waveHeight = Hs,mwl = mwl, depth = depth,g = g, waveDir = np.array([0.707,0.707,0]))
+    eta = etaCalc(x,y,z,t,waves)
+
+    plotSeriesAlongAxis(x,t,eta[:,0,0,:],3,"X_rot")
+    plotSeriesAlongAxis(y,t,eta[0,:,0,:],4,"Y_rot")
+    plotSeriesAlongAxis(z,t,eta[0,0,:,:],5,"Z_rot")
+    fig = figure(6)
+    X,Y = np.meshgrid(x,y)
+    contour1 = pyplot.contour(X,Y,eta[:,:,0,0])
+    pyplot.xlim(0,max(x))
+    pyplot.ylim(0,max(y))
+    pyplot.savefig("contourEtat=0.png")
+
+                   
+
+"""
+
     waves = RandomWaves(Tp = Tp,
                         Hs = Hs,
                         d = d,
