@@ -12,8 +12,7 @@ This module solves equations of the form
 from proteus.iproteus import *
 from proteus import Comm
 comm = Comm.get()
-Profiling.logLevel=7
-Profiling.verbose=True
+
 def test_c0p1(genMesh=True):
     import poisson_3d_tetgen_p
     import poisson_3d_tetgen_c0p1_n
@@ -23,8 +22,6 @@ def test_c0p1(genMesh=True):
     so.name = pList[0].name = "poisson_3d_tetgen_c0p1"+"pe"+`comm.size()`
     so.sList=[default_s]
     opts.logLevel=7
-    opts.verbose=True
-    opts.profile=True
     opts.generatePartitionedMeshFromFiles = True
     opts.gatherArchive=True
     pList[0].genMesh=genMesh
@@ -45,8 +42,6 @@ def test_c0p2(genMesh=True):
     so.name = pList[0].name = "poisson_3d_tetgen_c0p2"+"pe"+`comm.size()`
     so.sList=[default_s]
     opts.logLevel=7
-    opts.verbose=True
-    opts.profile=True
     opts.generatePartitionedMeshFromFiles = True
     opts.gatherArchive=True
     pList[0].genMesh=genMesh
