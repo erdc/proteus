@@ -12,36 +12,17 @@
 #   \brief A driver for both single and mult-model simulations
 #
 #
-try:
-    import  imp,sys,ctypes,os
-    if not os.getenv('PROTEUS_PREFIX'):
-        os.environ['PROTEUS_PREFIX'] = sys.prefix
-    config = imp.load_source('config', sys.prefix+'/proteusConfig/config.py')
-    mpi_preload_libs=[]
-    for lib in config.PROTEUS_PRELOAD_LIBS:
-        mpi_preload_libs.append(ctypes.CDLL(lib,mode=ctypes.RTLD_GLOBAL));
-except:
-    print "NO PROTEUS_PRELOAD_LIBS LOADED; CHECK config.py"
+
 import os
-import sys
-import socket
-import cPickle
-import numpy
 import proteus
-#not blanket import statements until after Comm initialized for petsc4py
-from proteus import Profiling,Comm
+
+#remove blanket import statements until after Comm initialized for petsc4py
+from proteus import Profiling, Comm, version
 from warnings import *
 import optparse
 import sys
-import pstats
-import pdb
 
-try:
-    import cProfile as profiler
-except:
-    import profile as profiler
-
-usage = "usage: %prog [options] [module_so.py] [module_p.py module_n.py]"
+usage = "usage: %prog [options] soModule.py [[soFile.sso] [pModule.py nModule.py]]"
 parser = optparse.OptionParser(usage=usage)
 parser.add_option("-I", "--inspect",
                   help="Inspect namespace at 't0','user_step'",
@@ -76,25 +57,25 @@ parser.add_option("-P", "--petsc-options",
                   dest="petscOptions",
                   default=None)
 parser.add_option("-O", "--petsc-options-file",
-                  help="Text file of ptions to pass to PETSc",
+                  help="Text file of options to pass to PETSc",
                   action="store",
                   type="string",
                   dest="petscOptionsFile",
                   default=None)
 parser.add_option("-D", "--dataDir",
-                  help="Options to pass to PETSc",
+                  help="Data directory",
                   action="store",
                   type="string",
                   dest="dataDir",
                   default='')
 parser.add_option("-b", "--batchFile",
-                  help="Read input from a file",
+                  help="Text file of commands to execute",
                   action="store",
                   type="string",
                   dest="batchFileName",
                   default="")
 parser.add_option("-p", "--profile",
-                  help="Generate a profile of the  run",
+                  help="Generate a profile of the run",
                   action="store_true",
                   dest="profile",
                   default=False)
@@ -104,15 +85,22 @@ parser.add_option("-T", "--useTextArchive",
                   dest="useTextArchive",
                   default=False)
 parser.add_option("-m", "--memory",
-                  help="Track memory usage of the  run",
+                  help="Track memory usage of the run",
                   action="callback",
                   callback=Profiling.memProfOn_callback)
+parser.add_option("-M", "--memoryHardLimit",
+                  help="Abort program if you reach the per-MPI-process memory hardlimit (in GB)",
+                  action="callback",
+                  type="float",
+                  callback=Profiling.memHardLimitOn_callback,
+                  default = -1.0,
+                  dest = "memHardLimit")
 parser.add_option("-l", "--log",
-                  help="Store information about what the code is doing,0=none,10=everything",
+                  help="Store information about what the code is doing, 0=none, 10=everything",
                   action="store",
                   type="int",
                   dest="logLevel",
-                  default=1)
+                  default=1)    
 parser.add_option("-A", "--logAllProcesses",
                   help="Log events from every MPI process",
                   action="store_true",
@@ -160,14 +148,14 @@ parser.add_option("-H","--hotStart",
                   default=False,
                   dest="hotStart",
                   action="store_true",
-                  help="""Use the last step in the archive as the intial condition and continue appending to the archive""")
-
+                  help="""Use the last step in the archive as the initial condition and continue appending to the
+                  archive""")
 parser.add_option("-B","--writeVelocityPostProcessor",
                   default=False,
                   dest="writeVPP",
                   action="store_true",
-                  help="""Use the last step in the archive as the intial condition and continue appending to the archive""")
-
+                  help="""Use the last step in the archive as the initial condition and continue appending to the
+                  archive""")
 parser.add_option("-F","--generatePartitionedMeshFromFiles",
                   default=False,
                   dest="generatePartitionedMeshFromFiles",
@@ -179,13 +167,60 @@ parser.add_option("-S","--save_dof",
                   dest="save_dof",
                   action="store_true",
                   help="""save the solution degrees of freedom after they have been calculated (for interactive plotting)""")
+parser.add_option("--setupOnly",
+                  default=False,
+                  dest="setupOnly",
+                  action="store_true",
+                  help="Don't actually compute a solution, just initialize the Numerical Solution")
 
 
 (opts,args) = parser.parse_args(args=[])
 
 if opts.debug:
+    import pdb
     pdb.set_trace()
 
+log = Profiling.logEvent
+logDir = None
+if opts.dataDir != '':
+    if not os.path.exists(opts.dataDir):
+    	try: 
+    	     os.mkdir(opts.dataDir)
+        except os.error:
+             print "Failed to create: " + opts.dataDir 
+             opts.dataDir=''
+    logDir = opts.dataDir
+
+log("Initializing Proteus")
+log("HashDist Version: " + version.hashdist)
+log("HashStack Version: " + version.hashstack)
+log("Proteus Version: " + version.proteus)
+
+log("Initializing MPI")
+if opts.petscOptions != None:
+    petsc_argv = sys.argv[:1]+opts.petscOptions.split()
+    log("PETSc options from commandline")
+    log(str(petsc_argv))
+else:
+    petsc_argv=sys.argv[:1]
+if opts.petscOptionsFile != None:
+
+    petsc_argv=[sys.argv[0]]
+    with open(opts.petscOptionsFile) as petsc_file:
+        data = petsc_file.readlines()
+    def strip_comments(line):
+        if '#' in line:
+            line = line[:line.index('#')]
+        return line
+
+    stripped_data = [strip_comments(line) for line in data]
+    petsc_argv += '\n'.join(stripped_data).split()
+    log("PETSc options from commandline")
+    log(str(petsc_argv))
+
+Comm.argv = petsc_argv
+comm = Comm.init()
+Profiling.procID=comm.rank()
 if opts.logLevel > 0:
     #mwf looks like just gets .py.log if no sso file given
     #Profiling.openLog(args[0][-3:]+".log",opts.logLevel)
@@ -197,35 +232,20 @@ if opts.logLevel > 0:
         Profiling.openLog(args[0][-3:]+".log",opts.logLevel)
 if opts.logAllProcesses:
     Profiling.logAllProcesses = True
-log = Profiling.logEvent
 
-log("Initializing MPI")#this won't show up unless logAllProcesses=True because we don't know our procID yet
-if opts.petscOptions != None:
-    petsc_argv = sys.argv[:1]+opts.petscOptions.split()
-    log("PETSc options from commandline")
-    log(str(petsc_argv))
-else:
-    petsc_argv=sys.argv[:1]
-if opts.petscOptionsFile != None:
-    petsc_argv=[sys.argv[0]]
-    petsc_argv += open(opts.petscOptionsFile).read().split()
-    log("PETSc options from commandline")
-    log(str(petsc_argv))
-
-Comm.argv = petsc_argv
-comm = Comm.init()
 #blanket import statements can go below here now that petsc4py should be initialized
-Profiling.procID=comm.rank()
-log("Initialized MPI")
-if opts.viewer is not False:
-    from proteusGraphical import *
 from proteus import *
+try:
+    from proteusGraphical import *
+except:
+    pass
 
 log("Adding "+str(opts.probDir)+" to path for loading modules")
 probDir = str(opts.probDir)
 if probDir not in sys.path:
     sys.path.insert(0,probDir)
 
+log("Loading problem-specific modules")
 pList = []
 nList = []
 sList = []
