@@ -417,13 +417,21 @@ class directionalWaves:
 if __name__ == '__main__':
     from matplotlib.pyplot import *
     import os as os
-    def etaCalc(x,y,z,t,wave_fun):
+    def etaCalc(x,y,z,t,wave_fun,var="eta"):
         eta = np.zeros((len(x),len(y),len(z),len(t)),float)
         for n,T in enumerate(t):
             for J,xi in enumerate(x):
                 for I,yi in enumerate(y):
                     for K,zi in enumerate(z):
-                        eta[J,I,K,n] = wave_fun.eta(xi,yi,zi,T)
+                        if var == "eta":
+                            eta[J,I,K,n] = wave_fun.eta(xi,yi,zi,T)
+                        elif var == "u":
+                            eta[J,I,K,n] = wave_fun.u(xi,yi,zi,T)
+                        elif var == "v":
+                            eta[J,I,K,n] = wave_fun.u(xi,yi,zi,T)
+                        elif var == "w":
+                            eta[J,I,K,n] = wave_fun.u(xi,yi,zi,T)
+
         return eta
     def plotSeriesAlongAxis(x,t,ts,ifig,string):
        # print(x)
@@ -471,6 +479,8 @@ if __name__ == '__main__':
     pyplot.ylim(0,max(y))
     pyplot.savefig("contourEtat=0.png")
 
+
+    
                    
 
 """
