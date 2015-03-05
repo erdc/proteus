@@ -511,21 +511,14 @@ class LevelModel(OneLevelTransport):
         log(memory("TimeIntegration","OneLevelTransport"),level=4)
         log("Calculating numerical quadrature formulas",2)
         self.calculateQuadrature()
-        #lay out components/equations contiguously for now
-        self.offset = [0]
-        for ci in range(1,self.nc):
-            self.offset += [self.offset[ci-1]+self.nFreeDOF_global[ci-1]]
-        self.stride = [1 for ci in range(self.nc)]
-        #use contiguous layout of components for parallel, requires weak DBC's
+
+        self.setupFieldStrides()
+
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
             assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
-            self.offset = [0]
-            for ci in range(1,self.nc):
-                self.offset += [ci]
-            self.stride = [self.nc for ci in range(self.nc)]
-        #
+
         log(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType != None:
             if options == None or options.periodicDirichletConditions == None:
