@@ -100,7 +100,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  movingDomain=False,
                  useVF=0.0,
                  useRBLES=0.0,
-		 useMetrics=0.0,
+                 useMetrics=0.0,
                  useConstant_he=False,
                  dragAlpha=0.01,
                  dragBeta =0.0,
@@ -117,7 +117,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  waterDepth=0.5,
                  Omega_s=[[0.45,0.55],[0.2,0.4],[0.0,1.0]],
                  epsFact_source=1.,
-                 epsFact_solid=1.0,
+                 epsFact_solid=None,
                  eb_adjoint_sigma=1.0,
                  eb_penalty_constant=10.0,
                  forceStrongDirichlet=False,
@@ -1426,6 +1426,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('velocity',0)],
             self.ebq_global[('totalFlux',0)],
             self.elementResidual[0],
+            self.mesh.elementMaterialTypes,
             self.mesh.elementBoundaryMaterialTypes,
             self.coefficients.barycenters,
             self.coefficients.wettedAreas,
@@ -1638,7 +1639,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(3,0)],
             self.csrColumnOffsets_eb[(3,1)],
             self.csrColumnOffsets_eb[(3,2)],
-            self.csrColumnOffsets_eb[(3,3)])
+            self.csrColumnOffsets_eb[(3,3)],
+            self.mesh.elementMaterialTypes)
 
         if not self.forceStrongConditions and max(numpy.linalg.norm(self.u[1].dof,numpy.inf),numpy.linalg.norm(self.u[2].dof,numpy.inf),numpy.linalg.norm(self.u[3].dof,numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace=True
