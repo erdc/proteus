@@ -145,8 +145,11 @@ class NS_base:  # (HasTraits):
                         p.domain = Domain.RectangularDomain(L=p.L[:3],name=p.name)
                 else:
                     raise RuntimeError("No support for domains in more than three dimensions")
+                        #mwf hack for multilevel?
             #now generate meshes, could move to Domain and use polymorphism or MeshTools
-            if isinstance(p.domain,Domain.RectangularDomain):
+            if 'mlMesh' in dir(n) and isinstance(n.mlMesh,MeshTools.MultilevelMesh):
+                mlMesh = n.mlMesh
+            elif isinstance(p.domain,Domain.RectangularDomain):
                 if p.domain.nd == 1:
                     mlMesh = MeshTools.MultilevelEdgeMesh(n.nn,1,1,
                                                           p.domain.L[0],1,1,

@@ -227,9 +227,9 @@ class SimulationProcessor:
             for il,m in enumerate(mlvt.levelModelList):
                 for ci in range(p.coefficients.nc):
                     if ci in self.flags['components'] and m.q.has_key(('m',ci)):
-                        self.errorData[ci][il]['globalMass0'] = Norms.globalScalarDomainIntegral(m.q['abs(det(J))'],
-                                                                                             m.elementQuadratureWeights[('m',ci)],
-                                                                                             m.q[('m',ci)])
+                        self.errorData[ci][il]['globalMass0'] = Norms.globalScalarDomainIntegral(m.q['dV'],
+                                                                                                 m.q[('m',ci)],
+                                                                                                 m.mesh.subdomainMesh.nElements_owned)
                         if self.flags['echo']:
                             logEvent("""t= %g globalMass0[%d][%d] = %g """ % (tsim,ci,il,
                                                                            self.errorData[ci][il]['globalMass0']))
@@ -242,10 +242,10 @@ class SimulationProcessor:
             for il,m in enumerate(mlvt.levelModelList):
                 for ci in range(p.coefficients.nc):
                     if ci in self.flags['components'] and m.q.has_key(('m',ci)):
-                        hm = numpy.where(m.q[('m',ci)] >= 0.0,1.0,0.0)
-                        self.errorData[ci][il]['globalHeavisideMass0'] = Norms.globalScalarDomainIntegral(m.q['abs(det(J))'],
-                                                                                                  m.elementQuadratureWeights[('m',ci)],
-                                                                                                  hm)
+                        hm = numpy.where(m.q[('m',ci)][0:m.mesh.subdomainMesh.nElements_owned] >= 0.0,1.0,0.0)
+                        self.errorData[ci][il]['globalHeavisideMass0'] = Norms.globalScalarDomainIntegral(m.q['dV'],
+                                                                                                          hm,
+                                                                                                          m.mesh.subdomainMesh.nElements_owned)
                         if self.flags['echo']:
                             logEvent("""t= %g globalHeavisideMass0[%d][%d] = %g """ % (tsim,ci,il,
                                                                                        self.errorData[ci][il]['globalHeavisideMass0']))
@@ -490,9 +490,9 @@ class SimulationProcessor:
             for il,m in enumerate(mlvt.levelModelList):
                 for ci in range(p.coefficients.nc):
                     if ci in self.flags['components'] and m.q.has_key(('m',ci)):
-                        self.errorData[ci][il]['globalMassF'].append(Norms.globalScalarDomainIntegral(m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                                                                      m.elementQuadratureWeights[('m',ci)],
-                                                                                                      m.q[('m',ci)][0:m.mesh.subdomainMesh.nElements_owned]))
+                        self.errorData[ci][il]['globalMassF'].append(Norms.globalScalarDomainIntegral(m.q['dV'],
+                                                                                                 m.q[('m',ci)],
+                                                                                                 m.mesh.subdomainMesh.nElements_owned))
                         if self.flags['echo']:
                             logEvent("""t= %g globalMassF[%d][%d] = %g globalMassDiff[%d][%d]= %g""" % \
                                          (tsim,ci,il,self.errorData[ci][il]['globalMassF'][-1],ci,il,
@@ -507,9 +507,10 @@ class SimulationProcessor:
                 for ci in range(p.coefficients.nc):
                     if ci in self.flags['components'] and m.q.has_key(('m',ci)):
                         hm = numpy.where(m.q[('m',ci)][0:m.mesh.subdomainMesh.nElements_owned] >= 0.0,1.0,0.0)
-                        self.errorData[ci][il]['globalHeavisideMassF'].append(Norms.globalScalarDomainIntegral(m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                                                                       m.elementQuadratureWeights[('m',ci)],
-                                                                                                       hm))
+                        self.errorData[ci][il]['globalHeavisideMass0'] = Norms.globalScalarDomainIntegral(m.q['dV'],
+                                                                                                          hm,
+                                                                                                          m.mesh.subdomainMesh.nElements_owned)
+
                         if self.flags['echo']:
                             logEvent("""t= %g globalHeavisideMassF[%d][%d] = %g globalHeavisideMassDiff[%d][%d]= %g""" % \
                                          (tsim,ci,il,self.errorData[ci][il]['globalHeavisideMassF'][-1],ci,il,
@@ -1144,9 +1145,9 @@ class SimulationProcessor:
             for il,m in enumerate(mlvt.levelModelList):
                 for ci in range(p.coefficients.nc):
                     if ci in self.flags['components'] and m.q.has_key(('m',ci)):
-                        globalMass = Norms.globalScalarDomainIntegral(m.q['abs(det(J))'],
-                                                             m.elementQuadratureWeights[('m',ci)],
-                                                             m.q[('m',ci)])
+                        globalMass = Norms.globalScalarDomainIntegral(m.q['dV'],
+                                                                      m.q[('m',ci)],
+                                                                      m.mesh.subdomainMesh.nElements_owned)
                         globErr = abs(globalMass-self.errorData[ci][il]['globalMass0'])
                         self.errorData[ci][il]['globalMassF'].append(globalMass)
                         if self.flags['echo']:
@@ -1161,10 +1162,10 @@ class SimulationProcessor:
             for il,m in enumerate(mlvt.levelModelList):
                 for ci in range(p.coefficients.nc):
                     if ci in self.flags['components'] and m.q.has_key(('m',ci)):
-                        hm = numpy.where(m.q[('m',ci)] >= 0.0,1.0,0.0)
-                        globalMass = Norms.globalScalarDomainIntegral(m.q['abs(det(J))'],
-                                                              m.elementQuadratureWeights[('m',ci)],
-                                                              hm)
+                        hm = numpy.where(m.q[('m',ci)][0:m.mesh.subdomainMesh.nElements_owned] >= 0.0,1.0,0.0)
+                        globalMass = Norms.globalScalarDomainIntegral(m.q['dV'],
+                                                                      hm,
+                                                                      m.mesh.subdomainMesh.nElements_owned)
                         globErr = abs(globalMass-self.errorData[ci][il]['globalHeavisideMass0'])
                         self.errorData[ci][il]['globalHeavisideMassF'].append(globalMass)
                         if self.flags['echo']:

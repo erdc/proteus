@@ -220,10 +220,14 @@ def scalarSmoothedHeavisideDomainIntegral(epsFact,elementDiameters,dV,nValueArra
         partialSum = cfemIntegrals.scalarSmoothedHeavisideDomainIntegral(epsFact,elementDiameters,dV,nValueArray,nElements)
     return globalSum(partialSum)
 #compute the mass in the domain, but make global across processors
-def globalScalarDomainIntegral(abs_det_J,quadratureWeightArray,nValueArray):
+def globalScalarDomainIntegral(dV,nValueArray,nElements=None):
     integral = 0.0
+    if nElements == None:
+        N = nValueArray.shape[0]
+    else:
+        N = nElements
     if useC:
-        integral = cfemIntegrals.scalarDomainIntegral(abs_det_J,quadratureWeightArray,nValueArray)
+        integral = cfemIntegrals.scalarDomainIntegral(dV,nValueArray,N)
     else:
         integral=0.0
         range_nQuadraturePoints_element = range(nValueArray.shape[1])
