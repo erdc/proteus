@@ -57,7 +57,7 @@ cdef extern from "RANS2P.h" namespace "proteus":
 				   double C_dc,
 				   double C_b,
 # VRANS start
-				   double eps_solid,
+				   double* eps_solid,
 				   double* phi_solid,
 				   double* q_velocity_solid,
 				   double* q_porosity,
@@ -145,6 +145,7 @@ cdef extern from "RANS2P.h" namespace "proteus":
 				   double* ebqe_velocity,
 				   double* flux,
                                    double* elementResidual_p,
+				   int* elementFlags,
 				   int* boundaryFlags,
 				   double* barycenters,
 				   double* wettedAreas,
@@ -201,7 +202,7 @@ cdef extern from "RANS2P.h" namespace "proteus":
 				   double C_dg,
 				   double C_b,
 # VRANS start
-				   double eps_solid,
+				   double* eps_solid,
 				   double* phi_solid,
 				   double* q_velocity_solid,
 				   double* q_porosity,
@@ -304,7 +305,8 @@ cdef extern from "RANS2P.h" namespace "proteus":
 				   int* csrColumnOffsets_eb_w_p,
 				   int* csrColumnOffsets_eb_w_u,
 				   int* csrColumnOffsets_eb_w_v,
-				   int* csrColumnOffsets_eb_w_w)
+				   int* csrColumnOffsets_eb_w_w,				   
+				   int* elementFlags)
         void calculateForce(double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -518,7 +520,7 @@ cdef class cRANS2P_base:
                          double C_dc,
 			 double C_b,
 # VRANS start
-			 double eps_solid,
+			 numpy.ndarray eps_solid,
 		         numpy.ndarray phi_solid,
 			 numpy.ndarray q_velocity_solid,
                          numpy.ndarray q_porosity,
@@ -606,6 +608,7 @@ cdef class cRANS2P_base:
                          numpy.ndarray ebqe_velocity,
                          numpy.ndarray flux,
                          numpy.ndarray elementResidual_p,
+			 numpy.ndarray elementFlags,
 			 numpy.ndarray boundaryFlags,
 			 numpy.ndarray barycenters,
 			 numpy.ndarray wettedAreas,
@@ -663,7 +666,7 @@ cdef class cRANS2P_base:
                                        C_dc,
 				       C_b,
 # VRANS start
-				       eps_solid,
+				       <double*> eps_solid.data,
 				       <double*> phi_solid.data,
 				       <double*> q_velocity_solid.data,
                                        <double*> q_porosity.data,
@@ -751,6 +754,7 @@ cdef class cRANS2P_base:
                                        <double*> ebqe_velocity.data,
                                        <double*> flux.data,
                                        <double*> elementResidual_p.data,
+				       <int*> elementFlags.data,
 				       <int*> boundaryFlags.data,
 				       <double*> barycenters.data,
 				       <double*> wettedAreas.data,
@@ -809,7 +813,7 @@ cdef class cRANS2P_base:
                          double C_dg,
 			 double C_b,
 # VRANS start
-			 double eps_solid,
+			 numpy.ndarray eps_solid,
 		 	 numpy.ndarray phi_solid,
 			 numpy.ndarray q_velocity_solid,
                          numpy.ndarray q_porosity,
@@ -912,7 +916,8 @@ cdef class cRANS2P_base:
                          numpy.ndarray csrColumnOffsets_eb_w_p,
                          numpy.ndarray csrColumnOffsets_eb_w_u,
                          numpy.ndarray csrColumnOffsets_eb_w_v,
-                         numpy.ndarray csrColumnOffsets_eb_w_w):
+                         numpy.ndarray csrColumnOffsets_eb_w_w,
+			 numpy.ndarray elementFlags):
        cdef numpy.ndarray rowptr,colind,globalJacobian_a
        (rowptr,colind,globalJacobian_a) = globalJacobian.getCSRrepresentation()
        self.thisptr.calculateJacobian(<double*> mesh_trial_ref.data,
@@ -965,7 +970,7 @@ cdef class cRANS2P_base:
                                       C_dg,
 				      C_b,
 # VRANS start
-                                      eps_solid,
+                                      <double*> eps_solid.data,
                                       <double*> phi_solid.data,
                                       <double*> q_velocity_solid.data,
                                       <double*> q_porosity.data,
@@ -1068,7 +1073,8 @@ cdef class cRANS2P_base:
                                       <int*> csrColumnOffsets_eb_w_p.data,
                                       <int*> csrColumnOffsets_eb_w_u.data,
                                       <int*> csrColumnOffsets_eb_w_v.data,
-                                      <int*> csrColumnOffsets_eb_w_w.data)
+                                      <int*> csrColumnOffsets_eb_w_w.data,
+				      <int*> elementFlags.data)
 
    def calculateForce(self,
                          numpy.ndarray mesh_trial_ref,
