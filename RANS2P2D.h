@@ -952,10 +952,6 @@ namespace proteus
 #else
       viscosity = nu;
 #endif
-      //cek old
-      H_s = smoothedHeaviside(eps_s,phi_s);
-      //cek new
-      //      double x = fmin(0.0, fmax( 1.0, 0.5+phi_s/(2.0*eps_s)));//0 at phi_s = -eps, 1 at phi_s=eps
       double x = fmax(0.0, fmin( 1.0, 0.5+phi_s/(2.0*eps_s)));//0 at phi_s = -eps, 1 at phi_s=eps
       H_s = 1 - (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
       //
