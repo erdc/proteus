@@ -1,6 +1,7 @@
-import platform
+import os
 
-if platform.node().startswith('garnet') or platform.node().startswith('copper'):
-    from garnet import *
+if 'HOSTNAME' in os.environ:
+    if os.environ['HOSTNAME'].startswith('garnet') or os.environ['HOSTNAME'].startswith('copper'):
+        from garnet import *
 else:
     from default import *
