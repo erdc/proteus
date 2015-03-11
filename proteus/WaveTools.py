@@ -7,9 +7,8 @@ wave generation sources, and validation solutions for numerical wave
 codes.
 
 """
-from math import pi,tanh,sqrt,exp,log,sin,cos,cosh,sinh
+from math import pi, tanh, sqrt, exp, log, sin, cos, cosh, sinh
 import numpy as np
-from matplotlib  import pyplot
 from Profiling import logEvent
 
 
