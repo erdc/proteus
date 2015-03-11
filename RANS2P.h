@@ -953,7 +953,7 @@ namespace proteus
       viscosity = nu;
 #endif
       double x = fmax(0.0, fmin( 1.0, 0.5+phi_s/(2.0*eps_s)));//0 at phi_s = -eps, 1 at phi_s=eps
-      H_s = 1 - (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
+      H_s =  (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
       //
       uc = sqrt(u*u+v*v*+w*w); 
       duc_du = u/(uc+1.0e-12);
@@ -1043,7 +1043,6 @@ namespace proteus
       nu_t = fmax(nu_t,1.0e-4*nu); //limit according to Lew, Buscaglia etal 01
       //mwf hack
       nu_t     = fmin(nu_t,1.0e6*nu);
-
 #ifdef COMPRESSIBLE_FORM
       eddy_viscosity = nu_t*rho;
       //u momentum diffusion tensor
@@ -1103,7 +1102,6 @@ namespace proteus
       mom_wv_diff_ten[0]+=porosity*eddy_viscosity;
   
 #endif
-
     }
 
     inline
