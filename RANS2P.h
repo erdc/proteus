@@ -65,7 +65,7 @@ namespace proteus
 				   double C_dc,
 				   double C_b,
 				   //VRANS
-				   double eps_solid,
+				   const double* eps_solid,
 				   const double* phi_solid,
 				   const double* q_velocity_solid,
 				   const double* q_porosity,
@@ -152,6 +152,7 @@ namespace proteus
 				   double* ebqe_velocity,
 				   double* flux,
 				   double* elementResidual_p,
+				   int* elementFlags,
 				   int* boundaryFlags,
 				   double* barycenters,
 				   double* wettedAreas,
@@ -211,7 +212,7 @@ namespace proteus
 				   double C_dg,
 				   double C_b,
 				   //VRANS
-				   double eps_solid,
+				   const double* eps_solid,
 				   const double* phi_solid,
 				   const double* q_velocity_solid,
 				   const double* q_porosity,
@@ -313,7 +314,8 @@ namespace proteus
 				   int* csrColumnOffsets_eb_w_p,
 				   int* csrColumnOffsets_eb_w_u,
 				   int* csrColumnOffsets_eb_w_v,
-				   int* csrColumnOffsets_eb_w_w)=0;
+				   int* csrColumnOffsets_eb_w_w,				   
+				   int* elementFlags)=0;
     virtual void calculateForce(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -950,8 +952,9 @@ namespace proteus
 #else
       viscosity = nu;
 #endif
-      H_s = smoothedHeaviside(eps_s,phi_s);
-
+      double x = fmax(0.0, fmin( 1.0, 0.5+phi_s/(2.0*eps_s)));//0 at phi_s = -eps, 1 at phi_s=eps
+      H_s =  (exp(pow(x,3.5)) - 1.)/ (exp(1.) - 1.);
+      //
       uc = sqrt(u*u+v*v*+w*w); 
       duc_du = u/(uc+1.0e-12);
       duc_dv = v/(uc+1.0e-12);
@@ -1040,7 +1043,6 @@ namespace proteus
       nu_t = fmax(nu_t,1.0e-4*nu); //limit according to Lew, Buscaglia etal 01
       //mwf hack
       nu_t     = fmin(nu_t,1.0e6*nu);
-
 #ifdef COMPRESSIBLE_FORM
       eddy_viscosity = nu_t*rho;
       //u momentum diffusion tensor
@@ -1100,7 +1102,6 @@ namespace proteus
       mom_wv_diff_ten[0]+=porosity*eddy_viscosity;
   
 #endif
-
     }
 
     inline
@@ -1732,7 +1733,7 @@ namespace proteus
 			   double C_dc,
 			   double C_b,
 			   //VRANS
-			   double eps_solid,
+			   const double* eps_solid,
 			   const double* phi_solid,
 			   const double* q_velocity_solid,
 			   const double* q_porosity,
@@ -1820,6 +1821,7 @@ namespace proteus
 			   double* ebqe_velocity,
 			   double* flux,
 			   double* elementResidual_p_save,
+			   int* elementFlags,
 			   int* boundaryFlags,
 			   double* barycenters,
 			   double* wettedAreas,
@@ -2101,7 +2103,7 @@ namespace proteus
 						u,//q_velocity_sge[eN_k_nSpace+0],//u
 						v,//q_velocity_sge[eN_k_nSpace+1],//v
 						w,//q_velocity_sge[eN_k_nSpace+2],//w
-						eps_solid,
+						eps_solid[elementFlags[eN]],
 						phi_solid[eN_k],
 						q_velocity_solid[eN_k_nSpace+0],
 						q_velocity_solid[eN_k_nSpace+1],
@@ -3257,7 +3259,7 @@ namespace proteus
 			   double C_dg,
 			   double C_b,
 			   //VRANS
-			   double eps_solid,
+			   const double* eps_solid,
 			   const double* phi_solid,
 			   const double* q_velocity_solid,
 			   const double* q_porosity,
@@ -3360,7 +3362,8 @@ namespace proteus
 			   int* csrColumnOffsets_eb_w_p,
 			   int* csrColumnOffsets_eb_w_u,
 			   int* csrColumnOffsets_eb_w_v,
-			   int* csrColumnOffsets_eb_w_w)
+			   int* csrColumnOffsets_eb_w_w,
+			   int* elementFlags)
     {
       //
       //loop over elements to compute volume integrals and load them into the element Jacobians and global Jacobian
@@ -3663,7 +3666,7 @@ namespace proteus
 						u,//q_velocity_sge[eN_k_nSpace+0],//u
 						v,//q_velocity_sge[eN_k_nSpace+1],//v
 						w,//q_velocity_sge[eN_k_nSpace+2],//w
-						eps_solid,
+						eps_solid[elementFlags[eN]],
 						phi_solid[eN_k],
 						q_velocity_solid[eN_k_nSpace+0],
 						q_velocity_solid[eN_k_nSpace+1],
