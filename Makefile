@@ -177,7 +177,7 @@ ${PROTEUS_PREFIX}/bin/proteus ${PROTEUS_PREFIX}/bin/proteus_env.sh: profile
 	@echo "************************"
 
 # Proteus install should be triggered by an out-of-date hashstack profile, source tree, or modified setup files.
-install: profile config.py $(shell find proteus -type f) $(wildcard *.py) proteus
+install: profile $(shell find proteus -type f) $(wildcard *.py) proteus
 	@echo "************************"
 	@echo "Installing..."
 	@echo "************************"
@@ -198,7 +198,7 @@ install: profile config.py $(shell find proteus -type f) $(wildcard *.py) proteu
 	$(call show_info)
 	$(call howto)
 
-develop: proteus profile config.py
+develop: proteus profile 
 	@echo "************************"
 	@echo "Installing development version"
 	@echo "************************"
