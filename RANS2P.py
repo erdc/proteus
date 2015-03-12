@@ -351,7 +351,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             self.q_turb_var[1] = numpy.ones(self.model.q[('u',1)].shape,'d')
             self.ebqe_turb_var[1] = numpy.ones(self.model.ebqe[('u',1)].shape,'d')
-
+        if self.epsFact_solid == None:
+            self.epsFact_solid = numpy.ones(self.model.mesh.elementMaterialTypes.max()+1)
+        assert len(self.epsFact_solid) > self.model.mesh.elementMaterialTypes.max(), "epsFact_solid  array is not large  enough for the materials  in this mesh; length must be greater  than largest  material type ID"
+            
     def initializeMesh(self,mesh):
         #cek we eventually need to use the local element diameter
         self.eps_density = self.epsFact_density*mesh.h
