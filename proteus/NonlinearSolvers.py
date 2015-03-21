@@ -663,6 +663,7 @@ class POD_Newton(Newton):
         self.DBf = self.DB
         self.Uf  = None; self.Uf_transpose = None; 
         self.rho_deim = None; self.Ut_Uf_PtUf_inv=None
+        self.rs = None; self.rt = None
         if self.use_deim:
             Uf = np.loadtxt('Fs_SVD_basis')
             self.Uf = Uf[:,0:self.DBf]
@@ -674,11 +675,23 @@ class POD_Newton(Newton):
             #to get 'projection' from deim to coarse space
             self.Ut_Uf_PtUf_inv = np.dot(self.U_transpose,Uf_PtUf_inv)
         self.pod_J = np.zeros((self.DB,self.DB),'d')
+        self.pod_Jt= np.zeros((self.DBf,self.DB),'d')
+        self.pod_Jtmp= np.zeros((self.DBf,self.DB),'d')
         self.pod_linearSolver = LU(self.pod_J)
         self.J_rowptr,self.J_colind,self.J_nzval = self.J.getCSRrepresentation()
         self.pod_du = np.zeros(self.DB)
     def norm(self,u):
         return self.norm_function(u)
+    #mwf add for DEIM
+    def computeDEIMresiduals(self,u,r,rs,rt):
+        """
+        wrapper for computing residuals separately for DEIM
+        """
+        assert 'getSpatialResidual' in dir(self.F)
+        assert 'getMassResidual' in dir(self.F)
+        self.F.getSpatialResidual(u,rs)
+        self.F.getMassResidual(u,rt)
+
     def solveInitialize(self,u,r,b):
         """
         if using deim modifies base initialization by
@@ -694,6 +707,12 @@ class POD_Newton(Newton):
         else:
             self.r=r
         self.computeResidual(u,r,b)
+        if self.use_deim:
+            if self.rs == None:
+                self.rs = Vec(self.F.dim)
+            if self.rt == None:
+                self.rt = Vec(self.F.dim)
+            self.computeDEIMresiduals(u,self.rs,self.rt)
         self.its = 0
         self.norm_r0 = self.norm(r)
         self.norm_r = self.norm_r0
@@ -752,6 +771,328 @@ class POD_Newton(Newton):
             u[:] = np.dot(self.U,pod_u)
             self.computeResidual(u,r,b)
             pod_r[:] = np.dot(self.U_transpose,r)
+            r[:] = np.dot(self.U,pod_r)
+        else:
+            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+                % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            return self.failedFlag
+        log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+            % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+    def solveDEIM(self,u,r=None,b=None,par_u=None,par_r=None):
+        """
+        Solve F(u) = b
+
+        b -- right hand side
+        u -- solution
+        r -- F(u) - b
+
+        using DEIM
+        Start with brute force just testing things
+        """
+        assert self.use_deim
+        pod_u = np.dot(self.U_transpose,u)
+        u[:] = np.dot(self.U,pod_u)           
+        #evaluate fine grid residuals directly
+        r=self.solveInitialize(u,r,b)
+        r_deim = self.rt[self.rho_deim].copy()
+        r_deim += self.rs[self.rho_deim]
+        #pod_r = np.dot(self.U_transpose,r)
+        pod_r = np.dot(self.Ut_Uf_PtUf_inv,r_deim)
+        self.norm_r0 = self.norm(pod_r)
+        self.norm_r_hist = []
+        self.norm_du_hist = []
+        self.gammaK_max=0.0
+        self.linearSolverFailed = False
+        while (not self.converged(pod_r) and
+               not self.failed()):
+            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+                % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+            if self.updateJacobian or self.fullNewton:
+                self.updateJacobian = False
+                #go ahead and evaluate spatial grid on fine grid for now
+                self.F.getSpatialJacobian(self.J)
+                #now this holds P^T J_s U                
+                self.pod_Jtmp[:] = 0.0
+                for i in range(self.DBf):
+                    for j in range(self.DB):
+                        for k in range(self.F.dim):
+                            deim_k = self.rho_deim[k]
+                            for m in range(self.J_rowptr[deim_k],self.J_rowptr[deim_k+1]):
+                                self.pod_Jtmp[i,j] += self.J_nzval[m]*self.U[self.J_colind[m],j]
+                #combined DEIM, coarse grid projection
+                self.pod_J = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
+                self.F.getMassJacobian(self.J)
+                #now this holds P^T J_s U                
+                self.pod_Jtmp[:] = 0.0
+                for i in range(self.DBf):
+                    for j in range(self.DB):
+                        for k in range(self.F.dim):
+                            deim_k = self.rho_deim[k]
+                            for m in range(self.J_rowptr[deim_k],self.J_rowptr[deim_k+1]):
+                                self.pod_Jtmp[i,j] += self.J_nzval[m]*self.U[self.J_colind[m],j]
+                #combined DEIM, coarse grid projection
+                self.pod_Jt = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
+                #combined
+                self.pod_J += self.pod_Jt
+                #self.linearSolver.prepare(b=r)
+                self.pod_linearSolver.prepare(b=pod_r)
+            self.du[:]=0.0
+            self.pod_du[:]=0.0
+            if not self.linearSolverFailed:
+                #self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                #self.linearSolverFailed = self.linearSolver.failed()
+                self.pod_linearSolver.solve(u=self.pod_du,b=pod_r)
+                self.linearSolverFailed = self.pod_linearSolver.failed() 
+            #pod_u-=np.dot(self.U_transpose,self.du)
+            pod_u-=self.pod_du
+            u[:] = np.dot(self.U,pod_u)
+            #self.computeResidual(u,r,b)
+            self.commputeDEIMresiduals(u,self.rs,self.rt)
+            r_deim = self.rt[self.rho_deim]
+            r_deim += self.rs[self.rho_deim]
+            #pod_r = np.dot(self.U_transpose,r)
+            pod_r = np.dot(self.Ut_Uf_PtUf_inv,r_deim)
+            r[:] = np.dot(self.U,pod_r)
+        else:
+            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+                % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            return self.failedFlag
+        log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+            % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+class POD_DEIM_Newton(Newton):
+    """Newton's method on the reduced order system based on POD"""
+    def __init__(self,
+                 linearSolver,
+                 F,J=None,du=None,par_du=None,
+                 rtol_r  = 1.0e-4,
+                 atol_r  = 1.0e-16,
+                 rtol_du = 1.0e-4,
+                 atol_du = 1.0e-16,
+                 maxIts  = 100,
+                 norm = l2Norm,
+                 convergenceTest = 'r',
+                 computeRates = True,
+                 printInfo = True,
+                 fullNewton=True,
+                 directSolver=False,
+                 EWtol=True,
+                 maxLSits = 100,
+                 use_deim=True):
+        Newton.__init__(self,
+                linearSolver,
+                F,J,du,par_du,
+                rtol_r,
+                atol_r,
+                rtol_du,
+                atol_du,
+                maxIts,
+                norm,
+                convergenceTest,
+                computeRates,
+                printInfo,
+                fullNewton,
+                directSolver,
+                EWtol,
+                maxLSits)
+        #setup reduced basis for solution 
+        self.DB = 11 #number of basis vectors for solution
+        U = np.loadtxt('SVD_basis')
+        self.U = U[:,0:self.DB]
+        self.U_transpose = self.U.conj().T
+        #setup reduced basis for DEIM interpolants
+        self.use_deim = use_deim
+        self.DBf = self.DB
+        self.Uf  = None; self.Uf_transpose = None; 
+        self.rho_deim = None; self.Ut_Uf_PtUf_inv=None
+        self.rs = None; self.rt = None
+        if self.use_deim:
+            Uf = np.loadtxt('Fs_SVD_basis')
+            self.Uf = Uf[:,0:self.DBf]
+            self.Uf_transpose = self.Uf.conj().T
+            #returns rho --> deim indices and deim 'projection' matrix
+            #U(P^TU)^{-1}
+            self.rho_deim,Uf_PtUf_inv = deim_utils.deim_alg(self.Uf,self.DBf)
+            #go ahead and left multiply projection matrix by solution basis
+            #to get 'projection' from deim to coarse space
+            self.Ut_Uf_PtUf_inv = np.dot(self.U_transpose,Uf_PtUf_inv)
+        self.pod_J = np.zeros((self.DB,self.DB),'d')
+        self.pod_Jt= np.zeros((self.DBf,self.DB),'d')
+        self.pod_Jtmp= np.zeros((self.DBf,self.DB),'d')
+        self.pod_linearSolver = LU(self.pod_J)
+        self.J_rowptr,self.J_colind,self.J_nzval = self.J.getCSRrepresentation()
+        self.pod_du = np.zeros(self.DB)
+    def norm(self,u):
+        return self.norm_function(u)
+    #mwf add for DEIM
+    def computeDEIMresiduals(self,u,r,rs,rt):
+        """
+        wrapper for computing residuals separately for DEIM
+        """
+        assert 'getSpatialResidual' in dir(self.F)
+        assert 'getMassResidual' in dir(self.F)
+        self.F.getSpatialResidual(u,rs)
+        self.F.getMassResidual(u,rt)
+
+    def solveInitialize(self,u,r,b):
+        """
+        if using deim modifies base initialization by
+        splitting up residual evaluation into separate pieces
+        interpolated by deim (right now just does 'mass' and 'space')
+
+        NOT FINISHED
+        """
+        if r == None:
+            if self.r == None:
+                self.r = Vec(self.F.dim)
+            r=self.r
+        else:
+            self.r=r
+        self.computeResidual(u,r,b)
+        if self.use_deim:
+            if self.rs == None:
+                self.rs = Vec(self.F.dim)
+            if self.rt == None:
+                self.rt = Vec(self.F.dim)
+            self.computeDEIMresiduals(u,self.rs,self.rt)
+        self.its = 0
+        self.norm_r0 = self.norm(r)
+        self.norm_r = self.norm_r0
+        self.ratio_r_solve = 1.0
+        self.ratio_du_solve = 1.0
+        self.last_log_ratio_r = 1.0
+        self.last_log_ratior_du = 1.0
+        #self.convergenceHistoryIsCorrupt=False
+        self.convergingIts = 0
+        #mwf begin hack for conv. rate
+        self.gustafsson_alpha = -12345.0
+        self.gustafsson_norm_du_last = -12345.0
+        #mwf end hack for conv. rate
+        return r
+    def solve(self,u,r=None,b=None,par_u=None,par_r=None):
+        """
+        Solve F(u) = b
+
+        b -- right hand side
+        u -- solution
+        r -- F(u) - b
+        """
+        pod_u = np.dot(self.U_transpose,u)
+        u[:] = np.dot(self.U,pod_u)           
+        r=self.solveInitialize(u,r,b)
+        pod_r = np.dot(self.U_transpose,r)
+        self.norm_r0 = self.norm(pod_r)
+        self.norm_r_hist = []
+        self.norm_du_hist = []
+        self.gammaK_max=0.0
+        self.linearSolverFailed = False
+        while (not self.converged(pod_r) and
+               not self.failed()):
+            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+                % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+            if self.updateJacobian or self.fullNewton:
+                self.updateJacobian = False
+                self.F.getJacobian(self.J)
+                self.pod_J[:] = 0.0
+                for i in range(self.DB):
+                    for j in range(self.DB):
+                        for k in range(self.F.dim):
+                            for m in range(self.J_rowptr[k],self.J_rowptr[k+1]):
+                                self.pod_J[i,j] += self.U_transpose[i,k]*self.J_nzval[m]*self.U[self.J_colind[m],j]
+                #self.linearSolver.prepare(b=r)
+                self.pod_linearSolver.prepare(b=pod_r)
+            self.du[:]=0.0
+            self.pod_du[:]=0.0
+            if not self.linearSolverFailed:
+                #self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                #self.linearSolverFailed = self.linearSolver.failed()
+                self.pod_linearSolver.solve(u=self.pod_du,b=pod_r)
+                self.linearSolverFailed = self.pod_linearSolver.failed() 
+            #pod_u-=np.dot(self.U_transpose,self.du)
+            pod_u-=self.pod_du
+            u[:] = np.dot(self.U,pod_u)
+            self.computeResidual(u,r,b)
+            pod_r[:] = np.dot(self.U_transpose,r)
+            r[:] = np.dot(self.U,pod_r)
+        else:
+            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+                % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            return self.failedFlag
+        log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
+            % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+    def solveDEIM(self,u,r=None,b=None,par_u=None,par_r=None):
+        """
+        Solve F(u) = b
+
+        b -- right hand side
+        u -- solution
+        r -- F(u) - b
+
+        using DEIM
+        Start with brute force just testing things
+        """
+        assert self.use_deim
+        pod_u = np.dot(self.U_transpose,u)
+        u[:] = np.dot(self.U,pod_u)           
+        #evaluate fine grid residuals directly
+        r=self.solveInitialize(u,r,b)
+        r_deim = self.rt[self.rho_deim].copy()
+        r_deim += self.rs[self.rho_deim]
+        #pod_r = np.dot(self.U_transpose,r)
+        pod_r = np.dot(self.Ut_Uf_PtUf_inv,r_deim)
+        self.norm_r0 = self.norm(pod_r)
+        self.norm_r_hist = []
+        self.norm_du_hist = []
+        self.gammaK_max=0.0
+        self.linearSolverFailed = False
+        while (not self.converged(pod_r) and
+               not self.failed()):
+            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
+                % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+            if self.updateJacobian or self.fullNewton:
+                self.updateJacobian = False
+                #go ahead and evaluate spatial grid on fine grid for now
+                self.F.getSpatialJacobian(self.J)
+                #now this holds P^T J_s U                
+                self.pod_Jtmp[:] = 0.0
+                for i in range(self.DBf):
+                    for j in range(self.DB):
+                        for k in range(self.F.dim):
+                            deim_k = self.rho_deim[k]
+                            for m in range(self.J_rowptr[deim_k],self.J_rowptr[deim_k+1]):
+                                self.pod_Jtmp[i,j] += self.J_nzval[m]*self.U[self.J_colind[m],j]
+                #combined DEIM, coarse grid projection
+                self.pod_J = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
+                self.F.getMassJacobian(self.J)
+                #now this holds P^T J_s U                
+                self.pod_Jtmp[:] = 0.0
+                for i in range(self.DBf):
+                    for j in range(self.DB):
+                        for k in range(self.F.dim):
+                            deim_k = self.rho_deim[k]
+                            for m in range(self.J_rowptr[deim_k],self.J_rowptr[deim_k+1]):
+                                self.pod_Jtmp[i,j] += self.J_nzval[m]*self.U[self.J_colind[m],j]
+                #combined DEIM, coarse grid projection
+                self.pod_Jt = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
+                #combined
+                self.pod_J += self.pod_Jt
+                #self.linearSolver.prepare(b=r)
+                self.pod_linearSolver.prepare(b=pod_r)
+            self.du[:]=0.0
+            self.pod_du[:]=0.0
+            if not self.linearSolverFailed:
+                #self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
+                #self.linearSolverFailed = self.linearSolver.failed()
+                self.pod_linearSolver.solve(u=self.pod_du,b=pod_r)
+                self.linearSolverFailed = self.pod_linearSolver.failed() 
+            #pod_u-=np.dot(self.U_transpose,self.du)
+            pod_u-=self.pod_du
+            u[:] = np.dot(self.U,pod_u)
+            #self.computeResidual(u,r,b)
+            self.commputeDEIMresiduals(u,self.rs,self.rt)
+            r_deim = self.rt[self.rho_deim]
+            r_deim += self.rs[self.rho_deim]
+            #pod_r = np.dot(self.U_transpose,r)
+            pod_r = np.dot(self.Ut_Uf_PtUf_inv,r_deim)
             r[:] = np.dot(self.U,pod_r)
         else:
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
