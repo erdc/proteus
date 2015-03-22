@@ -618,6 +618,7 @@ class Newton(NonlinearSolver):
         log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
 
+import deim_utils
 class POD_Newton(Newton):
     """Newton's method on the reduced order system based on POD"""
     def __init__(self,
@@ -683,7 +684,7 @@ class POD_Newton(Newton):
     def norm(self,u):
         return self.norm_function(u)
     #mwf add for DEIM
-    def computeDEIMresiduals(self,u,r,rs,rt):
+    def computeDEIMresiduals(self,u,rs,rt):
         """
         wrapper for computing residuals separately for DEIM
         """
@@ -771,87 +772,6 @@ class POD_Newton(Newton):
             u[:] = np.dot(self.U,pod_u)
             self.computeResidual(u,r,b)
             pod_r[:] = np.dot(self.U_transpose,r)
-            r[:] = np.dot(self.U,pod_r)
-        else:
-            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-                % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-            return self.failedFlag
-        log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-            % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-    def solveDEIM(self,u,r=None,b=None,par_u=None,par_r=None):
-        """
-        Solve F(u) = b
-
-        b -- right hand side
-        u -- solution
-        r -- F(u) - b
-
-        using DEIM
-        Start with brute force just testing things
-        """
-        assert self.use_deim
-        pod_u = np.dot(self.U_transpose,u)
-        u[:] = np.dot(self.U,pod_u)           
-        #evaluate fine grid residuals directly
-        r=self.solveInitialize(u,r,b)
-        r_deim = self.rt[self.rho_deim].copy()
-        r_deim += self.rs[self.rho_deim]
-        #pod_r = np.dot(self.U_transpose,r)
-        pod_r = np.dot(self.Ut_Uf_PtUf_inv,r_deim)
-        self.norm_r0 = self.norm(pod_r)
-        self.norm_r_hist = []
-        self.norm_du_hist = []
-        self.gammaK_max=0.0
-        self.linearSolverFailed = False
-        while (not self.converged(pod_r) and
-               not self.failed()):
-            log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
-                % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
-            if self.updateJacobian or self.fullNewton:
-                self.updateJacobian = False
-                #go ahead and evaluate spatial grid on fine grid for now
-                self.F.getSpatialJacobian(self.J)
-                #now this holds P^T J_s U                
-                self.pod_Jtmp[:] = 0.0
-                for i in range(self.DBf):
-                    for j in range(self.DB):
-                        for k in range(self.F.dim):
-                            deim_k = self.rho_deim[k]
-                            for m in range(self.J_rowptr[deim_k],self.J_rowptr[deim_k+1]):
-                                self.pod_Jtmp[i,j] += self.J_nzval[m]*self.U[self.J_colind[m],j]
-                #combined DEIM, coarse grid projection
-                self.pod_J = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
-                self.F.getMassJacobian(self.J)
-                #now this holds P^T J_s U                
-                self.pod_Jtmp[:] = 0.0
-                for i in range(self.DBf):
-                    for j in range(self.DB):
-                        for k in range(self.F.dim):
-                            deim_k = self.rho_deim[k]
-                            for m in range(self.J_rowptr[deim_k],self.J_rowptr[deim_k+1]):
-                                self.pod_Jtmp[i,j] += self.J_nzval[m]*self.U[self.J_colind[m],j]
-                #combined DEIM, coarse grid projection
-                self.pod_Jt = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
-                #combined
-                self.pod_J += self.pod_Jt
-                #self.linearSolver.prepare(b=r)
-                self.pod_linearSolver.prepare(b=pod_r)
-            self.du[:]=0.0
-            self.pod_du[:]=0.0
-            if not self.linearSolverFailed:
-                #self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-                #self.linearSolverFailed = self.linearSolver.failed()
-                self.pod_linearSolver.solve(u=self.pod_du,b=pod_r)
-                self.linearSolverFailed = self.pod_linearSolver.failed() 
-            #pod_u-=np.dot(self.U_transpose,self.du)
-            pod_u-=self.pod_du
-            u[:] = np.dot(self.U,pod_u)
-            #self.computeResidual(u,r,b)
-            self.commputeDEIMresiduals(u,self.rs,self.rt)
-            r_deim = self.rt[self.rho_deim]
-            r_deim += self.rs[self.rho_deim]
-            #pod_r = np.dot(self.U_transpose,r)
-            pod_r = np.dot(self.Ut_Uf_PtUf_inv,r_deim)
             r[:] = np.dot(self.U,pod_r)
         else:
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
@@ -901,12 +821,13 @@ class POD_DEIM_Newton(Newton):
         self.U_transpose = self.U.conj().T
         #setup reduced basis for DEIM interpolants
         self.use_deim = use_deim
-        self.DBf = self.DB
+        self.DBf = None
         self.Uf  = None; self.Uf_transpose = None; 
         self.rho_deim = None; self.Ut_Uf_PtUf_inv=None
         self.rs = None; self.rt = None
         if self.use_deim:
             Uf = np.loadtxt('Fs_SVD_basis')
+            self.DBf = Uf.shape[1]#debug
             self.Uf = Uf[:,0:self.DBf]
             self.Uf_transpose = self.Uf.conj().T
             #returns rho --> deim indices and deim 'projection' matrix
@@ -916,15 +837,22 @@ class POD_DEIM_Newton(Newton):
             #to get 'projection' from deim to coarse space
             self.Ut_Uf_PtUf_inv = np.dot(self.U_transpose,Uf_PtUf_inv)
         self.pod_J = np.zeros((self.DB,self.DB),'d')
-        self.pod_Jt= np.zeros((self.DBf,self.DB),'d')
+        self.pod_Jt= np.zeros((self.DB,self.DB),'d')
         self.pod_Jtmp= np.zeros((self.DBf,self.DB),'d')
         self.pod_linearSolver = LU(self.pod_J)
         self.J_rowptr,self.J_colind,self.J_nzval = self.J.getCSRrepresentation()
+        assert 'getSpatialJacobian' in dir(self.F)
+        assert 'getMassJacobian' in dir(self.F)
+        self.Js = self.F.initializeSpatialJacobian()
+        self.Js_rowptr,self.Js_colind,self.Js_nzval = self.Js.getCSRrepresentation()
+        self.Jt = self.F.initializeMassJacobian()
+        self.Jt_rowptr,self.Jt_colind,self.Jt_nzval = self.Jt.getCSRrepresentation()
+        
         self.pod_du = np.zeros(self.DB)
     def norm(self,u):
         return self.norm_function(u)
     #mwf add for DEIM
-    def computeDEIMresiduals(self,u,r,rs,rt):
+    def computeDEIMresiduals(self,u,rs,rt):
         """
         wrapper for computing residuals separately for DEIM
         """
@@ -976,6 +904,8 @@ class POD_DEIM_Newton(Newton):
         u -- solution
         r -- F(u) - b
         """
+        if self.use_deim:
+            return self.solveDEIM(u,r,b,par_u,par_r)
         pod_u = np.dot(self.U_transpose,u)
         u[:] = np.dot(self.U,pod_u)           
         r=self.solveInitialize(u,r,b)
@@ -1039,6 +969,7 @@ class POD_DEIM_Newton(Newton):
         r_deim += self.rs[self.rho_deim]
         #pod_r = np.dot(self.U_transpose,r)
         pod_r = np.dot(self.Ut_Uf_PtUf_inv,r_deim)
+        assert not numpy.isnan(pod_r).any()
         self.norm_r0 = self.norm(pod_r)
         self.norm_r_hist = []
         self.norm_du_hist = []
@@ -1051,28 +982,30 @@ class POD_DEIM_Newton(Newton):
             if self.updateJacobian or self.fullNewton:
                 self.updateJacobian = False
                 #go ahead and evaluate spatial grid on fine grid for now
-                self.F.getSpatialJacobian(self.J)
+                self.F.getSpatialJacobian(self.Js)
+                assert not numpy.isnan(self.Js_nzval).any()
                 #now this holds P^T J_s U                
                 self.pod_Jtmp[:] = 0.0
                 for i in range(self.DBf):
+                    deim_i = self.rho_deim[i]
                     for j in range(self.DB):
-                        for k in range(self.F.dim):
-                            deim_k = self.rho_deim[k]
-                            for m in range(self.J_rowptr[deim_k],self.J_rowptr[deim_k+1]):
-                                self.pod_Jtmp[i,j] += self.J_nzval[m]*self.U[self.J_colind[m],j]
+                        for m in range(self.Js_rowptr[deim_i],self.Js_rowptr[deim_i+1]):
+                            self.pod_Jtmp[i,j] += self.Js_nzval[m]*self.U[self.Js_colind[m],j]
                 #combined DEIM, coarse grid projection
                 self.pod_J = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
-                self.F.getMassJacobian(self.J)
-                #now this holds P^T J_s U                
-                self.pod_Jtmp[:] = 0.0
-                for i in range(self.DBf):
+                assert not numpy.isnan(self.pod_J).any()
+                self.F.getMassJacobian(self.Jt)
+                assert not numpy.isnan(self.Jt_nzval).any()
+                #now this holds U^T Jt U                
+                self.pod_Jt[:] = 0.0
+                for i in range(self.DB):
                     for j in range(self.DB):
                         for k in range(self.F.dim):
-                            deim_k = self.rho_deim[k]
-                            for m in range(self.J_rowptr[deim_k],self.J_rowptr[deim_k+1]):
-                                self.pod_Jtmp[i,j] += self.J_nzval[m]*self.U[self.J_colind[m],j]
+                            for m in range(self.Jt_rowptr[k],self.Jt_rowptr[k+1]):
+                                self.pod_Jt[i,j] += self.U_transpose[i,k]*self.Jt_nzval[m]*self.U[self.Jt_colind[m],j]
                 #combined DEIM, coarse grid projection
-                self.pod_Jt = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
+                #self.pod_Jt = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
+                assert not numpy.isnan(self.pod_Jt).any()
                 #combined
                 self.pod_J += self.pod_Jt
                 #self.linearSolver.prepare(b=r)
@@ -1088,11 +1021,12 @@ class POD_DEIM_Newton(Newton):
             pod_u-=self.pod_du
             u[:] = np.dot(self.U,pod_u)
             #self.computeResidual(u,r,b)
-            self.commputeDEIMresiduals(u,self.rs,self.rt)
-            r_deim = self.rt[self.rho_deim]
+            self.computeDEIMresiduals(u,self.rs,self.rt)
+            r_deim = self.rt[self.rho_deim].copy()
             r_deim += self.rs[self.rho_deim]
             #pod_r = np.dot(self.U_transpose,r)
             pod_r = np.dot(self.Ut_Uf_PtUf_inv,r_deim)
+            assert not numpy.isnan(pod_r).any()
             r[:] = np.dot(self.U,pod_r)
         else:
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
@@ -2898,13 +2832,13 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                    directSolver=linearDirectSolverFlag,
                                                    EWtol=EWtol,
                                                    maxLSits=maxLSits ))
-    elif levelNonlinearSolverType == POD_Newton:
+    elif levelNonlinearSolverType in [POD_Newton,POD_DEIM_Newton]:
         for l in range(nLevels):
             if par_duList != None and len(par_duList) > 0:
                 par_du=par_duList[l]
             else:
                 par_du=None
-            levelNonlinearSolverList.append(POD_Newton(linearSolver=linearSolverList[l],
+            levelNonlinearSolverList.append(levelNonlinearSolverType(linearSolver=linearSolverList[l],
                                                    F=nonlinearOperatorList[l],
                                                    J=jacobianList[l],
                                                    du=duList[l],
@@ -3063,7 +2997,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                          computeRates = computeSolverRates,
                                          printInfo=printSolverInfo)
     elif (multilevelNonlinearSolverType == Newton or
-          multilevelNonlinearSolverType == POD_Newton or
+          multilevelNonlinearSolverType in [POD_Newton,POD_DEIM_Newton] or
           multilevelNonlinearSolverType == NewtonNS or
           multilevelNonlinearSolverType == NLJacobi or
           multilevelNonlinearSolverType == NLGaussSeidel or
