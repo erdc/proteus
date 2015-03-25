@@ -57,12 +57,13 @@ def openLog(filename,level,logLocation=None):
     global logDir
     global procID
     global logAllProcesses
+    assert procID != None, "Initialize Comm and set Profiling.procID before opening log"
     filename_full = filename
     import os
     if logLocation != None:
         logDir = logLocation
         filename_full = os.path.join(logDir,filename)
-    if  procID == None or procID == 0:
+    if  procID == 0:
         logFile=open(filename_full,'w')
     elif logAllProcesses:
         logFile=open(filename_full+`procID`,'w')
