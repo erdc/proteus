@@ -989,7 +989,7 @@ class SSPRKNewton(Newton):
         self.linearSolverFailed = False
         while (not self.converged(r) and
                not self.failed()):
-            print "SSPRKNewton it", self.its, "norm(r)", self.norm_r
+            log("SSPRKNewton it "+`self.its`+" norm(r) " + `self.norm_r`,level=3)
             if self.updateJacobian or self.fullNewton and not self.isFactored:
                 self.updateJacobian = False
                 self.F.getJacobian(self.J)
