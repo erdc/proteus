@@ -7,6 +7,7 @@ The solution is the vector of components :math:`u=u_0,\ldots,u_{nc-1}`, and
 the nonlinear coefficients are :math:`m^i,f^i,a^{ik},\phi^k, H^i` and :math:`r^i`.
 """
 from math import *
+
 from EGeometry import *
 from LinearAlgebraTools import *
 from LinearSolvers import *
@@ -1493,21 +1494,14 @@ class OneLevelTransport(NonlinearEquation):
         log(memory("TimeIntegration","OneLevelTransport"),level=4)
         log("Calculating numerical quadrature formulas",2)
         self.calculateQuadrature()
-        #lay out components/equations contiguously for now
-        self.offset = [0]
-        for ci in range(1,self.nc):
-            self.offset += [self.offset[ci-1]+self.nFreeDOF_global[ci-1]]
-        self.stride = [1 for ci in range(self.nc)]
-        #use contiguous layout of components for parallel, requires weak DBC's
+
         comm = Comm.get()
         self.comm=comm
         if comm.size() > 1:
             assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
-            self.offset = [0]
-            for ci in range(1,self.nc):
-                self.offset += [ci]
-            self.stride = [self.nc for ci in range(self.nc)]
-        #
+
+        self.setupFieldStrides()
+
         log(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType != None:
             if options == None or options.periodicDirichletConditions == None:
@@ -1555,6 +1549,21 @@ class OneLevelTransport(NonlinearEquation):
         self.nzval_mass = None
         self.nzval_space = None
     #end __init__
+
+    def setupFieldStrides(self, interleaved=True):
+        """
+        Set up the stride/offset layout for this object.  The default layout is interleaved.
+        """
+
+        if interleaved:
+            self.offset = range(self.nc)
+            self.stride = [self.nc] * self.nc
+        else:
+            self.offset = [0]
+            for ci in range(1,self.nc):
+                self.offset += [self.offset[ci-1]+self.nFreeDOF_global[ci-1]]
+            self.stride = [1] * self.nc
+
     def setInitialConditions(self,getInitialConditionsDict,T=0.0):
         self.timeIntegration.t = T
         #
