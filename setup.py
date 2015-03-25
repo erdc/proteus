@@ -1,3 +1,4 @@
+import sys
 from distutils.core import setup, Extension
 from petsc4py.conf.petscconf import Extension as PetscExtension
 
@@ -9,11 +10,9 @@ from Cython.Distutils import build_ext
 #
 #  Set the DISTUTILS_DEBUG environment variable to print detailed information while setup.py is running.
 #
-try:
-    import config
-    from config import *
-except:
-    raise RuntimeError("Missing or invalid config.py file. See proteusConfig for examples")
+
+from proteus import config
+from proteus.config import *
 
 ###to turn on debugging in c++
 ##\todo Finishing cleaning up setup.py/setup.cfg, config.py...
@@ -29,13 +28,22 @@ PROTEUS_PETSC_EXTRA_COMPILE_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_COMPILE_
 
 proteus_install_path = os.path.join(sysconfig.get_python_lib(), 'proteus')
 
+# handle non-system installations
+for arg in sys.argv:    
+    if arg.startswith('--root'):
+        proteus_install_path = proteus_install_path.partition(sys.prefix + '/')[-1]
+        break
+    if arg.startswith('--prefix'):
+        proteus_install_path = proteus_install_path.partition(sys.prefix + '/')[-1]
+        break
+
 setup(name='proteus',
       version='1.0.0',
       description='Python tools for multiphysics modeling',
       author='Chris Kees, Matthew Farthing, et al.',
       author_email='chris.kees@us.army.mil',
       url='http://proteus.usace.army.mil',
-      packages = ['proteus', 'proteus.tests'],
+      packages = ['proteus', 'proteus.config', 'proteus.tests'],
       cmdclass = {'build_ext':build_ext},
       ext_package='proteus',
       ext_modules=[Extension("ADR",['proteus/ADR.pyx'],
@@ -238,8 +246,7 @@ setup(name='proteus',
                                   extra_link_args=PROTEUS_EXTRA_LINK_ARGS + PROTEUS_PETSC_EXTRA_LINK_ARGS,
                                   extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS)
                    ],
-      data_files=[('proteusConfig',['config.py']),
-                  (proteus_install_path,['proteus/proteus_blas.h', 'proteus/proteus_lapack.h',
+      data_files=[(proteus_install_path,['proteus/proteus_blas.h', 'proteus/proteus_lapack.h',
                                          'proteus/ModelFactory.h', 'proteus/CompKernel.h'])],
       scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf',
                  'scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond',
