@@ -11,6 +11,7 @@ from math import pi,tanh,sqrt,exp,log,sin,cos,cosh,sinh
 import numpy as np
 from matplotlib  import pyplot
 from Profiling import logEvent
+import time as tt
 
 
 
@@ -97,7 +98,7 @@ class MonochromaticWaves:
         if self.waveType not in self.knownWaveTypes:
             logEvent("Wrong wavetype given: Valid wavetypes are %s" %(self.knownWaveTypes), level=0)
         self.dircheck = abs(sum(g * waveDir))
-        print self.dircheck
+        #print self.dircheck
         if self.dircheck > 1e-6:
             logEvent("Wave direction is not perpendicular to gravity vector. Check input",level=0)
         self.period = period
@@ -127,7 +128,11 @@ class MonochromaticWaves:
     
     def eta(self,x,y,z,t):
         if self.waveType is "Linear":
-            return self.amplitude*cos(self.phase(x,y,z,t))
+            global VTIME
+            a = tt.time()
+            aa = self.amplitude*cos(self.phase(x,y,z,t))
+            VTIME = (tt.time() - a)
+            return aa
         else:
             HH = 0.
             ii =0.
@@ -160,11 +165,11 @@ class MonochromaticWaves:
             ii=0.
             for B in self.Bcoeff:
                 ii+=1.
-                UH_t =B*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.phase(x,y,z,t))/cosh(self.k*self.depth)
+                UV_t =B*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.phase(x,y,z,t))/cosh(self.k*self.depth)
                 if waveType is "Fenton":
-                    UH+=ii*UH_t
+                    UV+=ii*UV_t
                 else:
-                    UH+=UH_t
+                    UV+=UV_t
                     
     def uvector(x,y,z,t):
         return self.waveDir*self.UH(x,y,z,t) - self.vDir * self.UV(x,y,z,t) 
@@ -205,9 +210,10 @@ class RandomWaves:
         self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
         self.g = g
         self.gAbs = sqrt(sum(g * g))
+        self.vDir = self.g/self.gAbs
         self.Tp = Tp
         self.Hs = Hs
-        self.d = d
+        self.depth = d
         self.fp = fp
         self.bandFactor = bandFactor
         self.N = N
@@ -218,8 +224,9 @@ class RandomWaves:
         self.fi=np.zeros(self.N,'d')
         for i in range(self.N):
             self.fi[i] = self.fmin+self.df*i
-        self.ki = dispersion(2.0*pi*self.fi,self.d,g=self.gAbs)
-        self.wi = 2.*pi/ki
+        self.omega = 2.*pi*self.fi
+        self.ki = dispersion(2.0*pi*self.fi,self.depth,g=self.gAbs)
+        self.wi = 2.*pi/self.ki
         self.phi = 2.0*pi*np.random.random(self.fi.shape[0])
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
         fim_tmp = (0.5*(self.fi[1:]+self.fi[:-1])).tolist()
@@ -227,6 +234,11 @@ class RandomWaves:
         self.Si_Jm = spec_fun(self.fim,f0=self.fp,Hs=self.Hs,g=self.g,gamma=3.3)
         self.ai = np.sqrt((self.Si_Jm[1:]+self.Si_Jm[:-1])*(self.fim[1:]-self.fim[:-1]))
         self.waves = MonochromaticWaves
+        self.kDir = np.zeros((self.N, 3) , "d")
+        for k in range(N):
+            self.kDir[k,:] = self.ki[k]*self.waveDir[:]
+    def Z(self,x,y,z):
+        return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.mwl
     def eta(self,x,y,z,t):
         """Free surface displacement
         
@@ -234,55 +246,32 @@ class RandomWaves:
         :param t: time"""
         Eta=0.
         for ii in range(self.N):
-            Eta+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=wi[ii], phi0 = phi[ii]).eta(x,y,z,t)
+            Eta+=self.ai[ii]*cos(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t + self.phi[ii])
         return Eta
 #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
     
-    def u(self,x,z,t):
+    def u(self,x,y,z,t,ss = "x"):
         """x-component of velocity
 
         :param x: floating point x coordinate
         :param z: floating point z coordinate (height above bottom)
         :param t: time
         """
-        U=0.
+        UH=0.
+        UV=0.
         for ii in range(self.N):
-            U+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
-        return U
+            UH+=self.ai[ii]*self.omega[ii]*cosh(self.ki[ii]*(self.Z(x,y,z)+self.depth))*cos(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t + self.phi[ii])/sinh(self.ki[ii]*self.depth)
+            UV+=self.ai[ii]*self.omega[ii]*sinh(self.ki[ii]*(self.Z(x,y,z)+self.depth))*sin(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t + self.phi[ii])/sinh(self.ki[ii]*self.depth)
+#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
+        Vcomp = {
+            "x":UH*self.waveDir[0] + UV*self.vDir[0],
+            "y":UH*self.waveDir[1] + UV*self.vDir[1],
+            "z":UH*self.waveDir[2] + UV*self.vDir[2],
+            }
+        return Vcomp[ss]
 #        Z = z - self.mwl
 #        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
 #                np.cosh(self.ki*(self.d+Z))/np.sinh(self.ki*self.d)).sum()
-    
-    def v(self,x,z,t):
-        """x-component of velocity
-
-        :param x: floating point x coordinate
-        :param z: floating point z coordinate (height above bottom)
-        :param t: time
-        """
-        U=0.
-        for ii in range(self.N):
-            U+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).v(x,y,z,t)
-        return U
-#        Z = z - self.mwl
-#        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
-#                np.cosh(self.ki*(self.d+Z))/np.sinh(self.ki*self.d)).sum()
-    
-    def w(self,x,z,t):
-        """x-component of velocity
-
-        :param x: floating point x coordinate
-        :param z: floating point z coordinate (height above bottom)
-        :param t: time
-        """
-        U=0.
-        for ii in range(self.N):
-            U+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).w(x,y,z,t)
-        return U
-#        Z = z - self.mwl
-#        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
-#                np.cosh(self.ki*(self.d+Z))/np.sinh(self.ki*self.d)).sum()
-
 
 
 class directionalWaves:
@@ -417,13 +406,26 @@ class directionalWaves:
 if __name__ == '__main__':
     from matplotlib.pyplot import *
     import os as os
-    def etaCalc(x,y,z,t,wave_fun):
+    global VTIME
+    VTIME = 0.
+
+    def etaCalc(x,y,z,t,wave_fun,ttime):
         eta = np.zeros((len(x),len(y),len(z),len(t)),float)
         for n,T in enumerate(t):
             for J,xi in enumerate(x):
                 for I,yi in enumerate(y):
-                    for K,zi in enumerate(z):
+                    for K,zi in enumerate(z):                        
                         eta[J,I,K,n] = wave_fun.eta(xi,yi,zi,T)
+
+        return eta
+    def velCalc(x,y,z,t,wave_fun,ttime,ss):
+        eta = np.zeros((len(x),len(y),len(z),len(t)),float)
+        for n,T in enumerate(t):
+            for J,xi in enumerate(x):
+                for I,yi in enumerate(y):
+                    for K,zi in enumerate(z):                        
+                        eta[J,I,K,n] = wave_fun.u(xi,yi,zi,T,ss)
+
         return eta
     def plotSeriesAlongAxis(x,t,ts,ifig,string):
        # print(x)
@@ -431,7 +433,7 @@ if __name__ == '__main__':
         for i,xi in enumerate(x):
             line1 = plot(t,ts[i,:])
             
-        savefig("etaTimeseriesalong%s.png" %string)
+        savefig("timeseries_%s.png" %string)
 
 
     print "Loading variables"
@@ -443,20 +445,39 @@ if __name__ == '__main__':
     g = np.array([0,0,-9.81])
     print "Setting space and time arrays"
     li =2.*pi/dispersion(2.*pi/Tp,depth,g=9.81)
-
-    x = np.linspace(0,li,50)
-    y = np.linspace(0,li,50)
-    z = np.linspace(-10,10,5)
-    t=np.linspace(0,Tp,25)
+    bandFactor = 2.
+    x = np.linspace(0,0,1)
+    y = np.linspace(0,0,1)
+    z = np.linspace(0,0,1)
+    t=np.linspace(0,50.*Tp/1.1,625)
     print "Calculating waves"
-    waves = MonochromaticWaves(period = Tp, waveHeight = Hs,mwl = mwl, depth = depth,g = g, waveDir = waveDir)
-    eta = etaCalc(x,y,z,t,waves)
+    #waves = MonochromaticWaves(period = Tp, waveHeight = Hs,mwl = mwl, depth = depth,g = g, waveDir = waveDir)
+    waves = RandomWaves(Tp = Tp,
+                        Hs = Hs,
+                        d = depth,
+                        fp = 1./Tp,
+                        bandFactor = bandFactor,
+                        N = 101,
+                        mwl = mwl,
+                        g = g)
+    print "Calculating free-surface"
+
+    print "Start-time: %s" %tt.time()
+    ttime = tt.time()
+    eta = etaCalc(x,y,z,t,waves,ttime)
+    v1 = velCalc(x,y,z,t,waves,ttime,"x")
+    v2 = velCalc(x,y,z,t,waves,ttime,"y")
+    v3 = velCalc(x,y,z,t,waves,ttime,"z")
+    duration = tt.time()-ttime
+    print "Duration: %s" %duration
     print "Plotting free surface elevation"
 
-    plotSeriesAlongAxis(x,t,eta[:,0,0,:],0,"X")
-    plotSeriesAlongAxis(y,t,eta[0,:,0,:],1,"Y")
-    plotSeriesAlongAxis(z,t,eta[0,0,:,:],2,"Z")
+    plotSeriesAlongAxis(x,t,eta[0,0,:,:],0,"Eta")
+    plotSeriesAlongAxis(z,t,v1[0,0,:,:],1,"UX")
+    plotSeriesAlongAxis(y,t,v2[0,0,:,:],2,"UY")
+    plotSeriesAlongAxis(z,t,v3[0,0,:,:],3,"UZ")
     #Rotating the waves
+"""
     print "Plotting free surface elevation for dir = [0.707,0.707,0]"
     waves = MonochromaticWaves(period = Tp, waveHeight = Hs,mwl = mwl, depth = depth,g = g, waveDir = np.array([0.707,0.707,0]))
     eta = etaCalc(x,y,z,t,waves)
@@ -473,7 +494,7 @@ if __name__ == '__main__':
 
                    
 
-"""
+
 
     waves = RandomWaves(Tp = Tp,
                         Hs = Hs,
@@ -540,4 +561,4 @@ if __name__ == '__main__':
         fig.set_size_inches(16.0,16.0*zmax/xmax)
         pyplot.savefig('frame%4.4d.png' % n)
 """    
-
+print VTIME
