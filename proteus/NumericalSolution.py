@@ -746,8 +746,6 @@ class NS_base:  # (HasTraits):
                                                                                                                     model.stepController.t_model,
                                                                                                                     model.stepController.dt_model,
                                                                                                                     model.name),level=3)
-                                for av in self.auxiliaryVariables[model.name]:
-                                    av.calculate()
                         #end model step
                         if stepFailed:
                             log("Sequence step failed")
@@ -789,10 +787,6 @@ class NS_base:  # (HasTraits):
                     self.systemStepController.sequenceTaken()
                     self.systemStepController.updateTimeHistory()
                     #you're dead if retrySequence didn't work
-                    #go ahead and calculate auxiliary variables for failed solution
-                    for model in self.modelList:
-                        for av in self.auxiliaryVariables[model.name]:
-                            av.calculate()
                     log("Step Failed, Model step t=%12.5e, dt=%12.5e for model %s" % (model.stepController.t_model,
                                                                                       model.stepController.dt_model,
                                                                                       model.name))
@@ -807,7 +801,9 @@ class NS_base:  # (HasTraits):
                     log("Step Taken, Model step t=%12.5e, dt=%12.5e for model %s" % (model.stepController.t_model,
                                                                                      model.stepController.dt_model,
                                                                                      model.name))
-
+                for model in self.modelList:
+                    for av in self.auxiliaryVariables[model.name]:
+                        av.calculate()
                 if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
                     self.tCount+=1
                     for index,model in enumerate(self.modelList):
