@@ -1,3 +1,4 @@
+import sys
 from distutils.core import setup, Extension
 from petsc4py.conf.petscconf import Extension as PetscExtension
 
