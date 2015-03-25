@@ -25,6 +25,8 @@ packages:
       bzip2, sqlite
   blas:
     use: host-blas
+  lapack:
+    use: host-lapack
   daetk:
   mpi:
     use: mpich
@@ -53,3 +55,4 @@ packages:
   memory_profiler:
   ipdb:
   pip:
+  scipy:
