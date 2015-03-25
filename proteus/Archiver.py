@@ -41,6 +41,7 @@ class AR_base:
         self.comm=comm
         self.rank = comm.rank()
         self.size = comm.size()
+        self.readOnly = readOnly
         import datetime
         #filename += datetime.datetime.now().isoformat()
         try:
@@ -117,10 +118,12 @@ class AR_base:
         self.xmlFile.truncate()
     def close(self):
         log("Closing Archive")
-        self.clear_xml()
-        self.xmlFile.write(self.xmlHeader)
+        if not self.readOnly:
+            self.clear_xml()
+            self.xmlFile.write(self.xmlHeader)
         indentXML(self.tree.getroot())
-        self.tree.write(self.xmlFile)
+        if not self.readOnly:
+            self.tree.write(self.xmlFile)
         self.xmlFile.close()
         if self.hdfFile != None:
             self.hdfFile.close()

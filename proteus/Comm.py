@@ -1,8 +1,19 @@
 """
 Module for controlling MPI
 """
+
+import ctypes
 import sys
+
 import petsc4py
+from .Profiling import logEvent as log
+
+
+# Special workaround for broken MPI on certain Cray systems
+import config
+mpi_preload_libs=[]
+for lib in config.PROTEUS_PRELOAD_LIBS:
+    mpi_preload_libs.append(ctypes.CDLL(lib,mode=ctypes.RTLD_GLOBAL))
 
 comm = None
 argv = sys.argv
@@ -29,7 +40,9 @@ def init():
     return new_comm
 
 def get():
-    assert(comm, "Call Comm.init() once before calling Comm.get()")
+    if comm is None:
+        log("Comm.get called before init, init is being called for you.", 3)
+        return init()
     return comm
 
 class Comm():
