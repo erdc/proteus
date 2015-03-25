@@ -16,6 +16,8 @@ PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || pyt
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 PROTEUS_VERSION := $(shell ${VER_CMD})
+HASHDIST_DEFAULT_VERSION := $(shell cat .hashdist_default)
+HASHSTACK_DEFAULT_VERSION := $(shell cat .hashstack_default)
 HASHDIST_VERSION := $(shell cd hashdist; ${VER_CMD})
 HASHSTACK_VERSION := $(shell cd stack; ${VER_CMD})
 
@@ -101,11 +103,12 @@ update:
 
 hashdist: 
 	@echo "No hashdist found.  Cloning hashdist from GitHub"
-	git clone https://github.com/hashdist/hashdist.git
-
+	git clone https://github.com/hashdist/hashdist.git 
+	cd hashdist && git checkout ${HASHDIST_DEFAULT_VERSION}
 stack: 
 	@echo "No stack found.  Cloning stack from GitHub"
 	git clone https://github.com/hashdist/hashstack.git stack
+	cd  stack && git checkout ${HASHSTACK_DEFAULT_VERSION}
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
