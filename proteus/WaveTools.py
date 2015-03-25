@@ -208,7 +208,7 @@ class RandomWaves:
                  spec_fun = JONSWAP
                  ): 
         self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
-        self.g = g
+        self.g = np.array(g)
         self.gAbs = sqrt(sum(g * g))
         self.vDir = self.g/self.gAbs
         self.Tp = Tp
@@ -323,7 +323,7 @@ class directionalWaves:
         for i in range(self.N):
             self.fi[i] = self.fmin+self.df*i
         self.ki = dispersion(2.0*pi*self.fi,self.d,g=self.gAbs)
-        self.wi = 2.*math.pi/ki
+        self.wi = 2.*math.pi/self.ki
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
         fim_tmp = (0.5*(self.fi[1:]+self.fi[:-1])).tolist()
         self.fim = np.array([fim_tmp[0]-0.5*self.df]+fim_tmp+[fim_tmp[-1]+0.5*self.df])
@@ -476,6 +476,7 @@ if __name__ == '__main__':
     plotSeriesAlongAxis(z,t,v1[0,0,:,:],1,"UX")
     plotSeriesAlongAxis(y,t,v2[0,0,:,:],2,"UY")
     plotSeriesAlongAxis(z,t,v3[0,0,:,:],3,"UZ")
+    print VTIME
     #Rotating the waves
 """
     print "Plotting free surface elevation for dir = [0.707,0.707,0]"
@@ -561,4 +562,4 @@ if __name__ == '__main__':
         fig.set_size_inches(16.0,16.0*zmax/xmax)
         pyplot.savefig('frame%4.4d.png' % n)
 """    
-print VTIME
+
