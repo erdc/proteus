@@ -3,22 +3,17 @@ Module for controlling MPI
 """
 
 import ctypes
-import imp
-import os
 import sys
 
 import petsc4py
 from .Profiling import logEvent as log
 
-try:
-    if not os.getenv('PROTEUS_PREFIX'):
-        os.environ['PROTEUS_PREFIX'] = sys.prefix
-    config = imp.load_source('config', sys.prefix+'/proteusConfig/config.py')
-    mpi_preload_libs=[]
-    for lib in config.PROTEUS_PRELOAD_LIBS:
-        mpi_preload_libs.append(ctypes.CDLL(lib,mode=ctypes.RTLD_GLOBAL));
-except:
-    log("NO PROTEUS_PRELOAD_LIBS LOADED; CHECK config.py", 3)
+
+# Special workaround for broken MPI on certain Cray systems
+import config
+mpi_preload_libs=[]
+for lib in config.PROTEUS_PRELOAD_LIBS:
+    mpi_preload_libs.append(ctypes.CDLL(lib,mode=ctypes.RTLD_GLOBAL))
 
 comm = None
 argv = sys.argv
