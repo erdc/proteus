@@ -185,7 +185,7 @@ install: profile $(shell find proteus -type f) $(wildcard *.py) proteus
 	@echo "Installing..."
 	@echo "************************"
 	$(call show_info)
-	${PROTEUS_ENV} which python
+	${PROTEUS_ENV} python -c "from .proteus import config; from .proteus.config import  default; print default.__dict__"
 	${PROTEUS_ENV} ${PROTEUS_INSTALL_CMD}
 	@echo "************************"
 	@echo "done installing standard extension modules"
