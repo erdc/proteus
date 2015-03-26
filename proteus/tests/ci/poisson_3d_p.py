@@ -16,7 +16,15 @@ Heterogeneous Poisson's equation, -div(a(x)u) = f(x), on unit domain [0,1]x[0,1]
 #space dimension
 nd = 3
 #if unstructured would need variable polyfile or meshfile set
+x0 = (0.0,0.0,0.0)
+L  = (1.0,1.0,1.0)
 
+test_hexMesh_3x3 = False
+if test_hexMesh_3x3 == True:
+    meshfile='hexMesh_3x3'
+    domain = Domain.MeshHexDomain(meshfile)
+    x0 = (-3.,-3.,-3.)
+    L  = ( 6., 6., 6.)
 #steady-state so no initial conditions
 initialConditions = None
 #use sparse diffusion representation
@@ -24,6 +32,7 @@ sd=True
 #identity tensor for defining analytical heterogeneity functions
 Ident = numpy.zeros((nd,nd),'d')
 Ident[0,0]=1.0; Ident[1,1] = 1.0; Ident[2,2]=1.0
+
 
 #for computing exact 'Darcy' velocity
 class velEx:
@@ -64,16 +73,16 @@ class u5Ex:
 
 #dirichlet boundary condition functions on (x=0,y,z), (x,y=0,z), (x,y=1,z), (x,y,z=0), (x,y,z=1)
 def getDBC5(x,flag):
-    if x[0] in [0.0] or x[1] in [0.0,1.0] or x[2] in [0.0,1.0]:
+    if x[0] in [x0[0]] or x[1] in [x0[1],x0[1]+L[1]] or x[2] in [x0[2],x0[2]+L[2]]:
         return lambda x,t: u5Ex().uOfXT(x,t)
 def getAdvFluxBC5(x,flag):
     pass
 #specify flux on (x=1,y,z)
 def getDiffFluxBC5(x,flag):
-    if x[0] == 1.0:
+    if x[0] >= x0[0]+L[0]-1.0e-8:
         n = numpy.zeros((nd,),'d'); n[0]=1.0
         return lambda x,t: numpy.dot(velEx(u5Ex(),a5).uOfXT(x,t),n)
-    if not (x[0] in [0.0] or x[1] in [0.0,1.0] or x[2] in [0.0,1.0]):
+    if not (x[0] in [x0[0]] or x[1] in [x0[1],x0[1]+L[1]] or x[2] in [x0[2],x0[2]+L[2]]):
         return lambda x,t: 0.0
 #store a,f in dictionaries since coefficients class allows for one entry per component
 aOfX = {0:a5}; fOfX = {0:f5}
