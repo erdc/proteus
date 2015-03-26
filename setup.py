@@ -247,7 +247,7 @@ setup(name='proteus',
                                   extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS)
                    ],
       data_files=[(proteus_install_path,['proteus/proteus_blas.h', 'proteus/proteus_lapack.h',
-                                         'proteus/ModelFactory.h', 'proteus/CompKernel.h'])],
+                                         'proteus/ModelFactory.h', 'proteus/CompKernel.h']),(os.path.join(proteus_install_path,'tests'),['proteus/tests/hex_cube_3x3.xmf','proteus/tests/hex_cube_3x3.h5'])],
       scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf',
                  'scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond',
                  'scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec'],
