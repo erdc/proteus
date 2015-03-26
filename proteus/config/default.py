@@ -2,6 +2,7 @@ import os
 from os.path import join as pjoin
 import sys
 
+PROTEUS_PRELOAD_LIBS=[]
 
 prefix = os.getenv('PROTEUS_PREFIX')
 if not prefix:
