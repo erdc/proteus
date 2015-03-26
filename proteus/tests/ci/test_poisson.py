@@ -83,7 +83,9 @@ def test_c0q1():
 
 def test_c0q1_hex_mesh():
     from proteus import MeshTools
-    xmf_archive_base = 'hex_cube_3x3'; heavy_file_base='hex_cube_3x3'
+    xmf_archive_base=os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                          '..','hex_cube_3x3')
+    heavy_file_base = xmf_archive_base
     mesh_info = MeshTools.readMeshXdmf(xmf_archive_base,heavy_file_base)
     hex_meshfile_base = 'hexmesh_3x3'
     MeshTools.writeHexMesh(mesh_info,hex_meshfile_base,index_base=1)
