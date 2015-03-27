@@ -17,9 +17,7 @@ import time as tt
 def sigma(omega,omega0):
     """sigma function for JONSWAP spectrum
     """
-    sigmaReturn = omega.copy()
-    sigmaReturn[:] = 0.07
-    sigmaReturn[omega > omega0] = 0.09
+    sigmaReturn = np.where(omega > omega0,0.09,0.07)
     return sigmaReturn
 
 def JONSWAP(f,f0,Hs,g,gamma):
