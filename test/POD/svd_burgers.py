@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from read_hdf5 import *
-from burgers_init import use_deim
-from deim_utils import read_snapshots
+import burgers_init,deim_utils
+
 
 T = 1.0
 nDTout = 100
