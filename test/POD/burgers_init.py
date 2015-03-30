@@ -156,7 +156,7 @@ Profiling.verbose = 1
 opts.logLevel = 2
 
 #whether or not to use deim approximation
-use_deim = False
+use_deim = True
 
 simFlagsList=None
 if use_deim:
