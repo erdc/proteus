@@ -1017,6 +1017,7 @@ class POD_DEIM_Newton(Newton):
                 #self.linearSolverFailed = self.linearSolver.failed()
                 self.pod_linearSolver.solve(u=self.pod_du,b=pod_r)
                 self.linearSolverFailed = self.pod_linearSolver.failed() 
+            assert not self.linearSolverFailed
             #pod_u-=np.dot(self.U_transpose,self.du)
             pod_u-=self.pod_du
             u[:] = np.dot(self.U,pod_u)
