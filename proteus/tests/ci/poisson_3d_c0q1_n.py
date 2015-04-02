@@ -20,7 +20,7 @@ nnz = 5
 #if unstructured would need triangleOptions flag to be set
 
 
-hex=True
+hex=False
 #NURBS=True
 px=1
 py=1
@@ -52,7 +52,7 @@ tolFac = 0.0
 matrix = SparseMatrix
 
 #convenience flag
-parallel = True
+parallel = False
 
 if parallel:
     multilevelLinearSolver = KSP_petsc4py
