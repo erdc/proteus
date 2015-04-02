@@ -11,8 +11,31 @@
    \ingroup transportCoefficients
    @{
 */
+/*define relaxation function according to Jacobsen et al 2012, INJNMF*/
+double relaxationFunction(double phi, double phiStart, double phiEnd)
+{
+  double H;
+  double x;
+  double Length;
+    
+    if(phiStart < phiEnd)
+      { 
+	Length = phiEnd - phiStart;
+	x = (phi - phiStart)/Length;
+	H = 1 - (exp(pow(x,3.5)) - 1.)/ (exp(1) - 1.);
+      }
+    else
+      { 
+	Length = -(phiEnd - phiStart);
+	x = 1 - (phi - phiStart)/Length;
+	H = 1 - (exp(pow(x,3.5)) - 1.)/ (exp(1) - 1.);
+      }      
+    return H;
+	
+	  
+  
+}
 /*#define SCALAR_DIFFUSION*/
-
 double smoothedHeaviside(double eps, double phi)
 {
   double H;
