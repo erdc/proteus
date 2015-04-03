@@ -965,10 +965,11 @@ class POD_DEIM_Newton(Newton):
         u[:] = np.dot(self.U,pod_u)           
         #evaluate fine grid residuals directly
         r=self.solveInitialize(u,r,b)
-        r_deim = self.rt[self.rho_deim].copy()
-        r_deim += self.rs[self.rho_deim]
-        #pod_r = np.dot(self.U_transpose,r)
-        pod_r = np.dot(self.Ut_Uf_PtUf_inv,r_deim)
+        #r_deim = self.rt[self.rho_deim].copy()
+        r_deim = self.rs[self.rho_deim]
+        pod_rt = np.dot(self.U_transpose,self.rt)
+        pod_r  = np.dot(self.Ut_Uf_PtUf_inv,r_deim)
+        pod_r += pod_rt
         assert not numpy.isnan(pod_r).any()
         self.norm_r0 = self.norm(pod_r)
         self.norm_r_hist = []
@@ -992,7 +993,8 @@ class POD_DEIM_Newton(Newton):
                         for m in range(self.Js_rowptr[deim_i],self.Js_rowptr[deim_i+1]):
                             self.pod_Jtmp[i,j] += self.Js_nzval[m]*self.U[self.Js_colind[m],j]
                 #combined DEIM, coarse grid projection
-                self.pod_J = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
+                tmp = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
+                self.pod_J.flat[:] = tmp.flat[:]                
                 assert not numpy.isnan(self.pod_J).any()
                 self.F.getMassJacobian(self.Jt)
                 assert not numpy.isnan(self.Jt_nzval).any()
@@ -1019,14 +1021,16 @@ class POD_DEIM_Newton(Newton):
                 self.linearSolverFailed = self.pod_linearSolver.failed() 
             assert not self.linearSolverFailed
             #pod_u-=np.dot(self.U_transpose,self.du)
-            pod_u-=self.pod_du
+            assert not numpy.isnan(self.pod_du).any()
+            pod_u-=self.pod_du            
             u[:] = np.dot(self.U,pod_u)
             #self.computeResidual(u,r,b)
             self.computeDEIMresiduals(u,self.rs,self.rt)
-            r_deim = self.rt[self.rho_deim].copy()
-            r_deim += self.rs[self.rho_deim]
-            #pod_r = np.dot(self.U_transpose,r)
+            #r_deim = self.rt[self.rho_deim].copy()
+            r_deim = self.rs[self.rho_deim]
+            pod_rt = np.dot(self.U_transpose,self.rt)
             pod_r = np.dot(self.Ut_Uf_PtUf_inv,r_deim)
+            pod_r += pod_rt
             assert not numpy.isnan(pod_r).any()
             r[:] = np.dot(self.U,pod_r)
         else:
