@@ -12,7 +12,7 @@ class Burgers(TransportCoefficients.TC_base):
     """
     The coefficients of the viscout Burgers equation
     """
-    def __init__(self,A,B):
+    def __init__(self,A,B,nd=3):
         TransportCoefficients.TC_base.__init__(self,
                                                nc=1,
                                                variableNames=['u'],
@@ -23,26 +23,23 @@ class Burgers(TransportCoefficients.TC_base):
                                                potential = {0:{0:'u'}})
         self.A=A
         self.B=B
-	       	
+        self.nd = nd
     def evaluate(self,t,c):
         u =  c[('u',0)]
         c[('m',0)][:] = u
         c[('dm',0,0)][:] = 1.0
-        c[('a',0,0)][...,0] = self.A[0][0]
-        c[('a',0,0)][...,4] = self.A[1][1]
-        c[('a',0,0)][...,8] = self.A[2][2]
-        c[('f', 0)][..., 0] = 0.5*self.B[0]*u**2
-        c[('f', 0)][..., 1] = 0.5*self.B[1]*u**2
-        c[('f', 0)][..., 2] = 0.5*self.B[2]*u**2
-        c[('df', 0, 0)][..., 0] = self.B[0]*u
-        c[('df', 0, 0)][..., 1] = self.B[1]*u
-        c[('df', 0, 0)][..., 2] = self.B[2]*u
+        for I in range(self.nd):
+            c[('a',0,0)][...,I*self.nd+I] = self.A[I][I]
+            c[('f', 0)][..., I] = 0.5*self.B[I]*u**2
+            c[('df', 0, 0)][..., I] = self.B[I]*u
         c[('r',0)][:] = 0.0*u
         c[('dr',0,0)][:] = 0.0
 
 #use numpy for evaluations
 import numpy as np
 
+#number of spatial dimensions to use
+nd = 1
 #convenience function for holding the boundary condition
 def constant_zero(x,t):
     return 0.0
@@ -52,17 +49,17 @@ def constant_one(x,t):
 
 def inflow(x):
     eps = 1.0e-8
-    if x[0] <= eps or x[1] <= eps or x[2] <= eps:
-        return True
-    else:
-        return False
+    for I in range(nd):
+        if x[I] <= eps:
+            return True
+    return False
 
 def outflow(x):
     eps = 1.0e-8
-    if x[0] >= 1.0-eps or x[1] >= 1.0-eps or x[2] >= 1.0-eps:
-        return True
-    else:
-        return False
+    for I in range(nd):
+        if x[I] >= 1.0-eps:
+            return True
+    return False
 
 # this function's job is to return another function holding the Dirichlet boundary conditions wherever they are set
 def getDBC(x,flag):
@@ -91,16 +88,17 @@ class Initial:
 #physics
 
 a0 = 1.0
-T = 1.0
+T = 0.5
 
 physics = default_p
-physics.nd = 3; #Three dimensions
-physics.L=(1.0,1.0,1.0) #spatial domain: unit cube
-A  =[[a0,0.0,0.0],
-     [0.0,a0,0.0],
-     [0.0,0.0,a0]]
-B = [1.0,1.0,1.0]
-physics.coefficients=Burgers(A,B) #the object for evaluating the coefficients   
+physics.nd = nd; #
+physics.name = "burgers_{0}d".format(physics.nd)
+physics.L=(1.0,)*nd #spatial domain: unit cube
+A  = np.zeros((nd,nd),'d')
+for I in range(nd):
+    A[I,I]=a0
+B = np.array([1.0]*nd)
+physics.coefficients=Burgers(A,B,nd=nd) #the object for evaluating the coefficients   
 physics.dirichletConditions = {0:getDBC}
 physics.advectiveFluxBoundaryConditions = {0:getAFBC}
 physics.diffusiveFluxBoundaryConditions = {0:{0:getDFBC}}
@@ -118,7 +116,7 @@ numerics.runCFL=0.99
 numerics.femSpaces = {0:FemTools.C0_AffineLinearOnSimplexWithNodalBasis} #piecewise linears
 numerics.elementQuadrature = Quadrature.SimplexGaussQuadrature(physics.nd,2) #Quadrature rule for elements
 numerics.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(physics.nd-1,2) #Quadrature rule for element boundaries
-numerics.nnx = numerics.nny = numerics.nnz = 21 #number of nodes in the x and y direction
+numerics.nn = numerics.nnx = numerics.nny = numerics.nnz = 21 #number of nodes in the x and y direction
 
 numerics.multilevelNonlinearSolver = NonlinearSolvers.Newton
 numerics.levelLinearSolver = NonlinearSolvers.Newton
@@ -162,3 +160,37 @@ simFlagsList=None
 if use_deim:
     simFlagsList=[{}]
     simFlagsList[0]['storeQuantities']=['pod_residuals']
+
+
+def burgers_plot3d(ns):
+    #arrays for using matplotlib's unstructured plotting interface
+    x = ns.modelList[0].levelModelList[-1].mesh.nodeArray[:,0]
+    y = ns.modelList[0].levelModelList[-1].mesh.nodeArray[:,1]
+    z = ns.modelList[0].levelModelList[-1].mesh.nodeArray[:,2]
+    u = ns.modelList[0].levelModelList[-1].u[0].dof
+
+    #we want to build a 3d plot of f(x,y,z0), when z0 = 0.5
+    u_range = u[4410:4851]
+    x_range = x[4410:4851]
+    y_range = y[4410:4851]
+    u_range = u_range.reshape(21,21)
+    x_range = x_range.reshape(21,21)
+    y_range = y_range.reshape(21,21)
+
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    from matplotlib import cm
+    from matplotlib.ticker import LinearLocator, FormatStrFormatter
+
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    surf=ax.plot_surface(x_range, y_range, u_range, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+    plt.xlabel('x'); plt.ylabel('y')
+    plt.title('approximate solution at t = 1');
+
+    ax.zaxis.set_major_locator(LinearLocator(10))
+    ax.zaxis.set_major_formatter(FormatStrFormatter('%.05f'))
+
+    fig.colorbar(surf, shrink=0.5, aspect=5)
+    plt.savefig("solution.png")
+    plt.show()
