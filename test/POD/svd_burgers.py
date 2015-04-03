@@ -8,7 +8,7 @@ T = 1.0
 nDTout = 100
 DT = T/float(nDTout)
 
-archive = Archiver.XdmfArchive(".","burgers_3d",readOnly=True)
+archive = Archiver.XdmfArchive(".",burgers_init.physics.name,readOnly=True)
 
 import numpy as np
 
