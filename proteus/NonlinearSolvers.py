@@ -970,6 +970,9 @@ class POD_DEIM_Newton(Newton):
         pod_rt = np.dot(self.U_transpose,self.rt)
         pod_r  = np.dot(self.Ut_Uf_PtUf_inv,r_deim)
         pod_r += pod_rt
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
         assert not numpy.isnan(pod_r).any()
         self.norm_r0 = self.norm(pod_r)
         self.norm_r_hist = []
@@ -985,6 +988,14 @@ class POD_DEIM_Newton(Newton):
                 #go ahead and evaluate spatial grid on fine grid for now
                 self.F.getSpatialJacobian(self.Js)
                 assert not numpy.isnan(self.Js_nzval).any()
+                self.F.getMassJacobian(self.Jt)
+                assert not numpy.isnan(self.Jt_nzval).any()
+                #have to scale by dt
+                self.Jt_nzval /= self.F.timeIntegration.dt
+                #mwf debug
+                self.F.getJacobian(self.J)
+                tmp = self.Jt_nzval+self.Js_nzval-self.J_nzval 
+                assert numpy.absolute(tmp) < 1.0e-12
                 #now this holds P^T J_s U                
                 self.pod_Jtmp[:] = 0.0
                 for i in range(self.DBf):
@@ -996,8 +1007,6 @@ class POD_DEIM_Newton(Newton):
                 tmp = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
                 self.pod_J.flat[:] = tmp.flat[:]                
                 assert not numpy.isnan(self.pod_J).any()
-                self.F.getMassJacobian(self.Jt)
-                assert not numpy.isnan(self.Jt_nzval).any()
                 #now this holds U^T Jt U                
                 self.pod_Jt[:] = 0.0
                 for i in range(self.DB):
