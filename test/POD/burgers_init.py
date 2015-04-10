@@ -12,7 +12,7 @@ class Burgers(TransportCoefficients.TC_base):
     """
     The coefficients of the viscout Burgers equation
     """
-    def __init__(self,A,B,nd=3):
+    def __init__(self,A,B,nd=3,linearize=False):
         TransportCoefficients.TC_base.__init__(self,
                                                nc=1,
                                                variableNames=['u'],
@@ -24,14 +24,19 @@ class Burgers(TransportCoefficients.TC_base):
         self.A=A
         self.B=B
         self.nd = nd
+        self.linearize = linearize
     def evaluate(self,t,c):
         u =  c[('u',0)]
         c[('m',0)][:] = u
         c[('dm',0,0)][:] = 1.0
         for I in range(self.nd):
             c[('a',0,0)][...,I*self.nd+I] = self.A[I][I]
-            c[('f', 0)][..., I] = 0.5*self.B[I]*u**2
-            c[('df', 0, 0)][..., I] = self.B[I]*u
+            if self.linearize:
+                c[('f', 0)][..., I] = self.B[I]*u
+                c[('df', 0, 0)][..., I] = self.B[I]
+            else:
+                c[('f', 0)][..., I] = 0.5*self.B[I]*u**2
+                c[('df', 0, 0)][..., I] = self.B[I]*u
         c[('r',0)][:] = 0.0*u
         c[('dr',0,0)][:] = 0.0
 
@@ -98,7 +103,7 @@ A  = np.zeros((nd,nd),'d')
 for I in range(nd):
     A[I,I]=a0
 B = np.array([1.0]*nd)
-physics.coefficients=Burgers(A,B,nd=nd) #the object for evaluating the coefficients   
+physics.coefficients=Burgers(A,B,nd=nd,linearize=True) #the object for evaluating the coefficients   
 physics.dirichletConditions = {0:getDBC}
 physics.advectiveFluxBoundaryConditions = {0:getAFBC}
 physics.diffusiveFluxBoundaryConditions = {0:{0:getDFBC}}
