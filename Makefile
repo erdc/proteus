@@ -52,7 +52,7 @@ define howto
 endef
 
 ifeq ($(PROTEUS_ARCH), darwin)
-PLATFORM_ENV = MACOSX_DEPLOYMENT_TARGET=$(shell sw_vers -productVersion | sed "s/\(10.[0-9]\).*/\1/")
+PLATFORM_ENV = MACOSX_DEPLOYMENT_TARGET=$(shell sw_vers -productVersion | sed -E "s/([0-9]+\.[0-9]+).*/\1/")
 endif
 
 ifeq ($(PROTEUS_ARCH), cygwin)
