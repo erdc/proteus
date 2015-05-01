@@ -815,7 +815,7 @@ class POD_DEIM_Newton(Newton):
                 EWtol,
                 maxLSits)
         #setup reduced basis for solution 
-        self.DB = 11 #number of basis vectors for solution
+        self.DB = 11 #11 #number of basis vectors for solution
         U = np.loadtxt('SVD_basis')
         self.U = U[:,0:self.DB]
         self.U_transpose = self.U.conj().T
@@ -827,7 +827,7 @@ class POD_DEIM_Newton(Newton):
         self.rs = None; self.rt = None
         if self.use_deim:
             Uf = np.loadtxt('Fs_SVD_basis')
-            self.DBf = Uf.shape[1]#debug
+            self.DBf = min(16,Uf.shape[1])#debug
             self.Uf = Uf[:,0:self.DBf]
             self.Uf_transpose = self.Uf.conj().T
             #returns rho --> deim indices and deim 'projection' matrix
@@ -860,7 +860,7 @@ class POD_DEIM_Newton(Newton):
         assert 'getMassResidual' in dir(self.F)
         self.F.getSpatialResidual(u,rs)
         self.F.getMassResidual(u,rt)
-
+        
     def solveInitialize(self,u,r,b):
         """
         if using deim modifies base initialization by
@@ -965,6 +965,10 @@ class POD_DEIM_Newton(Newton):
         u[:] = np.dot(self.U,pod_u)           
         #evaluate fine grid residuals directly
         r=self.solveInitialize(u,r,b)
+        #mwf debug
+        tmp = r-self.rt-self.rs
+        assert np.absolute(tmp).all() < 1.0e-12
+ 
         #r_deim = self.rt[self.rho_deim].copy()
         r_deim = self.rs[self.rho_deim]
         pod_rt = np.dot(self.U_transpose,self.rt)
@@ -995,7 +999,7 @@ class POD_DEIM_Newton(Newton):
                 #mwf debug
                 self.F.getJacobian(self.J)
                 tmp = self.Jt_nzval+self.Js_nzval-self.J_nzval 
-                assert numpy.absolute(tmp) < 1.0e-12
+                assert numpy.absolute(tmp).all() < 1.0e-12
                 #now this holds P^T J_s U                
                 self.pod_Jtmp[:] = 0.0
                 for i in range(self.DBf):
@@ -1035,6 +1039,11 @@ class POD_DEIM_Newton(Newton):
             u[:] = np.dot(self.U,pod_u)
             #self.computeResidual(u,r,b)
             self.computeDEIMresiduals(u,self.rs,self.rt)
+            #mwf debug
+            self.F.getResidual(u,r)
+            tmp = r-self.rt-self.rs
+            assert np.absolute(tmp).all() < 1.0e-12
+            #mwf debug
             #r_deim = self.rt[self.rho_deim].copy()
             r_deim = self.rs[self.rho_deim]
             pod_rt = np.dot(self.U_transpose,self.rt)
