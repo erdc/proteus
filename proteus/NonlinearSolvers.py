@@ -770,6 +770,8 @@ class POD_Newton(Newton):
             #pod_u-=np.dot(self.U_transpose,self.du)
             pod_u-=self.pod_du
             u[:] = np.dot(self.U,pod_u)
+            #mostly for convergence norms
+            self.du = np.dot(self.U,self.pod_du)
             self.computeResidual(u,r,b)
             pod_r[:] = np.dot(self.U_transpose,r)
             r[:] = np.dot(self.U,pod_r)
@@ -827,7 +829,7 @@ class POD_DEIM_Newton(Newton):
         self.rs = None; self.rt = None
         if self.use_deim:
             Uf = np.loadtxt('Fs_SVD_basis')
-            self.DBf = min(16,Uf.shape[1])#debug
+            self.DBf = min(12,Uf.shape[1],self.F.dim)#debug
             self.Uf = Uf[:,0:self.DBf]
             self.Uf_transpose = self.Uf.conj().T
             #returns rho --> deim indices and deim 'projection' matrix
@@ -849,6 +851,8 @@ class POD_DEIM_Newton(Newton):
         self.Jt_rowptr,self.Jt_colind,self.Jt_nzval = self.Jt.getCSRrepresentation()
         
         self.pod_du = np.zeros(self.DB)
+        self.skip_mass_jacobian_eval = False
+        self.linear_reduced_mass_matrix=None
     def norm(self,u):
         return self.norm_function(u)
     #mwf add for DEIM
@@ -940,6 +944,8 @@ class POD_DEIM_Newton(Newton):
             #pod_u-=np.dot(self.U_transpose,self.du)
             pod_u-=self.pod_du
             u[:] = np.dot(self.U,pod_u)
+            #mostly for norm calculations
+            self.du = np.dot(self.U,self.pod_du)
             self.computeResidual(u,r,b)
             pod_r[:] = np.dot(self.U_transpose,r)
             r[:] = np.dot(self.U,pod_r)
@@ -978,6 +984,7 @@ class POD_DEIM_Newton(Newton):
         #import pdb
         #pdb.set_trace()
         assert not numpy.isnan(pod_r).any()
+        #
         self.norm_r0 = self.norm(pod_r)
         self.norm_r_hist = []
         self.norm_du_hist = []
@@ -994,7 +1001,20 @@ class POD_DEIM_Newton(Newton):
                 assert not numpy.isnan(self.Js_nzval).any()
                 self.F.getMassJacobian(self.Jt)
                 assert not numpy.isnan(self.Jt_nzval).any()
-                #have to scale by dt
+                #mwf hack, speed up mass matrix calculation
+                if self.skip_mass_jacobian_eval and self.linear_reduced_mass_matrix is None:
+                    #now this holds U^T Jt U                
+                    self.pod_Jt[:] = 0.0
+                    for i in range(self.DB):
+                        for j in range(self.DB):
+                            for k in range(self.F.dim):
+                                for m in range(self.Jt_rowptr[k],self.Jt_rowptr[k+1]):
+                                    self.pod_Jt[i,j] += self.U_transpose[i,k]*self.Jt_nzval[m]*self.U[self.Jt_colind[m],j]
+                    #combined DEIM, coarse grid projection
+                    #self.pod_Jt = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
+                    assert not numpy.isnan(self.pod_Jt).any()
+                    self.linear_reduced_mass_matrix  = self.pod_Jt.copy()
+                #have to scale by dt in general shouldn't affect constant mass matrix
                 self.Jt_nzval /= self.F.timeIntegration.dt
                 #mwf debug
                 self.F.getJacobian(self.J)
@@ -1011,17 +1031,21 @@ class POD_DEIM_Newton(Newton):
                 tmp = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
                 self.pod_J.flat[:] = tmp.flat[:]                
                 assert not numpy.isnan(self.pod_J).any()
-                #now this holds U^T Jt U                
-                self.pod_Jt[:] = 0.0
-                for i in range(self.DB):
-                    for j in range(self.DB):
-                        for k in range(self.F.dim):
-                            for m in range(self.Jt_rowptr[k],self.Jt_rowptr[k+1]):
-                                self.pod_Jt[i,j] += self.U_transpose[i,k]*self.Jt_nzval[m]*self.U[self.Jt_colind[m],j]
-                #combined DEIM, coarse grid projection
-                #self.pod_Jt = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
-                assert not numpy.isnan(self.pod_Jt).any()
-                #combined
+                if not self.skip_mass_jacobian_eval:
+                    #now this holds U^T Jt U                
+                    self.pod_Jt[:] = 0.0
+                    for i in range(self.DB):
+                        for j in range(self.DB):
+                            for k in range(self.F.dim):
+                                for m in range(self.Jt_rowptr[k],self.Jt_rowptr[k+1]):
+                                    self.pod_Jt[i,j] += self.U_transpose[i,k]*self.Jt_nzval[m]*self.U[self.Jt_colind[m],j]
+                    #combined DEIM, coarse grid projection
+                    #self.pod_Jt = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
+                    assert not numpy.isnan(self.pod_Jt).any()
+                else: 
+                    #mwf hack just copy over from precomputed mass matrix
+                    self.pod_Jt.flat[:] = self.linear_reduced_mass_matrix.flat[:]
+                    self.pod_Jt /= self.F.timeIntegration.dt
                 self.pod_J += self.pod_Jt
                 #self.linearSolver.prepare(b=r)
                 self.pod_linearSolver.prepare(b=pod_r)
@@ -1037,6 +1061,8 @@ class POD_DEIM_Newton(Newton):
             assert not numpy.isnan(self.pod_du).any()
             pod_u-=self.pod_du            
             u[:] = np.dot(self.U,pod_u)
+            #mostly for norm calculations
+            self.du = np.dot(self.U,self.pod_du)
             #self.computeResidual(u,r,b)
             self.computeDEIMresiduals(u,self.rs,self.rt)
             #mwf debug
