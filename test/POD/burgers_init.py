@@ -70,8 +70,8 @@ def outflow(x):
 def getDBC(x,flag):
     if inflow(x):
         return constant_one
-    elif outflow(x):
-        return constant_zero#won't be strongly enforced if B points out
+    #elif outflow(x):
+    #    return constant_zero#won't be strongly enforced if B points out
 
 def getAFBC(x,flag):
     #return None
@@ -92,8 +92,8 @@ class Initial:
 
 #physics
 
-a0 = 1.0
-T = 0.5
+a0 = 1.0e-2
+T = 1.0
 
 physics = default_p
 physics.nd = nd; #
@@ -103,12 +103,12 @@ A  = np.zeros((nd,nd),'d')
 for I in range(nd):
     A[I,I]=a0
 B = np.array([1.0]*nd)
-physics.coefficients=Burgers(A,B,nd=nd,linearize=True) #the object for evaluating the coefficients   
+physics.coefficients=Burgers(A,B,nd=nd,linearize=False) #the object for evaluating the coefficients   
 physics.dirichletConditions = {0:getDBC}
 physics.advectiveFluxBoundaryConditions = {0:getAFBC}
 physics.diffusiveFluxBoundaryConditions = {0:{0:getDFBC}}
 physics.initialConditions = {0:Initial()}
-
+physics.fluxBoundaryConditions = {0:'outFlow'}
 #numerics
 
 nDTout = 100
@@ -121,7 +121,7 @@ numerics.runCFL=0.99
 numerics.femSpaces = {0:FemTools.C0_AffineLinearOnSimplexWithNodalBasis} #piecewise linears
 numerics.elementQuadrature = Quadrature.SimplexGaussQuadrature(physics.nd,2) #Quadrature rule for elements
 numerics.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(physics.nd-1,2) #Quadrature rule for element boundaries
-numerics.nn = numerics.nnx = numerics.nny = numerics.nnz = 21 #number of nodes in the x and y direction
+numerics.nn = numerics.nnx = numerics.nny = numerics.nnz = 101 #number of nodes in the x and y direction
 
 numerics.multilevelNonlinearSolver = NonlinearSolvers.Newton
 numerics.levelLinearSolver = NonlinearSolvers.Newton
@@ -136,12 +136,12 @@ numerics.l_atol_res = 1.0e-8 #linear solver rtolerance
 
 numerics.periodicDirichletConditions=None 
 
-#numerics.subgridError = SubgridError.AdvectionDiffusionReaction_ASGS(physics.coefficients,
-#                                                                 physics.nd,lag=False)
-#numerics.shockCapturing = ShockCapturing.ResGradQuad_SC(physics.coefficients,
-#                                                            physics.nd,
-#                                                            shockCapturingFactor=0.75,
-#                                                             lag=True)
+numerics.subgridError = SubgridError.AdvectionDiffusionReaction_ASGS(physics.coefficients,
+                                                                 physics.nd,lag=False)
+numerics.shockCapturing = ShockCapturing.ResGradQuad_SC(physics.coefficients,
+                                                        physics.nd,
+                                                        shockCapturingFactor=0.75,
+                                                        lag=True)
 #numerics.numericalFluxType = NumericalFlux.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
 numerics.numericalFluxType = NumericalFlux.NoFlux
 
