@@ -817,24 +817,34 @@ class POD_DEIM_Newton(Newton):
                 EWtol,
                 maxLSits)
         #setup reduced basis for solution 
-        self.DB = 11 #11 #number of basis vectors for solution
+        self.DB = 43 #11 #number of basis vectors for solution
         U = np.loadtxt('SVD_basis')
         self.U = U[:,0:self.DB]
         self.U_transpose = self.U.conj().T
         #setup reduced basis for DEIM interpolants
         self.use_deim = use_deim
         self.DBf = None
-        self.Uf  = None; self.Uf_transpose = None; 
+        self.Uf  = None; 
         self.rho_deim = None; self.Ut_Uf_PtUf_inv=None
         self.rs = None; self.rt = None
+        calculate_deim_internally = True
         if self.use_deim:
-            Uf = np.loadtxt('Fs_SVD_basis')
-            self.DBf = min(12,Uf.shape[1],self.F.dim)#debug
-            self.Uf = Uf[:,0:self.DBf]
-            self.Uf_transpose = self.Uf.conj().T
-            #returns rho --> deim indices and deim 'projection' matrix
-            #U(P^TU)^{-1}
-            self.rho_deim,Uf_PtUf_inv = deim_utils.deim_alg(self.Uf,self.DBf)
+            #mwf this calculates things in the code. Switch for debugging to just reading
+            if calculate_deim_internally:
+                Uf = np.loadtxt('Fs_SVD_basis')
+                self.DBf = min(73,Uf.shape[1],self.F.dim)#debug
+                self.Uf = Uf[:,0:self.DBf]
+                #returns rho --> deim indices and deim 'projection' matrix
+                #U(P^TU)^{-1}
+                self.rho_deim,Uf_PtUf_inv = deim_utils.deim_alg(self.Uf,self.DBf)
+            else:
+                self.Uf = np.loadtxt('Fs_SVD_basis_truncated')
+                self.DBf = self.Uf.shape[1]
+                self.rho_deim = np.loadtxt('Fs_DEIM_indices_truncated',dtype='i')
+                PtUf = self.Uf[self.rho_deim]
+                assert PtUf.shape == (self.DBf,self.DBf)
+                PtUfInv = np.linalg.inv(PtUf)
+                Uf_PtUf_inv = np.dot(self.Uf,PtUfInv)
             #go ahead and left multiply projection matrix by solution basis
             #to get 'projection' from deim to coarse space
             self.Ut_Uf_PtUf_inv = np.dot(self.U_transpose,Uf_PtUf_inv)
@@ -851,7 +861,7 @@ class POD_DEIM_Newton(Newton):
         self.Jt_rowptr,self.Jt_colind,self.Jt_nzval = self.Jt.getCSRrepresentation()
         
         self.pod_du = np.zeros(self.DB)
-        self.skip_mass_jacobian_eval = False
+        self.skip_mass_jacobian_eval = True
         self.linear_reduced_mass_matrix=None
     def norm(self,u):
         return self.norm_function(u)
