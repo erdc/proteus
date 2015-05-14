@@ -14,7 +14,7 @@ extends:
 # profile.
 
 packages:
-
+  clawpack:
   launcher:
   cmake:
     use: host-cmake
@@ -46,6 +46,7 @@ packages:
     debug: false
   petsc4py:
     with_conf: true
+  pillow:
   pytables:
   sphinx:
   superlu:
@@ -53,6 +54,34 @@ packages:
   tetgen:
   triangle:
   memory_profiler:
+  boost:
+    toolset: gcc
+    address_model: 64
+    build_with: |
+      python
+
+  cgal:
+  pycgal:
+  netcdf4:
+  netcdf4f:
+  python-netcdf4:
+  jasper:
+  grib_api:
+  pyproj:
+  pygrib:
+  scipy:
+  ipython:
+  terminado:
+  h5py:
+  pydap:
+  leafletwidget:
+  geojson:
+  rdp:
+  ipython-d3plot:
+  ipython-gridwidget:
+  shapely:
+  rtree:
+  ode:
   ipdb:
   pip:
-  scipy:
+  pexpect:
