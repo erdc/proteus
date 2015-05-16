@@ -557,15 +557,24 @@ class KSP_petsc4py(LinearSolver):
 class SimpleNavierStokes3D:
     def __init__(self,L,prefix=None):
         self.L = L
-        sizes = L.getSizes()
-        range = L.getOwnershipRange()
-        #print "sizes",sizes
-        neqns = sizes[0][0]
+        L_sizes = L.getSizes()
+        L_range = L.getOwnershipRange()
+        #print "L_sizes",L_sizes
+        neqns = L_sizes[0][0]
         #print "neqns",neqns
-        self.pressureDOF = numpy.arange(range[0],range[0]+neqns/4,dtype="i")
-        #print "pressure",self.pressureDOF
-        self.velocityDOF = numpy.arange(range[0]+neqns/4,range[0]+neqns,dtype="i")
-        #print "velocity",self.velocityDOF
+        self.pressureDOF = numpy.arange(start=L_range[0],
+                                        stop=L_range[0]+neqns,
+                                        step=4,
+                                        dtype="i")
+        print "pressure",self.pressureDOF
+        velocityDOF = []
+        for start in range(1,4):
+            velocityDOF.append(numpy.arange(start=L_range[0]+start,
+                                         stop=L_range[0]+neqns,
+                                         step=4,
+                                         dtype="i"))
+        self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
+        print "velocity",self.velocityDOF
         self.pc = p4pyPETSc.PC().create()
         if prefix:
             self.pc.setOptionsPrefix(prefix)
@@ -589,14 +598,14 @@ class SimpleNavierStokes3D:
 
 class SimpleDarcyFC:
     def __init__(self,L):
-        sizes = L.getSizes()
-        range = L.getOwnershipRange()
-        print "sizes",sizes
-        neqns = sizes[0][0]
+        L_sizes = L.getSizes()
+        L_range = L.getOwnershipRange()
+        print "L_sizes",L_sizes
+        neqns = L_sizes[0][0]
         print "neqns",neqns
-        self.saturationDOF = numpy.arange(range[0],range[0]+neqns/2,dtype="i")
+        self.saturationDOF = numpy.arange(L_range[0],L_range[0]+neqns/2,dtype="i")
         #print "saturation",self.saturationDOF
-        self.pressureDOF = numpy.arange(range[0]+neqns/2,range[0]+neqns,dtype="i")
+        self.pressureDOF = numpy.arange(L_range[0]+neqns/2,L_range[0]+neqns,dtype="i")
         #print "pressure",self.pressureDOF
         self.pc = p4pyPETSc.PC().create()
         self.pc.setType('fieldsplit')
@@ -612,15 +621,24 @@ class SimpleDarcyFC:
 class SimpleNavierStokes2D:
     def __init__(self,L,prefix=None):
         self.L=L
-        sizes = L.getSizes()
-        range = L.getOwnershipRange()
-        #print "sizes",sizes
-        neqns = sizes[0][0]
+        L_sizes = L.getSizes()
+        L_range = L.getOwnershipRange()
+        #print "L_sizes",L_sizes
+        neqns = L_sizes[0][0]
         #print "neqns",neqns
-        self.pressureDOF = numpy.arange(range[0],range[0]+neqns/3,dtype="i")
-        #print "pressure",self.pressureDOF
-        self.velocityDOF = numpy.arange(range[0]+neqns/3,range[0]+neqns,dtype="i")
-        #print "velocity",self.velocityDOF
+        self.pressureDOF = numpy.arange(start=L_range[0],
+                                        stop=L_range[0]+neqns,
+                                        step=3,
+                                        dtype="i")
+        print "pressure",self.pressureDOF
+        velocityDOF = []
+        for start in range(1,3):
+            velocityDOF.append(numpy.arange(start=L_range[0]+start,
+                                         stop=L_range[0]+neqns,
+                                         step=3,
+                                         dtype="i"))
+        self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
+        print "velocity",self.velocityDOF
         self.pc = p4pyPETSc.PC().create()
         if prefix:
             self.pc.setOptionsPrefix(prefix)
@@ -641,14 +659,14 @@ class SimpleNavierStokes2D:
 
 class SimpleDarcyFC:
     def __init__(self,L):
-        sizes = L.getSizes()
-        range = L.getOwnershipRange()
-        print "sizes",sizes
-        neqns = sizes[0][0]
+        L_sizes = L.getSizes()
+        L_range = L.getOwnershipRange()
+        print "L_sizes",L_sizes
+        neqns = L_sizes[0][0]
         print "neqns",neqns
-        self.saturationDOF = numpy.arange(range[0],range[0]+neqns/2,dtype="i")
+        self.saturationDOF = numpy.arange(L_range[0],L_range[0]+neqns/2,dtype="i")
         #print "saturation",self.saturationDOF
-        self.pressureDOF = numpy.arange(range[0]+neqns/2,range[0]+neqns,dtype="i")
+        self.pressureDOF = numpy.arange(L_range[0]+neqns/2,L_range[0]+neqns,dtype="i")
         #print "pressure",self.pressureDOF
         self.pc = p4pyPETSc.PC().create()
         self.pc.setType('fieldsplit')
