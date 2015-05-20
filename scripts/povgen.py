@@ -11,7 +11,7 @@ pov = open("water.pov","w")
 
 nodeArray = h5.getNode("/nodesSpatial_Domain0")[:]
 elementNodesArray = h5.getNode("/elementsSpatial_Domain0")[:]
-phi = h5.getNode("/phi10")[:]
+phi = h5.getNode("/phi33")[:]
 ll = (nodeArray[:,0].min(),nodeArray[:,1].min(),nodeArray[:,2].min())
 ur = (nodeArray[:,0].max(),nodeArray[:,1].max(),nodeArray[:,2].max())
 L = tuple(np.array(ur) - np.array(ll))
@@ -174,37 +174,37 @@ background { color rgb <0.319997, 0.340002, 0.429999>}
 
 camera {
 	perspective
-	location <0.0, -0.75, 0.2>
+	location <0.5, -3.0, 1.5>
 	sky <0.0, 0.0, 5.0>
 	up <0, 0, 1>
 	right <1.33, 0, 0>
 	angle 45.000000
-	look_at <0.0, 0.0, -0.1>
+	look_at <0.5, 0.5, 0.5>
 }
 
 light_source {
-	<0.2,0.2,0.4>
+	<1.5,1.5,1.5>
 	color <0.99980, 0.999800, 0.999800>*2.250000
 	spotlight
-	point_at <0.0,0.0,0.0>
+	point_at <0.5,0.5,0.0>
 }
 light_source {
-	<0.2,-0.2,0.4>
+	<1.5,-0.5,1.5>
 	color <0.99980, 0.999800, 0.999800>*2.250000
 	spotlight
-	point_at <0.0,0.0,0.0>
+	point_at <0.5,0.5,0.0>
 }
 light_source {
-	<-0.2,-0.2,0.4>
+	<-0.5,-0.5,1.5>
 	color <0.99980, 0.999800, 0.999800>*2.250000
 	spotlight
-	point_at <0.0,0.0,0.0>
+	point_at <0.5,0.5,0.0>
 }
 light_source {
-	<-0.2,0.2,0.4>
+	<-0.5,1.5,1.5>
 	color <0.99980, 0.999800, 0.999800>*2.250000
 	spotlight
-	point_at <0.0,0.0,0.0>
+	point_at <0.5,0.5,0.0>
 }
 
 // ground -----------------------------------------------------------------
@@ -225,11 +225,11 @@ light_source {
 //-------------------------------------------------------------------------
     
 // squared plane XY
-plane { <0,0,1>, -0.11    // plane with layered textures
+plane { <0,0,1>, 0.0    // plane with layered textures
         texture { pigment{checker color White, color Black}
                 scale 0.04}
       }
-plane { <0,0,-1>, 1.0    // plane with layered textures
+plane { <0,0,-1>, 5.0    // plane with layered textures
         texture { pigment{color Blue}
                 }
         rotate<0,0,0>
@@ -238,12 +238,12 @@ plane { <0,0,-1>, 1.0    // plane with layered textures
  object{
  difference{
  box {
-    <-0.2-0.01,-0.2-0.01,-0.1>,  // Near lower left corner
-    <0.2+0.01,0.2+0.01,0.1>   // Far upper right corner
+    <0.0-0.01,0.0-0.01,0.0-0.01>,  // Near lower left corner
+    <1.0+0.01,1.0+0.01,1.0+0.01>   // Far upper right corner
     }
  box {
-    <-0.2,-0.2,-0.1+0.01>,  // Near lower left corner
-    <0.2,0.2,0.1+0.01>   // Far upper right corner
+    <0.0,0.0,0.0>,  // Near lower left corner
+    <1.0,1.0,1.0>   // Far upper right corner
     }}
     
         material{
