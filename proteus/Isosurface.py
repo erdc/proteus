@@ -48,6 +48,7 @@ class Isosurface(AV_base):
         self.activeTime = activeTime
         self.sampleRate = sampleRate
         self.fileName = fileName
+        self.comm = Comm.get()
     def attachModel(self, model, ar):
         """ Attach this isosurface to the given simulation model.
         """
@@ -81,7 +82,7 @@ class Isosurface(AV_base):
         for field,values in self.isosurfaces:
             for v in values:
                 phi = self.u[self.fieldNames.index(field)].dof
-                for eN in range(self.elementNodesArray.shape[0]):
+                for eN in range(self.num_owned_elements):
                     plus=[]
                     minus=[]
                     zeros=[]
@@ -90,7 +91,7 @@ class Isosurface(AV_base):
                         I = self.elementNodesArray[eN,i]
                         if phi[I] > eps:
                             plus.append(I)
-                        elif  phi[I] < eps:
+                        elif  phi[I] < -eps:
                             minus.append(I)
                         else:
                             zeros.append(I)
@@ -132,7 +133,6 @@ class Isosurface(AV_base):
                         elements.append([nN_start+j for j in range(3)])
                         if etriple(self.nodeArray[minus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) > 0.0:
                             elements[-1] = [elements[-1][0], elements[-1][2], elements[-1][1]]
-                            assert etriple(self.nodeArray[minus[0]] - nodes[-3],nodes[-1]-nodes[-3],nodes[-2]- nodes[-3]) < 0.0
                         normal = ecross(nodes[elements[-1][1]]-nodes[elements[-1][0]],nodes[elements[-1][2]]- nodes[elements[-1][0]])
                         normal /= enorm(normal)
                         normals.append(normal)
@@ -148,7 +148,6 @@ class Isosurface(AV_base):
                         elements.append([nN_start+j for j in range(3)])
                         if etriple(self.nodeArray[plus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) < 0.0:
                             elements[-1] = [elements[-1][0], elements[-1][2], elements[-1][1]]
-                            assert etriple(self.nodeArray[plus[0]] - nodes[-3],nodes[-1]-nodes[-3],nodes[-2]- nodes[-3]) > 0.0
                         normal = ecross(nodes[elements[-1][1]]-nodes[elements[-1][0]],nodes[elements[-1][2]]- nodes[elements[-1][0]])
                         normal /= enorm(normal)
                         normals.append(normal)
@@ -166,7 +165,6 @@ class Isosurface(AV_base):
                         elements.append([nN_start+j for j in range(3)])
                         if etriple(self.nodeArray[plus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) < 0.0:
                             elements[-1] = [elements[-1][0], elements[-1][2], elements[-1][1]]
-                            assert etriple(self.nodeArray[plus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) > 0.0
                         normal = ecross(nodes[elements[-1][1]]-nodes[elements[-1][0]],nodes[elements[-1][2]]- nodes[elements[-1][0]])
                         normal /= enorm(normal)
                         normals.append(normal)
@@ -184,7 +182,6 @@ class Isosurface(AV_base):
                         elements.append([nN_start+j for j in range(3)])
                         if etriple(self.nodeArray[plus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) < 0.0:
                                 elements[-1] = [elements[-1][0], elements[-1][2], elements[-1][1]]
-                                assert etriple(self.nodeArray[plus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) > 0.0
                         normal = ecross(nodes[elements[-1][1]]-nodes[elements[-1][0]],nodes[elements[-1][2]]- nodes[elements[-1][0]])
                         normal /= enorm(normal)
                         normals.append(normal)
@@ -198,20 +195,19 @@ class Isosurface(AV_base):
                         if nPlus == 1:
                             if etriple(self.nodeArray[plus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) < 0.0:
                                 elements[-1] = [elements[-1][0], elements[-1][2], elements[-1][1]]
-                                assert etriple(self.nodeArray[plus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) > 0.0
                         else:
                             if etriple(self.nodeArray[minus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) > 0.0:
                                 elements[-1] = [elements[-1][0], elements[-1][2], elements[-1][1]]
-                                assert etriple(self.nodeArray[minus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) < 0.0
                         normal = ecross(nodes[elements[-1][1]]-nodes[elements[-1][0]],nodes[elements[-1][2]]- nodes[elements[-1][0]])
                         normal /= enorm(normal)
                         normals.append(normal)
                         normals.append(normal)
                         normals.append(normal)
                         normal_indices.append(elements[-1])
-                pov = open(field+"_"+`v`+"_%4.4d.pov" % self.nFrames,"w")
-                povScene="""
-#include "colors.inc"
+                self.comm.beginSequential()
+                if self.comm.isMaster():
+                    pov = open(field+"_"+`v`+"_%4.4d.pov" % self.nFrames,"w")
+                    povScene="""#include "colors.inc"
 #include "textures.inc"
 #include "glass.inc"
 #include "metals.inc"
@@ -329,10 +325,13 @@ plane { <0,0,-1>, 5.0    // plane with layered textures
  
         } // end of material
   }
-  
-mesh2 {
-        vertex_vectors {
-                 """
+"""
+                    pov.write(povScene)
+                    pov.flush()
+                else:
+                    pov = open(field+"_"+`v`+"_%4.4d.pov" % self.nFrames,"a")
+                povScene = """mesh2 {
+vertex_vectors {"""
                 pov.write(povScene)
                 pov.write("%i,\n" % (len(nodes),))
                 for n in nodes:
@@ -382,9 +381,11 @@ mesh2 {
                                 } // end of interior
                         } // end of material
                 }
-                """)
+""")
+                pov.flush()
                 pov.close()
+                self.comm.endSequential()
         self.nFrames+=1
         self.last_output = time
-        self.nodes = np.array(nodes)
-        self.elements = np.array(elements)
+        self.nodes_array = np.array(nodes)
+        self.elements_array = np.array(elements)
