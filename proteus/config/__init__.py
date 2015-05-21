@@ -1,10 +1,10 @@
 import os
 
-if 'HOSTNAME' in os.environ and (os.environ['HOSTNAME'].startswith('garnet')
-                                 or
-                                 os.environ['HOSTNAME'].startswith('copper')
-                                 or
-                                 os.environ['HOSTNAME'].startswith('lightning')):
+if 'HOSTNAME' in os.environ and (os.environ['HOSTNAME'].startswith('garnet')):
     from garnet import *
+if 'HOSTNAME' in os.environ and (os.environ['HOSTNAME'].startswith('copper')):
+    from copper import *
+if 'HOSTNAME' in os.environ and (os.environ['HOSTNAME'].startswith('lightning')):
+    from lightning import *
 else:
     from default import *
