@@ -1,0 +1,109 @@
+<?xml version="1.0" ?>
+<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
+<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">
+  <Domain>
+    <Grid GridType="Uniform">
+      <Topology TopologyType="Hexahedron" Dimensions="27">
+        <DataItem Dimensions="27 8" NumberType="Int" Precision="8" Format="HDF">hex_cube_3x3.h5:/Data0</DataItem>
+      </Topology>
+      <Geometry GeometryType="XYZ">
+        <DataItem Dimensions="64 3" NumberType="Float" Precision="4" Format="HDF">hex_cube_3x3.h5:/Data1</DataItem>
+      </Geometry>
+      <Attribute Name="T" AttributeType="Scalar" Center="Cell">
+        <DataItem Dimensions="27" NumberType="Float" Precision="4" Format="XML">
+1 1 1 1 1 1 1 1 1 1 
+1 1 1 1 1 1 1 1 1 1 
+1 1 1 1 1 1 1 
+</DataItem>
+      </Attribute>
+      <Attribute Name="U" AttributeType="Vector" Center="Cell">
+        <DataItem Dimensions="27 3" NumberType="Float" Precision="4" Format="XML">
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+0 0 0 
+</DataItem>
+      </Attribute>
+      <Attribute Name="cellID" AttributeType="Scalar" Center="Cell">
+        <DataItem Dimensions="27" NumberType="Int" Precision="4" Format="XML">
+0 1 2 3 4 5 6 7 8 9 
+10 11 12 13 14 15 16 17 18 19 
+20 21 22 23 24 25 26 
+</DataItem>
+      </Attribute>
+      <Attribute Name="magU" AttributeType="Scalar" Center="Cell">
+        <DataItem Dimensions="27" NumberType="Float" Precision="4" Format="XML">
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 
+</DataItem>
+      </Attribute>
+      <Attribute Name="p" AttributeType="Scalar" Center="Cell">
+        <DataItem Dimensions="27" NumberType="Float" Precision="4" Format="XML">
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 
+</DataItem>
+      </Attribute>
+      <Attribute Name="T" AttributeType="Scalar" Center="Node">
+        <DataItem Dimensions="64" NumberType="Float" Precision="4" Format="XML">
+1 1 1 1 1 1 1 1 1 1 
+1 1 1 1 1 1 1 1 1 1 
+1 1 1 1 1 1 1 1 1 1 
+1 1 1 1 1 1 1 1 1 1 
+1 1 1 1 1 1 1 1 1 1 
+1 1 1 1 1 1 1 1 1 1 
+1 1 1 1 
+</DataItem>
+      </Attribute>
+      <Attribute Name="U" AttributeType="Vector" Center="Node">
+        <DataItem Dimensions="64 3" NumberType="Float" Precision="4" Format="HDF">/home/mfarthin/Public/code/air-water-vv/OpenFOAM_mesh_3x3/VTK/foo.h5:/Data2</DataItem>
+      </Attribute>
+      <Attribute Name="magU" AttributeType="Scalar" Center="Node">
+        <DataItem Dimensions="64" NumberType="Float" Precision="4" Format="XML">
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 
+</DataItem>
+      </Attribute>
+      <Attribute Name="p" AttributeType="Scalar" Center="Node">
+        <DataItem Dimensions="64" NumberType="Float" Precision="4" Format="XML">
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 0 0 0 0 0 0 
+0 0 0 0 
+</DataItem>
+      </Attribute>
+    </Grid>
+  </Domain>
+</Xdmf>
