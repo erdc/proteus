@@ -1,15 +1,14 @@
-#!/bin/bash
-#PBS -l select=1:ncpus=16:mpiprocs=16
-#PBS -A ERDCV00898ENQ
+#!/bin/tcsh
+#PBS -l select=1:ncpus=32:mpiprocs=32
+#PBS -A ERDCV00898ENQR40
 #PBS -l walltime=001:00:00
 #PBS -q background
 #PBS -N testProteus
 #PBS -j oe
 #PBS -l application=proteus
 #PBS -V
-#PBS -l ccm=1
-source /opt/modules/default/init/bash
-PROTEUS_PYTHON=${HOME}/proteus/garnet.gnu/bin/python
+##PBS -l ccm=1
+PROTEUS_PYTHON=${HOME}/proteus/lightning.gnu/bin/python
 cd $PBS_O_WORKDIR
 echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 echo "testing import"
