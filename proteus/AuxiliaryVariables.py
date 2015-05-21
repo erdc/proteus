@@ -44,6 +44,10 @@ class AV_base:
                                 "Precision":"8",
                                 "Dimensions":"1"})
         values.text = str(u)
+    def calculate_init(self):
+        self.calculate()
+    def calculate(self):
+        pass
 
 class GatherDOF(AV_base):
     def __init__(self,filename):
