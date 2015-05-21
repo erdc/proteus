@@ -67,4 +67,6 @@ __all__ = ["Archiver",
            "cnumericalFlux",
            "cfmmfsw",
            "cTwophaseDarcyCoefficients",
-           "ADR"]
+           "ADR",
+           "WaveTools",
+           "Context"]
