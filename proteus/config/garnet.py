@@ -1,9 +1,9 @@
 from default import *
 
-PROTEUS_PRELOAD_LIBS=['/opt/cray/mpt/6.0.0/gni/mpich2-gnu/48/lib/libmpich.so.2.0.0']
-PROTEUS_EXTRA_LINK_ARGS=['-L/opt/acml/5.3.1/gfortran64/lib','-lacml'] + platform_extra_link_args
-PROTEUS_EXTRA_FC_LINK_ARGS=['-L/opt/acml/5.3.1/gfortran64/lib','-lacml']
-PROTEUS_BLAS_LIB_DIR = '/opt/acml/5.3.1/gfortran64/lib'
-PROTEUS_BLAS_LIB   = 'acml'
-PROTEUS_LAPACK_LIB_DIR = '/opt/acml/5.3.1/gfortran64/lib'
-PROTEUS_LAPACK_LIB = 'acml'
+PROTEUS_PRELOAD_LIBS=[]
+PROTEUS_EXTRA_LINK_ARGS=['-L/cm/shared/apps/openblas/dynamic/0.2.6/lib','-lopenblas'] + platform_extra_link_args
+PROTEUS_EXTRA_FC_LINK_ARGS=['-L/cm/shared/apps/openblas/dynamic/0.2.6/lib','-lopenblas']
+PROTEUS_BLAS_LIB_DIR = '/cm/shared/apps/openblas/dynamic/0.2.6/lib'
+PROTEUS_BLAS_LIB   = 'openblas'
+PROTEUS_LAPACK_LIB_DIR = '/cm/shared/apps/openblas/dynamic/0.2.6/lib'
+PROTEUS_LAPACK_LIB = 'openblas'
