@@ -1,14 +1,14 @@
 import os
 
-if 'HOSTNAME' in os.environ and (os.environ['HOSTNAME'].startswith('garnet')):
+if 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('garnet'):
     from garnet import *
-elif 'HOSTNAME' in os.environ and (os.environ['HOSTNAME'].startswith('spirit')):
+elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('spirit'):
     from spirit import *
-elif 'HOSTNAME' in os.environ and (os.environ['HOSTNAME'].startswith('copper')):
+elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('copper'):
     from copper import *
-elif 'HOSTNAME' in os.environ and (os.environ['HOSTNAME'].startswith('lightning')):
+elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('lightning'):
     from lightning import *
-elif 'HOSTNAME' in os.environ and os.environ['HOSTNAME'].startswith('viutill'):
+elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('viutill'):
     from viutill import *
 else:
     from default import *
