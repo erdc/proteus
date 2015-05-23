@@ -1,6 +1,9 @@
+"""
+AuxiliaryVariables subclasses for extractin isosurfaces and contours
+"""
 from collections import defaultdict, OrderedDict
 from itertools import product
-from proteus.EGeometry import etriple,ecross,enorm
+from proteus.EGeometry import etriple,ecross,enorm,edot
 
 from mpi4py import MPI
 from petsc4py import PETSc
@@ -14,8 +17,8 @@ from proteus.MeshTools import triangleVerticesToNormals, tetrahedronVerticesToNo
 
 
 class Isosurface(AV_base):
-    """Extract isosurfaces(isocontours)"""
-    def __init__(self,isosurfaces, activeTime=None, sampleRate=0, fileName='water.pov'):
+    """Extract isosurfaces"""
+    def __init__(self,isosurfaces, domain, activeTime=None, sampleRate=0, fileName='water.pov'):
         """
         Create a set of isosurfaces that will be extracted and serialized
         
@@ -23,12 +26,17 @@ class Isosurface(AV_base):
         is specified by a 2-tuple, with the first element in the tuple is a field
         from which to extract isosurfaces, and the second element is an n-tuple
         of isosurface values to extract.
+
+        :param domain: a Domain object
+        
         :param activeTime: If not None, a 2-tuple of start time and end time for
         which the point gauge is active.
+
         :param sampleRate: The intervals at which samples should be measured.
         Note that this is a rough lower bound, and that the gauge values could
         be computed less frequently depending on the time integrator.  The default
         value of zero computes the gauge values at every time step.
+
         :param fileName: The name of the file to serialize results to.
 
         Example:
@@ -42,6 +50,7 @@ class Isosurface(AV_base):
         taken no more frequently than every 0.2 seconds.  Results will be saved to: water.pov.
         """
         self.isosurfaces = isosurfaces
+        self.domain = domain
         for f,values in self.isosurfaces:
             for v in values:
                 assert v==0.0,"only implemented for 0 isosurface  in 3D for  now"
@@ -55,16 +64,23 @@ class Isosurface(AV_base):
         self.model = model
         self.fieldNames = model.levelModelList[-1].coefficients.variableNames
         self.elementNodesArray = model.levelModelList[-1].mesh.elementNodesArray
+        self.exteriorElementBoundariesArray = model.levelModelList[-1].mesh.exteriorElementBoundariesArray
+        self.elementBoundaryNodesArray = model.levelModelList[-1].mesh.elementBoundaryNodesArray
+        self.elementBoundaryMaterialTypes = model.levelModelList[-1].mesh.elementBoundaryMaterialTypes
+        self.boundaryNodes = set(self.elementBoundaryNodesArray[self.exteriorElementBoundariesArray].flatten())
+        self.g2b = dict((gn,bn) for bn,gn in enumerate(self.boundaryNodes))
         self.nodeArray = model.levelModelList[-1].mesh.nodeArray
         self.num_owned_elements = model.levelModelList[-1].mesh.nElements_global
         self.u = model.levelModelList[-1].u
         self.timeIntegration = model.levelModelList[-1].timeIntegration
         self.nFrames=0
         self.last_output=None
+        self.writeSceneHeader()
         return self
     def calculate(self):
         """ Extracts current isosourfaces and updates open output files
         """
+        from string import Template
         time = self.timeIntegration.tLast
         log("Calculate called at time %g" % time)
         # check that gauge is in its active time region
@@ -172,12 +188,12 @@ class Isosurface(AV_base):
                         normals.append(normal)
                         normal_indices.append(elements[-1])
                     elif nZeros == 2 and nPlus == 1 and nMinus == 1:#1 cut edge, 2 vertices lie in plane
+                        for I in zeros:
+                            nodes.append(self.nodeArray[I])
                         I = plus[0]
                         J = minus[0]
                         s = -phi[I]/(phi[J] - phi[I])
                         x = s*(self.nodeArray[J] - self.nodeArray[I])+self.nodeArray[I]
-                        nodes.append(self.nodeArray[I])
-                        nodes.append(self.nodeArray[J])
                         nodes.append(x)
                         elements.append([nN_start+j for j in range(3)])
                         if etriple(self.nodeArray[plus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) < 0.0:
@@ -207,7 +223,122 @@ class Isosurface(AV_base):
                 self.comm.beginSequential()
                 if self.comm.isMaster():
                     pov = open(field+"_"+`v`+"_%4.4d.pov" % self.nFrames,"w")
-                    povScene="""#include "colors.inc"
+                    dx = np.array(self.domain.L)*0.02
+                    nll = np.array(self.domain.x)-dx
+                    fur = np.array(self.domain.L)+dx
+                    fur[2] = self.domain.L[2] - dx[2]#clip  the  top off
+                    pov.write(Template("""#version 3.7;
+#include "proteus.inc"
+object
+{
+//difference
+//{
+// box {
+//    <$nll_x,$nll_y,$nll_z>,  // Near lower left corner
+//    <$fur_x,$fur_y,$fur_z>   // Far upper right corner
+//    }
+union
+{
+""").substitute(nll_x=nll[0],
+                nll_y=nll[1],
+                nll_z=nll[2],
+                fur_x=fur[0],
+                fur_y=fur[1],
+                fur_z=fur[2]))
+                    pov.flush()
+                else:
+                    pov = open(field+"_"+`v`+"_%4.4d.pov" % self.nFrames,"a")
+                povScene = """mesh2 {
+vertex_vectors {"""
+                pov.write(povScene)
+                pov.write("%i,\n" % (len(self.boundaryNodes),))
+                for n in self.boundaryNodes:
+                    pov.write("<%f,%f,%f>,\n" % tuple(self.nodeArray[n].tolist()))
+                pov.write("}\n")
+                pov.write("""face_indices {
+                                 """)
+                pov.write("%i,\n" % (np.count_nonzero(self.elementBoundaryMaterialTypes),))
+                for ebN in self.exteriorElementBoundariesArray:
+                    if self.elementBoundaryMaterialTypes[ebN] > 0:
+                        bnt = tuple([self.g2b[n] for n in self.elementBoundaryNodesArray[ebN]])
+                        pov.write("<%i,%i,%i>,\n" % bnt)
+                pov.write("}\n")
+                pov.write("//inside_vector on\n}//mesh\n")
+                pov.flush()
+                pov.close()
+                self.comm.endSequential()
+                self.comm.barrier()
+                self.comm.beginSequential()
+                pov = open(field+"_"+`v`+"_%4.4d.pov" % self.nFrames,"a")
+                if self.comm.isMaster():
+                    pov.write("""}//union of meshes
+//}//difference of perturbed bounding box and boundary
+                    matrix < 1.000000, 0.000000, 0.000000,
+                             0.000000, 1.000000, 0.000000,
+                             0.000000, 0.000000, 1.000000,
+                             0.000000, 0.000000, 0.000000 >
+                    tank_material()
+}//object
+""")
+                povScene = """mesh2 {
+vertex_vectors {"""
+                pov.write(povScene)
+                pov.write("%i,\n" % (len(nodes),))
+                for n in nodes:
+                    pov.write("<%f,%f,%f>,\n" % tuple(n.tolist()))
+                pov.write("""        }
+                        normal_vectors {
+                                """)
+                pov.write("%i,\n" % (len(normals),))
+                for n in normals:
+                    pov.write("<%f,%f,%f>,\n" % tuple(n))
+                pov.write("""        }
+                         face_indices {
+                                 """)
+                pov.write("%i,\n" % (len(elements),))
+                for e in elements:
+                    pov.write("<%i,%i,%i>,\n" % tuple(e))
+                pov.write("""        }
+                         normal_indices {
+                                 """)
+                pov.write("%i,\n" % (len(normal_indices),))
+                for ni in normal_indices:
+                    pov.write("<%i,%i,%i>,\n" % tuple(ni))
+                pov.write("""        }
+                    matrix < 1.000000, 0.000000, 0.000000,
+                             0.000000, 1.000000, 0.000000,
+                             0.000000, 0.000000, 1.000000,
+                             0.000000, 0.000000, 0.000000 >
+                    isosurface_material()
+                }
+""")
+                pov.flush()
+                pov.close()
+                self.comm.endSequential()
+        self.nFrames+=1
+        self.last_output = time
+        self.nodes_array = np.array(nodes)
+        self.elements_array = np.array(elements)
+        
+    def writeSceneHeader(self):
+        """
+        Write a simple scene description (can be modified before running povray)
+        """
+        from string import Template
+        if self.comm.isMaster():
+            look_at = [0.5*(x+L) for x,L in zip(self.domain.x,self.domain.L)]
+            cam = [0.5*(self.domain.x[0]+self.domain.L[0]),
+                   self.domain.x[1]-2*self.domain.L[1],#cek todo, this should be a function of width and height to fit the scene
+                   self.domain.x[2] + 0.85*(self.domain.L[2]+self.domain.x[2])]
+            light  = [0.5*(x+L) for x,L in zip(self.domain.x,self.domain.L)]
+            light[2] = self.domain.x[2]+5*self.domain.L[2]
+            light_dx,light_dy = (self.domain.x[0]-light[0],
+                                 self.domain.x[1]-light[1])
+            floor_z = self.domain.x[2]-0.01*self.domain.L[2]#offset floor slightly
+            wall_y = self.domain.x[1]-2.0*self.domain.L[1]#offset floor slightly
+            sky_z = self.domain.x[2]+10*self.domain.L[2]
+            pov = open("proteus.inc","w")
+            povSceneTemplate=Template("""#include "colors.inc"
 #include "textures.inc"
 #include "glass.inc"
 #include "metals.inc"
@@ -229,34 +360,39 @@ background { color rgb <0.319997, 0.340002, 0.429999>}
 
 camera {
 	perspective
-	location <0.5, -3.0, 1.5>
+	location <$cam_x,$cam_y,$cam_z>
 	sky <0.0, 0.0, 5.0>
 	up <0, 0, 1>
 	right <1.33, 0, 0>
 	angle 45.000000
-	look_at <0.5, 0.5, 0.5>
+	look_at <$look_at_x,$look_at_y,$look_at_z>
+}
+
+light_source {<$light_x,$light_y,$light_z> color White}
+
+light_source {
+	<$light_x+$light_dx,$light_y+$light_dy,$light_z>
+	color <0.99980, 0.999800, 0.999800>*2.250000
+	spotlight
+	point_at <0.5,0.5,0.0>
 }
 
 light_source {
-	<1.5,1.5,1.5>
+	<$light_x+$light_dx,$light_y-$light_dy,$light_z>
 	color <0.99980, 0.999800, 0.999800>*2.250000
 	spotlight
 	point_at <0.5,0.5,0.0>
 }
+
 light_source {
-	<1.5,-0.5,1.5>
+	<$light_x-$light_dx,$light_y-$light_dy,$light_z>
 	color <0.99980, 0.999800, 0.999800>*2.250000
 	spotlight
 	point_at <0.5,0.5,0.0>
 }
+
 light_source {
-	<-0.5,-0.5,1.5>
-	color <0.99980, 0.999800, 0.999800>*2.250000
-	spotlight
-	point_at <0.5,0.5,0.0>
-}
-light_source {
-	<-0.5,1.5,1.5>
+	<$light_x-$light_dx,+$light_y,$light_z>
 	color <0.99980, 0.999800, 0.999800>*2.250000
 	spotlight
 	point_at <0.5,0.5,0.0>
@@ -280,28 +416,23 @@ light_source {
 //-------------------------------------------------------------------------
     
 // squared plane XY
-plane { <0,0,1>, 0.0    // plane with layered textures
+plane { <0,0,1>, $floor_z    // plane with layered textures
         texture { pigment{checker color White, color Black}
-                scale 0.04}
+                scale $light_dy*0.5}
       }
-plane { <0,0,-1>, 5.0    // plane with layered textures
+plane { <0,-1,0>, $wall_y    // plane with layered textures
+        texture { pigment{color White}
+                }
+        rotate<0,0,0>
+      }
+plane { <0,0,-1>, $sky_z    // plane with layered textures
         texture { pigment{color Blue}
                 }
         rotate<0,0,0>
       }
 //------------------------------------------------ end of squared plane XZ
- object{
- difference{
- box {
-    <0.0-0.01,0.0-0.01,0.0-0.01>,  // Near lower left corner
-    <1.0+0.01,1.0+0.01,1.0+0.01>   // Far upper right corner
-    }
- box {
-    <0.0,0.0,0.0>,  // Near lower left corner
-    <1.0,1.0,1.0>   // Far upper right corner
-    }}
-    
-        material{
+#macro tank_material()
+                                material{
          texture{
           pigment{ rgbf<.98,.98,.98,0.85>*1}
           finish { ambient 0.0
@@ -324,41 +455,9 @@ plane { <0,0,-1>, 5.0    // plane with layered textures
 
  
         } // end of material
-  }
-"""
-                    pov.write(povScene)
-                    pov.flush()
-                else:
-                    pov = open(field+"_"+`v`+"_%4.4d.pov" % self.nFrames,"a")
-                povScene = """mesh2 {
-vertex_vectors {"""
-                pov.write(povScene)
-                pov.write("%i,\n" % (len(nodes),))
-                for n in nodes:
-                    pov.write("<%f,%f,%f>,\n" % tuple(n.tolist()))
-                pov.write("""        }
-                         normal_vectors {
-                                 """)
-                pov.write("%i,\n" % (len(normals),))
-                for n in normals:
-                    pov.write("<%f,%f,%f>,\n" % tuple(n))
-                pov.write("""        }
-                         face_indices {
-                                 """)
-                pov.write("%i,\n" % (len(elements),))
-                for e in elements:
-                    pov.write("<%i,%i,%i>,\n" % tuple(e))
-                pov.write("""        }
-                         normal_indices {
-                                 """)
-                pov.write("%i,\n" % (len(normal_indices),))
-                for ni in normal_indices:
-                    pov.write("<%i,%i,%i>,\n" % tuple(ni))
-                pov.write("""        }
-                    matrix < 1.000000, 0.000000, 0.000000,
-                             0.000000, 1.000000, 0.000000,
-                             0.000000, 0.000000, 1.000000,
-                             0.000000, 0.000000, 0.000000 >
+#end
+
+#macro isosurface_material()
                         material{
                          texture{
                           pigment{ rgbf<.98,.98,.98,0.9>*0.95}
@@ -380,12 +479,23 @@ vertex_vectors {"""
                                     fade_color <0.8,0.8,0.8> 
                                 } // end of interior
                         } // end of material
-                }
+#end
 """)
-                pov.flush()
-                pov.close()
-                self.comm.endSequential()
-        self.nFrames+=1
-        self.last_output = time
-        self.nodes_array = np.array(nodes)
-        self.elements_array = np.array(elements)
+            pov.write(povSceneTemplate.substitute(look_at_x=look_at[0],
+                                                  look_at_y=look_at[1],
+                                                  look_at_z=look_at[2],
+                                                  cam_x=cam[0],
+                                                  cam_y=cam[1],
+                                                  cam_z=cam[2],
+                                                  light_x=light[0],
+                                                  light_y=light[1],
+                                                  light_z=light[2],
+                                                  light_dx=light_dx,
+                                                  light_dy=light_dy,
+                                                  floor_z = floor_z,
+                                                  wall_y = wall_y,
+                                                  sky_z=sky_z
+                                                  )
+                      )
+            pov.close()
+
