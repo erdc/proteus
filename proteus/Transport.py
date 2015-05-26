@@ -1500,7 +1500,11 @@ class OneLevelTransport(NonlinearEquation):
         if comm.size() > 1:
             assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
-        self.setupFieldStrides()
+        interleave_DOF=True
+        for nDOF_trial_element_ci in self.nDOF_trial_element:
+            if nDOF_trial_element_ci != self.nDOF_trial_element[0]:
+                interleave_DOF=False
+        self.setupFieldStrides(interleaved=interleave_DOF)
 
         log(memory("stride+offset","OneLevelTransport"),level=4)
         if numericalFluxType != None:
@@ -2886,8 +2890,8 @@ class OneLevelTransport(NonlinearEquation):
                     for j in nodeSetList[eN]:
                         self.elementJacobian[cj][cj][eN,j,:]=0.0
                         self.elementJacobian[cj][cj][eN,j,j]=self.weakFactor*self.mesh.elementDiametersArray[eN]
-    
-    
+
+
     def calculateElementBoundaryJacobian(self):
         evalElementBoundaryJacobian = False; evalElementBoundaryJacobian_hj = False
         for jDict in self.fluxJacobian.values():
@@ -3924,13 +3928,27 @@ class OneLevelTransport(NonlinearEquation):
         #note for now requires advectiveFluxBoundaryConditions to have key if want
         #to set diffusiveFluxBCs
         #mwf should be able to get rid of this too
-        self.fluxBoundaryConditionsObjectsDictGlobalElementBoundary = dict([(cj,FluxBoundaryConditionsGlobalElementBoundaries(self.mesh,
-                                                                                                                              self.nElementBoundaryQuadraturePoints_elementBoundary,
-                                                                                                                              self.ebq_global[('x')],
-                                                                                                                              self.advectiveFluxBoundaryConditionsSetterDict[cj],
-                                                                                                                              self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
-                                                                            for cj in self.advectiveFluxBoundaryConditionsSetterDict.keys()])
-
+        #setup flux boundary conditions
+        fluxBoundaryCondition_components = set()
+        if self.advectiveFluxBoundaryConditionsSetterDict != None:
+            fluxBoundaryCondition_components = fluxBoundaryCondition_components.union(set(self.advectiveFluxBoundaryConditionsSetterDict.keys()))
+        if self.diffusiveFluxBoundaryConditionsSetterDictDict != None:
+            fluxBoundaryCondition_components = fluxBoundaryCondition_components.union(set(self.diffusiveFluxBoundaryConditionsSetterDictDict .keys()))
+        self.fluxBoundaryConditionsObjectsDictGlobalElementBoundary = {}
+        for ci in fluxBoundaryCondition_components:
+            if ci in self.advectiveFluxBoundaryConditionsSetterDict:
+                advectiveFluxBC = self.advectiveFluxBoundaryConditionsSetterDict[ci]
+            else:
+                advectiveFluxBC = None
+            if ci in self.diffusiveFluxBoundaryConditionsSetterDictDict:
+                diffusiveFluxBC = self.diffusiveFluxBoundaryConditionsSetterDictDict[ci]
+            else:
+                diffusiveFluxBC = {}
+            self.fluxBoundaryConditionsObjectsDictGlobalElementBoundary[ci] = FluxBoundaryConditionsGlobalElementBoundaries(self.mesh,
+                                                                                                                          self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                                                                                                          self.ebq_global[('x')],
+                                                                                                                          advectiveFluxBC,
+                                                                                                                          diffusiveFluxBC)
         #
         for ci in range(self.nc):
             if self.ebq.has_key(('dS_u',ci)):
@@ -4095,12 +4113,27 @@ class OneLevelTransport(NonlinearEquation):
                                                                                                     self.ebqe[('grad(v)Xw*dS_'+I,ck,cj,ci)])
 
         #setup flux boundary conditions
-        self.fluxBoundaryConditionsObjectsDict = dict([(cj,FluxBoundaryConditions(self.mesh,
-                                                                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
-                                                                                  self.ebqe[('x')],
-                                                                                  self.advectiveFluxBoundaryConditionsSetterDict[cj],
-                                                                                  self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
-                                                       for cj in self.advectiveFluxBoundaryConditionsSetterDict.keys()])
+        fluxBoundaryCondition_components = set()
+        if self.advectiveFluxBoundaryConditionsSetterDict != None:
+            fluxBoundaryCondition_components = fluxBoundaryCondition_components.union(set(self.advectiveFluxBoundaryConditionsSetterDict.keys()))
+        if self.diffusiveFluxBoundaryConditionsSetterDictDict != None:
+            fluxBoundaryCondition_components = fluxBoundaryCondition_components.union(set(self.diffusiveFluxBoundaryConditionsSetterDictDict .keys()))
+        self.fluxBoundaryConditionsObjectsDict = {}
+        print "fluxBoundaryCondition_components",fluxBoundaryCondition_components
+        for ci in fluxBoundaryCondition_components:
+            if ci in self.advectiveFluxBoundaryConditionsSetterDict:
+                advectiveFluxBC = self.advectiveFluxBoundaryConditionsSetterDict[ci]
+            else:
+                advectiveFluxBC = None
+            if ci in self.diffusiveFluxBoundaryConditionsSetterDictDict:
+                diffusiveFluxBC = self.diffusiveFluxBoundaryConditionsSetterDictDict[ci]
+            else:
+                diffusiveFluxBC = {}
+            self.fluxBoundaryConditionsObjectsDict[ci] = FluxBoundaryConditions(self.mesh,
+                                                                                self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                                                                self.ebqe[('x')],
+                                                                                advectiveFluxBC,
+                                                                                diffusiveFluxBC)
         self.stressFluxBoundaryConditionsObjectsDict = dict([(cj,FluxBoundaryConditions(self.mesh,
                                                                                         self.nElementBoundaryQuadraturePoints_elementBoundary,
                                                                                         self.ebqe[('x')],
@@ -5534,7 +5567,7 @@ class OneLevelTransport(NonlinearEquation):
         for key in q_save.keys():
             self.q[key].flat[:] = q_save[key].flat[:]
         log("Coefficients on element",level=10,data=self.q)
-        ## exterior element boundaries 
+        ## exterior element boundaries
     def calculateElementLoad_inhomogeneous(self):
         """
         Calculate all the portion of the weak element residual corresponding to terms that
@@ -5739,10 +5772,10 @@ class OneLevelTransport(NonlinearEquation):
                                                                   self.elementResidual[ci],
                                                                   f);
         log("Global Load Vector",level=9,data=f)
-        
+
 
     def getMassJacobian(self,jacobian):
-        """ 
+        """
         assemble the portion of the jacobian coming from the time derivative terms
         """
         import superluWrappers
@@ -5804,7 +5837,7 @@ class OneLevelTransport(NonlinearEquation):
     #
     def getSpatialJacobian(self,jacobian):
         return self.getJacobian(jacobian,skipMassTerms=True)
-    
+
 #end Transport definition
 class MultilevelTransport:
     """Nonlinear ADR on a multilevel mesh"""
