@@ -4,10 +4,15 @@ def test_povgen():
     import urllib
     import subprocess
     import os
+    proteus_path = os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.dirname(os.path.abspath(__file__)))))
+    povgen_path = os.path.join(proteus_path,'scripts','povgen.py')
     urllib.urlretrieve(
         'https://dl.dropboxusercontent.com/u/26353144/floating_bar0.h5',
         'floating_bar0.h5')
-    subprocess.check_call(['../../../scripts/povgen.py',
+    subprocess.check_call([povgen_path,
                            'floating_bar',
                            '-s',
                            '3'])
