@@ -13,31 +13,30 @@ from numpy.linalg import norm
 from . import Comm
 from .AuxiliaryVariables import AV_base
 from .Profiling import logEvent as log
-from proteus.MeshTools import triangleVerticesToNormals, tetrahedronVerticesToNormals, getMeshIntersections
 
 
 class Isosurface(AV_base):
     """Extract isosurfaces"""
-    def __init__(self,isosurfaces, domain, activeTime=None, sampleRate=0, fileName='water.pov'):
-        """
-        Create a set of isosurfaces that will be extracted and serialized
-        
-        :param isosurfaces: An iterable of "isosurfaces".  Each isosurface
-        is specified by a 2-tuple, with the first element in the tuple is a field
+    def __init__(self,isosurfaces, domain, activeTime=None,
+                 sampleRate=0, format='pov',writeBoundary=True):
+        """Create a set of isosurfaces that will be extracted and serialized
+
+        :param isosurfaces: An iterable of "isosurfaces".  Each isosurface is
+        specified by a 2-tuple, with the first element in the tuple is a field
         from which to extract isosurfaces, and the second element is an n-tuple
         of isosurface values to extract.
 
         :param domain: a Domain object
-        
-        :param activeTime: If not None, a 2-tuple of start time and end time for
-        which the point gauge is active.
+
+        :param activeTime: If not None, a 2-tuple of start time and end time
+        for which the point gauge is active.
 
         :param sampleRate: The intervals at which samples should be measured.
         Note that this is a rough lower bound, and that the gauge values could
-        be computed less frequently depending on the time integrator.  The default
-        value of zero computes the gauge values at every time step.
+        be computed less frequently depending on the time integrator.  The
+        default value of zero computes the gauge values at every time step.
 
-        :param fileName: The name of the file to serialize results to.
+        :param format: the file format for the isosurfaces.
 
         Example:
 
@@ -46,189 +45,330 @@ class Isosurface(AV_base):
                 sampleRate=0.2,
                 fileName='water.pov')
 
-        This creates an Isosurfaces object that will extract phi(x,y,z,t) = 0 at simulation time between = 0 and 2.5 with samples
-        taken no more frequently than every 0.2 seconds.  Results will be saved to: water.pov.
+        This creates an Isosurfaces object that will extract phi(x,y,z,t) = 0
+        at simulation time between = 0 and 2.5 with samples taken no more
+        frequently than every 0.2 seconds.  Results will be saved to:
+        water.pov.
+
         """
         self.isosurfaces = isosurfaces
         self.domain = domain
+        self.nodes = {}
+        self.elements = {}
+        self.normals = {}
+        self.normal_indices = {}
         for f,values in self.isosurfaces:
             for v in values:
-                assert v==0.0,"only implemented for 0 isosurface  in 3D for  now"
+                assert v==0.0,"only implemented for 0 isosurface in 3D for now"
         self.activeTime = activeTime
         self.sampleRate = sampleRate
-        self.fileName = fileName
+        self.format = format
         self.comm = Comm.get()
+        self.writeBoundary = writeBoundary
+
     def attachModel(self, model, ar):
         """ Attach this isosurface to the given simulation model.
         """
         self.model = model
-        self.fieldNames = model.levelModelList[-1].coefficients.variableNames
-        self.elementNodesArray = model.levelModelList[-1].mesh.elementNodesArray
-        self.exteriorElementBoundariesArray = model.levelModelList[-1].mesh.exteriorElementBoundariesArray
-        self.elementBoundaryNodesArray = model.levelModelList[-1].mesh.elementBoundaryNodesArray
-        self.elementBoundaryMaterialTypes = model.levelModelList[-1].mesh.elementBoundaryMaterialTypes
-        self.boundaryNodes = set(self.elementBoundaryNodesArray[self.exteriorElementBoundariesArray].flatten())
+        fine_grid = model.levelModelList[-1]
+        self.fieldNames = fine_grid.coefficients.variableNames
+        self.elementNodesArray = fine_grid.mesh.elementNodesArray
+        self.exteriorElementBoundariesArray = fine_grid.mesh.exteriorElementBoundariesArray
+        self.elementBoundaryNodesArray = fine_grid.mesh.elementBoundaryNodesArray
+        self.elementBoundaryMaterialTypes = fine_grid.mesh.elementBoundaryMaterialTypes
+        self.boundaryNodes = set(
+            self.elementBoundaryNodesArray[
+                self.exteriorElementBoundariesArray
+            ].flatten())
         self.g2b = dict((gn,bn) for bn,gn in enumerate(self.boundaryNodes))
-        self.nodeArray = model.levelModelList[-1].mesh.nodeArray
-        self.num_owned_elements = model.levelModelList[-1].mesh.nElements_global
-        self.u = model.levelModelList[-1].u
-        self.timeIntegration = model.levelModelList[-1].timeIntegration
+        self.nodeArray = fine_grid.mesh.nodeArray
+        self.num_owned_elements = fine_grid.mesh.nElements_global
+        self.u = fine_grid.u
+        self.timeIntegration = fine_grid.timeIntegration
         self.nFrames=0
         self.last_output=None
         self.writeSceneHeader()
         return self
-    def calculate(self):
-        """ Extracts current isosourfaces and updates open output files
-        """
-        from string import Template
-        time = self.timeIntegration.tLast
-        log("Calculate called at time %g" % time)
-        # check that gauge is in its active time region
-        if self.activeTime is not None and (self.activeTime[0] > time or self.activeTime[1] < time):
-            return
 
-        # check that gauge is ready to be sampled again
-        if self.last_output is not None and time < self.last_output + self.sampleRate:
-            return
-        nodes = []
-        elements = []
-        normals = []
-        normal_indices = []
-        assert self.elementNodesArray.shape[1] == 4, "Algorithmn is for tetrahedra but cells have nVertices = d" % (elementNodesArray.shape,)
-        for field,values in self.isosurfaces:
-            for v in values:
-                phi = self.u[self.fieldNames.index(field)].dof
-                for eN in range(self.num_owned_elements):
-                    plus=[]
-                    minus=[]
-                    zeros=[]
-                    eps = 1.0e-8
-                    for  i  in range(4):
-                        I = self.elementNodesArray[eN,i]
-                        if phi[I] > eps:
-                            plus.append(I)
-                        elif  phi[I] < -eps:
-                            minus.append(I)
-                        else:
-                            zeros.append(I)
-                    nZeros = len(zeros)
-                    nMinus = len(minus)
-                    nPlus = len(plus)
-                    assert(nZeros+nMinus+nPlus == 4)
-                    nN_start = len(nodes)
-                    if nMinus == 2 and nPlus == 2:#4 cut edges
-                        for  J in minus:
-                            for  I in plus:
-                                s = -phi[I]/(phi[J] - phi[I])
-                                x = s*(self.nodeArray[J] - self.nodeArray[I])+ self.nodeArray[I]
-                                nodes.append(x)
-                        elements.append([nN_start+j for j in range(3)])
-                        elements.append([nN_start+j+1 for j in range(3)])
-                        if etriple(self.nodeArray[plus[0]] - nodes[-4],nodes[-3]-nodes[-4],nodes[-2]- nodes[-4]) < 0.0:
-                            elements[-2] = [elements[-2][0], elements[-2][2], elements[-2][1]]
-                        if etriple(self.nodeArray[plus[1]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) < 0.0:
-                            elements[-1] = [elements[-1][0], elements[-1][2], elements[-1][1]]
-                        normal = ecross(nodes[elements[-2][1]]-nodes[elements[-2][0]],nodes[elements[-2][2]]- nodes[elements[-2][0]])
-                        normal /= enorm(normal)
-                        normals.append(normal)
-                        normals.append(normal)
-                        normals.append(normal)
-                        normal_indices.append(elements[-2])
-                        normal = ecross(nodes[elements[-1][1]]-nodes[elements[-1][0]],nodes[elements[-1][2]]- nodes[elements[-1][0]])
-                        normal /= enorm(normal)
-                        normals.append(normal)
-                        normals.append(normal)
-                        normals.append(normal)
-                        normal_indices.append(elements[-1])
-                    elif nPlus == 3 and nMinus == 1:#3 cut edges
-                        I = minus[0]
-                        for  J in plus:
-                            s = -phi[I]/(phi[J] - phi[I])
-                            x = s*(self.nodeArray[J] - self.nodeArray[I]) + self.nodeArray[I]
-                            nodes.append(x)
-                        elements.append([nN_start+j for j in range(3)])
-                        if etriple(self.nodeArray[minus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) > 0.0:
-                            elements[-1] = [elements[-1][0], elements[-1][2], elements[-1][1]]
-                        normal = ecross(nodes[elements[-1][1]]-nodes[elements[-1][0]],nodes[elements[-1][2]]- nodes[elements[-1][0]])
-                        normal /= enorm(normal)
-                        normals.append(normal)
-                        normals.append(normal)
-                        normals.append(normal)
-                        normal_indices.append(elements[-1])
-                    elif nMinus == 3 and nPlus == 1:#3 cut edges
-                        I = plus[0]
-                        for  J in minus:
-                            s = -phi[I]/(phi[J] - phi[I])
-                            x = s*(self.nodeArray[J] - self.nodeArray[I])+ self.nodeArray[I]
-                            nodes.append(x)
-                        elements.append([nN_start+j for j in range(3)])
-                        if etriple(self.nodeArray[plus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) < 0.0:
-                            elements[-1] = [elements[-1][0], elements[-1][2], elements[-1][1]]
-                        normal = ecross(nodes[elements[-1][1]]-nodes[elements[-1][0]],nodes[elements[-1][2]]- nodes[elements[-1][0]])
-                        normal /= enorm(normal)
-                        normals.append(normal)
-                        normals.append(normal)
-                        normals.append(normal)
-                        normal_indices.append(elements[-1])
-                    elif nZeros == 1 and ((nPlus == 2 and nMinus == 1) or
-                                          (nPlus == 1 and nMinus == 2)): #2 cut edges, 1 vertex lies in plane
-                        nodes.append(self.nodeArray[zeros[0]])
-                        for  J in minus:
-                            for  I in plus:
-                                s = -phi[I]/(phi[J] - phi[I])
-                                x = s*(self.nodeArray[J] - self.nodeArray[I])+ self.nodeArray[I]
-                                nodes.append(x)
-                        elements.append([nN_start+j for j in range(3)])
-                        if etriple(self.nodeArray[plus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) < 0.0:
-                            elements[-1] = [elements[-1][0], elements[-1][2], elements[-1][1]]
-                        normal = ecross(nodes[elements[-1][1]]-nodes[elements[-1][0]],nodes[elements[-1][2]]- nodes[elements[-1][0]])
-                        normal /= enorm(normal)
-                        normals.append(normal)
-                        normals.append(normal)
-                        normals.append(normal)
-                        normal_indices.append(elements[-1])
-                    elif nZeros == 2 and nPlus == 1 and nMinus == 1:#1 cut edge, 2 vertices lie in plane
-                        for I in zeros:
-                            nodes.append(self.nodeArray[I])
-                        I = plus[0]
-                        J = minus[0]
+    def attachHDF5(self,h5,step):
+        from collections import namedtuple
+        """ Attach this isosurface to the given simulation model.
+        """
+        #self.model = model
+        #fine_grid = model.levelModelList[-1]
+        #self.fieldNames = fine_grid.coefficients.variableNames
+        self.fieldNames = [isosurface[0] for isosurface in self.isosurfaces]
+        self.elementNodesArray = h5.getNode("/elementsSpatial_Domain" + repr(step))#fine_grid.mesh.elementNodesArray
+        #self.exteriorElementBoundariesArray = fine_grid.mesh.exteriorElementBoundariesArray
+        #self.elementBoundaryNodesArray = fine_grid.mesh.elementBoundaryNodesArray
+        #self.elementBoundaryMaterialTypes = fine_grid.mesh.elementBoundaryMaterialTypes
+        #self.boundaryNodes = set(
+        #    self.elementBoundaryNodesArray[
+        #        self.exteriorElementBoundariesArray
+        #    ].flatten())
+        #self.g2b = dict((gn,bn) for bn,gn in enumerate(self.boundaryNodes))
+        self.nodeArray = h5.getNode("/nodesSpatial_Domain" + repr(step))#fine_grid.mesh.nodeArray
+        self.num_owned_elements = len(self.elementNodesArray)#fine_grid.mesh.nElements_global
+        self.u={}
+        FemField = namedtuple('FemField',['dof'])
+        for field_i,field in enumerate(self.fieldNames):
+            self.u[field_i] = FemField(dof=h5.getNode("/"+self.isosurfaces[0][0]+repr(step)))#fine_grid.u
+        #self.timeIntegration = fine_grid.timeIntegration
+        self.nFrames=step
+        self.last_output=None
+        if step == 0:
+            self.writeSceneHeader()
+        return self
+
+    def triangulateIsosurface(self, field, value):
+        self.nodes[(field, value)] = nodes = []
+        self.elements[(field, value)] = elements = []
+        self.normals[(field, value)] = normals = []
+        self.normal_indices[(field, value)] = normal_indices = []
+        if value != 0.0:
+            raise NotImplementedError("Only zero isocontour extraction")
+        phi = self.u[self.fieldNames.index(field)].dof
+        for eN in range(self.num_owned_elements):
+            plus=[]
+            minus=[]
+            zeros=[]
+            eps = 1.0e-8
+            for  i  in range(4):
+                I = self.elementNodesArray[eN,i]
+                if phi[I] > eps:
+                    plus.append(I)
+                elif  phi[I] < -eps:
+                    minus.append(I)
+                else:
+                    zeros.append(I)
+            nZeros = len(zeros)
+            nMinus = len(minus)
+            nPlus = len(plus)
+            assert(nZeros+nMinus+nPlus == 4)
+            nN_start = len(nodes)
+            if nMinus == 2 and nPlus == 2:#4 cut edges
+                for  J in minus:
+                    for  I in plus:
                         s = -phi[I]/(phi[J] - phi[I])
-                        x = s*(self.nodeArray[J] - self.nodeArray[I])+self.nodeArray[I]
+                        x = s*(self.nodeArray[J] - self.nodeArray[I]) \
+                            + self.nodeArray[I]
                         nodes.append(x)
-                        elements.append([nN_start+j for j in range(3)])
-                        if etriple(self.nodeArray[plus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) < 0.0:
-                                elements[-1] = [elements[-1][0], elements[-1][2], elements[-1][1]]
-                        normal = ecross(nodes[elements[-1][1]]-nodes[elements[-1][0]],nodes[elements[-1][2]]- nodes[elements[-1][0]])
-                        normal /= enorm(normal)
-                        normals.append(normal)
-                        normals.append(normal)
-                        normals.append(normal)
-                        normal_indices.append(elements[-1])
-                    elif nZeros == 3:#3 vertices lie in plane
-                        for I in zeros:
-                            nodes.append(self.nodeArray[I])
-                        elements.append([nN_start+j for  j in range(3)])
-                        if nPlus == 1:
-                            if etriple(self.nodeArray[plus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) < 0.0:
-                                elements[-1] = [elements[-1][0], elements[-1][2], elements[-1][1]]
-                        else:
-                            if etriple(self.nodeArray[minus[0]] - nodes[-3],nodes[-2]-nodes[-3],nodes[-1]- nodes[-3]) > 0.0:
-                                elements[-1] = [elements[-1][0], elements[-1][2], elements[-1][1]]
-                        normal = ecross(nodes[elements[-1][1]]-nodes[elements[-1][0]],nodes[elements[-1][2]]- nodes[elements[-1][0]])
-                        normal /= enorm(normal)
-                        normals.append(normal)
-                        normals.append(normal)
-                        normals.append(normal)
-                        normal_indices.append(elements[-1])
-                self.comm.beginSequential()
-                if self.comm.isMaster():
-                    pov = open(field+"_"+`v`+"_%4.4d.pov" % self.nFrames,"w")
-                    dx = np.array(self.domain.L)*0.02
-                    nll = np.array(self.domain.x)-dx
-                    fur = np.array(self.domain.L)+dx
-                    fur[2] = self.domain.L[2] - dx[2]#clip  the  top off
-                    pov.write(Template("""#version 3.7;
-#include "proteus.inc"
+                elements.append([nN_start+j for j in range(3)])
+                elements.append([nN_start+j+1 for j in range(3)])
+                if etriple(self.nodeArray[plus[0]] - nodes[-4],
+                           nodes[-3]-nodes[-4],
+                           nodes[-2]- nodes[-4]) < 0.0:
+                    elements[-2] = [elements[-2][0],
+                                    elements[-2][2],
+                                    elements[-2][1]]
+                if etriple(self.nodeArray[plus[1]] - nodes[-3],
+                           nodes[-2] - nodes[-3],
+                           nodes[-1]- nodes[-3]) < 0.0:
+                    elements[-1] = [elements[-1][0],
+                                    elements[-1][2],
+                                    elements[-1][1]]
+                normal = ecross(
+                    nodes[elements[-2][1]]-nodes[elements[-2][0]],
+                    nodes[elements[-2][2]]- nodes[elements[-2][0]])
+                normal /= enorm(normal)
+                normals.append(normal)
+                normals.append(normal)
+                normals.append(normal)
+                normal_indices.append(elements[-2])
+                normal = ecross(
+                    nodes[elements[-1][1]]-nodes[elements[-1][0]],
+                    nodes[elements[-1][2]]- nodes[elements[-1][0]])
+                normal /= enorm(normal)
+                normals.append(normal)
+                normals.append(normal)
+                normals.append(normal)
+                normal_indices.append(elements[-1])
+            elif nPlus == 3 and nMinus == 1:#3 cut edges
+                I = minus[0]
+                for  J in plus:
+                    s = -phi[I]/(phi[J] - phi[I])
+                    x = s*(self.nodeArray[J] - self.nodeArray[I]) + \
+                        self.nodeArray[I]
+                    nodes.append(x)
+                elements.append([nN_start+j for j in range(3)])
+                if etriple(self.nodeArray[minus[0]] - nodes[-3],
+                           nodes[-2]-nodes[-3],
+                           nodes[-1]- nodes[-3]) > 0.0:
+                    elements[-1] = [elements[-1][0],
+                                    elements[-1][2],
+                                    elements[-1][1]]
+                normal = ecross(
+                    nodes[elements[-1][1]]-nodes[elements[-1][0]],
+                    nodes[elements[-1][2]]- nodes[elements[-1][0]])
+                normal /= enorm(normal)
+                normals.append(normal)
+                normals.append(normal)
+                normals.append(normal)
+                normal_indices.append(elements[-1])
+            elif nMinus == 3 and nPlus == 1:#3 cut edges
+                I = plus[0]
+                for  J in minus:
+                    s = -phi[I]/(phi[J] - phi[I])
+                    x = s*(self.nodeArray[J] - self.nodeArray[I]) + \
+                        self.nodeArray[I]
+                    nodes.append(x)
+                elements.append([nN_start+j for j in range(3)])
+                if etriple(self.nodeArray[plus[0]] - nodes[-3],
+                           nodes[-2]-nodes[-3],
+                           nodes[-1]- nodes[-3]) < 0.0:
+                    elements[-1] = [elements[-1][0],
+                                    elements[-1][2],
+                                    elements[-1][1]]
+                normal = ecross(
+                    nodes[elements[-1][1]]-nodes[elements[-1][0]],
+                    nodes[elements[-1][2]]- nodes[elements[-1][0]])
+                normal /= enorm(normal)
+                normals.append(normal)
+                normals.append(normal)
+                normals.append(normal)
+                normal_indices.append(elements[-1])
+            elif nZeros == 1 and ((nPlus == 2 and nMinus == 1) or
+                                  (nPlus == 1 and nMinus == 2)):
+                #2 cut edges, 1 vertex lies in plane
+                nodes.append(self.nodeArray[zeros[0]])
+                for  J in minus:
+                    for  I in plus:
+                        s = -phi[I]/(phi[J] - phi[I])
+                        x = s*(self.nodeArray[J] - self.nodeArray[I]) \
+                            + self.nodeArray[I]
+                        nodes.append(x)
+                elements.append([nN_start+j for j in range(3)])
+                if etriple(self.nodeArray[plus[0]] - nodes[-3],
+                           nodes[-2]-nodes[-3],
+                           nodes[-1]- nodes[-3]) < 0.0:
+                    elements[-1] = [elements[-1][0],
+                                    elements[-1][2],
+                                    elements[-1][1]]
+                normal = ecross(
+                    nodes[elements[-1][1]]-nodes[elements[-1][0]],
+                    nodes[elements[-1][2]]- nodes[elements[-1][0]])
+                normal /= enorm(normal)
+                normals.append(normal)
+                normals.append(normal)
+                normals.append(normal)
+                normal_indices.append(elements[-1])
+            elif nZeros == 2 and nPlus == 1 and nMinus == 1:
+                #1 cut edge, 2 vertices lie in plane
+                for I in zeros:
+                    nodes.append(self.nodeArray[I])
+                I = plus[0]
+                J = minus[0]
+                s = -phi[I]/(phi[J] - phi[I])
+                x = s*(self.nodeArray[J] - self.nodeArray[I]) \
+                    +self.nodeArray[I]
+                nodes.append(x)
+                elements.append([nN_start+j for j in range(3)])
+                if etriple(self.nodeArray[plus[0]] - nodes[-3],
+                           nodes[-2]-nodes[-3],
+                           nodes[-1]- nodes[-3]) < 0.0:
+                        elements[-1] = [elements[-1][0],
+                                        elements[-1][2],
+                                        elements[-1][1]]
+                normal = ecross(
+                    nodes[elements[-1][1]]-nodes[elements[-1][0]],
+                    nodes[elements[-1][2]]- nodes[elements[-1][0]])
+                normal /= enorm(normal)
+                normals.append(normal)
+                normals.append(normal)
+                normals.append(normal)
+                normal_indices.append(elements[-1])
+            elif nZeros == 3:#3 vertices lie in plane
+                for I in zeros:
+                    nodes.append(self.nodeArray[I])
+                elements.append([nN_start+j for  j in range(3)])
+                if nPlus == 1:
+                    if etriple(self.nodeArray[plus[0]] - nodes[-3],
+                               nodes[-2]-nodes[-3],
+                               nodes[-1]- nodes[-3]) < 0.0:
+                        elements[-1] = [elements[-1][0],
+                                        elements[-1][2],
+                                        elements[-1][1]]
+                else:
+                    if etriple(self.nodeArray[minus[0]] - nodes[-3],
+                               nodes[-2]-nodes[-3],
+                               nodes[-1]- nodes[-3]) > 0.0:
+                        elements[-1] = [elements[-1][0],
+                                        elements[-1][2],
+                                        elements[-1][1]]
+                normal = ecross(
+                    nodes[elements[-1][1]]-nodes[elements[-1][0]],
+                    nodes[elements[-1][2]]- nodes[elements[-1][0]])
+                normal /= enorm(normal)
+                normals.append(normal)
+                normals.append(normal)
+                normals.append(normal)
+                normal_indices.append(elements[-1])
+
+    def writeIsosurfaceMesh(self, field, value, frame):
+        if self.format == 'pov':
+            log("Writing pov frame "+repr(frame))
+            self.writeIsosurfaceMesh_povray(field, value, frame)
+        elif self.format is None:
+            pass
+        else:
+            log("Isosurface file format not recognized")
+
+    def writeIsosurfaceMesh_povray(self, field, value, frame):
+        from string import Template
+        nodes = self.nodes[(field, value)]
+        elements = self.elements[(field, value)]
+        normals = self.normals[(field, value)]
+        normal_indices = self.normal_indices[(field, value)]
+        pov_filename = "{field:s}_{value:f}_{frame:04d}.pov".format(
+            field=field,
+            value=value,
+            frame=self.nFrames)
+        self.comm.beginSequential()
+        if self.comm.isMaster():
+            pov = open(pov_filename, "w")
+            dx = np.array(self.domain.L)*0.02
+            nll = np.array(self.domain.x)-dx
+            fur = np.array(self.domain.L)+dx
+            fur[2] = self.domain.L[2] - dx[2]#clip  the  top off
+            pov.write("""#version 3.7;
+#include  "proteus.inc"
+""")
+            if not self.writeBoundary:
+                pov.write(Template("""
+object
+{
+difference
+{
+box {
+    <$nll_x,$nll_y,$nll_z>,  // Near lower left corner
+    <$fur_x,$fur_y,$fur_z>   // Far upper right corner
+    }
+box {
+    <$domain_nll_x,$domain_nll_y,$domain_nll_z>,  // Near lower left corner
+    <$domain_fur_x,$domain_fur_y,$domain_fur_z>   // Far upper right corner
+    }
+}//difference of perturbed bounding box and boundary
+                    matrix < 1.000000, 0.000000, 0.000000,
+                             0.000000, 1.000000, 0.000000,
+                             0.000000, 0.000000, 1.000000,
+                             0.000000, 0.000000, 0.000000 >
+                    tank_material()
+}//object
+""").substitute(nll_x=nll[0],
+                nll_y=nll[1],
+                nll_z=nll[2],
+                fur_x=fur[0],
+                fur_y=fur[1],
+                fur_z=fur[2],
+                domain_nll_x=self.domain.x[0],
+                domain_nll_y=self.domain.x[1],
+                domain_nll_z=self.domain.x[2],
+                domain_fur_x=self.domain.L[0],
+                domain_fur_y=self.domain.L[1],
+                domain_fur_z=self.domain.L[2]))
+                pov.flush()
+            if  self.writeBoundary:
+                pov.write(Template("""
 object
 {
 //difference
@@ -245,33 +385,38 @@ union
                 fur_x=fur[0],
                 fur_y=fur[1],
                 fur_z=fur[2]))
-                    pov.flush()
-                else:
-                    pov = open(field+"_"+`v`+"_%4.4d.pov" % self.nFrames,"a")
-                povScene = """mesh2 {
+            pov.flush()
+        else:
+            pov = open(pov_filename, "a")
+        if self.writeBoundary:
+            povScene = """mesh2 {
 vertex_vectors {"""
-                pov.write(povScene)
-                pov.write("%i,\n" % (len(self.boundaryNodes),))
-                for n in self.boundaryNodes:
-                    pov.write("<%f,%f,%f>,\n" % tuple(self.nodeArray[n].tolist()))
-                pov.write("}\n")
-                pov.write("""face_indices {
-                                 """)
-                pov.write("%i,\n" % (np.count_nonzero(self.elementBoundaryMaterialTypes),))
-                for ebN in self.exteriorElementBoundariesArray:
-                    if self.elementBoundaryMaterialTypes[ebN] > 0:
-                        bnt = tuple([self.g2b[n] for n in self.elementBoundaryNodesArray[ebN]])
-                        pov.write("<%i,%i,%i>,\n" % bnt)
-                pov.write("}\n")
-                pov.write("//inside_vector on\n}//mesh\n")
-                pov.flush()
-                pov.close()
-                self.comm.endSequential()
-                self.comm.barrier()
-                self.comm.beginSequential()
-                pov = open(field+"_"+`v`+"_%4.4d.pov" % self.nFrames,"a")
-                if self.comm.isMaster():
-                    pov.write("""}//union of meshes
+            pov.write(povScene)
+            pov.write("{0:d},\n".format(len(self.boundaryNodes)))
+            for n in self.boundaryNodes:
+                pov.write("<{0:f}, {1:f}, {2:f}>,\n".format(
+                    *self.nodeArray[n]))
+            pov.write("}\n")
+            pov.write("""face_indices {
+                             """)
+            pov.write("{0:d},\n".format(
+                np.count_nonzero(self.elementBoundaryMaterialTypes)))
+            for ebN in self.exteriorElementBoundariesArray:
+                if self.elementBoundaryMaterialTypes[ebN] > 0:
+                    bnt = tuple(
+                        [self.g2b[n] for n
+                         in self.elementBoundaryNodesArray[ebN]])
+                    pov.write("<{0:d},{1:d},{2:d}>,\n".format(*bnt))
+            pov.write("}\n")
+            pov.write("//inside_vector on\n}//mesh\n")
+            pov.flush()
+            pov.close()
+            self.comm.endSequential()
+            self.comm.barrier()
+            self.comm.beginSequential()
+            pov = open(pov_filename, "a")
+            if self.comm.isMaster():
+                pov.write("""}//union of meshes
 //}//difference of perturbed bounding box and boundary
                     matrix < 1.000000, 0.000000, 0.000000,
                              0.000000, 1.000000, 0.000000,
@@ -280,31 +425,31 @@ vertex_vectors {"""
                     tank_material()
 }//object
 """)
-                povScene = """mesh2 {
+        povScene = """mesh2 {
 vertex_vectors {"""
-                pov.write(povScene)
-                pov.write("%i,\n" % (len(nodes),))
-                for n in nodes:
-                    pov.write("<%f,%f,%f>,\n" % tuple(n.tolist()))
-                pov.write("""        }
-                        normal_vectors {
-                                """)
-                pov.write("%i,\n" % (len(normals),))
-                for n in normals:
-                    pov.write("<%f,%f,%f>,\n" % tuple(n))
-                pov.write("""        }
-                         face_indices {
-                                 """)
-                pov.write("%i,\n" % (len(elements),))
-                for e in elements:
-                    pov.write("<%i,%i,%i>,\n" % tuple(e))
-                pov.write("""        }
-                         normal_indices {
-                                 """)
-                pov.write("%i,\n" % (len(normal_indices),))
-                for ni in normal_indices:
-                    pov.write("<%i,%i,%i>,\n" % tuple(ni))
-                pov.write("""        }
+        pov.write(povScene)
+        pov.write("{0:d},\n".format(len(nodes)))
+        for n in nodes:
+            pov.write("<{0:f}, {1:f}, {2:f}>,\n".format(*n))
+        pov.write("""        }
+                normal_vectors {
+                        """)
+        pov.write("{0:d},\n".format((len(normals))))
+        for n in normals:
+            pov.write("<{0:f}, {1:f}, {2:f}>,\n".format(*n))
+        pov.write("""        }
+                 face_indices {
+                         """)
+        pov.write("{0:d},\n".format(len(elements)))
+        for e in elements:
+            pov.write("<{0:d}, {1:d}, {2:d}>,\n".format(*e))
+        pov.write("""        }
+                 normal_indices {
+                         """)
+        pov.write("{0:d},\n".format(len(normal_indices)))
+        for ni in normal_indices:
+            pov.write("<{0:d}, {1:d}, {2:d}>,\n".format(*ni))
+        pov.write("""        }
                     matrix < 1.000000, 0.000000, 0.000000,
                              0.000000, 1.000000, 0.000000,
                              0.000000, 0.000000, 1.000000,
@@ -312,14 +457,37 @@ vertex_vectors {"""
                     isosurface_material()
                 }
 """)
-                pov.flush()
-                pov.close()
-                self.comm.endSequential()
+        pov.flush()
+        pov.close()
+        self.comm.endSequential()
+
+    def calculate(self,checkTime=True):
+        """Extracts isosourfaces at current time and update open output files
+        """
+        from string import Template
+        if checkTime:
+            time = self.timeIntegration.tLast
+            log("Calculate called at time " + `time`)
+            # check that gauge is in its active time region
+            if self.activeTime is not None and (self.activeTime[0] > time or
+                                                self.activeTime[1] < time):
+                return
+
+            # check that gauge is ready to be sampled again
+            if (self.last_output is not None and
+                time < self.last_output + self.sampleRate):
+                return
+        assert self.elementNodesArray.shape[1] == 4, \
+            "Elements have {0:d} vertices but algorithm is for tets".format(
+                elementNodesArray.shape[1])
+        for field,values in self.isosurfaces:
+            for v in values:
+                self.triangulateIsosurface(field, v)
+                self.writeIsosurfaceMesh(field, v, self.nFrames)
         self.nFrames+=1
-        self.last_output = time
-        self.nodes_array = np.array(nodes)
-        self.elements_array = np.array(elements)
-        
+        if checkTime:
+            self.last_output = time
+
     def writeSceneHeader(self):
         """
         Write a simple scene description (can be modified before running povray)
@@ -337,7 +505,7 @@ vertex_vectors {"""
             floor_z = self.domain.x[2]-0.01*self.domain.L[2]#offset floor slightly
             wall_y = self.domain.x[1]-2.0*self.domain.L[1]#offset floor slightly
             sky_z = self.domain.x[2]+10*self.domain.L[2]
-            pov = open("proteus.inc","w")
+            pov = open("proteus.inc", "w")
             povSceneTemplate=Template("""#include "colors.inc"
 #include "textures.inc"
 #include "glass.inc"
@@ -401,10 +569,10 @@ light_source {
 // ground -----------------------------------------------------------------
 //---------------------------------<<< settings of squared plane dimensions
 #declare RasterScale = 0.10;
-#declare RasterHalfLine  = 0.0125;  
-#declare RasterHalfLineZ = 0.0125; 
+#declare RasterHalfLine  = 0.0125;
+#declare RasterHalfLineZ = 0.0125;
 //-------------------------------------------------------------------------
-#macro Raster(RScale, HLine) 
+#macro Raster(RScale, HLine)
        pigment{ gradient x scale RScale
                 color_map{[0.000   color rgbt<1,1,1,0>*0.8]
                           [0+HLine color rgbt<1,1,1,0>*0.8]
@@ -412,9 +580,9 @@ light_source {
                           [1-HLine color rgbt<1,1,1,1>]
                           [1-HLine color rgbt<1,1,1,0>*0.8]
                           [1.000   color rgbt<1,1,1,0>*0.8]} }
- #end// of Raster(RScale, HLine)-macro    
+ #end// of Raster(RScale, HLine)-macro
 //-------------------------------------------------------------------------
-    
+
 // squared plane XY
 plane { <0,0,1>, $floor_z    // plane with layered textures
         texture { pigment{checker color White, color Black}
@@ -440,7 +608,7 @@ plane { <0,0,-1>, $sky_z    // plane with layered textures
                    reflection 0.2
                    specular 0.6
                    roughness 0.005
-                  // phong 1 
+                  // phong 1
                   // phong_size 400
                    reflection { 0.03, 1.0 fresnel on }
                 //   conserve_energy
@@ -453,7 +621,7 @@ plane { <0,0,-1>, $sky_z    // plane with layered textures
                     fade_color <0.8,0.8,0.8>
                   } // end of interior
 
- 
+
         } // end of material
 #end
 
@@ -461,22 +629,22 @@ plane { <0,0,-1>, $sky_z    // plane with layered textures
                         material{
                          texture{
                           pigment{ rgbf<.98,.98,.98,0.9>*0.95}
-                          //normal { ripples 1.35 scale 0.0 turbulence 0.3 translate<-0.05,0,0> rotate<0,0,-20>} 
+                          //normal { ripples 1.35 scale 0.0 turbulence 0.3 translate<-0.05,0,0> rotate<0,0,-20>}
                           finish { ambient 0.0
                                    diffuse 0.15
                                    specular 0.6
                                    roughness 0.005
-                                   //phong 1 
+                                   //phong 1
                                    //phong_size 400
                                    reflection { 0.2, 1.0 fresnel on }
                                    conserve_energy
                                  }
                            } // end of texture
 
-                          interior{ ior 1.33 
+                          interior{ ior 1.33
                                     fade_power 1001
                                     fade_distance 0.5
-                                    fade_color <0.8,0.8,0.8> 
+                                    fade_color <0.8,0.8,0.8>
                                 } // end of interior
                         } // end of material
 #end
@@ -498,4 +666,3 @@ plane { <0,0,-1>, $sky_z    // plane with layered textures
                                                   )
                       )
             pov.close()
-
