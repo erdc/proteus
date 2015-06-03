@@ -1,5 +1,5 @@
 """
-AuxiliaryVariables subclasses for extractin isosurfaces and contours
+AuxiliaryVariables subclasses for extracting isosurfaces and contours
 """
 from collections import defaultdict, OrderedDict
 from itertools import product
