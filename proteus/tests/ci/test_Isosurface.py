@@ -5,7 +5,7 @@ def test_povgen():
     import subprocess
     import os
     urllib.urlretrieve(
-        'http://dl.dropboxusercontent.com/u/26353144/floating_bar0.h5',
+        'https://dl.dropboxusercontent.com/u/26353144/floating_bar0.h5',
         'floating_bar0.h5')
     subprocess.check_call(['../../../scripts/povgen.py',
                            'floating_bar',
@@ -18,7 +18,7 @@ def test_povgen():
         with open(filename, 'r') as f:
             povfiles.append(f.readlines())
     urllib.urlretrieve(
-        'http://dl.dropboxusercontent.com/u/26353144/phi_0.000000_000.tgz',
+        'https://dl.dropboxusercontent.com/u/26353144/phi_0.000000_000.tgz',
         'phi_0.000000_000.tgz')
     subprocess.check_call(['tar', 'xzf', 'phi_0.000000_000.tgz'])
     saved_povfiles = []
