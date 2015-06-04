@@ -43,6 +43,7 @@ class AR_base:
         self.size = comm.size()
         self.readOnly = readOnly
         import datetime
+        self.comm.beginSequential()
         #filename += datetime.datetime.now().isoformat()
         try:
             import tables
@@ -112,6 +113,7 @@ class AR_base:
                 self.hdfFile=None
                 self.dataItemFormat="XML"
         #
+        self.comm.endSequential()
         self.gatherAtClose = gatherAtClose
     def clear_xml(self):
         self.xmlFile.seek(0)
