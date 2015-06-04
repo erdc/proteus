@@ -484,7 +484,7 @@ class Newton(NonlinearSolver):
                     self.setLinearSolverTolerance(r)
             if not self.linearSolverFailed:
                 self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-                self.linearSolverFailed = self.linearSolver.failed() 
+                self.linearSolverFailed = self.linearSolver.failed()
             #print self.du
             u-=self.du
             if par_u != None:
@@ -655,7 +655,7 @@ class POD_Newton(Newton):
                 directSolver,
                 EWtol,
                 maxLSits)
-        #setup reduced basis for solution 
+        #setup reduced basis for solution
         self.DB = 11 #number of basis vectors for solution
         U = np.loadtxt('SVD_basis')
         self.U = U[:,0:self.DB]
@@ -667,7 +667,7 @@ class POD_Newton(Newton):
     def computeResidual(self,u,r,b):
         """
         Use DEIM algorithm to compute residual if use_deim is turned on
-        
+
         Right now splits the evaluation into two 'temporal' (mass) and spatial piece
 
         As first step for DEIM still does full evaluation
@@ -695,7 +695,7 @@ class POD_Newton(Newton):
         r -- F(u) - b
         """
         pod_u = np.dot(self.U_transpose,u)
-        u[:] = np.dot(self.U,pod_u)           
+        u[:] = np.dot(self.U,pod_u)
         r=self.solveInitialize(u,r,b)
         pod_r = np.dot(self.U_transpose,r)
         self.norm_r0 = self.norm(pod_r)
@@ -724,7 +724,7 @@ class POD_Newton(Newton):
                 #self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
                 #self.linearSolverFailed = self.linearSolver.failed()
                 self.pod_linearSolver.solve(u=self.pod_du,b=pod_r)
-                self.linearSolverFailed = self.pod_linearSolver.failed() 
+                self.linearSolverFailed = self.pod_linearSolver.failed()
             #pod_u-=np.dot(self.U_transpose,self.du)
             pod_u-=self.pod_du
             u[:] = np.dot(self.U,pod_u)
@@ -739,6 +739,7 @@ class POD_Newton(Newton):
             return self.failedFlag
         log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+
 class POD_DEIM_Newton(Newton):
     """Newton's method on the reduced order system based on POD"""
     def __init__(self,
@@ -774,7 +775,7 @@ class POD_DEIM_Newton(Newton):
                 directSolver,
                 EWtol,
                 maxLSits)
-        #setup reduced basis for solution 
+        #setup reduced basis for solution
         self.DB = 43 #11 #number of basis vectors for solution
         U = np.loadtxt('SVD_basis')
         self.U = U[:,0:self.DB]
@@ -782,7 +783,7 @@ class POD_DEIM_Newton(Newton):
         #setup reduced basis for DEIM interpolants
         self.use_deim = use_deim
         self.DBf = None
-        self.Uf  = None; 
+        self.Uf  = None;
         self.rho_deim = None; self.Ut_Uf_PtUf_inv=None
         self.rs = None; self.rt = None
         calculate_deim_internally = True
@@ -817,7 +818,7 @@ class POD_DEIM_Newton(Newton):
         self.Js_rowptr,self.Js_colind,self.Js_nzval = self.Js.getCSRrepresentation()
         self.Jt = self.F.initializeMassJacobian()
         self.Jt_rowptr,self.Jt_colind,self.Jt_nzval = self.Jt.getCSRrepresentation()
-        
+
         self.pod_du = np.zeros(self.DB)
         self.skip_mass_jacobian_eval = True
         self.linear_reduced_mass_matrix=None
@@ -832,7 +833,7 @@ class POD_DEIM_Newton(Newton):
         assert 'getMassResidual' in dir(self.F)
         self.F.getSpatialResidual(u,rs)
         self.F.getMassResidual(u,rt)
-        
+
     def solveInitialize(self,u,r,b):
         """
         if using deim modifies base initialization by
@@ -879,7 +880,7 @@ class POD_DEIM_Newton(Newton):
         if self.use_deim:
             return self.solveDEIM(u,r,b,par_u,par_r)
         pod_u = np.dot(self.U_transpose,u)
-        u[:] = np.dot(self.U,pod_u)           
+        u[:] = np.dot(self.U,pod_u)
         r=self.solveInitialize(u,r,b)
         pod_r = np.dot(self.U_transpose,r)
         self.norm_r0 = self.norm(pod_r)
@@ -908,7 +909,7 @@ class POD_DEIM_Newton(Newton):
                 #self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
                 #self.linearSolverFailed = self.linearSolver.failed()
                 self.pod_linearSolver.solve(u=self.pod_du,b=pod_r)
-                self.linearSolverFailed = self.pod_linearSolver.failed() 
+                self.linearSolverFailed = self.pod_linearSolver.failed()
             #pod_u-=np.dot(self.U_transpose,self.du)
             pod_u-=self.pod_du
             u[:] = np.dot(self.U,pod_u)
@@ -936,13 +937,13 @@ class POD_DEIM_Newton(Newton):
         """
         assert self.use_deim
         pod_u = np.dot(self.U_transpose,u)
-        u[:] = np.dot(self.U,pod_u)           
+        u[:] = np.dot(self.U,pod_u)
         #evaluate fine grid residuals directly
         r=self.solveInitialize(u,r,b)
         #mwf debug
         tmp = r-self.rt-self.rs
         assert np.absolute(tmp).all() < 1.0e-12
- 
+
         #r_deim = self.rt[self.rho_deim].copy()
         r_deim = self.rs[self.rho_deim]
         pod_rt = np.dot(self.U_transpose,self.rt)
@@ -971,7 +972,7 @@ class POD_DEIM_Newton(Newton):
                 assert not numpy.isnan(self.Jt_nzval).any()
                 #mwf hack, speed up mass matrix calculation
                 if self.skip_mass_jacobian_eval and self.linear_reduced_mass_matrix is None:
-                    #now this holds U^T Jt U                
+                    #now this holds U^T Jt U
                     self.pod_Jt[:] = 0.0
                     for i in range(self.DB):
                         for j in range(self.DB):
@@ -986,9 +987,9 @@ class POD_DEIM_Newton(Newton):
                 self.Jt_nzval /= self.F.timeIntegration.dt
                 #mwf debug
                 self.F.getJacobian(self.J)
-                tmp = self.Jt_nzval+self.Js_nzval-self.J_nzval 
+                tmp = self.Jt_nzval+self.Js_nzval-self.J_nzval
                 assert numpy.absolute(tmp).all() < 1.0e-12
-                #now this holds P^T J_s U                
+                #now this holds P^T J_s U
                 self.pod_Jtmp[:] = 0.0
                 for i in range(self.DBf):
                     deim_i = self.rho_deim[i]
@@ -997,10 +998,10 @@ class POD_DEIM_Newton(Newton):
                             self.pod_Jtmp[i,j] += self.Js_nzval[m]*self.U[self.Js_colind[m],j]
                 #combined DEIM, coarse grid projection
                 tmp = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
-                self.pod_J.flat[:] = tmp.flat[:]                
+                self.pod_J.flat[:] = tmp.flat[:]
                 assert not numpy.isnan(self.pod_J).any()
                 if not self.skip_mass_jacobian_eval:
-                    #now this holds U^T Jt U                
+                    #now this holds U^T Jt U
                     self.pod_Jt[:] = 0.0
                     for i in range(self.DB):
                         for j in range(self.DB):
@@ -1010,7 +1011,7 @@ class POD_DEIM_Newton(Newton):
                     #combined DEIM, coarse grid projection
                     #self.pod_Jt = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
                     assert not numpy.isnan(self.pod_Jt).any()
-                else: 
+                else:
                     #mwf hack just copy over from precomputed mass matrix
                     self.pod_Jt.flat[:] = self.linear_reduced_mass_matrix.flat[:]
                     self.pod_Jt /= self.F.timeIntegration.dt
@@ -1023,11 +1024,11 @@ class POD_DEIM_Newton(Newton):
                 #self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
                 #self.linearSolverFailed = self.linearSolver.failed()
                 self.pod_linearSolver.solve(u=self.pod_du,b=pod_r)
-                self.linearSolverFailed = self.pod_linearSolver.failed() 
+                self.linearSolverFailed = self.pod_linearSolver.failed()
             assert not self.linearSolverFailed
             #pod_u-=np.dot(self.U_transpose,self.du)
             assert not numpy.isnan(self.pod_du).any()
-            pod_u-=self.pod_du            
+            pod_u-=self.pod_du
             u[:] = np.dot(self.U,pod_u)
             #mostly for norm calculations
             self.du = np.dot(self.U,self.pod_du)
@@ -1052,43 +1053,6 @@ class POD_DEIM_Newton(Newton):
         log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
 
-class POD_DEIM_Newton(POD_Newton):
-    """
-    Newton's method on the reduced order system based on POD and DEIM
-    Just a convenience right now to avoid passing any new arguments through the nonlinear solver chain   
-    """
-    def __init__(self,
-                 linearSolver,
-                 F,J=None,du=None,par_du=None,
-                 rtol_r  = 1.0e-4,
-                 atol_r  = 1.0e-16,
-                 rtol_du = 1.0e-4,
-                 atol_du = 1.0e-16,
-                 maxIts  = 100,
-                 norm = l2Norm,
-                 convergenceTest = 'r',
-                 computeRates = True,
-                 printInfo = True,
-                 fullNewton=True,
-                 directSolver=False,
-                 EWtol=True,
-                 maxLSits = 100):
-        POD_Newton.__init__(self,
-                            linearSolver,
-                            F,J,du,par_du,
-                            rtol_r,
-                            atol_r,
-                            rtol_du,
-                            atol_du,
-                            maxIts,
-                            norm,
-                            convergenceTest,
-                            computeRates,
-                            printInfo,
-                            fullNewton,
-                            directSolver,
-                            EWtol,
-                            maxLSits,use_deim=True)
 
 class NewtonNS(NonlinearSolver):
     """
@@ -1261,7 +1225,7 @@ class NewtonNS(NonlinearSolver):
             log("Start linear solve",level=4)
             if not self.linearSolverFailed:
                 self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-                self.linearSolverFailed = self.linearSolver.failed() 
+                self.linearSolverFailed = self.linearSolver.failed()
             self.linearSolver.printPerformance()
             #print self.du
             u-=self.du
@@ -1485,7 +1449,7 @@ class SSPRKNewton(Newton):
                     self.setLinearSolverTolerance(r)
             if not self.linearSolverFailed:
                 self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-                self.linearSolverFailed = self.linearSolver.failed() 
+                self.linearSolverFailed = self.linearSolver.failed()
             #print self.du
             u-=self.du
             if par_u != None:
@@ -1707,7 +1671,7 @@ class PicardNewton(Newton):
                     self.setLinearSolverTolerance(r)
             if not self.linearSolverFailed:
                 self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-                self.linearSolverFailed = self.linearSolver.failed() 
+                self.linearSolverFailed = self.linearSolver.failed()
             #print self.du
             u-=self.du
             if par_u != None:
@@ -2894,23 +2858,6 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
             else:
                 par_du=None
             levelNonlinearSolverList.append(levelNonlinearSolverType(linearSolver=linearSolverList[l],
-<<<<<<< HEAD
-                                                   F=nonlinearOperatorList[l],
-                                                   J=jacobianList[l],
-                                                   du=duList[l],
-                                                   par_du=par_du,
-                                                   rtol_r=relativeToleranceList[l],
-                                                   atol_r=absoluteTolerance,
-                                                   maxIts=maxSolverIts,
-                                                   norm = nonlinearSolverNorm,
-                                                   convergenceTest = levelSolverConvergenceTest,
-                                                   computeRates = computeLevelSolverRates,
-                                                   printInfo=printLevelSolverInfo,
-                                                   fullNewton=levelSolverFullNewtonFlag,
-                                                   directSolver=linearDirectSolverFlag,
-                                                   EWtol=EWtol,
-                                                   maxLSits=maxLSits ))
-=======
                                                                      F=nonlinearOperatorList[l],
                                                                      J=jacobianList[l],
                                                                      du=duList[l],
@@ -2926,7 +2873,6 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                                      directSolver=linearDirectSolverFlag,
                                                                      EWtol=EWtol,
                                                                      maxLSits=maxLSits ))
->>>>>>> cekees/add_nonlinear_pod
     elif levelNonlinearSolverType == NewtonNS:
         for l in range(nLevels):
             if par_duList != None and len(par_duList) > 0:
@@ -3070,12 +3016,8 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                          computeRates = computeSolverRates,
                                          printInfo=printSolverInfo)
     elif (multilevelNonlinearSolverType == Newton or
-<<<<<<< HEAD
-          multilevelNonlinearSolverType in [POD_Newton,POD_DEIM_Newton] or
-=======
           multilevelNonlinearSolverType == POD_Newton or
           multilevelNonlinearSolverType == POD_DEIM_Newton or
->>>>>>> cekees/add_nonlinear_pod
           multilevelNonlinearSolverType == NewtonNS or
           multilevelNonlinearSolverType == NLJacobi or
           multilevelNonlinearSolverType == NLGaussSeidel or
