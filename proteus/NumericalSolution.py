@@ -644,7 +644,7 @@ class NS_base:  # (HasTraits):
             m.stepController.initializeTimeHistory()
             log("Auxiliary variable calculations for model %s" % (m.name,))
             for av in self.auxiliaryVariables[m.name]:
-                av.calculate()
+                av.calculate_init()
             if not self.opts.cacheArchive:
                 self.ar[index].sync()
         self.systemStepController.initialize_dt_system(self.tnList[0],self.tnList[1]) #may reset other dt's

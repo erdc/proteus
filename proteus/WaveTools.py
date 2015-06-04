@@ -201,8 +201,10 @@ class RandomWaves:
                  mwl = 0.0,        #mean water level
                  waveDir = np.array([1,0,0]),
                  g = np.array([0, -9.81, 0]),         #accelerationof gravity
-                 spec_fun = JONSWAP
+                 spec_fun = JONSWAP,
+                 gamma=3.3
                  ): 
+        self.gamma=gamma
         self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
         self.g = np.array(g)
         self.gAbs = sqrt(sum(g * g))
@@ -227,7 +229,7 @@ class RandomWaves:
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
         fim_tmp = (0.5*(self.fi[1:]+self.fi[:-1])).tolist()
         self.fim = np.array([fim_tmp[0]-0.5*self.df]+fim_tmp+[fim_tmp[-1]+0.5*self.df])
-        self.Si_Jm = spec_fun(self.fim,f0=self.fp,Hs=self.Hs,g=self.g,gamma=3.3)
+        self.Si_Jm = spec_fun(self.fim,f0=self.fp,Hs=self.Hs,g=self.g,gamma=self.gamma)
         self.ai = np.sqrt((self.Si_Jm[1:]+self.Si_Jm[:-1])*(self.fim[1:]-self.fim[:-1]))
         self.waves = MonochromaticWaves
         self.kDir = np.zeros((self.N, 3) , "d")
