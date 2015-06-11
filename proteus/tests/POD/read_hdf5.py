@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from proteus.iproteus import *
 
 def read_from_hdf5(hdfFile,label,dof_map=None):
     """
