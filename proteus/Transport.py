@@ -877,6 +877,7 @@ class OneLevelTransport(NonlinearEquation):
                 needEBQ_GLOBAL = needEBQ_GLOBAL or self.conservativeFlux[ci] != None
         if options.needEBQ_GLOBAL:
             needEBQ_GLOBAL = True
+        self.needEBQ_GLOBAL=needEBQ_GLOBAL
         if needEBQ_GLOBAL:
             self.points_elementBoundaryQuadrature_global.allocate(self.ebq_global)
             #allocate scalars element boundary quadrature global
@@ -2953,6 +2954,19 @@ class OneLevelTransport(NonlinearEquation):
             if self.q.has_key(('grad(u)',cj)):
                 self.u[cj].getGradientValues(self.q[('grad(v)',cj)],
                                              self.q[('grad(u)',cj)])
+            self.u[cj].getValues(self.ebqe[('v',cj)],
+                                 self.ebqe[('u',cj)])
+            if self.ebqe.has_key(('grad(u)',cj)):
+                self.u[cj].getGradientValues(self.ebqe[('grad(v)',cj)],
+                                             self.ebqe[('grad(u)',cj)])
+        if self.needEBQ:
+            for cj in range(self.nc):
+                self.u[cj].getValuesTrace(self.ebq[('v',cj)],
+                                     self.ebq[('u',cj)])
+                if self.ebq.has_key(('grad(u)',cj)):
+                    self.u[cj].getGradientValuesTrace(self.ebq[('grad(v)',cj)],
+                                                 self.ebq[('grad(u)',cj)])
+
     def calculateStrongResidualAndAdjoint(self,cq):
         """
         break off computation of strong residual and adjoint so that we can do this at different quadrature locations?

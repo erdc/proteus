@@ -570,16 +570,16 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
 class QuadraticOnSimplexWithNodalBasis(LocalFunctionSpace):
     """
     Quadratic polynomials on the unit nd-simplex with the nodal basis.
-    
+
     Nodal basis functions on the reference nd-simplex (nd <=3) with
     coordinates xi[0],xi[1],and xi[2]. The basis functions are
     numbered according to
-    
+
     .. math::
-    
+
     \psi &= \lambda_i(2\lambda_i-1)  0<= i<= d
     \psi &= 4\lambda_j\lambda_k       0<= j < k <= d
-    
+
     where :math:`\lambda_i` is the barycentric coordinate associated
     with node i (i.e., it's 1 at node i and zero elsewhere)
 
@@ -598,8 +598,8 @@ class QuadraticOnSimplexWithNodalBasis(LocalFunctionSpace):
     \psi_3 &= 4\lambda_0\lambda_1
     \psi_4 &= 4\lambda_1\lambda_2
     \psi_5 &= 4\lambda_0\lambda_2
-     
-     
+
+
     2d numberings for :math:`\psi`
 
       2
@@ -861,28 +861,28 @@ class CrouzeixRaviartWithNodalBasis(LocalFunctionSpace):
     degrees of freedom are the values at barycenters of faces. Defined for
     the reference nd-simplex  (nd <=3)
     """
-    
+
     # In 1d, it's identical to the standard P^1 Lagrange element
-    
+
     # The basis functions are numbered according to the faces, which are
     # in turn numbered according to the node that they are opposite.
-    
+
     # If :math:`\lambda_i` is the barycentric coordinate that's 1 at node p_i, then
     # the CrR shape functions are
-    
+
     # .. math::
-    
+
     # \psi_i( x) = d(1/d - \lambda_i)
-    
+
     # and is one along :math:`E_i`, the face opposite :math:`p_i`.
-    
+
     # These relationships hold in physical space or reference space as long as the
     # barycentric coordinates are defined appropriately.
-    
+
     # In physical space, the barycentric coordinates are defined by
-    
+
     # .. math::
-    
+
     #   \lambda_i = 1 - \frac{( x -  p_i)\cdot  n_i}
     #                        {( p_j -  p_i)\cdot  n_i}
 
@@ -890,11 +890,11 @@ class CrouzeixRaviartWithNodalBasis(LocalFunctionSpace):
 
     #                                                            |  t
     # On the reference element, in 2d we have                   u| /
-    #                                                            |/___ 
+    #                                                            |/___
     # .. math::
 
     # \lambda_0 = 1-s-t, \lambda_1 = s, \lambda_2 = t
-                
+
     # For 3d the reference coordinates are
 
     # .. math::
@@ -907,11 +907,11 @@ class CrouzeixRaviartWithNodalBasis(LocalFunctionSpace):
     # .. math::
 
     # \hat{\psi}_0 =  2(s+t)-1, \hat{\psi}_1 = 1-2s, \hat{\psi}_2 = 1-2t
-    
+
     # In 3d, the CrR shape functions on the reference element are
-    
+
     # .. math::
-    
+
     # \hat{\psi}_0 =  3(s+t+u)-2, \hat{\psi}_1 = 1-3s, \hat{\psi}_2 = 1-3t,
     #      \hat{\psi}_3 = 1-3u
 
@@ -1696,14 +1696,14 @@ class P1BubbleInterpolationConditions(InterpolationConditions):
     Interpolation conditions for space P1 enriched with bubbles
     """
     # .. math::
-    
+
     # P^1(\hat{\Omega_e}) \oplus \mbox{span}{\hat{b}} b = (n_d+1)^{n_d+1} \Pi_{i=0}^{n_d} \lambda_i
-    
+
     # Note :math:`b(\bar{x_{e}}) = 1`
-    
+
     # Interpolation conditions are
     # .. math::
-    
+
     # v(x_j), j = 0, n_d \mbox{for vertices} x_j \mbox{and} v(\bar{x}_{e}) - \frac{1}{d+1}\sum_{j=0}^{n_d}(v( x_j)) \mbox{for} b
     def __init__(self,referenceElement):
         InterpolationConditions.__init__(self,referenceElement.nNodes+1,referenceElement)
@@ -1945,7 +1945,7 @@ class QuadraticLagrangeCubeDOFMap(DOFMap):
     number for iloc 0<= iloc<= space dim global edge number for
     spacedim < iloc
 
-    total dimension is number of vertices + number of edges 
+    total dimension is number of vertices + number of edges
     """
     # TODO fix
     # lagrangeNodesArray to hold all the nodes for parallel in 3d
@@ -6305,7 +6305,9 @@ class FluxBoundaryConditionsGlobalElementBoundaries:
             materialFlag = mesh.elementBoundaryMaterialTypes[ebN]
             for k in range(nElementBoundaryQuadraturePoints_elementBoundary):
                 try:
-                    g = getAdvectiveFluxBoundaryConditions(x[ebN,k],materialFlag)
+                    g = None
+                    if getAdvectiveFluxBoundaryConditions:
+                        g = getAdvectiveFluxBoundaryConditions(x[ebN,k],materialFlag)
                     if g:
                         self.advectiveFluxBoundaryConditionsDict[(ebN,k)] = g
                     for ck in getDiffusiveFluxBoundaryConditions.keys():
@@ -6314,7 +6316,9 @@ class FluxBoundaryConditionsGlobalElementBoundaries:
                             self.diffusiveFluxBoundaryConditionsDictDict[ck][(ebN,k)] = g
                 except TypeError:
                     logEvent("""WARNING FluxBoundaryCondition GlobalElement should take arguments (x,flag) now trying without flag""")
-                    g = getAdvectiveFluxBoundaryConditions(x[ebN,k])
+                    g = None
+                    if getAdvectiveFluxBoundaryConditions:
+                        g = getAdvectiveFluxBoundaryConditions(x[ebN,k])
                     if g:
                         self.advectiveFluxBoundaryConditionsDict[(ebN,k)] = g
                     for ck in getDiffusiveFluxBoundaryConditions.keys():
