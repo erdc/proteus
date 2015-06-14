@@ -12,8 +12,8 @@
   export PATH=$PROTEUS/custom_installs/python/Python-2.7.6:$PATH
   export LD_LIBRARY_PATH=$PROTEUS/custom_installs/python/Python-2.7.6:$LD_LIBRARY_PATH
   export PATH=$PROTEUS/scripts:$PATH
-  export PYTHONPATH=$PROTEUS/linux2-scorec/lib/python2.7:$PYHTONPATH
-  export PYTHONPATH=$PROTEUS/linux2-scorec/lib/python2.7/site-packages:$PYHTONPATH
+  export PYTHONPATH=$PROTEUS/linux2-scorec/lib/python2.7:$PYTHONPATH
+  export PYTHONPATH=$PROTEUS/linux2-scorec/lib/python2.7/site-packages:$PYTHONPATH
   export PYTHONPATH=$PROTEUS_MPRANS/build/lib.linux-x86_64-2.7/proteus/mprans:$PYTHONPATH
   export PYTHONPATH=$PROTEUS/custom_installs/memprof/memory_profiler-0.31/build/lib:$PYTHONPATH
  # export PYTHONPATH=$PROTEUS/heapy/guppy-0.1.10/build/lib.linux-x86_64-2.7/guppy:$PYTHONPATH
