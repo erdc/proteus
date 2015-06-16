@@ -722,13 +722,15 @@ class SimulationProcessor:
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.elementQuadratureWeights.values()[0],
-                                                             m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],tsim)
+                                                             m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                             T=tsim)
 
                                 exa = Norms.L2errorSFEMvsAF2(zeroFunction(),
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.elementQuadratureWeights.values()[0],
-                                                             m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],tsim)
+                                                             m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                             T=tsim)
                             else:
                                 err = Norms.L2errorSFEM(mFine.q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],udense[0:mFine.mesh.subdomainMesh.nElements_owned],uproj[ci][0:mFine.mesh.subdomainMesh.nElements_owned])
                                 exa = Norms.L2errorSFEM(mFine.q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],udense[0:mFine.mesh.subdomainMesh.nElements_owned],
@@ -751,12 +753,14 @@ class SimulationProcessor:
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.elementQuadratureWeights.values()[0],
-                                                             m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],tsim)
+                                                             m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                             T=tsim)
                                 exa = Norms.L1errorSFEMvsAF2(zeroFunction(),
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.elementQuadratureWeights.values()[0],
-                                                             m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],tsim)
+                                                             m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                             T=tsim)
                             else:
                                 err = Norms.L1errorSFEM(mFine.q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],udense[0:mFine.mesh.subdomainMesh.nElements_owned],uproj[ci][0:mFine.mesh.subdomainMesh.nElements_owned])
                                 exa = Norms.L1errorSFEM(mFine.q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],udense[0:mFine.mesh.subdomainMesh.nElements_owned],
@@ -779,10 +783,12 @@ class SimulationProcessor:
                             if hasAnalyticalSolution[ci]:
                                 err = Norms.LIerrorSFEMvsAF(self.analyticalSolution[ci],
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                            m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],tsim)
+                                                            m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                            T=tsim)
                                 exa = Norms.LIerrorSFEMvsAF(zeroFunction(),
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
-                                                            m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],tsim)
+                                                            m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                            T=tsim)
                             else:
                                 err = max(numpy.absolute(uproj[ci][0:mFine.mesh.subdomainMesh.nElements_owned].flat[:]-udense[0:mFine.mesh.subdomainMesh.nElements_owned].flat[:]))
                                 exa = max(numpy.absolute(udense[0:mFine.mesh.subdomainMesh.nElements_owned].flat))
@@ -807,13 +813,15 @@ class SimulationProcessor:
                                                               m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.elementQuadratureWeights.values()[0],
-                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],tsim)
+                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                              T=tsim)
 
                                 exa0 = Norms.L2errorSFEMvsAF2(zeroFunction(),
                                                               m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.elementQuadratureWeights.values()[0],
-                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],tsim)
+                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                              T=tsim)
                             else:
 
                                 err0 = Norms.L2errorSFEM(mlvt.levelModelList[-1].q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],udense[0:mFine.mesh.subdomainMesh.nElements_owned],uproj[ci][0:mFine.mesh.subdomainMesh.nElements_owned])
@@ -824,12 +832,14 @@ class SimulationProcessor:
                                 err1 = Norms.L2errorVFEMvsAF(gradWrapper(p.analyticalSolution[ci]),
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
-                                                             m.q[('grad(u)',ci)][0:m.mesh.subdomainMesh.nElements_owned])
+                                                             m.q[('grad(u)',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                             T=tsim)
                                 exa1 = Norms.L2errorVFEMvsAF(gradWrapper(p.analyticalSolution[ci]),
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                              numpy.zeros(m.q[('grad(u)',ci)][0:m.mesh.subdomainMesh.nElements_owned].shape,
-                                                                           'd'))
+                                                                           'd'),
+                                                             T=tsim)
                             else:
                                 err1 = Norms.L2errorVFEM(mlvt.levelModelList[-1].q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],
                                                          gradu_dense[0:mFine.mesh.subdomainMesh.nElements_owned],uprojGrad[ci][0:mFine.mesh.subdomainMesh.nElements_owned])
@@ -858,12 +868,14 @@ class SimulationProcessor:
                                 err = Norms.L2errorVFEMvsAF(gradWrapper(p.analyticalSolution[ci]),
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                             m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
-                                                            m.q[('grad(u)',ci)][0:m.mesh.subdomainMesh.nElements_owned])
+                                                            m.q[('grad(u)',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                            T=tsim)
                                 exa = Norms.L2errorVFEMvsAF(gradWrapper(p.analyticalSolution[ci]),
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                             m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                             numpy.zeros(m.q[('grad(u)',ci)][0:m.mesh.subdomainMesh.nElements_owned].shape,
-                                                                          'd'))
+                                                                          'd'),
+                                                            T=tsim)
                             else:
                                 err = Norms.L2errorVFEM(mlvt.levelModelList[-1].q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],
                                                         gradu_dense[0:mFine.mesh.subdomainMesh.nElements_owned],uprojGrad[ci][0:mFine.mesh.subdomainMesh.nElements_owned])
@@ -891,13 +903,15 @@ class SimulationProcessor:
                                                               m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.elementQuadratureWeights.values()[0],
-                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],tsim)
+                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                              T=tsim)
 
                                 exa0 = Norms.L1errorSFEMvsAF2(zeroFunction(),
                                                               m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.q['abs(det(J))'][0:m.mesh.subdomainMesh.nElements_owned],
                                                               m.elementQuadratureWeights.values()[0],
-                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],tsim)
+                                                              m.q[('u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                              T=tsim)
                             else:
                                 err0 = Norms.L1errorSFEM(mlvt.levelModelList[-1].q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],udense[0:mFine.mesh.subdomainMesh.nElements_owned],uproj[ci][0:mFine.mesh.subdomainMesh.nElements_owned])
                                 exa0 = Norms.L1errorSFEM(mlvt.levelModelList[-1].q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],udense[0:mFine.mesh.subdomainMesh.nElements_owned],
@@ -907,12 +921,14 @@ class SimulationProcessor:
                                 err1 = Norms.L1errorVFEMvsAF(gradWrapper(p.analyticalSolution[ci]),
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
-                                                             m.q[('grad(u)',ci)][0:m.mesh.subdomainMesh.nElements_owned])
+                                                             m.q[('grad(u)',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                             T=tsim)
                                 exa1 = Norms.L1errorVFEMvsAF(gradWrapper(p.analyticalSolution[ci]),
                                                              m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                              m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                              numpy.zeros(m.q[('grad(u)',ci)][0:m.mesh.subdomainMesh.nElements_owned].shape,
-                                                                           'd'))
+                                                                           'd'),
+                                                             T=tsim)
                             else:
                                 err1 = Norms.L1errorVFEM(mlvt.levelModelList[-1].q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],
                                                          gradu_dense[0:mFine.mesh.subdomainMesh.nElements_owned],uprojGrad[ci][0:mFine.mesh.subdomainMesh.nElements_owned])
@@ -940,12 +956,14 @@ class SimulationProcessor:
                                 err = Norms.L1errorVFEMvsAF(gradWrapper(p.analyticalSolution[ci]),
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                             m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
-                                                            m.q[('grad(u)',ci)][0:m.mesh.subdomainMesh.nElements_owned])
+                                                            m.q[('grad(u)',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                            T=tsim)
                                 exa = Norms.L1errorVFEMvsAF(gradWrapper(p.analyticalSolution[ci]),
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                             m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                             numpy.zeros(m.q[('grad(u)',ci)][0:m.mesh.subdomainMesh.nElements_owned].shape,
-                                                                          'd'))
+                                                                          'd'),
+                                                            T=tsim)
                             else:
                                 err = Norms.L1errorVFEM(mlvt.levelModelList[-1].q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],
                                                         gradu_dense[0:mFine.mesh.subdomainMesh.nElements_owned],uprojGrad[ci][0:mFine.mesh.subdomainMesh.nElements_owned])
@@ -982,7 +1000,8 @@ class SimulationProcessor:
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                             m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                             numpy.zeros(m.q[('grad(u)',ci)][0:m.mesh.subdomainMesh.nElements_owned].shape,
-                                                                          'd'))
+                                                                          'd'),
+                                                            T=tsim)
                             else:
                                 exa = Norms.L1errorVFEM(mlvt.levelModelList[-1].q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],
                                                         gradu_dense[0:mFine.mesh.subdomainMesh.nElements_owned],
@@ -1008,12 +1027,14 @@ class SimulationProcessor:
                                 err = Norms.L2errorVFEMvsAF(p.analyticalSolutionVelocity[ci],
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                             m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
-                                                            m.q[('velocity',ci)][0:m.mesh.subdomainMesh.nElements_owned])
+                                                            m.q[('velocity',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                            T=tsim)
                                 exa = Norms.L2errorVFEMvsAF(p.analyticalSolutionVelocity[ci],
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                             m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                             numpy.zeros(m.q[('velocity',ci)][0:m.mesh.subdomainMesh.nElements_owned].shape,
-                                                                          'd'))
+                                                                          'd'),
+                                                            T=tsim)
                             else:
                                 #now try to project velocity to finer grids?
                                 #mwf debug
@@ -1042,12 +1063,14 @@ class SimulationProcessor:
                                 err = Norms.L1errorVFEMvsAF(p.analyticalSolutionVelocity[ci],
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                             m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
-                                                            m.q[('velocity',ci)][0:m.mesh.subdomainMesh.nElements_owned])
+                                                            m.q[('velocity',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                            T=tsim)
                                 exa = Norms.L1errorVFEMvsAF(p.analyticalSolutionVelocity[ci],
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                             m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                             numpy.zeros(m.q[('velocity',ci)][0:m.mesh.subdomainMesh.nElements_owned].shape,
-                                                                          'd'))
+                                                                          'd'),
+                                                            T=tsim)
                             else:
                                 #now try to project velocity to finer grids?
                                 err = Norms.L1errorVFEM(mlvt.levelModelList[-1].q[('dV_u',ci)][0:mFine.mesh.subdomainMesh.nElements_owned],
@@ -1075,12 +1098,14 @@ class SimulationProcessor:
                                 err = Norms.LIerrorVFEMvsAF(p.analyticalSolutionVelocity[ci],
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                             m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
-                                                            m.q[('velocity',ci)][0:m.mesh.subdomainMesh.nElements_owned])
+                                                            m.q[('velocity',ci)][0:m.mesh.subdomainMesh.nElements_owned],
+                                                            T=tsim)
                                 exa = Norms.LIerrorVFEMvsAF(p.analyticalSolutionVelocity[ci],
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
                                                             m.q[('dV_u',ci)][0:m.mesh.subdomainMesh.nElements_owned],
                                                             numpy.zeros(m.q[('velocity',ci)][0:m.mesh.subdomainMesh.nElements_owned].shape,
-                                                                          'd'))
+                                                                          'd'),
+                                                            T=tsim)
 
                             else:
                                 #now try to project velocity to finer grids?
