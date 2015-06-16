@@ -55,7 +55,8 @@ PROTEUS_SCOREC_EXTRA_LINK_ARGS = [
     '-lSimMeshTools',
     '-lSimPartitionWrapper-mpich3',
     '-L'+os.getenv('MPI_ROOT')+'/lib',
-    '-lmpi']
+    '-lmpi',
+    '-lpetsc']
 PROTEUS_SCOREC_EXTRA_COMPILE_ARGS = [
     '-g',
     '-I'+os.getenv('SIM_INCLUDE_DIR'),
