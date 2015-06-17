@@ -672,7 +672,7 @@ class SimulationProcessor:
                                          self.analyticalSolution[ci] != None)
             hasAnalyticalSolutionVelocity[ci] = ('analyticalSolutionVelocity' in dir(p) and
                                                  p.analyticalSolutionVelocity is not None and 
-                                                 p.analyticalSolutionVelocity.has_key(ci) and 
+                                                 ci in p.analyticalSolutionVelocity and 
                                                  p.analyticalSolutionVelocity[ci] is not None)
         #ci
         class gradWrapper:
