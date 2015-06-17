@@ -671,7 +671,9 @@ class SimulationProcessor:
             hasAnalyticalSolution[ci] = (self.analyticalSolution.has_key(ci)  and
                                          self.analyticalSolution[ci] != None)
             hasAnalyticalSolutionVelocity[ci] = ('analyticalSolutionVelocity' in dir(p) and
-                                                 p.analyticalSolutionVelocity != None)
+                                                 p.analyticalSolutionVelocity is not None and 
+                                                 p.analyticalSolutionVelocity.has_key(ci) and 
+                                                 p.analyticalSolutionVelocity[ci] is not None)
         #ci
         class gradWrapper:
             def __init__(self,ex):
