@@ -79,7 +79,8 @@ class NS_base:  # (HasTraits):
         if so.useOneArchive:
             self.femSpaceWritten={}
             tmp  = Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
-                                        gatherAtClose=opts.gatherArchive,hotStart=opts.hotStart)
+                                        gatherAtClose=opts.gatherArchive,hotStart=opts.hotStart,
+                                        useGlobalXMF=(not opts.subdomainArchives))
             self.ar = dict([(i,tmp) for i in range(len(self.pList))])
         elif len(self.pList) == 1:
             self.ar = {0:Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
@@ -913,7 +914,7 @@ class NS_base:  # (HasTraits):
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=True,meshChanged=True)
 
-        #for nonlinear POD 
+        #for nonlinear POD
         if self.archive_pod_residuals[index] == True:
             res_space = {}; res_mass = {}
             for ci in range(model.levelModelList[-1].coefficients.nc):
@@ -973,7 +974,7 @@ class NS_base:  # (HasTraits):
             model.levelModelList[-1].archiveExteriorElementBoundaryQuadratureValues(self.ar[index],t,self.tCount,
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=False,meshChanged=True)
-        #for nonlinear POD 
+        #for nonlinear POD
         if self.archive_pod_residuals[index] == True:
             res_space = {}; res_mass = {}
             for ci in range(model.levelModelList[-1].coefficients.nc):
@@ -983,7 +984,7 @@ class NS_base:  # (HasTraits):
                 model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_mass[ci])
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],t,self.tCount,res_space,res_name_base='spatial_residual')
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],t,self.tCount,res_mass,res_name_base='mass_residual')
-                
+
         if not self.opts.cacheArchive:
             self.ar[index].sync()
     ## clean up archive
