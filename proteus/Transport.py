@@ -4133,7 +4133,6 @@ class OneLevelTransport(NonlinearEquation):
         if self.diffusiveFluxBoundaryConditionsSetterDictDict != None:
             fluxBoundaryCondition_components = fluxBoundaryCondition_components.union(set(self.diffusiveFluxBoundaryConditionsSetterDictDict .keys()))
         self.fluxBoundaryConditionsObjectsDict = {}
-        print "fluxBoundaryCondition_components",fluxBoundaryCondition_components
         for ci in fluxBoundaryCondition_components:
             if ci in self.advectiveFluxBoundaryConditionsSetterDict:
                 advectiveFluxBC = self.advectiveFluxBoundaryConditionsSetterDict[ci]
