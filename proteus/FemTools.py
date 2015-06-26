@@ -3505,7 +3505,7 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 del array
             else:
                 if ar.has_h5py:
-                    u.dof[:]=ar.hdfFile.getNode("/",u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount))
+                    u.dof[:]=ar.hdfFile["/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)]
                 else:
                     u.dof[:]=ar.hdfFile.getNode("/",u.name+str(tCount))
         else:
