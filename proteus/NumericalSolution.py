@@ -646,8 +646,6 @@ class NS_base:  # (HasTraits):
             log("Auxiliary variable calculations for model %s" % (m.name,))
             for av in self.auxiliaryVariables[m.name]:
                 av.calculate_init()
-            if not self.opts.cacheArchive:
-                self.ar[index].sync()
         self.systemStepController.initialize_dt_system(self.tnList[0],self.tnList[1]) #may reset other dt's
         log("Starting time stepping",level=0)
         self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
@@ -777,8 +775,6 @@ class NS_base:  # (HasTraits):
                             self.tCount+=1
                             for index,model in enumerate(self.modelList):
                                 self.archiveSolution(model,index,self.systemStepController.t_system)
-                            if not self.opts.cacheArchive:
-                                self.ar[index].sync()
                 #end system split operator sequence
                 if systemStepFailed:
                     log("System Step Failed")
@@ -809,15 +805,11 @@ class NS_base:  # (HasTraits):
                     self.tCount+=1
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
-                    if not self.opts.cacheArchive:
-                        self.ar[index].sync()
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
                 self.tCount+=1
                 for index,model in enumerate(self.modelList):
                     self.archiveSolution(model,index,self.systemStepController.t_system_last)
-                if not self.opts.cacheArchive:
-                    self.ar[index].sync()
             if systemStepFailed:
                 break
         log("Finished calculating solution",level=3)
@@ -924,6 +916,13 @@ class NS_base:  # (HasTraits):
                 model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_space,res_name_base='spatial_residual')
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_mass,res_name_base='mass_residual')
+
+        if not self.opts.cacheArchive:
+            if not self.so.useOneArchive:
+                self.ar[index].sync()
+            else:
+                if index == len(self.ar) - 1:
+                    self.ar[index].sync()
     ##save model's solution values to archive
     def archiveSolution(self,model,index,t=None):
         if self.archiveFlag == ArchiveFlags.UNDEFINED:
@@ -986,7 +985,12 @@ class NS_base:  # (HasTraits):
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],t,self.tCount,res_mass,res_name_base='mass_residual')
 
         if not self.opts.cacheArchive:
-            self.ar[index].sync()
+            if not self.so.useOneArchive:
+                self.ar[index].sync()
+            else:
+                if index == len(self.ar) - 1:
+                    self.ar[index].sync()
+
     ## clean up archive
     def closeArchive(self,model,index):
         if self.archiveFlag == None:
