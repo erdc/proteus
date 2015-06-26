@@ -31,8 +31,14 @@ class ArchiveFlags:
     UNDEFINED            =-1
 #
 class AR_base:
-    def __init__(self,dataDir,filename,useTextArchive=False,gatherAtClose=True,useGlobalXMF=True, hotStart=False,readOnly=False):
+    def __init__(self,dataDir,filename,
+                 useTextArchive=False,
+                 gatherAtClose=True,
+                 useGlobalXMF=True,
+                 hotStart=False,
+                 readOnly=False):
         import os.path
+        import copy
         self.useGlobalXMF=useGlobalXMF
         comm=Comm.get()
         self.comm=comm
@@ -48,6 +54,7 @@ class AR_base:
         try:
             import h5py
             self.has_h5py=True
+            comm_world = self.comm.comm.tompi4py()
         except:
             self.has_h5py=False
         try:
@@ -57,17 +64,35 @@ class AR_base:
             self.hasTables=False
         self.xmlHeader = "<?xml version=\"1.0\" ?>\n<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>\n"
         if hotStart:
-            xmlFile_old=open(os.path.join(self.dataDir,filename+str(self.rank)+".xmf"),"r")
+            if useGlobalXMF:
+                xmlFile_old=open(os.path.join(self.dataDir,
+                                              filename+"_all"+str(self.size)+".xmf"),
+                                 "r")
+            else:
+                xmlFile_old=open(os.path.join(self.dataDir,
+                                              filename+str(self.rank)+".xmf"),
+                                 "r")
             self.tree=ElementTree(file=xmlFile_old)
-            xmlFile_old.close()
-            self.xmlFile=open(os.path.join(self.dataDir,filename+str(self.rank)+".xmf"),"a")
+            if self.comm.isMaster():
+                self.xmlFileGlobal = open(os.path.join(self.dataDir,
+                                                       filename+"_all"+str(self.size)+".xmf"),
+                                          "a")
+                self.treeGlobal=copy.deepcopy(self.tree)
+            if not useGlobalXMF:
+                self.xmlFile=open(os.path.join(self.dataDir,
+                                               filename+str(self.rank)+".xmf"),
+                                  "a")
             if self.has_h5py and not useTextArchive:
                 self.hdfFilename=filename+".h5"
-                self.hdfFile=h5py.File(self.hdfFilename, "a", driver="mpio", comm = self.comm.comm.tompi4py())
+                self.hdfFile=h5py.File(self.hdfFilename,
+                                       "a",
+                                       driver="mpio",
+                                       comm = comm_world)
                 self.dataItemFormat="HDF"
             elif self.hasTables and not useTextArchive:
                 self.hdfFilename=filename+str(self.rank)+".h5"
-                self.hdfFile=tables.openFile(os.path.join(self.dataDir,self.hdfFilename),
+                self.hdfFile=tables.openFile(os.path.join(self.dataDir,
+                                                          self.hdfFilename),
                                              mode = "a",
                                              title = filename+" Data")
                 self.dataItemFormat="HDF"
@@ -81,29 +106,43 @@ class AR_base:
                 self.hdfFile=None
                 self.dataItemFormat="XML"
         elif readOnly:
-            self.xmlFile=open(os.path.join(self.dataDir,filename+str(self.rank)+".xmf"),"r")
+            if useGlobalXMF:
+                self.xmlFile=open(os.path.join(self.dataDir,
+                                               filename+"_all"+str(self.size)+".xmf"),
+                                  "r")
+            else:
+                self.xmlFile=open(os.path.join(self.dataDir,
+                                               filename+str(self.rank)+".xmf"),
+                                  "r")
             self.tree=ElementTree(file=self.xmlFile)
             if self.has_h5py and not useTextArchive:
                 self.hdfFilename=filename+".h5"
                 self.hdfFile=h5py.File(os.path.join(self.dataDir,
-                                                    self.hdfFilename),"r")
+                                                    self.hdfFilename),
+                                       "r",
+                                       driver = 'mpio',
+                                       comm = comm_world)
                 try:
                     # The "global" extension is hardcoded in collect.py
                     self.hdfFileGlb=h5py.File(
                         os.path.join(self.dataDir,
                                      filename+"global.h5"),
-                        "r")
+                        "r",
+                        driver = 'mpio',
+                        comm = comm_world)
                 except:
                     pass
                 self.dataItemFormat="HDF"
             elif self.hasTables and not useTextArchive:
                 self.hdfFilename=filename+str(self.rank)+".h5"
-                self.hdfFile=tables.openFile(os.path.join(self.dataDir,self.hdfFilename),
+                self.hdfFile=tables.openFile(os.path.join(self.dataDir,
+                                                          self.hdfFilename),
                                              mode = "r",
                                              title = filename+" Data")
                 try:
                     # The "global" extension is hardcoded in collect.py
-                    self.hdfFileGlb=tables.openFile(os.path.join(self.dataDir,filename+"global.h5"),
+                    self.hdfFileGlb=tables.openFile(os.path.join(self.dataDir,
+                                                                 filename+"global.h5"),
                                                     mode = "r",
                                                     title = filename+" Data")
                 except:
@@ -116,28 +155,37 @@ class AR_base:
                 self.dataItemFormat="XML"
         else:
             if not self.useGlobalXMF:
-                self.xmlFile=open(os.path.join(self.dataDir,filename+str(self.rank)+".xmf"),"w")
-            self.tree=ElementTree(Element("Xdmf",
-                                          {"Version":"2.0",
-                                           "xmlns:xi":"http://www.w3.org/2001/XInclude"}))
+                self.xmlFile=open(os.path.join(self.dataDir,
+                                               filename+str(self.rank)+".xmf"),
+                                  "w")
+            self.tree=ElementTree(
+                Element("Xdmf",
+                        {"Version":"2.0",
+                         "xmlns:xi":"http://www.w3.org/2001/XInclude"})
+            )
             if self.comm.isMaster():
-                self.xmlFileGlobal=open(os.path.join(self.dataDir,filename+"_all"+str(self.size)+".xmf"),"w")
-                self.treeGlobal=ElementTree(Element("Xdmf",
-                                                    {"Version":"2.0",
-                                                     "xmlns:xi":"http://www.w3.org/2001/XInclude"}))
-            comm_world = self.comm.comm.tompi4py()
+                self.xmlFileGlobal=open(
+                    os.path.join(self.dataDir,
+                                 filename+"_all"+str(self.size)+".xmf"),
+                    "w")
+                self.treeGlobal=ElementTree(
+                    Element("Xdmf",
+                            {"Version":"2.0",
+                             "xmlns:xi":"http://www.w3.org/2001/XInclude"})
+                )
             if self.has_h5py and not useTextArchive:
                 self.hdfFilename=filename+".h5"
                 self.hdfFile=h5py.File(os.path.join(self.dataDir,
                                                     self.hdfFilename),
                                        "w",
-                                       driver='mpio',
+                                       driver = 'mpio',
                                        comm = comm_world)
                 self.dataItemFormat="HDF"
                 self.comm.barrier()
             elif self.hasTables and not useTextArchive:
                 self.hdfFilename=filename+str(self.rank)+".h5"
-                self.hdfFile=tables.openFile(os.path.join(self.dataDir,self.hdfFilename),
+                self.hdfFile=tables.openFile(os.path.join(self.dataDir,
+                                                          self.hdfFilename),
                                              mode = "w",
                                              title = filename+" Data")
                 self.dataItemFormat="HDF"
@@ -226,7 +274,7 @@ class AR_base:
             if len(XDMFGlobal) == 0:
                 XDMFGlobal.append(copy.deepcopy(Domain))
                 DomainGlobal = XDMFGlobal[-1]
-                #delete and actual grids in the temporal  collections
+                #delete any actual grids in the temporal  collections
                 for TemporalGridCollectionGlobal in DomainGlobal:
                     del TemporalGridCollectionGlobal[:]
             else:
@@ -247,8 +295,8 @@ class AR_base:
         log("Done Gathering Archive Time Step")
     def sync(self):
         log("Syncing Archive",level=3)
+        self.clear_xml()
         if not self.useGlobalXMF:
-            self.clear_xml()
             self.xmlFile.write(self.xmlHeader)
             indentXML(self.tree.getroot())
             self.tree.write(self.xmlFile)
