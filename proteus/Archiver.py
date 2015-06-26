@@ -776,9 +776,9 @@ class XdmfWriter:
                                                "Dimensions":"%i %i" % lagrangeNodesArray.shape})
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
-                else:
                     elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                else:
+                    elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
                 if concatNow:
                     if ar.has_h5py:
                         allNodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
