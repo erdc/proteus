@@ -608,7 +608,7 @@ class Mesh:
             #topology and geometry
             #
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology = SubElement(self.arGrid,"Topology",
                                   {"Type":Xdmf_ElementTopology,
                                    "NumberOfElements":str(self.nElements_owned)})
@@ -646,7 +646,7 @@ class Mesh:
             #
             if EB:
                 self.arEBGrid = SubElement(self.arEBGridCollection,"Grid",{"GridType":"Uniform"})
-                self.arEBTime = SubElement(self.arEBGrid,"Time",{"Value":str(t)})
+                self.arEBTime = SubElement(self.arEBGrid,"Time",{"Value":str(t),"Name":str(tCount)})
                 Xdmf_ElementEBTopology = "Triangle" #cek hack
                 ebtopology = SubElement(self.arEBGrid,"Topology",
                                     {"Type":Xdmf_ElementEBTopology,
@@ -2920,7 +2920,7 @@ class Mesh2DM(Mesh):
             #topology and geometry
             #
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology = SubElement(self.arGrid,"Topology",
                                   {"Type":Xdmf_ElementTopology,
                                    "NumberOfElements":str(self.nElements_owned)})
@@ -3279,7 +3279,7 @@ class Mesh3DM(Mesh):
             #topology and geometry
             #
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology = SubElement(self.arGrid,"Topology",
                                   {"Type":Xdmf_ElementTopology,
                                    "NumberOfElements":str(self.nElements_owned)})

@@ -8,6 +8,7 @@ import os
 from xml.etree.ElementTree import *
 
 log = Profiling.logEvent
+memory = Profiling.memory
 
 def indentXML(elem, level=0):
     i = "\n" + level*"  "
@@ -49,6 +50,7 @@ class AR_base:
         self.rank = comm.rank()
         self.size = comm.size()
         self.readOnly = readOnly
+        self.n_datasets = 0
         import datetime
         #filename += datetime.datetime.now().isoformat()
         try:
@@ -264,6 +266,7 @@ class AR_base:
         log("Done Gathering Archive")
     def allGatherIncremental(self):
         import copy
+        from mpi4py import MPI
         log("Gathering Archive Time step")
         self.comm.barrier()
         XDMF =self.tree.getroot()
@@ -279,11 +282,13 @@ class AR_base:
                     del TemporalGridCollectionGlobal[:]
             else:
                 DomainGlobal = XDMFGlobal[-1]
-        #gather the latest grids in each collections onto master
+        #gather the latest grids in each collection onto master
         comm_world = self.comm.comm.tompi4py()
         for i, TemporalGridCollection in enumerate(Domain):
             GridLocal = TemporalGridCollection[-1]
-            Grids = comm_world.allgather(GridLocal)
+            TimeAttrib = GridLocal[0].attrib['Value']
+            Grids = comm_world.gather(GridLocal)
+            max_grid_string_len = 0
             if self.comm.isMaster():
                 TemporalGridCollectionGlobal = DomainGlobal[i]
                 SpatialCollection=SubElement(TemporalGridCollectionGlobal,"Grid",{"GridType":"Collection",
@@ -292,21 +297,49 @@ class AR_base:
                 for Grid in Grids:
                     del Grid[0]#Time
                     SpatialCollection.append(Grid) #append Grid without Time
+                    element_string = tostring(Grid)
+                    max_grid_string_len = max(len(element_string),
+                                              max_grid_string_len)
+            max_grid_string_len_array = numpy.array(max_grid_string_len,'i')
+            comm_world.Bcast([max_grid_string_len_array,MPI.INT], root=0)
+            max_grid_string_len = int(max_grid_string_len_array)
+            if self.has_h5py:
+                dataset_name = TemporalGridCollection.attrib['Name']+"_"+ \
+                               `self.n_datasets`
+                dataset_name = dataset_name.replace(" ","_")
+                xml_data  = self.hdfFile.create_dataset(name  = dataset_name,
+                                                        shape = (self.comm.size(),),
+                                                        dtype = '|S'+`max_grid_string_len`)
+                xml_data.attrs['Time'] = TimeAttrib
+                if self.comm.isMaster():
+                    for j, Grid in enumerate(Grids):
+                        xml_data[j] = tostring(Grid)
+        self.n_datasets += 1
         log("Done Gathering Archive Time Step")
     def sync(self):
         log("Syncing Archive",level=3)
+        self.allGatherIncremental()
         self.clear_xml()
         if not self.useGlobalXMF:
             self.xmlFile.write(self.xmlHeader)
             indentXML(self.tree.getroot())
             self.tree.write(self.xmlFile)
             self.xmlFile.flush()
-        self.allGatherIncremental()
+        #delete grids for step from tree
+        XDMF =self.tree.getroot()
+        Domain = XDMF[-1]
+        for TemporalGridCollection in Domain:
+            del TemporalGridCollection[:]
         if self.comm.isMaster():
             self.xmlFileGlobal.write(self.xmlHeader)
             indentXML(self.treeGlobal.getroot())
             self.treeGlobal.write(self.xmlFileGlobal)
             self.xmlFileGlobal.flush()
+            #delete grids for step from tree
+            XDMF = self.treeGlobal.getroot()
+            Domain = XDMF[-1]
+            for TemporalGridCollection in Domain:
+                del TemporalGridCollection[:]
         if self.hdfFile != None:
             if self.has_h5py:
                 self.comm.barrier()
@@ -465,7 +498,7 @@ class XdmfWriter:
             Xdmf_NodesGlobal     = Xdmf_NumberOfElements*Xdmf_NodesPerElement
 
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(Xdmf_NumberOfElements),
@@ -628,7 +661,7 @@ class XdmfWriter:
             elif spaceDim == 3:
                 Xdmf_ElementTopology = "Tetrahedron"
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(mesh.nElements_global)})
@@ -703,7 +736,7 @@ class XdmfWriter:
             elif spaceDim == 3:
                 Xdmf_ElementTopology = "Tet_10"
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(mesh.nElements_global)})
@@ -789,7 +822,7 @@ class XdmfWriter:
             elif spaceDim == 3:
                 Xdmf_ElementTopology = "Tet_10"
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             lagrangeNodesArray = dofMap.lagrangeNodesArray
             topology = SubElement(self.arGrid,"Topology",
                                   {"Type":Xdmf_ElementTopology,
@@ -934,7 +967,7 @@ class XdmfWriter:
                             l2g[8*eN+i,j] = dofs[e2s[i][j]]
 
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
 
             lagrangeNodesArray = dofMap.lagrangeNodesArray
 
@@ -1067,7 +1100,7 @@ class XdmfWriter:
             Xdmf_NodesPerElement = spaceDim+1
             Xdmf_NumberOfElements= mesh.nElements_global
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(Xdmf_NumberOfElements)})
@@ -1298,7 +1331,7 @@ class XdmfWriter:
             Xdmf_NodesGlobal     = Xdmf_NumberOfElements*Xdmf_NodesPerElement
 
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(Xdmf_NumberOfElements),
@@ -1425,7 +1458,7 @@ class XdmfWriter:
                 elif spaceDim == 3:
                     Xdmf_ElementTopology = "Tetrahedron"
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(mesh.nElements_global)})
@@ -1550,7 +1583,7 @@ class XdmfWriter:
             Xdmf_NumberOfElements= mesh.nElements_global
             Xdmf_NumberOfNodes   = mesh.nNodes_global
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(Xdmf_NumberOfElements)})
@@ -1704,7 +1737,7 @@ class XdmfWriter:
             Xdmf_NodesGlobal     = nPoints
 
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(Xdmf_NumberOfElements),
@@ -1829,7 +1862,7 @@ class XdmfWriter:
             Xdmf_NodesPerElement = spaceDim+1
             Xdmf_NumberOfElements= mesh.nElements_global
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(Xdmf_NumberOfElements)})
