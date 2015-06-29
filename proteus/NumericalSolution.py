@@ -510,7 +510,8 @@ class NS_base:  # (HasTraits):
         for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
             if self.opts.hotStart:
                 log("Setting initial conditions from hot start file for "+p.name)
-                tCount = len(self.ar[index].tree.getroot()[-1][-1]) - 1
+                tCount = int(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Name'])
+                self.ar[index].n_datasets = tCount+1
                 time = float(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Value'])
                 if len(self.ar[index].tree.getroot()[-1][-1]) > 1:
                     dt = time - float(self.ar[index].tree.getroot()[-1][-1][-2][0].attrib['Value'])
