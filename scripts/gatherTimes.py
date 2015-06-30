@@ -3,6 +3,8 @@
 import numpy
 import os
 from xml.etree.ElementTree import *
+from proteus import Comm
+comm = Comm.init()
 #rather than import proteus
 def indentXML(elem, level=0):
     i = "\n" + level*"  "
@@ -19,7 +21,7 @@ def indentXML(elem, level=0):
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
-def gatherTimes(size, filename,dataDir='.',addname="_times"):
+def gatherTimes(size, filename,dataDir='.',addname="_times", tCount=None):
     """
     in case archiving failed to collect results from all times
     """
@@ -31,10 +33,11 @@ def gatherTimes(size, filename,dataDir='.',addname="_times"):
     XDMF = tree.getroot()
     Domain = XDMF[0]
     for TemporalGridCollection in Domain:
-        SpatialCollection = TemporalGridCollection[-1]
-        Grids = SpatialCollection[:]
-        tCount = int(Grids[0].attrib['Name'])
-        del TemporalGridCollection[:]
+        if tCount == -1:
+            SpatialCollection = TemporalGridCollection[-1]
+            Grids = SpatialCollection[:]
+            tCount = int(Grids[0].attrib['Name'])
+            del TemporalGridCollection[:]
         for i in range(tCount):
             dataset_name = TemporalGridCollection.attrib['Name']+"_"+`i`
             dataset_name = dataset_name.replace(" ","_")
@@ -68,6 +71,13 @@ if __name__ == '__main__':
                       dest="filebase",
                       default="simulation")
 
+    parser.add_option("-t","--tCount",
+                      help="number of time steps",
+                      action="store",
+                      type="int",
+                      dest="tCount",
+                      default="-1")
+
     (opts,args) = parser.parse_args()
 
-    gatherTimes(opts.size, opts.filebase)
+    gatherTimes(opts.size, opts.filebase,tCount = opts.tCount)
