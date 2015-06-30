@@ -628,7 +628,6 @@ class SimpleNavierStokes2D:
                                         stop=L_range[0]+neqns,
                                         step=3,
                                         dtype="i")
-        print "pressure",self.pressureDOF
         velocityDOF = []
         for start in range(1,3):
             velocityDOF.append(numpy.arange(start=L_range[0]+start,
@@ -636,7 +635,6 @@ class SimpleNavierStokes2D:
                                          step=3,
                                          dtype="i"))
         self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
-        print "velocity",self.velocityDOF
         self.pc = p4pyPETSc.PC().create()
         if prefix:
             self.pc.setOptionsPrefix(prefix)
@@ -659,13 +657,9 @@ class SimpleDarcyFC:
     def __init__(self,L):
         L_sizes = L.getSizes()
         L_range = L.getOwnershipRange()
-        print "L_sizes",L_sizes
         neqns = L_sizes[0][0]
-        print "neqns",neqns
         self.saturationDOF = numpy.arange(L_range[0],L_range[0]+neqns/2,dtype="i")
-        #print "saturation",self.saturationDOF
         self.pressureDOF = numpy.arange(L_range[0]+neqns/2,L_range[0]+neqns,dtype="i")
-        #print "pressure",self.pressureDOF
         self.pc = p4pyPETSc.PC().create()
         self.pc.setType('fieldsplit')
         self.isp = p4pyPETSc.IS()
