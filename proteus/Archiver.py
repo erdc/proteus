@@ -318,6 +318,7 @@ class AR_base:
         log("Done Gathering Archive Time Step")
     def sync(self):
         log("Syncing Archive",level=3)
+        memory()
         self.allGatherIncremental()
         self.clear_xml()
         if not self.useGlobalXMF:
@@ -347,6 +348,8 @@ class AR_base:
                 self.comm.barrier()
             else:
                 self.hdfFile.flush()
+        log("Done Syncing Archive",level=3)
+        log(memory("Syncing Archive"),level=4)
     def create_dataset_async(self,name,data):
         comm_world = self.comm.comm.tompi4py()
         metadata = comm_world.allgather((name,data.shape,data.dtype))
