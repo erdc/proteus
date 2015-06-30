@@ -211,27 +211,20 @@ class AR_base:
             self.xmlFileGlobal.truncate()
     def close(self):
         log("Closing Archive")
-        self.clear_xml()
         if not self.useGlobalXMF:
-            if not self.readOnly:
-                self.xmlFile.write(self.xmlHeader)
-                indentXML(self.tree.getroot())
-                self.tree.write(self.xmlFile)
-                self.xmlFile.close()
+            self.xmlFile.close()
         if self.comm.isMaster():
-            if not self.readOnly:
-                self.xmlFileGlobal.write(self.xmlHeader)
-                indentXML(self.treeGlobal.getroot())
-                self.treeGlobal.write(self.xmlFileGlobal)
-                self.xmlFileGlobal.close()
+            self.xmlFileGlobal.close()
         if self.hdfFile != None:
             self.hdfFile.close()
         log("Done Closing Archive")
         try:
-            if self.gatherAtClose:
-                self.allGather()
+            if not self.useGlobalXMF:
+                if self.gatherAtClose:
+                    self.allGather()
         except:
             pass
+        #cek todo add gatherTimes
     def allGather(self):
         log("Gathering Archive")
         self.comm.barrier()
