@@ -68,7 +68,7 @@ class AR_base:
         if hotStart:
             if useGlobalXMF:
                 xmlFile_old=open(os.path.join(self.dataDir,
-                                              filename+"_all"+str(self.size)+".xmf"),
+                                              filename+".xmf"),
                                  "r")
             else:
                 xmlFile_old=open(os.path.join(self.dataDir,
@@ -77,7 +77,7 @@ class AR_base:
             self.tree=ElementTree(file=xmlFile_old)
             if self.comm.isMaster():
                 self.xmlFileGlobal = open(os.path.join(self.dataDir,
-                                                       filename+"_all"+str(self.size)+".xmf"),
+                                                       filename+".xmf"),
                                           "a")
                 self.treeGlobal=copy.deepcopy(self.tree)
             if not useGlobalXMF:
@@ -110,7 +110,7 @@ class AR_base:
         elif readOnly:
             if useGlobalXMF:
                 self.xmlFile=open(os.path.join(self.dataDir,
-                                               filename+"_all"+str(self.size)+".xmf"),
+                                               filename+".xmf"),
                                   "r")
             else:
                 self.xmlFile=open(os.path.join(self.dataDir,
@@ -168,7 +168,7 @@ class AR_base:
             if self.comm.isMaster():
                 self.xmlFileGlobal=open(
                     os.path.join(self.dataDir,
-                                 filename+"_all"+str(self.size)+".xmf"),
+                                 filename+".xmf"),
                     "w")
                 self.treeGlobal=ElementTree(
                     Element("Xdmf",
@@ -202,6 +202,27 @@ class AR_base:
                 self.dataItemFormat="XML"
         #
         self.gatherAtClose = gatherAtClose
+    def gatherAndWriteTimes(self):
+        """
+        Pull all the time steps into the global tree and write
+        """
+        XDMF = self.treeGlobal.getroot()
+        Domain = XDMF[0]
+        for TemporalGridCollection in Domain:
+            for i in range(self.n_datasets):
+                dataset_name = TemporalGridCollection.attrib['Name']+"_"+`i`
+                dataset_name = dataset_name.replace(" ","_")
+                grid_array = self.hdfFile["/"+dataset_name]
+                SpatialCollection=SubElement(TemporalGridCollection,"Grid",{"GridType":"Collection",
+                                                                            "CollectionType":"Spatial"})
+                time = SubElement(SpatialCollection,"Time",{"Value":grid_array.attrs['Time'],"Name":str(i)})
+                for j in range(self.comm.size()):
+                    Grid = fromstring(grid_array[j])
+                    SpatialCollection.append(Grid)
+        self.clear_xml()
+        self.xmlFileGlobal.write(self.xmlHeader)
+        indentXML(self.treeGlobal.getroot())
+        self.treeGlobal.write(self.xmlFileGlobal)
     def clear_xml(self):
         if not self.useGlobalXMF:
             self.xmlFile.seek(0)
@@ -214,6 +235,7 @@ class AR_base:
         if not self.useGlobalXMF:
             self.xmlFile.close()
         if self.comm.isMaster():
+            self.gatherAndWriteTimes()
             self.xmlFileGlobal.close()
         if self.hdfFile != None:
             self.hdfFile.close()
@@ -224,7 +246,6 @@ class AR_base:
                     self.allGather()
         except:
             pass
-        #cek todo add gatherTimes
     def allGather(self):
         log("Gathering Archive")
         self.comm.barrier()
@@ -252,7 +273,7 @@ class AR_base:
                         del Grid[0]#Time
                         Grid_all.append(Grid)
                 xmlFile.close()
-            f = open(os.path.join(self.dataDir,self.filename+"_all"+str(self.size)+".xmf"),"w")
+            f = open(os.path.join(self.dataDir,self.filename+".xmf"),"w")
             indentXML(self.tree.getroot())
             self.tree.write(f)
             f.close()
