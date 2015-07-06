@@ -8,6 +8,7 @@ import os
 from xml.etree.ElementTree import *
 
 log = Profiling.logEvent
+memory = Profiling.memory
 
 def indentXML(elem, level=0):
     i = "\n" + level*"  "
@@ -31,8 +32,15 @@ class ArchiveFlags:
     UNDEFINED            =-1
 #
 class AR_base:
-    def __init__(self,dataDir,filename,useTextArchive=False,gatherAtClose=True,hotStart=False,readOnly=False):
+    def __init__(self,dataDir,filename,
+                 useTextArchive=False,
+                 gatherAtClose=True,
+                 useGlobalXMF=True,
+                 hotStart=False,
+                 readOnly=False):
         import os.path
+        import copy
+        self.useGlobalXMF=useGlobalXMF
         comm=Comm.get()
         self.comm=comm
         self.dataDir=dataDir
@@ -42,9 +50,15 @@ class AR_base:
         self.rank = comm.rank()
         self.size = comm.size()
         self.readOnly = readOnly
+        self.n_datasets = 0
         import datetime
-        self.comm.beginSequential()
         #filename += datetime.datetime.now().isoformat()
+        try:
+            import h5py
+            self.has_h5py=True
+            comm_world = self.comm.comm.tompi4py()
+        except:
+            self.has_h5py=False
         try:
             import tables
             self.hasTables=True
@@ -52,13 +66,35 @@ class AR_base:
             self.hasTables=False
         self.xmlHeader = "<?xml version=\"1.0\" ?>\n<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []>\n"
         if hotStart:
-            xmlFile_old=open(os.path.join(self.dataDir,filename+str(self.rank)+".xmf"),"r")
+            if useGlobalXMF:
+                xmlFile_old=open(os.path.join(self.dataDir,
+                                              filename+".xmf"),
+                                 "r")
+            else:
+                xmlFile_old=open(os.path.join(self.dataDir,
+                                              filename+str(self.rank)+".xmf"),
+                                 "r")
             self.tree=ElementTree(file=xmlFile_old)
-            xmlFile_old.close()
-            self.xmlFile=open(os.path.join(self.dataDir,filename+str(self.rank)+".xmf"),"a")
-            if self.hasTables and not useTextArchive:
+            if self.comm.isMaster():
+                self.xmlFileGlobal = open(os.path.join(self.dataDir,
+                                                       filename+".xmf"),
+                                          "a")
+                self.treeGlobal=copy.deepcopy(self.tree)
+            if not useGlobalXMF:
+                self.xmlFile=open(os.path.join(self.dataDir,
+                                               filename+str(self.rank)+".xmf"),
+                                  "a")
+            if self.has_h5py and not useTextArchive:
+                self.hdfFilename=filename+".h5"
+                self.hdfFile=h5py.File(self.hdfFilename,
+                                       "a",
+                                       driver="mpio",
+                                       comm = comm_world)
+                self.dataItemFormat="HDF"
+            elif self.hasTables and not useTextArchive:
                 self.hdfFilename=filename+str(self.rank)+".h5"
-                self.hdfFile=tables.openFile(os.path.join(self.dataDir,self.hdfFilename),
+                self.hdfFile=tables.openFile(os.path.join(self.dataDir,
+                                                          self.hdfFilename),
                                              mode = "a",
                                              title = filename+" Data")
                 self.dataItemFormat="HDF"
@@ -72,16 +108,43 @@ class AR_base:
                 self.hdfFile=None
                 self.dataItemFormat="XML"
         elif readOnly:
-            self.xmlFile=open(os.path.join(self.dataDir,filename+str(self.rank)+".xmf"),"r")
+            if useGlobalXMF:
+                self.xmlFile=open(os.path.join(self.dataDir,
+                                               filename+".xmf"),
+                                  "r")
+            else:
+                self.xmlFile=open(os.path.join(self.dataDir,
+                                               filename+str(self.rank)+".xmf"),
+                                  "r")
             self.tree=ElementTree(file=self.xmlFile)
-            if self.hasTables and not useTextArchive:
+            if self.has_h5py and not useTextArchive:
+                self.hdfFilename=filename+".h5"
+                self.hdfFile=h5py.File(os.path.join(self.dataDir,
+                                                    self.hdfFilename),
+                                       "r",
+                                       driver = 'mpio',
+                                       comm = comm_world)
+                try:
+                    # The "global" extension is hardcoded in collect.py
+                    self.hdfFileGlb=h5py.File(
+                        os.path.join(self.dataDir,
+                                     filename+"global.h5"),
+                        "r",
+                        driver = 'mpio',
+                        comm = comm_world)
+                except:
+                    pass
+                self.dataItemFormat="HDF"
+            elif self.hasTables and not useTextArchive:
                 self.hdfFilename=filename+str(self.rank)+".h5"
-                self.hdfFile=tables.openFile(os.path.join(self.dataDir,self.hdfFilename),
+                self.hdfFile=tables.openFile(os.path.join(self.dataDir,
+                                                          self.hdfFilename),
                                              mode = "r",
                                              title = filename+" Data")
                 try:
                     # The "global" extension is hardcoded in collect.py
-                    self.hdfFileGlb=tables.openFile(os.path.join(self.dataDir,filename+"global.h5"),
+                    self.hdfFileGlb=tables.openFile(os.path.join(self.dataDir,
+                                                                 filename+"global.h5"),
                                                     mode = "r",
                                                     title = filename+" Data")
                 except:
@@ -93,13 +156,38 @@ class AR_base:
                 self.hdfFile=None
                 self.dataItemFormat="XML"
         else:
-            self.xmlFile=open(os.path.join(self.dataDir,filename+str(self.rank)+".xmf"),"w")
-            self.tree=ElementTree(Element("Xdmf",
-                                          {"Version":"2.0",
-                                           "xmlns:xi":"http://www.w3.org/2001/XInclude"}))
-            if self.hasTables and not useTextArchive:
+            if not self.useGlobalXMF:
+                self.xmlFile=open(os.path.join(self.dataDir,
+                                               filename+str(self.rank)+".xmf"),
+                                  "w")
+            self.tree=ElementTree(
+                Element("Xdmf",
+                        {"Version":"2.0",
+                         "xmlns:xi":"http://www.w3.org/2001/XInclude"})
+            )
+            if self.comm.isMaster():
+                self.xmlFileGlobal=open(
+                    os.path.join(self.dataDir,
+                                 filename+".xmf"),
+                    "w")
+                self.treeGlobal=ElementTree(
+                    Element("Xdmf",
+                            {"Version":"2.0",
+                             "xmlns:xi":"http://www.w3.org/2001/XInclude"})
+                )
+            if self.has_h5py and not useTextArchive:
+                self.hdfFilename=filename+".h5"
+                self.hdfFile=h5py.File(os.path.join(self.dataDir,
+                                                    self.hdfFilename),
+                                       "w",
+                                       driver = 'mpio',
+                                       comm = comm_world)
+                self.dataItemFormat="HDF"
+                self.comm.barrier()
+            elif self.hasTables and not useTextArchive:
                 self.hdfFilename=filename+str(self.rank)+".h5"
-                self.hdfFile=tables.openFile(os.path.join(self.dataDir,self.hdfFilename),
+                self.hdfFile=tables.openFile(os.path.join(self.dataDir,
+                                                          self.hdfFilename),
                                              mode = "w",
                                              title = filename+" Data")
                 self.dataItemFormat="HDF"
@@ -113,27 +201,49 @@ class AR_base:
                 self.hdfFile=None
                 self.dataItemFormat="XML"
         #
-        self.comm.endSequential()
         self.gatherAtClose = gatherAtClose
+    def gatherAndWriteTimes(self):
+        """
+        Pull all the time steps into the global tree and write
+        """
+        XDMF = self.treeGlobal.getroot()
+        Domain = XDMF[0]
+        for TemporalGridCollection in Domain:
+            for i in range(self.n_datasets):
+                dataset_name = TemporalGridCollection.attrib['Name']+"_"+`i`
+                dataset_name = dataset_name.replace(" ","_")
+                grid_array = self.hdfFile["/"+dataset_name]
+                SpatialCollection=SubElement(TemporalGridCollection,"Grid",{"GridType":"Collection",
+                                                                            "CollectionType":"Spatial"})
+                time = SubElement(SpatialCollection,"Time",{"Value":grid_array.attrs['Time'],"Name":str(i)})
+                for j in range(self.comm.size()):
+                    Grid = fromstring(grid_array[j])
+                    SpatialCollection.append(Grid)
+        self.clear_xml()
+        self.xmlFileGlobal.write(self.xmlHeader)
+        indentXML(self.treeGlobal.getroot())
+        self.treeGlobal.write(self.xmlFileGlobal)
     def clear_xml(self):
-        self.xmlFile.seek(0)
-        self.xmlFile.truncate()
+        if not self.useGlobalXMF:
+            self.xmlFile.seek(0)
+            self.xmlFile.truncate()
+        if self.comm.isMaster():
+            self.xmlFileGlobal.seek(0)
+            self.xmlFileGlobal.truncate()
     def close(self):
         log("Closing Archive")
-        if not self.readOnly:
-            self.clear_xml()
-            self.xmlFile.write(self.xmlHeader)
-        indentXML(self.tree.getroot())
-        if not self.readOnly:
-            self.tree.write(self.xmlFile)
-        self.xmlFile.close()
+        if not self.useGlobalXMF:
+            self.xmlFile.close()
+        if self.comm.isMaster():
+            self.gatherAndWriteTimes()
+            self.xmlFileGlobal.close()
         if self.hdfFile != None:
             self.hdfFile.close()
-        self.comm.barrier()
         log("Done Closing Archive")
         try:
-            if self.gatherAtClose:
-                self.allGather()
+            if not self.useGlobalXMF:
+                if self.gatherAtClose:
+                    self.allGather()
         except:
             pass
     def allGather(self):
@@ -163,20 +273,106 @@ class AR_base:
                         del Grid[0]#Time
                         Grid_all.append(Grid)
                 xmlFile.close()
-            f = open(os.path.join(self.dataDir,self.filename+"_all"+str(self.size)+".xmf"),"w")
+            f = open(os.path.join(self.dataDir,self.filename+".xmf"),"w")
             indentXML(self.tree.getroot())
             self.tree.write(f)
             f.close()
         log("Done Gathering Archive")
+    def allGatherIncremental(self):
+        import copy
+        from mpi4py import MPI
+        log("Gathering Archive Time step")
+        self.comm.barrier()
+        XDMF =self.tree.getroot()
+        Domain =XDMF[-1]
+        #initialize Domain and grid collections on master if necessary
+        if self.comm.isMaster():
+            XDMFGlobal =self.treeGlobal.getroot()
+            if len(XDMFGlobal) == 0:
+                XDMFGlobal.append(copy.deepcopy(Domain))
+                DomainGlobal = XDMFGlobal[-1]
+                #delete any actual grids in the temporal  collections
+                for TemporalGridCollectionGlobal in DomainGlobal:
+                    del TemporalGridCollectionGlobal[:]
+            else:
+                DomainGlobal = XDMFGlobal[-1]
+        #gather the latest grids in each collection onto master
+        comm_world = self.comm.comm.tompi4py()
+        for i, TemporalGridCollection in enumerate(Domain):
+            GridLocal = TemporalGridCollection[-1]
+            TimeAttrib = GridLocal[0].attrib['Value']
+            Grids = comm_world.gather(GridLocal)
+            max_grid_string_len = 0
+            if self.comm.isMaster():
+                TemporalGridCollectionGlobal = DomainGlobal[i]
+                SpatialCollection=SubElement(TemporalGridCollectionGlobal,"Grid",{"GridType":"Collection",
+                                                                                  "CollectionType":"Spatial"})
+                SpatialCollection.append(GridLocal[0])#append Time in Spatial Collection
+                for Grid in Grids:
+                    del Grid[0]#Time
+                    SpatialCollection.append(Grid) #append Grid without Time
+                    element_string = tostring(Grid)
+                    max_grid_string_len = max(len(element_string),
+                                              max_grid_string_len)
+            max_grid_string_len_array = numpy.array(max_grid_string_len,'i')
+            comm_world.Bcast([max_grid_string_len_array,MPI.INT], root=0)
+            max_grid_string_len = int(max_grid_string_len_array)
+            if self.has_h5py:
+                dataset_name = TemporalGridCollection.attrib['Name']+"_"+ \
+                               `self.n_datasets`
+                dataset_name = dataset_name.replace(" ","_")
+                xml_data  = self.hdfFile.create_dataset(name  = dataset_name,
+                                                        shape = (self.comm.size(),),
+                                                        dtype = '|S'+`max_grid_string_len`)
+                xml_data.attrs['Time'] = TimeAttrib
+                if self.comm.isMaster():
+                    for j, Grid in enumerate(Grids):
+                        xml_data[j] = tostring(Grid)
+        self.n_datasets += 1
+        log("Done Gathering Archive Time Step")
     def sync(self):
         log("Syncing Archive",level=3)
+        memory()
+        self.allGatherIncremental()
         self.clear_xml()
-        self.xmlFile.write(self.xmlHeader)
-        indentXML(self.tree.getroot())
-        self.tree.write(self.xmlFile)
-        self.xmlFile.flush()
+        if not self.useGlobalXMF:
+            self.xmlFile.write(self.xmlHeader)
+            indentXML(self.tree.getroot())
+            self.tree.write(self.xmlFile)
+            self.xmlFile.flush()
+        #delete grids for step from tree
+        XDMF =self.tree.getroot()
+        Domain = XDMF[-1]
+        for TemporalGridCollection in Domain:
+            del TemporalGridCollection[:]
+        if self.comm.isMaster():
+            self.xmlFileGlobal.write(self.xmlHeader)
+            indentXML(self.treeGlobal.getroot())
+            self.treeGlobal.write(self.xmlFileGlobal)
+            self.xmlFileGlobal.flush()
+            #delete grids for step from tree
+            XDMF = self.treeGlobal.getroot()
+            Domain = XDMF[-1]
+            for TemporalGridCollection in Domain:
+                del TemporalGridCollection[:]
         if self.hdfFile != None:
-            self.hdfFile.flush()
+            if self.has_h5py:
+                self.comm.barrier()
+                self.hdfFile.flush()
+                self.comm.barrier()
+            else:
+                self.hdfFile.flush()
+        log("Done Syncing Archive",level=3)
+        log(memory("Syncing Archive"),level=4)
+    def create_dataset_async(self,name,data):
+        comm_world = self.comm.comm.tompi4py()
+        metadata = comm_world.allgather((name,data.shape,data.dtype))
+        for i,m in enumerate(metadata):
+            dataset = self.hdfFile.create_dataset(name  = m[0],
+                                                  shape = m[1],
+                                                  dtype = m[2])
+            if i == self.comm.rank():
+                dataset[:] = data
 
 XdmfArchive=AR_base
 
@@ -319,7 +515,7 @@ class XdmfWriter:
             Xdmf_NodesGlobal     = Xdmf_NumberOfElements*Xdmf_NodesPerElement
 
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(Xdmf_NumberOfElements),
@@ -335,8 +531,12 @@ class XdmfWriter:
                                       "Precision":"8",
                                       "Dimensions":"%i %i" % (Xdmf_NodesGlobal,3)})
             if ar.hdfFile != None:
-                elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
-                nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
+                if ar.has_h5py:
+                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                else:
+                    elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
                 if init or meshChanged:
                     #this will fail if elements_dgp1 already exists
                     #q_l2g = numpy.zeros((Xdmf_NumberOfElements,Xdmf_NodesPerElement),'i')
@@ -346,8 +546,12 @@ class XdmfWriter:
                     #        q_l2g[eN,nN] = eN*Xdmf_NodesPerElement + nN
                     #
                     q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
-                    ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,q_l2g)
-                    ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,x.flat[:])
+                    if ar.has_h5py:
+                        ar.create_dataset_async('elements'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = q_l2g)
+                        ar.create_dataset_async('nodes'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = x.flat[:])
+                    else:
+                        ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,q_l2g)
+                        ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,x.flat[:])
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt"})
@@ -380,8 +584,12 @@ class XdmfWriter:
                                 "Precision":"8",
                                 "Dimensions":"%i" % (Xdmf_NodesGlobal,)})
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+name+str(tCount)
-            ar.hdfFile.createArray("/",name+str(tCount),u.flat[:])
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.flat[:])
+            else:
+                values.text = ar.hdfFilename+":/"+name+str(tCount)
+                ar.hdfFile.createArray("/",name+str(tCount),u.flat[:])
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",u.flat[:])
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
@@ -404,8 +612,12 @@ class XdmfWriter:
         tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(u.flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
 
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+name+str(tCount)
-            ar.hdfFile.createArray("/",name+str(tCount),tmp)
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = tmp)
+            else:
+                values.text = ar.hdfFilename+":/"+name+str(tCount)
+                ar.hdfFile.createArray("/",name+str(tCount),tmp)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",tmp)
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
@@ -434,8 +646,12 @@ class XdmfWriter:
                     tmp.flat[k*9 + i*3 + j]=u.flat[k*Xdmf_NumberOfComponents + i*u.shape[2] + j]
 
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+name+str(tCount)
-            ar.hdfFile.createArray("/",name+str(tCount),tmp)
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = tmp)
+            else:
+                values.text = ar.hdfFilename+":/"+name+str(tCount)
+                ar.hdfFile.createArray("/",name+str(tCount),tmp)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",tmp)
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
@@ -462,7 +678,7 @@ class XdmfWriter:
             elif spaceDim == 3:
                 Xdmf_ElementTopology = "Tetrahedron"
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(mesh.nElements_global)})
@@ -477,18 +693,28 @@ class XdmfWriter:
                                       "Precision":"8",
                                       "Dimensions":"%i %i" % (dofMap.nDOF,3)})
             if ar.hdfFile != None:
-                elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
-                nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
+                if ar.has_h5py:
+                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                else:
+                    elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
                 if init or meshChanged:
                     #this will fail if elements_dgp1 already exists
-                    ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,dofMap.l2g)
+                    if ar.has_h5py:
+                        ar.create_dataset_async('elements'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = dofMap.l2g)
+                    else:
+                        ar.hdfFile.createArray("/",'elements'+`ar.comm.rank()`+spaceSuffix+`tCount`,dofMap.l2g)
                     #bad
                     dgnodes = numpy.zeros((dofMap.nDOF,3),'d')
                     for eN in range(mesh.nElements_global):
                         for nN in range(mesh.nNodes_element):
                             dgnodes[dofMap.l2g[eN,nN],:]=mesh.nodeArray[mesh.elementNodesArray[eN,nN]]
                     #make more pythonic loop
-                    ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,dgnodes)
+                    if ar.has_h5py:
+                        ar.create_dataset_async('nodes'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = dgnodes)
+                    else:
+                        ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,dgnodes)
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt"})
@@ -527,7 +753,7 @@ class XdmfWriter:
             elif spaceDim == 3:
                 Xdmf_ElementTopology = "Tet_10"
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(mesh.nElements_global)})
@@ -543,11 +769,18 @@ class XdmfWriter:
                                       "Precision":"8",
                                       "Dimensions":"%i %i" % (dofMap.nDOF,3)})
             if ar.hdfFile != None:
-                elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
-                nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
+                if ar.has_h5py:
+                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                else:
+                    elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
                 if init or meshChanged:
                     #this will fail if elements_dgp1 already exists
-                    ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,dofMap.l2g)
+                    if ar.has_h5py:
+                        ar.create_dataset_async('elements'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = dofMap.l2g)
+                    else:
+                        ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,dofMap.l2g)
                     #bad
                     dgnodes = numpy.zeros((dofMap.nDOF,3),'d')
                     for eN in range(mesh.nElements_global):
@@ -561,7 +794,10 @@ class XdmfWriter:
                         #    dgnodes[dofMap.l2g[eN,nN],:]= CGDOFMap.lagrangeNodesArray[CGDOFMap.l2g[eN,nN]-mesh.nNodes_global,:]
 
                     #make more pythonic loop
-                    ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,dgnodes)
+                    if ar.has_h5py:
+                        ar.create_dataset_async('nodes'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = dgnodes)
+                    else:
+                        ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,dgnodes)
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt"})
@@ -603,7 +839,7 @@ class XdmfWriter:
             elif spaceDim == 3:
                 Xdmf_ElementTopology = "Tet_10"
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             lagrangeNodesArray = dofMap.lagrangeNodesArray
             topology = SubElement(self.arGrid,"Topology",
                                   {"Type":Xdmf_ElementTopology,
@@ -637,9 +873,15 @@ class XdmfWriter:
                                                "Precision":"8",
                                                "Dimensions":"%i %i" % lagrangeNodesArray.shape})
             if ar.hdfFile != None:
-                elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
+                if ar.has_h5py:
+                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                else:
+                    elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
                 if concatNow:
-                    allNodes.text = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
+                    if ar.has_h5py:
+                        allNodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                    else:
+                        allNodes.text = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
                     import copy
                     if spaceDim == 3:#
                         #mwf 10/19/09 orig no longer works because of changes in orderings for
@@ -656,14 +898,20 @@ class XdmfWriter:
                     else:
                         elements=dofMap.l2g
                     if init or meshChanged:
-                        ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,elements)
+                        if ar.has_h5py:
+                            ar.create_dataset_async('elements'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = elements)
+                        else:
+                            ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,elements)
                         #print "element nodes",elements
                         #mwf orig ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,numpy.concatenate((mesh.nodeArray,lagrangeNodesArray)))
                         #ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,numpy.concatenate((mesh.nodeArray.flat[:3*mesh.nNodes_owned],
                         #                                                                           lagrangeNodesArray.flat[:3*mesh.nElements_owned],
                         #                                                                           mesh.nodeArray.flat[3*mesh.nNodes_owned:3*mesh.nNodes_global],
                         #                                                                           lagrangeNodesArray.flat[3*mesh.nElements_owned:3*mesh.nElements_global])))
-                        ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,lagrangeNodesArray)
+                        if ar.has_h5py:
+                            ar.create_dataset_async('nodes'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = lagrangeNodesArray)
+                        else:
+                            ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,lagrangeNodesArray)
                         #mwf debug
                         #print "nodes ",numpy.concatenate((mesh.nodeArray,lagrangeNodesArray))
                         #print "nodes ",numpy.concatenate((mesh.nodeArray.flat[:3*mesh.nNodes_owned],
@@ -671,12 +919,20 @@ class XdmfWriter:
                         #                                  mesh.nodeArray.flat[3*mesh.nNodes_owned:3*mesh.nNodes_global],
                         #                                  lagrangeNodesArray.flat[3*mesh.nElements_owned:3*mesh.nElements_global]))
                 else:
-                    nodes.text = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
-                    lagrangeNodes.text = ar.hdfFilename+":/lagrangeNodes"+spaceSuffix+`tCount`
-                    if init or meshChanged:
-                        ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,dofMap.l2g)
-                        #ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,mesh.nodeArray)
-                        ar.hdfFile.createArray("/",'lagrangeNodes'+spaceSuffix+`tCount`,lagrangeNodesArray)
+                    if ar.has_h5py:
+                        nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                        lagrangeNodes.text = ar.hdfFilename+":/lagrangeNodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                        if init or meshChanged:
+                            ar.create_dataset_async('elements'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = dofMap.l2g)
+                            #ar.create_dataset_async('nodes'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = mesh.nodeArray)
+                            ar.create_dataset_async('lagrangeNodes'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = lagrangeNodesArray)
+                    else:
+                        nodes.text = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
+                        lagrangeNodes.text = ar.hdfFilename+":/lagrangeNodes"+spaceSuffix+`tCount`
+                        if init or meshChanged:
+                            ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,dofMap.l2g)
+                            #ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,mesh.nodeArray)
+                            ar.hdfFile.createArray("/",'lagrangeNodes'+spaceSuffix+`tCount`,lagrangeNodesArray)
 
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt"})
@@ -728,7 +984,7 @@ class XdmfWriter:
                             l2g[8*eN+i,j] = dofs[e2s[i][j]]
 
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
 
             lagrangeNodesArray = dofMap.lagrangeNodesArray
 
@@ -767,19 +1023,31 @@ class XdmfWriter:
                                                "Dimensions":"%i %i" % lagrangeNodesArray.shape})
 
             if ar.hdfFile != None:
-                elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
+                if ar.has_h5py:
+                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                else:
+                    elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
                 if concatNow:
-                    allNodes.text = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
+                    if ar.has_h5py:
+                        allNodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                    else:
+                        allNodes.text = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
                     import copy
                     if init or meshChanged:
-                        ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,l2g)
+                        if ar.has_h5py:
+                            ar.create_dataset_async('elements'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = l2g)
+                        else:
+                            ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,l2g)
                         #print "element nodes",elements
                         #mwf orig ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,numpy.concatenate((mesh.nodeArray,lagrangeNodesArray)))
                         #ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,numpy.concatenate((mesh.nodeArray.flat[:3*mesh.nNodes_owned],
                         #                                                                           lagrangeNodesArray.flat[:3*mesh.nElements_owned],
                         #                                                                           mesh.nodeArray.flat[3*mesh.nNodes_owned:3*mesh.nNodes_global],
                         #                                                                           lagrangeNodesArray.flat[3*mesh.nElements_owned:3*mesh.nElements_global])))
-                        ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,lagrangeNodesArray)
+                        if ar.has_h5py:
+                            ar.create_dataset_async('nodes'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = lagrangeNodesArray)
+                        else:
+                            ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,lagrangeNodesArray)
                         #mwf debug
                         #print "nodes ",numpy.concatenate((mesh.nodeArray,lagrangeNodesArray))
                         #print "nodes ",numpy.concatenate((mesh.nodeArray.flat[:3*mesh.nNodes_owned],
@@ -787,13 +1055,21 @@ class XdmfWriter:
                         #                                  mesh.nodeArray.flat[3*mesh.nNodes_owned:3*mesh.nNodes_global],
                         #                                  lagrangeNodesArray.flat[3*mesh.nElements_owned:3*mesh.nElements_global]))
                 else:
-                    nodes.text = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
-                    lagrangeNodes.text = ar.hdfFilename+":/lagrangeNodes"+spaceSuffix+`tCount`
+                    if ar.has_h5py:
+                        nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                        lagrangeNodes.text = ar.hdfFilename+":/lagrangeNodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                    else:
+                        nodes.text = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
+                        lagrangeNodes.text = ar.hdfFilename+":/lagrangeNodes"+spaceSuffix+`tCount`
                     if init or meshChanged:
-                        ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,l2g)
-                        #ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,mesh.nodeArray)
-                        ar.hdfFile.createArray("/",'lagrangeNodes'+spaceSuffix+`tCount`,lagrangeNodesArray)
-
+                        if ar.has_h5py:
+                            ar.create_dataset_async('elements'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = l2g)
+                            #ar.create_dataset_async('nodes'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = mesh.nodeArray)
+                            ar.create_dataset_async('lagrangeNodes'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = lagrangeNodesArray)
+                        else:
+                            ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,l2g)
+                            #ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,mesh.nodeArray)
+                            ar.hdfFile.createArray("/",'lagrangeNodes'+spaceSuffix+`tCount`,lagrangeNodesArray)
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt"})
                 if concatNow:
@@ -841,7 +1117,7 @@ class XdmfWriter:
             Xdmf_NodesPerElement = spaceDim+1
             Xdmf_NumberOfElements= mesh.nElements_global
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(Xdmf_NumberOfElements)})
@@ -855,15 +1131,25 @@ class XdmfWriter:
                                       "DataType":"Float",
                                       "Dimensions":"%i %i" % (Xdmf_NumberOfElements*Xdmf_NodesPerElement,3)})
             if ar.hdfFile != None:
-                elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
-                nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
+                if ar.has_h5py:
+                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                else:
+                    elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
                 if init or meshChanged:
                     #simple dg l2g mapping
                     dg_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
-                    ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,dg_l2g)
+                    if ar.has_h5py:
+                        ar.create_dataset_async('elements'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = dg_l2g)
+                    else:
+                        ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,dg_l2g)
 
                     dgnodes = numpy.reshape(mesh.nodeArray[mesh.elementNodesArray],(Xdmf_NumberOfElements*Xdmf_NodesPerElement,3))
-                    ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,dgnodes)
+                    if ar.has_h5py:
+                        ar.create_dataset_async('nodes'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = dgnodes)
+                    else:
+                        ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,dgnodes)
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt"})
@@ -889,8 +1175,12 @@ class XdmfWriter:
                                 "Precision":"8",
                                 "Dimensions":"%i" % (u.nDOF_global,)})
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+u.name+str(tCount)
-            ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
+            else:
+                values.text = ar.hdfFilename+":/"+u.name+str(tCount)
+                ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
         else:
             numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"})
@@ -905,8 +1195,12 @@ class XdmfWriter:
                                 "Precision":"8",
                                 "Dimensions":"%i" % (u.nDOF_global,)})
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+u.name+str(tCount)
-            ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+u.name+str(tCount)
+                ar.create_dataset_async(u.name+str(tCount), data = u.dof)
+            else:
+                values.text = ar.hdfFilename+":/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.hdfFile.createArray("/",u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount),u.dof)
         else:
             numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"})
@@ -951,8 +1245,12 @@ class XdmfWriter:
 
 
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+name+str(tCount)
-            ar.hdfFile.createArray("/",name+str(tCount),u_tmp)
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u_tmp)
+            else:
+                values.text = ar.hdfFilename+":/"+name+str(tCount)
+                ar.hdfFile.createArray("/",name+str(tCount),u_tmp)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",u_tmp)
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
@@ -969,8 +1267,12 @@ class XdmfWriter:
                                 "DataType":"Float",
                                 "Dimensions":"%i" % (u.nDOF_global,)})
         if ar.hdfFile != None:
-            values_dof.text = ar.hdfFilename+":/"+name+"_dof"+str(tCount)
-            ar.hdfFile.createArray("/",name+"_dof"+str(tCount),u.dof)
+            if ar.has_h5py:
+                values_dof.text = ar.hdfFilename+":/"+name+"_dof"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(name+"_dof"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
+            else:
+                values_dof.text = ar.hdfFilename+":/"+name+"_dof"+str(tCount)
+                ar.hdfFile.createArray("/",name+"_dof"+str(tCount),u.dof)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+"_dof"+str(tCount)+".txt",u.dof)
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+"_dof"+str(tCount)+".txt"})
@@ -997,8 +1299,12 @@ class XdmfWriter:
                 w_dof = uList[components[2]].dof
             velocity = numpy.column_stack((u_dof,v_dof,w_dof))
             if ar.hdfFile != None:
-                values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
-                ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
+                if ar.has_h5py:
+                    values.text = ar.hdfFilename+":/"+vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                    ar.create_dataset_async(vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = velocity)
+                else:
+                    values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
+                    ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
         else:
             attribute = SubElement(self.arGrid,"Attribute",{"Name":vectorName,
                                                             "AttributeType":"Vector",
@@ -1042,7 +1348,7 @@ class XdmfWriter:
             Xdmf_NodesGlobal     = Xdmf_NumberOfElements*Xdmf_NodesPerElement
 
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(Xdmf_NumberOfElements),
@@ -1058,12 +1364,20 @@ class XdmfWriter:
                                       "Precision":"8",
                                       "Dimensions":"%i %i" % (Xdmf_NodesGlobal,3)})
             if ar.hdfFile != None:
-                elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
-                nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
-                if init or meshChanged:
-                    q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
-                    ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,q_l2g)
-                    ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,interpolationPoints.flat[:])
+                if ar.has_h5py:
+                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                    if init or meshChanged:
+                        q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
+                        ar.create_dataset_async('elements'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = q_l2g)
+                        ar.create_dataset_async('nodes'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = interpolationPoints.flat[:])
+                else:
+                    elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
+                    if init or meshChanged:
+                        q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
+                        ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,q_l2g)
+                        ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,interpolationPoints.flat[:])
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt"})
@@ -1093,8 +1407,12 @@ class XdmfWriter:
                                 "Precision":"8",
                                 "Dimensions":"%i" % (Xdmf_NodesGlobal,)})
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+name+str(tCount)
-            ar.hdfFile.createArray("/",name+str(tCount),interpolationValues.flat[:])
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = interpolationValues.flat[:])
+            else:
+                values.text = ar.hdfFilename+":/"+name+str(tCount)
+                ar.hdfFile.createArray("/",name+str(tCount),interpolationValues.flat[:])
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",interpolationValues.flat[:])
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
@@ -1120,8 +1438,12 @@ class XdmfWriter:
         tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(interpolationValues.flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
 
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+name+str(tCount)
-            ar.hdfFile.createArray("/",name+str(tCount),tmp)
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = tmp)
+            else:
+                values.text = ar.hdfFilename+":/"+name+str(tCount)
+                ar.hdfFile.createArray("/",name+str(tCount),tmp)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",tmp)
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
@@ -1153,7 +1475,7 @@ class XdmfWriter:
                 elif spaceDim == 3:
                     Xdmf_ElementTopology = "Tetrahedron"
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(mesh.nElements_global)})
@@ -1177,8 +1499,12 @@ class XdmfWriter:
                                       "Dimensions":"%i %i" % (mesh.nNodes_global,3)})
             #just reuse spatial mesh entries
             if ar.hdfFile != None:
-                elements.text = ar.hdfFilename+":/elements"+meshSpaceSuffix+`tCount`
-                nodes.text    = ar.hdfFilename+":/nodes"+meshSpaceSuffix+`tCount`
+                if ar.has_h5py:
+                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+meshSpaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+meshSpaceSuffix+`tCount`
+                else:
+                    elements.text = ar.hdfFilename+":/elements"+meshSpaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+meshSpaceSuffix+`tCount`
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+meshSpaceSuffix+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+meshSpaceSuffix+".txt"})
@@ -1197,8 +1523,12 @@ class XdmfWriter:
                                 "Precision":"8",
                                 "Dimensions":"%i" % (u.femSpace.elementMaps.mesh.nElements_global,)})
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+name+str(tCount)
-            ar.hdfFile.createArray("/",name+str(tCount),u.dof)
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
+            else:
+                values.text = ar.hdfFilename+":/"+name+str(tCount)
+                ar.hdfFile.createArray("/",name+str(tCount),u.dof)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",u.dof)
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
@@ -1225,8 +1555,12 @@ class XdmfWriter:
                 w_dof = uList[components[2]].dof
             velocity = numpy.column_stack((u_dof,v_dof,w_dof))
             if ar.hdfFile != None:
-                values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
-                ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
+                if ar.has_h5py:
+                    values.text = ar.hdfFilename+":/"+vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                    ar.create_dataset_async(vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = velocity)
+                else:
+                    values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
+                    ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
         else:
             attribute = SubElement(uList[components[0]].femSpace.elementMaps.mesh.arGrid,"Attribute",{"Name":vectorName,
                                                                  "AttributeType":"Vector",
@@ -1266,7 +1600,7 @@ class XdmfWriter:
             Xdmf_NumberOfElements= mesh.nElements_global
             Xdmf_NumberOfNodes   = mesh.nNodes_global
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(Xdmf_NumberOfElements)})
@@ -1281,12 +1615,20 @@ class XdmfWriter:
                                       "Precision":"8",
                                       "Dimensions":"%i %i" % (Xdmf_NumberOfNodes,3)})
             if ar.hdfFile != None:
-                elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
-                nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
-                if init or meshChanged:
-                    #c0p1 mapping for now
-                    ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,mesh.elementNodesArray)
-                    ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,mesh.nodeArray)
+                if ar.has_h5py:
+                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                    if init or meshChanged:
+                        #c0p1 mapping for now
+                        ar.create_dataset_async('elements'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = mesh.elementNodesArray)
+                        ar.create_dataset_async('nodes'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = mesh.nodeArray)
+                else:
+                    elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
+                    if init or meshChanged:
+                        #c0p1 mapping for now
+                        ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,mesh.elementNodesArray)
+                        ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,mesh.nodeArray)
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt"})
@@ -1315,8 +1657,12 @@ class XdmfWriter:
                                 "Precision":"8",
                                 "Dimensions":"%i" % (Xdmf_NumberOfNodes,)})
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+name+str(tCount)
-            ar.hdfFile.createArray("/",name+str(tCount),u.dof[0:Xdmf_NumberOfNodes])
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof[0:Xdmf_NumberOfNodes])
+            else:
+                values.text = ar.hdfFilename+":/"+name+str(tCount)
+                ar.hdfFile.createArray("/",name+str(tCount),u.dof[0:Xdmf_NumberOfNodes])
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",u.dof[0:Xdmf_NumberOfNodes])
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
@@ -1331,8 +1677,12 @@ class XdmfWriter:
                                 "Precision":"8",
                                 "Dimensions":"%i" % (u.nDOF_global,)})
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+u.name+str(tCount)
-            ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
+            else:
+                values.text = ar.hdfFilename+":/"+u.name+str(tCount)
+                ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
         else:
             numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"})
@@ -1359,8 +1709,12 @@ class XdmfWriter:
                 w_dof = uList[components[2]].dof[0:nDOF_global]
             velocity = numpy.column_stack((u_dof,v_dof,w_dof))
             if ar.hdfFile != None:
-                values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
-                ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
+                if ar.has_h5py:
+                    values.text = ar.hdfFilename+":/"+vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                    ar.create_dataset_async(vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = velocity)
+                else:
+                    values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
+                    ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
         else:
             attribute = SubElement(self.arGrid,"Attribute",{"Name":vectorName,
                                                             "AttributeType":"Vector",
@@ -1400,7 +1754,7 @@ class XdmfWriter:
             Xdmf_NodesGlobal     = nPoints
 
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(Xdmf_NumberOfElements),
@@ -1416,8 +1770,12 @@ class XdmfWriter:
                                       "Precision":"8",
                                       "Dimensions":"%i %i" % (Xdmf_NodesGlobal,3)})
             if ar.hdfFile != None:
-                elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
-                nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
+                if ar.has_h5py:
+                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                else:
+                    elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
                 if init or meshChanged:
                     #this will fail if elements_dgp1 already exists
                     #q_l2g = numpy.zeros((Xdmf_NumberOfElements,Xdmf_NodesPerElement),'i')
@@ -1427,8 +1785,12 @@ class XdmfWriter:
                     #        q_l2g[eN,nN] = eN*Xdmf_NodesPerElement + nN
                     #
                     q_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
-                    ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,q_l2g)
-                    ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,x.flat[:])
+                    if ar.has_h5py:
+                        ar.create_dataset_async('elements'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = q_l2g)
+                        ar.create_dataset_async('nodes'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = x.flat[:])
+                    else:
+                        ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,q_l2g)
+                        ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,x.flat[:])
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+spaceSuffix+`tCount`+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+spaceSuffix+`tCount`+".txt"})
@@ -1462,8 +1824,12 @@ class XdmfWriter:
                                 "Precision":"8",
                                 "Dimensions":"%i" % (Xdmf_NodesGlobal,)})
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+name+str(tCount)
-            ar.hdfFile.createArray("/",name+str(tCount),u.flat[:])
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.flat[:])
+            else:
+                values.text = ar.hdfFilename+":/"+name+str(tCount)
+                ar.hdfFile.createArray("/",name+str(tCount),u.flat[:])
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",u.flat[:])
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
@@ -1486,8 +1852,12 @@ class XdmfWriter:
         tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(u.flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
 
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+name+str(tCount)
-            ar.hdfFile.createArray("/",name+str(tCount),tmp)
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = tmp)
+            else:
+                values.text = ar.hdfFilename+":/"+name+str(tCount)
+                ar.hdfFile.createArray("/",name+str(tCount),tmp)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",tmp)
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
@@ -1509,7 +1879,7 @@ class XdmfWriter:
             Xdmf_NodesPerElement = spaceDim+1
             Xdmf_NumberOfElements= mesh.nElements_global
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology    = SubElement(self.arGrid,"Topology",
                                      {"Type":Xdmf_ElementTopology,
                                       "NumberOfElements":str(Xdmf_NumberOfElements)})
@@ -1523,12 +1893,23 @@ class XdmfWriter:
                                       "DataType":"Float",
                                       "Dimensions":"%i %i" % (Xdmf_NumberOfElements*Xdmf_NodesPerElement,3)})
             if ar.hdfFile != None:
-                elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
-                nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
-                if init or meshChanged:
-                    #simple dg l2g mapping
-                    dg_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
-                    ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,dg_l2g)
+                if ar.has_h5py:
+                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+spaceSuffix+`tCount`
+                    if init or meshChanged:
+                        #simple dg l2g mapping
+                        dg_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
+                        ar.create_dataset_async('elements'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = dg_l2g)
+
+                    dgnodes = numpy.reshape(mesh.nodeArray[mesh.elementNodesArray],(Xdmf_NumberOfElements*Xdmf_NodesPerElement,3))
+                    ar.create_dataset_async('nodes'+`ar.comm.rank()`+spaceSuffix+`tCount`, data = dgnodes)
+                else:
+                    elements.text = ar.hdfFilename+":/elements"+spaceSuffix+`tCount`
+                    nodes.text    = ar.hdfFilename+":/nodes"+spaceSuffix+`tCount`
+                    if init or meshChanged:
+                        #simple dg l2g mapping
+                        dg_l2g = numpy.arange(Xdmf_NumberOfElements*Xdmf_NodesPerElement,dtype='i').reshape((Xdmf_NumberOfElements,Xdmf_NodesPerElement))
+                        ar.hdfFile.createArray("/",'elements'+spaceSuffix+`tCount`,dg_l2g)
 
                     dgnodes = numpy.reshape(mesh.nodeArray[mesh.elementNodesArray],(Xdmf_NumberOfElements*Xdmf_NodesPerElement,3))
                     ar.hdfFile.createArray("/",'nodes'+spaceSuffix+`tCount`,dgnodes)
@@ -1565,8 +1946,12 @@ class XdmfWriter:
         tmp[:,:Xdmf_NumberOfComponents]=numpy.reshape(u.flat,(Xdmf_NodesGlobal,Xdmf_NumberOfComponents))
 
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+name+str(tCount)
-            ar.hdfFile.createArray("/",name+str(tCount),tmp)
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = tmp)
+            else:
+                values.text = ar.hdfFilename+":/"+name+str(tCount)
+                ar.hdfFile.createArray("/",name+str(tCount),tmp)
         else:
             numpy.savetxt(ar.textDataDir+"/"+name+str(tCount)+".txt",tmp)
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
