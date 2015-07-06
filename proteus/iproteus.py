@@ -158,7 +158,11 @@ parser.add_option("-G","--gatherArchive",
                   dest="gatherArchive",
                   action="store_true",
                   help="""collect data files into single file at end of simulation (convenient but slow on big run)""")
-
+parser.add_option("-s","--subdomainArchives",
+                  default=False,
+                  dest="subdomainArchives",
+                  action="store_true",
+                  help="""write xmf files for every processor's subdomain""")
 parser.add_option("-H","--hotStart",
                   default=False,
                   dest="hotStart",
