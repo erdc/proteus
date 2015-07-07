@@ -29,7 +29,7 @@ PROTEUS_PETSC_EXTRA_COMPILE_ARGS = getattr(config, 'PROTEUS_PETSC_EXTRA_COMPILE_
 proteus_install_path = os.path.join(sysconfig.get_python_lib(), 'proteus')
 
 # handle non-system installations
-for arg in sys.argv:    
+for arg in sys.argv:
     if arg.startswith('--root'):
         proteus_install_path = proteus_install_path.partition(sys.prefix + '/')[-1]
         break
@@ -304,12 +304,12 @@ setup(name='proteus',
                              depends=["proteus/mprans/Dissipation2D.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
                              language="c++",
                              include_dirs=[numpy.get_include(), 'proteus']),
-                   
+
                    ],
       data_files=[(proteus_install_path,['proteus/proteus_blas.h', 'proteus/proteus_lapack.h',
                                          'proteus/ModelFactory.h', 'proteus/CompKernel.h']),(os.path.join(proteus_install_path,'tests'),['proteus/tests/hex_cube_3x3.xmf','proteus/tests/hex_cube_3x3.h5'])],
       scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf',
                  'scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond',
-                 'scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec'],
+                 'scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec','scripts/gatherTimes.py'],
       requires=['numpy']
       )
