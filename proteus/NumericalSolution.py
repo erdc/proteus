@@ -644,10 +644,11 @@ class NS_base:  # (HasTraits):
                 lm.getResidual(lu,lr)
             log("Initializing time history for model step controller")
             m.stepController.initializeTimeHistory()
+        self.systemStepController.initialize_dt_system(self.tnList[0],self.tnList[1]) #may reset other dt's
+        for m in self.modelList:
             log("Auxiliary variable calculations for model %s" % (m.name,))
             for av in self.auxiliaryVariables[m.name]:
                 av.calculate_init()
-        self.systemStepController.initialize_dt_system(self.tnList[0],self.tnList[1]) #may reset other dt's
         log("Starting time stepping",level=0)
         self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
         systemStepFailed=False
