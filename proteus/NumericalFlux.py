@@ -12,6 +12,7 @@ from EGeometry import enorm
 #
 class NF_base:
     useWeakDirichletConditions=True
+    useStrongDirichletConstraints=False
     hasInterior=True
     def __init__(self,vt,
                  getPointwiseBoundaryConditions,
@@ -1002,6 +1003,7 @@ class ConstantAdvection_Diffusion_IIPG_exterior(NF_base):
                                                                                                 ebqe['penalty'],
                                                                                                 fluxJacobian_exterior[ci][cj])
 class ConstantAdvection_exterior(NF_base):
+    useStrongDirichletConstraints=True
     hasInterior=False
     def __init__(self,vt,getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
