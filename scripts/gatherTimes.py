@@ -21,12 +21,12 @@ def indentXML(elem, level=0):
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = i
 
-def gatherTimes(size, filename,dataDir='.',addname="_times", tCount=None):
+def gatherTimes(filename,dataDir='.',addname="_complete", tCount=None):
     """
     in case archiving failed to collect results from all times
     """
     import h5py
-    xmlFile = open(filename+"_all"+`size`+".xmf","r")
+    xmlFile = open(filename+".xmf","r")
     h5File = h5py.File(filename+".h5","r")
     tree = ElementTree(file=xmlFile)
     xmlFile.close()
@@ -42,13 +42,14 @@ def gatherTimes(size, filename,dataDir='.',addname="_times", tCount=None):
             dataset_name = TemporalGridCollection.attrib['Name']+"_"+`i`
             dataset_name = dataset_name.replace(" ","_")
             grid_array = h5File["/"+dataset_name]
+            size = grid_array.shape[0]
             SpatialCollection=SubElement(TemporalGridCollection,"Grid",{"GridType":"Collection",
                                                                         "CollectionType":"Spatial"})
             time = SubElement(SpatialCollection,"Time",{"Value":grid_array.attrs['Time'],"Name":str(i)})
             for j in range(size):
                 Grid = fromstring(grid_array[j])
                 SpatialCollection.append(Grid)
-    xmlFile = open(filename+"_all"+`size`+"_complete.xmf","w")
+    xmlFile = open(filename+addname+".xmf","w")
     indentXML(tree.getroot())
     tree.write(xmlFile)
     xmlFile.close()
@@ -57,13 +58,6 @@ if __name__ == '__main__':
     from optparse import OptionParser
     usage = ""
     parser = OptionParser(usage=usage)
-    parser.add_option("-s","--size",
-                      help="number of processors for run",
-                      action="store",
-                      type="int",
-                      dest="size",
-                      default=1)
-
     parser.add_option("-f","--filebase",
                       help="base name for storage files",
                       action="store",
@@ -80,4 +74,4 @@ if __name__ == '__main__':
 
     (opts,args) = parser.parse_args()
 
-    gatherTimes(opts.size, opts.filebase,tCount = opts.tCount)
+    gatherTimes(opts.filebase,tCount = opts.tCount)
