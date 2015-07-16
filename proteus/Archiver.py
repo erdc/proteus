@@ -210,15 +210,16 @@ class AR_base:
         Domain = XDMF[0]
         for TemporalGridCollection in Domain:
             for i in range(self.n_datasets):
-                dataset_name = TemporalGridCollection.attrib['Name']+"_"+`i`
-                dataset_name = dataset_name.replace(" ","_")
-                grid_array = self.hdfFile["/"+dataset_name]
-                SpatialCollection=SubElement(TemporalGridCollection,"Grid",{"GridType":"Collection",
-                                                                            "CollectionType":"Spatial"})
-                time = SubElement(SpatialCollection,"Time",{"Value":grid_array.attrs['Time'],"Name":str(i)})
-                for j in range(self.comm.size()):
-                    Grid = fromstring(grid_array[j])
-                    SpatialCollection.append(Grid)
+                if self.has_h5py:#only writing xml metadata to hdf5 using h5py right now
+                    dataset_name = TemporalGridCollection.attrib['Name']+"_"+`i`
+                    dataset_name = dataset_name.replace(" ","_")
+                    grid_array = self.hdfFile["/"+dataset_name]
+                    SpatialCollection=SubElement(TemporalGridCollection,"Grid",{"GridType":"Collection",
+                                                                                "CollectionType":"Spatial"})
+                    time = SubElement(SpatialCollection,"Time",{"Value":grid_array.attrs['Time'],"Name":str(i)})
+                    for j in range(self.comm.size()):
+                        Grid = fromstring(grid_array[j])
+                        SpatialCollection.append(Grid)
         self.clear_xml()
         self.xmlFileGlobal.write(self.xmlHeader)
         indentXML(self.treeGlobal.getroot())
@@ -317,7 +318,7 @@ class AR_base:
             max_grid_string_len_array = numpy.array(max_grid_string_len,'i')
             comm_world.Bcast([max_grid_string_len_array,MPI.INT], root=0)
             max_grid_string_len = int(max_grid_string_len_array)
-            if self.has_h5py:
+            if self.has_h5py: #only writing xml metadata to hdf5 using h5py right now
                 dataset_name = TemporalGridCollection.attrib['Name']+"_"+ \
                                `self.n_datasets`
                 dataset_name = dataset_name.replace(" ","_")
@@ -344,7 +345,8 @@ class AR_base:
         XDMF =self.tree.getroot()
         Domain = XDMF[-1]
         for TemporalGridCollection in Domain:
-            del TemporalGridCollection[:]
+            if self.has_h5py: #only writing xml metadata to hdf5 using h5py right now
+                del TemporalGridCollection[:]
         if self.comm.isMaster():
             self.xmlFileGlobal.write(self.xmlHeader)
             indentXML(self.treeGlobal.getroot())
@@ -354,7 +356,8 @@ class AR_base:
             XDMF = self.treeGlobal.getroot()
             Domain = XDMF[-1]
             for TemporalGridCollection in Domain:
-                del TemporalGridCollection[:]
+                if self.has_h5py: #only writing xml metadata to hdf5 using h5py right now
+                    del TemporalGridCollection[:]
         if self.hdfFile != None:
             if self.has_h5py:
                 self.comm.barrier()
