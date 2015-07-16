@@ -859,7 +859,7 @@ class OneLevelTransport(NonlinearEquation):
                                        max(1,self.nSpace_global-1)),
                                       'd')
         log(memory("global exterior element boundary quadrature","OneLevelTransport"),level=4)
-        self.forceStrongConditions=False
+        self.forceStrongConditions= numericalFluxType.useStrongDirichletConstraints
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
