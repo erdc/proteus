@@ -6,6 +6,9 @@ import numpy
 import FemTools
 from Profiling import logEvent
 
+from proteus import Comm
+comm = Comm.get()
+
 #dummy classes for computing exact solution norms with error functions
 class zeroFunction:
     def uOfX(self,x):
@@ -188,7 +191,7 @@ class SimulationProcessor:
                     #figure out which exception to raise
                     assert 0, "SimTools append=True but couldn't find storage file=%s" % absfile
             else:
-                if not os.path.exists(self.flags['dataDir']):
+                if not os.path.exists(self.flags['dataDir']) and comm.isMaster():
                     os.makedirs(self.flags['dataDir'])
                 if os.path.exists(absfile):
                     logEvent("Warning SimTools storing data removing old data in %s " % absfile)
@@ -671,8 +674,8 @@ class SimulationProcessor:
             hasAnalyticalSolution[ci] = (self.analyticalSolution.has_key(ci)  and
                                          self.analyticalSolution[ci] != None)
             hasAnalyticalSolutionVelocity[ci] = ('analyticalSolutionVelocity' in dir(p) and
-                                                 p.analyticalSolutionVelocity is not None and 
-                                                 ci in p.analyticalSolutionVelocity and 
+                                                 p.analyticalSolutionVelocity is not None and
+                                                 ci in p.analyticalSolutionVelocity and
                                                  p.analyticalSolutionVelocity[ci] is not None)
         #ci
         class gradWrapper:
@@ -781,7 +784,7 @@ class SimulationProcessor:
                         if calcLIu:
                             err = -12345.0
                             exa = 0.0
-                            
+
                             if hasAnalyticalSolution[ci]:
                                 err = Norms.LIerrorSFEMvsAF(self.analyticalSolution[ci],
                                                             m.q['x'][0:m.mesh.subdomainMesh.nElements_owned],
