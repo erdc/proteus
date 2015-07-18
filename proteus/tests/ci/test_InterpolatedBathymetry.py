@@ -63,7 +63,7 @@ def test_L1():
     archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_L1_")
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
-    archive.close()
+    archive.sync(); archive.close()
 
 def test_L2():
     domain = setupStepGauss()
@@ -72,7 +72,7 @@ def test_L2():
     archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_L2_")
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
-    archive.close()
+    archive.sync(); archive.close()
 
 def test_Linfty():
     domain = setupStepGauss()
@@ -81,7 +81,7 @@ def test_Linfty():
     archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_Linfty_")
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
-    archive.close()
+    archive.sync(); archive.close()
 
 def test_L1_interp():
     domain = setupStepGauss()
@@ -90,7 +90,7 @@ def test_L1_interp():
     archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_L1_interp_")
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
-    archive.close()
+    archive.sync(); archive.close()
 
 def test_L2_interp():
     domain = setupStepGauss()
@@ -99,7 +99,7 @@ def test_L2_interp():
     archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_L2_interp_")
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
-    archive.close()
+    archive.sync(); archive.close()
 
 def test_Linfty_interp():
     domain = setupStepGauss()
@@ -108,7 +108,7 @@ def test_Linfty_interp():
     archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_Linfty_interp_")
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
-    archive.close()
+    archive.sync(); archive.close()
 
 def test_L1_grid():
     domain = setupStepGauss()
@@ -117,7 +117,7 @@ def test_L1_grid():
     archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_L1_")
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
-    archive.close()
+    archive.sync(); archive.close()
 
 def test_L2_grid():
     domain = setupStepGauss()
@@ -126,7 +126,7 @@ def test_L2_grid():
     archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_L2_")
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
-    archive.close()
+    archive.sync(); archive.close()
 
 def test_Linfty_grid():
     domain = setupStepGauss()
@@ -135,7 +135,7 @@ def test_Linfty_grid():
     archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_Linfty_")
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
-    archive.close()
+    archive.sync(); archive.close()
 
 def test_L1_interp_grid():
     domain = setupStepGauss()
@@ -144,7 +144,7 @@ def test_L1_interp_grid():
     archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_L1_interp_")
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
-    archive.close()
+    archive.sync(); archive.close()
 
 def test_L2_interp_grid():
     domain = setupStepGauss()
@@ -153,7 +153,7 @@ def test_L2_interp_grid():
     archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_L2_interp_")
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
-    archive.close()
+    archive.sync(); archive.close()
 
 def test_Linfty_interp_grid():
     domain = setupStepGauss()
@@ -162,7 +162,7 @@ def test_Linfty_interp_grid():
     archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_Linfty_interp_")
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
-    archive.close()
+    archive.sync(); archive.close()
     mesh.meshList[-1].writeMeshADH("interpolatedBathySimpleTest_grid_Linfty_interp_")
 
 if __name__ == '__main__':

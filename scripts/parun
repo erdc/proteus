@@ -101,7 +101,7 @@ parser.add_option("-l", "--log",
                   action="store",
                   type="int",
                   dest="logLevel",
-                  default=1)    
+                  default=1)
 parser.add_option("-A", "--logAllProcesses",
                   help="Log events from every MPI process",
                   action="store_true",
@@ -144,7 +144,11 @@ parser.add_option("-G","--gatherArchive",
                   dest="gatherArchive",
                   action="store_true",
                   help="""collect data files into single file at end of simulation (convenient but slow on big run)""")
-
+parser.add_option("-s","--subdomainArchives",
+                  default=False,
+                  dest="subdomainArchives",
+                  action="store_true",
+                  help="""write xmf files for every processor's subdomain""")
 parser.add_option("-H","--hotStart",
                   default=False,
                   dest="hotStart",
@@ -185,10 +189,10 @@ log = Profiling.logEvent
 logDir = None
 if opts.dataDir != '':
     if not os.path.exists(opts.dataDir):
-    	try: 
+    	try:
     	     os.mkdir(opts.dataDir)
         except os.error:
-             print "Failed to create: " + opts.dataDir 
+             print "Failed to create: " + opts.dataDir
              opts.dataDir=''
     logDir = opts.dataDir
 
@@ -358,7 +362,7 @@ for p,simFlags in zip(pList,simFlagsList):
         else:
             simFlags['plotOptions'] = {'ensight':{'on':True}}
         #control convention on case file for multiple models, doesn't effect parun right now
-        simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ `comm.rank()`  
+        simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ `comm.rank()`
 if opts.batchFileName != "":
     log("Reading batch file = ",opts.batchFileName)
     #try to split batch file into executable blocks delimited by
@@ -406,7 +410,7 @@ while running:
         lines = '\n'.join(batchBlocks.pop(0))
         exec lines
         run = True
-        running = len(batchBlocks) > 0        
+        running = len(batchBlocks) > 0
     else:
         userInput = False
         run = True

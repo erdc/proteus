@@ -3486,8 +3486,12 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                 "Precision":"8",
                                 "Dimensions":"%i" % (self.mesh.nNodes_global,)})
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+u.name+str(tCount)
-            ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
+            else:
+                values.text = ar.hdfFilename+":/"+u.name+str(tCount)
+                ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
         else:
             numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"})
@@ -3500,7 +3504,10 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                     u.dof[i] = array[map[i]]
                 del array
             else:
-                u.dof[:]=ar.hdfFile.getNode("/",u.name+str(tCount))
+                if ar.has_h5py:
+                    u.dof[:]=ar.hdfFile["/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)]
+                else:
+                    u.dof[:]=ar.hdfFile.getNode("/",u.name+str(tCount))
         else:
             assert(False)
             #numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
@@ -3527,8 +3534,12 @@ class C0_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                 w_dof = uList[components[2]].dof
             velocity = numpy.column_stack((u_dof,v_dof,w_dof))
             if ar.hdfFile != None:
-                values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
-                ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
+                if ar.has_h5py:
+                    values.text = ar.hdfFilename+":/"+vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                    ar.create_dataset_async(vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = velocity)
+                else:
+                    values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
+                    ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
         else:
             attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":vectorName,
                                                         "AttributeType":"Vector",
@@ -3743,8 +3754,12 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                                 "Precision":"8",
                                 "Dimensions":"%i" % (self.mesh.nNodes_global,)})
         if ar.hdfFile != None:
-            values.text = ar.hdfFilename+":/"+u.name+str(tCount)
-            ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
+            if ar.has_h5py:
+                values.text = ar.hdfFilename+":/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                ar.create_dataset_async(u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = u.dof)
+            else:
+                values.text = ar.hdfFilename+":/"+u.name+str(tCount)
+                ar.hdfFile.createArray("/",u.name+str(tCount),u.dof)
         else:
             numpy.savetxt(ar.textDataDir+"/"+u.name+str(tCount)+".txt",u.dof)
             SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+u.name+str(tCount)+".txt"})
@@ -3771,8 +3786,12 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                 w_dof = uList[components[2]].dof
             velocity = numpy.column_stack((u_dof,v_dof,w_dof))
             if ar.hdfFile != None:
-                values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
-                ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
+                if ar.has_h5py:
+                    values.text = ar.hdfFilename+":/"+vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                    ar.create_dataset_async(vectorName+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = velocity)
+                else:
+                    values.text = ar.hdfFilename+":/"+vectorName+str(tCount)
+                    ar.hdfFile.createArray("/",vectorName+str(tCount),velocity)
         else:
             attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":vectorName,
                                                         "AttributeType":"Vector",

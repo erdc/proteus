@@ -92,18 +92,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.eikonalSolverFlag >= 1: #FMM
             assert self.RD_modelIndex==None, "no redistance with eikonal solver too"
         self.checkMass = checkMass
-	
 	self.sc_uref=sc_uref
-	self.sc_beta=sc_beta	
-	
+	self.sc_beta=sc_beta
         self.waterline_interval = waterline_interval
-		
+
     def attachModels(self,modelList):
         #the level set model
         self.model = modelList[self.modelIndex]
 
 	#self.u_old_dof = numpy.zeros(self.model.u[0].dof.shape,'d')
-	self.u_old_dof = numpy.copy(self.model.u[0].dof)
+	self.u_old_dof = self.model.u[0].dof.copy()
         #the velocity
         if self.flowModelIndex >= 0:
             self.flowModel = modelList[self.flowModelIndex]
@@ -131,7 +129,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                     frontTolerance=1.0e-8,#default 1.0e-4
                                                     frontInitType='frontIntersection')
 #,#'frontIntersection',#or 'magnitudeOnly'
-        elif self.eikonalSolverFlag == 1: #FMM 
+        elif self.eikonalSolverFlag == 1: #FMM
             self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
             eikonalSolverType = self.FMMEikonalSolver
             self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
@@ -181,7 +179,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         copyInstructions = {}
         return copyInstructions
     def postStep(self,t,firstStep=False):
-       	self.u_old_dof = numpy.copy(self.model.u[0].dof)
+        self.u_old_dof[:] = self.model.u[0].dof
         # if self.checkMass:
         #     self.m_post = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                               self.model.mesh.elementDiametersArray,
@@ -202,7 +200,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #     self.lsGlobalMassArray.append(self.lsGlobalMass)
         #     self.lsGlobalMassErrorArray.append(self.lsGlobalMass - self.lsGlobalMassArray[0] + self.totalFluxGlobal)
         #     self.fluxArray.append(self.fluxIntegral)
-        #     self.timeArray.append(self.model.timeIntegration.t)            
+        #     self.timeArray.append(self.model.timeIntegration.t)
         # if self.flowModelIndex >= 0 and self.flowModel.ebq.has_key(('v',1)):
         #     self.model.u[0].getValuesTrace(self.flowModel.ebq[('v',1)],self.model.ebq[('u',0)])
         #     self.model.u[0].getGradientValuesTrace(self.flowModel.ebq[('grad(v)',1)],self.model.ebq[('grad(u)',0)])
@@ -228,7 +226,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                                                 c[('m',0)],
                                                 c[('dm',0,0)],
                                                 c[('H',0)],
-                                                c[('dH',0,0)])            
+                                                c[('dH',0,0)])
 class LevelModel(OneLevelTransport):
     nCalls=0
     def __init__(self,
@@ -270,7 +268,7 @@ class LevelModel(OneLevelTransport):
         self.timeTerm=True#allow turning off  the  time derivative
         #self.lowmem=False
         self.testIsTrial=True
-        self.phiTrialIsTrial=True            
+        self.phiTrialIsTrial=True
         self.u = uDict
         self.ua = {}#analytical solutions
         self.phi  = phiDict
@@ -328,8 +326,8 @@ class LevelModel(OneLevelTransport):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or 
-                                                 (numericalFluxType != None) or 
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or
+                                                 (numericalFluxType != None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -343,7 +341,7 @@ class LevelModel(OneLevelTransport):
         self.nDOF_test_element     = [femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
         self.nFreeDOF_global  = [dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
         self.nVDOF_element    = sum(self.nDOF_trial_element)
-        self.nFreeVDOF_global = sum(self.nFreeDOF_global) 
+        self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
         NonlinearEquation.__init__(self,self.nFreeVDOF_global)
         #
@@ -398,7 +396,7 @@ class LevelModel(OneLevelTransport):
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
         else:
-            for I in self.coefficients.elementBoundaryIntegralKeys: 
+            for I in self.coefficients.elementBoundaryIntegralKeys:
                 elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature
         #
         # find the union of all element quadrature points and
@@ -460,7 +458,7 @@ class LevelModel(OneLevelTransport):
         self.q[('numDiff',0,0)] =  numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.ebqe[('u',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary),'d')
         self.ebqe[('grad(u)',0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
-        #mwf for running as standalone 
+        #mwf for running as standalone
         self.ebqe[('dH',0,0)] = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nElementBoundaryQuadraturePoints_elementBoundary,self.nSpace_global),'d')
         self.q[('dm',0,0)] =numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('H',0)] =numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
@@ -505,7 +503,7 @@ class LevelModel(OneLevelTransport):
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
              self.timeIntegration = TimeIntegrationClass(self)
-           
+
         if options != None:
             self.timeIntegration.setFromOptions(options)
         log(memory("TimeIntegration","OneLevelTransport"),level=4)
@@ -551,7 +549,7 @@ class LevelModel(OneLevelTransport):
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         from proteus import PostProcessingTools
-        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)  
+        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         log(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         from proteus import Archiver
@@ -565,7 +563,7 @@ class LevelModel(OneLevelTransport):
 #                if self.coefficients.advection.has_key(ci):
 #                    self.ebqe[('advectiveFlux_bc',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
 #                    self.ebqe[('advectiveFlux_bc_flag',ci)][t[0],t[1]] = 1
-        
+
         if hasattr(self.numericalFlux,'setDirichletValues'):
             self.numericalFlux.setDirichletValues(self.ebqe)
         if not hasattr(self.numericalFlux,'isDOFBoundary'):
@@ -587,7 +585,7 @@ class LevelModel(OneLevelTransport):
         if self.forceStrongConditions:
             self.dirichletConditionsForceDOF = DOFBoundaryConditions(self.u[0].femSpace,dofBoundaryConditionsSetterDict[0],weakDirichletConditions=False)
 
-	
+
         if self.movingDomain:
             self.MOVING_DOMAIN=1.0
         else:
@@ -602,7 +600,7 @@ class LevelModel(OneLevelTransport):
     #mwf these are getting called by redistancing classes,
     def calculateCoefficients(self):
         pass
-        
+
     def calculateElementResidual(self):
         if self.globalResidualDummy != None:
             self.getResidual(self.u[0].dof,self.globalResidualDummy)
@@ -659,12 +657,12 @@ class LevelModel(OneLevelTransport):
             self.timeIntegration.alpha_bdf,#mwf was self.timeIntegration.dt,
             self.shockCapturing.lag,
             self.shockCapturing.shockCapturingFactor,
-	    self.coefficients.sc_uref, 
-	    self.coefficients.sc_beta,	    
+	    self.coefficients.sc_uref,
+	    self.coefficients.sc_beta,
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
             self.u[0].dof,
-	    self.coefficients.u_old_dof, 
+	    self.coefficients.u_old_dof,
             self.coefficients.q_v,
             self.timeIntegration.m_tmp[0],
             self.q[('u',0)],
@@ -758,7 +756,7 @@ class LevelModel(OneLevelTransport):
 
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
-            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system 
+            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
             for dofN in self.dirichletConditionsForceDOF.DOFBoundaryConditionsDict.keys():
                     global_dofN = dofN
                     for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
@@ -768,7 +766,7 @@ class LevelModel(OneLevelTransport):
                         else:
                             self.nzval[i] = 0.0
                             #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
-			    
+
 
         log("Jacobian ",level=10,data=jacobian)
         #mwf decide if this is reasonable for solver statistics
@@ -778,7 +776,7 @@ class LevelModel(OneLevelTransport):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points.
-        
+
         This function should be called only when the mesh changes.
         """
         self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
@@ -827,10 +825,10 @@ class LevelModel(OneLevelTransport):
         pass
 
     def computeWaterline(self, t):
-        self.waterline_calls += 1 
+        self.waterline_calls += 1
         if self.coefficients.waterline_interval > 0 and self.waterline_calls%self.coefficients.waterline_interval == 0:
 		self.waterline_npoints = numpy.zeros((1,),'i')
-        	self.waterline_data    = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nSpace_global),'d')	
+        	self.waterline_data    = numpy.zeros((self.mesh.nExteriorElementBoundaries_global,self.nSpace_global),'d')
 		self.ncls.calculateWaterline(#element
 	 	   self.waterline_npoints,
 		   self.waterline_data,
@@ -861,12 +859,12 @@ class LevelModel(OneLevelTransport):
                    self.timeIntegration.alpha_bdf,#mwf was self.timeIntegration.dt,
                    self.shockCapturing.lag,
                    self.shockCapturing.shockCapturingFactor,
-	           self.coefficients.sc_uref, 
-	           self.coefficients.sc_beta,	    
+	           self.coefficients.sc_uref,
+	           self.coefficients.sc_beta,
                    self.u[0].femSpace.dofMap.l2g,
                    self.mesh.elementDiametersArray,
                    self.u[0].dof,
-	           self.coefficients.u_old_dof, 
+	           self.coefficients.u_old_dof,
                    self.coefficients.q_v,
                    self.timeIntegration.m_tmp[0],
                    self.q[('u',0)],
@@ -887,7 +885,7 @@ class LevelModel(OneLevelTransport):
                    self.numericalFlux.ebqe[('u',0)],
                    self.ebqe[('u',0)])
 		from proteus import Comm
-		comm = Comm.get()	
+		comm = Comm.get()
 		filename = os.path.join(self.coefficients.opts.dataDir,  "waterline." + str(comm.rank()) + "." + str(self.waterline_prints))
 		numpy.save(filename, self.waterline_data[0:self.waterline_npoints[0]])
                 self.waterline_prints += 1
