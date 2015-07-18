@@ -442,6 +442,7 @@ class Newton(NonlinearSolver):
         """
 
         import Viewers
+        memory()
         if self.linearSolver.computeEigenvalues:
             self.u0[:]=u
         r=self.solveInitialize(u,r,b)
@@ -614,9 +615,11 @@ class Newton(NonlinearSolver):
                 #raw_input("wait")
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
                 % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            log(memory("Newton","Newton"),level=4)
             return self.failedFlag
         log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+        log(memory("Newton","Newton"),level=4)
 
 import deim_utils
 class POD_Newton(Newton):
@@ -1171,6 +1174,7 @@ class NewtonNS(NonlinearSolver):
         """
 
         import Viewers
+        memory()
         if self.linearSolver.computeEigenvalues:
             self.u0[:]=u
         r=self.solveInitialize(u,r,b)
