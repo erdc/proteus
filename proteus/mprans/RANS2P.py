@@ -1442,7 +1442,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 	if self.forceStrongConditions:#
 	    for cj in range(len(self.dirichletConditionsForceDOF)):#
 		for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
+                     r[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+
         cflMax=globalMax(self.q[('cfl',0)].max())*self.timeIntegration.dt
         log("Maximum CFL = " + str(cflMax),level=2)
         if self.stabilization:
@@ -1647,14 +1648,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.pp_hasConstantNullSpace=False
         #Load the Dirichlet conditions directly into residual
         if self.forceStrongConditions:
-            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
             for cj in range(self.nc):
                 for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
                     global_dofN = self.offset[cj]+self.stride[cj]*dofN
                     for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
                         if (self.colind[i] == global_dofN):
-                            #print "RBLES forcing residual cj = %s dofN= %s global_dofN= %s was self.nzval[i]= %s now =%s " % (cj,dofN,global_dofN,self.nzval[i],scaling)
-                            self.nzval[i] = scaling
+                            self.nzval[i] = 1.0
                         else:
                             self.nzval[i] = 0.0
                             #print "RBLES zeroing residual cj = %s dofN= %s global_dofN= %s " % (cj,dofN,global_dofN)
