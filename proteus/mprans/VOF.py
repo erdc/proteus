@@ -203,11 +203,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #VRANS
         self.ebqe_porosity = numpy.ones(cebqe[('u',0)].shape,'d')
     def preStep(self,t,firstStep=False):
-        # if self.checkMass:
-        #     self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV'],
-        #                                             self.model.q[('m',0)],
-        #                                             self.model.mesh.nElements_owned)
-        #     log("Phase  0 mass before VOF step = %12.5e" % (self.m_pre,),level=2)
+        if self.checkMass:
+            self.m_pre = Norms.scalarDomainIntegral(self.model.q['dV_last'],
+                                                    self.model.q[('m',0)],
+                                                    self.model.mesh.nElements_owned)
+            log("Phase  0 mass before VOF step = %12.5e" % (self.m_pre,),level=2)
         #     self.m_last = Norms.scalarDomainIntegral(self.model.q['dV'],
         #                                              self.model.timeIntegration.m_last[0],
         #                                              self.model.mesh.nElements_owned)
@@ -217,21 +217,21 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def postStep(self,t,firstStep=False):
 	self.u_old_dof = numpy.copy(self.model.u[0].dof)
         self.model.q['dV_last'][:] = self.model.q['dV']
-        # if self.checkMass:
-        #     self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
-        #                                              self.model.q[('m',0)],
-        #                                              self.model.mesh.nElements_owned)
-        #     log("Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
-        #     self.fluxIntegral = Norms.fluxDomainBoundaryIntegral(self.model.ebqe['dS'],
-        #                                                          self.model.ebqe[('advectiveFlux',0)],
-        #                                                          self.model.mesh)
-        #     log("Phase  0 mass flux boundary integral after VOF step = %12.5e" % (self.fluxIntegral,),level=2)
-        #     log("Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
-        #     divergence = Norms.fluxDomainBoundaryIntegralFromVector(self.model.ebqe['dS'],
-        #                                                             self.ebqe_v,
-        #                                                             self.model.ebqe['n'],
-        #                                                             self.model.mesh)
-        #     log("Divergence = %12.5e" % (divergence,),level=2)
+        if self.checkMass:
+            self.m_post = Norms.scalarDomainIntegral(self.model.q['dV'],
+                                                     self.model.q[('m',0)],
+                                                     self.model.mesh.nElements_owned)
+            log("Phase  0 mass after VOF step = %12.5e" % (self.m_post,),level=2)
+            #self.fluxIntegral = Norms.fluxDomainBoundaryIntegral(self.model.ebqe['dS'],
+            #                                                     self.model.ebqe[('advectiveFlux',0)],
+            #                                                     self.model.mesh)
+            #log("Phase  0 mass flux boundary integral after VOF step = %12.5e" % (self.fluxIntegral,),level=2)
+            #log("Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_last + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
+            #divergence = Norms.fluxDomainBoundaryIntegralFromVector(self.model.ebqe['dS'],
+            #                                                        self.ebqe_v,
+            #                                                        self.model.ebqe['n'],
+            #                                                        self.model.mesh)
+            #log("Divergence = %12.5e" % (divergence,),level=2)
         copyInstructions = {}
         return copyInstructions
     def updateToMovingDomain(self,t,c):

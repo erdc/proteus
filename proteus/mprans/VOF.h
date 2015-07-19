@@ -508,13 +508,13 @@ namespace proteus
 	      //
               if (q_dV_last[eN_k] <= -100)
                 q_dV_last[eN_k] = dV;
+              q_dV[eN_k] = dV;
 	      ck.bdf(alphaBDF,
-		     q_m_betaBDF[eN_k]*q_dV_last[eN_k]/dV,
+		     q_m_betaBDF[eN_k]*q_dV_last[eN_k]/dV,//ensure prior mass integral is correct for  m_t with BDF1
 		     m,
 		     dm,
 		     m_t,
 		     dm_t);
-              q_dV[eN_k] = dV;
 	      //
 	      //calculate subgrid error (strong residual and adjoint)
 	      //
@@ -955,7 +955,7 @@ namespace proteus
 	      //calculate time derivatives
 	      //
 	      ck.bdf(alphaBDF,
-		     q_m_betaBDF[eN_k],
+		     q_m_betaBDF[eN_k],//since m_t isn't used, we don't have to correct mass
 		     m,
 		     dm,
 		     m_t,
