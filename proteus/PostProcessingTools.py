@@ -1161,6 +1161,31 @@ class VPP_PWL_BDM_OPT(VPP_PWL_RT0_OPT):
                                                          self.BDMprojectionMat_element)
         cpostprocessing.factorLocalBDM1projectionMatrices(self.BDMprojectionMat_element,
                                                           self.BDMprojectionMatPivots_element)
+    def updateWeights(self):
+        for ci in self.vtComponents:
+            if not isinstance(self.vt.u[ci].femSpace,FemTools.C0_AffineLinearOnSimplexWithNodalBasis):
+                self.testSpace.getBasisValues(self.vt.elementQuadraturePoints,
+                                              self.qv[ci])
+                self.testSpace.getBasisValuesTrace(self.vt.u[0].femSpace.elementMaps.permutations,
+                                                   self.vt.ebq['hat(x)'],
+                                                   self.w[ci])
+                cfemIntegrals.calculateWeightedShapeTrace(self.vt.elementBoundaryQuadratureWeights[('u',ci)],
+                                                          self.vt.ebq['sqrt(det(g))'],
+                                                          self.w[ci],
+                                                          self.w_dS[ci])
+            else:
+                if not self.ebq.has_key(('w*dS_f',ci)):
+                    self.w_dS[ci] = numpy.zeros(
+                        (self.vt.mesh.nElements_global,
+                         self.vt.mesh.nElementBoundaries_element,
+                         self.vt.nElementBoundaryQuadraturePoints_elementBoundary,
+                         self.vt.nDOF_test_element[ci]),
+                        'd')
+                    #since self.ebq = self.vt.ebq this gets updated by vt when the mesh changes
+                    cfemIntegrals.calculateWeightedShapeTrace(self.vt.elementBoundaryQuadratureWeights[('u',ci)],
+                                                              self.ebq['sqrt(det(g))'],
+                                                              self.ebq[('w',ci)],
+                                                              self.w_dS[ci])
     def computeGeometricInfo(self):
         if self.BDMcomponent != None:
             self.computeBDM1projectionMatrices()
