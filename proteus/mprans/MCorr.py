@@ -12,7 +12,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.variableNames=['phiCorr']
         nc=1
         mass={}
-        advection={} 
+        advection={}
         hamiltonian={}
         diffusion={0:{0:{0:'constant'}}}
         potential={0:{0:'u'}}
@@ -48,7 +48,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.applyCorrectionToDOF = applyCorrectionToDOF
         else:
             self.applyCorrectionToDOF = False
-        self.massConservationError=0.0	
+        self.massConservationError=0.0
     def initializeMesh(self,mesh):
         self.h=mesh.h
         self.epsHeaviside = self.epsFactHeaviside*mesh.h
@@ -61,7 +61,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.lsModel = modelList[self.levelSetModelIndex]
         self.q_u_ls  = modelList[self.levelSetModelIndex].q[('u',0)]
 	self.q_n_ls  = modelList[self.levelSetModelIndex].q[('grad(u)',0)]
-	
+
         self.ebqe_u_ls = modelList[self.levelSetModelIndex].ebqe[('u',0)]
         self.ebqe_n_ls = modelList[self.levelSetModelIndex].ebqe[('grad(u)',0)]
 
@@ -117,13 +117,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.sd and cebqe.has_key(('a',0,0)):
             cebqe[('a',0,0)].fill(self.epsDiffusion)
     def preStep(self,t,firstStep=False):
-        # if self.checkMass:
-        #     log("Phase 0 mass before mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
-        #                                                                                          self.vofModel.q[('m',0)],
-        #                                                                                          self.massCorrModel.mesh.nElements_owned),),level=2)
-        #     log("Phase 0 mass before mass correction (LS) %12.5e" % (Norms.scalarHeavisideDomainIntegral(self.vofModel.q['dV'],
-        #                                                                                                  self.lsModel.q[('m',0)],
-        #                                                                                                  self.massCorrModel.mesh.nElements_owned),),level=2)
+        if self.checkMass:
+            log("Phase 0 mass before mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+                                                                                                 self.vofModel.q[('m',0)],
+                                                                                                 self.massCorrModel.mesh.nElements_owned),),level=2)
+            log("Phase 0 mass (primitive) before mass correction (LS) %12.5e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
+                                                                                                                 self.massCorrModel.elementDiameter,
+                                                                                                                 self.vofModel.q['dV'],
+                                                                                                                 self.lsModel.q[('m',0)],
+                                                                                                                 self.massCorrModel.mesh.nElements_owned),),level=2)
+            log("Phase 0 mass (consistent) before mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m',0)]),),level=2)
         copyInstructions = {'clear_uList':True}
         return copyInstructions
     def postStep(self,t,firstStep=False):
@@ -138,6 +141,16 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.massCorrModel.setMassQuadrature()
             #self.vofModel.q[('u',0)] += self.massCorrModel.q[('r',0)]
             #####print "********************max VOF************************",max(self.vofModel.q[('u',0)].flat[:])
+        if self.checkMass:
+            log("Phase 0 mass after mass correction (VOF) %12.5e" % (Norms.scalarDomainIntegral(self.vofModel.q['dV'],
+                                                                                                self.vofModel.q[('m',0)],
+                                                                                                self.massCorrModel.mesh.nElements_owned),),level=2)
+            log("Phase 0 mass (primitive) after mass correction (LS) %12.5e" % (Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFactHeaviside,
+                                                                                                                self.massCorrModel.elementDiameter,
+                                                                                                                self.vofModel.q['dV'],
+                                                                                                                self.lsModel.q[('m',0)],
+                                                                                                                self.massCorrModel.mesh.nElements_owned),),level=2)
+            log("Phase 0 mass (consistent) after mass correction (LS) %12.5e" % (self.massCorrModel.calculateMass(self.lsModel.q[('m',0)]),),level=2)
         copyInstructions = {}
         #get the waterline on the obstacle if option set in NCLS (boundary==7)
 	self.lsModel.computeWaterline(t)
@@ -230,7 +243,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.timeTerm=True#allow turning off  the  time derivative
         #self.lowmem=False
         self.testIsTrial=True
-        self.phiTrialIsTrial=True            
+        self.phiTrialIsTrial=True
         self.u = uDict
         self.ua = {}#analytical solutions
         self.phi  = phiDict
@@ -288,8 +301,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
-            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or 
-                                                 (numericalFluxType != None) or 
+            self.elementBoundaryIntegrals[ci] = ((self.conservativeFlux != None) or
+                                                 (numericalFluxType != None) or
                                                  (self.fluxBoundaryConditions[ci] == 'outFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'mixedFlow') or
                                                  (self.fluxBoundaryConditions[ci] == 'setFlow'))
@@ -303,7 +316,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.nDOF_test_element     = [femSpace.max_nDOF_element for femSpace in self.testSpace.values()]
         self.nFreeDOF_global  = [dc.nFreeDOF_global for dc in self.dirichletConditions.values()]
         self.nVDOF_element    = sum(self.nDOF_trial_element)
-        self.nFreeVDOF_global = sum(self.nFreeDOF_global) 
+        self.nFreeVDOF_global = sum(self.nFreeDOF_global)
         #
         NonlinearEquation.__init__(self,self.nFreeVDOF_global)
         #
@@ -358,7 +371,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 else:
                     elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature['default']
         else:
-            for I in self.coefficients.elementBoundaryIntegralKeys: 
+            for I in self.coefficients.elementBoundaryIntegralKeys:
                 elementBoundaryQuadratureDict[I] = elementBoundaryQuadrature
         #
         # find the union of all element quadrature points and
@@ -454,7 +467,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration = TimeIntegrationClass(self,integrateInterpolationPoints=True)
         else:
              self.timeIntegration = TimeIntegrationClass(self)
-           
+
         if options != None:
             self.timeIntegration.setFromOptions(options)
         log(memory("TimeIntegration","OneLevelTransport"),level=4)
@@ -499,7 +512,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.elementEffectiveDiametersArray  = self.mesh.elementInnerDiametersArray
         #use post processing tools to get conservative fluxes, None by default
         from proteus import PostProcessingTools
-        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)  
+        self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         log(memory("velocity postprocessor","OneLevelTransport"),level=4)
         #helper for writing out data storage
         from proteus import Archiver
@@ -512,7 +525,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter = self.mesh.elementDiametersArray.copy()
             self.elementDiameter[:] = max(self.mesh.elementDiametersArray)
         else:
-            self.elementDiameter = self.mesh.elementDiametersArray        
+            self.elementDiameter = self.mesh.elementDiametersArray
         self.mcorr = cMCorr_base(self.nSpace_global,
                                  self.nQuadraturePoints_element,
                                  self.u[0].femSpace.elementMaps.localFunctionSpace.dim,
@@ -536,7 +549,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         #Load the unknowns into the finite element dof
         self.setUnknowns(u)
-	
+
 
         #no flux boundary conditions
         self.mcorr.calculateResidual(#element
@@ -562,32 +575,33 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #physics
             self.mesh.nElements_global,
 	    self.coefficients.useMetrics,
-                                 self.coefficients.epsFactHeaviside,
-                                 self.coefficients.epsFactDirac,
-                                 self.coefficients.epsFactDiffusion,
-                                 self.u[0].femSpace.dofMap.l2g,
-                                 self.elementDiameter,#self.mesh.elementDiametersArray,
+            self.coefficients.epsFactHeaviside,
+            self.coefficients.epsFactDirac,
+            self.coefficients.epsFactDiffusion,
+            self.u[0].femSpace.dofMap.l2g,
+            self.elementDiameter,#self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
-                                 self.u[0].dof,
-                                 self.coefficients.q_u_ls,
-				 self.coefficients.q_n_ls,
-				 self.coefficients.ebqe_u_ls,
-                                 self.coefficients.ebqe_n_ls,
-                                 self.coefficients.q_H_vof,
-                                 self.q[('u',0)],
-				 self.q[('grad(u)',0)],
-				 self.ebqe[('u',0)],
-				 self.ebqe[('grad(u)',0)], 
-                                 self.q[('r',0)],                 
-                                 self.coefficients.q_porosity,
-		                 self.offset[0],self.stride[0],
-                                 r,
+            self.u[0].dof,
+            self.coefficients.q_u_ls,
+            self.coefficients.q_n_ls,
+            self.coefficients.ebqe_u_ls,
+            self.coefficients.ebqe_n_ls,
+            self.coefficients.q_H_vof,
+            self.q[('u',0)],
+            self.q[('grad(u)',0)],
+            self.ebqe[('u',0)],
+            self.ebqe[('grad(u)',0)],
+            self.q[('r',0)],
+            self.coefficients.q_porosity,
+            self.offset[0],self.stride[0],
+            r,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
             self.mesh.elementBoundaryLocalElementBoundariesArray)
         log("Global residual",level=9,data=r)
-        self.coefficients.massConservationError = fabs(globalSum(sum(r.flat[:self.mesh.nElements_owned])))
+        self.coefficients.massConservationError = fabs(globalSum(sum(r.flat[:self.mesh.nNodes_owned])))
+        assert self.coefficients.massConservationError == fabs(globalSum(r[:self.mesh.nNodes_owned].sum()))
         log("   Mass Conservation Error",level=3,data=self.coefficients.massConservationError)
         self.nonlinear_function_evaluations += 1
         if self.globalResidualDummy == None:
@@ -633,7 +647,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
-    
+
     def elementSolve(self,u,r):
         import pdb
         import copy
@@ -643,7 +657,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         #Load the unknowns into the finite element dof
         self.setUnknowns(u)
-	
+
         #no flux boundary conditions
         self.mcorr.elementSolve(#element
             self.u[0].femSpace.elementMaps.psi,
@@ -683,8 +697,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('u',0)],
             self.q[('grad(u)',0)],
             self.ebqe[('u',0)],
-            self.ebqe[('grad(u)',0)], 
-            self.q[('r',0)],                 
+            self.ebqe[('grad(u)',0)],
+            self.q[('r',0)],
             self.coefficients.q_porosity,
             self.offset[0],self.stride[0],
             r,
@@ -704,7 +718,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         #Load the unknowns into the finite element dof
         self.setUnknowns(u)
-	
+
         #no flux boundary conditions
         self.mcorr.elementConstantSolve(#element
             self.u[0].femSpace.elementMaps.psi,
@@ -729,26 +743,26 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #physics
             self.mesh.nElements_global,
 	    self.coefficients.useMetrics,
-                                 self.coefficients.epsFactHeaviside,
-                                 self.coefficients.epsFactDirac,
-                                 self.coefficients.epsFactDiffusion,
-                                 self.u[0].femSpace.dofMap.l2g,
-                                 self.elementDiameter,#self.mesh.elementDiametersArray,
+            self.coefficients.epsFactHeaviside,
+            self.coefficients.epsFactDirac,
+            self.coefficients.epsFactDiffusion,
+            self.u[0].femSpace.dofMap.l2g,
+            self.elementDiameter,#self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
-                                 self.u[0].dof,
-                                 self.coefficients.q_u_ls,
-				 self.coefficients.q_n_ls,
-				 self.coefficients.ebqe_u_ls,
-                                 self.coefficients.ebqe_n_ls,
-                                 self.coefficients.q_H_vof,
-                                 self.q[('u',0)],
-				 self.q[('grad(u)',0)],
-				 self.ebqe[('u',0)],
-				 self.ebqe[('grad(u)',0)], 
-                                 self.q[('r',0)],                 
-                                 self.coefficients.q_porosity,
-		                 self.offset[0],self.stride[0],
-                                 r,
+            self.u[0].dof,
+            self.coefficients.q_u_ls,
+            self.coefficients.q_n_ls,
+            self.coefficients.ebqe_u_ls,
+            self.coefficients.ebqe_n_ls,
+            self.coefficients.q_H_vof,
+            self.q[('u',0)],
+            self.q[('grad(u)',0)],
+            self.ebqe[('u',0)],
+            self.ebqe[('grad(u)',0)],
+            self.q[('r',0)],
+            self.coefficients.q_porosity,
+            self.offset[0],self.stride[0],
+            r,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
@@ -766,7 +780,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         r.fill(0.0)
         #Load the unknowns into the finite element dof
         self.setUnknowns(u)
-	
+
         #no flux boundary conditions
         (R,J) = self.mcorr.globalConstantRJ(#element
             self.u[0].femSpace.elementMaps.psi,
@@ -795,7 +809,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.epsFactDirac,
             self.coefficients.epsFactDiffusion,
             self.u[0].femSpace.dofMap.l2g,
-            self.elementDiameter,self.mesh.elementDiametersArray,
+            self.elementDiameter,
+            self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
             self.u[0].dof,
             self.coefficients.q_u_ls,
@@ -806,8 +821,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('u',0)],
             self.q[('grad(u)',0)],
             self.ebqe[('u',0)],
-            self.ebqe[('grad(u)',0)], 
-            self.q[('r',0)],                 
+            self.ebqe[('grad(u)',0)],
+            self.q[('r',0)],
             self.offset[0],self.stride[0],
             r,
             self.coefficients.q_porosity,
@@ -846,7 +861,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points.
-        
+
         This function should be called only when the mesh changes.
         """
         #self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
@@ -897,25 +912,25 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             #physics
             self.mesh.nElements_owned,
 	    self.coefficients.useMetrics,
-                                 self.coefficients.epsFactHeaviside,
-                                 self.coefficients.epsFactDirac,
-                                 self.coefficients.epsFactDiffusion,
-                                 self.u[0].femSpace.dofMap.l2g,
-                                 self.elementDiameter,#self.mesh.elementDiametersArray,
+            self.coefficients.epsFactHeaviside,
+            self.coefficients.epsFactDirac,
+            self.coefficients.epsFactDiffusion,
+            self.u[0].femSpace.dofMap.l2g,
+            self.elementDiameter,#self.mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
-                                 self.u[0].dof,
-                                 q_phi,#self.coefficients.q_u_ls,
-				 self.coefficients.q_n_ls,
-				 self.coefficients.ebqe_u_ls,
-                                 self.coefficients.ebqe_n_ls,
-                                 self.coefficients.q_H_vof,
-                                 self.q[('u',0)],
-				 self.q[('grad(u)',0)],
-				 self.ebqe[('u',0)],
-				 self.ebqe[('grad(u)',0)], 
-                                 self.q[('r',0)],              
-                                 self.coefficients.q_porosity,
-		                 self.offset[0],self.stride[0],
+            self.u[0].dof,
+            q_phi,#self.coefficients.q_u_ls,
+            self.coefficients.q_n_ls,
+            self.coefficients.ebqe_u_ls,
+            self.coefficients.ebqe_n_ls,
+            self.coefficients.q_H_vof,
+            self.q[('u',0)],
+            self.q[('grad(u)',0)],
+            self.ebqe[('u',0)],
+            self.ebqe[('grad(u)',0)],
+            self.q[('r',0)],
+            self.coefficients.q_porosity,
+            self.offset[0],self.stride[0],
             self.u[0].dof,#dummy r,not used
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
@@ -960,8 +975,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('u',0)],
             self.q[('grad(u)',0)],
             self.ebqe[('u',0)],
-            self.ebqe[('grad(u)',0)], 
-            self.q[('r',0)],              
+            self.ebqe[('grad(u)',0)],
+            self.q[('r',0)],
             self.coefficients.q_porosity,
             self.offset[0],self.stride[0],
             self.u[0].dof,#dummy r,not used

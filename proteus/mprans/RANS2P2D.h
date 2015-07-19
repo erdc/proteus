@@ -93,6 +93,8 @@ namespace proteus
 				   double* q_mom_w_acc,
 				   double* q_mass_adv,
 				   double* q_mom_u_acc_beta_bdf, double* q_mom_v_acc_beta_bdf, double* q_mom_w_acc_beta_bdf,
+                                   double* q_dV,
+                                   double* q_dV_last,
 				   double* q_velocity_sge,
 				   double* q_cfl,
 				   double* q_numDiff_u, double* q_numDiff_v, double* q_numDiff_w,
@@ -232,6 +234,8 @@ namespace proteus
 				   double* normal_phi,
 				   double* kappa_phi,
 				   double* q_mom_u_acc_beta_bdf, double* q_mom_v_acc_beta_bdf, double* q_mom_w_acc_beta_bdf,
+                                   double* q_dV,
+                                   double* q_dV_last,
 				   double* q_velocity_sge,
 				   double* q_cfl,
 				   double* q_numDiff_u_last, double* q_numDiff_v_last, double* q_numDiff_w_last,
@@ -441,6 +445,8 @@ namespace proteus
     					  int* elementBoundaryElementsArray,
     					  int* elementBoundaryLocalElementBoundariesArray,
     					  double* mesh_dof,
+                                          double* mesh_velocity_dof,
+                                          double MOVING_DOMAIN,//0 or 1
     					  int* mesh_l2g,
     					  double* mesh_trial_trace_ref,
     					  double* mesh_grad_trial_trace_ref,
@@ -626,7 +632,7 @@ namespace proteus
 			       0.5*(grad_u[2]+grad_w[0])*(grad_u[2]+grad_w[0]) +
 			       0.5*(grad_v[2]+grad_w[1])*(grad_v[2]+grad_w[1])));*/
 	    re_0 = h_e*h_e*norm_S/nu_0;
-	    if(re_0 > 1.0)
+	    if (re_0 > 1.0)
 	      cs_0=0.027*pow(10.0,-3.23*pow(re_0,-0.92));
 	    nu_t0 = cs_0*h_e*h_e*norm_S;
 	    re_1 = h_e*h_e*norm_S/nu_1;
@@ -980,33 +986,33 @@ namespace proteus
 
     inline
       void updateTurbulenceClosure(const int turbulenceClosureModel,
-				 const double eps_rho,
-				 const double eps_mu,
-				 const double rho_0,
-				 const double nu_0,
-				 const double rho_1,
-				 const double nu_1,
-				 const double useVF,
-				 const double vf,
-				 const double phi,
-				 const double porosity,
-				 const double eddy_visc_coef_0,
-				 const double turb_var_0, //k for k-eps or k-omega
-				 const double turb_var_1, //epsilon for k-epsilon, omega for k-omega
-				 const double turb_grad_0[nSpace],//grad k for k-eps,k-omega
-   			         double& eddy_viscosity,
-				 double mom_uu_diff_ten[nSpace],
-				 double mom_vv_diff_ten[nSpace],
-				 double mom_ww_diff_ten[nSpace],
-				 double mom_uv_diff_ten[1],
-				 double mom_uw_diff_ten[1],
-				 double mom_vu_diff_ten[1],
-				 double mom_vw_diff_ten[1],
-				 double mom_wu_diff_ten[1],
-				 double mom_wv_diff_ten[1],
-				 double& mom_u_source,
-				 double& mom_v_source,
-				 double& mom_w_source)
+				   const double eps_rho,
+				   const double eps_mu,
+				   const double rho_0,
+				   const double nu_0,
+				   const double rho_1,
+				   const double nu_1,
+				   const double useVF,
+				   const double vf,
+				   const double phi,
+				   const double porosity,
+				   const double eddy_visc_coef_0,
+				   const double turb_var_0, //k for k-eps or k-omega
+				   const double turb_var_1, //epsilon for k-epsilon, omega for k-omega
+				   const double turb_grad_0[nSpace],//grad k for k-eps,k-omega
+				   double& eddy_viscosity,
+				   double mom_uu_diff_ten[nSpace],
+				   double mom_vv_diff_ten[nSpace],
+				   double mom_ww_diff_ten[nSpace],
+				   double mom_uv_diff_ten[1],
+				   double mom_uw_diff_ten[1],
+				   double mom_vu_diff_ten[1],
+				   double mom_vw_diff_ten[1],
+				   double mom_wu_diff_ten[1],
+				   double mom_wv_diff_ten[1],
+				   double& mom_u_source,
+				   double& mom_v_source,
+				   double& mom_w_source)
     {
       /****
 	   eddy_visc_coef 
@@ -1761,6 +1767,8 @@ namespace proteus
 			   double* q_mom_w_acc,
 			   double* q_mass_adv,
 			   double* q_mom_u_acc_beta_bdf, double* q_mom_v_acc_beta_bdf, double* q_mom_w_acc_beta_bdf,
+                           double* q_dV,
+                           double* q_dV_last,
 			   double* q_velocity_sge,
 			   double* q_cfl,
 			   double* q_numDiff_u, double* q_numDiff_v, double* q_numDiff_w,
@@ -2164,8 +2172,8 @@ namespace proteus
 	      //moving mesh
 	      //
 	      //transform the continuity equation as if the accumulation term was  d(1)/dt
-	      mass_adv[0] -= MOVING_DOMAIN*xt;
-	      mass_adv[1] -= MOVING_DOMAIN*yt;
+	      //mass_adv[0] -= MOVING_DOMAIN*xt;
+	      //mass_adv[1] -= MOVING_DOMAIN*yt;
 	      /* mass_adv[2] -= MOVING_DOMAIN*zt; */
 
 	      mom_u_adv[0] -= MOVING_DOMAIN*mom_u_acc*xt;
@@ -2191,20 +2199,23 @@ namespace proteus
 	      //
 	      //calculate time derivative at quadrature points
 	      //
+              if (q_dV_last[eN_k] <= -100)
+                q_dV_last[eN_k] = dV;
+              q_dV[eN_k] = dV;
 	      ck.bdf(alphaBDF,
-		     q_mom_u_acc_beta_bdf[eN_k],
+		     q_mom_u_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV,
 		     mom_u_acc,
 		     dmom_u_acc_u,
 		     mom_u_acc_t,
 		     dmom_u_acc_u_t);
 	      ck.bdf(alphaBDF,
-		     q_mom_v_acc_beta_bdf[eN_k],
+		     q_mom_v_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV,
 		     mom_v_acc,
 		     dmom_v_acc_v,
 		     mom_v_acc_t,
 		     dmom_v_acc_v_t);
 	      /* ck.bdf(alphaBDF, */
-	      /* 	     q_mom_w_acc_beta_bdf[eN_k], */
+	      /* 	     q_mom_w_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV, */
 	      /* 	     mom_w_acc, */
 	      /* 	     dmom_w_acc_w, */
 	      /* 	     mom_w_acc_t, */
@@ -2819,8 +2830,8 @@ namespace proteus
 	      //
 	      //moving domain
 	      //
-	      mass_adv_ext[0] -= MOVING_DOMAIN*xt_ext;
-	      mass_adv_ext[1] -= MOVING_DOMAIN*yt_ext;
+	      //mass_adv_ext[0] -= MOVING_DOMAIN*xt_ext;
+	      //mass_adv_ext[1] -= MOVING_DOMAIN*yt_ext;
 	      /* mass_adv_ext[2] -= MOVING_DOMAIN*zt_ext; */
 
 	      mom_u_adv_ext[0] -= MOVING_DOMAIN*mom_u_acc_ext*xt_ext;
@@ -3285,6 +3296,8 @@ namespace proteus
 			   double* normal_phi,
 			   double* kappa_phi,
 			   double* q_mom_u_acc_beta_bdf, double* q_mom_v_acc_beta_bdf, double* q_mom_w_acc_beta_bdf,
+                           double* q_dV,
+                           double* q_dV_last,
 			   double* q_velocity_sge,
 			   double* q_cfl,
 			   double* q_numDiff_u_last, double* q_numDiff_v_last, double* q_numDiff_w_last,
@@ -3720,8 +3733,8 @@ namespace proteus
 	      //
 	      //moving mesh
 	      //
-	      mass_adv[0] -= MOVING_DOMAIN*xt;
-	      mass_adv[1] -= MOVING_DOMAIN*yt;
+	      //mass_adv[0] -= MOVING_DOMAIN*xt;
+	      //mass_adv[1] -= MOVING_DOMAIN*yt;
 	      /* mass_adv[2] -= MOVING_DOMAIN*zt; */
 
 	      mom_u_adv[0] -= MOVING_DOMAIN*mom_u_acc*xt;
@@ -3748,19 +3761,19 @@ namespace proteus
 	      //calculate time derivatives
 	      //
 	      ck.bdf(alphaBDF,
-		     q_mom_u_acc_beta_bdf[eN_k],
+		     q_mom_u_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV,
 		     mom_u_acc,
 		     dmom_u_acc_u,
 		     mom_u_acc_t,
 		     dmom_u_acc_u_t);
 	      ck.bdf(alphaBDF,
-		     q_mom_v_acc_beta_bdf[eN_k],
+		     q_mom_v_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV,
 		     mom_v_acc,
 		     dmom_v_acc_v,
 		     mom_v_acc_t,
 		     dmom_v_acc_v_t);
 	      /* ck.bdf(alphaBDF, */
-	      /* 	     q_mom_w_acc_beta_bdf[eN_k], */
+	      /* 	     q_mom_w_acc_beta_bdf[eN_k]*q_dV_last[eN_k]/dV, */
 	      /* 	     mom_w_acc, */
 	      /* 	     dmom_w_acc_w, */
 	      /* 	     mom_w_acc_t, */
@@ -4475,8 +4488,8 @@ namespace proteus
 	      //
 	      //moving domain
 	      //
-	      mass_adv_ext[0] -= MOVING_DOMAIN*xt_ext;
-	      mass_adv_ext[1] -= MOVING_DOMAIN*yt_ext;
+	      //mass_adv_ext[0] -= MOVING_DOMAIN*xt_ext;
+	      //mass_adv_ext[1] -= MOVING_DOMAIN*yt_ext;
 	      /* mass_adv_ext[2] -= MOVING_DOMAIN*zt_ext; */
 
 	      mom_u_adv_ext[0] -= MOVING_DOMAIN*mom_u_acc_ext*xt_ext;
@@ -4819,6 +4832,8 @@ namespace proteus
     				  int* elementBoundaryElementsArray,
     				  int* elementBoundaryLocalElementBoundariesArray,
     				  double* mesh_dof,
+                                  double* mesh_velocity_dof,
+                                  double MOVING_DOMAIN,//0 or 1
     				  int* mesh_l2g,
     				  double* mesh_trial_trace_ref,
     				  double* mesh_grad_trial_trace_ref,
@@ -4864,7 +4879,8 @@ namespace proteus
     	    metricTensor[(nSpace-1)*(nSpace-1)],
     	    metricTensorDetSqrt,
     	    normal[2],
-    	    x,y,z;
+    	    x,y,z,
+    	    xt,yt,zt,integralScaling;
 	  
     	  for  (int kb=0;kb<nQuadraturePoints_elementBoundary;kb++)
     	    {
@@ -4907,6 +4923,18 @@ namespace proteus
     						  normal_ref,
     						  normal,
     						  x,y,z);
+	      ck.calculateMappingVelocity_elementBoundary(left_eN_global,
+	        					  left_ebN_element,
+	        					  kb,
+	        					  left_ebN_element*nQuadraturePoints_elementBoundary+kb,
+	        					  mesh_velocity_dof,
+	        					  mesh_l2g,
+	        					  mesh_trial_trace_ref,
+	        					  xt,yt,zt,
+	        					  normal,
+	        					  boundaryJac,
+	        					  metricTensor,
+	        					  integralScaling);
     	      xArray_right[kb*2+0] = x;
     	      xArray_right[kb*2+1] = y;
     	      /* xArray_right[kb*3+2] = z; */
@@ -4957,6 +4985,9 @@ namespace proteus
     	      velocityAverage[ebN_kb_nSpace+0]=0.5*(u_left + u_right);
     	      velocityAverage[ebN_kb_nSpace+1]=0.5*(v_left + v_right);
     	      /* velocityAverage[ebN_kb_nSpace+2]=0.5*(w_left + w_right); */
+    	      velocityAverage[ebN_kb_nSpace+0] -= MOVING_DOMAIN*xt;
+    	      velocityAverage[ebN_kb_nSpace+1] -= MOVING_DOMAIN*yt;
+    	      /* velocityAverage[ebN_kb_nSpace+2] -= MOVING_DOMAIN*zt; */
     	    }//ebNI
     	}
     }
