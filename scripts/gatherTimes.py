@@ -36,7 +36,7 @@ def gatherTimes(filename,dataDir='.',addname="_complete", tCount=None):
         if tCount == -1:
             SpatialCollection = TemporalGridCollection[-1]
             Grids = SpatialCollection[:]
-            tCount = int(Grids[0].attrib['Name'])
+            tCount = int(Grids[0].attrib['Name'])+1
             del TemporalGridCollection[:]
         for i in range(tCount):
             dataset_name = TemporalGridCollection.attrib['Name']+"_"+`i`

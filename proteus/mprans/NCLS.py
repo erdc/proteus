@@ -180,6 +180,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         return copyInstructions
     def postStep(self,t,firstStep=False):
         self.u_old_dof[:] = self.model.u[0].dof
+        self.model.q['dV_last'][:] = self.model.q['dV']
         # if self.checkMass:
         #     self.m_post = Norms.scalarSmoothedHeavisideDomainIntegral(self.epsFact,
         #                                                               self.model.mesh.elementDiametersArray,
@@ -449,6 +450,8 @@ class LevelModel(OneLevelTransport):
         self.q[('grad(u)',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
         self.q[('m_last',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('mt',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q['dV'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q['dV_last'] = -1000*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('m_tmp',0)] = self.q[('u',0)]#numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('m',0)] = self.q[('u',0)]#numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         #cek todo for NCLS we really don't need dH because it's just q_v from the flow model
@@ -669,6 +672,8 @@ class LevelModel(OneLevelTransport):
 	    self.q[('grad(u)',0)],
             self.q[('dH_sge',0,0)],
             self.timeIntegration.beta_bdf[0],#mwf was self.timeIntegration.m_last[0],
+            self.q['dV'],
+            self.q['dV_last'],
             self.q[('cfl',0)],
             self.shockCapturing.numDiff[0],
             self.shockCapturing.numDiff_last[0],
