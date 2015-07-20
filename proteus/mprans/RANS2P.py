@@ -89,6 +89,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  rho_1=1.205,nu_1=1.500e-5,
                  g=[0.0,0.0,-9.8],
                  nd=3,
+                 ME_model=0,
                  LS_model=None,
                  VF_model=None,
                  KN_model=None,
@@ -142,6 +143,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             self.epsFact_density = epsFact
         self.stokes=stokes
+        self.ME_model=ME_model
         self.LS_model=LS_model
         self.VF_model=VF_model
         self.KN_model=KN_model
@@ -287,7 +289,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def attachModels(self,modelList):
         #level set
-        self.model = modelList[0]
+        self.model = modelList[self.ME_model]
         self.model.q['phi_solid'] = self.q_phi_solid
         self.model.q['velocity_solid'] = self.q_velocity_solid
         if self.LS_model != None:
@@ -644,6 +646,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             #print "Forces_v"
             #print self.netForces_v[:,:]
     def postStep(self,t,firstStep=False):
+        self.model.q['dV_last'][:] = self.model.q['dV']
         if self.comm.isMaster():
             #print "wettedAreas"
             #print self.wettedAreas[:]
@@ -882,9 +885,11 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[('mt',1)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('mt',2)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('mt',3)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        self.q[('dV_u',1)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        self.q[('dV_u',2)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        self.q[('dV_u',3)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        #self.q[('dV_u',1)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        #self.q[('dV_u',2)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        #self.q[('dV_u',3)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q['dV'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
+        self.q['dV_last'] = -1000*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q[('f',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
         self.q[('velocity',0)] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
         self.q['velocity_solid'] = numpy.zeros((self.mesh.nElements_global,self.nQuadraturePoints_element,self.nSpace_global),'d')
@@ -1360,6 +1365,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.beta_bdf[1],
             self.timeIntegration.beta_bdf[2],
             self.timeIntegration.beta_bdf[3],
+            self.q['dV'],
+            self.q['dV_last'],
             self.stabilization.v_last,
             self.q[('cfl',0)],
             self.q[('numDiff',1,1)],
@@ -1553,6 +1560,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.timeIntegration.beta_bdf[1],
             self.timeIntegration.beta_bdf[2],
             self.timeIntegration.beta_bdf[3],
+            self.q['dV'],
+            self.q['dV_last'],
             self.stabilization.v_last,
             self.q[('cfl',0)],
             self.shockCapturing.numDiff_last[1],
@@ -1659,7 +1668,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         return jacobian
-    def calculateElementQuadrature(self):
+    def calculateElementQuadrature(self,domainMoved=False):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points.
@@ -1681,10 +1690,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[1].femSpace.getBasisValuesRef(self.elementQuadraturePoints)
         self.u[1].femSpace.getBasisGradientValuesRef(self.elementQuadraturePoints)
         self.coefficients.initializeElementQuadrature(self.timeIntegration.t,self.q)
-        if self.stabilization != None:
+        if self.stabilization != None and not domainMoved:
             self.stabilization.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
             self.stabilization.initializeTimeIntegration(self.timeIntegration)
-        if self.shockCapturing != None:
+        if self.shockCapturing != None and not domainMoved:
             self.shockCapturing.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
     def calculateElementBoundaryQuadrature(self):
         """
@@ -1767,7 +1776,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def calculateSolutionAtQuadrature(self):
         pass
     def calculateAuxiliaryQuantitiesAfterStep(self):
-        if self.postProcessing:
+        if self.postProcessing and self.conservativeFlux:
             self.rans2p.calculateVelocityAverage(self.mesh.nExteriorElementBoundaries_global,
                                                  self.mesh.exteriorElementBoundariesArray,
                                                  self.mesh.nInteriorElementBoundaries_global,
@@ -1775,6 +1784,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  self.mesh.elementBoundaryElementsArray,
                                                  self.mesh.elementBoundaryLocalElementBoundariesArray,
                                                  self.mesh.nodeArray,
+                                                 self.mesh.nodeVelocityArray,
+                                                 self.MOVING_DOMAIN,
                                                  self.mesh.elementNodesArray,
                                                  self.u[0].femSpace.elementMaps.psi_trace,
                                                  self.u[0].femSpace.elementMaps.grad_psi_trace,
@@ -1787,6 +1798,18 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                                                  self.u[1].femSpace.psi_trace,
                                                  self.ebqe[('velocity',0)],
                                                  self.ebq_global[('velocityAverage',0)])
+            if self.movingDomain:
+                log("Element Quadrature",level=3)
+                self.calculateElementQuadrature(domainMoved=True)
+                log("Element Boundary Quadrature",level=3)
+                self.calculateElementBoundaryQuadrature()
+                log("Global Exterior Element Boundary Quadrature",level=3)
+                self.calculateExteriorElementBoundaryQuadrature()
+                for ci in range(len(self.velocityPostProcessor.vpp_algorithms)):
+                    for cj in self.velocityPostProcessor.vpp_algorithms[ci].updateConservationJacobian.keys():
+                        self.velocityPostProcessor.vpp_algorithms[ci].updateWeights()
+                        self.velocityPostProcessor.vpp_algorithms[ci].computeGeometricInfo()
+                        self.velocityPostProcessor.vpp_algorithms[ci].updateConservationJacobian[cj] = True
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
 
     def getForce(self,cg,forceExtractionFaces,force,moment):
