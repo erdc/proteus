@@ -141,7 +141,7 @@ ${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find 
 
 	$(call show_info)
 
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -f -k error default.yaml ${PROTEUS_PREFIX}
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -f -k error -l copy default.yaml ${PROTEUS_PREFIX}
         # workaround hack on Cygwin for hashdist launcher to work correctly
 	-cp ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.exe.link ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.link
 
