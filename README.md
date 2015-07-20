@@ -14,4 +14,4 @@ https://github.com/erdc-cm/proteus/wiki/How-to-Build-Proteus-Using-HashDist
 # Developer Information
 
 The source code, wiki, and issue tracker are on GitHub at
-https://github.come/erdc-cm/proteus.
+https://github.com/erdc-cm/proteus.
