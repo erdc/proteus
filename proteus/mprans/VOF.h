@@ -51,6 +51,8 @@ namespace proteus
 				   double* q_m,
 				   double* q_u,
 				   double* q_m_betaBDF,
+                                   double* q_dV,
+                                   double* q_dV_last,
 				   double* cfl,
 				   double* q_numDiff_u, 
 				   double* q_numDiff_u_last, 
@@ -345,6 +347,8 @@ namespace proteus
 			   double* q_m,
 			   double* q_u,
 			   double* q_m_betaBDF,
+                           double* q_dV,
+                           double* q_dV_last,
 			   double* cfl,
 			   double* q_numDiff_u, 
 			   double* q_numDiff_u_last, 
@@ -502,8 +506,11 @@ namespace proteus
 	      //
 	      //calculate time derivative at quadrature points
 	      //
+              if (q_dV_last[eN_k] <= -100)
+                q_dV_last[eN_k] = dV;
+              q_dV[eN_k] = dV;
 	      ck.bdf(alphaBDF,
-		     q_m_betaBDF[eN_k],
+		     q_m_betaBDF[eN_k]*q_dV_last[eN_k]/dV,//ensure prior mass integral is correct for  m_t with BDF1
 		     m,
 		     dm,
 		     m_t,
@@ -948,7 +955,7 @@ namespace proteus
 	      //calculate time derivatives
 	      //
 	      ck.bdf(alphaBDF,
-		     q_m_betaBDF[eN_k],
+		     q_m_betaBDF[eN_k],//since m_t isn't used, we don't have to correct mass
 		     m,
 		     dm,
 		     m_t,
