@@ -79,7 +79,8 @@ class NS_base:  # (HasTraits):
         if so.useOneArchive:
             self.femSpaceWritten={}
             tmp  = Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
-                                        gatherAtClose=opts.gatherArchive,hotStart=opts.hotStart)
+                                        gatherAtClose=opts.gatherArchive,hotStart=opts.hotStart,
+                                        useGlobalXMF=(not opts.subdomainArchives))
             self.ar = dict([(i,tmp) for i in range(len(self.pList))])
         elif len(self.pList) == 1:
             self.ar = {0:Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
@@ -509,7 +510,8 @@ class NS_base:  # (HasTraits):
         for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
             if self.opts.hotStart:
                 log("Setting initial conditions from hot start file for "+p.name)
-                tCount = len(self.ar[index].tree.getroot()[-1][-1]) - 1
+                tCount = int(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Name'])
+                self.ar[index].n_datasets = tCount+1
                 time = float(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Value'])
                 if len(self.ar[index].tree.getroot()[-1][-1]) > 1:
                     dt = time - float(self.ar[index].tree.getroot()[-1][-1][-2][0].attrib['Value'])
@@ -642,12 +644,11 @@ class NS_base:  # (HasTraits):
                 lm.getResidual(lu,lr)
             log("Initializing time history for model step controller")
             m.stepController.initializeTimeHistory()
+        self.systemStepController.initialize_dt_system(self.tnList[0],self.tnList[1]) #may reset other dt's
+        for m in self.modelList:
             log("Auxiliary variable calculations for model %s" % (m.name,))
             for av in self.auxiliaryVariables[m.name]:
                 av.calculate_init()
-            if not self.opts.cacheArchive:
-                self.ar[index].sync()
-        self.systemStepController.initialize_dt_system(self.tnList[0],self.tnList[1]) #may reset other dt's
         log("Starting time stepping",level=0)
         self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
         systemStepFailed=False
@@ -776,8 +777,6 @@ class NS_base:  # (HasTraits):
                             self.tCount+=1
                             for index,model in enumerate(self.modelList):
                                 self.archiveSolution(model,index,self.systemStepController.t_system)
-                            if not self.opts.cacheArchive:
-                                self.ar[index].sync()
                 #end system split operator sequence
                 if systemStepFailed:
                     log("System Step Failed")
@@ -808,15 +807,11 @@ class NS_base:  # (HasTraits):
                     self.tCount+=1
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
-                    if not self.opts.cacheArchive:
-                        self.ar[index].sync()
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
                 self.tCount+=1
                 for index,model in enumerate(self.modelList):
                     self.archiveSolution(model,index,self.systemStepController.t_system_last)
-                if not self.opts.cacheArchive:
-                    self.ar[index].sync()
             if systemStepFailed:
                 break
         log("Finished calculating solution",level=3)
@@ -913,7 +908,7 @@ class NS_base:  # (HasTraits):
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=True,meshChanged=True)
 
-        #for nonlinear POD 
+        #for nonlinear POD
         if self.archive_pod_residuals[index] == True:
             res_space = {}; res_mass = {}
             for ci in range(model.levelModelList[-1].coefficients.nc):
@@ -923,6 +918,13 @@ class NS_base:  # (HasTraits):
                 model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_space,res_name_base='spatial_residual')
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_mass,res_name_base='mass_residual')
+
+        if not self.opts.cacheArchive:
+            if not self.so.useOneArchive:
+                self.ar[index].sync()
+            else:
+                if index == len(self.ar) - 1:
+                    self.ar[index].sync()
     ##save model's solution values to archive
     def archiveSolution(self,model,index,t=None):
         if self.archiveFlag == ArchiveFlags.UNDEFINED:
@@ -973,7 +975,7 @@ class NS_base:  # (HasTraits):
             model.levelModelList[-1].archiveExteriorElementBoundaryQuadratureValues(self.ar[index],t,self.tCount,
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=False,meshChanged=True)
-        #for nonlinear POD 
+        #for nonlinear POD
         if self.archive_pod_residuals[index] == True:
             res_space = {}; res_mass = {}
             for ci in range(model.levelModelList[-1].coefficients.nc):
@@ -983,9 +985,14 @@ class NS_base:  # (HasTraits):
                 model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_mass[ci])
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],t,self.tCount,res_space,res_name_base='spatial_residual')
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],t,self.tCount,res_mass,res_name_base='mass_residual')
-                
+
         if not self.opts.cacheArchive:
-            self.ar[index].sync()
+            if not self.so.useOneArchive:
+                self.ar[index].sync()
+            else:
+                if index == len(self.ar) - 1:
+                    self.ar[index].sync()
+
     ## clean up archive
     def closeArchive(self,model,index):
         if self.archiveFlag == None:

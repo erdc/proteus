@@ -859,7 +859,7 @@ class OneLevelTransport(NonlinearEquation):
                                        max(1,self.nSpace_global-1)),
                                       'd')
         log(memory("global exterior element boundary quadrature","OneLevelTransport"),level=4)
-        self.forceStrongConditions=False
+        self.forceStrongConditions= numericalFluxType.useStrongDirichletConstraints
         self.dirichletConditionsForceDOF = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
@@ -1733,7 +1733,7 @@ class OneLevelTransport(NonlinearEquation):
         if self.forceStrongConditions:#
             for cj in range(len(self.dirichletConditionsForceDOF)):#
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    r[self.offset[cj]+self.stride[cj]*dofN] = 0
+                    r[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         #for keeping solver statistics
         self.nonlinear_function_evaluations += 1
         #cek debug
@@ -1776,13 +1776,12 @@ class OneLevelTransport(NonlinearEquation):
             raise TypeError("Matrix type must be SparseMatrix or array")
         log("Jacobian ",level=10,data=jacobian)
         if self.forceStrongConditions:
-            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
             for cj in range(self.nc):
                 for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
                     global_dofN = self.offset[cj]+self.stride[cj]*dofN
                     for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
                         if (self.colind[i] == global_dofN):
-                            self.nzval[i] = scaling
+                            self.nzval[i] = 1.0
                         else:
                             self.nzval[i] = 0.0
         #mwf decide if this is reasonable for solver statistics
@@ -4133,7 +4132,6 @@ class OneLevelTransport(NonlinearEquation):
         if self.diffusiveFluxBoundaryConditionsSetterDictDict != None:
             fluxBoundaryCondition_components = fluxBoundaryCondition_components.union(set(self.diffusiveFluxBoundaryConditionsSetterDictDict .keys()))
         self.fluxBoundaryConditionsObjectsDict = {}
-        print "fluxBoundaryCondition_components",fluxBoundaryCondition_components
         for ci in fluxBoundaryCondition_components:
             if ci in self.advectiveFluxBoundaryConditionsSetterDict:
                 advectiveFluxBC = self.advectiveFluxBoundaryConditionsSetterDict[ci]
@@ -5855,13 +5853,12 @@ class OneLevelTransport(NonlinearEquation):
             raise TypeError("Matrix type must be SparseMatrix or array")
         log("Mass Jacobian ",level=10,data=jacobian)
         if self.forceStrongConditions:
-            scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
             for cj in range(self.nc):
                 for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
                     global_dofN = self.offset[cj]+self.stride[cj]*dofN
                     for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
                         if (self.colind[i] == global_dofN):
-                            self.nzval[i] = scaling
+                            self.nzval[i] = 1.0
                         else:
                             self.nzval[i] = 0.0
         return jacobian
