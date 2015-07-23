@@ -1,0 +1,28 @@
+#!/bin/tcsh
+#PBS -l select=1:ncpus=32:mpiprocs=32
+#PBS -A ERDCV00898ENQ
+#PBS -l walltime=001:00:00
+#PBS -q debug
+#PBS -N testProteus
+#PBS -j oe
+#PBS -l application=proteus
+#PBS -V
+#PBS -l ccm=1
+setenv PROTEUS_PYTHON ${HOME}/proteus/lightning.gnu/bin/python
+cd $PBS_O_WORKDIR
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+echo "testing import"
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+aprun -n 1 ${PROTEUS_PYTHON} -v test_import.py
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+echo "testing import on all mpi  processes"
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+aprun -n 16 ${PROTEUS_PYTHON} test_import.py
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+echo "testing poisson 1 way on 1 nodes"
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+aprun -n 1 ${PROTEUS_PYTHON} test_meshPartitionFromTetgenFiles.py
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+echo "testing poisson 16 way on 1 nodes"
+echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+aprun -n 16 ${PROTEUS_PYTHON} test_meshPartitionFromTetgenFiles.py

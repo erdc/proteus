@@ -84,17 +84,6 @@ SparseMatrix_getCSRrepresentation(SparseMatrix *self,
   nr  = self->dim[0];
   nnz = self->A.nnz;
 
-  /*old style array creation*/
-/*   dims[0] = nr+1; */
-/*   rowout = PyArray_FromDimsAndData(1,dims,PyArray_INT, */
-/* 				   (char*)rowptr); */
-/*   dims[0] = nnz; */
-/*   colout = PyArray_FromDimsAndData(1,dims,PyArray_INT, */
-/* 				   (char*)colind); */
-
-/*   dims[0] = nnz; */
-/*   aout = PyArray_FromDimsAndData(1,dims,PyArray_DOUBLE, */
-/* 				   (char*)a); */
   dims[0] = nr+1;
   rowout = PyArray_SimpleNewFromData(1,dims,NPY_INT,
 				   (void*)rowptr);
