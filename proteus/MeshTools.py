@@ -3,6 +3,7 @@ Tools for creating and manipulating 1,2, and 3D meshes
 """
 from EGeometry import *
 import numpy
+np = numpy
 import array
 from Archiver import *
 from LinearAlgebraTools import ParVec_petsc4py
@@ -607,7 +608,7 @@ class Mesh:
             #topology and geometry
             #
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology = SubElement(self.arGrid,"Topology",
                                   {"Type":Xdmf_ElementTopology,
                                    "NumberOfElements":str(self.nElements_owned)})
@@ -622,11 +623,18 @@ class Mesh:
                                    "Precision":"8",
                                    "Dimensions":"%i %i" % (self.nNodes_global,3)})
             if ar.hdfFile != None:
-                elements.text = ar.hdfFilename+":/elements"+name+`tCount`
-                nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
-                if init or meshChanged:
-                    ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
-                    ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+                if ar.has_h5py:
+                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
+                    nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
+                    if init or meshChanged:
+                        ar.create_dataset_async('elements'+`ar.comm.rank()`+name+`tCount`,data=self.elementNodesArray[:self.nElements_owned])
+                        ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`,data=self.nodeArray)
+                else:
+                    elements.text = ar.hdfFilename+":/elements"+name+`tCount`
+                    nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                    if init or meshChanged:
+                        ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
+                        ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -638,7 +646,7 @@ class Mesh:
             #
             if EB:
                 self.arEBGrid = SubElement(self.arEBGridCollection,"Grid",{"GridType":"Uniform"})
-                self.arEBTime = SubElement(self.arEBGrid,"Time",{"Value":str(t)})
+                self.arEBTime = SubElement(self.arEBGrid,"Time",{"Value":str(t),"Name":str(tCount)})
                 Xdmf_ElementEBTopology = "Triangle" #cek hack
                 ebtopology = SubElement(self.arEBGrid,"Topology",
                                     {"Type":Xdmf_ElementEBTopology,
@@ -654,11 +662,18 @@ class Mesh:
                                      "Precision":"8",
                                      "Dimensions":"%i %i" % (self.nNodes_global,3)})
                 if ar.hdfFile != None:
-                    ebelements.text = ar.hdfFilename+":/elementBoundaries"+name+`tCount`
-                    ebnodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
-                    if init or meshChanged:
-                        ar.hdfFile.createArray("/",'elementBoundaries'+name+`tCount`,self.elementBoundaryNodesArray)
-                        #ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+                    if ar.has_h5py:
+                        ebelements.text = ar.hdfFilename+":/elementBoundaries"+`ar.comm.rank()`+name+`tCount`
+                        ebnodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
+                        if init or meshChanged:
+                            ar.create_dataset_async('elementBoundaries'+`ar.comm.rank()`+name+`tCount`, data = self.elementBoundaryNodesArray)
+                            #ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`, data = self.nodeArray)
+                    else:
+                        ebelements.text = ar.hdfFilename+":/elementBoundaries"+name+`tCount`
+                        ebnodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                        if init or meshChanged:
+                            ar.hdfFile.createArray("/",'elementBoundaries'+name+`tCount`,self.elementBoundaryNodesArray)
+                            #ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
                 else:
                     SubElement(ebelements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elementBoundaries"+name+".txt"})
                     SubElement(ebnodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -732,11 +747,18 @@ class Mesh:
                                       "Dimensions":str(self.nElements_owned)})
 
                 if ar.hdfFile != None:
-                    nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+name+`tCount`
-                    elemMap.text = ar.hdfFilename+":/cellMapL2G"+name+`tCount`
-                    if init or meshChanged:
-                        ar.hdfFile.createArray("/",'nodeMapL2G'+name+`tCount`,self.globalMesh.nodeNumbering_subdomain2global)
-                        ar.hdfFile.createArray("/",'cellMapL2G'+name+`tCount`,self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
+                    if ar.has_h5py:
+                        nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+`ar.comm.rank()`+name+`tCount`
+                        elemMap.text = ar.hdfFilename+":/cellMapL2G"+`ar.comm.rank()`+name+`tCount`
+                        if init or meshChanged:
+                            ar.create_dataset_async('nodeMapL2G'+`ar.comm.rank()`+name+`tCount`, data=self.globalMesh.nodeNumbering_subdomain2global)
+                            ar.create_dataset_async('cellMapL2G'+`ar.comm.rank()`+name+`tCount`, data=self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
+                    else:
+                        nodeMap.text = ar.hdfFilename+":/nodeMapL2G"+name+`tCount`
+                        elemMap.text = ar.hdfFilename+":/cellMapL2G"+name+`tCount`
+                        if init or meshChanged:
+                            ar.hdfFile.createArray("/",'nodeMapL2G'+name+`tCount`,self.globalMesh.nodeNumbering_subdomain2global)
+                            ar.hdfFile.createArray("/",'cellMapL2G'+name+`tCount`,self.globalMesh.elementNumbering_subdomain2global[:self.nElements_owned])
                 else:
                     SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodeMapL2G"+name+".txt"})
                     SubElement(nodeMap,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/cellMapL2G"+name+".txt"})
@@ -780,15 +802,25 @@ class Mesh:
                                                        "DataType":"Int",
                                                        "Dimensions":"%i" % (self.nElementBoundaries_global,)})
             if ar.hdfFile != None:
-                nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
-                ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
-                elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
-                ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
-                if EB:
-                    ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
-                    #ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
-                    elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+str(tCount)
-                    ar.hdfFile.createArray("/","elementBoundaryMaterialTypes"+str(tCount),self.elementBoundaryMaterialTypes)
+                if ar.has_h5py:
+                    nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                    ar.create_dataset_async("nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data=self.nodeMaterialTypes)
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                    ar.create_dataset_async("elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data=self.elementMaterialTypes[:self.nElements_owned])
+                    if EB:
+                        ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                        elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                        ar.create_dataset_async("elementBoundaryMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data=self.elementBoundaryMaterialTypes)
+                else:
+                    nodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
+                    ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
+                    ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
+                    if EB:
+                        ebnodeMaterialTypesValues.text = ar.hdfFilename+":/"+"nodeMaterialTypes"+str(tCount)
+                        #ar.hdfFile.createArray("/","nodeMaterialTypes"+str(tCount),self.nodeMaterialTypes)
+                        elementBoundaryMaterialTypesValues.text = ar.hdfFilename+":/"+"elementBoundaryMaterialTypes"+str(tCount)
+                        ar.hdfFile.createArray("/","elementBoundaryMaterialTypes"+str(tCount),self.elementBoundaryMaterialTypes)
             else:
                 numpy.savetxt(ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt",self.nodeMaterialTypes)
                 SubElement(nodeMaterialTypesValues,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+"nodeMaterialTypes"+str(tCount)+".txt"})
@@ -2462,7 +2494,7 @@ class TetrahedralMesh(Mesh):
         if parallel:
             cmeshTools.generateFromTetgenFilesParallel(self.cmesh,filebase,base)
         else:
-            cmeshTools.generateFromTetgenFiles(self.cmesh,filebase,base)            
+            cmeshTools.generateFromTetgenFiles(self.cmesh,filebase,base)
         log(memory("calling cmeshTools.generateFromTetgenFiles","cmeshTools"),level=4)
         if skipGeometricInit == False:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
@@ -2888,7 +2920,7 @@ class Mesh2DM(Mesh):
             #topology and geometry
             #
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology = SubElement(self.arGrid,"Topology",
                                   {"Type":Xdmf_ElementTopology,
                                    "NumberOfElements":str(self.nElements_owned)})
@@ -2911,13 +2943,22 @@ class Mesh2DM(Mesh):
                                                      "DataType":"Int",
                                                      "Dimensions":"%i" % (self.nElements_owned,)})
             if ar.hdfFile != None:
-                elements.text = ar.hdfFilename+":/elements"+name+`tCount`
-                nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
-                elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
-                if init or meshChanged:
-                    ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
-                    ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
-                    ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
+                if ar.has_h5py:
+                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
+                    nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_async('elements'+`ar.comm.rank()`+name+`tCount`, data = self.elementNodesArray[:self.nElements_owned])
+                        ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`, data = self.nodeArray)
+                        ar.create_dataset_async("elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
+                else:
+                    elements.text = ar.hdfFilename+":/elements"+name+`tCount`
+                    nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
+                    if init or meshChanged:
+                        ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
+                        ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+                        ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -3238,7 +3279,7 @@ class Mesh3DM(Mesh):
             #topology and geometry
             #
             self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
-            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t)})
+            self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
             topology = SubElement(self.arGrid,"Topology",
                                   {"Type":Xdmf_ElementTopology,
                                    "NumberOfElements":str(self.nElements_owned)})
@@ -3261,13 +3302,22 @@ class Mesh3DM(Mesh):
                                                      "DataType":"Int",
                                                      "Dimensions":"%i" % (self.nElements_owned,)})
             if ar.hdfFile != None:
-                elements.text = ar.hdfFilename+":/elements"+name+`tCount`
-                nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
-                elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
-                if init or meshChanged:
-                    ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
-                    ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
-                    ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
+                if ar.has_h5py:
+                    elements.text = ar.hdfFilename+":/elements"+`ar.comm.rank()`+name+`tCount`
+                    nodes.text = ar.hdfFilename+":/nodes"+`ar.comm.rank()`+name+`tCount`
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                    if init or meshChanged:
+                        ar.create_dataset_async('elements'+`ar.comm.rank()`+name+`tCount`, data = self.elementNodesArray[:self.nElements_owned])
+                        ar.create_dataset_async('nodes'+`ar.comm.rank()`+name+`tCount`, data = self.nodeArray)
+                        ar.create_dataset_async("elementMaterialTypes"+"_p"+`ar.comm.rank()`+"_t"+str(tCount), data = self.elementMaterialTypes[:self.nElements_owned])
+                else:
+                    elements.text = ar.hdfFilename+":/elements"+name+`tCount`
+                    nodes.text = ar.hdfFilename+":/nodes"+name+`tCount`
+                    elementMaterialTypesValues.text = ar.hdfFilename+":/"+"elementMaterialTypes"+str(tCount)
+                    if init or meshChanged:
+                        ar.hdfFile.createArray("/",'elements'+name+`tCount`,self.elementNodesArray[:self.nElements_owned])
+                        ar.hdfFile.createArray("/",'nodes'+name+`tCount`,self.nodeArray)
+                        ar.hdfFile.createArray("/","elementMaterialTypes"+str(tCount),self.elementMaterialTypes[:self.nElements_owned])
             else:
                 SubElement(elements,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/elements"+name+".txt"})
                 SubElement(nodes,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/nodes"+name+".txt"})
@@ -4177,7 +4227,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
     def locallyRefine(self,elementTagArray,flagForRefineType=0):
         """
         simple local refinement assuming elementTagArray[eN]=1 --> bisect
-        
+
         flagForRefineType = 0 -- newest node, 1 -- 4T, 2 -- U4T
         """
         log("MultilevelTriangularMesh:locallyRefine")
@@ -4225,13 +4275,13 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         self.bathyType=bathyType
         self.bathyAssignmentScheme=bathyAssignmentScheme
         self.errorNormType = errorNormType
-        
+
         log("InterpolatedBathymetryMesh: Calling Triangle to generate 2D coarse mesh for "+self.domain.name)
         tmesh = TriangleTools.TriangleBaseMesh(baseFlags=self.triangleOptions,
                                                nbase=1,
                                                verbose=10)
         tmesh.readFromPolyFile(domain.polyfile)
-        
+
         log("InterpolatedBathymetryMesh: Converting to Proteus Mesh")
         self.coarseMesh=tmesh.convertToProteusMesh(verbose=1)
         MultilevelTriangularMesh.__init__(self,0,0,0,skipInit=True,nLayersOfOverlap=0,
@@ -4280,7 +4330,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
             log("InterpolatedBathymetryMesh: tagging elements for refinement")
             error = self.tagElements(self.meshList[-1])
             log("InterpolatedBathymetryMesh: error = %f atol = %f rtol = %f number of elements tagged = %i" % (error,self.atol,self.rtol,self.meshList[-1].elementTags.sum()))
-    
+
     def setMeshBathymetry(self,mesh):
         if self.bathyAssignmentScheme == "interpolation":
             self.setMeshBathymetry_interpolate(mesh)
@@ -4290,13 +4340,13 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
             raise NotImplementedError
         elif self.bathyAssignmentScheme == "H1-projection":
             raise NotImplementedError
-        
+
     def setMeshBathymetry_interpolate(self,mesh):
         if self.bathyType == 'grid':
             mesh.nodeArray[:,2] = self.bathyInterpolant.ev(mesh.nodeArray[:,0],mesh.nodeArray[:,1])
         else:
             mesh.nodeArray[:,2] = self.bathyInterpolant(mesh.nodeArray[:,0],mesh.nodeArray[:,1])
-    
+
     def setMeshBathymetry_localAveraging(self,mesh):
         """
         calculate the arithmetic mean bathymetry of points inside each triangle and then assign the area-weighted average of the element means to each node
@@ -4631,7 +4681,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
                 #print "pN = ",pN,"eN = ",eN,"nodes ",mesh.elementNodesArray[eN,:]
                 zInterp = self.pointNodeWeightsArray[pN,0]*mesh.nodeArray[mesh.elementNodesArray[eN,0],2] +  \
                           self.pointNodeWeightsArray[pN,1]*mesh.nodeArray[mesh.elementNodesArray[eN,1],2] +  \
-                          self.pointNodeWeightsArray[pN,2]*mesh.nodeArray[mesh.elementNodesArray[eN,2],2] 
+                          self.pointNodeWeightsArray[pN,2]*mesh.nodeArray[mesh.elementNodesArray[eN,2],2]
                 errorPointwise = fabs(zInterp - self.domain.bathy[pN,2]) / (fabs(self.domain.bathy[pN,2])*self.rtol + self.atol)
                 #print "error ",errorPointwise
                 errorInfty = max(errorPointwise,errorInfty)
@@ -4977,6 +5027,275 @@ class MultilevelSimplicialMesh(MultilevelMesh):
             MultilevelTetrahedralMesh.refine(self)
 
 ## @}
+
+###utility functions for reading meshes from Xdmf
+from xml.etree import ElementTree as ET
+import tables,os
+
+def findXMLgridElement(xmf,MeshTag='Spatial_Domain',id_in_collection=-1,verbose=0):
+    """Try to find the element of the xml tree xmf that holds a uniform
+    grid with the name given in MeshTag by searching through Temporal
+    Grid Collections and Grid Collections.
+
+    If MeshTag isn't found, uses the first entry in the Domain
+    """
+    Domain = xmf.getroot()[-1]
+    GridCollection = None
+    Grid = None
+    for collection in Domain:
+        if 'Name' in collection.attrib and MeshTag in collection.attrib['Name']:
+            GridCollection = collection
+            break
+    if GridCollection == None:
+        GridCollection = Domain[0]
+    logEvent("Trying GridCollection.tag= %s" % (GridCollection.tag),4)
+    if GridCollection.attrib['GridType'] == 'Collection':
+        Grid = GridCollection[-1]
+    elif GridCollection.attrib['GridType'] == 'Uniform':
+        Grid = GridCollection
+    assert Grid.tag == 'Grid'
+    assert Grid.attrib['GridType'] == 'Uniform'
+
+    return Grid
+
+def extractPropertiesFromXdmfGridNode(Grid):
+    """unpack the Topology, Geometry, NodeMaterials, and ElementMaterials
+    nodes from xdmf node for a uniform grid
+    """
+    #Geometry first
+    Topology = None; Geometry  = None; NodeMaterials= None; ElementMaterials = None
+    for i,leaf in enumerate(Grid):
+        logEvent("Grid leaf %d tag= %s " % (i,leaf.tag),4)
+        if leaf.tag == 'Topology':
+            Topology = Grid[i]
+            logEvent("Topology found in leaf %d " % i,4)
+        elif leaf.tag == 'Geometry':
+            Geometry = Grid[i]
+            logEvent("Geometry found in leaf %d " % i,4)
+        elif leaf.tag == 'Attribute' and leaf.attrib['Name'] == 'nodeMaterialTypes':
+            NodeMaterials = Grid[i]
+            logEvent("NodeMaterials found in leaf %d " % i,4)
+        elif leaf.tag == 'Attribute' and leaf.attrib['Name'] == 'elementMaterialTypes':
+            ElementMaterials = Grid[i]
+            logEvent("ElementMaterials found in leaf %d " % i,4)
+
+    return Topology,Geometry,NodeMaterials,ElementMaterials
+
+def readUniformElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topologyid2name,topology2nodes):
+    """
+    Read xmdf element topology information when there are uniform elements in the mesh
+    Type of element given by elementTopologyName
+    Heavy data stored in hdf5
+    topologyid2name -- lookup for number of nodes in a given element type
+
+    returns
+
+    nElements_global  -- the number of elements in the mesh
+    nNodes_element    -- number of nodes per element
+    elementNodesArray -- element --> node connectivity
+                         stored as flattened array accessed using elementNodes_offset
+    elementNodes_offset -- offsets into the elementNodesArray storage for element connectivity
+                        -- element eN nodes are in
+                           elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]
+
+    """
+
+    nNodes_element = topology2nodes[elementTopologyName]
+    entry = Topology[0].text.split(':')[-1]
+    logEvent("Reading  elementNodesArray from %s " % entry,3)
+
+    elementNodesArray = hdf5.getNode(entry).read()
+    assert elementNodesArray.shape[1] == nNodes_element
+    nElements_global = elementNodesArray.shape[0]
+    logEvent("nElements_global,nNodes_element= (%d,%d) " % (nElements_global,nNodes_element),3)
+
+    elementNodes_offset = numpy.arange(nElements_global*nNodes_element+1,step=nNodes_element,dtype='i')
+
+    return nElements_global, nNodes_element, elementNodesArray, elementNodes_offset
+
+def readMixedElementTopologyFromXdmf(elementTopologyName,Topology,hdf5,topologyid2name,topology2nodes):
+    """
+    Read xmdf element topology information when there are mixed elements in the mesh
+    Heavy data stored in hdf5
+    topologyid2name -- lookup for number of nodes in a given element type
+
+    returns
+
+    nElements_global  -- the number of elements in the mesh
+    elementNodesArray -- element --> node connectivity
+                         stored as flattened array accessed using elementNodes_offset
+    elementNodes_offset -- offsets into the elementNodesArray storage for element connectivity
+                        -- element eN nodes are in
+                           elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]]
+
+    """
+    assert elementTopologyName == 'Mixed'
+
+    entry = Topology[0].text.split(':')[-1]
+    logEvent("Reading xdmf_topology from %s " % entry,3)
+
+    xdmf_topology = hdf5.getNode(entry).read()
+    #build elementNodesArray and offsets now
+    nElements_global = 0
+    i = 0
+    while i < len(xdmf_topology):
+        nElements_global += 1
+        nNodes_local = topology2nodes[topologyid2name[xdmf_topology[i]]]
+        i += nNodes_local+1
+    #
+    logEvent("Mixed topology found %s elements " % nElements_global,3)
+    elementNodes_offset = numpy.zeros((nElements_global+1,),'i')
+
+    i = 0; eN = 0
+    while i < len(xdmf_topology):
+        nNodes_local = topology2nodes[topologyid2name[xdmf_topology[i]]]
+        elementNodes_offset[eN+1] = elementNodes_offset[eN] + nNodes_local
+        eN += 1; i += nNodes_local+1
+    elementNodesArray = numpy.zeros((elementNodes_offset[nElements_global],),'i')
+    i = 0; eN = 0
+    while i < len(self.xdmf_topology):
+        nNodes_local = topology2nodes[topologyid2name[xdmf_topology[i]]]
+        elementNodesArray[elementNodes_offset[eN]:elementNodes_offset[eN+1]][:] = xdmf_topology[i+1:i+1+nNodes_local][:]
+        eN += 1; i += nNodes_local+1
+
+    return nElements_global, elementNodesArray, elementNodes_offset
+
+def readMeshXdmf(xmf_archive_base,heavy_file_base,MeshTag="Spatial_Domain",hasHDF5=True,verbose=0):
+    """
+    start trying to read an xdmf archive with name xmf_archive_base.xmf
+    assumes heavy_file_base.h5 has heavy data
+    root Element is Xdmf
+      last child of Xdmf which should be a Domain Element
+         find child of Domain that is a Temporal Grid Collection with a name containing MeshTag, if None use first collection
+            last child of Temporal Grid Collection should be a Uniform Grid at final time
+               Attribute (usually 1) of child is  Topology
+                  set elementTopologyName to Type
+                  if Type != Mixed
+                    get text attribute and read this entry from  hdf5 file
+                    set nNodes_element based on Type, nElements_global from leading dimension of elementNodesArray
+                    create elementNodes_offset from Type and flatten elementNodesArray
+                  else
+                    get text attribute and read this entry from  hdf5 file to place in into xdmf_topology
+                    generate elementNodesArray from xdmf_topology, calculating the number of elements using
+                      walk through xdmf_topology
+               Attribute (usually 2) of child is Geometry  --> load data into nodeArray
+                   set nNodes_global from nodeArray
+               If has Attribute nodeMaterials read this from hdf file, else set to default of all zeros
+               If has Attribute elementMaterialTypes, read this from hdf file, else set to default of all zeros
+
+    returns a BasicMeshInfo object with the minimal information read
+    """
+    assert os.path.isfile(xmf_archive_base+'.xmf')
+    assert os.path.isfile(heavy_file_base+'.h5')
+
+    ###information about allowed Xdmf topologies
+    #Xdmf cell type id to Name
+    topologyid2name = {2:'Polyline',4:'Triangle',5:'Quadrilateral',6:'Tetrahedron',8:'Wedge',9:'Hexahedron',
+                       112:'Mixed'} #Mixed isn't actually used 0x070
+    #Topology name to number of local nodes
+    topology2nodes = {'Polyline':2,'Triangle':3,'Quadrilateral':4,'Tetrahedron':4,'Wedge':6,'Hexahedron':8}
+
+    #for output
+    class BasicMeshInfo:
+        def __init__(self):
+            self.nNodes_global     = None
+            self.nodeArray         = None
+            self.nodeMaterialTypes = None
+            self.nNodes_element    = None
+            self.nElements_global  = None
+            self.elementTopologyName = None
+            self.elementNodesArray = None
+            self.elementNodes_offset  = None
+            self.elementMaterialTypes = None
+            self.nNodes_owned         = None
+            self.nElements_owned      = None
+        #
+    #
+    MeshInfo = BasicMeshInfo()
+
+    xmf = ET.parse(xmf_archive_base+'.xmf')
+    hdf5= tables.openFile(heavy_file_base+'.h5',mode="r")
+    assert hasHDF5
+
+    Grid = findXMLgridElement(xmf,MeshTag,id_in_collection=-1,verbose=verbose)
+
+    Topology,Geometry,NodeMaterials,ElementMaterials = extractPropertiesFromXdmfGridNode(Grid)
+
+    assert Geometry != None
+    entry = Geometry[0].text.split(':')[-1]
+    logEvent("Reading nodeArray from %s " % entry,3)
+
+    MeshInfo.nodeArray = hdf5.getNode(entry).read()
+    MeshInfo.nNodes_global = MeshInfo.nodeArray.shape[0]
+
+    if NodeMaterials != None:
+        entry = NodeMaterials[0].text.split(':')[-1]
+        logEvent("Reading nodeMaterialTypes from %s " % entry,4)
+        MeshInfo.nodeMaterialTypes = hdf5.getNode(entry).read()
+    else:
+        MeshInfo.nodeMaterialTypes = numpy.zeros((MeshInfo.nNodes_global,),'i')
+
+    assert Topology != None
+    if 'Type' in Topology.attrib:
+        MeshInfo.elementTopologyName = Topology.attrib['Type']
+    elif 'TopologyType' in Topology.attrib:
+        MeshInfo.elementTopologyName = Topology.attrib['TopologyType']
+    assert MeshInfo.elementTopologyName != None
+
+    logEvent("elementTopologyName= %s " % MeshInfo.elementTopologyName,3)
+    assert MeshInfo.elementTopologyName in topologyid2name.values()
+
+    if MeshInfo.elementTopologyName != 'Mixed':
+        MeshInfo.nElements_global, MeshInfo.nNodes_element, \
+            MeshInfo.elementNodesArray, MeshInfo.elementNodes_offset = readUniformElementTopologyFromXdmf(MeshInfo.elementTopologyName,Topology,
+                                                                                                          hdf5,topologyid2name,topology2nodes)
+
+    else:
+        MeshInfo.nElements_global, MeshInfo.elementNodesArray, \
+            MeshInfo.elementNodes_offset = readMixedElementTopologyFromXdmf(MeshInfo.elementTopologyName,Topology,hdf5,topologyid2name,topology2nodes)
+
+    #
+    if ElementMaterials != None:
+        entry = ElementMaterials[0].text.split(':')[-1]
+        logEvent("Reading elementMaterialTypes from %s " % entry,3)
+        MeshInfo.elementMaterialTypes = hdf5.getNode(entry).read()
+
+    else:
+        MeshInfo.elementMaterialTypes = numpy.zeros((MeshInfo.nElements_global,),'i')
+    #
+    ###only serial for now
+    MeshInfo.nNodes_owned = MeshInfo.nNodes_global
+    MeshInfo.nElements_owned = MeshInfo.nElements_global
+    hdf5.close()
+
+    return MeshInfo
+#
+def writeHexMesh(mesh_info,hexfile_base,index_base=0):
+    """
+    Write a hex mesh in Ido's format with base numbering index_base
+    HEX
+    nNodes_global nElements_global
+    x0 y0 z0
+    x1 y1 z1
+    ...
+    xN yN zN
+    [n0 n1 n2 n3 n4 n5 n6 n7 mat0]
+    [n0 n1 n2 n3 n4 n5 n6 n7 mat1]
+    """
+    assert mesh_info.elementTopologyName=='Hexahedron'
+
+    header="""HEX
+{nNodes_global} {nElements_global}
+""".format(nNodes_global=mesh_info.nNodes_global,nElements_global=mesh_info.nElements_global)
+
+    with open(hexfile_base+'.mesh','w') as mout:
+        mout.write(header)
+        numpy.savetxt(mout,mesh_info.nodeArray)
+        #format the elements, appending element material type
+        elems_with_mat = numpy.append(mesh_info.elementNodesArray,mesh_info.elementMaterialTypes.reshape(mesh_info.nElements_global,1),axis=1)
+        elems_with_mat[:,:-1] += index_base
+        numpy.savetxt(mout,elems_with_mat,fmt='%d')
+
 
 if __name__=='__main__':
 #      n0 = Node(0,0.0,0.0,0.0)
@@ -5411,3 +5730,229 @@ class NURBSMesh(HexahedralMesh):
         cmeshTools.allocateGeometricInfo_NURBS(self.cmesh)
         cmeshTools.computeGeometricInfo_NURBS(self.cmesh)
         self.buildFromC(self.cmesh)
+
+
+def distance(a, b):
+    norm = np.linalg.norm
+    return norm(b - a)
+
+def triangleVerticesToNormals(elementVertices):
+    """
+    Given a set of vertices to a triangle, return normals and a point corresponding to each normal
+    """
+    norm = np.linalg.norm
+
+    elementVertices = np.asarray(elementVertices)
+
+    if norm(elementVertices[:,2]) > 0:
+        raise ValueError("Expected triangles in 2D plane, got something else")
+    sets = ((0, 1), (0, 2), (1, 2))
+    outs = (2, 1, 0)
+    faces = []
+    rotate = np.asarray(((0., -1., 0.),
+                         (1., 0., 0.),
+                         (0., 0., 0.)))
+
+    for set, out in zip(sets, outs):
+        vertices = elementVertices[[set]]
+        ab = vertices[1] - vertices[0]
+        v_out = vertices[0] - elementVertices[out]
+        normal = rotate.dot(ab)
+        # normal should point *away* from remaining point
+        if normal.dot(v_out) < 0:
+            normal = -1*normal
+        faces.append((normal, vertices[0]))
+    return faces
+
+def tetrahedronVerticesToNormals(elementVertices):
+    """
+    Given a set of vertices to a tetrahedron, return normals and a point corresponding to each normal
+    """
+
+    elementVertices = np.asarray(elementVertices)
+
+    sets = ((0, 1, 2), (0, 1, 3), (0, 2, 3), (1, 2, 3))
+    outs = (3, 2, 1, 0)
+
+    faces = []
+
+    for set, out in zip(sets, outs):
+        vertices = elementVertices[[set]]
+        ab = vertices[1] - vertices[0]
+        ac = vertices[2] - vertices[0]
+        normal = np.cross(ab, ac)
+        v_out = vertices[0] - elementVertices[out]
+        # normal should point *away* from remaining point
+        if normal.dot(v_out) < 0:
+            normal = -1*normal
+        faces.append((normal, vertices[0]))
+    return faces
+
+
+def intersectPoints(line, points):
+    """
+    Given a line segment (defined as two points), identify all points that the line segment intersects.
+
+    This hasn't been vectorized.
+    """
+
+    a, b = line
+    a = np.asarray(a)
+    b = np.asarray(b)
+    distanceAB = distance(a, b)
+
+    def onAB(p):
+        p = np.asarray(p)
+        eps = 2*np.max((np.max(np.spacing(a)), np.max(np.spacing(b)), np.max(np.spacing(p))))
+        distancePA = distance(a, p)
+        distancePB = distance(p, b)
+        return p if abs(distancePA + distancePB - distanceAB) < eps else None
+
+    return [onAB(p) for p in points]
+
+
+def intersectEdges(line, edges):
+    """
+    Given a line segment (defined as two points), identify the locations of its intersections with all
+    given edges (defined as line segments).  If the line and an edge overlap, the *furthest* point
+    along the line (closest to the second point) that is still on each edge is returned.
+
+    This hasn't been vectorized.
+    """
+    norm = np.linalg.norm
+
+    def intersectEdge(line, edge):
+
+        line = np.asarray(line)
+        edge = np.asarray(edge)
+        a, b = line
+        c, d = edge
+        v_l = b - a
+        v_e = d - c
+
+        vl_cross_ve = np.cross(v_l, v_e)
+        mag_vl_cross_ve = norm(vl_cross_ve)
+
+        if mag_vl_cross_ve == 0:
+            # lines are parallel, check for overlap
+            intersects = intersectPoints(line, edge) + intersectPoints(edge, line)
+            # test for an intersect in intersectPoints
+            intersect = next((i for i in intersects if i is not None), None)
+            if intersect is not None:
+                # farthest endpoint is a, so start from there
+                closest_endpoint = a
+                closest_distance = distance(closest_endpoint, b)
+                # could reuse iterator from above, but it's confusing enough as it is :)
+                for intersect in intersects:
+                    if intersect is None:
+                        continue
+                    intersect_distance = distance(intersect, b)
+                    if intersect_distance < closest_distance:
+                        closest_endpoint = intersect
+                        closest_distance = intersect_distance
+                return closest_endpoint
+            else:
+                return None
+
+        # lines are not parallel, check for intersection
+        vl_cross_ve = np.cross(v_l, v_e)
+
+        # if v_l and v_e intersect, then there is an x that satisfies
+        x_vl_cross_ve = np.cross((c - a), v_e)
+
+        # but the two above vectors must be parallel
+        if norm(np.cross(vl_cross_ve, x_vl_cross_ve)) > 1e-8:
+            return None
+
+        # two lines are parallel, solve for x
+        x = norm(x_vl_cross_ve)/norm(vl_cross_ve)
+
+        intersect = a + x*(b-a)
+
+        # and verify intersection is on the line
+        points = intersectPoints(line, [intersect])
+        assert(len(points) == 1)
+        return points[0]
+
+    return [intersectEdge(line, edge) for edge in edges]
+
+
+def intersectPolyhedron(line, polyhedron):
+    """
+    Given a line (defined as two points), identify the locations that it enters and exits the
+    polyhedron (defined as a collection of half-planes in three-space in normal, vertex form)
+
+    If the facets of the polyhedron are in edge form, the normal can be computed by taking the cross product of any
+    two non-parallel edges of the facet (in three-space).  Any vertex of the facet will work.
+
+    Implementation of algorithm described here: http://geomalgorithms.com/a13-_intersect-4.html
+
+    This hasn't been vectorized.
+    """
+
+    a, b = line
+    a, b = np.asarray(a), np.asarray(b)
+
+    if distance(a, b) == 0:
+        raise ValueError("Line segment must not have length 0")
+
+    v_l = b - a
+    t_e = 0  # location along line entering polyhedron (initial value 0)
+    t_l = 1  # location along line leaving polyhedron (initial value 1)
+
+    for plane in polyhedron:
+        n, v = plane
+        n, v = np.asarray(n), np.asarray(v)
+        ndotba = -n.dot(a - v)
+        d = n.dot(v_l)
+        if d == 0:
+            # the line segment is parallel to this face
+            if ndotba < 0:
+                # the line is outside the face
+                return None
+            else:
+                # the line is in or on the face, ignore this face
+                continue
+        t = ndotba / float(d)
+        if d < 0:
+            # segment is entering polyhedron across this facet
+            t_e = max(t_e, t)
+            if t_e > t_l:
+                # segment enters polyhedron after leaving, no intersection
+                return None
+        else:
+            # segment is exiting polyhedron across this facet
+            t_l = min(t_l, t)
+            if t_l < t_e:
+                # segment exits polyhedron before entering, no intersection
+                return None
+
+    assert(t_e <= t_l)
+
+    return [a + t_e*v_l, a + t_l*v_l]
+
+
+def getMeshIntersections(mesh, toPolyhedron, endpoints):
+    """
+    Return all intersections between a line segment and a Proteus mesh
+
+
+    :param mesh - a Proteus mesh
+    :param toPolyhedron - a method for converting Proteus element vertices to polyhedra in normal/point form
+    :param endpoints - a pair of points in 3-space defining the line segment
+
+    :return a list of pairs of intersections through the mesh
+    """
+
+    intersections = set()
+    for element in mesh.elementNodesArray:
+        # map nodes to physical vertices
+        elementVertices = mesh.nodeArray[element]
+        # get plane normals
+        polyhedron = toPolyhedron(elementVertices)
+        elementIntersections = intersectPolyhedron(endpoints, polyhedron)
+        if elementIntersections:
+            if np.array_equal(elementIntersections[0], elementIntersections[1]):
+                continue
+            intersections.update(((tuple(elementIntersections[0]), tuple(elementIntersections[1])),),)
+    return intersections
