@@ -41,11 +41,11 @@ class TC_base:
     equation with nc components. The coefficients and their derivative
     are evaluated at a time t over an array of solution values, u, at
     an array of points x.
-    
+
     methods:
-    
-    evaluate(t,c) -- t, time, is a float, c is a dictionary of x,u, and coefficients 
-    
+
+    evaluate(t,c) -- t, time, is a float, c is a dictionary of x,u, and coefficients
+
     members:
 
     nc        -- (number  of components) integer
@@ -57,7 +57,7 @@ class TC_base:
     hamiltonian -- ({{}} logically nx x nc) 'linear' or 'nonlinear'
     stencil   -- ([set(),] nc x nc) indicates jacobian block structure
     variableNames -- (number of components) string describing the component
-    
+
     These dictionaries indicate which coefficients are nonzero and how
     the non-zero coefficietns depend on the solution variables. The
     dictionaries will be used like sparse multi-dimensional
@@ -1100,14 +1100,14 @@ class NavierStokes(TC_base):
                                           c[('H',2)],
                                           c[('dH',2,0)],
                                           c[('H',3)],
-                                          c[('dH',3,0)])                                    
+                                          c[('dH',3,0)])
 
 class ShallowWater(TC_base):
     """
     The coefficients for the shallow water equations.
 
     right hand side for bed friction looks like
-     -\tau_b / \rho 
+     -\tau_b / \rho
     where the bed friction stress is
      \tau_b = \rho C_f \vec u \|\vec u\|
     C_f = g b/h^{a}
@@ -1140,8 +1140,8 @@ class ShallowWater(TC_base):
         assert ((self.bathymetryFunc == None and self.bathymetryGradientFunc == None) or
                 (self.bathymetryFunc != None and self.bathymetryGradientFunc != None))
         #index of bathymetry values in spatial points
-        self.bind = 2; 
-        if self.nd == 1: 
+        self.bind = 2;
+        if self.nd == 1:
             self.bind=1
         if nd==1:
             variableNames=['h','hu']
@@ -1200,45 +1200,6 @@ class ShallowWater(TC_base):
                              variableNames,
                              sparseDiffusionTensors=sdInfo)
             #self.vectorComponents=[1,2]
-#         elif nd==3:
-#             variableNames=['p','u','v','w']
-#             mass = {1:{1:'linear'},
-#                     2:{2:'linear'},
-#                     3:{3:'linear'}}
-#             advection = {0:{1:'linear',
-#                             2:'linear',
-#                             3:'linear'},
-#                          1:{1:'nonlinear',
-#                             2:'nonlinear',
-#                             3:'nonlinear'},
-#                          2:{1:'nonlinear',
-#                             2:'nonlinear',
-#                             3:'nonlinear'},
-#                          3:{1:'nonlinear',
-#                             2:'nonlinear',
-#                             3:'nonlinear'}}
-#             diffusion = {1:{1:{1:'constant'}},
-#                          2:{2:{2:'constant'}},
-#                          3:{3:{3:'constant'}}}
-#             potential= {1:{1:'u'},
-#                         2:{2:'u'},
-#                         3:{3:'u'}}
-#             reaction = {1:{1:'constant'},
-#                         2:{2:'constant'},
-#                         3:{3:'constant'}}
-#             hamiltonian = {1:{0:'linear'},
-#                            2:{0:'linear'},
-#                            3:{0:'linear'}}
-#             TC_base.__init__(self,
-#                              4,
-#                              mass,
-#                              advection,
-#                              diffusion,
-#                              potential,
-#                              reaction,
-#                              hamiltonian,
-#                              variableNames)
-#             self.vectorComponents=[1,2,3]
         #save bathymetry slopes for different quadrature types
         for term in ['q_grad_b','ebq_grad_b','ebq_global_grad_b','ebqe_grad_b','ip_grad_b']:
             setattr(self,term,None)
@@ -1252,10 +1213,10 @@ class ShallowWater(TC_base):
     def initializeElementQuadrature(self,t,cq):
         self.q_grad_b = numpy.zeros(cq[('grad(u)',0)].shape,'d')
         if self.bathymetryFunc:
-            #cq is elementQuadrature dictionary so x is nElements_global x nQuadraturePoints_element x 3 
+            #cq is elementQuadrature dictionary so x is nElements_global x nQuadraturePoints_element x 3
             nPoints = cq['x'].shape[0]*cq['x'].shape[1]
             for i in range(nPoints):
-                x = cq['x'].flat[i*3:(i+1)*3]; b = self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x) 
+                x = cq['x'].flat[i*3:(i+1)*3]; b = self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x)
                 cq['x'].flat[i*3+self.bind]=b
                 self.q_grad_b.flat[i*self.nd:(i+1)*self.nd] = grad_b
         #
@@ -1268,23 +1229,23 @@ class ShallowWater(TC_base):
             sh = (cebq_global['x'].shape[0],cebq_global['x'].shape[1],self.nd)
             self.ebq_global_grad_b = numpy.zeros(sh,'d')
         if self.bathymetryFunc:
-            #cebq is quadrature dictionary for local "faces" on each element so 
-            #  x is nElements_global x nElementBoundaries_element x nQuadraturePoints_elementBoundary x 3 
+            #cebq is quadrature dictionary for local "faces" on each element so
+            #  x is nElements_global x nElementBoundaries_element x nQuadraturePoints_elementBoundary x 3
             nPoints = cebq['x'].shape[0]*cebq['x'].shape[1]*cebq['x'].shape[2]
             for i in range(nPoints):
-                x = cebq['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x) 
+                x = cebq['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x)
                 cebq['x'].flat[i*3+self.bind]=b
                 self.ebq_grad_b.flat[i*self.nd:(i+1)*self.nd] = grad_b
-            #cebq_global is quadrature dictionary for global "faces" so 
+            #cebq_global is quadrature dictionary for global "faces" so
             #x is nElementBoundaries_global x nQuadraturePoints_elementBoundary x 3
             nPoints = cebq_global['x'].shape[0]*cebq_global['x'].shape[1]
             for i in range(nPoints):
-                x = cebq_global['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x) 
+                x = cebq_global['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x)
                 cebq_global['x'].flat[i*3+self.bind]=b
                 self.ebq_global_grad_b.flat[i*self.nd:(i+1)*self.nd] = grad_b
         #
         if cebq_global.has_key(('u',0)):
-            cebq_global[('H',0)] = numpy.copy(cebq_global[('u',0)]); 
+            cebq_global[('H',0)] = numpy.copy(cebq_global[('u',0)]);
         else:
             sh = (cebq_global['x'].shape[0],cebq_global['x'].shape[1])
             cebq_global[('H',0)] = numpy.zeros(sh,'d')
@@ -1293,24 +1254,24 @@ class ShallowWater(TC_base):
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         self.ebqe_grad_b = numpy.zeros(cebqe[('grad(u)',0)].shape,'d')
         if self.bathymetryFunc:
-            #cebqe is quadrature dictionary for global exterior "faces" 
-            #  x is nExteriorElementBoundaries_global x nQuadraturePoints_elementBoundary x 3 
+            #cebqe is quadrature dictionary for global exterior "faces"
+            #  x is nExteriorElementBoundaries_global x nQuadraturePoints_elementBoundary x 3
             nPoints = cebqe['x'].shape[0]*cebqe['x'].shape[1]
             for i in range(nPoints):
-                x = cebqe['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x) 
+                x = cebqe['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x)
                 cebqe['x'].flat[i*3+self.bind]=b
                 self.ebqe_grad_b.flat[i*self.nd:(i+1)*self.nd] = grad_b
         #
-        cebqe[('H',0)] = numpy.copy(cebqe[('u',0)]); 
+        cebqe[('H',0)] = numpy.copy(cebqe[('u',0)]);
 
     def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
         self.ip_grad_b = numpy.zeros((cip['x'].shape[0],cip['x'].shape[1],self.nd),'d')
         if self.bathymetryFunc:
-            #cip is dictionary for interpolation points 
+            #cip is dictionary for interpolation points
             #  so x is nElements x number of interpolation points (usual dof) per element
             nPoints = cip['x'].shape[0]*cip['x'].shape[1]
             for i in range(nPoints):
-                x = cip['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x);  grad_b = self.bathymetryGradientFunc(x) 
+                x = cip['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x);  grad_b = self.bathymetryGradientFunc(x)
                 cip['x'].flat[i*3+self.bind]=b
                 self.ip_grad_b.flat[i*self.nd:(i+1)*self.nd] = grad_b
         #
@@ -1393,7 +1354,7 @@ class ShallowWater(TC_base):
                                           c[('r',2)],
                                           c[('dr',2,0)],
                                           c[('dr',2,1)],
-                                          c[('dr',2,2)]) 
+                                          c[('dr',2,2)])
             #for now allow constant eddy viscosity
             #once have diagonal sparse rep
             #c[('a',1,1)].fill(self.eddyViscosity)
@@ -1440,7 +1401,7 @@ class ShallowWater(TC_base):
 #                                           c[('H',2)],
 #                                           c[('dH',2,0)],
 #                                           c[('H',3)],
-#                                           c[('dH',3,0)])                                    
+#                                           c[('dH',3,0)])
 
 ##\brief Incompressible Stokes equations
 #
@@ -1539,7 +1500,7 @@ class Stokes(TC_base):
                              variableNames)
             self.vectorComponents=[1,2,3]
     def evaluate(self,t,c):
-        if self.nd==2:            
+        if self.nd==2:
             self.Stokes_2D_Evaluate(self.rho,
                                     self.nu,
                                     self.g,
@@ -1721,7 +1682,7 @@ class StokesP(TC_base):
 
 ##\brief Two-phase, Incompressible Navier-Stokes equations (level-set formulation)
 #
-#The equations are 
+#The equations are
 #
 #\f{eqnarray*}
 #\nabla \cdot \mathbf{v} &=& 0 \\
@@ -1851,7 +1812,7 @@ class TwophaseNavierStokes_LS_SO(TC_base):
             self.ebq_phi = None
             if modelList[self.LS_model].ebq.has_key(('u',0)):
                 self.ebq_phi = modelList[self.LS_model].ebq[('u',0)]
-        
+
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
     def initializeElementQuadrature(self,t,cq):
@@ -1951,7 +1912,7 @@ class TwophaseNavierStokes_LS_SO(TC_base):
 
 ##\brief Two-phase, Incompressible Navier-Stokes equations (level-set formulation)
 #
-#The equations are 
+#The equations are
 #
 #\f{eqnarray*}
 #\nabla \cdot \mathbf{v} &=& 0 \\
@@ -2131,7 +2092,7 @@ class TwophaseNavierStokes_ST_LS_SO(TC_base):
                              useSparseDiffusion = sd,
                              movingDomain=movingDomain)
             self.vectorComponents=[1,2,3]
-        
+
     def attachModels(self,modelList):
         #level set
         self.model = modelList[0]
@@ -2586,11 +2547,11 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
         max_z = min_z = float(words[2])
         for pN,line in enumerate(lines[5:5+nParticles]):
             words=line.split()
-            x = float(words[2])            
+            x = float(words[2])
             y = float(words[3])
             z = float(words[4])
             self.centers[pN][0] = x
-            self.centers[pN][1] = y 
+            self.centers[pN][1] = y
             self.centers[pN][2] = z
             max_x = max(x,max_x); min_x = min(x,min_x)
             max_y = max(y,max_y); min_y = min(y,min_y)
@@ -2911,7 +2872,7 @@ class ThreephaseNavierStokes_ST_LS_SO(TC_base):
         c[('phi_viz')]  = phi
 ##\brief Two-phase, Incompressible Navier-Stokes equations (level-set formulation)
 #
-#The equations are 
+#The equations are
 #
 #\f{eqnarray*}
 #\nabla \cdot \mathbf{v} &=& 0 \\
@@ -3087,7 +3048,7 @@ class TwophaseStokes_LS_SO(TC_base):
                                                   c[('dH',1,0)],
                                                   c[('H',2)],
                                                   c[('dH',2,0)])
-            
+
         elif self.nd==3:
             self.TwophaseStokes_LS_SO_3D_Evaluate(self.eps,
                                                   self.rho_0,
@@ -3122,7 +3083,7 @@ class TwophaseStokes_LS_SO(TC_base):
                                                   c[('H',2)],
                                                   c[('dH',2,0)],
                                                   c[('H',3)],
-                                                  c[('dH',3,0)])                                    
+                                                  c[('dH',3,0)])
 
 ##\brief Two-phase Navier-Stokes equations (volume-of-fluid formulation)
 #
@@ -3244,7 +3205,7 @@ class TwophaseNavierStokes_VOF_SO(TC_base):
         self.ebq_vof  = None
         if modelList[self.LS_model].ebq.has_key(('u',0)):
             self.ebq_vof = modelList[self.LS_model].ebq[('u',0)]
-        
+
     def initializeMesh(self,mesh):
         self.eps = self.epsFact*mesh.h
     def initializeElementQuadrature(self,t,cq):
@@ -3511,7 +3472,7 @@ class TwophaseStokes_VOF_SO(TC_base):
                                                   c[('dH',1,0)],
                                                   c[('H',2)],
                                                   c[('dH',2,0)])
-            
+
         elif self.nd==3:
             self.TwophaseStokes_VOF_SO_3D_Evaluate(self.eps,
                                                   self.rho_0,
@@ -3546,7 +3507,7 @@ class TwophaseStokes_VOF_SO(TC_base):
                                                   c[('H',2)],
                                                   c[('dH',2,0)],
                                                   c[('H',3)],
-                                                  c[('dH',3,0)])                                    
+                                                  c[('dH',3,0)])
 ##\brief The non-conservative form of the level set equation for a moving boundary
 #
 #The equations are formulated as
@@ -3622,7 +3583,7 @@ class NCLevelSetCoefficients(TC_base):
                                                     frontTolerance=1.0e-8,#default 1.0e-4
                                                     frontInitType='frontIntersection')
 #,#'frontIntersection',#or 'magnitudeOnly'
-        elif self.eikonalSolverFlag == 1: #FMM 
+        elif self.eikonalSolverFlag == 1: #FMM
             self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
             eikonalSolverType = self.FMMEikonalSolver
             self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
@@ -3694,7 +3655,7 @@ class NCLevelSetCoefficients(TC_base):
             self.lsGlobalMassArray.append(self.lsGlobalMass)
             self.lsGlobalMassErrorArray.append(self.lsGlobalMass - self.lsGlobalMassArray[0] + self.totalFluxGlobal)
             self.fluxArray.append(self.fluxIntegral)
-            self.timeArray.append(self.model.timeIntegration.t)            
+            self.timeArray.append(self.model.timeIntegration.t)
         if self.flowModelIndex >= 0 and self.flowModel.ebq.has_key(('v',1)):
             self.model.u[0].getValuesTrace(self.flowModel.ebq[('v',1)],self.model.ebq[('u',0)])
             self.model.u[0].getGradientValuesTrace(self.flowModel.ebq[('grad(v)',1)],self.model.ebq[('grad(u)',0)])
@@ -3720,7 +3681,7 @@ class NCLevelSetCoefficients(TC_base):
                                                 c[('m',0)],
                                                 c[('dm',0,0)],
                                                 c[('H',0)],
-                                                c[('dH',0,0)])            
+                                                c[('dH',0,0)])
 
 class CLevelSetCoefficients(TC_base):
     from ctransportCoefficients import cLevelSetCoefficientsEvaluate
@@ -3770,7 +3731,7 @@ class CLevelSetCoefficients(TC_base):
                                                     frontTolerance=1.0e-4,#default 1.0e-4
                                                     frontInitType='frontIntersection',#'frontIntersection',#or 'magnitudeOnly'
                                                     useLocalPWLreconstruction = False)
-        elif self.eikonalSolverFlag == 1: #FMM 
+        elif self.eikonalSolverFlag == 1: #FMM
             self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
             eikonalSolverType = self.FMMEikonalSolver
             self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
@@ -3778,7 +3739,7 @@ class CLevelSetCoefficients(TC_base):
                                                     frontTolerance=1.0e-4,#default 1.0e-4
                                                     frontInitType='frontIntersection',#'frontIntersection',#or 'magnitudeOnly'
                                                     useLocalPWLreconstruction = False)
-            
+
     def initializeElementQuadrature(self,t,cq):
         if self.flowModelIndex == None:
             self.q_v = numpy.ones(cq[('f',0)].shape,'d')
@@ -3811,7 +3772,7 @@ class CLevelSetCoefficients(TC_base):
 #                         if self.rdModel.ebq[('u',0)][eN,ebN,k] > 0:
 #                             self.model.ebq[('m',0)][eN,ebN,k] = 1.0
 #                         else:
-#                             self.model.ebq[('m',0)][eN,ebN,k] = 0.0                    
+#                             self.model.ebq[('m',0)][eN,ebN,k] = 0.0
 #             self.model.updateTimeHistory(t,resetFromDOF=True)
 #             copyInstructions = {}#'copy_uList':True,'uList_model':self.RD_modelIndex}
 #             return copyInstructions
@@ -3835,7 +3796,7 @@ class CLevelSetCoefficients(TC_base):
                         heavisideMassPre += self.model.q[('dV_u',0)][eN,iq]
             #print """CLevel postStep t=%s u massIn =%s """ % (t,heavisideMassPre)
         if self.eikonalSolverFlag > 0:
-            heavisideMassPost = 0.0; 
+            heavisideMassPost = 0.0;
             #check to see if q[('u',0)] is getting updated
             #qU_in = numpy.array(self.model.q[('u',0)])
             #maxDiff=0.0;
@@ -3848,7 +3809,7 @@ class CLevelSetCoefficients(TC_base):
                         #maxDiff = max(maxDiff,abs(self.model.q[('u',0)][eN,iq]-qU_in[eN,iq]))
                         if self.model.q[('u',0)][eN,iq] >= 0.0:
                             heavisideMassPost += self.model.q[('dV_u',0)][eN,iq]
-                    
+
                 #mwf debug
                 #print """CLevel postStep t=%s after Eikonal solve massOut=%s """ % (t,heavisideMassPost)
     def evaluate(self,t,c):
@@ -3936,7 +3897,7 @@ class VOFCoefficients(TC_base):
                                                     frontTolerance=1.0e-4,#default 1.0e-4
                                                     frontInitType='frontIntersection',#'frontIntersection',#or 'magnitudeOnly'
                                                     useLocalPWLreconstruction = False)
-        elif self.eikonalSolverFlag == 1: #FMM 
+        elif self.eikonalSolverFlag == 1: #FMM
             self.resDummy = numpy.zeros(self.model.u[0].dof.shape,'d')
             eikonalSolverType = self.FMMEikonalSolver
             self.eikonalSolver = self.EikonalSolver(eikonalSolverType,
@@ -3958,7 +3919,7 @@ class VOFCoefficients(TC_base):
                                                                      self.model.ebqe[('advectiveFlux',0)],
                                                                      self.model.mesh)
                 log("Attach Models VOF: Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_pre + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
-            
+
     def initializeElementQuadrature(self,t,cq):
         if self.flowModelIndex == None:
             self.q_v = numpy.ones(cq[('f',0)].shape,'d')
@@ -4009,7 +3970,7 @@ class VOFCoefficients(TC_base):
         pass
     def evaluate(self,t,c):
         #mwf debug
-        #print "VOFcoeficients eval t=%s " % t 
+        #print "VOFcoeficients eval t=%s " % t
         if c[('f',0)].shape == self.q_v.shape:
             v = self.q_v
             phi = self.q_phi
@@ -4320,7 +4281,7 @@ class LevelSetConservation(TC_base):
         return copyInstructions
     def postStep(self,t,firstStep=False):
         if self.applyCorrection:
-            
+
             self.vofModel.q[('m',0)] += self.massCorrModel.q[('r',0)]
             self.lsModel.q[('m',0)] += self.massCorrModel.q[('u',0)]
             if self.vofModel.q[('u',0)] is not self.vofModel.q[('m',0)]:
@@ -4455,7 +4416,7 @@ class ConservativeHeadRichardsL2projMualemVanGenuchten(TC_base):
             if c[('f',0)].shape[2] == 2:
                 volFact =0.5
             elif c[('f',0)].shape[2] == 3:
-                volFact = 1./6.    
+                volFact = 1./6.
             for eN in range(c[('dV_u',0)].shape[0]):
                 vol = 0.0;
                 for k in range(c[('dV_u',0)].shape[1]):
@@ -4612,7 +4573,7 @@ class ConservativeHeadRichardsL2projMualemVanGenuchtenBlockHet(TC_base):
             thetaR = self.thetaR_ebq
             thetaSR = self.thetaSR_ebq
             dV = c[('dS_u',0)]
-            
+
 
 
         self.conservativeHeadRichardsL2projMualemVanGenuchtenHetEvaluate(self.rho,
@@ -4749,7 +4710,7 @@ class ConservativeSatRichardsMualemVanGenuchten(TC_base):
                                                                   c[('da',0,0,0)],
                                                                   c[('phi',0)],
                                                                   c[('dphi',0,0)])
-        
+
 class ConservativeTotalHeadRichardsMualemVanGenuchten(TC_base):
     from ctransportCoefficients import  conservativeTotalHeadRichardsMualemVanGenuchtenHomEvaluate
     def __init__(self,
@@ -4936,7 +4897,7 @@ class ConservativeHeadRichardsMualemVanGenuchtenHet(TC_base):
         self.vgm_n_q     = numpy.zeros(cq[('u',0)].shape,'d')
         self.thetaR_q    = numpy.zeros(cq[('u',0)].shape,'d')
         self.thetaSR_q   = numpy.zeros(cq[('u',0)].shape,'d')
-        
+
         nPoints=1
         for d in cq[('u',0)].shape:
             nPoints*=d
@@ -5776,7 +5737,7 @@ class UnitSquareVortexLevelSet(TC_base):
                                               c[('dH',0,0)]);
 
     #end def
-                                          
+
 class RotatingVelocityLevelSet(TC_base):
     from ctransportCoefficients import unitSquareRotationLevelSetEvaluate
     def __init__(self):
@@ -5839,7 +5800,7 @@ class EikonalEquationCoefficients(TC_base):
                                      c[('r',0)]);
 
     #end def
-                                          
+
 
 class RedistanceLevelSet(TC_base):
     from proteus.ctransportCoefficients import redistanceLevelSetCoefficientsEvaluate
@@ -5878,7 +5839,7 @@ class RedistanceLevelSet(TC_base):
             self.q_u0 =   self.nModel.q[('u',0)]
             if self.nModel.ebq.has_key(('u',0)):
                 self.ebq_u0 = self.nModel.ebq[('u',0)]
-            self.ebqe_u0 =   self.nModel.ebqe[('u',0)]            
+            self.ebqe_u0 =   self.nModel.ebqe[('u',0)]
             self.dof_u0 = self.nModel.u[0].dof
         else:
             self.nModel = None
@@ -6147,7 +6108,7 @@ class RedistanceLevelSetWithWeakPenalty(RedistanceLevelSet):
                                                                    c[('dH',0,0)],
                                                                    c[('r',0)],
                                                                    c[('dr',0,0)])
-    
+
 class RedistanceLevelSetSandF(RedistanceLevelSet):
     from proteus.ctransportCoefficients import redistanceLevelSetSandFCoefficientsEvaluate
     def __init__(self,applyRedistancing=True,epsFact=2.0,nModelId=1,u0=None,rdModelId=-1,vofModelId=4,massCorrModelId=5,
@@ -6179,7 +6140,7 @@ class RedistanceLevelSetSandF(RedistanceLevelSet):
                                                          c[('dH',0,0)],
                                                          c[('r',0)])
 
- 
+
 # class RedistanceLevelSetWithWeakPenalty(RedistanceLevelSet):
 #     def __init__(self,applyRedistancing=True,epsFact=2.0,nModelId=None,u0=None,rdModelId=0):
 #         variableNames=['phid']
@@ -6290,7 +6251,7 @@ class ConservativeHead2PMualemVanGenuchten(TC_base):
                                                                    c[('df',1,1)],
                                                                    c[('a',1,1)],
                                                                    c[('da',1,1,1)])
-                                                                   
+
 class PoissonEquationCoefficients(TC_base):
     from proteus.ctransportCoefficients import L2projectEvaluate
     def __init__(self,aOfX,fOfX,nc=1,nd=2,l2proj=None,
@@ -6327,14 +6288,14 @@ class PoissonEquationCoefficients(TC_base):
             for i in range(len(cq[('r',ci)].flat)):
                 cq[('r',ci)].flat[i] = -self.fOfX[ci](cq['x'].flat[3*i:3*(i+1)])
                 cq[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.aOfX[ci](cq['x'].flat[3*i:3*(i+1)]).flat
-        
+
             if self.l2proj != None and self.l2proj[ci] == True:
                 if cq.has_key(('dV_u',ci)):
                     assert cq[('r',ci)].shape == cq[('dV_u',ci)].shape, "wrong scalar shape"
                     self.L2projectEvaluate(0,cq[('dV_u',ci)],cq[('r',ci)])
                     self.L2projectEvaluate(1,cq[('dV_u',ci)],cq[('f',ci)])
                     self.L2projectEvaluate(2,cq[('dV_u',ci)],cq[('a',ci,ci)])
-            #ci                        
+            #ci
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         nd = self.nd
         for c in [cebq,cebq_global]:
@@ -6384,7 +6345,7 @@ class PoissonEquationCoefficients(TC_base):
                         self.L2projectEvaluate(0,c[('dS_u',ci)],c[('r',ci)])
                         self.L2projectEvaluate(1,c[('dS_u',ci)],c[('f',ci)])
                         self.L2projectEvaluate(2,c[('dS_u',ci)],c[('a',ci,ci)])
-                #ci                        
+                #ci
             #end ci
     #end def
 
@@ -6586,7 +6547,7 @@ class MovingMesh(TC_base):
             self.mesh.nodeArray[:,1]+=self.modelList[-1].u[1].dof
             self.mesh.computeGeometricInfo()
         copyInstructions = {}
-        return copyInstructions    
+        return copyInstructions
     def evaluate(self,t,c):
         if c.has_key('abs(det(J))'):
             det_J = c['abs(det(J))']
@@ -6632,15 +6593,15 @@ class kEpsilon(TC_base):
 Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11
 
 \bar{\vec v} = <\vec v> Reynolds-averaged (mean) velocity
-\vec v^{'}   = turbulent fluctuation 
+\vec v^{'}   = turbulent fluctuation
 assume \vec v = <\vec v> + \vec v^{'}, with <\vec v^{'}> = 0
 
 Reynolds averaged NS equations
 
 \deld \bar{\vec v} = 0
 
-\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right) 
-               -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p  
+\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
+               -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p
                - \frac{1}{rho}\deld \ten{R} = 0
 
 Reynolds stress term
@@ -6655,11 +6616,11 @@ D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
 
 k-epsilon tranport equations
 
-\pd{k}{t} + \deld (k\bar{\vec v}) 
+\pd{k}{t} + \deld (k\bar{\vec v})
           - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
           - 4\nu_t \Pi_{D} + \epsilon = 0
 
-\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v}) 
+\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
           - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
           - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0
 
@@ -6672,10 +6633,10 @@ k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
 
 
 \Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
-\ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 + 
+\ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
                                         1/2 (u_y + v_x)^2 \right]
-   
-4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 + 
+
+4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
                                 1/2 (u_y + v_x)^2 \right]
           = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]
 
@@ -6684,7 +6645,7 @@ k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
 
 c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
 
-    
+
     """
     from proteus.ctransportCoefficients import kEpsilon_2D_Evaluate
     from proteus.ctransportCoefficients import kEpsilon_2D_Evaluate_sd
@@ -6692,7 +6653,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
     def __init__(self,
                  flowModelID=0,
                  nd     =2,
-                 c_mu   =0.09,    
+                 c_mu   =0.09,
                  c_1    =0.126,
                  c_2    =1.92,
                  c_epsilon = 0.07, #Default values from ...
@@ -6700,7 +6661,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                  sigma_e=1.29,#essentially c_mu/c_epsilon
                  g=[0.0,-9.8],
                  nu=1.004e-6,
-                 rho=998.0): 
+                 rho=998.0):
         self.c_mu= c_mu
         self.c_1 = c_1
         self.c_2 = c_2
@@ -6743,7 +6704,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                                 numpy.array([0,1,2],dtype='i')),
                          (1,1):(numpy.array([0,1,2,3],dtype='i'),
                                 numpy.array([0,1,2],dtype='i'))}
-            
+
         TC_base.__init__(self,
                          self.nc,
                          mass,
@@ -6767,7 +6728,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                         'gradu':('grad(u)',1),
                         'gradv':('grad(u)',2),
                         'gradw':('grad(u)',3)}
-        
+
     def attachModels(self,modelList):
         if self.flowModelID != None:
             terms = ['velocity','gradu','gradv']
@@ -6833,7 +6794,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
         else:
             #import pdb
             #pdb.set_trace()
-            raise TypeError, "c['x'].shape= not recognized " 
+            raise TypeError, "c['x'].shape= not recognized "
         hackSourceTerm = False#True
         if self.nd == 2:
             if self.sd == True:
@@ -6969,15 +6930,15 @@ Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11
  but solves for just k assuming epsilon computed independently and lagged in time
 
 \bar{\vec v} = <\vec v> Reynolds-averaged (mean) velocity
-\vec v^{'}   = turbulent fluctuation 
+\vec v^{'}   = turbulent fluctuation
 assume \vec v = <\vec v> + \vec v^{'}, with <\vec v^{'}> = 0
 
 Reynolds averaged NS equations
 
 \deld \bar{\vec v} = 0
 
-\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right) 
-               -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p  
+\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
+               -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p
                - \frac{1}{rho}\deld \ten{R} = 0
 
 Reynolds stress term
@@ -6992,11 +6953,11 @@ D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
 
 k-epsilon tranport equations
 
-\pd{k}{t} + \deld (k\bar{\vec v}) 
+\pd{k}{t} + \deld (k\bar{\vec v})
           - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
           - 4\nu_t \Pi_{D} + \epsilon = 0
 
-\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v}) 
+\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
           - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
           - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0
 
@@ -7009,10 +6970,10 @@ k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
 
 
 \Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
-\ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 + 
+\ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
                                         1/2 (u_y + v_x)^2 \right]
-   
-4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 + 
+
+4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
                                 1/2 (u_y + v_x)^2 \right]
           = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]
 
@@ -7021,7 +6982,7 @@ k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
 
 c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
 
-    
+
     """
     from proteus.ctransportCoefficients import kEpsilon_k_2D_Evaluate_sd
     from proteus.ctransportCoefficients import kEpsilon_k_3D_Evaluate_sd
@@ -7029,11 +6990,11 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                  flowModelID=0,
                  epsilonModelID=2,
                  nd     =2,
-                 c_mu   =0.09,    
+                 c_mu   =0.09,
                  sigma_k=1.0,#Prandtl Number
                  g=[0.0,-9.8],
                  nu=1.004e-6,
-                 rho=998.0): 
+                 rho=998.0):
         self.c_mu= c_mu
         self.sigma_k = sigma_k
         self.g = numpy.array(g)
@@ -7085,7 +7046,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                         'gradv':('grad(u)',2),
                         'gradw':('grad(u)',3),
                         'epsilon':('u',0)}
-        
+
     def attachModels(self,modelList):
         if self.flowModelID != None:
             terms = ['velocity','gradu','gradv']
@@ -7184,7 +7145,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
         else:
             #import pdb
             #pdb.set_trace()
-            raise TypeError, "c['x'].shape= not recognized " 
+            raise TypeError, "c['x'].shape= not recognized "
         hackSourceTerm = False#True
         if self.nd == 2:
             if self.sd == True:
@@ -7206,7 +7167,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                                                c[('da',0,0,0)],
                                                c[('r',0)],
                                                c[('dr',0,0)])
-                                             
+
             else:
                 raise NotImplementedError
         else:
@@ -7230,7 +7191,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                                                c[('da',0,0,0)],
                                                c[('r',0)],
                                                c[('dr',0,0)])
-                                             
+
             else:
                 raise NotImplementedError
             #mwf debug
@@ -7240,22 +7201,22 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
         if hackSourceTerm:
             c[('r',0)].flat[:] = 0.0
             c[('dr',0,0)].flat[:] = 0.0
-            
+
 class kEpsilon_epsilon(TC_base):
     """
 Basic k-epsilon model for incompressible flow from Hutter etal Chaper 11
   but solves for just epsilon assuming k lagged
 
 \bar{\vec v} = <\vec v> Reynolds-averaged (mean) velocity
-\vec v^{'}   = turbulent fluctuation 
+\vec v^{'}   = turbulent fluctuation
 assume \vec v = <\vec v> + \vec v^{'}, with <\vec v^{'}> = 0
 
 Reynolds averaged NS equations
 
 \deld \bar{\vec v} = 0
 
-\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right) 
-               -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p  
+\pd{\bar{\vec v}}{t} + \deld \left(\bar{\vec v} \outer \bar{\vec v}\right)
+               -\nu \deld \ten \bar{D} + \frac{1}{\rho}\grad \bar p
                - \frac{1}{rho}\deld \ten{R} = 0
 
 Reynolds stress term
@@ -7270,11 +7231,11 @@ D_{ij}(\vec v) = \frac{1}{2} \left( \pd{v_i}{x_j} + \pd{v_j}{x_i})
 
 k-epsilon tranport equations
 
-\pd{k}{t} + \deld (k\bar{\vec v}) 
+\pd{k}{t} + \deld (k\bar{\vec v})
           - \deld\left[\left(\frac{\nu_t}{\sigma_k} + \nu\right)\grad k \right]
           - 4\nu_t \Pi_{D} + \epsilon = 0
 
-\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v}) 
+\pd{\varepsilon}{t} + \deld (\varepsilon \bar{\vec v})
           - \deld\left[\left(\frac{\nu_t}{\sigma_\varepsilon} + \nu\right)\grad \varepsilon \right]
           - 4c_1 k \Pi_{D} + c_2 \frac{\epsilon^2}{k} = 0
 
@@ -7287,10 +7248,10 @@ k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
 
 
 \Pi_{\ten A} = \frac{1}{2}tr(\ten A^2) = 1/2 \ten A\cdot \ten A
-\ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 + 
+\ten D \cdot \ten D = \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
                                         1/2 (u_y + v_x)^2 \right]
-   
-4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 + 
+
+4 \Pi_{D} = 2 \frac{1}{4}\left[ (4 u_x^2 + 4 v_y^2 +
                                 1/2 (u_y + v_x)^2 \right]
           = \left[ (2 u_x^2 + 2 v_y^2 + (u_y + v_x)^2 \right]
 
@@ -7299,7 +7260,7 @@ k              -- turbulent kinetic energy = <\vec v^{'}\dot \vec v^{'}>
 
 c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
 
-    
+
     """
     from proteus.ctransportCoefficients import kEpsilon_epsilon_2D_Evaluate_sd
     from proteus.ctransportCoefficients import kEpsilon_epsilon_3D_Evaluate_sd
@@ -7307,14 +7268,14 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                  flowModelID=0,
                  kModelID=1,
                  nd     =2,
-                 c_mu   =0.09,    
+                 c_mu   =0.09,
                  c_1    =0.126,
                  c_2    =1.92,
                  c_epsilon = 0.07, #Default values from ...
                  sigma_e=1.29,#essentially c_mu/c_epsilon
                  g=[0.0,-9.8],
                  nu=1.004e-6,
-                 rho=998.0): 
+                 rho=998.0):
         self.c_mu= c_mu
         self.c_1 = c_1
         self.c_2 = c_2
@@ -7369,7 +7330,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                         'gradv':('grad(u)',2),
                         'gradw':('grad(u)',3),
                         'k':('u',0)}
-        
+
     def attachModels(self,modelList):
         if self.flowModelID != None:
             terms = ['velocity','gradu','gradv']
@@ -7468,7 +7429,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
         else:
             #import pdb
             #pdb.set_trace()
-            raise TypeError, "c['x'].shape= not recognized " 
+            raise TypeError, "c['x'].shape= not recognized "
         hackSourceTerm = False#True
         if self.nd == 2:
             if self.sd == True:
@@ -7493,7 +7454,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                                                      c[('da',0,0,0)],
                                                      c[('r',0)],
                                                      c[('dr',0,0)])
-                                             
+
             else:
                 raise NotImplementedError
         else:
@@ -7520,7 +7481,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
                                                      c[('da',0,0,0)],
                                                      c[('r',0)],
                                                      c[('dr',0,0)])
-                                             
+
             else:
                 raise NotImplementedError
             #mwf debug
@@ -7530,15 +7491,15 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
         if hackSourceTerm:
             c[('r',0)].flat[:] = 0.0
             c[('dr',0,0)].flat[:] = 0.0
-            
+
 
 class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
     """
-    The coefficients for incompresslble fluid governed by the Navier-Stokes equations 
+    The coefficients for incompresslble fluid governed by the Navier-Stokes equations
     assuming k-epsilon model for turbulence
 
     KEmodelID = [m1,m2] if using two separate models for k and epsilon
-    otherwise should be just an integer id 
+    otherwise should be just an integer id
     """
     from ctransportCoefficients import ReynoldsAveragedNavierStokes_kEpsilon_2D_Update
     from ctransportCoefficients import ReynoldsAveragedNavierStokes_kEpsilon_2D_Update_sd
@@ -7576,7 +7537,7 @@ class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
                                                stokes=stokes,
                                                sd=sd,
                                                movingDomain=movingDomain)
-                 
+
         #name of terms taken from k-epsilon model
         self.kEpsilonTerms = ['k','epsilon','grad_k']
         #assumed entries in k-epsilon model for k,epsilon and grad(k)
@@ -7588,12 +7549,12 @@ class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
             self.nameMap = {'k':('u',0),
                             'epsilon':('u',0),
                             'grad_k':('grad(u)',0)}
-            
+
         for quad in ['q','ebq','ebqe','ebq_global']:
             for term in self.kEpsilonTerms:
                 name = quad + '_' + term
                 setattr(self,term,None)
-        
+
     def attachModels(self,modelList):
         if self.KEmodelID != None:
             for quad in ['q','ebq','ebqe','ebq_global']:
@@ -7614,7 +7575,7 @@ class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
                         if d.has_key(key):
                             name = quad+'_'+term
                             setattr(self,name,d[key])
-                        
+
             if self.KEmodelSplit:
                 self.Kmodel=modelList[self.KEmodelID[0]]
                 self.EpsilonModel=modelList[self.KEmodelID[1]]
@@ -7681,7 +7642,7 @@ class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
         elif c['x'].shape[:-1] == self.ebq_grad_k.shape[:-1]:
             k = self.ebq_k; epsilon = self.ebq_epsilon; grad_k = self.ebq_grad_k;
         else:
-            raise TypeError, "c['x'].shape= not recognized " 
+            raise TypeError, "c['x'].shape= not recognized "
         if self.nd == 2:
             if self.sd == True:
                 self.ReynoldsAveragedNavierStokes_kEpsilon_2D_Update_sd(self.rho,
@@ -7749,10 +7710,10 @@ class ReynoldsAveragedNavierStokes_kEpsilon(TwophaseNavierStokes_ST_LS_SO):
                                                                      c[('r',1)],
                                                                      c[('r',2)],
                                                                      c[('r',3)])
- 
+
 class ReynoldsAveragedNavierStokes_AlgebraicClosure(TwophaseNavierStokes_ST_LS_SO):
     """
-    The coefficients for incompresslble fluid governed by the Navier-Stokes equations 
+    The coefficients for incompresslble fluid governed by the Navier-Stokes equations
     assuming k-epsilon model for turbulence
     """
     def __init__(self,
@@ -7779,7 +7740,7 @@ class ReynoldsAveragedNavierStokes_AlgebraicClosure(TwophaseNavierStokes_ST_LS_S
 
 class TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure(TwophaseNavierStokes_ST_LS_SO):
     """
-    The coefficients for incompresslble fluid governed by the Navier-Stokes equations 
+    The coefficients for incompresslble fluid governed by the Navier-Stokes equations
     assuming k-epsilon model for turbulence
     """
     from ctransportCoefficients import eddyViscosity_2D_Update_sd,eddyViscosity_2D_Update
@@ -7830,8 +7791,8 @@ class TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure(TwophaseNavierStokes
                                                stokes=stokes,
                                                sd=sd,
                                                movingDomain=movingDomain)
-                 
-        
+
+
     def initializeMesh(self,mesh):
         TwophaseNavierStokes_ST_LS_SO.initializeMesh(self,mesh)
         self.mesh = mesh
@@ -7842,7 +7803,7 @@ class TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure(TwophaseNavierStokes
         if self.turbulenceClosureFlag != None:
             self.q_nu_t = numpy.zeros(cq[('u',1)].shape,'d')
             self.q      = cq
-            
+
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         TwophaseNavierStokes_ST_LS_SO.initializeElementBoundaryQuadrature(self,t,cebq,cebq_global)
         #if self.turbulenceClosureFlag != None:
@@ -7916,9 +7877,9 @@ class TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure(TwophaseNavierStokes
         if self.turbulenceClosureFlag != None:
             nu_t = None
             if c['x'].shape[:-1] == self.q_nu_t.shape[:]:
-                nu_t = self.q_nu_t; 
+                nu_t = self.q_nu_t;
             else:
-                return 
+                return
             if self.nd == 2:
                 if self.sd == True:
                     #print "before Smagorinsky eval t=%s nu_t: min=%s max=%s " % (t,nu_t.min(),nu_t.max())
@@ -8027,7 +7988,7 @@ class ViscousBurgersEqn(TC_base):
                                                       c[('a',ci,ci)],
                                                       c[('phi',ci)],
                                                       c[('dphi',ci,ci)])
-                
+
         else:
             nd = self.nd
             for ci in range(self.nc):
@@ -8044,7 +8005,7 @@ class ViscousBurgersEqn(TC_base):
                         c[('f',ci)].flat[nd*i:nd*(i+1)]          = self.v.flat*0.5*(c[('u',ci)].flat[i]**2)
                         c[('df',ci,ci)].flat[nd*i:nd*(i+1)]      = self.v.flat*c[('u',ci)].flat[i]
                         c[('a',ci,ci)].flat[nd*nd*i:nd*nd*(i+1)] = self.nu.flat
-                    
+
             #ci
         #useC
     #ci
@@ -8060,9 +8021,9 @@ class BuckleyLeverettLiuExample(TC_base):
     \vec a = (\pd{\phi}{x},\pd{phi}{y})
 
     \phi = 0.01 \log(\sqrt{x^2 + y^2})
-    
+
     However, note that his example is for
-    S=0 injecting into S=1 background saturation using his definition of f 
+    S=0 injecting into S=1 background saturation using his definition of f
 
     """
     from proteus.ctransportCoefficients import evaluateBuckleyLeverettLiuExample
@@ -8073,7 +8034,7 @@ class BuckleyLeverettLiuExample(TC_base):
         potential={}
         reaction ={}
         hamiltonian={}
-        
+
         for i in range(nc):
             mass[i]     = {i:'linear'}
             advection[i]= {i:'nonlinear'}
@@ -8104,7 +8065,7 @@ class BuckleyLeverettLiuExample(TC_base):
                                                        c[('a',ci,ci)]);
         #useC
     #ci
-##\brief Incompressible Navier-Stokes equations for porous domain 
+##\brief Incompressible Navier-Stokes equations for porous domain
 #
 #The equations are (needs to be updated)
 #
@@ -8137,7 +8098,7 @@ class BuckleyLeverettLiuExample(TC_base):
 class VolumeAveragedNavierStokesFullDevStress(TC_base):
     """
     The coefficients for incompressible fluid in a porous domain governed by the Navier-Stokes equations
-    
+
     """
     from ctransportCoefficients import VolumeAveragedNavierStokesFullDevStress_2D_Evaluate
     from ctransportCoefficients import VolumeAveragedNavierStokesFullDevStress_3D_Evaluate
@@ -8389,7 +8350,7 @@ class VolumeAveragedNavierStokesFullDevStress(TC_base):
                                                                      c[('dH',1,0)],
                                                                      c[('H',2)],
                                                                      c[('dH',2,0)])
-            
+
             #mwf debug
             #import pdb
             #pdb.set_trace()
@@ -8821,7 +8782,7 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
     def evaluate(self,t,c):
         import pdb
         phi = None; n = None; kappa = None; porosity = None; meanGrain = None
- 
+
         if c[('u',0)].shape == self.q_phi.shape:
             phi = self.q_phi
             n   = self.q_n
@@ -8938,7 +8899,7 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
                                                                              c[('dH',1,0)],
                                                                              c[('H',2)],
                                                                              c[('dH',2,0)])
-            
+
             #
             if self.stokes:
                 c[('f',1)].flat[:]=0.0; c[('f',2)].flat[:]=0.0;
@@ -9089,7 +9050,7 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
         if self.turbulenceClosureFlag != None:
             nu_t = None
             if c['x'].shape[:-1] == self.q_nu_t.shape[:]:
-                nu_t = self.q_nu_t; 
+                nu_t = self.q_nu_t;
                 if self.nd == 2:
                     if self.sd == True:
                         #print "before Smagorinsky eval t=%s nu_t: min=%s max=%s " % (t,nu_t.min(),nu_t.max())
@@ -9261,7 +9222,7 @@ class VolumeAveragedTwophaseNavierStokes(TwophaseReynoldsAveragedNavierStokes_Al
         #                                                                            c[('u',1)].min(),c[('u',1)].max(),
         #                                                                            c[('u',2)].min(),c[('u',2)].max(),
         #                                                                            porosity.min(),porosity.max())
-                                                                                    
+
     #
 ########################################################################
 #VOF coefficients when have variable porosity term
@@ -9313,8 +9274,8 @@ class VolumeAveragedVOFCoefficients(VOFCoefficients):
                 self.setParamsFunc(modelList[self.LS_modelIndex].ebqe['x'],self.ebqe_porosity)
             #
         #
-        
-        
+
+
     #
     def evaluate(self,t,c):
 
@@ -9354,14 +9315,14 @@ class VolumeAveragedVOFCoefficients(VOFCoefficients):
             numpy.isnan(c[('df',0,0)]).any()):
             import pdb
             pdb.set_trace()
-            
+
     #
 #
 class GroundwaterTransportCoefficients(TC_base):
     from proteus.ctransportCoefficients import groundwaterTransportCoefficientsEvaluate
     """
-    groundwater advection-dispersion equation with constant coefficients but variable 
-    velocity 
+    groundwater advection-dispersion equation with constant coefficients but variable
+    velocity
     """
     def __init__(self,nc=1,
                  omega=0.3,
@@ -9437,12 +9398,12 @@ class GroundwaterTransportCoefficients(TC_base):
                         import pdb
                         pdb.set_trace()
 
-                        
+
 
 class GroundwaterBiodegradation01Coefficients(TC_base):
     from proteus.ctransportCoefficients import groundwaterBiodegradation01EvaluateFC
     """
-    groundwater advection-dispersion equation with constant coefficients but variable 
+    groundwater advection-dispersion equation with constant coefficients but variable
     velocity and simple 3 component biodegradation system
     """
     def __init__(self,
@@ -9474,7 +9435,7 @@ class GroundwaterBiodegradation01Coefficients(TC_base):
         reaction = {0 : {0:'nonlinear',1:'nonlinear',2:'nonlinear'},
                     1 : {0:'nonlinear',1:'nonlinear',2:'nonlinear'},
                     2 : {0:'nonlinear',1:'nonlinear',2:'nonlinear'}}
-                       
+
 
         TC_base.__init__(self,
                          nc,
@@ -9495,7 +9456,7 @@ class GroundwaterBiodegradation01Coefficients(TC_base):
         self.Kox_E=Kox_E
         self.Kox_X=Kox_X
         self.Yield=Yield
-        self.k_d  =k_d 
+        self.k_d  =k_d
 
         self.useC = True
     def attachModels(self,modelList):
@@ -9568,7 +9529,7 @@ class GroundwaterBiodegradation01Coefficients(TC_base):
 class GroundwaterBryantDawsonIonExCoefficients(TC_base):
     from proteus.ctransportCoefficients import groundwaterBryantDawsonIonExEvaluateFC
     """
-    groundwater advection-dispersion equation with constant coefficients but variable 
+    groundwater advection-dispersion equation with constant coefficients but variable
     velocity and competitive ion exchange problem from Bryant, Dawson etal 00
     """
     def __init__(self,
@@ -9600,7 +9561,7 @@ class GroundwaterBryantDawsonIonExCoefficients(TC_base):
                     1 : {1:'nonlinear'}}
         reaction = {0 : {0:'nonlinear',1:'nonlinear'},
                     1 : {0:'nonlinear',1:'nonlinear'}}
-                       
+
 
         TC_base.__init__(self,
                          nc,
@@ -9676,7 +9637,7 @@ class GroundwaterBryantDawsonIonExCoefficients(TC_base):
                                                         c[('r',1)],
                                                         c[('dr',1,0)],
                                                         c[('dr',1,1)])
-                                                       
+
 from proteus import FemTools
 class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
     """
@@ -9686,7 +9647,7 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
     from ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwind
     from ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwindAndHarm
     from ctransportCoefficients import conservativeHeadRichardsMualemVanGenuchtenHetEvaluateV2withUpwindAndHarm_sd
-    
+
     def __init__(self,
                  nd,
                  Ks_block,
@@ -9814,7 +9775,7 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
         for ebNE in range(self.ebqe_shape[0]):
             ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
             self.quadraturePointToElementBoundary['ebqe'][ebNE,:] = ebN
-        
+
     def evaluate(self,t,c):
         if c[('u',0)].shape == self.q_shape:
             materialTypes = self.materialTypes_q
@@ -9952,7 +9913,7 @@ class ConservativeHeadRichardsMualemVanGenuchtenBlockHetV2withUpwind(TC_base):
                                                                                                   c[('df',0,0)],
                                                                                                   c[('a',0,0)],
                                                                                                   c[('da',0,0,0)])
-            
+
             #mwf debug
             #import pdb
             #pdb.set_trace()
@@ -9992,7 +9953,7 @@ class DiffusiveWave_1D(TC_base):
         Optionally provide a function for bathymetry, right hand side (source), and an analytical solution. The
         """
         self.alpha=alpha; self.gamma=gamma; self.epsilon=epsilon
-        TC_base.__init__(self, nc=1, 
+        TC_base.__init__(self, nc=1,
                          variableNames=['H'],
                          mass={0:{0:'linear'}},
                          advection={},
@@ -10017,7 +9978,7 @@ class DiffusiveWave_1D(TC_base):
         Set the y component of the element quadrature points using the bathymetry function.
         """
         if self.bathymetryFunc:
-            #cq is elementQuadrature dictionary so x is nElements_global x nQuadraturePoints_element x 3 
+            #cq is elementQuadrature dictionary so x is nElements_global x nQuadraturePoints_element x 3
             nPoints = cq['x'].shape[0]*cq['x'].shape[1]
             for i in range(nPoints):
                 x = cq['x'].flat[i*3:(i+1)*3]; z =  self.bathymetryFunc(x)
@@ -10027,13 +9988,13 @@ class DiffusiveWave_1D(TC_base):
         Set the y component of the element boundary quadrature points using the bathymetry function.
         """
         if self.bathymetryFunc:
-            #cebq is quadrature dictionary for local "faces" on each element so 
-            #  x is nElements_global x nElementBoundaries_element x nQuadraturePoints_elementBoundary x 3 
+            #cebq is quadrature dictionary for local "faces" on each element so
+            #  x is nElements_global x nElementBoundaries_element x nQuadraturePoints_elementBoundary x 3
             nPoints = cebq['x'].shape[0]*cebq['x'].shape[1]*cebq['x'].shape[2]
             for i in range(nPoints):
                 x = cebq['x'].flat[i*3:(i+1)*3]; z =  self.bathymetryFunc(x)
                 cebq['x'].flat[i*3+1]=z
-            #cebq_global is quadrature dictionary for global "faces" so 
+            #cebq_global is quadrature dictionary for global "faces" so
             #x is nElementBoundaries_global x nQuadraturePoints_elementBoundary x 3
             nPoints = cebq_global['x'].shape[0]*cebq_global['x'].shape[1]
             for i in range(nPoints):
@@ -10045,8 +10006,8 @@ class DiffusiveWave_1D(TC_base):
         Set the y component of the exterior element boundary quadrature points using the bathymetry function.
         """
         if self.bathymetryFunc:
-            #cebqe is quadrature dictionary for global exterior "faces" 
-            #  x is nExteriorElementBoundaries_global x nQuadraturePoints_elementBoundary x 3 
+            #cebqe is quadrature dictionary for global exterior "faces"
+            #  x is nExteriorElementBoundaries_global x nQuadraturePoints_elementBoundary x 3
             nPoints = cebqe['x'].shape[0]*cebqe['x'].shape[1]
             for i in range(nPoints):
                 x = cebqe['x'].flat[i*3:(i+1)*3]; z =  self.bathymetryFunc(x)
@@ -10057,7 +10018,7 @@ class DiffusiveWave_1D(TC_base):
         Set the y component of the generlatized interpolation points using the bathymetry function.
         """
         if self.bathymetryFunc:
-            #cip is dictionary for interpolation points 
+            #cip is dictionary for interpolation points
             #  so x is nElements x number of interpolation points (usual dof) per element
             nPoints = cip['x'].shape[0]*cip['x'].shape[1]
             for i in range(nPoints):
@@ -10065,12 +10026,12 @@ class DiffusiveWave_1D(TC_base):
                 cip['x'].flat[i*3+1]=z
 
     def evaluate(self,t,c):
-        
+
         """
         Evaluated the coefficients of the 1D diffusive wave model.
         """
-              
-        
+
+
         self.diffusiveWave1DCoefficientsEvaluate(self.alpha,
                                                  self.gamma,
                                                  self.epsilon,
@@ -10080,7 +10041,7 @@ class DiffusiveWave_1D(TC_base):
                                                  c[('m',0)],
                                                  c[('dm',0,0)],
                                                  c[('a',0,0)],
-                                                 c[('da',0,0,0)])        
+                                                 c[('da',0,0,0)])
 
 
 
@@ -10099,7 +10060,7 @@ class DiffusiveWave_2D(TC_base):
         Optionally provide a function for bathymetry, right hand side (source), and an analytical solution. The
         """
         self.alpha=alpha; self.gamma=gamma; self.epsilon=epsilon; self.nd=nd
-        TC_base.__init__(self, nc=1, 
+        TC_base.__init__(self, nc=1,
                          variableNames=['H'],
                          mass={0:{0:'linear'}},
                          advection={0:{0:'constant'}},#mwf added for LDG right now
@@ -10122,10 +10083,10 @@ class DiffusiveWave_2D(TC_base):
     def initializeElementQuadrature(self,t,cq):
         self.q_grad_b = numpy.zeros(cq[('grad(u)',0)].shape,'d')
         if self.bathymetryFunc:
-            #cq is elementQuadrature dictionary so x is nElements_global x nQuadraturePoints_element x 3 
+            #cq is elementQuadrature dictionary so x is nElements_global x nQuadraturePoints_element x 3
             nPoints = cq['x'].shape[0]*cq['x'].shape[1]
             for i in range(nPoints):
-                x = cq['x'].flat[i*3:(i+1)*3]; b = self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x) 
+                x = cq['x'].flat[i*3:(i+1)*3]; b = self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x)
                 cq['x'].flat[i*3+self.bind]=b
                 self.q_grad_b.flat[i*self.nd:(i+1)*self.nd] = grad_b
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
@@ -10136,40 +10097,40 @@ class DiffusiveWave_2D(TC_base):
             sh = (cebq_global['x'].shape[0],cebq_global['x'].shape[1],self.nd)
             self.ebq_global_grad_b = numpy.zeros(sh,'d')
         if self.bathymetryFunc:
-            #cebq is quadrature dictionary for local "faces" on each element so 
-            #  x is nElements_global x nElementBoundaries_element x nQuadraturePoints_elementBoundary x 3 
+            #cebq is quadrature dictionary for local "faces" on each element so
+            #  x is nElements_global x nElementBoundaries_element x nQuadraturePoints_elementBoundary x 3
             nPoints = cebq['x'].shape[0]*cebq['x'].shape[1]*cebq['x'].shape[2]
             for i in range(nPoints):
-                x = cebq['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x) 
+                x = cebq['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x)
                 cebq['x'].flat[i*3+self.bind]=b
                 self.ebq_grad_b.flat[i*self.nd:(i+1)*self.nd] = grad_b
-            #cebq_global is quadrature dictionary for global "faces" so 
+            #cebq_global is quadrature dictionary for global "faces" so
             #x is nElementBoundaries_global x nQuadraturePoints_elementBoundary x 3
             nPoints = cebq_global['x'].shape[0]*cebq_global['x'].shape[1]
             for i in range(nPoints):
-                x = cebq_global['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x) 
+                x = cebq_global['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x)
                 cebq_global['x'].flat[i*3+self.bind]=b
                 self.ebq_global_grad_b.flat[i*self.nd:(i+1)*self.nd] = grad_b
 
     def initializeGlobalExteriorElementBoundaryQuadrature(self,t,cebqe):
         self.ebqe_grad_b = numpy.zeros(cebqe[('grad(u)',0)].shape,'d')
         if self.bathymetryFunc:
-            #cebqe is quadrature dictionary for global exterior "faces" 
-            #  x is nExteriorElementBoundaries_global x nQuadraturePoints_elementBoundary x 3 
+            #cebqe is quadrature dictionary for global exterior "faces"
+            #  x is nExteriorElementBoundaries_global x nQuadraturePoints_elementBoundary x 3
             nPoints = cebqe['x'].shape[0]*cebqe['x'].shape[1]
             for i in range(nPoints):
-                x = cebqe['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x) 
+                x = cebqe['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x); grad_b = self.bathymetryGradientFunc(x)
                 cebqe['x'].flat[i*3+self.bind]=b
                 self.ebqe_grad_b.flat[i*self.nd:(i+1)*self.nd] = grad_b
 
     def initializeGeneralizedInterpolationPointQuadrature(self,t,cip):
         self.ip_grad_b = numpy.zeros((cip['x'].shape[0],cip['x'].shape[1],self.nd),'d')
         if self.bathymetryFunc:
-            #cip is dictionary for interpolation points 
+            #cip is dictionary for interpolation points
             #  so x is nElements x number of interpolation points (usual dof) per element
             nPoints = cip['x'].shape[0]*cip['x'].shape[1]
             for i in range(nPoints):
-                x = cip['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x);  grad_b = self.bathymetryGradientFunc(x) 
+                x = cip['x'].flat[i*3:(i+1)*3]; b =  self.bathymetryFunc(x);  grad_b = self.bathymetryGradientFunc(x)
                 cip['x'].flat[i*3+self.bind]=b
                 self.ip_grad_b.flat[i*self.nd:(i+1)*self.nd] = grad_b
 
@@ -10177,7 +10138,7 @@ class DiffusiveWave_2D(TC_base):
         """
         Evaluated the coefficients of the 2D diffusive wave model.
         """
-        
+
         self.diffusiveWave2DCoefficientsEvaluate(self.nd,
                                                  self.alpha,
                                                  self.gamma,
@@ -10244,7 +10205,7 @@ class TwophaseNavierStokesWithWaveMaker(TwophaseReynoldsAveragedNavierStokes_Alg
     def initializeMesh(self,mesh):
         TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure.initializeMesh(self,mesh)
         self.eps_source=self.epsFact_source*mesh.h
-        
+
     def evaluate(self,t,c):
         TwophaseReynoldsAveragedNavierStokes_AlgebraicClosure.evaluate(self,t,c)
         if c.has_key('x') and len(c['x'].shape) == 3:
@@ -10284,7 +10245,7 @@ class TwophaseNavierStokesWithWaveMaker(TwophaseReynoldsAveragedNavierStokes_Alg
                                            c['x'],
                                            c[('r',0)],
                                            t)
-                
+
             elif self.waveFlag == 0:
                 waveFunctions.monochromaticWave(c[('r',0)].shape[0],
                                                 c[('r',0)].shape[1],
@@ -10356,7 +10317,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                 self.elementBoundaryTypes[ebN,1] = self.elementMaterialTypes[eN_right]
             else:
                 self.elementBoundaryTypes[ebN,1] = self.elementMaterialTypes[eN_left]
-            
+
     def initializeElementQuadrature(self,t,cq):
         for ci in range(self.nc):
             cq[('f',ci)].flat[:] = 0.0
@@ -10365,7 +10326,7 @@ class SinglePhaseDarcyCoefficients(TC_base):
                 for k in range(cq['x'].shape[1]):
                     cq[('a',ci,ci)][eN,k,:] = self.a_types[material](cq['x'][eN,k],t).flat
                     cq[('r',ci)][eN,k]        =-self.source_types[material](cq['x'][eN,k],t)
-        #ci                        
+        #ci
     def initializeElementBoundaryQuadrature(self,t,cebq,cebq_global):
         nd = self.nd
         #use harmonic average for a, arith average for f
