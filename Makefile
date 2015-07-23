@@ -1,4 +1,4 @@
-.PHONY: all check clean distclean doc install profile proteus update
+.PHONY: all check clean distclean doc install profile proteus update FORCE
 
 all: install
 
@@ -7,7 +7,7 @@ all: install
 
 SHELL=/usr/bin/env bash
 
-PROTEUS ?= $(shell python -c "import os; print os.path.realpath(os.getcwd())")
+PROTEUS ?= $(shell python -c "from __future__ import print_function; import os; print(os.path.realpath(os.getcwd()))")
 VER_CMD = git log -1 --pretty="%H"
 PROTEUS_INSTALL_CMD = python setup.py install
 PROTEUS_DEVELOP_CMD = pip install -e .
@@ -16,6 +16,10 @@ PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || pyt
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 PROTEUS_VERSION := $(shell ${VER_CMD})
+HASHDIST_DEFAULT_VERSION := $(shell cat .hashdist_default)
+HASHSTACK_DEFAULT_VERSION := $(shell cat .hashstack_default)
+HASHDIST_VERSION := $(shell cd hashdist; ${VER_CMD})
+HASHSTACK_VERSION := $(shell cd stack; ${VER_CMD})
 
 define show_info
 	@echo "Please include this information in all bug reports."
@@ -24,8 +28,8 @@ define show_info
 	@echo "PROTEUS_ARCH     : ${PROTEUS_ARCH}"
 	@echo "PROTEUS_PREFIX   : ${PROTEUS_PREFIX}"
 	@echo "PROTEUS_VERSION  : ${PROTEUS_VERSION}"
-	@echo "HASHDIST_VERSION : $$(cd hashdist; ${VER_CMD})"
-	@echo "HASHSTACK_VERSION: $$(cd stack; ${VER_CMD})"
+	@echo "HASHDIST_VERSION : ${HASHDIST_VERSION}"
+	@echo "HASHSTACK_VERSION: ${HASHSTACK_VERSION}"
 	@echo "+======================================================================================================+"
 	@echo ""
 endef
@@ -48,7 +52,7 @@ define howto
 endef
 
 ifeq ($(PROTEUS_ARCH), darwin)
-PLATFORM_ENV = MACOSX_DEPLOYMENT_TARGET=$(shell sw_vers -productVersion | sed "s/\(10.[0-9]\).*/\1/")
+PLATFORM_ENV = MACOSX_DEPLOYMENT_TARGET=$(shell sw_vers -productVersion | sed -E "s/([0-9]+\.[0-9]+).*/\1/")
 endif
 
 ifeq ($(PROTEUS_ARCH), cygwin)
@@ -99,11 +103,12 @@ update:
 
 hashdist: 
 	@echo "No hashdist found.  Cloning hashdist from GitHub"
-	git clone https://github.com/hashdist/hashdist.git
-
+	git clone https://github.com/hashdist/hashdist.git 
+	cd hashdist && git checkout ${HASHDIST_DEFAULT_VERSION}
 stack: 
 	@echo "No stack found.  Cloning stack from GitHub"
 	git clone https://github.com/hashdist/hashstack.git stack
+	cd  stack && git checkout ${HASHSTACK_DEFAULT_VERSION}
 
 cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
 	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
@@ -124,7 +129,7 @@ matlab_setup.done: stack stack/default.yaml hashdist
 profile: ${PROTEUS_PREFIX}/artifact.json
 
 stack/default.yaml: stack stack/examples/proteus.${PROTEUS_ARCH}.yaml
-	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
+	ln -sfb ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
 
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
@@ -143,6 +148,17 @@ ${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find 
 	@echo "************************"
 	@echo "Dependency build complete"
 	@echo "************************"
+
+versions: ${PROTEUS_PREFIX}/versions.txt
+	@echo "************************"
+	@echo "Installing hashdist/hashstack versions..."
+	@echo "************************"
+
+	echo ${HASHDIST_VERSION} > ${PROTEUS_PREFIX}/hashdist_version.txt
+	echo ${HASHSTACK_VERSION} > ${PROTEUS_PREFIX}/hashstack_version.txt
+
+# this always runs
+${PROTEUS_PREFIX}/versions.txt: ${PROTEUS_PREFIX}/artifact.json FORCE
 
 proteus: ${PROTEUS_PREFIX}/bin/proteus
 
@@ -164,7 +180,7 @@ ${PROTEUS_PREFIX}/bin/proteus ${PROTEUS_PREFIX}/bin/proteus_env.sh: profile
 	@echo "************************"
 
 # Proteus install should be triggered by an out-of-date hashstack profile, source tree, or modified setup files.
-install: profile config.py $(shell find proteus -type f) $(wildcard *.py) proteus
+install: profile $(shell find proteus -type f) $(wildcard *.py) proteus
 	@echo "************************"
 	@echo "Installing..."
 	@echo "************************"
@@ -176,11 +192,16 @@ install: profile config.py $(shell find proteus -type f) $(wildcard *.py) proteu
 	@echo "Installation complete"
 	@echo "************************"
 	@echo ""
+	@echo "************************"
+	@echo "Installing proteus version information..."
+	@echo "************************"
+	@echo ${PROTEUS_VERSION} > ${PROTEUS_PREFIX}/proteus_version.txt
+
 	@echo "Proteus was built using the following configuration:"
 	$(call show_info)
 	$(call howto)
 
-develop: proteus profile config.py
+develop: proteus profile 
 	@echo "************************"
 	@echo "Installing development version"
 	@echo "************************"
@@ -190,12 +211,34 @@ develop: proteus profile config.py
 	@echo "Development installation complete"
 	@echo "************************"
 	@echo ""
+	@echo "************************"
+	@echo "Installing proteus version information..."
+	@echo "************************"
+	@echo "${PWD}" > ${PROTEUS_PREFIX}/proteus_version.txt
 	@echo "Proteus was built using the following configuration:"
 	$(call show_info)
 	$(call howto)
 
 check:
-	@echo "cek hack, doing nothing"
+	@echo "************************"
+	@echo "Sanity environment check"
+	@echo PROTEUS: ${PROTEUS}
+	@echo PROTEUS_ARCH: ${PROTEUS_ARCH}
+	@echo PROTEUS_PREFIX: ${PROTEUS_PREFIX}
+	@echo PROTEUS_ENV: ${PROTEUS_ENV}
+
+	@echo "************************"
+	@echo "Hello world Check!"
+	${PROTEUS_PREFIX}/bin/python -c "print 'hello world'"
+	@echo "************************"
+	@echo "Proteus Partition Test"
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; ${PROTEUS_PREFIX}/bin/python proteus/tests/ci/test_meshPartitionFromTetgenFiles.py
+	@echo "************************"
+
+	@echo "************************"
+	@echo "Parallel Proteus Partition Test"
+	source ${PROTEUS_PREFIX}/bin/proteus_env.sh; mpirun -np 4 ${PROTEUS_PYTHON} proteus/tests/ci/test_meshPartitionFromTetgenFiles.py
+	@echo "************************"
 
 doc: install
 	cd doc && ${PROTEUS_ENV} PROTEUS=${PWD} make html

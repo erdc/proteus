@@ -12,21 +12,12 @@
 #   \brief A driver for both single and mult-model simulations
 #
 #
-try:
-    import  imp,sys,ctypes,os
-    if not os.getenv('PROTEUS_PREFIX'):
-        os.environ['PROTEUS_PREFIX'] = sys.prefix
-    config = imp.load_source('config', sys.prefix+'/proteusConfig/config.py')
-    mpi_preload_libs=[]
-    for lib in config.PROTEUS_PRELOAD_LIBS:
-        mpi_preload_libs.append(ctypes.CDLL(lib,mode=ctypes.RTLD_GLOBAL));
-except:
-    print "NO PROTEUS_PRELOAD_LIBS LOADED; CHECK config.py"
+
 import os
 import proteus
 
 #remove blanket import statements until after Comm initialized for petsc4py
-from proteus import Profiling, Comm
+from proteus import Profiling, Comm, version, Context
 from warnings import *
 import optparse
 import sys
@@ -54,11 +45,12 @@ parser.add_option("-V", "--viewer",
                   type="string",
                   dest="viewer",
                   default=False)
-parser.add_option("-C", "--plot-coefficients",
-                  help="Plot the coefficients of the transport models",
-                  action="store_true",
-                  dest="plotCoefficients",
-                  default=False)
+parser.add_option("-C", "--context-options",
+                  help="Set variables in the user's global context",
+                  action="store",
+                  type="string",
+                  dest="contextOptions",
+                  default=None)
 parser.add_option("-P", "--petsc-options",
                   help="Options to pass to PETSc",
                   action="store",
@@ -109,7 +101,7 @@ parser.add_option("-l", "--log",
                   action="store",
                   type="int",
                   dest="logLevel",
-                  default=1)    
+                  default=1)
 parser.add_option("-A", "--logAllProcesses",
                   help="Log events from every MPI process",
                   action="store_true",
@@ -152,7 +144,11 @@ parser.add_option("-G","--gatherArchive",
                   dest="gatherArchive",
                   action="store_true",
                   help="""collect data files into single file at end of simulation (convenient but slow on big run)""")
-
+parser.add_option("-s","--subdomainArchives",
+                  default=False,
+                  dest="subdomainArchives",
+                  action="store_true",
+                  help="""write xmf files for every processor's subdomain""")
 parser.add_option("-H","--hotStart",
                   default=False,
                   dest="hotStart",
@@ -185,7 +181,6 @@ parser.add_option("--setupOnly",
 
 (opts,args) = parser.parse_args()
 
-
 if opts.debug:
     import pdb
     pdb.set_trace()
@@ -194,13 +189,18 @@ log = Profiling.logEvent
 logDir = None
 if opts.dataDir != '':
     if not os.path.exists(opts.dataDir):
-    	try: 
+    	try:
     	     os.mkdir(opts.dataDir)
         except os.error:
-             print "Failed to create: " + opts.dataDir 
+             print "Failed to create: " + opts.dataDir
              opts.dataDir=''
     logDir = opts.dataDir
-    
+
+log("Initializing Proteus")
+log("HashDist Version: " + version.hashdist)
+log("HashStack Version: " + version.hashstack)
+log("Proteus Version: " + version.proteus)
+
 log("Initializing MPI")
 if opts.petscOptions != None:
     petsc_argv = sys.argv[:1]+opts.petscOptions.split()
@@ -240,6 +240,9 @@ if probDir not in sys.path:
     sys.path.insert(0,probDir)
 
 log("Loading problem-specific modules")
+if opts.contextOptions:
+    Context.contextOptionsString=opts.contextOptions
+
 pList = []
 nList = []
 sList = []
@@ -359,7 +362,7 @@ for p,simFlags in zip(pList,simFlagsList):
         else:
             simFlags['plotOptions'] = {'ensight':{'on':True}}
         #control convention on case file for multiple models, doesn't effect parun right now
-        simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ `comm.rank()`  
+        simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ `comm.rank()`
 if opts.batchFileName != "":
     log("Reading batch file = ",opts.batchFileName)
     #try to split batch file into executable blocks delimited by
@@ -407,7 +410,7 @@ while running:
         lines = '\n'.join(batchBlocks.pop(0))
         exec lines
         run = True
-        running = len(batchBlocks) > 0        
+        running = len(batchBlocks) > 0
     else:
         userInput = False
         run = True

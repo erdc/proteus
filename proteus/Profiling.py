@@ -57,12 +57,13 @@ def openLog(filename,level,logLocation=None):
     global logDir
     global procID
     global logAllProcesses
+    assert procID != None, "Initialize Comm and set Profiling.procID before opening log"
     filename_full = filename
     import os
     if logLocation != None:
         logDir = logLocation
         filename_full = os.path.join(logDir,filename)
-    if  procID == None or procID == 0:
+    if  procID == 0:
         logFile=open(filename_full,'w')
     elif logAllProcesses:
         logFile=open(filename_full+`procID`,'w')
@@ -142,11 +143,11 @@ def memory(message=None,className='',memSaved=None):
                     line = "Unknown Line"
                 if message == None:
                     message = ''
-                logEvent("PROTEUS ERROR: MEMORY HARDLIMIT REACHED, EXIT From "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %d MB in routine, %d MB in program, %d MB is hard limit" % (memInc,mem,memHardLimit))
+                logEvent("PROTEUS ERROR: MEMORY HARDLIMIT REACHED, EXIT From "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %f MB in routine, %f MB in program, %f MB is hard limit" % (memInc,mem,memHardLimit))
                 MPI.COMM_WORLD.Abort(1)
                 sys.exit("MPI.COMM_WORLD.Abort(1); exit(1)")
         if message:
-            return "In "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %d MB in routine, %d MB in program" % (memInc,mem)
+            return "In "+filename.split("/")[-1]+", "+className+caller+", line "+`line`+": "+message+", %f MB in routine, %f MB in program" % (memInc,mem)
 
 def memorySummary():
     global memLog
