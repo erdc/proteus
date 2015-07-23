@@ -1,16 +1,35 @@
 language: python
+
+sudo: false
+
 env:
 - TEST_PROFILE="test.proteus.yaml"
 python:
 - 2.7
+addons:
+  apt:
+    packages:
+    - gfortran
+    - pv
+    - cmake
+    - swig
+    - libblas-dev
+    - liblapack-dev
+
 before_install:
-- sudo apt-get update -qq
-- sudo apt-get install gfortran pv cmake swig libblas-dev liblapack-dev
+- wget https://www.dropbox.com/s/5mjf94aitd9ai5w/hashdist.tgz
+- tar xzf hashdist.tgz 
+- mv .hashdist $HOME
+
 install:
-- git clone https://github.com/erdc-cm/proteus
-script:
-- set -o pipefail
-- make check 2>&1 | pv -i 15 -n | cat > log.txt
-- tail -n 60 log.txt
+- make hashdist
+- make stack
+- make stack/default.yaml
+- cp .shippable-profile.yaml stack/default.yaml
+- make install
+- export  PATH=$PWD/linux2/bin:$PATH
+- export  LD_LIBRARY_PATH=$PWD/linux2/lib:$LD_LIBRARY_PATH
+- export SSL_CERT_DIR=/etc/ssl/certs
+
 notifications:
 email: false
