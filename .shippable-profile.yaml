@@ -60,6 +60,8 @@ packages:
       python
   netcdf4:
   python-netcdf4:
+  netcdf4f:
+  netcdf4cpp:
   jasper:
   grib_api:
   pyproj:
@@ -77,3 +79,4 @@ packages:
   ipdb:
   pip:
   pexpect:
+  doxygen:
