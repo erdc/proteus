@@ -4,8 +4,10 @@ sudo: false
 
 env:
 - TEST_PROFILE="test.proteus.yaml"
+
 python:
 - 2.7
+
 addons:
   apt:
     packages:
