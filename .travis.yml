@@ -18,7 +18,7 @@ addons:
     - liblapack-dev
 
 before_install:
-- wget https://www.dropbox.com/s/5mjf94aitd9ai5w/hashdist.tgz
+- wget https://dl.dropboxusercontent.com/u/26353144/hashdist_travis.tgz
 - tar xzf hashdist.tgz 
 - mv .hashdist $HOME
 
