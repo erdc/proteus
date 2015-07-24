@@ -19,7 +19,7 @@ addons:
 
 before_install:
 - wget https://dl.dropboxusercontent.com/u/26353144/hashdist_travis.tgz
-- tar xzf hashdist.tgz 
+- tar xzf hashdist_travis.tgz 
 - mv .hashdist $HOME
 
 install:
