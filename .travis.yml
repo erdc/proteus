@@ -12,16 +12,15 @@ addons:
   apt:
     packages:
     - gfortran
-    - pv
     - cmake
     - swig
     - libblas-dev
     - liblapack-dev
 
 before_install:
-- pwd
-- echo $HOME
-- lsb_releasse -a
+- wget https://www.dropbox.com/s/5mjf94aitd9ai5w/hashdist.tgz
+- tar xzf hashdist.tgz 
+- mv .hashdist $HOME
 
 install:
 - make hashdist
