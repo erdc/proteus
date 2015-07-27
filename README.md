@@ -1,4 +1,4 @@
-# Proteus: Computational Methods and Simulation Toolkit [![Build Status](https://api.shippable.com/projects/545531c244927f89db3e7d70/badge?branchName=master)](https://app.shippable.com/projects/545531c244927f89db3e7d70/builds/latest) [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/erdc-cm/proteus-public)
+# Proteus: Computational Methods and Simulation Toolkit [![Build Status Shippable](https://api.shippable.com/projects/545531c244927f89db3e7d70/badge/master)](https://app.shippable.com/projects/545531c244927f89db3e7d70) [![Build Status Travis](https://img.shields.io/travis/erdc-cm/proteus.svg)](https://travis-ci.org/erdc-cm/proteus)
 
 Proteus (http://proteus.usace.army.mil) is a Python package for
 rapidly developing computer models and numerical methods.
