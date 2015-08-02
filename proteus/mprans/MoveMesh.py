@@ -74,10 +74,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.firstCall=True
         self.gravityStep=True
         self.meIndex = meIndex
-        print "Constraints"
-        print self.linConstraints
-        print self.angConstraints
-        print self.hullinertia
         self.solidsList=[]
         
     def attachModels(self,modelList):
