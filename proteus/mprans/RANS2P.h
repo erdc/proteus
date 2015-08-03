@@ -2172,9 +2172,10 @@ namespace proteus
 	      //moving mesh
 	      //
 	      //transform the continuity equation as if the accumulation term was  d(1)/dt
-	      mass_adv[0] -= MOVING_DOMAIN*xt;
-	      mass_adv[1] -= MOVING_DOMAIN*yt;
-	      mass_adv[2] -= MOVING_DOMAIN*zt;
+              //cek would have to add mass_acc too
+	      //mass_adv[0] -= MOVING_DOMAIN*xt;
+	      //mass_adv[1] -= MOVING_DOMAIN*yt;
+	      //mass_adv[2] -= MOVING_DOMAIN*zt;
 
 	      mom_u_adv[0] -= MOVING_DOMAIN*mom_u_acc*xt;
 	      mom_u_adv[1] -= MOVING_DOMAIN*mom_u_acc*yt;
@@ -2830,9 +2831,10 @@ namespace proteus
 	      //
 	      //moving domain
 	      //
-	      mass_adv_ext[0] -= MOVING_DOMAIN*xt_ext;
-	      mass_adv_ext[1] -= MOVING_DOMAIN*yt_ext;
-	      mass_adv_ext[2] -= MOVING_DOMAIN*zt_ext;
+              //cek would have to add mass_acc too
+	      //mass_adv_ext[0] -= MOVING_DOMAIN*xt_ext;
+	      //mass_adv_ext[1] -= MOVING_DOMAIN*yt_ext;
+	      //mass_adv_ext[2] -= MOVING_DOMAIN*zt_ext;
 
 	      mom_u_adv_ext[0] -= MOVING_DOMAIN*mom_u_acc_ext*xt_ext;
 	      mom_u_adv_ext[1] -= MOVING_DOMAIN*mom_u_acc_ext*yt_ext;
@@ -3729,9 +3731,10 @@ namespace proteus
 	      //
 	      //moving mesh
 	      //
-	      mass_adv[0] -= MOVING_DOMAIN*xt;
-	      mass_adv[1] -= MOVING_DOMAIN*yt;
-	      mass_adv[2] -= MOVING_DOMAIN*zt;
+              //cek would have to add mass_acc too
+	      //mass_adv[0] -= MOVING_DOMAIN*xt;
+	      //mass_adv[1] -= MOVING_DOMAIN*yt;
+	      //mass_adv[2] -= MOVING_DOMAIN*zt;
 
 	      mom_u_adv[0] -= MOVING_DOMAIN*mom_u_acc*xt;
 	      mom_u_adv[1] -= MOVING_DOMAIN*mom_u_acc*yt;
@@ -4484,9 +4487,10 @@ namespace proteus
 	      //
 	      //moving domain
 	      //
-	      mass_adv_ext[0] -= MOVING_DOMAIN*xt_ext;
-	      mass_adv_ext[1] -= MOVING_DOMAIN*yt_ext;
-	      mass_adv_ext[2] -= MOVING_DOMAIN*zt_ext;
+              //cek would have to add mass_acc to
+	      //mass_adv_ext[0] -= MOVING_DOMAIN*xt_ext;
+	      //mass_adv_ext[1] -= MOVING_DOMAIN*yt_ext;
+	      //mass_adv_ext[2] -= MOVING_DOMAIN*zt_ext;
 
 	      mom_u_adv_ext[0] -= MOVING_DOMAIN*mom_u_acc_ext*xt_ext;
 	      mom_u_adv_ext[1] -= MOVING_DOMAIN*mom_u_acc_ext*yt_ext;
@@ -4982,9 +4986,10 @@ namespace proteus
     	      velocityAverage[ebN_kb_nSpace+0]=0.5*(u_left + u_right);
     	      velocityAverage[ebN_kb_nSpace+1]=0.5*(v_left + v_right);
     	      velocityAverage[ebN_kb_nSpace+2]=0.5*(w_left + w_right);
-    	      velocityAverage[ebN_kb_nSpace+0] -= MOVING_DOMAIN*xt;
-    	      velocityAverage[ebN_kb_nSpace+1] -= MOVING_DOMAIN*yt;
-    	      velocityAverage[ebN_kb_nSpace+2] -= MOVING_DOMAIN*zt;
+              //cek would have  to add mass_acc too
+    	      //velocityAverage[ebN_kb_nSpace+0] -= MOVING_DOMAIN*xt;
+    	      //velocityAverage[ebN_kb_nSpace+1] -= MOVING_DOMAIN*yt;
+    	      //velocityAverage[ebN_kb_nSpace+2] -= MOVING_DOMAIN*zt;
     	    }//ebNI
     	}
     }
