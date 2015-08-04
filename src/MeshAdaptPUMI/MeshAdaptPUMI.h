@@ -1,5 +1,6 @@
 #include "mesh.h"
 #include "cmeshToolsModule.h"
+#include <apf.h>
 #include <apfMesh2.h>
 #include <apfNumbering.h>
 
@@ -34,6 +35,13 @@ class MeshAdaptPUMIDrvr{
   int numIter;
   int nAdapt; //counter for number of adapt steps
 
+  //Element Residual Method
+  void get_local_error();
+  //double rho_0,rho_1,nu_0,nu_1; //currently hardcoded in ERM.cpp
+  //for now, only handles DBC
+  apf::MeshTag* BCtag;
+  apf::MeshTag* BCval;
+
   private: 
   apf::Mesh2* m;
   int comm_size, comm_rank;
@@ -62,3 +70,5 @@ class MeshAdaptPUMIDrvr{
   void freeField(apf::Field*& f);
   void freeNumbering(apf::Numbering*& n);
 };
+
+
