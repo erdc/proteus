@@ -1695,7 +1695,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.stabilization.initializeTimeIntegration(self.timeIntegration)
         if self.shockCapturing != None and not domainMoved:
             self.shockCapturing.initializeElementQuadrature(self.mesh,self.timeIntegration.t,self.q)
-    def calculateElementBoundaryQuadrature(self):
+    def calculateElementBoundaryQuadrature(self, domainMoved=False):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points on element boundaries.
@@ -1729,7 +1729,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             cfemIntegrals.calculateElementBoundaryIntegrationWeights(self.ebq['sqrt(det(g))'],
                                                                      self.elementBoundaryQuadratureWeights[('u',0)],
                                                                      self.ebq[('dS_u',0)])
-    def calculateExteriorElementBoundaryQuadrature(self):
+    def calculateExteriorElementBoundaryQuadrature(self, domainMoved=False):
         """
         Calculate the physical location and weights of the quadrature rules
         and the shape information at the quadrature points on global element boundaries.
@@ -1762,14 +1762,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
                                                                     self.ebqe['x'])
         log("setting flux boundary conditions")
-        self.fluxBoundaryConditionsObjectsDict = dict([(cj,FluxBoundaryConditions(self.mesh,
-                                                                                  self.nElementBoundaryQuadraturePoints_elementBoundary,
-                                                                                  self.ebqe[('x')],
-                                                                                  self.advectiveFluxBoundaryConditionsSetterDict[cj],
-                                                                                  self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
-                                                       for cj in self.advectiveFluxBoundaryConditionsSetterDict.keys()])
-        log("initializing coefficients ebqe")
-        self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self.timeIntegration.t,self.ebqe)
+        if not domainMoved:
+            self.fluxBoundaryConditionsObjectsDict = dict([(cj,FluxBoundaryConditions(self.mesh,
+                                                                                      self.nElementBoundaryQuadraturePoints_elementBoundary,
+                                                                                      self.ebqe[('x')],
+                                                                                      self.advectiveFluxBoundaryConditionsSetterDict[cj],
+                                                                                      self.diffusiveFluxBoundaryConditionsSetterDictDict[cj]))
+                                                           for cj in self.advectiveFluxBoundaryConditionsSetterDict.keys()])
+            log("initializing coefficients ebqe")
+            self.coefficients.initializeGlobalExteriorElementBoundaryQuadrature(self.timeIntegration.t,self.ebqe)
         log("done with ebqe")
     def estimate_mt(self):
         pass
@@ -1802,9 +1803,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 log("Element Quadrature",level=3)
                 self.calculateElementQuadrature(domainMoved=True)
                 log("Element Boundary Quadrature",level=3)
-                self.calculateElementBoundaryQuadrature()
+                self.calculateElementBoundaryQuadrature(domainMoved=True)
                 log("Global Exterior Element Boundary Quadrature",level=3)
-                self.calculateExteriorElementBoundaryQuadrature()
+                self.calculateExteriorElementBoundaryQuadrature(domainMoved=True)
                 for ci in range(len(self.velocityPostProcessor.vpp_algorithms)):
                     for cj in self.velocityPostProcessor.vpp_algorithms[ci].updateConservationJacobian.keys():
                         self.velocityPostProcessor.vpp_algorithms[ci].updateWeights()
@@ -1813,6 +1814,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
 
     def getForce(self,cg,forceExtractionFaces,force,moment):
+        assert False
         """
         Calculate the element residuals and add in to the global residual
         """
