@@ -2953,11 +2953,11 @@ class OneLevelTransport(NonlinearEquation):
             if self.q.has_key(('grad(u)',cj)):
                 self.u[cj].getGradientValues(self.q[('grad(v)',cj)],
                                              self.q[('grad(u)',cj)])
-            self.u[cj].getValues(self.ebqe[('v',cj)],
-                                 self.ebqe[('u',cj)])
+            self.u[cj].getValuesGlobalExteriorTrace(self.ebqe[('v',cj)],
+                                                    self.ebqe[('u',cj)])
             if self.ebqe.has_key(('grad(u)',cj)):
-                self.u[cj].getGradientValues(self.ebqe[('grad(v)',cj)],
-                                             self.ebqe[('grad(u)',cj)])
+                self.u[cj].getGradientValuesGlobalExteriorTrace(self.ebqe[('grad(v)',cj)],
+                                                                self.ebqe[('grad(u)',cj)])
         if self.needEBQ:
             for cj in range(self.nc):
                 self.u[cj].getValuesTrace(self.ebq[('v',cj)],
