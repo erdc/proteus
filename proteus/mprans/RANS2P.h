@@ -2172,9 +2172,9 @@ namespace proteus
 	      //moving mesh
 	      //
 	      //transform the continuity equation as if the accumulation term was  d(1)/dt
-	      mass_adv[0] -= MOVING_DOMAIN*xt;
-	      mass_adv[1] -= MOVING_DOMAIN*yt;
-	      mass_adv[2] -= MOVING_DOMAIN*zt;
+	      /* mass_adv[0] -= MOVING_DOMAIN*xt; */
+	      /* mass_adv[1] -= MOVING_DOMAIN*yt; */
+	      /* mass_adv[2] -= MOVING_DOMAIN*zt; */
 
 	      mom_u_adv[0] -= MOVING_DOMAIN*mom_u_acc*xt;
 	      mom_u_adv[1] -= MOVING_DOMAIN*mom_u_acc*yt;
@@ -2339,6 +2339,7 @@ namespace proteus
 		  register int i_nSpace=i*nSpace;
 
 		  elementResidual_p[i] += ck.Advection_weak(mass_adv,&p_grad_test_dV[i_nSpace]) +
+		    /* MOVING_DOMAIN*(ck.Reaction_weak(1.0,p_test_dV[i]) - ck.Reaction_weak(1.0,p_test_dV[i]*q_dV_last[eN_k]/dV))   + */
 		    //VRANS
 		    ck.Reaction_weak(mass_source,p_test_dV[i])   + //VRANS source term for wave maker
 		    //
@@ -2616,9 +2617,10 @@ namespace proteus
 		    vel_grad_test_dS[j*nSpace+I] = vel_grad_trial_trace[j*nSpace+I]*dS;//cek hack, using trial
 		}
 	      bc_p_ext = isDOFBoundary_p[ebNE_kb]*ebqe_bc_p_ext[ebNE_kb]+(1-isDOFBoundary_p[ebNE_kb])*p_ext;
-	      bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext;
-	      bc_v_ext = isDOFBoundary_v[ebNE_kb]*ebqe_bc_v_ext[ebNE_kb]+(1-isDOFBoundary_v[ebNE_kb])*v_ext;
-	      bc_w_ext = isDOFBoundary_w[ebNE_kb]*ebqe_bc_w_ext[ebNE_kb]+(1-isDOFBoundary_w[ebNE_kb])*w_ext;
+              //note, our convention is that bc values at moving boundaries are relative to boundary velocity so we add it here
+	      bc_u_ext = isDOFBoundary_u[ebNE_kb]*(ebqe_bc_u_ext[ebNE_kb] + MOVING_DOMAIN*xt_ext) + (1-isDOFBoundary_u[ebNE_kb])*u_ext;
+	      bc_v_ext = isDOFBoundary_v[ebNE_kb]*(ebqe_bc_v_ext[ebNE_kb] + MOVING_DOMAIN*yt_ext) + (1-isDOFBoundary_v[ebNE_kb])*v_ext;
+	      bc_w_ext = isDOFBoundary_w[ebNE_kb]*(ebqe_bc_w_ext[ebNE_kb] + MOVING_DOMAIN*zt_ext) + (1-isDOFBoundary_w[ebNE_kb])*w_ext;
 	      //VRANS
 	      porosity_ext = ebqe_porosity_ext[ebNE_kb];
 	      //
@@ -2830,9 +2832,9 @@ namespace proteus
 	      //
 	      //moving domain
 	      //
-	      mass_adv_ext[0] -= MOVING_DOMAIN*xt_ext;
-	      mass_adv_ext[1] -= MOVING_DOMAIN*yt_ext;
-	      mass_adv_ext[2] -= MOVING_DOMAIN*zt_ext;
+	      /* mass_adv_ext[0] -= MOVING_DOMAIN*xt_ext; */
+	      /* mass_adv_ext[1] -= MOVING_DOMAIN*yt_ext; */
+	      /* mass_adv_ext[2] -= MOVING_DOMAIN*zt_ext; */
 
 	      mom_u_adv_ext[0] -= MOVING_DOMAIN*mom_u_acc_ext*xt_ext;
 	      mom_u_adv_ext[1] -= MOVING_DOMAIN*mom_u_acc_ext*yt_ext;
@@ -2856,6 +2858,10 @@ namespace proteus
 	      dmom_w_adv_w_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*zt_ext;
 
 	      //bc's
+	      /* bc_mass_adv_ext[0] -= MOVING_DOMAIN*xt_ext; */
+	      /* bc_mass_adv_ext[1] -= MOVING_DOMAIN*yt_ext; */
+	      /* bc_mass_adv_ext[2] -= MOVING_DOMAIN*zt_ext; */
+
 	      bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_mom_u_acc_ext*xt_ext;
 	      bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_mom_u_acc_ext*yt_ext;
 	      bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_mom_u_acc_ext*zt_ext;
@@ -2888,7 +2894,7 @@ namespace proteus
 					     bc_mom_u_adv_ext,
 					     bc_mom_v_adv_ext,
 					     bc_mom_w_adv_ext,
-					     ebqe_bc_flux_mass_ext[ebNE_kb],
+					     ebqe_bc_flux_mass_ext[ebNE_kb]+MOVING_DOMAIN*(xt_ext*normal[0]+yt_ext*normal[1]+zt_ext*normal[2]),//BC is relative mass flux
 					     ebqe_bc_flux_mom_u_adv_ext[ebNE_kb],
 					     ebqe_bc_flux_mom_v_adv_ext[ebNE_kb],
 					     ebqe_bc_flux_mom_w_adv_ext[ebNE_kb],
@@ -2917,6 +2923,7 @@ namespace proteus
 					     flux_mom_v_adv_ext,
 					     flux_mom_w_adv_ext,
 					     &ebqe_velocity[ebNE_kb_nSpace]);
+              assert(fabs(flux_mass_ext - (ebqe_velocity[ebNE_kb_nSpace+0]*normal[0]+ebqe_velocity[ebNE_kb_nSpace+1]*normal[1]+ebqe_velocity[ebNE_kb_nSpace+2]*normal[2])) < 1.0e-8);
 	      exteriorNumericalDiffusiveFlux(eps_rho,
 					     ebqe_phi_ext[ebNE_kb],
 					     sdInfo_u_u_rowptr,
@@ -3053,7 +3060,8 @@ namespace proteus
 					     penalty,//ebqe_penalty_ext[ebNE_kb],
 					     flux_mom_ww_diff_ext);
 	      flux[ebN*nQuadraturePoints_elementBoundary+kb] = flux_mass_ext;
-	      // 
+              assert(fabs(flux[ebN*nQuadraturePoints_elementBoundary+kb] - (ebqe_velocity[ebNE_kb_nSpace+0]*normal[0]+ebqe_velocity[ebNE_kb_nSpace+1]*normal[1]+ebqe_velocity[ebNE_kb_nSpace+2]*normal[2])) < 1.0e-8);	      
+              // 
 	      //integrate the net force and moment on flagged boundaries
 	      //
 	      if (ebN < nElementBoundaries_owned)
@@ -3729,9 +3737,9 @@ namespace proteus
 	      //
 	      //moving mesh
 	      //
-	      mass_adv[0] -= MOVING_DOMAIN*xt;
-	      mass_adv[1] -= MOVING_DOMAIN*yt;
-	      mass_adv[2] -= MOVING_DOMAIN*zt;
+	      /* mass_adv[0] -= MOVING_DOMAIN*xt; */
+	      /* mass_adv[1] -= MOVING_DOMAIN*yt; */
+	      /* mass_adv[2] -= MOVING_DOMAIN*zt; */
 
 	      mom_u_adv[0] -= MOVING_DOMAIN*mom_u_acc*xt;
 	      mom_u_adv[1] -= MOVING_DOMAIN*mom_u_acc*yt;
@@ -4273,9 +4281,10 @@ namespace proteus
 	      //load the boundary values
 	      //
 	      bc_p_ext = isDOFBoundary_p[ebNE_kb]*ebqe_bc_p_ext[ebNE_kb]+(1-isDOFBoundary_p[ebNE_kb])*p_ext;
-	      bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext;
-	      bc_v_ext = isDOFBoundary_v[ebNE_kb]*ebqe_bc_v_ext[ebNE_kb]+(1-isDOFBoundary_v[ebNE_kb])*v_ext;
-	      bc_w_ext = isDOFBoundary_w[ebNE_kb]*ebqe_bc_w_ext[ebNE_kb]+(1-isDOFBoundary_w[ebNE_kb])*w_ext;
+              //bc values at moving boundaries are specified relative to boundary motion so we need to add it here
+	      bc_u_ext = isDOFBoundary_u[ebNE_kb]*(ebqe_bc_u_ext[ebNE_kb] + MOVING_DOMAIN*xt_ext) + (1-isDOFBoundary_u[ebNE_kb])*u_ext;
+	      bc_v_ext = isDOFBoundary_v[ebNE_kb]*(ebqe_bc_v_ext[ebNE_kb] + MOVING_DOMAIN*yt_ext) + (1-isDOFBoundary_v[ebNE_kb])*v_ext;
+	      bc_w_ext = isDOFBoundary_w[ebNE_kb]*(ebqe_bc_w_ext[ebNE_kb] + MOVING_DOMAIN*zt_ext) + (1-isDOFBoundary_w[ebNE_kb])*w_ext;
 	      //VRANS
 	      porosity_ext = ebqe_porosity_ext[ebNE_kb];
 	      // 
@@ -4484,9 +4493,9 @@ namespace proteus
 	      //
 	      //moving domain
 	      //
-	      mass_adv_ext[0] -= MOVING_DOMAIN*xt_ext;
-	      mass_adv_ext[1] -= MOVING_DOMAIN*yt_ext;
-	      mass_adv_ext[2] -= MOVING_DOMAIN*zt_ext;
+	      /* mass_adv_ext[0] -= MOVING_DOMAIN*xt_ext; */
+	      /* mass_adv_ext[1] -= MOVING_DOMAIN*yt_ext; */
+	      /* mass_adv_ext[2] -= MOVING_DOMAIN*zt_ext; */
 
 	      mom_u_adv_ext[0] -= MOVING_DOMAIN*mom_u_acc_ext*xt_ext;
 	      mom_u_adv_ext[1] -= MOVING_DOMAIN*mom_u_acc_ext*yt_ext;
@@ -4510,6 +4519,10 @@ namespace proteus
 	      dmom_w_adv_w_ext[2] -= MOVING_DOMAIN*dmom_w_acc_w_ext*zt_ext;
 	      
 	      //moving domain bc's
+	      /* bc_mass_adv_ext[0] -= MOVING_DOMAIN*xt_ext; */
+	      /* bc_mass_adv_ext[1] -= MOVING_DOMAIN*yt_ext; */
+	      /* bc_mass_adv_ext[2] -= MOVING_DOMAIN*zt_ext; */
+
 	      bc_mom_u_adv_ext[0] -= MOVING_DOMAIN*bc_mom_u_acc_ext*xt_ext;
 	      bc_mom_u_adv_ext[1] -= MOVING_DOMAIN*bc_mom_u_acc_ext*yt_ext;
 	      bc_mom_u_adv_ext[2] -= MOVING_DOMAIN*bc_mom_u_acc_ext*zt_ext;
@@ -4539,7 +4552,7 @@ namespace proteus
 							bc_mom_u_adv_ext,
 							bc_mom_v_adv_ext,
 							bc_mom_w_adv_ext,
-							ebqe_bc_flux_mass_ext[ebNE_kb],
+							ebqe_bc_flux_mass_ext[ebNE_kb]+MOVING_DOMAIN*(xt_ext*normal[0]+yt_ext*normal[1]+zt_ext*normal[2]),//bc is relative mass  flux
 							ebqe_bc_flux_mom_u_adv_ext[ebNE_kb],
 							ebqe_bc_flux_mom_v_adv_ext[ebNE_kb],
 							ebqe_bc_flux_mom_w_adv_ext[ebNE_kb],
@@ -4982,9 +4995,10 @@ namespace proteus
     	      velocityAverage[ebN_kb_nSpace+0]=0.5*(u_left + u_right);
     	      velocityAverage[ebN_kb_nSpace+1]=0.5*(v_left + v_right);
     	      velocityAverage[ebN_kb_nSpace+2]=0.5*(w_left + w_right);
-    	      velocityAverage[ebN_kb_nSpace+0] -= MOVING_DOMAIN*xt;
-    	      velocityAverage[ebN_kb_nSpace+1] -= MOVING_DOMAIN*yt;
-    	      velocityAverage[ebN_kb_nSpace+2] -= MOVING_DOMAIN*zt;
+              //cek would have  to add mass_acc too
+    	      /* velocityAverage[ebN_kb_nSpace+0] -= MOVING_DOMAIN*xt; */
+    	      /* velocityAverage[ebN_kb_nSpace+1] -= MOVING_DOMAIN*yt; */
+    	      /* velocityAverage[ebN_kb_nSpace+2] -= MOVING_DOMAIN*zt; */
     	    }//ebNI
     	}
     }
@@ -5108,6 +5122,7 @@ namespace proteus
 			   double* flux,
 			   double* elementResidual_p_save)
     {
+      assert(false);
       //
       //loop over exterior element boundaries to calculate surface integrals and load into element and global residuals
       //
