@@ -3084,17 +3084,17 @@ namespace proteus
 		  
 		  wettedAreas[boundaryFlags[ebN]] += dS*(1.0-ebqe_vf_ext[ebNE_kb]);
 		  
-		  netForces_p[3*boundaryFlags[ebN]+0] += force_p_x*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
-		  netForces_p[3*boundaryFlags[ebN]+1] += force_p_y*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
-		  netForces_p[3*boundaryFlags[ebN]+2] += force_p_z*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
+		  netForces_p[3*boundaryFlags[ebN]+0] += force_p_x*dS;
+		  netForces_p[3*boundaryFlags[ebN]+1] += force_p_y*dS;
+		  netForces_p[3*boundaryFlags[ebN]+2] += force_p_z*dS;
 		  
-		  netForces_v[3*boundaryFlags[ebN]+0] += force_v_x*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
-		  netForces_v[3*boundaryFlags[ebN]+1] += force_v_y*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
-		  netForces_v[3*boundaryFlags[ebN]+2] += force_v_z*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
+		  netForces_v[3*boundaryFlags[ebN]+0] += force_v_x*dS;
+		  netForces_v[3*boundaryFlags[ebN]+1] += force_v_y*dS;
+		  netForces_v[3*boundaryFlags[ebN]+2] += force_v_z*dS;
 		  
-		  netMoments[3*boundaryFlags[ebN]+0] += (r_y*force_z - r_z*force_y)*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
-		  netMoments[3*boundaryFlags[ebN]+1] += (r_z*force_x - r_x*force_z)*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
-		  netMoments[3*boundaryFlags[ebN]+2] += (r_x*force_y - r_y*force_x)*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
+		  netMoments[3*boundaryFlags[ebN]+0] += (r_y*force_z - r_z*force_y)*dS;
+		  netMoments[3*boundaryFlags[ebN]+1] += (r_z*force_x - r_x*force_z)*dS;
+		  netMoments[3*boundaryFlags[ebN]+2] += (r_x*force_y - r_y*force_x)*dS;
 		}
 	      //
 	      //update residuals
