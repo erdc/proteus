@@ -2585,7 +2585,7 @@ namespace proteus
 	      //std::cout<<"integralScaling - metricTensorDetSrt ==============================="<<integralScaling-metricTensorDetSqrt<<std::endl;
 	      /* std::cout<<"metricTensorDetSqrt "<<metricTensorDetSqrt */
 	      /* 	       <<"dS_ref[kb]"<<dS_ref[kb]<<std::endl; */
-	      dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
+	      dS = metricTensorDetSqrt*dS_ref[kb];
 	      //get the metric tensor
 	      //cek todo use symmetry
 	      ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
@@ -3084,17 +3084,17 @@ namespace proteus
 		  
 		  wettedAreas[boundaryFlags[ebN]] += dS*(1.0-ebqe_vf_ext[ebNE_kb]);
 		  
-		  netForces_p[3*boundaryFlags[ebN]+0] += force_p_x*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
-		  netForces_p[3*boundaryFlags[ebN]+1] += force_p_y*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
-		  netForces_p[3*boundaryFlags[ebN]+2] += force_p_z*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
+		  netForces_p[3*boundaryFlags[ebN]+0] += force_p_x*dS;
+		  netForces_p[3*boundaryFlags[ebN]+1] += force_p_y*dS;
+		  netForces_p[3*boundaryFlags[ebN]+2] += force_p_z*dS;
 		  
-		  netForces_v[3*boundaryFlags[ebN]+0] += force_v_x*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
-		  netForces_v[3*boundaryFlags[ebN]+1] += force_v_y*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
-		  netForces_v[3*boundaryFlags[ebN]+2] += force_v_z*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
+		  netForces_v[3*boundaryFlags[ebN]+0] += force_v_x*dS;
+		  netForces_v[3*boundaryFlags[ebN]+1] += force_v_y*dS;
+		  netForces_v[3*boundaryFlags[ebN]+2] += force_v_z*dS;
 		  
-		  netMoments[3*boundaryFlags[ebN]+0] += (r_y*force_z - r_z*force_y)*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
-		  netMoments[3*boundaryFlags[ebN]+1] += (r_z*force_x - r_x*force_z)*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
-		  netMoments[3*boundaryFlags[ebN]+2] += (r_x*force_y - r_y*force_x)*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
+		  netMoments[3*boundaryFlags[ebN]+0] += (r_y*force_z - r_z*force_y)*dS;
+		  netMoments[3*boundaryFlags[ebN]+1] += (r_z*force_x - r_x*force_z)*dS;
+		  netMoments[3*boundaryFlags[ebN]+2] += (r_x*force_y - r_y*force_x)*dS;
 		}
 	      //
 	      //update residuals
@@ -4247,9 +4247,7 @@ namespace proteus
 							  boundaryJac,
 							  metricTensor,
 							  integralScaling);
-	      //xt_ext=0.0;yt_ext=0.0;zt_ext=0.0;
-	      //std::cout<<"xt_ext "<<xt_ext<<'\t'<<yt_ext<<'\t'<<zt_ext<<std::endl;
-	      dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
+	      dS = metricTensorDetSqrt*dS_ref[kb];
 	      ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
 	      ck.calculateGScale(G,&ebqe_normal_phi_ext[ebNE_kb_nSpace],h_phi);
 
