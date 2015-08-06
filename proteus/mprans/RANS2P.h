@@ -2585,7 +2585,7 @@ namespace proteus
 	      //std::cout<<"integralScaling - metricTensorDetSrt ==============================="<<integralScaling-metricTensorDetSqrt<<std::endl;
 	      /* std::cout<<"metricTensorDetSqrt "<<metricTensorDetSqrt */
 	      /* 	       <<"dS_ref[kb]"<<dS_ref[kb]<<std::endl; */
-	      dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
+	      dS = metricTensorDetSqrt*dS_ref[kb];
 	      //get the metric tensor
 	      //cek todo use symmetry
 	      ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
@@ -4247,9 +4247,7 @@ namespace proteus
 							  boundaryJac,
 							  metricTensor,
 							  integralScaling);
-	      //xt_ext=0.0;yt_ext=0.0;zt_ext=0.0;
-	      //std::cout<<"xt_ext "<<xt_ext<<'\t'<<yt_ext<<'\t'<<zt_ext<<std::endl;
-	      dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
+	      dS = metricTensorDetSqrt*dS_ref[kb];
 	      ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
 	      ck.calculateGScale(G,&ebqe_normal_phi_ext[ebNE_kb_nSpace],h_phi);
 
