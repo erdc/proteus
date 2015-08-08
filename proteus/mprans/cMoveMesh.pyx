@@ -108,17 +108,6 @@ cdef extern from "MoveMesh.h" namespace "proteus":
                                int* csrColumnOffsets_eb_w_v,
                                int* csrColumnOffsets_eb_w_w)
 			       
-        void moveRigidBody(double  mass,           double* inertiaRef,
-			   double* force, 	   double* moment,
-			   double* disp0, 	   double* disp1,
-			   double* vel0,  	   double* vel1,
-			   double* rot0,  	   double* rot1,
-			   double* angVel0,	   double* angVel1,
-			   double  deltaT,
-			   int*    linConstraints, int*	   angConstraints,
-			   double  linRelaxFac,	   double  angRelaxFac,
-			   double  linNorm,	   double  angNorm,
-			   int	   iterMax) 
 
 
     MoveMesh_base* newMoveMesh(int nSpaceIn,
@@ -354,30 +343,3 @@ cdef class cMoveMesh_base:
                                         <int*>csrColumnOffsets_eb_w_w.data)
 
 
-    def moveRigidBody(self,    
-                                     mass,            numpy.ndarray  inertiaRef,
-		      numpy.ndarray  force,	      numpy.ndarray  moment,
-		      numpy.ndarray  disp0,	      numpy.ndarray  disp1,
-		      numpy.ndarray  vel0,	      numpy.ndarray  vel1,
-		      numpy.ndarray  rot0,	      numpy.ndarray  rot1,
-		      numpy.ndarray  angVel0,         numpy.ndarray  angVel1,
-		                     deltaT,
-		      numpy.ndarray  linConstraints,  numpy.ndarray  angConstraints,
-		                     linRelaxFac,                    angRelaxFac,
-		                     linNorm,                        angNorm,
-		      int            iterMax): 
-        #print linConstraints
-        #print angConstraints	
-        self.thisptr.moveRigidBody(           mass,                 <double*>  inertiaRef.data,
-			           <double*>  force.data,           <double*>  moment.data,
-			           <double*>  disp0.data, 	    <double*>  disp1.data,
-			           <double*>  vel0.data,  	    <double*>  vel1.data,
-			           <double*>  rot0.data,  	    <double*>  rot1.data,
-			           <double*>  angVel0.data,	    <double*>  angVel1.data,
-			                      deltaT,
-			           <int*>     linConstraints.data,  <int*>     angConstraints.data,
-			                      linRelaxFac,	               angRelaxFac,
-			                      linNorm,	                       angNorm,
-			                      iterMax) 
-        #print linConstraints
-        #print angConstraints	

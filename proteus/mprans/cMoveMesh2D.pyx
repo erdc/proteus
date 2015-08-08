@@ -4,8 +4,8 @@ from proteus import *
 from proteus.Transport import *
 from proteus.Transport import OneLevelTransport
 
-cdef extern from "MoveMesh.h" namespace "proteus":
-    cdef cppclass MoveMesh_base:
+cdef extern from "MoveMesh2D.h" namespace "proteus":
+    cdef cppclass MoveMesh2D_base:
         void calculateResidual(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -108,20 +108,7 @@ cdef extern from "MoveMesh.h" namespace "proteus":
                                int* csrColumnOffsets_eb_w_v,
                                int* csrColumnOffsets_eb_w_w)
 			       
-        void moveRigidBody(double  mass,           double* inertiaRef,
-			   double* force, 	   double* moment,
-			   double* disp0, 	   double* disp1,
-			   double* vel0,  	   double* vel1,
-			   double* rot0,  	   double* rot1,
-			   double* angVel0,	   double* angVel1,
-			   double  deltaT,
-			   int*    linConstraints, int*	   angConstraints,
-			   double  linRelaxFac,	   double  angRelaxFac,
-			   double  linNorm,	   double  angNorm,
-			   int	   iterMax) 
-
-
-    MoveMesh_base* newMoveMesh(int nSpaceIn,
+    MoveMesh2D_base* newMoveMesh2D(int nSpaceIn,
                                int nQuadraturePoints_elementIn,
                                int nDOF_mesh_trial_elementIn,
                                int nDOF_trial_elementIn,
@@ -129,8 +116,8 @@ cdef extern from "MoveMesh.h" namespace "proteus":
                                int nQuadraturePoints_elementBoundaryIn,
                                int CompKernelFlag)
 
-cdef class cMoveMesh_base:
-    cdef MoveMesh_base* thisptr
+cdef class cMoveMesh2D_base:
+    cdef MoveMesh2D_base* thisptr
     def __cinit__(self,
                   int nSpaceIn,
                   int nQuadraturePoints_elementIn,
@@ -139,7 +126,7 @@ cdef class cMoveMesh_base:
                   int nDOF_test_elementIn,
                   int nQuadraturePoints_elementBoundaryIn,
                   int CompKernelFlag):
-        self.thisptr = newMoveMesh(nSpaceIn,
+        self.thisptr = newMoveMesh2D(nSpaceIn,
                                    nQuadraturePoints_elementIn,
                                    nDOF_mesh_trial_elementIn,
                                    nDOF_trial_elementIn,
@@ -352,32 +339,3 @@ cdef class cMoveMesh_base:
                                         <int*>csrColumnOffsets_eb_w_u.data,
                                         <int*>csrColumnOffsets_eb_w_v.data,
                                         <int*>csrColumnOffsets_eb_w_w.data)
-
-
-    def moveRigidBody(self,    
-                                     mass,            numpy.ndarray  inertiaRef,
-		      numpy.ndarray  force,	      numpy.ndarray  moment,
-		      numpy.ndarray  disp0,	      numpy.ndarray  disp1,
-		      numpy.ndarray  vel0,	      numpy.ndarray  vel1,
-		      numpy.ndarray  rot0,	      numpy.ndarray  rot1,
-		      numpy.ndarray  angVel0,         numpy.ndarray  angVel1,
-		                     deltaT,
-		      numpy.ndarray  linConstraints,  numpy.ndarray  angConstraints,
-		                     linRelaxFac,                    angRelaxFac,
-		                     linNorm,                        angNorm,
-		      int            iterMax): 
-        #print linConstraints
-        #print angConstraints	
-        self.thisptr.moveRigidBody(           mass,                 <double*>  inertiaRef.data,
-			           <double*>  force.data,           <double*>  moment.data,
-			           <double*>  disp0.data, 	    <double*>  disp1.data,
-			           <double*>  vel0.data,  	    <double*>  vel1.data,
-			           <double*>  rot0.data,  	    <double*>  rot1.data,
-			           <double*>  angVel0.data,	    <double*>  angVel1.data,
-			                      deltaT,
-			           <int*>     linConstraints.data,  <int*>     angConstraints.data,
-			                      linRelaxFac,	               angRelaxFac,
-			                      linNorm,	                       angNorm,
-			                      iterMax) 
-        #print linConstraints
-        #print angConstraints	
