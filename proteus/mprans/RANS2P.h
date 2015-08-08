@@ -967,21 +967,21 @@ namespace proteus
       duc_dv = v/(uc+1.0e-12);
       duc_dw = w/(uc+1.0e-12);
 
-      mom_u_source += H_s*(viscosity*alpha + beta*uc)*(u-u_s);
-      mom_v_source += H_s*(viscosity*alpha + beta*uc)*(v-v_s);
-      mom_w_source += H_s*(viscosity*alpha + beta*uc)*(w-w_s);
+      mom_u_source += H_s*viscosity*(alpha + beta*uc)*(u-u_s);
+      mom_v_source += H_s*viscosity*(alpha + beta*uc)*(v-v_s);
+      mom_w_source += H_s*viscosity*(alpha + beta*uc)*(w-w_s);
 
-      dmom_u_source[0] = H_s*(viscosity*alpha + beta*(uc + u*duc_du));
+      dmom_u_source[0] = H_s*viscosity*(alpha + beta*(uc + u*duc_du));
       dmom_u_source[1] = H_s*beta*u*duc_dv;
       dmom_u_source[2] = H_s*beta*u*duc_dw;
     
       dmom_v_source[0] = H_s*beta*v*duc_du;
-      dmom_v_source[1] = H_s*(viscosity*alpha + beta*(uc + v*duc_dv));
+      dmom_v_source[1] = H_s*viscosity*(alpha + beta*(uc + v*duc_dv));
       dmom_v_source[2] = H_s*beta*w*duc_dw;
 
       dmom_w_source[0] = H_s*beta*w*duc_du;
       dmom_w_source[1] = H_s*beta*w*duc_dv;
-      dmom_w_source[2] = H_s*(viscosity*alpha + beta*(uc + w*duc_dw));
+      dmom_w_source[2] = H_s*viscosity*(alpha + beta*(uc + w*duc_dw));
     }
 
     inline
@@ -1750,7 +1750,7 @@ namespace proteus
                            const double* q_turb_var_0,
 			   const double* q_turb_var_1,
 			   const double* q_turb_var_grad_0,
-			   double * q_eddy_viscosity, //mwf not used yet
+			   double * q_eddy_viscosity,
 			   //
 			   int* p_l2g, 
 			   int* vel_l2g, 
@@ -2582,6 +2582,7 @@ namespace proteus
 							  integralScaling);
 	      //xt_ext=0.0;yt_ext=0.0;zt_ext=0.0;
 	      //std::cout<<"xt_ext "<<xt_ext<<'\t'<<yt_ext<<'\t'<<zt_ext<<std::endl;
+	      //std::cout<<"x_ext "<<x_ext<<'\t'<<y_ext<<'\t'<<z_ext<<std::endl;
 	      //std::cout<<"integralScaling - metricTensorDetSrt ==============================="<<integralScaling-metricTensorDetSqrt<<std::endl;
 	      /* std::cout<<"metricTensorDetSqrt "<<metricTensorDetSqrt */
 	      /* 	       <<"dS_ref[kb]"<<dS_ref[kb]<<std::endl; */
@@ -2923,7 +2924,6 @@ namespace proteus
 					     flux_mom_v_adv_ext,
 					     flux_mom_w_adv_ext,
 					     &ebqe_velocity[ebNE_kb_nSpace]);
-              assert(fabs(flux_mass_ext - (ebqe_velocity[ebNE_kb_nSpace+0]*normal[0]+ebqe_velocity[ebNE_kb_nSpace+1]*normal[1]+ebqe_velocity[ebNE_kb_nSpace+2]*normal[2])) < 1.0e-8);
 	      exteriorNumericalDiffusiveFlux(eps_rho,
 					     ebqe_phi_ext[ebNE_kb],
 					     sdInfo_u_u_rowptr,
@@ -3060,8 +3060,11 @@ namespace proteus
 					     penalty,//ebqe_penalty_ext[ebNE_kb],
 					     flux_mom_ww_diff_ext);
 	      flux[ebN*nQuadraturePoints_elementBoundary+kb] = flux_mass_ext;
-              assert(fabs(flux[ebN*nQuadraturePoints_elementBoundary+kb] - (ebqe_velocity[ebNE_kb_nSpace+0]*normal[0]+ebqe_velocity[ebNE_kb_nSpace+1]*normal[1]+ebqe_velocity[ebNE_kb_nSpace+2]*normal[2])) < 1.0e-8);	      
-              // 
+	      /* std::cout<<"external u,v,u_n " */
+	      /* 	       <<ebqe_velocity[ebNE_kb_nSpace+0]<<'\t' */
+	      /* 	       <<ebqe_velocity[ebNE_kb_nSpace+1]<<'\t' */
+	      /* 	       <<flux[ebN*nQuadraturePoints_elementBoundary+kb]<<std::endl; */
+	      // 
 	      //integrate the net force and moment on flagged boundaries
 	      //
 	      if (ebN < nElementBoundaries_owned)
