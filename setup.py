@@ -1,10 +1,7 @@
 import sys
 from distutils.core import setup, Extension
-#<<<<<<< HEAD
 from Cython.Build import cythonize
-#=======
 from petsc4py.conf.petscconf import Extension as PetscExtension
-#>>>>>>> proteus-master
 
 import numpy
 from Cython.Distutils import build_ext
@@ -18,6 +15,10 @@ from Cython.Distutils import build_ext
 from proteus import config
 from proteus.config import *
 
+try:
+    from config import *
+except:
+    raise RuntimeError("Missing or invalid config.py file. See proteusConfig for examples")
 
 ###to turn on debugging in c++
 ##\todo Finishing cleaning up setup.py/setup.cfg, config.py...
@@ -51,7 +52,6 @@ setup(name='proteus',
       packages = ['proteus', 'proteus.config', 'proteus.tests', 'proteus.mprans'],
       cmdclass = {'build_ext':build_ext},
       ext_package='proteus',
-#<<<<<<< HEAD
       ext_modules=cythonize(
                    [Extension('MeshAdaptPUMI',
 
@@ -74,9 +74,8 @@ setup(name='proteus',
                              include_dirs=[numpy.get_include(),'include',
                                            PROTEUS_SUPERLU_INCLUDE_DIR],
                              libraries=['m'],
-                             extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS,
-#=======
-      ext_modules=[Extension("ADR",['proteus/ADR.pyx'],
+                             extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS),
+                   Extension("ADR",['proteus/ADR.pyx'],
                              depends=['proteus/ADR.h'],
                              language='c++',
                              include_dirs=[numpy.get_include(),'proteus']),
@@ -85,7 +84,6 @@ setup(name='proteus',
                              extra_link_args=PROTEUS_EXTRA_LINK_ARGS),
                    Extension("subsurfaceTransportFunctions",['proteus/subsurfaceTransportFunctions.pyx'],
                              include_dirs=[numpy.get_include(),'proteus'],
-#>>>>>>> proteus-master
                              extra_link_args=PROTEUS_EXTRA_LINK_ARGS),
                    Extension('cfmmfsw', ['proteus/cfmmfswModule.cpp','proteus/cfmmfsw.cpp','proteus/stupidheap.cpp',
                              'proteus/FMMandFSW.cpp'],
@@ -258,16 +256,6 @@ setup(name='proteus',
                              libraries=['m'],
                              extra_link_args=PROTEUS_EXTRA_LINK_ARGS,
                              extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS),
-'''
-<<<<<<< HEAD
-                   #Cython generated modules with just c code
-                   Extension("waveFunctions",['src/waveFunctions.c','src/transportCoefficients.c'],
-                             include_dirs=[numpy.get_include(),'include'])
-                   ]),
-      data_files=[('proteusConfig',['config.py'])],
-      scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond','scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec'],
-=======
-'''
                    PetscExtension('flcbdfWrappers',
                                   ['proteus/flcbdfWrappersModule.cpp','proteus/mesh.cpp','proteus/meshio.cpp'],
                                   define_macros=[('PROTEUS_TRIANGLE_H',PROTEUS_TRIANGLE_H),
@@ -346,12 +334,11 @@ setup(name='proteus',
                              language="c++",
                              include_dirs=[numpy.get_include(), 'proteus']),
 
-                   ],
+                   ]),
       data_files=[(proteus_install_path,['proteus/proteus_blas.h', 'proteus/proteus_lapack.h',
                                          'proteus/ModelFactory.h', 'proteus/CompKernel.h']),(os.path.join(proteus_install_path,'tests'),['proteus/tests/hex_cube_3x3.xmf','proteus/tests/hex_cube_3x3.h5'])],
       scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf',
                  'scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond',
                  'scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec','scripts/gatherTimes.py'],
-#>>>>>>> proteus-master
       requires=['numpy']
       )
