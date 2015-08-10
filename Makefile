@@ -108,7 +108,7 @@ hashdist:
 stack: 
 #<<<<<<< HEAD
 	@echo "No stack found.  Cloning private stack from GitHub"
-	git clone https://github.com/erdc-cm/hashstack-private.git stack
+	git clone -b scorec  git@github.com:erdc-cm/hashstack-private.git stack
 
 mprans: 
 	@echo "No mprans found.  Cloning mprans from GitHub"

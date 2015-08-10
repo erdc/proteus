@@ -258,6 +258,7 @@ setup(name='proteus',
                              libraries=['m'],
                              extra_link_args=PROTEUS_EXTRA_LINK_ARGS,
                              extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS),
+'''
 <<<<<<< HEAD
                    #Cython generated modules with just c code
                    Extension("waveFunctions",['src/waveFunctions.c','src/transportCoefficients.c'],
@@ -266,6 +267,7 @@ setup(name='proteus',
       data_files=[('proteusConfig',['config.py'])],
       scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf','scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond','scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec'],
 =======
+'''
                    PetscExtension('flcbdfWrappers',
                                   ['proteus/flcbdfWrappersModule.cpp','proteus/mesh.cpp','proteus/meshio.cpp'],
                                   define_macros=[('PROTEUS_TRIANGLE_H',PROTEUS_TRIANGLE_H),
@@ -350,6 +352,6 @@ setup(name='proteus',
       scripts = ['scripts/parun','scripts/gf2poly','scripts/gatherArchives.py','scripts/qtm','scripts/waves2xmf',
                  'scripts/velocity2xmf','scripts/run_script_garnet','scripts/run_script_diamond',
                  'scripts/run_script_lonestar','scripts/run_script_ranger','scripts/run_script_mpiexec','scripts/gatherTimes.py'],
->>>>>>> proteus-master
+#>>>>>>> proteus-master
       requires=['numpy']
       )
