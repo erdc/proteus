@@ -1,5 +1,5 @@
 module load mpich3/3.1.2-thread-multiple git python cmake simmetrix/simModSuite gcc/4.7.0
-export HDPATH=/lore/zhanga/HDPATH
+export HDPATH=/lore/zhanga/HDPATH2
 export PROTEUS=$PWD
 export PROTEUS_ARCH=linux2-scorec
 export PROTEUS_PREFIX=$PROTEUS/$PROTEUS_ARCH
