@@ -112,7 +112,7 @@ stack:
 
 mprans: 
 	@echo "No mprans found.  Cloning mprans from GitHub"
-	git clone https://github.com/erdc-cm/proteus-mprans.git mprans
+	git clone -b scorec git@github.com:erdc-cm/proteus-mprans.git mprans
 
 config.py:
 	@echo "No config.py file found.  Running ./configure"

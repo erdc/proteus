@@ -6493,10 +6493,10 @@ static PyObject* flcbdfWrappersConvertPUMIPartitionToPython(PyObject* self,
                         &subdomain_cmesh))
     return NULL;
   MESH(cmesh).subdomainp=&MESH(subdomain_cmesh);
-  PETSC_COMM_WORLD = Py_PETSC_COMM_WORLD;
+  PETSC_COMM_WORLD = PROTEUS_COMM_WORLD;
   int ierr,size,rank;
-  ierr = MPI_Comm_size(Py_PETSC_COMM_WORLD,&size);
-  ierr = MPI_Comm_rank(Py_PETSC_COMM_WORLD,&rank);
+  ierr = MPI_Comm_size(PROTEUS_COMM_WORLD,&size);
+  ierr = MPI_Comm_rank(PROTEUS_COMM_WORLD,&rank);
 
   int dims[1];
   //build handles to python arrays
