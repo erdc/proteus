@@ -12,7 +12,7 @@ VER_CMD = git log -1 --pretty="%H"
 PROTEUS_INSTALL_CMD = python setup.py install
 PROTEUS_DEVELOP_CMD = pip install -e .
 # shell hack for now to automatically detect Garnet front-end nodes
-PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
+PROTEUS_ARCH ?=$(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 PROTEUS_VERSION := $(shell ${VER_CMD})
@@ -113,6 +113,10 @@ stack:
 mprans: 
 	@echo "No mprans found.  Cloning mprans from GitHub"
 	git clone https://github.com/erdc-cm/proteus-mprans.git mprans
+
+config.py:
+	@echo "No config.py file found.  Running ./configure"
+	./configure
 
 profile: ${PROTEUS_PREFIX}/artifact.json
 
