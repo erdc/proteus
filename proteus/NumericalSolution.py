@@ -458,6 +458,9 @@ class NS_base:  # (HasTraits):
                 #\todo need to add logic in multilevel NL solver chooser to account for numerical method's stencil as well
                 parallelUsesFullOverlap=(n.nLayersOfOverlapForParallel > 0 or n.parallelPartitioningType == MeshTools.MeshParallelPartitioningTypes.node),
                 nonlinearSolverNorm = n.nonlinearSolverNorm))
+            #update nonlinear solvers using numerics options
+            for nls in self.nlsList:
+                nls.setFromOptions(n)
             model.solver=self.nlsList[-1]
             model.viewer = Viewers.V_base(p,n,s)
             Profiling.memory("MultilevelNonlinearSolver for"+p.name)

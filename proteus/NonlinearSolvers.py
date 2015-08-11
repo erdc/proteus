@@ -17,6 +17,7 @@ import FemTools
 from UnstructuredFMMandFSWsolvers import FMMEikonalSolver
 from UnstructuredFMMandFSWsolvers import FSWEikonalSolver
 import csmoothers
+import os
 
 class NonlinearEquation:
     """
@@ -192,11 +193,6 @@ class NonlinearSolver:
         if self.convergenceHistoryIsCorrupt:
             return
         else:
-            #mwf begin hack for conv. rate
-            #equation (5) in Gustafsson_Soderlind_97
-            #mwf debug
-            #import pdb
-            #pdb.set_trace()
             if self.gustafsson_norm_du_last >= 0.0:
                 tmp = self.norm_du / (self.gustafsson_norm_du_last + 1.0e-16)
                 self.gustafsson_alpha = max(self.gustafsson_alpha,tmp)
@@ -658,22 +654,28 @@ class POD_Newton(Newton):
                 directSolver,
                 EWtol,
                 maxLSits)
+        self.pod_initialized=False
+        self.DB = 1
+        self.SVD_basis_file='SVD_basis_file'
+    def initialize_POD(self):
+        """
+        Setup for Full Nonlinear POD approximation
+        """
+        assert self.DB is not None
+        assert os.path.isfile(self.SVD_basis_file), "SVD Basis file {0} not found".format(self.SVD_basis_file)
         #setup reduced basis for solution
-        self.DB = 11 #number of basis vectors for solution
-        U = np.loadtxt('SVD_basis')
+        U = np.loadtxt(self.SVD_basis_file)
+        assert 0 < self.DB and self.DB <= U.shape[1] and self.DB <= self.F.dim, "{0} out of bounds [0,min({1},{2})]".format(self.DB,U.shape[1],self.F.dim)
         self.U = U[:,0:self.DB]
         self.U_transpose = self.U.conj().T
         self.pod_J = np.zeros((self.DB,self.DB),'d')
         self.pod_linearSolver = LU(self.pod_J)
         self.J_rowptr,self.J_colind,self.J_nzval = self.J.getCSRrepresentation()
         self.pod_du = np.zeros(self.DB)
+        self.pod_initialized=True
     def computeResidual(self,u,r,b):
         """
-        Use DEIM algorithm to compute residual if use_deim is turned on
-
         Right now splits the evaluation into two 'temporal' (mass) and spatial piece
-
-        As first step for DEIM still does full evaluation
         """
         if self.fullResidual:
             self.F.getResidual(u,r)
@@ -697,6 +699,8 @@ class POD_Newton(Newton):
         u -- solution
         r -- F(u) - b
         """
+        if not self.pod_initialized:
+            self.initialize_POD()
         pod_u = np.dot(self.U_transpose,u)
         u[:] = np.dot(self.U,pod_u)
         r=self.solveInitialize(u,r,b)
@@ -742,7 +746,16 @@ class POD_Newton(Newton):
             return self.failedFlag
         log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-
+    def setFromOptions(self,nOptions):
+        """
+        DB -- number of modes to use for solution default is [1]
+        SVD_basis_file -- file holding U basis from SVD of snapshots ['SVD_basis']
+        """
+        if 'DB' in dir(nOptions):
+            self.DB = nOptions.DB
+        if 'SVD_basis_file' in dir(nOptions):
+            self.SVD_basis_file = nOptions.SVD_Basis_file
+            
 class POD_DEIM_Newton(Newton):
     """Newton's method on the reduced order system based on POD"""
     def __init__(self,
@@ -778,31 +791,44 @@ class POD_DEIM_Newton(Newton):
                 directSolver,
                 EWtol,
                 maxLSits)
+        self.pod_initialized=False
+        self.DB = 1
+        self.DBf = 1
+        self.SVD_basis_file='SVD_basis'
+        self.Fs_SVD_basis_file='Fs_SVD_basis'
+        self.hyper_reduction_indices = 'Fs_DEIM_indices_truncated'
+        self.use_deim = False
+    def initialize_POD(self):
+        """
+        Setup for Full Nonlinear POD approximation
+        """
+        assert self.DB is not None
+        assert os.path.isfile(self.SVD_basis_file), "SVD Basis file {0} not found".format(self.SVD_basis_file)
         #setup reduced basis for solution
-        self.DB = 43 #11 #number of basis vectors for solution
-        U = np.loadtxt('SVD_basis')
+        U = np.loadtxt(self.SVD_basis_file)
+        assert 0 < self.DB and self.DB <= U.shape[1] and self.DB <= self.F.dim, "{0} out of bounds [0,min({1},{2})]".format(self.DB,U.shape[1],self.F.dim)
         self.U = U[:,0:self.DB]
         self.U_transpose = self.U.conj().T
         #setup reduced basis for DEIM interpolants
-        self.use_deim = use_deim
-        self.DBf = None
         self.Uf  = None;
         self.rho_deim = None; self.Ut_Uf_PtUf_inv=None
         self.rs = None; self.rt = None
         calculate_deim_internally = True
         if self.use_deim:
+            assert os.path.isfile(self.Fs_SVD_basis_file), "Spatial Residual Basis file {0} not found".format(self.Fs_SVD_basis_file)
+            Uf = np.loadtxt(self.Fs_SVD_basis_file)
+            
             #mwf this calculates things in the code. Switch for debugging to just reading
             if calculate_deim_internally:
-                Uf = np.loadtxt('Fs_SVD_basis')
-                self.DBf = min(73,Uf.shape[1],self.F.dim)#debug
+                assert self.DBf is not None and 0 < self.DBf and self.DBf <= min(Uf.shape[1],self.F.dim), "{0} out of bounds [0,min({1},{2})]".format(self.DBf,Uf.shape[1],self.F.dim)
                 self.Uf = Uf[:,0:self.DBf]
                 #returns rho --> deim indices and deim 'projection' matrix
                 #U(P^TU)^{-1}
                 self.rho_deim,Uf_PtUf_inv = deim_utils.deim_alg(self.Uf,self.DBf)
             else:
-                self.Uf = np.loadtxt('Fs_SVD_basis_truncated')
+                assert os.path.isfile(self.hyper_reduction_indices),  "File for indices for evaluating hyper-reduction points  {0} not found".format(self.hyper_reduction_indices)
                 self.DBf = self.Uf.shape[1]
-                self.rho_deim = np.loadtxt('Fs_DEIM_indices_truncated',dtype='i')
+                self.rho_deim = np.loadtxt(self.hyper_reduction_indices,dtype='i')
                 PtUf = self.Uf[self.rho_deim]
                 assert PtUf.shape == (self.DBf,self.DBf)
                 PtUfInv = np.linalg.inv(PtUf)
@@ -825,6 +851,8 @@ class POD_DEIM_Newton(Newton):
         self.pod_du = np.zeros(self.DB)
         self.skip_mass_jacobian_eval = True
         self.linear_reduced_mass_matrix=None
+        self.pod_initialized=True
+
     def norm(self,u):
         return self.norm_function(u)
     #mwf add for DEIM
@@ -939,6 +967,9 @@ class POD_DEIM_Newton(Newton):
         Start with brute force just testing things
         """
         assert self.use_deim
+        if not self.pod_initialized:
+            self.initialize_POD()
+        assert self.pod_initialized
         pod_u = np.dot(self.U_transpose,u)
         u[:] = np.dot(self.U,pod_u)
         #evaluate fine grid residuals directly
@@ -1056,7 +1087,20 @@ class POD_DEIM_Newton(Newton):
         log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
 
-
+    def setFromOptions(self,nOptions):
+        """
+        DB -- number of modes to use for solution default is [1]
+        SVD_basis_file -- file holding U basis from SVD of snapshots ['SVD_basis']
+        use_deim -- try DEIM for hyper-reduction
+        DBf -- number of modes to use for hyper-reduction
+        Fs_SVD_basis_file -- file holding Uf basis from SVD of snapshot nonlineariities ['Fs_SVD_basis']
+        """
+        optional_params = ['DB','SVD_basis_file','use_deim','DBf','Fs_SVD_basis_file']
+        for parm in optional_params:
+            if parm in dir(nOptions):
+                setattr(self,parm,getattr(nOptions,parm))
+        
+        
 class NewtonNS(NonlinearSolver):
     """
     A simple iterative solver that is Newton's method
@@ -2259,6 +2303,13 @@ class MultilevelNonlinearSolver:
         self.infoString+="********************End Multilevel Nonlinear Solver Info*********************\n"
         return self.infoString
 
+    def setFromOptions(self,nOptions):
+        """
+        modify parameters based on numerics files
+        """
+        for levelSolver in self.solverList:
+            if 'setFromOptions' in dir(levelSolver):
+                levelSolver.setFromOptions(nOptions)
 
 class EikonalSolver:
     """
