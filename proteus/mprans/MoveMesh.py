@@ -626,7 +626,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         if self.forceStrongConditions:#
             for cj in range(self.nc):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    r[self.offset[cj]+self.stride[cj]*dofN] = 0
+                    r[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         log("Global residual",level=9,data=r)
         self.nonlinear_function_evaluations += 1
     def getJacobian(self,jacobian):
