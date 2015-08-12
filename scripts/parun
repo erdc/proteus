@@ -436,29 +436,82 @@ while running:
             run = False
             running = False
 
+#    if run:
+#        log("Starting %s run number %i" % (so.name, runNumber))
+#        runName = so.name + str(runNumber)
+#        dispatch = Profiling.Dispatcher(comm, opts.profile)
+#        ns = dispatch(NumericalSolution.NS_base,
+#                      (so, pList, nList, sList, opts, simFlagsList),
+#                      {},
+#                      runName + '_init_prof')
+
+#        if doCalculate:
+#            dispatch(ns.calculateSolution,
+#                     (runName,),
+#                     {},
+#                     runName + '_run_prof')
+
+#        log("Completed %s run number %i" %(so.name,runNumber))
+#        import gc
+#        log("Collecting garbage")
+#        gc.collect()
+#        log("Done with garbage")
+#        runNumber+=1
+
     if run:
-        log("Starting %s run number %i" % (so.name, runNumber))
-        runName = so.name + str(runNumber)
-        dispatch = Profiling.Dispatcher(comm, opts.profile)
-        ns = dispatch(NumericalSolution.NS_base,
-                      (so, pList, nList, sList, opts, simFlagsList),
-                      {},
-                      runName + '_init_prof')
+        log("Starting %s run number %i" %(so.name,runNumber))
+        runName = so.name+`runNumber`
+        if opts.profile:
+            profiler.run('ns = NumericalSolution.NS_base(so,pList,nList,sList,opts,simFlagsList)',so.name+'_init_prof'+`comm.rank()`)
+            comm.beginSequential()
+            stats = pstats.Stats(so.name+'_init_prof'+`comm.rank()`)
+            stats.strip_dirs()
+            stats.dump_stats(so.name+'_init_prof_c'+`comm.rank()`)
+            stats.sort_stats('cumulative')
+            if Profiling.verbose and comm.isMaster():
+                stats.print_stats(30)
+            stats.sort_stats('time')
+            if Profiling.verbose and comm.isMaster():
+                stats.print_stats(30)
+            comm.endSequential()
+            profiler.run('ns.calculateSolution(runName)',so.name+'_run_prof'+`comm.rank()`)
+            comm.beginSequential()
+            runNumber+=1
+            stats = pstats.Stats(so.name+'_run_prof'+`comm.rank()`)
+            stats.strip_dirs()
+            stats.dump_stats(so.name+'_run_prof_c'+`comm.rank()`)
+            stats.sort_stats('cumulative')
+            if Profiling.verbose and comm.isMaster():
+                stats.print_stats(30)
+            stats.sort_stats('time')
+            if Profiling.verbose and comm.isMaster():
+                stats.print_stats(30)
+            comm.endSequential()
+        else:
+          loop_num=0
+          oldname=so.name
+          p = pList[0]
+          for i in range(p.domain.numAdaptSteps):
+            loop_num=loop_num+1
+            log("loop number: "+str(loop_num))
+            so.name=oldname+str(loop_num)
+            ns = NumericalSolution.NS_base(so,pList,nList,sList,opts,simFlagsList)
+            #if comm.isMaster():
+            #    ns.frameWidget = vtkViewers.QtGui.QFrame(vtkViewers.g.mainWindow)
+            #    ns.hbox = vtkViewers.QtGui.QHBoxLayout()
+            #    ns.frameWidget.setLayout(ns.hbox)
+            #    vtkViewers.g.tabWidget.addTab(ns.frameWidget,"NumericalSolution")
+            #    vtkViewers.g.tabWidget.setCurrentWidget(ns.frameWidget)
+            #    ui = ns.edit_traits(parent=ns.frameWidget,kind='panel')
+            #    ui.control.setParent(ns.frameWidget)
+            #    #ns.edit_traits()
+            ns.calculateSolution(runName)
+            log("Completed %s run number %i" %(so.name,runNumber))
+            import gc
+            log("Collecting garbage")
+            gc.collect()
+            log("Done with garbage")
 
-        if doCalculate:
-            dispatch(ns.calculateSolution,
-                     (runName,),
-                     {},
-                     runName + '_run_prof')
-
-        log("Completed %s run number %i" %(so.name,runNumber))
-        import gc
-        log("Collecting garbage")
-        gc.collect()
-        log("Done with garbage")
-        runNumber+=1
-
-#>>>>>>> proteus-master
 if opts.viewer:
     if comm.isMaster():
         try:
