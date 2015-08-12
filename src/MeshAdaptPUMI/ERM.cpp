@@ -329,7 +329,8 @@ testcount++;
 */
     KSP ksp; //initialize solver context
     KSPCreate(PETSC_COMM_SELF,&ksp);
-    KSPSetOperators(ksp,K,K,SAME_PRECONDITIONER);
+    //KSPSetOperators(ksp,K,K,SAME_PRECONDITIONER);
+    KSPSetOperators(ksp,K,K);
     KSPSetType(ksp,KSPPREONLY);
     PC pc;
     KSPGetPC(ksp,&pc);
