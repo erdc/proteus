@@ -1158,8 +1158,7 @@ namespace proteus
       flux_umom = 0.0;
       flux_vmom = 0.0;
       /* flux_wmom = 0.0; */
-      flowDirection=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//+n[2]*f_mass[2];
-      //flowDirection=n[0]*f_mass[0]+n[1]*f_mass[1];//+n[2]*f_mass[2];
+      flowDirection=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//tricky, works for  moving and fixed domains
       if (isDOFBoundary_u != 1)
 	{
 	  flux_mass += n[0]*f_mass[0];
@@ -1354,9 +1353,7 @@ namespace proteus
       dflux_wmom_du = 0.0;
       dflux_wmom_dv = 0.0;
       /* dflux_wmom_dw = 0.0; */
-  
-      flowDirection=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//+n[2]*f_mass[2];
-      //flowDirection=n[0]*f_mass[0]+n[1]*f_mass[1];//+n[2]*f_mass[2];
+      flowDirection=n[0]*df_vmom_dv[0]+n[1]*df_umom_du[1];//tricky, works for moving and fixed  domains
       if (isDOFBoundary_u != 1)
 	{
 	  dflux_mass_du += n[0]*df_mass_du[0];
@@ -1909,7 +1906,8 @@ namespace proteus
                 {
                   int eN_j=eN*NDOF_MESH_TRIAL_ELEMENT+j;
                   div_mesh_velocity +=
-                    mesh_velocity_dof[mesh_l2g[eN_j]*3+0]*vel_grad_trial[j*nSpace+0] + mesh_velocity_dof[mesh_l2g[eN_j]*3+1]*vel_grad_trial[j*nSpace+1];
+                    mesh_velocity_dof[mesh_l2g[eN_j]*3+0]*vel_grad_trial[j*nSpace+0] +
+                    mesh_velocity_dof[mesh_l2g[eN_j]*3+1]*vel_grad_trial[j*nSpace+1];
                 }
               mesh_volume_conservation_element += (alphaBDF*(dV-q_dV_last[eN_k])/dV - div_mesh_velocity)*dV;
               div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
@@ -2124,12 +2122,12 @@ namespace proteus
 	      //
 	      //calculate strong residual
 	      pdeResidual_p = ck.Advection_strong(dmass_adv_u,grad_u) +
+                ck.Advection_strong(dmass_adv_v,grad_v) +
+		/* ck.Advection_strong(dmass_adv_w,grad_w) + */
                 DM2*MOVING_DOMAIN*ck.Reaction_strong(alphaBDF*(dV-q_dV_last[eN_k])/dV - div_mesh_velocity) +
 		//VRANS
-		ck.Reaction_strong(mass_source) + 
+		ck.Reaction_strong(mass_source);
 		//
-		ck.Advection_strong(dmass_adv_v,grad_v);// +
-		/* ck.Advection_strong(dmass_adv_w,grad_w); */
 	  
               dmom_adv_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
               dmom_adv_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
@@ -2147,10 +2145,11 @@ namespace proteus
 		ck.Reaction_strong(mom_v_source) -
                 ck.Reaction_strong(v*div_mesh_velocity);
               
-	      /* pdeResidual_w = ck.Mass_strong(mom_w_acc_t) +  */
-	      /* 	ck.Advection_strong(dmom_adv_sge,grad_w) + */
-	      /* 	ck.Hamiltonian_strong(dmom_w_ham_grad_p,grad_p) + */
-	      /* 	ck.Reaction_strong(mom_w_source); */
+	      pdeResidual_w = ck.Mass_strong(mom_w_acc_t) +
+	      	ck.Advection_strong(dmom_adv_sge,grad_w) +
+	      	ck.Hamiltonian_strong(dmom_w_ham_grad_p,grad_p) +
+	      	ck.Reaction_strong(mom_w_source) +
+                ck.Reaction_strong(w*div_mesh_velocity);
 	
 	      //calculate tau and tau*Res
 	      //cek debug
@@ -2504,6 +2503,7 @@ namespace proteus
 	      //std::cout<<"integralScaling - metricTensorDetSrt ==============================="<<integralScaling-metricTensorDetSqrt<<std::endl;
 	      /* std::cout<<"metricTensorDetSqrt "<<metricTensorDetSqrt */
 	      /* 	       <<"dS_ref[kb]"<<dS_ref[kb]<<std::endl; */
+	      //dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];//cek need to test effect on accuracy
 	      dS = metricTensorDetSqrt*dS_ref[kb];
 	      //get the metric tensor
 	      //cek todo use symmetry
@@ -3003,10 +3003,10 @@ namespace proteus
 		  
 		  netForces_v[3*boundaryFlags[ebN]+0] += force_v_x*dS;
 		  netForces_v[3*boundaryFlags[ebN]+1] += force_v_y*dS;
-		  //netForces_v[3*boundaryFlags[ebN]+2] += force_v_z*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
+		  //netForces_v[3*boundaryFlags[ebN]+2] += force_v_z*dS;
 		  
-		  //netMoments[3*boundaryFlags[ebN]+0] += (r_y*force_z - r_z*force_y)*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
-		  //netMoments[3*boundaryFlags[ebN]+1] += (r_z*force_x - r_x*force_z)*dS*(1.0-ebqe_vf_ext[ebNE_kb]);
+		  //netMoments[3*boundaryFlags[ebN]+0] += (r_y*force_z - r_z*force_y)*dS;
+		  //netMoments[3*boundaryFlags[ebN]+1] += (r_z*force_x - r_x*force_z)*dS;
 		  netMoments[3*boundaryFlags[ebN]+2] += (r_x*force_y - r_y*force_x)*dS;
 		}
 	      //
@@ -3018,7 +3018,6 @@ namespace proteus
 		  elementResidual_p[i] += ck.ExteriorElementBoundaryFlux(flux_mass_ext,p_test_dS[i]);
 		  elementResidual_p[i] -= DM*ck.ExteriorElementBoundaryFlux(MOVING_DOMAIN*(xt_ext*normal[0]+yt_ext*normal[1]),p_test_dS[i]); 
 		  globalConservationError += ck.ExteriorElementBoundaryFlux(flux_mass_ext,p_test_dS[i]);
-		  
 		  
 		  elementResidual_u[i] += ck.ExteriorElementBoundaryFlux(flux_mom_u_adv_ext,vel_test_dS[i])+
 		    ck.ExteriorElementBoundaryFlux(flux_mom_uu_diff_ext,vel_test_dS[i])+
@@ -3140,10 +3139,10 @@ namespace proteus
 	      /* globalResidual[offset_w+stride_w*vel_l2g[eN_i]]+=elementResidual_w[i]; */
 	    }//i
 	}//ebNE
-      std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl;
-      std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl;
-      std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl;
-      std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl;
+      /* std::cout<<"mesh volume conservation = "<<mesh_volume_conservation<<std::endl; */
+      /* std::cout<<"mesh volume conservation weak = "<<mesh_volume_conservation_weak<<std::endl; */
+      /* std::cout<<"mesh volume conservation err max= "<<mesh_volume_conservation_err_max<<std::endl; */
+      /* std::cout<<"mesh volume conservation err max weak = "<<mesh_volume_conservation_err_max_weak<<std::endl; */
     }
 
     void calculateJacobian(//element
@@ -3518,7 +3517,8 @@ namespace proteus
                 {
                   int eN_j=eN*NDOF_MESH_TRIAL_ELEMENT+j;
                   div_mesh_velocity +=
-                    mesh_velocity_dof[mesh_l2g[eN_j]*3+0]*vel_grad_trial[j*2+0] + mesh_velocity_dof[mesh_l2g[eN_j]*3+1]*vel_grad_trial[j*2+1];
+                    mesh_velocity_dof[mesh_l2g[eN_j]*3+0]*vel_grad_trial[j*2+0] +
+                    mesh_velocity_dof[mesh_l2g[eN_j]*3+1]*vel_grad_trial[j*2+1];
                 }
               div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
 	      //
@@ -3718,12 +3718,12 @@ namespace proteus
 	      //calculate strong residual
 	      //
 	      pdeResidual_p = ck.Advection_strong(dmass_adv_u,grad_u) +
-                DM2*MOVING_DOMAIN*ck.Reaction_strong(alphaBDF*(dV-q_dV_last[eN_k])/dV - div_mesh_velocity) +
 		ck.Advection_strong(dmass_adv_v,grad_v) +
+		/* ck.Advection_strong(dmass_adv_w,grad_w) + */
+                DM2*MOVING_DOMAIN*ck.Reaction_strong(alphaBDF*(dV-q_dV_last[eN_k])/dV - div_mesh_velocity) +
                 //VRANS
 		ck.Reaction_strong(mass_source);
 		//
-		/* ck.Advection_strong(dmass_adv_w,grad_w); */
 	      
 	      pdeResidual_u = ck.Mass_strong(mom_u_acc_t) +
 		ck.Advection_strong(dmom_adv_sge,grad_u) +
@@ -3757,12 +3757,13 @@ namespace proteus
 	      
 		  dpdeResidual_v_p[j]=ck.HamiltonianJacobian_strong(dmom_v_ham_grad_p,&p_grad_trial[j_nSpace]);
 		  dpdeResidual_v_v[j]=ck.MassJacobian_strong(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j]) +
-		    ck.AdvectionJacobian_strong(dmom_adv_sge,&vel_grad_trial[j_nSpace])-
+		    ck.AdvectionJacobian_strong(dmom_adv_sge,&vel_grad_trial[j_nSpace]) -
                     ck.ReactionJacobian_strong(div_mesh_velocity,vel_trial_ref[k*nDOF_trial_element+j]);
 	      
 		  /* dpdeResidual_w_p[j]=ck.HamiltonianJacobian_strong(dmom_w_ham_grad_p,&p_grad_trial[j_nSpace]); */
 		  /* dpdeResidual_w_w[j]=ck.MassJacobian_strong(dmom_w_acc_w_t,vel_trial_ref[k*nDOF_trial_element+j]) +  */
-		  /*   ck.AdvectionJacobian_strong(dmom_adv_sge,&vel_grad_trial[j_nSpace]); */
+		  /*   ck.AdvectionJacobian_strong(dmom_adv_sge,&vel_grad_trial[j_nSpace]) -
+                    ck.ReactionJacobian_strong(div_mesh_velocity,vel_trial_ref[k*nDOF_trial_element+j]); */
 
 		  //VRANS account for drag terms, diagonal only here ... decide if need off diagonal terms too
 		  dpdeResidual_u_u[j]+= ck.ReactionJacobian_strong(dmom_u_source[0],vel_trial_ref[k*nDOF_trial_element+j]);
@@ -4181,6 +4182,7 @@ namespace proteus
 							  boundaryJac,
 							  metricTensor,
 							  integralScaling);
+	      //dS = ((1.0-MOVING_DOMAIN)*metricTensorDetSqrt + MOVING_DOMAIN*integralScaling)*dS_ref[kb];
 	      dS = metricTensorDetSqrt*dS_ref[kb];
 	      ck.calculateG(jacInv_ext,G,G_dd_G,tr_G);
 	      ck.calculateGScale(G,&ebqe_normal_phi_ext[ebNE_kb_nSpace],h_phi);
