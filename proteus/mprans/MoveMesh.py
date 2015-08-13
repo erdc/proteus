@@ -100,6 +100,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         print self.linConstraints
         print self.angConstraints
         print self.hullinertia
+        self.dt_last = None
         self.solidsList=[]
 
     def attachModels(self,modelList):
@@ -129,12 +130,22 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     	self.model.postStep()
         self.mesh.nodeArray[:,0]+=self.model.u[0].dof
         self.mesh.nodeVelocityArray[:,0]=self.model.u[0].dof
+        self.model.u[0].dof[:] = 0.0
         self.mesh.nodeArray[:,1]+=self.model.u[1].dof
         self.mesh.nodeVelocityArray[:,1]=self.model.u[1].dof
+        self.model.u[1].dof[:] = 0.0
         if self.nd == 3:
             self.mesh.nodeArray[:,2]+=self.model.u[2].dof
             self.mesh.nodeVelocityArray[:,2]=self.model.u[2].dof
-        self.mesh.nodeVelocityArray/=self.model.timeIntegration.dt
+            self.model.u[2].dof[:] = 0.0
+        if self.dt_last == None:
+            dt = self.model.timeIntegration.dt
+        else:
+            dt = self.dt_last
+        self.mesh.nodeVelocityArray/=dt
+        self.dt_last = self.model.timeIntegration.dt
+        copyInstructions = {'clear_uList':True}
+        return copyInstructions
 
     def preStep(self,t,firstStep=False):
         log("MoveMesh preStep")
