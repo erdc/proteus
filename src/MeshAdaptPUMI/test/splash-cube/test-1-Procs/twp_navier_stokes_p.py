@@ -50,25 +50,26 @@ def getDBC_w(x,flag):
 
 '''
 def getDBC_p(x,flag):
-    if flag == boundaryTags['top']:
+    #if flag == boundaryTags['top'] or x[2] >= L[2] - 1.0e-5:
     #if flag == boundaryTags['top'] or flag==boundaryTags['bottom'] or flag==boundaryTags['front'] or flag==boundaryTags['left'] or flag==boundaryTags['right']:
-    #if flag==boundaryTags['top'] or flag==boundaryTags['bottom'] or flag==boundaryTags['front'] or flag==boundaryTags['left'] or flag==boundaryTags['right'] or flag==boundaryTags['back']:
-        return lambda x,t: 1.0
+    if flag==boundaryTags['top'] or flag==boundaryTags['bottom'] or flag==boundaryTags['front'] or flag==boundaryTags['left'] or flag==boundaryTags['right'] or flag==boundaryTags['back']:
+        return lambda x,t: 0.0
     
 def getDBC_u(x,flag):
-    if flag == boundaryTags['top'] or flag==boundaryTags['bottom'] or flag==boundaryTags['front'] or flag==boundaryTags['left'] or flag==boundaryTags['right']:
-    #if flag==boundaryTags['top'] or flag==boundaryTags['bottom'] or flag==boundaryTags['front'] or flag==boundaryTags['left'] or flag==boundaryTags['right'] or flag==boundaryTags['back']:
+    #if flag == boundaryTags['top'] or flag==boundaryTags['bottom'] or flag==boundaryTags['front'] or flag==boundaryTags['left'] or flag==boundaryTags['right']:
+    if flag==boundaryTags['top'] or x[2]>=L[2]-1.0e-5 or flag==boundaryTags['bottom'] or flag==boundaryTags['front'] or flag==boundaryTags['left'] or flag==boundaryTags['right'] or flag==boundaryTags['back']:
         return lambda x,t: 0.0
 
 def getDBC_v(x,flag):
     #if flag == boundaryTags['top']:
-    if flag==boundaryTags['top'] or x[2] >= L[2] - 1.0e-12 or  flag==boundaryTags['bottom'] or flag==boundaryTags['front'] or flag==boundaryTags['left'] or flag==boundaryTags['right']:# or flag==boundaryTags['back']:
-        return lambda x,t: 0.0#x[2]*1.0/L[2]
+    #if flag == boundaryTags['top'] or flag==boundaryTags['bottom'] or flag==boundaryTags['front'] or flag==boundaryTags['left'] or flag==boundaryTags['right']:
+    if flag==boundaryTags['top'] or x[2] >= L[2] - 1.0e-12 or  flag==boundaryTags['bottom'] or flag==boundaryTags['front'] or flag==boundaryTags['left'] or flag==boundaryTags['right'] or flag==boundaryTags['back']:
+        return lambda x,t: x[2]*1.0/L[2]
 
 def getDBC_w(x,flag):
     #if flag == boundaryTags['top']:
-    if flag == boundaryTags['top'] or flag==boundaryTags['bottom'] or flag==boundaryTags['front'] or flag==boundaryTags['left'] or flag==boundaryTags['right']:
-    #if flag==boundaryTags['top'] or flag==boundaryTags['bottom'] or flag==boundaryTags['front'] or flag==boundaryTags['left'] or flag==boundaryTags['right'] or flag==boundaryTags['back']:
+    #if flag == boundaryTags['top'] or flag==boundaryTags['bottom'] or flag==boundaryTags['front'] or flag==boundaryTags['left'] or flag==boundaryTags['right']:
+    if flag==boundaryTags['top'] or x[2] >=L[2] - 1.0e-5 or flag==boundaryTags['bottom'] or flag==boundaryTags['front'] or flag==boundaryTags['left'] or flag==boundaryTags['right'] or flag==boundaryTags['back']:
         return lambda x,t: 0.0
 #'''   
  
@@ -78,8 +79,9 @@ dirichletConditions = {0:getDBC_p,
                        3:getDBC_w}
 
 def getAFBC_p(x,flag):
-#        if flag !=boundaryTags['back']:
-          #return lambda x,t: 0.0
+#        if flag !=boundaryTags['top']:
+#        if flag ==boundaryTags['back']:
+#          return lambda x,t: 0.0
         pass
 
 def getAFBC_u(x,flag):
@@ -89,7 +91,7 @@ def getAFBC_u(x,flag):
 
 def getAFBC_v(x,flag):
 #    if flag==boundaryTags['back']:
-#        return lambda x,t: x[2]/L[2]
+#        return lambda x,t: (x[2]/L[2])**2
         pass
 
 def getAFBC_w(x,flag):
@@ -100,17 +102,17 @@ def getAFBC_w(x,flag):
 def getDFBC_u(x,flag):
     if flag==boundaryTags['back']:
         return lambda x,t: 0.0
-#        pass
+#       pass
     
 def getDFBC_v(x,flag):
    if flag==boundaryTags['back']:
         return lambda x,t: 0.0
-        pass
+#        pass
 
 def getDFBC_w(x,flag):
     if flag==boundaryTags['back']:
         return lambda x,t: 0.0
-#        pass
+        #pass
 
 advectiveFluxBoundaryConditions =  {0:getAFBC_p,
                                     1:getAFBC_u,
@@ -152,7 +154,7 @@ initialConditions = {0:PerturbedSurface_p(waterLine_z),
 '''
 initialConditions = {0:AtRest(),
                      1:AtRest(),
-                     #2:AtRest(),
-                     2:Couette(),
+                     2:AtRest(),
+                     #2:Couette(),
                      3:AtRest()}
 
