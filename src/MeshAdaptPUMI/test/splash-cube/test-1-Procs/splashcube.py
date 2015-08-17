@@ -98,7 +98,7 @@ else:
         nny=2*Refinement
     else:
         domain = Domain.PUMIDomain(fileprefix="Splashcube.smb",modelfile="Splashcube.smd") #initialize the domain
-        #domain.numBC=6 #set number of BCs 
+        domain.numBC=6 #set number of BCs 
         domain.numAdaptSteps=1 #set number of adapt steps (loops)
         #Following sets list of face tags of geometric model as mapped from boundary Tags, 
         #meaning if faceList=[[2,4],[1]] and boundaries=['left','right'], then faces with geometry tags 2 and 4 are set as 'left'
@@ -109,13 +109,13 @@ else:
         #domain.faceList=[[3],[5],[1],[6],[2],[4]]
         domain.faceList=[[80],[76],[42],[24],[82],[78]]
         #set max edge length, min edge length, number of meshadapt iterations and initialize the MeshAdaptPUMI object
-        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.005, numIter=1) 
+        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=2) 
         #read the geometry and mesh
         domain.PUMIMesh.loadModelAndMesh("Splashcube.smd", "Splashcube.smb")
 
 
 # Time stepping
-T=1
+T=0.2
 dt_fixed = 0.1
 dt_init = min(0.1*dt_fixed,0.1)
 runCFL=0.33
@@ -201,8 +201,8 @@ sigma_01 = 0.0
 g = [0.0,0.0,0]
 
 # Initial condition
-waterLine_x = 0.11
-waterLine_y = 0.21
+waterLine_x = 0.05
+waterLine_y = 0.1
 waterLine_z = 0.025
 
 def signedDistance(x):
