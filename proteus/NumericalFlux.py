@@ -3371,6 +3371,13 @@ class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG(NF_base):
                        #                                                                     self.scale_penalty,
                         #                                                                    self.penalty_floor)
 
+
+# If using this flux, it adds the term  + p*\n to the existing HamiltonJacobiFlux.  Because this is
+# in a sense treating pressure (or pI) as a conservative advection velocity, but pressure is
+# not really being advected, it is important not to use this flux in combination with
+# an upwinding numericalFlux for the pressure variable.  Recommended ones are
+# ConstantAdvection_exterior or others of that type for pressure.
+#
 class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior(Diffusion_SIPG_exterior):
     useStrongDirichletConstraints=False
     def __init__(self,vt,getPointwiseBoundaryConditions,
@@ -3399,141 +3406,11 @@ class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior(Diffusion_SI
             for bci in self.periodicBoundaryConditionsDictList[ci].values():
                 self.ebqe[('u',ci)][bci[0]]=ebqe[('u',ci)][bci[1]]
                 self.ebqe[('u',ci)][bci[1]]=ebqe[('u',ci)][bci[0]]
-        self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
-        if self.vt.movingDomain:
-            self.vt.coefficients.updateToMovingDomain(self.vt.timeIntegration.t,self.ebqe)
-        for ci in range(self.nc):
-            cnumericalFlux.calculateExteriorLesaintRaviartNumericalFlux(self.speedEvaluationType,
-                                                                        self.mesh.exteriorElementBoundariesArray,
-                                                                        self.mesh.elementBoundaryElementsArray,
-                                                                        self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                        self.isDOFBoundary[ci],
-                                                                        inflowFlag[ci],
-                                                                        ebqe['n'],
-                                                                        self.ebqe[('u',ci)],
-                                                                        self.ebqe[('H',ci)],
-                                                                        self.ebqe[('dH',ci,ci)],
-                                                                        ebqe[('u',ci)],
-                                                                        ebqe[('H',ci)],
-                                                                        ebqe[('dH',ci,ci)],
-                                                                        ebqe[('HamiltonJacobiFlux',ci)],
-                                                                        ebqe[('dHamiltonJacobiFlux_left',ci,ci)])
-            for ck in range(self.nc):
-                if ebqe.has_key(('a',ci,ck)):
-                    if self.vt.sd:
-                        cnumericalFlux.calculateExteriorNumericalDiffusiveFlux_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][0],
-                                                                                  self.mesh.exteriorElementBoundariesArray,
-                                                                                  self.mesh.elementBoundaryElementsArray,
-                                                                                  self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                                  self.isDOFBoundary[ck],
-                                                                                  ebqe['n'],
-                                                                                  self.ebqe[('a',ci,ck)],
-                                                                                  self.ebqe[('grad(phi)',ck)],
-                                                                                  self.ebqe[('u',ck)],
-                                                                                  ebqe[('a',ci,ck)],
-                                                                                  ebqe[('grad(phi)',ck)],
-                                                                                  ebqe[('u',ck)],
-                                                                                  ebqe[('penalty')],
-                                                                                  ebqe[('diffusiveFlux',ck,ci)],
-                                                                                  self.scale_penalty,
-                                                                                  self.penalty_floor)
-                    else:
-                        cnumericalFlux.calculateExteriorNumericalDiffusiveFlux(self.mesh.exteriorElementBoundariesArray,
-                                                                               self.mesh.elementBoundaryElementsArray,
-                                                                               self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                               self.isDOFBoundary[ck],
-                                                                               ebqe['n'],
-                                                                               self.ebqe[('a',ci,ck)],
-                                                                               self.ebqe[('grad(phi)',ck)],
-                                                                               self.ebqe[('u',ck)],
-                                                                               ebqe[('a',ci,ck)],
-                                                                               ebqe[('grad(phi)',ck)],
-                                                                               ebqe[('u',ck)],
-                                                                               ebqe[('penalty')],
-                                                                               ebqe[('diffusiveFlux',ck,ci)],
-                                                                               self.scale_penalty,
-                                                                               self.penalty_floor)
-
-    def updateExteriorNumericalFluxJacobian(self,l2g,inflowFlag,q,ebqe,dphi,fluxJacobian_exterior,fluxJacobian_eb,fluxJacobian_hj):
-        for ci in range(self.nc):
-            if self.vt.timeIntegration.hamiltonianIsImplicit[ci]:
-                cnumericalFlux.updateExteriorNumericalAdvectiveFluxJacobian(self.mesh.exteriorElementBoundariesArray,
-                                                                            self.mesh.elementBoundaryElementsArray,
-                                                                            self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                            inflowFlag[ci],
-                                                                            ebqe[('dHamiltonJacobiFlux_left',ci,ci)],
-                                                                            ebqe[('v',ci)],
-                                                                            fluxJacobian_exterior[ci][ci])
-
-            if self.vt.timeIntegration.diffusionIsImplicit[ci]:
-                for ck in range(self.nc):
-                    if ebqe.has_key(('a',ci,ck)):
-                        for cj in range(self.nc):
-                            if dphi.has_key((ck,cj)):
-                                if self.vt.sd:
-                                    cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian_sd(self.vt.coefficients.sdInfo[(ci,ck)][0],self.vt.coefficients.sdInfo[(ci,ck)][1],
-                                                                                                   dphi[(ck,cj)].femSpace.dofMap.l2g,
-                                                                                                   self.mesh.exteriorElementBoundariesArray,
-                                                                                                   self.mesh.elementBoundaryElementsArray,
-                                                                                                   self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                                                   self.isDOFBoundary[ck],
-                                                                                                   ebqe['n'],
-                                                                                                   ebqe[('a',ci,ck)],
-                                                                                                   ebqe[('da',ci,ck,cj)],
-                                                                                                   ebqe[('grad(phi)',ck)],
-                                                                                                   dphi[(ck,cj)].dof,
-                                                                                                   ebqe[('v',cj)],
-                                                                                                   ebqe[('grad(v)',cj)],
-                                                                                                   ebqe['penalty'],
-                                                                                                   fluxJacobian_exterior[ci][cj],
-                                                                                                   self.scale_penalty,
-                                                                                                   self.penalty_floor)
-                                else:
-                                    cnumericalFlux.updateExteriorNumericalDiffusiveFluxJacobian(dphi[(ck,cj)].femSpace.dofMap.l2g,
-                                                                                                self.mesh.exteriorElementBoundariesArray,
-                                                                                                self.mesh.elementBoundaryElementsArray,
-                                                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                                                                                self.isDOFBoundary[ck],
-                                                                                                ebqe['n'],
-                                                                                                ebqe[('a',ci,ck)],
-                                                                                                ebqe[('da',ci,ck,cj)],
-                                                                                                ebqe[('grad(phi)',ck)],
-                                                                                                dphi[(ck,cj)].dof,
-                                                                                                ebqe[('v',cj)],
-                                                                                                ebqe[('grad(v)',cj)],
-                                                                                                ebqe['penalty'],
-                                                                                                fluxJacobian_exterior[ci][cj],
-                                                                                                self.scale_penalty,
-                                                                                                self.penalty_floor)
-
-class HamiltonJacobi_Advection_pN_DiagonalLesaintRaviart_Diffusion_SIPG_exterior(Diffusion_SIPG_exterior):
-    useStrongDirichletConstraints=False
-    def __init__(self,vt,getPointwiseBoundaryConditions,
-                 getAdvectiveFluxBoundaryConditions,
-                 getDiffusiveFluxBoundaryConditions,
-                 getPeriodicBoundaryConditions=None,
-                 speedEvaluationType=1):
-        Diffusion_SIPG_exterior.__init__(self,vt,getPointwiseBoundaryConditions,
-                 getAdvectiveFluxBoundaryConditions,
-                 getDiffusiveFluxBoundaryConditions,
-                 getPeriodicBoundaryConditions)
-        self.speedEvaluationType = int(speedEvaluationType)#1 -- use max, otherwise allow disc.
-        for ci in range(self.nc):
-            self.advectiveNumericalFlux[ci] = False
-            self.diffusiveNumericalFlux[ci] = True
-            self.HamiltonJacobiNumericalFlux[ci] = True
-        self.scale_penalty = 1; self.penalty_floor = 0.0
-    def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
-        for ci in range(self.nc):
-            self.ebqe[('u',ci)].flat[:] = ebqe[('u',ci)].flat[:]
-            for (ebNE,k),g,x in zip(self.DOFBoundaryConditionsDictList[ci].keys(),
-                                    self.DOFBoundaryConditionsDictList[ci].values(),
-                                    self.DOFBoundaryPointDictList[ci].values()):
-                self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t)
-        for ci in range(self.nc):
-            for bci in self.periodicBoundaryConditionsDictList[ci].values():
-                self.ebqe[('u',ci)][bci[0]]=ebqe[('u',ci)][bci[1]]
-                self.ebqe[('u',ci)][bci[1]]=ebqe[('u',ci)][bci[0]]
+        # check if flux is even defined, to add term ('f' dot 'n' = pN)
+        if (ebqe.has_key(('f',0)) and ebqe[('f',0)][...,0].shape == ebqe[('u',0)].shape):
+            includeAdvectiveFluxpNTerm = True
+        else:
+            includeAdvectiveFluxpNTerm = False
         self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
         if self.vt.movingDomain:
             self.vt.coefficients.updateToMovingDomain(self.vt.timeIntegration.t,self.ebqe)
@@ -3560,9 +3437,9 @@ class HamiltonJacobi_Advection_pN_DiagonalLesaintRaviart_Diffusion_SIPG_exterior
             #
             # so our term is  pIn = p \n  and since 'f' = pI, we just innerproduct
             # with 'n' to get our term.
-            ebqe[('HamiltonJacobiFlux',ci)][:] += (ebqe[('f',ci)]*ebqe['n']).sum(-1)   #  + p N from advection terms
-            ebqe[('dHamiltonJacobiFlux_left',ci,ci)][:] += 0.0
-
+            if includeAdvectiveFluxpNTerm:
+                ebqe[('HamiltonJacobiFlux',ci)][:] += (ebqe[('f',ci)]*ebqe['n']).sum(-1)   #  + p N from advection terms
+                ebqe[('dHamiltonJacobiFlux_left',ci,ci)][:] += 0.0
 
             for ck in range(self.nc):
                 if ebqe.has_key(('a',ci,ck)):
@@ -3651,8 +3528,6 @@ class HamiltonJacobi_Advection_pN_DiagonalLesaintRaviart_Diffusion_SIPG_exterior
                                                                                                 fluxJacobian_exterior[ci][cj],
                                                                                                 self.scale_penalty,
                                                                                                 self.penalty_floor)
-
-
 
 class DarcyFCFF_IIPG_exterior(NF_base):
     hasInterior=False
