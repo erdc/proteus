@@ -3372,6 +3372,7 @@ class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_IIPG(NF_base):
                         #                                                                    self.penalty_floor)
 
 class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior(Diffusion_SIPG_exterior):
+    useStrongDirichletConstraints=True
     def __init__(self,vt,getPointwiseBoundaryConditions,
                  getAdvectiveFluxBoundaryConditions,
                  getDiffusiveFluxBoundaryConditions,
@@ -3386,7 +3387,10 @@ class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior(Diffusion_SI
             self.advectiveNumericalFlux[ci] = False
             self.diffusiveNumericalFlux[ci] = True
             self.HamiltonJacobiNumericalFlux[ci] = True
-        self.scale_penalty = 1; self.penalty_floor = 0.0
+        self.scale_penalty = 1
+        self.penalty_floor = 0.0
+        self.penalty_constant = 1000.0
+
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
         for ci in range(self.nc):
             self.ebqe[('u',ci)].flat[:] = ebqe[('u',ci)].flat[:]
