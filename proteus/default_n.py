@@ -228,3 +228,6 @@ levelNonlinearSolverConvergenceTest = 'r'
 linearSolverConvergenceTest = 'r' #r,its,r-true for true residual
 #we can add this if desired for setting solver specific options in petsc
 #linear_solver_options_prefix= None #
+
+bcsTimeDependent = True
+"""Allow optimizations if boundary conditions are not time dependent"""
