@@ -535,6 +535,12 @@ class KSP_petsc4py(LinearSolver):
 
         if not initialGuessIsZero:
             self.ksp.setInitialGuessNonzero(True)
+        try:
+            if self.preconditioner.hasNullSpace:
+                self.preconditioner.nsp.remove(par_b)
+                self.ksp.setNullSpace(self.preconditioner.nsp)
+        except:
+            pass
         self.ksp.solve(par_b,par_u)
         try:
             if self.preconditioner.hasNullSpace:
@@ -666,7 +672,6 @@ class NavierStokesPressureCorrection:
     def __init__(self,L,prefix=None):
         self.L=L
         self.pc = p4pyPETSc.PC().create()
-        self.pc.setType('hypre')
         if prefix:
             self.pc.setOptionsPrefix(prefix)
         self.pc.setFromOptions()
