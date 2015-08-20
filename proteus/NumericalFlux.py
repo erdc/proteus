@@ -765,6 +765,23 @@ class Advection_DiagonalUpwind_Diffusion_NIPG(Advection_DiagonalUpwind_Diffusion
         self.includeBoundaryAdjoint=True
         self.boundaryAdjoint_sigma=-1.0
 
+class Advection_DiagonalUpwind_exterior(Advection_DiagonalUpwind):
+    hasInterior=False
+    def __init__(self,vt,getPointwiseBoundaryConditions,
+                 getAdvectiveFluxBoundaryConditions,
+                 getDiffusiveFluxBoundaryConditions,
+                 getPeriodicBoundaryConditions=None):
+        Advection_DiagonalUpwind.__init__(self,vt,getPointwiseBoundaryConditions,
+                                          getAdvectiveFluxBoundaryConditions,
+                                          getDiffusiveFluxBoundaryConditions,
+                                          getPeriodicBoundaryConditions)
+        self.hasInterior=False
+        self.outFlowOnly=True
+    def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
+        pass
+    def updateInteriorNumericalFluxJacobian(self,l2g,q,ebq,ebq_global,dphi,fluxJacobian,fluxJacobian_eb,fluxJacobian_hj):
+        pass
+
 class Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
     hasInterior=False
     def __init__(self,vt,getPointwiseBoundaryConditions,
