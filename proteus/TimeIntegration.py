@@ -1494,7 +1494,7 @@ class VBDF(TI_base):
                 self.error_estimate[ci].flat[:] = self.m_tmp[ci].flat
                 self.error_estimate[ci]   -= self.m_pred[ci]
                 self.error_estimate[ci]   *= 0.5
-                
+
     def calculatePredictor(self):
         #mwf debug
         #import pdb
@@ -1532,7 +1532,7 @@ class VBDF(TI_base):
             self.needToCalculateBDFCoefs = False
     #
     def chooseOrder(self):
-        if self.nUpdatesTimeHistoryCalled  < 3:
+        if self.nUpdatesTimeHistoryCalled  < 1:
             self.timeOrder = 1
         else:
             self.timeOrder = self.targetTimeOrder
