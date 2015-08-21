@@ -542,11 +542,6 @@ class KSP_petsc4py(LinearSolver):
         except:
             pass
         self.ksp.solve(par_b,par_u)
-        try:
-            if self.preconditioner.hasNullSpace:
-                self.preconditioner.nsp.remove(par_u)
-        except:
-            pass
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
                                                                                                              self.ksp.converged,
