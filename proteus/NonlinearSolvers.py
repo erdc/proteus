@@ -797,6 +797,8 @@ class POD_DEIM_Newton(Newton):
         self.SVD_basis_file='SVD_basis'
         self.Fs_SVD_basis_file='Fs_SVD_basis'
         self.hyper_reduction_indices = 'Fs_DEIM_indices_truncated'
+        self.hyper_reduction_PF      = 'hyper_reduction_PF'
+        self.calculate_deim_internally = True
         self.use_deim = False
     def initialize_POD(self):
         """
@@ -813,26 +815,27 @@ class POD_DEIM_Newton(Newton):
         self.Uf  = None;
         self.rho_deim = None; self.Ut_Uf_PtUf_inv=None
         self.rs = None; self.rt = None
-        calculate_deim_internally = True
         if self.use_deim:
             assert os.path.isfile(self.Fs_SVD_basis_file), "Spatial Residual Basis file {0} not found".format(self.Fs_SVD_basis_file)
             Uf = np.loadtxt(self.Fs_SVD_basis_file)
             
             #mwf this calculates things in the code. Switch for debugging to just reading
-            if calculate_deim_internally:
+            if self.calculate_deim_internally:
                 assert self.DBf is not None and 0 < self.DBf and self.DBf <= min(Uf.shape[1],self.F.dim), "{0} out of bounds [0,min({1},{2})]".format(self.DBf,Uf.shape[1],self.F.dim)
                 self.Uf = Uf[:,0:self.DBf]
                 #returns rho --> deim indices and deim 'projection' matrix
                 #U(P^TU)^{-1}
                 self.rho_deim,Uf_PtUf_inv = deim_utils.deim_alg(self.Uf,self.DBf)
             else:
+                #mwf debug
+                import pdb
+                pdb.set_trace()
                 assert os.path.isfile(self.hyper_reduction_indices),  "File for indices for evaluating hyper-reduction points  {0} not found".format(self.hyper_reduction_indices)
+                assert os.path.isfile(self.hyper_reduction_PF)
+                self.Uf = Uf
                 self.DBf = self.Uf.shape[1]
                 self.rho_deim = np.loadtxt(self.hyper_reduction_indices,dtype='i')
-                PtUf = self.Uf[self.rho_deim]
-                assert PtUf.shape == (self.DBf,self.DBf)
-                PtUfInv = np.linalg.inv(PtUf)
-                Uf_PtUf_inv = np.dot(self.Uf,PtUfInv)
+                Uf_PtUf_inv = np.loadtxt(self.hyper_reduction_PF)
             #go ahead and left multiply projection matrix by solution basis
             #to get 'projection' from deim to coarse space
             self.Ut_Uf_PtUf_inv = np.dot(self.U_transpose,Uf_PtUf_inv)
@@ -855,7 +858,6 @@ class POD_DEIM_Newton(Newton):
 
     def norm(self,u):
         return self.norm_function(u)
-    #mwf add for DEIM
     def computeDEIMresiduals(self,u,rs,rt):
         """
         wrapper for computing residuals separately for DEIM
@@ -1094,8 +1096,12 @@ class POD_DEIM_Newton(Newton):
         use_deim -- try DEIM for hyper-reduction
         DBf -- number of modes to use for hyper-reduction
         Fs_SVD_basis_file -- file holding Uf basis from SVD of snapshot nonlineariities ['Fs_SVD_basis']
+        calculate_deim_internally -- Calculate DEIM using internal routines or load matrices from file?
+        hyper_reduction_indices -- file with indices for hyper reduction
+        hyper_reduction_PF -- file with matrix PF for hyper-reduction approximation $\hat{F} = U^T \cdot Q P^T F(U z)$
         """
-        optional_params = ['DB','SVD_basis_file','use_deim','DBf','Fs_SVD_basis_file']
+        optional_params = ['DB','SVD_basis_file','use_deim','DBf','Fs_SVD_basis_file','calculate_deim_internally',
+                           'hyper_reduction_indices','hyper_reduction_PF']
         for parm in optional_params:
             if parm in dir(nOptions):
                 setattr(self,parm,getattr(nOptions,parm))
