@@ -584,7 +584,7 @@ class NS_base:  # (HasTraits):
                     #calculate consistent time derivative
                     lm.estimate_mt()
                     #post-process velocity
-                    #lm.calculateAuxiliaryQuantitiesAfterStep()
+                    lm.calculateAuxiliaryQuantitiesAfterStep()
                 log("Spin-Up Choosing initial time step for model "+p.name)
                 m.stepController.initialize_dt_model(self.tnList[0],self.tnList[1])
                 #mwf what if user wants spin-up to be over (t_0,t_1)?
