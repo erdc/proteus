@@ -3406,6 +3406,19 @@ class HamiltonJacobi_DiagonalLesaintRaviart_Diffusion_SIPG_exterior(Diffusion_SI
         self.scale_penalty = 1
         self.penalty_floor = 0.0
         self.penalty_constant = 10.0
+    def setDirichletValues(self,ebqe):
+        for ci in range(self.nc):
+            self.ebqe[('u',ci)].flat[:] = ebqe[('u',ci)].flat[:]
+            for (ebNE,k),g,x in zip(self.DOFBoundaryConditionsDictList[ci].keys(),
+                                    self.DOFBoundaryConditionsDictList[ci].values(),
+                                    self.DOFBoundaryPointDictList[ci].values()):
+                self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t)
+        for ci in range(self.nc):
+            for bci in self.periodicBoundaryConditionsDictList[ci].values():
+                self.ebqe[('u',ci)][bci[0]]=ebqe[('u',ci)][bci[1]]
+                self.ebqe[('u',ci)][bci[1]]=ebqe[('u',ci)][bci[0]]
+        if self.vt.movingDomain:
+            self.vt.coefficients.updateToMovingDomain(self.vt.timeIntegration.t,self.ebqe)
 
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
         for ci in range(self.nc):
