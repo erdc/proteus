@@ -756,8 +756,8 @@ class POD_Newton(Newton):
         if 'SVD_basis_file' in dir(nOptions):
             self.SVD_basis_file = nOptions.SVD_Basis_file
             
-class POD_DEIM_Newton(Newton):
-    """Newton's method on the reduced order system based on POD"""
+class POD_HyperReduced_Newton(Newton):
+    """Newton's method on the reduced order system based on POD and hyper-reduction"""
     def __init__(self,
                  linearSolver,
                  F,J=None,du=None,par_du=None,
@@ -774,71 +774,61 @@ class POD_DEIM_Newton(Newton):
                  directSolver=False,
                  EWtol=True,
                  maxLSits = 100,
-                 use_deim=True):
+                 use_hyper=True):
         Newton.__init__(self,
-                linearSolver,
-                F,J,du,par_du,
-                rtol_r,
-                atol_r,
-                rtol_du,
-                atol_du,
-                maxIts,
-                norm,
-                convergenceTest,
-                computeRates,
-                printInfo,
-                fullNewton,
-                directSolver,
-                EWtol,
-                maxLSits)
+                    linearSolver,
+                    F,J,du,par_du,
+                    rtol_r,
+                    atol_r,
+                    rtol_du,
+                    atol_du,
+                    maxIts,
+                    norm,
+                    convergenceTest,
+                    computeRates,
+                    printInfo,
+                    fullNewton,
+                    directSolver,
+                    EWtol,
+                    maxLSits)
         self.pod_initialized=False
-        self.DB = 1
-        self.DBf = 1
+        self.DB = None
+        self.DBf = F.dim #Nonlinear pod by default
         self.SVD_basis_file='SVD_basis'
-        self.Fs_SVD_basis_file='Fs_SVD_basis'
-        self.hyper_reduction_indices = 'Fs_DEIM_indices_truncated'
-        self.hyper_reduction_PF      = 'hyper_reduction_PF'
-        self.calculate_deim_internally = True
-        self.use_deim = False
+        self.Fs_SVD_basis_file=None
+        self.hyper_reduction_indices = 'Fs_hyper_indices'
+        self.hyper_reduction_Q      = 'hyper_reduction_Q'
+        self.use_hyper = use_hyper
     def initialize_POD(self):
         """
         Setup for Full Nonlinear POD approximation
         """
-        assert self.DB is not None
         assert os.path.isfile(self.SVD_basis_file), "SVD Basis file {0} not found".format(self.SVD_basis_file)
         #setup reduced basis for solution
         U = np.loadtxt(self.SVD_basis_file)
-        assert 0 < self.DB and self.DB <= U.shape[1] and self.DB <= self.F.dim, "{0} out of bounds [0,min({1},{2})]".format(self.DB,U.shape[1],self.F.dim)
+        self.DB = U.shape[1]
+        assert 0 < self.DB and self.DB <= self.F.dim, "{0} out of bounds [0,{1}]".format(self.DB,self.F.dim)
         self.U = U[:,0:self.DB]
         self.U_transpose = self.U.conj().T
-        #setup reduced basis for DEIM interpolants
+        #setup reduced basis for hyper reduction
         self.Uf  = None;
-        self.rho_deim = None; self.Ut_Uf_PtUf_inv=None
+        self.rho_hyper = None; self.Ut_Q=None
         self.rs = None; self.rt = None
-        if self.use_deim:
+        if self.use_hyper:
             assert os.path.isfile(self.Fs_SVD_basis_file), "Spatial Residual Basis file {0} not found".format(self.Fs_SVD_basis_file)
             Uf = np.loadtxt(self.Fs_SVD_basis_file)
-            
-            #mwf this calculates things in the code. Switch for debugging to just reading
-            if self.calculate_deim_internally:
-                assert self.DBf is not None and 0 < self.DBf and self.DBf <= min(Uf.shape[1],self.F.dim), "{0} out of bounds [0,min({1},{2})]".format(self.DBf,Uf.shape[1],self.F.dim)
-                self.Uf = Uf[:,0:self.DBf]
-                #returns rho --> deim indices and deim 'projection' matrix
-                #U(P^TU)^{-1}
-                self.rho_deim,Uf_PtUf_inv = deim_utils.deim_alg(self.Uf,self.DBf)
-            else:
-                #mwf debug
-                import pdb
-                pdb.set_trace()
-                assert os.path.isfile(self.hyper_reduction_indices),  "File for indices for evaluating hyper-reduction points  {0} not found".format(self.hyper_reduction_indices)
-                assert os.path.isfile(self.hyper_reduction_PF)
-                self.Uf = Uf
-                self.DBf = self.Uf.shape[1]
-                self.rho_deim = np.loadtxt(self.hyper_reduction_indices,dtype='i')
-                Uf_PtUf_inv = np.loadtxt(self.hyper_reduction_PF)
+            self.DBf = Uf.shape[1]
+            self.Uf = Uf[:,0:self.DBf]
+            assert os.path.isfile(self.hyper_reduction_indices),  "File for indices for evaluating hyper-reduction points  {0} not found".format(self.hyper_reduction_indices)
+            assert os.path.isfile(self.hyper_reduction_Q)
+            self.rho_hyper = np.loadtxt(self.hyper_reduction_indices,dtype='i')
+            Q = np.loadtxt(self.hyper_reduction_Q)
             #go ahead and left multiply projection matrix by solution basis
-            #to get 'projection' from deim to coarse space
-            self.Ut_Uf_PtUf_inv = np.dot(self.U_transpose,Uf_PtUf_inv)
+            #to get 'projection' from hyper-reduced space to coarse space
+            self.Ut_Q = np.dot(self.U_transpose,Q)
+        else:#full nonlinear pod
+            self.rho_hyper = np.linspace(self.F.dim,dtype='i')
+            self.Ut_Q = self.U_transpose
         self.pod_J = np.zeros((self.DB,self.DB),'d')
         self.pod_Jt= np.zeros((self.DB,self.DB),'d')
         self.pod_Jtmp= np.zeros((self.DBf,self.DB),'d')
@@ -858,9 +848,9 @@ class POD_DEIM_Newton(Newton):
 
     def norm(self,u):
         return self.norm_function(u)
-    def computeDEIMresiduals(self,u,rs,rt):
+    def computeHyperResiduals(self,u,rs,rt):
         """
-        wrapper for computing residuals separately for DEIM
+        wrapper for computing residuals separately for hyper reduction
         """
         assert 'getSpatialResidual' in dir(self.F)
         assert 'getMassResidual' in dir(self.F)
@@ -869,9 +859,9 @@ class POD_DEIM_Newton(Newton):
 
     def solveInitialize(self,u,r,b):
         """
-        if using deim modifies base initialization by
+        if using hyper reduction modifies base initialization by
         splitting up residual evaluation into separate pieces
-        interpolated by deim (right now just does 'mass' and 'space')
+        interpolated by hyper reduction (right now just does 'mass' and 'space')
 
         NOT FINISHED
         """
@@ -882,12 +872,12 @@ class POD_DEIM_Newton(Newton):
         else:
             self.r=r
         self.computeResidual(u,r,b)
-        if self.use_deim:
+        if self.use_hyper:
             if self.rs == None:
                 self.rs = Vec(self.F.dim)
             if self.rt == None:
                 self.rt = Vec(self.F.dim)
-            self.computeDEIMresiduals(u,self.rs,self.rt)
+            self.computeHyperResiduals(u,self.rs,self.rt)
         self.its = 0
         self.norm_r0 = self.norm(r)
         self.norm_r = self.norm_r0
@@ -895,12 +885,7 @@ class POD_DEIM_Newton(Newton):
         self.ratio_du_solve = 1.0
         self.last_log_ratio_r = 1.0
         self.last_log_ratior_du = 1.0
-        #self.convergenceHistoryIsCorrupt=False
         self.convergingIts = 0
-        #mwf begin hack for conv. rate
-        self.gustafsson_alpha = -12345.0
-        self.gustafsson_norm_du_last = -12345.0
-        #mwf end hack for conv. rate
         return r
     def solve(self,u,r=None,b=None,par_u=None,par_r=None):
         """
@@ -910,8 +895,8 @@ class POD_DEIM_Newton(Newton):
         u -- solution
         r -- F(u) - b
         """
-        if self.use_deim:
-            return self.solveDEIM(u,r,b,par_u,par_r)
+        if self.use_hyper:
+            return self.solveHyper(u,r,b,par_u,par_r)
         pod_u = np.dot(self.U_transpose,u)
         u[:] = np.dot(self.U,pod_u)
         r=self.solveInitialize(u,r,b)
@@ -957,7 +942,7 @@ class POD_DEIM_Newton(Newton):
             return self.failedFlag
         log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
             % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-    def solveDEIM(self,u,r=None,b=None,par_u=None,par_r=None):
+    def solveHyper(self,u,r=None,b=None,par_u=None,par_r=None):
         """
         Solve F(u) = b
 
@@ -965,10 +950,13 @@ class POD_DEIM_Newton(Newton):
         u -- solution
         r -- F(u) - b
 
-        using DEIM
+        using Hyper-reduction
         Start with brute force just testing things
         """
-        assert self.use_deim
+        #mwf debug
+        #import pdb
+        #pdb.set_trace()
+        assert self.use_hyper
         if not self.pod_initialized:
             self.initialize_POD()
         assert self.pod_initialized
@@ -980,10 +968,10 @@ class POD_DEIM_Newton(Newton):
         tmp = r-self.rt-self.rs
         assert np.absolute(tmp).all() < 1.0e-12
 
-        #r_deim = self.rt[self.rho_deim].copy()
-        r_deim = self.rs[self.rho_deim]
+        #r_hyper = self.rt[self.rho_hyper].copy()
+        r_hyper = self.rs[self.rho_hyper]
         pod_rt = np.dot(self.U_transpose,self.rt)
-        pod_r  = np.dot(self.Ut_Uf_PtUf_inv,r_deim)
+        pod_r  = np.dot(self.Ut_Q,r_hyper)
         pod_r += pod_rt
         #mwf debug
         #import pdb
@@ -1015,8 +1003,6 @@ class POD_DEIM_Newton(Newton):
                             for k in range(self.F.dim):
                                 for m in range(self.Jt_rowptr[k],self.Jt_rowptr[k+1]):
                                     self.pod_Jt[i,j] += self.U_transpose[i,k]*self.Jt_nzval[m]*self.U[self.Jt_colind[m],j]
-                    #combined DEIM, coarse grid projection
-                    #self.pod_Jt = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
                     assert not numpy.isnan(self.pod_Jt).any()
                     self.linear_reduced_mass_matrix  = self.pod_Jt.copy()
                 #have to scale by dt in general shouldn't affect constant mass matrix
@@ -1028,12 +1014,12 @@ class POD_DEIM_Newton(Newton):
                 #now this holds P^T J_s U
                 self.pod_Jtmp[:] = 0.0
                 for i in range(self.DBf):
-                    deim_i = self.rho_deim[i]
+                    hyper_i = self.rho_hyper[i]
                     for j in range(self.DB):
-                        for m in range(self.Js_rowptr[deim_i],self.Js_rowptr[deim_i+1]):
+                        for m in range(self.Js_rowptr[hyper_i],self.Js_rowptr[hyper_i+1]):
                             self.pod_Jtmp[i,j] += self.Js_nzval[m]*self.U[self.Js_colind[m],j]
-                #combined DEIM, coarse grid projection
-                tmp = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
+                #combined Hyper-reduction, coarse grid projection
+                tmp = np.dot(self.Ut_Q,self.pod_Jtmp)
                 self.pod_J.flat[:] = tmp.flat[:]
                 assert not numpy.isnan(self.pod_J).any()
                 if not self.skip_mass_jacobian_eval:
@@ -1044,8 +1030,6 @@ class POD_DEIM_Newton(Newton):
                             for k in range(self.F.dim):
                                 for m in range(self.Jt_rowptr[k],self.Jt_rowptr[k+1]):
                                     self.pod_Jt[i,j] += self.U_transpose[i,k]*self.Jt_nzval[m]*self.U[self.Jt_colind[m],j]
-                    #combined DEIM, coarse grid projection
-                    #self.pod_Jt = np.dot(self.Ut_Uf_PtUf_inv,self.pod_Jtmp)
                     assert not numpy.isnan(self.pod_Jt).any()
                 else:
                     #mwf hack just copy over from precomputed mass matrix
@@ -1057,28 +1041,24 @@ class POD_DEIM_Newton(Newton):
             self.du[:]=0.0
             self.pod_du[:]=0.0
             if not self.linearSolverFailed:
-                #self.linearSolver.solve(u=self.du,b=r,par_u=self.par_du,par_b=par_r)
-                #self.linearSolverFailed = self.linearSolver.failed()
                 self.pod_linearSolver.solve(u=self.pod_du,b=pod_r)
                 self.linearSolverFailed = self.pod_linearSolver.failed()
             assert not self.linearSolverFailed
-            #pod_u-=np.dot(self.U_transpose,self.du)
             assert not numpy.isnan(self.pod_du).any()
             pod_u-=self.pod_du
             u[:] = np.dot(self.U,pod_u)
             #mostly for norm calculations
             self.du = np.dot(self.U,self.pod_du)
-            #self.computeResidual(u,r,b)
-            self.computeDEIMresiduals(u,self.rs,self.rt)
+            self.computeHyperResiduals(u,self.rs,self.rt)
             #mwf debug
             self.F.getResidual(u,r)
             tmp = r-self.rt-self.rs
             assert np.absolute(tmp).all() < 1.0e-12
             #mwf debug
-            #r_deim = self.rt[self.rho_deim].copy()
-            r_deim = self.rs[self.rho_deim]
+            #r_hyper = self.rt[self.rho_hyper].copy()
+            r_hyper = self.rs[self.rho_hyper]
             pod_rt = np.dot(self.U_transpose,self.rt)
-            pod_r = np.dot(self.Ut_Uf_PtUf_inv,r_deim)
+            pod_r = np.dot(self.Ut_Q,r_hyper)
             pod_r += pod_rt
             assert not numpy.isnan(pod_r).any()
             r[:] = np.dot(self.U,pod_r)
@@ -1091,17 +1071,14 @@ class POD_DEIM_Newton(Newton):
 
     def setFromOptions(self,nOptions):
         """
-        DB -- number of modes to use for solution default is [1]
         SVD_basis_file -- file holding U basis from SVD of snapshots ['SVD_basis']
-        use_deim -- try DEIM for hyper-reduction
-        DBf -- number of modes to use for hyper-reduction
+        use_hyper -- try hyper-reduction
         Fs_SVD_basis_file -- file holding Uf basis from SVD of snapshot nonlineariities ['Fs_SVD_basis']
-        calculate_deim_internally -- Calculate DEIM using internal routines or load matrices from file?
         hyper_reduction_indices -- file with indices for hyper reduction
-        hyper_reduction_PF -- file with matrix PF for hyper-reduction approximation $\hat{F} = U^T \cdot Q P^T F(U z)$
+        hyper_reduction_Q -- file with matrix Q for hyper-reduction approximation $\hat{F} = U^T \cdot Q P^T F(U z)$
         """
-        optional_params = ['DB','SVD_basis_file','use_deim','DBf','Fs_SVD_basis_file','calculate_deim_internally',
-                           'hyper_reduction_indices','hyper_reduction_PF']
+        optional_params = ['SVD_basis_file','use_hyper','DBf','Fs_SVD_basis_file',
+                           'hyper_reduction_indices','hyper_reduction_Q']
         for parm in optional_params:
             if parm in dir(nOptions):
                 setattr(self,parm,getattr(nOptions,parm))
@@ -2912,7 +2889,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                    directSolver=linearDirectSolverFlag,
                                                    EWtol=EWtol,
                                                    maxLSits=maxLSits ))
-    elif levelNonlinearSolverType in [POD_Newton,POD_DEIM_Newton]:
+    elif levelNonlinearSolverType in [POD_Newton,POD_HyperReduced_Newton]:
         for l in range(nLevels):
             if par_duList != None and len(par_duList) > 0:
                 par_du=par_duList[l]
@@ -3078,7 +3055,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                          printInfo=printSolverInfo)
     elif (multilevelNonlinearSolverType == Newton or
           multilevelNonlinearSolverType == POD_Newton or
-          multilevelNonlinearSolverType == POD_DEIM_Newton or
+          multilevelNonlinearSolverType == POD_HyperReduced_Newton or
           multilevelNonlinearSolverType == NewtonNS or
           multilevelNonlinearSolverType == NLJacobi or
           multilevelNonlinearSolverType == NLGaussSeidel or
