@@ -263,10 +263,9 @@ class ResGradQuadDelayLag_SC(ResGradQuad_SC):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
         if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
             self.lag = True
-            self.numDiff = []
-            self.numDiff_last=[]
+            self.numDiff=[]
             for ci in range(self.nc):
-                self.numDiff_last[ci] = numpy.zeros(self.numDiff[ci].shape,'d')
+                self.numDiff.append(self.numDiff_last[ci].copy())
 
 class NavierStokes_SC(ResGradQuad_SC):
     def __init__(self,coefficients,nd,shockCapturingFactor=0.25,lag=True,nStepsToDelay=None):
