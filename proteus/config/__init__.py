@@ -12,5 +12,7 @@ elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('viu
     from viutill import *
 elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('tamucluster'):
     from tamucluster import *
+elif 'PROTEUS_ARCH' in os.environ and os.environ['PROTEUS_ARCH'].startswith('centos'):
+    from centos import *
 else:
     from default import *
