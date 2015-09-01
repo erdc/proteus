@@ -315,7 +315,13 @@ class LU(LinearSolver):
                                                      self.n,
                                                      self.work,
                                                      5*self.n)
-
+            eigen_mags = numpy.sqrt(self.eigenvalues_r**2 + self.eigenvalues_i**2)
+            logEvent("Minimum eigenvalue magnitude"+`eigen_mags.min()`)
+            logEvent("Maximum eigenvalue magnitude"+`eigen_mags.max()`)
+            logEvent("Minimum real part of eigenvalue "+`self.eigenvalues_r.min()`)
+            logEvent("Maximum real part of eigenvalue "+`self.eigenvalues_r.max()`)
+            logEvent("Minimum complex part of eigenvalue "+`self.eigenvalues_i.min()`)
+            logEvent("Maximum complex part of eigenvalue "+`self.eigenvalues_i.max()`)
 class PETSc(LinearSolver):
     def __init__(self,L,par_L,prefix=None):
         import flcbdfWrappers
