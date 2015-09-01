@@ -415,7 +415,8 @@ class NS_base:  # (HasTraits):
                 ##\todo logic needs to handle element boundary partition too
                 parallelUsesFullOverlap=(n.nLayersOfOverlapForParallel > 0 or n.parallelPartitioningType == MeshTools.MeshParallelPartitioningTypes.node),
                 par_duList=model.par_duList,
-                solver_options_prefix=linear_solver_options_prefix)
+                solver_options_prefix=linear_solver_options_prefix,
+                computeEigenvalues = n.computeEigenvalues)
             self.lsList.append(multilevelLinearSolver)
             Profiling.memory("MultilevelLinearSolver for "+p.name)
             log("Setting up MultilevelNonLinearSolver for "+p.name)
