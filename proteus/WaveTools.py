@@ -116,6 +116,8 @@ class MonochromaticWaves:
         self.amplitude = 0.5*self.waveHeight
         self.meanVelocity = meanVelocity
         self.vDir = self.g/self.gAbs
+        self.Ycoeff = Ycoeff
+        self.Bcoeff = Bcoeff
         if (Ycoeff is None) or (Bcoeff is None):
             if self.waveType is not "Linear":
                 pr.logEvent("Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves")                          
@@ -133,52 +135,51 @@ class MonochromaticWaves:
         else:
             HH = 0.
             ii =0.
-            for Y in self.YCoeff:
+            for Y in self.Ycoeff:
                 ii+=1
                 HH+=Y*cos(ii*self.phase(x,y,z,t))
             if self.waveType is "Fenton": return HH/self.k
             else: return HH
-    def Z(self,x,y,z,t):
+    def Z(self,x,y,z):
         return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.mwl
-    def UH(self,x,y,z,t):
-        if(self.waveType is "Linear"):
-            return self.amplitude*self.omega*cosh(self.k*(self.Z(x,y,z)+self.depth))*cos(self.phase(x,y,z,t))/sinh(self.k*self.depth)
-        else:
-            UH = 0.
-            ii=0.
-            for B in self.Bcoeff:
-                ii+=1.
-                UH_t =B*cosh(self.k*(self.Z(x,y,z)+self.depth))*cos(self.phase(x,y,z,t))/cosh(self.k*self.depth)
-                if waveType is "Fenton":
-                    UH+=ii*UH_t
-                else:
-                    UH+=UH_t
                     
-    def UV(self,x,y,z,t):
-        if waveType is "Linear":
-            return self.sigma*self.amplitude*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.theta(x,y,z,t))/sinh(self.k*self.depth)
-        else:
-            UV = 0.
-            ii=0.
+    def u(self,x,y,z,t,ss = "x"):
+        """x-component of velocity
+
+        :param x: floating point x coordinate
+        :param z: floating point z coordinate (height above bottom)
+        :param t: time
+        """
+        UH=0.
+        UV=0.
+        ii=0.
+        if self.waveType is "Linear":
+            UH+=self.amplitude*self.omega*cosh(self.k*(self.Z(x,y,z)+self.depth))*cos(self.phase(x,y,z,t))/sinh(self.k*self.depth)
+            UV+=self.omega*self.amplitude*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.phase(x,y,z,t))/sinh(self.k*self.depth)
+#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
+            Vcomp = {
+                "x":UH*self.waveDir[0] + UV*self.vDir[0],
+                "y":UH*self.waveDir[1] + UV*self.vDir[1],
+                "z":UH*self.waveDir[2] + UV*self.vDir[2],
+                }
+
+        elif self.waveType is "Fenton":
             for B in self.Bcoeff:
-                ii+=1.
-                UV_t =B*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.phase(x,y,z,t))/cosh(self.k*self.depth)
-                if waveType is "Fenton":
-                    UV+=ii*UV_t
-                else:
-                    UV+=UV_t
-                    
-    def uvector(x,y,z,t):
-        return self.waveDir*self.UH(x,y,z,t) - self.vDir * self.UV(x,y,z,t) 
-    def u(x,y,z,t):
-        utemp =self.uvector(x,y,z,t)
-        return utemp[0]
-    def v(x,y,z,t):
-        utemp =self.uvector(x,y,z,t)
-        return utemp[1]
-    def w(x,y,z,t):
-        utemp =self.uvector(x,y,z,t)
-        return utemp[2]
+                ii+=1
+                UV+=ii*B*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.phase(x,y,z,t))/cosh(self.k*self.depth)
+                UH+=ii*B*cosh(self.k*(self.Z(x,y,z)+self.depth))*cos(self.phase(x,y,z,t))/cosh(self.k*self.depth)
+#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
+                Vcomp = {
+                    "x":UH*self.waveDir[0] + UV*self.vDir[0],
+                    "y":UH*self.waveDir[1] + UV*self.vDir[1],
+                    "z":UH*self.waveDir[2] + UV*self.vDir[2],
+
+                    }
+        else:
+            print "Wrong waveType"
+            exit(1)
+        return Vcomp[ss]
+
 
 class RandomWaves:
     """Generate approximate random wave solutions
@@ -435,12 +436,13 @@ if __name__ == '__main__':
 
 
     print "Loading variables"
+    
     Tp = 5.0 #s peak period
     Hs = 2.0 #m significant wave height
     mwl = 0.0 #mean water level    Hs = 2.0
-    depth = 10.0
-    waveDir = np.array([0,1,0])
-    g = np.array([0,0,-9.81])
+    depth = 10.0 # water depth
+    waveDir = np.array([0,1,0])#wave Direction
+    g = np.array([0,0,-9.81]) # 
     print "Setting space and time arrays"
     li =2.*pi/dispersion(2.*pi/Tp,depth,g=9.81)
     bandFactor = 2.
@@ -448,16 +450,45 @@ if __name__ == '__main__':
     y = np.linspace(0,0,1)
     z = np.linspace(0,0,1)
     t=np.linspace(0,50.*Tp/1.1,625)
+#Fenton coefficients
+    
+    Y = [0.04160592, #Surface elevation Fourier coefficients for non-dimensionalised solution
+         0.00555874,
+         0.00065892,
+         0.00008144,
+         0.00001078,
+         0.00000151,
+         0.00000023,
+         0.00000007]
+
+    B = [0.05395079,
+         0.00357780,
+         0.00020506,
+         0.00000719,
+         -0.00000016,
+         -0.00000005,
+         0.00000000,
+         0.00000000]
     print "Calculating waves"
-    #waves = MonochromaticWaves(period = Tp, waveHeight = Hs,mwl = mwl, depth = depth,g = g, waveDir = waveDir)
-    waves = RandomWaves(Tp = Tp,
-                        Hs = Hs,
-                        d = depth,
-                        fp = 1./Tp,
-                        bandFactor = bandFactor,
-                        N = 101,
-                        mwl = mwl,
-                        g = g)
+
+
+
+    waveType = "Fenton" # Change between Linear, Fenton and random
+    if waveType is "Linear": 
+        waves = MonochromaticWaves( Tp, Hs, mwl,  depth, g,  waveDir)
+    elif waveType is "Fenton": 
+        wlength = 8.12
+        t=np.linspace(0,30,500)
+        waves = MonochromaticWaves( 2.95, 0.109 , mwl,  0.873, g,  waveDir,wlength, waveType, Y, B) #period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = 0.,phi0 = 0.):
+    elif waveType is "Random":
+        waves = RandomWaves(Tp = Tp,
+                            Hs = Hs,
+                            d = depth,
+                            fp = 1./Tp,
+                            bandFactor = bandFactor,
+                            N = 101,
+                            mwl = mwl,
+                            g = g)
     print "Calculating free-surface"
 
     print "Start-time: %s" %tt.time()
@@ -475,91 +506,3 @@ if __name__ == '__main__':
     plotSeriesAlongAxis(y,t,v2[0,0,:,:],2,"UY")
     plotSeriesAlongAxis(z,t,v3[0,0,:,:],3,"UZ")
     print VTIME
-    #Rotating the waves
-"""
-    print "Plotting free surface elevation for dir = [0.707,0.707,0]"
-    waves = MonochromaticWaves(period = Tp, waveHeight = Hs,mwl = mwl, depth = depth,g = g, waveDir = np.array([0.707,0.707,0]))
-    eta = etaCalc(x,y,z,t,waves)
-
-    plotSeriesAlongAxis(x,t,eta[:,0,0,:],3,"X_rot")
-    plotSeriesAlongAxis(y,t,eta[0,:,0,:],4,"Y_rot")
-    plotSeriesAlongAxis(z,t,eta[0,0,:,:],5,"Z_rot")
-    fig = figure(6)
-    X,Y = np.meshgrid(x,y)
-    contour1 = pyplot.contour(X,Y,eta[:,:,0,0])
-    pyplot.xlim(0,max(x))
-    pyplot.ylim(0,max(y))
-    pyplot.savefig("contourEtat=0.png")
-
-
-    
-                   
-
-
-
-    waves = RandomWaves(Tp = Tp,
-                        Hs = Hs,
-                        d = d,
-                        fp = fp,
-                        bandFactor = bandFactor,
-                        N = N,
-                        mwl = mwl,
-                        g = 9.81)
-    waves = RandomWaves(Tp = 1.94,
-                        Hs = 0.1,
-                        d  = 1.0,
-                        fp = 1.0/1.94,
-                        bandFactor = 2.0,
-                        N = 101,
-                        mwl = 1.0,
-                        g = 9.8)#shouldn't mwl = d always?
-    waves = MonochromaticWaves(period=1.94,
-                              waveHeight=0.1,
-                              mwl = 1.0,
-                              depth = 1.0,
-                              meanVelocity=0.0,
-                              g=np.array([0,-9.81,0]),
-                               waveDir = np.array([1,0,0])
-                               )
-    fp = 1.0/1.94
-    d = 1.0
-    Hs = 0.1
-    Tp = 1.94
-    
-    kp = dispersion(2.0*pi*fp,d)
-    nn = 51
-    zmax = d+1.8*Hs/2.0
-    xmax = 10*zmax
-    T=0.0
-    L = 6.0*pi/kp
-    T_end = 10.0*Tp
-    nt = 10*2#21
-    x = np.linspace(0,xmax,nn)
-    z = np.linspace(0,zmax,nn)
-    X,Z = np.meshgrid(x,z)
-    U = np.zeros((nn,nn),'d')
-    W = np.zeros((nn,nn),'d')
-    for n,T in enumerate(np.linspace(0,T_end,nt)):
-        for J,xi in enumerate(x):
-            for I,zi in enumerate(z):
-                z_surf = d+waves.eta(xi,T)
-                if zi < z_surf:
-                    UIJ = waves.u(xi,zi,T)
-                    WIJ = waves.w(xi,zi,T)
-                    U[I,J] =  UIJ
-                    W[I,J] = WIJ
-                else:
-                    U[I,J] = 0.0
-                    W[I,J] = 0.0
-        speed = np.sqrt(U*U + W*W)
-        hl = [d+waves.eta(xi,T) for xi in x]
-        pyplot.clf()
-        #pyplot.axis('equal')
-        pyplot.plot(x,hl)
-        pyplot.streamplot(x, z, U, W,density=(1,1), color=speed,linewidth=2.5*speed/speed.max())
-        #pyplot.contourf(x,z,speed)
-        fig = pyplot.gcf()
-        fig.set_size_inches(16.0,16.0*zmax/xmax)
-        pyplot.savefig('frame%4.4d.png' % n)
-"""    
-
