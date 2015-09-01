@@ -469,13 +469,17 @@ class Newton(NonlinearSolver):
                 self.updateJacobian = False
                 self.F.getJacobian(self.J)
                 if self.linearSolver.computeEigenvalues:
+                    log("Calculting eigenvalues of J^t J")
                     self.JLast[:]=self.J
                     self.J_t_J[:]=self.J
                     self.J_t_J *= numpy.transpose(self.J)
-                    self.JLsolver.prepare()
-                    self.JLsolver.calculateEigenvalues()
+                    self.JLsolver.prepare()#eigenvalue calc happens in prepare
                     self.norm_2_J_current = sqrt(max(self.JLsolver.eigenvalues_r))
-                    self.norm_2_Jinv_current = 1.0/sqrt(min(self.JLsolver.eigenvalues_r))
+                    try:
+                        self.norm_2_Jinv_current = 1.0/sqrt(min(self.JLsolver.eigenvalues_r))
+                    except:
+                        log("Norm of J_inv_current is singular to machine prection 1/sqrt("+`min(self.JLsolver.eigenvalues_r)`+")")
+                        self.norm_2_Jinv_current = np.inf
                     self.kappa_current = self.norm_2_J_current*self.norm_2_Jinv_current
                     self.betaK_current = self.norm_2_Jinv_current
                 self.linearSolver.prepare(b=r)
@@ -503,11 +507,11 @@ class Newton(NonlinearSolver):
             #print "global r",r
             if self.linearSolver.computeEigenvalues:
                 #approximate Lipschitz constant of J
+                log("Calculting eigenvalues of dJ^t dJ")
                 self.F.getJacobian(self.dJ_t_dJ)
                 self.dJ_t_dJ-=self.JLast
                 self.dJ_t_dJ *= numpy.transpose(self.dJ_t_dJ)
                 self.dJLsolver.prepare()
-                self.dJLsolver.calculateEigenvalues()
                 self.norm_2_dJ_current = sqrt(max(self.dJLsolver.eigenvalues_r))
                 self.etaK_current = self.W*self.norm(self.du)
                 self.gammaK_current = self.norm_2_dJ_current/self.etaK_current
@@ -515,9 +519,6 @@ class Newton(NonlinearSolver):
                 self.norm_r_hist.append(self.W*self.norm(r))
                 self.norm_du_hist.append(self.W*self.unorm(self.du))
                 if self.its  == 1:
-#                     print "max(|du|) ",max(numpy.absolute(self.du))
-#                     print self.du[0]
-#                     print self.du[-1]
                     self.betaK_0 = self.betaK_current
                     self.etaK_0 = self.etaK_current
                 if self.its  == 2:
@@ -530,9 +531,15 @@ class Newton(NonlinearSolver):
                 print "gammaM(Lip J')",self.gammaK_max
                 print "kappa(cond(J))",self.kappa_current
                 if self.betaK_current*self.etaK_current*self.gammaK_current <= 0.5:
-                    print "r         ",(1.0+sqrt(1.0-2.0*self.betaK_current*self.etaK_current*self.gammaK_current))/(self.betaK_current*self.gammaK_current)
+                    try:
+                        print "r         ",(1.0+sqrt(1.0-2.0*self.betaK_current*self.etaK_current*self.gammaK_current))/(self.betaK_current*self.gammaK_current)
+                    except:
+                        pass
                 if self.betaK_current*self.etaK_current*self.gammaK_max <= 0.5:
-                    print "r_max     ",(1.0+sqrt(1.0-2.0*self.betaK_current*self.etaK_current*self.gammaK_max))/(self.betaK_current*self.gammaK_max)
+                    try:
+                        print "r_max     ",(1.0+sqrt(1.0-2.0*self.betaK_current*self.etaK_current*self.gammaK_max))/(self.betaK_current*self.gammaK_max)
+                    except:
+                        pass
                 print "lambda_max",max(self.linearSolver.eigenvalues_r)
                 print "lambda_i_max",max(self.linearSolver.eigenvalues_i)
                 print "norm_J",self.norm_2_J_current
@@ -571,10 +578,13 @@ class Newton(NonlinearSolver):
                         log("Linesearches = %i" % ls_its,level=3)
         else:
             if self.linearSolver.computeEigenvalues:
-                if self.betaK_0*self.etaK_0*self.gammaK_max <= 0.5:
-                    print "r_{-,0}     ",(1.0+sqrt(1.0-2.0*self.betaK_0*self.etaK_0*self.gammaK_max))/(self.betaK_0*self.gammaK_max)
-                if self.betaK_1*self.etaK_1*self.gammaK_max <= 0.5 and self.its > 1:
-                    print "r_{-,1}     ",(1.0+sqrt(1.0-2.0*self.betaK_1*self.etaK_1*self.gammaK_max))/(self.betaK_1*self.gammaK_max)
+                try:
+                    if self.betaK_0*self.etaK_0*self.gammaK_max <= 0.5:
+                        print "r_{-,0}     ",(1.0+sqrt(1.0-2.0*self.betaK_0*self.etaK_0*self.gammaK_max))/(self.betaK_0*self.gammaK_max)
+                    if self.betaK_1*self.etaK_1*self.gammaK_max <= 0.5 and self.its > 1:
+                        print "r_{-,1}     ",(1.0+sqrt(1.0-2.0*self.betaK_1*self.etaK_1*self.gammaK_max))/(self.betaK_1*self.gammaK_max)
+                except:
+                    pass
                 print "beta0*eta0*gamma ",self.betaK_0*self.etaK_0*self.gammaK_max
                 if Viewers.viewerType == 'gnuplot':
                     max_r = max(1.0,max(self.linearSolver.eigenvalues_r))

@@ -238,10 +238,11 @@ class ResGradDelayLag_SC(ResGrad_SC):
                 self.numDiff.append(numpy.zeros(self.cq_numDiff[ci].shape,'d'))
 
 class ResGradQuadDelayLag_SC(ResGradQuad_SC):
-    def __init__(self,coefficients,nd,shockCapturingFactor=0.25,lag=True,nStepsToDelay=None):
+    def __init__(self,coefficients,nd,shockCapturingFactor=0.25,lag=True,nStepsToDelay=None,isotropic=False):
         ResGradQuad_SC.__init__(self,coefficients,nd,shockCapturingFactor,lag)
         self.nStepsToDelay = nStepsToDelay
         self.nSteps=0
+        self.isotropic=isotropic
     def initializeElementQuadrature(self,mesh,t,cq):
         self.mesh=mesh
         self.numDiff=[]
@@ -258,6 +259,12 @@ class ResGradQuadDelayLag_SC(ResGradQuad_SC):
                 self.numDiff_last.append(cq[('numDiff',ci,ci)])
     def updateShockCapturingHistory(self):
         self.nSteps += 1
+
+        if self.isotropic:
+            for ci in range(1,self.nc):
+                self.numDiff[0][:] = numpy.maximum(self.numDiff[0],self.numDiff[ci])
+            for ci  in range(1,self.nc):
+                self.numDiff[ci][:] = self.numDiff[0]
         if self.lag:
             for ci in range(self.nc):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
