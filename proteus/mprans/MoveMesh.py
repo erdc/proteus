@@ -6,32 +6,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def __init__(self,
                  modelType_block,
                  modelParams_block,
-                 hullMass,
-                 hullCG,
-                 hullInertia,
-                 linConstraints =[1,1,1],
-                 angConstraints =[1,1,1],
-                 rigidBodyMaterialFlag = 7,
                  g=[0.0,0.0,-9.8],#gravitational acceleration
                  rhow=998.2,#kg/m^3 water density (used if pore pressures specified)
-                 pa=101325.0,#N/m^2 atmospheric pressure
                  nd=3,
                  meIndex=0,
                  V_model=0):
-        self.hullmass       = hullMass
-        self.hullcg         = numpy.array(hullCG)
-        self.hullinertia    = numpy.array(hullInertia)
-        # Force correct int-type for numpy
-        self.linConstraints = numpy.zeros(3, 'i')
-        self.linConstraints[0] = linConstraints[0]
-        self.linConstraints[1] = linConstraints[1]
-        self.linConstraints[2] = linConstraints[2]
-        self.angConstraints = numpy.zeros(3, 'i')
-        self.angConstraints[0] = angConstraints[0]
-        self.angConstraints[1] = angConstraints[1]
-        self.angConstraints[2] = angConstraints[2]
-        self.rigidBodyMaterialFlag = rigidBodyMaterialFlag
-		#8
         self.flowModelIndex=V_model
         self.modelType_block = modelType_block
         self.modelParams_block = modelParams_block
@@ -40,7 +19,6 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.g = numpy.array(g)
         self.gmag = sqrt(sum([gi**2 for gi in g]))
         self.rhow=rhow
-        self.pa=pa
         self.nd=nd
         mass={}
         advection={}
@@ -486,6 +464,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.ebqe[('stressFlux_bc',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
                 self.ebqe[('stressFlux_bc_flag',ci)][t[0],t[1]] = 1
         self.numericalFlux.setDirichletValues(self.ebqe)
+        if self.mesh.nodeVelocityArray==None:
+            self.mesh.nodeVelocityArray = numpy.zeros(self.mesh.nodeArray.shape,'d')
         compKernelFlag=0
         if self.nSpace_global == 2:
             import copy
@@ -523,24 +503,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
         self.forceStrongConditions=True  ##False#True
         self.dirichletConditionsForceDOF = {}
-        self.nodeDisplacements = {}
         if self.forceStrongConditions:
             for cj in range(self.nc):
                 self.dirichletConditionsForceDOF[cj] = DOFBoundaryConditions(self.u[cj].femSpace,dofBoundaryConditionsSetterDict[cj],weakDirichletConditions=False)
-                i=0
-                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    if self.dirichletConditionsForceDOF[cj].DOFBoundaryMaterialFlag[dofN] == self.coefficients.rigidBodyMaterialFlag:
-                        i+=1
-                self.nodeDisplacements[cj] = numpy.zeros(i,'d')
-        forceExtractionFaces = []
-        for ebNE in range(self.mesh.nExteriorElementBoundaries_global):
-            ebN = self.mesh.exteriorElementBoundariesArray[ebNE]
-            materialFlag =self.mesh.elementBoundaryMaterialTypes[ebN]
-            if materialFlag == self.coefficients.rigidBodyMaterialFlag:
-                forceExtractionFaces.append(ebNE)
-        self.forceExtractionFaces =  numpy.zeros(len(forceExtractionFaces),'i');
-        for i in range(len(forceExtractionFaces)):
-            self.forceExtractionFaces[i] = forceExtractionFaces[i]
         from proteus import PostProcessingTools
         self.velocityPostProcessor = PostProcessingTools.VelocityPostProcessingChooser(self)
         log(memory("velocity postprocessor","OneLevelTransport"),level=4)
@@ -568,16 +533,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementResidual[2].fill(0.0)
 
         if self.forceStrongConditions:
-            # for cj in range(self.nc):
-            #     i=0
-            #     for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-            #         if self.dirichletConditionsForceDOF[cj].DOFBoundaryMaterialFlag[dofN] == self.coefficients.rigidBodyMaterialFlag:
-            #             self.u[cj].dof[dofN] = (sum(self.rot1[cj,:]*(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN]-self.coefficients.hullcg))
-            #                                     - (self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN]-self.coefficients.hullcg)[cj] + self.disp1[cj]
-            #                                     - self.nodeDisplacements[cj][i])
-            #             i+=1
-            #         else:
-            #             self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
             for cj in range(self.nc):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
@@ -783,20 +738,5 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         pass
     def postStep(self):
         pass
-        # self.disp0[:]   = self.disp1
-        # self.vel0[:]    = self.vel1
-        # self.rot0[:]    = self.rot1
-        # self.angVel0[:] = self.angVel1
-        # if self.forceStrongConditions:
-        #     for cj in range(self.nc):
-        #         i=0
-        #         for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-        #             if self.dirichletConditionsForceDOF[cj].DOFBoundaryMaterialFlag[dofN] == self.coefficients.rigidBodyMaterialFlag:
-        #                 self.u[cj].dof[dofN] = (sum(self.rot1[cj,:]*(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN]-self.coefficients.hullcg))
-        #                                         - (self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN]-self.coefficients.hullcg)[cj] + self.disp1[cj]
-        #                                         -  self.nodeDisplacements[cj][i])
-        #                 self.nodeDisplacements[cj][i] = (sum(self.rot1[cj,:]*(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN]-self.coefficients.hullcg))
-        #                                                  - (self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN]-self.coefficients.hullcg)[cj] + self.disp1[cj])
-        #                 i+=1
     def updateAfterMeshMotion(self):
         pass
