@@ -18,8 +18,8 @@ class ShockCapturing_base:
         self.numDiff_last=[]
         for ci in range(self.nc):
             if self.lag:
-                self.numDiff.append(cq[('numDiff',ci,ci)])
-                self.numDiff_last.append(numpy.zeros(cq[('u',ci)].shape,'d'))
+                self.numDiff_last.append(cq[('numDiff',ci,ci)])
+                self.numDiff.append(numpy.zeros(cq[('u',ci)].shape,'d'))
             else:
                 self.numDiff_last.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(cq[('numDiff',ci,ci)])
@@ -92,24 +92,6 @@ class ResGradQuad_SC(ShockCapturing_base):
                     import pdb
                     print "NaN's in numDiff"
                     pdb.set_trace()
-    #todo ido, fix this so it doesn't break models that don't have a 'gradNorm'
-    # def initializeElementQuadrature(self,mesh,t,cq):
-    #     ShockCapturing_base.initializeElementQuadrature(self,mesh,t,cq)
-    #     self.gradNorm=[]
-    #     self.gradNorm_last=[]
-    #     for ci in range(self.nc):
-    #         if self.gradLag:
-    #             self.gradNorm_last.append(cq[('gradNorm',ci,ci)])
-    #             self.gradNorm.append(numpy.zeros(cq[('u',ci)].shape,'d'))
-    #         else:
-    #             self.gradNorm_last.append(cq[('gradNorm',ci,ci)])
-    #             self.gradNorm.append(cq[('gradNorm',ci,ci)])
-
-    # def updateShockCapturingHistory(self):
-    #     ShockCapturing_base.updateShockCapturingHistory(self)
-    #     if self.gradLag:
-    #         for ci in range(self.nc):
-    #             self.gradNorm_last[ci][:] = self.gradNorm[ci]
 
 class Eikonal_SC(ShockCapturing_base):
     def __init__(self,coefficients,nd,shockCapturingFactor=0.25,lag=True):
@@ -200,8 +182,8 @@ class ResGradDelayLag_SC(ResGrad_SC):
         self.cq_numDiff=[]
         for ci in range(self.nc):
             if self.lag:
-                self.numDiff.append(cq[('numDiff',ci,ci)])
-                self.numDiff_last.append(numpy.zeros(cq[('u',ci)].shape,'d'))
+                self.numDiff_last.append(cq[('numDiff',ci,ci)])
+                self.numDiff.append(numpy.zeros(cq[('u',ci)].shape,'d'))
             elif self.lag == False and self.nStepsToDelay != None:
                 self.cq_numDiff.append(cq[('numDiff',ci,ci)])
                 self.numDiff.append(cq[('numDiff',ci,ci)])
@@ -249,8 +231,8 @@ class ResGradQuadDelayLag_SC(ResGradQuad_SC):
         self.numDiff_last=[]
         for ci in range(self.nc):
             if self.lag:
-                self.numDiff.append(cq[('numDiff',ci,ci)])
-                self.numDiff_last.append(numpy.zeros(cq[('u',ci)].shape,'d'))
+                self.numDiff_last.append(cq[('numDiff',ci,ci)])
+                self.numDiff.append(numpy.zeros(cq[('u',ci)].shape,'d'))
             elif self.lag == False and self.nStepsToDelay != None:
                 self.numDiff.append(cq[('numDiff',ci,ci)])
                 self.numDiff_last.append(cq[('numDiff',ci,ci)])
@@ -347,6 +329,7 @@ class NavierStokes_SC_opt(ResGradQuad_SC):
         self.numDiff_last={}
         for ci in range(1,self.nc):
             if self.lag:
+                #note: _opt  does  the  lagging backwards from above
                 self.numDiff_last[ci]=numpy.zeros(cq[('u',ci)].shape,'d')
                 self.numDiff[ci]=cq[('numDiff',ci,ci)]
             else:
