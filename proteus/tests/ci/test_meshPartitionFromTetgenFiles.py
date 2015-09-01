@@ -21,7 +21,8 @@ def test_c0p1(genMesh=True):
     so = default_so
     so.name = pList[0].name = "poisson_3d_tetgen_c0p1"+"pe"+`comm.size()`
     so.sList=[default_s]
-    opts.logLevel=7
+    Profiling.logLevel=7
+    Profiling.verbose=False
     opts.generatePartitionedMeshFromFiles = True
     opts.gatherArchive=True
     pList[0].genMesh=genMesh
@@ -41,7 +42,8 @@ def test_c0p2(genMesh=True):
     so = default_so
     so.name = pList[0].name = "poisson_3d_tetgen_c0p2"+"pe"+`comm.size()`
     so.sList=[default_s]
-    opts.logLevel=7
+    Profiling.logLevel=7
+    Profiling.verbose=False
     opts.generatePartitionedMeshFromFiles = True
     opts.gatherArchive=True
     pList[0].genMesh=genMesh
