@@ -507,7 +507,7 @@ class Newton(NonlinearSolver):
             #print "global r",r
             if self.linearSolver.computeEigenvalues:
                 #approximate Lipschitz constant of J
-                log("Calculting eigenvalues of dJ^t dJ")
+                log("Calculating eigenvalues of dJ^t dJ")
                 self.F.getJacobian(self.dJ_t_dJ)
                 self.dJ_t_dJ-=self.JLast
                 self.dJ_t_dJ *= numpy.transpose(self.dJ_t_dJ)
