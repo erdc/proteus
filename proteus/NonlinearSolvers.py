@@ -469,7 +469,7 @@ class Newton(NonlinearSolver):
                 self.updateJacobian = False
                 self.F.getJacobian(self.J)
                 if self.linearSolver.computeEigenvalues:
-                    log("Calculting eigenvalues of J^t J")
+                    log("Calculating eigenvalues of J^t J")
                     self.JLast[:]=self.J
                     self.J_t_J[:]=self.J
                     self.J_t_J *= numpy.transpose(self.J)
