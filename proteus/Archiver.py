@@ -56,6 +56,7 @@ class AR_base:
         try:
             import h5py
             self.has_h5py=True
+            self.global_sync=True
             comm_world = self.comm.comm.tompi4py()
         except:
             self.has_h5py=False
@@ -210,7 +211,7 @@ class AR_base:
         Domain = XDMF[0]
         for TemporalGridCollection in Domain:
             for i in range(self.n_datasets):
-                if self.has_h5py:#only writing xml metadata to hdf5 using h5py right now
+                if self.has_h5py and not self.global_sync:#only writing xml metadata to hdf5 using h5py right now
                     dataset_name = TemporalGridCollection.attrib['Name']+"_"+`i`
                     dataset_name = dataset_name.replace(" ","_")
                     grid_array = self.hdfFile["/"+dataset_name]
@@ -293,42 +294,46 @@ class AR_base:
                 XDMFGlobal.append(copy.deepcopy(Domain))
                 DomainGlobal = XDMFGlobal[-1]
                 #delete any actual grids in the temporal  collections
-                for TemporalGridCollectionGlobal in DomainGlobal:
-                    del TemporalGridCollectionGlobal[:]
+                if not self.global_sync:
+                    for TemporalGridCollectionGlobal in DomainGlobal:
+                        del TemporalGridCollectionGlobal[:]
             else:
                 DomainGlobal = XDMFGlobal[-1]
         #gather the latest grids in each collection onto master
-        comm_world = self.comm.comm.tompi4py()
-        for i, TemporalGridCollection in enumerate(Domain):
-            GridLocal = TemporalGridCollection[-1]
-            TimeAttrib = GridLocal[0].attrib['Value']
-            Grids = comm_world.gather(GridLocal)
-            max_grid_string_len = 0
-            if self.comm.isMaster():
-                TemporalGridCollectionGlobal = DomainGlobal[i]
-                SpatialCollection=SubElement(TemporalGridCollectionGlobal,"Grid",{"GridType":"Collection",
-                                                                                  "CollectionType":"Spatial"})
-                SpatialCollection.append(GridLocal[0])#append Time in Spatial Collection
-                for Grid in Grids:
-                    del Grid[0]#Time
-                    SpatialCollection.append(Grid) #append Grid without Time
-                    element_string = tostring(Grid)
-                    max_grid_string_len = max(len(element_string),
-                                              max_grid_string_len)
-            max_grid_string_len_array = numpy.array(max_grid_string_len,'i')
-            comm_world.Bcast([max_grid_string_len_array,MPI.INT], root=0)
-            max_grid_string_len = int(max_grid_string_len_array)
-            if self.has_h5py: #only writing xml metadata to hdf5 using h5py right now
-                dataset_name = TemporalGridCollection.attrib['Name']+"_"+ \
-                               `self.n_datasets`
-                dataset_name = dataset_name.replace(" ","_")
-                xml_data  = self.hdfFile.create_dataset(name  = dataset_name,
-                                                        shape = (self.comm.size(),),
-                                                        dtype = '|S'+`max_grid_string_len`)
-                xml_data.attrs['Time'] = TimeAttrib
+        if  not self.global_sync:
+            comm_world = self.comm.comm.tompi4py()
+            for i, TemporalGridCollection in enumerate(Domain):
+                GridLocal = TemporalGridCollection[-1]
+                TimeAttrib = GridLocal[0].attrib['Value']
+                Grids = comm_world.gather(GridLocal)
+                max_grid_string_len = 0
                 if self.comm.isMaster():
-                    for j, Grid in enumerate(Grids):
-                        xml_data[j] = tostring(Grid)
+                    TemporalGridCollectionGlobal = DomainGlobal[i]
+                    SpatialCollection=SubElement(TemporalGridCollectionGlobal,"Grid",{"GridType":"Collection",
+                                                                                      "CollectionType":"Spatial"})
+                    SpatialCollection.append(GridLocal[0])#append Time in Spatial Collection
+                    for Grid in Grids:
+                        del Grid[0]#Time
+                        SpatialCollection.append(Grid) #append Grid without Time
+                        element_string = tostring(Grid)
+                        max_grid_string_len = max(len(element_string),
+                                                  max_grid_string_len)
+                max_grid_string_len_array = numpy.array(max_grid_string_len,'i')
+                comm_world.Bcast([max_grid_string_len_array,MPI.INT], root=0)
+                max_grid_string_len = int(max_grid_string_len_array)
+                if self.has_h5py: #only writing xml metadata to hdf5 using h5py right now
+                    dataset_name = TemporalGridCollection.attrib['Name']+"_"+ \
+                                   `self.n_datasets`
+                    dataset_name = dataset_name.replace(" ","_")
+                    xml_data  = self.hdfFile.create_dataset(name  = dataset_name,
+                                                            shape = (self.comm.size(),),
+                                                            dtype = '|S'+`max_grid_string_len`)
+                    xml_data.attrs['Time'] = TimeAttrib
+                    if self.comm.isMaster():
+                        for j, Grid in enumerate(Grids):
+                            xml_data[j] = tostring(Grid)
+        else:
+            pass
         self.n_datasets += 1
         log("Done Gathering Archive Time Step")
     def sync(self):
@@ -345,7 +350,7 @@ class AR_base:
         XDMF =self.tree.getroot()
         Domain = XDMF[-1]
         for TemporalGridCollection in Domain:
-            if self.has_h5py: #only writing xml metadata to hdf5 using h5py right now
+            if self.has_h5py and not self.global_sync: #only writing xml metadata to hdf5 using h5py right now
                 del TemporalGridCollection[:]
         if self.comm.isMaster():
             self.xmlFileGlobal.write(self.xmlHeader)
@@ -356,7 +361,7 @@ class AR_base:
             XDMF = self.treeGlobal.getroot()
             Domain = XDMF[-1]
             for TemporalGridCollection in Domain:
-                if self.has_h5py: #only writing xml metadata to hdf5 using h5py right now
+                if self.has_h5py and not self.global_sync: #only writing xml metadata to hdf5 using h5py right now
                     del TemporalGridCollection[:]
         if self.hdfFile != None:
             if self.has_h5py:
@@ -368,6 +373,8 @@ class AR_base:
         log("Done Syncing Archive",level=3)
         log(memory("Syncing Archive"),level=4)
     def create_dataset_async(self,name,data):
+        import pdb
+        pdb.set_trace()
         comm_world = self.comm.comm.tompi4py()
         metadata = comm_world.allgather((name,data.shape,data.dtype))
         for i,m in enumerate(metadata):
@@ -376,6 +383,11 @@ class AR_base:
                                                   dtype = m[2])
             if i == self.comm.rank():
                 dataset[:] = data
+    def create_dataset_sync(self,name,offsets,data):
+        dataset = self.hdfFile.create_dataset(name  = name,
+                                              shape = tuple([offsets[-1]]+list(data.shape[1:])),
+                                              dtype = data.dtype)
+        dataset[offsets[self.comm.rank()]:offsets[self.comm.rank()+1]] = data
 
 XdmfArchive=AR_base
 
