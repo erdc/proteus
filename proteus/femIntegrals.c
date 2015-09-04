@@ -11765,6 +11765,7 @@ void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(in
 					 k*nSpace+
 					 colind[m]]
 				      *a[ebNE*nQuadraturePoints_elementBoundary*nnz+
+                                         k*nnz+
 					 m]
 				      *grad_w[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
 					      k*nDOF_trial_element*nSpace+
@@ -12046,6 +12047,7 @@ void updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(int 
 					 k*nSpace+
 					 colind[m]]
 				      *a[ebNE*nQuadraturePoints_elementBoundary*nnz+
+                                         k*nnz+
 					 m]
 				      *grad_w[ebNE*nQuadraturePoints_elementBoundary*nDOF_trial_element*nSpace+
 					      k*nDOF_trial_element*nSpace+
