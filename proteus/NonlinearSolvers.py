@@ -794,6 +794,7 @@ class POD_HyperReduced_Newton(Newton):
         self.pod_initialized=False
         self.DB = None
         self.DBf = F.dim #Nonlinear pod by default
+        self.nhyper_sample = F.dim #number of points for sampling in hyper reduction
         self.SVD_basis_file='SVD_basis'
         self.Fs_SVD_basis_file=None
         self.hyper_reduction_indices = 'Fs_hyper_indices'
@@ -822,16 +823,19 @@ class POD_HyperReduced_Newton(Newton):
             assert os.path.isfile(self.hyper_reduction_indices),  "File for indices for evaluating hyper-reduction points  {0} not found".format(self.hyper_reduction_indices)
             assert os.path.isfile(self.hyper_reduction_Q)
             self.rho_hyper = np.loadtxt(self.hyper_reduction_indices,dtype='i')
+            self.nhyper_sample = len(self.rho_hyper)
             Q = np.loadtxt(self.hyper_reduction_Q)
+            assert self.nhyper_sample == Q.shape[1]
             #go ahead and left multiply projection matrix by solution basis
             #to get 'projection' from hyper-reduced space to coarse space
             self.Ut_Q = np.dot(self.U_transpose,Q)
         else:#full nonlinear pod
             self.rho_hyper = np.linspace(self.F.dim,dtype='i')
+            self.nhyper_sample = len(self.rho_hyper)
             self.Ut_Q = self.U_transpose
         self.pod_J = np.zeros((self.DB,self.DB),'d')
         self.pod_Jt= np.zeros((self.DB,self.DB),'d')
-        self.pod_Jtmp= np.zeros((self.DBf,self.DB),'d')
+        self.pod_Jtmp= np.zeros((self.nhyper_sample,self.DB),'d')
         self.pod_linearSolver = LU(self.pod_J)
         self.J_rowptr,self.J_colind,self.J_nzval = self.J.getCSRrepresentation()
         assert 'getSpatialJacobian' in dir(self.F)
@@ -1008,12 +1012,14 @@ class POD_HyperReduced_Newton(Newton):
                 #have to scale by dt in general shouldn't affect constant mass matrix
                 self.Jt_nzval /= self.F.timeIntegration.dt
                 #mwf debug
+                #import pdb
+                #pdb.set_trace()
                 self.F.getJacobian(self.J)
                 tmp = self.Jt_nzval+self.Js_nzval-self.J_nzval
                 assert numpy.absolute(tmp).all() < 1.0e-12
                 #now this holds P^T J_s U
                 self.pod_Jtmp[:] = 0.0
-                for i in range(self.DBf):
+                for i in range(self.nhyper_sample):
                     hyper_i = self.rho_hyper[i]
                     for j in range(self.DB):
                         for m in range(self.Js_rowptr[hyper_i],self.Js_rowptr[hyper_i+1]):
@@ -1077,7 +1083,7 @@ class POD_HyperReduced_Newton(Newton):
         hyper_reduction_indices -- file with indices for hyper reduction
         hyper_reduction_Q -- file with matrix Q for hyper-reduction approximation $\hat{F} = U^T \cdot Q P^T F(U z)$
         """
-        optional_params = ['SVD_basis_file','use_hyper','DBf','Fs_SVD_basis_file',
+        optional_params = ['SVD_basis_file','use_hyper','Fs_SVD_basis_file',
                            'hyper_reduction_indices','hyper_reduction_Q']
         for parm in optional_params:
             if parm in dir(nOptions):
