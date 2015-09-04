@@ -129,7 +129,9 @@ matlab_setup.done: stack stack/default.yaml hashdist
 profile: ${PROTEUS_PREFIX}/artifact.json
 
 stack/default.yaml: stack stack/examples/proteus.${PROTEUS_ARCH}.yaml
-	ln -sfi ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
+	# workaround since mac doesn't support '-b' and '-i' breaks travis
+	-cp ${PWD}/stack/default.yaml ${PWD}/stack/default.yaml.bak
+	ln -sf ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
 
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
