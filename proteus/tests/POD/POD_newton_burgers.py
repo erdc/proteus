@@ -9,14 +9,14 @@ The equation is
 from burgers_init import *
 
 physics.name = "pod_burgers_{0}d".format(physics.nd)
-if use_deim:
-    physics.name = "pod_burgers_DEIM_{0}d".format(physics.nd)
+if use_hyper:
+    physics.name = "pod_burgers_hyper_{0}d".format(physics.nd)
 so.name = physics.name
 Profiling.logLevel=5
 Profiling.verbose=True
-if use_deim:
-    numerics.multilevelNonlinearSolver = NonlinearSolvers.POD_DEIM_Newton
-    numerics.levelNonlinearSolver = NonlinearSolvers.POD_DEIM_Newton
+if use_hyper:
+    numerics.multilevelNonlinearSolver = NonlinearSolvers.POD_HyperReduced_Newton
+    numerics.levelNonlinearSolver = NonlinearSolvers.POD_HyperReduced_Newton
 else:
     numerics.multilevelNonlinearSolver = NonlinearSolvers.POD_Newton
     numerics.levelNonlinearSolver = NonlinearSolvers.POD_Newton
