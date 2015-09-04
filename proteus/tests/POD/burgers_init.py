@@ -74,8 +74,8 @@ def getDBC(x,flag):
     #    return constant_zero#won't be strongly enforced if B points out
 
 def getAFBC(x,flag):
-    #return None
     return constant_zero
+    #return None
 
 def getDFBC(x,flag):
     return constant_zero
@@ -108,7 +108,7 @@ physics.dirichletConditions = {0:getDBC}
 physics.advectiveFluxBoundaryConditions = {0:getAFBC}
 physics.diffusiveFluxBoundaryConditions = {0:{0:getDFBC}}
 physics.initialConditions = {0:Initial()}
-physics.fluxBoundaryConditions = {0:'outFlow'}
+#physics.fluxBoundaryConditions = {0:'outFlow'}
 #numerics
 
 nDTout = 100
@@ -127,6 +127,7 @@ numerics.multilevelNonlinearSolver = NonlinearSolvers.Newton
 numerics.levelLinearSolver = NonlinearSolvers.Newton
 numerics.tolFac = 0.0#relative tolerance
 numerics.nl_atol_res = 1.0e-4 #nonlinear solver rtolerance
+numerics.maxNonlinearIts = 10
 
 numerics.matrix = LinearAlgebraTools.SparseMatrix #matrix type
 numerics.multilevelLinearSolver = LinearSolvers.LU
@@ -136,17 +137,27 @@ numerics.l_atol_res = 1.0e-8 #linear solver rtolerance
 
 numerics.periodicDirichletConditions=None 
 
-numerics.subgridError = SubgridError.AdvectionDiffusionReaction_ASGS(physics.coefficients,
-                                                                 physics.nd,lag=False)
-numerics.shockCapturing = ShockCapturing.ResGradQuad_SC(physics.coefficients,
-                                                        physics.nd,
-                                                        shockCapturingFactor=0.75,
-                                                        lag=True)
+#numerics.subgridError = SubgridError.AdvectionDiffusionReaction_ASGS(physics.coefficients,
+#                                                                 physics.nd,lag=False)
+#numerics.shockCapturing = ShockCapturing.ResGradQuad_SC(physics.coefficients,
+#                                                        physics.nd,
+#                                                        shockCapturingFactor=0.75,
+#                                                        lag=True)
+
 #numerics.numericalFluxType = NumericalFlux.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
-numerics.numericalFluxType = NumericalFlux.NoFlux
-
-#numerics.nl_atol_res = 1.0e-4
-
+#numerics.numericalFluxType = NumericalFlux.NoFlux
+numericalFluxBase = NumericalFlux.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
+class NoFluxDirichletConstraints(numericalFluxBase):
+    useStrongDirichletConstraints=True
+numerics.numericalFluxType = NoFluxDirichletConstraints
+##POD-specific controls
+numerics.use_hyper = True
+numerics.SVD_basis_file='SVD_basis_truncated_43'
+numerics.Fs_SVD_basis_file='Fs_SVD_basis_truncated_73'
+numerics.hyper_reduction_indices = 'DEIM_indices_73'
+numerics.hyper_reduction_Q = 'Q_DEIM_truncated_73'
+numerics.hyper_reduction_indices = 'Fs_Gappy_indices_truncated_101'#'Fs_Gappy_indices_truncated_73'
+numerics.hyper_reduction_Q = 'Q_Gappy_truncated_73_101'#'PF_Gappy_truncated_73_73'
 #
 # split operator options (trivial since we're not splitting)
 #
@@ -159,10 +170,10 @@ Profiling.verbose = 1
 opts.logLevel = 2
 
 #whether or not to use deim approximation
-use_deim = True
+use_hyper = True
 
 simFlagsList=None
-if use_deim:
+if use_hyper:
     simFlagsList=[{}]
     simFlagsList[0]['storeQuantities']=['pod_residuals']
 
