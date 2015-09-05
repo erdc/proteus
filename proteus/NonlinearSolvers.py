@@ -469,7 +469,7 @@ class Newton(NonlinearSolver):
                 self.updateJacobian = False
                 self.F.getJacobian(self.J)
                 if self.linearSolver.computeEigenvalues:
-                    log("Calculting eigenvalues of J^t J")
+                    log("Calculating eigenvalues of J^t J")
                     self.JLast[:]=self.J
                     self.J_t_J[:]=self.J
                     self.J_t_J *= numpy.transpose(self.J)
@@ -507,7 +507,7 @@ class Newton(NonlinearSolver):
             #print "global r",r
             if self.linearSolver.computeEigenvalues:
                 #approximate Lipschitz constant of J
-                log("Calculting eigenvalues of dJ^t dJ")
+                log("Calculating eigenvalues of dJ^t dJ")
                 self.F.getJacobian(self.dJ_t_dJ)
                 self.dJ_t_dJ-=self.JLast
                 self.dJ_t_dJ *= numpy.transpose(self.dJ_t_dJ)
