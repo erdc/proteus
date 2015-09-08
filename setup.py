@@ -15,11 +15,6 @@ from Cython.Distutils import build_ext
 from proteus import config
 from proteus.config import *
 
-try:
-    from config import *
-except:
-    raise RuntimeError("Missing or invalid config.py file. See proteusConfig for examples")
-
 ###to turn on debugging in c++
 ##\todo Finishing cleaning up setup.py/setup.cfg, config.py...
 from distutils import sysconfig
@@ -49,32 +44,25 @@ setup(name='proteus',
       author='Chris Kees, Matthew Farthing, et al.',
       author_email='chris.kees@us.army.mil',
       url='http://proteus.usace.army.mil',
-      packages = ['proteus', 'proteus.config', 'proteus.tests', 'proteus.mprans'],
+      packages = ['proteus', 'proteus.config', 'proteus.tests', 'proteus.mprans', 'proteus.MeshAdaptPUMI'],
       cmdclass = {'build_ext':build_ext},
       ext_package='proteus',
       ext_modules=cythonize(
-                   [Extension('MeshAdaptPUMI',
+                   [Extension('MeshAdaptPUMI.MeshAdaptPUMI',
 
-                             sources = ['src/MeshAdaptPUMI.pyx', 'src/MeshAdaptPUMI/MeshAdaptPUMI.cpp',
-                                        'src/MeshAdaptPUMI/MeshConverter.cpp', 'src/MeshAdaptPUMI/ParallelMeshConverter.cpp',
-                                        'src/MeshAdaptPUMI/MeshFields.cpp', 'src/MeshAdaptPUMI/SizeField.cpp',
-                                        'src/MeshAdaptPUMI/DumpMesh.cpp',
-                                        'src/MeshAdaptPUMI/ERM.cpp'],
+                             sources = ['proteus/MeshAdaptPUMI/MeshAdaptPUMI.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
+                                        'proteus/MeshAdaptPUMI/MeshConverter.cpp', 'proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp',
+                                        'proteus/MeshAdaptPUMI/MeshFields.cpp', 'proteus/MeshAdaptPUMI/SizeField.cpp',
+                                        'proteus/MeshAdaptPUMI/DumpMesh.cpp',
+                                        'proteus/MeshAdaptPUMI/ERM.cpp'],
                              define_macros=[('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H)],
                              include_dirs=[numpy.get_include(),'include',
-                                           'src','proteus',
-                                           PROTEUS_SCOREC_INCLUDE_DIR],
-                             library_dirs=[PROTEUS_SCOREC_LIB_DIR], #path here to where zoltan and parmetis libs are
-                             libraries=['m'],
-                             extra_compile_args=PROTEUS_SCOREC_EXTRA_COMPILE_ARGS,
-                             extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS),
-                   Extension('ctracking',
-                             ['src/ctrackingModule.cpp','src/tracking.cpp'],
-                             define_macros=[('PROTEUS_SUPERLU_H',PROTEUS_SUPERLU_H)],
-                             include_dirs=[numpy.get_include(),'include', 'proteus',
-                                           PROTEUS_SUPERLU_INCLUDE_DIR],
-                             libraries=['m'],
-                             extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS),
+                                           'proteus']+
+                                           PROTEUS_SCOREC_INCLUDE_DIRS,
+                              library_dirs=PROTEUS_SCOREC_LIB_DIRS,
+                              libraries=PROTEUS_SCOREC_LIBS,
+                             extra_compile_args=PROTEUS_SCOREC_EXTRA_COMPILE_ARGS+PROTEUS_EXTRA_COMPILE_ARGS,
+                             extra_link_args=PROTEUS_SCOREC_EXTRA_LINK_ARGS+PROTEUS_EXTRA_LINK_ARGS),
                    Extension("ADR",['proteus/ADR.pyx'],
                              depends=['proteus/ADR.h'],
                              language='c++',
@@ -276,8 +264,8 @@ setup(name='proteus',
                                   libraries=['stdc++','m',PROTEUS_DAETK_LIB]+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS,
                                   extra_link_args=PROTEUS_EXTRA_LINK_ARGS + PROTEUS_PETSC_EXTRA_LINK_ARGS,
                                   extra_compile_args=PROTEUS_EXTRA_COMPILE_ARGS + PROTEUS_PETSC_EXTRA_COMPILE_ARGS),
-                                  Extension("mprans.cNCLS",["proteus/mprans/cNCLS.pyx"],depends=["proteus/mprans/NCLS.h"], language="c++",
-                             include_dirs=[numpy.get_include(), 'proteus']),
+                    Extension("mprans.cNCLS",["proteus/mprans/cNCLS.pyx"],depends=["proteus/mprans/NCLS.h"], language="c++",
+                              include_dirs=[numpy.get_include(), 'proteus']),
                    Extension("mprans.cMCorr",["proteus/mprans/cMCorr.pyx"],depends=["proteus/mprans/MCorr.h"], define_macros=[('PROTEUS_LAPACK_H',PROTEUS_LAPACK_H),
                                             ('PROTEUS_LAPACK_INTEGER',PROTEUS_LAPACK_INTEGER),
                                             ('PROTEUS_BLAS_H',PROTEUS_BLAS_H)],language="c++",
