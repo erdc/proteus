@@ -186,15 +186,6 @@ if opts.debug:
     pdb.set_trace()
 
 log = Profiling.logEvent
-logDir = None
-if opts.dataDir != '':
-    if not os.path.exists(opts.dataDir):
-    	try:
-    	     os.mkdir(opts.dataDir)
-        except os.error:
-             print "Failed to create: " + opts.dataDir
-             opts.dataDir=''
-    logDir = opts.dataDir
 
 log("Initializing Proteus")
 log("HashDist Version: " + version.hashdist)
@@ -226,6 +217,32 @@ if opts.petscOptionsFile != None:
 Comm.argv = petsc_argv
 comm = Comm.init()
 
+logDir = None
+if opts.dataDir != '':
+    if comm.isMaster() and not os.path.exists(opts.dataDir):
+    	try:
+            os.makedirs(opts.dataDir)
+        except Exception, e:
+            print(
+                "Exiting parun, failed creating dataDir = {0}\n{1}".format(
+                    opts.dataDir,
+                    str(e)))
+            comm.comm.tompi4py().Abort()
+            raise#just in case
+    comm.barrier()
+    if os.path.exists(opts.dataDir):
+        if os.access(opts.dataDir, os.W_OK):
+            logDir = opts.dataDir
+        else:
+            print("Processor {0} cannot write to datatDir = {1}".format(
+                comm.rank(),
+                opts.dataDir))
+            comm.comm.tompi4py().Abort()
+    else:
+        print("Processor {0} cannot access datatDir = {1}".format(
+            comm.rank(),
+            opts.dataDir))
+        comm.comm.tompi4py().Abort()
 
 #blanket import statements can go below here now that petsc4py should be initialized
 from proteus import *

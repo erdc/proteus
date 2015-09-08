@@ -7,10 +7,6 @@ np = numpy
 import array
 from Archiver import *
 from LinearAlgebraTools import ParVec_petsc4py
-#<<<<<<< HEAD:src/MeshTools.py
-
-#=======
-#>>>>>>> proteus-master:proteus/MeshTools.py
 from Profiling import logEvent,memory
 
 class Node:
@@ -2489,7 +2485,7 @@ class TetrahedralMesh(Mesh):
 
     def refine(self,oldMesh):
         return self.refineFreudenthalBey(oldMesh)
-     
+
     def convertFromPUMI(self, PUMIMesh, numBC, faceList, parallel=False):
         import cmeshTools
         import MeshAdaptPUMI
@@ -2533,7 +2529,7 @@ class TetrahedralMesh(Mesh):
           par_nodeDiametersArray.scatter_forward_insert()
           comm.barrier()
         else:
-          PUMIMesh.ConstructFromSerialPUMIMesh(self.cmesh) 
+          PUMIMesh.ConstructFromSerialPUMIMesh(self.cmesh)
           for i in range(len(faceList)):
             for j in range(len(faceList[i])):
               PUMIMesh.UpdateMaterialArrays(self.cmesh, i+1, faceList[i][j])
@@ -3458,7 +3454,7 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
         self.buildFromC(self.cmultilevelMesh)
         self.elementParents = None
         self.elementChildren=[]
-          
+
     def generatePartitionedMeshFromTetgenFiles(self,filebase,base,mesh0,refinementLevels,nLayersOfOverlap=1,
                                                parallelPartitioningType=MeshParallelPartitioningTypes.node):
         import cmeshTools

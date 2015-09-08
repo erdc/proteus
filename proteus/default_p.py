@@ -74,9 +74,6 @@ initialConditions = None
 weakDirichletConditions = None
 """Dictionary of weak Dirichlet constraint setters"""
 
-bcsTimeDependent = True
-"""Allow optimizations if boundary conditions are not time dependent"""
-
 dummyInitialConditions = False #mwf temporary hack for RD level sets
 
 #what to do after each coupling step?

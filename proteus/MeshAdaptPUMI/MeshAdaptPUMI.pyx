@@ -31,6 +31,7 @@ cdef class MeshAdaptPUMI:
     cdef double hmax, hmin
     cdef int numIter, numAdaptSteps
     def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10):
+        print hmax,hmin,numIter
         self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter)
     def __dealloc__(self):
         del self.thisptr
