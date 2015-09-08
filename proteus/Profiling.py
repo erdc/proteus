@@ -5,6 +5,7 @@ import gc
 import inspect
 import pstats
 from time import time
+import atexit
 
 try:
     from cProfile import Profile
@@ -222,3 +223,14 @@ class Dispatcher():
         comm.endSequential()
 
         return func_return
+
+@atexit.register
+def ProfilingDtor():
+    global procID, verbose
+    if procID == None:
+        verbose=True
+        logEvent(
+            "Proteus.Profiling never initialized. Doing it at exit.")
+        procID = 0
+        openLog("proteus_default.log",level=11,logLocation=".")
+    closeLog()

@@ -4,8 +4,8 @@ from proteus import *
 from proteus.Transport import *
 from proteus.Transport import OneLevelTransport
 
-cdef extern from "MoveMesh.h" namespace "proteus":
-    cdef cppclass MoveMesh_base:
+cdef extern from "MoveMesh2D.h" namespace "proteus":
+    cdef cppclass MoveMesh2D_base:
         void calculateResidual(double* mesh_trial_ref,
                                double* mesh_grad_trial_ref,
                                double* mesh_dof,
@@ -108,9 +108,7 @@ cdef extern from "MoveMesh.h" namespace "proteus":
                                int* csrColumnOffsets_eb_w_v,
                                int* csrColumnOffsets_eb_w_w)
 			       
-
-
-    MoveMesh_base* newMoveMesh(int nSpaceIn,
+    MoveMesh2D_base* newMoveMesh2D(int nSpaceIn,
                                int nQuadraturePoints_elementIn,
                                int nDOF_mesh_trial_elementIn,
                                int nDOF_trial_elementIn,
@@ -118,8 +116,8 @@ cdef extern from "MoveMesh.h" namespace "proteus":
                                int nQuadraturePoints_elementBoundaryIn,
                                int CompKernelFlag)
 
-cdef class cMoveMesh_base:
-    cdef MoveMesh_base* thisptr
+cdef class cMoveMesh2D_base:
+    cdef MoveMesh2D_base* thisptr
     def __cinit__(self,
                   int nSpaceIn,
                   int nQuadraturePoints_elementIn,
@@ -128,7 +126,7 @@ cdef class cMoveMesh_base:
                   int nDOF_test_elementIn,
                   int nQuadraturePoints_elementBoundaryIn,
                   int CompKernelFlag):
-        self.thisptr = newMoveMesh(nSpaceIn,
+        self.thisptr = newMoveMesh2D(nSpaceIn,
                                    nQuadraturePoints_elementIn,
                                    nDOF_mesh_trial_elementIn,
                                    nDOF_trial_elementIn,
@@ -341,5 +339,3 @@ cdef class cMoveMesh_base:
                                         <int*>csrColumnOffsets_eb_w_u.data,
                                         <int*>csrColumnOffsets_eb_w_v.data,
                                         <int*>csrColumnOffsets_eb_w_w.data)
-
-

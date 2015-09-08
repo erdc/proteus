@@ -361,7 +361,8 @@ class NS_base:  # (HasTraits):
         self.modelList=[]
         self.lsList=[]
         self.nlsList=[]
-        self.modelSpinUpList = []
+        from collections import OrderedDict
+        self.modelSpinUp = OrderedDict()
         #
         for p in pList:
             p.coefficients.opts = self.opts
@@ -430,7 +431,8 @@ class NS_base:  # (HasTraits):
                 ##\todo logic needs to handle element boundary partition too
                 parallelUsesFullOverlap=(n.nLayersOfOverlapForParallel > 0 or n.parallelPartitioningType == MeshTools.MeshParallelPartitioningTypes.node),
                 par_duList=model.par_duList,
-                solver_options_prefix=linear_solver_options_prefix)
+                solver_options_prefix=linear_solver_options_prefix,
+                computeEigenvalues = n.computeEigenvalues)
             self.lsList.append(multilevelLinearSolver)
             Profiling.memory("MultilevelLinearSolver for "+p.name)
             log("Setting up MultilevelNonLinearSolver for "+p.name)
@@ -478,8 +480,8 @@ class NS_base:  # (HasTraits):
             model.viewer = Viewers.V_base(p,n,s)
             Profiling.memory("MultilevelNonlinearSolver for"+p.name)
             #collect models to be used for spin up
-            if index in so.modelSpinUpList:
-                self.modelSpinUpList.append(model)
+        for index in so.modelSpinUpList:
+            self.modelSpinUp[index] = self.modelList[index]
         log("Finished setting up models and solvers")
         if self.opts.save_dof:
             for m in self.modelList:
@@ -569,19 +571,14 @@ class NS_base:  # (HasTraits):
         else:
             self.tCount=0#time step counter
         log("Attaching models and running spin-up step if requested")
-#>>>>>>> proteus-master:proteus/NumericalSolution.py
 
-
-#<<<<<<< HEAD:src/NumericalSolution.py
-#               pass
-        
         #chitak, override the initial conditions
         if (isinstance(p.domain, Domain.PUMIDomain) and p.domain.initFlag==True):
           log("Setting initial conditions from PUMI interpolated solution")
           ivar=0;
           for m in self.modelList:
             for lm in m.levelModelList:
-               for ci in range(lm.coefficients.nc):                        
+               for ci in range(lm.coefficients.nc):
                        ivar=ivar+1
           tot_var=ivar
           soldof=numpy.zeros((tot_var,lm.mesh.nNodes_global))
@@ -589,19 +586,25 @@ class NS_base:  # (HasTraits):
           ivar=-1
           for m in self.modelList:
             for lm in m.levelModelList:
-               for ci in range(lm.coefficients.nc):                       
+               for ci in range(lm.coefficients.nc):
                  ivar=ivar+1
                  for nN in range(lm.mesh.nNodes_global):
                     lm.u[ci].dof[nN]=soldof[ivar,nN]
-               lm.setFreeDOF(m.uList[0])     
+               lm.setFreeDOF(m.uList[0])
                lm.calculateSolutionAtQuadrature()
-          del soldof     
-        
-        #log("Attaching models and running spin-up step if requested",level=3)
-#=======
-        for p,n,m,simOutput in zip(self.pList,self.nList,self.modelList,self.simOutputList):
+          del soldof
+
+        self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
+        spinup = []
+        for index,m in self.modelSpinUp.iteritems():
+            spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
+        for index,m in enumerate(self.modelList):
+            if index not in self.modelSpinUp:
+                spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
+        for p,n,m,simOutput in spinup:
+            log("Attaching models to model "+p.name)
             m.attachModels(self.modelList)
-            if m in self.modelSpinUpList:
+            if m in self.modelSpinUp.values():
                 log("Spin-Up Estimating initial time derivative and initializing time history for model "+p.name)
                 #now the models are attached so we can calculate the coefficients
                 for lm,lu,lr in zip(m.levelModelList,
@@ -621,7 +624,7 @@ class NS_base:  # (HasTraits):
                     #calculate consistent time derivative
                     lm.estimate_mt()
                     #post-process velocity
-                    #lm.calculateAuxiliaryQuantitiesAfterStep()
+                    lm.calculateAuxiliaryQuantitiesAfterStep()
                 log("Spin-Up Choosing initial time step for model "+p.name)
                 m.stepController.initialize_dt_model(self.tnList[0],self.tnList[1])
                 #mwf what if user wants spin-up to be over (t_0,t_1)?
@@ -646,6 +649,7 @@ class NS_base:  # (HasTraits):
                     if n.restrictFineSolutionToAllMeshes:
                         log("Using interpolant of fine mesh an all meshes")
                         self.restrictFromFineMesh(m)
+                    self.postStep(m)
                     self.systemStepController.modelStepTaken(m,self.tnList[0])
                     log("Spin-Up Step Taken, Model step t=%12.5e, dt=%12.5e for model %s" % (m.stepController.t_model,
                                                                                              m.stepController.dt_model,
@@ -696,7 +700,6 @@ class NS_base:  # (HasTraits):
             for av in self.auxiliaryVariables[m.name]:
                 av.calculate_init()
         log("Starting time stepping",level=0)
-        self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
         systemStepFailed=False
         stepFailed=False
 
@@ -853,13 +856,9 @@ class NS_base:  # (HasTraits):
                     self.tCount+=1
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
-#<<<<<<< HEAD:src/NumericalSolution.py
                     if not self.opts.cacheArchive:
                         self.ar[index].sync()
 
-                        
-#=======
-#>>>>>>> proteus-master:proteus/NumericalSolution.py
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
                 self.tCount+=1
@@ -874,14 +873,14 @@ class NS_base:  # (HasTraits):
           ivar=0;
           for m in self.modelList:
              for lm in m.levelModelList:
-                  for ci in range(lm.coefficients.nc):                        
+                  for ci in range(lm.coefficients.nc):
                           ivar=ivar+1
           tot_var=ivar
           soldof=numpy.zeros((ivar,lm.mesh.nNodes_global))
           ivar=-1
           for m in self.modelList:
              for lm in m.levelModelList:
-                  for ci in range(lm.coefficients.nc):                        
+                  for ci in range(lm.coefficients.nc):
                           ivar=ivar+1
                           for nN in range(lm.mesh.nNodes_global):
                                 soldof[ivar][nN]=lm.u[ci].dof[nN]
@@ -895,7 +894,7 @@ class NS_base:  # (HasTraits):
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)
             self.closeArchive(model,index)
-          
+
         #Destroy the mesh data structures in C because garbage collection doesnt take care of it
         #import cmeshTools
         #m = self.modelList[0]
