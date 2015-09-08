@@ -27,7 +27,7 @@ MeshAdaptPUMI.ConstructFromSerialPUMIMesh(mesh.cmesh)
 #cmeshTools.CMesh_FromMesh(mesh)
 
 mesh.buildFromC(mesh.cmesh)
-print "Done reading in mesh" 
+print "Done reading in mesh"
 
 #cmeshTools.write3dmFiles(cmesh,"mesh",1)
 #mesh.printMesh()
@@ -43,4 +43,3 @@ MeshAdaptPUMI.helloworld('Done MeshAdaptPUMI')
 #cmeshTools.cmeshToolsDeleteMeshDataStructures(mesh2.cmesh)
 #from pyadh import vtkViewers as vtkViewers
 #vtkViewers.viewMesh(mesh2)
-

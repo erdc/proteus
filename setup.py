@@ -49,7 +49,6 @@ setup(name='proteus',
       ext_package='proteus',
       ext_modules=cythonize(
                    [Extension('MeshAdaptPUMI.MeshAdaptPUMI',
-
                              sources = ['proteus/MeshAdaptPUMI/MeshAdaptPUMI.pyx', 'proteus/MeshAdaptPUMI/cMeshAdaptPUMI.cpp',
                                         'proteus/MeshAdaptPUMI/MeshConverter.cpp', 'proteus/MeshAdaptPUMI/ParallelMeshConverter.cpp',
                                         'proteus/MeshAdaptPUMI/MeshFields.cpp', 'proteus/MeshAdaptPUMI/SizeField.cpp',
