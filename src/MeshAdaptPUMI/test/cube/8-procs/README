@@ -1,2 +1,0 @@
-running: 
-mpirun -np 8 parun test_poisson.py
