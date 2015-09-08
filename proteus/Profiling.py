@@ -69,12 +69,7 @@ def openLog(filename,level,logLocation=None):
     elif logAllProcesses:
         logFile=open(filename_full+`procID`,'w')
     logLevel = level
-#<<<<<<< HEAD:src/Profiling.py
-##    logLevel = 7
-#    for (string,level,data) in preInitBuffer:
-#=======
     for string,level,data in preInitBuffer:
-#>>>>>>> proteus-master:proteus/Profiling.py
         logEvent(string,level,data)
 
 def closeLog():
