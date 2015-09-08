@@ -830,7 +830,7 @@ class POD_HyperReduced_Newton(Newton):
             #to get 'projection' from hyper-reduced space to coarse space
             self.Ut_Q = np.dot(self.U_transpose,Q)
         else:#full nonlinear pod
-            self.rho_hyper = np.linspace(self.F.dim,dtype='i')
+            self.rho_hyper = np.arange(self.F.dim,dtype='i')
             self.nhyper_sample = len(self.rho_hyper)
             self.Ut_Q = self.U_transpose
         self.pod_J = np.zeros((self.DB,self.DB),'d')
@@ -901,6 +901,10 @@ class POD_HyperReduced_Newton(Newton):
         """
         if self.use_hyper:
             return self.solveHyper(u,r,b,par_u,par_r)
+        if not self.pod_initialized:
+            self.initialize_POD()
+        assert self.pod_initialized
+
         pod_u = np.dot(self.U_transpose,u)
         u[:] = np.dot(self.U,pod_u)
         r=self.solveInitialize(u,r,b)
