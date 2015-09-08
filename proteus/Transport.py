@@ -1830,7 +1830,7 @@ class OneLevelTransport(NonlinearEquation):
                 #
                 #element boundary contributions
                 #
-                if self.numericalFlux != None:
+                if self.numericalFlux != None and type(self.numericalFlux) != NumericalFlux.DoNothing:
                     if self.numericalFlux.hasInterior:
                         cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(self.offset[ci],
                                                                                                         self.stride[ci],
@@ -2156,7 +2156,7 @@ class OneLevelTransport(NonlinearEquation):
                 #
                 #element boundary contributions
                 #
-                if self.numericalFlux != None:
+                if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
                     if self.numericalFlux.hasInterior:
                         cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(self.mesh.interiorElementBoundariesArray,
                                                                                                       self.mesh.elementBoundaryElementsArray,
@@ -2457,7 +2457,7 @@ class OneLevelTransport(NonlinearEquation):
         #         print self.elementResidual[0][eN,i]
         #         print self.elementResidual[1][eN,i]
         #         print self.elementResidual[2][eN,i]
-        if self.numericalFlux != None:
+        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             for ci in range(self.nc):
                 self.ebq_global[('totalFlux',ci)].fill(0.0)
                 self.ebqe[('totalFlux',ci)].fill(0.0)
@@ -2906,7 +2906,7 @@ class OneLevelTransport(NonlinearEquation):
                 evalElementBoundaryJacobian_hj = True
                 j.fill(0.0)
         #cek clean up this logic using numerical flux
-        if self.numericalFlux != None:
+        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             #
             self.numericalFlux.updateInteriorNumericalFluxJacobian(self.l2g,self.q,self.ebq,self.ebq_global,self.dphi,
                                                                    self.fluxJacobian,self.fluxJacobian_eb,self.fluxJacobian_hj)
@@ -2921,7 +2921,7 @@ class OneLevelTransport(NonlinearEquation):
         for jDict in self.fluxJacobian_exterior.values():
             for j in jDict.values():
                 j.fill(0.0)
-        if self.numericalFlux != None:
+        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             self.numericalFlux.updateExteriorNumericalFluxJacobian(self.l2g,self.inflowFlag,self.q,self.ebqe,self.dphi,
                                                                    self.fluxJacobian_exterior,self.fluxJacobian_eb,self.fluxJacobian_hj)
         else:
@@ -2953,11 +2953,11 @@ class OneLevelTransport(NonlinearEquation):
             if self.q.has_key(('grad(u)',cj)):
                 self.u[cj].getGradientValues(self.q[('grad(v)',cj)],
                                              self.q[('grad(u)',cj)])
-            self.u[cj].getValues(self.ebqe[('v',cj)],
-                                 self.ebqe[('u',cj)])
+            self.u[cj].getValuesGlobalExteriorTrace(self.ebqe[('v',cj)],
+                                                    self.ebqe[('u',cj)])
             if self.ebqe.has_key(('grad(u)',cj)):
-                self.u[cj].getGradientValues(self.ebqe[('grad(v)',cj)],
-                                             self.ebqe[('grad(u)',cj)])
+                self.u[cj].getGradientValuesGlobalExteriorTrace(self.ebqe[('grad(v)',cj)],
+                                                                self.ebqe[('grad(u)',cj)])
         if self.needEBQ:
             for cj in range(self.nc):
                 self.u[cj].getValuesTrace(self.ebq[('v',cj)],
@@ -3388,7 +3388,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         # calculate the averages and jumps at element boundaries
         #
-        if self.numericalFlux != None:
+        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             self.numericalFlux.calculateInteriorNumericalFlux(self.q,self.ebq,self.ebq_global)
         if self.conservativeFlux != None:
             for ci in self.conservativeFlux.keys():
@@ -3524,7 +3524,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         # calculate the averages and jumps at element boundaries
         #
-        if self.numericalFlux != None:
+        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             self.numericalFlux.calculateExteriorNumericalFlux(self.inflowFlag,self.q,self.ebqe)
         else:
             #cek this wll go away

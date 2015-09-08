@@ -12,7 +12,7 @@ if redist_Newton:
     timeIntegration = NoIntegration
     stepController = Newton_controller
     maxNonlinearIts = 100 # Farhad 25
-    maxLineSearches = 40 # Farhad 10 
+    maxLineSearches = 0 # Farhad 10
     nonlinearSolverConvergenceTest = 'r'
     levelNonlinearSolverConvergenceTest = 'r'
     linearSolverConvergenceTest = 'r-true'
@@ -34,9 +34,9 @@ else:
     linearSolverConvergenceTest = 'r-true'
 
 femSpaces = {0:basis}
-       
+
 massLumping       = False
-numericalFluxType = DoNothing    
+numericalFluxType = DoNothing
 conservativeFlux  = None
 subgridError      = RDLS.SubgridError(coefficients,nd)
 shockCapturing    = RDLS.ShockCapturing(coefficients,nd,shockCapturingFactor=rd_shockCapturingFactor,lag=rd_lag_shockCapturing)
@@ -62,4 +62,3 @@ if useSuperlu:
     levelLinearSolver      = LU
 
 linear_solver_options_prefix = 'rdls_'
-

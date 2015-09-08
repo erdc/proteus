@@ -19,8 +19,8 @@ subgridError = RANS2P.SubgridError(coefficients,nd,lag=ns_lag_subgridError,hFact
 shockCapturing = RANS2P.ShockCapturing(coefficients,nd,ns_shockCapturingFactor,lag=ns_lag_shockCapturing)
 
 fullNewtonFlag = True
-multilevelNonlinearSolver = NewtonNS
-levelNonlinearSolver      = NewtonNS
+multilevelNonlinearSolver = Newton
+levelNonlinearSolver      = Newton
 
 nonlinearSmoother = None
 linearSmoother    = SimpleNavierStokes3D
@@ -49,4 +49,4 @@ nl_atol_res = ns_nl_atol_res
 useEisenstatWalker = False#True
 maxNonlinearIts = 100
 maxLineSearches = 0
-conservativeFlux = None 
+conservativeFlux = {0:'pwl-bdm-opt'}

@@ -5,6 +5,7 @@ import gc
 import inspect
 import pstats
 from time import time
+import atexit
 
 try:
     from cProfile import Profile
@@ -68,12 +69,7 @@ def openLog(filename,level,logLocation=None):
     elif logAllProcesses:
         logFile=open(filename_full+`procID`,'w')
     logLevel = level
-#<<<<<<< HEAD:src/Profiling.py
-##    logLevel = 7
-#    for (string,level,data) in preInitBuffer:
-#=======
     for string,level,data in preInitBuffer:
-#>>>>>>> proteus-master:proteus/Profiling.py
         logEvent(string,level,data)
 
 def closeLog():
@@ -222,3 +218,14 @@ class Dispatcher():
         comm.endSequential()
 
         return func_return
+
+@atexit.register
+def ProfilingDtor():
+    global procID, verbose
+    if procID == None:
+        verbose=True
+        logEvent(
+            "Proteus.Profiling never initialized. Doing it at exit.")
+        procID = 0
+        openLog("proteus_default.log",level=11,logLocation=".")
+    closeLog()

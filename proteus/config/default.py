@@ -97,5 +97,29 @@ PROTEUS_MPI_LIBS =[]
 
 PROTEUS_PETSC_INCLUDE_DIR, PROTEUS_PETSC_LIB_DIR = get_flags('petsc')
 PROTEUS_PETSC_LIB_DIRS = [PROTEUS_PETSC_LIB_DIR]
-PROTEUS_PETSC_LIBS = []
+PROTEUS_PETSC_LIBS = ['petsc']
 PROTEUS_PETSC_INCLUDE_DIRS = [PROTEUS_PETSC_INCLUDE_DIR]
+
+PROTEUS_SCOREC_INCLUDE_DIRS = [pjoin(prefix, 'include'), os.getenv('SIM_INCLUDE_DIR')]+ PROTEUS_PETSC_INCLUDE_DIRS+PROTEUS_MPI_INCLUDE_DIRS
+PROTEUS_SCOREC_LIB_DIRS = [pjoin(prefix, 'lib'), os.getenv('SIM_LIB_DIR')]+PROTEUS_PETSC_LIB_DIRS+PROTEUS_MPI_LIB_DIRS
+PROTEUS_SCOREC_LIBS = [
+    'gmi_sim',
+    'apf_sim',
+    'spr',
+    'ma',
+    'parma',
+    'apf_zoltan',
+    'mds',
+    'apf',
+    'gmi',
+    'pcu',
+    'zoltan',
+    'parmetis',
+    'metis',
+    'SimPartitionedMesh-mpi',
+    'SimMeshing',
+    'SimModel',
+    'SimMeshTools',
+    'SimPartitionWrapper-mpich3']+PROTEUS_PETSC_LIBS+PROTEUS_MPI_LIBS
+PROTEUS_SCOREC_EXTRA_LINK_ARGS = []
+PROTEUS_SCOREC_EXTRA_COMPILE_ARGS = ['-g']

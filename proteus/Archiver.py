@@ -59,6 +59,10 @@ class AR_base:
             comm_world = self.comm.comm.tompi4py()
         except:
             self.has_h5py=False
+        #cek hack for adaption based on i/o of hdf5
+        self.has_h5py = False
+        self.useGlobalXMF=False
+        #end hack
         try:
             import tables
             self.hasTables=True
@@ -236,20 +240,16 @@ class AR_base:
         if not self.useGlobalXMF:
             self.xmlFile.close()
         if self.comm.isMaster():
-            self.gatherAndWriteTimes()
-            self.xmlFileGlobal.close()
+            if self.useGlobalXMF:
+                self.gatherAndWriteTimes()
+                self.xmlFileGlobal.close()
         if self.hdfFile != None:
             self.hdfFile.close()
         log("Done Closing Archive")
         try:
-#<<<<<<< HEAD:src/Archiver.py
-#            if self.gatherAtClose:
-#               self.allGather()
-#=======
             if not self.useGlobalXMF:
                 if self.gatherAtClose:
                     self.allGather()
-#>>>>>>> proteus-master:proteus/Archiver.py
         except:
             pass
     def allGather(self):
