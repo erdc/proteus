@@ -12,7 +12,7 @@ VER_CMD = git log -1 --pretty="%H"
 PROTEUS_INSTALL_CMD = python setup.py install
 PROTEUS_DEVELOP_CMD = pip install -e .
 # shell hack for now to automatically detect Garnet front-end nodes
-PROTEUS_ARCH ?=$(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
+PROTEUS_ARCH ?= $(shell [[ $$(hostname) = garnet* ]] && echo "garnet.gnu" || python -c "import sys; print sys.platform")
 PROTEUS_PREFIX ?= ${PROTEUS}/${PROTEUS_ARCH}
 PROTEUS_PYTHON ?= ${PROTEUS_PREFIX}/bin/python
 PROTEUS_VERSION := $(shell ${VER_CMD})
@@ -129,18 +129,19 @@ matlab_setup.done: stack stack/default.yaml hashdist
 profile: ${PROTEUS_PREFIX}/artifact.json
 
 stack/default.yaml: stack stack/examples/proteus.${PROTEUS_ARCH}.yaml
+	# workaround since mac doesn't support '-b' and '-i' breaks travis
 	-cp ${PWD}/stack/default.yaml ${PWD}/stack/default.yaml.bak
 	ln -sf ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
 
-mprans: 
-	@echo "No mprans found.  Cloning mprans from GitHub"
-	git clone -b scorec git@github.com:erdc-cm/proteus-mprans.git mprans
 
-config.py:
-	@echo "No config.py file found.  Running ./configure"
-	./configure
+# A hashstack profile will be rebuilt if Make detects any files in the stack 
+# directory newer than the profile artifact file.
+${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find stack -type f) ${BOOTSTRAP} ${MATLAB_SETUP}
+	@echo "************************"
+	@echo "Building dependencies..."
+	@echo "************************"
 
-profile: ${PROTEUS_PREFIX}/artifact.json
+	$(call show_info)
 
 	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -v -f -k error default.yaml ${PROTEUS_PREFIX}
 
