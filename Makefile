@@ -106,9 +106,31 @@ hashdist:
 	git clone https://github.com/hashdist/hashdist.git 
 	cd hashdist && git checkout ${HASHDIST_DEFAULT_VERSION}
 stack: 
-#<<<<<<< HEAD
-	@echo "No stack found.  Cloning private stack from GitHub"
-	git clone -b scorec  git@github.com:erdc-cm/hashstack-private.git stack
+	@echo "No stack found.  Cloning stack from GitHub"
+	git clone https://github.com/hashdist/hashstack.git stack
+	cd  stack && git checkout ${HASHSTACK_DEFAULT_VERSION}
+
+cygwin_bootstrap.done: stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
+	python stack/scripts/setup_cygstack.py stack/scripts/cygstack.txt
+	touch cygwin_bootstrap.done
+
+matlab_setup.done: stack stack/default.yaml hashdist
+	@echo "User requests MATLAB install"
+	@echo "MATLAB environment variable set to ${MATLAB}"
+	@python setupmatlab.py stack/default.yaml ${MATLAB}; if [ $$? -ne 0 ] ; then \
+	echo "+======================================================================================================+"; \
+	echo "Couldn't find matlab on PATH."; \
+	echo "Try"; \
+	echo "    MATLAB=/path/to/matlab make"; \
+	echo "+======================================================================================================+"; \
+	false; fi
+	touch matlab_setup.done
+
+profile: ${PROTEUS_PREFIX}/artifact.json
+
+stack/default.yaml: stack stack/examples/proteus.${PROTEUS_ARCH}.yaml
+	-cp ${PWD}/stack/default.yaml ${PWD}/stack/default.yaml.bak
+	ln -sf ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
 
 mprans: 
 	@echo "No mprans found.  Cloning mprans from GitHub"
@@ -120,10 +142,7 @@ config.py:
 
 profile: ${PROTEUS_PREFIX}/artifact.json
 
-${PROTEUS_PREFIX}/artifact.json: stack hashdist mprans
-	cp stack/examples/proteus.${PROTEUS_ARCH}.yaml stack/default.yaml
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop -v -f default.yaml ${PROTEUS_PREFIX}
-	-cp ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.exe.link ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.link
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -v -f -k error default.yaml ${PROTEUS_PREFIX}
 
 	@echo "************************"
 	@echo "Dependency build complete"
