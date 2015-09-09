@@ -180,21 +180,28 @@ def test_norm_correctness():
     A[0, 0] = 1
     A[1, 1] = 1
 
-    test = npt.assert_almost_equal
+    test = lambda a,b: npt.assert_almost_equal(a,b)
     test.description = 'test_correctness_l1Norm'
     yield test, l1Norm(x), 2
+    test = lambda a,b: npt.assert_almost_equal(a,b)
     test.description = 'test_correctness_l2Norm'
     yield test, l2Norm(x), sqrt(2)
+    test = lambda a,b: npt.assert_almost_equal(a,b)
     test.description = 'test_correctness_lInfNorm'
     yield test, lInfNorm(x), 1
+    test = lambda a,b: npt.assert_almost_equal(a,b)
     test.description = 'test_correctness_rmsNorm'
     yield test, rmsNorm(x), 1
+    test = lambda a,b: npt.assert_almost_equal(a,b)
     test.description = 'test_correctness_wl1Norm'
     yield test, wl1Norm(x, h), 2
+    test = lambda a,b: npt.assert_almost_equal(a,b)
     test.description = 'test_correctness_wl2Norm'
     yield test, wl2Norm(x, h), sqrt(2)
+    test = lambda a,b: npt.assert_almost_equal(a,b)
     test.description = 'test_correctness_wlInfNorm'
     yield test, wlInfNorm(x, h), 1
+    test = lambda a,b: npt.assert_almost_equal(a,b)
     test.description = 'test_correctness_energyNorm'
     yield test, energyNorm(x, A), sqrt(2)
 
@@ -220,7 +227,7 @@ def test_norm_zero():
 
     for name, norms in compute_norms(h, A, [v]):
         n = norms[0]
-        test = npt.assert_almost_equal
+        test = lambda a,b: npt.assert_almost_equal(a,b)
         test.description = 'test_norm_zero[{}]'.format(name)
         yield test, n, 0
 
@@ -249,7 +256,7 @@ def test_norm_homogeneity():
     for a in [0.5, -2]:
         for name, norms in compute_norms(h, A, [v1, a*v1]):
             t1, t2 = norms
-            test = npt.assert_almost_equal
+            test = lambda a,b: npt.assert_almost_equal(a,b)
             test.description = 'test_norm_homogeneity[{}]'.format(name)
             yield test, abs(a)*t1, t2
 
@@ -280,7 +287,7 @@ def test_norm_triangle_inequality():
 
     for name, norms in compute_norms(h, A, [v1+v2, v1, v2]):
         t1, t2, t3 = norms
-        test = ok
+        test = lambda b: ok(b)
         test.description = 'test_norm_triangle_inequality[{}]'.format(name)
         yield test, t1 <= t2 + t3
 
