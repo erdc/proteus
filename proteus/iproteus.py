@@ -21,6 +21,21 @@ from proteus import Profiling, Comm, version
 from warnings import *
 import optparse
 import sys
+from IPython.display import display,Markdown
+import inspect
+
+def display_src(python_object):
+    display(Markdown("```Python\n"+inspect.getsource(python_object)+"\n```\n"))
+
+def load_macros(filename,verbose=False):
+    with open(filename,'r') as macros:
+        markdown = ""
+        for line in macros.readlines():
+            if len(line.strip('\n')) and not line.startswith('%'):
+                markdown += "${0}$\n".format(line.strip('\n'))
+        if verbose:
+            print(markdown)
+        display(Markdown(markdown))
 
 usage = "usage: %prog [options] soModule.py [[soFile.sso] [pModule.py nModule.py]]"
 parser = optparse.OptionParser(usage=usage)
@@ -100,7 +115,7 @@ parser.add_option("-l", "--log",
                   action="store",
                   type="int",
                   dest="logLevel",
-                  default=1)    
+                  default=1)
 parser.add_option("-A", "--logAllProcesses",
                   help="Log events from every MPI process",
                   action="store_true",
@@ -143,7 +158,11 @@ parser.add_option("-G","--gatherArchive",
                   dest="gatherArchive",
                   action="store_true",
                   help="""collect data files into single file at end of simulation (convenient but slow on big run)""")
-
+parser.add_option("-s","--subdomainArchives",
+                  default=False,
+                  dest="subdomainArchives",
+                  action="store_true",
+                  help="""write xmf files for every processor's subdomain""")
 parser.add_option("-H","--hotStart",
                   default=False,
                   dest="hotStart",
@@ -184,10 +203,10 @@ log = Profiling.logEvent
 logDir = None
 if opts.dataDir != '':
     if not os.path.exists(opts.dataDir):
-    	try: 
+    	try:
     	     os.mkdir(opts.dataDir)
         except os.error:
-             print "Failed to create: " + opts.dataDir 
+             print "Failed to create: " + opts.dataDir
              opts.dataDir=''
     logDir = opts.dataDir
 
