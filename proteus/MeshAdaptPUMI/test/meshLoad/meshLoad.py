@@ -5,7 +5,7 @@
 from ctypes import *
 from proteus import MeshTools
 from proteus import cmeshTools
-from proteus import MeshAdaptPUMI
+from proteus.MeshAdaptPUMI import MeshAdaptPUMI
 from proteus import Archiver
 from tables import *
 
@@ -14,7 +14,7 @@ from petsc4py import PETSc
 import os
 print os.getcwd()
 
-testDir='src/MeshAdaptPUMI/test/meshLoad/'
+testDir='./'
 cubeMdl=testDir + 'cube.dmg'
 cube670p1=testDir + 'pumi670/cube.smb'
 MeshAdaptPUMI = MeshAdaptPUMI.MeshAdaptPUMI()
@@ -25,7 +25,7 @@ mesh.cmesh = cmeshTools.CMesh()
 MeshAdaptPUMI.ConstructFromSerialPUMIMesh(mesh.cmesh)
 mesh.buildFromC(mesh.cmesh)
 
-print "Done reading in mesh" 
+print "Done reading in mesh"
 print "meshInfo says : \n", mesh.meshInfo()
 
 mesh.writeMeshEnsight("mesh","n")

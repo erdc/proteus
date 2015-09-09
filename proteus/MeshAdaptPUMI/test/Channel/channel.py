@@ -1,10 +1,10 @@
 from math import *
 import proteus.MeshTools
 from proteus import Domain
-from proteus.default_n import *   
+from proteus.default_n import *
 from proteus.Profiling import logEvent
-   
-#  Discretization -- input options  
+
+#  Discretization -- input options
 #Refinement = 20#45min on a single core for spaceOrder=1, useHex=False
 Refinement = 5 #45min on a single core for spaceOrder=1, useHex=False
 genMesh=True
@@ -16,7 +16,7 @@ useRBLES   = 0.0
 useMetrics = 1.0
 applyCorrection=True
 useVF = 1.0
-useOnlyVF = False
+useOnlyVF = True
 redist_Newton = True
 useRANS = 0 # 0 -- None
             # 1 -- K-Epsilon
@@ -24,39 +24,39 @@ useRANS = 0 # 0 -- None
 # Input checks
 if spaceOrder not in [1,2]:
     print "INVALID: spaceOrder" + spaceOrder
-    sys.exit()    
-    
+    sys.exit()
+
 if useRBLES not in [0.0, 1.0]:
-    print "INVALID: useRBLES" + useRBLES 
+    print "INVALID: useRBLES" + useRBLES
     sys.exit()
 
 if useMetrics not in [0.0, 1.0]:
     print "INVALID: useMetrics"
     sys.exit()
-    
-#  Discretization   
+
+#  Discretization
 nd = 3
 if spaceOrder == 1:
     hFactor=1.0
     if useHex:
 	 basis=C0_AffineLinearOnCubeWithNodalBasis
          elementQuadrature = CubeGaussQuadrature(nd,2)
-         elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,2)     	 
+         elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,2)
     else:
     	 basis=C0_AffineLinearOnSimplexWithNodalBasis
          elementQuadrature = SimplexGaussQuadrature(nd,3)
-         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3) 	    
+         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,3)
 elif spaceOrder == 2:
     hFactor=0.5
-    if useHex:    
+    if useHex:
 	basis=C0_AffineLagrangeOnCubeWithNodalBasis
         elementQuadrature = CubeGaussQuadrature(nd,4)
-        elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,4)    
-    else:    
-	basis=C0_AffineQuadraticOnSimplexWithNodalBasis	
+        elementBoundaryQuadrature = CubeGaussQuadrature(nd-1,4)
+    else:
+	basis=C0_AffineQuadraticOnSimplexWithNodalBasis
         elementQuadrature = SimplexGaussQuadrature(nd,4)
         elementBoundaryQuadrature = SimplexGaussQuadrature(nd-1,4)
-    
+
 # Domain and mesh
 L = (0.8,0.2,0.2)
 #he = L[0]/float(4*Refinement-1)
@@ -75,13 +75,13 @@ parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.eleme
 #parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.node
 nLayersOfOverlapForParallel = 0
 structured=False
-if useHex:   
+if useHex:
     nnx=4*Refinement+1
     nny=1*Refinement+1
     nnz=2*Refinement+1
     if quas2D:
         nny=2
-    hex=True    
+    hex=True
     domain = Domain.RectangularDomain(L)
 else:
     boundaries=['left','right','bottom','top','front','back']
@@ -126,11 +126,12 @@ else:
                                                      facetFlags=facetFlags,
                                                      regions=regions,
                                                      regionFlags=regionFlags)
-        #go ahead and add a boundary tags member 
+        #go ahead and add a boundary tags member
         domain.boundaryTags = boundaryTags
         domain.writePoly("mesh")
         domain.writePLY("mesh")
         domain.writeAsymptote("mesh")
+        domain.numAdaptSteps=1
         triangleOptions="VApq1.4q12feena%21.16e" % ((he**3)/6.0,)
 
 logEvent("""Mesh generated using: tetgen -%s %s"""  % (triangleOptions,domain.polyfile+".poly"))
@@ -210,7 +211,7 @@ nu_0  = 1.0e-6
 
 # Air
 rho_1 = 1000.0
-nu_1  = 1.0e-6 
+nu_1  = 1.0e-6
 
 # Surface tension
 sigma_01 = 0.0
@@ -225,7 +226,7 @@ waterLine_z = 0.0
 def signedDistance(x):
 	return (x[0]-waterLine_x)
 #    phi_x = x[0]-waterLine_x
-#    phi_z = x[2]-waterLine_z 
+#    phi_z = x[2]-waterLine_z
 #    if phi_x < 0.0:
 #        if phi_z < 0.0:
 #            return max(phi_x,phi_z)
@@ -236,4 +237,3 @@ def signedDistance(x):
 #            return phi_x
 #        else:
 #            return sqrt(phi_x**2 + phi_z**2)
-

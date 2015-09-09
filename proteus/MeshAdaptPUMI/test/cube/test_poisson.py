@@ -6,7 +6,7 @@ from ctypes import *
 from proteus import Domain
 from proteus import MeshTools
 from proteus import cmeshTools
-from proteus import MeshAdaptPUMI
+from proteus.MeshAdaptPUMI import MeshAdaptPUMI
 from proteus import Archiver
 from tables import *
 
@@ -52,7 +52,7 @@ ns.calculateSolution('poisson_3d_c0p1')
 #cmeshTools.CMesh_FromMesh(mesh)
 
 mesh.buildFromC(mesh.cmesh)
-print "Done reading in mesh" 
+print "Done reading in mesh"
 
 #print "meshInfo says : \n", mesh.meshInfo()
 #mesh.writeMeshEnsight("mesh","n")
@@ -61,4 +61,3 @@ MeshAdaptPUMI.helloworld('Done MeshAdaptPUMI')
 
 #from pyadh import vtkViewers as vtkViewers
 #vtkViewers.viewMesh(mesh2)
-
