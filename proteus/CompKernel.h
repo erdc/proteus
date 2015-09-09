@@ -2504,5 +2504,13 @@ public:
       (dstress[sYX*nSymTen+sYX]*grad_trial[X]+dstress[sYX*nSymTen+sYY]*grad_trial[Y])*grad_test_dV[X] +
       (dstress[sYY*nSymTen+sYX]*grad_trial[X]+dstress[sYY*nSymTen+sYY]*grad_trial[Y])*grad_test_dV[Y];
   }
+  double ExteriorElementBoundaryStressFlux(const double& stressFlux,const double& disp_test_dS)
+  {
+    return stressFlux*disp_test_dS;
+  }
+  double ExteriorElementBoundaryStressFluxJacobian(const double& dstressFlux,const double& disp_test_dS)
+  {
+    return dstressFlux*disp_test_dS;
+  }
 };
 #endif

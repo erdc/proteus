@@ -101,7 +101,7 @@ parser.add_option("-l", "--log",
                   action="store",
                   type="int",
                   dest="logLevel",
-                  default=1)    
+                  default=1)
 parser.add_option("-A", "--logAllProcesses",
                   help="Log events from every MPI process",
                   action="store_true",
@@ -144,7 +144,11 @@ parser.add_option("-G","--gatherArchive",
                   dest="gatherArchive",
                   action="store_true",
                   help="""collect data files into single file at end of simulation (convenient but slow on big run)""")
-
+parser.add_option("-s","--subdomainArchives",
+                  default=False,
+                  dest="subdomainArchives",
+                  action="store_true",
+                  help="""write xmf files for every processor's subdomain""")
 parser.add_option("-H","--hotStart",
                   default=False,
                   dest="hotStart",
@@ -182,15 +186,6 @@ if opts.debug:
     pdb.set_trace()
 
 log = Profiling.logEvent
-logDir = None
-if opts.dataDir != '':
-    if not os.path.exists(opts.dataDir):
-    	try: 
-    	     os.mkdir(opts.dataDir)
-        except os.error:
-             print "Failed to create: " + opts.dataDir 
-             opts.dataDir=''
-    logDir = opts.dataDir
 
 log("Initializing Proteus")
 log("HashDist Version: " + version.hashdist)
@@ -222,6 +217,32 @@ if opts.petscOptionsFile != None:
 Comm.argv = petsc_argv
 comm = Comm.init()
 
+logDir = None
+if opts.dataDir != '':
+    if comm.isMaster() and not os.path.exists(opts.dataDir):
+    	try:
+            os.makedirs(opts.dataDir)
+        except Exception, e:
+            print(
+                "Exiting parun, failed creating dataDir = {0}\n{1}".format(
+                    opts.dataDir,
+                    str(e)))
+            comm.comm.tompi4py().Abort()
+            raise#just in case
+    comm.barrier()
+    if os.path.exists(opts.dataDir):
+        if os.access(opts.dataDir, os.W_OK):
+            logDir = opts.dataDir
+        else:
+            print("Processor {0} cannot write to datatDir = {1}".format(
+                comm.rank(),
+                opts.dataDir))
+            comm.comm.tompi4py().Abort()
+    else:
+        print("Processor {0} cannot access datatDir = {1}".format(
+            comm.rank(),
+            opts.dataDir))
+        comm.comm.tompi4py().Abort()
 
 #blanket import statements can go below here now that petsc4py should be initialized
 from proteus import *
@@ -358,7 +379,7 @@ for p,simFlags in zip(pList,simFlagsList):
         else:
             simFlags['plotOptions'] = {'ensight':{'on':True}}
         #control convention on case file for multiple models, doesn't effect parun right now
-        simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ `comm.rank()`  
+        simFlags['plotOptions']['ensight']['caseFileName']=simFlags['simulationName']+'master'+ `comm.rank()`
 if opts.batchFileName != "":
     log("Reading batch file = ",opts.batchFileName)
     #try to split batch file into executable blocks delimited by
@@ -406,7 +427,7 @@ while running:
         lines = '\n'.join(batchBlocks.pop(0))
         exec lines
         run = True
-        running = len(batchBlocks) > 0        
+        running = len(batchBlocks) > 0
     else:
         userInput = False
         run = True
