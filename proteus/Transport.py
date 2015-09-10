@@ -6335,7 +6335,7 @@ class MultilevelTransport:
             log(memory("global Jacobian and vectors","MultilevelTransport"),level=4)
         log("Building Mesh Transfers",level=2)
         MultilevelProjectionOperatorType = MultilevelProjectionOperators
-        self. meshTransfers = MultilevelProjectionOperatorType(
+        self.meshTransfers = MultilevelProjectionOperatorType(
             mlMesh,
             global_trialSpaceDictList,
             self.offsetListList,
