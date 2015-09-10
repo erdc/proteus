@@ -117,18 +117,6 @@ namespace proteus
 				   int* csrColumnOffsets_eb_w_u,
 				   int* csrColumnOffsets_eb_w_v,
 				   int* csrColumnOffsets_eb_w_w)=0;
-      virtual void moveRigidBody(double  mass,           double* inertiaRef,
-			         double* force, 	 double* moment,
-				 double* disp0, 	 double* disp1,
-				 double* vel0,  	 double* vel1,
-				 double* rot0,  	 double* rot1,
-				 double* angVel0,	 double* angVel1,
-				 double  deltaT,
-				 int*	 linConstraints, int*	 angConstraints,
-				 double  linRelaxFac,	 double  angRelaxFac,
-				 double  linNorm,	 double  angNorm,
-				 int	 iterMax) =0;
-
   };
   
   template<class CompKernelType,
@@ -200,7 +188,7 @@ namespace proteus
     {
       //cek hack/todo need to set E based on reference configuration
       const double strainTrace=(strain[sXX]+strain[sYY]+strain[sZZ]),
-	E=materialProperties[0],   //det_J,//for mesh motion penalize small elements
+	E=materialProperties[0]/det_J,//for mesh motion penalize small elements
 	nu=materialProperties[1];
 
       const double shear = E/(1.0+nu);	
@@ -1073,199 +1061,199 @@ namespace proteus
 
     }
 
-    //----------------------------------------------------------------------------
-    virtual void  moveRigidBody(double  mass,           double* inertiaRef,
-	  		        double* force,          double* moment,
-			        double* disp0,	        double* disp1,
-			        double* vel0,	        double* vel1,
-			        double* rot0,	        double* rot1,
-			        double* angVel0,        double* angVel1,
-			        double  deltaT,
-			        int*    linConstraints, int*    angConstraints,
-			        double  linRelaxFac,    double  angRelaxFac,
-			        double  linNorm,        double  angNorm,
-			        int     iterMax)
-    {			 
-      int i,j,k,l, iter;
-      double inertia0[3*3], inertia1[3*3], res[3], res2[3*3], Ainv[3*3], angVelTen[3*3],RotLHS[3*3];
+    /* //---------------------------------------------------------------------------- */
+    /* virtual void  moveRigidBody(double  mass,           double* inertiaRef, */
+    /*       		        double* force,          double* moment, */
+    /*     		        double* disp0,	        double* disp1, */
+    /*     		        double* vel0,	        double* vel1, */
+    /*     		        double* rot0,	        double* rot1, */
+    /*     		        double* angVel0,        double* angVel1, */
+    /*     		        double  deltaT, */
+    /*     		        int*    linConstraints, int*    angConstraints, */
+    /*     		        double  linRelaxFac,    double  angRelaxFac, */
+    /*     		        double  linNorm,        double  angNorm, */
+    /*     		        int     iterMax) */
+    /* {			  */
+    /*   int i,j,k,l, iter; */
+    /*   double inertia0[3*3], inertia1[3*3], res[3], res2[3*3], Ainv[3*3], angVelTen[3*3],RotLHS[3*3]; */
 
-      //std::cout<<" lin const = "<<linConstraints[0]<<"  "<<linConstraints[1]<<"  "<<linConstraints[2]<<std::endl; 
-      //std::cout<<" ang const = "<<angConstraints[0]<<"  "<<angConstraints[1]<<"  "<<angConstraints[2]<<std::endl; 
+    /*   //std::cout<<" lin const = "<<linConstraints[0]<<"  "<<linConstraints[1]<<"  "<<linConstraints[2]<<std::endl;  */
+    /*   //std::cout<<" ang const = "<<angConstraints[0]<<"  "<<angConstraints[1]<<"  "<<angConstraints[2]<<std::endl;  */
 
-      //-----------------------------------------------
-      //   Linear balance
-      //   Integrated using Crank-Nicolson (midpoint)
-      //-----------------------------------------------
-      for (i = 0; i < 3; i++)
-      {
-         if(linConstraints[i] >= 1) 
-	 {
-	   vel1[i]  = 0.0;
-	   disp1[i] = disp0[i];
-	   res[i] = 0.0;
-	 }  
-	 else	 	
-	 {
-            res[i] = force[i] - (mass/deltaT)*(vel1[i]-vel0[i]);
-	    vel1[i]  += linRelaxFac*(deltaT/mass)*res[i];
+    /*   //----------------------------------------------- */
+    /*   //   Linear balance */
+    /*   //   Integrated using Crank-Nicolson (midpoint) */
+    /*   //----------------------------------------------- */
+    /*   for (i = 0; i < 3; i++) */
+    /*   { */
+    /*      if(linConstraints[i] >= 1)  */
+    /*      { */
+    /*        vel1[i]  = 0.0; */
+    /*        disp1[i] = disp0[i]; */
+    /*        res[i] = 0.0; */
+    /*      }   */
+    /*      else	 	 */
+    /*      { */
+    /*         res[i] = force[i] - (mass/deltaT)*(vel1[i]-vel0[i]); */
+    /*         vel1[i]  += linRelaxFac*(deltaT/mass)*res[i]; */
 	    	    
-	    disp1[i] = disp0[i] + 0.5*deltaT*(vel1[i] + vel0[i]);
-	 }
-      }
+    /*         disp1[i] = disp0[i] + 0.5*deltaT*(vel1[i] + vel0[i]); */
+    /*      } */
+    /*   } */
   
-      linNorm = 0.0;
-      for (i = 0; i < 3; i++)
-      {
-         linNorm += res[i]*res[i]; 
-      }
-      linNorm = sqrt(linNorm);
+    /*   linNorm = 0.0; */
+    /*   for (i = 0; i < 3; i++) */
+    /*   { */
+    /*      linNorm += res[i]*res[i];  */
+    /*   } */
+    /*   linNorm = sqrt(linNorm); */
              
-      //---------------------------------------
-      // Get inertia tensor - at time level 0
-      //---------------------------------------      
-      for (i = 0; i < 3; i++)
-      {
-        for (j = 0; j < 3; j++)
-        {
-	  inertia0[i*3+j] = 0.0;
-          for (k = 0; k < 3; k++)
-          {
-            for (l = 0; l < 3; l++)
-            {
-                inertia0[i*3+j] += rot0[i*3+k]*inertiaRef[k*3+l]*rot0[j*3+l];
-	    }
-	  }
-        }
-      }
+    /*   //--------------------------------------- */
+    /*   // Get inertia tensor - at time level 0 */
+    /*   //---------------------------------------       */
+    /*   for (i = 0; i < 3; i++) */
+    /*   { */
+    /*     for (j = 0; j < 3; j++) */
+    /*     { */
+    /*       inertia0[i*3+j] = 0.0; */
+    /*       for (k = 0; k < 3; k++) */
+    /*       { */
+    /*         for (l = 0; l < 3; l++) */
+    /*         { */
+    /*             inertia0[i*3+j] += rot0[i*3+k]*inertiaRef[k*3+l]*rot0[j*3+l]; */
+    /*         } */
+    /*       } */
+    /*     } */
+    /*   } */
 
-      //---------------------------------------
-      for (iter = 0; iter<iterMax; iter++)
-      { 
-        //---------------------------------------
-        // Get inertia tensor - at time level 1
-        //---------------------------------------           
-        for (i = 0; i < 3; i++)
-        {
-          for (j = 0; j < 3; j++)
-          {
-	    inertia1[i*3+j] = 0.0;
-            for (k = 0; k < 3; k++)
-            {
-              for (l = 0; l < 3; l++)
-              {
-                 inertia1[i*3+j] += rot1[i*3+k]*inertiaRef[k*3+l]*rot1[j*3+l];
-	      }
-	    }
-          }
-        }
-        //---------------------------------------
-        // Get angular residuals
-        //---------------------------------------  
-        for (i = 0; i < 3; i++)
-        {
-          if(angConstraints[i] >= 1) 
-  	  {
-	    res[i] =0.0;
+    /*   //--------------------------------------- */
+    /*   for (iter = 0; iter<iterMax; iter++) */
+    /*   {  */
+    /*     //--------------------------------------- */
+    /*     // Get inertia tensor - at time level 1 */
+    /*     //---------------------------------------            */
+    /*     for (i = 0; i < 3; i++) */
+    /*     { */
+    /*       for (j = 0; j < 3; j++) */
+    /*       { */
+    /*         inertia1[i*3+j] = 0.0; */
+    /*         for (k = 0; k < 3; k++) */
+    /*         { */
+    /*           for (l = 0; l < 3; l++) */
+    /*           { */
+    /*              inertia1[i*3+j] += rot1[i*3+k]*inertiaRef[k*3+l]*rot1[j*3+l]; */
+    /*           } */
+    /*         } */
+    /*       } */
+    /*     } */
+    /*     //--------------------------------------- */
+    /*     // Get angular residuals */
+    /*     //---------------------------------------   */
+    /*     for (i = 0; i < 3; i++) */
+    /*     { */
+    /*       if(angConstraints[i] >= 1)  */
+    /*       { */
+    /*         res[i] =0.0; */
 	   
-            for (j = 0; j < 3; j++)
-            {	   
-	      inertia1[i*3+j] = 0.0;
-	      inertia1[j*3+i] = 0.0;
-	    }
-	    inertia1[i*3+i] = 1.0;
-	  }
-	  else
-	  {      
-            res[i] = moment[i];
-	    for (j = 0; j < 3; j++)
-            {
-	      res[i] -= (inertia1[i*3+j]*angVel1[j] - inertia0[i*3+j]*angVel0[j])/deltaT;
-            }  
-	  }	
-        }
+    /*         for (j = 0; j < 3; j++) */
+    /*         {	    */
+    /*           inertia1[i*3+j] = 0.0; */
+    /*           inertia1[j*3+i] = 0.0; */
+    /*         } */
+    /*         inertia1[i*3+i] = 1.0; */
+    /*       } */
+    /*       else */
+    /*       {       */
+    /*         res[i] = moment[i]; */
+    /*         for (j = 0; j < 3; j++) */
+    /*         { */
+    /*           res[i] -= (inertia1[i*3+j]*angVel1[j] - inertia0[i*3+j]*angVel0[j])/deltaT; */
+    /*         }   */
+    /*       }	 */
+    /*     } */
 
-        angNorm = 0.0;
-        for (i = 0; i < 3; i++)
-        {
-          angNorm += res[i]*res[i]; 
-        }
-        angNorm = sqrt(angNorm);
+    /*     angNorm = 0.0; */
+    /*     for (i = 0; i < 3; i++) */
+    /*     { */
+    /*       angNorm += res[i]*res[i];  */
+    /*     } */
+    /*     angNorm = sqrt(angNorm); */
 	          
-        //---------------------------------------
-        //  Compute angular velocity
-        //---------------------------------------      
-        Invert3by3(inertia1,Ainv);
+    /*     //--------------------------------------- */
+    /*     //  Compute angular velocity */
+    /*     //---------------------------------------       */
+    /*     Invert3by3(inertia1,Ainv); */
       
-        for (i = 0; i < 3; i++)
-        {
-	    for (j = 0; j < 3; j++)
-            {
-               angVel1[i] += (angRelaxFac*deltaT)*Ainv[i*3+j]*res[j];
-	    }
-        }
+    /*     for (i = 0; i < 3; i++) */
+    /*     { */
+    /*         for (j = 0; j < 3; j++) */
+    /*         { */
+    /*            angVel1[i] += (angRelaxFac*deltaT)*Ainv[i*3+j]*res[j]; */
+    /*         } */
+    /*     } */
  
-        //-------------------------------------------------
-        //  Compute rotation matrix
-        //
-        //  Integrating using Crank-Nicolson (midpoint)
-        //  According to Hughes-Winget the rotation matrix 
-        //  remains orthonormal (a proper rotation matrix) 
-        //  
-        //-------------------------------------------------
-        angVelTen[0*3+0] =  0.0;
-        angVelTen[0*3+1] = -0.5*(angVel0[2]+angVel1[2]);
-        angVelTen[0*3+2] =  0.5*(angVel0[1]+angVel1[1]);
+    /*     //------------------------------------------------- */
+    /*     //  Compute rotation matrix */
+    /*     // */
+    /*     //  Integrating using Crank-Nicolson (midpoint) */
+    /*     //  According to Hughes-Winget the rotation matrix  */
+    /*     //  remains orthonormal (a proper rotation matrix)  */
+    /*     //   */
+    /*     //------------------------------------------------- */
+    /*     angVelTen[0*3+0] =  0.0; */
+    /*     angVelTen[0*3+1] = -0.5*(angVel0[2]+angVel1[2]); */
+    /*     angVelTen[0*3+2] =  0.5*(angVel0[1]+angVel1[1]); */
      
-        angVelTen[1*3+0] =  0.5*(angVel0[2]+angVel1[2]);
-        angVelTen[1*3+1] =  0.0;      
-        angVelTen[1*3+2] = -0.5*(angVel0[0]+angVel1[0]);
+    /*     angVelTen[1*3+0] =  0.5*(angVel0[2]+angVel1[2]); */
+    /*     angVelTen[1*3+1] =  0.0;       */
+    /*     angVelTen[1*3+2] = -0.5*(angVel0[0]+angVel1[0]); */
       
-        angVelTen[2*3+0] = -0.5*(angVel0[1]+angVel1[1]);
-        angVelTen[2*3+1] =  0.5*(angVel0[0]+angVel1[0]);
-        angVelTen[2*3+2] =  0.0;
+    /*     angVelTen[2*3+0] = -0.5*(angVel0[1]+angVel1[1]); */
+    /*     angVelTen[2*3+1] =  0.5*(angVel0[0]+angVel1[0]); */
+    /*     angVelTen[2*3+2] =  0.0; */
 
-        for (i = 0; i < 3; i++)
-        {
-          for (j = 0; j < 3; j++)
-          {
-	    res2[i*3+j] = - (rot1[i*3+j]-rot0[i*3+j])/deltaT;
+    /*     for (i = 0; i < 3; i++) */
+    /*     { */
+    /*       for (j = 0; j < 3; j++) */
+    /*       { */
+    /*         res2[i*3+j] = - (rot1[i*3+j]-rot0[i*3+j])/deltaT; */
 	 
-            for (k = 0; k < 3; k++)
-            {
-               res2[i*3+j] += angVelTen[i*3+k]*0.5*(rot1[k*3+j]+rot0[k*3+j]);
-            }
-	  }
-        }
+    /*         for (k = 0; k < 3; k++) */
+    /*         { */
+    /*            res2[i*3+j] += angVelTen[i*3+k]*0.5*(rot1[k*3+j]+rot0[k*3+j]); */
+    /*         } */
+    /*       } */
+    /*     } */
 	
-        for (i = 0; i < 3; i++)
-        {
-          for (j = 0; j < 3; j++)
-          {
-	    RotLHS[i*3+j] = -0.5*angVelTen[i*3+j];
-	  }
-	  RotLHS[i*3+i] += 1.0/deltaT;
-        }
+    /*     for (i = 0; i < 3; i++) */
+    /*     { */
+    /*       for (j = 0; j < 3; j++) */
+    /*       { */
+    /*         RotLHS[i*3+j] = -0.5*angVelTen[i*3+j]; */
+    /*       } */
+    /*       RotLHS[i*3+i] += 1.0/deltaT; */
+    /*     } */
 		
-        Invert3by3(RotLHS,Ainv);
+    /*     Invert3by3(RotLHS,Ainv); */
 
-        for (i = 0; i < 3; i++)
-        {
-          for (j = 0; j < 3; j++)
-          {
-            for (k = 0; k < 3; k++)
-            {
-              rot1[i*3+j] += Ainv[i*3+k]*res2[k*3+j];
-	    }  
-          }
-        }
+    /*     for (i = 0; i < 3; i++) */
+    /*     { */
+    /*       for (j = 0; j < 3; j++) */
+    /*       { */
+    /*         for (k = 0; k < 3; k++) */
+    /*         { */
+    /*           rot1[i*3+j] += Ainv[i*3+k]*res2[k*3+j]; */
+    /*         }   */
+    /*       } */
+    /*     } */
        
-      } // End of newton loop    
+    /*   } // End of newton loop     */
 
-      //std::cout<<" lin const = "<<linConstraints[0]<<"  "<<linConstraints[1]<<"  "<<linConstraints[2]<<std::endl; 
-      //std::cout<<" ang const = "<<angConstraints[0]<<"  "<<angConstraints[1]<<"  "<<angConstraints[2]<<std::endl; 
-    }
+    /*   //std::cout<<" lin const = "<<linConstraints[0]<<"  "<<linConstraints[1]<<"  "<<linConstraints[2]<<std::endl;  */
+    /*   //std::cout<<" ang const = "<<angConstraints[0]<<"  "<<angConstraints[1]<<"  "<<angConstraints[2]<<std::endl;  */
+    /* } */
 
-  };//MoveMesh
+  };                            //MoveMesh
 
   inline MoveMesh_base* newMoveMesh(int nSpaceIn,
 				int nQuadraturePoints_elementIn,

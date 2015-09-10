@@ -79,7 +79,8 @@ class NS_base:  # (HasTraits):
         if so.useOneArchive:
             self.femSpaceWritten={}
             tmp  = Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
-                                        gatherAtClose=opts.gatherArchive,hotStart=opts.hotStart)
+                                        gatherAtClose=opts.gatherArchive,hotStart=opts.hotStart,
+                                        useGlobalXMF=(not opts.subdomainArchives))
             self.ar = dict([(i,tmp) for i in range(len(self.pList))])
         elif len(self.pList) == 1:
             self.ar = {0:Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
@@ -88,9 +89,10 @@ class NS_base:  # (HasTraits):
             self.ar = dict([(i,Archiver.XdmfArchive(opts.dataDir,p.name,useTextArchive=opts.useTextArchive,
                                                     gatherAtClose=opts.gatherArchive,hotStart=opts.hotStart)) for i,p in enumerate(self.pList)])
         #by default do not save quadrature point info
-        self.archive_q          = dict([(i,False) for i in range(len(self.pList))]);
-        self.archive_ebq_global = dict([(i,False) for i in range(len(self.pList))]);
-        self.archive_ebqe       = dict([(i,False) for i in range(len(self.pList))]);
+        self.archive_q                 = dict([(i,False) for i in range(len(self.pList))]);
+        self.archive_ebq_global        = dict([(i,False) for i in range(len(self.pList))]);
+        self.archive_ebqe              = dict([(i,False) for i in range(len(self.pList))]);
+        self.archive_pod_residuals = dict([(i,False) for i in range(len(self.pList))]);
         if simFlagsList != None:
             assert len(simFlagsList) == len(self.pList), "len(simFlagsList) = %s should be %s " % (len(simFlagsList),len(self.pList))
             for index in range(len(self.pList)):
@@ -104,6 +106,8 @@ class NS_base:  # (HasTraits):
                         elif len(recType) > 1 and recType[0] == 'ebqe':
                             self.archive_ebqe[index] = True
                         #
+                        elif recType[0] == 'pod_residuals':
+                            self.archive_pod_residuals[index]=True
                         else:
                             log("Warning Numerical Solution storeQuantity = %s not recognized won't archive" % quant)
                     #
@@ -341,7 +345,8 @@ class NS_base:  # (HasTraits):
         self.modelList=[]
         self.lsList=[]
         self.nlsList=[]
-        self.modelSpinUpList = []
+        from collections import OrderedDict
+        self.modelSpinUp = OrderedDict()
         #
         for p in pList:
             p.coefficients.opts = self.opts
@@ -410,7 +415,8 @@ class NS_base:  # (HasTraits):
                 ##\todo logic needs to handle element boundary partition too
                 parallelUsesFullOverlap=(n.nLayersOfOverlapForParallel > 0 or n.parallelPartitioningType == MeshTools.MeshParallelPartitioningTypes.node),
                 par_duList=model.par_duList,
-                solver_options_prefix=linear_solver_options_prefix)
+                solver_options_prefix=linear_solver_options_prefix,
+                computeEigenvalues = n.computeEigenvalues)
             self.lsList.append(multilevelLinearSolver)
             Profiling.memory("MultilevelLinearSolver for "+p.name)
             log("Setting up MultilevelNonLinearSolver for "+p.name)
@@ -458,8 +464,8 @@ class NS_base:  # (HasTraits):
             model.viewer = Viewers.V_base(p,n,s)
             Profiling.memory("MultilevelNonlinearSolver for"+p.name)
             #collect models to be used for spin up
-            if index in so.modelSpinUpList:
-                self.modelSpinUpList.append(model)
+        for index in so.modelSpinUpList:
+            self.modelSpinUp[index] = self.modelList[index]
         log("Finished setting up models and solvers")
         if self.opts.save_dof:
             for m in self.modelList:
@@ -506,7 +512,8 @@ class NS_base:  # (HasTraits):
         for index,p,n,m,simOutput in zip(range(len(self.modelList)),self.pList,self.nList,self.modelList,self.simOutputList):
             if self.opts.hotStart:
                 log("Setting initial conditions from hot start file for "+p.name)
-                tCount = len(self.ar[index].tree.getroot()[-1][-1]) - 1
+                tCount = int(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Name'])
+                self.ar[index].n_datasets = tCount+1
                 time = float(self.ar[index].tree.getroot()[-1][-1][-1][0].attrib['Value'])
                 if len(self.ar[index].tree.getroot()[-1][-1]) > 1:
                     dt = time - float(self.ar[index].tree.getroot()[-1][-1][-2][0].attrib['Value'])
@@ -548,9 +555,17 @@ class NS_base:  # (HasTraits):
         else:
             self.tCount=0#time step counter
         log("Attaching models and running spin-up step if requested")
-        for p,n,m,simOutput in zip(self.pList,self.nList,self.modelList,self.simOutputList):
+        self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
+        spinup = []
+        for index,m in self.modelSpinUp.iteritems():
+            spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
+        for index,m in enumerate(self.modelList):
+            if index not in self.modelSpinUp:
+                spinup.append((self.pList[index],self.nList[index],m,self.simOutputList[index]))
+        for p,n,m,simOutput in spinup:
+            log("Attaching models to model "+p.name)
             m.attachModels(self.modelList)
-            if m in self.modelSpinUpList:
+            if m in self.modelSpinUp.values():
                 log("Spin-Up Estimating initial time derivative and initializing time history for model "+p.name)
                 #now the models are attached so we can calculate the coefficients
                 for lm,lu,lr in zip(m.levelModelList,
@@ -570,7 +585,7 @@ class NS_base:  # (HasTraits):
                     #calculate consistent time derivative
                     lm.estimate_mt()
                     #post-process velocity
-                    #lm.calculateAuxiliaryQuantitiesAfterStep()
+                    lm.calculateAuxiliaryQuantitiesAfterStep()
                 log("Spin-Up Choosing initial time step for model "+p.name)
                 m.stepController.initialize_dt_model(self.tnList[0],self.tnList[1])
                 #mwf what if user wants spin-up to be over (t_0,t_1)?
@@ -595,6 +610,7 @@ class NS_base:  # (HasTraits):
                     if n.restrictFineSolutionToAllMeshes:
                         log("Using interpolant of fine mesh an all meshes")
                         self.restrictFromFineMesh(m)
+                    self.postStep(m)
                     self.systemStepController.modelStepTaken(m,self.tnList[0])
                     log("Spin-Up Step Taken, Model step t=%12.5e, dt=%12.5e for model %s" % (m.stepController.t_model,
                                                                                              m.stepController.dt_model,
@@ -639,14 +655,12 @@ class NS_base:  # (HasTraits):
                 lm.getResidual(lu,lr)
             log("Initializing time history for model step controller")
             m.stepController.initializeTimeHistory()
+        self.systemStepController.initialize_dt_system(self.tnList[0],self.tnList[1]) #may reset other dt's
+        for m in self.modelList:
             log("Auxiliary variable calculations for model %s" % (m.name,))
             for av in self.auxiliaryVariables[m.name]:
                 av.calculate_init()
-            if not self.opts.cacheArchive:
-                self.ar[index].sync()
-        self.systemStepController.initialize_dt_system(self.tnList[0],self.tnList[1]) #may reset other dt's
         log("Starting time stepping",level=0)
-        self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
         systemStepFailed=False
         stepFailed=False
 
@@ -773,8 +787,6 @@ class NS_base:  # (HasTraits):
                             self.tCount+=1
                             for index,model in enumerate(self.modelList):
                                 self.archiveSolution(model,index,self.systemStepController.t_system)
-                            if not self.opts.cacheArchive:
-                                self.ar[index].sync()
                 #end system split operator sequence
                 if systemStepFailed:
                     log("System Step Failed")
@@ -805,15 +817,11 @@ class NS_base:  # (HasTraits):
                     self.tCount+=1
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
-                    if not self.opts.cacheArchive:
-                        self.ar[index].sync()
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
                 self.tCount+=1
                 for index,model in enumerate(self.modelList):
                     self.archiveSolution(model,index,self.systemStepController.t_system_last)
-                if not self.opts.cacheArchive:
-                    self.ar[index].sync()
             if systemStepFailed:
                 break
         log("Finished calculating solution",level=3)
@@ -910,6 +918,23 @@ class NS_base:  # (HasTraits):
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=True,meshChanged=True)
 
+        #for nonlinear POD
+        if self.archive_pod_residuals[index] == True:
+            res_space = {}; res_mass = {}
+            for ci in range(model.levelModelList[-1].coefficients.nc):
+                res_space[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
+                model.levelModelList[-1].getSpatialResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
+                res_mass[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
+                model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_space,res_name_base='spatial_residual')
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_mass,res_name_base='mass_residual')
+
+        if not self.opts.cacheArchive:
+            if not self.so.useOneArchive:
+                self.ar[index].sync()
+            else:
+                if index == len(self.ar) - 1:
+                    self.ar[index].sync()
     ##save model's solution values to archive
     def archiveSolution(self,model,index,t=None):
         if self.archiveFlag == ArchiveFlags.UNDEFINED:
@@ -960,8 +985,24 @@ class NS_base:  # (HasTraits):
             model.levelModelList[-1].archiveExteriorElementBoundaryQuadratureValues(self.ar[index],t,self.tCount,
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=False,meshChanged=True)
+        #for nonlinear POD
+        if self.archive_pod_residuals[index] == True:
+            res_space = {}; res_mass = {}
+            for ci in range(model.levelModelList[-1].coefficients.nc):
+                res_space[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
+                model.levelModelList[-1].getSpatialResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
+                res_mass[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
+                model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_mass[ci])
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],t,self.tCount,res_space,res_name_base='spatial_residual')
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],t,self.tCount,res_mass,res_name_base='mass_residual')
+
         if not self.opts.cacheArchive:
-            self.ar[index].sync()
+            if not self.so.useOneArchive:
+                self.ar[index].sync()
+            else:
+                if index == len(self.ar) - 1:
+                    self.ar[index].sync()
+
     ## clean up archive
     def closeArchive(self,model,index):
         if self.archiveFlag == None:
