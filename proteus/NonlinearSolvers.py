@@ -876,12 +876,11 @@ class POD_HyperReduced_Newton(Newton):
         else:
             self.r=r
         self.computeResidual(u,r,b)
-        if self.use_hyper:
-            if self.rs == None:
-                self.rs = Vec(self.F.dim)
-            if self.rt == None:
-                self.rt = Vec(self.F.dim)
-            self.computeHyperResiduals(u,self.rs,self.rt)
+        if self.rs == None:
+            self.rs = Vec(self.F.dim)
+        if self.rt == None:
+            self.rt = Vec(self.F.dim)
+        self.computeHyperResiduals(u,self.rs,self.rt)
         self.its = 0
         self.norm_r0 = self.norm(r)
         self.norm_r = self.norm_r0
