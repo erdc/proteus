@@ -3067,9 +3067,6 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   int nElements_owned_subdomain(elements_subdomain_owned.size()),
     nElements_owned_new=0;
   MPI_Allreduce(&nElements_owned_subdomain,&nElements_owned_new,1,MPI_INT,MPI_SUM,PROTEUS_COMM_WORLD);
-  std::cout<<"nElements_owned_new "<<nElements_owned_new
-	   <<'\t'
-	   <<"nElements_global "<<nElements_global<<std::endl;
   assert(nElements_owned_new == nElements_global);
   PetscLogEventEnd(build_subdomains_reread_elements_event,0,0,0,0);
   int build_subdomains_send_marked_elements_event;
@@ -3262,9 +3259,6 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   int nElementBoundaries_owned_subdomain=elementBoundaries_subdomain_owned.size(),
     nElementBoundaries_owned_new=0;
   MPI_Allreduce(&nElementBoundaries_owned_subdomain,&nElementBoundaries_owned_new,1,MPI_INT,MPI_SUM,PROTEUS_COMM_WORLD);
-  std::cout<<nElementBoundaries_owned_new
-	   <<'\t'
-	   <<nElementBoundaries_global<<std::endl;
   assert(nElementBoundaries_owned_new == nElementBoundaries_global);
 
   //now get the element boundaries on the outside of the star
@@ -3427,9 +3421,6 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   int nEdges_owned_subdomain=edges_subdomain_owned.size(),
     nEdges_owned_new=0;
   MPI_Allreduce(&nEdges_owned_subdomain,&nEdges_owned_new,1,MPI_INT,MPI_SUM,PROTEUS_COMM_WORLD);
-  std::cout<<nEdges_owned_new
-	   <<'\t'
-	   <<nEdges_global<<std::endl;
   assert(nEdges_owned_new == nEdges_global);
   //done with edge file
   //

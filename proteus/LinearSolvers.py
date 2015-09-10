@@ -315,7 +315,13 @@ class LU(LinearSolver):
                                                      self.n,
                                                      self.work,
                                                      5*self.n)
-
+            eigen_mags = numpy.sqrt(self.eigenvalues_r**2 + self.eigenvalues_i**2)
+            logEvent("Minimum eigenvalue magnitude"+`eigen_mags.min()`)
+            logEvent("Maximum eigenvalue magnitude"+`eigen_mags.max()`)
+            logEvent("Minimum real part of eigenvalue "+`self.eigenvalues_r.min()`)
+            logEvent("Maximum real part of eigenvalue "+`self.eigenvalues_r.max()`)
+            logEvent("Minimum complex part of eigenvalue "+`self.eigenvalues_i.min()`)
+            logEvent("Maximum complex part of eigenvalue "+`self.eigenvalues_i.max()`)
 class PETSc(LinearSolver):
     def __init__(self,L,par_L,prefix=None):
         import flcbdfWrappers
@@ -430,14 +436,11 @@ class KSP_petsc4py(LinearSolver):
             elif Preconditioner == SimpleNavierStokes2D:
                 self.preconditioner = SimpleNavierStokes2D(par_L,prefix)
                 self.pc = self.preconditioner.pc
-            elif Preconditioner == SimpleNavierStokes3D_null_pp:
-                self.preconditioner = SimpleNavierStokes3D(par_L,prefix)
-                self.pc = self.preconditioner.pc
-            elif Preconditioner == SimpleNavierStokes2D_null_pp:
-                self.preconditioner = SimpleNavierStokes2D(par_L,prefix)
-                self.pc = self.preconditioner.pc
             elif Preconditioner == SimpleDarcyFC:
                 self.preconditioner = SimpleDarcyFC(par_L)
+                self.pc = self.preconditioner.pc
+            elif Preconditioner == NavierStokesPressureCorrection:
+                self.preconditioner = NavierStokesPressureCorrection(par_L)
                 self.pc = self.preconditioner.pc
         assert type(L).__name__ == 'SparseMatrix', "petsc4py PETSc can only be called with a local sparse matrix"
         assert isinstance(par_L,ParMat_petsc4py)
@@ -458,6 +461,13 @@ class KSP_petsc4py(LinearSolver):
         self.Lshell.setPythonContext(self.matcontext)
         #self.ksp.setOperators(self.petsc_L,self.Lshell)#,self.petsc_L)
         #
+        try:
+            if self.preconditioner.hasNullSpace:
+                self.petsc_L.setOption(p4pyPETSc.Mat.Option.SYMMETRIC, True)
+                self.petsc_L.setNullSpace(self.preconditioner.nsp)
+                self.ksp.setNullSpace(self.preconditioner.nsp)
+        except:
+            pass
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
         self.ksp.atol = self.atol_r; self.ksp.rtol= self.rtol_r ; self.ksp.max_it = self.maxIts
         if convergenceTest == 'r-true':
@@ -467,7 +477,7 @@ class KSP_petsc4py(LinearSolver):
                 ksp.buildResidual(self.r_work)
                 truenorm = self.r_work.norm()
                 logEvent("        KSP it %i norm(r) = %e; atol=%e rtol=%e " % (its,truenorm,ksp.atol,ksp.rtol))
-                if its == 0: 
+                if its == 0:
                     self.rnorm0 = truenorm
                     return False
                 else:
@@ -528,9 +538,15 @@ class KSP_petsc4py(LinearSolver):
             self.pccontext.par_u = par_u
         if self.matcontext != None:
             self.matcontext.par_b = par_b
-        
+
         if not initialGuessIsZero:
             self.ksp.setInitialGuessNonzero(True)
+        try:
+            if self.preconditioner.hasNullSpace:
+                self.preconditioner.nsp.remove(par_b)
+                self.ksp.setNullSpace(self.preconditioner.nsp)
+        except:
+            pass
         self.ksp.solve(par_b,par_u)
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
@@ -548,7 +564,7 @@ class KSP_petsc4py(LinearSolver):
         return self.ksp.converged
     def failed(self):
         failedFlag = LinearSolver.failed(self)
-        failedFlag = failedFlag or (not self.ksp.converged) 
+        failedFlag = failedFlag or (not self.ksp.converged)
         return failedFlag
 
     def info(self):
@@ -566,7 +582,6 @@ class SimpleNavierStokes3D:
                                         stop=L_range[0]+neqns,
                                         step=4,
                                         dtype="i")
-        print "pressure",self.pressureDOF
         velocityDOF = []
         for start in range(1,4):
             velocityDOF.append(numpy.arange(start=L_range[0]+start,
@@ -574,7 +589,6 @@ class SimpleNavierStokes3D:
                                          step=4,
                                          dtype="i"))
         self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
-        print "velocity",self.velocityDOF
         self.pc = p4pyPETSc.PC().create()
         if prefix:
             self.pc.setOptionsPrefix(prefix)
@@ -630,7 +644,6 @@ class SimpleNavierStokes2D:
                                         stop=L_range[0]+neqns,
                                         step=3,
                                         dtype="i")
-        print "pressure",self.pressureDOF
         velocityDOF = []
         for start in range(1,3):
             velocityDOF.append(numpy.arange(start=L_range[0]+start,
@@ -638,7 +651,6 @@ class SimpleNavierStokes2D:
                                          step=3,
                                          dtype="i"))
         self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
-        print "velocity",self.velocityDOF
         self.pc = p4pyPETSc.PC().create()
         if prefix:
             self.pc.setOptionsPrefix(prefix)
@@ -657,17 +669,28 @@ class SimpleNavierStokes2D:
                 self.kspList = self.pc.getFieldSplitSubKSP()
                 self.kspList[1].setNullSpace(self.nsp)
 
+class NavierStokesPressureCorrection:
+    def __init__(self,L,prefix=None):
+        self.L=L
+        self.pc = p4pyPETSc.PC().create()
+        if prefix:
+            self.pc.setOptionsPrefix(prefix)
+        self.pc.setFromOptions()
+        self.hasNullSpace=True
+        self.nsp = p4pyPETSc.NullSpace().create(constant=True,
+                                                comm=p4pyPETSc.COMM_WORLD)
+        self.L.setOption(p4pyPETSc.Mat.Option.SYMMETRIC, True)
+        self.L.setNullSpace(self.nsp)
+    def setUp(self):
+        pass
+
 class SimpleDarcyFC:
     def __init__(self,L):
         L_sizes = L.getSizes()
         L_range = L.getOwnershipRange()
-        print "L_sizes",L_sizes
         neqns = L_sizes[0][0]
-        print "neqns",neqns
         self.saturationDOF = numpy.arange(L_range[0],L_range[0]+neqns/2,dtype="i")
-        #print "saturation",self.saturationDOF
         self.pressureDOF = numpy.arange(L_range[0]+neqns/2,L_range[0]+neqns,dtype="i")
-        #print "pressure",self.pressureDOF
         self.pc = p4pyPETSc.PC().create()
         self.pc.setType('fieldsplit')
         self.isp = p4pyPETSc.IS()

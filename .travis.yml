@@ -1,0 +1,40 @@
+language: python
+
+sudo: false
+
+env:
+- TEST_PROFILE="test.proteus.yaml"
+
+python:
+- 2.7
+
+addons:
+  apt:
+    packages:
+    - gfortran
+    - cmake
+    - swig
+    - libblas-dev
+    - liblapack-dev
+
+before_install:
+- wget https://dl.dropboxusercontent.com/u/26353144/hashdist_travis.tgz
+- tar xzf hashdist_travis.tgz 
+- mv .hashdist $HOME
+
+install:
+- make hashdist
+- make stack
+- make stack/default.yaml
+- make install | tee install.out | tail -f -s 60.0
+- export PATH=$PWD/linux2/bin:$PATH
+- export SSL_CERT_DIR=/etc/ssl/certs
+- ls $SSL_CERT_DIR
+
+script:
+- nosetests -vv --traverse-namespace proteus/tests proteus/tests/ci
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
