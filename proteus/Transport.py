@@ -1328,6 +1328,18 @@ class OneLevelTransport(NonlinearEquation):
                          self.nDOF_test_element[ci],
                          self.nDOF_trial_element[cj]),
                         'd')
+        #for POD
+        self.elementLinearResidual = [numpy.zeros(
+                (self.mesh.nElements_global,
+                 self.nDOF_test_element[ci]),
+                'd') for ci in range(self.nc)]
+        self.elementLinearJacobian = {}
+        for ci in self.elementJacobian.keys():
+            self.elementLinearJacobian[ci] = {}
+            for cj in self.elementJacobian[ci].keys():
+                self.elementLinearJacobian[ci][cj]= self.elementJacobian[ci][cj].copy()
+        #need to add terms for boundaries too maybe
+
         log(memory("element Jacobian","OneLevelTransport"),level=4)
         self.fluxJacobian = {}
         self.fluxJacobian_eb = {}
@@ -5953,6 +5965,376 @@ class OneLevelTransport(NonlinearEquation):
             for cj in range(len(self.dirichletConditionsForceDOF)):#
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     r[self.offset[cj]+self.stride[cj]*dofN] = 0
+
+    def calculateLinearElementResidual(self):
+        """Calculate the element residuals for linear terms for POD"""
+        import pdb
+        #pdb.set_trace()
+        for ci in range(self.nc):
+            self.elementLinearResidual[ci].fill(0.0)
+        for ci  in self.coefficients.advection.keys():
+            if 'nonlinear' not in self.coefficients.advection[ci].values():
+                cfemIntegrals.updateAdvection_weak(self.q[('f',ci)],
+                                                   self.q[('grad(w)*dV_f',ci)],
+                                                   self.elementLinearResidual[ci])
+        for ci,ckDict in self.coefficients.diffusion.iteritems():
+            for ck in ckDict.keys():
+                if 'nonlinear' not in ckDict.values():
+                    if self.numericalFlux == None or self.numericalFlux.mixedDiffusion[ci] == False:
+                            if self.sd:
+                                cfemIntegrals.updateDiffusion_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                      self.q[('a',ci,ck)],
+                                                                      self.q[('grad(phi)',ck)],
+                                                                      self.q[('grad(w)*dV_a',ck,ci)],
+                                                                      self.elementLinearResidual[ci])
+                            elif self.lowmem:
+                                cfemIntegrals.updateDiffusion_weak_lowmem(self.q[('a',ci,ck)],
+                                                                          self.q[('grad(phi)',ck)],
+                                                                          self.q[('grad(w)*dV_a',ck,ci)],
+                                                                          self.elementLinearResidual[ci])
+                            else:
+                                cfemIntegrals.updateDiffusion_weak(self.q[('a',ci,ck)],
+                                                                   self.q[('grad(phi)Xgrad(w)*dV_a',ck,ci)],
+                                                                   self.elementLinearResidual[ci])
+
+                    else:
+                        if not self.q.has_key(('grad(w)*dV_f',ck)):
+                            self.q[('grad(w)*dV_f',ck)] = self.q[('grad(w)*dV_a',ci,ck)]
+                        if 'rho_split' in dir(self.numericalFlux):
+                            rho_split = self.numericalFlux.rho_split
+                        else:
+                            rho_split = 0
+                        if self.sd:
+                            #tjp need to zero velocity because this just updates
+                            #import pdb
+                            #pdb.set_trace()
+                            self.q[('velocity',ck)].fill(0.0)
+                            cfemIntegrals.updateDiffusion_MixedForm_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                            self.numericalFlux.aTilde[(ci,ck)],
+                                                                            self.numericalFlux.qV[ck],
+                                                                            self.q[('grad(w)*dV_f',ck)],
+                                                                            self.q[('velocity',ck)],#added for ldg coupling tjp
+                                                                            self.elementLinearResidual[ci],
+                                                                            rho_split)
+                        else:
+                            cfemIntegrals.updateDiffusion_MixedForm_weak(self.numericalFlux.aTilde[(ci,ck)],
+                                                                         self.numericalFlux.qV[ck],
+                                                                         self.q[('grad(w)*dV_f',ck)],
+                                                                         self.elementLinearResidual[ci])
+                #end nonlinear check
+            #end ck loop for potentials
+        #end diffusion check 
+        for ci in self.coefficients.reaction.keys():
+            if 'nonlinear' not in self.coefficients.reaction[ci].values():
+                cfemIntegrals.updateReaction_weak(self.q[('r',ci)],
+                                                  self.q[('w*dV_r',ci)],
+                                                  self.elementLinearResidual[ci])
+        for ci in self.coefficients.hamiltonian.keys():
+            if 'nonlinear' not in self.coefficients.hamiltonial[ci].values():
+                cfemIntegrals.updateHamiltonian_weak(self.q[('H',ci)],
+                                                     self.q[('w*dV_H',ci)],
+                                                     self.elementLinearResidual[ci])
+        if len(self.coefficients.stress.keys())>0:
+            assert False, "POD not yet setup to handle problems with nonzero stress term"
+            cfemIntegrals.updateStress_weak(self.q['sigma'],
+                                            self.q[('grad(w)*dV_sigma',0)],
+                                            self.elementResidual[0],
+                                            self.elementResidual[1],
+                                            self.elementResidual[2])
+        if  self.stabilization != None and not self.stabilizationIsNonlinear:
+            for ci in range(self.nc):
+                for cj in self.coefficients.stencil[ci]:
+                    cfemIntegrals.updateSubgridError(self.q[('subgridError',cj)],
+                                                     self.q[('Lstar*w*dV',cj,ci)],
+                                                     self.elementLinearResidual[ci])
+                    #now incorporate gradient stabilization if exists
+                    if self.stabilization.usesGradientStabilization == True:
+                        #mwf hack for now assume only term surviving gradient of
+                        #L*w_h are mass and reaction terms
+                        if self.lowmem:
+                            cfemIntegrals.updateNumericalDiffusion_lowmem(self.q[('dmt_sge',ci,cj)],#check this
+                                                                          self.q[('grad(subgridError)',ci)],
+                                                                          self.q[('grad(w)*dV_f',ci)],
+                                                                          self.elementLinearResidual[ci])
+                            #now try to manually insert to double check
+                            #mwf also need dr_sge ...
+                            cfemIntegrals.updateNumericalDiffusion_lowmem(self.q[('dr',ci,cj)],#check this
+                                                                          self.q[('grad(subgridError)',ci)],
+                                                                          self.q[('grad(w)*dV_f',ci)],
+                                                                          self.elementLinearResidual[ci])
+                        else:
+                            assert False, "need self.q[('grad(subgridError)Xgrad(w)*dV_numDiff',ci,ci)] if not self.lowmem "
+
+        if self.shockCapturing != None and False: #assume for now that shock capturing is always nonlinear
+            for ci in self.shockCapturing.components:
+                if self.lowmem:
+                    cfemIntegrals.updateNumericalDiffusion_lowmem(self.q[('numDiff',ci,ci)],
+                                                                  self.q[('grad(u)',ci)],
+                                                                  self.q[('grad(w)*dV_numDiff',ci,ci)],
+                                                                  self.elementLinearResidual[ci])
+                else:
+                    cfemIntegrals.updateNumericalDiffusion(self.q[('numDiff',ci,ci)],
+                                                           self.q[('grad(u)Xgrad(w)*dV_numDiff',ci,ci)],
+                                                           self.elementLinearResidual[ci])
+        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
+            for ci in self.coefficients.advection.keys():
+                if 'nonlinear' not in self.coefficients.advection[ci].values():
+                    if (self.numericalFlux.advectiveNumericalFlux.has_key(ci) and
+                        self.numericalFlux.advectiveNumericalFlux[ci]) == True:
+                        #cek do we let the numerical flux decide if interior is updated? yes we do. no we don't
+                        if self.numericalFlux.hasInterior:
+                            cfemIntegrals.updateInteriorElementBoundaryFlux(self.mesh.interiorElementBoundariesArray,
+                                                                            self.mesh.elementBoundaryElementsArray,
+                                                                            self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                            self.ebq_global[('advectiveFlux',ci)],
+                                                                            self.ebq[('w*dS_f',ci)],
+                                                                            self.elementLinearResidual[ci])
+                        cfemIntegrals.updateExteriorElementBoundaryFlux(self.mesh.exteriorElementBoundariesArray,
+                                                                        self.mesh.elementBoundaryElementsArray,
+                                                                        self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                        self.ebqe[('advectiveFlux',ci)],
+                                                                        self.ebqe[('w*dS_f',ci)],
+                                                                        self.elementLinearResidual[ci])
+            for ci in self.coefficients.diffusion.keys():
+                if (self.numericalFlux.diffusiveNumericalFlux.has_key(ci) and
+                    self.numericalFlux.diffusiveNumericalFlux[ci]) == True:
+                    for ck in self.coefficients.diffusion[ci]:
+                        if 'nonlinear' not in self.coefficients.diffusion[ci][ck].values():
+                            if self.numericalFlux.hasInterior:
+                                cfemIntegrals.updateInteriorElementBoundaryFlux(self.mesh.interiorElementBoundariesArray,
+                                                                                self.mesh.elementBoundaryElementsArray,
+                                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                self.ebq_global[('diffusiveFlux',ck,ci)],
+                                                                                self.ebq[('w*dS_a',ck,ci)],
+                                                                                self.elementLinearResidual[ci])
+                            cfemIntegrals.updateExteriorElementBoundaryFlux(self.mesh.exteriorElementBoundariesArray,
+                                                                            self.mesh.elementBoundaryElementsArray,
+                                                                            self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                            self.ebqe[('diffusiveFlux',ck,ci)],
+                                                                            self.ebqe[('w*dS_a',ck,ci)],
+                                                                            self.elementLinearResidual[ci])
+                            if self.numericalFlux.includeBoundaryAdjoint:
+                                if self.sd:
+                                    if self.numericalFlux.hasInterior:
+                                        cfemIntegrals.updateInteriorElementBoundaryDiffusionAdjoint_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                                                       self.mesh.interiorElementBoundariesArray,
+                                                                                                       self.mesh.elementBoundaryElementsArray,
+                                                                                                       self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                       self.numericalFlux.boundaryAdjoint_sigma,
+                                                                                                       self.ebq[('u',ck)],
+                                                                                                       self.ebq['n'],
+                                                                                                       self.ebq[('a',ci,ck)],
+                                                                                                       self.ebq[('grad(v)',ci)],#cek should be grad(w)
+                                                                                                       self.ebq[('dS_u',ci)],
+                                                                                                       self.elementLinearResidual[ci])
+                                    if not self.numericalFlux.includeBoundaryAdjointInteriorOnly: #added to only eval interior tjp
+                                        cfemIntegrals.updateExteriorElementBoundaryDiffusionAdjoint_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                                                       self.numericalFlux.isDOFBoundary[ck],
+                                                                                                       self.mesh.exteriorElementBoundariesArray,
+                                                                                                       self.mesh.elementBoundaryElementsArray,
+                                                                                                       self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                       self.numericalFlux.boundaryAdjoint_sigma,
+                                                                                                       self.ebqe[('u',ck)],
+                                                                                                       self.numericalFlux.ebqe[('u',ck)],
+                                                                                                       self.ebqe['n'],
+                                                                                                       self.numericalFlux.ebqe[('a',ci,ck)],
+                                                                                                       self.ebqe[('grad(v)',ci)],#cek grad w
+                                                                                                       self.ebqe[('dS_u',ci)],
+                                                                                                       self.elementLinearResidual[ci])
+                                else:
+                                    if self.numericalFlux.hasInterior:
+                                        cfemIntegrals.updateInteriorElementBoundaryDiffusionAdjoint(self.mesh.interiorElementBoundariesArray,
+                                                                                                    self.mesh.elementBoundaryElementsArray,
+                                                                                                    self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                    self.numericalFlux.boundaryAdjoint_sigma,
+                                                                                                    self.ebq[('u',ck)],
+                                                                                                    self.ebq['n'],
+                                                                                                    self.ebq[('a',ci,ck)],
+                                                                                                    self.ebq[('grad(v)',ci)],#cek grad w
+                                                                                                    self.ebq[('dS_u',ci)],
+                                                                                                    self.elementLinearResidual[ci])
+                                    if not self.numericalFlux.includeBoundaryAdjointInteriorOnly: #added to only eval interior tjp
+                                        cfemIntegrals.updateExteriorElementBoundaryDiffusionAdjoint(self.numericalFlux.isDOFBoundary[ck],
+                                                                                                    self.mesh.exteriorElementBoundariesArray,
+                                                                                                    self.mesh.elementBoundaryElementsArray,
+                                                                                                    self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                    self.numericalFlux.boundaryAdjoint_sigma,
+                                                                                                    self.ebqe[('u',ck)],
+                                                                                                    self.numericalFlux.ebqe[('u',ck)],
+                                                                                                    self.ebqe['n'],
+                                                                                                    self.numericalFlux.ebqe[('a',ci,ck)],
+                                                                                                    self.ebqe[('grad(v)',ci)],#cek grad w
+                                                                                                    self.ebqe[('dS_u',ci)],
+                                                                                                    self.elementLinearResidual[ci])
+            for ci in self.coefficients.hamiltonian.keys():
+                if 'nonlinear' not in self.coefficients.hamiltonian[ci].values():
+                    if (self.numericalFlux.HamiltonJacobiNumericalFlux.has_key(ci) and
+                        self.numericalFlux.HamiltonJacobiNumericalFlux[ci] == True):
+                        if self.numericalFlux.hasInterior:
+                            cfemIntegrals.updateInteriorTwoSidedElementBoundaryFlux(self.mesh.interiorElementBoundariesArray,
+                                                                                    self.mesh.elementBoundaryElementsArray,
+                                                                                    self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                    self.ebq[('HamiltonJacobiFlux',ci)],
+                                                                                    self.ebq[('w*dS_H',ci)],
+                                                                                    self.elementLinearResidual[ci])
+                        #1-sided on exterior boundary
+                        cfemIntegrals.updateExteriorElementBoundaryFlux(self.mesh.exteriorElementBoundariesArray,
+                                                                        self.mesh.elementBoundaryElementsArray,
+                                                                        self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                        self.ebqe[('HamiltonJacobiFlux',ci)],
+                                                                        self.ebqe[('w*dS_H',ci)],
+                                                                        self.elementLinearResidual[ci])
+            for ci in self.coefficients.stress.keys():
+                assert False, "POD not implemented for nonzero stress term"
+                cfemIntegrals.updateExteriorElementBoundaryStressFlux(self.mesh.exteriorElementBoundariesArray,
+                                                                      self.mesh.elementBoundaryElementsArray,
+                                                                      self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                      self.ebqe[('stressFlux',ci)],
+                                                                      self.ebqe[('w*dS_sigma',ci)],
+                                                                      self.elementLinearResidual[ci])
+        else:
+            #cek this will go away
+            #cek need to clean up how BC's interact with numerical fluxes
+            #outflow <=> zero diffusion, upwind advection
+            #mixedflow <=> you set, otherwise calculated as free
+            #setflow <=
+            for ci,flag in self.fluxBoundaryConditions.iteritems():
+                if (flag == 'outFlow' or
+                    flag == 'mixedFlow' or
+                    flag == 'setFlow'):
+                    if self.coefficients.advection.has_key(ci):
+                        if 'nonlinear' not in self.coefficients.advection[ci].values():
+                            cfemIntegrals.updateExteriorElementBoundaryFlux(self.mesh.exteriorElementBoundariesArray,
+                                                                            self.mesh.elementBoundaryElementsArray,
+                                                                            self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                            self.ebqe[('advectiveFlux',ci)],
+                                                                            self.ebqe[('w*dS_f',ci)],
+                                                                            self.elementLinearResidual[ci])
+                if (flag == 'mixedFlow' or
+                    flag == 'setFlow'):
+                    if self.coefficients.diffusion.has_key(ci):
+                        for ck in self.coefficients.diffusion[ci]:
+                            if 'nonlinear' not in self.coefficients.diffusion[ci][ck].values():
+                                #
+                                cfemIntegrals.updateExteriorElementBoundaryFlux(self.mesh.exteriorElementBoundariesArray,
+                                                                                self.mesh.elementBoundaryElementsArray,
+                                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                self.ebqe[('diffusiveFlux',ck,ci)],
+                                                                                self.ebqe[('w*dS_a',ck,ci)],
+                                                                                self.elementLinearResidual[ci])
+
+        #if any time terms are nonlinear then assume all of them are for now
+        massIsNonlinear=False
+        for ci in self.coefficients.mass.keys():
+            if 'nonlinear' in self.coefficients.mass[ci].values():
+                massIsNonlinear = True
+        if not massIsNonlinear:
+            self.timeIntegration.calculateElementSpatialResidual(self.elementLinearResidual)
+        if self.stabilization and not self.stabilizationIsNonlinear:
+            self.stabilization.accumulateSubgridMassHistory(self.q)
+        if not massIsNonlinear:
+            for ci in self.coefficients.mass.keys():
+                cfemIntegrals.updateMass_weak(self.q[('mt',ci)],
+                                              self.q[('w*dV_m',ci)],
+                                              self.elementLinearResidual[ci])
+        if self.dirichletNodeSetList != None:
+            for cj,nodeSetList in self.dirichletNodeSetList.iteritems():
+                for eN in range(self.mesh.nElements_global):
+                    for j in nodeSetList[eN]:
+                        J = self.u[cj].femSpace.dofMap.l2g[eN,j]
+                        self.weakFactor=3.0
+                        self.elementLinearResidual[cj][eN,j] = (self.u[cj].dof[J]-self.dirichletValues[cj][(eN,j)])*self.weakFactor*self.mesh.elementDiametersArray[eN]
+
+    def getLinearResidual(self,u,r):
+        """
+        Calculate the portion of the element residuals associated with the linear terms and assemble into a global residual
+        This is being used right now to test nonlinear pod and deim and is inefficient
+        """
+        r.fill(0.0)
+        #Load the Dirichlet conditions
+        for cj in range(self.nc):
+            for dofN,g in self.dirichletConditions[cj].DOFBoundaryConditionsDict.iteritems():
+                self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        if self.forceStrongConditions:
+            for cj in range(len(self.dirichletConditionsForceDOF)):
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                    self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        #Load the unknowns into the finite element dof
+        self.timeIntegration.calculateU(u)
+        self.setUnknowns(self.timeIntegration.u)
+        self.calculateCoefficients()
+        self.calculateLinearElementResidual()
+        self.scale_dt = False
+        log("Element linear residual",level=9,data=self.elementLinearResidual)
+        if self.timeIntegration.dt < 1.0e-8*self.mesh.h:
+            self.scale_dt = True
+            log("Rescaling residual for small time steps")
+        else:
+            self.scale_dt = False
+        for ci in range(self.nc):
+            if self.scale_dt:
+                self.elementLinearResidual[ci]*=self.timeIntegration.dt
+            cfemIntegrals.updateGlobalResidualFromElementResidual(self.offset[ci],
+                                                                  self.stride[ci],
+                                                                  self.l2g[ci]['nFreeDOF'],
+                                                                  self.l2g[ci]['freeLocal'],
+                                                                  self.l2g[ci]['freeGlobal'],
+                                                                  self.elementLinearResidual[ci],
+                                                                  r);
+        log("Global mass residual",level=9,data=r)
+        if self.forceStrongConditions:#
+            for cj in range(len(self.dirichletConditionsForceDOF)):#
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                    r[self.offset[cj]+self.stride[cj]*dofN] = 0
+
+    def getNonlinearResidual(self,u,r):
+        """
+        Calculate the portion of the element residuals associated with the nonlinear terms and assemble into a global residual
+        This is being used right now to test nonlinear pod and deim and is inefficient. It computes the nonlinear terms by
+        computing the full residual and subtracting the linear terms
+        """
+        r.fill(0.0)
+        #Load the Dirichlet conditions
+        for cj in range(self.nc):
+            for dofN,g in self.dirichletConditions[cj].DOFBoundaryConditionsDict.iteritems():
+                self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        if self.forceStrongConditions:
+            for cj in range(len(self.dirichletConditionsForceDOF)):
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                    self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        #Load the unknowns into the finite element dof
+        self.timeIntegration.calculateU(u)
+        self.setUnknowns(self.timeIntegration.u)
+        self.calculateCoefficients()
+        self.calculateElementResidual()
+        self.calculateLinearElementResidual()
+        elementNonlinearResidual = {}
+        for ci in range(self.nc):
+            elementNonlinearResidual[ci]=np.copy(self.elementResidual[ci])
+            elementNonlinearResidual[ci]-= self.elementLinearResidual[ci]
+
+        self.scale_dt = False
+        log("Element nonlinear residual",level=9,data=elementNonlinearResidual)
+        if self.timeIntegration.dt < 1.0e-8*self.mesh.h:
+            self.scale_dt = True
+            log("Rescaling residual for small time steps")
+        else:
+            self.scale_dt = False
+        for ci in range(self.nc):
+            if self.scale_dt:
+                elementNonlinearResidual[ci]*=self.timeIntegration.dt
+            cfemIntegrals.updateGlobalResidualFromElementResidual(self.offset[ci],
+                                                                  self.stride[ci],
+                                                                  self.l2g[ci]['nFreeDOF'],
+                                                                  self.l2g[ci]['freeLocal'],
+                                                                  self.l2g[ci]['freeGlobal'],
+                                                                  elementNonlinearResidual[ci],
+                                                                  r);
+        log("Global residual",level=9,data=r)
+        if self.forceStrongConditions:#
+            for cj in range(len(self.dirichletConditionsForceDOF)):#
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                    r[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
 
 #end Transport definition
 class MultilevelTransport:
