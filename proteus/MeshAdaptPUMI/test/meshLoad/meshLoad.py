@@ -14,7 +14,7 @@ from petsc4py import PETSc
 import os
 print os.getcwd()
 
-testDir='./'
+testDir='./proteus/MeshAdaptPUMI/test/meshLoad/'
 cubeMdl=testDir + 'cube.dmg'
 cube670p1=testDir + 'pumi670/cube.smb'
 MeshAdaptPUMI = MeshAdaptPUMI.MeshAdaptPUMI()

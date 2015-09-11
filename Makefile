@@ -242,7 +242,7 @@ check:
 
 	@echo "************************"
 	@echo "SCOREC-Proteus Test"
-	${PROTEUS_ENV} python src/MeshAdaptPUMI/test/meshLoad/meshLoad.py
+	${PROTEUS_ENV} python proteus/MeshAdaptPUMI/test/meshLoad/meshLoad.py
 	@echo "************************"
 
 
