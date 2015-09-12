@@ -8,6 +8,7 @@
 #include <apfDynamicMatrix.h>
 
 #include <iostream>
+#include <fstream>
 
 #define  PSR_IDX  0
 #define  VEX_IDX  1
@@ -20,7 +21,7 @@
 int approx_order = 2; //if using Lagrange shape functions. Serendipity is automatic
 int int_order = approx_order*2; //determines number of integration points
 double nu_0,nu_1,rho_0,rho_1;
-double a_kl = 0.5;
+double a_kl = 0.5; //flux term weight
 
 
 //used to attach error estimates to nodes
@@ -66,6 +67,11 @@ void getProps(double &rho_0, double &rho_1,double &nu_0, double &nu_1)
   //air
   rho_1 = 1.205;
   nu_1 = 1.5e-5; 
+  
+  //debug
+  rho_1 = rho_0;
+  nu_1 = nu_0; 
+  
   return;
 }
 
@@ -108,18 +114,19 @@ void MeshAdaptPUMIDrvr::get_local_error()
     apf::setScalar(visc, ent, 0,visc_val);
   }
   m->end(iter);
-  //apf::writeVtkFiles("viscosity", m);
+  //apf::writeVtkFiles("velocity", m);
 
 
   //Start computing element quantities
   int numqpt; //number of quadrature points
-  int nshl,nshl_sol; //number of local shape functions
+  int nshl; //number of local shape functions
   int elem_type; //what type of topology
   double weight; //value container for the weight at each qpt
   double Jdet;
   int numcomps = apf::countComponents(solution);
-  apf::FieldShape* err_shape = apf::getLagrange(approx_order);
-  apf::FieldShape* sol_shape = apf::getShape(solution);
+  //apf::FieldShape* err_shape = apf::getLagrange(approx_order);
+  //apf::FieldShape* err_shape = apf::getSerendipity();
+  apf::FieldShape* err_shape = apf::getHierarchic();
   apf::EntityShape* elem_shape;
   apf::Vector3 qpt; //container for quadrature points
   apf::MeshElement* element;
@@ -127,12 +134,13 @@ void MeshAdaptPUMIDrvr::get_local_error()
 
   apf::Matrix3x3 J; //actual Jacobian matrix
   apf::Matrix3x3 invJ; //inverse of Jacobian
-  apf::NewArray <double> shpval, shpval_sol; //array to store shape function values at quadrature points
-  apf::NewArray <apf::Vector3> shgval, shgval_sol; //array to store shape function values at quadrature points
+  apf::NewArray <double> shpval; //array to store shape function values at quadrature points
+  apf::NewArray <double> shpval_temp; //array to store shape function values at quadrature points temporarily
+  apf::NewArray <apf::Vector3> shgval; //array to store shape function values at quadrature points
 
   apf::DynamicMatrix invJ_copy;
-  apf::NewArray <apf::DynamicVector> shdrv,shdrv_sol;
-  apf::NewArray <apf::DynamicVector> shgval_copy, shgval_sol_copy;
+  apf::NewArray <apf::DynamicVector> shdrv;
+  apf::NewArray <apf::DynamicVector> shgval_copy;
   
   iter = m->begin(nsd); //loop over elements
 int testcount = 0;
@@ -148,15 +156,18 @@ int testcount = 0;
       exit(0); 
     }
     nshl=apf::countElementNodes(err_shape,elem_type);
-    nshl_sol=apf::countElementNodes(sol_shape,elem_type);
+    shgval.allocate(nshl);
+    shpval_temp.allocate(nshl);
+
+    int hier_off = 4; //there is an offset that needs to be made to isolate the hierarchic edge modes
+    nshl = nshl - hier_off;
+
     if(testcount==0 && comm_rank==0)
-      std::cout<<"nshls "<<nshl<<" "<<nshl_sol<<" numqpt "<<numqpt<<std::endl;
-    shpval.allocate(nshl);  shgval.allocate(nshl); shgval_copy.allocate(nshl); shdrv.allocate(nshl);
-    shpval_sol.allocate(nshl_sol);  shgval_sol.allocate(nshl_sol); shgval_sol_copy.allocate(nshl_sol); shdrv_sol.allocate(nshl_sol);
+      std::cout<<"nshls "<<nshl<<" numqpt "<<numqpt<<std::endl;
+    shpval.allocate(nshl);   shgval_copy.allocate(nshl); shdrv.allocate(nshl);
 
     //LHS Matrix Initialization
     int ndofs = nshl*nsd;
-    int ndofs_sol = nshl_sol*nsd;
     Mat K; //matrix size depends on nshl, which may vary from element to element
     MatCreate(PETSC_COMM_SELF,&K);
     //MatSetType(K,MATSBAIJ); //should be symmetric sparse
@@ -187,25 +198,47 @@ int testcount = 0;
 
       //first get the shape function values for error shape functions
       elem_shape = err_shape->getEntityShape(elem_type);
-      elem_shape->getValues(NULL,NULL,qpt,shpval);
+      elem_shape->getValues(NULL,NULL,qpt,shpval_temp);
       elem_shape->getLocalGradients(NULL,NULL,qpt,shgval); 
 
-      for(int i =0;i<nshl;i++){ //get the true derivative
-        shgval_copy[i] = apf::fromVector(shgval[i]);
+      for(int i =0;i<nshl;i++){ //get the true derivative and copy only the edge modes for use
+        shgval_copy[i] = apf::fromVector(shgval[i+hier_off]);
+        shpval[i] = shpval_temp[i+hier_off];
         apf::multiply(shgval_copy[i],invJ_copy,shdrv[i]); 
       }
 
+      //Debugging Information
+      //if(testcount==0) std::cout<<"Local shape gradients "<<shgval[0]<<" "<<shgval[1]<<" "<<shgval[2]<<" "<<shgval[3]<< std::endl;
+      if(testcount==0) std::cout<<"Global shape gradients "<<shdrv[0]<<" "<<shdrv[1]<<" "<<shdrv[2]<<" "<<shdrv[3]<<" "<<shdrv[4]<<" "<<shdrv[5]<<std::endl;
+      if(testcount==0) std::cout<<std::scientific<<std::setprecision(15)<< "qpt #"<< k << " value "<<qpt<<std::endl;
+      apf::Adjacent dbg_vadj;
+      m->getAdjacent(ent,0,dbg_vadj);
+      if(testcount==0 && k==0){
+         std::cout<<"adjacent verts ";
+         apf::Vector3 testpt;
+         for(int test_count=0;test_count<4;test_count++){
+           m->getPoint(dbg_vadj[test_count],0,testpt);
+           std::cout<<testpt<<" ";
+          }
+          std::cout<<std::endl;
+      }
+      if(testcount==0) std::cout<<"Jacobian "<<J<<std::endl;
+      if(testcount==0) std::cout<<"Jdet "<<Jdet<<std::endl;
+      if(testcount==0) std::cout<<"invJ "<<invJ<<std::endl;
+      if(testcount==0) std::cout<<"Shape function"<<shpval[0]<<" "<<shpval[1]<<" "<<shpval[2]<<" "<<shpval[3]<<" "<<shpval[4]<<" "<<shpval[5]<<std::endl;
+      if(testcount==0) std::cout<<"visc_val "<<visc_val<<std::endl;
+      if(testcount==0) std::cout<<"weight "<<weight<<std::endl;
+      
        
       //obtain viscosity value
       visc_elem = apf::createElement(visc,element); //at vof currently
       visc_val = apf::getScalar(visc_elem,qpt);
 
-      //test visocosity values at qpts
+      //test viscosity values at qpts
 //      apf::Element* vof_elem; 
 //      vof_elem = apf::createElement(voff,element); //at vof currently
 //      apf::Vector3 xyz;
 //      apf::mapLocalToGlobal(element,qpt,xyz);
-
 //      if(comm_rank==0 && k ==0 ) std::cout<<"VOF "<<apf::getScalar(vof_elem,qpt)<< " Viscosity at qpt " << visc_val<<" at "<<xyz<<std::endl;
 
       //Left-Hand Side
@@ -218,7 +251,7 @@ int testcount = 0;
           for(int j=0;j<nsd;j++){
             temp+=shdrv[s][j]*shdrv[t][j];
           }
-          term1[s][t] = temp*weight;
+          term1[s][t] = temp*weight*visc_val;
         }
       } 
       int idx[nshl]; //indices for PETSc Mat insertion
@@ -234,7 +267,7 @@ int testcount = 0;
         for(int j=0; j< nsd;j++){
           for(int s=0;s<nshl;s++){
             for(int t=0;t<nshl;t++){
-              term2[s][t] = shdrv[s][j]*shdrv[t][i]*weight;
+              term2[s][t] = shdrv[s][j]*shdrv[t][i]*weight*visc_val;
             }
           }
           for(int count=0;count<nshl;count++){
@@ -245,32 +278,39 @@ int testcount = 0;
         }
       } //end 2nd term loop
 
-      //solution shape functions
-      elem_shape = sol_shape->getEntityShape(elem_type);
-      elem_shape->getValues(NULL,NULL,qpt,shpval_sol);
-      elem_shape->getLocalGradients(NULL,NULL,qpt,shgval_sol); 
-
-      for(int i =0;i<nshl_sol;i++){ //get the true derivative
-        shgval_sol_copy[i] = apf::fromVector(shgval_sol[i]);
-        apf::multiply(shgval_sol_copy[i],invJ_copy,shdrv_sol[i]); 
-      }
-
       //Get RHS
       apf::Vector3 vel_vect;
       apf::Matrix3x3 grad_vel;
+
+      apf::getVector(velo_elem,qpt,vel_vect);
+      apf::getVectorGrad(velo_elem,qpt,grad_vel);
+      //vector gradient is given in the transpose of the usual definition, need to retranspose it
+      grad_vel = apf::transpose(grad_vel);
+      if(testcount==0){
+        apf::Vector3 xyz;
+        apf::mapLocalToGlobal(element,qpt,xyz);
+        std::cout<<"Local "<<qpt<<" Global "<<xyz<<std::endl;
+        std::cout<<"Velocity "<<vel_vect<<" Gradient "<<grad_vel<<std::endl;
+        std::cout<<"Pressure "<<apf::getScalar(pres_elem,qpt)<<std::endl;
+      }
+
       for( int i = 0; i<nsd; i++){
         double temp_vect[nshl];
         for( int s=0;s<nshl;s++){
           idx[s] = i*nshl+s;
 
           temp_vect[s] = 0*shpval[s]; //force term
+          //a(u,v) and c(u,u,v) term
           for(int j=0;j<nsd;j++){
-            apf::getVector(velo_elem,qpt,vel_vect);
-            apf::getVectorGrad(velo_elem,qpt,grad_vel);
-            temp_vect[s] += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i])+shpval[s]*grad_vel[i][j]*vel_vect[j];
+            temp_vect[s] += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
+            //temp_vect[s] += -shpval[s]*grad_vel[i][j]*vel_vect[j];
+            if(testcount==0 && k ==0 && i==2){
+              std::cout<<"idx[s] "<<idx[s] << " Value "<< temp_vect[s]<<" Components "<<visc_val<<" "<<shdrv[s][j]<<" "<<grad_vel[i][j]<<" "<<grad_vel[j][i]<<" indices "<<j<<" "<<i<<std::endl;
+            }
+              
           }
           //need to scale pressure by density
-          temp_vect[s] += getMPvalue(apf::getScalar(pres_elem,qpt),1.0/rho_0,1.0/rho_1)*shdrv[s][i]; //pressure term
+          //temp_vect[s] += getMPvalue(apf::getScalar(pres_elem,qpt),1.0/rho_0,1.0/rho_1)*shdrv[s][i]; //pressure term
 
           temp_vect[s] = temp_vect[s]*weight;
         } //end loop over number of shape functions
@@ -289,7 +329,7 @@ testcount++;
  
     if(comm_rank==0 && testcount==1){ 
       MatView(K,PETSC_VIEWER_STDOUT_SELF);
-      std::cout<<" NOW VECTOR" <<std::endl;
+      std::cout<<" NOW VECTOR with just a(.,.)" <<std::endl;
       VecView(F,PETSC_VIEWER_STDOUT_SELF);
     }
    
@@ -297,9 +337,10 @@ testcount++;
     double* bflux;
     int F_idx[ndofs];
     bflux = (double*) calloc(ndofs,sizeof(double));
-    getBoundaryFlux(m,ent,voff,visc,pref,velf,bflux); 
-//    std::cout<<"Bflux Result "<<std::endl;
-//    for(int s=0;s<ndofs;s++) std::cout<<bflux[s]<<std::endl;
+    if(testcount==1){ getBoundaryFlux(m,ent,voff,visc,pref,velf,bflux); 
+    std::cout<<"Bflux Result "<<std::endl;
+    for(int s=0;s<ndofs;s++) std::cout<<bflux[s]<<std::endl;
+    }
     for(int s=0;s<ndofs;s++){
       F_idx[s]=s;
     }
@@ -313,33 +354,60 @@ testcount++;
     VecSetUp(coef);
 
     if(testcount==1 && comm_rank==0){
-/*
+
+/* Test the solver
     for(int z=0;z<ndofs;z++){
       for(int y=0;y<ndofs;y++){
         if(z==y)
-          MatSetValue(K,z,y,1,INSERT_VALUES);
+          MatSetValue(K,z,y,1+z*ndofs,INSERT_VALUES);
+        else if(y==z+1 || y==z-1)
+          MatSetValue(K,z,y,(1+z*ndofs)/3,INSERT_VALUES);
         else
           MatSetValue(K,z,y,0,INSERT_VALUES);
       }
+      VecSetValue(F,z,z,INSERT_VALUES);
     }
     MatAssemblyBegin(K,MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(K,MAT_FINAL_ASSEMBLY);
-    MatView(K,PETSC_VIEWER_STDOUT_SELF);
-    //}
+    VecAssemblyBegin(F);
+    VecAssemblyEnd(F);
 */
+//Save Temporarily for Debugging
+      std::ofstream myfile ("stiffness.csv");
+      std::ofstream myfile2 ("force.csv");
+      std::ofstream myfilegsl("stiffness.txt");
+      myfile<<std::scientific<<std::setprecision(15);
+      myfile2<<std::scientific<<std::setprecision(15);
+      myfilegsl<<std::scientific<<std::setprecision(15);
+      PetscScalar matstor;  
+      PetscScalar vecstor;  
+      int idxr[ndofs], idxc[ndofs];
+      for(int ii=0;ii<ndofs;ii++){
+        idxr[ii]=ii;
+        for(int jj=0;jj<ndofs;jj++){
+          idxc[jj]=jj;
+          MatGetValues(K,1,&idxr[ii],1,&idxc[jj],&matstor);
+          myfile<<matstor<<","; 
+          myfilegsl<<matstor<<std::endl;
+        }
+        myfile<<std::endl;
+        VecGetValues(F,1,&idxr[ii],&vecstor);
+        myfile2<<vecstor<<std::endl;
+      }
+      myfile.close();
+
+    MatView(K,PETSC_VIEWER_STDOUT_SELF);
+    VecView(F,PETSC_VIEWER_STDOUT_SELF);
+
     KSP ksp; //initialize solver context
     KSPCreate(PETSC_COMM_SELF,&ksp);
-    //KSPSetOperators(ksp,K,K,SAME_PRECONDITIONER);
     KSPSetOperators(ksp,K,K);
     KSPSetType(ksp,KSPPREONLY);
     PC pc;
+    //PCSetOperators(pc,K,K);
     KSPGetPC(ksp,&pc);
     PCSetType(pc,PCLU);
     KSPSetFromOptions(ksp);
-
-//    if(testcount==1 && comm_rank==0){
-      //std::cout<<" Post Boundary" <<std::endl;
-      //VecView(F,PETSC_VIEWER_STDOUT_SELF);
 
       std::cout<<"Final error "<<std::endl;
       KSPSolve(ksp,F,coef);
@@ -366,8 +434,10 @@ void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::
     int nsd = m->getDimension();
     int nshl;
     apf::NewArray <double> shpval;
+    apf::NewArray <double> shpval_temp;
 
-    apf::FieldShape* err_shape = apf::getLagrange(approx_order);
+    //apf::FieldShape* err_shape = apf::getLagrange(approx_order);
+    apf::FieldShape* err_shape = apf::getHierarchic();
     apf::EntityShape* elem_shape;
 
     //loop over element faces
@@ -375,7 +445,7 @@ void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::
     apf::Adjacent neighbors;
     apf::MeshEntity* bent;
     apf::MeshElement* b_elem;
-    apf::Vector3 bqpt,bqptl;
+    apf::Vector3 bqpt,bqptl,bqptshp;
 
     double weight, Jdet;
     apf::Matrix3x3 J;
@@ -384,9 +454,12 @@ void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::
 
     //Shape functions of the region and not the boundaries
     nshl=apf::countElementNodes(err_shape,m->getType(ent));
+    shpval_temp.allocate(nshl);
+    int hier_off = 4;
+    nshl= nshl-hier_off;
     shpval.allocate(nshl);
     elem_shape = err_shape->getEntityShape(m->getType(ent));
-
+  
     m->getAdjacent(ent,nsd-1,boundaries);
     for(int adjcount =0;adjcount<boundaries.getSize();adjcount++){
 
@@ -394,24 +467,32 @@ void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::
       apf::Matrix3x3 tempbflux(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0);
       bent = boundaries[adjcount];
 
+apf::Adjacent adjvtxs;
+m->getAdjacent(bent,0,adjvtxs);
+apf::Vector3 vtxpt;
+for(int adj=0;adj<adjvtxs.getSize();adj++){
+  m->getPoint(adjvtxs[adj],0,vtxpt);
+  std::cout<<"Point "<<adj<<" Value "<<vtxpt<<std::endl;
+}
+
       apf::ModelEntity* me=m->toModel(bent);
       int tag = m->getModelTag(me);
       apf::ModelEntity* boundary_face = m->findModelEntity(nsd-1,tag);
-      if(me == boundary_face){ //is on a model boundary
-        //std::cout<<"ON BOUNDARY "<<std::endl;
-        //is Dirichlet? for now all boundaries are DBC
-        
-        //is Natural/Neumann?
-      }
-      else{ //compute the flux
+      //if(me == boundary_face){ //is on a model boundary
+
+      //}
+      //else{ //compute the flux
         if(m->isShared(bent)){//is shared by a parallel entity
-          //std::cout<<"PARALLEL "<<std::endl;
+          std::cout<<"PARALLEL "<<std::endl;
         }
         else{
           m->getAdjacent(bent,nsd,neighbors);
           b_elem = apf::createMeshElement(m,bent);
+std::cout<<"Area? "<<apf::measure(b_elem)<<std::endl;
           apf::Matrix3x3 tempgrad_velo[2];
           apf::Matrix3x3 identity(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
+          //apf::Matrix3x3 jacoboff(2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0);
+          //apf::Matrix3x3 jacoboff(1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0);
           apf::MeshElement* tempelem; apf::Element * tempvelo,*temppres,*tempvoff;
           
           normal=getFaceNormal(m,bent);
@@ -422,13 +503,19 @@ void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::
           std::cout<<"Boundary "<<apf::getLinearCentroid(m,bent)<<std::endl;
           std::cout<<"Is in Tet? "<<isInTet(m,ent,apf::project(normal,centerdir)*centerdir.getLength()+apf::getLinearCentroid(m,bent))<<std::endl;
 */
-          if(!isInTet(m,ent,apf::project(normal,centerdir)*centerdir.getLength()+apf::getLinearCentroid(m,bent)))
+          if(isInTet(m,ent,apf::project(normal,centerdir)*centerdir.getLength()+apf::getLinearCentroid(m,bent)))
             normal = normal*-1.0; //normal needs to face the other direction
          
+          //shape functions are from weighting function and independent of neighbors
+          //shapeelem = apf::createMeshElement(m,neighbors[idx_neigh]);
+
           double flux_weight;         
-          for(int idx_neigh=0; idx_neigh<2;idx_neigh++){ //only two neighboring elements
-            if(neighbors[idx_neigh]==ent) flux_weight = 1-a_kl;
-            else flux_weight = a_kl;
+          for(int idx_neigh=0; idx_neigh<neighbors.getSize();idx_neigh++){ //at most two neighboring elements
+            if(me==boundary_face){ flux_weight=1; std::cout<<"on boundary face "<<std::endl;}
+            else{
+              if(neighbors[idx_neigh]==ent) flux_weight = 1-a_kl;
+              else flux_weight = a_kl;
+            }
             tempelem = apf::createMeshElement(m,neighbors[idx_neigh]);
             temppres = apf::createElement(pref,tempelem);
             tempvelo = apf::createElement(velf,tempelem);
@@ -437,15 +524,20 @@ void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::
               apf::getIntPoint(b_elem,int_order,l,bqpt);
               weight = apf::getIntWeight(b_elem,int_order,l);
               apf::getJacobian(b_elem,bqpt,J); //evaluate the Jacobian at the quadrature point
-              J = apf::transpose(J); 
-              Jdet=apf::getJacobianDeterminant(J,nsd-1); 
-
+              //J = apf::transpose(J); //offset to avoid zero determinant 
+              //if(J[0][0]==0 && J[0][1]
+              Jdet=apf::getJacobianDeterminant(J,nsd-1);
               bqptl=apf::boundaryToElementXi(m,bent,neighbors[idx_neigh],bqpt); 
-              elem_shape->getValues(NULL,NULL,bqptl,shpval);
+              bqptshp=apf::boundaryToElementXi(m,bent,ent,bqpt); 
+              elem_shape->getValues(NULL,NULL,bqptshp,shpval_temp);
+              for(int j=0;j<nshl;j++){ shpval[j] = shpval_temp[hier_off+j];}
               
               apf::getVectorGrad(tempvelo,bqptl,tempgrad_velo[idx_neigh]);
-              tempbflux = tempbflux + ((tempgrad_velo[idx_neigh]+apf::transpose(tempgrad_velo[idx_neigh]))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
-                -identity*getMPvalue(apf::getScalar(temppres,bqptl),1.0/rho_0,1.0/rho_1))*weight*Jdet*flux_weight;
+              tempbflux = ((tempgrad_velo[idx_neigh]+apf::transpose(tempgrad_velo[idx_neigh]))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
+                -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1))*weight*Jdet*flux_weight;
+//std::cout<<"Value of the flux "<<tempbflux<<std::endl;
+//std::cout<<"Value of shape function "<<shpval[0]<<" "<<shpval[1]<<" "<<shpval[2]<<" "<<shpval[3]<<" "<<shpval[4]<<" "<<shpval[5]<<std::endl;
+              //if(adjcount==1)std::cout<<"idx_neigh "<<idx_neigh<<" "<<tempbflux<<std::endl;
               bflux = tempbflux*normal;
               for(int i=0;i<nsd;i++){
                 for(int s=0;s<nshl;s++){
@@ -454,6 +546,17 @@ void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::
               } 
               
             } //end boundary integration loop
+/*
+std::cout<<"Normal vector "<<normal<<std::endl;
+std::cout<<"What is the strain? "<<tempgrad_velo[idx_neigh]+apf::transpose(tempgrad_velo[idx_neigh])<<std::endl;
+std::cout<<"Flux on one side post integration "<<adjcount<<" "<< idx_neigh<<std::endl;
+for(int i=0;i<nsd;i++){
+  for(int s=0;s<nshl;s++){
+    std::cout<<endflux[i*nshl+s]<<std::endl;
+    endflux[i*nshl+s] = 0; //for debugging purposes
+  }
+} 
+*/ 
           } //end for loop of neighbors
 
 /*
@@ -462,7 +565,7 @@ void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::
 */
           apf::destroyMeshElement(tempelem);apf::destroyElement(tempvelo);apf::destroyElement(temppres); apf::destroyElement(tempvoff);
         }
-      } //end if/else on boundary face
+      //} //end if/else on boundary face
     } //end loop over adjacent faces
 }//end function
 
@@ -531,5 +634,4 @@ bool isInTet(apf::Mesh* mesh, apf::MeshEntity* ent, apf::Vector3 pt){
 */
   return isin;
 }
-
 
