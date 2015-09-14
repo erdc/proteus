@@ -91,8 +91,8 @@ void MeshAdaptPUMIDrvr::get_local_error()
 //First get the mesh and impose a 2nd order field
 //Then get the desired quadrature points
 {
+
   getProps(rho_0,rho_1,nu_0,nu_1);
-  //std::cout<<"Viscosity? "<<nu_0<<" "<<nu_1<<std::endl;
 
   //***** Get Solution Fields First *****//
   apf::Field* voff = apf::createLagrangeField(m,"proteus_vof",apf::SCALAR,1);
@@ -114,8 +114,25 @@ void MeshAdaptPUMIDrvr::get_local_error()
     apf::setScalar(visc, ent, 0,visc_val);
   }
   m->end(iter);
-  //apf::writeVtkFiles("velocity", m);
 
+
+  //Initialize the Error Fields
+  apf::Field* err_reg = apf::createField(m,"ErrorRegion",apf::SCALAR,apf::getConstant(nsd));
+  apf::Field* err_vtx = apf::createLagrangeField(m,"error_vtx",apf::SCALAR,1);  //for contraction
+/*
+  apf::MeshIterator* ittest = m->begin(nsd);
+  while(ent = m->iterate(ittest)){
+    apf::setScalar(err_reg,ent,0,1.2);
+  } 
+  m->end(ittest);
+  
+  ittest = m->begin(0);
+  while(ent = m->iterate(ittest)){
+    averageToEntity(err_reg, err_vtx, ent);
+  }
+  m->end(ittest);
+  apf::destroyField(err_reg);
+*/
 
   //Start computing element quantities
   int numqpt; //number of quadrature points
@@ -355,23 +372,6 @@ testcount++;
 
     if(testcount==1 && comm_rank==0){
 
-/* Test the solver
-    for(int z=0;z<ndofs;z++){
-      for(int y=0;y<ndofs;y++){
-        if(z==y)
-          MatSetValue(K,z,y,1+z*ndofs,INSERT_VALUES);
-        else if(y==z+1 || y==z-1)
-          MatSetValue(K,z,y,(1+z*ndofs)/3,INSERT_VALUES);
-        else
-          MatSetValue(K,z,y,0,INSERT_VALUES);
-      }
-      VecSetValue(F,z,z,INSERT_VALUES);
-    }
-    MatAssemblyBegin(K,MAT_FINAL_ASSEMBLY);
-    MatAssemblyEnd(K,MAT_FINAL_ASSEMBLY);
-    VecAssemblyBegin(F);
-    VecAssemblyEnd(F);
-*/
 //Save Temporarily for Debugging
       std::ofstream myfile ("stiffness.csv");
       std::ofstream myfile2 ("force.csv");
@@ -415,13 +415,68 @@ testcount++;
     
     KSPDestroy(&ksp); //destroy ksp
     PCDestroy(&pc);
+
+    //compute the local error  
+    double Acomp=0;
+    double Bcomp=0;
+    double coef_ez[nshl*nsd];
+    int ez_idx[nshl*nsd];
+    for(int ez=0;ez<nshl*nsd;ez++) VecGetValues(coef,nshl*nsd,ez_idx,coef_ez);
+    for(int k=0; k<numqpt;k++){ 
+      apf::getIntPoint(element,int_order,k,qpt); //get a quadrature point and store in qpt
+      apf::getJacobian(element,qpt,J); //evaluate the Jacobian at the quadrature point
+
+      invJ = invert(J);
+      invJ = apf::transpose(invJ);
+      Jdet=apf::getJacobianDeterminant(J,nsd); 
+      weight = apf::getIntWeight(element,int_order,k);
+      invJ_copy = apf::fromMatrix(invJ);
+
+      //first get the shape function values for error shape functions
+      elem_shape = err_shape->getEntityShape(elem_type);
+      elem_shape->getValues(NULL,NULL,qpt,shpval_temp);
+      elem_shape->getLocalGradients(NULL,NULL,qpt,shgval); 
+
+      for(int i =0;i<nshl;i++){ //get the true derivative and copy only the edge modes for use
+        shgval_copy[i] = apf::fromVector(shgval[i+hier_off]);
+        shpval[i] = shpval_temp[i+hier_off];
+        apf::multiply(shgval_copy[i],invJ_copy,shdrv[i]); 
+      }
+      visc_val = apf::getScalar(visc_elem,qpt);
+      for(int i=0; i<nsd;i++){
+        for(int j=0;j<nsd;j++){
+          double phi_ij =0; double phi_ji =0;
+          for(int s=0;s<nshl;s++){
+            phi_ij = phi_ij + coef_ez[nshl*i+s]*shdrv[s][j];
+            phi_ji = phi_ji + coef_ez[nshl*j+s]*shdrv[s][i];
+          }
+          Acomp = Acomp + visc_val*phi_ij*(phi_ij+phi_ji)*weight;
+        }
+      }
+      Bcomp = Bcomp + apf::getDiv(velo_elem,qpt);
+if(k==0) std::cout<<"What is divergence? "<<apf::getDiv(velo_elem,qpt)<<std::endl;
+    } //end compute local error
+    //std::cout<<"Acomp and Bcomp "<<Acomp<<" "<<Bcomp<<std::endl;
+    //apf::setScalar(err_reg,ent,0,Acomp+Bcomp);
     }
 
+    apf::setScalar(err_reg,ent,0,Jdet);
     MatDestroy(&K); //destroy the matrix
     VecDestroy(&F); //destroy vector
     VecDestroy(&coef); //destroy vector
+
   } //end element loop
   m->end(iter);
+
+  //store error field onto vertices
+  apf::MeshIterator* iter_vtx = m->begin(0);
+  while(ent = m->iterate(iter_vtx)){
+    averageToEntity(err_reg, err_vtx, ent);
+  }
+  m->end(iter_vtx);
+  apf::destroyField(err_reg);
+
+
   apf::destroyField(voff);
   apf::destroyField(visc);
   apf::destroyField(velf);
@@ -535,9 +590,6 @@ std::cout<<"Area? "<<apf::measure(b_elem)<<std::endl;
               apf::getVectorGrad(tempvelo,bqptl,tempgrad_velo[idx_neigh]);
               tempbflux = ((tempgrad_velo[idx_neigh]+apf::transpose(tempgrad_velo[idx_neigh]))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
                 -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1))*weight*Jdet*flux_weight;
-//std::cout<<"Value of the flux "<<tempbflux<<std::endl;
-//std::cout<<"Value of shape function "<<shpval[0]<<" "<<shpval[1]<<" "<<shpval[2]<<" "<<shpval[3]<<" "<<shpval[4]<<" "<<shpval[5]<<std::endl;
-              //if(adjcount==1)std::cout<<"idx_neigh "<<idx_neigh<<" "<<tempbflux<<std::endl;
               bflux = tempbflux*normal;
               for(int i=0;i<nsd;i++){
                 for(int s=0;s<nshl;s++){
@@ -546,23 +598,8 @@ std::cout<<"Area? "<<apf::measure(b_elem)<<std::endl;
               } 
               
             } //end boundary integration loop
-/*
-std::cout<<"Normal vector "<<normal<<std::endl;
-std::cout<<"What is the strain? "<<tempgrad_velo[idx_neigh]+apf::transpose(tempgrad_velo[idx_neigh])<<std::endl;
-std::cout<<"Flux on one side post integration "<<adjcount<<" "<< idx_neigh<<std::endl;
-for(int i=0;i<nsd;i++){
-  for(int s=0;s<nshl;s++){
-    std::cout<<endflux[i*nshl+s]<<std::endl;
-    endflux[i*nshl+s] = 0; //for debugging purposes
-  }
-} 
-*/ 
           } //end for loop of neighbors
 
-/*
-          std::cout<<"viscosity "<<getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)<<std::endl;
-          std::cout<<"pressure "<<getMPvalue(apf::getScalar(temppres,bqptl),1.0/rho_0,1.0/rho_1)<<std::endl;
-*/
           apf::destroyMeshElement(tempelem);apf::destroyElement(tempvelo);apf::destroyElement(temppres); apf::destroyElement(tempvoff);
         }
       //} //end if/else on boundary face
@@ -583,10 +620,6 @@ apf::Vector3 getFaceNormal(apf::Mesh* mesh, apf::MeshEntity* face){
   a = vtxs[1]-vtxs[0];
   b = vtxs[2]-vtxs[0];
   normal = apf::cross(a,b);
-/*
-  std::cout<<"Normal vector "<<normal<<std::endl;
-  std::cout<<"normalized? "<<normal.normalize()<<std::endl;
-*/
 
   return normal.normalize();
 }
