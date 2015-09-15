@@ -10,21 +10,24 @@ from LinearAlgebraTools import ParVec_petsc4py
 from Profiling import logEvent,memory
 
 class Node:
+    """A numbered point in 3D Euclidean space
+
+    :ivar N: node number
+    :ivar p: Euclidean coordinates
+
+    Comparison operators and a hash value are defined using the 3-tuple of
+    coordinates.  This allows using Node objects and tuples of node objects as
+    dictionary keys, but in that use case one should be careful not to modify
+    the node coordinates.
+
+    >>> n0 = Node(nodeNumber=0,x=0.0,y=0.0,z=0.0)
+    >>> n1 = Node(nodeNumber=1,x=1.0,y=1.0,z=1.0)
+    >>> n1 >= n0
+    True
+    """
     xUnitVector = EVec(1.0,0.0,0.0)
     yUnitVector = EVec(0.0,1.0,0.0)
     zUnitVector = EVec(0.0,0.0,1.0)
-    """
-    A numbered point in 3D Euclidean space
-
-    N -- node number
-    p -- Euclidean coordinages
-
-    Comparisons operators and a hash value
-    are defined using the 3-tuple of coordinates.
-    This is dangerous because Nodes are not
-    immutable so care must be taken when using
-    Nodes as dictionary keys.
-    """
     def __init__(self,nodeNumber=0,x=0.0,y=0.0,z=0.0):
         self.N=nodeNumber
         self.p=EVec(x,y,z)
@@ -65,8 +68,13 @@ class Node:
                (other.p[X],other.p[Y],other.p[Z])
 
 class Element:
-    """
-    An numbered polytope in R^n
+    """An numbered polytope in R^n
+
+    :ivar N: element number
+    :ivar nodes: sorted tuple of nodes defining the polytope
+
+    The nodes data member can be used as a dictionary key for the polytop as
+    long as the nodes aren't later modified.
     """
     def __init__(self,elementNumber=0,nodes=[]):
         self.N = elementNumber
