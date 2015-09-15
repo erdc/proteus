@@ -2,11 +2,64 @@ from collections import namedtuple
 
 import numpy.testing as npt
 import numpy as np
-from nose.tools import eq_
+from nose.tools import eq_, ok_
+from proteus.MeshTools import (Node,
+                               Element,
+                               triangleVerticesToNormals,
+                               tetrahedronVerticesToNormals,
+                               intersectPoints,
+                               intersectEdges,
+                               intersectPolyhedron,
+                               getMeshIntersections)
 
-from proteus.MeshTools import (triangleVerticesToNormals, tetrahedronVerticesToNormals, intersectPoints,
-                              intersectEdges, intersectPolyhedron, getMeshIntersections)
+def test_Node():
+    origin_default = Node()
+    origin = Node(nodeNumber=0,x=0.0,y=0.0,z=0.0)
+    ppp = Node(nodeNumber=1, x= 0.5, y= 0.5, z= 0.5)
+    ppm = Node(nodeNumber=2, x= 0.5, y= 0.5, z=-0.5)
+    pmp = Node(nodeNumber=3, x= 0.5, y=-0.5, z= 0.5)
+    pmm = Node(nodeNumber=4, x= 0.5, y=-0.5, z=-0.5)
+    mpp = Node(nodeNumber=5, x=-0.5, y= 0.5, z= 0.5)
+    mpm = Node(nodeNumber=6, x=-0.5, y= 0.5, z=-0.5)
+    mmp = Node(nodeNumber=7, x=-0.5, y=-0.5, z= 0.5)
+    mmm = Node(nodeNumber=8, x=-0.5, y=-0.5, z=-0.5)
+    lexicographic_ordering = [ppp, ppm, pmp, pmm, mpp, mpm, mmp, mmm]
+    ok_(origin.N == 0)
+    ok_(origin.p[0] == 0.0)
+    ok_(origin.p[1] == 0.0)
+    ok_(origin.p[2] == 0.0)
+    ok_(origin.length == 1.0)
+    ok_(origin.diameter == 1.0)
+    ok_((origin.unitNormal == Node.xUnitVector).all())
+    ok_(origin == origin_default)
+    ok_(str(origin) == str(origin_default))
+    ok_(hash(origin) == hash(origin_default))
+    ok_(ppp > origin)
+    for  i in range(8):
+        p = lexicographic_ordering[i]
+        for pg in lexicographic_ordering[:i]:
+            ok_(pg > p)
+            ok_(pg >= p)
+            ok_(pg != p)
+        for pl in lexicographic_ordering[i+1:]:
+            ok_(pl < p)
+            ok_(pl <= p)
+            ok_(pl != p)
 
+def test_Element():
+    nodesCube= [Node(0,0.0,0.0,0.0),
+                Node(1,0.0,1.0,0.0),
+                Node(2,1.0,1.0,0.0),
+                Node(3,1.0,0.0,0.0),
+                Node(4,0.0,0.0,1.0),
+                Node(5,0.0,1.0,1.0),
+                Node(6,1.0,1.0,1.0),
+                Node(7,1.0,0.0,1.0)]
+    e0 = Element(elementNumber=1, nodes = nodesCube)
+    nodesCube.sort()
+    ok_(e0.N == 1)
+    for N, n   in enumerate(nodesCube):
+        ok_(e0.nodes[N] == n)
 
 def test_intersect_points():
     npt.assert_equal(intersectPoints(([0, 1], [0, 2]), [[0, 1], [0., 1.5]]),
