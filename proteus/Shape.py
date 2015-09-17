@@ -48,17 +48,17 @@ class Shape:
         Adds Shape information to the domain
         """
         # add new information to the domain
-        self.domain.vertices += self.vertices  # append new vertices to static variable of Shape
+        self.domain.vertices += self.vertices.tolist()  # append new vertices to static variable of Shape
         self.domain.vertexFlags += (self.vertexFlags+self.snv).tolist()
         self.domain.segments += (self.segments+self.snv).tolist()
-        self.domain.segmentFlags += (self.segmentFlags+self.snv).tolist()
+        self.domain.segmentFlags += (self.segmentFlags+self.sns).tolist()
         if self.domain.nd == 3:
             self.domain.facets += (self.facets+self.snv).tolist()
             self.domain.facetFlags += (self.facetFlags+self.snf).tolist()
         self.domain.holes += self.holes.tolist()
         self.domain.regions += self.regions.tolist()
         self.domain.regionFlags += (self.regionFlags+self.snr).tolist()
-        self.domain.bc += self.bc.tolist()
+        self.domain.bc += self.bc
         self.domain.update()
 
     def updateDomain(self):
