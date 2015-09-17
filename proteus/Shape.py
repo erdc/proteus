@@ -76,7 +76,7 @@ class Shape:
         Set position of the Shape
         :arg coords: new set of coordinates for the Shape
         """
-        old_coords = self.coords
+        old_coords = np.array(self.coords)
         self.vertices += coords - old_coords
         self.regions += coords
         self.updateDomain()
@@ -150,9 +150,9 @@ class Cuboid(Shape):
     """
     def __init__(self, domain, dim=(0.,0.,0.), coords=(0.,0.,0.)):
         Shape.__init__(self, domain)
-        self.dim = list(dim)  # length, width height
+        self.dim = dim  # length, width height
         self.volume = dim[0]*dim[1]*dim[2]
-        self.coords = list(coords)
+        self.coords = coords
         self.coords = x, y, z = coords
         self.dimfactor = np.array([[-0.5, -0.5, -0.5],
                                    [-0.5, +0.5, -0.5],
@@ -206,8 +206,8 @@ class Rectangle(Shape):
     """
     def __init__(self, domain, dim=(0.,0.), coords=(0.,0.)):
         Shape.__init__(self, domain)
-        self.dim = list(dim)
-        self.coords = x, y = list(coords)
+        self.dim = dim
+        self.coords = x, y = coords
         self.dimfactor = np.array([[-0.5, -0.5],
                                    [+0.5, -0.5],
                                    [+0.5, +0.5],
