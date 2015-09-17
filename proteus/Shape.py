@@ -48,7 +48,7 @@ class Shape:
         Adds Shape information to the domain
         """
         # add new information to the domain
-        self.domain.vertices += self.vertices.tolist()  # append new vertices to static variable of Shape
+        self.domain.vertices += self.vertices.tolist()
         self.domain.vertexFlags += (self.vertexFlags+self.snv).tolist()
         self.domain.segments += (self.segments+self.snv).tolist()
         self.domain.segmentFlags += (self.segmentFlags+self.sns).tolist()
@@ -150,9 +150,9 @@ class Cuboid(Shape):
     """
     def __init__(self, domain, dim=(0.,0.,0.), coords=(0.,0.,0.)):
         Shape.__init__(self, domain)
-        self.dim = dim  # length, width height
+        self.dim = list(dim)  # length, width height
         self.volume = dim[0]*dim[1]*dim[2]
-        self.coords = coords
+        self.coords = list(coords)
         self.coords = x, y, z = coords
         self.dimfactor = np.array([[-0.5, -0.5, -0.5],
                                    [-0.5, +0.5, -0.5],
@@ -206,8 +206,8 @@ class Rectangle(Shape):
     """
     def __init__(self, domain, dim=(0.,0.), coords=(0.,0.)):
         Shape.__init__(self, domain)
-        self.dim = dim
-        self.coords = x, y = coords
+        self.dim = list(dim)
+        self.coords = x, y = list(coords)
         self.dimfactor = np.array([[-0.5, -0.5],
                                    [+0.5, -0.5],
                                    [+0.5, +0.5],
@@ -266,7 +266,7 @@ def rotation2D(points, rot, pivot=(0.,0.)):
     points_rot = points_rot[:,:2]
     return points_rot
 
-def rotation3D(points, rot, axis=(0.), pivot=(0.,0.,0.)):
+def rotation3D(points, rot, axis=(0.,0.,1.), pivot=(0.,0.,0.)):
     """
     function to make a set of points/vertices/vectors (arg: points) to rotate 
     around an arbitrary axis/vector (arg: axis) going through a pivot point (arg: pivot) 
