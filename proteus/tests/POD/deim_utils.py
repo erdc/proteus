@@ -2,22 +2,8 @@
 """
 utility module for generating deim interpolants
 """
+from read_hdf5 import *
 import numpy as np
-
-def read_from_hdf5(hdfFile,label,dof_map=None):
-    """
-    Just grab the array stored in the node with label label and return it
-    If dof_map is not none, use this to map values in the array
-    If dof_map is not none, this determines shape of the output array
-    """
-    assert hdfFile != None, "requires hdf5 for heavy data"
-    vals = hdfFile.getNode(label).read()
-    if dof_map is not None:
-        dof = vals[dof_map]
-    else:
-        dof = vals
-
-    return dof
 
 def read_snapshots(archive,nsnap,val_name):
     """
@@ -112,6 +98,64 @@ def deim_alg(Uin,m):
     PF= np.dot(Um,PtUmInv)
     return rho,PF
 
+def calculate_gpod_indices(Uin):
+    """
+    input: Uin n x m array of basis vectors for nonlinear function snapshots
+    output: rho, vector of indices \rho_i for extracting $\vec F$ values, and nind, vector of index quantity rate per basis vector
+
+    """
+    n,m=Uin.shape
+    indices = set()
+    rind = np.argmax(np.absolute(Uin[:,0]))
+    indices.add(rind)
+    neigs = set([max(0,rind-1)]+[min(n-1,rind+1)])
+    indices |= neigs
+    rho = np.array(list(indices),dtype='i')
+    l = len(indices)
+    nind = np.array([l])
+    for j in range(1,m):
+	U = Uin[:,0:j]
+	u = Uin[:,j]
+	c,l2res,rank,svals = np.linalg.lstsq(U[rho],u[rho])
+	r = u-np.dot(U,c)
+	r[rho] = 0.0
+	rind = np.argmax(np.absolute(r))
+	if not rind in indices:
+	    indices.add(rind)
+	else:
+	    break
+	neigs = set([max(0,rind-1)]+[min(n-1,rind+1)])
+	indices |= neigs
+	rho = np.array(list(indices),dtype='i')
+	nind = np.append(nind, len(indices)-l)
+	l = len(indices)
+    #
+    return rho, nind
+
+def gpod_alg(Uin,m):
+    """
+    Basic procedure
+
+    - given $m$, dimension for $F$ reduced basis $\mathbf{U}_m$
+    - call Gappy POD algorithm to determine $\vec \rho$.
+    - build $\mathbf{P}$ from $\rho$ as
+      $$
+      \mathbf{P} = [\vec e_{\rho_1},\vec e_{\rho_2},\dots,\vec e_{\rho_m}]
+      $$
+    - invert $\mathbf{P}^T\mathbf{U}_m$ in a presudo sense
+    - return \rho and $\mathbf{P}_F=\mathbf{U}_m(\mathbf{P}^T\mathbf{U}_m)^{-1}$
+
+
+    """
+    assert m <= Uin.shape[1]
+    Um = Uin[:,0:m]
+    rho, nind = calculate_gpod_indices(Um)
+    PtUm = Um[rho]
+    assert PtUm.shape == (np.sum(nind,dtype='i'),m)
+    PtUmInv = np.linalg.pinv(PtUm)
+    PF= np.dot(Um,PtUmInv)
+    return rho,nind,PF
+
 def visualize_zslice(variable,nnx,nny,iz,x=None,y=None,name=None):
     """
     convenience function for plotting a slice
@@ -141,23 +185,3 @@ def visualize_zslice(variable,nnx,nny,iz,x=None,y=None,name=None):
 
 
     return surf
-
-def extract_sub_matrix_csr(rho,rowptr,colind,nnzval):
-    """
-    manually extract the rows in the deim index vector rho from a csr matrix representation 
-    returns a csr representation 
-    """
-    m = len(rho)
-    rowptr_sub = np.zeros(m+1,'i')
-    nnz_sub = 0
-    for k,I in enumerate(rho):#count number of nonzero entries
-        diff = rowptr[I+1]-rowptr[I]
-        rowptr_sub[k+1]=rowptr_sub[k]+diff
-        nnz_sub += diff
-    colind_sub = np.zeros(nnz_sub,'i'); nzval_sub=np.zeros(nnz_sub,'d')
-    for k,KK in enumerate(rho):
-        for m,MM in enumerate(range(rowptr[KK],rowptr[KK+1])):
-            colind_sub[rowptr_sub[k]+m]=colind[MM]
-            nzval_sub[rowptr_sub[k]+m]=nnzval[MM]
-    #
-    return rowptr_sub,colind_sub,nzval_sub
