@@ -115,9 +115,9 @@ nDTout = 100
 DT = T/float(nDTout)
 
 numerics=default_n
-numerics.timeIntegration = TimeIntegration.BackwardEuler_cfl
-numerics.stepController = StepControl.Min_dt_cfl_controller
-numerics.runCFL=0.99
+numerics.timeIntegration = TimeIntegration.BackwardEuler#_cfl
+#numerics.stepController = StepControl.Min_dt_cfl_controller
+#numerics.runCFL=0.99
 numerics.femSpaces = {0:FemTools.C0_AffineLinearOnSimplexWithNodalBasis} #piecewise linears
 numerics.elementQuadrature = Quadrature.SimplexGaussQuadrature(physics.nd,2) #Quadrature rule for elements
 numerics.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(physics.nd-1,2) #Quadrature rule for element boundaries
@@ -152,12 +152,10 @@ class NoFluxDirichletConstraints(numericalFluxBase):
 numerics.numericalFluxType = NoFluxDirichletConstraints
 ##POD-specific controls
 numerics.use_hyper = True
-numerics.SVD_basis_file='SVD_basis_truncated_43'
-numerics.Fs_SVD_basis_file='Fs_SVD_basis_truncated_73'
-numerics.hyper_reduction_indices = 'DEIM_indices_73'
-numerics.hyper_reduction_Q = 'Q_DEIM_truncated_73'
-#numerics.hyper_reduction_indices = 'Fs_Gappy_indices_truncated_101'#'Fs_Gappy_indices_truncated_73'
-#numerics.hyper_reduction_Q = 'Q_Gappy_truncated_73_101'#'PF_Gappy_truncated_73_73'
+numerics.SVD_basis_file='SVD_basis_truncated_10'
+numerics.Fs_SVD_basis_file='Fs_SVD_basis_truncated_10'
+numerics.hyper_reduction_indices = 'DEIM_indices_10'
+numerics.hyper_reduction_Q = 'Q_DEIM_truncated_10'
 #
 # split operator options (trivial since we're not splitting)
 #
