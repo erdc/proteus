@@ -20,7 +20,7 @@ class Shape:
     Class defining a shape
     :param domain: domain in which the shape is defined
     """
-    def __init__(self, domain):
+    def __init__(self, domain, dim=None, coords=None):
         self.domain = domain
         self.vertices = None
         self.vertexFlags = None
@@ -34,8 +34,7 @@ class Shape:
         self.volume = None
         self.mass = None
         self.density = None
-        self.barycenter = None
-        self.cm = None  # centre of mass
+        self.barycentre = None
         self.bc = None
         self.snv = len(self.domain.vertices)  # total number of vertices in domain when shape.__init__
         self.snf = len(self.domain.facets)
@@ -77,17 +76,24 @@ class Shape:
         :arg coords: new set of coordinates for the Shape
         """
         old_coords = np.array(self.coords)
-        self.vertices += coords - old_coords
-        self.regions += coords
-        self.updateDomain()
+        trans = coords - old_coords
+        self.translate(trans)
 
     def setDimensions(self, dim):
         """
         Set dimensions of the shape
         :arg dim: new dimensions of the Shape
         """
-        self.vertices = self.dimfactor*dim + self.coords 
+        self.vertices = self.dimfactor*dim + self.coords
+        self.updateDomain()
         
+    def setBarycentre(self, barycentre):
+        """
+        Set barycentre of the shape, from the reference frame of the shape
+        :arg barycentre: coordinates of barycentre from centre of shape
+        """
+        self.barycentre = np.einsum('ij,i->j', self.coords_system, barycentre)
+
     def setConstraints(self, free_x, free_r):
         """
         Sets constraints on the Shape
@@ -104,14 +110,24 @@ class Shape:
         :arg axis: axis of rotation (list or array)
         :arg pivot: point around which the Shape rotates
         """
-        pivot = pivot or self.coords
+        if pivot is None:
+            pivot = self.barycentre
+            rotate_barycentre = False
+        else:
+            rotate_barycentre = True
         if self.domain.nd == 2:
             self.vertices = rotation2D(self.vertices, rot, pivot)
             self.regions = rotation2D(self.regions, rot, pivot)
+            self.coords_system = rotation2D(self.coords_system, rot, pivot=(0.,0.,0.))
+            if rotate_barycentre:
+                self.barycentre = rotation2D(self.barycentre, rot, pivot)
         elif self.domain.nd == 3:
             self.vertices = rotation3D(self.vertices, rot, axis, pivot)
             self.holes = rotation3D(self.holes, rot, axis, pivot)
             self.regions = rotation3D(self.regions, rot, axis, pivot)
+            self.coords_system = rotation3D(self.coords_system, rot, pivot=(0.,0.,0.))
+            if rotate_barycentre:
+                self.barycentre = rotation3D(self.barycentre, rot, pivot)
         self.updateDomain()
 
     def translate(self, trans):
@@ -120,6 +136,11 @@ class Shape:
         :arg trans: translation values
         """
         self.vertices += trans
+        self.regions += trans
+        self.coords += trans
+        self.barycentre += trans
+        if self.domain.nd == 3:
+            self.holes += trans
         self.updateDomain()
 
     def setMass(self, mass):
@@ -127,7 +148,7 @@ class Shape:
         Set mass of the shape and calculate density
         :arg mass: mass of the Shape
         """
-        self.mass = mass
+        self.mass = float(mass)
         if self.volume:
             self.density = self.mass/self.volume
 
@@ -136,7 +157,7 @@ class Shape:
         Set density of the Shape and calculate mass
         :arg density: density of the Shape
         """
-        self.density = density
+        self.density = float(density)
         if self.volume:
             self.mass = self.density*self.volume
 
@@ -148,12 +169,13 @@ class Cuboid(Shape):
     :arg dim: dimensions of the cuboid (list or array)
     :arg coords: coordinates of the cuboid (list or array)
     """
-    def __init__(self, domain, dim=(0.,0.,0.), coords=(0.,0.,0.)):
+    def __init__(self, domain, dim=(0.,0.,0.), coords=(0.,0.,0.), barycentre=None):
         Shape.__init__(self, domain)
         self.dim = dim  # length, width height
         self.volume = dim[0]*dim[1]*dim[2]
-        self.coords = coords
         self.coords = x, y, z = coords
+        self.coords_system = np.eye(3)
+        self.barycentre = barycentre or coords
         self.dimfactor = np.array([[-0.5, -0.5, -0.5],
                                    [-0.5, +0.5, -0.5],
                                    [+0.5, +0.5, -0.5],
@@ -171,13 +193,13 @@ class Cuboid(Shape):
                                   [x+0.5*dim[0], y+0.5*dim[1], z+0.5*dim[2]],
                                   [x+0.5*dim[0], y-0.5*dim[1], z+0.5*dim[2]]])
         self.segments = np.array([[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6],
-                         [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]])
-        self.facets = np.array([[0, 1, 2, 3],  # bottom
-                       [0, 1, 5, 4],  # front
-                       [1, 2, 6, 5],  # right
-                       [2, 3, 7, 6],  # back
-                       [3, 0, 4, 7],  # left
-                       [4, 5, 6, 7]])  # top
+                                  [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]])
+        self.facets = np.array([[[0, 1, 2, 3]],  # bottom
+                                [[0, 1, 5, 4]],  # front
+                                [[1, 2, 6, 5]],  # right
+                                [[2, 3, 7, 6]],  # back
+                                [[3, 0, 4, 7]],  # left
+                                [[4, 5, 6, 7]]])  # top
         self.regions = np.array([[x, y, z]])
         self.holes = np.array([coords])
         # defining flags for boundary conditions
@@ -204,10 +226,12 @@ class Rectangle(Shape):
     :arg dim: dimensions of the rectangle (list or array)
     :arg coords: coordinates of the rectangle (list or array)
     """
-    def __init__(self, domain, dim=(0.,0.), coords=(0.,0.)):
+    def __init__(self, domain, dim=(0.,0.), coords=(0.,0.), barycentre=None):
         Shape.__init__(self, domain)
         self.dim = dim
         self.coords = x, y = coords
+        self.coords_system = np.eye(2)
+        self.barycentre = barycentre or coords
         self.dimfactor = np.array([[-0.5, -0.5],
                                    [+0.5, -0.5],
                                    [+0.5, +0.5],
@@ -239,18 +263,19 @@ def rotation2D(points, rot, pivot=(0.,0.)):
     """
     function to make a set of points/vertices/vectors (arg: points) to rotate 
     around a pivot point (arg: pivot) 
-    :arg points: set of 3D points (array)
+    :arg points: set of 3D points (list or array)
     :arg rot: angle of rotation (in radians) 
     :arg pivot: point around which the set of points rotates (list or array)
     :return points_rot: the rotated set of points
     """
+    points = np.array(points)
     rot = float(rot)
     # get coordinates for translation
     x, y = pivot
     # translation matrix
-    T = np.array([[1,  0,   0],
-                  [0,  1,   0],
-                  [-x, -y,  1]])
+    T = np.array([[1,  0,   -x],
+                  [0,  1,   -y],
+                  [0,  0,   1]])
     # rotation matrices
     R = np.array([[cos(rot), -sin(rot), 0],
                   [sin(rot), cos(rot),  0],
@@ -258,12 +283,20 @@ def rotation2D(points, rot, pivot=(0.,0.)):
     # full transformation matrix
     M = reduce(np.dot, [T, R, np.linalg.inv(T)])
     # transform points (check also if it is only a 1D array or 2D)
-    points_rot = np.ones((len(points),3))
-    points_rot[:,:-1] = points
-    points_rot = points_rot.T  # set of vectors (transposing array)
-    points_rot = np.dot(M, points_rot)  # matrix dot product on each vector
-    points_rot = points_rot.T  # transpose back to original array shape
-    points_rot = points_rot[:,:2]
+    if points.ndim > 1:
+        points_rot = np.ones((len(points),3))
+        points_rot[:,:-1] = points
+        points_rot = points_rot.T  # set of vectors (transposing array)
+        points_rot = np.dot(M, points_rot)  # matrix dot product on each vector
+        points_rot = points_rot.T  # transpose back to original array shape
+        points_rot = points_rot[:,:-1]
+    else:
+        points_rot = np.ones(3)
+        points_rot[:-1] = points
+        points_rot = points_rot.T  # set of vectors (transposing array)
+        points_rot = np.dot(M, points_rot)  # matrix dot product on each vector
+        points_rot = points_rot.T  # transpose back to original array shape
+        points_rot = points_rot[:-1]
     return points_rot
 
 def rotation3D(points, rot, axis=(0.,0.,1.), pivot=(0.,0.,0.)):
@@ -276,6 +309,7 @@ def rotation3D(points, rot, axis=(0.,0.,1.), pivot=(0.,0.,0.)):
     :arg pivot: point around which the set of points rotates (list or array)
     :return points_rot: the rotated set of points
     """
+    points = np.array(points)
     rot = float(rot)
     # get coordinates for translation
     x, y, z = pivot
@@ -312,10 +346,18 @@ def rotation3D(points, rot, axis=(0.,0.,1.), pivot=(0.,0.,0.)):
                   [0,  0,  0,  1]])
     # full transformation matrix
     M = reduce(np.dot, [T, Rx, Ry, Rz, np.linalg.inv(Ry), np.linalg.inv(Rx), np.linalg.inv(T)])
-    points_rot = np.ones((len(points),4))
-    points_rot[:,:-1] = points
-    points_rot = points_rot.T  # set of vectors (transposing array)
-    points_rot = np.dot(M, points_rot)  # matrix dot product on each vector
-    points_rot = points_rot.T  # transpose back to original array shape
-    points_rot = points_rot[:,:3]
+    if points.ndim > 1:
+        points_rot = np.ones((len(points),4))
+        points_rot[:,:-1] = points
+        points_rot = points_rot.T  # set of vectors (transposing array)
+        points_rot = np.dot(M, points_rot)  # matrix dot product on each vector
+        points_rot = points_rot.T  # transpose back to original array shape
+        points_rot = points_rot[:,:-1]
+    else:
+        points_rot = np.ones(4)
+        points_rot[:-1] = points
+        points_rot = points_rot.T  # set of vectors (transposing array)
+        points_rot = np.dot(M, points_rot)  # matrix dot product on each vector
+        points_rot = points_rot.T  # transpose back to original array shape
+        points_rot = points_rot[:-1]
     return points_rot
