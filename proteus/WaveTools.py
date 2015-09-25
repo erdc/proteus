@@ -11,7 +11,7 @@ from math import pi, tanh, sqrt, exp, log, sin, cos, cosh, sinh
 import numpy as np
 from Profiling import logEvent
 import time as tt
-
+import sys as sys
 
 
 def sigma(omega,omega0):
@@ -94,10 +94,12 @@ class MonochromaticWaves:
         self.phi0=phi0
         if self.waveType not in self.knownWaveTypes:
             logEvent("Wrong wavetype given: Valid wavetypes are %s" %(self.knownWaveTypes), level=0)
+            sys.exit(1)
         self.dircheck = abs(sum(g * waveDir))
         #print self.dircheck
         if self.dircheck > 1e-6:
             logEvent("Wave direction is not perpendicular to gravity vector. Check input",level=0)
+            sys.exit(1)
         self.period = period
         self.waveHeight = waveHeight
         self.mwl = mwl
@@ -111,7 +113,8 @@ class MonochromaticWaves:
                 self.k = 2.0*pi/wavelength
                 self.wavelength=wavelength
             except:
-                pr.logEvent("Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments")  
+                logEvent("Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)  
+                sys.exit(1)
         self.kDir = self.k * self.waveDir 
         self.amplitude = 0.5*self.waveHeight
         self.meanVelocity = meanVelocity
@@ -120,7 +123,8 @@ class MonochromaticWaves:
         self.Bcoeff = Bcoeff
         if (Ycoeff is None) or (Bcoeff is None):
             if self.waveType is not "Linear":
-                pr.logEvent("Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves")                          
+                pr.logEvent("Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)                            
+                sys.exit(1)
     def phase(self,x,y,z,t):        
 #        return y*self.kDir[1] - self.omega*t + self.phi0
         return x*self.kDir[0]+y*self.kDir[1]+z*self.kDir[2] - self.omega*t + self.phi0
@@ -176,10 +180,9 @@ class MonochromaticWaves:
 
                     }
         else:
-            print "Wrong waveType"
+            logEvent("Check Wave types. Available wave types are %s" % waveType,level=0)
             exit(1)
         return Vcomp[ss]
-
 
 class RandomWaves:
     """Generate approximate random wave solutions
@@ -271,6 +274,96 @@ class RandomWaves:
 #        Z = z - self.mwl
 #        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
 #                np.cosh(self.ki*(self.d+Z))/np.sinh(self.ki*self.d)).sum()
+
+
+class timeSeries:
+    """Generate a time series by using spectral windowing method.
+
+    :param ts: time-series array [T]
+    :param  d: depth [L]
+    :param Npeaks: Number of spectral peaks
+    :param bandFactor[Npeaks]: width factor for band  around spectral peaks [-]
+    :param peakFrequencies[Npeaks]: expected peak frequencies
+    :param N: number of frequency bins [-]
+    :param Nwaves: Number of waves per window (Approx)
+    :param mwl: mean water level [L]"""
+    
+    def __init__(self,
+                 timeSeriesFile= "Timeseries.txt",
+                 skiprows = 0,
+                 d = 2.0,
+                 Npeaks = 1, #m depth
+                 bandFactor = [2.0], #controls width of band  around fp
+                 peakFrequencies = [1.0],
+                 N = 32,          #number of frequency bins
+                 Nwaves = 20,
+                 mwl = 0.0,        #mean water level
+                 waveDir = np.array([1,0,0]),
+                 g = np.array([0, -9.81, 0])         #accelerationof gravity
+                 ): 
+        self.depth = d
+        self.Npeaks = Npeaks
+        self.bandFactor = np.array(bandFactor)        
+        self.peakFrequencies = np.array(peakFrequencies)
+        self.N = N
+        self.Nwaves = Nwaves
+        self.mwl = mwl
+        self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
+        self.g = np.array(g)
+
+#derived variables
+        self.gAbs = sqrt(sum(g * g))
+        self.vDir = self.g/self.gAbs
+        self.fmax = self.bandFactor*self.peakFrequencies
+        self.fmin = self.peakFrequencies/self.bandFactor
+
+        self.df = (self.fmax-self.fmin)/float(self.N-1)
+        self.fi=np.zeros((self.N,self.Npeaks),'d')
+
+        for i,j in np.ndenumerate(fi):
+            self.fi[i,j] = self.fmin[i,j]+self.df[i,j]*i
+
+        self.omegai = 2.*pi*self.fi
+        self.ki = dispersion(self.omegai,self.depth,g=self.gAbs)
+        self.wi = 2.*pi/self.ki
+        
+#Reading time series
+        filetype = timeSeriesFile[-3:]
+        if (filetype is not "txt") or (filetype is not "csv"):
+            logEvent("Timeseries must be given in txt or csv format",level=0)
+            sys.exit(1)
+        elif (filetype is "csv"):
+            tdata = np.loadtxt(fid,skiprows=skiprows,delimiter=",")
+        else:
+            tdata = np.loadtxt(fid,skiprows=skiprows)
+#Checks for tseries file
+        ncols = len(tdata[0,:])
+        if ncols is not 2:
+            logEvent("Timeseries file must have two colunms for a single probe data",level=0)
+            sys.exit(1)
+
+
+
+        time_temp = tdata[:,0] 
+        self.dt = (time_temp[-1]-time_temp[0])/len(time_temp)
+        doInterp = False
+        for i in enumerate(time_temp,start=1):
+            dt_temp = time_temp[i]-time_temp[i-1]
+        #check if time is at first column
+            if time_temp[i]<time_temp[i-1]:
+                logEvent("Found not consistent time entry between %s and %s row. Warning: time variable must be always at the first column of the file and increasing monotonically" %(i-1,i) )
+                sys.exit(1)            
+        #check if sampling rate is constant
+            if dt is not self.dt:
+                logEvent("Not constant sampling rate found, proceeding to signal interpolation to a constant sampling rate")
+                doInterp = True
+        if(doInterp):
+            self.time = np.linspace(time_temp[0],time_temp[-1],len(time_temp))
+            self.eta = np.interp(self.time,time_temp,tdata[:,1])
+        else:
+            self.time = time_temp
+            self.eta = tdata[:,1]
+        del tdata
 
 
 class directionalWaves:
