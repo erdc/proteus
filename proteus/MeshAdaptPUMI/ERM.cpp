@@ -18,7 +18,7 @@
 #define  PHI_IDX  5
 
 
-int approx_order = 2; //if using Lagrange shape functions. Serendipity is automatic
+int approx_order = 1; //if using Lagrange shape functions. Serendipity is automatic
 int int_order = approx_order*2; //determines number of integration points
 double nu_0,nu_1,rho_0,rho_1;
 double a_kl = 0.5; //flux term weight
@@ -119,20 +119,6 @@ void MeshAdaptPUMIDrvr::get_local_error()
   //Initialize the Error Fields
   apf::Field* err_reg = apf::createField(m,"ErrorRegion",apf::SCALAR,apf::getConstant(nsd));
   apf::Field* err_vtx = apf::createLagrangeField(m,"error_vtx",apf::SCALAR,1);  //for contraction
-/*
-  apf::MeshIterator* ittest = m->begin(nsd);
-  while(ent = m->iterate(ittest)){
-    apf::setScalar(err_reg,ent,0,1.2);
-  } 
-  m->end(ittest);
-  
-  ittest = m->begin(0);
-  while(ent = m->iterate(ittest)){
-    averageToEntity(err_reg, err_vtx, ent);
-  }
-  m->end(ittest);
-  apf::destroyField(err_reg);
-*/
 
   //Start computing element quantities
   int numqpt; //number of quadrature points
@@ -161,6 +147,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
   
   iter = m->begin(nsd); //loop over elements
 int testcount = 0;
+int eID = 0; 
   while(ent = m->iterate(iter)){ //loop through all elements
     element = apf::createMeshElement(m,ent);
     pres_elem = apf::createElement(pref,element);
@@ -179,7 +166,7 @@ int testcount = 0;
     int hier_off = 4; //there is an offset that needs to be made to isolate the hierarchic edge modes
     nshl = nshl - hier_off;
 
-    if(testcount==0 && comm_rank==0)
+    if(testcount==eID && comm_rank==0)
       std::cout<<"nshls "<<nshl<<" numqpt "<<numqpt<<std::endl;
     shpval.allocate(nshl);   shgval_copy.allocate(nshl); shdrv.allocate(nshl);
 
@@ -205,8 +192,6 @@ int testcount = 0;
     for(int k=0;k<numqpt;k++){
       apf::getIntPoint(element,int_order,k,qpt); //get a quadrature point and store in qpt
       apf::getJacobian(element,qpt,J); //evaluate the Jacobian at the quadrature point
-      if(J[2][2] == 0){ J[2][2]=1;} //can't compute an inverse with a 0 in a diagonal
-
       J = apf::transpose(J); //Is PUMI still defined in this way?
       invJ = invert(J);
       Jdet=apf::getJacobianDeterminant(J,nsd); 
@@ -225,12 +210,12 @@ int testcount = 0;
       }
 
       //Debugging Information
-      //if(testcount==0) std::cout<<"Local shape gradients "<<shgval[0]<<" "<<shgval[1]<<" "<<shgval[2]<<" "<<shgval[3]<< std::endl;
-      if(testcount==0) std::cout<<"Global shape gradients "<<shdrv[0]<<" "<<shdrv[1]<<" "<<shdrv[2]<<" "<<shdrv[3]<<" "<<shdrv[4]<<" "<<shdrv[5]<<std::endl;
-      if(testcount==0) std::cout<<std::scientific<<std::setprecision(15)<< "qpt #"<< k << " value "<<qpt<<std::endl;
+      //if(testcount==eID) std::cout<<"Local shape gradients "<<shgval[0]<<" "<<shgval[1]<<" "<<shgval[2]<<" "<<shgval[3]<< std::endl;
+      //if(testcount==eID) std::cout<<"Global shape gradients "<<shdrv[0]<<" "<<shdrv[1]<<" "<<shdrv[2]<<" "<<shdrv[3]<<" "<<shdrv[4]<<" "<<shdrv[5]<<std::endl;
+      //if(testcount==eID) std::cout<<std::scientific<<std::setprecision(15)<< "qpt #"<< k << " value "<<qpt<<std::endl;
       apf::Adjacent dbg_vadj;
       m->getAdjacent(ent,0,dbg_vadj);
-      if(testcount==0 && k==0){
+      if(testcount==eID && k==0){
          std::cout<<"adjacent verts ";
          apf::Vector3 testpt;
          for(int test_count=0;test_count<4;test_count++){
@@ -239,12 +224,12 @@ int testcount = 0;
           }
           std::cout<<std::endl;
       }
-      if(testcount==0) std::cout<<"Jacobian "<<J<<std::endl;
-      if(testcount==0) std::cout<<"Jdet "<<Jdet<<std::endl;
-      if(testcount==0) std::cout<<"invJ "<<invJ<<std::endl;
-      if(testcount==0) std::cout<<"Shape function"<<shpval[0]<<" "<<shpval[1]<<" "<<shpval[2]<<" "<<shpval[3]<<" "<<shpval[4]<<" "<<shpval[5]<<std::endl;
-      if(testcount==0) std::cout<<"visc_val "<<visc_val<<std::endl;
-      if(testcount==0) std::cout<<"weight "<<weight<<std::endl;
+      if(testcount==eID) std::cout<<"Jacobian "<<J<<std::endl;
+      if(testcount==eID) std::cout<<"Jdet "<<Jdet<<std::endl;
+      if(testcount==eID) std::cout<<"invJ "<<invJ<<std::endl;
+      if(testcount==eID) std::cout<<"Shape function"<<shpval[0]<<" "<<shpval[1]<<" "<<shpval[2]<<" "<<shpval[3]<<" "<<shpval[4]<<" "<<shpval[5]<<std::endl;
+      if(testcount==eID) std::cout<<"visc_val "<<visc_val<<std::endl;
+      if(testcount==eID) std::cout<<"weight "<<weight<<std::endl;
       
        
       //obtain viscosity value
@@ -298,12 +283,14 @@ int testcount = 0;
       //Get RHS
       apf::Vector3 vel_vect;
       apf::Matrix3x3 grad_vel;
+    
+      apf::Element* vof_elem = apf::createElement(voff,element); //at vof currently
 
       apf::getVector(velo_elem,qpt,vel_vect);
       apf::getVectorGrad(velo_elem,qpt,grad_vel);
       //vector gradient is given in the transpose of the usual definition, need to retranspose it
       grad_vel = apf::transpose(grad_vel);
-      if(testcount==0){
+      if(testcount==eID){
         apf::Vector3 xyz;
         apf::mapLocalToGlobal(element,qpt,xyz);
         std::cout<<"Local "<<qpt<<" Global "<<xyz<<std::endl;
@@ -316,20 +303,20 @@ int testcount = 0;
         for( int s=0;s<nshl;s++){
           idx[s] = i*nshl+s;
 
-          temp_vect[s] = 0*shpval[s]; //force term
+          temp_vect[s] = (0)*shpval[s];
           //a(u,v) and c(u,u,v) term
           for(int j=0;j<nsd;j++){
             temp_vect[s] += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
-            //temp_vect[s] += -shpval[s]*grad_vel[i][j]*vel_vect[j];
-            if(testcount==0 && k ==0 && i==2){
-              std::cout<<"idx[s] "<<idx[s] << " Value "<< temp_vect[s]<<" Components "<<visc_val<<" "<<shdrv[s][j]<<" "<<grad_vel[i][j]<<" "<<grad_vel[j][i]<<" indices "<<j<<" "<<i<<std::endl;
-            }
-              
+            temp_vect[s] += -shpval[s]*grad_vel[i][j]*vel_vect[j];
           }
-          //need to scale pressure by density
-          //temp_vect[s] += getMPvalue(apf::getScalar(pres_elem,qpt),1.0/rho_0,1.0/rho_1)*shdrv[s][i]; //pressure term
+          //need to scale pressure by density b(p,v)
+          temp_vect[s] += apf::getScalar(pres_elem,qpt)/getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1)*shdrv[s][i]; //pressure term
 
           temp_vect[s] = temp_vect[s]*weight;
+          if(testcount==eID && k ==0 && i==2){
+              std::cout<<"idx[s] "<<idx[s] << " Value "<< temp_vect[s]<<std::endl;
+          }
+
         } //end loop over number of shape functions
         VecSetValues(F,nshl,idx,temp_vect,ADD_VALUES);
       } //end loop over spatial dimensions
@@ -337,27 +324,28 @@ int testcount = 0;
 
     //to complete integration, scale by the determinant of the Jacobian
 
-testcount++;
     MatAssemblyBegin(K,MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(K,MAT_FINAL_ASSEMBLY);
     MatScale(K,Jdet); //must be done after assembly
     VecAssemblyBegin(F);
     VecAssemblyEnd(F); VecScale(F,Jdet); //must be done after assembly
  
-    if(comm_rank==0 && testcount==1){ 
+    if(comm_rank==0 && testcount==eID){ 
       MatView(K,PETSC_VIEWER_STDOUT_SELF);
       std::cout<<" NOW VECTOR with just a(.,.)" <<std::endl;
       VecView(F,PETSC_VIEWER_STDOUT_SELF);
     }
    
-    //if(testcount==1 && comm_rank==0){
     double* bflux;
     int F_idx[ndofs];
     bflux = (double*) calloc(ndofs,sizeof(double));
-    if(testcount==1){ getBoundaryFlux(m,ent,voff,visc,pref,velf,bflux); 
+///*
+    if(testcount==eID){ getBoundaryFlux(m,ent,voff,visc,pref,velf,bflux); 
     std::cout<<"Bflux Result "<<std::endl;
     for(int s=0;s<ndofs;s++) std::cout<<bflux[s]<<std::endl;
     }
+//*/
+    //getBoundaryFlux(m,ent,voff,visc,pref,velf,bflux);
     for(int s=0;s<ndofs;s++){
       F_idx[s]=s;
     }
@@ -370,7 +358,7 @@ testcount++;
     VecSetSizes(coef,ndofs,ndofs);
     VecSetUp(coef);
 
-    if(testcount==1 && comm_rank==0){
+    if(testcount==eID && comm_rank==0){
 
 //Save Temporarily for Debugging
       std::ofstream myfile ("stiffness.csv");
@@ -409,9 +397,9 @@ testcount++;
     PCSetType(pc,PCLU);
     KSPSetFromOptions(ksp);
 
-      std::cout<<"Final error "<<std::endl;
-      KSPSolve(ksp,F,coef);
-      VecView(coef,PETSC_VIEWER_STDOUT_SELF);
+    std::cout<<"Final error "<<std::endl;
+    KSPSolve(ksp,F,coef);
+    VecView(coef,PETSC_VIEWER_STDOUT_SELF);
     
     KSPDestroy(&ksp); //destroy ksp
     PCDestroy(&pc);
@@ -453,18 +441,22 @@ testcount++;
           Acomp = Acomp + visc_val*phi_ij*(phi_ij+phi_ji)*weight;
         }
       }
-      Bcomp = Bcomp + apf::getDiv(velo_elem,qpt);
-if(k==0) std::cout<<"What is divergence? "<<apf::getDiv(velo_elem,qpt)<<std::endl;
+      Bcomp = Bcomp + apf::getDiv(velo_elem,qpt)*apf::getDiv(velo_elem,qpt)*weight;
     } //end compute local error
-    //std::cout<<"Acomp and Bcomp "<<Acomp<<" "<<Bcomp<<std::endl;
-    //apf::setScalar(err_reg,ent,0,Acomp+Bcomp);
-    }
+    Acomp = Acomp*Jdet;
+    Bcomp = Bcomp*Jdet;
 
-    apf::setScalar(err_reg,ent,0,Jdet);
+    //apf::setScalar(err_reg,ent,0,Acomp+Bcomp);
+//if(Acomp+Bcomp>1e-10) std::cout<<"Element broken "<<testcount<<std::endl;
+std::cout<<"eID "<<testcount<<" error "<<Acomp+Bcomp<<std::endl;
+    } //end if testcount 
+
+    apf::setScalar(err_reg,ent,0,Jdet); //temporary place in
     MatDestroy(&K); //destroy the matrix
     VecDestroy(&F); //destroy vector
     VecDestroy(&coef); //destroy vector
 
+testcount++;
   } //end element loop
   m->end(iter);
 
@@ -546,8 +538,6 @@ for(int adj=0;adj<adjvtxs.getSize();adj++){
 std::cout<<"Area? "<<apf::measure(b_elem)<<std::endl;
           apf::Matrix3x3 tempgrad_velo[2];
           apf::Matrix3x3 identity(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
-          //apf::Matrix3x3 jacoboff(2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0);
-          //apf::Matrix3x3 jacoboff(1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0);
           apf::MeshElement* tempelem; apf::Element * tempvelo,*temppres,*tempvoff;
           
           normal=getFaceNormal(m,bent);
@@ -560,30 +550,43 @@ std::cout<<"Area? "<<apf::measure(b_elem)<<std::endl;
 */
           if(isInTet(m,ent,apf::project(normal,centerdir)*centerdir.getLength()+apf::getLinearCentroid(m,bent)))
             normal = normal*-1.0; //normal needs to face the other direction
-         
+
+         std::cout<<"Final Normal "<<normal<<std::endl;
+
           //shape functions are from weighting function and independent of neighbors
-          //shapeelem = apf::createMeshElement(m,neighbors[idx_neigh]);
 
           double flux_weight;         
           for(int idx_neigh=0; idx_neigh<neighbors.getSize();idx_neigh++){ //at most two neighboring elements
             if(me==boundary_face){ flux_weight=1; std::cout<<"on boundary face "<<std::endl;}
             else{
               if(neighbors[idx_neigh]==ent) flux_weight = 1-a_kl;
-              else flux_weight = a_kl;
+              else{ 
+                flux_weight = a_kl;
+m->getAdjacent(neighbors[idx_neigh],0,adjvtxs);
+for(int adj=0;adj<adjvtxs.getSize();adj++){
+  m->getPoint(adjvtxs[adj],0,vtxpt);
+  std::cout<<"Adjacent Vertices "<<adj<<" Value "<<vtxpt<<std::endl;
+}
+
+              }
             }
             tempelem = apf::createMeshElement(m,neighbors[idx_neigh]);
             temppres = apf::createElement(pref,tempelem);
             tempvelo = apf::createElement(velf,tempelem);
             tempvoff = apf::createElement(voff,tempelem);
+std::cout<<"Number of boundary int points "<<apf::countIntPoints(b_elem,int_order)<<std::endl;
+std::cout<<"Is the ent?  "<< (neighbors[idx_neigh]==ent)<< std::endl;
             for(int l=0; l<apf::countIntPoints(b_elem,int_order);l++){
               apf::getIntPoint(b_elem,int_order,l,bqpt);
               weight = apf::getIntWeight(b_elem,int_order,l);
               apf::getJacobian(b_elem,bqpt,J); //evaluate the Jacobian at the quadrature point
-              //J = apf::transpose(J); //offset to avoid zero determinant 
-              //if(J[0][0]==0 && J[0][1]
               Jdet=apf::getJacobianDeterminant(J,nsd-1);
               bqptl=apf::boundaryToElementXi(m,bent,neighbors[idx_neigh],bqpt); 
               bqptshp=apf::boundaryToElementXi(m,bent,ent,bqpt); 
+std::cout<<"Boundary qpt "<<bqpt<<std::endl;
+std::cout<<"Boundary qpt local "<<bqptl<<std::endl;
+std::cout<<"Boundary qpt shape "<<bqptshp<<std::endl;
+std::cout<<"Weight "<<weight<<std::endl;
               elem_shape->getValues(NULL,NULL,bqptshp,shpval_temp);
               for(int j=0;j<nshl;j++){ shpval[j] = shpval_temp[hier_off+j];}
               
@@ -596,8 +599,16 @@ std::cout<<"Area? "<<apf::measure(b_elem)<<std::endl;
                   endflux[i*nshl+s] = endflux[i*nshl+s]+bflux[i]*shpval[s];
                 }
               } 
-              
+               
             } //end boundary integration loop
+
+std::cout<<"endflux "<<idx_neigh<<std::endl;
+for(int i=0;i<nsd;i++){
+for(int s=0;s<nshl;s++){
+std::cout<<endflux[i*nshl+s]<<std::endl;
+  endflux[i*nshl+s] = 0;
+}
+} 
           } //end for loop of neighbors
 
           apf::destroyMeshElement(tempelem);apf::destroyElement(tempvelo);apf::destroyElement(temppres); apf::destroyElement(tempvoff);
