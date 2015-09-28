@@ -9,9 +9,11 @@ codes.
 """
 from math import pi, tanh, sqrt, exp, log, sin, cos, cosh, sinh
 import numpy as np
-from Profiling import logEvent
+
+from Profiling import logEvent as log
 import time as tt
 import sys as sys
+
 
 
 def sigma(omega,omega0):
@@ -93,12 +95,12 @@ class MonochromaticWaves:
         self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
         self.phi0=phi0
         if self.waveType not in self.knownWaveTypes:
-            logEvent("Wrong wavetype given: Valid wavetypes are %s" %(self.knownWaveTypes), level=0)
+            log("Wrong wavetype given: Valid wavetypes are %s" %(self.knownWaveTypes), level=0)
             sys.exit(1)
         self.dircheck = abs(sum(g * waveDir))
         #print self.dircheck
         if self.dircheck > 1e-6:
-            logEvent("Wave direction is not perpendicular to gravity vector. Check input",level=0)
+            log("Wave direction is not perpendicular to gravity vector. Check input",level=0)
             sys.exit(1)
         self.period = period
         self.waveHeight = waveHeight
@@ -113,7 +115,7 @@ class MonochromaticWaves:
                 self.k = 2.0*pi/wavelength
                 self.wavelength=wavelength
             except:
-                logEvent("Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)  
+                log("Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)  
                 sys.exit(1)
         self.kDir = self.k * self.waveDir 
         self.amplitude = 0.5*self.waveHeight
@@ -123,7 +125,7 @@ class MonochromaticWaves:
         self.Bcoeff = Bcoeff
         if (Ycoeff is None) or (Bcoeff is None):
             if self.waveType is not "Linear":
-                pr.logEvent("Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)                            
+                pr.log("Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)                            
                 sys.exit(1)
     def phase(self,x,y,z,t):        
 #        return y*self.kDir[1] - self.omega*t + self.phi0
@@ -180,7 +182,7 @@ class MonochromaticWaves:
 
                     }
         else:
-            logEvent("Check Wave types. Available wave types are %s" % waveType,level=0)
+            log("Check Wave types. Available wave types are %s" % waveType,level=0)
             exit(1)
         return Vcomp[ss]
 
@@ -301,8 +303,19 @@ class timeSeries:
                  waveDir = np.array([1,0,0]),
                  g = np.array([0, -9.81, 0])         #accelerationof gravity
                  ): 
+
         self.depth = d
         self.Npeaks = Npeaks
+        if Npeaks is not len(bandFactor): 
+            log("WaveTools.py: bandFactor entries in should be as many as the number of frequencies",level=0)
+            log("Stopping simulation",level=0)
+            exit(1)
+
+        if Npeaks is not len(peakFrequencies): 
+            log("WaveTools.py: peakFrequencies entries in should be as many as the number of frequencies",level=0)
+            log("Stopping simulation",level=0)
+            exit(1)
+            
         self.bandFactor = np.array(bandFactor)        
         self.peakFrequencies = np.array(peakFrequencies)
         self.N = N
@@ -316,30 +329,35 @@ class timeSeries:
         self.vDir = self.g/self.gAbs
         self.fmax = self.bandFactor*self.peakFrequencies
         self.fmin = self.peakFrequencies/self.bandFactor
-
         self.df = (self.fmax-self.fmin)/float(self.N-1)
         self.fi=np.zeros((self.N,self.Npeaks),'d')
 
-        for i,j in np.ndenumerate(fi):
-            self.fi[i,j] = self.fmin[i,j]+self.df[i,j]*i
+        for j in range(Npeaks):
+            for i in range(N):
+                self.fi[i,j] = self.fmin[j]+self.df[j]*i
 
         self.omegai = 2.*pi*self.fi
         self.ki = dispersion(self.omegai,self.depth,g=self.gAbs)
         self.wi = 2.*pi/self.ki
         
 #Reading time series
-        filetype = timeSeriesFile[-3:]
-        if (filetype is not "txt") or (filetype is not "csv"):
-            logEvent("Timeseries must be given in txt or csv format",level=0)
-            sys.exit(1)
-        elif (filetype is "csv"):
+        filetype = timeSeriesFile[-4:]
+        log("Reading timeseries from %s file: %s" % (filetype,timeSeriesFile),level=0)
+        fid = open(timeSeriesFile,"r")
+        if (filetype !=".txt") and (filetype != ".csv"):
+                log("WaveTools.py: Timeseries must be given in .txt or .csv format",level=0)
+                log("Stopping simulation",level=0)
+                sys.exit(1)
+        elif (filetype == ".csv"):
             tdata = np.loadtxt(fid,skiprows=skiprows,delimiter=",")
         else:
             tdata = np.loadtxt(fid,skiprows=skiprows)
+        fid.close()
 #Checks for tseries file
         ncols = len(tdata[0,:])
-        if ncols is not 2:
-            logEvent("Timeseries file must have two colunms for a single probe data",level=0)
+        if ncols != 2:
+            log("WaveTools.py: Timeseries file must have only two columns [time, eta]",level=0)
+            log("Stopping simulation",level=0)
             sys.exit(1)
 
 
@@ -347,24 +365,38 @@ class timeSeries:
         time_temp = tdata[:,0] 
         self.dt = (time_temp[-1]-time_temp[0])/len(time_temp)
         doInterp = False
-        for i in enumerate(time_temp,start=1):
+        for i in range(1,len(time_temp)):
             dt_temp = time_temp[i]-time_temp[i-1]
         #check if time is at first column
             if time_temp[i]<time_temp[i-1]:
-                logEvent("Found not consistent time entry between %s and %s row. Warning: time variable must be always at the first column of the file and increasing monotonically" %(i-1,i) )
+                log("WaveTools.py:  Found not consistent time entry between %s and %s row. Time variable must be always at the first column of the file and increasing monotonically" %(i-1,i) )
+                log("Stopping simulation",level=0)               
                 sys.exit(1)            
         #check if sampling rate is constant
-            if dt is not self.dt:
-                logEvent("Not constant sampling rate found, proceeding to signal interpolation to a constant sampling rate")
+            if abs(dt_temp-self.dt)/self.dt <= 1e-4:
                 doInterp = True
         if(doInterp):
+            log("WaveTools.py: Not constant sampling rate found, proceeding to signal interpolation to a constant sampling rate",level=0)
             self.time = np.linspace(time_temp[0],time_temp[-1],len(time_temp))
             self.eta = np.interp(self.time,time_temp,tdata[:,1])
-        else:
+        else:            
             self.time = time_temp
             self.eta = tdata[:,1]
         del tdata
-
+    def plotSeries(self):
+        "Plots the timeseries in timeSeries.pdf. If returnPlot is set to True, returns a line object"
+        from matplotlib import pyplot as plt
+#insert comm
+        fig = plt.figure(1)
+        line = plt.plot(self.time,self.eta)
+        plt.grid()
+        plt.xlabel("Time")
+        plt.ylabel("Elevation")
+        plt.savefig("timeSeries.pdf")
+        log("WaveTools.py: Plotting timeseries in timeSeries.pdf",level=0)
+        plt.close("all")
+        del fig
+        
 
 class directionalWaves:
 
@@ -493,8 +525,33 @@ class directionalWaves:
                 W+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).w(x,y,z,t)
         return W
     
-    
+   
 
+
+if __name__ == '__main__':
+    from matplotlib import pyplot as plt
+    import os as os
+
+    tseries = timeSeries(timeSeriesFile= "Tseries_proteus.csv",
+                         skiprows = 2,
+                         d = 5.5,
+                         Npeaks = 1, #m depth
+                         bandFactor = [2.0], #controls width of band  around fp
+                         peakFrequencies = [1.0],
+                         N = 32,          #number of frequency bins
+                         Nwaves = 20,
+                         mwl = 0.0,        #mean water level
+                         waveDir = np.array([1,0,0]),
+                         g = np.array([0, -9.81, 0])         #accelerationof gravity
+                         )
+    graph = tseries.plotSeries()
+    tseries_comp = np.loadtxt("Tseries_proteus.csv",skiprows=2, delimiter = ",")
+    line1 = plt.plot(tseries_comp[:,0],tseries_comp[:,1])
+    plt.savefig("timeSeries2.pdf")
+
+
+ 
+"""#Regular, Random wave tests
 if __name__ == '__main__':
     from matplotlib.pyplot import *
     import os as os
@@ -598,4 +655,4 @@ if __name__ == '__main__':
     plotSeriesAlongAxis(z,t,v1[0,0,:,:],1,"UX")
     plotSeriesAlongAxis(y,t,v2[0,0,:,:],2,"UY")
     plotSeriesAlongAxis(z,t,v3[0,0,:,:],3,"UZ")
-    print VTIME
+    print VTIME """
