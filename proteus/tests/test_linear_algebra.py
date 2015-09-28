@@ -323,6 +323,20 @@ def test_petsc_binary_mat_io():
     npt.assert_equal(mj, aj)
     npt.assert_equal(mv, av)
 
+
+def test_dense_lu(n=4):
+    """
+    Test LU calculation for dense matrices stored as numpy arrays. LU assumes that matrix is stored 
+    in row major format
+    """
+    A = np.diag(np.ones(n,'d'))+np.diag(np.arange(n-1,'d'),1)
+    b = np.random.randn(n)
+    LU= LinearSolvers.LU(A)
+    LU.prepare(b=b)
+    LU.solve(u=u,b=b)
+    u_np = np.linalg.solve(A,b)
+    npt.assert_almost_equal(u,u_np)
+
 if __name__ == '__main__':
     import nose
     nose.main()
