@@ -256,6 +256,8 @@ class Cuboid(Shape):
         self.regions = np.array([[x, y, z]])
         if not tank:
             self.holes = np.array([coords])
+        else:
+            self.holes = np.array([])
         # defining flags for boundary conditions
         self.facetFlags = np.array([0, 1, 2, 3, 4, 5])  # bottom, front, right, back, left, top
         self.vertexFlags = np.array([0, 0, 0, 0, 5, 5, 5, 5])  # only top and bottom for vertices
