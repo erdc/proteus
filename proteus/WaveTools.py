@@ -9,7 +9,7 @@ codes.
 """
 from math import pi, tanh, sqrt, exp, log, sin, cos, cosh, sinh
 import numpy as np
-
+import cmath as cmath
 from Profiling import logEvent as log
 import time as tt
 import sys as sys
@@ -83,6 +83,85 @@ def dispersion(w,d, g = 9.81,niter = 1000):
 #    print("Final k value = %s" %str(Kd/d))
 #    print("Wavelength= %s" %str(2.*pi*d/Kd))
     return(Kd/d)
+        
+def window(wname='Costap'):
+    """Returns a window function, currently has dirichlet window and cosine taper
+    ntime : Number of sample points in window function
+    wname : filter type
+    See: On the use of Windows for Harmonic Analysis with Discrete Fourier Transform,
+    Harris JF (1978) Proceedings of the IEEE 66(1): 51-83"""
+    def diric(l):
+        """Dirichlet filter, only ones"""
+        return np.ones(l)
+
+    def costap(l):
+        """ Cosine taper Goda (2010), Random Seas and Design of Maritime Structures
+        a particular window function. Looks like Hanning window. taper window"""
+        npoints = np.ceil(0.1*l)
+        wind = np.ones(l)
+        for k in range(l): # (k,np) = (n,N) normally used
+            if k < npoints:
+                wind[k] = 0.5*(1.-cos(pi*float(k)/float(npoints)))
+            if k > l - npoints -1:
+                wind[k] = 0.5*(1.-cos(pi*float(l-k-1)/float(npoints)))
+        return wind
+    options= {"Dirichlet":diric,
+            "Costap":costap,
+            }
+    return options[wname]
+    
+#fft function ( = Cooley-Tukey FFT algorithm ) already included in imported numpy library 
+# fft( input array (here eta), x axis (here Time component) ).
+
+def decompose_tseries(time,eta,nfft,ret_only_freq=0):
+    results = []
+    NN = np.ceil((nfft+1)/2)-1  #   %number of primary frequency components (excluding negative frequencies and 0 frequency)
+
+
+	#linspace( start, stop , nb of values returned (optionnal)) => return an array
+	# theory : ww = ( 2 pi * j ) / N   with loop on j and N = nb of frequencies
+	# here : ww = ( 2 pi * linspace ) * (nfft / dt)
+	# (nfft / dt) = nb of intervals. 
+
+
+	#return an array composed with all the ww_k
+    ww = np.linspace(1,NN,NN)*2*pi/(time[2]-time[1])/nfft      	#evenly spaced ang. frequency vector with NN points (excluding w=0)
+    if (ret_only_freq!=0):                                          #if return only frequency is not 0, then the script returns only the frequencies
+        return ww
+    fft_x = np.fft.fft(eta,nfft)
+  
+
+
+    setup = np.real(fft_x[0])/nfft   #first coefficient of Fourier series = average value
+    fft_x = fft_x[1:NN+1]                              #%retaining only first half of the spectrum
+
+	#computes the abs(fft_x) component after component and returns the array aa
+    aa = abs(fft_x)/nfft                                 #%amplitudes (only the ones related to positive frequencies)
+    if nfft%2:                                       #%odd nfft- excludes Nyquist point    
+        aa[0:NN] = 2*aa[0:NN]                              #%multiply amplitudes by 2 since we neglected the negative half of the spectrum. Note that the index starts at 1 (not 2) since the vector a doesnt contain the 0 freq. component.
+    else:                                                 #%even nfft - includes Nyquist point
+        aa[0:NN -1] = 2*aa[0:NN -1]                        #%mulitply amplitudes by 2 since we neglected the negative half of the spectrum
+
+
+    pp = np.zeros(len(aa),complex)
+	#calculate the phase of each (fft_x[k]).
+	# returns an array     
+    for k in range(len(aa)):
+        pp[k]=cmath.phase(fft_x[k])                       #% Calculating phases phases
+        pp = np.real(pp)                                         # Append results to list
+
+
+    results.append(ww)
+    results.append(aa)
+    results.append(pp)
+    results.append(setup)
+    return results
+
+
+
+
+
+
 
 class MonochromaticWaves:
     """Generate a monochromatic wave train in the linear regime
@@ -383,6 +462,30 @@ class timeSeries:
             self.time = time_temp
             self.eta = tdata[:,1]
         del tdata
+        #Loading the window, setting a taper window
+#        print self.peakFrequencies
+        self.Twindow = self.Nwaves / self.peakFrequencies
+        self.Nwindow = self.Twindow / self.dt
+#        if(np.mod(self.Nwindow,2)==1): self.Nwindow+=1
+#        print self.Nwindow
+        wind_fun = window(wname="Costap")
+#        try: 
+#            itest = len(self.Nwindow)
+#           for ii in self.Nwindow:
+#                print wind_fun(int(ii))
+#        except:
+#            print wind_fun(int(self.Nwindow))
+        self.time = self.time
+        self.eta = self.eta
+        self.nfft=len(self.time)
+        self.decomp = decompose_tseries(self.time,self.eta,self.nfft,ret_only_freq=0)
+        
+
+
+    def rawdata(self):
+        A = [self.time, self.eta]
+        return A
+
     def plotSeries(self):
         "Plots the timeseries in timeSeries.pdf. If returnPlot is set to True, returns a line object"
         from matplotlib import pyplot as plt
@@ -396,7 +499,43 @@ class timeSeries:
         log("WaveTools.py: Plotting timeseries in timeSeries.pdf",level=0)
         plt.close("all")
         del fig
-        
+    def Z(self,x,y,z):
+        return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.mwl
+
+    def reconstruct(self,x,y,z,t,Nf,var="eta",ss = "x"):
+        ai = self.decomp[1]
+        ipeak = np.where(ai == max(ai))[0][0]
+        imax = min(ipeak + Nf/2,len(ai))
+        imin = max(0,ipeak - Nf/2)
+        ai = ai[imin:imax]
+        omega = self.decomp[0][imin:imax]
+        phi = self.decomp[2][imin:imax]                              
+        ki = dispersion(omega,self.depth,g=self.gAbs)
+        kDir = np.zeros((len(ki),3),"d")
+        Nf = len(omega)
+        for ii in range(len(ki)):
+            kDir[ii,:] = ki[ii]*self.waveDir[:]
+        if var=="eta":
+            Eta=0.
+            for ii in range(Nf):
+                Eta+=ai[ii]*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])
+            return Eta        
+        if var=="U":
+            UH=0.
+            UV=0.
+            for ii in range(Nf):
+                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(Z(x,y,z)+depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*depth)
+                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(Z(x,y,z)+depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*depth)
+#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
+            Vcomp = {
+                    "x":UH*self.waveDir[0] + UV*self.vDir[0],
+                    "y":UH*self.waveDir[1] + UV*self.vDir[1],
+                    "z":UH*self.waveDir[2] + UV*self.vDir[2],
+                    }
+            return Vcomp[ss]
+
+            
+       
 
 class directionalWaves:
 
@@ -548,7 +687,28 @@ if __name__ == '__main__':
     tseries_comp = np.loadtxt("Tseries_proteus.csv",skiprows=2, delimiter = ",")
     line1 = plt.plot(tseries_comp[:,0],tseries_comp[:,1])
     plt.savefig("timeSeries2.pdf")
+    plt.close("all")
+    time = tseries.rawdata()[0]
+    eta = tseries.rawdata()[1]
+    decomp = decompose_tseries(time,eta,len(time),ret_only_freq=0)
+   # plt.plot(decomp[0],decomp[1])
+   # plt.plot(decomp[0],decomp[2])
 
+
+    
+    tlim = 200 # len(time)
+    ax = plt.subplot(111)
+    for Nf in np.array([4,8,16,32,64,128]):
+        print Nf
+        eta_rec= np.zeros(len(time),"d")
+        for itime in range(tlim):
+            eta_rec[itime] = tseries.reconstruct(0.,0.,0.,time[itime],Nf)
+        ax.plot(time,eta_rec,label = "Nf = %s" %Nf)
+        ax.legend()
+    ax.plot(time,eta,"ko",label="Actual")
+    plt.legend(loc="best")
+    ax.set_xlim(0,50)
+    plt.savefig("Comp.pdf")
 
  
 """#Regular, Random wave tests
