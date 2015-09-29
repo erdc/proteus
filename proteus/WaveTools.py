@@ -502,7 +502,7 @@ class timeSeries:
     def Z(self,x,y,z):
         return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.mwl
 
-    def reconstruct(self,x,y,z,t,Nf,var="eta",ss = "x"):
+    def reconstruct_direct(self,x,y,z,t,Nf,var="eta",ss = "x"):
         ai = self.decomp[1]
         ipeak = np.where(ai == max(ai))[0][0]
         imax = min(ipeak + Nf/2,len(ai))
@@ -702,7 +702,7 @@ if __name__ == '__main__':
         print Nf
         eta_rec= np.zeros(len(time),"d")
         for itime in range(tlim):
-            eta_rec[itime] = tseries.reconstruct(0.,0.,0.,time[itime],Nf)
+            eta_rec[itime] = tseries.reconstruct_direct(0.,0.,0.,time[itime],Nf)
         ax.plot(time,eta_rec,label = "Nf = %s" %Nf)
         ax.legend()
     ax.plot(time,eta,"ko",label="Actual")
