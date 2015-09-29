@@ -15,6 +15,8 @@ import BC as bc
 import numpy as np
 from math import cos, sin, sqrt
 from proteus import AuxiliaryVariables, Archiver
+from proteus.Profiling import logEvent
+
 
 class Shape:
     """
@@ -71,11 +73,10 @@ class Shape:
         if len(self.domain.bc) == 0: # need to add None boundary condition at 0 indice
             self.domain.bc += [bc.BoundaryConditions()]
         self.domain.bc += self.bc
-        if self.barycentre:
-            if self.domain.barycenters is not None:
-                self.domain.barycenters = np.append(self.domain.barycenters, self.barycenters, axis=0)  # need to change to array
-            else:
-                self.domain.barycenters = self.barycenters
+        if self.domain.barycenters is not None:
+            self.domain.barycenters = np.append(self.domain.barycenters, self.barycenters, axis=0)  # need to change to array
+        else:
+            self.domain.barycenters = self.barycenters
         self.domain.update()
 
     def _updateDomain(self):
@@ -229,7 +230,7 @@ class Cuboid(Shape):
         Shape.__init__(self, domain)
         self.dim = L, W, H = dim  # length, width height
         self.volume = L*W*H
-        self.coords = x, y, z = coords
+        self.coords = x, y, z = np.array(coords)
         self.coords_system = np.eye(3)
         self.vertices = np.array([[x-0.5*L, y-0.5*W, z-0.5*H],
                                   [x-0.5*L, y+0.5*W, z-0.5*H],
@@ -247,12 +248,12 @@ class Cuboid(Shape):
                                 [[2, 3, 7, 6]],  # back
                                 [[3, 0, 4, 7]],  # left
                                 [[4, 5, 6, 7]]])  # top
-        self.facets_orientation = np.array([[0,  0, -1],
-                                            [-1, 0,  0],
-                                            [0,  1,  0],
-                                            [1,  0,  0],
-                                            [0, -1,  0],
-                                            [0,  0,  1]])
+        self.facets_orientation = np.array([[0.,  0., -1.],
+                                            [-1., 0.,  0.],
+                                            [0.,  1.,  0.],
+                                            [1.,  0.,  0.],
+                                            [0., -1.,  0.],
+                                            [0.,  0.,  1.]])
         self.regions = np.array([[x, y, z]])
         if not tank:
             self.holes = np.array([coords])
@@ -325,10 +326,10 @@ class Rectangle(Shape):
                                   [x+0.5*L, y+0.5*H],
                                   [x-0.5*L, y+0.5*H]])
         self.segments= np.array([[0,1],[1,2],[2,3],[3,0]])  # bottom, right, top, left
-        self.segments_orientation = [[0, -1],
-                                     [1, 0],
-                                     [0, 1],
-                                     [0, -1]]
+        self.segments_orientation = [[0., -1.],
+                                     [1., 0.],
+                                     [0., 1.],
+                                     [0., -1.]]
         self.barycenters = np.array([self.barycentre for segment in self.sgments])
         self.regions = np.array([[x, y]])
         self.segmentFlags = np.array([0, 1, 2, 3]) # bottom, right, top, left
@@ -391,10 +392,8 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.M = np.zeros(nd, 'd')
         self.last_F = np.zeros(nd, 'd')
         self.last_M = np.zeros(nd, 'd')
-        self.barycenters = np.zeros((len(self.shape.domain.facets), nd), 'd')
-        startnf = self.shape.snf
-        endnf = startnf + len(self.shape.facets) + 1
-        self.barycenters[startnf:endnf,:] = self.shape.barycentre
+        self.barycenters = shape.domain.barycenters
+        self.velocity_ang = 0.
 
     def step(self, dt):
         # displacement from force
@@ -404,8 +403,8 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.shape.translate(displacement)        # rotation due to moment
         I = self.shape.getInertia(vec=self.M, pivot=self.shape.barycentre)
         acc_ang = self.M/I
-        velocity_ang += acc_ang*dt
-        ang_disp = velocity_ang*dt
+        self.velocity_ang += acc_ang*dt
+        ang_disp = self.velocity_ang*dt
         self.ang = np.linalg.norm(ang_disp)
         self.shape.rotate(rot=self.ang, axis=ang_vel, pivot=self.shape.barycentre)
 
@@ -417,10 +416,7 @@ class RigidBody(AuxiliaryVariables.AV_base):
         m = self.model.levelModelList[-1]
         flagMax = max(m.mesh.elementBoundaryMaterialTypes)
         flagMin = min(m.mesh.elementBoundaryMaterialTypes)
-        # assert(flagMin >= 0)
-        # assert(flagMax <= 7)
-        # self.nForces=flagMax+1
-        # assert(self.nForces <= 8)
+        self.nForces=flagMax+1
         return self
 
     def get_u(self):
@@ -440,6 +436,7 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.calculate()
 
     def calculate(self):
+        import copy
         self.last_velocity = copy.deepcopy(self.velocity)
         self.last_position = copy.deepcopy(self.position)
         self.last_rotation = self.rotation.copy()
