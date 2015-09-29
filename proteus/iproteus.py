@@ -21,7 +21,10 @@ from proteus import Profiling, Comm, version
 from warnings import *
 import optparse
 import sys
-from IPython.display import display,Markdown
+try:
+    from IPython.display import display,Markdown
+except:
+    pass
 import inspect
 
 def display_src(python_object):
