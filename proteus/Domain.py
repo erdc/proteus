@@ -732,6 +732,8 @@ class PiecewiseLinearComplexDomain(D_base):
             self.regionLegend = {}
             self.boundaryFlags = {}
             self.bc = bc or []
+            import numpy as np
+            self.barycenters = None
             self.update()
             
     def update(self):
