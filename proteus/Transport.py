@@ -1788,14 +1788,24 @@ class OneLevelTransport(NonlinearEquation):
             raise TypeError("Matrix type must be SparseMatrix or array")
         log("Jacobian ",level=10,data=jacobian)
         if self.forceStrongConditions:
-            for cj in range(self.nc):
-                for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
-                    global_dofN = self.offset[cj]+self.stride[cj]*dofN
-                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
-                        if (self.colind[i] == global_dofN):
-                            self.nzval[i] = 1.0
-                        else:
-                            self.nzval[i] = 0.0
+            if self.matType == superluWrappers.SparseMatrix:
+                jac_rowptr,jac_colind,jac_nzval  = jacobian.getCSRrepresentation()
+                for cj in range(self.nc):
+                    for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                        global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                        for i in range(jac_rowptr[global_dofN],jac_rowptr[global_dofN+1]):
+                            if (self.colind[i] == global_dofN):
+                                jac_nzval[i] = 1.0
+                            else:
+                                jac_nzval[i] = 0.0
+                            
+            elif self.matType  == numpy.array:
+                for cj in range(self.nc):
+                    for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                        global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                        jacobian[global_dofN,:] = 0.
+                        jacobian[global_dofN,global_dofN] = 1.0
+
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         #cek debug
@@ -5818,6 +5828,7 @@ class OneLevelTransport(NonlinearEquation):
     def getMassJacobian(self,jacobian):
         """
         assemble the portion of the jacobian coming from the time derivative terms
+        zeros rows for Dirichlet boundary conditions if forcing strong conditions is requested
         """
         import superluWrappers
         import numpy
@@ -5865,14 +5876,20 @@ class OneLevelTransport(NonlinearEquation):
             raise TypeError("Matrix type must be SparseMatrix or array")
         log("Mass Jacobian ",level=10,data=jacobian)
         if self.forceStrongConditions:
-            for cj in range(self.nc):
-                for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
-                    global_dofN = self.offset[cj]+self.stride[cj]*dofN
-                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
-                        if (self.colind[i] == global_dofN):
-                            self.nzval[i] = 1.0
-                        else:
-                            self.nzval[i] = 0.0
+            if self.matType == superluWrappers.SparseMatrix:
+                jac_rowptr,jac_colind,jac_nzval  = jacobian.getCSRrepresentation()
+                for cj in range(self.nc):
+                    for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                        global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                        for i in range(jac_rowptr[global_dofN],jac_rowptr[global_dofN+1]):
+                            jac_nzval[i] = 0.0
+                            
+            elif self.matType  == numpy.array:
+                for cj in range(self.nc):
+                    for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                        global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                        jacobian[global_dofN,:] = 0.
+
         return jacobian
     #
     def getSpatialJacobian(self,jacobian):
@@ -5918,7 +5935,7 @@ class OneLevelTransport(NonlinearEquation):
         if self.forceStrongConditions:#
             for cj in range(len(self.dirichletConditionsForceDOF)):#
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    r[self.offset[cj]+self.stride[cj]*dofN] = 0
+                    r[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
     def getMassResidual(self,u,r):
         """
         Calculate the portion of the element residuals associated with the temporal term and assemble into a global residual
