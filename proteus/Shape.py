@@ -117,8 +117,8 @@ class Shape:
         self.free_r = free_r
 
     def setRegions(self, regions):
-        self.regions = regions
-        self._updateDomain
+        self.regions = np.array([regions])
+        self._updateDomain()
     
     def rotate(self, rot, axis=(0,0,1), pivot=None):
         """
