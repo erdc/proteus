@@ -34,8 +34,9 @@ for bc in caisson3D.bc:
     bc.setNoSlip()
 
 for bc in tank.bc:
-    bc.setNoSlip()    
-tank.bc_top.setOpen()  # BC can be set individually
+    bc.setNoSlip()
+tank.bc_top.setFreeSlip()  # BC can be set individually
+
 
 def newBC(x, t):
     return 0.0
