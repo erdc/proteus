@@ -4,28 +4,25 @@ Module for creating boundary conditions. Imported in Shape.py
 import numpy as np
 
 
-
 def constantBC(value, nested=True):
     """
-    function returning constant BC 
+    function returning constant BC
     :arg a0:
     :arg a1:
     :arg i:
-    :arg nested: True (default) if used directly to define a BC, False if used in a function already taking x as an argument  
+    :arg nested: True (default) if used directly to define a BC, False if used in a function already taking x as an argument
     :return: func(x): func(x,t) with nested=True
              func(x,t) with nested=False
     """
-    if value is None:
-        return None
-    else:
-        if nested:  # need to nest functions as it is called with x in *_p.py files
-            return lambda x: (lambda x, t: value)
-        else:  # only if another function is calling setConstantBC and is already using x
-            return lambda x, t: value
+    if nested:  # need to nest functions as it is called with x in *_p.py files
+        return lambda x: (lambda x, t: value)
+    else:  # only if another function is calling setConstantBC and is already using x
+        return lambda x, t: value
+
 
 def linearBC(a0, a1, i, nested=True):
     """
-    function returning linear BC 
+    function returning linear BC
     :arg a0:
     :arg a1:
     :arg i:
@@ -38,6 +35,7 @@ def linearBC(a0, a1, i, nested=True):
     else:
         return lambda x, t: a0 + a1*x[i]
 
+
 def noBC(x):
     """
     function returning None
@@ -45,6 +43,7 @@ def noBC(x):
     :return: None
     """
     return None
+
 
 def zeroBC(x):
     """
@@ -102,7 +101,7 @@ class BoundaryConditions:
             self.stress_u = noBC
         elif b_or[1] == 1 or b_or[1] == -1:
             self.DBC_hy = constantBC(0.)
-            self.stress_w = noBC
+            self.stress_v = noBC
         elif len(b_or) > 2 and (b_or[2] == 1 or b_or[2] == -1):
             self.DBC_hz = constantBC(0.)
             self.stress_w = noBC
@@ -154,9 +153,9 @@ class BoundaryConditions:
         sets rigid body boundary conditions
         """
         self.reset()
-        # self.DBC_hx = zeroBC  # initial mesh conditions
-        # self.DBC_hy = zeroBC
-        # self.DBC_hz = zeroBC
+        self.DBC_hx = constantBC(0.)  # initial mesh conditions
+        self.DBC_hy = constantBC(0.)
+        self.DBC_hz = constantBC(0.)
         self.DBC_u = constantBC(0.)
         self.DBC_v = constantBC(0.)
         self.DBC_w = constantBC(0.)
@@ -176,17 +175,17 @@ class BoundaryConditions:
         """
         # (!) could also be done using axis of rotation and angle
         def get_DBC_h(i):
-            def DBC_h(x, t):
+            def DBC_h(x):
                 h = position-last_position  # translation of pivot between calculation step
                 x_0 = x-last_position  # translate rotation pivot to origin
                 new_rotation_matrix = np.dot(np.linalg.inv(last_rotation), rotation)
                 new_x = np.dot(x_0, new_rotation_matrix)+h+last_position  # rotate and translate back
                 hx = new_x-x  # displacement of point x from last calculation step
-                return hx[i]
+                return lambda x, t: hx[i]
             return DBC_h
         self.DBC_hx = get_DBC_h(i=0)
         self.DBC_hy = get_DBC_h(i=1)
-        if len(h) > 2:
+        if len(last_position) > 2:
             self.DBC_hz = get_DBC_h(i=2)
 
     def setTwoPhaseVelocityInlet(self, U, waterLevel, vert_axis=-1, air=1., water=0.):
@@ -251,11 +250,10 @@ class BoundaryConditions:
                 b_or = self._b_or[self._b_i]
                 if b_or[i] == 0:
                     return constantBC(0., nested=False)
-        
-        self.DBC_u = get_outlet_DBC_ux(0)
-        self.DBC_v = get_outlet_DBC_ux(1)
+        self.DBC_u = get_outlet_DBC_vel(0)
+        self.DBC_v = get_outlet_DBC_vel(1)
         if len(g) == 3:
-            self.DBC_w = get_outlet_DBC_ux(2)
+            self.DBC_w = get_outlet_DBC_vel(2)
         self.DBC_p = linearBC(a0, a1, vert_axis)
         self.DBC_vof = constantBC(air)
         self.DFBC_u = constantBC(0.)
