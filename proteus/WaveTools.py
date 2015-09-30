@@ -94,10 +94,10 @@ def window(wname='Costap'):
         """Dirichlet filter, only ones"""
         return np.ones(l)
 
-    def costap(l):
+    def costap(l,tail=0.1):
         """ Cosine taper Goda (2010), Random Seas and Design of Maritime Structures
         a particular window function. Looks like Hanning window. taper window"""
-        npoints = np.ceil(0.1*l)
+        npoints = np.ceil(tail*l)
         wind = np.ones(l)
         for k in range(l): # (k,np) = (n,N) normally used
             if k < npoints:
@@ -461,24 +461,34 @@ class timeSeries:
         else:            
             self.time = time_temp
             self.eta = tdata[:,1]
-        del tdata
-        #Loading the window, setting a taper window
-#        print self.peakFrequencies
-        self.Twindow = self.Nwaves / self.peakFrequencies
-        self.Nwindow = self.Twindow / self.dt
-#        if(np.mod(self.Nwindow,2)==1): self.Nwindow+=1
-#        print self.Nwindow
+        self.eta -=np.mean(self.eta)
         wind_fun = window(wname="Costap")
-#        try: 
-#            itest = len(self.Nwindow)
-#           for ii in self.Nwindow:
-#                print wind_fun(int(ii))
-#        except:
-#            print wind_fun(int(self.Nwindow))
-        self.time = self.time
-        self.eta = self.eta
+        self.eta *=wind_fun(len(self.time),tail=0.05)
+        
+
+
+
+
+
+
+        del tdata
+
+# Direct decomposition of the time series for using at reconstruct_direct
         self.nfft=len(self.time)
         self.decomp = decompose_tseries(self.time,self.eta,self.nfft,ret_only_freq=0)
+        self.setup = self.decomp[3]
+        self.eta+=self.setup
+
+# Spectral windowing
+        self.Twindow = self.Nwaves / self.peakFrequencies
+        self.Npw = int(self.Twindow / self.dt)        
+        self.Twindow = self.Npw*self.dt
+        
+        self.Noverlap = int(self.Npw *0.25)
+        self.Toverlap = self.Noverlap
+
+        
+
         
 
 
@@ -518,8 +528,8 @@ class timeSeries:
         if var=="eta":
             Eta=0.
             for ii in range(Nf):
-                Eta+=ai[ii]*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])
-            return Eta        
+                Eta+=ai[ii]*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii]) 
+            return Eta
         if var=="U":
             UH=0.
             UV=0.
@@ -612,7 +622,10 @@ class directionalWaves:
         self.dirs[self.M,:] = self.waveDir
         self.phi[self.M,:] = 2.0*pi*np.random.random(self.fi.shape[0])
         self.ai_d[self.M,:] = self.ai*self.G_Int*spread[0] 
- 
+
+
+
+
     def eta(self,x,y,z,t):
         """Free surface displacement
         
@@ -670,8 +683,40 @@ class directionalWaves:
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     import os as os
+    import tables
+    lineData = tables.openFile("20150927-0000-01.FRFNProp.line.data.mat","r")
+    z = lineData.root.lineGriddedFilteredData.waterGridFiltered[:]
+    x = lineData.root.lineCoredat.downLineX[:] 
+    xfinite = x[:]
+    xfinite[np.isnan(x)] = -1000.0
+    i105 = np.where(xfinite > 105.0)[0][0]
+    print i105
+    rawtime = lineData.root.lineCoredat.tGPSVector[:500]
+    raweta = z[i105,:500]
 
-    tseries = timeSeries(timeSeriesFile= "Tseries_proteus.csv",
+    rawtime = rawtime - rawtime[0]
+    rawtime*=86400
+
+    
+    plt.plot(rawtime,raweta,"ko")
+
+
+    #from scipy.interpolate import interp1d
+
+    #from scipy import interpolate
+    not_nan = np.logical_not(np.isnan(raweta))
+
+    indices = np.arange(len(raweta))        
+    neweta = np.interp(indices, indices[not_nan], raweta[not_nan])
+    
+    plt.plot(rawtime,neweta)
+   
+    plt.savefig("raw.pdf")
+    plt.close("all") 
+    np.savetxt("Duck_series.txt",zip(rawtime,neweta))
+        
+
+    tseries = timeSeries(timeSeriesFile= "Duck_series.txt",
                          skiprows = 2,
                          d = 5.5,
                          Npeaks = 1, #m depth
@@ -690,24 +735,31 @@ if __name__ == '__main__':
     plt.close("all")
     time = tseries.rawdata()[0]
     eta = tseries.rawdata()[1]
+
+
+
+
     decomp = decompose_tseries(time,eta,len(time),ret_only_freq=0)
    # plt.plot(decomp[0],decomp[1])
    # plt.plot(decomp[0],decomp[2])
 
 
     
-    tlim = 200 # len(time)
+    
+    tlim = len(time) # len(time)
     ax = plt.subplot(111)
-    for Nf in np.array([4,8,16,32,64,128]):
+    for Nf in np.array([16,32,64,128]):
         print Nf
         eta_rec= np.zeros(len(time),"d")
         for itime in range(tlim):
             eta_rec[itime] = tseries.reconstruct_direct(0.,0.,0.,time[itime],Nf)
         ax.plot(time,eta_rec,label = "Nf = %s" %Nf)
         ax.legend()
+
+    rawm = np.mean(neweta)    
     ax.plot(time,eta,"ko",label="Actual")
     plt.legend(loc="best")
-    ax.set_xlim(0,50)
+#    ax.set_xlim(0,50)
     plt.savefig("Comp.pdf")
 
  
