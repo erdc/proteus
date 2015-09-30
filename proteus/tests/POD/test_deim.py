@@ -56,6 +56,27 @@ def test_residual_split():
     res_t += res_s
     npt.assert_almost_equal(res,res_t)
 
+def test_nonlin_residual_split():
+    """
+    just tests that R=R_l+R_n for random dof vector in [0,1]
+
+    Here R_l and R_n are the linear and nonlinear portions of the residual
+    """
+    ns = get_burgers_ns("test_res_split",T=0.05,nDTout=5)
+    failed = ns.calculateSolution("run_res_test")
+    assert not failed
+    #storage for residuals
+    model = ns.modelList[0].levelModelList[-1]
+    u_tmp = np.random.random(model.u[0].dof.shape)
+    res = np.zeros(model.u[0].dof.shape,'d')
+    res_n = res.copy(); res_l=res.copy()
+    model.getResidual(u_tmp,res)
+    model.getNonlinearResidual(u_tmp,res_n)
+    model.getLinearResidual(u_tmp,res_l)
+    
+    res_n += res_l
+    npt.assert_almost_equal(res,res_n)
+
 def test_res_archive():
     """
     smoke test if numerical solution can archive 'spatial residuals' to xdmf  
@@ -228,5 +249,5 @@ if __name__ == "__main__":
     from proteus import Comm
     comm = Comm.init()
     import nose
-    nose.main(defaultTest='test_deim:test_deim_approx_full')
+    nose.main(defaultTest='test_deim:test_nonlin_residual_split')
     
