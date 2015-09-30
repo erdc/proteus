@@ -254,7 +254,7 @@ class LU(LinearSolver):
         LinearSolver.__init__(self,L)
         if type(L).__name__ == 'SparseMatrix':
             self.sparseFactor = superluWrappers.SparseFactor(self.n)
-        elif type(L).__name__ == 'ndarray':#mwf was array
+        elif type(L).__name__ == 'ndarray':#
             self.denseFactor = lapackWrappers.DenseFactor(self.n)
         self.solverName = "LU"
         self.computeEigenvalues = computeEigenvalues or (computeEigenvectors != None)
@@ -293,10 +293,12 @@ class LU(LinearSolver):
         if type(self.L).__name__ == 'SparseMatrix':
             superluWrappers.sparseFactorSolve(self.sparseFactor,u)
         elif type(self.L).__name__ == 'ndarray':
+            use_transpose=1
             lapackWrappers.denseFactorSolve(self.n,
                                             self.L,
                                             self.denseFactor,
-                                            u)
+                                            u,use_transpose)
+
         self.computeResidual(u,r,b)
         self.du -= u
         self.converged(r)

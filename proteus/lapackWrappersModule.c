@@ -124,16 +124,22 @@ static PyObject* lapackWrappersDenseFactorPrepare(PyObject* self,
 static PyObject* lapackWrappersDenseFactorSolve(PyObject* self,
                                                 PyObject* args)
 {
-  int dim;
+  int dim,use_transpose=0;
   PROTEUS_LAPACK_INTEGER N,INFO=0,NRHS=1;
   char TRANS='N';
   PyObject *mat,*b,*denseFactor;
-  if(!PyArg_ParseTuple(args,"iOOO",
+  if(!PyArg_ParseTuple(args,"iOOO|i",
                        &dim,
                        &mat,
                        &denseFactor,
-                       &b))
+                       &b,
+		       &use_transpose))
     return NULL;
+  if (use_transpose == 1)
+    TRANS='T';
+  else
+    TRANS='N';
+
   N = (PROTEUS_LAPACK_INTEGER)(dim);
   dgetrs_(&TRANS,
           &N,
