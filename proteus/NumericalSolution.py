@@ -925,7 +925,7 @@ class NS_base:  # (HasTraits):
                 res_space[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
                 model.levelModelList[-1].getSpatialResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
                 res_mass[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
-                model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
+                model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_mass[ci])
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_space,res_name_base='spatial_residual')
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_mass,res_name_base='mass_residual')
 
