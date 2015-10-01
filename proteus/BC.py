@@ -20,23 +20,6 @@ def linearBC(a0, a1, i):
     """
     return lambda x, t: a0 + a1*x[i]
 
-def noBC(x, t):
-    """
-    function returning None
-    :arg x: coordinates of point
-    :return: None
-    """
-    return None
-
-
-def zeroBC(x, t):
-    """
-    function returning 0
-    :arg x: coordinates of point
-    :return: 0
-    """
-    return 0.0
-
 
 class BoundaryConditions:
     """
@@ -47,48 +30,48 @@ class BoundaryConditions:
         self._b_i = b_i  # indice for this boundary in list of boundaries in shape
         self.reset()
         # moveMesh boundary conditions
-        self.DBC_hx = noBC
-        self.DBC_hy = noBC
-        self.DBC_hz = noBC
-        self.stress_u = zeroBC
-        self.stress_v = zeroBC
-        self.stress_w = zeroBC
+        self.DBC_hx = None
+        self.DBC_hy = None
+        self.DBC_hz = None
+        self.stress_u = constantBC(0.)
+        self.stress_v = constantBC(0.)
+        self.stress_w = constantBC(0.)
 
     def reset(self):
         # Dirichlet
-        self.DBC_p = noBC  # pressure
-        self.DBC_u = noBC  # velocity u
-        self.DBC_v = noBC  # velocity v
-        self.DBC_w = noBC  # velocity w
-        self.DBC_vof = noBC  # VOF
-        self.DBC_k = noBC  # kappa
-        self.DBC_dissipation = noBC  # dissipation
+        self.DBC_p = None  # pressure
+        self.DBC_u = None  # velocity u
+        self.DBC_v = None  # velocity v
+        self.DBC_w = None  # velocity w
+        self.DBC_vof = None  # VOF
+        self.DBC_k = None  # kappa
+        self.DBC_dissipation = None  # dissipation
         # Advective
-        self.AFBC_p = noBC
-        self.AFBC_u = noBC
-        self.AFBC_v = noBC
-        self.AFBC_w = noBC
-        self.AFBC_vof = noBC
-        self.AFBC_k = noBC
-        self.AFBC_dissipation = noBC
+        self.AFBC_p = None
+        self.AFBC_u = None
+        self.AFBC_v = None
+        self.AFBC_w = None
+        self.AFBC_vof = None
+        self.AFBC_k = None
+        self.AFBC_dissipation = None
         # Diffusive
-        self.DFBC_u = noBC
-        self.DFBC_v = noBC
-        self.DFBC_w = noBC
-        self.DFBC_k = noBC
-        self.DFBC_dissipation = noBC
+        self.DFBC_u = None
+        self.DFBC_v = None
+        self.DFBC_w = None
+        self.DFBC_k = None
+        self.DFBC_dissipation = None
 
     def setTank(self):
         b_or = self._b_or[self._b_i].tolist()
         if b_or[0] == 1 or b_or[0] == -1:
             self.DBC_hx = constantBC(0.)
-            self.stress_u = noBC
+            self.stress_u = None
         elif b_or[1] == 1 or b_or[1] == -1:
             self.DBC_hy = constantBC(0.)
-            self.stress_v = noBC
+            self.stress_v = None
         elif len(b_or) > 2 and (b_or[2] == 1 or b_or[2] == -1):
             self.DBC_hz = constantBC(0.)
-            self.stress_w = noBC
+            self.stress_w = None
 
     def setNoSlip(self):
         """
