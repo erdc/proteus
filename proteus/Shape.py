@@ -13,7 +13,7 @@ Add more predifined shape types
 
 import BC as bc
 import numpy as np
-from math import cos, sin, sqrt
+from math import cos, sin, sqrt, atan2, acos
 from proteus import AuxiliaryVariables, Archiver
 from proteus.Profiling import logEvent
 
@@ -37,7 +37,7 @@ class Shape:
         self.volume = None
         self.mass = None
         self.density = None
-        self.barycentre = None
+        self.barycenter = None
         self.bc = None
         self.free_x = (1, 1, 1)
         self.free_r = (1, 1, 1)
@@ -76,7 +76,8 @@ class Shape:
         if self.domain.barycenters is not None:
             self.domain.barycenters = np.append(self.domain.barycenters, self.barycenters, axis=0)  # need to change to array
         else:
-            self.domain.barycenters = self.barycenters
+            self.domain.barycenters = np.array([[0.,0.,0.]])
+            self.domain.barycenters = np.append(self.domain.barycenters, self.barycenters, axis=0)
         self.domain.update()
 
     def _updateDomain(self):
@@ -88,7 +89,7 @@ class Shape:
         nf = len(self.facets)
         self.domain.vertices[self.snv:self.snv+nv] = self.vertices.tolist()
         self.domain.regions[self.snr:self.snr+nr] = self.regions.tolist()
-        self.domain.barycenters[self.snf:self.snf+nf] = self.barycentre
+        self.domain.barycenters[self.snf:self.snf+nf] = self.barycenter
         self.domain.update()
 
     def setPosition(self, coords):
@@ -100,13 +101,13 @@ class Shape:
         trans = coords - old_coords
         self.translate(trans)
 
-    def setBarycentre(self, barycentre):
+    def setBarycenter(self, barycenter):
         """
-        Set barycentre of the shape, from the reference frame of the shape
-        :arg barycentre: coordinates of barycentre from centre of shape
+        Set barycenter of the shape, from the reference frame of the shape
+        :arg barycenter: coordinates of barycenter from centre of shape
         """
-        self.barycentre = np.einsum('ij,i->j', self.coords_system, barycentre)
-        self.domain.barycenters[:] = self.barycentre
+        self.barycenter = np.einsum('ij,i->j', self.coords_system, barycenter)
+        self.domain.barycenters[:] = self.barycenter
 
     def setConstraints(self, free_x, free_r):
         """
@@ -129,17 +130,17 @@ class Shape:
         :arg pivot: point around which the Shape rotates
         """
         if pivot is None:
-            pivot = self.barycentre
-            rotate_barycentre = False
+            pivot = self.barycenter
+            rotate_barycenter = False
         else:
-            rotate_barycentre = True
+            rotate_barycenter = True
         if self.domain.nd == 2:
             self.vertices[:] = rotation2D(points=self.vertices, rot=rot, pivot=pivot)
             self.regions[:] = rotation2D(points=self.regions, rot=rot, pivot=pivot)
             self.coords_system[:] = rotation2D(points=self.coords_system, rot=rot, pivot=(0.,0.,0.))
             self.segments_orientation[:] = rotation2D(points=self.facets_orientation, rot=rot, pivot=(0., 0., 0.))
-            if rotate_barycentre:
-                self.barycentre[:] = rotation2D(points=self.barycentre, rot=rot, pivot=pivot)
+            if rotate_barycenter:
+                self.barycenter[:] = rotation2D(points=self.barycenter, rot=rot, pivot=pivot)
         elif self.domain.nd == 3:
             self.vertices[:] = rotation3D(points=self.vertices, rot=rot, axis=axis, pivot=pivot)
             if len(self.holes) != 0:
@@ -147,8 +148,8 @@ class Shape:
             self.regions[:] = rotation3D(points=self.regions, rot=rot, axis=axis, pivot=pivot)
             self.coords_system[:] = rotation3D(points=self.coords_system, rot=rot, axis=axis, pivot=(0.,0.,0.))
             self.facets_orientation[:] = rotation3D(points=self.facets_orientation, rot=rot, axis=axis, pivot=(0., 0., 0.))
-            if rotate_barycentre:
-                self.barycentre[:] = rotation3D(points=self.barycentre, rot=rot, axis=axis, pivot=pivot)
+            if rotate_barycenter:
+                self.barycenter[:] = rotation3D(points=self.barycenter, rot=rot, axis=axis, pivot=pivot)
         self._updateDomain()
 
     def translate(self, trans):
@@ -159,7 +160,7 @@ class Shape:
         self.vertices += trans
         self.regions += trans
         self.coords += trans
-        self.barycentre += trans
+        self.barycenter += trans
         if self.domain.nd == 3 and len(self.holes) != 0:
             self.holes += trans
         self._updateDomain()
@@ -193,8 +194,9 @@ class Shape:
             I = self.It*self.mass
         elif self.domain.nd == 3:
             # Pivot coords relative to shape centre of mass
-            pivot = pivot or self.barycentre
-            pivot = pivot-np.array(self.barycentre)
+            if pivot is None:
+                pivot = self.barycenter
+            pivot = pivot-np.array(self.barycenter)
             # making unity vector/axis of rotation
             vec = vx, vy, vz = np.array(vec)
             length_vec = sqrt(vx**2+vy**2+vz**2)
@@ -226,7 +228,7 @@ class Cuboid(Shape):
     :arg dim: dimensions of the cuboid (list or array)
     :arg coords: coordinates of the cuboid (list or array)
     """
-    def __init__(self, domain, dim=(0.,0.,0.), coords=(0.,0.,0.), barycentre=None, tank=False):
+    def __init__(self, domain, dim=(0.,0.,0.), coords=(0.,0.,0.), barycenter=None, tank=False):
         Shape.__init__(self, domain)
         self.dim = L, W, H = dim  # length, width height
         self.volume = L*W*H
@@ -274,8 +276,8 @@ class Cuboid(Shape):
         self.bc_top = bc.BoundaryConditions(b_or=b_or, b_i=5)
         self.bc = [self.bc_bottom, self.bc_front, self.bc_right,
                     self.bc_back, self.bc_left, self.bc_top]
-        self.barycentre = barycentre or self.coords
-        self.barycenters = np.array([self.barycentre for facet in self.facets])
+        self.barycenter = barycenter or self.coords
+        self.barycenters = np.array([self.barycenter for facet in self.facets])
         self.It = np.array([[(W**2.+H**2.)/12., 0, 0],
                             [0, (L**2.+H**2.)/12., 0],
                             [0, 0, (W**2.+L**2.)/12.]])
@@ -315,22 +317,22 @@ class Rectangle(Shape):
     :arg dim: dimensions of the rectangle (list or array)
     :arg coords: coordinates of the rectangle (list or array)
     """
-    def __init__(self, domain, dim=(0.,0.), coords=(0.,0.), barycentre=None):
+    def __init__(self, domain, dim=(0.,0.), coords=(0.,0.), barycenter=None):
         Shape.__init__(self, domain)
         self.dim = L, H = dim  # length, height
         self.coords = x, y = coords
         self.coords_system = np.eye(2)
-        self.barycentre = barycentre or coords
+        self.barycenter = barycenter or coords
         self.vertices = np.array([[x-0.5*L, y-0.5*H],
                                   [x+0.5*L, y-0.5*H],
                                   [x+0.5*L, y+0.5*H],
                                   [x-0.5*L, y+0.5*H]])
-        self.segments= np.array([[0,1],[1,2],[2,3],[3,0]])  # bottom, right, top, left
+        self.segments = np.array([[0, 1], [1, 2], [2, 3], [3, 0]])  # bottom, right, top, left
         self.segments_orientation = [[0., -1.],
                                      [1., 0.],
                                      [0., 1.],
                                      [0., -1.]]
-        self.barycenters = np.array([self.barycentre for segment in self.sgments])
+        self.barycenters = np.array([self.barycenter for segment in self.segments])
         self.regions = np.array([[x, y]])
         self.segmentFlags = np.array([0, 1, 2, 3]) # bottom, right, top, left
         self.vertexFlags = np.array([0, 0, 2, 2])  # bottom, bottom, top, top
@@ -370,10 +372,6 @@ class Rectangle(Shape):
         self._updateDomain()
 
 
-
-
-
-
 class RigidBody(AuxiliaryVariables.AV_base):
 
     def __init__(self, shape, he=1., cfl_target=0.9, dt_init=0.001):
@@ -381,32 +379,50 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.dt_init = dt_init
         self.he = he
         self.cfl_target = 0.9
-        self.position = self.shape.barycentre
+        self.position = self.shape.barycenter.copy()
+        self.last_position = self.position.copy()
         nd = self.shape.domain.nd
-        self.velocity = np.zeros(nd)
-        self.last_velocity = np.zeros(nd)
+        self.velocity = np.zeros(nd, 'd')
+        self.last_velocity = np.zeros(nd, 'd')
         self.h = np.zeros(nd)
         self.rotation = np.eye(nd)
+        self.rotation[:] = shape.coords_system
         self.last_rotation = np.eye(nd)
+        self.last_rotation[:] = shape.coords_system
         self.F = np.zeros(nd, 'd')
         self.M = np.zeros(nd, 'd')
         self.last_F = np.zeros(nd, 'd')
         self.last_M = np.zeros(nd, 'd')
         self.barycenters = shape.domain.barycenters
-        self.velocity_ang = 0.
+        self.angvel = np.zeros(nd, 'd')
+        self.angvel_last = np.zeros(nd, 'd')
+        self.nb_start = self.shape.snf+1  # must skip indice 0 for forces / barycenters
+        self.nb_end = self.nb_start + len(self.shape.facets)
+        self.rotation_matrix = np.eye(nd)  # matrix used for rotating mesh between 2 calculation steps
+        self.Fg = self.shape.mass*np.array([0., 0., -9.81])
 
     def step(self, dt):
         # displacement from force
         self.acceleration = self.F/self.shape.mass
-        self.velocity += self.acceleration*dt
-        displacement = self.velocity*dt
-        self.shape.translate(displacement)        # rotation due to moment
-        I = self.shape.getInertia(vec=self.M, pivot=self.shape.barycentre)
-        acc_ang = self.M/I
-        self.velocity_ang += acc_ang*dt
-        ang_disp = self.velocity_ang*dt
+        self.velocity = self.last_velocity + self.acceleration*dt
+        self.h[:] = self.velocity*dt
+        # update barycenters
+        i0, i1 = self.nb_start, self.nb_end
+        self.barycenters[i0:i1, :] += self.h
+        self.shape.barycenter += self.h
+        self.position[:] += self.h
+        # self.shape.translate(displacement)
+        # rotation due to moment
+        I = self.shape.getInertia(vec=self.M, pivot=self.position)
+        ang_acc = self.M/I
+        self.ang_vel = self.angvel_last+ang_acc*dt
+        ang_disp = self.ang_vel*dt
         self.ang = np.linalg.norm(ang_disp)
-        self.shape.rotate(rot=self.ang, axis=ang_vel, pivot=self.shape.barycentre)
+        if np.sum(self.M) != 0:
+            self.shape.rotate(rot=self.ang, axis=self.ang_vel, pivot=self.position)  # this rotation is only for getting the inertia right on the next calculation step..
+            self.rotation[:] = rotation3D(self.rotation, rot=self.ang, axis=self.ang_vel, pivot=(0.,0.,0.))  # this rotation matrix will be used for moveMesh
+            self.rotation_matrix = np.dot(np.linalg.inv(self.last_rotation), self.rotation)
+        
 
     def attachModel(self, model, ar):
         self.model = model
@@ -419,37 +435,37 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.nForces=flagMax+1
         return self
 
-    def get_u(self):
-        return self.last_velocity[0]
+    # def get_u(self):
+    #     return self.last_velocity[0]
 
-    def get_v(self):
-        return self.last_velocity[1]
+    # def get_v(self):
+    #     return self.last_velocity[1]
 
-    def get_w(self):
-        return self.last_velocity[2]
+    # def get_w(self):
+    #     return self.last_velocity[2]
 
-    def getVelocity(self):
-        return self.last_velocity
+    # def getVelocity(self):
+    #     return self.velocity
 
     def calculate_init(self):
-        self.last_F = None
         self.calculate()
 
     def calculate(self):
         import copy
-        self.last_velocity = copy.deepcopy(self.velocity)
-        self.last_position = copy.deepcopy(self.position)
-        self.last_rotation = self.rotation.copy()
+        self.last_position[:] = self.position[:]
+        self.last_velocity[:] = self.velocity[:]
+        self.last_rotation[:] = self.rotation[:]
+        # store forces
+        self.last_F[:] = self.F[:]
+        self.last_M[:] = self.M[:]
         # self.last_rotation_inv = np.linalg.inv(self.last_rotation)
-        import copy
         try:
             dt = self.model.levelModelList[-1].dt_last
         except:
             dt = self.dt_init
-        startnf = self.shape.snf
-        endnf = startnf + len(self.shape.facets)
-        F = np.sum(self.model.levelModelList[-1].coefficients.netForces_p[startnf:endnf,:], axis=0) + self.model.levelModelList[-1].coefficients.netForces_v[startnf:endnf,:];
-        M = np.sum(self.model.levelModelList[-1].coefficients.netMoments[startnf:endnf,:], axis=0)
+        i0, i1 = self.nb_start, self.nb_end
+        F = np.sum(self.model.levelModelList[-1].coefficients.netForces_p[i0:i1,:], axis=0) + np.sum(self.model.levelModelList[-1].coefficients.netForces_v[i0:i1,:], axis=0) + self.Fg
+        M = np.sum(self.model.levelModelList[-1].coefficients.netMoments[i0:i1,:], axis=0)
         logEvent("x Force " +`self.model.stepController.t_model_last`+" "+`F[0]`)
         logEvent("y Force " +`self.model.stepController.t_model_last`+" "+`F[1]`)
         logEvent("z Force " +`self.model.stepController.t_model_last`+" "+`F[2]`)
@@ -457,27 +473,9 @@ class RigidBody(AuxiliaryVariables.AV_base):
         logEvent("y Moment " +`self.model.stepController.t_model_last`+" "+`M[1]`)
         logEvent("z Moment " +`self.model.stepController.t_model_last`+" "+`M[2]`)
         logEvent("dt " +`dt`)
-        nSteps = 10
-        Fstar = F
-        Mstar = M
-        for i in range(nSteps):
-            self.F = Fstar*self.shape.free_x
-            self.M = Mstar*self.shape.free_r
-            self.step(dt/float(nSteps))
-        # store forces
-        self.last_F[:] = F
-        self.last_M[:] = M
-        x,y,z = self.shape.barycentre
-        u,v,w = self.getVelocity()
-        # update barycenters
-        self.barycenters[startnf:endnf, :] = [x, y, z]
-        self.position = (x,y,z)
-        self.velocity = (u,v,w)
-        self.rotation = self.shape.getRotation()
-        self.h = np.array(self.position)-self.last_position
-        # set new boundary conditions for moveMesh
-        for bc in self.shape.bc:
-            bc.setMoveMesh(self.h, self.last_rotation, self.rotation, self.last_position)
+        self.F[:] = F*self.shape.free_x
+        self.M[:] = M*self.shape.free_r
+        self.step(dt)
         logEvent("%1.2fsec: pos=(%21.16e, %21.16e, %21.16e) vel=(%21.16e, %21.16e, %21.16e) h=(%21.16e, %21.16e, %21.16e)" % (self.model.stepController.t_model_last,
                                                                                                                             self.position[0],
                                                                                                                             self.position[1],

@@ -4,39 +4,23 @@ Module for creating boundary conditions. Imported in Shape.py
 import numpy as np
 
 
-def constantBC(value, nested=True):
+def constantBC(value):
     """
     function returning constant BC
-    :arg a0:
-    :arg a1:
-    :arg i:
-    :arg nested: True (default) if used directly to define a BC, False if used in a function already taking x as an argument
-    :return: func(x): func(x,t) with nested=True
-             func(x,t) with nested=False
     """
-    if nested:  # need to nest functions as it is called with x in *_p.py files
-        return lambda x: (lambda x, t: value)
-    else:  # only if another function is calling setConstantBC and is already using x
-        return lambda x, t: value
+    return lambda x, t: value
 
 
-def linearBC(a0, a1, i, nested=True):
+def linearBC(a0, a1, i):
     """
     function returning linear BC
     :arg a0:
     :arg a1:
     :arg i:
-    :arg nested: True (default) if used directly to define a BC, False if used in a function already taking x as an argument
-    :return: func(x): func(x,t) with nested=True
-             func(x,t) with nested=False
     """
-    if nested:
-        return lambda x: (lambda x, t: a0 + a1*x[i])
-    else:
-        return lambda x, t: a0 + a1*x[i]
+    return lambda x, t: a0 + a1*x[i]
 
-
-def noBC(x):
+def noBC(x, t):
     """
     function returning None
     :arg x: coordinates of point
@@ -45,7 +29,7 @@ def noBC(x):
     return None
 
 
-def zeroBC(x):
+def zeroBC(x, t):
     """
     function returning 0
     :arg x: coordinates of point
@@ -164,28 +148,25 @@ class BoundaryConditions:
         self.AFBC_vof = constantBC(0.)
         self.DFBC_d = constantBC(0.)
 
-    def setMoveMesh(self, last_position, position, last_rotation, rotation):
+    def setMoveMesh(self, body):
         """
         sets rigid body boundary conditions for moving the mesh
-        :arg last_position: position of (barycentre of) shape before last calculation step
-        :arg position: position of (barycentre of) shape after last calculation step
-        :arg last_rotation: rotation matrix of shape before last calculation step
-        :arg rotation: rotation matrix of shape after last calculation step
+        :arg last_position: position of (barycentre of) body before last calculation step
+        :arg position: position of (barycentre of) body after last calculation step
+        :arg last_rotation: rotation matrix of body before last calculation step
+        :arg rotation: rotation matrix of body after last calculation step
         (!) should not be set manually
         """
-        # (!) could also be done using axis of rotation and angle
         def get_DBC_h(i):
-            def DBC_h(x):
-                h = position-last_position  # translation of pivot between calculation step
-                x_0 = x-last_position  # translate rotation pivot to origin
-                new_rotation_matrix = np.dot(np.linalg.inv(last_rotation), rotation)
-                new_x = np.dot(x_0, new_rotation_matrix)+h+last_position  # rotate and translate back
-                hx = new_x-x  # displacement of point x from last calculation step
-                return lambda x, t: hx[i]
+            def DBC_h(x, t):
+                x_0 = x-body.last_position
+                new_x_0 = np.dot(x_0, body.rotation_matrix)
+                hx = new_x_0-x_0+body.h
+                return hx[i]
             return DBC_h
         self.DBC_hx = get_DBC_h(i=0)
         self.DBC_hy = get_DBC_h(i=1)
-        if len(last_position) > 2:
+        if len(body.last_position) > 2:
             self.DBC_hz = get_DBC_h(i=2)
 
     def setTwoPhaseVelocityInlet(self, U, waterLevel, vert_axis=-1, air=1., water=0.):
@@ -205,27 +186,26 @@ class BoundaryConditions:
         U = np.array(U)
 
         def get_inlet_DBC_vel(ux):
-            def DBC_ux(x):
+            def DBC_ux(x, t):
                 if x[vert_axis] < waterLevel:
-                    return constantBC(ux, nested=False)
-                elif x[vert_axis] >= waterLevel:
-                    if ux == 0:
-                        return constantBC(0., nested=False)
+                    return ux
+                elif x[vert_axis] >= waterLevel and ux==0:
+                    return 0.
             return DBC_ux
 
-        def inlet_DBC_vof(x):
+        def inlet_DBC_vof(x, t):
             if x[vert_axis] < waterLevel:
-                return constantBC(water, nested=False)
+                return water
             elif x[vert_axis] >= waterLevel:
-                return constantBC(air, nested=False)
+                return air
 
-        def inlet_AFBC_p(x, u=U):
+        def inlet_AFBC_p(x, t, u=U):
             b_or = self._b_or[self._b_i]
             u_p = np.sum(U*b_or)
             # This is the normal velocity, based on the inwards boundary orientation -b_or
             u_p = -u_p
             if x[vert_axis] < waterLevel:
-                return constantBC(u_p, nested=False)
+                return u_p
             elif x[vert_axis] >= waterLevel:
                 return None
 
@@ -246,10 +226,10 @@ class BoundaryConditions:
         # This is the normal velocity, based on the boundary orientation
 
         def get_outlet_DBC_vel(i):
-            def DBC_ux(x):
+            def DBC_ux(x, t):
                 b_or = self._b_or[self._b_i]
                 if b_or[i] == 0:
-                    return constantBC(0., nested=False)
+                    return 0.
         self.DBC_u = get_outlet_DBC_vel(0)
         self.DBC_v = get_outlet_DBC_vel(1)
         if len(g) == 3:
@@ -260,7 +240,7 @@ class BoundaryConditions:
         self.DFBC_v = constantBC(0.)
         self.DFBC_w = constantBC(0.)
 
-    def hydrostaticPressureOutletWithDepth(self, seaLevel,rhoUp,rhoDown,g,refLevel,pRef=0.0,vert_axis=-1,air=1.0,water=0.0):
+    def hydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g, refLevel, pRef=0.0, vert_axis=-1, air=1.0, water=0.0):
         """Imposes a hydrostatic pressure profile and open boundary conditions with a known otuflow depth
         :arg rhoUp: Phase density of the upper part
         :arg rhoDown: Phase density of the lower part
@@ -274,21 +254,21 @@ class BoundaryConditions:
         """
         self.reset()
 
-        def hydrostaticPressureOutletWithDepth_DBC_p(x):
+        def hydrostaticPressureOutletWithDepth_DBC_p(x, t):
             if x[vert_axis] < seaLevel:
                 a0 = pRef - rhoUp*g[vert_axis]*(refLevel - seaLevel) - rhoDown*g[vert_axis]*seaLevel
                 a1 = rhoDown*g[vert_axis]
-                return linearBC(a0, a1, vert_axis, nested=False)
+                return a0 + a1*x[vert_axis]
 
-        def hydrostaticPressureOutletWithDepth_DBC_vof(x):
+        def hydrostaticPressureOutletWithDepth_DBC_vof(x, t):
             if x[vert_axis] < seaLevel:
                 a0 = pRef - rhoUp*g[vert_axis]*(refLevel - seaLevel) - rhoDown*g[vert_axis]*seaLevel
                 a1 = rhoDown*g[vert_axis]
-                return constantBC(water, nested=False)
+                return water
 
-        def hydrostaticPressureOutletWithDepth_DBC_vof(x):
+        def hydrostaticPressureOutletWithDepth_DBC_vof(x, t):
             if x[vert_axis] < seaLevel:
-                return constantBC(water, nested=False)
+                return water
 
         self.hydrostaticPressureOutlet(rhoUp, g, refLevel, pRef, vert_axis, air)
         self.DBC_p = hydrostaticPressureOutletWithDepth_DBC_p
