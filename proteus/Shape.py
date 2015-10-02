@@ -421,7 +421,7 @@ class RigidBody(AuxiliaryVariables.AV_base):
         if np.sum(self.M) != 0:
             self.shape.rotate(rot=self.ang, axis=self.ang_vel, pivot=self.position)  # this rotation is only for getting the inertia right on the next calculation step..
             self.rotation[:] = rotation3D(self.rotation, rot=self.ang, axis=self.ang_vel, pivot=(0.,0.,0.))  # this rotation matrix will be used for moveMesh
-            self.rotation_matrix = np.dot(np.linalg.inv(self.last_rotation), self.rotation)
+            self.rotation_matrix[:] = np.dot(np.linalg.inv(self.last_rotation), self.rotation)
         
 
     def attachModel(self, model, ar):
