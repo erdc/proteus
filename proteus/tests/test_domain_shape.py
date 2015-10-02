@@ -41,5 +41,5 @@ tank.bc_top.setFreeSlip()  # BC can be set individually
 def newBC(x, t):
     return 0.0
 
-tank.bc_bottom.DBC_u = newBC  # customized functions can still be passed
+tank.bc_bottom.u_dirichlet = newBC  # customized functions can still be passed
 
