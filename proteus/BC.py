@@ -30,105 +30,107 @@ class BoundaryConditions:
         self._b_i = b_i  # indice for this boundary in list of boundaries in shape
         self.reset()
         # moveMesh boundary conditions
-        self.DBC_hx = None
-        self.DBC_hy = None
-        self.DBC_hz = None
-        self.stress_u = constantBC(0.)
-        self.stress_v = constantBC(0.)
-        self.stress_w = constantBC(0.)
+        self.hx_dirichlet = None
+        self.hy_dirichlet = None
+        self.hz_dirichlet = None
+        self.u_stress = constantBC(0.)
+        self.v_stress = constantBC(0.)
+        self.w_stress = constantBC(0.)
 
     def reset(self):
-        # Dirichlet
-        self.DBC_p = None  # pressure
-        self.DBC_u = None  # velocity u
-        self.DBC_v = None  # velocity v
-        self.DBC_w = None  # velocity w
-        self.DBC_vof = None  # VOF
-        self.DBC_k = None  # kappa
-        self.DBC_dissipation = None  # dissipation
-        # Advective
-        self.AFBC_p = None
-        self.AFBC_u = None
-        self.AFBC_v = None
-        self.AFBC_w = None
-        self.AFBC_vof = None
-        self.AFBC_k = None
-        self.AFBC_dissipation = None
-        # Diffusive
-        self.DFBC_u = None
-        self.DFBC_v = None
-        self.DFBC_w = None
-        self.DFBC_k = None
-        self.DFBC_dissipation = None
+        # _dirichlet
+        self.p_dirichlet = None  # pressure
+        self.u_dirichlet = None  # velocity u
+        self.v_dirichlet = None  # velocity v
+        self.w_dirichlet = None  # velocity w
+        self.vof_dirichlet = None  # VOF
+        self.k_dirichlet = None  # kappa
+        self.dissipation_dirichlet = None  # dissipation
+        # _advective
+        self.p_advective = constantBC(0.)
+        self.u_advective = constantBC(0.)
+        self.v_advective = constantBC(0.)
+        self.w_advective = constantBC(0.)
+        self.vof_advective = constantBC(0.)
+        self.k_advective = None
+        self.dissipation_advective = None
+        # _diffusive
+        self.u_diffusive = constantBC(0.)
+        self.v_diffusive = constantBC(0.)
+        self.w_diffusive = constantBC(0.)
+        self.k_diffusive = None
+        self.dissipation_diffusive = None
 
     def setTank(self):
         b_or = self._b_or[self._b_i].tolist()
         if b_or[0] == 1 or b_or[0] == -1:
-            self.DBC_hx = constantBC(0.)
-            self.stress_u = None
+            self.hx_dirichlet = constantBC(0.)
+            self.u_stress = None
         elif b_or[1] == 1 or b_or[1] == -1:
-            self.DBC_hy = constantBC(0.)
-            self.stress_v = None
+            self.hy_dirichlet = constantBC(0.)
+            self.v_stress = None
         elif len(b_or) > 2 and (b_or[2] == 1 or b_or[2] == -1):
-            self.DBC_hz = constantBC(0.)
-            self.stress_w = None
+            self.hz_dirichlet = constantBC(0.)
+            self.w_stress = None
 
     def setNoSlip(self):
         """
         sets no slip conditions at the boundary
         """
         self.reset()
-        self.DBC_u = constantBC(0.)
-        self.DBC_v = constantBC(0.)
-        self.DBC_w = constantBC(0.)
-        self.AFBC_p = constantBC(0.)
-        self.AFBC_u = constantBC(0.)
-        self.AFBC_v = constantBC(0.)
-        self.AFBC_w = constantBC(0.)
-        self.AFBC_vof = constantBC(0.)
+        self.u_dirichlet = constantBC(0.)
+        self.v_dirichlet = constantBC(0.)
+        self.w_dirichlet = constantBC(0.)
 
     def setFreeSlip(self):
         """
         sets free slip conditions at the boundary
         """
         self.reset()
-        self.AFBC_p = constantBC(0.)
-        self.AFBC_u = constantBC(0.)
-        self.AFBC_v = constantBC(0.)
-        self.AFBC_w = constantBC(0.)
-        self.AFBC_vof = constantBC(0.)
-        self.DFBC_u = constantBC(0.)
-        self.DFBC_v = constantBC(0.)
-        self.DFBC_w = constantBC(0.)
 
     def setClosed(self):
-        self.AFBC_k = constantBC(0.)
-        self.DFBC_k = constantBC(0.)
+        self.k_advective = constantBC(0.)
+        self.k_diffusive = constantBC(0.)
 
     def setOpenAir(self):
         """
         sets open boundary conditions (water can come out)
         """
-        self.DBC_p = constantBC(0.)
-        self.DBC_vof = constantBC(1.)
-        self.AFBC_k = constantBC(0.)
-        self.DFBC_k = constantBC(0.)
-        self.DFBC_dissipation = constantBC(0.)
+        self.p_dirichlet = constantBC(0.)
+        self.u_dirichlet = constantBC(0.)
+        self.v_dirichlet = constantBC(0.)
+        self.w_dirichlet = constantBC(0.)
+        self.vof_dirichlet = constantBC(1.)
+        self.p_advective = None
+        self.u_advective = None
+        self.v_advective = None
+        self.w_advective = None
+        self.k_advective = constantBC(0.)
+        self.u_diffusive = constantBC(0.)
+        self.v_diffusive = constantBC(0.)
+        self.w_diffusive = constantBC(0.)
+        self.k_diffusive = constantBC(0.)
+        self.dissipation_diffusive = constantBC(0.)
 
     def setObstacle(self):
         """
         sets rigid body boundary conditions
         """
         self.reset()
-        self.DBC_hx = constantBC(0.)  # initial mesh conditions
-        self.DBC_hy = constantBC(0.)
-        self.DBC_hz = constantBC(0.)
-        self.DBC_u = constantBC(0.)
-        self.DBC_v = constantBC(0.)
-        self.DBC_w = constantBC(0.)
-        self.DBC_k = constantBC(0.)
-        self.AFBC_p = constantBC(0.)
-        self.AFBC_vof = constantBC(0.)
+        self.hx_dirichlet = constantBC(0.)  # initial mesh conditions
+        self.hy_dirichlet = constantBC(0.)
+        self.hz_dirichlet = constantBC(0.)
+        self.u_dirichlet = constantBC(0.)
+        self.v_dirichlet = constantBC(0.)
+        self.w_dirichlet = constantBC(0.)
+        self.k_dirichlet = constantBC(0.)
+        self.u_advective = None
+        self.v_advective = None
+        self.w_advective = None
+        self.vof_advective = constantBC(0.)
+        self.u_diffusive = None
+        self.v_diffusive = None
+        self.w_diffusive = None
         self.DFBC_d = constantBC(0.)
 
     def setMoveMesh(self, body):
@@ -147,10 +149,10 @@ class BoundaryConditions:
                 hx = new_x_0-x_0+body.h
                 return hx[i]
             return DBC_h
-        self.DBC_hx = get_DBC_h(i=0)
-        self.DBC_hy = get_DBC_h(i=1)
+        self.hx_dirichlet = get_DBC_h(i=0)
+        self.hy_dirichlet = get_DBC_h(i=1)
         if len(body.last_position) > 2:
-            self.DBC_hz = get_DBC_h(i=2)
+            self.hz_dirichlet = get_DBC_h(i=2)
 
     def setTwoPhaseVelocityInlet(self, U, waterLevel, vert_axis=-1, air=1., water=0.):
         """
@@ -160,29 +162,29 @@ class BoundaryConditions:
         :arg vert_axis: index of vertical in position vector, must always be aligned with gravity, by default set to 1]
         :arg air: Volume fraction for air (1.0 by default)
         :arg water: Volume fraction for water (0.0 by default)
-        Below the seawater level, the condition returns the Dirichlet and pAdvective condition according to the inflow velocity
-        Above the sea water level, the condition returns the gravity as zero, and sets Dirichlet condition to zero, only if there is an 
+        Below the seawater level, the condition returns the _dirichlet and p_advective condition according to the inflow velocity
+        Above the sea water level, the condition returns the gravity as zero, and sets _dirichlet condition to zero, only if there is an 
         zero inflow velocity component
         THIS CONDITION IS BEST USED FOR BOUNDARIES AND GRAVITY ALIGNED WITH ONE OF THE MAIN AXES
         """
         self.reset()
         U = np.array(U)
 
-        def get_inlet_DBC_vel(ux):
-            def DBC_ux(x, t):
+        def get_inlet_v_dirichletel(ux):
+            def u_dirichletx(x, t):
                 if x[vert_axis] < waterLevel:
                     return ux
                 elif x[vert_axis] >= waterLevel and ux==0:
                     return 0.
-            return DBC_ux
+            return u_dirichletx
 
-        def inlet_DBC_vof(x, t):
+        def inlet_vof_dirichlet(x, t):
             if x[vert_axis] < waterLevel:
                 return water
             elif x[vert_axis] >= waterLevel:
                 return air
 
-        def inlet_AFBC_p(x, t, u=U):
+        def inlet_p_advective(x, t, u=U):
             b_or = self._b_or[self._b_i]
             u_p = np.sum(U*b_or)
             # This is the normal velocity, based on the inwards boundary orientation -b_or
@@ -192,15 +194,15 @@ class BoundaryConditions:
             elif x[vert_axis] >= waterLevel:
                 return None
 
-        self.DBC_u = get_inlet_DBC_vel(U[0])
-        self.DBC_v = get_inlet_DBC_vel(U[1])
+        self.u_dirichlet = get_inlet_v_dirichletel(U[0])
+        self.v_dirichlet = get_inlet_v_dirichletel(U[1])
         if len(U) == 3:
-                self.DBC_w = get_inlet_DBC_vel(U[2])
-        self.DBC_vof = inlet_DBC_vof
-        self.AFBC_p = inlet_AFBC_p
-        self.DFBC_u = constantBC(0.)
-        self.DFBC_v = constantBC(0.)
-        self.DFBC_w = constantBC(0.)
+                self.w_dirichlet = get_inlet_v_dirichletel(U[2])
+        self.vof_dirichlet = inlet_vof_dirichlet
+        self.p_advective = inlet_p_advective
+        self.u_diffusive = constantBC(0.)
+        self.v_diffusive = constantBC(0.)
+        self.w_diffusive = constantBC(0.)
 
     def setHydrostaticPressureOutlet(self, rho, g, refLevel, pRef=0.0, vert_axis=-1, air=1.0):
         self.reset()
@@ -208,20 +210,20 @@ class BoundaryConditions:
         a1 = rho*g[vert_axis]
         # This is the normal velocity, based on the boundary orientation
 
-        def get_outlet_DBC_vel(i):
-            def DBC_ux(x, t):
+        def get_outlet_v_dirichletel(i):
+            def u_dirichletx(x, t):
                 b_or = self._b_or[self._b_i]
                 if b_or[i] == 0:
                     return 0.
-        self.DBC_u = get_outlet_DBC_vel(0)
-        self.DBC_v = get_outlet_DBC_vel(1)
+        self.u_dirichlet = get_outlet_v_dirichletel(0)
+        self.v_dirichlet = get_outlet_v_dirichletel(1)
         if len(g) == 3:
-            self.DBC_w = get_outlet_DBC_vel(2)
-        self.DBC_p = linearBC(a0, a1, vert_axis)
-        self.DBC_vof = constantBC(air)
-        self.DFBC_u = constantBC(0.)
-        self.DFBC_v = constantBC(0.)
-        self.DFBC_w = constantBC(0.)
+            self.w_dirichlet = get_outlet_v_dirichletel(2)
+        self.p_dirichlet = linearBC(a0, a1, vert_axis)
+        self.vof_dirichlet = constantBC(air)
+        self.u_diffusive = constantBC(0.)
+        self.v_diffusive = constantBC(0.)
+        self.w_diffusive = constantBC(0.)
 
     def hydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g, refLevel, pRef=0.0, vert_axis=-1, air=1.0, water=0.0):
         """Imposes a hydrostatic pressure profile and open boundary conditions with a known otuflow depth
@@ -237,22 +239,22 @@ class BoundaryConditions:
         """
         self.reset()
 
-        def hydrostaticPressureOutletWithDepth_DBC_p(x, t):
+        def hydrostaticPressureOutletWithDepth_p_dirichlet(x, t):
             if x[vert_axis] < seaLevel:
                 a0 = pRef - rhoUp*g[vert_axis]*(refLevel - seaLevel) - rhoDown*g[vert_axis]*seaLevel
                 a1 = rhoDown*g[vert_axis]
                 return a0 + a1*x[vert_axis]
 
-        def hydrostaticPressureOutletWithDepth_DBC_vof(x, t):
+        def hydrostaticPressureOutletWithDepth_vof_dirichlet(x, t):
             if x[vert_axis] < seaLevel:
                 a0 = pRef - rhoUp*g[vert_axis]*(refLevel - seaLevel) - rhoDown*g[vert_axis]*seaLevel
                 a1 = rhoDown*g[vert_axis]
                 return water
 
-        def hydrostaticPressureOutletWithDepth_DBC_vof(x, t):
+        def hydrostaticPressureOutletWithDepth_vof_dirichlet(x, t):
             if x[vert_axis] < seaLevel:
                 return water
 
         self.hydrostaticPressureOutlet(rhoUp, g, refLevel, pRef, vert_axis, air)
-        self.DBC_p = hydrostaticPressureOutletWithDepth_DBC_p
-        self.DBC_vof = hydrostaticPressureOutletWithDepth_DBC_vof
+        self.p_dirichlet = hydrostaticPressureOutletWithDepth_p_dirichlet
+        self.vof_dirichlet = hydrostaticPressureOutletWithDepth_vof_dirichlet
