@@ -4365,7 +4365,10 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         from matplotlib import tri as mpl_tri
         from scipy import interpolate as scipy_interpolate
         import TriangleTools
-        self.maxElementDiameter = maxElementDiameter
+        if maxElementDiameter:
+            self.maxElementDiameter = maxElementDiameter
+        else:
+            self.maxElementDiameter = np.inf
         self.atol = atol
         self.rtol = rtol
         self.maxLevels=maxLevels
