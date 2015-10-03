@@ -373,8 +373,6 @@ class AR_base:
         log("Done Syncing Archive",level=3)
         log(memory("Syncing Archive"),level=4)
     def create_dataset_async(self,name,data):
-        import pdb
-        pdb.set_trace()
         comm_world = self.comm.comm.tompi4py()
         metadata = comm_world.allgather((name,data.shape,data.dtype))
         for i,m in enumerate(metadata):
