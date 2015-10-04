@@ -129,7 +129,9 @@ matlab_setup.done: stack stack/default.yaml hashdist
 profile: ${PROTEUS_PREFIX}/artifact.json
 
 stack/default.yaml: stack stack/examples/proteus.${PROTEUS_ARCH}.yaml
-	ln -sfb ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
+	# workaround since mac doesn't support '-b' and '-i' breaks travis
+	-cp ${PWD}/stack/default.yaml ${PWD}/stack/default.yaml.bak
+	ln -sf ${PWD}/stack/examples/proteus.${PROTEUS_ARCH}.yaml ${PWD}/stack/default.yaml
 
 
 # A hashstack profile will be rebuilt if Make detects any files in the stack 
@@ -142,8 +144,6 @@ ${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find 
 	$(call show_info)
 
 	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -v -f -k error default.yaml ${PROTEUS_PREFIX}
-        # workaround hack on Cygwin for hashdist launcher to work correctly
-	-cp ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.exe.link ${PROTEUS}/${PROTEUS_ARCH}/bin/python2.7.link
 
 	@echo "************************"
 	@echo "Dependency build complete"

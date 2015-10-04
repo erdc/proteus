@@ -25,7 +25,7 @@ namespace proteus
 						int nQuadraturePoints_elementBoundaryIn,
 						int CompKernelFlag)//0=Parametric
     {
-           std::cout<<"Constructing model object from template class:"<<std::endl
+           /*std::cout<<"Constructing model object from template class:"<<std::endl
 	       <<"return static_cast<Model_Base*>(new ModelTemplate<CompKernelTemplate<"
 	       <<nSpaceIn<<","
 	       <<nDOF_mesh_trial_elementIn<<","
@@ -37,7 +37,7 @@ namespace proteus
 	       <<nDOF_trial_elementIn<<","
 	       <<nDOF_test_elementIn<<","
 	       <<nQuadraturePoints_elementBoundaryIn<<">());"
-	       <<std::endl<<std::flush;
+	       <<std::endl<<std::flush;*/
       if (CompKernelFlag == 0)
 	{
 	  if (nSpaceIn == 3)
