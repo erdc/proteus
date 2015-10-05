@@ -393,9 +393,10 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.M = np.zeros(nd, 'd')
         self.last_F = np.zeros(nd, 'd')
         self.last_M = np.zeros(nd, 'd')
+        self.ang = 0.
         self.barycenters = shape.domain.barycenters
         self.angvel = np.zeros(nd, 'd')
-        self.angvel_last = np.zeros(nd, 'd')
+        self.last_angvel = np.zeros(nd, 'd')
         self.nb_start = self.shape.snf+1  # must skip indice 0 for forces / barycenters
         self.nb_end = self.nb_start + len(self.shape.facets)
         self.rotation_matrix = np.eye(nd)  # matrix used for rotating mesh between 2 calculation steps
@@ -407,21 +408,22 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.velocity = self.last_velocity + self.acceleration*dt
         self.h[:] = self.velocity*dt
         # update barycenters
+        self.shape.translate(self.h)
         i0, i1 = self.nb_start, self.nb_end
-        self.barycenters[i0:i1, :] += self.h
-        self.shape.barycenter += self.h
-        self.position[:] += self.h
-        # self.shape.translate(displacement)
+        self.barycenters[i0:i1, :] += self.shape.barycenter
+        self.position[:] = self.shape.barycenter
         # rotation due to moment
-        I = self.shape.getInertia(vec=self.M, pivot=self.position)
+        I = self.shape.getInertia(vec=self.M, pivot=self.shape.barycenter)
         ang_acc = self.M/I
-        self.ang_vel = self.angvel_last+ang_acc*dt
-        ang_disp = self.ang_vel*dt
+        self.angvel[:] = self.last_angvel+ang_acc*dt
+        ang_disp = self.angvel*dt
         self.ang = np.linalg.norm(ang_disp)
         if np.sum(self.M) != 0:
-            self.shape.rotate(rot=self.ang, axis=self.ang_vel, pivot=self.position)  # this rotation is only for getting the inertia right on the next calculation step..
-            self.rotation[:] = rotation3D(self.rotation, rot=self.ang, axis=self.ang_vel, pivot=(0.,0.,0.))  # this rotation matrix will be used for moveMesh
+            self.shape.rotate(rot=self.ang, axis=self.angvel, pivot=self.shape.barycenter)
+            self.rotation[:] = self.shape.coords_system  # this rotation matrix will be used for moveMesh
             self.rotation_matrix[:] = np.dot(np.linalg.inv(self.last_rotation), self.rotation)
+        else:
+            self.rotation_matrix[:] = np.eye(nd)
         
 
     def attachModel(self, model, ar):
@@ -452,12 +454,13 @@ class RigidBody(AuxiliaryVariables.AV_base):
 
     def calculate(self):
         import copy
-        self.last_position[:] = self.position[:]
-        self.last_velocity[:] = self.velocity[:]
-        self.last_rotation[:] = self.rotation[:]
+        self.last_position[:] = self.position
+        self.last_velocity[:] = self.velocity
+        self.last_rotation[:] = self.rotation
+        self.last_angvel[:] = self.angvel
         # store forces
-        self.last_F[:] = self.F[:]
-        self.last_M[:] = self.M[:]
+        self.last_F[:] = self.F
+        self.last_M[:] = self.M
         # self.last_rotation_inv = np.linalg.inv(self.last_rotation)
         try:
             dt = self.model.levelModelList[-1].dt_last
