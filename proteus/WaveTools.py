@@ -375,12 +375,13 @@ class timeSeries:
                  d = 2.0,
                  Npeaks = 1, #m depth
                  bandFactor = [2.0], #controls width of band  around fp
-                 peakFrequencies = [1.0],
+                 peakFrequencies = [0.2],
                  N = 32,          #number of frequency bins
-                 Nwaves = 20,
+                 Nwaves = 4, #Nmumber of waves per windowmean water level
                  mwl = 0.0,        #mean water level
-                 waveDir = np.array([1,0,0]),
-                 g = np.array([0, -9.81, 0])         #accelerationof gravity
+                 waveDir = np.array([1,0,0]), #accelerationof gravity
+                 g = np.array([0, -9.81, 0]),
+                 rec_direct = False
                  ): 
 
         self.depth = d
@@ -394,7 +395,7 @@ class timeSeries:
             log("WaveTools.py: peakFrequencies entries in should be as many as the number of frequencies",level=0)
             log("Stopping simulation",level=0)
             exit(1)
-            
+        self.rec_direct= rec_direct
         self.bandFactor = np.array(bandFactor)        
         self.peakFrequencies = np.array(peakFrequencies)
         self.N = N
@@ -466,31 +467,84 @@ class timeSeries:
         self.eta *=wind_fun(len(self.time),tail=0.05)
         
 
-
-
-
-
-
         del tdata
-
+        self.tlength = (self.time[-1]-self.time[0])
+        windows_span = []
+        windows_rec = []
 # Direct decomposition of the time series for using at reconstruct_direct
-        self.nfft=len(self.time)
-        self.decomp = decompose_tseries(self.time,self.eta,self.nfft,ret_only_freq=0)
-        self.setup = self.decomp[3]
-        self.eta+=self.setup
+        if (self.rec_direct):
+            self.nfft=len(self.time)
+            self.decomp = decompose_tseries(self.time,self.eta,self.nfft,ret_only_freq=0)
+            self.setup = self.decomp[3]
+
 
 # Spectral windowing
-        self.Twindow = self.Nwaves / self.peakFrequencies
-        self.Npw = int(self.Twindow / self.dt)        
-        self.Twindow = self.Npw*self.dt
-        
-        self.Noverlap = int(self.Npw *0.25)
-        self.Toverlap = self.Noverlap
+        else:
+            #setting the window duration (approx.). Twindow = Tmean * Nwaves = Tpeak * Nwaves /1.1 
+            self.Twindow =  self.Nwaves / (1.1 * self.peakFrequencies )
+            print self.Twindow
+            #Settling overlap 25% of Twindow
+            self.Toverlap = 0.25 * self.Twindow
+            #Getting the actual number of windows
+            # (N-1) * (Twindow - Toverlap) + Twindow
+            self.Nwindows = int( (self.tlength -   self.Twindow ) / (self.Twindow - self.Toverlap) ) + 1 
+            # Correct Twindow and Toverlap for duration
+            self.Twindow = self.tlength/(1. + 0.75*(self.Nwindows))
+            self.Toverlap = 0.25*self.Twindow
+            log("WaveTools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow * 1.1* self.peakFrequencies) )
+            diff = self.Nwindows*(self.Twindow -self.Toverlap)+self.Twindow - self.tlength
+            log("WaveTools.py: Checking duration of windowed time series: %s per cent difference from original duration" %(100*diff) )
+            log("WaveTools.py: Using %s windows for reconstruction with %s sec duration and 25 per cent overlap" %(self.Nwindows, self.Twindow) )
 
-        
+            for jj in range(self.Nwindows):
+                span = np.zeros(2,"d")
+                tfirst = self.time[0] + self.Twindow
+                tlast = self.time[-1] - self.Twindow
+                if jj == 0:
+                    ispan1 = 0
+                    ispan2 = np.where(self.time> tfirst)[0][0]
+                elif jj == self.Nwindows:
+                    ispan1 = np.where(self.time > tlast)[0][0]
+                    ispan2 = len(self.time)
+                else: 
+                    tstart = self.time[ispan2] - self.Toverlap
+                    ispan1 = np.where(self.time > tstart)[0][0]
+                    ispan2 = np.where(self.time > tstart + self.Twindow )[0][0]                    
+                span[0] = ispan1
+                span[1] = ispan2
+                
+                windows_span.append(span)
+                windows_rec.append(np.array(zip(self.time[ispan1:ispan2],self.eta[ispan1:ispan2])))
+                print jj
+                
+#            print (self.Twindow)
+#            print("number of windows: %s" % self.Nwindows)
+#            print(self.Nwindows*(self.Twindow -self.Toverlap)+self.Twindow )
+#            print(self.tlength)
+            self.decompose_window = []
+            style = "k-"
+            for wind in windows_rec:
+                self.nfft=len(wind[:,0])
+                decomp = decompose_tseries(wind[:,0],wind[:,1],self.nfft,ret_only_freq=0)
+                self.decompose_window.append(decomp)
 
-        
 
+                
+
+               
+
+                
+
+
+
+                if style == "k-":
+                    style = "kx"
+                else:
+                    style ="k-"
+                plt.plot(wind[:,0],wind[:,1],style)
+            plt.savefig("rec.pdf")
+#            self.Twindow = self.Npw*self.dt
+#            self.Noverlap = int(self.Npw *0.25)
 
     def rawdata(self):
         A = [self.time, self.eta]
@@ -513,6 +567,11 @@ class timeSeries:
         return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.mwl
 
     def reconstruct_direct(self,x,y,z,t,Nf,var="eta",ss = "x"):
+        "Direct reconstruction of a timeseries"
+        if self.rec_direct==False:
+            log("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
+            log("Stopping simulation",level=0)               
+            exit(1)           
         ai = self.decomp[1]
         ipeak = np.where(ai == max(ai))[0][0]
         imax = min(ipeak + Nf/2,len(ai))
@@ -544,7 +603,42 @@ class timeSeries:
                     }
             return Vcomp[ss]
 
-            
+    def reconstruct_window(self,x,y,z,t,Nf,var="eta",ss = "x"):
+        "Direct reconstruction of a timeseries"
+        if self.rec_direct==False:
+            log("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
+            log("Stopping simulation",level=0)               
+            exit(1)           
+        ai = self.decomp[1]
+        ipeak = np.where(ai == max(ai))[0][0]
+        imax = min(ipeak + Nf/2,len(ai))
+        imin = max(0,ipeak - Nf/2)
+        ai = ai[imin:imax]
+        omega = self.decomp[0][imin:imax]
+        phi = self.decomp[2][imin:imax]                              
+        ki = dispersion(omega,self.depth,g=self.gAbs)
+        kDir = np.zeros((len(ki),3),"d")
+        Nf = len(omega)
+        for ii in range(len(ki)):
+            kDir[ii,:] = ki[ii]*self.waveDir[:]
+        if var=="eta":
+            Eta=0.
+            for ii in range(Nf):
+                Eta+=ai[ii]*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii]) 
+            return Eta
+        if var=="U":
+            UH=0.
+            UV=0.
+            for ii in range(Nf):
+                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(Z(x,y,z)+depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*depth)
+                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(Z(x,y,z)+depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*depth)
+#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
+            Vcomp = {
+                    "x":UH*self.waveDir[0] + UV*self.vDir[0],
+                    "y":UH*self.waveDir[1] + UV*self.vDir[1],
+                    "z":UH*self.waveDir[2] + UV*self.vDir[2],
+                    }
+            return Vcomp[ss]            
        
 
 class directionalWaves:
@@ -721,9 +815,9 @@ if __name__ == '__main__':
                          d = 5.5,
                          Npeaks = 1, #m depth
                          bandFactor = [2.0], #controls width of band  around fp
-                         peakFrequencies = [1.0],
+                         peakFrequencies = [0.2],
                          N = 32,          #number of frequency bins
-                         Nwaves = 20,
+                         Nwaves = 4,
                          mwl = 0.0,        #mean water level
                          waveDir = np.array([1,0,0]),
                          g = np.array([0, -9.81, 0])         #accelerationof gravity
