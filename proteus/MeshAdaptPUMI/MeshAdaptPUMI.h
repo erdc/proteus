@@ -21,6 +21,7 @@ class MeshAdaptPUMIDrvr{
   //Fields
   int TransferSolutionToPUMI(double* inArray, int nVar, int nN);
   int TransferSolutionToProteus(double* outArray, int nVar, int nN);
+  int TransferPropertiesToPUMI(double* rho, double* nu);
   int CommuSizeField();
   int AdaptPUMIMesh();
 
@@ -47,6 +48,8 @@ class MeshAdaptPUMIDrvr{
   int comm_size, comm_rank;
   int elms_owned, faces_owned, edges_owned, vtx_owned;
   int numVar;
+
+  double rho[2], nu[2];
 
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
