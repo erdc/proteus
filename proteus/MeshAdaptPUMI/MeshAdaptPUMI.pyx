@@ -23,6 +23,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int UpdateMaterialArrays(Mesh&, int, int)
         int TransferSolutionToPUMI(double*, int, int)
         int TransferSolutionToProteus(double*, int, int)
+        int TransferPropertiesToPUMI(double*, double*)
         int AdaptPUMIMesh()
         int dumpMesh(Mesh&)
 
@@ -53,6 +54,10 @@ cdef class MeshAdaptPUMI:
     def TransferSolutionToProteus(self, np.ndarray[np.double_t,ndim=2,mode="c"] outArray):
         outArray = np.ascontiguousarray(outArray)
         return self.thisptr.TransferSolutionToProteus(&outArray[0,0], outArray.shape[0], outArray.shape[1])
+    def TransferPropertiesToPUMI(self, np.ndarray[np.double_t,ndim=1,mode="c"] rho, np.ndarray[np.double_t,ndim=1,mode="c"] nu):
+        rho = np.ascontiguousarray(rho)
+        nu = np.ascontiguousarray(nu)
+        return self.thisptr.TransferPropertiesToPUMI(&rho[0],&nu[0])
     def AdaptPUMIMesh(self):
         return self.thisptr.AdaptPUMIMesh()
     def dumpMesh(self, cmesh):
