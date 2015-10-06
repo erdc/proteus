@@ -37,14 +37,14 @@ int MeshAdaptPUMIDrvr::TransferSolutionToPUMI(double* inArray, int nVar, int nN)
 /*
     m->getPoint(v,0,pt);
     double Lz = 0.05;
-    double Uinf = 1.0;
+    double Uinf = 1.0;//2e-3;
     tmp[0] =0 ; //pressure
     tmp[1] =0; //u
     tmp[2] = Uinf*pt[2]/Lz;
     tmp[3] =0;
 */
     //Poiseuille Flow dpdy=-1
-//*
+///*
     m->getPoint(v,0,pt);
     double Lz = 0.05;
     double Ly = 0.2;
@@ -59,6 +59,15 @@ int MeshAdaptPUMIDrvr::TransferSolutionToPUMI(double* inArray, int nVar, int nN)
   m->end(it);
   return 0;
 }
+
+int MeshAdaptPUMIDrvr::TransferPropertiesToPUMI(double* rho, double* nu)
+{ 
+ std::cout<<"rho "<<rho[0]<<" "<<rho[1]<<" nu "<<nu[0]<<" "<<nu[1]<<std::endl; 
+ printf("Hello,World\n");
+  return 0;
+}
+
+
 
 int MeshAdaptPUMIDrvr::TransferSolutionToProteus(double* outArray, int nVar, int nN)
 {
