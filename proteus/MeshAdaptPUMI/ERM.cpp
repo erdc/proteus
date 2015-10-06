@@ -85,6 +85,8 @@ double getMPvalue(double field_val,double val_0, double val_1)
 void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux);
 bool isInTet(apf::Mesh* mesh, apf::MeshEntity* elem, apf::Vector3 pt);
 apf::Vector3 getFaceNormal(apf::Mesh* mesh, apf::MeshEntity* face);
+double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf);
+
 
 void MeshAdaptPUMIDrvr::get_local_error() 
 //This function aims to compute error at each element via ERM.
@@ -148,6 +150,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
   iter = m->begin(nsd); //loop over elements
 int testcount = 0;
 int eID = 0; 
+double effectivity_avg=0.0;
   while(ent = m->iterate(iter)){ //loop through all elements
     element = apf::createMeshElement(m,ent);
     pres_elem = apf::createElement(pref,element);
@@ -339,13 +342,13 @@ int eID = 0;
     double* bflux;
     int F_idx[ndofs];
     bflux = (double*) calloc(ndofs,sizeof(double));
-///*
+/*
     if(testcount==eID){ getBoundaryFlux(m,ent,voff,visc,pref,velf,bflux); 
     std::cout<<"Bflux Result "<<std::endl;
     for(int s=0;s<ndofs;s++) std::cout<<bflux[s]<<std::endl;
     }
-//*/
-    //getBoundaryFlux(m,ent,voff,visc,pref,velf,bflux);
+*/
+    getBoundaryFlux(m,ent,voff,visc,pref,velf,bflux);
     for(int s=0;s<ndofs;s++){
       F_idx[s]=s;
     }
@@ -358,7 +361,7 @@ int eID = 0;
     VecSetSizes(coef,ndofs,ndofs);
     VecSetUp(coef);
 
-    if(testcount==eID && comm_rank==0){
+//    if(testcount==eID && comm_rank==0){
 
 //Save Temporarily for Debugging
       std::ofstream myfile ("stiffness.csv");
@@ -446,18 +449,22 @@ int eID = 0;
     Acomp = Acomp*Jdet;
     Bcomp = Bcomp*Jdet;
 
-    //apf::setScalar(err_reg,ent,0,Acomp+Bcomp);
-//if(Acomp+Bcomp>1e-10) std::cout<<"Element broken "<<testcount<<std::endl;
-std::cout<<"eID "<<testcount<<" error "<<Acomp+Bcomp<<std::endl;
-    } //end if testcount 
+    apf::setScalar(err_reg,ent,0,Acomp+Bcomp);
+    double L2err= getL2error(m,ent,voff,visc,pref,velf); 
+std::cout<<"eID "<<testcount<<" error "<<Acomp+Bcomp<< "L2 "<<L2err<<" Effectivity "<<(Acomp+Bcomp)/L2err<<std::endl;
+effectivity_avg = effectivity_avg+sqrt((Acomp+Bcomp)/L2err);
+   
+//    } //end if testcount 
 
-    apf::setScalar(err_reg,ent,0,Jdet); //temporary place in
+//    apf::setScalar(err_reg,ent,0,Jdet); //temporary place in
     MatDestroy(&K); //destroy the matrix
     VecDestroy(&F); //destroy vector
     VecDestroy(&coef); //destroy vector
 
 testcount++;
   } //end element loop
+effectivity_avg=effectivity_avg/testcount;
+std::cout<<"Average effectivity "<<effectivity_avg<<std::endl;
   m->end(iter);
 
   //store error field onto vertices
@@ -551,8 +558,6 @@ std::cout<<"Area? "<<apf::measure(b_elem)<<std::endl;
           if(isInTet(m,ent,apf::project(normal,centerdir)*centerdir.getLength()+apf::getLinearCentroid(m,bent)))
             normal = normal*-1.0; //normal needs to face the other direction
 
-         std::cout<<"Final Normal "<<normal<<std::endl;
-
           //shape functions are from weighting function and independent of neighbors
 
           double flux_weight;         
@@ -562,20 +567,12 @@ std::cout<<"Area? "<<apf::measure(b_elem)<<std::endl;
               if(neighbors[idx_neigh]==ent) flux_weight = 1-a_kl;
               else{ 
                 flux_weight = a_kl;
-m->getAdjacent(neighbors[idx_neigh],0,adjvtxs);
-for(int adj=0;adj<adjvtxs.getSize();adj++){
-  m->getPoint(adjvtxs[adj],0,vtxpt);
-  std::cout<<"Adjacent Vertices "<<adj<<" Value "<<vtxpt<<std::endl;
-}
-
               }
             }
             tempelem = apf::createMeshElement(m,neighbors[idx_neigh]);
             temppres = apf::createElement(pref,tempelem);
             tempvelo = apf::createElement(velf,tempelem);
             tempvoff = apf::createElement(voff,tempelem);
-std::cout<<"Number of boundary int points "<<apf::countIntPoints(b_elem,int_order)<<std::endl;
-std::cout<<"Is the ent?  "<< (neighbors[idx_neigh]==ent)<< std::endl;
             for(int l=0; l<apf::countIntPoints(b_elem,int_order);l++){
               apf::getIntPoint(b_elem,int_order,l,bqpt);
               weight = apf::getIntWeight(b_elem,int_order,l);
@@ -583,10 +580,6 @@ std::cout<<"Is the ent?  "<< (neighbors[idx_neigh]==ent)<< std::endl;
               Jdet=apf::getJacobianDeterminant(J,nsd-1);
               bqptl=apf::boundaryToElementXi(m,bent,neighbors[idx_neigh],bqpt); 
               bqptshp=apf::boundaryToElementXi(m,bent,ent,bqpt); 
-std::cout<<"Boundary qpt "<<bqpt<<std::endl;
-std::cout<<"Boundary qpt local "<<bqptl<<std::endl;
-std::cout<<"Boundary qpt shape "<<bqptshp<<std::endl;
-std::cout<<"Weight "<<weight<<std::endl;
               elem_shape->getValues(NULL,NULL,bqptshp,shpval_temp);
               for(int j=0;j<nshl;j++){ shpval[j] = shpval_temp[hier_off+j];}
               
@@ -601,14 +594,6 @@ std::cout<<"Weight "<<weight<<std::endl;
               } 
                
             } //end boundary integration loop
-
-std::cout<<"endflux "<<idx_neigh<<std::endl;
-for(int i=0;i<nsd;i++){
-for(int s=0;s<nshl;s++){
-std::cout<<endflux[i*nshl+s]<<std::endl;
-  endflux[i*nshl+s] = 0;
-}
-} 
           } //end for loop of neighbors
 
           apf::destroyMeshElement(tempelem);apf::destroyElement(tempvelo);apf::destroyElement(temppres); apf::destroyElement(tempvoff);
@@ -678,4 +663,58 @@ bool isInTet(apf::Mesh* mesh, apf::MeshEntity* ent, apf::Vector3 pt){
 */
   return isin;
 }
+
+double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf){
+
+    int nsd = m->getDimension();
+    int nshl; //assuming linear solution
+    int numqpt;
+    int elem_type;
+
+    apf::FieldShape* err_shape = apf::getLagrange(approx_order);
+    apf::EntityShape* elem_shape;
+    elem_type = m->getType(ent);
+
+    nshl=apf::countElementNodes(err_shape,elem_type);
+
+    double Lz = 0.05;
+    double Ly = 0.2;
+    double dpdy = -1;
+    double u_exact, u_h;
+    double L2_err=0.0; 
+
+    apf::MeshElement* element;
+    apf::Element* visc_elem, *pres_elem,*velo_elem;
+    double weight, Jdet;
+    apf::Matrix3x3 J;
+    apf::Vector3 qpt;
+
+    element = apf::createMeshElement(m,ent);
+    pres_elem = apf::createElement(pref,element);
+    velo_elem = apf::createElement(velf,element);
+  
+    numqpt=apf::countIntPoints(element,int_order); //generally p*p maximum for shape functions
+    apf::Vector3 xyz;
+    apf::Vector3 vel_vect;
+
+    for(int k=0;k<numqpt;k++){
+      apf::getIntPoint(element,int_order,k,qpt);
+      apf::getJacobian(element,qpt,J); 
+      Jdet=apf::getJacobianDeterminant(J,nsd); 
+      weight = apf::getIntWeight(element,int_order,k);
+   
+      apf::mapLocalToGlobal(element,qpt,xyz);
+      apf::getVector(velo_elem,qpt,vel_vect);
+
+      //Hardcoded Exact Solution    
+      u_exact= 0.5/(nu_0*rho_0)*(dpdy)*(xyz[2]*xyz[2]-Lz*xyz[2]);  //Poiseuille Flow
+      //u_exact = 1.0*xyz[2]/Lz; //Couette Flow
+      u_h = vel_vect[1]; 
+      L2_err = L2_err+(u_exact-u_h)*(u_exact-u_h)*weight*Jdet;
+    }
+
+  apf::destroyMeshElement(element);apf::destroyElement(velo_elem);apf::destroyElement(pres_elem);
+  return L2_err;
+}
+
 
