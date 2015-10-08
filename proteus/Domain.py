@@ -260,6 +260,7 @@ class PlanarStraightLineGraphDomain(D_base):
             self.regionFlags = regionFlags or []
             self.regionConstraints = regionConstraints or []
             self.bc = bc or []
+            self.barycenters = None
             self.update()
 
     def update(self):

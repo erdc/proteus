@@ -42,7 +42,8 @@ class Shape:
         self.free_x = (1, 1, 1)
         self.free_r = (1, 1, 1)
         self.snv = len(self.domain.vertices)  # total number of vertices in domain when shape.__init__
-        self.snf = len(self.domain.facets)
+        if self.domain.nd == 3:
+            self.snf = len(self.domain.facets)
         self.sns = len(self.domain.segments)
         self.snr = len(self.domain.regions)
         self.snbc = len(self.domain.bc)
@@ -54,11 +55,19 @@ class Shape:
         # add new information to the domain
         # get maximum flag defined in domain so far
         # need to add +1 for flags as 0 cannot be used
-        if self.domain.vertexFlags or self.domain.segmentFlags or self.domain.facetFlags:
-            flag = max([max(self.domain.vertexFlags), max(self.domain.segmentFlags), max(self.domain.facetFlags)])
-            flag += 1
-        else:
-            flag = 1
+        if self.domain.nd == 2:
+            if self.domain.vertexFlags or self.domain.segmentFlags:
+                flag = 1 + max([max(self.domain.vertexFlags),
+                            max(self.domain.segmentFlags)])
+            else:
+                flag = 1
+        elif self.domain.nd == 3:
+            if self.domain.vertexFlags or self.domain.segmentFlags or self.domain.facetFlags:
+                flag = 1 + max([max(self.domain.vertexFlags),
+                            max(self.domain.segmentFlags),
+                            max(self.domain.facetFlags)])
+            else:
+                flag = 1
         self.domain.vertices += self.vertices.tolist()
         self.domain.vertexFlags += (self.vertexFlags+flag).tolist()
         self.domain.segments += (self.segments+self.snv).tolist()
@@ -76,7 +85,7 @@ class Shape:
         if self.domain.barycenters is not None:
             self.domain.barycenters = np.append(self.domain.barycenters, self.barycenters, axis=0)  # need to change to array
         else:
-            self.domain.barycenters = np.array([[0.,0.,0.]])
+            self.domain.barycenters = np.array([[0. for i in range(self.domain.nd)]])
             self.domain.barycenters = np.append(self.domain.barycenters, self.barycenters, axis=0)
         self.domain.update()
 
@@ -86,10 +95,15 @@ class Shape:
         """
         nv = len(self.vertices)
         nr = len(self.regions)
-        nf = len(self.facets)
+        ns = len(self.segments)
+        if self.domain.nd == 3:
+            nf = len(self.facets)
         self.domain.vertices[self.snv:self.snv+nv] = self.vertices.tolist()
         self.domain.regions[self.snr:self.snr+nr] = self.regions.tolist()
-        self.domain.barycenters[self.snf:self.snf+nf] = self.barycenter
+        if self.domain.nd == 2:
+            self.domain.barycenters[self.sns:self.sns+ns] = self.barycenter
+        if self.domain.nd == 3:
+            self.domain.barycenters[self.snf:self.snf+nf] = self.barycenter
         self.domain.update()
 
     def setPosition(self, coords):
@@ -137,8 +151,8 @@ class Shape:
         if self.domain.nd == 2:
             self.vertices[:] = rotation2D(points=self.vertices, rot=rot, pivot=pivot)
             self.regions[:] = rotation2D(points=self.regions, rot=rot, pivot=pivot)
-            self.coords_system[:] = rotation2D(points=self.coords_system, rot=rot, pivot=(0.,0.,0.))
-            self.segments_orientation[:] = rotation2D(points=self.facets_orientation, rot=rot, pivot=(0., 0., 0.))
+            self.coords_system[:] = rotation2D(points=self.coords_system, rot=rot, pivot=(0.,0.))
+            self.boundaries_orientation[:] = rotation2D(points=self.boundaries_orientation, rot=rot, pivot=(0., 0.))
             if rotate_barycenter:
                 self.barycenter[:] = rotation2D(points=self.barycenter, rot=rot, pivot=pivot)
         elif self.domain.nd == 3:
@@ -147,7 +161,7 @@ class Shape:
                 self.holes[:] = rotation3D(points=self.holes, rot=rot, axis=axis, pivot=pivot)
             self.regions[:] = rotation3D(points=self.regions, rot=rot, axis=axis, pivot=pivot)
             self.coords_system[:] = rotation3D(points=self.coords_system, rot=rot, axis=axis, pivot=(0.,0.,0.))
-            self.facets_orientation[:] = rotation3D(points=self.facets_orientation, rot=rot, axis=axis, pivot=(0., 0., 0.))
+            self.boundaries_orientation[:] = rotation3D(points=self.boundaries_orientation, rot=rot, axis=axis, pivot=(0., 0., 0.))
             if rotate_barycenter:
                 self.barycenter[:] = rotation3D(points=self.barycenter, rot=rot, axis=axis, pivot=pivot)
         self._updateDomain()
@@ -218,7 +232,6 @@ class Shape:
     def setTank(self):
         for bc in self.bc:
             bc.setTank()
-        self.RigidBody = RigidBody(shape=self)
 
 
 class Cuboid(Shape):
@@ -250,7 +263,7 @@ class Cuboid(Shape):
                                 [[2, 3, 7, 6]],  # back
                                 [[3, 0, 4, 7]],  # left
                                 [[4, 5, 6, 7]]])  # top
-        self.facets_orientation = np.array([[0.,  0., -1.],
+        self.boundaries_orientation = np.array([[0.,  0., -1.],
                                             [-1., 0.,  0.],
                                             [0.,  1.,  0.],
                                             [1.,  0.,  0.],
@@ -267,7 +280,7 @@ class Cuboid(Shape):
         self.segmentFlags = np.array([0, 0, 0, 0, 5, 5, 5, 5, 1, 1, 3, 3])
         self.regionFlags = np.array([0])
         # Initialize (empty) boundary conditions
-        b_or = self.facets_orientation
+        b_or = self.boundaries_orientation
         self.bc_bottom = bc.BoundaryConditions(b_or=b_or, b_i=0)
         self.bc_front = bc.BoundaryConditions(b_or=b_or, b_i=1)
         self.bc_right = bc.BoundaryConditions(b_or=b_or, b_i=2)
@@ -320,32 +333,32 @@ class Rectangle(Shape):
     def __init__(self, domain, dim=(0.,0.), coords=(0.,0.), barycenter=None):
         Shape.__init__(self, domain)
         self.dim = L, H = dim  # length, height
-        self.coords = x, y = coords
+        self.coords = x, y = np.array(coords)
         self.coords_system = np.eye(2)
-        self.barycenter = barycenter or coords
+        self.barycenter = barycenter or self.coords
         self.vertices = np.array([[x-0.5*L, y-0.5*H],
                                   [x+0.5*L, y-0.5*H],
                                   [x+0.5*L, y+0.5*H],
                                   [x-0.5*L, y+0.5*H]])
         self.segments = np.array([[0, 1], [1, 2], [2, 3], [3, 0]])  # bottom, right, top, left
-        self.segments_orientation = [[0., -1.],
-                                     [1., 0.],
-                                     [0., 1.],
-                                     [0., -1.]]
+        self.boundaries_orientation = np.array([[0., -1.],
+                                                [1., 0.],
+                                                [0., 1.],
+                                                [0., -1.]])
         self.barycenters = np.array([self.barycenter for segment in self.segments])
         self.regions = np.array([[x, y]])
         self.segmentFlags = np.array([0, 1, 2, 3]) # bottom, right, top, left
         self.vertexFlags = np.array([0, 0, 2, 2])  # bottom, bottom, top, top
         self.regionFlags = np.array([0])
         # Initialize (empty) boundary conditions
-        self.bc_bottom = bc.BoundaryConditions(b_or=self.segments_orientation, b_i=0)
-        self.bc_right = bc.BoundaryConditions(b_or=self.segments_orientation, b_i=1)
-        self.bc_top = bc.BoundaryConditions(b_or=self.segments_orientation, b_i=2)
-        self.bc_left = bc.BoundaryConditions(b_or=self.segments_orientation, b_i=3)
+        self.bc_bottom = bc.BoundaryConditions(b_or=self.boundaries_orientation, b_i=0)
+        self.bc_right = bc.BoundaryConditions(b_or=self.boundaries_orientation, b_i=1)
+        self.bc_top = bc.BoundaryConditions(b_or=self.boundaries_orientation, b_i=2)
+        self.bc_left = bc.BoundaryConditions(b_or=self.boundaries_orientation, b_i=3)
         self.bc = [self.bc_bottom, self.bc_right, self.bc_top, self.bc_left]
         self.It = np.array([[(L**2.)/3., 0],
                             [0, (H**2.)/3.]])
-        self._addShapes()  # adding shape to domain
+        self._addShape()  # adding shape to domain
 
     def _setInertiaTensor(self):
         """
@@ -397,10 +410,17 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.barycenters = shape.domain.barycenters
         self.angvel = np.zeros(nd, 'd')
         self.last_angvel = np.zeros(nd, 'd')
-        self.nb_start = self.shape.snf+1  # must skip indice 0 for forces / barycenters
-        self.nb_end = self.nb_start + len(self.shape.facets)
+        if nd == 2:
+            self.nb_start = self.shape.sns+1
+            self.nb_end = self.nb_start+len(self.shape.segments)
+        if nd == 3:
+            self.nb_start = self.shape.snf+1  # must skip indice 0 for forces / barycenters
+            self.nb_end = self.nb_start + len(self.shape.segments)
         self.rotation_matrix = np.eye(nd)  # matrix used for rotating mesh between 2 calculation steps
-        self.Fg = self.shape.mass*np.array([0., 0., -9.81])
+        if nd == 2:
+            self.Fg = self.shape.mass*np.array([0., -9.81])
+        if nd == 3:
+            self.Fg = self.shape.mass*np.array([0., 0., -9.81])
 
     def step(self, dt):
         # displacement from force
@@ -410,20 +430,27 @@ class RigidBody(AuxiliaryVariables.AV_base):
         # update barycenters
         self.shape.translate(self.h)
         i0, i1 = self.nb_start, self.nb_end
-        self.barycenters[i0:i1, :] += self.shape.barycenter
+        self.barycenters[i0:i1, :] = self.shape.barycenter
         self.position[:] = self.shape.barycenter
         # rotation due to moment
         I = self.shape.getInertia(vec=self.M, pivot=self.shape.barycenter)
+        logEvent("inertia: " + `I`)
         ang_acc = self.M/I
         self.angvel[:] = self.last_angvel+ang_acc*dt
         ang_disp = self.angvel*dt
         self.ang = np.linalg.norm(ang_disp)
-        if np.sum(self.M) != 0:
+        if self.ang != 0.:
             self.shape.rotate(rot=self.ang, axis=self.angvel, pivot=self.shape.barycenter)
             self.rotation[:] = self.shape.coords_system  # this rotation matrix will be used for moveMesh
             self.rotation_matrix[:] = np.dot(np.linalg.inv(self.last_rotation), self.rotation)
         else:
             self.rotation_matrix[:] = np.eye(nd)
+        logEvent("angle: " + `self.ang`)
+        logEvent("angacc: " + `ang_acc`)
+        logEvent("angvel: " + `self.angvel`)
+        logEvent("last angvel: " + `self.last_angvel`)
+        logEvent("angdisp: " + `ang_disp`)
+        logEvent("rotation: " + `self.rotation_matrix`)
         
 
     def attachModel(self, model, ar):
@@ -469,12 +496,16 @@ class RigidBody(AuxiliaryVariables.AV_base):
         i0, i1 = self.nb_start, self.nb_end
         F = np.sum(self.model.levelModelList[-1].coefficients.netForces_p[i0:i1,:], axis=0) + np.sum(self.model.levelModelList[-1].coefficients.netForces_v[i0:i1,:], axis=0) + self.Fg
         M = np.sum(self.model.levelModelList[-1].coefficients.netMoments[i0:i1,:], axis=0)
+        logEvent("moment" +`self.model.levelModelList[-1].coefficients.netMoments`)
+        logEvent("moment" +`self.model.levelModelList[-1].coefficients.netMoments[i0:i1,:]`)
         logEvent("x Force " +`self.model.stepController.t_model_last`+" "+`F[0]`)
         logEvent("y Force " +`self.model.stepController.t_model_last`+" "+`F[1]`)
-        logEvent("z Force " +`self.model.stepController.t_model_last`+" "+`F[2]`)
+        if self.nd > 2:
+            logEvent("z Force " +`self.model.stepController.t_model_last`+" "+`F[2]`)
         logEvent("x Moment " +`self.model.stepController.t_model_last`+" "+`M[0]`)
         logEvent("y Moment " +`self.model.stepController.t_model_last`+" "+`M[1]`)
-        logEvent("z Moment " +`self.model.stepController.t_model_last`+" "+`M[2]`)
+        if self.nd > 2:
+            logEvent("z Moment " +`self.model.stepController.t_model_last`+" "+`M[2]`)
         logEvent("dt " +`dt`)
         self.F[:] = F*self.shape.free_x
         self.M[:] = M*self.shape.free_r
