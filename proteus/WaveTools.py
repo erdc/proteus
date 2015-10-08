@@ -356,6 +356,46 @@ class RandomWaves:
 #        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
 #                np.cosh(self.ki*(self.d+Z))/np.sinh(self.ki*self.d)).sum()
 
+class DoublePeakedRandomWaves(RandomWaves):
+    """Generate approximate random wave solutions
+
+    :param Tp: peak period [T]
+    :param Tp_2: second peak period [T]
+    :param Hs: significant wave height [L]
+    :param  d: depth [L]
+    :param fp: frequency [1/T]
+    :param bandFactor: width factor for band  around fp [-]
+    :param N: number of frequency bins [-]
+    :param mwl: mean water level [L]"""
+
+    def __init__(self,
+                 Tp = 5.0,         #s peak period
+                 Tp_2 = 2.5,         #s peak period
+                 Hs = 2.0,         #m significant wave height
+                 d = 2.0,           #m depth
+                 fp = 1.0/5.0,      #peak  frequency
+                 bandFactor = 2.0, #controls width of band  around fp
+                 N = 101,          #number of frequency bins
+                 mwl = 0.0,        #mean water level
+                 waveDir = np.array([1,0,0]),
+                 g = np.array([0, -9.81, 0]),         #accelerationof gravity
+                 spec_fun = JONSWAP,
+                 gamma=3.3):
+        self.fp_2 = 1.0/Tp_2
+        RandomWaves.__init__(self,
+                             Tp,
+                             Hs,
+                             d,
+                             fp,
+                             bandFactor,
+                             N,
+                             mwl,
+                             waveDir,
+                             g,
+                             spec_fun,
+                             gamma)
+        self.Si_Jm = spec_fun(self.fim,f0=self.fp,Hs=self.Hs,g=self.g,gamma=self.gamma) + spec_fun(self.fim,f0=self.fp_2,Hs=self.Hs,g=self.g,gamma=self.gamma)
+        self.ai = np.sqrt((self.Si_Jm[1:]+self.Si_Jm[:-1])*(self.fim[1:]-self.fim[:-1]))
 
 class timeSeries:
     """Generate a time series by using spectral windowing method.
