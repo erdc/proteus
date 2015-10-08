@@ -22,7 +22,7 @@ def sigma(omega,omega0):
     sigmaReturn = np.where(omega > omega0,0.09,0.07)
     return sigmaReturn
 
-def JONSWAP(f,f0,Hs,g,gamma):
+def JONSWAP(f,f0,Hs,g,gamma,TMA=False, h = -10):
     """The wave spectrum from Joint North Sea Wave Observation Project
 
     :param f: wave frequency [1/T]
@@ -35,7 +35,16 @@ def JONSWAP(f,f0,Hs,g,gamma):
     omega0 = 2.0*pi*f0
     alpha = 2.0*pi*0.0624*(1.094-0.01915*log(gamma))/(0.23+0.0336*gamma-0.0185/(1.9+gamma))
     r = np.exp(- (omega-omega0)**2/(2*sigma(omega,omega0)**2*omega0**2))
-    return (alpha*Hs**2*omega0**4/omega**5)*np.exp(-(5.0/4.0)*(omega0/omega)**4)*gamma**r
+    tma = 1.
+    if TMA:
+        if (h < 0):
+            log("Wavetools:py. Provide valid depth definition definition for TMA spectrum")
+            log("Wavetools:py. Stopping simulation")
+            exit(1)
+        k = dispersion(2*pi*f,h)
+        tma = tanh(k*h)*tanh(k*h)/(1.+ 2.*k*h/sinh(k*h))
+
+    return (tma * alpha*Hs**2*omega0**4/omega**5)*np.exp(-(5.0/4.0)*(omega0/omega)**4)*gamma**r
 
 def piersonMoskovitz(f,f0,alpha=8.1e-3,beta=0.74,g=9.8):
     """Pierson-Moskovitz spectrum
@@ -277,7 +286,6 @@ class RandomWaves:
     :param mwl: mean water level [L]"""
     
     def __init__(self,
-                 Tp = 5.0,         #s peak period
                  Hs = 2.0,         #m significant wave height
                  d = 2.0,           #m depth
                  fp = 1.0/5.0,      #peak  frequency
@@ -294,7 +302,6 @@ class RandomWaves:
         self.g = np.array(g)
         self.gAbs = sqrt(sum(g * g))
         self.vDir = self.g/self.gAbs
-        self.Tp = Tp
         self.Hs = Hs
         self.depth = d
         self.fp = fp
