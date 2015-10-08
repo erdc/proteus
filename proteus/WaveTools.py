@@ -38,8 +38,8 @@ def JONSWAP(f,f0,Hs,g,gamma,TMA=False, h = -10):
     tma = 1.
     if TMA:
         if (h < 0):
-            log("Wavetools:py. Provide valid depth definition definition for TMA spectrum")
-            log("Wavetools:py. Stopping simulation")
+            logEvent("Wavetools:py. Provide valid depth definition definition for TMA spectrum")
+            logEvent("Wavetools:py. Stopping simulation")
             exit(1)
         k = dispersion(2*pi*f,h)
         tma = tanh(k*h)*tanh(k*h)/(1.+ 2.*k*h/sinh(k*h))
@@ -539,10 +539,10 @@ class timeSeries:
             # Correct Twindow and Toverlap for duration
             self.Twindow = self.tlength/(1. + 0.75*(self.Nwindows))
             self.Toverlap = 0.25*self.Twindow
-            log("WaveTools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow * 1.1* self.peakFrequencies) )
+            logEvent("WaveTools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow * 1.1* self.peakFrequencies) )
             diff = self.Nwindows*(self.Twindow -self.Toverlap)+self.Twindow - self.tlength
-            log("WaveTools.py: Checking duration of windowed time series: %s per cent difference from original duration" %(100*diff) )
-            log("WaveTools.py: Using %s windows for reconstruction with %s sec duration and 25 per cent overlap" %(self.Nwindows, self.Twindow) )
+            logEvent("WaveTools.py: Checking duration of windowed time series: %s per cent difference from original duration" %(100*diff) )
+            logEvent("WaveTools.py: Using %s windows for reconstruction with %s sec duration and 25 per cent overlap" %(self.Nwindows, self.Twindow) )
 
             for jj in range(self.Nwindows):
                 span = np.zeros(2,"d")
@@ -617,8 +617,8 @@ class timeSeries:
     def reconstruct_direct(self,x,y,z,t,Nf,var="eta",ss = "x"):
         "Direct reconstruction of a timeseries"
         if self.rec_direct==False:
-            log("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
-            log("Stopping simulation",level=0)               
+            logEvent("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
+            logEvent("Stopping simulation",level=0)               
             exit(1)           
         ai = self.decomp[1]
         ipeak = np.where(ai == max(ai))[0][0]
@@ -655,8 +655,8 @@ class timeSeries:
     def reconstruct_window(self,x,y,z,t,Nf,var="eta",ss = "x"):
         "Direct reconstruction of a timeseries"
         if self.rec_direct==False:
-            log("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
-            log("Stopping simulation",level=0)               
+            logEvent("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
+            logEvent("Stopping simulation",level=0)               
             exit(1)           
         ai = self.decomp[1]
         ipeak = np.where(ai == max(ai))[0][0]
