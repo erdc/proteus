@@ -291,7 +291,6 @@ class RandomWaves:
         self.g = np.array(g)
         self.gAbs = sqrt(sum(g * g))
         self.vDir = self.g/self.gAbs
-        self.Tp = Tp
         self.Hs = Hs
         self.depth = d
         self.fp = fp
