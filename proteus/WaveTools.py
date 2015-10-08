@@ -424,16 +424,11 @@ class timeSeries:
                  N = 32,          #number of frequency bins
                  Nwaves = 4, #Nmumber of waves per windowmean water level
                  mwl = 0.0,        #mean water level
-<<<<<<< HEAD
                  waveDir = np.array([1,0,0]), #accelerationof gravity
                  g = np.array([0, -9.81, 0]),
                  rec_direct = False
                  ): 
-=======
-                 waveDir = np.array([1,0,0]),
-                 g = np.array([0, -9.81, 0])         #accelerationof gravity
-                 ):
->>>>>>> bd7fb6af597ee3aa26f07d7c469f8361b9bbf04e
+
 
         self.depth = d
         self.Npeaks = Npeaks
@@ -446,13 +441,10 @@ class timeSeries:
             logEvent("WaveTools.py: peakFrequencies entries in should be as many as the number of frequencies",level=0)
             logEvent("Stopping simulation",level=0)
             exit(1)
-<<<<<<< HEAD
+
         self.rec_direct= rec_direct
         self.bandFactor = np.array(bandFactor)        
-=======
 
-        self.bandFactor = np.array(bandFactor)
->>>>>>> bd7fb6af597ee3aa26f07d7c469f8361b9bbf04e
         self.peakFrequencies = np.array(peakFrequencies)
         self.N = N
         self.Nwaves = Nwaves
@@ -533,20 +525,6 @@ class timeSeries:
             self.decomp = decompose_tseries(self.time,self.eta,self.nfft,ret_only_freq=0)
             self.setup = self.decomp[3]
 
-<<<<<<< HEAD
-=======
-# Spectral windowing
-        self.Twindow = self.Nwaves / self.peakFrequencies
-        self.Npw = int(self.Twindow / self.dt)
-        self.Twindow = self.Npw*self.dt
-
-        self.Noverlap = int(self.Npw *0.25)
-        self.Toverlap = self.Noverlap
-
-
-
-
->>>>>>> bd7fb6af597ee3aa26f07d7c469f8361b9bbf04e
 
 # Spectral windowing
         else:
@@ -673,7 +651,7 @@ class timeSeries:
                     }
             return Vcomp[ss]
 
-<<<<<<< HEAD
+
     def reconstruct_window(self,x,y,z,t,Nf,var="eta",ss = "x"):
         "Direct reconstruction of a timeseries"
         if self.rec_direct==False:
@@ -711,10 +689,7 @@ class timeSeries:
                     }
             return Vcomp[ss]            
        
-=======
 
-
->>>>>>> bd7fb6af597ee3aa26f07d7c469f8361b9bbf04e
 
 class directionalWaves:
 
