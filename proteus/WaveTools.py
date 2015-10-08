@@ -267,8 +267,6 @@ class MonochromaticWaves:
 
 class RandomWaves:
     """Generate approximate random wave solutions
-
-    :param Tp: peak period [T]
     :param Hs: significant wave height [L]
     :param  d: depth [L]
     :param fp: frequency [1/T]
@@ -277,7 +275,6 @@ class RandomWaves:
     :param mwl: mean water level [L]"""
 
     def __init__(self,
-                 Tp = 5.0,         #s peak period
                  Hs = 2.0,         #m significant wave height
                  d = 2.0,           #m depth
                  fp = 1.0/5.0,      #peak  frequency
