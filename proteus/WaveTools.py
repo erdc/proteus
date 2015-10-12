@@ -530,17 +530,17 @@ class timeSeries:
         else:
             #setting the window duration (approx.). Twindow = Tmean * Nwaves = Tpeak * Nwaves /1.1 
             self.Twindow =  self.Nwaves / (1.1 * self.peakFrequencies )
-            print self.Twindow
+#            print self.Twindow
             #Settling overlap 25% of Twindow
             self.Toverlap = 0.25 * self.Twindow
             #Getting the actual number of windows
-            # (N-1) * (Twindow - Toverlap) + Twindow
+            # (N-1) * (Twindow - Toverlap) + Twindow = total time
             self.Nwindows = int( (self.tlength -   self.Twindow ) / (self.Twindow - self.Toverlap) ) + 1 
             # Correct Twindow and Toverlap for duration
-            self.Twindow = self.tlength/(1. + 0.75*(self.Nwindows))
+            self.Twindow = self.tlength/(1. + 0.75*(self.Nwindows-1))
             self.Toverlap = 0.25*self.Twindow
             logEvent("WaveTools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow * 1.1* self.peakFrequencies) )
-            diff = self.Nwindows*(self.Twindow -self.Toverlap)+self.Twindow - self.tlength
+            diff = (self.Nwindows-1.)*(self.Twindow -self.Toverlap)+self.Twindow - self.tlength
             logEvent("WaveTools.py: Checking duration of windowed time series: %s per cent difference from original duration" %(100*diff) )
             logEvent("WaveTools.py: Using %s windows for reconstruction with %s sec duration and 25 per cent overlap" %(self.Nwindows, self.Twindow) )
 
@@ -551,9 +551,9 @@ class timeSeries:
                 if jj == 0:
                     ispan1 = 0
                     ispan2 = np.where(self.time> tfirst)[0][0]
-                elif jj == self.Nwindows:
+                elif jj == self.Nwindows-1:
                     ispan1 = np.where(self.time > tlast)[0][0]
-                    ispan2 = len(self.time)
+                    ispan2 = len(self.time)-1
                 else: 
                     tstart = self.time[ispan2] - self.Toverlap
                     ispan1 = np.where(self.time > tstart)[0][0]
@@ -561,12 +561,13 @@ class timeSeries:
                 span[0] = ispan1
                 span[1] = ispan2
                 
+                print self.time[ispan1], self.time[ispan2]
                 windows_span.append(span)
                 windows_rec.append(np.array(zip(self.time[ispan1:ispan2],self.eta[ispan1:ispan2])))
-                print jj
+#                print jj
                 
 #            print (self.Twindow)
-#            print("number of windows: %s" % self.Nwindows)
+            print("number of windows: %s" % self.Nwindows)
 #            print(self.Nwindows*(self.Twindow -self.Toverlap)+self.Twindow )
 #            print(self.tlength)
             self.decompose_window = []
@@ -577,19 +578,13 @@ class timeSeries:
                 self.decompose_window.append(decomp)
 
 
-                
-
-               
-
-                
-
-
 
                 if style == "k-":
                     style = "kx"
                 else:
                     style ="k-"
                 plt.plot(wind[:,0],wind[:,1],style)
+                plt.plot(self.time,self.eta,"bo",markersize=2)
             plt.savefig("rec.pdf")
 #            self.Twindow = self.Npw*self.dt
 #            self.Noverlap = int(self.Npw *0.25)
@@ -616,6 +611,9 @@ class timeSeries:
 
     def reconstruct_direct(self,x,y,z,t,Nf,var="eta",ss = "x"):
         "Direct reconstruction of a timeseries"
+
+
+
         if self.rec_direct==False:
             logEvent("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
             logEvent("Stopping simulation",level=0)               
@@ -641,8 +639,8 @@ class timeSeries:
             UH=0.
             UV=0.
             for ii in range(Nf):
-                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(self.Z(x,y,z)+self.depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*self.depth)
-                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(self.Z(x,y,z)+self.depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*self.depth)
+                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(self.Z(x,y,z)+self.depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*self.depth)
+                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(self.Z(x,y,z)+self.depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*self.depth)
 #waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
             Vcomp = {
                     "x":UH*self.waveDir[0] + UV*self.vDir[0],
@@ -654,17 +652,37 @@ class timeSeries:
 
     def reconstruct_window(self,x,y,z,t,Nf,var="eta",ss = "x"):
         "Direct reconstruction of a timeseries"
-        if self.rec_direct==False:
-            logEvent("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
+        if self.rec_direct==True:
+            logEvent("WaveTools.py: While attempting  reconstruction in windows, wrong input for rec_direct found (should be set to False)",level=0)
             logEvent("Stopping simulation",level=0)               
             exit(1)           
-        ai = self.decomp[1]
+        #Tracking the time window (spatial coherency not yet implemented)
+        Nw = min(int(np.floor( t- self.time[0])/ (self.Twindow - self.Toverlap) )  , self.Nwindows - 1)
+            #setting the reference time at the start of each window
+#        print    Nw
+#        print    (len(self.decompose_window))
+#        print    self.Nwindows
+        if (Nw == 0):
+            tref = 0 
+            thand = 0
+        else:
+            tref = time[0] + Nw*self.Twindow - self.Toverlap
+            thand = tref  + 0.15*self.Twindow
+        #Checking if first window
+        if Nw == 0:
+            thand = 0.
+# Choosing the side of windows 
+        if t-self.time[0] < thand:
+            Nw -=1
+       # print Nw
+        
+        ai = self.decompose_window[Nw][1]
         ipeak = np.where(ai == max(ai))[0][0]
         imax = min(ipeak + Nf/2,len(ai))
         imin = max(0,ipeak - Nf/2)
         ai = ai[imin:imax]
-        omega = self.decomp[0][imin:imax]
-        phi = self.decomp[2][imin:imax]                              
+        omega = self.decompose_window[Nw][0][imin:imax]
+        phi = self.decompose_window[Nw][2][imin:imax]                              
         ki = dispersion(omega,self.depth,g=self.gAbs)
         kDir = np.zeros((len(ki),3),"d")
         Nf = len(omega)
@@ -674,13 +692,16 @@ class timeSeries:
             Eta=0.
             for ii in range(Nf):
                 Eta+=ai[ii]*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii]) 
-            return Eta
+            if (Nw < 2):
+                return Eta
+            else:
+                return 0.
         if var=="U":
             UH=0.
             UV=0.
             for ii in range(Nf):
-                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(Z(x,y,z)+depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*depth)
-                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(Z(x,y,z)+depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*depth)
+                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(Z(x,y,z)+depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*depth)
+                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(Z(x,y,z)+depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*depth)
 #waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
             Vcomp = {
                     "x":UH*self.waveDir[0] + UV*self.vDir[0],
@@ -892,11 +913,11 @@ if __name__ == '__main__':
 
     tlim = len(time) # len(time)
     ax = plt.subplot(111)
-    for Nf in np.array([16,32,64,128]):
-        print Nf
+    for Nf in np.array([4]):
+#        print Nf
         eta_rec= np.zeros(len(time),"d")
         for itime in range(tlim):
-            eta_rec[itime] = tseries.reconstruct_direct(0.,0.,0.,time[itime],Nf)
+            eta_rec[itime] = tseries.reconstruct_window(0.,0.,0.,time[itime],Nf)
         ax.plot(time,eta_rec,label = "Nf = %s" %Nf)
         ax.legend()
 
