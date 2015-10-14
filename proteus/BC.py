@@ -33,9 +33,9 @@ class BoundaryConditions:
         self.hx_dirichlet = None
         self.hy_dirichlet = None
         self.hz_dirichlet = None
-        self.u_stress = constantBC(0.)
-        self.v_stress = constantBC(0.)
-        self.w_stress = constantBC(0.)
+        self.u_stress = 0.
+        self.v_stress = 0.
+        self.w_stress = 0.
 
     def reset(self):
         # _dirichlet
@@ -116,10 +116,6 @@ class BoundaryConditions:
         """
         sets rigid body boundary conditions
         """
-        self.reset()
-        self.hx_dirichlet = constantBC(0.)  # initial mesh conditions
-        self.hy_dirichlet = constantBC(0.)
-        self.hz_dirichlet = constantBC(0.)
         self.u_dirichlet = constantBC(0.)
         self.v_dirichlet = constantBC(0.)
         self.w_dirichlet = constantBC(0.)
