@@ -684,6 +684,33 @@ class NavierStokesPressureCorrection:
     def setUp(self):
         pass
 
+class DarcyMSDG:
+    def __init__(self,L,prefix=None):
+        self.L = L
+        L_sizes = L.getSizes()
+        L_range = L.getOwnershipRange()
+        #print "L_sizes",L_sizes
+        neqns = L_sizes[0][0]
+        #print "neqns",neqns
+        self.pc = p4pyPETSc.PC().create()
+        if prefix:
+            self.pc.setOptionsPrefix(prefix)
+        self.pc.setType('mg')
+        self.Rshell = p4pyPETSc.Mat().create()
+        assert(L_sizes[0] == 3*self.L.pde.u[0].nDOF_global)
+        self.Rshell.setSizes([[3*self.L.pde.cg_u[0].nDOF_global,None],[L_sizes[0],None]])
+        self.Rshell.setType('python')
+        self.Rcontext  = self.L.pde
+        self.Rshell.setPythonContext(self.Rcontext)
+        self.setMGSetLevels(2)
+        self.setMGSetResitriction(1,self.Rshell)
+        self.setMGSetGalerkin()
+    def setUp(self):
+        if self.L.pde.pp_hasConstantNullSpace:
+            if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
+                self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
+                self.kspList = self.pc.getFieldSplitSubKSP()
+                self.kspList[1].setNullSpace(self.nsp)
 class SimpleDarcyFC:
     def __init__(self,L):
         L_sizes = L.getSizes()

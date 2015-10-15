@@ -53,6 +53,12 @@ class OneLevelMSDG(Transport.OneLevelTransport):
                                              reuse_trial_and_test_quadrature,
                                              sd,
                                              movingDomain)
+        self.cg_spaces = {}
+        self.u_cg = {}
+        for i in range(self.nd+1):
+            self.cg_spaces[i] = C0_AffineLinearOnSimplexWithNodalBasis(self.mesh,
+                                                                       self.nd)
+            self.u_cg = FiniteElementFunction(cg_spaces[i],name=self.u[i].name)
     def calculateElementJacobian(self,skipMassTerms=False):
         import numpy as np
         from numpy import  linalg
@@ -140,3 +146,21 @@ class OneLevelMSDG(Transport.OneLevelTransport):
         #we would then need to assemble the element Jacobians  into a global Jacobian based on the continuous element maps
         #this approach would need formal MSDG space with knowledge of  coarse and fine  spaces
         #let's first check  if M and T are right
+    def CG_to_DG(self, cg_dof, dg_dof):
+        dg_dof[:] = 0.0
+        for eN in range(self.mesh.nElements_global):
+            for  i in range(self.nDOF_trial_element[0]):
+                for  j in range(self.nDOF_trial_element[0]):
+                    dg_dof[3*self.u[0].dofMap.l2g[eN,i] + 0]  += (self.T[eN][0*self.nDOF_test_element[0] + i, 0*self.nDOF_trial_element[0]+j]*cg_dof[3*self.u_cg[0].dofMap.l2g[eN,j]+0] +
+                                                                  self.T[eN][0*self.nDOF_test_element[0] + i, 1*self.nDOF_trial_element[0]+j]*cg_dof[3*self.u_cg[1].dofMap.l2g[eN,j]+1] +
+                                                                  self.T[eN][0*self.nDOF_test_element[0] + i, 2*self.nDOF_trial_element[0]+j]*cg_dof[3*self.u_cg[2].dofMap.l2g[eN,j]+2])
+                    dg_dof[3*self.u[1].dofMap.l2g[eN,i] + 1]  += (self.T[eN][1*self.nDOF_test_element[0] + i, 0*self.nDOF_trial_element[0]+j]*cg_dof[3*self.u_cg[0].dofMap.l2g[eN,j]+0] +
+                                                                  self.T[eN][1*self.nDOF_test_element[0] + i, 1*self.nDOF_trial_element[0]+j]*cg_dof[3*self.u_cg[1].dofMap.l2g[eN,j]+1] +
+                                                                  self.T[eN][1*self.nDOF_test_element[0] + i, 2*self.nDOF_trial_element[0]+j]*cg_dof[3*self.u_cg[2].dofMap.l2g[eN,j]+2])
+                    dg_dof[3*self.u[2].dofMap.l2g[eN,i] + 2]  += (self.T[eN][2*self.nDOF_test_element[0] + i, 0*self.nDOF_trial_element[0]+j]*cg_dof[3*self.u_cg[0].dofMap.l2g[eN,j]+0] +
+                                                                  self.T[eN][2*self.nDOF_test_element[0] + i, 1*self.nDOF_trial_element[0]+j]*cg_dof[3*self.u_cg[1].dofMap.l2g[eN,j]+1] +
+                                                                  self.T[eN][2*self.nDOF_test_element[0] + i, 2*self.nDOF_trial_element[0]+j]*cg_dof[3*self.u_cg[2].dofMap.l2g[eN,j]+2])
+    def create(self,):
+        pass
+    def mult(self, A, x, y):
+        self.CG_to_DG(cg_dof=x, dg_dof=y)
