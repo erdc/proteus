@@ -18,6 +18,7 @@ platform_lapack_h = None
 platform_lapack_integer = None
 
 if sys.platform == 'darwin':
+    platform_extra_compile_args = ['-DPETSC_SKIP_COMPLEX=1']
     platform_extra_link_args = ['-framework', 'Accelerate']
     platform_lapack_integer = '__CLPK_integer'
     platform_blas_h = r'<Accelerate/Accelerate.h>'
