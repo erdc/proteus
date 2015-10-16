@@ -518,12 +518,12 @@ class KSP_petsc4py(LinearSolver):
             self.petsc_L.setValuesLocalCSR(self.csr_rep[0],self.csr_rep[1],self.csr_rep[2],p4pyPETSc.InsertMode.ADD_VALUES)
         self.petsc_L.assemblyBegin()
         self.petsc_L.assemblyEnd()
+        self.ksp.setOperators(self.petsc_L,self.petsc_L)
         if self.pc != None:
+            self.pc.setOperators(self.petsc_L,self.petsc_L)
             if self.preconditioner:
                 self.preconditioner.setUp()
-            self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
-        self.ksp.setOperators(self.petsc_L,self.petsc_L)
         #self.ksp.setOperators(self.Lshell,self.petsc_L)
         self.ksp.setUp()
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
@@ -724,10 +724,13 @@ class DarcyMSDG:
         logEvent("Done setting up Restriction")
         #self.pc.setMGInterpolation(1,self.Ishell)
         self.pc.setMGInterpolation(1,self.I)
+        self.hasNullSpace=False
         #logEvent("Done setting up Interpolation")
     def setUp(self):
         self.Icontext, self.I  = self.L.pde.getInterpolation()
-        self.pc.setMGInterpolation(1,self.I)
+        #self.pc.setType('mg')
+        #self.pc.setFromOptions()
+        #self.pc.setMGInterpolation(1,self.I)
         logEvent("setting up PC")
 
 class SimpleDarcyFC:

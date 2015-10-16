@@ -88,15 +88,16 @@ class OneLevelMSDG(Transport.OneLevelTransport):
         #                                                 reuse_trial_and_test_quadrature,
         #                                                 sd,
         #                                                 movingDomain)
-        self.dg_u_all = np.zeros((self.dim,),'d')
-        self.dg_r_all = np.zeros((self.dim,),'d')
+        #self.dg_u_all = np.zeros((self.dim,),'d')
+        #self.dg_r_all = np.zeros((self.dim,),'d')
         #self.dim = self.cg_transport.dim
-       # self.dim_proc = self.cg_transport.dim_proc
+        #self.dim_proc = self.cg_transport.dim_proc
         self.T = []
         for eN in range(self.mesh.nElements_global):
             self.T.append(np.identity(9,'d'))
+        self.I = None
     def CG_to_DG(self, cg_dof, dg_dof):
-        print "CG -> DG"
+        logEvent("CG -> DG")
         dg_dof[:] = 0.0
         for eN in range(self.mesh.nElements_global):
             for  i in range(self.nDOF_trial_element[0]):
@@ -174,12 +175,11 @@ class OneLevelMSDG(Transport.OneLevelTransport):
                             h = self.q['abs(det(J))'][eN,k]/self.ebq['sqrt(det(g))'][eN,ebN,k]
                             lambda_norm = abs(self.ebq[('dr',1,1)][eN,ebN,k])
 
-
                             #
                             #lhs matrix
                             #
                             #til_D_k
-                            self.transfer_lhs[(0,0)][eN,i,j] += self.alpha_beta* lambda_norm/h*self.ebq[('v',0)][eN,ebN,k,j]*self.ebq[('w*dS_H',0)][eN,ebN,k,i]
+                            self.transfer_lhs[(0,0)][eN,i,j] += self.alpha_beta*lambda_norm/h*self.ebq[('v',0)][eN,ebN,k,j]*self.ebq[('w*dS_H',0)][eN,ebN,k,i]
                             #til_C_k
                             self.transfer_lhs[(0,1)][eN,i,j] -= self.ebq['n'][eN,ebN,k,0]*self.ebq[('v',1)][eN,ebN,k,j]*self.ebq[('w*dS_H',0)][eN,ebN,k,i]
                             self.transfer_lhs[(0,2)][eN,i,j] -= self.ebq['n'][eN,ebN,k,1]*self.ebq[('v',2)][eN,ebN,k,j]*self.ebq[('w*dS_H',0)][eN,ebN,k,i]
@@ -189,8 +189,8 @@ class OneLevelMSDG(Transport.OneLevelTransport):
                             self.transfer_lhs[(1,1)][eN,i,j] += self.alpha_p*h/lambda_norm*self.ebq['n'][eN,ebN,k,0]*self.ebq['n'][eN,ebN,k,0]*self.ebq[('v',1)][eN,ebN,k,j]*self.ebq[('w*dS_f',1)][eN,ebN,k,i]
                             self.transfer_lhs[(2,2)][eN,i,j] += self.alpha_p*h/lambda_norm*self.ebq['n'][eN,ebN,k,1]*self.ebq['n'][eN,ebN,k,1]*self.ebq[('v',2)][eN,ebN,k,j]*self.ebq[('w*dS_f',2)][eN,ebN,k,i]
                             # add more terms
-                            self.transfer_rhs[(1,2)][eN,i,j] += self.alpha_p*h/lambda_norm*self.ebq['n'][eN,ebN,k,0]*self.ebq['n'][eN,ebN,k,1]*self.ebq[('v',1)][eN,ebN,k,j]*self.ebq[('w*dS_f',1)][eN,ebN,k,i]
-                            self.transfer_rhs[(2,1)][eN,i,j] += self.alpha_p*h/lambda_norm*self.ebq['n'][eN,ebN,k,1]*self.ebq['n'][eN,ebN,k,0]*self.ebq[('v',2)][eN,ebN,k,j]*self.ebq[('w*dS_f',2)][eN,ebN,k,i]
+                            self.transfer_lhs[(1,2)][eN,i,j] += self.alpha_p*h/lambda_norm*self.ebq['n'][eN,ebN,k,0]*self.ebq['n'][eN,ebN,k,1]*self.ebq[('v',2)][eN,ebN,k,j]*self.ebq[('w*dS_f',1)][eN,ebN,k,i]
+                            self.transfer_lhs[(2,1)][eN,i,j] += self.alpha_p*h/lambda_norm*self.ebq['n'][eN,ebN,k,1]*self.ebq['n'][eN,ebN,k,0]*self.ebq[('v',1)][eN,ebN,k,j]*self.ebq[('w*dS_f',2)][eN,ebN,k,i]
 
 
                             #
@@ -208,8 +208,8 @@ class OneLevelMSDG(Transport.OneLevelTransport):
                             self.transfer_rhs[(1,1)][eN,i,j] += self.alpha_p*h/lambda_norm*self.ebq['n'][eN,ebN,k,0]*self.ebq['n'][eN,ebN,k,0]*self.ebq[('v',1)][eN,ebN,k,j]*self.ebq[('w*dS_f',1)][eN,ebN,k,i]
                             self.transfer_rhs[(2,2)][eN,i,j] += self.alpha_p*h/lambda_norm*self.ebq['n'][eN,ebN,k,1]*self.ebq['n'][eN,ebN,k,1]*self.ebq[('v',2)][eN,ebN,k,j]*self.ebq[('w*dS_f',2)][eN,ebN,k,i]
                             # add more terms
-                            self.transfer_rhs[(1,2)][eN,i,j] += self.alpha_p*h/lambda_norm*self.ebq['n'][eN,ebN,k,0]*self.ebq['n'][eN,ebN,k,1]*self.ebq[('v',1)][eN,ebN,k,j]*self.ebq[('w*dS_f',1)][eN,ebN,k,i]
-                            self.transfer_rhs[(2,1)][eN,i,j] += self.alpha_p*h/lambda_norm*self.ebq['n'][eN,ebN,k,1]*self.ebq['n'][eN,ebN,k,0]*self.ebq[('v',2)][eN,ebN,k,j]*self.ebq[('w*dS_f',2)][eN,ebN,k,i]
+                            self.transfer_rhs[(1,2)][eN,i,j] += self.alpha_p*h/lambda_norm*self.ebq['n'][eN,ebN,k,0]*self.ebq['n'][eN,ebN,k,1]*self.ebq[('v',2)][eN,ebN,k,j]*self.ebq[('w*dS_f',1)][eN,ebN,k,i]
+                            self.transfer_rhs[(2,1)][eN,i,j] += self.alpha_p*h/lambda_norm*self.ebq['n'][eN,ebN,k,1]*self.ebq['n'][eN,ebN,k,0]*self.ebq[('v',1)][eN,ebN,k,j]*self.ebq[('w*dS_f',2)][eN,ebN,k,i]
 
             self.til_M.append(np.zeros((3*self.nDOF_test_element[0],3*self.nDOF_trial_element[0]),'d'))
             self.bar_M.append(np.zeros((3*self.nDOF_test_element[0],3*self.nDOF_trial_element[0]),'d'))
@@ -217,27 +217,63 @@ class OneLevelMSDG(Transport.OneLevelTransport):
             for  i in range(self.nDOF_test_element[0]):
                 for  j in range(self.nDOF_trial_element[0]):
                     #til_M
-                    self.til_M[eN][0*self.nDOF_test_element[0] + i, 0*self.nDOF_trial_element[0]+j] = self.transfer_lhs[(0,0)][eN,i,j]
-                    self.til_M[eN][0*self.nDOF_test_element[0] + i, 1*self.nDOF_trial_element[0]+j] = self.transfer_lhs[(0,1)][eN,i,j]
-                    self.til_M[eN][0*self.nDOF_test_element[0] + i, 2*self.nDOF_trial_element[0]+j] = self.transfer_lhs[(0,2)][eN,i,j]
-                    self.til_M[eN][1*self.nDOF_test_element[0] + i, 0*self.nDOF_trial_element[0]+j] = self.transfer_lhs[(1,0)][eN,i,j]
-                    self.til_M[eN][1*self.nDOF_test_element[0] + i, 1*self.nDOF_trial_element[0]+j] = self.transfer_lhs[(1,1)][eN,i,j]
-                    self.til_M[eN][1*self.nDOF_test_element[0] + i, 2*self.nDOF_trial_element[0]+j] = self.transfer_lhs[(1,2)][eN,i,j]
-                    self.til_M[eN][2*self.nDOF_test_element[0] + i, 0*self.nDOF_trial_element[0]+j] = self.transfer_lhs[(2,0)][eN,i,j]
-                    self.til_M[eN][2*self.nDOF_test_element[0] + i, 1*self.nDOF_trial_element[0]+j] = self.transfer_lhs[(2,1)][eN,i,j]
-                    self.til_M[eN][2*self.nDOF_test_element[0] + i, 2*self.nDOF_trial_element[0]+j] = self.transfer_lhs[(2,2)][eN,i,j]
+                    self.til_M[eN][0*self.nDOF_test_element[0]  + i,
+                                   0*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_lhs[(0,0)][eN,i,j]
+                    self.til_M[eN][0*self.nDOF_test_element[0]  + i,
+                                   1*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_lhs[(0,1)][eN,i,j]
+                    self.til_M[eN][0*self.nDOF_test_element[0]  + i,
+                                   2*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_lhs[(0,2)][eN,i,j]
+                    self.til_M[eN][1*self.nDOF_test_element[0]  + i,
+                                   0*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_lhs[(1,0)][eN,i,j]
+                    self.til_M[eN][1*self.nDOF_test_element[0]  + i,
+                                   1*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_lhs[(1,1)][eN,i,j]
+                    self.til_M[eN][1*self.nDOF_test_element[0]  + i,
+                                   2*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_lhs[(1,2)][eN,i,j]
+                    self.til_M[eN][2*self.nDOF_test_element[0]  + i,
+                                   0*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_lhs[(2,0)][eN,i,j]
+                    self.til_M[eN][2*self.nDOF_test_element[0]  + i,
+                                   1*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_lhs[(2,1)][eN,i,j]
+                    self.til_M[eN][2*self.nDOF_test_element[0]  + i,
+                                   2*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_lhs[(2,2)][eN,i,j]
                     #bar_M
-                    self.bar_M[eN][0*self.nDOF_test_element[0] + i, 0*self.nDOF_trial_element[0]+j] = self.transfer_rhs[(0,0)][eN,i,j]
-                    self.bar_M[eN][0*self.nDOF_test_element[0] + i, 1*self.nDOF_trial_element[0]+j] = self.transfer_rhs[(0,1)][eN,i,j]
-                    self.bar_M[eN][0*self.nDOF_test_element[0] + i, 2*self.nDOF_trial_element[0]+j] = self.transfer_rhs[(0,2)][eN,i,j]
-                    self.bar_M[eN][1*self.nDOF_test_element[0] + i, 0*self.nDOF_trial_element[0]+j] = self.transfer_rhs[(1,0)][eN,i,j]
-                    self.bar_M[eN][1*self.nDOF_test_element[0] + i, 1*self.nDOF_trial_element[0]+j] = self.transfer_rhs[(1,1)][eN,i,j]
-                    self.bar_M[eN][1*self.nDOF_test_element[0] + i, 2*self.nDOF_trial_element[0]+j] = self.transfer_rhs[(1,2)][eN,i,j]
-                    self.bar_M[eN][2*self.nDOF_test_element[0] + i, 0*self.nDOF_trial_element[0]+j] = self.transfer_rhs[(2,0)][eN,i,j]
-                    self.bar_M[eN][2*self.nDOF_test_element[0] + i, 1*self.nDOF_trial_element[0]+j] = self.transfer_rhs[(2,1)][eN,i,j]
-                    self.bar_M[eN][2*self.nDOF_test_element[0] + i, 2*self.nDOF_trial_element[0]+j] = self.transfer_rhs[(2,2)][eN,i,j]
+                    self.bar_M[eN][0*self.nDOF_test_element[0]  + i,
+                                   0*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_rhs[(0,0)][eN,i,j]
+                    self.bar_M[eN][0*self.nDOF_test_element[0]  + i,
+                                   1*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_rhs[(0,1)][eN,i,j]
+                    self.bar_M[eN][0*self.nDOF_test_element[0]  + i,
+                                   2*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_rhs[(0,2)][eN,i,j]
+                    self.bar_M[eN][1*self.nDOF_test_element[0]  + i,
+                                   0*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_rhs[(1,0)][eN,i,j]
+                    self.bar_M[eN][1*self.nDOF_test_element[0]  + i,
+                                   1*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_rhs[(1,1)][eN,i,j]
+                    self.bar_M[eN][1*self.nDOF_test_element[0]  + i,
+                                   2*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_rhs[(1,2)][eN,i,j]
+                    self.bar_M[eN][2*self.nDOF_test_element[0]  + i,
+                                   0*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_rhs[(2,0)][eN,i,j]
+                    self.bar_M[eN][2*self.nDOF_test_element[0]  + i,
+                                   1*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_rhs[(2,1)][eN,i,j]
+                    self.bar_M[eN][2*self.nDOF_test_element[0]  + i,
+                                   2*self.nDOF_trial_element[0] + j] \
+                        = self.transfer_rhs[(2,2)][eN,i,j]
                     #T
-            #self.T[eN] = linalg.inv(self.til_M[eN])*self.bar_M[eN]
+            self.T[eN] = np.dot(linalg.inv(self.til_M[eN]),self.bar_M[eN])
         #we would then need to assemble the element Jacobians  into a global Jacobian based on the continuous element maps
         #this approach would need formal MSDG space with knowledge of  coarse and fine  spaces
         #let's first check  if M and T are right
@@ -260,51 +296,64 @@ class OneLevelMSDG(Transport.OneLevelTransport):
                 pass
             def mult(self, A, x, y):
                 self.pde.CG_to_DG(x,y)
-        I = PETSc.Mat().create()
-        I.setSizes([[3*self.u[0].femSpace.dim,3*self.u[0].femSpace.dim],[3*self.u_cg[0].femSpace.dim,3*self.u_cg[0].femSpace.dim]])
-        #INPY = np.zeros((3*self.u[0].femSpace.dim,3*self.u_cg[0].femSpace.dim),'d')
-        I.setType(PETSc.Mat.Type.SEQAIJ)
-        I.setPreallocationNNZ(1)
-        I.setOption(PETSc.Mat.Option.NEW_NONZERO_ALLOCATION_ERR, False)
+        if not self.I:
+            self.I = PETSc.Mat().create()
+            self.I.setSizes([[3*self.u[0].femSpace.dim,3*self.u[0].femSpace.dim],[3*self.u_cg[0].femSpace.dim,3*self.u_cg[0].femSpace.dim]])
+            #INPY = np.zeros((3*self.u[0].femSpace.dim,3*self.u_cg[0].femSpace.dim),'d')
+            self.I.setType(PETSc.Mat.Type.SEQAIJ)
+            self.I.setPreallocationNNZ(1)
+            self.I.setOption(PETSc.Mat.Option.NEW_NONZERO_ALLOCATION_ERR, False)
+        else:
+            self.I.zeroEntries()
+            self.I.setOption(PETSc.Mat.Option.NEW_NONZERO_ALLOCATION_ERR, True)
         for eN in range(self.mesh.nElements_global):
             for  i in range(self.nDOF_trial_element[0]):
                 for  j in range(self.nDOF_trial_element[0]):
-                    I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i] + 0,
-                               3*self.u_cg[0].femSpace.dofMap.l2g[eN,j]+0,
-                               self.T[eN][0*self.nDOF_test_element[0] + i, 0*self.nDOF_trial_element[0]+j],
-                               PETSc.InsertMode.ADD_VALUES)
-                    I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i] + 0,
-                               3*self.u_cg[1].femSpace.dofMap.l2g[eN,j]+1,
-                               self.T[eN][0*self.nDOF_test_element[0] + i, 1*self.nDOF_trial_element[0]+j],
-                               PETSc.InsertMode.ADD_VALUES)
-                    I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i] + 0,
-                               3*self.u_cg[2].femSpace.dofMap.l2g[eN,j]+2,
-                               self.T[eN][0*self.nDOF_test_element[0] + i, 2*self.nDOF_trial_element[0]+j],
-                               PETSc.InsertMode.ADD_VALUES)
-                    I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i] + 1,
-                               3*self.u_cg[0].femSpace.dofMap.l2g[eN,j]+0,
-                               self.T[eN][1*self.nDOF_test_element[0] + i, 0*self.nDOF_trial_element[0]+j],
-                               PETSc.InsertMode.ADD_VALUES)
-                    I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i] + 1,
-                               3*self.u_cg[1].femSpace.dofMap.l2g[eN,j]+1,
-                               self.T[eN][1*self.nDOF_test_element[0] + i, 1*self.nDOF_trial_element[0]+j],
-                               PETSc.InsertMode.ADD_VALUES)
-                    I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i] + 1,
-                               3*self.u_cg[2].femSpace.dofMap.l2g[eN,j]+2,
-                               self.T[eN][1*self.nDOF_test_element[0] + i, 2*self.nDOF_trial_element[0]+j],
-                               PETSc.InsertMode.ADD_VALUES)
-                    I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i] + 2,
-                               3*self.u_cg[0].femSpace.dofMap.l2g[eN,j]+0,
-                               self.T[eN][2*self.nDOF_test_element[0] + i, 0*self.nDOF_trial_element[0]+j],
-                               PETSc.InsertMode.ADD_VALUES)
-                    I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i] + 2,
-                               3*self.u_cg[1].femSpace.dofMap.l2g[eN,j]+1,
-                               self.T[eN][2*self.nDOF_test_element[0] + i, 1*self.nDOF_trial_element[0]+j],
-                               PETSc.InsertMode.ADD_VALUES)
-                    I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i] + 2,
-                               3*self.u_cg[2].femSpace.dofMap.l2g[eN,j]+2,
-                               self.T[eN][2*self.nDOF_test_element[0] + i, 2*self.nDOF_trial_element[0]+j],
-                               PETSc.InsertMode.ADD_VALUES)
+                    self.I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i]   +0,
+                                    3*self.u_cg[0].femSpace.dofMap.l2g[eN,j]+0,
+                                    self.T[eN][0*self.nDOF_test_element[0] +i,
+                                               0*self.nDOF_trial_element[0]+j],
+                                    PETSc.InsertMode.ADD_VALUES)
+                    self.I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i]   +0,
+                                    3*self.u_cg[1].femSpace.dofMap.l2g[eN,j]+1,
+                                    self.T[eN][0*self.nDOF_test_element[0] +i,
+                                               1*self.nDOF_trial_element[0]+j],
+                                    PETSc.InsertMode.ADD_VALUES)
+                    self.I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i]   +0,
+                                    3*self.u_cg[2].femSpace.dofMap.l2g[eN,j]+2,
+                                    self.T[eN][0*self.nDOF_test_element[0] +i,
+                                               2*self.nDOF_trial_element[0]+j],
+                                    PETSc.InsertMode.ADD_VALUES)
+                    self.I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i]   +1,
+                                    3*self.u_cg[0].femSpace.dofMap.l2g[eN,j]+0,
+                                    self.T[eN][1*self.nDOF_test_element[0] +i,
+                                               0*self.nDOF_trial_element[0]+j],
+                                    PETSc.InsertMode.ADD_VALUES)
+                    self.I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i]   +1,
+                                    3*self.u_cg[1].femSpace.dofMap.l2g[eN,j]+1,
+                                    self.T[eN][1*self.nDOF_test_element[0] +i,
+                                               1*self.nDOF_trial_element[0]+j],
+                                    PETSc.InsertMode.ADD_VALUES)
+                    self.I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i]   +1,
+                                    3*self.u_cg[2].femSpace.dofMap.l2g[eN,j]+2,
+                                    self.T[eN][1*self.nDOF_test_element[0] +i,
+                                               2*self.nDOF_trial_element[0]+j],
+                                    PETSc.InsertMode.ADD_VALUES)
+                    self.I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i]   +2,
+                                    3*self.u_cg[0].femSpace.dofMap.l2g[eN,j]+0,
+                                    self.T[eN][2*self.nDOF_test_element[0] +i,
+                                               0*self.nDOF_trial_element[0]+j],
+                                    PETSc.InsertMode.ADD_VALUES)
+                    self.I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i]   +2,
+                                    3*self.u_cg[1].femSpace.dofMap.l2g[eN,j]+1,
+                                    self.T[eN][2*self.nDOF_test_element[0] +i,
+                                               1*self.nDOF_trial_element[0]+j],
+                                    PETSc.InsertMode.ADD_VALUES)
+                    self.I.setValue(3*self.u[0].femSpace.dofMap.l2g[eN,i]   +2,
+                                    3*self.u_cg[2].femSpace.dofMap.l2g[eN,j]+2,
+                                    self.T[eN][2*self.nDOF_test_element[0] +i,
+                                               2*self.nDOF_trial_element[0]+j],
+                                    PETSc.InsertMode.ADD_VALUES)
                     #
                     # INPY[3*self.u[0].femSpace.dofMap.l2g[eN,i] + 0,
                     #            3*self.u_cg[0].femSpace.dofMap.l2g[eN,j]+0] += self.T[eN][0*self.nDOF_test_element[0] + i, 0*self.nDOF_trial_element[0]+j]
@@ -324,8 +373,8 @@ class OneLevelMSDG(Transport.OneLevelTransport):
                     #            3*self.u_cg[1].femSpace.dofMap.l2g[eN,j]+1] += self.T[eN][2*self.nDOF_test_element[0] + i, 1*self.nDOF_trial_element[0]+j]
                     # INPY[3*self.u[0].femSpace.dofMap.l2g[eN,i] + 2,
                     #            3*self.u_cg[2].femSpace.dofMap.l2g[eN,j]+2] += self.T[eN][2*self.nDOF_test_element[0] + i, 2*self.nDOF_trial_element[0]+j]
-        I.assemble()
-        return TransferShell(self), I#, INPY
+        self.I.assemble()
+        return TransferShell(self), self.I#, INPY
     #def getResidual(self,u,r):
     #    #self.CG_to_DG(u, self.dg_u_all)
     #    Transport.OneLevelTransport.getResidual(self, self.dg_u_all, self.dg_r_all)
