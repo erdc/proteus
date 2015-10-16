@@ -377,6 +377,24 @@ class KSP_petsc4py(LinearSolver):
         self.pccontext = None
         self.preconditioner = None
         self.pc = None
+        assert type(L).__name__ == 'SparseMatrix', "petsc4py PETSc can only be called with a local sparse matrix"
+        assert isinstance(par_L,ParMat_petsc4py)
+        self.solverName  = "PETSc"
+        self.par_fullOverlap = True
+        self.par_firstAssembly=True
+        self.par_L   = par_L
+        self.petsc_L = par_L
+        self.ksp     = p4pyPETSc.KSP().create()
+        self.csr_rep_owned = self.petsc_L.csr_rep_owned
+        self.csr_rep = self.petsc_L.csr_rep
+        #shell for main operator
+        self.Lshell = p4pyPETSc.Mat().create()
+        sizes = self.petsc_L.getSizes()
+        self.Lshell.setSizes([[sizes[0][0],None],[sizes[0][1],None]])
+        self.Lshell.setType('python')
+        self.matcontext  = SparseMatShell(self.petsc_L.ghosted_csr_mat)
+        self.Lshell.setPythonContext(self.matcontext)
+        par_L.shell = self.Lshell
         if Preconditioner != None:
             if Preconditioner == Jacobi:
                 self.pccontext= Preconditioner(L,
@@ -442,24 +460,10 @@ class KSP_petsc4py(LinearSolver):
             elif Preconditioner == NavierStokesPressureCorrection:
                 self.preconditioner = NavierStokesPressureCorrection(par_L)
                 self.pc = self.preconditioner.pc
-        assert type(L).__name__ == 'SparseMatrix', "petsc4py PETSc can only be called with a local sparse matrix"
-        assert isinstance(par_L,ParMat_petsc4py)
-        self.solverName  = "PETSc"
-        self.par_fullOverlap = True
-        self.par_firstAssembly=True
-        self.par_L   = par_L
-        self.petsc_L = par_L
-        self.ksp     = p4pyPETSc.KSP().create()
-        self.csr_rep_owned = self.petsc_L.csr_rep_owned
-        self.csr_rep = self.petsc_L.csr_rep
-        #shell for main operator
-        self.Lshell = p4pyPETSc.Mat().create()
-        sizes = self.petsc_L.getSizes()
-        self.Lshell.setSizes([[sizes[0][0],None],[sizes[0][1],None]])
-        self.Lshell.setType('python')
-        self.matcontext  = SparseMatShell(self.petsc_L.ghosted_csr_mat)
-        self.Lshell.setPythonContext(self.matcontext)
-        #self.ksp.setOperators(self.petsc_L,self.Lshell)#,self.petsc_L)
+            elif Preconditioner == DarcyMSDG:
+                self.preconditioner = DarcyMSDG(par_L)
+                self.pc = self.preconditioner.pc
+        #self.ksp.setOperators(self.Lshell,self.Lshell)#,self.petsc_L)
         #
         try:
             if self.preconditioner.hasNullSpace:
@@ -515,10 +519,10 @@ class KSP_petsc4py(LinearSolver):
         self.petsc_L.assemblyBegin()
         self.petsc_L.assemblyEnd()
         if self.pc != None:
-            self.pc.setOperators(self.petsc_L,self.petsc_L)
-            self.pc.setUp()
             if self.preconditioner:
                 self.preconditioner.setUp()
+            self.pc.setOperators(self.petsc_L,self.petsc_L)
+            self.pc.setUp()
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
         #self.ksp.setOperators(self.Lshell,self.petsc_L)
         self.ksp.setUp()
@@ -696,21 +700,36 @@ class DarcyMSDG:
         if prefix:
             self.pc.setOptionsPrefix(prefix)
         self.pc.setType('mg')
-        self.Rshell = p4pyPETSc.Mat().create()
-        assert(L_sizes[0] == 3*self.L.pde.u[0].nDOF_global)
-        self.Rshell.setSizes([[3*self.L.pde.cg_u[0].nDOF_global,None],[L_sizes[0],None]])
-        self.Rshell.setType('python')
-        self.Rcontext  = self.L.pde
-        self.Rshell.setPythonContext(self.Rcontext)
-        self.setMGSetLevels(2)
-        self.setMGSetResitriction(1,self.Rshell)
-        self.setMGSetGalerkin()
+        self.pc.setFromOptions()
+        L_sizes = self.L.getSizes()
+        assert(L_sizes[0][0] == 3*self.L.pde.u[0].nDOF_global)
+        #Interpolation from CG to DG
+        self.Ishell = p4pyPETSc.Mat().create()
+        self.Ishell.setSizes([
+            [L_sizes[0][0], L_sizes[0][0]],
+            [3*self.L.pde.u_cg[0].nDOF_global, 3*self.L.pde.u_cg[0].nDOF_global]])
+        self.Ishell.setType('python')
+        self.Icontext, self.I  = self.L.pde.getInterpolation()
+        self.Ishell.setPythonContext(self.Icontext)
+        #self.Rshell = p4pyPETSc.Mat().create()
+        #self.Rshell.setSizes([
+        #    [3*self.L.pde.u_cg[0].nDOF_global, 3*self.L.pde.u_cg[0].nDOF_global],
+        #    [L_sizes[0][1], L_sizes[0][1]]])
+        #self.Rshell.setType('python')
+        #self.Rcontext = self.L.pde.getRestriction()
+        #self.Rshell.setPythonContext(self.Rcontext)
+        logEvent("Number of MG  levels "  + `self.pc.getMGLevels()`)
+        #self.pc.setMGRestriction(1,self.Rshell)
+        #self.pc.setMGRestriction(1,self.R)
+        logEvent("Done setting up Restriction")
+        #self.pc.setMGInterpolation(1,self.Ishell)
+        self.pc.setMGInterpolation(1,self.I)
+        #logEvent("Done setting up Interpolation")
     def setUp(self):
-        if self.L.pde.pp_hasConstantNullSpace:
-            if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
-                self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
-                self.kspList = self.pc.getFieldSplitSubKSP()
-                self.kspList[1].setNullSpace(self.nsp)
+        self.Icontext, self.I  = self.L.pde.getInterpolation()
+        self.pc.setMGInterpolation(1,self.I)
+        logEvent("setting up PC")
+
 class SimpleDarcyFC:
     def __init__(self,L):
         L_sizes = L.getSizes()
