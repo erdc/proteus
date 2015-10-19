@@ -31,6 +31,7 @@ class MeshAdaptPUMIDrvr{
 
   int CalculateSizeField();
   int CalculateAnisoSizeField();
+  int getERMSizeField(double err_total);
 
   double hmax, hmin;
   int numIter;
@@ -54,9 +55,11 @@ class MeshAdaptPUMIDrvr{
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* solution;
+  apf::Field* err_reg; //error field from ERM
   /* there is either an isotropic or an anisotropic size field */
   /* this field stores isotropic size */
   apf::Field* size_iso;
+  //apf::Field* size_iso_reg;
   /* these fields store anisotropic size */
   apf::Field* size_scale;
   apf::Field* size_frame;
