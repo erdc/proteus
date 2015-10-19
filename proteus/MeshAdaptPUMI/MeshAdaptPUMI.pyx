@@ -26,6 +26,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int TransferPropertiesToPUMI(double*, double*)
         int AdaptPUMIMesh()
         int dumpMesh(Mesh&)
+        int getERMSizeField(double);
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
@@ -63,3 +64,5 @@ cdef class MeshAdaptPUMI:
     def dumpMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.dumpMesh(cmesh_ptr.mesh)
+    def getERMSizeField(self, err_total):
+        return self.thisptr.getERMSizeField(err_total);
