@@ -119,7 +119,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
 
 
   //Initialize the Error Fields
-  apf::Field* err_reg = apf::createField(m,"ErrorRegion",apf::SCALAR,apf::getConstant(nsd));
+  err_reg = apf::createField(m,"ErrorRegion",apf::SCALAR,apf::getConstant(nsd));
   apf::Field* err_vtx = apf::createLagrangeField(m,"error_vtx",apf::SCALAR,1);  //for contraction
 
   //Start computing element quantities
@@ -149,8 +149,12 @@ void MeshAdaptPUMIDrvr::get_local_error()
   
   iter = m->begin(nsd); //loop over elements
 int testcount = 0;
-int eID = 0; 
+int eID = 258;//860; 
 double effectivity_avg=0.0;
+
+double L2_total=0;
+double err_est = 0;
+double err_est_total=0;
   while(ent = m->iterate(iter)){ //loop through all elements
     element = apf::createMeshElement(m,ent);
     pres_elem = apf::createElement(pref,element);
@@ -355,7 +359,6 @@ double effectivity_avg=0.0;
     VecSetValues(F,ndofs,F_idx,bflux,ADD_VALUES);
     VecAssemblyBegin(F); VecAssemblyEnd(F);
     free(bflux);
-    //}
     Vec coef;
     VecCreate(PETSC_COMM_SELF,&coef);
     VecSetSizes(coef,ndofs,ndofs);
@@ -412,7 +415,9 @@ double effectivity_avg=0.0;
     double Bcomp=0;
     double coef_ez[nshl*nsd];
     int ez_idx[nshl*nsd];
-    for(int ez=0;ez<nshl*nsd;ez++) VecGetValues(coef,nshl*nsd,ez_idx,coef_ez);
+    for(int ez=0;ez<nshl*nsd;ez++){ez_idx[ez]=ez;}
+    VecGetValues(coef,nshl*nsd,ez_idx,coef_ez);
+
     for(int k=0; k<numqpt;k++){ 
       apf::getIntPoint(element,int_order,k,qpt); //get a quadrature point and store in qpt
       apf::getJacobian(element,qpt,J); //evaluate the Jacobian at the quadrature point
@@ -448,15 +453,20 @@ double effectivity_avg=0.0;
     } //end compute local error
     Acomp = Acomp*Jdet;
     Bcomp = Bcomp*Jdet;
+    err_est = sqrt(Acomp+Bcomp); //the square root should be here because the local error is given by this. but for statistics it's necessary for it to not be square rooted
+    //err_est = (Acomp+Bcomp);
+    err_est_total = err_est_total+(Acomp+Bcomp); //for tracking the upper bound
 
-    apf::setScalar(err_reg,ent,0,Acomp+Bcomp);
+    apf::setScalar(err_reg,ent,0,err_est);
     double L2err= getL2error(m,ent,voff,visc,pref,velf); 
-std::cout<<"eID "<<testcount<<" error "<<Acomp+Bcomp<< "L2 "<<L2err<<" Effectivity "<<(Acomp+Bcomp)/L2err<<std::endl;
-effectivity_avg = effectivity_avg+sqrt((Acomp+Bcomp)/L2err);
+    L2_total = L2_total+L2err;
+std::cout<<"eID "<<testcount<<" error "<<err_est<< "L2 "<<L2err<<" Effectivity "<<err_est/L2err<<std::endl;
+std::cout<<"Acomp "<<Acomp << " Bcomp "<<Bcomp<<std::endl;
+effectivity_avg = effectivity_avg + err_est/L2err;
    
 //    } //end if testcount 
 
-//    apf::setScalar(err_reg,ent,0,Jdet); //temporary place in
+//   apf::setScalar(err_reg,ent,0,Jdet); //temporary place in
     MatDestroy(&K); //destroy the matrix
     VecDestroy(&F); //destroy vector
     VecDestroy(&coef); //destroy vector
@@ -465,6 +475,7 @@ testcount++;
   } //end element loop
 effectivity_avg=effectivity_avg/testcount;
 std::cout<<"Average effectivity "<<effectivity_avg<<std::endl;
+std::cout<<"Err_est "<<sqrt(err_est_total)<<" L2 "<<sqrt(L2_total)<<" Average "<<sqrt(err_est_total/L2_total)<<std::endl;
   m->end(iter);
 
   //store error field onto vertices
@@ -473,8 +484,7 @@ std::cout<<"Average effectivity "<<effectivity_avg<<std::endl;
     averageToEntity(err_reg, err_vtx, ent);
   }
   m->end(iter_vtx);
-  apf::destroyField(err_reg);
-
+  getERMSizeField(sqrt(err_est_total));
 
   apf::destroyField(voff);
   apf::destroyField(visc);
@@ -542,7 +552,7 @@ for(int adj=0;adj<adjvtxs.getSize();adj++){
         else{
           m->getAdjacent(bent,nsd,neighbors);
           b_elem = apf::createMeshElement(m,bent);
-std::cout<<"Area? "<<apf::measure(b_elem)<<std::endl;
+//std::cout<<"Area? "<<apf::measure(b_elem)<<std::endl;
           apf::Matrix3x3 tempgrad_velo[2];
           apf::Matrix3x3 identity(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
           apf::MeshElement* tempelem; apf::Element * tempvelo,*temppres,*tempvoff;
@@ -587,6 +597,7 @@ std::cout<<"Area? "<<apf::measure(b_elem)<<std::endl;
               tempbflux = ((tempgrad_velo[idx_neigh]+apf::transpose(tempgrad_velo[idx_neigh]))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
                 -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1))*weight*Jdet*flux_weight;
               bflux = tempbflux*normal;
+
               for(int i=0;i<nsd;i++){
                 for(int s=0;s<nshl;s++){
                   endflux[i*nshl+s] = endflux[i*nshl+s]+bflux[i]*shpval[s];
@@ -594,6 +605,7 @@ std::cout<<"Area? "<<apf::measure(b_elem)<<std::endl;
               } 
                
             } //end boundary integration loop
+
           } //end for loop of neighbors
 
           apf::destroyMeshElement(tempelem);apf::destroyElement(tempvelo);apf::destroyElement(temppres); apf::destroyElement(tempvoff);
@@ -679,8 +691,7 @@ double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Fie
 
     double Lz = 0.05;
     double Ly = 0.2;
-    double dpdy = -1;
-    double u_exact, u_h;
+    double u_exact, u_h,p_exact,p_h, dpdy;
     double L2_err=0.0; 
 
     apf::MeshElement* element;
@@ -707,12 +718,29 @@ double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Fie
       apf::getVector(velo_elem,qpt,vel_vect);
 
       //Hardcoded Exact Solution    
-      u_exact= 0.5/(nu_0*rho_0)*(dpdy)*(xyz[2]*xyz[2]-Lz*xyz[2]);  //Poiseuille Flow
-      //u_exact = 1.0*xyz[2]/Lz; //Couette Flow
-      u_h = vel_vect[1]; 
-      L2_err = L2_err+(u_exact-u_h)*(u_exact-u_h)*weight*Jdet;
-    }
+int casenum = 0;
+      if(casenum==0){ 
+      //Poiseuille Flow
+        dpdy = -1/Ly;
+        u_exact= 0.5/(nu_0*rho_0)*(dpdy)*(xyz[2]*xyz[2]-Lz*xyz[2]);
+        p_exact = 1+xyz[1]*dpdy;
+      }
+      else if(casenum ==1){
+      //Couette Flow
+        u_exact = 1.0*xyz[2]/Lz;
+        p_exact = 0;
+      }
 
+      u_h = vel_vect[1]; 
+      p_h = apf::getScalar(pres_elem,qpt);
+
+      double temp=0.0;
+      temp = temp + (u_exact-u_h)*(u_exact-u_h);
+      temp = temp + (p_exact-p_h)*(p_exact-p_h)/rho_0/rho_0;
+      L2_err = L2_err+temp *weight*Jdet;
+   }
+
+    //L2_err = sqrt(L2_err);
   apf::destroyMeshElement(element);apf::destroyElement(velo_elem);apf::destroyElement(pres_elem);
   return L2_err;
 }
