@@ -1,3 +1,4 @@
+
 """Tools for working with water waves
 The primary objective of this module is to provide solutions (exact and
 
@@ -121,45 +122,31 @@ def window(wname='Costap'):
 
 #fft function ( = Cooley-Tukey FFT algorithm ) already included in imported numpy library
 # fft( input array (here eta), x axis (here Time component) ).
-
-def decompose_tseries(time,eta,nfft,ret_only_freq=0):
+def decompose_tseries(time,eta,nfft, NFR, ret_only_freq=0):
+    # This function does a spectral decomposition of a time series with constant sampling.
+    # It returns a list with results with two elements:
+        # 0 -> numpy array with frequency components ww
+        # 1 -> numpy array with amplitude of each component aa
+        # 2 -> numpy array with phase of each component pp
     results = []
-    NN = np.ceil((nfft+1)/2)-1  #   %number of primary frequency components (excluding negative frequencies and 0 frequency)
-
-
-	#linspace( start, stop , nb of values returned (optionnal)) => return an array
-	# theory : ww = ( 2 pi * j ) / N   with loop on j and N = nb of frequencies
-	# here : ww = ( 2 pi * linspace ) * (nfft / dt)
-	# (nfft / dt) = nb of intervals.
-
-
-	#return an array composed with all the ww_k
-    ww = np.linspace(1,NN,NN)*2*pi/(time[2]-time[1])/nfft      	#evenly spaced ang. frequency vector with NN points (excluding w=0)
+    NN = NFR  #                            %number of primary frequency components (excluding negative frequencies and 0 frequency)
+    ww = np.linspace(1,NN,NN)*2*pi/(time[2]-time[1])/nfft      #       %evenly spaced ang. frequency vector with NN points (excluding w=0)
     if (ret_only_freq!=0):                                          #if return only frequency is not 0, then the script returns only the frequencies
         return ww
-    fft_x = np.fft.fft(eta,nfft)
-
-
-
-    setup = np.real(fft_x[0])/nfft   #first coefficient of Fourier series = average value
+    fft_x = np.fft.fft(eta,nfft)                                   #%complex spectrum           
+    setup = np.real(fft_x[0])/nfft
     fft_x = fft_x[1:NN+1]                              #%retaining only first half of the spectrum
-
-	#computes the abs(fft_x) component after component and returns the array aa
     aa = abs(fft_x)/nfft                                 #%amplitudes (only the ones related to positive frequencies)
-    if nfft%2:                                       #%odd nfft- excludes Nyquist point
-        aa[0:NN] = 2*aa[0:NN]                              #%multiply amplitudes by 2 since we neglected the negative half of the spectrum. Note that the index starts at 1 (not 2) since the vector a doesnt contain the 0 freq. component.
+    if nfft%2:                                       #%odd nfft- excludes Nyquist point    
+      aa[0:NN] = 2*aa[0:NN]                              #%multiply amplitudes by 2 since we neglected the negative half of the spectrum. Note that the index starts at 1 (not 2) since the vector a doesnt contain the 0 freq. component.
     else:                                                 #%even nfft - includes Nyquist point
-        aa[0:NN -1] = 2*aa[0:NN -1]                        #%mulitply amplitudes by 2 since we neglected the negative half of the spectrum
+      aa[0:NN -1] = 2*aa[0:NN -1]                        #%mulitply amplitudes by 2 since we neglected the negative half of the spectrum
 
 
-    pp = np.zeros(len(aa),complex)
-	#calculate the phase of each (fft_x[k]).
-	# returns an array
+    pp = np.zeros(len(aa),complex)     
     for k in range(len(aa)):
         pp[k]=cmath.phase(fft_x[k])                       #% Calculating phases phases
-        pp = np.real(pp)                                         # Append results to list
-
-
+    pp = np.real(pp)                                         # Append results to list
     results.append(ww)
     results.append(aa)
     results.append(pp)
@@ -517,33 +504,33 @@ class timeSeries:
 
         del tdata
         self.tlength = (self.time[-1]-self.time[0])
-        windows_span = []
-        windows_rec = []
+        self.windows_handover = []
+        self.windows_rec = []
 # Direct decomposition of the time series for using at reconstruct_direct
         if (self.rec_direct):
             self.nfft=len(self.time)
-            self.decomp = decompose_tseries(self.time,self.eta,self.nfft,ret_only_freq=0)
+            self.decomp = decompose_tseries(self.time,self.eta,self.nfft,self.N,ret_only_freq=0)
             self.setup = self.decomp[3]
 
 
 # Spectral windowing
         else:
+            Overl = 0.25
             #setting the window duration (approx.). Twindow = Tmean * Nwaves = Tpeak * Nwaves /1.1 
             self.Twindow =  self.Nwaves / (1.1 * self.peakFrequencies )
 #            print self.Twindow
             #Settling overlap 25% of Twindow
-            self.Toverlap = 0.25 * self.Twindow
+            self.Toverlap = Overl * self.Twindow
             #Getting the actual number of windows
             # (N-1) * (Twindow - Toverlap) + Twindow = total time
             self.Nwindows = int( (self.tlength -   self.Twindow ) / (self.Twindow - self.Toverlap) ) + 1 
             # Correct Twindow and Toverlap for duration
-            self.Twindow = self.tlength/(1. + 0.75*(self.Nwindows-1))
-            self.Toverlap = 0.25*self.Twindow
+            self.Twindow = self.tlength/(1. + (1. - Overl)*(self.Nwindows-1))
+            self.Toverlap = Overl*self.Twindow
             logEvent("WaveTools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow * 1.1* self.peakFrequencies) )
             diff = (self.Nwindows-1.)*(self.Twindow -self.Toverlap)+self.Twindow - self.tlength
             logEvent("WaveTools.py: Checking duration of windowed time series: %s per cent difference from original duration" %(100*diff) )
             logEvent("WaveTools.py: Using %s windows for reconstruction with %s sec duration and 25 per cent overlap" %(self.Nwindows, self.Twindow) )
-
             for jj in range(self.Nwindows):
                 span = np.zeros(2,"d")
                 tfirst = self.time[0] + self.Twindow
@@ -560,24 +547,28 @@ class timeSeries:
                     ispan2 = np.where(self.time > tstart + self.Twindow )[0][0]                    
                 span[0] = ispan1
                 span[1] = ispan2
-                
-                print self.time[ispan1], self.time[ispan2]
-                windows_span.append(span)
-                windows_rec.append(np.array(zip(self.time[ispan1:ispan2],self.eta[ispan1:ispan2])))
+                self.windows_handover.append( self.time[ispan2] - 0.125*self.Twindow )
+                self.windows_rec.append(np.array(zip(self.time[ispan1:ispan2],self.eta[ispan1:ispan2])))
 #                print jj
-                
+            print self.windows_handover
+
 #            print (self.Twindow)
             print("number of windows: %s" % self.Nwindows)
 #            print(self.Nwindows*(self.Twindow -self.Toverlap)+self.Twindow )
 #            print(self.tlength)
             self.decompose_window = []
             style = "k-"
-            for wind in windows_rec:
+            ii = 0
+            for wind in self.windows_rec:
                 self.nfft=len(wind[:,0])
-                decomp = decompose_tseries(wind[:,0],wind[:,1],self.nfft,ret_only_freq=0)
+                filt = window(wname = "Costap")
+                wind_fun = window(wname="Costap")
+                wind[:,1] *=wind_fun(self.nfft)
+
+                decomp = decompose_tseries(wind[:,0],wind[:,1],self.nfft,self.N,ret_only_freq=0)
                 self.decompose_window.append(decomp)
-
-
+                
+                
 
                 if style == "k-":
                     style = "kx"
@@ -585,6 +576,10 @@ class timeSeries:
                     style ="k-"
                 plt.plot(wind[:,0],wind[:,1],style)
                 plt.plot(self.time,self.eta,"bo",markersize=2)
+                plt.plot([self.windows_handover[ii],self.windows_handover[ii]] , [-1000,1000],"b--") 
+                ii+=1    
+            plt.ylim(-1,2)
+            plt.grid()
             plt.savefig("rec.pdf")
 #            self.Twindow = self.Npw*self.dt
 #            self.Noverlap = int(self.Npw *0.25)
@@ -611,9 +606,6 @@ class timeSeries:
 
     def reconstruct_direct(self,x,y,z,t,Nf,var="eta",ss = "x"):
         "Direct reconstruction of a timeseries"
-
-
-
         if self.rec_direct==False:
             logEvent("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
             logEvent("Stopping simulation",level=0)               
@@ -655,26 +647,26 @@ class timeSeries:
         if self.rec_direct==True:
             logEvent("WaveTools.py: While attempting  reconstruction in windows, wrong input for rec_direct found (should be set to False)",level=0)
             logEvent("Stopping simulation",level=0)               
-            exit(1)           
+            exit(1)
+
+            
         #Tracking the time window (spatial coherency not yet implemented)
-        Nw = min(int(np.floor( t- self.time[0])/ (self.Twindow - self.Toverlap) )  , self.Nwindows - 1)
-            #setting the reference time at the start of each window
-#        print    Nw
-#        print    (len(self.decompose_window))
-#        print    self.Nwindows
-        if (Nw == 0):
-            tref = 0 
-            thand = 0
+        #Nw = 2
+        if t-self.time[0] >= 0.875*self.Twindow:
+            Nw = min(int((t-self.time[0] - 0.875*self.Twindow)/(self.Twindow - 2. * 0.125 * self.Twindow)) + 1, self.Nwindows-1)            
+            if t-self.time[0] < self.windows_handover[Nw-1] - self.time[0]:
+                Nw-=1
         else:
-            tref = time[0] + Nw*self.Twindow - self.Toverlap
-            thand = tref  + 0.15*self.Twindow
-        #Checking if first window
-        if Nw == 0:
-            thand = 0.
-# Choosing the side of windows 
-        if t-self.time[0] < thand:
-            Nw -=1
-       # print Nw
+            Nw = 0
+ 
+        print t,Nw, self.windows_handover[Nw]
+        
+        tinit = self.windows_rec[Nw][0,0] 
+#        thand = self.windows_handover[Nw]
+#        tinit  = self.windows_rec[Nw][0,0] 
+#       if t >= thand[1]: 
+#           Nw = min(Nw+1, 3)
+
         
         ai = self.decompose_window[Nw][1]
         ipeak = np.where(ai == max(ai))[0][0]
@@ -682,17 +674,18 @@ class timeSeries:
         imin = max(0,ipeak - Nf/2)
         ai = ai[imin:imax]
         omega = self.decompose_window[Nw][0][imin:imax]
-        phi = self.decompose_window[Nw][2][imin:imax]                              
+        phi = self.decompose_window[Nw][2][imin:imax]    
+        setup = self.decompose_window[Nw][3]
         ki = dispersion(omega,self.depth,g=self.gAbs)
         kDir = np.zeros((len(ki),3),"d")
         Nf = len(omega)
         for ii in range(len(ki)):
             kDir[ii,:] = ki[ii]*self.waveDir[:]
         if var=="eta":
-            Eta=0.
+            Eta=setup
             for ii in range(Nf):
-                Eta+=ai[ii]*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii]) 
-            if (Nw < 2):
+                Eta+=ai[ii]*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*(t-tinit) - phi[ii])  
+            if (Nw <10000):
                 return Eta
             else:
                 return 0.
@@ -843,8 +836,6 @@ class directionalWaves:
         return W
 
 
-
-
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     import os as os
@@ -888,7 +879,7 @@ if __name__ == '__main__':
                          bandFactor = [2.0], #controls width of band  around fp
                          peakFrequencies = [0.2],
                          N = 32,          #number of frequency bins
-                         Nwaves = 4,
+                         Nwaves = 2,
                          mwl = 0.0,        #mean water level
                          waveDir = np.array([1,0,0]),
                          g = np.array([0, -9.81, 0])         #accelerationof gravity
@@ -904,7 +895,7 @@ if __name__ == '__main__':
 
 
 
-    decomp = decompose_tseries(time,eta,len(time),ret_only_freq=0)
+    decomp = decompose_tseries(time,eta,len(time),len(time),ret_only_freq=0)
    # plt.plot(decomp[0],decomp[1])
    # plt.plot(decomp[0],decomp[2])
 
@@ -913,7 +904,7 @@ if __name__ == '__main__':
 
     tlim = len(time) # len(time)
     ax = plt.subplot(111)
-    for Nf in np.array([4]):
+    for Nf in np.array([8,16,32]):
 #        print Nf
         eta_rec= np.zeros(len(time),"d")
         for itime in range(tlim):
@@ -922,9 +913,10 @@ if __name__ == '__main__':
         ax.legend()
 
     rawm = np.mean(neweta)
-    ax.plot(time,eta,"ko",label="Actual")
+    ax.plot(time,eta,"ko",label="Actual",markersize=2)
     plt.legend(loc="best")
 #    ax.set_xlim(0,50)
+    plt.grid()
     plt.savefig("Comp.pdf")
 
 
