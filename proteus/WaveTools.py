@@ -394,9 +394,7 @@ class timeSeries:
 
     :param ts: time-series array [T]
     :param  d: depth [L]
-    :param Npeaks: Number of spectral peaks
-    :param bandFactor[Npeaks]: width factor for band  around spectral peaks [-]
-    :param peakFrequencies[Npeaks]: expected peak frequencies
+    :param peakFrequency: expected peak frequency
     :param N: number of frequency bins [-]
     :param Nwaves: Number of waves per window (Approx)
     :param mwl: mean water level [L]"""
@@ -405,9 +403,8 @@ class timeSeries:
                  timeSeriesFile= "Timeseries.txt",
                  skiprows = 0,
                  d = 2.0,
-                 Npeaks = 1, #m depth
-                 bandFactor = [2.0], #controls width of band  around fp
-                 peakFrequencies = [0.2],
+                 bandFactor = 2.0, #controls width of band  around fp
+                 peakFrequency = 0.2,
                  N = 32,          #number of frequency bins
                  Nwaves = 4, #Nmumber of waves per windowmean water level
                  mwl = 0.0,        #mean water level
@@ -416,41 +413,38 @@ class timeSeries:
                  rec_direct = False
                  ): 
 
-
+# Setting the depth
         self.depth = d
-        self.Npeaks = Npeaks
-        if Npeaks is not len(bandFactor):
-            logEvent("WaveTools.py: bandFactor entries in should be as many as the number of frequencies",level=0)
-            logEvent("Stopping simulation",level=0)
-            exit(1)
-
-        if Npeaks is not len(peakFrequencies):
-            logEvent("WaveTools.py: peakFrequencies entries in should be as many as the number of frequencies",level=0)
-            logEvent("Stopping simulation",level=0)
-            exit(1)
-
-        self.rec_direct= rec_direct
+        self.rec_direct = rec_direct
+# Setting frequency and band factor. Consider removing these if not used
         self.bandFactor = np.array(bandFactor)        
-
-        self.peakFrequencies = np.array(peakFrequencies)
+        self.peakFrequency = np.array(peakFrequency)
+# Number of wave components
         self.N = N
+# Number of waves per window (approx.)
         self.Nwaves = Nwaves
+# Mean water level
         self.mwl = mwl
+# Wave direction
         self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
+# Gravity
         self.g = np.array(g)
-
-#derived variables
+# Derived variables
+# Gravity magnitude
         self.gAbs = sqrt(sum(g * g))
+# Definition of gravity direction
         self.vDir = self.g/self.gAbs
-        self.fmax = self.bandFactor*self.peakFrequencies
-        self.fmin = self.peakFrequencies/self.bandFactor
+# Setting freq matrix
+        self.fmax = self.bandFactor*self.peakFrequency
+        self.fmin = self.peakFrequency/self.bandFactor
         self.df = (self.fmax-self.fmin)/float(self.N-1)
-        self.fi=np.zeros((self.N,self.Npeaks),'d')
+        self.fi=np.zeros((self.N),'d')
 
-        for j in range(Npeaks):
-            for i in range(N):
-                self.fi[i,j] = self.fmin[j]+self.df[j]*i
 
+        for i in range(N):
+            self.fi[i] = self.fmin+self.df*i
+
+# Derived arrays: angular freq, wavenumber, wavelength
         self.omegai = 2.*pi*self.fi
         self.ki = dispersion(self.omegai,self.depth,g=self.gAbs)
         self.wi = 2.*pi/self.ki
@@ -469,16 +463,16 @@ class timeSeries:
             tdata = np.loadtxt(fid,skiprows=skiprows)
         fid.close()
 #Checks for tseries file
+# Only 2 columns: time & eta
         ncols = len(tdata[0,:])
         if ncols != 2:
             logEvent("WaveTools.py: Timeseries file must have only two columns [time, eta]",level=0)
             logEvent("Stopping simulation",level=0)
             sys.exit(1)
-
-
-
         time_temp = tdata[:,0]
         self.dt = (time_temp[-1]-time_temp[0])/len(time_temp)
+
+# If necessary, perform interpolation
         doInterp = False
         for i in range(1,len(time_temp)):
             dt_temp = time_temp[i]-time_temp[i-1]
@@ -497,40 +491,53 @@ class timeSeries:
         else:
             self.time = time_temp
             self.eta = tdata[:,1]
+# Remove mean level from raw data
         self.eta -=np.mean(self.eta)
+# Filter out first 2.5 % (equivalent to ramp time)
         wind_fun = window(wname="Costap")
-        self.eta *=wind_fun(len(self.time),tail=0.05)
-
-
+        self.eta *=wind_fun(len(self.time),tail=0.025)
+# clear tdata from memory
         del tdata
+
+# Calculate time lenght
         self.tlength = (self.time[-1]-self.time[0])
+
+# Matrix initialisation
         self.windows_handover = []
         self.windows_rec = []
 # Direct decomposition of the time series for using at reconstruct_direct
         if (self.rec_direct):
             self.nfft=len(self.time)
+            logEvent("WaveTools.py: performing a direct series decomposition")
             self.decomp = decompose_tseries(self.time,self.eta,self.nfft,self.N,ret_only_freq=0)
             self.setup = self.decomp[3]
 
 
 # Spectral windowing
         else:
+            logEvent("WaveTools.py: performing series decomposition with spectral windows")
+# Portion of overlap, compared to window time
             Overl = 0.25
-            #setting the window duration (approx.). Twindow = Tmean * Nwaves = Tpeak * Nwaves /1.1 
-            self.Twindow =  self.Nwaves / (1.1 * self.peakFrequencies )
+# Portion of window filtered with the Costap filter
+            Filt = 0.1
+# Setting the handover time, either at the middle of the overlap or just after the filter 
+            Handover = min(Overl - 1.1 *Filt,  Overl / 2.)
+# setting the window duration (approx.). Twindow = Tmean * Nwaves = Tpeak * Nwaves /1.1 
+            self.Twindow =  self.Nwaves / (1.1 * self.peakFrequency )
 #            print self.Twindow
             #Settling overlap 25% of Twindow
             self.Toverlap = Overl * self.Twindow
             #Getting the actual number of windows
             # (N-1) * (Twindow - Toverlap) + Twindow = total time
             self.Nwindows = int( (self.tlength -   self.Twindow ) / (self.Twindow - self.Toverlap) ) + 1 
-            # Correct Twindow and Toverlap for duration
+            # Correct Twindow and Toverlap for duration and integer number of windows
             self.Twindow = self.tlength/(1. + (1. - Overl)*(self.Nwindows-1))
             self.Toverlap = Overl*self.Twindow
-            logEvent("WaveTools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow * 1.1* self.peakFrequencies) )
+            logEvent("WaveTools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow * 1.1* self.peakFrequency) )
             diff = (self.Nwindows-1.)*(self.Twindow -self.Toverlap)+self.Twindow - self.tlength
             logEvent("WaveTools.py: Checking duration of windowed time series: %s per cent difference from original duration" %(100*diff) )
-            logEvent("WaveTools.py: Using %s windows for reconstruction with %s sec duration and 25 per cent overlap" %(self.Nwindows, self.Twindow) )
+            logEvent("WaveTools.py: Using %s windows for reconstruction with %s sec duration and %s per cent overlap" %(self.Nwindows, self.Twindow,100*Overl) )
+# Setting where each window starts and ends
             for jj in range(self.Nwindows):
                 span = np.zeros(2,"d")
                 tfirst = self.time[0] + self.Twindow
@@ -547,40 +554,31 @@ class timeSeries:
                     ispan2 = np.where(self.time > tstart + self.Twindow )[0][0]                    
                 span[0] = ispan1
                 span[1] = ispan2
-                self.windows_handover.append( self.time[ispan2] - 0.125*self.Twindow )
+# Storing time series in windows and handover times 
+                self.windows_handover.append( self.time[ispan2] - Handover*self.Twindow )
                 self.windows_rec.append(np.array(zip(self.time[ispan1:ispan2],self.eta[ispan1:ispan2])))
-#                print jj
-            print self.windows_handover
-
-#            print (self.Twindow)
-            print("number of windows: %s" % self.Nwindows)
-#            print(self.Nwindows*(self.Twindow -self.Toverlap)+self.Twindow )
-#            print(self.tlength)
+# Decomposing windows to frequency domain
             self.decompose_window = []
-            style = "k-"
-            ii = 0
+#            style = "k-"
+#            ii = 0
             for wind in self.windows_rec:
                 self.nfft=len(wind[:,0])
                 filt = window(wname = "Costap")
                 wind_fun = window(wname="Costap")
-                wind[:,1] *=wind_fun(self.nfft)
-
+                wind[:,1] *=wind_fun(self.nfft,tail = Filt)
                 decomp = decompose_tseries(wind[:,0],wind[:,1],self.nfft,self.N,ret_only_freq=0)
                 self.decompose_window.append(decomp)
-                
-                
-
-                if style == "k-":
-                    style = "kx"
-                else:
-                    style ="k-"
-                plt.plot(wind[:,0],wind[:,1],style)
-                plt.plot(self.time,self.eta,"bo",markersize=2)
-                plt.plot([self.windows_handover[ii],self.windows_handover[ii]] , [-1000,1000],"b--") 
-                ii+=1    
-            plt.ylim(-1,2)
-            plt.grid()
-            plt.savefig("rec.pdf")
+#                if style == "k-":
+#                    style = "kx"
+#                else:
+#                    style ="k-"
+#                plt.plot(wind[:,0],wind[:,1],style)
+#                plt.plot(self.time,self.eta,"bo",markersize=2)
+#                plt.plot([self.windows_handover[ii],self.windows_handover[ii]] , [-1000,1000],"b--") 
+#                ii+=1    
+#            plt.ylim(-1,2)
+#            plt.grid()
+#            plt.savefig("rec.pdf")
 #            self.Twindow = self.Npw*self.dt
 #            self.Noverlap = int(self.Npw *0.25)
 
@@ -875,9 +873,8 @@ if __name__ == '__main__':
     tseries = timeSeries(timeSeriesFile= "Duck_series.txt",
                          skiprows = 2,
                          d = 5.5,
-                         Npeaks = 1, #m depth
-                         bandFactor = [2.0], #controls width of band  around fp
-                         peakFrequencies = [0.2],
+                         bandFactor = 2.0, #controls width of band  around fp
+                         peakFrequency = 0.2,
                          N = 32,          #number of frequency bins
                          Nwaves = 2,
                          mwl = 0.0,        #mean water level
