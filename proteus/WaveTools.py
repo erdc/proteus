@@ -410,7 +410,7 @@ class timeSeries:
                  mwl = 0.0,        #mean water level
                  waveDir = np.array([1,0,0]), #accelerationof gravity
                  g = np.array([0, -9.81, 0]),
-                 rec_direct = False
+                 rec_direct = True
                  ): 
 
 # Setting the depth
@@ -492,7 +492,7 @@ class timeSeries:
             self.time = time_temp
             self.eta = tdata[:,1]
 # Remove mean level from raw data
-        self.eta -=np.mean(self.eta)
+        self.eta -= np.mean(self.eta)
 # Filter out first 2.5 % (equivalent to ramp time)
         wind_fun = window(wname="Costap")
         self.eta *=wind_fun(len(self.time),tail=0.025)
@@ -507,11 +507,23 @@ class timeSeries:
         self.windows_rec = []
 # Direct decomposition of the time series for using at reconstruct_direct
         if (self.rec_direct):
+            Nf = self.N
             self.nfft=len(self.time)
             logEvent("WaveTools.py: performing a direct series decomposition")
             self.decomp = decompose_tseries(self.time,self.eta,self.nfft,self.N,ret_only_freq=0)
-            self.setup = self.decomp[3]
-
+            self.ai = self.decomp[1]
+            ipeak = np.where(self.ai == max(self.ai))[0][0]
+            imax = min(ipeak + Nf/2,len(self.ai))
+            imin = max(0,ipeak - Nf/2)
+            self.ai = self.ai[imin:imax]
+            self.omega = self.decomp[0][imin:imax]
+            self.phi = self.decomp[2][imin:imax]
+            self.ki = self.ki[imin:imax]
+            self.setup = self.decomp[imin:imax]
+            self.kDir = np.zeros((len(self.ki),3),"d")
+            for ii in range(len(self.ki)):
+                self.kDir[ii,:] = self.ki[ii]*self.waveDir[:]
+             
 
 # Spectral windowing
         else:
@@ -601,36 +613,25 @@ class timeSeries:
         del fig
     def Z(self,x,y,z):
         return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.mwl
-
-    def reconstruct_direct(self,x,y,z,t,Nf,var="eta",ss = "x"):
+    
+    def reconstruct_direct(self,x,y,z,t,var="eta",ss = "x"):
         "Direct reconstruction of a timeseries"
-        if self.rec_direct==False:
-            logEvent("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
-            logEvent("Stopping simulation",level=0)               
-            exit(1)           
-        ai = self.decomp[1]
-        ipeak = np.where(ai == max(ai))[0][0]
-        imax = min(ipeak + Nf/2,len(ai))
-        imin = max(0,ipeak - Nf/2)
-        ai = ai[imin:imax]
-        omega = self.decomp[0][imin:imax]
-        phi = self.decomp[2][imin:imax]
-        ki = dispersion(omega,self.depth,g=self.gAbs)
-        kDir = np.zeros((len(ki),3),"d")
-        Nf = len(omega)
-        for ii in range(len(ki)):
-            kDir[ii,:] = ki[ii]*self.waveDir[:]
+# Removing check, I believe it is slowing don the process
+#        if self.rec_direct==False:
+#            logEvent("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
+#            logEvent("Stopping simulation",level=0)               
+#            exit(1)           
         if var=="eta":
             Eta=0.
-            for ii in range(Nf):
-                Eta+=ai[ii]*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])
+            for ii in range(len(self.ai)):
+                Eta+=self.ai[ii]*cos(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t - self.phi[ii])
             return Eta
         if var=="U":
             UH=0.
             UV=0.
-            for ii in range(Nf):
-                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(self.Z(x,y,z)+self.depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*self.depth)
-                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(self.Z(x,y,z)+self.depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*self.depth)
+            for ii in range(len(self.ai)):
+                UH+=self.ai[ii]*self.omega[ii]*cosh(self.ki[ii]*(self.Z(x,y,z)+self.depth))*cos(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t - self.phi[ii])/sinh(self.ki[ii]*self.depth)
+                UV+=self.ai[ii]*self.omega[ii]*sinh(self.ki[ii]*(self.Z(x,y,z)+self.depth))*sin(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t - self.phi[ii])/sinh(self.ki[ii]*self.depth)
 #waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
             Vcomp = {
                     "x":UH*self.waveDir[0] + UV*self.vDir[0],
@@ -642,10 +643,10 @@ class timeSeries:
 
     def reconstruct_window(self,x,y,z,t,Nf,var="eta",ss = "x"):
         "Direct reconstruction of a timeseries"
-        if self.rec_direct==True:
-            logEvent("WaveTools.py: While attempting  reconstruction in windows, wrong input for rec_direct found (should be set to False)",level=0)
-            logEvent("Stopping simulation",level=0)               
-            exit(1)
+#        if self.rec_direct==True:
+#            logEvent("WaveTools.py: While attempting  reconstruction in windows, wrong input for rec_direct found (should be set to False)",level=0)
+#            logEvent("Stopping simulation",level=0)               
+#            exit(1)
 
             
         #Tracking the time window (spatial coherency not yet implemented)
@@ -869,43 +870,43 @@ if __name__ == '__main__':
     plt.close("all")
     np.savetxt("Duck_series.txt",zip(rawtime,neweta))
 
+    for Nf in np.array([8,16,32,64,128]):
 
-    tseries = timeSeries(timeSeriesFile= "Duck_series.txt",
-                         skiprows = 2,
-                         d = 5.5,
-                         bandFactor = 2.0, #controls width of band  around fp
-                         peakFrequency = 0.2,
-                         N = 32,          #number of frequency bins
-                         Nwaves = 2,
-                         mwl = 0.0,        #mean water level
-                         waveDir = np.array([1,0,0]),
-                         g = np.array([0, -9.81, 0])         #accelerationof gravity
-                         )
-    graph = tseries.plotSeries()
-    tseries_comp = np.loadtxt("Tseries_proteus.csv",skiprows=2, delimiter = ",")
-    line1 = plt.plot(tseries_comp[:,0],tseries_comp[:,1])
-    plt.savefig("timeSeries2.pdf")
-    plt.close("all")
-    time = tseries.rawdata()[0]
-    eta = tseries.rawdata()[1]
+        tseries = timeSeries(timeSeriesFile= "Duck_series.txt",
+                             skiprows = 2,
+                             d = 5.5,
+                             bandFactor = 2.0, #controls width of band  around fp
+                             peakFrequency = 0.2,
+                             N = Nf,          #number of frequency bins
+                             Nwaves = 2,
+                             mwl = 0.0,        #mean water level
+                             waveDir = np.array([1,0,0]),
+                             g = np.array([0, -9.81, 0])         #accelerationof gravity
+                             )
+#        graph = tseries.plotSeries()
+#        tseries_comp = np.loadtxt("Tseries_proteus.csv",skiprows=2, delimiter = ",")
+#        line1 = plt.plot(tseries_comp[:,0],tseries_comp[:,1])
+#        plt.savefig("timeSeries2.pdf")
+#        plt.close("all")
+        time = tseries.rawdata()[0]
+        eta = tseries.rawdata()[1]
 
 
 
 
-    decomp = decompose_tseries(time,eta,len(time),len(time),ret_only_freq=0)
+        decomp = decompose_tseries(time,eta,len(time),len(time),ret_only_freq=0)
    # plt.plot(decomp[0],decomp[1])
    # plt.plot(decomp[0],decomp[2])
 
 
 
 
-    tlim = len(time) # len(time)
-    ax = plt.subplot(111)
-    for Nf in np.array([8,16,32]):
-#        print Nf
+        tlim = len(time) # len(time)
+        ax = plt.subplot(111)
+        print Nf
         eta_rec= np.zeros(len(time),"d")
         for itime in range(tlim):
-            eta_rec[itime] = tseries.reconstruct_window(0.,0.,0.,time[itime],Nf)
+            eta_rec[itime] = tseries.reconstruct_direct(0.,0.,0.,time[itime])
         ax.plot(time,eta_rec,label = "Nf = %s" %Nf)
         ax.legend()
 
