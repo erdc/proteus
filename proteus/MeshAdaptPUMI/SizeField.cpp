@@ -103,7 +103,7 @@ std::cout<<"Err curr "<<err_curr<<" Err_dest "<<err_dest<<std::endl;
     h_new = h_old*pow(err_dest/err_curr,0.5);
     if(h_new>hmax) h_new = hmax;
     if(h_new<hmin) h_new = hmin;
-    //h_new = hmin;
+    //h_new = (hmin+hmax)/2;
     std::cout<<"Old length "<<h_old<<" New length "<<h_new<<std::endl;
     apf::setScalar(size_iso_reg,reg,0,h_new);
   }
@@ -116,13 +116,14 @@ std::cout<<"Err curr "<<err_curr<<" Err_dest "<<err_dest<<std::endl;
   apf::Matrix3x3 identity(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
   while ((v = m->iterate(it))) {
     averageToEntity(size_iso_reg, size_iso, v);
-    scale = apf::Vector3(1.0,1.0,1.0)* apf::getScalar(size_iso,v,0); //isotropic
+    //scale = apf::Vector3(1.0,1.0,1.0)* apf::getScalar(size_iso,v,0); //isotropic
+    scale = apf::Vector3(1.0,1.0,1.0)*(hmin+hmax)/2.0;
     apf::setVector(size_scale,v,0,scale);
     apf::setMatrix(size_frame,v,0,identity);
   }
   m->end(it);
-  for (int i = 0; i < 2; ++i)
-    SmoothField(size_scale);
+  //for (int i = 0; i < 2; ++i)
+  //  SmoothField(size_scale);
   apf::destroyField(size_iso_reg);
   apf::destroyField(err_reg);
   apf::writeVtkFiles("pumi_size", m);

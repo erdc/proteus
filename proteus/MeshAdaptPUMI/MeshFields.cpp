@@ -61,11 +61,11 @@ int MeshAdaptPUMIDrvr::TransferSolutionToPUMI(double* inArray, int nVar, int nN)
   return 0;
 }
 
-int MeshAdaptPUMIDrvr::TransferPropertiesToPUMI(double* rho, double* nu)
+int MeshAdaptPUMIDrvr::TransferPropertiesToPUMI(double* rho_p, double* nu_p)
 { 
- std::cout<<"rho "<<rho[0]<<" "<<rho[1]<<" nu "<<nu[0]<<" "<<nu[1]<<std::endl; 
- printf("Hello,World\n");
-  return 0;
+ rho[0] = rho_p[0]; rho[1] = rho_p[1];
+ nu[0] = nu_p[0]; nu[1] = nu_p[1];
+ return 0;
 }
 
 

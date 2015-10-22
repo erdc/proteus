@@ -18,7 +18,7 @@
 #define  PHI_IDX  5
 
 
-int approx_order = 1; //if using Lagrange shape functions. Serendipity is automatic
+int approx_order = 2; //if using Lagrange shape functions. Serendipity is automatic
 int int_order = approx_order*2; //determines number of integration points
 double nu_0,nu_1,rho_0,rho_1;
 double a_kl = 0.5; //flux term weight
@@ -38,7 +38,6 @@ static void averageToEntity(apf::Field* ef, apf::Field* vf, apf::MeshEntity* ent
   return;
 }
 
-
 static void extractFields(apf::Field* solution, apf::Field* pref,apf::Field* velf,apf::Field* voff)
 {
   apf::Mesh* m = apf::getMesh(solution);
@@ -57,17 +56,14 @@ static void extractFields(apf::Field* solution, apf::Field* pref,apf::Field* vel
   return;
 }
 
-void getProps(double &rho_0, double &rho_1,double &nu_0, double &nu_1)
+//void getProps(double &rho_0, double &rho_1,double &nu_0, double &nu_1)
+void getProps(double*rho,double*nu)
 {
-  //***** Physical hard-coded hook *****//
-  
-  //water 
-  rho_0 = 998.2; //kg/m^3
-  nu_0 = 1.004e-6; //m^2/s 
-  //air
-  rho_1 = 1.205;
-  nu_1 = 1.5e-5; 
-  
+  rho_0 = rho[0];
+  nu_0 = nu[0];      
+  rho_1 = rho[1];
+  nu_1 = nu[1];
+
   //debug
   rho_1 = rho_0;
   nu_1 = nu_0; 
@@ -86,7 +82,11 @@ void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::
 bool isInTet(apf::Mesh* mesh, apf::MeshEntity* elem, apf::Vector3 pt);
 apf::Vector3 getFaceNormal(apf::Mesh* mesh, apf::MeshEntity* face);
 double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf);
-
+double getStarerror(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, apf::Field* estimate);
+double a_k(apf::Matrix3x3 u, apf::Matrix3x3 v,double nu);
+double b_k(double a, apf::Matrix3x3 b);
+double c_k(apf::Vector3 a, apf::Matrix3x3 b, apf::Vector3 c);
+double getDotProduct(apf::Matrix3x3 a, apf::Matrix3x3 b);
 
 void MeshAdaptPUMIDrvr::get_local_error() 
 //This function aims to compute error at each element via ERM.
@@ -94,7 +94,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
 //Then get the desired quadrature points
 {
 
-  getProps(rho_0,rho_1,nu_0,nu_1);
+  getProps(rho,nu);
 
   //***** Get Solution Fields First *****//
   apf::Field* voff = apf::createLagrangeField(m,"proteus_vof",apf::SCALAR,1);
@@ -112,11 +112,10 @@ void MeshAdaptPUMIDrvr::get_local_error()
   int nsd = m->getDimension();
   while(ent = m->iterate(iter)){ //loop through all elements
     vof_val=apf::getScalar(voff,ent,0);
-    visc_val = nu_0*(1-vof_val)+nu_1*vof_val;
+    visc_val = getMPvalue(vof_val,nu_0, nu_1);
     apf::setScalar(visc, ent, 0,visc_val);
   }
   m->end(iter);
-
 
   //Initialize the Error Fields
   err_reg = apf::createField(m,"ErrorRegion",apf::SCALAR,apf::getConstant(nsd));
@@ -132,11 +131,12 @@ void MeshAdaptPUMIDrvr::get_local_error()
   //apf::FieldShape* err_shape = apf::getLagrange(approx_order);
   //apf::FieldShape* err_shape = apf::getSerendipity();
   apf::FieldShape* err_shape = apf::getHierarchic();
+  apf::Field * estimate = apf::createField(m, "err_est",apf::VECTOR,apf::getHierarchic());
   apf::EntityShape* elem_shape;
   apf::Vector3 qpt; //container for quadrature points
   apf::MeshElement* element;
   apf::Element* visc_elem, *pres_elem,*velo_elem;
-
+  apf::Element* est_elem;
   apf::Matrix3x3 J; //actual Jacobian matrix
   apf::Matrix3x3 invJ; //inverse of Jacobian
   apf::NewArray <double> shpval; //array to store shape function values at quadrature points
@@ -153,6 +153,7 @@ int eID = 258;//860;
 double effectivity_avg=0.0;
 
 double L2_total=0;
+double star_total=0;
 double err_est = 0;
 double err_est_total=0;
   while(ent = m->iterate(iter)){ //loop through all elements
@@ -181,10 +182,7 @@ double err_est_total=0;
     int ndofs = nshl*nsd;
     Mat K; //matrix size depends on nshl, which may vary from element to element
     MatCreate(PETSC_COMM_SELF,&K);
-    //MatSetType(K,MATSBAIJ); //should be symmetric sparse
     MatSetSizes(K,ndofs,ndofs,ndofs,ndofs);
-    //MatSeqSBAIJSetPreallocation(K,ndofs,ndofs,NULL); //the local matrices are going to be dense
-    //MatSetOption(K,MAT_SYMMETRIC,PETSC_TRUE);
     MatSetFromOptions(K);
     MatSetUp(K); //is this inefficient? check later
 
@@ -242,13 +240,6 @@ double err_est_total=0;
       //obtain viscosity value
       visc_elem = apf::createElement(visc,element); //at vof currently
       visc_val = apf::getScalar(visc_elem,qpt);
-
-      //test viscosity values at qpts
-//      apf::Element* vof_elem; 
-//      vof_elem = apf::createElement(voff,element); //at vof currently
-//      apf::Vector3 xyz;
-//      apf::mapLocalToGlobal(element,qpt,xyz);
-//      if(comm_rank==0 && k ==0 ) std::cout<<"VOF "<<apf::getScalar(vof_elem,qpt)<< " Viscosity at qpt " << visc_val<<" at "<<xyz<<std::endl;
 
       //Left-Hand Side
       PetscScalar term1[nshl][nshl], term2[nshl][nshl];
@@ -310,6 +301,7 @@ double err_est_total=0;
         for( int s=0;s<nshl;s++){
           idx[s] = i*nshl+s;
 
+          //forcing term
           temp_vect[s] = (0)*shpval[s];
           //a(u,v) and c(u,u,v) term
           for(int j=0;j<nsd;j++){
@@ -320,10 +312,6 @@ double err_est_total=0;
           temp_vect[s] += apf::getScalar(pres_elem,qpt)/getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1)*shdrv[s][i]; //pressure term
 
           temp_vect[s] = temp_vect[s]*weight;
-          if(testcount==eID && k ==0 && i==2){
-              std::cout<<"idx[s] "<<idx[s] << " Value "<< temp_vect[s]<<std::endl;
-          }
-
         } //end loop over number of shape functions
         VecSetValues(F,nshl,idx,temp_vect,ADD_VALUES);
       } //end loop over spatial dimensions
@@ -337,11 +325,11 @@ double err_est_total=0;
     VecAssemblyBegin(F);
     VecAssemblyEnd(F); VecScale(F,Jdet); //must be done after assembly
  
-    if(comm_rank==0 && testcount==eID){ 
+if(comm_rank==0 && testcount==eID){ 
       MatView(K,PETSC_VIEWER_STDOUT_SELF);
       std::cout<<" NOW VECTOR with just a(.,.)" <<std::endl;
       VecView(F,PETSC_VIEWER_STDOUT_SELF);
-    }
+}
    
     double* bflux;
     int F_idx[ndofs];
@@ -367,6 +355,7 @@ double err_est_total=0;
 //    if(testcount==eID && comm_rank==0){
 
 //Save Temporarily for Debugging
+/*
       std::ofstream myfile ("stiffness.csv");
       std::ofstream myfile2 ("force.csv");
       std::ofstream myfilegsl("stiffness.txt");
@@ -389,9 +378,9 @@ double err_est_total=0;
         myfile2<<vecstor<<std::endl;
       }
       myfile.close();
-
-    MatView(K,PETSC_VIEWER_STDOUT_SELF);
-    VecView(F,PETSC_VIEWER_STDOUT_SELF);
+*/
+    //MatView(K,PETSC_VIEWER_STDOUT_SELF);
+    //VecView(F,PETSC_VIEWER_STDOUT_SELF);
 
     KSP ksp; //initialize solver context
     KSPCreate(PETSC_COMM_SELF,&ksp);
@@ -405,7 +394,7 @@ double err_est_total=0;
 
     std::cout<<"Final error "<<std::endl;
     KSPSolve(ksp,F,coef);
-    VecView(coef,PETSC_VIEWER_STDOUT_SELF);
+    //VecView(coef,PETSC_VIEWER_STDOUT_SELF);
     
     KSPDestroy(&ksp); //destroy ksp
     PCDestroy(&pc);
@@ -413,11 +402,31 @@ double err_est_total=0;
     //compute the local error  
     double Acomp=0;
     double Bcomp=0;
+    apf::Matrix3x3 phi_ij;
+
+
     double coef_ez[nshl*nsd];
     int ez_idx[nshl*nsd];
     for(int ez=0;ez<nshl*nsd;ez++){ez_idx[ez]=ez;}
     VecGetValues(coef,nshl*nsd,ez_idx,coef_ez);
 
+    //Copy coefficients onto field
+    //apf::MeshEntity* testedge;
+    apf::Adjacent adjvert;
+    m->getAdjacent(ent,0,adjvert);
+    for(int idx=0;idx<4;idx++){
+      double coef_sub[3]={0,0,0};
+      apf::setVector(estimate,adjvert[idx],0,&coef_sub[0]);
+    }
+    
+    apf::Adjacent adjedg;
+    m->getAdjacent(ent,1,adjedg);
+    for(int idx=0;idx<nshl;idx++){
+      double coef_sub[3] ={coef_ez[idx],coef_ez[nshl+idx],coef_ez[nshl*2+idx]};
+      apf::setVector(estimate,adjedg[idx],0,&coef_sub[0]);
+    }
+
+    est_elem= apf::createElement(estimate,element);   
     for(int k=0; k<numqpt;k++){ 
       apf::getIntPoint(element,int_order,k,qpt); //get a quadrature point and store in qpt
       apf::getJacobian(element,qpt,J); //evaluate the Jacobian at the quadrature point
@@ -439,30 +448,22 @@ double err_est_total=0;
         apf::multiply(shgval_copy[i],invJ_copy,shdrv[i]); 
       }
       visc_val = apf::getScalar(visc_elem,qpt);
-      for(int i=0; i<nsd;i++){
-        for(int j=0;j<nsd;j++){
-          double phi_ij =0; double phi_ji =0;
-          for(int s=0;s<nshl;s++){
-            phi_ij = phi_ij + coef_ez[nshl*i+s]*shdrv[s][j];
-            phi_ji = phi_ji + coef_ez[nshl*j+s]*shdrv[s][i];
-          }
-          Acomp = Acomp + visc_val*phi_ij*(phi_ij+phi_ji)*weight;
-        }
-      }
+      apf::getVectorGrad(est_elem,qpt,phi_ij);
+      phi_ij = apf::transpose(phi_ij);
+      Acomp = Acomp + visc_val*getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
       Bcomp = Bcomp + apf::getDiv(velo_elem,qpt)*apf::getDiv(velo_elem,qpt)*weight;
     } //end compute local error
-    Acomp = Acomp*Jdet;
+
+    Acomp = Acomp*Jdet; //Jacobian+nondimensionalize
     Bcomp = Bcomp*Jdet;
     err_est = sqrt(Acomp+Bcomp); //the square root should be here because the local error is given by this. but for statistics it's necessary for it to not be square rooted
-    //err_est = (Acomp+Bcomp);
-    err_est_total = err_est_total+(Acomp+Bcomp); //for tracking the upper bound
-
     apf::setScalar(err_reg,ent,0,err_est);
-    double L2err= getL2error(m,ent,voff,visc,pref,velf); 
+    err_est_total = err_est_total+(Acomp+Bcomp); //for tracking the upper bound
+    double L2err= getL2error(m,ent,voff,visc,pref,velf); //non-dimensional
     L2_total = L2_total+L2err;
-std::cout<<"eID "<<testcount<<" error "<<err_est<< "L2 "<<L2err<<" Effectivity "<<err_est/L2err<<std::endl;
+    double starerr = getStarerror(m,ent,voff,visc,pref,velf,estimate);
+    star_total = star_total+starerr;
 std::cout<<"Acomp "<<Acomp << " Bcomp "<<Bcomp<<std::endl;
-effectivity_avg = effectivity_avg + err_est/L2err;
    
 //    } //end if testcount 
 
@@ -473,9 +474,13 @@ effectivity_avg = effectivity_avg + err_est/L2err;
 
 testcount++;
   } //end element loop
-effectivity_avg=effectivity_avg/testcount;
-std::cout<<"Average effectivity "<<effectivity_avg<<std::endl;
-std::cout<<"Err_est "<<sqrt(err_est_total)<<" L2 "<<sqrt(L2_total)<<" Average "<<sqrt(err_est_total/L2_total)<<std::endl;
+star_total = -2*(0.5*(err_est_total)-star_total); //before square root is taken
+err_est_total = sqrt(err_est_total);
+L2_total = sqrt(L2_total);
+if(star_total<0){ star_total=star_total*-1;std::cout<<"star err Was negative "<<std::endl;}
+star_total = sqrt(star_total);
+std::cout<<"Err_est "<<err_est_total<<" L2 "<<L2_total<<" Average "<<err_est_total/L2_total<<std::endl;
+std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est_total/star_total<<std::endl;
   m->end(iter);
 
   //store error field onto vertices
@@ -484,12 +489,9 @@ std::cout<<"Err_est "<<sqrt(err_est_total)<<" L2 "<<sqrt(L2_total)<<" Average "<
     averageToEntity(err_reg, err_vtx, ent);
   }
   m->end(iter_vtx);
-  getERMSizeField(sqrt(err_est_total));
-
-  apf::destroyField(voff);
-  apf::destroyField(visc);
-  apf::destroyField(velf);
-  apf::destroyField(pref);
+  getERMSizeField(err_est_total);
+  apf::destroyElement(visc_elem);apf::destroyElement(pres_elem);apf::destroyElement(velo_elem);apf::destroyElement(est_elem);
+  apf::destroyField(voff);  apf::destroyField(visc); apf::destroyField(velf); apf::destroyField(pref); apf::destroyField(estimate);
   printf("It cleared the function.\n");
 }
 
@@ -536,7 +538,7 @@ m->getAdjacent(bent,0,adjvtxs);
 apf::Vector3 vtxpt;
 for(int adj=0;adj<adjvtxs.getSize();adj++){
   m->getPoint(adjvtxs[adj],0,vtxpt);
-  std::cout<<"Point "<<adj<<" Value "<<vtxpt<<std::endl;
+  //std::cout<<"Point "<<adj<<" Value "<<vtxpt<<std::endl;
 }
 
       apf::ModelEntity* me=m->toModel(bent);
@@ -614,9 +616,8 @@ for(int adj=0;adj<adjvtxs.getSize();adj++){
     } //end loop over adjacent faces
 }//end function
 
-//get Normal vector
 
-apf::Vector3 getFaceNormal(apf::Mesh* mesh, apf::MeshEntity* face){
+apf::Vector3 getFaceNormal(apf::Mesh* mesh, apf::MeshEntity* face){ //get the normal vector
   apf::Vector3 normal;
   apf::Adjacent verts;
   mesh->getAdjacent(face,0,verts);
@@ -636,6 +637,17 @@ apf::Vector3 getFaceNormal(apf::Mesh* mesh, apf::MeshEntity* face){
 double getDotProduct(apf::Vector3 a, apf::Vector3 b){
   return (a[0]*b[0] + a[1]*b[1] + a[2]*b[2]);
 }
+
+double getDotProduct(apf::Matrix3x3 a, apf::Matrix3x3 b){
+  double temp =0;
+  for(int i=0;i<3;i++){
+    for(int j=0;j<3;j++){
+      temp = temp + a[i][j]*b[i][j];
+    }
+  }
+  return temp;
+}
+
 
 bool isInTet(apf::Mesh* mesh, apf::MeshEntity* ent, apf::Vector3 pt){
   bool isin=0;
@@ -740,9 +752,116 @@ int casenum = 0;
       L2_err = L2_err+temp *weight*Jdet;
    }
 
-    //L2_err = sqrt(L2_err);
   apf::destroyMeshElement(element);apf::destroyElement(velo_elem);apf::destroyElement(pres_elem);
   return L2_err;
 }
 
+double getStarerror(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, apf::Field* estimate){
 
+    int nsd = m->getDimension();
+    int nshl_err,nshl_est;  //exact error vs estimate
+    int numqpt;
+    int elem_type;
+
+    apf::FieldShape* err_shape = apf::getLagrange(approx_order);
+    apf::FieldShape* est_shape = apf::getHierarchic();
+    apf::EntityShape* elem_shape;
+    elem_type = m->getType(ent);
+
+    nshl_err=apf::countElementNodes(err_shape,elem_type);
+    nshl_est=apf::countElementNodes(est_shape,elem_type);
+
+    double Lz = 0.05;
+    double Ly = 0.2;
+    //double u_exact, u_h,
+    double p_exact,p_h, dpdy,div_u_h;
+    double star_err=0.0; 
+
+    apf::MeshElement* element;
+    apf::Element* visc_elem, *pres_elem,*velo_elem, *est_elem;
+    double weight, Jdet;
+    apf::Matrix3x3 J,grad_u_exact,grad_u_h,grad_est;
+    apf::Vector3 qpt;
+
+    element = apf::createMeshElement(m,ent);
+    pres_elem = apf::createElement(pref,element);
+    velo_elem = apf::createElement(velf,element);
+    est_elem = apf::createElement(estimate,element);
+  
+    numqpt=apf::countIntPoints(element,int_order); //generally p*p maximum for shape functions
+    apf::Vector3 xyz;
+    apf::Vector3 vel_vect;
+    apf::Vector3 est_vect;
+    apf::Vector3 u_exact, u_h;
+
+    for(int k=0;k<numqpt;k++){
+      apf::getIntPoint(element,int_order,k,qpt);
+      apf::getJacobian(element,qpt,J); 
+      Jdet=apf::getJacobianDeterminant(J,nsd); 
+      weight = apf::getIntWeight(element,int_order,k);
+   
+      apf::mapLocalToGlobal(element,qpt,xyz);
+      apf::getVector(velo_elem,qpt,vel_vect);
+
+      //Hardcoded Exact Solution    
+int casenum = 0;
+      if(casenum==0){ 
+      //Poiseuille Flow
+        dpdy = -1/Ly;
+        u_exact[0]=0;
+        u_exact[1]= 0.5/(nu_0*rho_0)*(dpdy)*(xyz[2]*xyz[2]-Lz*xyz[2]);
+        u_exact[2]=0;
+        p_exact = 1+xyz[1]*dpdy;
+        grad_u_exact[1][2] = 0.5/(nu_0*rho_0)*(dpdy)*(2*xyz[2]-Lz);
+      }
+      else if(casenum ==1){
+      //Couette Flow
+        u_exact[0]=0;
+        u_exact[1] = 1.0*xyz[2]/Lz;
+        u_exact[2]=0;
+        p_exact = 0;
+        grad_u_exact[1][2] = 1.0/Lz;
+      }
+
+      u_h = vel_vect; 
+      p_h = apf::getScalar(pres_elem,qpt);
+
+      apf::getVector(est_elem,qpt,est_vect); 
+      apf::getVectorGrad(est_elem,qpt,grad_est);
+      apf::getVectorGrad(velo_elem,qpt,grad_u_h);
+      grad_u_h=apf::transpose(grad_u_h);
+      div_u_h = grad_u_h[0][0]+grad_u_h[1][1]+grad_u_h[2][2];            
+
+      double temp=0.0;
+      temp = temp+a_k(grad_u_exact-grad_u_h,grad_est,nu_0); //nu is hardcoded because it's not necessary to generalize yet
+      temp = temp-b_k(p_exact-p_h,grad_est); 
+      temp = temp-b_k(div_u_h,grad_u_exact-grad_u_h); 
+      temp = temp + c_k(u_exact,grad_u_exact,est_vect);
+      temp = temp - c_k(u_h,grad_u_h,est_vect);
+if(k==0)
+//std::cout<<"C contribution "<<c_k(u_exact,grad_u_exact,est_vect)<<" "<<c_k(u_h,grad_u_h,est_vect)<<" "<<temp<<std::endl;
+//std::cout<<"Grad "<<grad_u_h<<std::endl;
+
+      star_err = star_err+temp *weight*Jdet;
+   }
+
+  apf::destroyMeshElement(element);apf::destroyElement(velo_elem);apf::destroyElement(pres_elem); apf::destroyElement(est_elem);
+  return star_err;
+}
+
+double a_k(apf::Matrix3x3 u, apf::Matrix3x3 v,double nu){
+  //u and v are gradients of a vector
+  apf::Matrix3x3 temp_u = u+apf::transpose(u);
+  apf::Matrix3x3 temp_v = v+apf::transpose(v);
+  return nu*getDotProduct(temp_u,temp_v);
+} 
+
+double b_k(double a, apf::Matrix3x3 b){
+  //b is a gradient of a vector
+  return a*(b[0][0]+b[1][1]+b[1][1]);
+}
+
+double c_k(apf::Vector3 a, apf::Matrix3x3 b, apf::Vector3 c){
+  //b is a gradient of a vector
+  return getDotProduct(b*a,c);
+}
