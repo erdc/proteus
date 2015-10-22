@@ -125,6 +125,8 @@ class Shape:
         old_coords = np.array(self.barycenter)
         if self.domain.nd == 2 and len(old_coords) == 3:
             trans = coords - old_coords[:2]
+        else:
+            trans = coords - old_coords
         self.translate(trans)
 
     def setBarycenter(self, barycenter):
