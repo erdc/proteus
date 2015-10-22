@@ -517,8 +517,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.timeIntegration.calculateCoefs()
         self.timeIntegration.calculateU(u)
         self.setUnknowns(self.timeIntegration.u)
-        #import pdb
-        #pdb.set_trace()
         if self.bcsTimeDependent or not self.bcsSet:
             self.bcsSet=True
             #Dirichlet boundary conditions
@@ -528,21 +526,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 for t,g in fbcObject.stressFluxBoundaryConditionsDict.iteritems():
                     self.ebqe[('stressFlux_bc',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
                     self.ebqe[('stressFlux_bc_flag',ci)][t[0],t[1]] = 1
-        #import pdb
-        #pdb.set_trace()
         r.fill(0.0)
         self.elementResidual[0].fill(0.0)
         self.elementResidual[1].fill(0.0)
         if self.nSpace_global==3:
             self.elementResidual[2].fill(0.0)
-        #import pdb
-        #pdb.set_trace()
         if self.forceStrongConditions:
             for cj in range(self.nc):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
-        #import pdb
-        #pdb.set_trace()
         self.moveMesh.calculateResidual(#element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
@@ -596,8 +588,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             for cj in range(self.nc):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     r[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
-        #import pdb
-        #pdb.set_trace()
         log("Global residual",level=9,data=r)
         self.nonlinear_function_evaluations += 1
     def getJacobian(self,jacobian):
@@ -679,8 +669,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2,1)],
             self.csrColumnOffsets_eb[(2,2)])
         #Load the Dirichlet conditions directly into residual
-        #import pdb
-        #pdb.set_trace()
         if self.forceStrongConditions:
             scaling = 1.0#probably want to add some scaling to match non-dirichlet diagonals in linear system
             for cj in range(self.nc):
@@ -750,12 +738,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
     def postStep(self):
         pass
     def updateAfterMeshMotion(self):
+        #cek todo: this needs to be cleaned up and generalized for other models under moving conditions
+        #few  models  actually use  the ebqe['x'] for boundary conditions, but  we need  to make it
+        #consistent  (the  physical coordinates and not the reference domain coordinates)
         self.calculateElementQuadrature()
         self.ebqe_old_x = self.ebqe['x'].copy()
         self.calculateExteriorElementBoundaryQuadrature()#pass
-        #print (self.ebqe_old_x - self.ebqe['x']).max()
         for cj in range(self.nc):
             self.u[cj].femSpace.updateInterpolationPoints()
             for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                #cek hack
                 self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN] = self.mesh.nodeArray[dofN]
