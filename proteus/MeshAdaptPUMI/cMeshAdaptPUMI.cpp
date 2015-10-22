@@ -70,7 +70,7 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
   in->shouldCleanupLayer = true; //added
   in->goodQuality = 0.01; //added
   std::cout<<"Starting "<<std::endl;
-  ma::adapt(in);
+  //ma::adapt(in);
   std::cout<<"Finished "<<std::endl;
   freeField(size_frame);
   freeField(size_scale);

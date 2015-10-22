@@ -21,7 +21,7 @@ class MeshAdaptPUMIDrvr{
   //Fields
   int TransferSolutionToPUMI(double* inArray, int nVar, int nN);
   int TransferSolutionToProteus(double* outArray, int nVar, int nN);
-  int TransferPropertiesToPUMI(double* rho, double* nu);
+  int TransferPropertiesToPUMI(double* rho_p, double* nu_p);
   int CommuSizeField();
   int AdaptPUMIMesh();
 
@@ -39,7 +39,6 @@ class MeshAdaptPUMIDrvr{
 
   //Element Residual Method
   void get_local_error();
-  //double rho_0,rho_1,nu_0,nu_1; //currently hardcoded in ERM.cpp
   //for now, only handles DBC
   apf::MeshTag* BCtag;
   apf::MeshTag* BCval;
@@ -51,7 +50,6 @@ class MeshAdaptPUMIDrvr{
   int numVar;
 
   double rho[2], nu[2];
-
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* solution;
