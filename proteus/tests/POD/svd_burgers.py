@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from read_hdf5 import *
+from proteus import Archiver
 import burgers_init,deim_utils
 
 

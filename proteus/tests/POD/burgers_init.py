@@ -152,10 +152,10 @@ class NoFluxDirichletConstraints(numericalFluxBase):
 numerics.numericalFluxType = NoFluxDirichletConstraints
 ##POD-specific controls
 numerics.use_hyper = True
-numerics.SVD_basis_file='SVD_basis_truncated_43'
-numerics.Fs_SVD_basis_file='Fs_SVD_basis_truncated_73'
-numerics.hyper_reduction_indices = 'DEIM_indices_73'
-numerics.hyper_reduction_Q = 'Q_DEIM_truncated_73'
+numerics.SVD_basis_file='SVD_basis_truncated_25'
+numerics.Fs_SVD_basis_file='Fs_SVD_basis_truncated_31'
+numerics.hyper_reduction_indices = 'DEIM_indices_31'
+numerics.hyper_reduction_Q = 'Q_DEIM_truncated_31'
 #numerics.hyper_reduction_indices = 'Fs_Gappy_indices_truncated_101'#'Fs_Gappy_indices_truncated_73'
 #numerics.hyper_reduction_Q = 'Q_Gappy_truncated_73_101'#'PF_Gappy_truncated_73_73'
 #

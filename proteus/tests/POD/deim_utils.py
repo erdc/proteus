@@ -25,7 +25,9 @@ def read_from_hdf5(hdfFile,label,dof_map=None,has_h5py=True):
 def read_snapshots(archive,nsnap,val_name):
     """
     assumes nsnap values of array in val_name are stored in h5file as
-    /val_name'i' for i=0,nspap-1
+    /val_name'i' for i=0,nspap-1 if using tables in proteus
+    otherwise 
+    val_name_p0_t'i' for h5py storage
 
     loads these into a matrix and returns
     """
@@ -35,7 +37,7 @@ def read_snapshots(archive,nsnap,val_name):
         S = np.reshape(u,(u.shape[0],1))
         for i in range(1,nsnap):
             label=label_base % (val_name,0,i)
-            u = read_from_hdf5(archive.hdfFile,label)
+            u = read_from_hdf5(archive.hdfFile,label,has_h5py=True)
             u = np.reshape(u,(u.shape[0],1))
             S = np.append(S,u,axis=1)
         
@@ -45,7 +47,7 @@ def read_snapshots(archive,nsnap,val_name):
         S = np.reshape(u,(u.shape[0],1))
         for i in range(1,nsnap):
             label=label_base % (val_name,i)
-            u = read_from_hdf5(archive.hdfFile,label)
+            u = read_from_hdf5(archive.hdfFile,label,has_h5py=False)
             u = np.reshape(u,(u.shape[0],1))
             S = np.append(S,u,axis=1)
         #
@@ -127,6 +129,64 @@ def deim_alg(Uin,m):
     PtUmInv = np.linalg.inv(PtUm)
     PF= np.dot(Um,PtUmInv)
     return rho,PF
+
+def calculate_gpod_indices(Uin):
+    """
+    input: Uin n x m array of basis vectors for nonlinear function snapshots
+    output: rho, vector of indices \rho_i for extracting $\vec F$ values, and nind, vector of index quantity rate per basis vector
+
+    """
+    n,m=Uin.shape
+    indices = set()
+    rind = np.argmax(np.absolute(Uin[:,0]))
+    indices.add(rind)
+    neigs = set([max(0,rind-1)]+[min(n-1,rind+1)])
+    indices |= neigs
+    rho = np.array(list(indices),dtype='i')
+    l = len(indices)
+    nind = np.array([l])
+    for j in range(1,m):
+	U = Uin[:,0:j]
+	u = Uin[:,j]
+	c,l2res,rank,svals = np.linalg.lstsq(U[rho],u[rho])
+	r = u-np.dot(U,c)
+	r[rho] = 0.0
+	rind = np.argmax(np.absolute(r))
+	if not rind in indices:
+	    indices.add(rind)
+	else:
+	    break
+	neigs = set([max(0,rind-1)]+[min(n-1,rind+1)])
+	indices |= neigs
+	rho = np.array(list(indices),dtype='i')
+	nind = np.append(nind, len(indices)-l)
+	l = len(indices)
+    #
+    return rho, nind
+
+def gpod_alg(Uin,m):
+    """
+    Basic procedure
+
+    - given $m$, dimension for $F$ reduced basis $\mathbf{U}_m$
+    - call Gappy POD algorithm to determine $\vec \rho$.
+    - build $\mathbf{P}$ from $\rho$ as
+      $$
+      \mathbf{P} = [\vec e_{\rho_1},\vec e_{\rho_2},\dots,\vec e_{\rho_m}]
+      $$
+    - invert $\mathbf{P}^T\mathbf{U}_m$ in a presudo sense
+    - return \rho and $\mathbf{P}_F=\mathbf{U}_m(\mathbf{P}^T\mathbf{U}_m)^{-1}$
+
+
+    """
+    assert m <= Uin.shape[1]
+    Um = Uin[:,0:m]
+    rho, nind = calculate_gpod_indices(Um)
+    PtUm = Um[rho]
+    assert PtUm.shape == (np.sum(nind,dtype='i'),m)
+    PtUmInv = np.linalg.pinv(PtUm)
+    PF= np.dot(Um,PtUmInv)
+    return rho,nind,PF
 
 def visualize_zslice(variable,nnx,nny,iz,x=None,y=None,name=None):
     """
