@@ -4,14 +4,17 @@ utility module for generating deim interpolants
 """
 import numpy as np
 
-def read_from_hdf5(hdfFile,label,dof_map=None):
+def read_from_hdf5(hdfFile,label,dof_map=None,has_h5py=True):
     """
     Just grab the array stored in the node with label label and return it
     If dof_map is not none, use this to map values in the array
     If dof_map is not none, this determines shape of the output array
     """
     assert hdfFile != None, "requires hdf5 for heavy data"
-    vals = hdfFile.getNode(label).read()
+    if not has_h5py:
+        vals = hdfFile.getNode(label).read()
+    else:
+        vals = hdfFile[label][:]
     if dof_map is not None:
         dof = vals[dof_map]
     else:
@@ -26,15 +29,28 @@ def read_snapshots(archive,nsnap,val_name):
 
     loads these into a matrix and returns
     """
-    label_base="/%s%d"
-    u = read_from_hdf5(archive.hdfFile,label_base % (val_name,0))
-    S = np.reshape(u,(u.shape[0],1))
-    for i in range(1,nsnap):
-        label=label_base % (val_name,i)
-        u = read_from_hdf5(archive.hdfFile,label)
-        u = np.reshape(u,(u.shape[0],1))
-        S = np.append(S,u,axis=1)
-    #
+    if archive.has_h5py:
+        label_base="/%s_p%d_t%d" #name, processor id, time step
+        u = read_from_hdf5(archive.hdfFile,label_base % (val_name,0,0),has_h5py=True)
+        S = np.reshape(u,(u.shape[0],1))
+        for i in range(1,nsnap):
+            label=label_base % (val_name,0,i)
+            u = read_from_hdf5(archive.hdfFile,label)
+            u = np.reshape(u,(u.shape[0],1))
+            S = np.append(S,u,axis=1)
+        
+    elif archive.hasTables:
+        label_base="/%s%d"
+        u = read_from_hdf5(archive.hdfFile,label_base % (val_name,0),has_h5py=False)
+        S = np.reshape(u,(u.shape[0],1))
+        for i in range(1,nsnap):
+            label=label_base % (val_name,i)
+            u = read_from_hdf5(archive.hdfFile,label)
+            u = np.reshape(u,(u.shape[0],1))
+            S = np.append(S,u,axis=1)
+        #
+    else:
+        raise NotImplementedError, "Assumes Archive has either tables or h5py based archive" 
     return S
 
 
