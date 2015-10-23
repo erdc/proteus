@@ -1563,8 +1563,12 @@ class OneLevelTransport(NonlinearEquation):
         #for model reduction
         self.mass_jacobian = None
         self.space_jacobian = None
+        self.linear_jacobian = None
+        self.nonlinear_jacobian = None
         self.nzval_mass = None
         self.nzval_space = None
+        self.nzval_linear = None
+        self.nzval_nonlinear = None
     #end __init__
 
     def setupFieldStrides(self, interleaved=True):
@@ -2345,6 +2349,75 @@ class OneLevelTransport(NonlinearEquation):
         #mwf debug
         #jacobian.fwrite("matdebug_p%s.txt" % self.comm.rank())
         return jacobian
+
+    def getLinearJacobian(self,jacobian):
+        import superluWrappers
+        import numpy
+        #todo clean up update,calculate,get,intialize usage
+        
+	#self.calculateLinearElementBoundaryJacobian()
+        #self.calculateLinearExteriorElementBoundaryJacobian()
+        self.calculateLinearElementJacobian()
+        log("Element Jacobian ",level=10,data=self.elementJacobian)
+        if self.matType == superluWrappers.SparseMatrix:
+            self.getJacobian_CSR(jacobian)
+        elif self.matType  == numpy.array:
+            self.getJacobian_dense(jacobian)
+        else:
+            raise TypeError("Matrix type must be SparseMatrix or array")
+        log("Jacobian ",level=10,data=jacobian)
+        if self.forceStrongConditions:
+            if self.matType == superluWrappers.SparseMatrix:
+                jac_rowptr,jac_colind,jac_nzval  = jacobian.getCSRrepresentation()
+                for cj in range(self.nc):
+                    for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                        global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                        for i in range(jac_rowptr[global_dofN],jac_rowptr[global_dofN+1]):
+                            if (self.colind[i] == global_dofN):
+                                jac_nzval[i] = 1.0
+                            else:
+                                jac_nzval[i] = 0.0
+                            
+            elif self.matType  == numpy.array:
+                for cj in range(self.nc):
+                    for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                        global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                        jacobian[global_dofN,:] = 0.
+                        jacobian[global_dofN,global_dofN] = 1.0
+
+        return jacobian
+    def getNonlinearJacobian(self,jacobian):
+        import superluWrappers
+        import numpy
+        #todo clean up update,calculate,get,intialize usage
+        
+	#self.calculateLinearElementBoundaryJacobian()
+        #self.calculateLinearExteriorElementBoundaryJacobian()
+        self.calculateNonlinearElementJacobian()
+        log("Element Jacobian ",level=10,data=self.elementJacobian)
+        if self.matType == superluWrappers.SparseMatrix:
+            self.getJacobian_CSR(jacobian)
+        elif self.matType  == numpy.array:
+            self.getJacobian_dense(jacobian)
+        else:
+            raise TypeError("Matrix type must be SparseMatrix or array")
+        log("Jacobian ",level=10,data=jacobian)
+        if self.forceStrongConditions:
+            if self.matType == superluWrappers.SparseMatrix:
+                jac_rowptr,jac_colind,jac_nzval  = jacobian.getCSRrepresentation()
+                for cj in range(self.nc):
+                    for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                        global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                        for i in range(jac_rowptr[global_dofN],jac_rowptr[global_dofN+1]):
+                            jac_nzval[i] = 0.0
+                            
+            elif self.matType  == numpy.array:
+                for cj in range(self.nc):
+                    for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                        global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                        jacobian[global_dofN,:] = 0.
+
+        return jacobian
     def calculateElementResidual(self):
         """Calculate all the element residuals"""
         import pdb
@@ -2883,6 +2956,166 @@ class OneLevelTransport(NonlinearEquation):
                     for j in nodeSetList[eN]:
                         self.elementJacobian[cj][cj][eN,j,:]=0.0
                         self.elementJacobian[cj][cj][eN,j,j]=self.weakFactor*self.mesh.elementDiametersArray[eN]
+
+    def calculateLinearElementJacobian(self):
+        for ci in range(self.nc):
+            for cj in self.coefficients.stencil[ci]:
+                self.elementJacobian[ci][cj].fill(0.0)
+                self.elementJacobian_eb[ci][cj].fill(0.0)
+        ##todo optimize nonlinear diffusion Jacobian calculation for the  different combinations of nonlinear a and phi
+        for ci,ckDict in self.coefficients.diffusion.iteritems():
+            for ck,cjDict in ckDict.iteritems():
+                for cj in set(cjDict.keys()+self.coefficients.potential[ck].keys()):
+                    if self.timeIntegration.diffusionIsImplicit[ci]:
+                        if self.numericalFlux == None or self.numericalFlux.mixedDiffusion[ci] == False:
+                            if self.sd:
+                                cfemIntegrals.updateDiffusionJacobian_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                              self.phi[ck].femSpace.dofMap.l2g,
+                                                                              self.q[('a',ci,ck)],
+                                                                              self.q[('da',ci,ck,cj)],
+                                                                              self.q[('grad(phi)',ck)],
+                                                                              self.q[('grad(w)*dV_a',ck,ci)],
+                                                                              self.dphi[(ck,cj)].dof,
+                                                                              self.q[('v',cj)],
+                                                                              self.q[('grad(v)',cj)],
+                                                                              self.elementJacobian[ci][cj])
+                            elif self.lowmem:
+                                #mwf getting a problem right now when have multiple potentials since
+                                #femIntegral routine uses nDOF_trial_element for accessing phi but this might not
+                                #be the same when there are different spaces for different components
+                                #e.g. when computing jacobian[0][1], 0 component has local dim 3, (trial space)
+                                #component 1 has local dim 2 and potential, ck = 1 so phi has local dim 2
+                                cfemIntegrals.updateDiffusionJacobian_weak_lowmem(self.phi[ck].femSpace.dofMap.l2g,
+                                                                                  self.q[('a',ci,ck)],
+                                                                                  self.q[('da',ci,ck,cj)],
+                                                                                  self.q[('grad(phi)',ck)],
+                                                                                  self.q[('grad(w)*dV_a',ck,ci)],
+                                                                                  self.dphi[(ck,cj)].dof,
+                                                                                  self.q[('v',cj)],
+                                                                                  self.q[('grad(v)',cj)],
+                                                                                  self.elementJacobian[ci][cj])
+                            else:
+                                cfemIntegrals.updateDiffusionJacobian_weak(self.phi[ck].femSpace.dofMap.l2g,
+                                                                           self.q[('a',ci,ck)],
+                                                                           self.q[('da',ci,ck,cj)],
+                                                                           self.q[('grad(phi)Xgrad(w)*dV_a',ck,ci)],
+                                                                           self.dphi[(ck,cj)].dof,
+                                                                           self.q[('v',cj)],
+                                                                           self.q[('grad(v)Xgrad(w)*dV_a',ck,cj,ci)],
+                                                                           self.elementJacobian[ci][cj])
+                        else:
+                            if self.sd:
+                                cfemIntegrals.updateDiffusionJacobian_MixedForm_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                                        self.numericalFlux.aTilde[(ci,ck)],
+                                                                                        #self.q[('a',ci,ck)],
+                                                                                        self.q[('da',ci,ck,cj)],
+                                                                                        self.numericalFlux.qV[ck],
+                                                                                        self.numericalFlux.qDV[ck],
+                                                                                        self.numericalFlux.qDV_eb[ck],
+                                                                                        self.q[('grad(w)*dV_f',ck)],
+                                                                                        self.q[('v',cj)],
+                                                                                        self.elementJacobian[ci][cj],
+                                                                                        self.elementJacobian_eb[ci][cj])
+                            else:
+                                cfemIntegrals.updateDiffusionJacobian_MixedForm_weak(self.numericalFlux.aTilde[(ci,ck)],
+                                                                                     #self.q[('a',ci,ck)],
+                                                                                     self.q[('da',ci,ck,cj)],
+                                                                                     self.numericalFlux.qV[ck],
+                                                                                     self.numericalFlux.qDV[ck],
+                                                                                     self.numericalFlux.qDV_eb[ck],
+                                                                                     self.q[('grad(w)*dV_f',ck)],
+                                                                                     self.q[('v',cj)],
+                                                                                     self.elementJacobian[ci][cj],
+                                                                                     self.elementJacobian_eb[ci][cj])
+        #self.timeIntegration.calculateElementSpatialJacobian(self.elementJacobian)
+        for ci,cjDict in self.coefficients.mass.iteritems():
+            for cj in cjDict:
+                if self.timeIntegration.massIsImplicit[ci]:
+                    if self.lowmem:
+                        cfemIntegrals.updateMassJacobian_weak_lowmem(self.q[('dmt',ci,cj)],
+                                                                     self.q[('v',cj)],
+                                                                     self.q[('w*dV_m',ci)],
+                                                                     self.elementJacobian[ci][cj])
+                    else:
+                        cfemIntegrals.updateMassJacobian_weak(self.q[('dmt',ci,cj)],
+                                                              self.q[('vXw*dV_m',cj,ci)],
+                                                              self.elementJacobian[ci][cj])
+        for cj in range(self.nc):
+            if self.timeIntegration.duStar_du[cj] != None:
+                self.elementJacobian[ci][cj] *= self.timeIntegration.duStar_du[cj]
+        if self.dirichletNodeSetList != None:
+            for cj,nodeSetList in self.dirichletNodeSetList.iteritems():
+                for eN in range(self.mesh.nElements_global):
+                    for j in nodeSetList[eN]:
+                        self.elementJacobian[cj][cj][eN,j,:]=0.0
+                        self.elementJacobian[cj][cj][eN,j,j]=self.weakFactor*self.mesh.elementDiametersArray[eN]
+    def calculateNonlinearElementJacobian(self,skipMassTerms=False):
+        for ci in range(self.nc):
+            for cj in self.coefficients.stencil[ci]:
+                self.elementJacobian[ci][cj].fill(0.0)
+                self.elementJacobian_eb[ci][cj].fill(0.0)
+        for ci,cjDict in self.coefficients.advection.iteritems():
+            for cj in cjDict:
+                if self.timeIntegration.advectionIsImplicit[ci]:
+                    if self.lowmem:
+                        cfemIntegrals.updateAdvectionJacobian_weak_lowmem(self.q[('df',ci,cj)],
+                                                                          self.q[('v',cj)],
+                                                                          self.q[('grad(w)*dV_f',ci)],
+                                                                          self.elementJacobian[ci][cj])
+                    else:
+                        cfemIntegrals.updateAdvectionJacobian_weak(self.q[('df',ci,cj)],
+                                                                   self.q[('vXgrad(w)*dV_f',cj,ci)],
+                                                                   self.elementJacobian[ci][cj])
+        #todo optimize nonlinear diffusion Jacobian calculation for the  different combinations of nonlinear a and phi
+        for ci,cjDict in self.coefficients.reaction.iteritems():
+            for cj in cjDict:
+                if self.timeIntegration.reactionIsImplicit[ci]:
+                    if self.lowmem:
+                        cfemIntegrals.updateReactionJacobian_weak_lowmem(self.q[('dr',ci,cj)],
+                                                                         self.q[('v',cj)],
+                                                                         self.q[('w*dV_r',ci)],
+                                                                         self.elementJacobian[ci][cj])
+                    else:
+                        cfemIntegrals.updateReactionJacobian_weak(self.q[('dr',ci,cj)],
+                                                                  self.q[('vXw*dV_r',cj,ci)],
+                                                                  self.elementJacobian[ci][cj])
+        if self.stabilization!= None:
+            for ci in range(self.coefficients.nc):
+                if self.timeIntegration.stabilizationIsImplicit[ci]:
+                    for cj in self.coefficients.stencil[ci]:
+                        for cjj in self.coefficients.stencil[ci]:
+                            cfemIntegrals.updateSubgridErrorJacobian(self.q[('dsubgridError',cj,cjj)],
+                                                                     self.q[('Lstar*w*dV',cj,ci)],
+                                                                     self.elementJacobian[ci][cjj])
+                    if self.stabilization.usesGradientStabilization == True:
+                        for cj in self.coefficients.stencil[ci]:
+                            if self.lowmem:
+                                #mwf hack to try to get something running for linear problems
+                                cfemIntegrals.updateNumericalDiffusionJacobian_lowmem(self.q[('dgrad(subgridError)',ci,cj)],
+                                                                                      self.q[('grad(v)',ci)],
+                                                                                      self.q[('grad(w)*dV_f',ci)],
+                                                                                      self.elementJacobian[ci][ci])
+                            else:
+                                assert False
+        if self.shockCapturing != None:
+            for ci in self.shockCapturing.components:
+                if self.timeIntegration.shockCapturingIsImplicit[ci]:
+                    if self.lowmem:
+                        cfemIntegrals.updateNumericalDiffusionJacobian_lowmem(self.q[('numDiff',ci,ci)],
+                                                                              self.q[('grad(v)',ci)],
+                                                                              self.q[('grad(w)*dV_numDiff',ci,ci)],
+                                                                              self.elementJacobian[ci][ci])
+                    else:
+                        cfemIntegrals.updateNumericalDiffusionJacobian(self.q[('numDiff',ci,ci)],
+                                                                       self.q[('grad(v)Xgrad(w)*dV_numDiff',ci,ci,ci)],
+                                                                       self.elementJacobian[ci][ci])
+        if self.dirichletNodeSetList != None:
+            for cj,nodeSetList in self.dirichletNodeSetList.iteritems():
+                for eN in range(self.mesh.nElements_global):
+                    for j in nodeSetList[eN]:
+                        self.elementJacobian[cj][cj][eN,j,:]=0.0
+                        self.elementJacobian[cj][cj][eN,j,j]=self.weakFactor*self.mesh.elementDiametersArray[eN]
+
     def calculateElementMassJacobian(self):
         """
         calculate just the mass matrix terms for element jacobian (i.e., those that multiply the accumulation term)
@@ -5588,6 +5821,40 @@ class OneLevelTransport(NonlinearEquation):
         else:
             raise TypeError("Matrix type must be sparse matrix or array")
         return self.space_jacobian
+
+    def initializeLinearJacobian(self):
+        """
+        Setup the storage for the linear jacobian and return as a ```SparseMat``` or ```Mat``` based on self.matType
+        """
+        if self.linear_jacobian != None:
+            return self.linear_jacobian
+        import superluWrappers
+        if self.matType == superluWrappers.SparseMatrix:
+            self.nzval_linear = self.nzval.copy()
+            self.linear_jacobian = SparseMat(self.nFreeVDOF_global,self.nFreeVDOF_global,self.nnz,
+                                           self.nzval_linear,self.colind,self.rowptr)
+        elif self.matType == numpy.array:
+            self.linear_jacobian = Mat(self.nFreeVDOF_global,self.nFreeVDOF_global)
+        else:
+            raise TypeError("Matrix type must be sparse matrix or array")
+        return self.linear_jacobian
+
+    def initializeNonlinearJacobian(self):
+        """
+        Setup the storage for the nonlinear jacobian and return as a ```SparseMat``` or ```Mat``` based on self.matType
+        """
+        if self.nonlinear_jacobian != None:
+            return self.nonlienar_jacobian
+        import superluWrappers
+        if self.matType == superluWrappers.SparseMatrix:
+            self.nzval_nonlinear = self.nzval.copy()
+            self.nonlinear_jacobian = SparseMat(self.nFreeVDOF_global,self.nFreeVDOF_global,self.nnz,
+                                           self.nzval_nonlinear,self.colind,self.rowptr)
+        elif self.matType == numpy.array:
+            self.nonlinear_jacobian = Mat(self.nFreeVDOF_global,self.nFreeVDOF_global)
+        else:
+            raise TypeError("Matrix type must be sparse matrix or array")
+        return self.nonlinear_jacobian
 
 
     def calculateElementLoadCoefficients_inhomogeneous(self):

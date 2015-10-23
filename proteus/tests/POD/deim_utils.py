@@ -2,8 +2,25 @@
 """
 utility module for generating deim interpolants
 """
-from read_hdf5 import *
 import numpy as np
+
+def read_from_hdf5(hdfFile,label,dof_map=None,has_h5py=True):
+    """
+    Just grab the array stored in the node with label label and return it
+    If dof_map is not none, use this to map values in the array
+    If dof_map is not none, this determines shape of the output array
+    """
+    assert hdfFile != None, "requires hdf5 for heavy data"
+    if not has_h5py:
+        vals = hdfFile.getNode(label).read()
+    else:
+        vals = hdfFile[label][:]
+    if dof_map is not None:
+        dof = vals[dof_map]
+    else:
+        dof = vals
+
+    return dof
 
 def read_snapshots(archive,nsnap,val_name):
     """
@@ -12,15 +29,28 @@ def read_snapshots(archive,nsnap,val_name):
 
     loads these into a matrix and returns
     """
-    label_base="/%s%d"
-    u = read_from_hdf5(archive.hdfFile,label_base % (val_name,0))
-    S = np.reshape(u,(u.shape[0],1))
-    for i in range(1,nsnap):
-        label=label_base % (val_name,i)
-        u = read_from_hdf5(archive.hdfFile,label)
-        u = np.reshape(u,(u.shape[0],1))
-        S = np.append(S,u,axis=1)
-    #
+    if archive.has_h5py:
+        label_base="/%s_p%d_t%d" #name, processor id, time step
+        u = read_from_hdf5(archive.hdfFile,label_base % (val_name,0,0),has_h5py=True)
+        S = np.reshape(u,(u.shape[0],1))
+        for i in range(1,nsnap):
+            label=label_base % (val_name,0,i)
+            u = read_from_hdf5(archive.hdfFile,label,has_h5py=True)
+            u = np.reshape(u,(u.shape[0],1))
+            S = np.append(S,u,axis=1)
+        
+    elif archive.hasTables:
+        label_base="/%s%d"
+        u = read_from_hdf5(archive.hdfFile,label_base % (val_name,0),has_h5py=False)
+        S = np.reshape(u,(u.shape[0],1))
+        for i in range(1,nsnap):
+            label=label_base % (val_name,i)
+            u = read_from_hdf5(archive.hdfFile,label,has_h5py=False)
+            u = np.reshape(u,(u.shape[0],1))
+            S = np.append(S,u,axis=1)
+        #
+    else:
+        raise NotImplementedError, "Assumes Archive has either tables or h5py based archive" 
     return S
 
 
@@ -185,3 +215,23 @@ def visualize_zslice(variable,nnx,nny,iz,x=None,y=None,name=None):
 
 
     return surf
+
+def extract_sub_matrix_csr(rho,rowptr,colind,nnzval):
+    """
+    manually extract the rows in the deim index vector rho from a csr matrix representation 
+    returns a csr representation 
+    """
+    m = len(rho)
+    rowptr_sub = np.zeros(m+1,'i')
+    nnz_sub = 0
+    for k,I in enumerate(rho):#count number of nonzero entries
+        diff = rowptr[I+1]-rowptr[I]
+        rowptr_sub[k+1]=rowptr_sub[k]+diff
+        nnz_sub += diff
+    colind_sub = np.zeros(nnz_sub,'i'); nzval_sub=np.zeros(nnz_sub,'d')
+    for k,KK in enumerate(rho):
+        for m,MM in enumerate(range(rowptr[KK],rowptr[KK+1])):
+            colind_sub[rowptr_sub[k]+m]=colind[MM]
+            nzval_sub[rowptr_sub[k]+m]=nnzval[MM]
+    #
+    return rowptr_sub,colind_sub,nzval_sub
