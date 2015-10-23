@@ -10,7 +10,7 @@ from proteus.iproteus import *
 
 class Burgers(TransportCoefficients.TC_base):
     """
-    The coefficients of the viscout Burgers equation
+    The coefficients of the viscous Burgers equation
     """
     def __init__(self,A,B,nd=3,linearize=False):
         TransportCoefficients.TC_base.__init__(self,
