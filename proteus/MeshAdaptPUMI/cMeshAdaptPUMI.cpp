@@ -59,22 +59,22 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);
   /// Adapt the mesh
+  freeField(size_iso);
   ma::Input* in = ma::configure(m, size_scale, size_frame);
   ma::validateInput(in);
   in->shouldRunPreParma = true;
   in->shouldRunMidParma = true;
   in->shouldRunPostParma = true;
   in->maximumIterations = numIter;
-  in->shouldSnap = true;
-  in->shouldFixShape = true;
-  in->shouldCleanupLayer = true; //added
+  in->shouldSnap = false;
+  in->shouldFixShape = false;
   in->goodQuality = 0.01; //added
-  std::cout<<"Starting "<<std::endl;
-  //ma::adapt(in);
+  std::cout<<"Starting (numIter "<<numIter<<")"<<std::endl;
+  apf::writeVtkFiles("size", m);
+  ma::adapt(in);
   std::cout<<"Finished "<<std::endl;
   freeField(size_frame);
   freeField(size_scale);
-  freeField(size_iso);
   m->verify();
   apf::writeVtkFiles("pumi_adapt", m);
   nAdapt++; //counter for number of adapt steps
