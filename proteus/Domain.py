@@ -696,7 +696,7 @@ class PUMIDomain(D_base):
   """
   3d domains from PUMI mesh files
   """
-  def __init__(self,name="PUMIDomain")
+  def __init__(self,name="PUMIDomain"):
       D_base.__init__(self,3,name)
       self.numBC=0
       self.numAdaptSteps=1
