@@ -121,7 +121,7 @@ int MeshAdaptPUMIDrvr::TransferBCtagsToProteus()
 int MeshAdaptPUMIDrvr::TransferBCsToProteus()
 {
   //Want to use some sort of Hierarchic projection 
-  apf::FieldShape* BC_shape = apf::getHierarchic();
+  apf::FieldShape* BC_shape = apf::getHierarchic(2);
   apf::MeshEntity* v;  
   int nVar = 4; //pressure + 3 velocity components
   //DBC = apf::createPackedField(m, "proteus_DBC", nVar);
