@@ -24,6 +24,8 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int TransferSolutionToPUMI(double*, int, int)
         int TransferSolutionToProteus(double*, int, int)
         int TransferPropertiesToPUMI(double*, double*)
+        int TransferBCtagsToProteus();
+        int TransferBCsToProteus();
         int AdaptPUMIMesh()
         int dumpMesh(Mesh&)
         int getERMSizeField(double);
@@ -59,6 +61,10 @@ cdef class MeshAdaptPUMI:
         rho = np.ascontiguousarray(rho)
         nu = np.ascontiguousarray(nu)
         return self.thisptr.TransferPropertiesToPUMI(&rho[0],&nu[0])
+    def TransferBCtagsToProteus(self):
+        return self.thisptr.TransferBCtagsToProteus()
+    def TransferBCsToProteus(self):
+        return self.thisptr.TransferBCsToProteus()
     def AdaptPUMIMesh(self):
         return self.thisptr.AdaptPUMIMesh()
     def dumpMesh(self, cmesh):
