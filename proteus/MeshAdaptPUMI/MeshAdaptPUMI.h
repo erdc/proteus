@@ -48,8 +48,8 @@ class MeshAdaptPUMIDrvr{
   apf::MeshTag* fluxtag[4];
 
   //Approximation/Integration order
-  int approximation_order = 2; //what order polynomial (hierarchic is 2nd order)
-  int integration_order = approximation_order*2; //determines number of integration points
+  int approximation_order; //what order polynomial (hierarchic is 2nd order)
+  int integration_order; //determines number of integration points
 
   private: 
   apf::Mesh2* m;
