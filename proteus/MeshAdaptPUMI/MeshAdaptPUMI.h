@@ -19,9 +19,12 @@ class MeshAdaptPUMIDrvr{
   int UpdateMaterialArrays(Mesh& mesh, int bdryID, int GeomTag);
 
   //Fields
+  //Transfer Boundary Conditions
   int TransferSolutionToPUMI(double* inArray, int nVar, int nN);
   int TransferSolutionToProteus(double* outArray, int nVar, int nN);
   int TransferPropertiesToPUMI(double* rho_p, double* nu_p);
+  int TransferBCtagsToProteus();
+  int TransferBCsToProteus();
   int CommuSizeField();
   int AdaptPUMIMesh();
 
@@ -39,9 +42,14 @@ class MeshAdaptPUMIDrvr{
 
   //Element Residual Method
   void get_local_error();
-  //for now, only handles DBC
-  apf::MeshTag* BCtag;
-  apf::MeshTag* BCval;
+  //tags used to identify types of BC
+  apf::MeshTag* BCtag[4];
+  apf::MeshTag* DBCtag[4];
+  apf::MeshTag* fluxtag[4];
+
+  //Approximation/Integration order
+  int approximation_order = 2; //what order polynomial (hierarchic is 2nd order)
+  int integration_order = approximation_order*2; //determines number of integration points
 
   private: 
   apf::Mesh2* m;
@@ -53,11 +61,11 @@ class MeshAdaptPUMIDrvr{
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* solution;
+  apf::Field* fluxBC;
+  apf::Field* DBC;
   apf::Field* err_reg; //error field from ERM
-  /* there is either an isotropic or an anisotropic size field */
   /* this field stores isotropic size */
   apf::Field* size_iso;
-  //apf::Field* size_iso_reg;
   /* these fields store anisotropic size */
   apf::Field* size_scale;
   apf::Field* size_frame;
