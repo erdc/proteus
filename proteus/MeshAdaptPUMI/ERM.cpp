@@ -6,6 +6,7 @@
 #include <apfMesh.h>
 #include <apfShape.h>
 #include <apfDynamicMatrix.h>
+#include <apfNumbering.h>
 
 #include <iostream>
 #include <fstream>
@@ -17,9 +18,9 @@
 #define  VOF_IDX  4
 #define  PHI_IDX  5
 
-
-int approx_order = 2; //if using Lagrange shape functions. Serendipity is automatic
-int int_order = approx_order*2; //determines number of integration points
+//proxy variables used to make it easier to pass these variables from MeshAdaptPUMIDrvr
+int approx_order;
+int int_order;
 double nu_0,nu_1,rho_0,rho_1;
 double a_kl = 0.5; //flux term weight
 
@@ -56,7 +57,6 @@ static void extractFields(apf::Field* solution, apf::Field* pref,apf::Field* vel
   return;
 }
 
-//void getProps(double &rho_0, double &rho_1,double &nu_0, double &nu_1)
 void getProps(double*rho,double*nu)
 {
   rho_0 = rho[0];
@@ -95,6 +95,8 @@ void MeshAdaptPUMIDrvr::get_local_error()
 {
 
   getProps(rho,nu);
+  approx_order = approximation_order; 
+  int_order = integration_order;
 
   //***** Get Solution Fields First *****//
   apf::Field* voff = apf::createLagrangeField(m,"proteus_vof",apf::SCALAR,1);
@@ -472,6 +474,7 @@ std::cout<<"Acomp "<<Acomp << " Bcomp "<<Bcomp<<std::endl;
     VecDestroy(&F); //destroy vector
     VecDestroy(&coef); //destroy vector
 
+
 testcount++;
   } //end element loop
 star_total = -2*(0.5*(err_est_total)-star_total); //before square root is taken
@@ -492,6 +495,8 @@ std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est
   getERMSizeField(err_est_total);
   apf::destroyElement(visc_elem);apf::destroyElement(pres_elem);apf::destroyElement(velo_elem);apf::destroyElement(est_elem);
   apf::destroyField(voff);  apf::destroyField(visc); apf::destroyField(velf); apf::destroyField(pref); apf::destroyField(estimate);
+//  m->destroyTag(fluxtag[1]); m->destroyTag(fluxtag[2]); m->destroyTag(fluxtag[3]);
+  freeField(fluxBC);
   printf("It cleared the function.\n");
 }
 
@@ -533,40 +538,21 @@ void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::
       apf::Matrix3x3 tempbflux(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0);
       bent = boundaries[adjcount];
 
-apf::Adjacent adjvtxs;
-m->getAdjacent(bent,0,adjvtxs);
-apf::Vector3 vtxpt;
-for(int adj=0;adj<adjvtxs.getSize();adj++){
-  m->getPoint(adjvtxs[adj],0,vtxpt);
-  //std::cout<<"Point "<<adj<<" Value "<<vtxpt<<std::endl;
-}
-
       apf::ModelEntity* me=m->toModel(bent);
       int tag = m->getModelTag(me);
       apf::ModelEntity* boundary_face = m->findModelEntity(nsd-1,tag);
-      //if(me == boundary_face){ //is on a model boundary
-
-      //}
-      //else{ //compute the flux
         if(m->isShared(bent)){//is shared by a parallel entity
           std::cout<<"PARALLEL "<<std::endl;
         }
         else{
           m->getAdjacent(bent,nsd,neighbors);
           b_elem = apf::createMeshElement(m,bent);
-//std::cout<<"Area? "<<apf::measure(b_elem)<<std::endl;
           apf::Matrix3x3 tempgrad_velo[2];
           apf::Matrix3x3 identity(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
           apf::MeshElement* tempelem; apf::Element * tempvelo,*temppres,*tempvoff;
           
           normal=getFaceNormal(m,bent);
           centerdir=apf::getLinearCentroid(m,ent)-apf::getLinearCentroid(m,bent);
-/*
-          std::cout<<"Normal "<<normal <<" Center "<<centerdir<<std::endl;
-          std::cout<<"Projection "<<apf::project(normal,centerdir)<<std::endl;
-          std::cout<<"Boundary "<<apf::getLinearCentroid(m,bent)<<std::endl;
-          std::cout<<"Is in Tet? "<<isInTet(m,ent,apf::project(normal,centerdir)*centerdir.getLength()+apf::getLinearCentroid(m,bent))<<std::endl;
-*/
           if(isInTet(m,ent,apf::project(normal,centerdir)*centerdir.getLength()+apf::getLinearCentroid(m,bent)))
             normal = normal*-1.0; //normal needs to face the other direction
 
@@ -574,7 +560,9 @@ for(int adj=0;adj<adjvtxs.getSize();adj++){
 
           double flux_weight;         
           for(int idx_neigh=0; idx_neigh<neighbors.getSize();idx_neigh++){ //at most two neighboring elements
-            if(me==boundary_face){ flux_weight=1; std::cout<<"on boundary face "<<std::endl;}
+            if(me==boundary_face){
+              flux_weight=1; std::cout<<"on boundary face "<<std::endl;
+            }
             else{
               if(neighbors[idx_neigh]==ent) flux_weight = 1-a_kl;
               else{ 
@@ -600,19 +588,17 @@ for(int adj=0;adj<adjvtxs.getSize();adj++){
                 -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1))*weight*Jdet*flux_weight;
               bflux = tempbflux*normal;
 
-              for(int i=0;i<nsd;i++){
+              for(int i=0;i<nsd;i++){ 
                 for(int s=0;s<nshl;s++){
                   endflux[i*nshl+s] = endflux[i*nshl+s]+bflux[i]*shpval[s];
                 }
               } 
-               
+  
             } //end boundary integration loop
-
           } //end for loop of neighbors
 
           apf::destroyMeshElement(tempelem);apf::destroyElement(tempvelo);apf::destroyElement(temppres); apf::destroyElement(tempvoff);
         }
-      //} //end if/else on boundary face
     } //end loop over adjacent faces
 }//end function
 
