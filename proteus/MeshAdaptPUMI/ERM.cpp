@@ -132,8 +132,8 @@ void MeshAdaptPUMIDrvr::get_local_error()
   int numcomps = apf::countComponents(solution);
   //apf::FieldShape* err_shape = apf::getLagrange(approx_order);
   //apf::FieldShape* err_shape = apf::getSerendipity();
-  apf::FieldShape* err_shape = apf::getHierarchic();
-  apf::Field * estimate = apf::createField(m, "err_est",apf::VECTOR,apf::getHierarchic());
+  apf::FieldShape* err_shape = apf::getHierarchic(2);
+  apf::Field * estimate = apf::createField(m, "err_est", apf::VECTOR, err_shape);
   apf::EntityShape* elem_shape;
   apf::Vector3 qpt; //container for quadrature points
   apf::MeshElement* element;
@@ -508,7 +508,7 @@ void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::
     apf::NewArray <double> shpval_temp;
 
     //apf::FieldShape* err_shape = apf::getLagrange(approx_order);
-    apf::FieldShape* err_shape = apf::getHierarchic();
+    apf::FieldShape* err_shape = apf::getHierarchic(2);
     apf::EntityShape* elem_shape;
 
     //loop over element faces
@@ -750,7 +750,7 @@ double getStarerror(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::F
     int elem_type;
 
     apf::FieldShape* err_shape = apf::getLagrange(approx_order);
-    apf::FieldShape* est_shape = apf::getHierarchic();
+    apf::FieldShape* est_shape = apf::getHierarchic(2);
     apf::EntityShape* elem_shape;
     elem_type = m->getType(ent);
 
