@@ -884,7 +884,7 @@ class NS_base:  # (HasTraits):
                                 ivar=ivar+1
                                 for nN in range(lm.mesh.nNodes_global):
                                     soldof[ivar][nN]=lm.u[ci].dof[nN]
-                    '''Get Physical Parameters'''
+                    #Get Physical Parameters
                     rho = numpy.array([self.pList[0].rho_0, self.pList[0].rho_1])
                     nu = numpy.array([self.pList[0].nu_0, self.pList[0].nu_1])
                     p.domain.PUMIMesh.TransferSolutionToPUMI(soldof)
