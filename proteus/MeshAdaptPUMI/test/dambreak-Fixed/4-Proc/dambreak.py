@@ -97,7 +97,7 @@ else:
         nnx=4*Refinement
         nny=2*Refinement
     else:
-        domain = Domain.PUMIDomain(fileprefix="Dambreak.smb",modelfile="Dambreak.smd") #initialize the domain
+        domain = Domain.PUMIDomain() #initialize the domain
         domain.numBC=6 #set number of BCs
         domain.numAdaptSteps=6 #set number of adapt steps (loops)
         #Following sets list of face tags of geometric model as mapped from boundary Tags,
