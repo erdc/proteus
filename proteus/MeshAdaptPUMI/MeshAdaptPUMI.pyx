@@ -15,7 +15,7 @@ cdef extern from "cmeshToolsModule.h":
 
 cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
     cdef cppclass MeshAdaptPUMIDrvr:
-        MeshAdaptPUMIDrvr(double, double, int)
+        MeshAdaptPUMIDrvr(double, double, int, char*)
         int numIter, numAdaptSteps
         int loadModelAndMesh(char *, char*)
         int ConstructFromSerialPUMIMesh(Mesh&)
@@ -23,16 +23,21 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int UpdateMaterialArrays(Mesh&, int, int)
         int TransferSolutionToPUMI(double*, int, int)
         int TransferSolutionToProteus(double*, int, int)
+        int TransferPropertiesToPUMI(double*, double*)
+        int TransferBCtagsToProteus()
+        int TransferBCsToProteus()
         int AdaptPUMIMesh()
         int dumpMesh(Mesh&)
+        int getERMSizeField(double)
+        double getMinimumQuality()
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
     cdef double hmax, hmin
     cdef int numIter, numAdaptSteps
-    def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10):
+    def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="farhad"):
         print hmax,hmin,numIter
-        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter)
+        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig)
     def __dealloc__(self):
         del self.thisptr
     def loadModelAndMesh(self, geomName, meshName):
@@ -53,8 +58,18 @@ cdef class MeshAdaptPUMI:
     def TransferSolutionToProteus(self, np.ndarray[np.double_t,ndim=2,mode="c"] outArray):
         outArray = np.ascontiguousarray(outArray)
         return self.thisptr.TransferSolutionToProteus(&outArray[0,0], outArray.shape[0], outArray.shape[1])
+    def TransferPropertiesToPUMI(self, np.ndarray[np.double_t,ndim=1,mode="c"] rho, np.ndarray[np.double_t,ndim=1,mode="c"] nu):
+        rho = np.ascontiguousarray(rho)
+        nu = np.ascontiguousarray(nu)
+        return self.thisptr.TransferPropertiesToPUMI(&rho[0],&nu[0])
+    def TransferBCtagsToProteus(self):
+        return self.thisptr.TransferBCtagsToProteus()
+    def TransferBCsToProteus(self):
+        return self.thisptr.TransferBCsToProteus()
     def AdaptPUMIMesh(self):
         return self.thisptr.AdaptPUMIMesh()
     def dumpMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.dumpMesh(cmesh_ptr.mesh)
+    def getERMSizeField(self, err_total):
+        return self.thisptr.getERMSizeField(err_total);

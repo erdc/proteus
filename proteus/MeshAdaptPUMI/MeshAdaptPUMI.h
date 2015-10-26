@@ -7,7 +7,7 @@
 class MeshAdaptPUMIDrvr{
  
   public:
-  MeshAdaptPUMIDrvr(double, double, int); 
+  MeshAdaptPUMIDrvr(double, double, int, const char*); 
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile);
@@ -19,8 +19,12 @@ class MeshAdaptPUMIDrvr{
   int UpdateMaterialArrays(Mesh& mesh, int bdryID, int GeomTag);
 
   //Fields
+  //Transfer Boundary Conditions
   int TransferSolutionToPUMI(double* inArray, int nVar, int nN);
   int TransferSolutionToProteus(double* outArray, int nVar, int nN);
+  int TransferPropertiesToPUMI(double* rho_p, double* nu_p);
+  int TransferBCtagsToProteus();
+  int TransferBCsToProteus();
   int CommuSizeField();
   int AdaptPUMIMesh();
 
@@ -30,6 +34,8 @@ class MeshAdaptPUMIDrvr{
 
   int CalculateSizeField();
   int CalculateAnisoSizeField();
+  int getERMSizeField(double err_total);
+  double getMinimumQuality();
 
   double hmax, hmin;
   int numIter;
@@ -37,10 +43,14 @@ class MeshAdaptPUMIDrvr{
 
   //Element Residual Method
   void get_local_error();
-  //double rho_0,rho_1,nu_0,nu_1; //currently hardcoded in ERM.cpp
-  //for now, only handles DBC
-  apf::MeshTag* BCtag;
-  apf::MeshTag* BCval;
+  //tags used to identify types of BC
+  apf::MeshTag* BCtag[4];
+  apf::MeshTag* DBCtag[4];
+  apf::MeshTag* fluxtag[4];
+
+  //Approximation/Integration order
+  int approximation_order; //what order polynomial (hierarchic is 2nd order)
+  int integration_order; //determines number of integration points
 
   private: 
   apf::Mesh2* m;
@@ -48,10 +58,13 @@ class MeshAdaptPUMIDrvr{
   int elms_owned, faces_owned, edges_owned, vtx_owned;
   int numVar;
 
+  double rho[2], nu[2];
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* solution;
-  /* there is either an isotropic or an anisotropic size field */
+  apf::Field* fluxBC;
+  apf::Field* DBC;
+  apf::Field* err_reg; //error field from ERM
   /* this field stores isotropic size */
   apf::Field* size_iso;
   /* these fields store anisotropic size */
@@ -69,6 +82,8 @@ class MeshAdaptPUMIDrvr{
 
   void freeField(apf::Field*& f);
   void freeNumbering(apf::Numbering*& n);
+
+  std::string size_field_config;
 };
 
 
