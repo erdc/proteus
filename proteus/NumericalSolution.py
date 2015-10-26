@@ -888,12 +888,15 @@ class NS_base:  # (HasTraits):
           '''Get Physical Parameters'''
           rho = numpy.array([self.pList[0].rho_0, self.pList[0].rho_1])
           nu = numpy.array([self.pList[0].nu_0, self.pList[0].nu_1])
+          bcTaglist=self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary
+          bcList=self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary
           #properties = numpy.array([rho,nu]) //delete if unnecessary
-
+          #print "testing %d." self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary[0][0]
           p.domain.PUMIMesh.TransferSolutionToPUMI(soldof)
           p.domain.PUMIMesh.TransferPropertiesToPUMI(rho,nu)
           p.domain.PUMIMesh.TransferBCtagsToProteus()
-          p.domain.PUMIMesh.TransferBCsToProteus()
+          #p.domain.PUMIMesh.TransferBCtagsToProteus()
+          #p.domain.PUMIMesh.TransferBCsToProteus()
           del soldof, rho, nu#, properties
           p.domain.PUMIMesh.AdaptPUMIMesh()
           p.domain.initFlag=True #For next step to take initial conditions from solution
