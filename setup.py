@@ -39,11 +39,6 @@ for arg in sys.argv:
         proteus_install_path = proteus_install_path.partition(sys.prefix + '/')[-1]
         break
 
-print "PROTEUS_SCOREC_EXTRA_LINK_ARGS"
-print PROTEUS_SCOREC_EXTRA_LINK_ARGS
-print "PROTEUS_SCOREC_LIBS"
-print PROTEUS_SCOREC_LIBS
-
 setup(name='proteus',
       version='1.0.0',
       description='Python tools for multiphysics modeling',
