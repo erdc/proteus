@@ -24,11 +24,12 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int TransferSolutionToPUMI(double*, int, int)
         int TransferSolutionToProteus(double*, int, int)
         int TransferPropertiesToPUMI(double*, double*)
-        int TransferBCtagsToProteus();
-        int TransferBCsToProteus();
+        int TransferBCtagsToProteus()
+        int TransferBCsToProteus()
         int AdaptPUMIMesh()
         int dumpMesh(Mesh&)
-        int getERMSizeField(double);
+        int getERMSizeField(double)
+        double getMinimumQuality()
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
