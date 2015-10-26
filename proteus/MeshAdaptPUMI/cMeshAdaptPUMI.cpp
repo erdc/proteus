@@ -9,7 +9,8 @@
 
 #include "MeshAdaptPUMI.h"
 
-MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter)
+MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
+    const char* sfConfig)
 {
   PCU_Comm_Init();
   PCU_Protect();
@@ -33,6 +34,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter)
   gmi_register_sim();
   approximation_order = 2;
   integration_order = approximation_order * 2;
+  size_field_config = sfConfig;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
@@ -56,7 +58,15 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
 
 int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
 {
-  get_local_error();
+  if (size_field_config == "farhad")
+    CalculateAnisoSizeField();
+  else if (size_field_config == "alvin")
+    get_local_error();
+  else {
+    std::cerr << "unknown size field config " << size_field_config << '\n';
+    abort();
+  }
+  assert(size_iso == 0);
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);
   /// Adapt the mesh
