@@ -1,6 +1,7 @@
 #include <gmi_mesh.h>
 #include <gmi_sim.h>
 #include <ma.h>
+#include <maShape.h>
 #include <apfMDS.h>
 #include <PCU.h>
 #include <SimUtil.h>
