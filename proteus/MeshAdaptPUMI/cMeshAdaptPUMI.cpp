@@ -68,7 +68,6 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
   in->maximumIterations = numIter;
   in->shouldSnap = false;
   in->shouldFixShape = false;
-  in->goodQuality = 0.01; //added
   std::cout<<"Starting (numIter "<<numIter<<")"<<std::endl;
   apf::writeVtkFiles("size", m);
   ma::adapt(in);
