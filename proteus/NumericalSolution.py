@@ -373,8 +373,56 @@ class NS_base:  # (HasTraits):
                             p.coefficients.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=p.nd**2+1,step=p.nd,dtype='i'),
                                                               numpy.array([range(p.nd) for row in range(p.nd)],dtype='i').flatten())
                             log("Numerical Solution Sparse diffusion information key "+`(ci,ck)`+' = '+`p.coefficients.sdInfo[(ci,ck)]`)
+        self.pList = pList
+        self.nLsit = nList
+        self.sList = sList
+        self.mlMesh_nList = mlMesh_nList
+        self.allocateModels()
+        #collect models to be used for spin up
+        for index in so.modelSpinUpList:
+            self.modelSpinUp[index] = self.modelList[index]
+        log("Finished setting up models and solvers")
+        if self.opts.save_dof:
+            for m in self.modelList:
+                for lm in m.levelModelList:
+                    for ci in range(lm.coefficients.nc):
+                        lm.u[ci].dof_last = lm.u[ci].dof.copy()
+        self.archiveFlag= so.archiveFlag
+        log("Setting up SimTools for "+p.name)
+        self.simOutputList = []
+        self.auxiliaryVariables = {}
+        if self.simFlagsList != None:
+            for p,n,simFlags,model,index in zip(pList,nList,simFlagsList,self.modelList,range(len(pList))):
+                self.simOutputList.append(SimTools.SimulationProcessor(flags=simFlags,nLevels=n.nLevels,
+                                                                       pFile=p,nFile=n,
+                                                                       analyticalSolution=p.analyticalSolution))
+                model.simTools = self.simOutputList[-1]
+                self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
+        else:
+            for p,n,s,model,index in zip(pList,nList,sList,self.modelList,range(len(pList))):
+                self.simOutputList.append(SimTools.SimulationProcessor(pFile=p,nFile=n))
+                model.simTools = self.simOutputList[-1]
+                model.viewer = Viewers.V_base(p,n,s)
+                self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
+        for avList in self.auxiliaryVariables.values():
+            for av in avList:
+                av.attachAuxiliaryVariables(self.auxiliaryVariables)
+        log(Profiling.memory("NumericalSolution memory",className='NumericalSolution',memSaved=memBase))
+        if so.tnList == None:
+            log("Building tnList from model = "+pList[0].name+" nDTout = "+`nList[0].nDTout`)
+            self.tnList=[float(n)*nList[0].T/float(nList[0].nDTout)
+                         for n in range(nList[0].nDTout+1)]
+        else:
+            log("Using tnList from so = "+so.name)
+            self.tnList = so.tnList
+        log("Time sequence"+`self.tnList`)
+        log("Setting "+so.name+" systemStepController to object of type "+str(so.systemStepControllerType))
+        self.systemStepController = so.systemStepControllerType(self.modelList,stepExact=so.systemStepExact)
+        self.systemStepController.setFromOptions(so)
+        log("Finished NumericalSolution initialization")
 
-        for p,n,s,mlMesh,index in zip(pList,nList,sList,mlMesh_nList,range(len(pList))):
+    def allocateModels(self):
+        for p,n,s,mlMesh,index in zip(self.pList,self.nList,self.sList,self.mlMesh_nList,range(len(self.pList))):
             if so.needEBQ_GLOBAL:
                 n.needEBQ_GLOBAL = True
             if so.needEBQ:
@@ -479,49 +527,6 @@ class NS_base:  # (HasTraits):
             model.solver=self.nlsList[-1]
             model.viewer = Viewers.V_base(p,n,s)
             Profiling.memory("MultilevelNonlinearSolver for"+p.name)
-            #collect models to be used for spin up
-        for index in so.modelSpinUpList:
-            self.modelSpinUp[index] = self.modelList[index]
-        log("Finished setting up models and solvers")
-        if self.opts.save_dof:
-            for m in self.modelList:
-                for lm in m.levelModelList:
-                    for ci in range(lm.coefficients.nc):
-                        lm.u[ci].dof_last = lm.u[ci].dof.copy()
-        self.archiveFlag= so.archiveFlag
-        log("Setting up SimTools for "+p.name)
-        self.simOutputList = []
-        self.auxiliaryVariables = {}
-        if self.simFlagsList != None:
-            for p,n,simFlags,model,index in zip(pList,nList,simFlagsList,self.modelList,range(len(pList))):
-                self.simOutputList.append(SimTools.SimulationProcessor(flags=simFlags,nLevels=n.nLevels,
-                                                                       pFile=p,nFile=n,
-                                                                       analyticalSolution=p.analyticalSolution))
-                model.simTools = self.simOutputList[-1]
-                self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
-        else:
-            for p,n,s,model,index in zip(pList,nList,sList,self.modelList,range(len(pList))):
-                self.simOutputList.append(SimTools.SimulationProcessor(pFile=p,nFile=n))
-                model.simTools = self.simOutputList[-1]
-                model.viewer = Viewers.V_base(p,n,s)
-                self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
-        for avList in self.auxiliaryVariables.values():
-            for av in avList:
-                av.attachAuxiliaryVariables(self.auxiliaryVariables)
-        log(Profiling.memory("NumericalSolution memory",className='NumericalSolution',memSaved=memBase))
-        if so.tnList == None:
-            log("Building tnList from model = "+pList[0].name+" nDTout = "+`nList[0].nDTout`)
-            self.tnList=[float(n)*nList[0].T/float(nList[0].nDTout)
-                         for n in range(nList[0].nDTout+1)]
-        else:
-            log("Using tnList from so = "+so.name)
-            self.tnList = so.tnList
-        log("Time sequence"+`self.tnList`)
-        log("Setting "+so.name+" systemStepController to object of type "+str(so.systemStepControllerType))
-        self.systemStepController = so.systemStepControllerType(self.modelList,stepExact=so.systemStepExact)
-        self.systemStepController.setFromOptions(so)
-        log("Finished NumericalSolution initialization")
-
     ## compute the solution
     def calculateSolution(self,runName):
         log("Setting initial conditions",level=0)
@@ -858,7 +863,79 @@ class NS_base:  # (HasTraits):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
                     if not self.opts.cacheArchive:
                         self.ar[index].sync()
-
+                #h-adapt mesh
+                #chitak Adapt the mesh and transfer the solution
+                #modified by cek to move inside main loop
+                if isinstance(p.domain, Domain.PUMIDomain):
+                    #
+                    #copy DOF to  PUMI
+                    #
+                    ivar=0;
+                    for m in self.modelList:
+                        for lm in m.levelModelList:
+                            for ci in range(lm.coefficients.nc):
+                                ivar=ivar+1
+                    tot_var=ivar
+                    soldof=numpy.zeros((ivar,lm.mesh.nNodes_global))
+                    ivar=-1
+                    for m in self.modelList:
+                        for lm in m.levelModelList:
+                            for ci in range(lm.coefficients.nc):
+                                ivar=ivar+1
+                                for nN in range(lm.mesh.nNodes_global):
+                                    soldof[ivar][nN]=lm.u[ci].dof[nN]
+                    p.domain.PUMIMesh.TransferSolutionToPUMI(soldof)
+                    del soldof
+                    #
+                    #h-adapt the mesh
+                    #
+                    p.domain.PUMIMesh.AdaptPUMIMesh()
+                    #
+                    #creat proteus mesh from PUMI mesh
+                    #
+                    mesh=MeshTools.TetrahedralMesh()
+                    log("Converting PUMI mesh to Proteus")
+                    mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.numBC, p.domain.faceList, parallel = comm.size() > 1)
+                    assert(so.useOneMesh)#adaption only works on single-mesh multiphysics  for now
+                    mlMesh = self.modelList[0].mlMeshSave
+                    mlMesh.meshList.append(mesh)
+                    #
+                    #deallocate old mesh, models, solvers
+                    del mlMesh.meshList[0]
+                    for i in range(len(self.modelList)-1,-1,-1):
+                        del self.modelList[i]
+                        del self.lsList[i]
+                        del self.nlsList[i]
+                    #
+                    #may want to trigger garbage collection here
+                    #
+                    #now  allocate  new model  and solvers on new  mesh
+                    #
+                    self.allocateModels()
+                    #
+                    #initialize  solution on new mesh  at this time step
+                    #
+                    ivar=0;
+                    for m in self.modelList:
+                        for lm in m.levelModelList:
+                            for ci in range(lm.coefficients.nc):
+                                ivar=ivar+1
+                    tot_var=ivar
+                    soldof=numpy.zeros((tot_var,lm.mesh.nNodes_global))
+                    p.domain.PUMIMesh.TransferSolutionToProteus(soldof)
+                    ivar=-1
+                    for m in self.modelList:
+                        for lm in m.levelModelList:
+                            for ci in range(lm.coefficients.nc):
+                                ivar=ivar+1
+                                lm.u[ci].dof[:]=soldof[ivar,:]
+                            lm.setFreeDOF(m.uList[0])
+                            lm.calculateSolutionAtQuadrature()
+                            lm.coefficients.evaluate(t,self.model.q)
+                            lm.coefficients..evaluate(t,self.model.ebqe)
+                            lm.timeIntegration.calculateElementCoefficients(self.model.q)
+                  p.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
+                  ##chitak end Adapt
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
                 self.tCount+=1
@@ -868,28 +945,6 @@ class NS_base:  # (HasTraits):
                 break
         log("Finished calculating solution",level=3)
 
-        #chitak Adapt the mesh and transfer the solution
-        if isinstance(p.domain, Domain.PUMIDomain):
-          ivar=0;
-          for m in self.modelList:
-             for lm in m.levelModelList:
-                  for ci in range(lm.coefficients.nc):
-                          ivar=ivar+1
-          tot_var=ivar
-          soldof=numpy.zeros((ivar,lm.mesh.nNodes_global))
-          ivar=-1
-          for m in self.modelList:
-             for lm in m.levelModelList:
-                  for ci in range(lm.coefficients.nc):
-                          ivar=ivar+1
-                          for nN in range(lm.mesh.nNodes_global):
-                                soldof[ivar][nN]=lm.u[ci].dof[nN]
-
-          p.domain.PUMIMesh.TransferSolutionToPUMI(soldof)
-          del soldof
-          p.domain.PUMIMesh.AdaptPUMIMesh()
-          p.domain.initFlag=True #For next step to take initial conditions from solution
-          ##chitak end Adapt
 
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)
