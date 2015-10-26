@@ -56,8 +56,6 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
 int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
 {
   get_local_error();
-  //CalculateAnisoSizeField();
-
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);
   /// Adapt the mesh
@@ -68,11 +66,11 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
   in->shouldRunPostParma = true;
   in->maximumIterations = numIter;
   in->shouldSnap = false;
-  in->shouldFixShape = false;
-  std::cout<<"Starting (numIter "<<numIter<<")"<<std::endl;
-  apf::writeVtkFiles("size", m);
+  in->shouldFixShape = true;
+  std::cout<<"Starting adapt (numIter "<<numIter<<")"<<std::endl;
+  apf::writeVtkFiles("pumi_size", m);
   ma::adapt(in);
-  std::cout<<"Finished "<<std::endl;
+  std::cout<<"Finished adapt"<<std::endl;
   freeField(size_frame);
   freeField(size_scale);
   m->verify();
