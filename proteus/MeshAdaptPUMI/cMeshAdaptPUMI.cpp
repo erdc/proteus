@@ -59,7 +59,6 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);
   /// Adapt the mesh
-  freeField(size_iso);
   ma::Input* in = ma::configure(m, size_scale, size_frame);
   ma::validateInput(in);
   in->shouldRunPreParma = true;
