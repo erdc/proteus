@@ -165,7 +165,6 @@ class NonlinearSolver:
                 self.J.matvec(u,r)
             if b != None:
                 r-=b
-
     def solveInitialize(self,u,r,b):
         if r == None:
             if self.r == None:
@@ -806,7 +805,7 @@ class POD_Newton2(Newton):
         self.pod_initialized=False
         self.DB = 1
         self.SVD_basis_file='SVD_basis'
-	self.nonlinear = False
+        self.nonlinear = True
     def initialize_POD(self,u):
         """
         Setup for Full Nonlinear POD approximation
@@ -851,7 +850,8 @@ class POD_Newton2(Newton):
             self.r=r
         self.computeResidual(u,r,b)
         self.its = 0
-        self.norm_r = self.norm_r0
+        #self.norm_r0 = self.norm(r)
+        self.norm_r = self.norm(r)#self.norm_r0
         self.ratio_r_solve = 1.0
         self.ratio_du_solve = 1.0
         self.last_log_ratio_r = 1.0
@@ -876,10 +876,12 @@ class POD_Newton2(Newton):
         self.norm_du_hist = []
         self.gammaK_max=0.0
         self.linearSolverFailed = False
-        while (not self.converged(pod_r) and
+        tol = 1e+3
+        while (tol >= 1e-4 and#not self.converged(pod_r) and
                not self.failed()):
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
-                % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+                #% (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+                % (self.its-1,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             self.pod_J.flat[:] = self.pod_lin_J.flat[:]
             if self.nonlinear: #self.updateJacobian or self.fullNewton:
                 #self.updateJacobian = False
@@ -905,12 +907,15 @@ class POD_Newton2(Newton):
             pod_r[:] = np.dot(self.U_transpose,r)
             assert not numpy.isnan(pod_r).any()
             r[:] = np.dot(self.U,pod_r)
+            tol = self.norm(self.pod_du)/self.norm(self.pod_u)
         else:
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-                % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                #% (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                % (self.its,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             return self.failedFlag
         log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-            % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            #% (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            % (self.its,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
     def setFromOptions(self,nOptions):
         """
         DB -- number of modes to use for solution default is [1]
@@ -1301,7 +1306,7 @@ class POD_HyperReduced_Newton2(Newton):
         self.DBf = F.dim #nonlinear pod by default
         self.nhyper_sample = F.dim #number of points for sampling in hyper reduction
         self.SVD_basis_file='SVD_basis'
-        self.hyper_SVD_basis_file='Hyper_SVD_basis'
+        self.hyper_SVD_basis_file='Fn_SVD_basis'
         self.hyper_indices_file = 'Hyper_indices'
         self.hyper_Q_file      = 'Hyper_Q'
         self.use_hyper = use_hyper
@@ -1392,7 +1397,8 @@ class POD_HyperReduced_Newton2(Newton):
             self.rn = Vec(self.F.dim)
         self.computeHyperResiduals(u,self.rl,self.rn)
         self.its = 0
-        self.norm_r = self.norm_r0
+        #self.norm_r0 = self.norm(r)
+        self.norm_r = self.norm(r)#self.norm_r0
         self.ratio_r_solve = 1.0
         self.ratio_du_solve = 1.0
         self.last_log_ratio_r = 1.0
@@ -1421,10 +1427,12 @@ class POD_HyperReduced_Newton2(Newton):
         self.norm_du_hist = []
         self.gammaK_max=0.0
         self.linearSolverFailed = False
-        while (not self.converged(pod_r) and
+        tol = 1e+3
+        while (tol >= 1e-4 and #not self.converged(pod_r) and
                not self.failed()):
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
-                % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+                #% (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+                % (self.its-1,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             self.pod_J.flat[:] = self.pod_lin_J.flat[:]
             if self.nonlinear: #self.updateJacobian or self.fullNewton:
                 #self.updateJacobian = False
@@ -1450,12 +1458,15 @@ class POD_HyperReduced_Newton2(Newton):
             pod_r[:] = np.dot(self.U_transpose,r)
             assert not numpy.isnan(pod_r).any()
             r[:] = np.dot(self.U,pod_r)
+            tol = self.norm(self.pod_du)/self.norm(self.pod_u)
         else:
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-                % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                #% (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                % (self.its,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             return self.failedFlag
         log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-            % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            #% (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            % (self.its,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
     def solveHyper(self,u,r=None,b=None,par_u=None,par_r=None):
         """
         Solve F(u) = b
@@ -1476,8 +1487,8 @@ class POD_HyperReduced_Newton2(Newton):
 
         r_hyper = self.rn[self.rho_hyper]
         pod_rl = np.dot(self.U_transpose,self.rl)
-        pod_r  = np.dot(self.Ut_Q,r_hyper)
-        pod_r += pod_rl
+        pod_rn  = np.dot(self.Ut_Q,r_hyper)
+        pod_r = pod_rn + pod_rl
         assert not numpy.isnan(pod_r).any()
         #
         self.norm_r0 = self.norm(pod_r)
@@ -1485,10 +1496,12 @@ class POD_HyperReduced_Newton2(Newton):
         self.norm_du_hist = []
         self.gammaK_max=0.0
         self.linearSolverFailed = False
-        while (not self.converged(pod_r) and
+        tol = 1e+3
+        while (tol >= 1e-4 and #not self.converged(pod_r) and
                not self.failed()):
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
-                % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+                #% (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+                % (self.its-1,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             self.pod_J.flat[:] = self.pod_lin_J.flat[:]
             if self.nonlinear: #self.updateJacobian or self.fullNewton:
                 #self.updateJacobian = False
@@ -1510,28 +1523,31 @@ class POD_HyperReduced_Newton2(Newton):
                 self.linearSolverFailed = self.pod_linearSolver.failed()
             assert not self.linearSolverFailed
             assert not numpy.isnan(self.pod_du).any()
-            pod_u-=self.pod_du
-            u[:] = np.dot(self.U,pod_u)
+            self.pod_u-=self.pod_du
+            u[:] = np.dot(self.U,self.pod_u)
             #mostly for norm calculations
             self.du = np.dot(self.U,self.pod_du)
             self.computeHyperResiduals(u,self.rl,self.rn)
             r_hyper = self.rn[self.rho_hyper]
             pod_rl = np.dot(self.U_transpose,self.rl)
-            pod_r = np.dot(self.Ut_Q,r_hyper)
-            pod_r += pod_rl
+            pod_rn  = np.dot(self.Ut_Q,r_hyper)
+            pod_r = pod_rn + pod_rl
             assert not numpy.isnan(pod_r).any()
             r[:] = np.dot(self.U,pod_r)
+            tol = self.norm(self.pod_du)/self.norm(self.pod_u)
         else:
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-                % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                #% (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                % (self.its,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             return self.failedFlag
         log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-            % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            #% (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            % (self.its,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
     def setFromOptions(self,nOptions):
         """
         SVD_basis_file -- file holding U basis from SVD of snapshots ['SVD_basis']
         use_hyper -- try hyper-reduction
-        hyper_SVD_basis_file -- file holding Uf basis from SVD of snapshot nonlineariities ['Hyper_SVD_basis']
+        hyper_SVD_basis_file -- file holding Uf basis from SVD of snapshot nonlineariities ['Fn_SVD_basis']
         hyper_indices_file -- file with indices for hyper-reduction
         hyper_Q_file -- file with matrix Q for hyper-reduction approximation $\hat{F} = U^T \cdot Q P^T F(U z)$
         """
@@ -3346,7 +3362,7 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                                    directSolver=linearDirectSolverFlag,
                                                    EWtol=EWtol,
                                                    maxLSits=maxLSits ))
-    elif levelNonlinearSolverType in [POD_Newton,POD_HyperReduced_Newton]:
+    elif levelNonlinearSolverType in [POD_Newton2,POD_HyperReduced_Newton2]:
         for l in range(nLevels):
             if par_duList != None and len(par_duList) > 0:
                 par_du=par_duList[l]
@@ -3511,8 +3527,8 @@ def multilevelNonlinearSolverChooser(nonlinearOperatorList,
                                          computeRates = computeSolverRates,
                                          printInfo=printSolverInfo)
     elif (multilevelNonlinearSolverType == Newton or
-          multilevelNonlinearSolverType == POD_Newton or
-          multilevelNonlinearSolverType == POD_HyperReduced_Newton or
+          multilevelNonlinearSolverType == POD_Newton2 or
+          multilevelNonlinearSolverType == POD_HyperReduced_Newton2 or
           multilevelNonlinearSolverType == NewtonNS or
           multilevelNonlinearSolverType == NLJacobi or
           multilevelNonlinearSolverType == NLGaussSeidel or
