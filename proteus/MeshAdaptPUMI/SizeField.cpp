@@ -2,6 +2,7 @@
 #include <apf.h>
 #include <apfVector.h>
 #include <apfMesh.h>
+#include <apfShape.h>
 #include <apfDynamicVector.h>
 #include <apfCavityOp.h>
 #include <string>
@@ -48,6 +49,87 @@ int MeshAdaptPUMIDrvr::CalculateSizeField()
   apf::writeVtkFiles("pumi_size", m);
   return 0;
 }
+
+//This is here temporarily
+static void averageToEntity(apf::Field* ef, apf::Field* vf, apf::MeshEntity* ent) //taken from Dan's superconvergent patch recovery code
+{
+  apf::Mesh* m = apf::getMesh(ef);
+  apf::Adjacent elements;
+  m->getAdjacent(ent, m->getDimension(), elements);
+  double s=0;
+  for (std::size_t i=0; i < elements.getSize(); ++i)
+    s += apf::getScalar(ef, elements[i], 0);
+  s /= elements.getSize();
+  apf::setScalar(vf, ent, 0, s);
+  return;
+}
+
+int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
+{
+  double alpha = 0.6; //refinement constant
+
+  free(size_frame);
+  free(size_scale);
+  free(size_iso);
+
+  apf::Mesh* m = apf::getMesh(err_reg);
+  size_frame = apf::createLagrangeField(m, "proteus_size_frame", apf::MATRIX, 1);
+  size_scale = apf::createLagrangeField(m, "proteus_size_scale", apf::VECTOR, 1);
+  apf::MeshIterator* it;
+  int numel = 0;
+  int nsd = m->getDimension();
+  it = m->begin(nsd);
+  apf::Field* size_iso_reg = apf::createField(m, "iso_size",apf::SCALAR,apf::getConstant(nsd));
+  size_iso = apf::createLagrangeField(m, "proteus_size",apf::SCALAR,1);
+
+  apf::MeshEntity* reg;
+  while( reg=m->iterate(it)){
+    numel++; 
+  }
+  m->end(it);
+  it = m->begin(nsd); 
+  double err_dest = alpha*err_total/sqrt(numel);
+  double err_curr = 0.0;
+  //compute the new size field
+  double h_old = 0.0;
+  double h_new;
+  apf::MeshElement* element;
+///*
+  while(reg=m->iterate(it)){
+    element = apf::createMeshElement(m,reg);
+    h_old = pow(apf::measure(element),1.0/3.0);
+    err_curr = apf::getScalar(err_reg,reg,0);
+std::cout<<"Err curr "<<err_curr<<" Err_dest "<<err_dest<<std::endl;
+    h_new = h_old*pow(err_dest/err_curr,0.5);
+    if(h_new>hmax) h_new = hmax;
+    if(h_new<hmin) h_new = hmin;
+    std::cout<<"Old length "<<h_old<<" New length "<<h_new<<std::endl;
+    apf::setScalar(size_iso_reg,reg,0,h_new);
+  }
+  apf::destroyMeshElement(element);
+  m->end(it);
+//*/
+  apf::MeshEntity* v;
+  it = m->begin(0);
+  apf::Vector3 scale(0.1,0.1,0.1);
+  apf::Matrix3x3 identity(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0); //isotropic size frame
+  while ((v = m->iterate(it))) {
+    averageToEntity(size_iso_reg, size_iso, v);
+    scale = apf::Vector3(1.0,1.0,1.0)* apf::getScalar(size_iso,v,0); //isotropic
+    //scale = apf::Vector3(1.0,1.0,1.0)*(hmin+hmax)/2.0; //for debugging purposes only
+    apf::setVector(size_scale,v,0,scale);
+    apf::setMatrix(size_frame,v,0,identity);
+  }
+  m->end(it);
+  //for (int i = 0; i < 2; ++i)
+  SmoothField(size_scale);
+  apf::destroyField(size_iso_reg); //will throw error if not destroyed
+  apf::destroyField(err_reg);
+  freeField(size_iso); //no longer necessary
+  apf::writeVtkFiles("pumi_size", m);
+  return 0;
+}
+
 
 static apf::Field* extractPhi(apf::Field* solution)
 {
