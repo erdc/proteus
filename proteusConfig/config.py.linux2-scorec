@@ -43,6 +43,7 @@ PROTEUS_SCOREC_EXTRA_LINK_ARGS = [
     '-lapf_zoltan',
     '-lmds',
     '-lapf',
+    '-lmth',
     '-lgmi',
     '-lpcu',
     '-lzoltan',
