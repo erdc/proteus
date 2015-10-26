@@ -892,6 +892,8 @@ class NS_base:  # (HasTraits):
 
           p.domain.PUMIMesh.TransferSolutionToPUMI(soldof)
           p.domain.PUMIMesh.TransferPropertiesToPUMI(rho,nu)
+          p.domain.PUMIMesh.TransferBCtagsToProteus()
+          p.domain.PUMIMesh.TransferBCsToProteus()
           del soldof, rho, nu#, properties
           p.domain.PUMIMesh.AdaptPUMIMesh()
           p.domain.initFlag=True #For next step to take initial conditions from solution
