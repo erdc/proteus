@@ -59,7 +59,6 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);
   /// Adapt the mesh
-  freeField(size_iso);
   ma::Input* in = ma::configure(m, size_scale, size_frame);
   ma::validateInput(in);
   in->shouldRunPreParma = true;
@@ -68,7 +67,6 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
   in->maximumIterations = numIter;
   in->shouldSnap = false;
   in->shouldFixShape = false;
-  in->goodQuality = 0.01; //added
   std::cout<<"Starting (numIter "<<numIter<<")"<<std::endl;
   apf::writeVtkFiles("size", m);
   ma::adapt(in);
