@@ -51,6 +51,12 @@ parser.add_option("-C", "--context-options",
                   type="string",
                   dest="contextOptions",
                   default=None)
+parser.add_option("-o", "--context-options-file",
+                  help="Text file of variables to set in user's global context",
+                  action="store",
+                  type="string",
+                  dest="contextOptionsFile",
+                  default=None)
 parser.add_option("-P", "--petsc-options",
                   help="Options to pass to PETSc",
                   action="store",
@@ -259,6 +265,10 @@ if probDir not in sys.path:
 log("Loading problem-specific modules")
 if opts.contextOptions:
     Context.contextOptionsString=opts.contextOptions
+elif opts.contextOptionsFile != None:
+    f = open(opts.contextOptionsFile, 'r')
+    Context.contextOptionsString = f.read()
+    f.close()
 
 pList = []
 nList = []
