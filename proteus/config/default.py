@@ -111,6 +111,7 @@ PROTEUS_SCOREC_LIBS = [
     'apf_zoltan',
     'mds',
     'apf',
+    'mth',
     'gmi',
     'pcu',
     'zoltan',
