@@ -79,3 +79,15 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
   return 0;
 }
 
+double MeshAdaptPUMIDrvr::getMinimumQuality()
+{
+  ma::SizeField* isf = new ma::IdentitySizeField(m);
+  apf::MeshIterator* it = m->begin(m->getDimension());
+  apf::MeshEntity* e;
+  double minq = 1;
+  while ((e = m->iterate(it)))
+    minq = std::min(minq, ma::measureElementQuality(m, isf, e));
+  m->end(it);
+  delete isf;
+  return PCU_Min_Double(minq);
+}
