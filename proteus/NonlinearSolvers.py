@@ -1310,7 +1310,8 @@ class POD_HyperReduced_Newton2(Newton):
         self.hyper_indices_file = 'Hyper_indices'
         self.hyper_Q_file      = 'Hyper_Q'
         self.use_hyper = use_hyper
-	self.nonlinear = True
+        #mwf we could make this a little more descriptive so that it's clear what option is being set
+	self.residual_is_nonlinear = True
     def initialize_POD(self,u):
         """
         Setup for Full Nonlinear POD approximation
@@ -1434,7 +1435,7 @@ class POD_HyperReduced_Newton2(Newton):
                 #% (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
                 % (self.its-1,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             self.pod_J.flat[:] = self.pod_lin_J.flat[:]
-            if self.nonlinear: #self.updateJacobian or self.fullNewton:
+            if self.residual_is_nonlinear: #self.updateJacobian or self.fullNewton:
                 #self.updateJacobian = False
                 self.F.getNonlinearJacobian(self.nonlin_J)
                 for i in range(self.DB):
@@ -1496,6 +1497,7 @@ class POD_HyperReduced_Newton2(Newton):
         self.norm_du_hist = []
         self.gammaK_max=0.0
         self.linearSolverFailed = False
+        #mwf we should return to a more general convergence test once the debugging is done
         tol = 1e+3
         while (tol >= 1e-4 and #not self.converged(pod_r) and
                not self.failed()):
@@ -1503,7 +1505,7 @@ class POD_HyperReduced_Newton2(Newton):
                 #% (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
                 % (self.its-1,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             self.pod_J.flat[:] = self.pod_lin_J.flat[:]
-            if self.nonlinear: #self.updateJacobian or self.fullNewton:
+            if self.residual_is_nonlinear: #self.updateJacobian or self.fullNewton:
                 #self.updateJacobian = False
                 self.F.getNonlinearJacobian(self.nonlin_J)
                 self.pod_Jtmp[:] = 0.0
@@ -1550,9 +1552,10 @@ class POD_HyperReduced_Newton2(Newton):
         hyper_SVD_basis_file -- file holding Uf basis from SVD of snapshot nonlineariities ['Fn_SVD_basis']
         hyper_indices_file -- file with indices for hyper-reduction
         hyper_Q_file -- file with matrix Q for hyper-reduction approximation $\hat{F} = U^T \cdot Q P^T F(U z)$
+        residual_is_nonlinear -- Is the residual actually nonlinear so that we need to update the full Nonlinear portion 
         """
         optional_params = ['SVD_basis_file','use_hyper','hyper_SVD_basis_file',
-                           'hyper_indices_file','hyper_Q_file']
+                           'hyper_indices_file','hyper_Q_file','residual_is_nonlinear']
         for parm in optional_params:
             if parm in dir(nOptions):
                 setattr(self,parm,getattr(nOptions,parm))
