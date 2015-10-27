@@ -112,11 +112,11 @@ else:
         domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=he, numIter=2)
         #read the geometry and mesh
         domain.PUMIMesh.loadModelAndMesh("Dambreak.smd", "Dambreak_coarse.smb")
-
+        domain.adapt=True
 
 # Time stepping
-T=1.0 #changed from 1.0
-dt_fixed = 0.01
+T=0.35
+dt_fixed = 0.001
 dt_init = min(0.1*dt_fixed,0.001)
 runCFL=0.9
 nDTout = int(round(T/dt_fixed))
