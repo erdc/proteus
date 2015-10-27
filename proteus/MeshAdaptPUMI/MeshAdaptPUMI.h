@@ -7,7 +7,7 @@
 class MeshAdaptPUMIDrvr{
  
   public:
-  MeshAdaptPUMIDrvr(double, double, int); 
+  MeshAdaptPUMIDrvr(double, double, int, const char*); 
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile);
@@ -86,6 +86,8 @@ class MeshAdaptPUMIDrvr{
 
   void freeField(apf::Field*& f);
   void freeNumbering(apf::Numbering*& n);
+
+  std::string size_field_config;
 };
 
 
