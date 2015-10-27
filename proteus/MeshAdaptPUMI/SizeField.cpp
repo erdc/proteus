@@ -167,6 +167,7 @@ static apf::Field* computeHessianField(apf::Field* grad2phi)
     apf::setMatrix(hessf, v, 0, hess);
   }
   m->end(it);
+  apf::writeVtkFiles("hessian", m);
   return hessf;
 }
 
@@ -269,12 +270,16 @@ static apf::Field* getSizeScales(apf::Field* phif, apf::Field* curves,
 }
 
 struct SortingStruct
+{
+  apf::Vector3 v;
+  double wm;
+  bool operator<(const SortingStruct& other) const
   {
-  int i;
-  double m;
-  };
+    return wm < other.wm;
+  }
+};
 
-static apf::Field* getSizeFrames(apf::Field* gradphi)     
+static apf::Field* getSizeFrames(apf::Field* hessians, apf::Field* gradphi)
 {
   apf::Mesh* m = apf::getMesh(gradphi);
   apf::Field* frames;
@@ -286,12 +291,35 @@ static apf::Field* getSizeFrames(apf::Field* gradphi)
     apf::getVector(gradphi, v, 0, gphi);
     apf::Vector3 dir;
     if (gphi.getLength() > 1e-16)
-      dir = gphi;
+      dir = gphi.normalize();
     else
       dir = apf::Vector3(1,0,0);
-    apf::Matrix3x3 frame = apf::getFrame(dir);
-    for (int i = 0; i < 3; ++i)       
-      frame[i] = frame[i].normalize(); 
+    apf::Matrix3x3 hessian;
+    apf::getMatrix(hessians, v, 0, hessian);
+    apf::Vector3 eigenVectors[3];
+    double eigenValues[3];
+    apf::eigen(hessian, eigenVectors, eigenValues);
+    SortingStruct ssa[3];
+    for (int i = 0; i < 3; ++i) {
+      ssa[i].v = eigenVectors[i];
+      ssa[i].wm = std::fabs(eigenValues[i]);
+    }
+    std::sort(ssa, ssa + 3);
+    assert(ssa[2].wm >= ssa[1].wm);
+    assert(ssa[1].wm >= ssa[0].wm);
+    double firstEigenvalue = ssa[2].wm;
+    apf::Matrix3x3 frame;
+    frame[0] = dir;
+    if (firstEigenvalue > 1e-16) {
+      apf::Vector3 firstEigenvector = ssa[2].v;
+      frame[1] = apf::reject(firstEigenvector, dir);
+      frame[2] = apf::cross(frame[0], frame[1]);
+      if (frame[2].getLength() < 1e-16)
+        frame = apf::getFrame(dir);
+    } else
+      frame = apf::getFrame(dir);
+    for (int i = 0; i < 3; ++i)
+      frame[i] = frame[i].normalize();
     frame = apf::transpose(frame);
     apf::setMatrix(frames, v, 0, frame);
   }
@@ -301,21 +329,20 @@ static apf::Field* getSizeFrames(apf::Field* gradphi)
 
 int MeshAdaptPUMIDrvr::CalculateAnisoSizeField()
 {
-  std::cerr << "running CalculateAnisoSizeField\n";
   apf::Field* phif = extractPhi(solution);
   apf::Field* gradphi = apf::recoverGradientByVolume(phif);
   apf::Field* grad2phi = apf::recoverGradientByVolume(gradphi);
   apf::Field* hess = computeHessianField(grad2phi);
   apf::destroyField(grad2phi);
   apf::Field* curves = getCurves(hess, gradphi);
-  apf::destroyField(hess);
   freeField(size_scale);
   
   size_scale = getSizeScales(phif, curves, hmin, hmax, nAdapt);
   apf::destroyField(phif);
   apf::destroyField(curves);
   freeField(size_frame);
-  size_frame = getSizeFrames(gradphi);
+  size_frame = getSizeFrames(hess, gradphi);
+  apf::destroyField(hess);
 
   apf::destroyField(gradphi);
   for (int i = 0; i < 2; ++i)
