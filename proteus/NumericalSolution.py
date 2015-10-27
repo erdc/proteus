@@ -936,7 +936,7 @@ class NS_base:  # (HasTraits):
                             lm.setFreeDOF(m.uList[0])
                             lm.calculateSolutionAtQuadrature()
                             lm.coefficients.evaluate(t,self.model.q)
-                            lm.coefficients..evaluate(t,self.model.ebqe)
+                            lm.coefficients.evaluate(t,self.model.ebqe)
                             lm.timeIntegration.calculateElementCoefficients(self.model.q)
                   p.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
                   ##chitak end Adapt
