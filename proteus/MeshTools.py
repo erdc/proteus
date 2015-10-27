@@ -2571,7 +2571,7 @@ class TetrahedralMesh(Mesh):
 Number of triangles  : %d
 Number of edges      : %d
 Number of nodes      : %d
-max(sigma_k)         : %d
+max(sigma_k)         : %f
 min(h_k)             : %f\n""" % (self.nElements_global,
                                   self.nElementBoundaries_global,
                                   self.nEdges_global,
