@@ -762,7 +762,6 @@ class NS_base:  # (HasTraits):
                             log("Model step t=%12.5e, dt=%12.5e for model %s" % (model.stepController.t_model,
                                                                                  model.stepController.dt_model,
                                                                                  model.name),level=3)
-
                             for self.tSubstep in model.stepController.substeps:
 
                                 log("Model substep t=%12.5e for model %s" % (self.tSubstep,model.name),level=3)
@@ -866,7 +865,7 @@ class NS_base:  # (HasTraits):
                 #modified by cek to move inside main loop
                 p = self.pList[0]
                 n = self.nList[0]
-                if isinstance(p.domain, Domain.PUMIDomain):
+                if isinstance(p.domain, Domain.PUMIDomain) and p.domain.adapt:
                     #
                     #copy DOF to  PUMI
                     #
@@ -952,7 +951,6 @@ class NS_base:  # (HasTraits):
                     for avList in self.auxiliaryVariables.values():
                         for av in avList:
                             av.attachAuxiliaryVariables(self.auxiliaryVariables)
-
                     #
                     #initialize  solution on new mesh  at this time step
                     #
@@ -964,18 +962,46 @@ class NS_base:  # (HasTraits):
                     tot_var=ivar
                     soldof=numpy.zeros((tot_var,lm.mesh.nNodes_global))
                     p.domain.PUMIMesh.TransferSolutionToProteus(soldof)
+                    #
+                    # attach models  to each other and copy fields  on new mesh from PUMI
+                    #
                     ivar=-1
-                    for m in self.modelList:
-                        for lm in m.levelModelList:
+                    for m,ptmp in zip(self.modelList, self.pList):
+                        log("Attaching models to model "+ptmp.name)
+                        m.attachModels(self.modelList)
+                        for lm, lu, lr in zip(m.levelModelList, m.uList, m.rList):
                             for ci in range(lm.coefficients.nc):
                                 ivar=ivar+1
                                 lm.u[ci].dof[:]=soldof[ivar,:]
-                            lm.setFreeDOF(m.uList[0])
-                            lm.calculateSolutionAtQuadrature()
+                            lm.setFreeDOF(lu)
+                            lm.timeIntegration.tLast = self.systemStepController.t_system_last
+                            lm.timeIntegration.t = self.systemStepController.t_system_last
+                            lm.timeIntegration.dt = self.systemStepController.dt_system
+                    #
+                    # evaluate  residuals and coefficients with new solution  and models attached
+                    #
+                    for m,ptmp in zip(self.modelList, self.pList):
+                        for lm, lu, lr in zip(m.levelModelList, m.uList, m.rList):
+                            lm.getResidual(lu,lr)
+                            lm.initializeTimeHistory()
+                            lm.timeIntegration.initializeSpaceHistory()
+                            lm.getResidual(lu,lr)
+                            lm.timeTerm=True
                             #lm.coefficients.evaluate(self.t_stepSequence,lm.q)
                             #lm.coefficients.evaluate(self.t_stepSequence,lm.ebqe)
                             #lm.timeIntegration.calculateElementCoefficients(lm.q)
+                        log("Initializing time history for model step controller")
+                        m.stepController.initializeTimeHistory()
+                        #self.postStep(m)
+                        log("Choosing initial time step for model "+p.name)
+                        m.stepController.initialize_dt_model(self.systemStepController.t_system_last,self.tn)
                     p.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
+                    self.systemStepController.modelList = self.modelList
+                    self.systemStepController.exitModelStep = {}
+                    for model in self.modelList:
+                        self.systemStepController.exitModelStep[model] = False
+                    self.systemStepController.initialize_dt_system(self.systemStepController.t_system_last,
+                                                                   self.tn)
                   ##chitak end Adapt
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
