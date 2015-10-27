@@ -108,9 +108,9 @@ else:
         #the geomtric face which is latter in the order (email: chitak2@rpi.edu for any questions)
         domain.faceList=[[3],[5],[1],[6],[2],[4]]
         #set max edge length, min edge length, number of meshadapt iterations and initialize the MeshAdaptPUMI object
-        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.04, hmin=0.005, numIter=2)
+        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=0.018, numIter=2)
         #read the geometry and mesh
-        domain.PUMIMesh.loadModelAndMesh("Dambreak.smd", "Dambreak.smb")
+        domain.PUMIMesh.loadModelAndMesh("Dambreak.smd", "Dambreak_coarse.smb")
 
 
 # Time stepping
