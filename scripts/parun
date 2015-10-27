@@ -518,7 +518,11 @@ while running:
           loop_num=0
           oldname=so.name
           p = pList[0]
-          for i in range(p.domain.numAdaptSteps):
+          if hasattr(p.domain, "numAdaptSteps"):
+            loop_iters = p.domain.numAdaptSteps;
+          else:
+            loop_iters = 1;
+          for i in range(loop_iters):
             loop_num=loop_num+1
             log("loop number: "+str(loop_num))
             so.name=oldname+str(loop_num)
