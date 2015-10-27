@@ -32,7 +32,8 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter)
   gmi_register_mesh();
   gmi_register_sim();
   approximation_order = 2;
-  integration_order = approximation_order * 2;
+  integration_order = 3;//approximation_order * 2;
+  exteriorGlobaltoLocalElementBoundariesArray = NULL;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
