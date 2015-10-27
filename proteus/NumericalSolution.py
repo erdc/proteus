@@ -864,6 +864,8 @@ class NS_base:  # (HasTraits):
                 #h-adapt mesh
                 #chitak Adapt the mesh and transfer the solution
                 #modified by cek to move inside main loop
+                p = self.pList[0]
+                n = self.nList[0]
                 if isinstance(p.domain, Domain.PUMIDomain):
                     #
                     #copy DOF to  PUMI
@@ -899,21 +901,58 @@ class NS_base:  # (HasTraits):
                     log("Converting PUMI mesh to Proteus")
                     mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.numBC, p.domain.faceList, parallel = self.comm.size() > 1)
                     assert(self.so.useOneMesh)#adaption only works on single-mesh multiphysics  for now
-                    mlMesh = self.modelList[0].mlMeshSave
-                    mlMesh.meshList.append(mesh)
+                    log("Generating %i-level mesh from PUMI mesh" % (n.nLevels,))
+                    mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
+                                                                 nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                 parallelPartitioningType=n.parallelPartitioningType)
+                    if self.comm.size()==1:
+                        mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                              parallelPartitioningType=n.parallelPartitioningType)
+                    else:
+                        mlMesh.generatePartitionedMeshFromPUMI(mesh,n.nLevels,nLayersOfOverlap=n.nLayersOfOverlapForParallel)
+                    self.mlMesh_nList=[]
+                    for p in self.pList:
+                        self.mlMesh_nList.append(mlMesh)
                     #
                     #deallocate old mesh, models, solvers
-                    del mlMesh.meshList[0]
-                    for i in range(len(self.modelList)-1,-1,-1):
-                        del self.modelList[i]
-                        del self.lsList[i]
-                        del self.nlsList[i]
+                    #mlMeshOld = self.modelList[0].mlMeshSave
+                    #del mlMeshOld.meshList[0]
+                    #for i in range(len(self.modelList)-1,-1,-1):
+                    #    del self.modelList[i]
+                    #    del self.lsList[i]
+                    #    del self.nlsList[i]
                     #
                     #may want to trigger garbage collection here
+                    self.modelList=[]
+                    self.lsList=[]
+                    self.nlsList=[]
                     #
                     #now  allocate  new model  and solvers on new  mesh
                     #
                     self.allocateModels()
+                    #
+                    #set up sim tools and auxiliary variables
+                    #(cut and pasted form init, need to cleanup)
+                    self.simOutputList = []
+                    self.auxiliaryVariables = {}
+                    if self.simFlagsList != None:
+                        for p,n,simFlags,model,index in zip(self.pList,self.nList,self.simFlagsList,self.modelList,range(len(self.pList))):
+                            self.simOutputList.append(SimTools.SimulationProcessor(flags=simFlags,nLevels=n.nLevels,
+                                                                                   pFile=p,nFile=n,
+                                                                                   analyticalSolution=p.analyticalSolution))
+                            model.simTools = self.simOutputList[-1]
+                            self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
+                    else:
+                        for p,n,s,model,index in zip(self.pList,self.nList,self.sList,self.modelList,range(len(self.pList))):
+                            self.simOutputList.append(SimTools.SimulationProcessor(pFile=p,nFile=n))
+                            model.simTools = self.simOutputList[-1]
+                            model.viewer = Viewers.V_base(p,n,s)
+                            self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
+                    for avList in self.auxiliaryVariables.values():
+                        for av in avList:
+                            av.attachAuxiliaryVariables(self.auxiliaryVariables)
+
                     #
                     #initialize  solution on new mesh  at this time step
                     #
