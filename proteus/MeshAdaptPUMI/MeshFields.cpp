@@ -87,33 +87,57 @@ int MeshAdaptPUMIDrvr::TransferSolutionToProteus(double* outArray, int nVar, int
   return 0;
 }
 
-int MeshAdaptPUMIDrvr::TransferBCtagsToProteus()
+int MeshAdaptPUMIDrvr::TransferBCtagsToProteus(int* tagArray,int idx, int* ebN, int*eN_global)
 {
   //Suppose I have a list of identifiers from Proteus that classifies each boundary element
-  apf::MeshIterator* it= m->begin(0);
+  apf::MeshIterator* it= m->begin(2);
   apf::MeshEntity* f;
   apf::ModelEntity* me;
   apf::ModelEntity* boundary_face; 
   int tag = 0;
-  BCtag[0] =  m->createIntTag("BCtype_p",1);
-  BCtag[1] =  m->createIntTag("BCtype_u",1);
-  BCtag[2] =  m->createIntTag("BCtype_v",1);
-  BCtag[3] =  m->createIntTag("BCtype_w",1);
+  int fID,type,boundary_ID;
+  int global_bE_count;
+  int numqpt;
+  int count = 0;
+
+  char label[9];
+  char type_flag;
+  if(idx == 0) sprintf(&type_flag,"p");
+  else if(idx == 1) sprintf(&type_flag,"u");
+  else if(idx == 2) sprintf(&type_flag,"v");
+  else if(idx == 3) sprintf(&type_flag,"w");
+  sprintf(&label[0],"BCtype_%c",type_flag);
+  BCtag[idx] = m->createIntTag(label,1);
+  std::cout<<"Boundary label "<<label<<std::endl;
+
   while(f=m->iterate(it)){
-    int i = localNumber(f);
+    if(count==0){ //happens only once
+      apf::MeshElement* sample_elem = apf::createMeshElement(m,f);
+      numqpt = apf::countIntPoints(sample_elem,integration_order);
+      apf::destroyMeshElement(sample_elem);
+      count++;
+    }
     me=m->toModel(f);
     tag = m->getModelTag(me);
     boundary_face = m->findModelEntity(2,tag); //faces
     if(me==boundary_face){ //is on model entity
       //Assign a tag to the face for the given type of boundary condition
-      int type = 1; //type None:0 DBC:1, NBC:2
-      m->setIntTag(f,BCtag[0],&type);
-      m->setIntTag(f,BCtag[1],&type);
-      m->setIntTag(f,BCtag[2],&type);
-      m->setIntTag(f,BCtag[3],&type);
+      fID=localNumber(f);
+      boundary_ID = exteriorGlobaltoLocalElementBoundariesArray[fID];
+      type = tagArray[numqpt*boundary_ID + 0 ];
+//std::cout<<"Face ID "<<fID<<" REGION? "<<eN_global[2*boundary_ID+0]<<"index "<<numqpt*boundary_ID<<" BC type? "<<type<<std::endl;
+      m->setIntTag(f,BCtag[idx],&type);
+      global_bE_count++;
     }
   }
   m->end(it);
+
+  //Cleanup
+  if(idx==3){ //after outside loop has finished, should move this to separate function
+    delete [] exteriorGlobaltoLocalElementBoundariesArray;
+    exteriorGlobaltoLocalElementBoundariesArray = NULL;
+  }
+
   std::cout<<"Finished Transfer of BC Tags "<<std::endl;
   return 0;
 }
@@ -145,6 +169,7 @@ int MeshAdaptPUMIDrvr::TransferBCsToProteus()
       fluxtag[2]= m->createDoubleTag("v_flux",numqpt);
       fluxtag[3]= m->createDoubleTag("w_flux",numqpt);
       apf::destroyMeshElement(sample_elem);
+      count++;
     }
 
     me=m->toModel(f);
