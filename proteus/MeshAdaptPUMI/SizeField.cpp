@@ -8,6 +8,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <PCU.h>
 
 enum {
   PHI_IDX = 5
@@ -273,7 +274,7 @@ struct SortingStruct
   double m;
   };
 
-static apf::Field* getSizeFrames(apf::Field* hessians, apf::Field* gradphi)     
+static apf::Field* getSizeFrames(apf::Field* gradphi)     
 {
   apf::Mesh* m = apf::getMesh(gradphi);
   apf::Field* frames;
@@ -281,42 +282,16 @@ static apf::Field* getSizeFrames(apf::Field* hessians, apf::Field* gradphi)
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* v;
   while ((v = m->iterate(it))) {
-
-//  Finding the eigenvalues and eigenvectors of the Hessian of the distance field.
-//  Largest eigenvalue and the corresponding eigenvector, represent the principal curvature and principal
-//  direction; respectively.	
-    apf::Matrix3x3 hessian;                                                     
-    apf::getMatrix(hessians, v, 0, hessian);                                    
-    apf::Vector3 eigenVector[3];         
-    double eigenValue[3];                                                       
-	int n= apf::eigen(hessian, eigenVector, eigenValue);                        
- 
-//  Sorting EigenValues by decreasing absolute value 
-    SortingStruct s[3] =
-    {{0,fabs(eigenValue[0])},{1,fabs(eigenValue[1])},{2,fabs(eigenValue[2])}};
-    if (s[2].m > s[1].m)
-       std::swap(s[1],s[2]);
-    if (s[1].m > s[0].m)
-       std::swap(s[0],s[1]);
-    if (s[2].m > s[1].m)
-       std::swap(s[1],s[2]);
-    int largest = s[0].i;
-    int medium  = s[1].i;
-    int smallest= s[2].i;
-
-// 1st Frame Size (normal):         First dferivative of the phi and not the Hessian (to be more accurate)	
-// 2nd Frame Size (1st tangential): Hessian's eigenvector corresponding to Hessian's larget eigenvalue
-// 3rd Frame Size (2nd tangenital): Cross product of the normal vector and the 1st tangential vector	
-	apf::Vector3 gphi;
+    apf::Vector3 gphi;
     apf::getVector(gradphi, v, 0, gphi);
-	apf::Matrix3x3 frameHess;
-    frameHess[0] = gphi;                            
-	frameHess[1] = eigenVector[largest];            
-    frameHess[2] = cross(frameHess[0],frameHess[1]);
-
-	apf::Matrix3x3 frame;
+    apf::Vector3 dir;
+    if (gphi.getLength() > 1e-16)
+      dir = gphi;
+    else
+      dir = apf::Vector3(1,0,0);
+    apf::Matrix3x3 frame = apf::getFrame(dir);
     for (int i = 0; i < 3; ++i)       
-       frame[i] = frameHess[i].normalize(); 
+      frame[i] = frame[i].normalize(); 
     frame = apf::transpose(frame);
     apf::setMatrix(frames, v, 0, frame);
   }
@@ -326,21 +301,22 @@ static apf::Field* getSizeFrames(apf::Field* hessians, apf::Field* gradphi)
 
 int MeshAdaptPUMIDrvr::CalculateAnisoSizeField()
 {
+  std::cerr << "running CalculateAnisoSizeField\n";
   apf::Field* phif = extractPhi(solution);
   apf::Field* gradphi = apf::recoverGradientByVolume(phif);
   apf::Field* grad2phi = apf::recoverGradientByVolume(gradphi);
   apf::Field* hess = computeHessianField(grad2phi);
   apf::destroyField(grad2phi);
   apf::Field* curves = getCurves(hess, gradphi);
+  apf::destroyField(hess);
   freeField(size_scale);
   
   size_scale = getSizeScales(phif, curves, hmin, hmax, nAdapt);
   apf::destroyField(phif);
   apf::destroyField(curves);
   freeField(size_frame);
-  size_frame = getSizeFrames(hess,gradphi); 
+  size_frame = getSizeFrames(gradphi);
 
-  apf::destroyField(hess);                    
   apf::destroyField(gradphi);
   for (int i = 0; i < 2; ++i)
     SmoothField(size_scale);
