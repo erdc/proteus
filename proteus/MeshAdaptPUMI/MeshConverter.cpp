@@ -184,6 +184,9 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh)
     new int[mesh.nElements_global * mesh.nElementBoundaries_element];
   mesh.elementBoundariesArray =
     new int[mesh.nElements_global * mesh.nElementBoundaries_element];
+  exteriorGlobaltoLocalElementBoundariesArray = 
+    new int[mesh.nElementBoundaries_global]; //oversized, can fix later?
+  int exterior_count=0; //counter for external boundaries
 
   apf::MeshIterator* it = m->begin(2);
   apf::MeshEntity* f;
@@ -234,6 +237,11 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh)
       mesh.elementBoundaryLocalElementBoundariesArray[i * 2 + 1] = -1;
       //exterior face as only 1 region adjacent
       exteriorElementBoundaries.insert(i);
+
+      //construct inverse mapping 
+      exteriorGlobaltoLocalElementBoundariesArray[i] = exterior_count;
+      exterior_count++;
+
     } else { //2 regions are shared by this face so interior face
       mesh.elementNeighborsArray[
         rightRgnID * mesh.nElementBoundaries_element + rightLocalFaceNumber]
@@ -255,8 +263,9 @@ int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh)
   int ebNI=0,ebNE=0;
   for (std::set<int>::iterator ebN=interiorElementBoundaries.begin();ebN != interiorElementBoundaries.end(); ebN++,ebNI++)
       mesh.interiorElementBoundariesArray[ebNI] = *ebN;
-  for (std::set<int>::iterator ebN=exteriorElementBoundaries.begin();ebN != exteriorElementBoundaries.end(); ebN++,ebNE++)
+  for (std::set<int>::iterator ebN=exteriorElementBoundaries.begin();ebN != exteriorElementBoundaries.end(); ebN++,ebNE++){
       mesh.exteriorElementBoundariesArray[ebNE] = *ebN;
+}
   
   return 0;
 }
