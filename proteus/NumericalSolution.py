@@ -373,8 +373,6 @@ class NS_base:  # (HasTraits):
                             p.coefficients.sdInfo[(ci,ck)] = (numpy.arange(start=0,stop=p.nd**2+1,step=p.nd,dtype='i'),
                                                               numpy.array([range(p.nd) for row in range(p.nd)],dtype='i').flatten())
                             log("Numerical Solution Sparse diffusion information key "+`(ci,ck)`+' = '+`p.coefficients.sdInfo[(ci,ck)]`)
-        self.pList = pList
-        self.nLsit = nList
         self.sList = sList
         self.mlMesh_nList = mlMesh_nList
         self.allocateModels()
@@ -423,9 +421,9 @@ class NS_base:  # (HasTraits):
 
     def allocateModels(self):
         for p,n,s,mlMesh,index in zip(self.pList,self.nList,self.sList,self.mlMesh_nList,range(len(self.pList))):
-            if so.needEBQ_GLOBAL:
+            if self.so.needEBQ_GLOBAL:
                 n.needEBQ_GLOBAL = True
-            if so.needEBQ:
+            if self.so.needEBQ:
                 n.needEBQ = True
             ## \todo clean up tolerances: use rtol_u,atol_u and rtol_res, atol_res; allow scaling by mesh diameter
             ## \todo pass in options = (p,n) instead of using monster ctor signature
@@ -899,8 +897,8 @@ class NS_base:  # (HasTraits):
                     #
                     mesh=MeshTools.TetrahedralMesh()
                     log("Converting PUMI mesh to Proteus")
-                    mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.numBC, p.domain.faceList, parallel = comm.size() > 1)
-                    assert(so.useOneMesh)#adaption only works on single-mesh multiphysics  for now
+                    mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.numBC, p.domain.faceList, parallel = self.comm.size() > 1)
+                    assert(self.so.useOneMesh)#adaption only works on single-mesh multiphysics  for now
                     mlMesh = self.modelList[0].mlMeshSave
                     mlMesh.meshList.append(mesh)
                     #
@@ -935,10 +933,10 @@ class NS_base:  # (HasTraits):
                                 lm.u[ci].dof[:]=soldof[ivar,:]
                             lm.setFreeDOF(m.uList[0])
                             lm.calculateSolutionAtQuadrature()
-                            lm.coefficients.evaluate(t,self.model.q)
-                            lm.coefficients.evaluate(t,self.model.ebqe)
-                            lm.timeIntegration.calculateElementCoefficients(self.model.q)
-                  p.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
+                            #lm.coefficients.evaluate(self.t_stepSequence,lm.q)
+                            #lm.coefficients.evaluate(self.t_stepSequence,lm.ebqe)
+                            #lm.timeIntegration.calculateElementCoefficients(lm.q)
+                    p.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
                   ##chitak end Adapt
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
