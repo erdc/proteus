@@ -1599,6 +1599,10 @@ class OneLevelTransport(NonlinearEquation):
         for cj in range(self.nc):
             for dofN,g in self.dirichletConditions[cj].DOFBoundaryConditionsDict.iteritems():
                 self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        #what if we would like to perform a projection on the initial conditions?
+        if 'project_initial_conditions' in dir(self):
+            self.project_initial_conditions()
+            
     #what about setting initial conditions directly from dofs calculated elsewhere?
     def archiveAnalyticalSolutions(self,archive,analyticalSolutionsDict,T=0.0,tCount=0):
         import copy

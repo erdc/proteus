@@ -1363,9 +1363,30 @@ class POD_HyperReduced_Newton2(Newton):
 
 	self.pod_Jtmp= np.zeros((self.nhyper_sample,self.DB),'d')
         self.rl = None; self.rn = None
-        #self.skip_mass_jacobian_eval = True
-        #self.linear_reduced_mass_matrix=None
         self.pod_initialized=True
+    def setup_POD_initial_conditions(self):
+        """
+        Set the Transport model to use the projection of the initial 
+        condition in the POD solution bases rather than the initial 
+        condition in the fine space
+
+        model degrees of freedom should come in initialized from fine space initial conditions
+
+        Work In Progress
+        """
+        
+        assert 'setFreeDOF' in dir(self.F)
+        assert  'setUnknowns' in dir(self.F)
+        import types
+        
+        #duplicate storage so that this can be called at the time the solver is constructed
+        assert os.path.isfile(self.SVD_basis_file), "SVD basis file {0} not found".format(self.SVD_basis_file)
+        U = np.loadtxt(self.SVD_basis_file)
+
+        F.project_initial_conditions = types.MethodType(deim_utils.project_initial_conditions,F,OneLevelTransport)
+        F.ic_projection_matrix = U.conj().T #fine to pod
+        F.ic_global_vector = self.du.copy()
+        
     def norm(self,u):
         return self.norm_function(u)
     def computeHyperResiduals(self,u,rl,rn):
@@ -1559,6 +1580,8 @@ class POD_HyperReduced_Newton2(Newton):
         for parm in optional_params:
             if parm in dir(nOptions):
                 setattr(self,parm,getattr(nOptions,parm))
+        #Go ahead and modify Transport behavior now that we have the correct input options
+        self.setup_POD_initial_conditions()#does not initialize all of POD machinery
         
 class NewtonNS(NonlinearSolver):
     """
