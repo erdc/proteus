@@ -87,7 +87,7 @@ int MeshAdaptPUMIDrvr::TransferSolutionToProteus(double* outArray, int nVar, int
   return 0;
 }
 
-int MeshAdaptPUMIDrvr::TransferBCtagsToProteus(int* tagArray,int idx, int* ebN, int*eN_global)
+int MeshAdaptPUMIDrvr::TransferBCtagsToProteus(int* tagArray,int idx, int* ebN, int*eN_global,double* fluxBC)
 {
   //Suppose I have a list of identifiers from Proteus that classifies each boundary element
   apf::MeshIterator* it= m->begin(2);
@@ -96,12 +96,12 @@ int MeshAdaptPUMIDrvr::TransferBCtagsToProteus(int* tagArray,int idx, int* ebN, 
   apf::ModelEntity* boundary_face; 
   int tag = 0;
   int fID,type,boundary_ID;
-  int global_bE_count;
   int numqpt;
   int count = 0;
 
-  char label[9];
-  char type_flag;
+  char label[9],labelflux[6],type_flag;
+  
+  //assign a label to the BC type tag
   if(idx == 0) sprintf(&type_flag,"p");
   else if(idx == 1) sprintf(&type_flag,"u");
   else if(idx == 2) sprintf(&type_flag,"v");
@@ -110,12 +110,16 @@ int MeshAdaptPUMIDrvr::TransferBCtagsToProteus(int* tagArray,int idx, int* ebN, 
   BCtag[idx] = m->createIntTag(label,1);
   std::cout<<"Boundary label "<<label<<std::endl;
 
+  //assign a label to the flux tag
+  if(idx>0) sprintf(labelflux,"%c_flux",type_flag);
+
   while(f=m->iterate(it)){
     if(count==0){ //happens only once
       apf::MeshElement* sample_elem = apf::createMeshElement(m,f);
       numqpt = apf::countIntPoints(sample_elem,integration_order);
       apf::destroyMeshElement(sample_elem);
       count++;
+      if(idx>0)fluxtag[idx]= m->createDoubleTag(labelflux,numqpt);
     }
     me=m->toModel(f);
     tag = m->getModelTag(me);
@@ -127,23 +131,23 @@ int MeshAdaptPUMIDrvr::TransferBCtagsToProteus(int* tagArray,int idx, int* ebN, 
       type = tagArray[numqpt*boundary_ID + 0 ];
 //std::cout<<"Face ID "<<fID<<" REGION? "<<eN_global[2*boundary_ID+0]<<"index "<<numqpt*boundary_ID<<" BC type? "<<type<<std::endl;
       m->setIntTag(f,BCtag[idx],&type);
-      global_bE_count++;
-    }
-  }
+
+      if(idx>0){
+        m->setDoubleTag(f,fluxtag[idx],&fluxBC[numqpt*boundary_ID]); //set the quadrature points
+      }
+
+    } //end if boundary face
+  } //end face loop
   m->end(it);
-
-  //Cleanup
-  if(idx==3){ //after outside loop has finished, should move this to separate function
-    delete [] exteriorGlobaltoLocalElementBoundariesArray;
-    exteriorGlobaltoLocalElementBoundariesArray = NULL;
-  }
-
+  
   std::cout<<"Finished Transfer of BC Tags "<<std::endl;
   return 0;
 }
 
+
 int MeshAdaptPUMIDrvr::TransferBCsToProteus()
 {
+/*
   //Want to use some sort of Hierarchic projection 
   apf::FieldShape* BC_shape = apf::getHierarchic(2);
   apf::MeshEntity* v;  
@@ -192,5 +196,6 @@ int MeshAdaptPUMIDrvr::TransferBCsToProteus()
   }
   std::cout<<"Finished Transferring BC "<<std::endl;
   m->end(it);
+*/
   return 0;
 }

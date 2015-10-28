@@ -23,7 +23,7 @@ class MeshAdaptPUMIDrvr{
   int TransferSolutionToPUMI(double* inArray, int nVar, int nN);
   int TransferSolutionToProteus(double* outArray, int nVar, int nN);
   int TransferPropertiesToPUMI(double* rho_p, double* nu_p);
-  int TransferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global);
+  int TransferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global,double* fluxBC);
   int TransferBCsToProteus();
   int CommuSizeField();
   int AdaptPUMIMesh();
@@ -43,6 +43,7 @@ class MeshAdaptPUMIDrvr{
 
   //Element Residual Method
   void get_local_error();
+  void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux);
   //tags used to identify types of BC
   apf::MeshTag* BCtag[4];
   apf::MeshTag* DBCtag[4];
@@ -66,8 +67,6 @@ class MeshAdaptPUMIDrvr{
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* solution;
-  apf::Field* fluxBC;
-  apf::Field* DBC;
   apf::Field* err_reg; //error field from ERM
   /* this field stores isotropic size */
   apf::Field* size_iso;

@@ -871,6 +871,20 @@ class NS_base:  # (HasTraits):
                     p0.domain.PUMIMesh.TransferPropertiesToPUMI(rho,nu)
                     del soldof, rho, nu
                     #
+                    # zhang-alvin's BC communication for N-S error estimation
+                    #
+                    for idx in range (0, self.modelList[0].levelModelList[0].coefficients.nc):
+                        if idx>0:
+                            diff_flux = self.modelList[0].levelModelList[0].ebqe[('diffusiveFlux_bc',idx,idx)]
+                        else:
+                            diff_flux = numpy.empty([2,2]) #dummy diff flux
+                        p.domain.PUMIMesh.TransferBCtagsToProteus(
+                            self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary[idx],
+                            idx,
+                            self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
+                            self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
+                            diff_flux)
+                    #
                     # Should we put in a hook here for forcing refinements?
                     # (e.g. set size  field  based on proteus calcualtions?)
                     # ...
