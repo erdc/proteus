@@ -1,4 +1,4 @@
-#!/users/behaff/proteus-scorec/linux2-scorec/bin/python2.7
+#!python
 
 import numpy
 import os

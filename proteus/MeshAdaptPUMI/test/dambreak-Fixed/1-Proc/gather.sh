@@ -10,8 +10,8 @@ else
 	x=`ls dambreak_p${step}0.h5`; 
 	set -e
 	if [ ! -z "$x" ]; then
-      echo "step $step"
-	   /users/behaff/proteusScorec/linux2-scorec/bin/gatherArchives.py -s $procs -f dambreak_p$step 
+     echo "step $step"
+	   python gatherArchives.py -s $procs -f dambreak_p$step
 	else 
 	  echo "skipping step $step"
 	fi
