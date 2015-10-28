@@ -67,6 +67,10 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
     std::cerr << "unknown size field config " << size_field_config << '\n';
     abort();
   }
+  //m->destroyTag(fluxtag[1]); m->destroyTag(fluxtag[2]); m->destroyTag(fluxtag[3]);
+  delete [] exteriorGlobaltoLocalElementBoundariesArray;
+  exteriorGlobaltoLocalElementBoundariesArray = NULL;
+
   assert(size_iso == 0);
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);

@@ -78,7 +78,7 @@ double getMPvalue(double field_val,double val_0, double val_1)
 
 //apf::Vector3 getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf);
 //void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf,apf::NewArray <double> &endflux);
-void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux);
+//void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux);
 bool isInTet(apf::Mesh* mesh, apf::MeshEntity* elem, apf::Vector3 pt);
 apf::Vector3 getFaceNormal(apf::Mesh* mesh, apf::MeshEntity* face);
 double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf);
@@ -495,12 +495,10 @@ std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est
   getERMSizeField(err_est_total);
   apf::destroyElement(visc_elem);apf::destroyElement(pres_elem);apf::destroyElement(velo_elem);apf::destroyElement(est_elem);
   apf::destroyField(voff);  apf::destroyField(visc); apf::destroyField(velf); apf::destroyField(pref); apf::destroyField(estimate);
-//  m->destroyTag(fluxtag[1]); m->destroyTag(fluxtag[2]); m->destroyTag(fluxtag[3]);
-  //freeField(fluxBC);
   printf("It cleared the function.\n");
 }
 
-void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux){
+void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux){
 
     int nsd = m->getDimension();
     int nshl;
@@ -562,6 +560,21 @@ void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::
           for(int idx_neigh=0; idx_neigh<neighbors.getSize();idx_neigh++){ //at most two neighboring elements
             if(me==boundary_face){
               flux_weight=1; std::cout<<"on boundary face "<<std::endl;
+/*
+std::cout<<"BC tags test" <<std::endl;
+int numqpt = apf::countIntPoints(b_elem,int_order);
+int data[numqpt];
+double data2[numqpt];
+m->getIntTag(bent,BCtag[0],&data[0]);
+std::cout<<"BCtype "<< data[0]<<std::endl;
+  m->getDoubleTag(bent,fluxtag[3],&data2[0]);
+std::cout<<"BC flux test "<<std::endl;
+for(int testidx=0;testidx<numqpt;testidx++){ 
+  std::cout<<data2[testidx]<<" ";
+}
+std::cout<<std::endl;
+*/
+
             }
             else{
               if(neighbors[idx_neigh]==ent) flux_weight = 1-a_kl;
