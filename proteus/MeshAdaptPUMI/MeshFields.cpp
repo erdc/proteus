@@ -22,6 +22,7 @@ int MeshAdaptPUMIDrvr::TransferSolutionToPUMI(double* inArray, int nVar, int nN)
 {
   assert(nN == static_cast<int>(m->count(0)));
   numVar = nVar;
+  assert(solution == 0);
   solution = apf::createPackedField(m, "proteus_solution", nVar);
   apf::NewArray<double> tmp(nVar);
   apf::MeshEntity* v;
@@ -33,28 +34,28 @@ int MeshAdaptPUMIDrvr::TransferSolutionToPUMI(double* inArray, int nVar, int nN)
     for(int j = 0; j < nVar; j++)
       tmp[j] = inArray[j * nN + i];
 
-    int casenum = 0;
-    //Rewrite only necessary components
-    if(casenum ==0){
-    //Poiseuille Flow dpdy=-1
-            m->getPoint(v,0,pt);
-            double Lz = 0.05;
-            double Ly = 0.2;
-            tmp[0] = 1-pt[1]/Ly; //pressure starts at 1 and goes to 0
-            tmp[1] = 0;
-            tmp[2] = 0.5/0.0010021928*(-1/Ly)*(pt[2]*pt[2]-Lz*pt[2]);  //dpdy = 1/Ly
-            tmp[3] = 0;
-    }
-    else if(casenum==1){
-    //Couette 
-            m->getPoint(v,0,pt);
-            double Lz = 0.05;
-            double Uinf = 1.0;//2e-3;
-            tmp[0] =0 ; //pressure
-            tmp[1] =0; //u
-            tmp[2] = Uinf*pt[2]/Lz;
-            tmp[3] =0;
-    }
+    // int casenum = 0;
+    // //Rewrite only necessary components
+    // if(casenum ==0){
+    // //Poiseuille Flow dpdy=-1
+    //         m->getPoint(v,0,pt);
+    //         double Lz = 0.05;
+    //         double Ly = 0.2;
+    //         tmp[0] = 1-pt[1]/Ly; //pressure starts at 1 and goes to 0
+    //         tmp[1] = 0;
+    //         tmp[2] = 0.5/0.0010021928*(-1/Ly)*(pt[2]*pt[2]-Lz*pt[2]);  //dpdy = 1/Ly
+    //         tmp[3] = 0;
+    // }
+    // else if(casenum==1){
+    // //Couette 
+    //         m->getPoint(v,0,pt);
+    //         double Lz = 0.05;
+    //         double Uinf = 1.0;//2e-3;
+    //         tmp[0] =0 ; //pressure
+    //         tmp[1] =0; //u
+    //         tmp[2] = Uinf*pt[2]/Lz;
+    //         tmp[3] =0;
+    // }
     apf::setComponents(solution, v, 0, &tmp[0]); 
   }
   m->end(it);
@@ -83,7 +84,7 @@ int MeshAdaptPUMIDrvr::TransferSolutionToProteus(double* outArray, int nVar, int
       outArray[j * nN + i] = tmp[j];
   }
   m->end(it);
-  apf::destroyField(solution);
+  freeField(solution);
   return 0;
 }
 
