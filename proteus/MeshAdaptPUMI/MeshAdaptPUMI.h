@@ -23,7 +23,7 @@ class MeshAdaptPUMIDrvr{
   int TransferSolutionToPUMI(double* inArray, int nVar, int nN);
   int TransferSolutionToProteus(double* outArray, int nVar, int nN);
   int TransferPropertiesToPUMI(double* rho_p, double* nu_p);
-  int TransferBCtagsToProteus();
+  int TransferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global);
   int TransferBCsToProteus();
   int CommuSizeField();
   int AdaptPUMIMesh();
@@ -48,9 +48,13 @@ class MeshAdaptPUMIDrvr{
   apf::MeshTag* DBCtag[4];
   apf::MeshTag* fluxtag[4];
 
+  int *exteriorGlobaltoLocalElementBoundariesArray;
+
   //Approximation/Integration order
   int approximation_order; //what order polynomial (hierarchic is 2nd order)
   int integration_order; //determines number of integration points
+  int num_quadrature; 
+  int num_quarature_boundary;
 
   private: 
   apf::Mesh2* m;
