@@ -858,14 +858,14 @@ class NS_base:  # (HasTraits):
                     self.tCount+=1
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
-                    if not self.opts.cacheArchive:
-                        self.ar[index].sync()
                 #h-adapt mesh
                 #chitak Adapt the mesh and transfer the solution
                 #modified by cek to move inside main loop
                 p = self.pList[0]
                 n = self.nList[0]
-                if isinstance(p.domain, Domain.PUMIDomain) and p.domain.adapt:
+                if isinstance(p.domain, Domain.PUMIDomain) and p.domain.adapt and self.tCount%10 == 0:
+                    for m in self.modelList: m.stepController.dt_model *= 0.01
+                    self.systemStepController.choose_dt_system()
                     #
                     #copy DOF to  PUMI
                     #
@@ -875,14 +875,13 @@ class NS_base:  # (HasTraits):
                             for ci in range(lm.coefficients.nc):
                                 ivar=ivar+1
                     tot_var=ivar
-                    soldof=numpy.zeros((ivar,lm.mesh.nNodes_global))
+                    soldof=numpy.zeros((ivar,lm.mesh.nNodes_global),'d')
                     ivar=-1
                     for m in self.modelList:
                         for lm in m.levelModelList:
                             for ci in range(lm.coefficients.nc):
                                 ivar=ivar+1
-                                for nN in range(lm.mesh.nNodes_global):
-                                    soldof[ivar][nN]=lm.u[ci].dof[nN]
+                                soldof[ivar,:]=lm.u[ci].dof[:]
                     #Get Physical Parameters
                     rho = numpy.array([self.pList[0].rho_0, self.pList[0].rho_1])
                     nu = numpy.array([self.pList[0].nu_0, self.pList[0].nu_1])
@@ -923,6 +922,7 @@ class NS_base:  # (HasTraits):
                     #    del self.nlsList[i]
                     #
                     #may want to trigger garbage collection here
+                    modelListOld = self.modelList
                     self.modelList=[]
                     self.lsList=[]
                     self.nlsList=[]
@@ -960,48 +960,70 @@ class NS_base:  # (HasTraits):
                             for ci in range(lm.coefficients.nc):
                                 ivar=ivar+1
                     tot_var=ivar
-                    soldof=numpy.zeros((tot_var,lm.mesh.nNodes_global))
+                    soldof=numpy.zeros((tot_var,lm.mesh.nNodes_global),'d')
                     p.domain.PUMIMesh.TransferSolutionToProteus(soldof)
                     #
                     # attach models  to each other and copy fields  on new mesh from PUMI
                     #
                     ivar=-1
-                    for m,ptmp in zip(self.modelList, self.pList):
+                    for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
                         log("Attaching models to model "+ptmp.name)
                         m.attachModels(self.modelList)
-                        for lm, lu, lr in zip(m.levelModelList, m.uList, m.rList):
+                        for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList,mOld.levelModelList):
                             for ci in range(lm.coefficients.nc):
                                 ivar=ivar+1
                                 lm.u[ci].dof[:]=soldof[ivar,:]
                             lm.setFreeDOF(lu)
-                            lm.timeIntegration.tLast = self.systemStepController.t_system_last
-                            lm.timeIntegration.t = self.systemStepController.t_system_last
-                            lm.timeIntegration.dt = self.systemStepController.dt_system
+                            lm.calculateSolutionAtQuadrature()
+                            lm.timeIntegration.tLast = lmOld.timeIntegration.tLast
+                            lm.timeIntegration.t = lmOld.timeIntegration.t
+                            lm.timeIntegration.dt = lmOld.timeIntegration.dt
+                            assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
+                            assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
+                            assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
+                        m.stepController.dt_model = mOld.stepController.dt_model
+                        m.stepController.t_model = mOld.stepController.t_model
+                        m.stepController.t_model_last = mOld.stepController.t_model_last
+                        m.stepController.substeps = mOld.stepController.substeps
                     #
                     # evaluate  residuals and coefficients with new solution  and models attached
                     #
-                    for m,ptmp in zip(self.modelList, self.pList):
-                        for lm, lu, lr in zip(m.levelModelList, m.uList, m.rList):
+                    for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
+                        for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
                             lm.getResidual(lu,lr)
+                            lm.timeIntegration.initializeTimeHistory(resetFromDOF=True)
                             lm.initializeTimeHistory()
                             lm.timeIntegration.initializeSpaceHistory()
                             lm.getResidual(lu,lr)
                             lm.timeTerm=True
+                            assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
+                            assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
+                            assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
                             #lm.coefficients.evaluate(self.t_stepSequence,lm.q)
                             #lm.coefficients.evaluate(self.t_stepSequence,lm.ebqe)
                             #lm.timeIntegration.calculateElementCoefficients(lm.q)
-                        log("Initializing time history for model step controller")
-                        m.stepController.initializeTimeHistory()
+                        assert(m.stepController.dt_model == mOld.stepController.dt_model)
+                        assert(m.stepController.t_model == mOld.stepController.t_model)
+                        assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
+                        #log("Initializing time history for model step controller")
+                        #m.stepController.initializeTimeHistory()
                         #self.postStep(m)
-                        log("Choosing initial time step for model "+p.name)
-                        m.stepController.initialize_dt_model(self.systemStepController.t_system_last,self.tn)
+                        #m.stepController.initialize_dt_model(lm.timeIntegration.tLast, lm.timeIntegration.t)
                     p.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
                     self.systemStepController.modelList = self.modelList
                     self.systemStepController.exitModelStep = {}
                     for model in self.modelList:
                         self.systemStepController.exitModelStep[model] = False
-                    self.systemStepController.initialize_dt_system(self.systemStepController.t_system_last,
-                                                                   self.tn)
+                        #model.stepController.initializeTimeHistory()
+                    self.systemStepController.choose_dt_system()
+                    for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
+                        for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
+                            assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
+                            assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
+                            assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
+                        assert(m.stepController.dt_model == mOld.stepController.dt_model)
+                        assert(m.stepController.t_model == mOld.stepController.t_model)
+                        assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
                   ##chitak end Adapt
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:

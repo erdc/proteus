@@ -23,7 +23,7 @@ useMetrics = 1.0
 applyCorrection=True
 useVF = 1.0
 useOnlyVF = False
-redist_Newton = True
+redist_Newton = False
 useRANS = 0 # 0 -- None
             # 1 -- K-Epsilon
             # 2 -- K-Omega
@@ -116,9 +116,9 @@ else:
 
 # Time stepping
 T=0.35
-dt_fixed = 0.001
-dt_init = min(0.1*dt_fixed,0.001)
-runCFL=0.9
+dt_fixed = 0.01
+dt_init = min(0.01*dt_fixed,0.0001)
+runCFL=0.33
 nDTout = int(round(T/dt_fixed))
 
 # Numerical parameters
@@ -135,9 +135,9 @@ if useMetrics:
     vof_lag_shockCapturing = True
     vof_sc_uref = 1.0
     vof_sc_beta = 1.5
-    rd_shockCapturingFactor  = 0.9
+    rd_shockCapturingFactor  = 0.5
     rd_lag_shockCapturing = False
-    epsFact_density    = 1.6
+    epsFact_density    = 1.5
     epsFact_viscosity  = epsFact_curvature  = epsFact_vof = epsFact_consrv_heaviside = epsFact_consrv_dirac = epsFact_density
     epsFact_redistance = 0.33
     epsFact_consrv_diffusion = 10.0
