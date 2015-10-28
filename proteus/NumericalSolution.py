@@ -1033,6 +1033,7 @@ class NS_base:  # (HasTraits):
             if systemStepFailed:
                 break
         log("Finished calculating solution",level=3)
+
         for index,model in enumerate(self.modelList):
             self.finalizeViewSolution(model)
             self.closeArchive(model,index)
