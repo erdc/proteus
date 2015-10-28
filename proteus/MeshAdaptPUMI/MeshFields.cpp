@@ -22,6 +22,7 @@ int MeshAdaptPUMIDrvr::TransferSolutionToPUMI(double* inArray, int nVar, int nN)
 {
   assert(nN == static_cast<int>(m->count(0)));
   numVar = nVar;
+  assert(solution == 0);
   solution = apf::createPackedField(m, "proteus_solution", nVar);
   apf::NewArray<double> tmp(nVar);
   apf::MeshEntity* v;
@@ -83,7 +84,7 @@ int MeshAdaptPUMIDrvr::TransferSolutionToProteus(double* outArray, int nVar, int
       outArray[j * nN + i] = tmp[j];
   }
   m->end(it);
-  apf::destroyField(solution);
+  freeField(solution);
   return 0;
 }
 
