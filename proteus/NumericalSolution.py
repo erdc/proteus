@@ -358,9 +358,6 @@ class NS_base:  # (HasTraits):
         if so.useOneMesh:
             for p in pList[1:]: mlMesh_nList.append(mlMesh)
         Profiling.memory("Mesh")
-        self.modelList=[]
-        self.lsList=[]
-        self.nlsList=[]
         from collections import OrderedDict
         self.modelSpinUp = OrderedDict()
         #
@@ -420,6 +417,9 @@ class NS_base:  # (HasTraits):
         log("Finished NumericalSolution initialization")
 
     def allocateModels(self):
+        self.modelList=[]
+        self.lsList=[]
+        self.nlsList=[]
         for p,n,s,mlMesh,index in zip(self.pList,self.nList,self.sList,self.mlMesh_nList,range(len(self.pList))):
             if self.so.needEBQ_GLOBAL:
                 n.needEBQ_GLOBAL = True
@@ -861,11 +861,11 @@ class NS_base:  # (HasTraits):
                 #h-adapt mesh
                 #chitak Adapt the mesh and transfer the solution
                 #modified by cek to move inside main loop
-                p = self.pList[0]
-                n = self.nList[0]
-                if isinstance(p.domain, Domain.PUMIDomain) and p.domain.adapt and self.tCount%10 == 0:
-                    for m in self.modelList: m.stepController.dt_model *= 0.01
-                    self.systemStepController.choose_dt_system()
+                p0 = self.pList[0]
+                n0 = self.nList[0]
+                if isinstance(p0.domain, Domain.PUMIDomain) and p0.domain.adapt and self.tCount%10 == 0:
+                    #for m in self.modelList: m.stepController.dt_model *= 0.01
+                    #self.systemStepController.choose_dt_system()
                     #
                     #copy DOF to  PUMI
                     #
@@ -881,34 +881,36 @@ class NS_base:  # (HasTraits):
                         for lm in m.levelModelList:
                             for ci in range(lm.coefficients.nc):
                                 ivar=ivar+1
-                                soldof[ivar,:]=lm.u[ci].dof[:]
+                                for nN in range(lm.mesh.nNodes_global):
+                                    soldof[ivar][nN]=lm.u[ci].dof[nN]
+                                assert((soldof[ivar,:]==lm.u[ci].dof[:]).all())
                     #Get Physical Parameters
                     rho = numpy.array([self.pList[0].rho_0, self.pList[0].rho_1])
                     nu = numpy.array([self.pList[0].nu_0, self.pList[0].nu_1])
-                    p.domain.PUMIMesh.TransferSolutionToPUMI(soldof)
-                    p.domain.PUMIMesh.TransferPropertiesToPUMI(rho,nu)
+                    p0.domain.PUMIMesh.TransferSolutionToPUMI(soldof)
+                    p0.domain.PUMIMesh.TransferPropertiesToPUMI(rho,nu)
                     del soldof, rho, nu#, properties
                     #
                     #h-adapt the mesh
                     #
-                    p.domain.PUMIMesh.AdaptPUMIMesh()
+                    p0.domain.PUMIMesh.AdaptPUMIMesh()
                     #
-                    #creat proteus mesh from PUMI mesh
+                    #create proteus mesh from PUMI mesh
                     #
                     mesh=MeshTools.TetrahedralMesh()
                     log("Converting PUMI mesh to Proteus")
-                    mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.numBC, p.domain.faceList, parallel = self.comm.size() > 1)
+                    mesh.convertFromPUMI(p0.domain.PUMIMesh, p0.domain.numBC, p0.domain.faceList, parallel = self.comm.size() > 1)
                     assert(self.so.useOneMesh)#adaption only works on single-mesh multiphysics  for now
-                    log("Generating %i-level mesh from PUMI mesh" % (n.nLevels,))
+                    log("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
                     mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
-                                                                 nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                 parallelPartitioningType=n.parallelPartitioningType)
+                                                                 nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
+                                                                 parallelPartitioningType=n0.parallelPartitioningType)
                     if self.comm.size()==1:
-                        mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
-                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                              parallelPartitioningType=n.parallelPartitioningType)
+                        mlMesh.generateFromExistingCoarseMesh(mesh,n0.nLevels,
+                                                              nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
+                                                              parallelPartitioningType=n0.parallelPartitioningType)
                     else:
-                        mlMesh.generatePartitionedMeshFromPUMI(mesh,n.nLevels,nLayersOfOverlap=n.nLayersOfOverlapForParallel)
+                        mlMesh.generatePartitionedMeshFromPUMI(mesh,n0.nLevels,nLayersOfOverlap=n0.nLayersOfOverlapForParallel)
                     self.mlMesh_nList=[]
                     for p in self.pList:
                         self.mlMesh_nList.append(mlMesh)
@@ -923,9 +925,6 @@ class NS_base:  # (HasTraits):
                     #
                     #may want to trigger garbage collection here
                     modelListOld = self.modelList
-                    self.modelList=[]
-                    self.lsList=[]
-                    self.nlsList=[]
                     #
                     #now  allocate  new model  and solvers on new  mesh
                     #
@@ -961,19 +960,23 @@ class NS_base:  # (HasTraits):
                                 ivar=ivar+1
                     tot_var=ivar
                     soldof=numpy.zeros((tot_var,lm.mesh.nNodes_global),'d')
-                    p.domain.PUMIMesh.TransferSolutionToProteus(soldof)
+                    p0.domain.PUMIMesh.TransferSolutionToProteus(soldof)
                     #
                     # attach models  to each other and copy fields  on new mesh from PUMI
                     #
                     ivar=-1
                     for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
-                        log("Attaching models to model "+ptmp.name)
-                        m.attachModels(self.modelList)
                         for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList,mOld.levelModelList):
+                            save_dof=[]
                             for ci in range(lm.coefficients.nc):
                                 ivar=ivar+1
-                                lm.u[ci].dof[:]=soldof[ivar,:]
+                                for nN in range(lm.mesh.nNodes_global):
+                                    lm.u[ci].dof[nN]=soldof[ivar,nN]
+                                assert((lm.u[ci].dof[:]==soldof[ivar,:]).all())
+                                save_dof.append( lm.u[ci].dof.copy())
                             lm.setFreeDOF(lu)
+                            for ci in range(lm.coefficients.nc):
+                                assert((save_dof[ci] == lm.u[ci].dof).all())
                             lm.calculateSolutionAtQuadrature()
                             lm.timeIntegration.tLast = lmOld.timeIntegration.tLast
                             lm.timeIntegration.t = lmOld.timeIntegration.t
@@ -989,13 +992,15 @@ class NS_base:  # (HasTraits):
                     # evaluate  residuals and coefficients with new solution  and models attached
                     #
                     for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
+                        log("Attaching models to model "+ptmp.name)
+                        m.attachModels(self.modelList)
                         for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
+                            lm.timeTerm=True
                             lm.getResidual(lu,lr)
                             lm.timeIntegration.initializeTimeHistory(resetFromDOF=True)
                             lm.initializeTimeHistory()
                             lm.timeIntegration.initializeSpaceHistory()
                             lm.getResidual(lu,lr)
-                            lm.timeTerm=True
                             assert(lmOld.timeIntegration.tLast == lm.timeIntegration.tLast)
                             assert(lmOld.timeIntegration.t == lm.timeIntegration.t)
                             assert(lmOld.timeIntegration.dt == lm.timeIntegration.dt)
@@ -1005,16 +1010,17 @@ class NS_base:  # (HasTraits):
                         assert(m.stepController.dt_model == mOld.stepController.dt_model)
                         assert(m.stepController.t_model == mOld.stepController.t_model)
                         assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
-                        #log("Initializing time history for model step controller")
-                        #m.stepController.initializeTimeHistory()
-                        #self.postStep(m)
-                        #m.stepController.initialize_dt_model(lm.timeIntegration.tLast, lm.timeIntegration.t)
-                    p.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
+                        log("Initializing time history for model step controller")
+                        m.stepController.initializeTimeHistory()
+                    p0.domain.initFlag=True #For next step to take initial conditions from solution, only used on restarts
                     self.systemStepController.modelList = self.modelList
                     self.systemStepController.exitModelStep = {}
+                    self.systemStepController.controllerList = []
                     for model in self.modelList:
                         self.systemStepController.exitModelStep[model] = False
-                        #model.stepController.initializeTimeHistory()
+                        if model.levelModelList[-1].timeIntegration.isAdaptive:
+                            self.systemStepController.controllerList.append(model)
+                            self.systemStepController.maxFailures = model.stepController.maxSolverFailures
                     self.systemStepController.choose_dt_system()
                     for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
                         for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList, mOld.levelModelList):
@@ -1024,6 +1030,9 @@ class NS_base:  # (HasTraits):
                         assert(m.stepController.dt_model == mOld.stepController.dt_model)
                         assert(m.stepController.t_model == mOld.stepController.t_model)
                         assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
+                    #self.tCount+=1
+                    #for index,model in enumerate(self.modelList):
+                    #    self.archiveSolution(model,index,self.systemStepController.t_system+1.0e-6)
                   ##chitak end Adapt
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
