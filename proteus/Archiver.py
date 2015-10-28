@@ -59,10 +59,6 @@ class AR_base:
             comm_world = self.comm.comm.tompi4py()
         except:
             self.has_h5py=False
-        #cek hack for adaption based on i/o of hdf5
-        self.has_h5py = False
-        self.useGlobalXMF=False
-        #end hack
         try:
             import tables
             self.hasTables=True
