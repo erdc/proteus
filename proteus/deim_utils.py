@@ -235,3 +235,25 @@ def extract_sub_matrix_csr(rho,rowptr,colind,nnzval):
             nzval_sub[rowptr_sub[k]+m]=nnzval[MM]
     #
     return rowptr_sub,colind_sub,nzval_sub
+
+#going to try to monkey patch Transport Model when setting initial conditions 
+def project_initial_conditions(self):
+    """
+    Set the Transport model to use the projection of the initial 
+    condition in some base bases rather than the initial 
+    condition in the fine space
+ 
+    Work In Progress
+    """
+
+    assert 'setFreeDOF' in dir(self)
+    assert  'setUnknowns' in dir(self)
+    assert 'ic_projection_matrix' in dir(self) #original space to reduced/target space
+    assert 'ic_global_vector' in dir(self) #size of complete degree of freedom
+
+    self.setFreeDOF(self.ic_global_vector) #copy models degrees of freedom to global vector
+    projected_ics = numpy.dot(self.ic_projection_matrix,self.ic_global_vector) #project to reduced/target space dofs
+    self.ic_global_vector[:] = numpy.dot(self.ic_projection_matrix.T,projected_ics) #back to fine space
+    self.setUnknowns(self.du) #set models degrees of freedom from global vector
+
+    
