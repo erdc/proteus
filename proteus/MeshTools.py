@@ -2486,7 +2486,7 @@ class TetrahedralMesh(Mesh):
     def refine(self,oldMesh):
         return self.refineFreudenthalBey(oldMesh)
 
-    def convertFromPUMI(self, PUMIMesh, numBC, faceList, parallel=False):
+    def convertFromPUMI(self, PUMIMesh, faceList, parallel=False):
         import cmeshTools
         import MeshAdaptPUMI
         import flcbdfWrappers
@@ -2536,7 +2536,7 @@ class TetrahedralMesh(Mesh):
           cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
           cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
           self.buildFromC(self.cmesh)
-        print "meshInfo says : \n", self.meshInfo()
+        log("meshInfo says : \n"+`self.meshInfo()`)
         #from Profiling import memory
         #memory()
         #log(memory("Partitioning Mesh","Mesh"),level=0)

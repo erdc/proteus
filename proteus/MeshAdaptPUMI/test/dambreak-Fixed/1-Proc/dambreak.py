@@ -15,7 +15,7 @@ Profiling.logLevel=7
 Refinement = 100 #45min on a single core for spaceOrder=1, useHex=False
 genMesh=True
 useOldPETSc=False
-useSuperlu=False
+useSuperlu=True
 spaceOrder = 1
 useHex     = False
 useRBLES   = 0.0
@@ -23,7 +23,7 @@ useMetrics = 1.0
 applyCorrection=True
 useVF = 1.0
 useOnlyVF = False
-redist_Newton = True
+redist_Newton = False
 useRANS = 0 # 0 -- None
             # 1 -- K-Epsilon
             # 2 -- K-Omega
@@ -69,7 +69,7 @@ L = (0.584,0.146,0.70)
 he = L[0]/float(4*Refinement-1)
 #he*=0.5
 #he = L[0]/40.0
-he*=0.5#128
+#he*=0.5#128
 #he*=0.5#1024
 quasi2D = False#True
 
@@ -98,8 +98,6 @@ else:
         nny=2*Refinement
     else:
         domain = Domain.PUMIDomain() #initialize the domain
-        domain.numBC=6 #set number of BCs
-        domain.numAdaptSteps=6 #set number of adapt steps (loops)
         #Following sets list of face tags of geometric model as mapped from boundary Tags,
         #meaning if faceList=[[2,4],[1]] and boundaries=['left','right'], then faces with geometry tags 2 and 4 are set as 'left'
         #and face with geometric tag 4 is set as 'right'
@@ -108,35 +106,40 @@ else:
         #the geomtric face which is latter in the order (email: chitak2@rpi.edu for any questions)
         domain.faceList=[[3],[5],[1],[6],[2],[4]]
         #set max edge length, min edge length, number of meshadapt iterations and initialize the MeshAdaptPUMI object
-        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=0.018, numIter=2)
+        he = 0.018
+        #these are now inputs to the numerics
+        adaptMesh = True
+        adaptMesh_nSteps = 10
+        adaptMesh_numIter = 2
+        #
+        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=he, numIter=adaptMesh_numIter)
         #read the geometry and mesh
         domain.PUMIMesh.loadModelAndMesh("Dambreak.smd", "Dambreak_coarse.smb")
 
-
 # Time stepping
-T=0.01 #changed from 1.0
-dt_fixed = 0.005
-dt_init = min(0.1*dt_fixed,0.001)
-runCFL=0.33
+T=0.35
+dt_fixed = 0.01
+dt_init = min(0.01*dt_fixed,0.0001)
+runCFL=0.9
 nDTout = int(round(T/dt_fixed))
 
 # Numerical parameters
 ns_forceStrongDirichlet = False#True
 if useMetrics:
-    ns_shockCapturingFactor  = 0.9
-    ns_lag_shockCapturing = False
-    ns_lag_subgridError = False
-    ls_shockCapturingFactor  = 0.9
-    ls_lag_shockCapturing = False
+    ns_shockCapturingFactor  = 0.5
+    ns_lag_shockCapturing = True
+    ns_lag_subgridError = True
+    ls_shockCapturingFactor  = 0.5
+    ls_lag_shockCapturing = True
     ls_sc_uref  = 1.0
     ls_sc_beta  = 1.5
-    vof_shockCapturingFactor = 0.9
-    vof_lag_shockCapturing = False
+    vof_shockCapturingFactor = 0.5
+    vof_lag_shockCapturing = True
     vof_sc_uref = 1.0
     vof_sc_beta = 1.5
-    rd_shockCapturingFactor  = 0.9
+    rd_shockCapturingFactor  = 0.5
     rd_lag_shockCapturing = False
-    epsFact_density    = 1.6
+    epsFact_density    = 1.5
     epsFact_viscosity  = epsFact_curvature  = epsFact_vof = epsFact_consrv_heaviside = epsFact_consrv_dirac = epsFact_density
     epsFact_redistance = 0.33
     epsFact_consrv_diffusion = 10.0
@@ -172,13 +175,13 @@ else:
 ns_nl_atol_res = max(1.0e-8,0.001*he**2)
 vof_nl_atol_res = max(1.0e-8,0.001*he**2)
 ls_nl_atol_res = max(1.0e-8,0.001*he**2)
-rd_nl_atol_res = max(1.0e-8,0.001*he**2)
+rd_nl_atol_res = max(1.0e-8,0.01*he**2)
 mcorr_nl_atol_res = max(1.0e-8,0.001*he**2)
 kappa_nl_atol_res = max(1.0e-8,0.001*he**2)
 dissipation_nl_atol_res = max(1.0e-8,0.001*he**2)
 
 #turbulence
-ns_closure=2 #1-classic smagorinsky, 2-dynamic smagorinsky, 3 -- k-epsilon, 4 -- k-omega
+ns_closure=0 #1-classic smagorinsky, 2-dynamic smagorinsky, 3 -- k-epsilon, 4 -- k-omega
 if useRANS == 1:
     ns_closure = 3
 elif useRANS == 2:

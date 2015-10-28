@@ -21,7 +21,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   numIter=NumIter;
   nAdapt=0;
   if(PCU_Comm_Self()==0)
-     printf("Setting hmax=%lf, hmin=%lf, numIters(meshadapt)=%d\n",
+     printf("MeshAdapt: Setting hmax=%lf, hmin=%lf, numIters(meshadapt)=%d\n",
        hmax, hmin, numIter);
   global[0] = global[1] = global[2] = global[3] = 0;
   local[0] = local[1] = local[2] = local[3] = 0;
