@@ -890,13 +890,19 @@ class NS_base:  # (HasTraits):
           nu = numpy.array([self.pList[0].nu_0, self.pList[0].nu_1])
       
           bcTaglist=self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary
+          fluxBC = self.modelList[0].levelModelList[0].ebqe
           ebN = self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray
           eN_global = self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray
           p.domain.PUMIMesh.TransferSolutionToPUMI(soldof)
           p.domain.PUMIMesh.TransferPropertiesToPUMI(rho,nu)
 
-          p.domain.PUMIMesh.TransferBCtagsToProteus(bcTaglist[0],0,ebN,eN_global)
-
+          for idx in range (0,4):
+            if idx>0: 
+              diff_flux=fluxBC[('diffusiveFlux_bc',idx,idx)]
+            else:
+              diff_flux = numpy.empty([2,2]) #dummy diff flux
+            p.domain.PUMIMesh.TransferBCtagsToProteus(bcTaglist[idx],idx,ebN,eN_global,diff_flux)
+          
           del soldof, rho, nu
           p.domain.PUMIMesh.AdaptPUMIMesh()
           p.domain.initFlag=True #For next step to take initial conditions from solution
