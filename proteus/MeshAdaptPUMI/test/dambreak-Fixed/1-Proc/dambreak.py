@@ -98,8 +98,6 @@ else:
         nny=2*Refinement
     else:
         domain = Domain.PUMIDomain() #initialize the domain
-        domain.numBC=6 #set number of BCs
-        domain.numAdaptSteps=100 #set number of adapt steps (loops)
         #Following sets list of face tags of geometric model as mapped from boundary Tags,
         #meaning if faceList=[[2,4],[1]] and boundaries=['left','right'], then faces with geometry tags 2 and 4 are set as 'left'
         #and face with geometric tag 4 is set as 'right'
@@ -109,16 +107,20 @@ else:
         domain.faceList=[[3],[5],[1],[6],[2],[4]]
         #set max edge length, min edge length, number of meshadapt iterations and initialize the MeshAdaptPUMI object
         he = 0.018
-        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=he, numIter=2)
+        #these are now inputs to the numerics
+        adaptMesh = True
+        adaptMesh_nSteps = 10
+        adaptMesh_numIter = 2
+        #
+        domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.08, hmin=he, numIter=adaptMesh_numIter)
         #read the geometry and mesh
         domain.PUMIMesh.loadModelAndMesh("Dambreak.smd", "Dambreak_coarse.smb")
-        domain.adapt=True
 
 # Time stepping
 T=0.35
 dt_fixed = 0.01
 dt_init = min(0.01*dt_fixed,0.0001)
-runCFL=0.33
+runCFL=0.9
 nDTout = int(round(T/dt_fixed))
 
 # Numerical parameters
@@ -141,7 +143,7 @@ if useMetrics:
     epsFact_viscosity  = epsFact_curvature  = epsFact_vof = epsFact_consrv_heaviside = epsFact_consrv_dirac = epsFact_density
     epsFact_redistance = 0.33
     epsFact_consrv_diffusion = 10.0
-    redist_Newton = True
+    redist_Newton = False
 else:
     ns_shockCapturingFactor  = 0.9
     ns_lag_shockCapturing = True

@@ -286,7 +286,7 @@ class NS_base:  # (HasTraits):
                 #The mesh is read in from the driver python file
                 mesh=MeshTools.TetrahedralMesh()
                 log("Converting PUMI mesh to Proteus")
-                mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.numBC, p.domain.faceList, parallel = comm.size() > 1)
+                mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.faceList, parallel = comm.size() > 1)
                 mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                              parallelPartitioningType=n.parallelPartitioningType)
@@ -297,7 +297,6 @@ class NS_base:  # (HasTraits):
                                                       parallelPartitioningType=n.parallelPartitioningType)
                 else:
                   mlMesh.generatePartitionedMeshFromPUMI(mesh,n.nLevels,nLayersOfOverlap=n.nLayersOfOverlapForParallel)
-
             elif isinstance(p.domain,Domain.MeshTetgenDomain):
                 mesh=MeshTools.TetrahedralMesh()
                 log("Reading coarse mesh from tetgen file")
@@ -575,28 +574,6 @@ class NS_base:  # (HasTraits):
             self.tCount=0#time step counter
         log("Attaching models and running spin-up step if requested")
 
-        #chitak, override the initial conditions
-        if (isinstance(p.domain, Domain.PUMIDomain) and p.domain.initFlag==True):
-          log("Setting initial conditions from PUMI interpolated solution")
-          ivar=0;
-          for m in self.modelList:
-            for lm in m.levelModelList:
-               for ci in range(lm.coefficients.nc):
-                       ivar=ivar+1
-          tot_var=ivar
-          soldof=numpy.zeros((tot_var,lm.mesh.nNodes_global))
-          p.domain.PUMIMesh.TransferSolutionToProteus(soldof)
-          ivar=-1
-          for m in self.modelList:
-            for lm in m.levelModelList:
-               for ci in range(lm.coefficients.nc):
-                 ivar=ivar+1
-                 for nN in range(lm.mesh.nNodes_global):
-                    lm.u[ci].dof[nN]=soldof[ivar,nN]
-               lm.setFreeDOF(m.uList[0])
-               lm.calculateSolutionAtQuadrature()
-          del soldof
-
         self.firstStep = True ##\todo get rid of firstStep flag in NumericalSolution if possible?
         spinup = []
         for index,m in self.modelSpinUp.iteritems():
@@ -717,7 +694,7 @@ class NS_base:  # (HasTraits):
         #schemes. The next loop is for each model to step, potentially
         #adaptively, to the time in the stepSequence. Lastly there is
         #a loop for substeps(stages).
-
+        self.nSequenceSteps = 0
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             log("==============================================================",level=0)
             log("Solving over interval [%12.5e,%12.5e]" % (self.tn_last,self.tn),level=0)
@@ -737,9 +714,8 @@ class NS_base:  # (HasTraits):
                 while (not self.systemStepController.converged() and
                        not systemStepFailed):
                     log("Split operator iteration %i" % (self.systemStepController.its,),level=3)
-
+                    self.nSequenceSteps += 1
                     for (self.t_stepSequence,model) in self.systemStepController.stepSequence:
-
                         log("Model: %s" % (model.name),level=1)
                         log("Fractional step %12.5e for model %s" % (self.t_stepSequence,model.name),level=3)
 
@@ -858,17 +834,20 @@ class NS_base:  # (HasTraits):
                     self.tCount+=1
                     for index,model in enumerate(self.modelList):
                         self.archiveSolution(model,index,self.systemStepController.t_system_last)
-                #h-adapt mesh
-                #chitak Adapt the mesh and transfer the solution
-                #modified by cek to move inside main loop
+                #
+                #h-adapt mesh, cekees modified from chitak
+                #
+                #assuming same for all physics and numerics  for now
                 p0 = self.pList[0]
                 n0 = self.nList[0]
-                if isinstance(p0.domain, Domain.PUMIDomain) and p0.domain.adapt and self.tCount%10 == 0:
-                    #for m in self.modelList: m.stepController.dt_model *= 0.01
-                    #self.systemStepController.choose_dt_system()
-                    #
-                    #copy DOF to  PUMI
-                    #
+                #can only handle PUMIDomain's for now
+                if (isinstance(p0.domain, Domain.PUMIDomain) and
+                    n0.adaptMesh and
+                    self.nSequenceSteps%n0.adaptMesh_nSteps == 0 and
+                    self.so.useOneMesh):
+                    log("Entering mesh adaption block")
+                    log("Copying DOF and parameters to PUMI")
+                    #replace block copy with named fields?
                     ivar=0;
                     for m in self.modelList:
                         for lm in m.levelModelList:
@@ -881,26 +860,28 @@ class NS_base:  # (HasTraits):
                         for lm in m.levelModelList:
                             for ci in range(lm.coefficients.nc):
                                 ivar=ivar+1
-                                for nN in range(lm.mesh.nNodes_global):
-                                    soldof[ivar][nN]=lm.u[ci].dof[nN]
-                                assert((soldof[ivar,:]==lm.u[ci].dof[:]).all())
+                                soldof[ivar,:] = lm.u[ci].dof[:]
                     #Get Physical Parameters
-                    rho = numpy.array([self.pList[0].rho_0, self.pList[0].rho_1])
-                    nu = numpy.array([self.pList[0].nu_0, self.pList[0].nu_1])
+                    #Can we do this in a problem-independent  way?
+                    rho = numpy.array([self.pList[0].rho_0,
+                                       self.pList[0].rho_1])
+                    nu = numpy.array([self.pList[0].nu_0,
+                                      self.pList[0].nu_1])
                     p0.domain.PUMIMesh.TransferSolutionToPUMI(soldof)
                     p0.domain.PUMIMesh.TransferPropertiesToPUMI(rho,nu)
-                    del soldof, rho, nu#, properties
+                    del soldof, rho, nu
                     #
-                    #h-adapt the mesh
+                    # Should we put in a hook here for forcing refinements?
+                    # (e.g. set size  field  based on proteus calcualtions?)
+                    # ...
                     #
+                    log("h-adapt mesh by calling AdaptPUMIMesh")
                     p0.domain.PUMIMesh.AdaptPUMIMesh()
-                    #
-                    #create proteus mesh from PUMI mesh
-                    #
-                    mesh=MeshTools.TetrahedralMesh()
                     log("Converting PUMI mesh to Proteus")
-                    mesh.convertFromPUMI(p0.domain.PUMIMesh, p0.domain.numBC, p0.domain.faceList, parallel = self.comm.size() > 1)
-                    assert(self.so.useOneMesh)#adaption only works on single-mesh multiphysics  for now
+                    mesh=MeshTools.TetrahedralMesh()
+                    mesh.convertFromPUMI(p0.domain.PUMIMesh,
+                                         p0.domain.faceList,
+                                         parallel = self.comm.size() > 1)
                     log("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
                     mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
                                                                  nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
@@ -925,24 +906,35 @@ class NS_base:  # (HasTraits):
                     #
                     #may want to trigger garbage collection here
                     modelListOld = self.modelList
-                    #
-                    #now  allocate  new model  and solvers on new  mesh
-                    #
+                    log("Allocating models on new mesh")
                     self.allocateModels()
-                    #
-                    #set up sim tools and auxiliary variables
+                    log("Attach auxiliary variables to new models")
                     #(cut and pasted form init, need to cleanup)
                     self.simOutputList = []
                     self.auxiliaryVariables = {}
                     if self.simFlagsList != None:
-                        for p,n,simFlags,model,index in zip(self.pList,self.nList,self.simFlagsList,self.modelList,range(len(self.pList))):
-                            self.simOutputList.append(SimTools.SimulationProcessor(flags=simFlags,nLevels=n.nLevels,
-                                                                                   pFile=p,nFile=n,
-                                                                                   analyticalSolution=p.analyticalSolution))
+                        for p, n, simFlags, model, index in zip(
+                                self.pList,
+                                self.nList,
+                                self.simFlagsList,
+                                self.modelList,
+                                range(len(self.pList))):
+                            self.simOutputList.append(
+                                SimTools.SimulationProcessor(
+                                    flags=simFlags,
+                                    nLevels=n.nLevels,
+                                    pFile=p,
+                                    nFile=n,
+                                    analyticalSolution=p.analyticalSolution))
                             model.simTools = self.simOutputList[-1]
                             self.auxiliaryVariables[model.name]= [av.attachModel(model,self.ar[index]) for av in n.auxiliaryVariables]
                     else:
-                        for p,n,s,model,index in zip(self.pList,self.nList,self.sList,self.modelList,range(len(self.pList))):
+                        for p,n,s,model,index in zip(
+                                self.pList,
+                                self.nList,
+                                self.sList,
+                                self.modelList,
+                                range(len(self.pList))):
                             self.simOutputList.append(SimTools.SimulationProcessor(pFile=p,nFile=n))
                             model.simTools = self.simOutputList[-1]
                             model.viewer = Viewers.V_base(p,n,s)
@@ -950,9 +942,7 @@ class NS_base:  # (HasTraits):
                     for avList in self.auxiliaryVariables.values():
                         for av in avList:
                             av.attachAuxiliaryVariables(self.auxiliaryVariables)
-                    #
-                    #initialize  solution on new mesh  at this time step
-                    #
+                    log("Transfering fields from PUMI to Proteus")
                     ivar=0;
                     for m in self.modelList:
                         for lm in m.levelModelList:
@@ -961,9 +951,7 @@ class NS_base:  # (HasTraits):
                     tot_var=ivar
                     soldof=numpy.zeros((tot_var,lm.mesh.nNodes_global),'d')
                     p0.domain.PUMIMesh.TransferSolutionToProteus(soldof)
-                    #
-                    # attach models  to each other and copy fields  on new mesh from PUMI
-                    #
+                    log("Attaching models on new mesh to each other")
                     ivar=-1
                     for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
                         for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList,mOld.levelModelList):
@@ -988,9 +976,7 @@ class NS_base:  # (HasTraits):
                         m.stepController.t_model = mOld.stepController.t_model
                         m.stepController.t_model_last = mOld.stepController.t_model_last
                         m.stepController.substeps = mOld.stepController.substeps
-                    #
-                    # evaluate  residuals and coefficients with new solution  and models attached
-                    #
+                    log("Evaluating residuals and time integration")
                     for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
                         log("Attaching models to model "+ptmp.name)
                         m.attachModels(self.modelList)
@@ -1030,9 +1016,14 @@ class NS_base:  # (HasTraits):
                         assert(m.stepController.dt_model == mOld.stepController.dt_model)
                         assert(m.stepController.t_model == mOld.stepController.t_model)
                         assert(m.stepController.t_model_last == mOld.stepController.t_model_last)
-                    #self.tCount+=1
-                    #for index,model in enumerate(self.modelList):
-                    #    self.archiveSolution(model,index,self.systemStepController.t_system+1.0e-6)
+                    if self.archiveFlag == ArchiveFlags.EVERY_SEQUENCE_STEP:
+                        #hack for archiving initial solution on adapted mesh
+                        self.tCount+=1
+                        for index,model in enumerate(self.modelList):
+                            self.archiveSolution(
+                                model,
+                                index,
+                                self.systemStepController.t_system+1.0e-6)
                   ##chitak end Adapt
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:

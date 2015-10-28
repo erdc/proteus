@@ -3,6 +3,7 @@
 from cpython.ref cimport PyObject
 cimport numpy as np
 import numpy as np
+from ..Profiling import logEvent
 
 cdef extern from "mesh.h":
     struct Mesh:
@@ -36,7 +37,7 @@ cdef class MeshAdaptPUMI:
     cdef double hmax, hmin
     cdef int numIter, numAdaptSteps
     def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="farhad"):
-        print hmax,hmin,numIter
+        logEvent("MeshAdaptPUMI: hmax = {0} hmin = {1} numIter = {2}".format(hmax,hmin,numIter))
         self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig)
     def __dealloc__(self):
         del self.thisptr
