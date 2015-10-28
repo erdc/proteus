@@ -6752,7 +6752,7 @@ class OneLevelTransport(NonlinearEquation):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
                     r[self.offset[cj]+self.stride[cj]*dofN] = 0.0
             
-    def getLinearJacobian_CSR(self,jacobian,includeBoundaryAdjointInJacobian=False):
+    def getLinearJacobian_CSR(self,jacobian,includeBoundaryAdjointTermsInJacobian=False):
         """
         Add in the element jacobians to the linear portion of the global jacobian
         """
@@ -6892,7 +6892,7 @@ class OneLevelTransport(NonlinearEquation):
         #
         for ci,ckDict in self.coefficients.diffusion.iteritems():
             for ck in ckDict.keys():
-                if self.numericalFlux.includeBoundaryAdjoint and includeBoundaryAdjointInJacobian:
+                if self.numericalFlux.includeBoundaryAdjoint and includeBoundaryAdjointTermsInJacobian:
                     if self.sd:
                         if self.numericalFlux.hasInterior:
                             cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
