@@ -60,7 +60,6 @@ class MeshAdaptPUMIDrvr{
   private: 
   apf::Mesh2* m;
   int comm_size, comm_rank;
-  int elms_owned, faces_owned, edges_owned, vtx_owned;
   int numVar;
 
   double rho[2], nu[2];
