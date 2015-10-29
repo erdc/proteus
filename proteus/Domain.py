@@ -699,8 +699,8 @@ class PUMIDomain(D_base):
   faceList -- defines face classification in simmetrix  mesh
   PUMIMesh -- the MeshAdapt object
   """
-  def __init__(self,name="PUMIDomain"):
-      D_base.__init__(self,3,name)
+  def __init__(self, name="PUMIDomain", dim=3):
+      D_base.__init__(self,dim,name)
       self.faceList=[]
       self.PUMIMesh=None
       #
