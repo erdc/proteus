@@ -12,6 +12,7 @@
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
     const char* sfConfig)
 {
+  m = 0;
   PCU_Comm_Init();
   PCU_Protect();
   Sim_readLicenseFile(0);
