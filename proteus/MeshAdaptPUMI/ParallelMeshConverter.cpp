@@ -115,19 +115,15 @@ int MeshAdaptPUMIDrvr::ConstructGlobalNumbering(Mesh &mesh)
     int* allOffsets;
     if(dim==3){
       allOffsets = mesh.elementOffsets_subdomain_owned;
-      elms_owned = nLocalOwned;
     }
     if(dim==2){
       allOffsets = mesh.elementBoundaryOffsets_subdomain_owned;
-      faces_owned = nLocalOwned;
     }
     if(dim==1){
       allOffsets = mesh.edgeOffsets_subdomain_owned;
-      edges_owned = nLocalOwned;
     }
     if(dim==0){
       allOffsets = mesh.nodeOffsets_subdomain_owned;
-      vtx_owned = nLocalOwned;
     }
 
     /* one of the many reasons N^2 algorithms are bad */
