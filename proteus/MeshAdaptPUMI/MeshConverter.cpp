@@ -6,13 +6,6 @@
 
 #include <sstream>
 
-const int DEFAULT_ELEMENT_MATERIAL=0;
-const int DEFAULT_NODE_MATERIAL=-1;
-const int INTERIOR_NODE_MATERIAL=0;
-const int EXTERIOR_NODE_MATERIAL=1;
-const int INTERIOR_ELEMENT_BOUNDARY_MATERIAL=0;
-const int EXTERIOR_ELEMENT_BOUNDARY_MATERIAL=1;
-
 static apf::Numbering* numberOwnedEntitiesFirst(apf::Mesh* m, int dimension)
 {
   std::stringstream ss;
@@ -101,18 +94,9 @@ int MeshAdaptPUMIDrvr::localNumber(apf::MeshEntity* e)
   return getNumber(local[apf::getDimension(m, e)], e, 0, 0);
 }
 
-//Construct node data structures for Proteus
-int MeshAdaptPUMIDrvr::ConstructNodes(Mesh& mesh) {
-//////build node array (coordinates?)
-
-//set interior and exterior node material flags after get boundary info in
-//constructElementBoundaryElementsArray_edge 
-//if nodeMaterialTypes left as DEFAULT_NODE_MATERIALi
-  mesh.nodeArray = new double[mesh.nNodes_global*3];
-  memset(mesh.nodeArray,0,mesh.nNodes_global*3*sizeof(double));
-  mesh.nodeMaterialTypes = new int[mesh.nNodes_global];
-  memset(mesh.nodeMaterialTypes,DEFAULT_NODE_MATERIAL,mesh.nNodes_global*sizeof(int));
-
+int MeshAdaptPUMIDrvr::ConstructNodes(Mesh& mesh)
+{
+  mesh.nodeArray = new double[mesh.nNodes_global * 3];
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* e;
   while ((e = m->iterate(it))) {
@@ -123,17 +107,12 @@ int MeshAdaptPUMIDrvr::ConstructNodes(Mesh& mesh) {
       mesh.nodeArray[i * 3 + j]= x[j];
   }
   m->end(it);
-
   return 0;
 } 
 
 int MeshAdaptPUMIDrvr::ConstructElements(Mesh& mesh)
 {
-//////build node list for the elements
   mesh.elementNodesArray = new int[mesh.nElements_global*mesh.nNodes_element];
-  mesh.elementMaterialTypes = new int[mesh.nElements_global];
-  memset(mesh.elementMaterialTypes,DEFAULT_ELEMENT_MATERIAL,mesh.nElements_global*sizeof(int));
-
   apf::MeshIterator* it = m->begin(m->getDimension());
   apf::MeshEntity* e;
   while ((e = m->iterate(it))) {
@@ -144,9 +123,8 @@ int MeshAdaptPUMIDrvr::ConstructElements(Mesh& mesh)
       int vtxID = localNumber(v[j]);
       mesh.elementNodesArray[i * mesh.nNodes_element + j] = vtxID;
     }
-  } //region loop
+  }
   m->end(it);
-
   return 0;
 }
 
@@ -339,9 +317,7 @@ static void createStars(Mesh& mesh)
 
 int MeshAdaptPUMIDrvr::ConstructEdges(Mesh& mesh)
 {
-/////////build edge data structutes and interior and exterior element boundary array
   mesh.edgeNodesArray = new int[mesh.nEdges_global * 2];
-
   apf::MeshIterator* it = m->begin(1);
   apf::MeshEntity* e;
   while ((e = m->iterate(it))) {
@@ -354,64 +330,67 @@ int MeshAdaptPUMIDrvr::ConstructEdges(Mesh& mesh)
     }
   }
   m->end(it);
-  
-//end: build edge data structures (also added star data structures here itself)
   createStars(mesh);
-  
   return 0;
 }
 
+#define INTERIOR_MATERIAL 0
+#define EXTERIOR_MATERIAL 1
+#define DEFAULT_ELEMENT_MATERIAL INTERIOR_MATERIAL
+
+static int getInOutMaterial(apf::Mesh* m, apf::MeshEntity* e)
+{
+  if (m->getModelType(m->toModel(e)) == m->getDimension())
+    return INTERIOR_MATERIAL;
+  else
+    return EXTERIOR_MATERIAL;
+}
+
+/* This function builds the element, elementBoundary, and node
+ * Material arrays and fills them in with zero or one depending
+ * one whether the entity is classified on the geometric boundary
+ * or not.
+ * This forms a baseline material tagging for all entities,
+ * which later gets overwritten for some entities with more
+ * specific values in MeshAdaptPUMIDrvr::UpdateMaterialArrays.
+ */
 int MeshAdaptPUMIDrvr::ConstructMaterialArrays(Mesh& mesh)
 {
   mesh.elementBoundaryMaterialTypes = new int[mesh.nElementBoundaries_global];
   mesh.nodeMaterialTypes = new int[mesh.nNodes_global];
   mesh.elementMaterialTypes = new int[mesh.nElements_global];
-
-  memset(mesh.nodeMaterialTypes,DEFAULT_NODE_MATERIAL,
-      mesh.nNodes_global*sizeof(int));
-  memset(mesh.elementMaterialTypes,DEFAULT_ELEMENT_MATERIAL,
-      mesh.nElements_global*sizeof(int));
- 
+  for (int i = 0; i < mesh.nElements_global; ++i)
+    mesh.elementMaterialTypes[i] = DEFAULT_ELEMENT_MATERIAL;
   int dim = m->getDimension();
   apf::MeshIterator* it = m->begin(dim - 1);
   apf::MeshEntity* f;
-  //populate elementBoundary Material arrays
-  static int const material_table[4] = {
-    EXTERIOR_ELEMENT_BOUNDARY_MATERIAL,
-    EXTERIOR_ELEMENT_BOUNDARY_MATERIAL,
-    EXTERIOR_ELEMENT_BOUNDARY_MATERIAL,
-    INTERIOR_ELEMENT_BOUNDARY_MATERIAL
-  };
   while ((f = m->iterate(it))) {
     int i = localNumber(f);
-    int geomType = m->getModelType(m->toModel(f));
-    mesh.elementBoundaryMaterialTypes[i] = material_table[geomType];
+    mesh.elementBoundaryMaterialTypes[i] = getInOutMaterial(m, f);
   }
   m->end(it);
-  
-  //populate node Material arrays
   it = m->begin(0);
   apf::MeshEntity* v;
-  //populate elementBoundary Material arrays
   while ((v = m->iterate(it))) {
     int i = localNumber(v);
-    int geomType = m->getModelType(m->toModel(v));
-    mesh.nodeMaterialTypes[i] = material_table[geomType];
+    mesh.nodeMaterialTypes[i] = getInOutMaterial(m, v);
   }
   m->end(it);
-
   return 0;
 }
 
-//function to update the material arrays for boundary conditions
+/* Given a geometric model face identified by the integer
+ * (scorec_tag), get all nodes and element boundaries
+ * classified on the closure of that model face and
+ * put the (proteus_material) integer in their material
+ * array slot.
+ */
 int MeshAdaptPUMIDrvr::UpdateMaterialArrays(Mesh& mesh,
     int proteus_material,
     int scorec_tag)
 {
   int dim = m->getDimension();
   apf::ModelEntity* geomEnt = m->findModelEntity(dim - 1, scorec_tag);
-
-  //populate elementBoundary Material arrays
   apf::MeshIterator* it = m->begin(dim - 1);
   apf::MeshEntity* f;
   while ((f = m->iterate(it))) {
@@ -421,13 +400,11 @@ int MeshAdaptPUMIDrvr::UpdateMaterialArrays(Mesh& mesh,
     }
   }
   m->end(it);
-
   apf::DynamicArray<apf::Node> nodes;
   apf::getNodesOnClosure(m, geomEnt, nodes);
   for (size_t i = 0; i < nodes.getSize(); ++i) {
     int vtxId = localNumber(nodes[i].entity);
     mesh.nodeMaterialTypes[vtxId] = proteus_material;
   }
-
   return 0;
 }
