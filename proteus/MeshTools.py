@@ -1380,6 +1380,71 @@ class Mesh:
             gnuplot.flush()
         raw_input('Please press return to continue... \n')
 
+    def convertFromPUMI(self, PUMIMesh, faceList, parallel=False):
+        import cmeshTools
+        import MeshAdaptPUMI
+        import flcbdfWrappers
+        import Comm
+        comm = Comm.get()
+        self.cmesh = cmeshTools.CMesh()
+        if parallel:
+          self.subdomainMesh=self.__class__()
+          self.subdomainMesh.globalMesh = self
+          self.subdomainMesh.cmesh = cmeshTools.CMesh()
+          PUMIMesh.ConstructFromParallelPUMIMesh(self.cmesh,
+              self.subdomainMesh.cmesh)
+          for i in range(len(faceList)):
+            for j in range(len(faceList[i])):
+              PUMIMesh.UpdateMaterialArrays(self.subdomainMesh.cmesh, i+1,
+                  faceList[i][j])
+          cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
+          cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
+          self.buildFromCNoArrays(self.cmesh)
+          (self.elementOffsets_subdomain_owned,
+           self.elementNumbering_subdomain2global,
+           self.nodeOffsets_subdomain_owned,
+           self.nodeNumbering_subdomain2global,
+           self.elementBoundaryOffsets_subdomain_owned,
+           self.elementBoundaryNumbering_subdomain2global,
+           self.edgeOffsets_subdomain_owned,
+           self.edgeNumbering_subdomain2global) = (
+              flcbdfWrappers.convertPUMIPartitionToPython(self.cmesh,
+                  self.subdomainMesh.cmesh))
+          self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
+          self.subdomainMesh.nElements_owned = (
+              self.elementOffsets_subdomain_owned[comm.rank()+1] -
+              self.elementOffsets_subdomain_owned[comm.rank()])
+          self.subdomainMesh.nNodes_owned = (
+              self.nodeOffsets_subdomain_owned[comm.rank()+1] -
+              self.nodeOffsets_subdomain_owned[comm.rank()])
+          self.subdomainMesh.nElementBoundaries_owned = (
+              self.elementBoundaryOffsets_subdomain_owned[comm.rank()+1] -
+              self.elementBoundaryOffsets_subdomain_owned[comm.rank()])
+          self.subdomainMesh.nEdges_owned = (
+              self.edgeOffsets_subdomain_owned[comm.rank()+1] -
+              self.edgeOffsets_subdomain_owned[comm.rank()])
+          comm.barrier()
+          par_nodeDiametersArray = (
+              ParVec_petsc4py(self.subdomainMesh.nodeDiametersArray,
+                              bs=1,
+                              n=self.subdomainMesh.nNodes_owned,
+                              N=self.nNodes_global,
+                              nghosts = self.subdomainMesh.nNodes_global -
+                                        self.subdomainMesh.nNodes_owned,
+                              subdomain2global = 
+                                  self.nodeNumbering_subdomain2global))
+          par_nodeDiametersArray.scatter_forward_insert()
+          comm.barrier()
+        else:
+          PUMIMesh.ConstructFromSerialPUMIMesh(self.cmesh)
+          for i in range(len(faceList)):
+            for j in range(len(faceList[i])):
+              PUMIMesh.UpdateMaterialArrays(self.cmesh, i+1, faceList[i][j])
+          cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
+          cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
+          self.buildFromC(self.cmesh)
+        log("meshInfo says : \n"+`self.meshInfo()`)
+
 class MultilevelMesh(Mesh):
     def __init__(self,levels=1):
         self.meshList=[]
@@ -2485,71 +2550,6 @@ class TetrahedralMesh(Mesh):
 
     def refine(self,oldMesh):
         return self.refineFreudenthalBey(oldMesh)
-
-    def convertFromPUMI(self, PUMIMesh, faceList, parallel=False):
-        import cmeshTools
-        import MeshAdaptPUMI
-        import flcbdfWrappers
-        import Comm
-        comm = Comm.get()
-        self.cmesh = cmeshTools.CMesh()
-        if parallel:
-          self.subdomainMesh=self.__class__()
-          self.subdomainMesh.globalMesh = self
-          self.subdomainMesh.cmesh = cmeshTools.CMesh()
-          PUMIMesh.ConstructFromParallelPUMIMesh(self.cmesh,
-              self.subdomainMesh.cmesh)
-          for i in range(len(faceList)):
-            for j in range(len(faceList[i])):
-              PUMIMesh.UpdateMaterialArrays(self.subdomainMesh.cmesh, i+1,
-                  faceList[i][j])
-          cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
-          cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
-          self.buildFromCNoArrays(self.cmesh)
-          (self.elementOffsets_subdomain_owned,
-           self.elementNumbering_subdomain2global,
-           self.nodeOffsets_subdomain_owned,
-           self.nodeNumbering_subdomain2global,
-           self.elementBoundaryOffsets_subdomain_owned,
-           self.elementBoundaryNumbering_subdomain2global,
-           self.edgeOffsets_subdomain_owned,
-           self.edgeNumbering_subdomain2global) = (
-              flcbdfWrappers.convertPUMIPartitionToPython(self.cmesh,
-                  self.subdomainMesh.cmesh))
-          self.subdomainMesh.buildFromC(self.subdomainMesh.cmesh)
-          self.subdomainMesh.nElements_owned = (
-              self.elementOffsets_subdomain_owned[comm.rank()+1] -
-              self.elementOffsets_subdomain_owned[comm.rank()])
-          self.subdomainMesh.nNodes_owned = (
-              self.nodeOffsets_subdomain_owned[comm.rank()+1] -
-              self.nodeOffsets_subdomain_owned[comm.rank()])
-          self.subdomainMesh.nElementBoundaries_owned = (
-              self.elementBoundaryOffsets_subdomain_owned[comm.rank()+1] -
-              self.elementBoundaryOffsets_subdomain_owned[comm.rank()])
-          self.subdomainMesh.nEdges_owned = (
-              self.edgeOffsets_subdomain_owned[comm.rank()+1] -
-              self.edgeOffsets_subdomain_owned[comm.rank()])
-          comm.barrier()
-          par_nodeDiametersArray = (
-              ParVec_petsc4py(self.subdomainMesh.nodeDiametersArray,
-                              bs=1,
-                              n=self.subdomainMesh.nNodes_owned,
-                              N=self.nNodes_global,
-                              nghosts = self.subdomainMesh.nNodes_global -
-                                        self.subdomainMesh.nNodes_owned,
-                              subdomain2global = 
-                                  self.nodeNumbering_subdomain2global))
-          par_nodeDiametersArray.scatter_forward_insert()
-          comm.barrier()
-        else:
-          PUMIMesh.ConstructFromSerialPUMIMesh(self.cmesh)
-          for i in range(len(faceList)):
-            for j in range(len(faceList[i])):
-              PUMIMesh.UpdateMaterialArrays(self.cmesh, i+1, faceList[i][j])
-          cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
-          cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
-          self.buildFromC(self.cmesh)
-        log("meshInfo says : \n"+`self.meshInfo()`)
 
     def generateFromTetgenFiles(self,filebase,base,skipGeometricInit=True,parallel=False):
         import cmeshTools
