@@ -85,13 +85,11 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
   in->shouldSnap = false;
   in->shouldFixShape = true;
   std::cout<<"Starting adapt (numIter "<<numIter<<")"<<std::endl;
-  apf::writeVtkFiles("pumi_size", m);
   ma::adapt(in);
   std::cout<<"Finished adapt"<<std::endl;
   freeField(size_frame);
   freeField(size_scale);
   m->verify();
-  apf::writeVtkFiles("pumi_adapt", m);
   nAdapt++; //counter for number of adapt steps
   return 0;
 }
