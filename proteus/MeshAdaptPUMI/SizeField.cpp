@@ -47,7 +47,6 @@ int MeshAdaptPUMIDrvr::CalculateSizeField()
   m->end(it);
   for(int i=0; i < 3; i++)
     SmoothField(size_iso);
-  apf::writeVtkFiles("pumi_size", m);
   return 0;
 }
 
@@ -127,7 +126,6 @@ std::cout<<"Err curr "<<err_curr<<" Err_dest "<<err_dest<<std::endl;
   apf::destroyField(size_iso_reg); //will throw error if not destroyed
   apf::destroyField(err_reg);
   freeField(size_iso); //no longer necessary
-  apf::writeVtkFiles("pumi_size", m);
   return 0;
 }
 
@@ -167,7 +165,6 @@ static apf::Field* computeHessianField(apf::Field* grad2phi)
     apf::setMatrix(hessf, v, 0, hess);
   }
   m->end(it);
-  apf::writeVtkFiles("hessian", m);
   return hessf;
 }
 
@@ -348,17 +345,6 @@ int MeshAdaptPUMIDrvr::CalculateAnisoSizeField()
   for (int i = 0; i < 2; ++i)
     SmoothField(size_scale);
  
-  //apf::writeVtkFiles("pumi_size", m);
-  std::stringstream s1;
-  s1 << "SizeField_t" << nAdapt;
-  std::string str1 = s1.str();
-  apf::writeVtkFiles(str1.c_str(), m);
-
-  std::stringstream s2;
-  s2 << "SizeField_t" << nAdapt<<".smb";
-  std::string str2 = s2.str();
-  m->writeNative(str2.c_str());
-
   return 0;
 }
 
