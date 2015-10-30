@@ -283,20 +283,34 @@ class NS_base:  # (HasTraits):
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
             elif isinstance(p.domain,Domain.PUMIDomain):
-                #The mesh is read in from the driver python file
-                mesh=MeshTools.TetrahedralMesh()
+                #ibaned: PUMI conversion #1
+                if p.domain.nd == 3:
+                  mesh = MeshTools.TetrahedralMesh()
+                else:
+                  mesh = MeshTools.TriangularMesh()
                 log("Converting PUMI mesh to Proteus")
-                mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.faceList, parallel = comm.size() > 1)
-                mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
-                                                             nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                             parallelPartitioningType=n.parallelPartitioningType)
+                mesh.convertFromPUMI(p.domain.PUMIMesh, p.domain.faceList,
+                    parallel = comm.size() > 1, dim = p.domain.nd)
+                if p.domain.nd == 3:
+                  mlMesh = MeshTools.MultilevelTetrahedralMesh(
+                      0,0,0,skipInit=True,
+                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                      parallelPartitioningType=n.parallelPartitioningType)
+                if p.domain.nd == 2:
+                  mlMesh = MeshTools.MultilevelTriangularMesh(
+                      0,0,0,skipInit=True,
+                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                      parallelPartitioningType=n.parallelPartitioningType)
                 log("Generating %i-level mesh from PUMI mesh" % (n.nLevels,))
                 if comm.size()==1:
-                  mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
-                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                      parallelPartitioningType=n.parallelPartitioningType)
+                  mlMesh.generateFromExistingCoarseMesh(
+                      mesh,n.nLevels,
+                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                      parallelPartitioningType=n.parallelPartitioningType)
                 else:
-                  mlMesh.generatePartitionedMeshFromPUMI(mesh,n.nLevels,nLayersOfOverlap=n.nLayersOfOverlapForParallel)
+                  mlMesh.generatePartitionedMeshFromPUMI(
+                      mesh,n.nLevels,
+                      nLayersOfOverlap=n.nLayersOfOverlapForParallel)
             elif isinstance(p.domain,Domain.MeshTetgenDomain):
                 mesh=MeshTools.TetrahedralMesh()
                 log("Reading coarse mesh from tetgen file")
@@ -892,32 +906,41 @@ class NS_base:  # (HasTraits):
                     log("h-adapt mesh by calling AdaptPUMIMesh")
                     p0.domain.PUMIMesh.AdaptPUMIMesh()
                     log("Converting PUMI mesh to Proteus")
-                    mesh=MeshTools.TetrahedralMesh()
+                    #ibaned: PUMI conversion #2
+                    #TODO: this code is nearly identical to
+                    #PUMI conversion #1, they should be merged
+                    #into a function
+                    if p0.domain.nd == 3:
+                      mesh = MeshTools.TetrahedralMesh()
+                    else:
+                      mesh = MeshTools.TriangularMesh()
                     mesh.convertFromPUMI(p0.domain.PUMIMesh,
                                          p0.domain.faceList,
-                                         parallel = self.comm.size() > 1)
+                                         parallel = self.comm.size() > 1,
+                                         dim = p0.domain.nd)
                     log("Generating %i-level mesh from PUMI mesh" % (n0.nLevels,))
-                    mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
-                                                                 nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
-                                                                 parallelPartitioningType=n0.parallelPartitioningType)
+                    if p0.domain.nd == 3:
+                      mlMesh = MeshTools.MultilevelTetrahedralMesh(
+                          0,0,0,skipInit=True,
+                          nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                          parallelPartitioningType=n.parallelPartitioningType)
+                    if p0.domain.nd == 2:
+                      mlMesh = MeshTools.MultilevelTriangularMesh(
+                          0,0,0,skipInit=True,
+                          nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                          parallelPartitioningType=n.parallelPartitioningType)
                     if self.comm.size()==1:
-                        mlMesh.generateFromExistingCoarseMesh(mesh,n0.nLevels,
-                                                              nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
-                                                              parallelPartitioningType=n0.parallelPartitioningType)
+                        mlMesh.generateFromExistingCoarseMesh(
+                            mesh,n0.nLevels,
+                            nLayersOfOverlap=n0.nLayersOfOverlapForParallel,
+                            parallelPartitioningType=n0.parallelPartitioningType)
                     else:
-                        mlMesh.generatePartitionedMeshFromPUMI(mesh,n0.nLevels,nLayersOfOverlap=n0.nLayersOfOverlapForParallel)
+                        mlMesh.generatePartitionedMeshFromPUMI(
+                            mesh,n0.nLevels,
+                            nLayersOfOverlap=n0.nLayersOfOverlapForParallel)
                     self.mlMesh_nList=[]
                     for p in self.pList:
                         self.mlMesh_nList.append(mlMesh)
-                    #
-                    #deallocate old mesh, models, solvers
-                    #mlMeshOld = self.modelList[0].mlMeshSave
-                    #del mlMeshOld.meshList[0]
-                    #for i in range(len(self.modelList)-1,-1,-1):
-                    #    del self.modelList[i]
-                    #    del self.lsList[i]
-                    #    del self.nlsList[i]
-                    #
                     #may want to trigger garbage collection here
                     modelListOld = self.modelList
                     log("Allocating models on new mesh")
