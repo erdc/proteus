@@ -458,8 +458,8 @@ class NS_base:  # (HasTraits):
             model.name = p.name
             log("Setting "+model.name+" stepController to "+str(n.stepController))
             model.stepController = n.stepController(model,n)
-            Profiling.memory("MultilevelTransport for"+p.name)
-            log("Setting up MultilevelLinearSolver for"+p.name)
+            Profiling.memory("MultilevelTransport for "+p.name)
+            log("Setting up MultilevelLinearSolver for "+p.name)
             #allow options database to set model specific parameters?
             linear_solver_options_prefix = None
             if 'linear_solver_options_prefix' in dir(n):
