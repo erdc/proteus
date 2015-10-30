@@ -1380,7 +1380,7 @@ class Mesh:
             gnuplot.flush()
         raw_input('Please press return to continue... \n')
 
-    def convertFromPUMI(self, PUMIMesh, faceList, parallel=False):
+    def convertFromPUMI(self, PUMIMesh, faceList, parallel=False, dim=3):
         import cmeshTools
         import MeshAdaptPUMI
         import flcbdfWrappers
@@ -1397,8 +1397,12 @@ class Mesh:
             for j in range(len(faceList[i])):
               PUMIMesh.UpdateMaterialArrays(self.subdomainMesh.cmesh, i+1,
                   faceList[i][j])
-          cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
-          cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
+          if dim == 3:
+            cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
+            cmeshTools.computeGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
+          if dim == 2:
+            cmeshTools.allocateGeometricInfo_triangle(self.subdomainMesh.cmesh)
+            cmeshTools.computeGeometricInfo_triangle(self.subdomainMesh.cmesh)
           self.buildFromCNoArrays(self.cmesh)
           (self.elementOffsets_subdomain_owned,
            self.elementNumbering_subdomain2global,
@@ -1440,8 +1444,12 @@ class Mesh:
           for i in range(len(faceList)):
             for j in range(len(faceList[i])):
               PUMIMesh.UpdateMaterialArrays(self.cmesh, i+1, faceList[i][j])
-          cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
-          cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
+          if dim == 3:
+            cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
+            cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
+          if dim == 2:
+            cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
+            cmeshTools.computeGeometricInfo_triangle(self.cmesh)
           self.buildFromC(self.cmesh)
         log("meshInfo says : \n"+`self.meshInfo()`)
 
