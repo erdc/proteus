@@ -32,7 +32,7 @@ static double isotropicFormula(double* solution, double hmin, double hmax)
   return size;
 }
 
-int MeshAdaptPUMIDrvr::CalculateSizeField()
+int MeshAdaptPUMIDrvr::calculateSizeField()
 {
   freeField(size_iso);
   size_iso = apf::createLagrangeField(m, "proteus_size",apf::SCALAR,1);
@@ -324,7 +324,7 @@ static apf::Field* getSizeFrames(apf::Field* hessians, apf::Field* gradphi)
   return frames;
 }
 
-int MeshAdaptPUMIDrvr::CalculateAnisoSizeField()
+int MeshAdaptPUMIDrvr::calculateAnisoSizeField()
 {
   apf::Field* phif = extractPhi(solution);
   apf::Field* gradphi = apf::recoverGradientByVolume(phif);

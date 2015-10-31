@@ -58,10 +58,10 @@ int MeshAdaptPUMIDrvr::loadModelAndMesh(const char* modelFile, const char* meshF
   return 0;
 }
 
-int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
+int MeshAdaptPUMIDrvr::adaptPUMIMesh()
 {
   if (size_field_config == "farhad")
-    CalculateAnisoSizeField();
+    calculateAnisoSizeField();
   else if (size_field_config == "alvin")
     get_local_error();
   else {
@@ -71,7 +71,6 @@ int MeshAdaptPUMIDrvr::AdaptPUMIMesh()
   //m->destroyTag(fluxtag[1]); m->destroyTag(fluxtag[2]); m->destroyTag(fluxtag[3]);
   delete [] exteriorGlobaltoLocalElementBoundariesArray;
   exteriorGlobaltoLocalElementBoundariesArray = NULL;
-
   assert(size_iso == 0);
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);
