@@ -32,9 +32,11 @@ static apf::Numbering* numberOwnedEntitiesFirst(apf::Mesh* m, int dimension)
   return n;
 }
 
-//Main API to construct a serial pumi mesh, what we do is contruct the global mesh when working with serial
-//and let Proteus populate the subdomain data structures (though it will be exactly same)
-int MeshAdaptPUMIDrvr::ConstructFromSerialPUMIMesh(Mesh& mesh)
+//Main API to construct a serial pumi mesh,
+//what we do is contruct the global mesh when working with serial
+//and let Proteus populate the subdomain data structures
+//(though it will be exactly same)
+int MeshAdaptPUMIDrvr::constructFromSerialPUMIMesh(Mesh& mesh)
 {
   assert(m != 0);
   std::cout << "Constructing global data structures\n"; 
@@ -72,11 +74,11 @@ int MeshAdaptPUMIDrvr::ConstructFromSerialPUMIMesh(Mesh& mesh)
   std::cerr << "Number of edges " << mesh.nEdges_global << "\n";
   
   numberLocally();
-  ConstructNodes(mesh);
-  ConstructElements(mesh);
-  ConstructBoundaries(mesh);
-  ConstructEdges(mesh);
-  ConstructMaterialArrays(mesh);
+  constructNodes(mesh);
+  constructElements(mesh);
+  constructBoundaries(mesh);
+  constructEdges(mesh);
+  constructMaterialArrays(mesh);
 
   return 0;
 }
@@ -94,7 +96,7 @@ int MeshAdaptPUMIDrvr::localNumber(apf::MeshEntity* e)
   return getNumber(local[apf::getDimension(m, e)], e, 0, 0);
 }
 
-int MeshAdaptPUMIDrvr::ConstructNodes(Mesh& mesh)
+int MeshAdaptPUMIDrvr::constructNodes(Mesh& mesh)
 {
   mesh.nodeArray = new double[mesh.nNodes_global * 3];
   apf::MeshIterator* it = m->begin(0);
@@ -110,7 +112,7 @@ int MeshAdaptPUMIDrvr::ConstructNodes(Mesh& mesh)
   return 0;
 } 
 
-int MeshAdaptPUMIDrvr::ConstructElements(Mesh& mesh)
+int MeshAdaptPUMIDrvr::constructElements(Mesh& mesh)
 {
   mesh.elementNodesArray = new int[mesh.nElements_global*mesh.nNodes_element];
   apf::MeshIterator* it = m->begin(m->getDimension());
@@ -160,7 +162,7 @@ int getProteusBoundaryIdx(apf::Mesh* m, apf::MeshEntity* e, apf::MeshEntity* f)
   return boundary_maps[dim][idx_apf];
 }
 
-int MeshAdaptPUMIDrvr::ConstructBoundaries(Mesh& mesh)
+int MeshAdaptPUMIDrvr::constructBoundaries(Mesh& mesh)
 {
 //build face list (elementBoundary and nodeBoundary arrays)
 //Enter at your own peril for those who stray will be lost
@@ -315,7 +317,7 @@ static void createStars(Mesh& mesh)
       mesh.nodeElementsArray[offset] = *eN_star;
 }
 
-int MeshAdaptPUMIDrvr::ConstructEdges(Mesh& mesh)
+int MeshAdaptPUMIDrvr::constructEdges(Mesh& mesh)
 {
   mesh.edgeNodesArray = new int[mesh.nEdges_global * 2];
   apf::MeshIterator* it = m->begin(1);
@@ -354,7 +356,7 @@ static int getInOutMaterial(apf::Mesh* m, apf::MeshEntity* e)
  * which later gets overwritten for some entities with more
  * specific values in MeshAdaptPUMIDrvr::UpdateMaterialArrays.
  */
-int MeshAdaptPUMIDrvr::ConstructMaterialArrays(Mesh& mesh)
+int MeshAdaptPUMIDrvr::constructMaterialArrays(Mesh& mesh)
 {
   mesh.elementBoundaryMaterialTypes = new int[mesh.nElementBoundaries_global];
   mesh.nodeMaterialTypes = new int[mesh.nNodes_global];
@@ -385,10 +387,12 @@ int MeshAdaptPUMIDrvr::ConstructMaterialArrays(Mesh& mesh)
  * put the (proteus_material) integer in their material
  * array slot.
  */
-int MeshAdaptPUMIDrvr::UpdateMaterialArrays(Mesh& mesh,
+int MeshAdaptPUMIDrvr::updateMaterialArrays(Mesh& mesh,
     int proteus_material,
     int scorec_tag)
 {
+  fprintf(stderr, "proteus_material %d scorec_tag %d\n",
+      proteus_material, scorec_tag);
   int dim = m->getDimension();
   apf::ModelEntity* geomEnt = m->findModelEntity(dim - 1, scorec_tag);
   apf::MeshIterator* it = m->begin(dim - 1);

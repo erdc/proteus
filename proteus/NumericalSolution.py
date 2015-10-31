@@ -881,8 +881,8 @@ class NS_base:  # (HasTraits):
                                        self.pList[0].rho_1])
                     nu = numpy.array([self.pList[0].nu_0,
                                       self.pList[0].nu_1])
-                    p0.domain.PUMIMesh.TransferSolutionToPUMI(soldof)
-                    p0.domain.PUMIMesh.TransferPropertiesToPUMI(rho,nu)
+                    p0.domain.PUMIMesh.transferSolutionToPUMI(soldof)
+                    p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu)
                     del soldof, rho, nu
                     #
                     # zhang-alvin's BC communication for N-S error estimation
@@ -904,7 +904,7 @@ class NS_base:  # (HasTraits):
                     # ...
                     #
                     log("h-adapt mesh by calling AdaptPUMIMesh")
-                    p0.domain.PUMIMesh.AdaptPUMIMesh()
+                    p0.domain.PUMIMesh.adaptPUMIMesh()
                     log("Converting PUMI mesh to Proteus")
                     #ibaned: PUMI conversion #2
                     #TODO: this code is nearly identical to
@@ -987,7 +987,7 @@ class NS_base:  # (HasTraits):
                                 ivar=ivar+1
                     tot_var=ivar
                     soldof=numpy.zeros((tot_var,lm.mesh.nNodes_global),'d')
-                    p0.domain.PUMIMesh.TransferSolutionToProteus(soldof)
+                    p0.domain.PUMIMesh.transferSolutionToProteus(soldof)
                     log("Attaching models on new mesh to each other")
                     ivar=-1
                     for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):

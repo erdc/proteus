@@ -22,7 +22,7 @@ static int countTotal(apf::Mesh* m, int dim)
   return total;
 }
 
-int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh)
+int MeshAdaptPUMIDrvr::constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh)
 {
   mesh.subdomainp = new Mesh();
   mesh.subdomainp = &subdomain_mesh;
@@ -80,14 +80,14 @@ int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
     std::cerr << "*****************************************\n";
   }
 
-  ConstructGlobalNumbering(mesh);
+  constructGlobalNumbering(mesh);
   numberLocally();
-  ConstructNodes(*mesh.subdomainp);
-  ConstructElements(*mesh.subdomainp);
-  ConstructBoundaries(*mesh.subdomainp);
-  ConstructEdges(*mesh.subdomainp);
-  ConstructMaterialArrays(*mesh.subdomainp);
-  ConstructGlobalStructures(mesh); 
+  constructNodes(*mesh.subdomainp);
+  constructElements(*mesh.subdomainp);
+  constructBoundaries(*mesh.subdomainp);
+  constructEdges(*mesh.subdomainp);
+  constructMaterialArrays(*mesh.subdomainp);
+  constructGlobalStructures(mesh); 
 
   std::stringstream ss;
   ss << "ToProteus_t" << nAdapt<<".smb";
@@ -97,7 +97,7 @@ int MeshAdaptPUMIDrvr::ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain
   return 0;
 } 
 
-int MeshAdaptPUMIDrvr::ConstructGlobalNumbering(Mesh &mesh)
+int MeshAdaptPUMIDrvr::constructGlobalNumbering(Mesh &mesh)
 {
   /* N^2 data structures and algorithms are terrible for scalability.
      Going along because Proteus is structured this way. */
@@ -144,7 +144,7 @@ int MeshAdaptPUMIDrvr::ConstructGlobalNumbering(Mesh &mesh)
   return 0; 
 }
 
-int MeshAdaptPUMIDrvr::ConstructGlobalStructures(Mesh &mesh)
+int MeshAdaptPUMIDrvr::constructGlobalStructures(Mesh &mesh)
 {
   mesh.elementNumbering_subdomain2global = new int[mesh.subdomainp->nElements_global];
   mesh.elementBoundaryNumbering_subdomain2global = new int[mesh.subdomainp->nElementBoundaries_global];
