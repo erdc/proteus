@@ -13,27 +13,27 @@ class MeshAdaptPUMIDrvr{
   int loadModelAndMesh(const char* modelFile, const char* meshFile);
 
   //Functions to construct proteus mesh data structures
-  int ConstructFromSerialPUMIMesh(Mesh& mesh);
-  int ConstructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh);
+  int constructFromSerialPUMIMesh(Mesh& mesh);
+  int constructFromParallelPUMIMesh(Mesh& mesh, Mesh& subdomain_mesh);
  
-  int UpdateMaterialArrays(Mesh& mesh, int bdryID, int GeomTag);
+  int updateMaterialArrays(Mesh& mesh, int bdryID, int GeomTag);
 
   //Fields
   //Transfer Boundary Conditions
-  int TransferSolutionToPUMI(double* inArray, int nVar, int nN);
-  int TransferSolutionToProteus(double* outArray, int nVar, int nN);
-  int TransferPropertiesToPUMI(double* rho_p, double* nu_p);
-  int TransferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global,double* fluxBC);
-  int TransferBCsToProteus();
-  int CommuSizeField();
-  int AdaptPUMIMesh();
+  int transferSolutionToPUMI(double* inArray, int nVar, int nN);
+  int transferSolutionToProteus(double* outArray, int nVar, int nN);
+  int transferPropertiesToPUMI(double* rho_p, double* nu_p);
+  int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global,double* fluxBC);
+  int transferBCsToProteus();
+  int commuSizeField();
+  int adaptPUMIMesh();
 
   void numberLocally();
   int localNumber(apf::MeshEntity* e);
   int dumpMesh(Mesh& mesh);
 
-  int CalculateSizeField();
-  int CalculateAnisoSizeField();
+  int calculateSizeField();
+  int calculateAnisoSizeField();
   int getERMSizeField(double err_total);
   double getMinimumQuality();
 
@@ -73,14 +73,14 @@ class MeshAdaptPUMIDrvr{
   apf::Field* size_scale;
   apf::Field* size_frame;
 
-  int ConstructGlobalNumbering(Mesh& mesh);
-  int ConstructGlobalStructures(Mesh& mesh);
+  int constructGlobalNumbering(Mesh& mesh);
+  int constructGlobalStructures(Mesh& mesh);
 
-  int ConstructElements(Mesh& mesh);
-  int ConstructNodes(Mesh& mesh);
-  int ConstructBoundaries(Mesh& mesh);
-  int ConstructEdges(Mesh& mesh);
-  int ConstructMaterialArrays(Mesh& mesh);
+  int constructElements(Mesh& mesh);
+  int constructNodes(Mesh& mesh);
+  int constructBoundaries(Mesh& mesh);
+  int constructEdges(Mesh& mesh);
+  int constructMaterialArrays(Mesh& mesh);
 
   void freeField(apf::Field*& f);
   void freeNumbering(apf::Numbering*& n);

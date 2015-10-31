@@ -19,15 +19,15 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         MeshAdaptPUMIDrvr(double, double, int, char*)
         int numIter, numAdaptSteps
         int loadModelAndMesh(char *, char*)
-        int ConstructFromSerialPUMIMesh(Mesh&)
-        int ConstructFromParallelPUMIMesh(Mesh&, Mesh&)
-        int UpdateMaterialArrays(Mesh&, int, int)
-        int TransferSolutionToPUMI(double*, int, int)
-        int TransferSolutionToProteus(double*, int, int)
-        int TransferPropertiesToPUMI(double*, double*)
-        int TransferBCtagsToProteus(int*, int, int*, int*,double*)
-        int TransferBCsToProteus()
-        int AdaptPUMIMesh()
+        int constructFromSerialPUMIMesh(Mesh&)
+        int constructFromParallelPUMIMesh(Mesh&, Mesh&)
+        int updateMaterialArrays(Mesh&, int, int)
+        int transferSolutionToPUMI(double*, int, int)
+        int transferSolutionToProteus(double*, int, int)
+        int transferPropertiesToPUMI(double*, double*)
+        int transferBCtagsToProteus(int*, int, int*, int*,double*)
+        int transferBCsToProteus()
+        int adaptPUMIMesh()
         int dumpMesh(Mesh&)
         int getERMSizeField(double)
         double getMinimumQuality()
@@ -43,36 +43,36 @@ cdef class MeshAdaptPUMI:
         del self.thisptr
     def loadModelAndMesh(self, geomName, meshName):
         return self.thisptr.loadModelAndMesh(geomName, meshName)
-    def ConstructFromSerialPUMIMesh(self, cmesh):
+    def constructFromSerialPUMIMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
-        return self.thisptr.ConstructFromSerialPUMIMesh(cmesh_ptr.mesh)
-    def ConstructFromParallelPUMIMesh(self, cmesh, subdomain_cmesh):
+        return self.thisptr.constructFromSerialPUMIMesh(cmesh_ptr.mesh)
+    def constructFromParallelPUMIMesh(self, cmesh, subdomain_cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         cdef CMesh* subdomain_cmesh_ptr = <CMesh*>subdomain_cmesh
-        return self.thisptr.ConstructFromParallelPUMIMesh(cmesh_ptr.mesh, subdomain_cmesh_ptr.mesh)
-    def UpdateMaterialArrays(self, cmesh, bdryId, geomTag):
+        return self.thisptr.constructFromParallelPUMIMesh(cmesh_ptr.mesh, subdomain_cmesh_ptr.mesh)
+    def updateMaterialArrays(self, cmesh, bdryId, geomTag):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
-        return self.thisptr.UpdateMaterialArrays(cmesh_ptr.mesh, bdryId, geomTag)
-    def TransferSolutionToPUMI(self, np.ndarray[np.double_t,ndim=2,mode="c"] inArray):
+        return self.thisptr.updateMaterialArrays(cmesh_ptr.mesh, bdryId, geomTag)
+    def transferSolutionToPUMI(self, np.ndarray[np.double_t,ndim=2,mode="c"] inArray):
         inArray = np.ascontiguousarray(inArray)
-        return self.thisptr.TransferSolutionToPUMI(&inArray[0,0], inArray.shape[0], inArray.shape[1])
-    def TransferSolutionToProteus(self, np.ndarray[np.double_t,ndim=2,mode="c"] outArray):
+        return self.thisptr.transferSolutionToPUMI(&inArray[0,0], inArray.shape[0], inArray.shape[1])
+    def transferSolutionToProteus(self, np.ndarray[np.double_t,ndim=2,mode="c"] outArray):
         outArray = np.ascontiguousarray(outArray)
-        return self.thisptr.TransferSolutionToProteus(&outArray[0,0], outArray.shape[0], outArray.shape[1])
-    def TransferPropertiesToPUMI(self, np.ndarray[np.double_t,ndim=1,mode="c"] rho, np.ndarray[np.double_t,ndim=1,mode="c"] nu):
+        return self.thisptr.transferSolutionToProteus(&outArray[0,0], outArray.shape[0], outArray.shape[1])
+    def transferPropertiesToPUMI(self, np.ndarray[np.double_t,ndim=1,mode="c"] rho, np.ndarray[np.double_t,ndim=1,mode="c"] nu):
         rho = np.ascontiguousarray(rho)
         nu = np.ascontiguousarray(nu)
-        return self.thisptr.TransferPropertiesToPUMI(&rho[0],&nu[0])
-    def TransferBCtagsToProteus(self, np.ndarray[int,ndim=2,mode="c"] tagArray, int idx, np.ndarray[int,ndim=1,mode="c"] ebN, np.ndarray[int, ndim=2, mode="c"] eN_global, np.ndarray[np.double_t,ndim=2,mode="c"] fluxBC):
+        return self.thisptr.transferPropertiesToPUMI(&rho[0],&nu[0])
+    def transferBCtagsToProteus(self, np.ndarray[int,ndim=2,mode="c"] tagArray, int idx, np.ndarray[int,ndim=1,mode="c"] ebN, np.ndarray[int, ndim=2, mode="c"] eN_global, np.ndarray[np.double_t,ndim=2,mode="c"] fluxBC):
         tagArray = np.ascontiguousarray(tagArray)
         ebN = np.ascontiguousarray(ebN)
         eN_global = np.ascontiguousarray(eN_global)
         fluxBC = np.ascontiguousarray(fluxBC)
-        return self.thisptr.TransferBCtagsToProteus(&tagArray[0,0],idx,&ebN[0],&eN_global[0,0],&fluxBC[0,0])
-    def TransferBCsToProteus(self):
-        return self.thisptr.TransferBCsToProteus()
-    def AdaptPUMIMesh(self):
-        return self.thisptr.AdaptPUMIMesh()
+        return self.thisptr.transferBCtagsToProteus(&tagArray[0,0],idx,&ebN[0],&eN_global[0,0],&fluxBC[0,0])
+    def transferBCsToProteus(self):
+        return self.thisptr.transferBCsToProteus()
+    def adaptPUMIMesh(self):
+        return self.thisptr.adaptPUMIMesh()
     def dumpMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.dumpMesh(cmesh_ptr.mesh)

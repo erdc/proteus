@@ -1391,11 +1391,11 @@ class Mesh:
           self.subdomainMesh=self.__class__()
           self.subdomainMesh.globalMesh = self
           self.subdomainMesh.cmesh = cmeshTools.CMesh()
-          PUMIMesh.ConstructFromParallelPUMIMesh(self.cmesh,
+          PUMIMesh.constructFromParallelPUMIMesh(self.cmesh,
               self.subdomainMesh.cmesh)
           for i in range(len(faceList)):
             for j in range(len(faceList[i])):
-              PUMIMesh.UpdateMaterialArrays(self.subdomainMesh.cmesh, i+1,
+              PUMIMesh.updateMaterialArrays(self.subdomainMesh.cmesh, i+1,
                   faceList[i][j])
           if dim == 3:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.subdomainMesh.cmesh)
@@ -1440,10 +1440,10 @@ class Mesh:
           par_nodeDiametersArray.scatter_forward_insert()
           comm.barrier()
         else:
-          PUMIMesh.ConstructFromSerialPUMIMesh(self.cmesh)
+          PUMIMesh.constructFromSerialPUMIMesh(self.cmesh)
           for i in range(len(faceList)):
             for j in range(len(faceList[i])):
-              PUMIMesh.UpdateMaterialArrays(self.cmesh, i+1, faceList[i][j])
+              PUMIMesh.updateMaterialArrays(self.cmesh, i+1, faceList[i][j])
           if dim == 3:
             cmeshTools.allocateGeometricInfo_tetrahedron(self.cmesh)
             cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
