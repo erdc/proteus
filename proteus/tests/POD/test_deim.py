@@ -27,34 +27,46 @@ def get_burgers_ns(name,T=0.1,nDTout=10,archive_pod_res=None):
     ns = bu.NumericalSolution.NS_base(bu.so,[bu.physics],[bu.numerics],bu.so.sList,bu.opts,simFlagsList=simFlagsList)
     return ns
 
-def test_burger_run():
+def get_burgers_ns_red(name,T=0.1,nDTout=10,archive_pod_res=None,use_pod=True,use_hyper=False):
+    import burgers_init as bu
+    bu.physics.name=name
+    bu.so.name = bu.physics.name
+    #adjust default end time and number of output steps
+    bu.T=T
+    bu.nDTout=nDTout
+    bu.DT=bu.T/float(bu.nDTout)
+    bu.so.tnList = [i*bu.DT for i in range(bu.nDTout+1)]
+
+    bu.numerics.SVD_basis_file='SVD_basis_truncated'
+    bu.numerics.hyper_SVD_basis_file='Fn_SVD_basis_truncated'
+    bu.numerics.hyper_indices_file = 'DEIM_indices'
+    bu.numerics.hyper_Q_file = 'Q_DEIM_truncated'
+
+    bu.numerics.use_hyper = use_hyper
+    #use_hyper is dummy by default if use_pod == True
+    if not use_pod:
+	bu.numerics.multilevelNonlinearSolver = NonlinearSolvers.POD_HyperReduced_Newton
+	bu.numerics.levelNonlinearSolver = NonlinearSolvers.POD_HyperReduced_Newton
+    else:
+	bu.numerics.multilevelNonlinearSolver = NonlinearSolvers.POD_Newton
+	bu.numerics.levelNonlinearSolver = NonlinearSolvers.POD_Newton
+    #request archiving of spatial residuals ...
+    numerics.tolFac = 0.0#relative tolerance
+    numerics.nl_atol_res = 1.0e-4 #nonlinear solver rtolerance
+    simFlagsList=None
+    if archive_pod_res is not None:
+        simFlagsList=[{}]
+        simFlagsList[0]['storeQuantities']=[archive_pod_res]
+    ns = bu.NumericalSolution.NS_base(bu.so,[bu.physics],[bu.numerics],bu.so.sList,bu.opts,simFlagsList=simFlagsList)
+    return ns
+
+def test_burgers_run():
     """
     Aron's favority smoke test to see if burgers runs
     """
     ns = get_burgers_ns("test_run",T=0.1,nDTout=10)
     failed = ns.calculateSolution("run_smoke_test")
     assert not failed
-
-def test_residual_split():
-    """
-    just tests that R=R_s+R_t for random dof vector in [0,1]
-
-    Here R_s and R_t are the spatial and mass residuals
-    """
-    ns = get_burgers_ns("test_res_split",T=0.05,nDTout=5)
-    failed = ns.calculateSolution("run_res_test")
-    assert not failed
-    #storage for residuals
-    model = ns.modelList[0].levelModelList[-1]
-    u_tmp = np.random.random(model.u[0].dof.shape)
-    res = np.zeros(model.u[0].dof.shape,'d')
-    res_s = res.copy(); res_t=res.copy()
-    model.getResidual(u_tmp,res)
-    model.getSpatialResidual(u_tmp,res_s)
-    model.getMassResidual(u_tmp,res_t)
-    
-    res_t += res_s
-    npt.assert_almost_equal(res,res_t)
 
 def test_nonlin_residual_split():
     """
@@ -83,7 +95,7 @@ def test_nonlin_jacobian_split():
 
     Here J_l and J_n are the linear and nonlinear portions of the Jacobian
     """
-    ns = get_burgers_ns("test_jac_split",T=0.05,nDTout=5)
+    ns = get_burgers_ns("test_jac_split",T=0.1,nDTout=10)
     failed = ns.calculateSolution("run_jac_test")
     assert not failed
     #storage for residuals
@@ -110,7 +122,6 @@ def test_nonlin_jacobian_split():
     npt.assert_almost_equal(lin_J_rowptr,model.rowptr)
     npt.assert_almost_equal(lin_J_colind,model.colind)
 
-    
     model.getLinearJacobian(lin_J)
     model.getNonlinearJacobian(nonlin_J)
     model.getJacobian(model.jacobian)
@@ -121,63 +132,15 @@ def test_nonlin_jacobian_split():
     
 def test_res_archive():
     """
-    smoke test if numerical solution can archive hyper reduction residuals' to xdmf  
+    smoke test if numerical solution can archive nonlinear residuals' to xdmf  
     """
-         
-    ns = get_burgers_ns("test_space_res_archive",T=0.1,nDTout=10,archive_pod_res='pod_residuals_timespace')
-    
-    space_failed = ns.calculateSolution("run_space_res_smoke_test")
-    assert not space_failed
-
     ns = get_burgers_ns("test_nonlin_res_archive",T=0.1,nDTout=10,archive_pod_res='pod_residuals_linnonlin')
     
     nonlin_failed = ns.calculateSolution("run_nonlin_res_smoke_test")
     assert not nonlin_failed
 
 
-def test_svd_space_res(file_prefix='F_s'):
-    """
-    test SVD decomposition of spatial residuals by generating SVD, saving to file and reloading
-    """
-    from proteus.deim_utils import read_snapshots,generate_svd_decomposition
-
-    ns = get_burgers_ns("test_svd_space_res",T=0.1,nDTout=10,archive_pod_res='pod_residuals_timespace')
-    
-    failed = ns.calculateSolution("run_svd_space_res")
-    assert not failed
-    from proteus import Archiver
-    archive = Archiver.XdmfArchive(".","test_svd_space_res",readOnly=True)
-
-    U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'spatial_residual0',file_prefix)
-
-    S_svd = np.dot(U,np.dot(np.diag(s),V))
-    #now load back in and test
-    S = read_snapshots(archive,len(ns.tnList),'spatial_residual0')
-
-    npt.assert_almost_equal(S,S_svd)
-
-def test_svd_mass_res(file_prefix='F_m'):
-    """
-    test SVD decomposition of mass residuals by generating SVD, saving to file and reloading
-    """
-    from proteus.deim_utils import read_snapshots,generate_svd_decomposition
-
-    ns = get_burgers_ns("test_svd_mass_res",T=0.1,nDTout=10,archive_pod_res='pod_residuals_timespace')
-    
-    failed = ns.calculateSolution("run_svd_mass_res")
-    assert not failed
-    from proteus import Archiver
-    archive = Archiver.XdmfArchive(".","test_svd_mass_res",readOnly=True)
-
-    U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'mass_residual0',file_prefix)
-
-    S_svd = np.dot(U,np.dot(np.diag(s),V))
-    #now load back in and test
-    S = read_snapshots(archive,len(ns.tnList),'mass_residual0')
-
-    npt.assert_almost_equal(S,S_svd)
-
-def test_svd_nonlin_res(file_prefix='F_s'):
+def test_svd_nonlin_res(file_prefix='Fn'):
     """
     test SVD decomposition of spatial residuals by generating SVD, saving to file and reloading
     """
@@ -198,7 +161,7 @@ def test_svd_nonlin_res(file_prefix='F_s'):
 
     npt.assert_almost_equal(S,S_svd)
 
-def test_svd_linear_res(file_prefix='F_m'):
+def test_svd_linear_res(file_prefix='Fl'):
     """
     test SVD decomposition of mass residuals by generating SVD, saving to file and reloading
     """
@@ -219,20 +182,20 @@ def test_svd_linear_res(file_prefix='F_m'):
 
     npt.assert_almost_equal(S,S_svd)
 
-def test_svd_soln():
+def test_svd_sol(file_prefix='sol'):
     """
     test SVD decomposition of solution by generating SVD, saving to file and reloading
     """
     from proteus.deim_utils import read_snapshots,generate_svd_decomposition
 
-    ns = get_burgers_ns("test_svd_soln",T=0.1,nDTout=10,archive_pod_res='pod_residuals_nonlin')
+    ns = get_burgers_ns("test_svd_sol",T=0.1,nDTout=10,archive_pod_res='pod_residuals_nonlin')
     
-    failed = ns.calculateSolution("run_svd_soln")
+    failed = ns.calculateSolution("run_svd_sol")
     assert not failed
     from proteus import Archiver
-    archive = Archiver.XdmfArchive(".","test_svd_soln",readOnly=True)
+    archive = Archiver.XdmfArchive(".","test_svd_sol",readOnly=True)
 
-    U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'u','soln')
+    U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'u',file_prefix)
 
     S_svd = np.dot(U,np.dot(np.diag(s),V))
     #now load back in and test
@@ -246,10 +209,11 @@ def test_deim_indices():
     and tests that get the deim algorithm returns all of the indices 
     """
     import os
-    basis_file='F_s_SVD_basis'
+    basis_file='Fn_SVD_basis'
     if not os.path.isfile(basis_file):
-        test_svd_space_res(file_prefix='F_s')
+        test_svd_nonlin_res(file_prefix='Fn')
     U = np.loadtxt(basis_file)
+    assert U.shape[1] > 1
     from proteus.deim_utils import calculate_deim_indices
     rho_half = calculate_deim_indices(U[:,:U.shape[1]/2])
     assert rho_half.shape[0] == U.shape[1]/2
@@ -260,12 +224,15 @@ def test_deim_indices():
     rho_uni = np.unique(rho)
     assert rho_uni.shape[0] == rho.shape[0]
 
+    for i in range(rho_half.shape[0]):
+	assert rho_half[i] == rho[i]
+
 def deim_approx(T=0.1,nDTout=10,m=5,m_linear=5):
     """
     Follow basic setup for DEIM approximation
     - generate a burgers solution, saving nonlinear and linear residuals
     - generate SVDs for snapshots
-    - for both residuals F_s and F_m
+    - for both residuals Fn and Fl
       - pick $m$, dimension for snapshot reduced basis $\mathbf{U}_m$
       - call DEIM algorithm to determine $\vec \rho$ and compute projection matrix 
         $\mathbf{P}_F=\mathbf{U}_m(\mathbf{P}^T\mathbf{U}_m)^{-1}$
@@ -289,8 +256,8 @@ def deim_approx(T=0.1,nDTout=10,m=5,m_linear=5):
     from proteus import Archiver
     archive = Archiver.XdmfArchive(".","test_deim_approx",readOnly=True)
     ##perform SVD on spatial residual
-    U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'nonlinear_residual0','F_s')
-    U_l,s_l,V_l=generate_svd_decomposition(archive,len(ns.tnList),'linear_residual0','F_m')
+    U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'nonlinear_residual0','Fn')
+    U_l,s_l,V_l=generate_svd_decomposition(archive,len(ns.tnList),'linear_residual0','Fl')
 
     from proteus.deim_utils import deim_alg
     ##calculate DEIM indices and projection matrix
@@ -316,7 +283,7 @@ def deim_approx(T=0.1,nDTout=10,m=5,m_linear=5):
         #deim approximation on the fine grid 
         F_deim[:,istep] = np.dot(PF,F[rho])
         errors[i] = np.linalg.norm(F-F_deim[:,istep])
-        #repeat for 'mass residual'
+        #repeat for linear residual
         Fl= Sl[:,istep]
         #deim approximation on the fine grid 
         Fl_deim[:,istep] = np.dot(PF_l,Fl[rho_l])
@@ -336,9 +303,150 @@ def test_deim_approx_full(tol=1.0e-12):
     assert errors.min() < tol
     assert errors_linear.min() < tol
 
+def pod_hyper_pod_run(T=0.1,nDTout=10,m_sol=5,m=5):
+    """
+    Follow basic setup for DEIM approximation
+    - generate a burgers solution, saving solution and nonlinear residuals
+    - generate SVDs for snapshots
+    - for residuals Fn
+      - pick $m$, dimension for snapshot reduced basis $\mathbf{U}_m$
+      - call DEIM algorithm to determine $\vec \rho$ and compute projection matrix 
+        $\mathbf{P}_F=\mathbf{U}_m(\mathbf{P}^T\mathbf{U}_m)^{-1}$
+
+    For all timesteps
+    - extract both reduced solutions from archive
+    - calculate the norms of the error between the two
+    """
+
+    from proteus.deim_utils import read_snapshots,generate_svd_decomposition
+    ##run fine grid problem
+    ns = get_burgers_ns("test_pod_hyper_pod_fine",T=T,nDTout=nDTout,archive_pod_res='pod_residuals_linnonlin')
+    
+    failed = ns.calculateSolution("run_pod_hyper_pod_fine")
+    assert not failed
+
+    from proteus import Archiver
+    archive = Archiver.XdmfArchive(".","test_pod_hyper_pod_fine",readOnly=True)
+    ##perform SVD on spatial residual
+    U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'u','sol')
+    Un,sn,Vn=generate_svd_decomposition(archive,len(ns.tnList),'nonlinear_residual0','Fn')
+
+    from proteus.deim_utils import deim_alg
+    ##calculate DEIM indices and projection matrix
+    rho,PF = deim_alg(Un,m)
+
+    np.savetxt('SVD_basis_truncated', U[:,0:m_sol], delimiter=' ')
+    np.savetxt('Fn_SVD_basis_truncated', Un[:,0:m], delimiter=' ')
+    np.savetxt('DEIM_indices', rho, delimiter=' ',fmt='%d')
+    np.savetxt('Q_DEIM_truncated', PF, delimiter=' ')
+
+    ##reduced order models below
+    ##pure POD first
+    ns_red = get_burgers_ns_red("test_pod_hyper_pod_red",T=T,nDTout=nDTout,archive_pod_res=None,use_pod=True,use_hyper=False)
+
+    failed = ns_red.calculateSolution("run_pod_hyper_pod_red")
+    assert not failed
+
+    archive_red = Archiver.XdmfArchive(".","test_pod_hyper_pod_red",readOnly=True)
+    ##for comparison, grab snapshots of solution
+    Su = read_snapshots(archive_red,len(ns_red.tnList),'u')
+
+    ##POD-DEIM second
+    ns_red1 = get_burgers_ns_red("test_pod_hyper_pod_red1",T=T,nDTout=nDTout,archive_pod_res=None,use_pod=False,use_hyper=False)
+
+    failed = ns_red1.calculateSolution("run_pod_hyper_pod_red1")
+    assert not failed
+
+    archive_red1 = Archiver.XdmfArchive(".","test_pod_hyper_pod_red1",readOnly=True)
+    ##for comparison, grab snapshots of solution
+    Su1 = read_snapshots(archive_red1,len(ns_red1.tnList),'u')
+
+    errors = np.zeros(Su.shape[0],'d');
+    for i in range(nDTout):
+	errors[i] = np.linalg.norm(Su[:,i]-Su1[:,i])
+    #
+    np.savetxt("pod_poddeim_errors_T={0}_nDT={1}_msol={2}_m={3}.dat".format(T,nDTout,m_sol,m),errors)
+        
+    return errors
+
+def test_pod_hyper_pod(tol=1.0e-14):
+    """
+    check that pod-deim = pod is use_hyper = False 
+    """
+    T = 0.1; nDTout=10; m_sol=5; m=5
+    errors = pod_hyper_pod_run(T=T,nDTout=nDTout,m_sol=m_sol,m=m)
+    assert errors.min() < tol
+
+def deim_run():
+    """
+    Follow basic setup for DEIM approximation
+    - generate a burgers solution, saving solution and nonlinear residuals
+    - generate SVDs for snapshots
+    - for residuals Fn
+      - pick $m=10$, dimension for snapshot reduced basis $\mathbf{U}_m$
+      - call DEIM algorithm to determine $\vec \rho$ and compute projection matrix 
+        $\mathbf{P}_F=\mathbf{U}_m(\mathbf{P}^T\mathbf{U}_m)^{-1}$
+    """
+
+    from proteus.deim_utils import read_snapshots,generate_svd_decomposition
+    ##run fine grid problem
+    ##these four values are rigidly fixed!!!!!
+    T = 1; nDTout = 100; m_sol = 10; m = 10
+    ns = get_burgers_ns("test_fine_run",T=T,nDTout=nDTout,archive_pod_res='pod_residuals_linnonlin')
+    
+    failed = ns.calculateSolution("run_fine_run")
+    assert not failed
+
+    from proteus import Archiver
+    archive = Archiver.XdmfArchive(".","test_fine_run",readOnly=True)
+    ##perform SVD on nonlinear residual
+    U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'u','sol')
+    Un,sn,Vn=generate_svd_decomposition(archive,len(ns.tnList),'nonlinear_residual0','Fn')
+
+    from proteus.deim_utils import deim_alg
+    ##calculate DEIM indices and projection matrix
+    rho,PF = deim_alg(Un,m)
+
+    np.savetxt('SVD_basis_truncated', U[:,0:m_sol], delimiter=' ')
+    np.savetxt('Fn_SVD_basis_truncated', Un[:,0:m], delimiter=' ')
+    np.savetxt('DEIM_indices', rho, delimiter=' ',fmt='%d')
+    np.savetxt('Q_DEIM_truncated', PF, delimiter=' ')
+
+    ##reduced order models below
+    ##pure POD first
+    ns_red = get_burgers_ns_red("test_deim_run",T=T,nDTout=nDTout,archive_pod_res=None,use_pod=False,use_hyper=True)
+
+    failed = ns_red.calculateSolution("run_deim_run")
+    assert not failed
+
+    archive_red = Archiver.XdmfArchive(".","test_deim_run",readOnly=True)
+    ##for comparison, grab snapshots of solution
+    Su = read_snapshots(archive_red,len(ns_red.tnList),'u')
+    np.savetxt("proteus_solution_T={0}_nDT={1}_msol={2}_m={3}.dat".format(T,nDTout,m_sol,m),Su)
+
+    return
+
+def test_deim_impl():
+    """
+    compare output from matlab POD-DEIM with proteus POD-DEIM
+    """
+    T = 1; nDTout=100; m_sol=10; m=10
+    #matlab solution: m_sol = 10, m = 10
+    solm = np.loadtxt("S_matlab.dat")
+    solm = solm[:,-1]
+    #proteus solution
+    deim_run()
+    sol = np.loadtxt("proteus_solution_T=1_nDT=100_msol=10_m=10.dat")#.format(T,nDTout,m_sol,m))
+    sol = sol[:,-1]
+
+    diff = solm-sol
+    imax = np.argmax(np.absolute(diff))
+    assert np.absolute(diff.flat[imax]) < 1.0e-10, "got larger value than expected at index {0}".format(imax)
+    npt.assert_almost_equal(sol,solm)
+    
 if __name__ == "__main__":
     from proteus import Comm
     comm = Comm.init()
     import nose
+    #nose.main(defaultTest='test_deim:test_burgers_run')
     nose.main(defaultTest='test_deim:test_nonlin_residual_split')
-    

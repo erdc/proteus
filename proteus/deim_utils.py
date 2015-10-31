@@ -25,7 +25,7 @@ def read_from_hdf5(hdfFile,label,dof_map=None,has_h5py=True):
 def read_snapshots(archive,nsnap,val_name):
     """
     assumes nsnap values of array in val_name are stored in h5file as
-    /val_name'i' for i=0,nspap-1
+    /val_name'i' for i=0,nsnap-1
 
     loads these into a matrix and returns
     """
@@ -57,7 +57,7 @@ def read_snapshots(archive,nsnap,val_name):
 def generate_svd_decomposition(archive,nsnap,val_name,outbase):
     """
     assumes nsnap values of array in val_name are stored in h5file as
-    /val_name'i' for i=0,nspap-1
+    /val_name'i' for i=0,nsnap-1
 
     loads these into a matrix, performs an SVD, and stores the output in outbase_SVD_basis, 
       outbase_singular_values in numpy's binary format
@@ -80,6 +80,7 @@ def calculate_deim_indices(Uin):
 
     """
     n,m=Uin.shape
+    m = min(n,m)
     rind = np.argmax(np.absolute(Uin[:,0]))
     U=np.array(Uin[:,0])
     rho=np.array([rind],'i')
@@ -135,6 +136,7 @@ def calculate_gpod_indices(Uin):
 
     """
     n,m=Uin.shape
+    m = min(n,m)
     indices = set()
     rind = np.argmax(np.absolute(Uin[:,0]))
     indices.add(rind)
