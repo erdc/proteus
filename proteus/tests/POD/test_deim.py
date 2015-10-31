@@ -432,7 +432,7 @@ def test_deim_impl():
     """
     T = 1; nDTout=100; m_sol=10; m=10
     #matlab solution: m_sol = 10, m = 10
-    solm = np.loadtxt("S_matlab.dat")
+    solm = np.loadtxt("S_matlab")
     solm = solm[:,-1]
     #proteus solution
     deim_run()
