@@ -668,7 +668,7 @@ class POD_Newton(Newton):
         self.pod_initialized=False
         self.DB = 1
         self.SVD_basis_file='SVD_basis'
-        self.nonlinear = True
+        self.residual_is_nonlinear = True
     def initialize_POD(self,u):
         """
         Setup for Full Nonlinear POD approximation
@@ -746,7 +746,7 @@ class POD_Newton(Newton):
                 #% (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
                 % (self.its-1,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             self.pod_J.flat[:] = self.pod_lin_J.flat[:]
-            if self.nonlinear: #self.updateJacobian or self.fullNewton:
+            if self.residual_is_nonlinear: #self.updateJacobian or self.fullNewton:
                 #self.updateJacobian = False
                 self.F.getNonlinearJacobian(self.nonlin_J)
                 for i in range(self.DB):
@@ -909,9 +909,9 @@ class POD_HyperReduced_Newton(Newton):
         assert os.path.isfile(self.SVD_basis_file), "SVD basis file {0} not found".format(self.SVD_basis_file)
         U = np.loadtxt(self.SVD_basis_file)
 
-        F.project_initial_conditions = types.MethodType(deim_utils.project_initial_conditions,F,OneLevelTransport)
-        F.ic_projection_matrix = U.conj().T #fine to pod
-        F.ic_global_vector = self.du.copy()
+        self.F.project_initial_conditions = types.MethodType(deim_utils.project_initial_conditions,self.F,OneLevelTransport)
+        self.F.ic_projection_matrix = U.conj().T #fine to pod
+        self.F.ic_global_vector = self.du.copy()
         
     def norm(self,u):
         return self.norm_function(u)
@@ -1107,7 +1107,7 @@ class POD_HyperReduced_Newton(Newton):
             if parm in dir(nOptions):
                 setattr(self,parm,getattr(nOptions,parm))
         #Go ahead and modify Transport behavior now that we have the correct input options
-        self.setup_POD_initial_conditions()#does not initialize all of POD machinery
+        #self.setup_POD_initial_conditions()#does not initialize all of POD machinery
         
 class NewtonNS(NonlinearSolver):
     """
