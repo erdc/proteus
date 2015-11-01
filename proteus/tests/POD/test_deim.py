@@ -45,14 +45,14 @@ def get_burgers_ns_red(name,T=0.1,nDTout=10,archive_pod_res=None,use_pod=True,us
     bu.numerics.use_hyper = use_hyper
     #use_hyper is dummy by default if use_pod == True
     if not use_pod:
-	bu.numerics.multilevelNonlinearSolver = NonlinearSolvers.POD_HyperReduced_Newton
-	bu.numerics.levelNonlinearSolver = NonlinearSolvers.POD_HyperReduced_Newton
+	bu.numerics.multilevelNonlinearSolver = bu.NonlinearSolvers.POD_HyperReduced_Newton
+	bu.numerics.levelNonlinearSolver = bu.NonlinearSolvers.POD_HyperReduced_Newton
     else:
-	bu.numerics.multilevelNonlinearSolver = NonlinearSolvers.POD_Newton
-	bu.numerics.levelNonlinearSolver = NonlinearSolvers.POD_Newton
+	bu.numerics.multilevelNonlinearSolver = bu.NonlinearSolvers.POD_Newton
+	bu.numerics.levelNonlinearSolver = bu.NonlinearSolvers.POD_Newton
     #request archiving of spatial residuals ...
-    numerics.tolFac = 0.0#relative tolerance
-    numerics.nl_atol_res = 1.0e-4 #nonlinear solver rtolerance
+    bu.numerics.tolFac = 0.0#relative tolerance
+    bu.numerics.nl_atol_res = 1.0e-4 #nonlinear solver rtolerance
     simFlagsList=None
     if archive_pod_res is not None:
         simFlagsList=[{}]
@@ -441,7 +441,7 @@ def test_deim_impl():
 
     diff = solm-sol
     imax = np.argmax(np.absolute(diff))
-    assert np.absolute(diff.flat[imax]) < 1.0e-10, "got larger value than expected at index {0}".format(imax)
+    assert np.absolute(diff.flat[imax]) < 1.0e-10, "got larger value than expected at index {0}: {1}".format(imax,diff.flat[imax])
     npt.assert_almost_equal(sol,solm)
     
 if __name__ == "__main__":
