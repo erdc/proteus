@@ -18,6 +18,7 @@ class D_base:
         self.units=units
         self.x=[]#minx,miny,minz
         self.L=[]#bounding box when self.x is origin
+        self.auxiliaryVariables = []
     def writeAsymptote(self, fileprefix):
         """
         Write a representation of the domain to file using the Asymptote vector graphics language.
