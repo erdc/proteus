@@ -41,17 +41,18 @@ def getDBC_p(x,flag):
         return lambda x,t: 0.0 #hydrostatic_pressure(x)
 
 def getDBC_u(x,flag):
-    #if flag in [boundaryTags['front'], boundaryTags['back'], boundaryTags['bottom'], boundaryTags['top']]:
-    if flag in [boundaryTags['front'], boundaryTags['bottom'], boundaryTags['top'], boundaryTags['back']]:
+    #if flag in [boundaryTags['front'], boundaryTags['bottom'], boundaryTags['top'], boundaryTags['back']]:
+    if flag in [boundaryTags['front'], boundaryTags['back']]:
         return lambda x,t: 0.0
 
 def getDBC_v(x,flag):
-    if flag in [boundaryTags['front'], boundaryTags['bottom'], boundaryTags['top'], boundaryTags['back']]:
-        return lambda x,t: 1.0 #Uinf*x[2]*1.0/L[2]
+    #if flag in [boundaryTags['front'], boundaryTags['bottom'], boundaryTags['top'], boundaryTags['back']]:
+    if flag in [boundaryTags['front'], boundaryTags['back']]:
+        return lambda x,t: 1.0
 
 def getDBC_w(x,flag):
-    #if flag in [boundaryTags['front'], boundaryTags['back'], boundaryTags['bottom'], boundaryTags['top']]:
-    if flag in [boundaryTags['front'], boundaryTags['bottom'], boundaryTags['top'], boundaryTags['back']]:
+    #if flag in [boundaryTags['front'], boundaryTags['bottom'], boundaryTags['top'], boundaryTags['back']]:
+    if flag in [boundaryTags['front'], boundaryTags['back']]:
         return lambda x,t: 0.0
 
 dirichletConditions = {0:getDBC_p,
@@ -61,45 +62,47 @@ dirichletConditions = {0:getDBC_p,
 
 def getAFBC_p(x,flag):
     if flag==boundaryTags['front']:
-        return lambda x,t: -1.0#-Uinf*x[2]*1.0/L[2]
+        return lambda x,t: -1.0
     elif flag==boundaryTags['back']:
         return None
     else:
         return lambda x,t: 0.0
 
 def getAFBC_u(x,flag):
-    #if flag not in [boundaryTags['front'],boundaryTags['back']]:
-    if flag not in [boundaryTags['front'],boundaryTags['top'],boundaryTags['bottom'],boundaryTags['back']]:
+    if flag not in [boundaryTags['front'],boundaryTags['back']]:
+    #if flag not in [boundaryTags['front'],boundaryTags['top'],boundaryTags['bottom'],boundaryTags['back']]:
         return lambda x,t: 0.0
 
 def getAFBC_v(x,flag):
-#    if flag not in [boundaryTags['front'],boundaryTags['back']]:
-    if flag==boundaryTags['back']:
-        return None
-        #return lambda x,t: 1.0#(Uinf*x[2]*1.0/L[2])**2
-    elif flag not in [boundaryTags['front'],boundaryTags['top'],boundaryTags['bottom']]:
+    if flag not in [boundaryTags['front'],boundaryTags['back']]:
+    #if flag==boundaryTags['back']:
+        #return None
+        #return lambda x,t: 1.0
+    #elif flag not in [boundaryTags['front'],boundaryTags['top'],boundaryTags['bottom']]:
         return lambda x,t: 0.0
 
 def getAFBC_w(x,flag):
-    #if flag not in [boundaryTags['front'],boundaryTags['back']]:
-    if flag not in [boundaryTags['front'],boundaryTags['top'],boundaryTags['bottom'],boundaryTags['back']]:
+    if flag not in [boundaryTags['front'],boundaryTags['back']]:
+    #if flag not in [boundaryTags['front'],boundaryTags['top'],boundaryTags['bottom'],boundaryTags['back']]:
         return lambda x,t: 0.0
 
 def getDFBC_u(x,flag):
-    if flag not in [boundaryTags['front'],boundaryTags['back'], boundaryTags['bottom'], boundaryTags['top']]:
+    #if flag not in [boundaryTags['front'],boundaryTags['back'], boundaryTags['bottom'], boundaryTags['top']]:
     #if flag not in [boundaryTags['front'], boundaryTags['bottom'], boundaryTags['top']]:
+    if flag not in [boundaryTags['front'],boundaryTags['back']]:
         return lambda x,t: 0.0
 
 def getDFBC_v(x,flag):
-    if flag not in [boundaryTags['front'],boundaryTags['back'], boundaryTags['bottom'], boundaryTags['top']]:
+    #if flag not in [boundaryTags['front'],boundaryTags['back'], boundaryTags['bottom'], boundaryTags['top']]:
     #if flag not in [boundaryTags['front'], boundaryTags['bottom'], boundaryTags['top']]:
+    if flag not in [boundaryTags['front'],boundaryTags['back']]:
         return lambda x,t: 0.0
 
 def getDFBC_w(x,flag):
-    if flag == boundaryTags['back']:
-        return None #lambda x,t: 0.0 #Uinf/L[2]*nu_0
-    elif flag not in [boundaryTags['front'], boundaryTags['bottom'], boundaryTags['top']]:
-    #if flag not in [boundaryTags['front'], boundaryTags['bottom'], boundaryTags['top']]:
+    #if flag == boundaryTags['back']:
+    #    return None #lambda x,t: 0.0
+    #elif flag not in [boundaryTags['front'], boundaryTags['bottom'], boundaryTags['top']]:
+    if flag not in [boundaryTags['front'],boundaryTags['back']]:
         return lambda x,t: 0.0
 
 
