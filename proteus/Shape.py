@@ -13,7 +13,8 @@ import numpy as np
 from math import cos, sin, sqrt, atan2, acos
 from proteus import AuxiliaryVariables, Archiver
 from proteus.Profiling import logEvent
-
+from itertools import compress
+import csv
 
 class BCContainer(object):
     def __init__(self, BC_dict):
@@ -48,8 +49,18 @@ class Shape:
             self._snf = len(self.domain.facets)
         self._sns = len(self.domain.segments)
         self._snr = len(self.domain.regions)
-        self._snbc = len(self.domain.bc)
+        self._snbc = len(self.domain.bc)+1
         self._snh = len(self.domain.holes)
+        if domain.nd == 2:
+            if len(domain.segmentFlags):
+                self._snflag = max(domain.segmentFlags) + 1
+            else:
+                self._snflag = 1
+        elif domain.nd == 3:
+            if len(domain.facetFlags):
+                self._snflag = max(domain.facetFlags) + 1
+            else:
+                self._snflag = 1
 
     def _addShape(self):
         """
@@ -84,11 +95,9 @@ class Shape:
         if len(self.domain.bc) == 0: # need to add None boundary condition at 0 indice
             self.domain.bc += [bc.BoundaryConditions()]
         self.domain.bc += self.BC_list
-        if self.domain.barycenters is not None:
-            self.domain.barycenters = np.append(self.domain.barycenters, self.barycenters, axis=0)
-        else:
+        if self.domain.barycenters is None:
             self.domain.barycenters = np.array([[0., 0., 0.]])
-            self.domain.barycenters = np.append(self.domain.barycenters, self.barycenters, axis=0)
+        self.domain.barycenters = np.append(self.domain.barycenters, self.barycenters, axis=0)
         self.domain.update()
 
     def _updateDomain(self):
@@ -283,6 +292,42 @@ class Shape:
     def setTank(self):
         for bc in self.BC_list:
             bc.setTank()
+
+    def setRecordValues(self, all_values=False, time=True, pos=False, pos_x=False,
+                        pos_y=False, pos_z=False, rot=False, rot_x=False,
+                        rot_y=False, rot_z=False, F=False, Fx=False, Fy=False,
+                        Fz=False, M=False, Mx=False, My=False, Mz=False, inertia=False,
+                        vel=False, vel_x=False, vel_y=False, vel_z=False, acc=False,
+                        acc_x=False, acc_y=False, acc_z=False):
+        """
+        values to be recorded in a csv file (for rigid bodies)
+        """
+        if pos is True:
+            pos_x = pos_y = pos_z = True
+        if rot is True:
+            rot_x = rot_y = rot_z = True
+        if F is True:
+            Fx = Fy = Fz = True
+        if M is True:
+            Mx = My = Mz = True
+        if vel is True:
+            vel_x = vel_y = vel_z = True
+        if acc is True:
+            acc_x = acc_y = acc_z = True
+        self.record_bool = [time, pos, pos_x, pos_y, pos_z, rot, rot_x, rot_y,
+                            rot_z, F, Fx, Fy, Fz, M, Mx, My, Mz, inertia, vel_x, vel_y,
+                            vel_z, acc_x, acc_y, acc_z]
+        if all_values is True:
+            self.record_bool = [True for value in self.record_bool]
+        self.record_names = ['time', 'pos_x', 'pos_y', 'pos_z', 
+                             'rot_x', 'rot_y', 'rot_z', 'Fx', 'Fy', 'Fz',
+                             'Mx', 'My', 'Mz', 'inertia', 'vel_x', 'vel_y', 'vel_z',
+                             'acc_x', 'acc_y', 'acc_z']
+        names_towrite = list(compress(self.record_names, self.record_bool))
+        self.record_filename = 'record_' + self.name + '.csv'
+        with open(self.record_filename, 'w') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow(names_towrite)
 
 
 class Cuboid(Shape):
@@ -556,9 +601,11 @@ class Tank2D(Rectangle):
     Class to create a 2D tank (rectangle)
     :arg domain: domain of the tank
     :arg dim: dimensions of the tank (list or array)
+    :leftSponge: width of left sponge (float)
+    :rightSponge: width of right sponge (float)
     """
     count = 0
-    def __init__(self, domain, dim=(0.,0.), from_0=True):
+    def __init__(self, domain, dim=(0.,0.), leftSponge=None, rightSponge=None, from_0=True):
         L, H = dim
         if from_0 is True:
             x, y = L/2., H/2.
@@ -568,11 +615,65 @@ class Tank2D(Rectangle):
         self.__class__.count += 1
         self.name = "tank2d" + str(self.__class__.count)
         self.from_0 = from_0
-        self.regions = np.array([[L-L/100., H-H/100.]])
+        self.regions = np.array([[L/2., H/2.]])
+        for boundcond in self.BC_list:
+            boundcond.setTank()
+        extra_vertices = []
+        extra_vertexFlags = []
+        x0 = x-0.5*L
+        x1 = x+0.5*L
+        y0 = y-0.5*H
+        y1 = y+0.5*H
+        if leftSponge is not None:
+            extra_vertices += [[x0+leftSponge, y0],
+                               [x0+leftSponge, y1]]
+            extra_vertexFlags += [0, 2]
+            self.BC_list += [bc.BoundaryConditions()]
+        if rightSponge is not None:
+            extra_vertices += [[x1-rightSponge, y0],
+                               [x1-rightSponge, y1]]
+            extra_vertexFlags += [0, 2]
+            self.BC_list += [bc.BoundaryConditions()]
+        # getting the right segments and regions if sponge layers are defined
+        if leftSponge is not None and rightSponge is not None:
+            self.segments = np.array([[0, 4], [4, 6], [6, 1], [1, 2],
+                                      [2, 7], [7, 5], [5, 3], [3, 0],
+                                      [4, 5], [6, 7]])
+            self.segmentFlags = np.array([0, 0, 0, 1,
+                                          2, 2, 2, 3,
+                                          4, 5])
+            self.regions = np.array([[(x0+leftSponge)/2., (y0+y1)/2.],
+                                     [((x0+leftSponge)+(x1-rightSponge))/2., (y0+y1)/2.],
+                                     [((x1-rightSponge)+x1)/2., (y0+y1)/2.]])
+            self.regionFlags = np.array([0, 1, 2])
+            self.regionIndice = {'leftSponge': 0,
+                                 'tank': 1,
+                                 'rightSponge': 2}
+        elif leftSponge is not None or rightSponge is not None:
+            self.segments = np.array([[0, 4], [4, 1], [1, 2], [2, 5],
+                                      [5, 3], [3, 0], [4, 5]])
+            self.segmentFlags = np.array([0, 0, 1, 2,
+                                          2, 3, 4])
+            if leftSponge is not None:
+                self.regions = np.array([[(x0+leftSponge)/2., (y0+y1)/2.],
+                                         [((x1-leftSponge)+x1)/2., (y0+y1)/2.]])
+                self.regionFlags = np.array([0, 1])
+                self.regionIndice = {'leftSponge': 0,
+                                     'tank': 1}
+            if rightSponge is not None:
+                self.regions = np.array([[(x0+rightSponge)/2., (y0+y1)/2.],
+                                         [((x1-rightSponge)+x1)/2., (y0+y1)/2.]])
+                self.regionFlags = np.array([0, 1])
+                self.regionIndice = {'tank': 0,
+                                     'rightSponge': 1}
+        # need to check that original region is not in new sponge regions!
+        if len(extra_vertices):
+            self.vertices = np.append(self.vertices, extra_vertices, axis=0)
+            self.vertexFlags = np.append(self.vertexFlags, extra_vertexFlags, axis=0)
+        self.zones = {}
+        self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones, domain)
         self.barycenter = np.array([0., 0., 0.])
-        self.barycenters = np.array([self.barycenter for segment in self.segments])
-        for bc in self.BC_list:
-            bc.setTank()
+        self.barycenters = np.array([self.barycenter for i in range(max(self.segmentFlags) + 1)])
         self._addShape()  # adding shape to domain
 
     def setDimensions(self, dim):
@@ -584,17 +685,55 @@ class Tank2D(Rectangle):
         L, H = dim
         if self.from_0 is True:
             x, y = L/2., H/2.
+            self.coords[:] = [x, y]
         else:
-            x, y = 0., 0.
-        self.vertices = np.array([[x-0.5*L, y-0.5*H],
-                                  [x+0.5*L, y-0.5*H],
-                                  [x+0.5*L, y+0.5*H],
-                                  [x-0.5*L, y+0.5*H]])
-        self.coords = np.array(self.dim)/2.
-        self.regions = np.array([[x+L/2.-L/100., y+H/2.-H/100.]])
+            x, y = self.coords
+        x0, x1 = x-0.5*L, x+0.5*L
+        y0, y1 = y-0.5*H, y+0.5*H
+        vertices = [[x0, y0],
+                    [x1, y0],
+                    [x1, y1],
+                    [x0, y1]]
+        leftSponge = self.leftSponge
+        rightSponge = self.rightSponge
+        if leftSponge is not None:
+            vertices += [[x0+leftSponge, y0],
+                         [x0+leftSponge, y1]]
+            regions = [[(x0+leftSponge)/2., (y0+y1)/2.],
+                       [((x1-leftSponge)+x1)/2., (y0+y1)/2.]]
+        if rightSponge is not None:
+            vertices += [[x1-rightSponge, y0],
+                         [x1-rightSponge, y1]]
+            regions = [[(x0+rightSponge)/2., (y0+y1)/2.],
+                       [((x1-rightSponge)+x1)/2., (y0+y1)/2.]]
+        if rightSponge is not None and leftSponge is not None:
+            regions = [[(x0+leftSponge)/2., (y0+y1)/2.],
+                       [((x0+leftSponge)+(x1-rightSponge))/2., (y0+y1)/2.],
+                       [((x1-rightSponge)+x1)/2., (y0+y1)/2.]]
+        self.vertices[:] = vertices
+        self.regions[:] = regions
         self._updateDomain()
 
 
+    def setAbsorptionZones(self, left=False, right=False):
+        self.leftSpongeAbs = left
+        self.rightSpongeAbs = right
+        if self.leftSpongeAbs is True:
+            ind = self.regionIndice['leftSponge']
+            key = ind + self._snr + 1
+            self.zones[key] = RelaxationZone(self.regions[ind, 0],
+                                             1.,
+                                             lambda x, t: 0.,
+                                             lambda x, t: 0.,
+                                             lambda x, t: 0.,)
+        if self.rightSpongeAbs is True:
+            ind = self.regionIndice['rightSponge']
+            key = ind + self._snr + 1
+            self.zones[key] = RelaxationZone(self.regions[ind, 0],
+                                             1.,
+                                             lambda x, t: 0.,
+                                             lambda x, t: 0.,
+                                             lambda x, t: 0.,)
 
 
 class CustomShape(Shape):
@@ -666,13 +805,13 @@ class RigidBody(AuxiliaryVariables.AV_base):
 
     def __init__(self, shape, he=1., cfl_target=0.9, dt_init=0.001):
         self.shape = shape
+        shape.domain.auxiliaryVariables += [self]
         self.dt_init = dt_init
         self.he = he
         self.cfl_target = 0.9
         self.last_position = np.array([0., 0., 0.])
         self.rotation_matrix = np.eye(3)
         self.h = np.array([0., 0., 0.])
-        self.initialize_values = True
 
     def step(self, dt):
         nd = self.shape.domain.nd
@@ -687,10 +826,11 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.position[:] = self.shape.barycenter
         # rotation due to moment
         if sum(self.M) != 0:
-            I = self.shape.getInertia(vec=self.M, pivot=self.shape.barycenter)
-            assert I != 0, "Zero inertia: inertia tensor (It) was not set correctly! It has to be set as a 3x3 numpy array"
-            ang_acc = self.M[:]/I
+            self.inertia = self.shape.getInertia(vec=self.M, pivot=self.shape.barycenter)
+            assert self.inertia != 0, "Zero inertia: inertia tensor (It) was not set correctly! It has to be set as a 3x3 numpy array"
+            ang_acc = self.M[:]/self.inertia
         else:
+            self.inertia = None
             ang_acc = np.array([0., 0., 0.])
         self.angvel[:] = self.last_angvel+ang_acc*dt
         ang_disp = self.angvel*dt
@@ -703,7 +843,29 @@ class RigidBody(AuxiliaryVariables.AV_base):
             self.rotation_matrix[:] = np.dot(np.linalg.inv(self.last_rotation), self.rotation)
         else:
             self.rotation_matrix[:] = np.eye(3)
+        self.recordValues()
 
+    def recordValues(self):
+        time = self.model.stepController.t_model_last
+        self.record_time = time
+        pos_x, pos_y, pos_z = self.last_position
+        rot = self.last_rotation
+        rot_x = atan2(rot[2,1], rot[1,2])
+        rot_y = atan2(-rot[0,2], sqrt(rot[2,1]**2+rot[2,2]**2))
+        rot_z = atan2(rot[1,0], rot[0,0])
+        Fx, Fy, Fz = self.F
+        Mx, My, Mz = self.M
+        inertia = self.inertia
+        vel_x, vel_y, vel_z = self.velocity
+        acc_x, acc_y, acc_z = self.acceleration
+        values = [time, pos_x, pos_y, pos_z, rot_x, rot_y,
+                  rot_z, Fx, Fy, Fz, Mx, My, Mz, inertia,
+                  vel_x, vel_y, vel_z, acc_x, acc_y, acc_z]
+        values_towrite = list(compress(values, self.shape.record_bool))
+        with open(self.shape.record_filename, 'a') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow(values_towrite)
+        
     def attachModel(self, model, ar):
         self.model = model
         self.ar = ar
@@ -735,22 +897,17 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.barycenters = shape.domain.barycenters
         self.angvel = np.zeros(3, 'd')
         self.last_angvel = np.zeros(3, 'd')
+        self.nb_start = self.shape._snflag
         if nd == 2:
-            self.nb_start = self.shape._sns+1
-            self.nb_end = self.nb_start+len(self.shape.segments)
+            self.nb_end = self.nb_start+ max(self.shape.segmentFlags) + 1
         if nd == 3:
-            self.nb_start = self.shape._snf+1  # must skip indice 0 for forces / barycenters
-            self.nb_end = self.nb_start + len(self.shape.facets)
+            self.nb_end = self.nb_start + max(self.shape.facetFlags) + 1
         if nd == 2:
             self.Fg = self.shape.mass*np.array([0., -9.81, 0.])
         if nd == 3:
             self.Fg = self.shape.mass*np.array([0., 0., -9.81])
 
     def calculate(self):
-        if self.initialize_values is True:
-            self.calculate_init()
-            self.initialize_values = False
-        import copy
         self.last_position[:] = self.position
         self.last_velocity[:] = self.velocity
         self.last_rotation[:] = self.rotation
@@ -766,7 +923,6 @@ class RigidBody(AuxiliaryVariables.AV_base):
         i0, i1 = self.nb_start, self.nb_end
         F = np.sum(self.model.levelModelList[-1].coefficients.netForces_p[i0:i1,:] + self.model.levelModelList[-1].coefficients.netForces_v[i0:i1,:], axis=0) + self.Fg
         M = np.sum(self.model.levelModelList[-1].coefficients.netMoments[i0:i1,:], axis=0)
-        logEvent(`self.model.levelModelList[-1].coefficients.netForces_p+ self.model.levelModelList[-1].coefficients.netForces_v`)
         self.F[:] = F*self.shape.free_x
         self.M[:] = M*self.shape.free_r
         logEvent("==============================================================")
@@ -934,3 +1090,43 @@ def relative_vec(vec1, vec0):
     y1_new = r1*sin(p1_new)*sin(t1_new)
     z1_new = r1*cos(p1_new)
     return (x1_new, y1_new, z1_new)
+
+    
+
+
+
+
+class RelaxationZone:
+    def __init__(self, center_x, sign, u, v, w):
+        self.center_x = center_x
+        self.sign = sign
+        self.u = u
+        self.v = v
+        self.w = w
+
+
+class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
+    """ Prescribe a velocity penalty scaling in a material zone via a Darcy-Forchheimer penalty
+    
+    :param zones: A dictionary mapping integer material types to Zones, where a Zone is a named tuple
+    specifying the x coordinate of the zone center and the velocity components
+    """
+    def __init__(self, zones, domain):
+        assert isinstance(zones,dict)
+        self.zones = zones
+        domain.auxiliaryVariables += [self]
+    def calculate(self):
+        typee = 99
+        for l, m in enumerate(self.model.levelModelList):
+            for eN in range(m.coefficients.q_phi.shape[0]):
+                mType = m.mesh.elementMaterialTypes[eN]
+                if self.zones.has_key(mType):
+                    for k in range(m.coefficients.q_phi.shape[1]):
+                        t = m.timeIntegration.t
+                        x = m.q['x'][eN,k]
+                        m.coefficients.q_phi_solid[eN,k] = self.zones[mType].sign*(self.zones[mType].center_x - x[0])
+                        m.coefficients.q_velocity_solid[eN,k,0] = self.zones[mType].u(x,t)
+                        m.coefficients.q_velocity_solid[eN,k,1] = self.zones[mType].v(x,t)
+                        #m.coefficients.q_velocity_solid[eN,k,2] = self.zones[mType].w(x,t)
+        m.q['phi_solid'] = m.coefficients.q_phi_solid
+        m.q['velocity_solid'] = m.coefficients.q_velocity_solid
