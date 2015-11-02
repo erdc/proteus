@@ -93,7 +93,7 @@ class Initial:
 #physics
 
 a0 = 1.0e-2
-T = 1.0
+T = 1.0#e-2
 
 physics = default_p
 physics.nd = nd; #
@@ -146,16 +146,17 @@ numerics.periodicDirichletConditions=None
 
 #numerics.numericalFluxType = NumericalFlux.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
 #numerics.numericalFluxType = NumericalFlux.NoFlux
-numericalFluxBase = NumericalFlux.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
+numericalFluxBase = NumericalFlux.NoFlux #NumericalFlux.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
 class NoFluxDirichletConstraints(numericalFluxBase):
     useStrongDirichletConstraints=True
 numerics.numericalFluxType = NoFluxDirichletConstraints
 ##POD-specific controls
 numerics.use_hyper = True
-numerics.SVD_basis_file='SVD_basis_truncated_10'
-numerics.Fs_SVD_basis_file='Fs_SVD_basis_truncated_10'
-numerics.hyper_reduction_indices = 'DEIM_indices_10'
-numerics.hyper_reduction_Q = 'Q_DEIM_truncated_10'
+numerics.SVD_basis_file='SVD_basis_truncated'
+#numerics.Fs_SVD_basis_file='Fs_SVD_basis_truncated_10'
+numerics.hyper_SVD_basis_file='Fn_SVD_basis_truncated'
+numerics.hyper_indices_file = 'DEIM_indices'
+numerics.hyper_Q_file = 'Q_DEIM_truncated'
 #
 # split operator options (trivial since we're not splitting)
 #
@@ -168,12 +169,12 @@ Profiling.verbose = 1
 opts.logLevel = 2
 
 #whether or not to use deim approximation
-use_hyper = True
+use_hyper = numerics.use_hyper
 
 simFlagsList=None
 if use_hyper:
     simFlagsList=[{}]
-    simFlagsList[0]['storeQuantities']=['pod_residuals']
+    simFlagsList[0]['storeQuantities']=['pod_residuals_linnonlin']
 
 
 def burgers_plot3d(ns):
