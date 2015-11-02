@@ -22,7 +22,7 @@ MeshAdaptPUMI.loadModelAndMesh(cubeMdl, cube670p1)
 
 mesh = MeshTools.TetrahedralMesh()
 mesh.cmesh = cmeshTools.CMesh()
-MeshAdaptPUMI.ConstructFromSerialPUMIMesh(mesh.cmesh)
+MeshAdaptPUMI.constructFromSerialPUMIMesh(mesh.cmesh)
 mesh.buildFromC(mesh.cmesh)
 
 print "Done reading in mesh"
