@@ -96,10 +96,17 @@ class BoundaryConditions:
         """
         sets open boundary conditions (water can come out)
         """
+        b_or = self._b_or[self._b_i]
+        def get_ux_dirichlet(i):
+            if b_or[i] == 1. or b_or[i] == -1.:
+                return None
+            else:
+                return constantBC(0.)
         self.p_dirichlet = constantBC(0.)
-        self.u_dirichlet = constantBC(0.)
-        self.v_dirichlet = constantBC(0.)
-        self.w_dirichlet = constantBC(0.)
+        self.u_dirichlet = get_ux_dirichlet(0)
+        self.v_dirichlet = get_ux_dirichlet(1)
+        if len(b_or) > 2:
+            self.w_dirichlet = get_ux_dirichlet(2)
         self.vof_dirichlet = constantBC(1.)
         self.p_advective = None
         self.u_advective = None
@@ -132,10 +139,10 @@ class BoundaryConditions:
     def setMoveMesh(self, body):
         """
         sets rigid body boundary conditions for moving the mesh
-        :arg last_position: position of (barycentre of) body before last calculation step
-        :arg position: position of (barycentre of) body after last calculation step
-        :arg last_rotation: rotation matrix of body before last calculation step
-        :arg rotation: rotation matrix of body after last calculation step
+        :arg last_position: position (barycentre) of body pre-calculation
+        :arg position: position (barycentre) of body post-calculation
+        :arg last_rotation: rotation matrix of body pre-calculation
+        :arg rotation: rotation matrix of body post-calculation
         (!) should not be set manually
         """
         def get_DBC_h(i):
@@ -152,27 +159,32 @@ class BoundaryConditions:
 
     def setTwoPhaseVelocityInlet(self, U, waterLevel, vert_axis=-1, air=1., water=0.):
         """
-        Imposes a velocity profile lower than the sea level and an open boundary for higher than the sealevel
-        :arg U: Velocity vector at the global system
-        :arg waterLevel: water level at global coordinate system
-        :arg vert_axis: index of vertical in position vector, must always be aligned with gravity, by default set to 1]
-        :arg air: Volume fraction for air (1.0 by default)
-        :arg water: Volume fraction for water (0.0 by default)
-        Below the seawater level, the condition returns the _dirichlet and p_advective condition according to the inflow velocity
-        Above the sea water level, the condition returns the gravity as zero, and sets _dirichlet condition to zero, only if there is an 
-        zero inflow velocity component
-        THIS CONDITION IS BEST USED FOR BOUNDARIES AND GRAVITY ALIGNED WITH ONE OF THE MAIN AXES
+        Imposes a velocity profile lower than the sea level and an open
+        boundary for higher than the sealevel.
+        :arg U: Velocity vector at the global system.
+        :arg waterLevel: water level at global coordinate system.
+        :arg vert_axis: index of vertical in position vector, must always be
+                        aligned with gravity, by default set to 1].
+        :arg air: Volume fraction for air (1.0 by default).
+        :arg water: Volume fraction for water (0.0 by default).
+        Below the seawater level, the condition returns the _dirichlet and
+        p_advective condition according to the inflow velocity.
+        Above the sea water level, the condition returns the gravity as zero,
+        and sets _dirichlet condition to zero, only if there is a zero inflow
+        velocity component.
+        (!) This condition is best used for boundaries and gravity aligned with
+            one of the main axes.
         """
         self.reset()
         U = np.array(U)
 
-        def get_inlet_v_dirichletel(ux):
-            def u_dirichletx(x, t):
+        def get_inlet_ux_dirichlet(ux):
+            def ux_dirichlet(x, t):
                 if x[vert_axis] < waterLevel:
                     return ux
                 elif x[vert_axis] >= waterLevel and ux==0:
                     return 0.
-            return u_dirichletx
+            return ux_dirichlet
 
         def inlet_vof_dirichlet(x, t):
             if x[vert_axis] < waterLevel:
@@ -190,17 +202,18 @@ class BoundaryConditions:
             elif x[vert_axis] >= waterLevel:
                 return None
 
-        self.u_dirichlet = get_inlet_v_dirichletel(U[0])
-        self.v_dirichlet = get_inlet_v_dirichletel(U[1])
+        self.u_dirichlet = get_inlet_ux_dirichlet(U[0])
+        self.v_dirichlet = get_inlet_ux_dirichlet(U[1])
         if len(U) == 3:
-                self.w_dirichlet = get_inlet_v_dirichletel(U[2])
+                self.w_dirichlet = get_inlet_ux_dirichlet(U[2])
         self.vof_dirichlet = inlet_vof_dirichlet
         self.p_advective = inlet_p_advective
         self.u_diffusive = constantBC(0.)
         self.v_diffusive = constantBC(0.)
         self.w_diffusive = constantBC(0.)
 
-    def setHydrostaticPressureOutlet(self, rho, g, refLevel, pRef=0.0, vert_axis=-1, air=1.0):
+    def setHydrostaticPressureOutlet(self, rho, g, refLevel, pRef=0.0,
+                                     vert_axis=-1, air=1.0):
         self.reset()
         a0 = pRef - rho*g[vert_axis]*refLevel
         a1 = rho*g[vert_axis]
@@ -221,17 +234,26 @@ class BoundaryConditions:
         self.v_diffusive = constantBC(0.)
         self.w_diffusive = constantBC(0.)
 
-    def hydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g, refLevel, pRef=0.0, vert_axis=-1, air=1.0, water=0.0):
-        """Imposes a hydrostatic pressure profile and open boundary conditions with a known otuflow depth
-        :arg rhoUp: Phase density of the upper part
-        :arg rhoDown: Phase density of the lower part
-        :arg g: Gravitational acceleration vector
-        :arg refLevel: Level at which pressure = pRef
-        :arg pRef: Reference value for the pressure at x[vert_axis]=refLevel, be default set to 0
-        :arg vert_axis: index of vertical in position vector, must always be aligned with gravity, by default set to 1
-        :return: hydrostaticPressureOutlet except when the pressure and the vof are defined. Then it returns the pressure and vof profile based on the known depth
-        If the boundary is aligned with one of the main axes, sets the tangential velocity components to zero as well
-        THIS CONDITION IS BEST USED FOR BOUNDARIES AND GRAVITY ALIGNED WITH ONE OF THE MAIN AXES
+    def hydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
+                                           refLevel, pRef=0.0, vert_axis=-1,
+                                           air=1.0, water=0.0):
+        """Imposes a hydrostatic pressure profile and open boundary conditions
+        with a known otuflow depth
+        :arg rhoUp: Phase density of the upper part.
+        :arg rhoDown: Phase density of the lower part.
+        :arg g: Gravitational acceleration vector.
+        :arg refLevel: Level at which pressure = pRef.
+        :arg pRef: Reference value for the pressure at x[vert_axis]=refLevel,
+                   be default set to 0.
+        :arg vert_axis: index of vertical in position vector, must always be
+                        aligned with gravity, by default set to 1.
+        :return: hydrostaticPressureOutlet except when the pressure and the
+                 vof are defined. Then it returns the pressure and vof profile
+                 based on the known depth.
+        If the boundary is aligned with one of the main axes, sets the
+        tangential velocity components to zero as well.
+        (!) This condition is best used for boundaries and gravity aligned with
+            one of the main axes.
         """
         self.reset()
 
