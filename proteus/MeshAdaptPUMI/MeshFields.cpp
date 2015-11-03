@@ -21,13 +21,31 @@ void MeshAdaptPUMIDrvr::freeNumbering(apf::Numbering*& n)
 int MeshAdaptPUMIDrvr::transferSolutionToPUMI(double* inArray, int nVar, int nN)
 {
   assert(nN == static_cast<int>(m->count(0)));
-  numVar = nVar;
   assert(solution == 0);
   solution = apf::createPackedField(m, "proteus_solution", nVar);
   apf::NewArray<double> tmp(nVar);
   apf::MeshEntity* v;
   apf::MeshIterator* it = m->begin(0);
-  apf::Vector3 pt;
+  while ((v = m->iterate(it))) {
+    int i = localNumber(v);
+    for(int j = 0; j < nVar; j++)
+      tmp[j] = inArray[j * nN + i];
+    apf::setComponents(solution, v, 0, &tmp[0]); 
+  }
+  m->end(it);
+  return 0;
+}
+
+int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double* inArray,
+    int nVar, int nN)
+{
+  assert(nN == static_cast<int>(m->count(0)));
+  apf::Field* f = m->findField(name);
+  if (!f)
+    f = apf::createPackedField(m, name, nVar);
+  apf::NewArray<double> tmp(nVar);
+  apf::MeshEntity* v;
+  apf::MeshIterator* it = m->begin(0);
   while ((v = m->iterate(it))) {
     int i = localNumber(v);
     for(int j = 0; j < nVar; j++)
