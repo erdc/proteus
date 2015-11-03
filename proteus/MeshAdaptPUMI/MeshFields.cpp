@@ -39,6 +39,7 @@ int MeshAdaptPUMIDrvr::transferSolutionToPUMI(double* inArray, int nVar, int nN)
 int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double* inArray,
     int nVar, int nN)
 {
+  fprintf(stderr, "got nVar = %d nN = %d\n", nVar, nN);
   assert(nN == static_cast<int>(m->count(0)));
   apf::Field* f = m->findField(name);
   if (!f) {
@@ -56,8 +57,8 @@ int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double* inArray,
   while ((v = m->iterate(it))) {
     int i = localNumber(v);
     for(int j = 0; j < nVar; j++)
-      tmp[j] = inArray[j * nN + i];
-    apf::setComponents(solution, v, 0, &tmp[0]); 
+      tmp[j] = inArray[i * nVar + j];
+    apf::setComponents(f, v, 0, &tmp[0]); 
   }
   m->end(it);
   return 0;
