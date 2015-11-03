@@ -883,7 +883,7 @@ class NS_base:  # (HasTraits):
                         for ci in range(coef.nc):
                           ivar=ivar+1
                           soldof[ivar,:] = lm.u[ci].dof[:]
-                          if coef.vectorComponents != None and \
+                          if coef.vectorComponents == None or \
                              ci not in coef.vectorComponents:
                              scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
                              scalar[:,0] = lm.u[ci].dof[:]
