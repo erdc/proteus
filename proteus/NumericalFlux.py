@@ -386,7 +386,6 @@ class Advection_DiagonalUpwind(NF_base):
         self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
         if self.vt.movingDomain:
             self.vt.coefficients.updateToMovingDomain(self.vt.timeIntegration.t,self.ebqe)
-        logEvent('NumFlux external eval t= %s '% (self.vt.timeIntegration.t))
         #import pdb
         #pdb.set_trace()
         for ci in range(self.nc):
