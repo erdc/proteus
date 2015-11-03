@@ -871,10 +871,25 @@ class NS_base:  # (HasTraits):
                     soldof=numpy.zeros((ivar,lm.mesh.nNodes_global),'d')
                     ivar=-1
                     for m in self.modelList:
-                        for lm in m.levelModelList:
-                            for ci in range(lm.coefficients.nc):
-                                ivar=ivar+1
-                                soldof[ivar,:] = lm.u[ci].dof[:]
+                      for lm in m.levelModelList:
+                        coef = lm.coefficients
+                        if coef.vectorComponents != None:
+                          vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
+                          for vci in range(len(coef.vectorComponents)):
+                            vector[:,vci] = lm.u[coef.vectorComponents[vci]].dof[:]
+                          p0.domain.PUMIMesh.transferFieldToPUMI(
+                                 coef.vectorName, vector)
+                          del vector
+                        for ci in range(coef.nc):
+                          ivar=ivar+1
+                          soldof[ivar,:] = lm.u[ci].dof[:]
+                          if coef.vectorComponents != None and \
+                             ci not in coef.vectorComponents:
+                             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+                             scalar[:,0] = lm.u[ci].dof[:]
+                             p0.domain.PUMIMesh.transferFieldToPUMI(
+                                 coef.variableNames[ci], scalar)
+                             del scalar
                     #Get Physical Parameters
                     #Can we do this in a problem-independent  way?
                     rho = numpy.array([self.pList[0].rho_0,
