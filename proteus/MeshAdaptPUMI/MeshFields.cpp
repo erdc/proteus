@@ -41,8 +41,15 @@ int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double* inArray,
 {
   assert(nN == static_cast<int>(m->count(0)));
   apf::Field* f = m->findField(name);
-  if (!f)
-    f = apf::createPackedField(m, name, nVar);
+  if (!f) {
+    assert(nVar == 1 || nVar == 3);
+    int valueType;
+    if (nVar == 1)
+      valueType = apf::SCALAR;
+    else
+      valueType = apf::VECTOR;
+    f = apf::createFieldOn(m, name, valueType);
+  }
   apf::NewArray<double> tmp(nVar);
   apf::MeshEntity* v;
   apf::MeshIterator* it = m->begin(0);
