@@ -17,7 +17,7 @@ static void SmoothField(apf::Field* f);
 static double isotropicFormula(double phi, double hmin, double hmax)
 {
   static double const epsilon = 0.02;
-  double phi = sqrt(phi * phi);
+  phi = fabs(phi);
   double size;
   if (fabs(phi) < epsilon)
     size = hmin;
@@ -34,7 +34,6 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
   size_iso = apf::createLagrangeField(m, "proteus_size",apf::SCALAR,1);
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* v;
-  apf::NewArray<double> sol(apf::countComponents(solution));
   apf::Field* phif = m->findField("phi");
   assert(phif);
   while ((v = m->iterate(it))) {
