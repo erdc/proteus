@@ -21,6 +21,7 @@
 //proxy variables used to make it easier to pass these variables from MeshAdaptPUMIDrvr
 int approx_order;
 int int_order;
+int norm_order;
 double nu_0,nu_1,rho_0,rho_1;
 double a_kl = 0.5; //flux term weight
 
@@ -76,9 +77,6 @@ double getMPvalue(double field_val,double val_0, double val_1)
   return val_0*(1-field_val)+val_1*field_val;
 }
 
-//apf::Vector3 getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf);
-//void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf,apf::NewArray <double> &endflux);
-//void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux);
 bool isInTet(apf::Mesh* mesh, apf::MeshEntity* elem, apf::Vector3 pt);
 apf::Vector3 getFaceNormal(apf::Mesh* mesh, apf::MeshEntity* face);
 double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf);
@@ -151,7 +149,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
   
   iter = m->begin(nsd); //loop over elements
 int testcount = 0;
-int eID = 258;//860; 
+int eID = 0; 
 double effectivity_avg=0.0;
 
 double L2_total=0;
@@ -330,7 +328,7 @@ double err_est_total=0;
 if(comm_rank==0 && testcount==eID){ 
       MatView(K,PETSC_VIEWER_STDOUT_SELF);
       std::cout<<" NOW VECTOR with just a(.,.)" <<std::endl;
-      VecView(F,PETSC_VIEWER_STDOUT_SELF);
+      //VecView(F,PETSC_VIEWER_STDOUT_SELF);
 }
    
     double* bflux;
@@ -394,18 +392,17 @@ if(comm_rank==0 && testcount==eID){
     PCSetType(pc,PCLU);
     KSPSetFromOptions(ksp);
 
-    std::cout<<"Final error "<<std::endl;
     KSPSolve(ksp,F,coef);
-    //VecView(coef,PETSC_VIEWER_STDOUT_SELF);
+//std::cout<<"Final error "<<std::endl;
+//VecView(coef,PETSC_VIEWER_STDOUT_SELF);
     
     KSPDestroy(&ksp); //destroy ksp
-    PCDestroy(&pc);
+    //PCDestroy(&pc);
 
     //compute the local error  
     double Acomp=0;
     double Bcomp=0;
     apf::Matrix3x3 phi_ij;
-
 
     double coef_ez[nshl*nsd];
     int ez_idx[nshl*nsd];
@@ -413,7 +410,6 @@ if(comm_rank==0 && testcount==eID){
     VecGetValues(coef,nshl*nsd,ez_idx,coef_ez);
 
     //Copy coefficients onto field
-    //apf::MeshEntity* testedge;
     apf::Adjacent adjvert;
     m->getAdjacent(ent,0,adjvert);
     for(int idx=0;idx<4;idx++){
@@ -465,7 +461,7 @@ if(comm_rank==0 && testcount==eID){
     L2_total = L2_total+L2err;
     double starerr = getStarerror(m,ent,voff,visc,pref,velf,estimate);
     star_total = star_total+starerr;
-std::cout<<"Acomp "<<Acomp << " Bcomp "<<Bcomp<<std::endl;
+//std::cout<<"Acomp "<<Acomp << " Bcomp "<<Bcomp<<std::endl;
    
 //    } //end if testcount 
 
@@ -558,30 +554,16 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf:
 
           double flux_weight;         
           for(int idx_neigh=0; idx_neigh<neighbors.getSize();idx_neigh++){ //at most two neighboring elements
+            int numqpt = apf::countIntPoints(b_elem,int_order); 
+            int BCtype[nsd];
+            double fluxdata[4][numqpt];
             if(me==boundary_face){
-              flux_weight=1; std::cout<<"on boundary face "<<std::endl;
-/*
-std::cout<<"BC tags test" <<std::endl;
-int numqpt = apf::countIntPoints(b_elem,int_order);
-int data[numqpt];
-double data2[numqpt];
-m->getIntTag(bent,BCtag[0],&data[0]);
-std::cout<<"BCtype "<< data[0]<<std::endl;
-  m->getDoubleTag(bent,fluxtag[3],&data2[0]);
-std::cout<<"BC flux test "<<std::endl;
-for(int testidx=0;testidx<numqpt;testidx++){ 
-  std::cout<<data2[testidx]<<" ";
-}
-std::cout<<std::endl;
-*/
-
-            }
-            else{
-              if(neighbors[idx_neigh]==ent) flux_weight = 1-a_kl;
-              else{ 
-                flux_weight = a_kl;
+              for(int i=1;i<nsd+1;i++){ //ignores 0th index because that's pressure
+                m->getIntTag(bent,BCtag[i],&BCtype[i]);                 
+                m->getDoubleTag(bent,fluxtag[i],&(fluxdata[i][0]));
               }
             }
+
             tempelem = apf::createMeshElement(m,neighbors[idx_neigh]);
             temppres = apf::createElement(pref,tempelem);
             tempvelo = apf::createElement(velf,tempelem);
@@ -595,11 +577,27 @@ std::cout<<std::endl;
               bqptshp=apf::boundaryToElementXi(m,bent,ent,bqpt); 
               elem_shape->getValues(NULL,NULL,bqptshp,shpval_temp);
               for(int j=0;j<nshl;j++){ shpval[j] = shpval_temp[hier_off+j];}
-              
-              apf::getVectorGrad(tempvelo,bqptl,tempgrad_velo[idx_neigh]);
-              tempbflux = ((tempgrad_velo[idx_neigh]+apf::transpose(tempgrad_velo[idx_neigh]))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
-                -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1))*weight*Jdet*flux_weight;
-              bflux = tempbflux*normal;
+
+              if(me==boundary_face){
+                if((BCtype[1]+BCtype[2]+BCtype[3] != 3) && BCtype[1] == 1 ){
+                  std::cerr << "diffusive flux not fully specified on face " << localNumber(bent) << '\n';
+                  std::cerr << "BCtype "<<BCtype[1]<<" "<<BCtype[2]<<" "<<BCtype[3]<<std::endl;
+                  abort();
+                }        
+                if(BCtype[1]+BCtype[2]+BCtype[3] == 3){
+                  bflux = {fluxdata[1][l],fluxdata[2][l],fluxdata[3][l]};
+                  bflux = bflux-identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1)*normal;
+                  bflux = bflux*weight*Jdet;
+                }
+              }
+              else{
+                if(neighbors[idx_neigh]==ent) flux_weight = 1-a_kl;
+                else flux_weight = a_kl;
+                apf::getVectorGrad(tempvelo,bqptl,tempgrad_velo[idx_neigh]);
+                tempbflux = ((tempgrad_velo[idx_neigh]+apf::transpose(tempgrad_velo[idx_neigh]))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
+                  -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1))*weight*Jdet*flux_weight;
+                bflux = tempbflux*normal;
+              }
 
               for(int i=0;i<nsd;i++){ 
                 for(int s=0;s<nshl;s++){
@@ -689,6 +687,8 @@ bool isInTet(apf::Mesh* mesh, apf::MeshEntity* ent, apf::Vector3 pt){
 
 double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf){
 
+    int norm_order = int_order + 1;
+
     int nsd = m->getDimension();
     int nshl; //assuming linear solution
     int numqpt;
@@ -715,15 +715,15 @@ double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Fie
     pres_elem = apf::createElement(pref,element);
     velo_elem = apf::createElement(velf,element);
   
-    numqpt=apf::countIntPoints(element,int_order); //generally p*p maximum for shape functions
+    numqpt=apf::countIntPoints(element,norm_order); //generally p*p maximum for shape functions
     apf::Vector3 xyz;
     apf::Vector3 vel_vect;
 
     for(int k=0;k<numqpt;k++){
-      apf::getIntPoint(element,int_order,k,qpt);
+      apf::getIntPoint(element,norm_order,k,qpt);
       apf::getJacobian(element,qpt,J); 
       Jdet=apf::getJacobianDeterminant(J,nsd); 
-      weight = apf::getIntWeight(element,int_order,k);
+      weight = apf::getIntWeight(element,norm_order,k);
    
       apf::mapLocalToGlobal(element,qpt,xyz);
       apf::getVector(velo_elem,qpt,vel_vect);
@@ -757,6 +757,8 @@ int casenum = 0;
 
 double getStarerror(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, apf::Field* estimate){
 
+    int norm_order = int_order + 1;
+
     int nsd = m->getDimension();
     int nshl_err,nshl_est;  //exact error vs estimate
     int numqpt;
@@ -787,17 +789,17 @@ double getStarerror(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::F
     velo_elem = apf::createElement(velf,element);
     est_elem = apf::createElement(estimate,element);
   
-    numqpt=apf::countIntPoints(element,int_order); //generally p*p maximum for shape functions
+    numqpt=apf::countIntPoints(element,norm_order); //generally p*p maximum for shape functions
     apf::Vector3 xyz;
     apf::Vector3 vel_vect;
     apf::Vector3 est_vect;
     apf::Vector3 u_exact, u_h;
 
     for(int k=0;k<numqpt;k++){
-      apf::getIntPoint(element,int_order,k,qpt);
+      apf::getIntPoint(element,norm_order,k,qpt);
       apf::getJacobian(element,qpt,J); 
       Jdet=apf::getJacobianDeterminant(J,nsd); 
-      weight = apf::getIntWeight(element,int_order,k);
+      weight = apf::getIntWeight(element,norm_order,k);
    
       apf::mapLocalToGlobal(element,qpt,xyz);
       apf::getVector(velo_elem,qpt,vel_vect);
