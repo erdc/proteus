@@ -10,7 +10,7 @@ from nose.tools import eq_ as eq
 
 from proteus import deim_utils
 
-def get_burgers_ns(name,T=0.1,nDTout=10,archive_pod_res=None):
+def get_burgers_ns(name,T=0.1,nDTout=10,archive_pod_res=None,try_reduction=False,use_pod=True,use_hyper=False,nl_atol_res=1.0e-4,tolFac=0.0):
     import burgers_init as bu
     bu.physics.name=name
     bu.so.name = bu.physics.name
@@ -19,46 +19,30 @@ def get_burgers_ns(name,T=0.1,nDTout=10,archive_pod_res=None):
     bu.nDTout=nDTout
     bu.DT=bu.T/float(bu.nDTout)
     bu.so.tnList = [i*bu.DT for i in range(bu.nDTout+1)]
+    bu.numerics.tolFac = tolFac#relative tolerance
+    bu.numerics.nl_atol_res = nl_atol_res #nonlinear solver rtolerance
+
     #request archiving of spatial residuals ...
     simFlagsList=None
     if archive_pod_res is not None:
         simFlagsList=[{}]
         simFlagsList[0]['storeQuantities']=[archive_pod_res]
-    ns = bu.NumericalSolution.NS_base(bu.so,[bu.physics],[bu.numerics],bu.so.sList,bu.opts,simFlagsList=simFlagsList)
-    return ns
-
-def get_burgers_ns_red(name,T=0.1,nDTout=10,archive_pod_res=None,use_pod=True,use_hyper=False):
-    import burgers_init as bu
-    bu.physics.name=name
-    bu.so.name = bu.physics.name
-    #adjust default end time and number of output steps
-    bu.T=T
-    bu.nDTout=nDTout
-    bu.DT=bu.T/float(bu.nDTout)
-    bu.so.tnList = [i*bu.DT for i in range(bu.nDTout+1)]
-
-    bu.numerics.SVD_basis_file='SVD_basis_truncated'
-    bu.numerics.hyper_SVD_basis_file='Fn_SVD_basis_truncated'
-    bu.numerics.hyper_indices_file = 'DEIM_indices'
-    bu.numerics.hyper_Q_file = 'Q_DEIM_truncated'
-
+    #
     bu.numerics.use_hyper = use_hyper
-    #use_hyper is dummy by default if use_pod == True
-    if not use_pod:
+
+    if not try_reduction:
+	bu.numerics.multilevelNonlinearSolver = bu.NonlinearSolvers.Newton
+	bu.numerics.levelNonlinearSolver = bu.NonlinearSolvers.Newton
+    elif not use_pod:
 	bu.numerics.multilevelNonlinearSolver = bu.NonlinearSolvers.POD_HyperReduced_Newton
 	bu.numerics.levelNonlinearSolver = bu.NonlinearSolvers.POD_HyperReduced_Newton
     else:
 	bu.numerics.multilevelNonlinearSolver = bu.NonlinearSolvers.POD_Newton
 	bu.numerics.levelNonlinearSolver = bu.NonlinearSolvers.POD_Newton
-    #request archiving of spatial residuals ...
-    bu.numerics.tolFac = 0.0#relative tolerance
-    bu.numerics.nl_atol_res = 1.0e-4 #nonlinear solver rtolerance
-    simFlagsList=None
-    if archive_pod_res is not None:
-        simFlagsList=[{}]
-        simFlagsList[0]['storeQuantities']=[archive_pod_res]
+        
     ns = bu.NumericalSolution.NS_base(bu.so,[bu.physics],[bu.numerics],bu.so.sList,bu.opts,simFlagsList=simFlagsList)
     return ns
+
 
 def test_burgers_run():
     """
@@ -342,7 +326,9 @@ def pod_hyper_pod_run(T=0.1,nDTout=10,m_sol=5,m=5):
 
     ##reduced order models below
     ##pure POD first
-    ns_red = get_burgers_ns_red("test_pod_hyper_pod_red",T=T,nDTout=nDTout,archive_pod_res=None,use_pod=True,use_hyper=False)
+    ns_red = get_burgers_ns("test_pod_hyper_pod_red",T=T,nDTout=nDTout,archive_pod_res=None,
+                            try_reduction=True,
+                            use_pod=True,use_hyper=False)
 
     failed = ns_red.calculateSolution("run_pod_hyper_pod_red")
     assert not failed
@@ -352,7 +338,10 @@ def pod_hyper_pod_run(T=0.1,nDTout=10,m_sol=5,m=5):
     Su = read_snapshots(archive_red,len(ns_red.tnList),'u')
 
     ##POD-DEIM second
-    ns_red1 = get_burgers_ns_red("test_pod_hyper_pod_red1",T=T,nDTout=nDTout,archive_pod_res=None,use_pod=False,use_hyper=False)
+    #should return nonlinear pod
+    ns_red1 = get_burgers_ns("test_pod_hyper_pod_red1",T=T,nDTout=nDTout,archive_pod_res=None,
+                             try_reduction=True,
+                             use_pod=False,use_hyper=False)
 
     failed = ns_red1.calculateSolution("run_pod_hyper_pod_red1")
     assert not failed
@@ -413,8 +402,9 @@ def deim_run():
     np.savetxt('Q_DEIM_truncated', PF, delimiter=' ')
 
     ##reduced order models below
-    ##pure POD first
-    ns_red = get_burgers_ns_red("test_deim_run",T=T,nDTout=nDTout,archive_pod_res=None,use_pod=False,use_hyper=True)
+    ##pure POD first mwf is this comment still correct? looks like POD-DEIM
+    ns_red = get_burgers_ns("test_deim_run",T=T,nDTout=nDTout,archive_pod_res=None,try_reduction=True,
+                            use_pod=False,use_hyper=True)
 
     failed = ns_red.calculateSolution("run_deim_run")
     assert not failed
@@ -449,4 +439,5 @@ if __name__ == "__main__":
     comm = Comm.init()
     import nose
     #nose.main(defaultTest='test_deim:test_burgers_run')
-    nose.main(defaultTest='test_deim:test_nonlin_residual_split')
+    #nose.main(defaultTest='test_deim:test_nonlin_residual_split')
+    nose.main(defaultTest='test_deim:test_deim_impl')
