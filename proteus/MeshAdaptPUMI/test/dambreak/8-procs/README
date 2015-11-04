@@ -1,3 +1,0 @@
-#PROTEUS_ENV is defined in the top level proteus Makefile
-run:
-${PROTEUS_ENV} mpirun -np 8 parun dambreak_so.py 

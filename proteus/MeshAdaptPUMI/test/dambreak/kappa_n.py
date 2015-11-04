@@ -38,6 +38,6 @@ l_atol_res = 0.001*kappa_nl_atol_res
 nl_atol_res = kappa_nl_atol_res
 useEisenstatWalker = True
 
-maxNonlinearIts = 50
+maxNonlinearIts = 100
 maxLineSearches = 0
 

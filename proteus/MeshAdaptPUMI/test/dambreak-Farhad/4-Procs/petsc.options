@@ -1,6 +1,0 @@
--rans2p_ksp_type bcgsl -rans2p_pc_type asm -rans2p_pc_asm_type basic -rans2p_sub_pc_type lu -rans2p_sub_ksp_type preonly -rans2p_sub_pc_factor_mat_solver_package superlu -rans2p_ksp_atol 1.0e-8 -rans2p_ksp_rtol 1.0e-8
--ncls_ksp_type   bcgsl -ncls_pc_type   asm -ncls_pc_asm_type   basic -ncls_ksp_atol   1.0e-8 -ncls_ksp_rtol   1.0e-8
--vof_ksp_type    bcgsl -vof_pc_type    asm -vof_pc_asm_type    basic -vof_ksp_atol    1.0e-8 -vof_ksp_rtol    1.0e-8
--rdls_ksp_type   bcgsl -rdls_pc_type   asm -vof_pc_asm_type    basic -rdls_ksp_atol   1.0e-8 -rdls_ksp_rtol   1.0e-8
--mcorr_ksp_type  bcgsl -mcorr_pc_type  asm -mcorr_pc_asm_type  basic -mcorr_ksp_atol  1.0e-8 -mcorr_ksp_rtol  1.0e-8
--log_summary
