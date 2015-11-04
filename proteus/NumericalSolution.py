@@ -4,6 +4,7 @@ A hierarchy of classes for managing comlete numerical solution implementations
 
 import os
 import numpy
+numpy.set_printoptions(threshold='nan')
 from subprocess import check_call
 
 import LinearSolvers
@@ -708,6 +709,16 @@ class NS_base:  # (HasTraits):
         #schemes. The next loop is for each model to step, potentially
         #adaptively, to the time in the stepSequence. Lastly there is
         #a loop for substeps(stages).
+
+       # for p,n,m,simOutput,index in zip(self.pList,self.nList,self.modelList,self.simOutputList,range(len(self.pList))):
+       #   for lm,lu,lr in zip(m.levelModelList,
+       #                         m.uList,
+       #                         m.rList):
+       #     lm.getResidual(lu,lr)
+       #     print "Initial Field \n %s" % lu
+       #     print "Initial Residual \n %s" % lr
+       #     print "Min / Max residual %s / %s" %(lr.min(),lr.max())
+
         self.nSequenceSteps = 0
         for (self.tn_last,self.tn) in zip(self.tnList[:-1],self.tnList[1:]):
             log("==============================================================",level=0)
@@ -887,17 +898,24 @@ class NS_base:  # (HasTraits):
                     #
                     # zhang-alvin's BC communication for N-S error estimation
                     #
-                    # for idx in range (0, self.modelList[0].levelModelList[0].coefficients.nc):
-                    #     if idx>0:
-                    #         diff_flux = self.modelList[0].levelModelList[0].ebqe[('diffusiveFlux_bc',idx,idx)]
-                    #     else:
-                    #         diff_flux = numpy.empty([2,2]) #dummy diff flux
-                    #     p.domain.PUMIMesh.TransferBCtagsToProteus(
-                    #         self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary[idx],
-                    #         idx,
-                    #         self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
-                    #         self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
-                    #         diff_flux)
+                    for idx in range (0, self.modelList[0].levelModelList[0].coefficients.nc):
+                        if idx>0:
+                            diff_flux = self.modelList[0].levelModelList[0].ebqe[('diffusiveFlux_bc',idx,idx)]
+                        else:
+                            diff_flux = numpy.empty([2,2]) #dummy diff flux
+                        #p.domain.PUMIMesh.transferBCtagsToProteus(
+                        #    self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary[idx],
+                        #    idx,
+                        #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
+                        #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
+                        #    diff_flux)
+                        p.domain.PUMIMesh.transferBCtagsToProteus(
+                            self.modelList[0].levelModelList[0].numericalFlux.isDiffusiveFluxBoundary[idx],
+                            idx,
+                            self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
+                            self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
+                            diff_flux)
+
                     #
                     # Should we put in a hook here for forcing refinements?
                     # (e.g. set size  field  based on proteus calcualtions?)
