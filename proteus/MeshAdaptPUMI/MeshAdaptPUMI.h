@@ -20,8 +20,6 @@ class MeshAdaptPUMIDrvr{
 
   int transferFieldToPUMI(const char* name, double const* inArray, int nVar, int nN);
   int transferFieldToProteus(const char* name, double* outArray, int nVar, int nN);
-  int transferSolutionToPUMI(double* inArray, int nVar, int nN);
-  int transferSolutionToProteus(double* outArray, int nVar, int nN);
   int transferPropertiesToPUMI(double* rho_p, double* nu_p);
   int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global,
       double* fluxBC);
