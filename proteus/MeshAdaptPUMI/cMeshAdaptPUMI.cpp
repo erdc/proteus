@@ -80,10 +80,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   in->maximumIterations = numIter;
   in->shouldSnap = false;
   in->shouldFixShape = true;
-  std::cout<<"Starting adapt (numIter "<<numIter<<")"<<std::endl;
-  apf::writeVtkFiles("pre_adapt", m);
   ma::adapt(in);
-  std::cout<<"Finished adapt"<<std::endl;
   freeField(size_frame);
   freeField(size_scale);
   m->verify();
