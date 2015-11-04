@@ -10,18 +10,14 @@
 #include <sstream>
 #include <PCU.h>
 
-enum {
-  PHI_IDX = 5
-};
-
 static void SmoothField(apf::Field* f);
 
 /* Based on the distance from the interface epsilon can be controlled to determine
    thickness of refinement near the interface */
-static double isotropicFormula(double* solution, double hmin, double hmax)
+static double isotropicFormula(double phi, double hmin, double hmax)
 {
   static double const epsilon = 0.02;
-  double phi = sqrt(solution[PHI_IDX] * solution[PHI_IDX]);
+  double phi = sqrt(phi * phi);
   double size;
   if (fabs(phi) < epsilon)
     size = hmin;
@@ -39,9 +35,11 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* v;
   apf::NewArray<double> sol(apf::countComponents(solution));
+  apf::Field* phif = m->findField("phi");
+  assert(phif);
   while ((v = m->iterate(it))) {
-    apf::getComponents(solution, v, 0, &sol[0]);
-    double size = isotropicFormula(&sol[0], hmin, hmax);
+    double phi = apf::getScalar(phif, v, 0);
+    double size = isotropicFormula(phi, hmin, hmax);
     apf::setScalar(size_iso, v, 0, size);
   }
   m->end(it);
@@ -50,8 +48,9 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
   return 0;
 }
 
-//This is here temporarily
-static void averageToEntity(apf::Field* ef, apf::Field* vf, apf::MeshEntity* ent) //taken from Dan's superconvergent patch recovery code
+//taken from Dan's superconvergent patch recovery code
+void MeshAdaptPUMIDrvr::averageToEntity(apf::Field* ef, apf::Field* vf,
+    apf::MeshEntity* ent)
 {
   apf::Mesh* m = apf::getMesh(ef);
   apf::Adjacent elements;
@@ -127,23 +126,6 @@ std::cout<<"Err curr "<<err_curr<<" Err_dest "<<err_dest<<std::endl;
   apf::destroyField(err_reg);
   freeField(size_iso); //no longer necessary
   return 0;
-}
-
-
-static apf::Field* extractPhi(apf::Field* solution)
-{
-  apf::Mesh* m = apf::getMesh(solution);
-  apf::Field* phif = apf::createLagrangeField(m,"proteus_phi",apf::SCALAR,1);
-  apf::MeshIterator* it = m->begin(0);
-  apf::MeshEntity* v;
-  apf::NewArray<double> tmp(apf::countComponents(solution));
-  while ((v = m->iterate(it))) {
-    apf::getComponents(solution, v, 0, &tmp[0]);
-    double phi = tmp[PHI_IDX];
-    apf::setScalar(phif, v, 0, phi);
-  }
-  m->end(it);
-  return phif;
 }
 
 static apf::Matrix3x3 hessianFormula(apf::Matrix3x3 const& g2phi)
@@ -326,7 +308,8 @@ static apf::Field* getSizeFrames(apf::Field* hessians, apf::Field* gradphi)
 
 int MeshAdaptPUMIDrvr::calculateAnisoSizeField()
 {
-  apf::Field* phif = extractPhi(solution);
+  apf::Field* phif = m->findField("phi");
+  assert(phif);
   apf::Field* gradphi = apf::recoverGradientByVolume(phif);
   apf::Field* grad2phi = apf::recoverGradientByVolume(gradphi);
   apf::Field* hess = computeHessianField(grad2phi);
