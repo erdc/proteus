@@ -885,11 +885,11 @@ class NS_base:  # (HasTraits):
                           soldof[ivar,:] = lm.u[ci].dof[:]
                           if coef.vectorComponents == None or \
                              ci not in coef.vectorComponents:
-                             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
-                             scalar[:,0] = lm.u[ci].dof[:]
-                             p0.domain.PUMIMesh.transferFieldToPUMI(
-                                 coef.variableNames[ci], scalar)
-                             del scalar
+                            scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+                            scalar[:,0] = lm.u[ci].dof[:]
+                            p0.domain.PUMIMesh.transferFieldToPUMI(
+                                coef.variableNames[ci], scalar)
+                            del scalar
                     #Get Physical Parameters
                     #Can we do this in a problem-independent  way?
                     rho = numpy.array([self.pList[0].rho_0,
@@ -1003,6 +1003,26 @@ class NS_base:  # (HasTraits):
                     tot_var=ivar
                     soldof=numpy.zeros((tot_var,lm.mesh.nNodes_global),'d')
                     p0.domain.PUMIMesh.transferSolutionToProteus(soldof)
+                    for m in self.modelList:
+                      for lm in m.levelModelList:
+                        coef = lm.coefficients
+                        if coef.vectorComponents != None:
+                          vector=numpy.zeros((lm.mesh.nNodes_global,3),'d')
+                          p0.domain.PUMIMesh.transferFieldToProteus(
+                                 coef.vectorName, vector)
+                          for vci in range(len(coef.vectorComponents)):
+                            lm.u[coef.vectorComponents[vci]].dof[:] = vector[:,vci]
+                          del vector
+                        for ci in range(coef.nc):
+                          ivar=ivar+1
+                          if coef.vectorComponents == None or \
+                             ci not in coef.vectorComponents:
+                            scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
+                            p0.domain.PUMIMesh.transferFieldToProteus(
+                                coef.variableNames[ci], scalar)
+                            lm.u[ci].dof[:] = scalar[:,0]
+                            del scalar
+                          lm.u[ci].dof[:] = soldof[ivar,:]
                     log("Attaching models on new mesh to each other")
                     ivar=-1
                     for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
@@ -1010,8 +1030,6 @@ class NS_base:  # (HasTraits):
                             save_dof=[]
                             for ci in range(lm.coefficients.nc):
                                 ivar=ivar+1
-                                for nN in range(lm.mesh.nNodes_global):
-                                    lm.u[ci].dof[nN]=soldof[ivar,nN]
                                 assert((lm.u[ci].dof[:]==soldof[ivar,:]).all())
                                 save_dof.append( lm.u[ci].dof.copy())
                             lm.setFreeDOF(lu)
