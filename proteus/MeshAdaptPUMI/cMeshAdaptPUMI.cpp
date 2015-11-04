@@ -25,7 +25,6 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
        hmax, hmin, numIter);
   global[0] = global[1] = global[2] = global[3] = 0;
   local[0] = local[1] = local[2] = local[3] = 0;
-  solution = 0;
   size_iso = 0;
   size_scale = 0;
   size_frame = 0;
@@ -40,7 +39,6 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
 {
-  freeField(solution);
   freeField(size_iso);
   freeField(size_scale);
   freeField(size_frame);

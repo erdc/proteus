@@ -11,51 +11,11 @@
 #include <iostream>
 #include <fstream>
 
-#define  PSR_IDX  0
-#define  VEX_IDX  1
-#define  VEY_IDX  2
-#define  VEZ_IDX  3
-#define  VOF_IDX  4
-#define  PHI_IDX  5
-
 //proxy variables used to make it easier to pass these variables from MeshAdaptPUMIDrvr
 int approx_order;
 int int_order;
 double nu_0,nu_1,rho_0,rho_1;
 double a_kl = 0.5; //flux term weight
-
-
-//used to attach error estimates to nodes
-static void averageToEntity(apf::Field* ef, apf::Field* vf, apf::MeshEntity* ent) //taken from Dan's superconvergent patch recovery code
-{
-  apf::Mesh* m = apf::getMesh(ef);
-  apf::Adjacent elements;
-  m->getAdjacent(ent, m->getDimension(), elements);
-  double s=0;
-  for (std::size_t i=0; i < elements.getSize(); ++i)
-    s += apf::getScalar(ef, elements[i], 0);
-  s /= elements.getSize();
-  apf::setScalar(vf, ent, 0, s);
-  return;
-}
-
-static void extractFields(apf::Field* solution, apf::Field* pref,apf::Field* velf,apf::Field* voff)
-{
-  apf::Mesh* m = apf::getMesh(solution);
-  apf::MeshIterator* it = m->begin(0);
-  apf::MeshEntity* v;
-  apf::NewArray<double> tmp(apf::countComponents(solution));
-  while ((v = m->iterate(it))) {
-    apf::getComponents(solution, v, 0, &tmp[0]);
-    apf::setScalar(pref,v,0,tmp[PSR_IDX]); //pressure
-    double vel[3] = {tmp[VEX_IDX],tmp[VEY_IDX],tmp[VEZ_IDX]};
-    apf::setVector(velf,v,0,&vel[0]);
-    double vof = tmp[VOF_IDX];
-    apf::setScalar(voff, v, 0, vof);
-  }
-  m->end(it);
-  return;
-}
 
 void getProps(double*rho,double*nu)
 {
@@ -99,12 +59,13 @@ void MeshAdaptPUMIDrvr::get_local_error()
   int_order = integration_order;
 
   //***** Get Solution Fields First *****//
-  apf::Field* voff = apf::createLagrangeField(m,"proteus_vof",apf::SCALAR,1);
-  apf::Field* velf = apf::createLagrangeField(m,"proteus_vel",apf::VECTOR,1);
-  apf::Field* pref = apf::createLagrangeField(m,"proteus_pre",apf::SCALAR,1);
+  apf::Field* voff = apf::findField("vof");
+  assert(voff);
+  apf::Field* velf = apf::findField("velocity");
+  assert(velf);
+  apf::Field* pref = apf::findField("p");
+  assert(pref);
   apf::Field* visc = apf::createLagrangeField(m,"viscosity",apf::SCALAR,1);
-  extractFields(solution,pref,velf,voff);
-  //*****               *****//
   
   //***** Compute the viscosity field *****//
   apf::Mesh*m = apf::getMesh(solution); 
@@ -112,7 +73,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
   apf::MeshIterator* iter = m->begin(0);
   double vof_val, visc_val;
   int nsd = m->getDimension();
-  while(ent = m->iterate(iter)){ //loop through all elements
+  while(ent = m->iterate(iter)){ //loop through all vertices
     vof_val=apf::getScalar(voff,ent,0);
     visc_val = getMPvalue(vof_val,nu_0, nu_1);
     apf::setScalar(visc, ent, 0,visc_val);
