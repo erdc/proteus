@@ -50,6 +50,8 @@ int MeshAdaptPUMIDrvr::transferFieldToProteus(const char* name, double* outArray
 {
   assert(nN == static_cast<int>(m->count(0)));
   apf::Field* f = m->findField(name);
+  if (!f)
+    fprintf(stderr, "couldn't find field \"%s\"\n", name);
   assert(f);
   assert(apf::countComponents(f) == nVar);
   apf::NewArray<double> tmp(nVar);
