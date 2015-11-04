@@ -59,21 +59,20 @@ void MeshAdaptPUMIDrvr::get_local_error()
   int_order = integration_order;
 
   //***** Get Solution Fields First *****//
-  apf::Field* voff = apf::findField("vof");
+  apf::Field* voff = m->findField("vof");
   assert(voff);
-  apf::Field* velf = apf::findField("velocity");
+  apf::Field* velf = m->findField("velocity");
   assert(velf);
-  apf::Field* pref = apf::findField("p");
+  apf::Field* pref = m->findField("p");
   assert(pref);
   apf::Field* visc = apf::createLagrangeField(m,"viscosity",apf::SCALAR,1);
   
   //***** Compute the viscosity field *****//
-  apf::Mesh*m = apf::getMesh(solution); 
   apf::MeshEntity* ent;
   apf::MeshIterator* iter = m->begin(0);
   double vof_val, visc_val;
   int nsd = m->getDimension();
-  while(ent = m->iterate(iter)){ //loop through all vertices
+  while ((ent = m->iterate(iter))) { //loop through all vertices
     vof_val=apf::getScalar(voff,ent,0);
     visc_val = getMPvalue(vof_val,nu_0, nu_1);
     apf::setScalar(visc, ent, 0,visc_val);
@@ -90,7 +89,6 @@ void MeshAdaptPUMIDrvr::get_local_error()
   int elem_type; //what type of topology
   double weight; //value container for the weight at each qpt
   double Jdet;
-  int numcomps = apf::countComponents(solution);
   //apf::FieldShape* err_shape = apf::getLagrange(approx_order);
   //apf::FieldShape* err_shape = apf::getSerendipity();
   apf::FieldShape* err_shape = apf::getHierarchic(2);
@@ -113,13 +111,12 @@ void MeshAdaptPUMIDrvr::get_local_error()
   iter = m->begin(nsd); //loop over elements
 int testcount = 0;
 int eID = 258;//860; 
-double effectivity_avg=0.0;
 
 double L2_total=0;
 double star_total=0;
 double err_est = 0;
 double err_est_total=0;
-  while(ent = m->iterate(iter)){ //loop through all elements
+  while ((ent = m->iterate(iter))) { //loop through all elements
     element = apf::createMeshElement(m,ent);
     pres_elem = apf::createElement(pref,element);
     velo_elem = apf::createElement(velf,element);
@@ -449,7 +446,7 @@ std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est
 
   //store error field onto vertices
   apf::MeshIterator* iter_vtx = m->begin(0);
-  while(ent = m->iterate(iter_vtx)){
+  while ((ent = m->iterate(iter_vtx))) {
     averageToEntity(err_reg, err_vtx, ent);
   }
   m->end(iter_vtx);
@@ -656,7 +653,6 @@ double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Fie
     int elem_type;
 
     apf::FieldShape* err_shape = apf::getLagrange(approx_order);
-    apf::EntityShape* elem_shape;
     elem_type = m->getType(ent);
 
     nshl=apf::countElementNodes(err_shape,elem_type);
@@ -667,7 +663,7 @@ double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Fie
     double L2_err=0.0; 
 
     apf::MeshElement* element;
-    apf::Element* visc_elem, *pres_elem,*velo_elem;
+    apf::Element* pres_elem, *velo_elem;
     double weight, Jdet;
     apf::Matrix3x3 J;
     apf::Vector3 qpt;
@@ -725,7 +721,6 @@ double getStarerror(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::F
 
     apf::FieldShape* err_shape = apf::getLagrange(approx_order);
     apf::FieldShape* est_shape = apf::getHierarchic(2);
-    apf::EntityShape* elem_shape;
     elem_type = m->getType(ent);
 
     nshl_err=apf::countElementNodes(err_shape,elem_type);
@@ -738,7 +733,7 @@ double getStarerror(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::F
     double star_err=0.0; 
 
     apf::MeshElement* element;
-    apf::Element* visc_elem, *pres_elem,*velo_elem, *est_elem;
+    apf::Element *pres_elem, *velo_elem, *est_elem;
     double weight, Jdet;
     apf::Matrix3x3 J,grad_u_exact,grad_u_h,grad_est;
     apf::Vector3 qpt;
