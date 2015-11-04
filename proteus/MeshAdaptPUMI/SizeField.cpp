@@ -317,7 +317,6 @@ int MeshAdaptPUMIDrvr::calculateAnisoSizeField()
   freeField(size_scale);
   
   size_scale = getSizeScales(phif, curves, hmin, hmax, nAdapt);
-  apf::destroyField(phif);
   apf::destroyField(curves);
   freeField(size_frame);
   size_frame = getSizeFrames(hess, gradphi);
