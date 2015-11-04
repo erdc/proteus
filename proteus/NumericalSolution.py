@@ -1003,6 +1003,7 @@ class NS_base:  # (HasTraits):
                     tot_var=ivar
                     soldof=numpy.zeros((tot_var,lm.mesh.nNodes_global),'d')
                     p0.domain.PUMIMesh.transferSolutionToProteus(soldof)
+                    ivar=-1
                     for m in self.modelList:
                       for lm in m.levelModelList:
                         coef = lm.coefficients
