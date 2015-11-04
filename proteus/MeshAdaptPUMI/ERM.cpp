@@ -452,7 +452,8 @@ std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est
   m->end(iter_vtx);
   getERMSizeField(err_est_total);
   apf::destroyElement(visc_elem);apf::destroyElement(pres_elem);apf::destroyElement(velo_elem);apf::destroyElement(est_elem);
-  apf::destroyField(voff);  apf::destroyField(visc); apf::destroyField(velf); apf::destroyField(pref); apf::destroyField(estimate);
+  apf::destroyField(visc);
+  apf::destroyField(estimate);
   printf("It cleared the function.\n");
 }
 
