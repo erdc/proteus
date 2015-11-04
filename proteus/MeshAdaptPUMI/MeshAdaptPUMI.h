@@ -65,7 +65,6 @@ class MeshAdaptPUMIDrvr{
   double rho[2], nu[2];
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
-  apf::Field* solution;
   apf::Field* err_reg; //error field from ERM
   /* this field stores isotropic size */
   apf::Field* size_iso;
@@ -84,6 +83,9 @@ class MeshAdaptPUMIDrvr{
 
   void freeField(apf::Field*& f);
   void freeNumbering(apf::Numbering*& n);
+
+  static void averageToEntity(apf::Field* ef, apf::Field* vf,
+      apf::MeshEntity* ent);
 
   std::string size_field_config;
 };

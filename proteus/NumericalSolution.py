@@ -861,15 +861,6 @@ class NS_base:  # (HasTraits):
                     self.so.useOneMesh):
                     log("Entering mesh adaption block")
                     log("Copying DOF and parameters to PUMI")
-                    #replace block copy with named fields?
-                    ivar=0;
-                    for m in self.modelList:
-                        for lm in m.levelModelList:
-                            for ci in range(lm.coefficients.nc):
-                                ivar=ivar+1
-                    tot_var=ivar
-                    soldof=numpy.zeros((ivar,lm.mesh.nNodes_global),'d')
-                    ivar=-1
                     for m in self.modelList:
                       for lm in m.levelModelList:
                         coef = lm.coefficients
@@ -881,8 +872,6 @@ class NS_base:  # (HasTraits):
                                  coef.vectorName, vector)
                           del vector
                         for ci in range(coef.nc):
-                          ivar=ivar+1
-                          soldof[ivar,:] = lm.u[ci].dof[:]
                           if coef.vectorComponents == None or \
                              ci not in coef.vectorComponents:
                             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
@@ -896,9 +885,8 @@ class NS_base:  # (HasTraits):
                                        self.pList[0].rho_1])
                     nu = numpy.array([self.pList[0].nu_0,
                                       self.pList[0].nu_1])
-                    p0.domain.PUMIMesh.transferSolutionToPUMI(soldof)
                     p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu)
-                    del soldof, rho, nu
+                    del rho, nu
                     #
                     # zhang-alvin's BC communication for N-S error estimation
                     #
@@ -995,15 +983,6 @@ class NS_base:  # (HasTraits):
                         for av in avList:
                             av.attachAuxiliaryVariables(self.auxiliaryVariables)
                     log("Transfering fields from PUMI to Proteus")
-                    ivar=0;
-                    for m in self.modelList:
-                        for lm in m.levelModelList:
-                            for ci in range(lm.coefficients.nc):
-                                ivar=ivar+1
-                    tot_var=ivar
-                    soldof=numpy.zeros((tot_var,lm.mesh.nNodes_global),'d')
-                    p0.domain.PUMIMesh.transferSolutionToProteus(soldof)
-                    ivar=-1
                     for m in self.modelList:
                       for lm in m.levelModelList:
                         coef = lm.coefficients
@@ -1015,7 +994,6 @@ class NS_base:  # (HasTraits):
                             lm.u[coef.vectorComponents[vci]].dof[:] = vector[:,vci]
                           del vector
                         for ci in range(coef.nc):
-                          ivar=ivar+1
                           if coef.vectorComponents == None or \
                              ci not in coef.vectorComponents:
                             scalar=numpy.zeros((lm.mesh.nNodes_global,1),'d')
@@ -1023,15 +1001,11 @@ class NS_base:  # (HasTraits):
                                 coef.variableNames[ci], scalar)
                             lm.u[ci].dof[:] = scalar[:,0]
                             del scalar
-                          lm.u[ci].dof[:] = soldof[ivar,:]
                     log("Attaching models on new mesh to each other")
-                    ivar=-1
                     for m,ptmp,mOld in zip(self.modelList, self.pList, modelListOld):
                         for lm, lu, lr, lmOld in zip(m.levelModelList, m.uList, m.rList,mOld.levelModelList):
                             save_dof=[]
                             for ci in range(lm.coefficients.nc):
-                                ivar=ivar+1
-                                assert((lm.u[ci].dof[:]==soldof[ivar,:]).all())
                                 save_dof.append( lm.u[ci].dof.copy())
                             lm.setFreeDOF(lu)
                             for ci in range(lm.coefficients.nc):
