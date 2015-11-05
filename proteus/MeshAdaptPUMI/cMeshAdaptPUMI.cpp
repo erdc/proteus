@@ -61,6 +61,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     calculateAnisoSizeField();
   else if (size_field_config == "alvin")
     get_local_error();
+  else if (size_field_config == "none")
+    std::cout << "No adapt "<<std::endl;
   else {
     std::cerr << "unknown size field config " << size_field_config << '\n';
     abort();
@@ -72,18 +74,21 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);
   /// Adapt the mesh
-  ma::Input* in = ma::configure(m, size_scale, size_frame);
-  ma::validateInput(in);
-  in->shouldRunPreParma = true;
-  in->shouldRunMidParma = true;
-  in->shouldRunPostParma = true;
-  in->maximumIterations = numIter;
-  in->shouldSnap = false;
-  in->shouldFixShape = true;
-  ma::adapt(in);
-  freeField(size_frame);
-  freeField(size_scale);
-  m->verify();
+  if(size_field_config == "none"){ 
+  else{
+    ma::Input* in = ma::configure(m, size_scale, size_frame);
+    ma::validateInput(in);
+    in->shouldRunPreParma = true;
+    in->shouldRunMidParma = true;
+    in->shouldRunPostParma = true;
+    in->maximumIterations = numIter;
+    in->shouldSnap = false;
+    in->shouldFixShape = true;
+    ma::adapt(in);
+    freeField(size_frame);
+    freeField(size_scale);
+    m->verify();
+  }
   nAdapt++; //counter for number of adapt steps
   return 0;
 }
