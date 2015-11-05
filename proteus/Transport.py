@@ -2441,16 +2441,41 @@ class OneLevelTransport(NonlinearEquation):
                             assert False, "need self.q[('grad(subgridError)Xgrad(w)*dV_numDiff',ci,ci)] if not self.lowmem "
 
         if self.shockCapturing != None:
+            if self.use_bij:
+                self.b = np.ones((self.mesh.nElements_global,
+                                  self.mesh.nDOF_trial_element[ci],
+                                  self.mesh.NDOF_test_elements[ci]),
+                                 'd')
+                self.nu_L = np.zeros((self.mesh.nElements_global,),'d')
+                for eN in range(self.mesh.nElements_global):
+                    bji = -self.mesh.elementVolume[eN]/self.nDOF_trial_element[ci]
+                    bjj = self.mesh.elementVolume[eN]
+                    for j in range(self.nDOF_trial_element[ci]):
+                        for i in range(self.nDOF_test_element[ci]):
+                            if i!=j:
+                                self.b[eN,j,i] = bji
+                            else:
+                                self.b[eN,j,i] = bjj
+                    for j in range(self.nDOF_trial_element[ci]):
+                        for i in range(self.nDOF_test_element[ci]):
+                            n = self.csrRowIndeces[(ci,cj)][eN,ii] + self.csrColumnOffsets[(ci,cj)][eN,i,j]
+                            self.nu_L[eN] = max(self.nu_L[eN], self.b_num_t_global[n])
             for ci in self.shockCapturing.components:
-                if self.lowmem:
-                    cfemIntegrals.updateNumericalDiffusion_lowmem(self.q[('numDiff',ci,ci)],
-                                                                  self.q[('grad(u)',ci)],
-                                                                  self.q[('grad(w)*dV_numDiff',ci,ci)],
-                                                                  self.elementResidual[ci])
+                if self.use_bij
+                    for eN in range(self.mesh.nElements_global):
+                        for j in range(self.nDOF_trial_element[ci]):
+                            for i in range(self.nDOF_test_element[ci]):
+                                self.elementResidual[ci][eN,i] += self.q[('numDiff',ci,ci)][eN]*self.u[ci].dof[self.u[cj].femSpace.dofMap.l2g[eN,j]]*self.b[eN,j,i]
                 else:
-                    cfemIntegrals.updateNumericalDiffusion(self.q[('numDiff',ci,ci)],
-                                                           self.q[('grad(u)Xgrad(w)*dV_numDiff',ci,ci)],
-                                                           self.elementResidual[ci])
+                    if self.lowmem:
+                        cfemIntegrals.updateNumericalDiffusion_lowmem(self.q[('numDiff',ci,ci)],
+                                                                      self.q[('grad(u)',ci)],
+                                                                      self.q[('grad(w)*dV_numDiff',ci,ci)],
+                                                                      self.elementResidual[ci])
+                    else:
+                        cfemIntegrals.updateNumericalDiffusion(self.q[('numDiff',ci,ci)],
+                                                               self.q[('grad(u)Xgrad(w)*dV_numDiff',ci,ci)],
+                                                               self.elementResidual[ci])
         # for eN in range(self.mesh.nElements_global):
         #     for i in range(self.nDOF_test_element[0]):
         #         print "element residual "+`eN`+'\t'+`i`
@@ -2682,10 +2707,14 @@ class OneLevelTransport(NonlinearEquation):
                                              self.elementSpatialResidual[ci],
                                              self.q[('mt',ci)])
     def calculateElementJacobian(self,skipMassTerms=False):
+        self.b_num_t={{}}
+        if self.matType == superluWrappers.SparseMatrix:
+            self.b_num_t_global = SparseMat(self.nFreeVDOF_global,self.nFreeVDOF_global,self.nnz,self.nzval,self.colind,self.rowptr)
         for ci in range(self.nc):
             for cj in self.coefficients.stencil[ci]:
                 self.elementJacobian[ci][cj].fill(0.0)
                 self.elementJacobian_eb[ci][cj].fill(0.0)
+                self.b_num_t[ci][cj] = self.elementJacobian[ci][cj].copy()
         for ci,cjDict in self.coefficients.advection.iteritems():
             for cj in cjDict:
                 if self.timeIntegration.advectionIsImplicit[ci]:
@@ -2694,10 +2723,25 @@ class OneLevelTransport(NonlinearEquation):
                                                                           self.q[('v',cj)],
                                                                           self.q[('grad(w)*dV_f',ci)],
                                                                           self.elementJacobian[ci][cj])
+                        self.b_num_t[ci][cj][:] = self.elementJacobian[ci][cj]
                     else:
                         cfemIntegrals.updateAdvectionJacobian_weak(self.q[('df',ci,cj)],
                                                                    self.q[('vXgrad(w)*dV_f',cj,ci)],
                                                                    self.elementJacobian[ci][cj])
+                        self.b_num_t[ci][cj][:] = self.elementJacobian[ci][cj]
+                cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                       jacobian)
+        for ci in range(self.nc):
+            for cj in self.coefficients.stencil[ci]:
+                cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[ci]['nFreeDOF'],
+                                                                          self.l2g[ci]['freeLocal'],
+                                                                          self.l2g[cj]['nFreeDOF'],
+                                                                          self.l2g[cj]['freeLocal'],
+                                                                          self.csrRowIndeces[(ci,cj)],
+                                                                          self.csrColumnOffsets[(ci,cj)],
+                                                                          self.b_num_t[ci][cj],
+                                                                          self.b_num_t_global)
+
         ##\todo optimize nonlinear diffusion Jacobian calculation for the  different combinations of nonlinear a and phi
         for ci,ckDict in self.coefficients.diffusion.iteritems():
             for ck,cjDict in ckDict.iteritems():
@@ -2829,15 +2873,26 @@ class OneLevelTransport(NonlinearEquation):
         if self.shockCapturing != None:
             for ci in self.shockCapturing.components:
                 if self.timeIntegration.shockCapturingIsImplicit[ci]:
-                    if self.lowmem:
-                        cfemIntegrals.updateNumericalDiffusionJacobian_lowmem(self.q[('numDiff',ci,ci)],
-                                                                              self.q[('grad(v)',ci)],
-                                                                              self.q[('grad(w)*dV_numDiff',ci,ci)],
-                                                                              self.elementJacobian[ci][ci])
+                    if self.use_bij:
+                        b = np.ones((self.mesh.nDOF_test_element[ci],),'d')
+                        for eN in range(self.mesh.nElements_global):
+                            bij = -self.mesh.elementVolume[eN]/self.nDOF_trial_element[ci]
+                            bjj = self.mesh.elementVolume[eN]
+                            for j in range(self.nDOF_trial_element[ci]):
+                                b[:] = bij
+                                b[j] = bjj
+                                for i in range(self.nDOF_test_element[ci]):
+                                    self.elementJacobian[ci][ci][eN,i,j] += self.q[('numDiff',ci,ci)]*b[j]
                     else:
-                        cfemIntegrals.updateNumericalDiffusionJacobian(self.q[('numDiff',ci,ci)],
-                                                                       self.q[('grad(v)Xgrad(w)*dV_numDiff',ci,ci,ci)],
-                                                                       self.elementJacobian[ci][ci])
+                        if self.lowmem:
+                            cfemIntegrals.updateNumericalDiffusionJacobian_lowmem(self.q[('numDiff',ci,ci)],
+                                                                                  self.q[('grad(v)',ci)],
+                                                                                  self.q[('grad(w)*dV_numDiff',ci,ci)],
+                                                                                  self.elementJacobian[ci][ci])
+                        else:
+                            cfemIntegrals.updateNumericalDiffusionJacobian(self.q[('numDiff',ci,ci)],
+                                                                           self.q[('grad(v)Xgrad(w)*dV_numDiff',ci,ci,ci)],
+                                                                           self.elementJacobian[ci][ci])
         self.timeIntegration.calculateElementSpatialJacobian(self.elementJacobian)
         if not skipMassTerms:
             for ci,cjDict in self.coefficients.mass.iteritems():
