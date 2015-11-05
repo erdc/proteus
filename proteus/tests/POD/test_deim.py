@@ -10,7 +10,7 @@ from nose.tools import eq_ as eq
 
 from proteus import deim_utils
 
-def get_burgers_ns(name,T=0.1,nDTout=10,archive_pod_res=None,try_reduction=False,use_pod=True,use_hyper=False,nl_atol_res=1.0e-4,tolFac=0.0):
+def get_burgers_ns(name,T=0.1,nDTout=10,archive_pod_res=None,use_pod=False,use_hyper=False,nl_atol_res=1.0e-4,tolFac=0.0):
     import burgers_init as bu
     bu.physics.name=name
     bu.so.name = bu.physics.name
@@ -28,14 +28,12 @@ def get_burgers_ns(name,T=0.1,nDTout=10,archive_pod_res=None,try_reduction=False
         simFlagsList=[{}]
         simFlagsList[0]['storeQuantities']=[archive_pod_res]
     #
+    bu.numerics.use_pod = use_pod
     bu.numerics.use_hyper = use_hyper
 
-    if not try_reduction:
+    if not use_pod:
 	bu.numerics.multilevelNonlinearSolver = bu.NonlinearSolvers.Newton
 	bu.numerics.levelNonlinearSolver = bu.NonlinearSolvers.Newton
-    elif not use_pod:
-	bu.numerics.multilevelNonlinearSolver = bu.NonlinearSolvers.POD_HyperReduced_Newton
-	bu.numerics.levelNonlinearSolver = bu.NonlinearSolvers.POD_HyperReduced_Newton
     else:
 	bu.numerics.multilevelNonlinearSolver = bu.NonlinearSolvers.POD_Newton
 	bu.numerics.levelNonlinearSolver = bu.NonlinearSolvers.POD_Newton
@@ -287,85 +285,6 @@ def test_deim_approx_full(tol=1.0e-12):
     assert errors.min() < tol
     assert errors_linear.min() < tol
 
-def pod_hyper_pod_run(T=0.1,nDTout=10,m_sol=5,m=5):
-    """
-    Follow basic setup for DEIM approximation
-    - generate a burgers solution, saving solution and nonlinear residuals
-    - generate SVDs for snapshots
-    - for residuals Fn
-      - pick $m$, dimension for snapshot reduced basis $\mathbf{U}_m$
-      - call DEIM algorithm to determine $\vec \rho$ and compute projection matrix 
-        $\mathbf{P}_F=\mathbf{U}_m(\mathbf{P}^T\mathbf{U}_m)^{-1}$
-
-    For all timesteps
-    - extract both reduced solutions from archive
-    - calculate the norms of the error between the two
-    """
-
-    from proteus.deim_utils import read_snapshots,generate_svd_decomposition
-    ##run fine grid problem
-    ns = get_burgers_ns("test_pod_hyper_pod_fine",T=T,nDTout=nDTout,archive_pod_res='pod_residuals_linnonlin')
-    
-    failed = ns.calculateSolution("run_pod_hyper_pod_fine")
-    assert not failed
-
-    from proteus import Archiver
-    archive = Archiver.XdmfArchive(".","test_pod_hyper_pod_fine",readOnly=True)
-    ##perform SVD on spatial residual
-    U,s,V=generate_svd_decomposition(archive,len(ns.tnList),'u','sol')
-    Un,sn,Vn=generate_svd_decomposition(archive,len(ns.tnList),'nonlinear_residual0','Fn')
-
-    from proteus.deim_utils import deim_alg
-    ##calculate DEIM indices and projection matrix
-    rho,PF = deim_alg(Un,m)
-
-    np.savetxt('SVD_basis_truncated', U[:,0:m_sol], delimiter=' ')
-    np.savetxt('Fn_SVD_basis_truncated', Un[:,0:m], delimiter=' ')
-    np.savetxt('DEIM_indices', rho, delimiter=' ',fmt='%d')
-    np.savetxt('Q_DEIM_truncated', PF, delimiter=' ')
-
-    ##reduced order models below
-    ##pure POD first
-    ns_red = get_burgers_ns("test_pod_hyper_pod_red",T=T,nDTout=nDTout,archive_pod_res=None,
-                            try_reduction=True,
-                            use_pod=True,use_hyper=False)
-
-    failed = ns_red.calculateSolution("run_pod_hyper_pod_red")
-    assert not failed
-
-    archive_red = Archiver.XdmfArchive(".","test_pod_hyper_pod_red",readOnly=True)
-    ##for comparison, grab snapshots of solution
-    Su = read_snapshots(archive_red,len(ns_red.tnList),'u')
-
-    ##POD-DEIM second
-    #should return nonlinear pod
-    ns_red1 = get_burgers_ns("test_pod_hyper_pod_red1",T=T,nDTout=nDTout,archive_pod_res=None,
-                             try_reduction=True,
-                             use_pod=False,use_hyper=False)
-
-    failed = ns_red1.calculateSolution("run_pod_hyper_pod_red1")
-    assert not failed
-
-    archive_red1 = Archiver.XdmfArchive(".","test_pod_hyper_pod_red1",readOnly=True)
-    ##for comparison, grab snapshots of solution
-    Su1 = read_snapshots(archive_red1,len(ns_red1.tnList),'u')
-
-    errors = np.zeros(Su.shape[0],'d');
-    for i in range(nDTout):
-	errors[i] = np.linalg.norm(Su[:,i]-Su1[:,i])
-    #
-    np.savetxt("pod_poddeim_errors_T={0}_nDT={1}_msol={2}_m={3}.dat".format(T,nDTout,m_sol,m),errors)
-        
-    return errors
-
-def test_pod_hyper_pod(tol=1.0e-14):
-    """
-    check that pod-deim = pod is use_hyper = False 
-    """
-    T = 0.1; nDTout=10; m_sol=5; m=5
-    errors = pod_hyper_pod_run(T=T,nDTout=nDTout,m_sol=m_sol,m=m)
-    assert errors.min() < tol
-
 def deim_run():
     """
     Follow basic setup for DEIM approximation
@@ -402,9 +321,8 @@ def deim_run():
     np.savetxt('Q_DEIM_truncated', PF, delimiter=' ')
 
     ##reduced order models below
-    ##pure POD first mwf is this comment still correct? looks like POD-DEIM
-    ns_red = get_burgers_ns("test_deim_run",T=T,nDTout=nDTout,archive_pod_res=None,try_reduction=True,
-                            use_pod=False,use_hyper=True)
+    ns_red = get_burgers_ns("test_deim_run",T=T,nDTout=nDTout,archive_pod_res=None,
+                            use_pod=True,use_hyper=True)
 
     failed = ns_red.calculateSolution("run_deim_run")
     assert not failed

@@ -30,6 +30,7 @@ def test_c0p1(genMesh=True):
     nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
     #nList[0].linearSolver=default_n.LU
     #nList[0].multilevelLinearSolver=default_n.LU
+    nList[0].use_pod=False
     nList[0].use_hyper=False
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_3d_c0p1')
@@ -50,6 +51,7 @@ def test_c0p2(genMesh=True):
     pList[0].genMesh=genMesh
     nList[0].linearSolver=default_n.KSP_petsc4py
     nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
+    nList[0].use_pod=False
     nList[0].use_hyper=False
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('poisson_3d_c0p2')
