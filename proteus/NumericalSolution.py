@@ -460,6 +460,7 @@ class NS_base:  # (HasTraits):
                 smootherFullNewtonFlag=n.fullNewtonFlag,
                 EWtol=n.useEisenstatWalker,
                 maxLSits=n.maxLineSearches,
+                use_pod=n.use_pod,
                 use_hyper=n.use_hyper,
                 #\todo need to add logic in multilevel NL solver chooser to account for numerical method's stencil as well
                 parallelUsesFullOverlap=(n.nLayersOfOverlapForParallel > 0 or n.parallelPartitioningType == MeshTools.MeshParallelPartitioningTypes.node),

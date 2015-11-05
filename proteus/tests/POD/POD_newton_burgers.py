@@ -8,18 +8,17 @@ The equation is
 """
 from burgers_init import *
 
+assert use_pod not False
+
 physics.name = "pod_burgers_{0}d".format(physics.nd)
 if use_hyper:
     physics.name = "pod_burgers_hyper_{0}d".format(physics.nd)
 so.name = physics.name
 Profiling.logLevel=5
 Profiling.verbose=True
-if use_hyper:
-    numerics.multilevelNonlinearSolver = NonlinearSolvers.POD_HyperReduced_Newton
-    numerics.levelNonlinearSolver = NonlinearSolvers.POD_HyperReduced_Newton
-else:
-    numerics.multilevelNonlinearSolver = NonlinearSolvers.POD_Newton
-    numerics.levelNonlinearSolver = NonlinearSolvers.POD_Newton
+
+numerics.multilevelNonlinearSolver = NonlinearSolvers.POD_Newton
+numerics.levelNonlinearSolver = NonlinearSolvers.POD_Newton
 numerics.tolFac = 0.0#relative tolerance
 numerics.nl_atol_res = 1.0e-4 #nonlinear solver rtolerance
 ns = NumericalSolution.NS_base(so,[physics],[numerics],so.sList,opts)

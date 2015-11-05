@@ -151,9 +151,10 @@ class NoFluxDirichletConstraints(numericalFluxBase):
     useStrongDirichletConstraints=True
 numerics.numericalFluxType = NoFluxDirichletConstraints
 ##POD-specific controls
+numerics.use_pod = True
+##use_hyper below won't matter if use_pod = False
 numerics.use_hyper = True
 numerics.SVD_basis_file='SVD_basis_truncated'
-#numerics.Fs_SVD_basis_file='Fs_SVD_basis_truncated_10'
 numerics.hyper_SVD_basis_file='Fn_SVD_basis_truncated'
 numerics.hyper_indices_file = 'DEIM_indices'
 numerics.hyper_Q_file = 'Q_DEIM_truncated'
@@ -169,6 +170,7 @@ Profiling.verbose = 1
 opts.logLevel = 2
 
 #whether or not to use deim approximation
+use_pod = numerics.use_pod
 use_hyper = numerics.use_hyper
 
 simFlagsList=None

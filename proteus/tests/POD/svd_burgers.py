@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+#from read_hdf5 import *
 from proteus import Archiver
 import burgers_init,deim_utils
 
@@ -21,10 +22,13 @@ np.savetxt('SVD_basis', U, delimiter=' ')
 np.savetxt('Singular_values', s, delimiter=' ')
 
 if burgers_init.use_hyper:
-    Sf = deim_utils.read_snapshots(archive,nDTout+1,'spatial_residual0')
+    Sm = deim_utils.read_snapshots(archive,nDTout+1,'linear_residual0')
+    np.savetxt('Fl_Snapshots', Sm, delimiter=' ')
+
+    Sf = deim_utils.read_snapshots(archive,nDTout+1,'nonlinear_residual0')
     Uf,sf,Vf = np.linalg.svd(Sf,full_matrices=False)
-    print 'SVD for spatial residual done!'
-    np.savetxt('Fs_Snapshots', Sf, delimiter=' ')
-    np.savetxt('Fs_SVD_basis', Uf, delimiter=' ')
-    np.savetxt('Fs_Singular_values', sf, delimiter=' ')
+    print 'SVD for nonlinear residual done!'
+    np.savetxt('Fn_Snapshots', Sf, delimiter=' ')
+    np.savetxt('Fn_SVD_basis', Uf, delimiter=' ')
+    np.savetxt('Fn_Singular_values', sf, delimiter=' ')
     
