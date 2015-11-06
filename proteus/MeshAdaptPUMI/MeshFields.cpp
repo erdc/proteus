@@ -33,7 +33,7 @@ int MeshAdaptPUMIDrvr::transferSolutionToPUMI(double* inArray, int nVar, int nN)
     for(int j = 0; j < nVar; j++)
       tmp[j] = inArray[j * nN + i];
 
-    int casenum = 2;
+    //int casenum = 2;
     //Rewrite only necessary components
     if(casenum ==0){
     //Poiseuille Flow dpdy=-1
@@ -128,7 +128,6 @@ int MeshAdaptPUMIDrvr::transferBCtagsToProteus(int* tagArray,int idx, int* ebN, 
       fID=localNumber(f);
       boundary_ID = exteriorGlobaltoLocalElementBoundariesArray[fID];
       type = tagArray[numqpt*boundary_ID + 0 ];
-//std::cout<<"Face ID "<<fID<<" REGION? "<<eN_global[2*boundary_ID+0]<<"index "<<numqpt*boundary_ID<<" BC type? "<<type<<std::endl;
       m->setIntTag(f,BCtag[idx],&type);
 
       if(idx>0){
