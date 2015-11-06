@@ -32,16 +32,40 @@ int MeshAdaptPUMIDrvr::transferSolutionToPUMI(double* inArray, int nVar, int nN)
     int i = localNumber(v);
     for(int j = 0; j < nVar; j++)
       tmp[j] = inArray[j * nN + i];
+
+    int casenum = 2;
+    //Rewrite only necessary components
+    if(casenum ==0){
+    //Poiseuille Flow dpdy=-1
+             m->getPoint(v,0,pt);
+             double Lz = 0.05;
+             double Ly = 0.2;
+             tmp[0] = 1-pt[1]/Ly; //pressure starts at 1 and goes to 0
+             tmp[1] = 0;
+             tmp[2] = 0.5/0.0010021928*(-1/Ly)*(pt[2]*pt[2]-Lz*pt[2]);  //dpdy = 1/Ly
+             tmp[3] = 0;
+     }
+     else if(casenum==1){
+    //Couette 
+             m->getPoint(v,0,pt);
+             double Lz = 0.05;
+             double Uinf = 1.0;//2e-3;
+             tmp[0] =0 ; //pressure
+             tmp[1] =0; //u
+             tmp[2] = Uinf*pt[2]/Lz;
+             tmp[3] =0;
+     }
     apf::setComponents(solution, v, 0, &tmp[0]); 
   }
   m->end(it);
   return 0;
 }
 
-int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p)
+int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, double *g_p)
 { 
  rho[0] = rho_p[0]; rho[1] = rho_p[1];
  nu[0] = nu_p[0]; nu[1] = nu_p[1];
+ g[0] = g_p[0]; g[1] = g_p[1]; g[2] = g[2];
  return 0;
 }
 

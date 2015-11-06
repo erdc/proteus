@@ -22,7 +22,7 @@ class MeshAdaptPUMIDrvr{
   //Transfer Boundary Conditions
   int transferSolutionToPUMI(double* inArray, int nVar, int nN);
   int transferSolutionToProteus(double* outArray, int nVar, int nN);
-  int transferPropertiesToPUMI(double* rho_p, double* nu_p);
+  int transferPropertiesToPUMI(double* rho_p, double* nu_p,double* g_p);
   int transferBCtagsToProteus(int* tagArray, int idx, int* ebN, int* eN_global,double* fluxBC);
   int transferBCsToProteus();
   int commuSizeField();
@@ -63,6 +63,7 @@ class MeshAdaptPUMIDrvr{
   int numVar;
 
   double rho[2], nu[2];
+  double g[3];
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* solution;

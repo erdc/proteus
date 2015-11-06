@@ -27,16 +27,25 @@ double a_kl = 0.5; //flux term weight
 
 
 //used to attach error estimates to nodes
-static void averageToEntity(apf::Field* ef, apf::Field* vf, apf::MeshEntity* ent) //taken from Dan's superconvergent patch recovery code
+static void volumeAverageToEntity(apf::Field* ef, apf::Field* vf, apf::MeshEntity* ent) //taken from Dan's superconvergent patch recovery code
 {
   apf::Mesh* m = apf::getMesh(ef);
   apf::Adjacent elements;
   m->getAdjacent(ent, m->getDimension(), elements);
   double s=0;
-  for (std::size_t i=0; i < elements.getSize(); ++i)
-    s += apf::getScalar(ef, elements[i], 0);
-  s /= elements.getSize();
+  double vol_tot=0;
+  apf::MeshElement* elem;
+  for (std::size_t i=0; i < elements.getSize(); ++i){
+    elem = apf::createMeshElement(m,elements[i]);
+    vol_tot += apf::measure(elem);
+  }
+  for (std::size_t i=0; i < elements.getSize(); ++i){
+    elem = apf::createMeshElement(m,elements[i]);
+    s += apf::getScalar(ef, elements[i], 0)*(1-apf::measure(elem)/vol_tot);
+  }
+  s /= (elements.getSize()-1);
   apf::setScalar(vf, ent, 0, s);
+  apf::destroyMeshElement(elem);
   return;
 }
 
@@ -68,7 +77,7 @@ void getProps(double*rho,double*nu)
   //debug
   rho_1 = rho_0;
   nu_1 = nu_0; 
-  
+ std::cout<<"What is rho "<<rho_0<<" " <<rho_1<<std::endl; 
   return;
 }
 
@@ -91,7 +100,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
 //First get the mesh and impose a 2nd order field
 //Then get the desired quadrature points
 {
-
+std::cout<<"g "<<g[0]<<" "<<g[1]<<" "<<g[2]<<std::endl;
   getProps(rho,nu);
   approx_order = approximation_order; 
   int_order = integration_order;
@@ -326,8 +335,8 @@ double err_est_total=0;
     VecAssemblyEnd(F); VecScale(F,Jdet); //must be done after assembly
  
 if(comm_rank==0 && testcount==eID){ 
-      MatView(K,PETSC_VIEWER_STDOUT_SELF);
-      std::cout<<" NOW VECTOR with just a(.,.)" <<std::endl;
+      //MatView(K,PETSC_VIEWER_STDOUT_SELF);
+      //std::cout<<" NOW VECTOR with just a(.,.)" <<std::endl;
       //VecView(F,PETSC_VIEWER_STDOUT_SELF);
 }
    
@@ -448,7 +457,8 @@ if(comm_rank==0 && testcount==eID){
       visc_val = apf::getScalar(visc_elem,qpt);
       apf::getVectorGrad(est_elem,qpt,phi_ij);
       phi_ij = apf::transpose(phi_ij);
-      Acomp = Acomp + visc_val*getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
+      //Acomp = Acomp + visc_val*getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
+      Acomp = Acomp + getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
       Bcomp = Bcomp + apf::getDiv(velo_elem,qpt)*apf::getDiv(velo_elem,qpt)*weight;
     } //end compute local error
 
@@ -485,7 +495,7 @@ std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est
   //store error field onto vertices
   apf::MeshIterator* iter_vtx = m->begin(0);
   while(ent = m->iterate(iter_vtx)){
-    averageToEntity(err_reg, err_vtx, ent);
+    volumeAverageToEntity(err_reg, err_vtx, ent);
   }
   m->end(iter_vtx);
   getERMSizeField(err_est_total);

@@ -24,7 +24,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int updateMaterialArrays(Mesh&, int, int)
         int transferSolutionToPUMI(double*, int, int)
         int transferSolutionToProteus(double*, int, int)
-        int transferPropertiesToPUMI(double*, double*)
+        int transferPropertiesToPUMI(double*, double*,double*)
         int transferBCtagsToProteus(int*, int, int*, int*,double*)
         int transferBCsToProteus()
         int adaptPUMIMesh()
@@ -59,10 +59,11 @@ cdef class MeshAdaptPUMI:
     def transferSolutionToProteus(self, np.ndarray[np.double_t,ndim=2,mode="c"] outArray):
         outArray = np.ascontiguousarray(outArray)
         return self.thisptr.transferSolutionToProteus(&outArray[0,0], outArray.shape[0], outArray.shape[1])
-    def transferPropertiesToPUMI(self, np.ndarray[np.double_t,ndim=1,mode="c"] rho, np.ndarray[np.double_t,ndim=1,mode="c"] nu):
+    def transferPropertiesToPUMI(self, np.ndarray[np.double_t,ndim=1,mode="c"] rho, np.ndarray[np.double_t,ndim=1,mode="c"] nu, np.ndarray[np.double_t,ndim=1,mode="c"] g):
         rho = np.ascontiguousarray(rho)
         nu = np.ascontiguousarray(nu)
-        return self.thisptr.transferPropertiesToPUMI(&rho[0],&nu[0])
+        g = np.ascontiguousarray(g)
+        return self.thisptr.transferPropertiesToPUMI(&rho[0],&nu[0],&g[0])
     def transferBCtagsToProteus(self, np.ndarray[int,ndim=2,mode="c"] tagArray, int idx, np.ndarray[int,ndim=1,mode="c"] ebN, np.ndarray[int, ndim=2, mode="c"] eN_global, np.ndarray[np.double_t,ndim=2,mode="c"] fluxBC):
         tagArray = np.ascontiguousarray(tagArray)
         ebN = np.ascontiguousarray(ebN)
