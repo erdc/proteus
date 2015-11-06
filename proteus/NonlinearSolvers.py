@@ -813,12 +813,12 @@ class POD_Newton(Newton):
         self.norm_du_hist = []
         self.gammaK_max=0.0
         self.linearSolverFailed = False
-        tol = 1e+3
-        while (tol >= 1e-4 and #not self.converged(pod_r) and
+        #tol = 1e+3
+        while (not self.converged(pod_r) and #tol >= 1e-4 and
                not self.failed()):
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
-                #% (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
-                % (self.its-1,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+                % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+                #% (self.its-1,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             self.pod_J.flat[:] = self.pod_lin_J.flat[:]
             if self.residual_is_nonlinear: #self.updateJacobian or self.fullNewton:
                 #self.updateJacobian = False
@@ -844,15 +844,15 @@ class POD_Newton(Newton):
             pod_r[:] = np.dot(self.U_transpose,r)
             assert not numpy.isnan(pod_r).any()
             r[:] = np.dot(self.U,pod_r)
-            tol = self.norm(self.pod_du)/self.norm(self.pod_u)
+            #tol = self.norm(self.pod_du)/self.norm(self.pod_u)
         else:
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-                #% (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-                % (self.its,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                #% (self.its,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             return self.failedFlag
         log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-            #% (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-            % (self.its,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            #% (self.its,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
     def solveHyper(self,u,r=None,b=None,par_u=None,par_r=None):
         """
         Solve F(u) = b
@@ -883,12 +883,12 @@ class POD_Newton(Newton):
         self.gammaK_max=0.0
         self.linearSolverFailed = False
         #mwf we should return to a more general convergence test once the debugging is done
-        tol = 1e+3
-        while (tol >= 1e-4 and #not self.converged(pod_r) and
+        #tol = 1e+3
+        while (not self.converged(pod_r) and #tol >= 1e-4 and
                not self.failed()):
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %g test=%s"
-                #% (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
-                % (self.its-1,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+                % (self.its-1,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
+                #% (self.its-1,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r)),self.convergenceTest),level=1)
             self.pod_J.flat[:] = self.pod_lin_J.flat[:]
             if self.residual_is_nonlinear: #self.updateJacobian or self.fullNewton:
                 #self.updateJacobian = False
@@ -921,15 +921,15 @@ class POD_Newton(Newton):
             pod_r = pod_rn + pod_rl
             assert not numpy.isnan(pod_r).any()
             r[:] = np.dot(self.U,pod_r)
-            tol = self.norm(self.pod_du)/self.norm(self.pod_u)
+            #tol = self.norm(self.pod_du)/self.norm(self.pod_u)
         else:
             log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-                #% (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-                % (self.its,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+                #% (self.its,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
             return self.failedFlag
         log("   Newton it %d norm(r) = %12.5e  \t\t norm(r)/(rtol*norm(r0)+atol) = %12.5e"
-            #% (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
-            % (self.its,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            % (self.its,self.norm_r,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
+            #% (self.its,tol,(self.norm_r/(self.rtol_r*self.norm_r0+self.atol_r))),level=1)
     def setFromOptions(self,nOptions):
         """
         SVD_basis_file -- file holding U basis from SVD of snapshots ['SVD_basis']
