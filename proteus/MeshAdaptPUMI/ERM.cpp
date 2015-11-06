@@ -24,7 +24,7 @@ int int_order;
 int norm_order;
 double nu_0,nu_1,rho_0,rho_1;
 double a_kl = 0.5; //flux term weight
-
+int casenumber;
 
 //used to attach error estimates to nodes
 static void volumeAverageToEntity(apf::Field* ef, apf::Field* vf, apf::MeshEntity* ent) //taken from Dan's superconvergent patch recovery code
@@ -77,7 +77,6 @@ void getProps(double*rho,double*nu)
   //debug
   rho_1 = rho_0;
   nu_1 = nu_0; 
- std::cout<<"What is rho "<<rho_0<<" " <<rho_1<<std::endl; 
   return;
 }
 
@@ -100,10 +99,10 @@ void MeshAdaptPUMIDrvr::get_local_error()
 //First get the mesh and impose a 2nd order field
 //Then get the desired quadrature points
 {
-std::cout<<"g "<<g[0]<<" "<<g[1]<<" "<<g[2]<<std::endl;
   getProps(rho,nu);
   approx_order = approximation_order; 
   int_order = integration_order;
+  casenumber = casenum;
 
   //***** Get Solution Fields First *****//
   apf::Field* voff = apf::createLagrangeField(m,"proteus_vof",apf::SCALAR,1);
@@ -311,7 +310,7 @@ double err_est_total=0;
           idx[s] = i*nshl+s;
 
           //forcing term
-          temp_vect[s] = (0)*shpval[s];
+          temp_vect[s] = (g[i]+0.0)*shpval[s];
           //a(u,v) and c(u,u,v) term
           for(int j=0;j<nsd;j++){
             temp_vect[s] += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
@@ -471,7 +470,6 @@ if(comm_rank==0 && testcount==eID){
     L2_total = L2_total+L2err;
     double starerr = getStarerror(m,ent,voff,visc,pref,velf,estimate);
     star_total = star_total+starerr;
-//std::cout<<"Acomp "<<Acomp << " Bcomp "<<Bcomp<<std::endl;
    
 //    } //end if testcount 
 
@@ -598,6 +596,13 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf:
                   bflux = {fluxdata[1][l],fluxdata[2][l],fluxdata[3][l]};
                   bflux = bflux-identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1)*normal;
                   bflux = bflux*weight*Jdet;
+                }
+                else{
+                  flux_weight = 1;
+                  apf::getVectorGrad(tempvelo,bqptl,tempgrad_velo[idx_neigh]);
+                  tempbflux = ((tempgrad_velo[idx_neigh]+apf::transpose(tempgrad_velo[idx_neigh]))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
+                    -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1))*weight*Jdet*flux_weight;
+                  bflux = tempbflux*normal;
                 }
               }
               else{
@@ -739,14 +744,14 @@ double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Fie
       apf::getVector(velo_elem,qpt,vel_vect);
 
       //Hardcoded Exact Solution    
-int casenum = 0;
-      if(casenum==0){ 
+//int casenum = 1;
+      if(casenumber==0){ 
       //Poiseuille Flow
         dpdy = -1/Ly;
         u_exact= 0.5/(nu_0*rho_0)*(dpdy)*(xyz[2]*xyz[2]-Lz*xyz[2]);
         p_exact = 1+xyz[1]*dpdy;
       }
-      else if(casenum ==1){
+      else if(casenumber ==1){
       //Couette Flow
         u_exact = 1.0*xyz[2]/Lz;
         p_exact = 0;
@@ -815,8 +820,8 @@ double getStarerror(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::F
       apf::getVector(velo_elem,qpt,vel_vect);
 
       //Hardcoded Exact Solution    
-int casenum = 0;
-      if(casenum==0){ 
+//int casenum = 1;
+      if(casenumber==0){ 
       //Poiseuille Flow
         dpdy = -1/Ly;
         u_exact[0]=0;
@@ -825,7 +830,7 @@ int casenum = 0;
         p_exact = 1+xyz[1]*dpdy;
         grad_u_exact[1][2] = 0.5/(nu_0*rho_0)*(dpdy)*(2*xyz[2]-Lz);
       }
-      else if(casenum ==1){
+      else if(casenumber ==1){
       //Couette Flow
         u_exact[0]=0;
         u_exact[1] = 1.0*xyz[2]/Lz;
