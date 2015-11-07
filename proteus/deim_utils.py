@@ -256,6 +256,6 @@ def project_initial_conditions(self):
     self.setFreeDOF(self.ic_global_vector) #copy models degrees of freedom to global vector
     projected_ics = numpy.dot(self.ic_projection_matrix,self.ic_global_vector) #project to reduced/target space dofs
     self.ic_global_vector[:] = numpy.dot(self.ic_projection_matrix.T,projected_ics) #back to fine space
-    self.setUnknowns(self.du) #set models degrees of freedom from global vector
+    self.setUnknowns(self.ic_global_vector) #set models degrees of freedom from global vector
 
     

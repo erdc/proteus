@@ -203,6 +203,8 @@ class OneLevelTransport(NonlinearEquation):
         self.stressFluxBoundaryConditionsSetterDict = stressFluxBoundaryConditionsSetterDict
         #assume  the stabilization term is always nonlinear for model reduction?
         self.stabilizationIsNonlinear = True
+        #do we want to add a projection for the initial conditions?
+        self.use_initial_condition_projection = False
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
@@ -1600,9 +1602,20 @@ class OneLevelTransport(NonlinearEquation):
             for dofN,g in self.dirichletConditions[cj].DOFBoundaryConditionsDict.iteritems():
                 self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         #what if we would like to perform a projection on the initial conditions?
-        if 'project_initial_conditions' in dir(self):
+        if self.use_initial_condition_projection:
             self.project_initial_conditions()
-            
+    def project_initial_conditions(self):
+        """
+        Default algebraic projection for initial conditions. 
+        Testing for POD as initial example. Injecting member function from NonlinearSolvers didn't
+        work because of 'recursive' imports of Transport and NonlinearSolvers
+        """
+        if self.use_initial_condition_projection and 'ic_global_vector' in dir(self) and 'ic_projection_matrix' in dir(self):
+            self.setFreeDOF(self.ic_global_vector) #copy models degrees of freedom to global vector
+            projected_ics = numpy.dot(self.ic_projection_matrix,self.ic_global_vector) #project to reduced/target space dofs
+            self.ic_global_vector[:] = numpy.dot(self.ic_projection_matrix.T,projected_ics) #back to fine space
+            self.setUnknowns(self.ic_global_vector) #set models degrees of freedom from global vector
+
     #what about setting initial conditions directly from dofs calculated elsewhere?
     def archiveAnalyticalSolutions(self,archive,analyticalSolutionsDict,T=0.0,tCount=0):
         import copy
