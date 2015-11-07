@@ -879,6 +879,10 @@ class NS_base:  # (HasTraits):
                             p0.domain.PUMIMesh.transferFieldToPUMI(
                                 coef.variableNames[ci], scalar)
                             del scalar
+                        if lm.mesh.nodeArray != None:
+                          log("Copying coordinates to PUMI")
+                          p0.domain.PUMIMesh.transferFieldToPUMI(
+                              "coordinates", lm.mesh.nodeArray)
                     #Get Physical Parameters
                     #Can we do this in a problem-independent  way?
                     rho = numpy.array([self.pList[0].rho_0,
@@ -949,7 +953,7 @@ class NS_base:  # (HasTraits):
                     log("Allocating models on new mesh")
                     self.allocateModels()
                     log("Attach auxiliary variables to new models")
-                    #(cut and pasted form init, need to cleanup)
+                    #(cut and pasted from init, need to cleanup)
                     self.simOutputList = []
                     self.auxiliaryVariables = {}
                     if self.simFlagsList != None:
