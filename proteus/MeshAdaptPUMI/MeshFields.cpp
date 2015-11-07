@@ -23,6 +23,11 @@ int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double const* inArr
 {
   assert(nN == static_cast<int>(m->count(0)));
   apf::Field* f = m->findField(name);
+  if (!strcmp(name, "coordinates")) {
+    assert(!f); /* coordinates are special, not found by regular findField */
+    f = m->getCoordinateField();
+    assert(f);
+  }
   if (!f) {
     assert(nVar == 1 || nVar == 3);
     int valueType;
