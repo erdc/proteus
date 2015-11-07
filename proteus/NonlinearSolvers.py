@@ -674,7 +674,6 @@ class POD_Newton(Newton):
         self.hyper_indices_file = 'Hyper_indices'
         self.hyper_Q_file      = 'Hyper_Q'
         self.use_hyper = use_hyper
-        #mwf we could make this a little more descriptive so that it's clear what option is being set
 	self.residual_is_nonlinear = True
     def initialize_POD(self,u):
         """
@@ -747,7 +746,9 @@ class POD_Newton(Newton):
         assert os.path.isfile(self.SVD_basis_file), "SVD basis file {0} not found".format(self.SVD_basis_file)
         U = np.loadtxt(self.SVD_basis_file)
 
-        self.F.project_initial_conditions = types.MethodType(deim_utils.project_initial_conditions,self.F,OneLevelTransport)
+        #this doesn't work because of recursive imports of Transport and Nonlinear solvers
+        #self.F.project_initial_conditions = types.MethodType(deim_utils.project_initial_conditions,self.F,Transport.OneLevelTransport)
+        self.F.use_initial_condition_projection = False
         self.F.ic_projection_matrix = U.conj().T #fine to pod
         self.F.ic_global_vector = self.du.copy()
         
@@ -945,7 +946,7 @@ class POD_Newton(Newton):
             if parm in dir(nOptions):
                 setattr(self,parm,getattr(nOptions,parm))
         #Go ahead and modify Transport behavior now that we have the correct input options
-        #self.setup_POD_initial_conditions()#does not initialize all of POD machinery
+        self.setup_POD_initial_conditions()#does not initialize all of POD machinery
         
 class NewtonNS(NonlinearSolver):
     """
