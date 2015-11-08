@@ -10,7 +10,8 @@ from nose.tools import eq_ as eq
 
 from proteus import deim_utils
 
-def get_burgers_ns(name,T=0.1,nDTout=10,archive_pod_res=None,use_pod=False,use_hyper=False,nl_atol_res=1.0e-4,tolFac=0.0):
+def get_burgers_ns(name,T=0.1,nDTout=10,archive_pod_res=None,use_pod=False,use_hyper=False,
+                   nl_atol_res=1.0e-4,tolFac=0.0,project_initial_conditions=True):
     import burgers_init as bu
     bu.physics.name=name
     bu.so.name = bu.physics.name
@@ -21,7 +22,7 @@ def get_burgers_ns(name,T=0.1,nDTout=10,archive_pod_res=None,use_pod=False,use_h
     bu.so.tnList = [i*bu.DT for i in range(bu.nDTout+1)]
     bu.numerics.tolFac = tolFac#relative tolerance
     bu.numerics.nl_atol_res = nl_atol_res #nonlinear solver rtolerance
-
+    
     #request archiving of spatial residuals ...
     simFlagsList=None
     if archive_pod_res is not None:
@@ -30,7 +31,7 @@ def get_burgers_ns(name,T=0.1,nDTout=10,archive_pod_res=None,use_pod=False,use_h
     #
     bu.numerics.use_pod = use_pod
     bu.numerics.use_hyper = use_hyper
-
+    bu.numerics.use_initial_condition_projection = project_initial_conditions
     if not use_pod:
 	bu.numerics.multilevelNonlinearSolver = bu.NonlinearSolvers.Newton
 	bu.numerics.levelNonlinearSolver = bu.NonlinearSolvers.Newton
@@ -285,7 +286,7 @@ def test_deim_approx_full(tol=1.0e-12):
     assert errors.min() < tol
     assert errors_linear.min() < tol
 
-def deim_run():
+def deim_run(project_initial_conditions=True):
     """
     Follow basic setup for DEIM approximation
     - generate a burgers solution, saving solution and nonlinear residuals
@@ -322,7 +323,8 @@ def deim_run():
 
     ##reduced order models below
     ns_red = get_burgers_ns("test_deim_run",T=T,nDTout=nDTout,archive_pod_res=None,
-                            use_pod=True,use_hyper=True)
+                            use_pod=True,use_hyper=True,
+                            project_initial_conditions=project_initial_conditions)
 
     failed = ns_red.calculateSolution("run_deim_run")
     assert not failed
@@ -334,16 +336,19 @@ def deim_run():
 
     return
 
-def test_deim_impl():
+def test_deim_impl(project_initial_conditions=True):
     """
     compare output from matlab POD-DEIM with proteus POD-DEIM
     """
     T = 1; nDTout=100; m_sol=10; m=10
     #matlab solution: m_sol = 10, m = 10
-    solm = np.loadtxt("S_matlab")
+    if project_initial_conditions:
+        solm = np.loadtxt("S_matlab_ic_projection")
+    else:
+        solm = np.loadtxt("S_matlab_no_ic_projection")
     solm = solm[:,-1]
     #proteus solution
-    deim_run()
+    deim_run(project_initial_conditions=project_initial_conditions)
     sol = np.loadtxt("proteus_solution_T=1_nDT=100_msol=10_m=10.dat")#.format(T,nDTout,m_sol,m))
     sol = sol[:,-1]
 

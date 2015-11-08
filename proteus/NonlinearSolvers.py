@@ -675,6 +675,7 @@ class POD_Newton(Newton):
         self.hyper_Q_file      = 'Hyper_Q'
         self.use_hyper = use_hyper
 	self.residual_is_nonlinear = True
+        self.use_initial_condition_projection = True
     def initialize_POD(self,u):
         """
         Setup for Full Nonlinear POD approximation
@@ -748,7 +749,7 @@ class POD_Newton(Newton):
 
         #this doesn't work because of recursive imports of Transport and Nonlinear solvers
         #self.F.project_initial_conditions = types.MethodType(deim_utils.project_initial_conditions,self.F,Transport.OneLevelTransport)
-        self.F.use_initial_condition_projection = False
+        self.F.use_initial_condition_projection = self.use_initial_condition_projection
         self.F.ic_projection_matrix = U.conj().T #fine to pod
         self.F.ic_global_vector = self.du.copy()
         
@@ -939,9 +940,11 @@ class POD_Newton(Newton):
         hyper_indices_file -- file with indices for hyper-reduction
         hyper_Q_file -- file with matrix Q for hyper-reduction approximation $\hat{F} = U^T \cdot Q P^T F(U z)$
         residual_is_nonlinear -- Is the residual actually nonlinear so that we need to update the full Nonlinear portion 
+        use_initial_condition_projection -- project initial conditions into POD space or not default is yes
         """
         optional_params = ['SVD_basis_file','use_hyper','hyper_SVD_basis_file',
-                           'hyper_indices_file','hyper_Q_file','residual_is_nonlinear']
+                           'hyper_indices_file','hyper_Q_file','residual_is_nonlinear',
+                           'use_initial_condition_projection']
         for parm in optional_params:
             if parm in dir(nOptions):
                 setattr(self,parm,getattr(nOptions,parm))
