@@ -1071,7 +1071,7 @@ class NS_base:  # (HasTraits):
                             self.archiveSolution(
                                 model,
                                 index,
-                                self.systemStepController.t_system+1.0e-6)
+                                self.systemStepController.t_system_last+1.0e-6)
                   ##chitak end Adapt
             #end system step iterations
             if self.archiveFlag == ArchiveFlags.EVERY_USER_STEP:
