@@ -860,6 +860,9 @@ class NS_base:  # (HasTraits):
                     self.nSequenceSteps%n0.adaptMesh_nSteps == 0 and
                     self.so.useOneMesh):
                     log("Entering mesh adaption block")
+                    log("Copying coordinates to PUMI")
+                    p0.domain.PUMIMesh.transferFieldToPUMI("coordinates",
+                        self.modelList[0].levelModelList[0].mesh.nodeArray)
                     log("Copying DOF and parameters to PUMI")
                     for m in self.modelList:
                       for lm in m.levelModelList:
@@ -879,10 +882,6 @@ class NS_base:  # (HasTraits):
                             p0.domain.PUMIMesh.transferFieldToPUMI(
                                 coef.variableNames[ci], scalar)
                             del scalar
-                        if lm.mesh.nodeArray != None:
-                          log("Copying coordinates to PUMI")
-                          p0.domain.PUMIMesh.transferFieldToPUMI(
-                              "coordinates", lm.mesh.nodeArray)
                     #Get Physical Parameters
                     #Can we do this in a problem-independent  way?
                     rho = numpy.array([self.pList[0].rho_0,
