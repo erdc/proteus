@@ -22,7 +22,7 @@ if sys.platform == 'darwin':
     platform_lapack_integer = '__CLPK_integer'
     platform_blas_h = r'<Accelerate/Accelerate.h>'
     platform_lapack_h = r'<Accelerate/Accelerate.h>'
-elif sys.platform == 'linux2':
+elif sys.platform == 'linux2' or sys.platform == 'cygwin':
     platform_extra_compile_args = ['-DPETSC_INCLUDE_AS_C']
     platform_extra_link_args = ['-Wl,-rpath,' + PROTEUS_LIB_DIR]
     platform_blas_h = r'"proteus_blas.h"'
@@ -51,10 +51,10 @@ def get_flags(package):
         lib_dir = PROTEUS_LIB_DIR
     return include_dir, lib_dir
 
-PROTEUS_EXTRA_LINK_ARGS=['-lblas'] + platform_extra_link_args
+PROTEUS_EXTRA_LINK_ARGS=['-L/usr/lib','-llapack','-lblas','-lX11','-lssl','-lcrypto'] + platform_extra_link_args
 
 PROTEUS_EXTRA_FC_COMPILE_ARGS= ['-Wall']
-PROTEUS_EXTRA_FC_LINK_ARGS=['-lblas']
+PROTEUS_EXTRA_FC_LINK_ARGS=['-llapack -lblas']
 
 
 PROTEUS_SUPERLU_INCLUDE_DIR, PROTEUS_SUPERLU_LIB_DIR = get_flags('superlu')
@@ -97,5 +97,5 @@ PROTEUS_MPI_LIBS =[]
 
 PROTEUS_PETSC_INCLUDE_DIR, PROTEUS_PETSC_LIB_DIR = get_flags('petsc')
 PROTEUS_PETSC_LIB_DIRS = [PROTEUS_PETSC_LIB_DIR]
-PROTEUS_PETSC_LIBS = []
+PROTEUS_PETSC_LIBS = ['petsc']
 PROTEUS_PETSC_INCLUDE_DIRS = [PROTEUS_PETSC_INCLUDE_DIR]

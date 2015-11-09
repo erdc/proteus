@@ -143,8 +143,8 @@ ${PROTEUS_PREFIX}/artifact.json: stack/default.yaml stack hashdist $(shell find 
 
 	$(call show_info)
 
-	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -v -f -k error default.yaml ${PROTEUS_PREFIX}
-
+	cd stack && ${PROTEUS}/hashdist/bin/hit develop ${HIT_FLAGS} -v -f -k error -l copy default.yaml ${PROTEUS_PREFIX}
+	-cp ${PROTEUS_PREFIX}/bin/python2.7.exe.link ${PROTEUS_PREFIX}/bin/python2.7.link
 	@echo "************************"
 	@echo "Dependency build complete"
 	@echo "************************"
