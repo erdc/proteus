@@ -64,67 +64,22 @@ static void averageToEntity(apf::Field* ef, apf::Field* vf, apf::MeshEntity* ent
   return;
 }
 
-int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
-{
-  double alpha = 0.6; //refinement constant
-
-  free(size_frame);
-  free(size_scale);
-  free(size_iso);
-
-  apf::Mesh* m = apf::getMesh(err_reg);
-  size_frame = apf::createLagrangeField(m, "proteus_size_frame", apf::MATRIX, 1);
-  size_scale = apf::createLagrangeField(m, "proteus_size_scale", apf::VECTOR, 1);
-  apf::MeshIterator* it;
-  int numel = 0;
-  int nsd = m->getDimension();
-  it = m->begin(nsd);
-  apf::Field* size_iso_reg = apf::createField(m, "iso_size",apf::SCALAR,apf::getConstant(nsd));
-  size_iso = apf::createLagrangeField(m, "proteus_size",apf::SCALAR,1);
-
-  apf::MeshEntity* reg;
-  while( reg=m->iterate(it)){
-    numel++; 
+static double vertexVolume(apf::Mesh* m,apf::MeshEntity* vtx){
+  apf::Adjacent adjedg;
+  apf::MeshElement* edg_elem;
+  double minedg=0.0;
+  double avgedg=0.0;
+  m->getAdjacent(vtx,1,adjedg);
+  for(int i=0; i<adjedg.size();i++){
+    edg_elem=apf::createMeshElement(m,adjedg[i]);
+    if(apf::measure(edg_elem)<minedg)
+      minedg=apf::measure(edg_elem);     
+    avgedg+=apf::measure(edg_elem);
   }
-  m->end(it);
-  it = m->begin(nsd); 
-  double err_dest = alpha*err_total/sqrt(numel);
-  double err_curr = 0.0;
-  //compute the new size field
-  double h_old = 0.0;
-  double h_new;
-  apf::MeshElement* element;
-///*
-  while(reg=m->iterate(it)){
-    element = apf::createMeshElement(m,reg);
-    h_old = pow(apf::measure(element),1.0/3.0);
-    err_curr = apf::getScalar(err_reg,reg,0);
-//std::cout<<"Err curr "<<err_curr<<" Err_dest "<<err_dest<<std::endl;
-    h_new = h_old*pow(err_dest/err_curr,0.5);
-    if(h_new>hmax) h_new = hmax;
-    if(h_new<hmin) h_new = hmin;
-//std::cout<<"Old length "<<h_old<<" New length "<<h_new<<std::endl;
-    apf::setScalar(size_iso_reg,reg,0,h_new);
-  }
-  apf::destroyMeshElement(element);
-  m->end(it);
-//*/
-  apf::MeshEntity* v;
-  it = m->begin(0);
-  apf::Vector3 scale(0.1,0.1,0.1);
-  apf::Matrix3x3 identity(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0); //isotropic size frame
-  while ((v = m->iterate(it))) {
-    averageToEntity(size_iso_reg, size_iso, v);
-    scale = apf::Vector3(1.0,1.0,1.0)* apf::getScalar(size_iso,v,0); //isotropic
-    apf::setVector(size_scale,v,0,scale);
-    apf::setMatrix(size_frame,v,0,identity);
-  }
-  m->end(it);
-  SmoothField(size_scale);
-  apf::destroyField(size_iso_reg); //will throw error if not destroyed
-  apf::destroyField(err_reg);
-  freeField(size_iso); //no longer necessary
-  return 0;
+  avgedg/=adjedg.size();
+  apf::destroyMeshElement(edg_elem);
+  //return (minedg*minedg*minedg); //cubic volume
+  return (avgedg*avgedg*avgedg); //cubic volume
 }
 
 
@@ -243,6 +198,32 @@ static void scaleFormula(double phi, double hmin, double hmax,
   for (int i = 0; i < 3; ++i)
     clamp(scale[i], hmin, hmax);
 }
+
+static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest, double vol,apf::Vector3 const& curves, apf::Vector3& scale)
+{
+  double epsilon = 7.0* hmin; 
+  if (fabs(phi) < epsilon) {
+     scale[0] = h_dest;
+     scale[1] = sqrt(vol/h_dest);
+     scale[2] = sqrt(vol/h_dest);
+//std::cout<<"compare "<<scale[1]<<" "<<sqrt(0.002/fabs(curves[1]))<<std::endl;
+     //scale[1] = sqrt(0.002/ fabs(curves[1]));
+     //scale[2] = sqrt(0.002/ fabs(curves[2]));
+  }else if(fabs(phi) < 4 * epsilon){
+     scale[0] = 2 * h_dest;
+     //scale[1] = 2 * sqrt(vol/h_dest);
+     //scale[2] = 2 * sqrt(vol/h_dest);
+     scale[1] = 2 * sqrt(0.002/ fabs(curves[1]));
+     scale[2] = 2 * sqrt(0.002/ fabs(curves[2]));
+  }else{
+     scale = apf::Vector3(1,1,1) * h_dest; 
+ }	  
+
+
+  for (int i = 0; i < 3; ++i)
+    clamp(scale[i], hmin, hmax);
+}
+
 
 static apf::Field* getSizeScales(apf::Field* phif, apf::Field* curves,
     double hmin, double hmax, int adapt_step)
@@ -404,3 +385,81 @@ static void SmoothField(apf::Field* f)
   Smoother op(f);
   op.applyToDimension(0);
 }
+
+int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
+{
+  double alpha = 0.6; //refinement constant
+
+  free(size_frame);
+  free(size_scale);
+  free(size_iso);
+//Get the anisotropic size frame
+  apf::Field* phif = extractPhi(solution);
+  apf::Field* gradphi = apf::recoverGradientByVolume(phif);
+  apf::Field* grad2phi = apf::recoverGradientByVolume(gradphi);
+  apf::Field* hess = computeHessianField(grad2phi);
+  apf::Field* curves = getCurves(hess, gradphi);
+  size_frame = getSizeFrames(hess, gradphi);
+//
+
+//set the desired size field over regions
+  apf::Mesh* m = apf::getMesh(err_reg);
+  size_scale = apf::createLagrangeField(m, "proteus_size_scale", apf::VECTOR, 1);
+  apf::MeshIterator* it;
+  int numel = 0;
+  int nsd = m->getDimension();
+  it = m->begin(nsd);
+  apf::Field* size_iso_reg = apf::createField(m, "iso_size",apf::SCALAR,apf::getConstant(nsd));
+  size_iso = apf::createLagrangeField(m, "proteus_size",apf::SCALAR,1);
+
+  numel = m->count(nsd);
+  it = m->begin(nsd); 
+  double err_dest = alpha*err_total/sqrt(numel);
+  double err_curr = 0.0;
+  //compute the new size field
+  apf::MeshElement* element;
+  apf::MeshEntity* reg;
+  while(reg=m->iterate(it)){
+    double h_old;
+    double h_new;
+    element = apf::createMeshElement(m,reg);
+    h_old = pow(apf::measure(element),1.0/3.0);
+    err_curr = apf::getScalar(err_reg,reg,0);
+    h_new = h_old*pow(err_dest/err_curr,0.5);
+    clamp(h_new,hmin,hmax);
+    apf::setScalar(size_iso_reg,reg,0,h_new);
+  }
+  apf::destroyMeshElement(element);
+  m->end(it);
+
+//Set the size scale for vertices
+  apf::MeshEntity* v;
+  it = m->begin(0);
+  apf::Vector3 scale;
+  while ((v = m->iterate(it))) {
+    double vtx_vol=0;
+    double phi = apf::getScalar(phif, v, 0);
+    apf::Vector3 curve;
+    apf::getVector(curves, v, 0, curve);
+    averageToEntity(size_iso_reg, size_iso, v);
+    //scale = apf::Vector3(1.0,1.0,1.0)* apf::getScalar(size_iso,v,0); //isotropic
+    vtx_vol=vertexVolume(m,v); 
+    scaleFormulaERM(phi,hmin,hmax,apf::getScalar(size_iso,v,0),vtx_vol,curve,scale);
+    apf::setVector(size_scale,v,0,scale);
+  }
+  m->end(it);
+  for(int i=0; i<2;i++)
+    SmoothField(size_scale);
+  apf::destroyField(size_iso_reg); //will throw error if not destroyed
+  apf::destroyField(err_reg);
+  apf::destroyField(grad2phi);
+  apf::destroyField(phif);
+  apf::destroyField(curves);
+  apf::destroyField(hess);
+  apf::destroyField(gradphi);
+
+  freeField(size_iso); //no longer necessary
+  return 0;
+}
+
+
