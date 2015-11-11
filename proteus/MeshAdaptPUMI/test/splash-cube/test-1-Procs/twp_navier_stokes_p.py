@@ -9,6 +9,13 @@ if useOnlyVF:
     LS_model = None
 else:
     LS_model = 2
+
+dragAlphaTypes = numpy.array([0.0,
+                              0.0,
+                              0.0,
+                              0.0])
+dragBetaTypes = numpy.array([0.0,0.0,0.0,0.0]) 
+
 coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
                                    sigma=0.0,
                                    rho_0 = rho_0,
@@ -24,31 +31,14 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
                                    useVF=useVF,
 				   useRBLES=useRBLES,
 				   useMetrics=useMetrics,
+                                   dragAlphaTypes=dragAlphaTypes,
+                                   dragBetaTypes=dragAlphaTypes,
                                    eb_adjoint_sigma=1.0,
-                                   forceStrongDirichlet=0,
+                                   forceStrongDirichlet=ns_forceStrongDirichlet,
                                    turbulenceClosureModel=ns_closure)
 
-Uinf = 1.0
-'''
-def getDBC_p(x,flag):
-    if flag == boundaryTags['top'] or x[2] >= L[2] - 1.0e-12:
-        return lambda x,t: 0.0
+Uinf = 0.002
 
-def getDBC_u(x,flag):
-    if flag == boundaryTags['top'] or x[2] >= L[2] - 1.0e-12 or flag==boundaryTags['bottom'] or x[2] <= 1.0e-12 or flag==boundaryTags['right'] or x[0] >= L[0] - 1.0e-12 or flag==boundaryTags['left'] or x[0] <= 1.0e-12 or flag==boundaryTags['front'] or x[1]<=1.0e-12 or flag==boundaryTags['back'] or x[1]>L[1]-1.0e-12 :
-        return lambda x,t: 0.0
-
-def getDBC_v(x,flag):
-    #if flag == boundaryTags['top'] or x[2] >= L[2] - 1.0e-12:
-    if flag == boundaryTags['top'] or x[2] >= L[2] - 1.0e-12 or flag==boundaryTags['bottom'] or x[2] <= 1.0e-12 or flag==boundaryTags['right'] or x[0] >= L[0] - 1.0e-12 or flag==boundaryTags['left'] or x[0] <= 1.0e-12 or flag==boundaryTags['front'] or x[1]<=1.0e-12 or flag==boundaryTags['back'] or x[1]>L[1]-1.0e-12 :
-        return lambda x,t: Uinf*x[2]/L[2]
-
-def getDBC_w(x,flag):
-    #if flag == boundaryTags['top'] or x[2] >= L[2] - 1.0e-12:
-    if flag == boundaryTags['top'] or x[2] >= L[2] - 1.0e-12 or flag==boundaryTags['bottom'] or x[2] <= 1.0e-12 or flag==boundaryTags['right'] or x[0] >= L[0] - 1.0e-12 or flag==boundaryTags['left'] or x[0] <= 1.0e-12 or flag==boundaryTags['front'] or x[1]<=1.0e-12 or flag==boundaryTags['back'] or x[1]>L[1]-1.0e-12 :
-        return lambda x,t: 0.0
-
-'''
 def hydrostatic_pressure(x):
     if signedDistance(x) < 0:
         return -(L[2] - waterLine_z)*rho_1*g[2] - (waterLine_z - x[2])*rho_0*g[2]
@@ -57,14 +47,14 @@ def hydrostatic_pressure(x):
 
 def getDBC_p(x,flag):
     if flag==boundaryTags['back']:
-        return lambda x,t: hydrostatic_pressure(x)
+        return lambda x,t: 0.0#hydrostatic_pressure(x)
 
 def getDBC_u(x,flag):
     if flag in [boundaryTags['front'], boundaryTags['back'], boundaryTags['bottom'], boundaryTags['top']]:
         return lambda x,t: 0.0
 
 def getDBC_v(x,flag):
-    if flag in [boundaryTags['front'], boundaryTags['bottom'], boundaryTags['top']]:
+    if flag in [boundaryTags['front'], boundaryTags['back'], boundaryTags['bottom'], boundaryTags['top']]:
         return lambda x,t: Uinf*x[2]*1.0/L[2]
 
 def getDBC_w(x,flag):
@@ -101,7 +91,7 @@ def getDFBC_u(x,flag):
         return lambda x,t: 0.0
 
 def getDFBC_v(x,flag):
-    if flag not in [boundaryTags['front'], boundaryTags['bottom'], boundaryTags['top']]:
+    if flag not in [boundaryTags['front'],boundaryTags['back'], boundaryTags['bottom'], boundaryTags['top']]:
         return lambda x,t: 0.0
 
 def getDFBC_w(x,flag):
@@ -139,5 +129,5 @@ class Couette:
 
 initialConditions = {0:PerturbedSurface_p(waterLine_z),
                      1:AtRest(),
-                     2:Couette(),
+                     2:AtRest(),#Couette(),
                      3:AtRest()}
