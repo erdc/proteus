@@ -116,14 +116,14 @@ else:
         domain.PUMIMesh.loadModelAndMesh("Splashcube.smd", "Splashcube.smb")
 
 # Time stepping
-T=0.2
+T=1
 dt_fixed = 0.1
 dt_init = min(0.1*dt_fixed,0.001)
 runCFL=0.33
 nDTout = int(round(T/dt_fixed))
 
 # Numerical parameters
-ns_forceStrongDirichlet = False
+ns_forceStrongDirichlet = True#False
 if useMetrics:
     ns_shockCapturingFactor  = 0.25
     ns_lag_shockCapturing = True
@@ -185,13 +185,13 @@ elif useRANS == 2:
     ns_closure == 4
 # Water
 rho_0 = 998.2
-nu_0  = 1.004e-6
+nu_0  = 0.0025#1.004e-6
 
 # Air
 #rho_1 = 1.205
 #nu_1  = 1.500e-5
-rho_1 = 998.2
-nu_1  = 1.004e-6
+rho_1 = rho_0
+nu_1  = nu_0
 
 # Surface tension
 sigma_01 = 0.0
