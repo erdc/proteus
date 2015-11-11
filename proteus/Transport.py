@@ -138,6 +138,9 @@ class OneLevelTransport(NonlinearEquation):
         ebqe       -- at element boundary quadrature, unique to global, exterior element boundary
         phi_ip     -- at the generalized interpolation points required to build a nonlinear  phi
         """
+        self.use_bij=False#True
+        self.has_fterm=False
+        self.has_nu_L=False
         #
         #set the objects describing the method and boundary conditions
         #
@@ -2439,33 +2442,80 @@ class OneLevelTransport(NonlinearEquation):
                                                                           self.elementResidual[ci])
                         else:
                             assert False, "need self.q[('grad(subgridError)Xgrad(w)*dV_numDiff',ci,ci)] if not self.lowmem "
+        if not self.has_fterm and self.matType == superluWrappers.SparseMatrix:
+            self.fterm={}
+            self.has_fterm= True
+            self.has_nu_L = True
+            self.fterm_a = self.nzval.copy()
+            self.fterm_global = SparseMat(self.nFreeVDOF_global,self.nFreeVDOF_global,self.nnz,self.fterm_a,self.colind,self.rowptr)
+            for ci in range(self.nc):
+                for cj in self.coefficients.stencil[ci]:
+                    if not self.fterm.has_key(ci):
+                        self.fterm[ci] = {}
+                    self.fterm[ci][cj] = self.elementJacobian[ci][cj].copy()
+            self.b = np.zeros((self.mesh.nElements_global,
+                               self.nDOF_trial_element[0],
+                               self.nDOF_test_element[0]),
+                              'd')
+            self.nu_L = np.zeros((self.mesh.nElements_global,),'d')
+            for eN in range(self.mesh.nElements_global):
+                vol = math.fabs(self.q['det(J)'][eN,0])/float(math.factorial(self.nSpace_global))#assume simplex
+                bji = -vol/(self.nDOF_trial_element[ci]-1.0)
+                bjj =  vol
+                for j in range(self.nDOF_trial_element[ci]):
+                    for i in range(self.nDOF_test_element[ci]):
+                        if i!=j:
+                            self.b[eN,j,i] = bji
+                        else:
+                            self.b[eN,j,i] = bjj
+        cfemIntegrals.zeroJacobian_CSR(self.nnz, self.fterm_global)
+        for ci,cjDict in self.coefficients.advection.iteritems():
+            for cj in cjDict:
+                self.fterm[ci][cj][:] = 0.0
+                if self.use_bij:
+                    mdf = -self.q[('df',ci,cj)] #advection is (-df*v,del w)
+                    if self.lowmem:
+                        cfemIntegrals.updateAdvectionJacobian_weak_lowmem(mdf,
+                                                                          self.q[('v',ci)],
+                                                                          self.q[('grad(w)*dV_f',cj)],
+                                                                          self.fterm[ci][cj])
+                    else:
+                        cfemIntegrals.updateAdvectionJacobian_weak(mdf,
+                                                                   self.q[('vXgrad(w)*dV_f',ci,cj)],
+                                                                   self.fterm[ci][cj])
+                    cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[ci]['nFreeDOF'],
+                                                                              self.l2g[ci]['freeLocal'],
+                                                                              self.l2g[cj]['nFreeDOF'],
+                                                                              self.l2g[cj]['freeLocal'],
+                                                                              self.csrRowIndeces[(ci,cj)],
+                                                                              self.csrColumnOffsets[(ci,cj)],
+                                                                              self.fterm[ci][cj],
+                                                                              self.fterm_global)
 
         if self.shockCapturing != None:
-            if self.use_bij:
-                self.b = np.ones((self.mesh.nElements_global,
-                                  self.mesh.nDOF_trial_element[ci],
-                                  self.mesh.NDOF_test_elements[ci]),
-                                 'd')
-                self.nu_L = np.zeros((self.mesh.nElements_global,),'d')
+            ci=0
+            cj=0
+            if self.use_bij and self.has_fterm:
+                self.nu_L[:] = 0.0
                 for eN in range(self.mesh.nElements_global):
-                    bji = -self.mesh.elementVolume[eN]/self.nDOF_trial_element[ci]
-                    bjj = self.mesh.elementVolume[eN]
                     for j in range(self.nDOF_trial_element[ci]):
                         for i in range(self.nDOF_test_element[ci]):
-                            if i!=j:
-                                self.b[eN,j,i] = bji
-                            else:
-                                self.b[eN,j,i] = bjj
-                    for j in range(self.nDOF_trial_element[ci]):
-                        for i in range(self.nDOF_test_element[ci]):
-                            n = self.csrRowIndeces[(ci,cj)][eN,ii] + self.csrColumnOffsets[(ci,cj)][eN,i,j]
-                            self.nu_L[eN] = max(self.nu_L[eN], self.b_num_t_global[n])
+                            if  i != j:
+                                n = self.csrRowIndeces[(ci,cj)][eN,i] + self.csrColumnOffsets[(ci,cj)][eN,i,j]
+                                I = self.u[cj].femSpace.dofMap.l2g[eN,i]
+                                J = self.u[cj].femSpace.dofMap.l2g[eN,j]
+                                T = set(self.mesh.nodeElementsArray[self.mesh.nodeElementOffsets[I]:self.mesh.nodeElementOffsets[I+1]]).intersection(set(self.mesh.nodeElementsArray[self.mesh.nodeElementOffsets[J]:self.mesh.nodeElementOffsets[J+1]]))
+                                den = 0.0
+                                for t in T:
+                                    den -= self.b[t,j,i]
+                                self.nu_L[eN] = 0.001#max(self.nu_L[eN], max(0.0,self.fterm_a[n])/den)
             for ci in self.shockCapturing.components:
-                if self.use_bij
+                if self.use_bij and self.has_fterm and self.has_nu_L:
+                    print "adding graph laplacian to element residual"
                     for eN in range(self.mesh.nElements_global):
                         for j in range(self.nDOF_trial_element[ci]):
                             for i in range(self.nDOF_test_element[ci]):
-                                self.elementResidual[ci][eN,i] += self.q[('numDiff',ci,ci)][eN]*self.u[ci].dof[self.u[cj].femSpace.dofMap.l2g[eN,j]]*self.b[eN,j,i]
+                                self.elementResidual[ci][eN,i] += self.nu_L[eN]*self.u[ci].dof[self.u[ci].femSpace.dofMap.l2g[eN,j]]*self.b[eN,j,i]
                 else:
                     if self.lowmem:
                         cfemIntegrals.updateNumericalDiffusion_lowmem(self.q[('numDiff',ci,ci)],
@@ -2707,14 +2757,6 @@ class OneLevelTransport(NonlinearEquation):
                                              self.elementSpatialResidual[ci],
                                              self.q[('mt',ci)])
     def calculateElementJacobian(self,skipMassTerms=False):
-        self.b_num_t={{}}
-        if self.matType == superluWrappers.SparseMatrix:
-            self.b_num_t_global = SparseMat(self.nFreeVDOF_global,self.nFreeVDOF_global,self.nnz,self.nzval,self.colind,self.rowptr)
-        for ci in range(self.nc):
-            for cj in self.coefficients.stencil[ci]:
-                self.elementJacobian[ci][cj].fill(0.0)
-                self.elementJacobian_eb[ci][cj].fill(0.0)
-                self.b_num_t[ci][cj] = self.elementJacobian[ci][cj].copy()
         for ci,cjDict in self.coefficients.advection.iteritems():
             for cj in cjDict:
                 if self.timeIntegration.advectionIsImplicit[ci]:
@@ -2723,25 +2765,10 @@ class OneLevelTransport(NonlinearEquation):
                                                                           self.q[('v',cj)],
                                                                           self.q[('grad(w)*dV_f',ci)],
                                                                           self.elementJacobian[ci][cj])
-                        self.b_num_t[ci][cj][:] = self.elementJacobian[ci][cj]
                     else:
                         cfemIntegrals.updateAdvectionJacobian_weak(self.q[('df',ci,cj)],
                                                                    self.q[('vXgrad(w)*dV_f',cj,ci)],
                                                                    self.elementJacobian[ci][cj])
-                        self.b_num_t[ci][cj][:] = self.elementJacobian[ci][cj]
-                cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
-                                       jacobian)
-        for ci in range(self.nc):
-            for cj in self.coefficients.stencil[ci]:
-                cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[ci]['nFreeDOF'],
-                                                                          self.l2g[ci]['freeLocal'],
-                                                                          self.l2g[cj]['nFreeDOF'],
-                                                                          self.l2g[cj]['freeLocal'],
-                                                                          self.csrRowIndeces[(ci,cj)],
-                                                                          self.csrColumnOffsets[(ci,cj)],
-                                                                          self.b_num_t[ci][cj],
-                                                                          self.b_num_t_global)
-
         ##\todo optimize nonlinear diffusion Jacobian calculation for the  different combinations of nonlinear a and phi
         for ci,ckDict in self.coefficients.diffusion.iteritems():
             for ck,cjDict in ckDict.iteritems():
@@ -2873,16 +2900,12 @@ class OneLevelTransport(NonlinearEquation):
         if self.shockCapturing != None:
             for ci in self.shockCapturing.components:
                 if self.timeIntegration.shockCapturingIsImplicit[ci]:
-                    if self.use_bij:
-                        b = np.ones((self.mesh.nDOF_test_element[ci],),'d')
+                    if self.use_bij and self.has_fterm and  self.has_nu_L:
+                        print "adding graph laplacian to element jacobian"
                         for eN in range(self.mesh.nElements_global):
-                            bij = -self.mesh.elementVolume[eN]/self.nDOF_trial_element[ci]
-                            bjj = self.mesh.elementVolume[eN]
                             for j in range(self.nDOF_trial_element[ci]):
-                                b[:] = bij
-                                b[j] = bjj
                                 for i in range(self.nDOF_test_element[ci]):
-                                    self.elementJacobian[ci][ci][eN,i,j] += self.q[('numDiff',ci,ci)]*b[j]
+                                    self.elementJacobian[ci][ci][eN,i,j] += self.nu_L[eN]*self.b[eN,j,i]
                     else:
                         if self.lowmem:
                             cfemIntegrals.updateNumericalDiffusionJacobian_lowmem(self.q[('numDiff',ci,ci)],
