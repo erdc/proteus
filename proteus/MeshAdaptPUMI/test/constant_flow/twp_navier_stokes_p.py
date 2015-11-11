@@ -9,6 +9,13 @@ if useOnlyVF:
     LS_model = None
 else:
     LS_model = 2
+        
+dragAlphaTypes = numpy.array([0.0,
+                              0.0,
+                              0.0,
+                              0.0])
+dragBetaTypes = numpy.array([0.0,0.0,0.0,0.0]) 
+
 coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
                                    sigma=0.0,
                                    rho_0 = rho_0,
@@ -25,6 +32,8 @@ coefficients = RANS2P.Coefficients(epsFact=epsFact_viscosity,
 				   useRBLES=useRBLES,
 				   useMetrics=useMetrics,
                                    eb_adjoint_sigma=1.0,
+                                   dragAlphaTypes=dragAlphaTypes,
+                                   dragBetaTypes=dragAlphaTypes,
                                    forceStrongDirichlet=ns_forceStrongDirichlet,
                                    turbulenceClosureModel=ns_closure)
 
@@ -144,5 +153,5 @@ class Constant:
 
 initialConditions = {0:AtRest(),#0:PerturbedSurface_p(waterLine_z),
                      1:AtRest(),
-                     2:Constant(),
+                     2:AtRest(),#Constant(),
                      3:AtRest()}
