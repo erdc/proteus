@@ -71,7 +71,7 @@ L = (0.1,0.2,0.05)
 he = L[0]/float(4*Refinement-1)
 #he*=0.5
 #he = L[0]/40.0
-he*=0.5#128
+#he*=0.5#128
 #he*=0.5#1024
 quasi2D = False#True
 
@@ -100,8 +100,8 @@ else:
         nny=2*Refinement
     else:
         domain = Domain.PUMIDomain() #initialize the domain
-        domain.numBC=6 #set number of BCs
-        domain.numAdaptSteps=1 #set number of adapt steps (loops)
+#        domain.numBC=6 #set number of BCs
+#        domain.numAdaptSteps=1 #set number of adapt steps (loops)
         #Following sets list of face tags of geometric model as mapped from boundary Tags,
         #meaning if faceList=[[2,4],[1]] and boundaries=['left','right'], then faces with geometry tags 2 and 4 are set as 'left'
         #and face with geometric tag 4 is set as 'right'
@@ -111,6 +111,10 @@ else:
         #domain.faceList=[[3],[5],[1],[6],[2],[4]]
         domain.faceList=[[80],[76],[42],[24],[82],[78]]
         #set max edge length, min edge length, number of meshadapt iterations and initialize the MeshAdaptPUMI object
+        he =0.5
+        adaptMesh= False
+        adaptMesh_nSteps = 4
+        adaptMesh_numIter = 1
         domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=2)
         #read the geometry and mesh
         domain.PUMIMesh.loadModelAndMesh("Splashcube.smd", "Splashcube.smb")
@@ -123,7 +127,7 @@ runCFL=0.33
 nDTout = int(round(T/dt_fixed))
 
 # Numerical parameters
-ns_forceStrongDirichlet = True#False
+ns_forceStrongDirichlet = False
 if useMetrics:
     ns_shockCapturingFactor  = 0.25
     ns_lag_shockCapturing = True
