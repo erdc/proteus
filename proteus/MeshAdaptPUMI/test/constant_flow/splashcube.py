@@ -111,7 +111,7 @@ else:
         domain.faceList=[[80],[76],[42],[24],[82],[78]]
         #set max edge length, min edge length, number of meshadapt iterations and initialize the MeshAdaptPUMI object
         he =0.5
-        adaptMesh = True
+        adaptMesh = False
         adaptMesh_nSteps = 4
         adaptMesh_numIter = 1#2
         domain.PUMIMesh=MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.01, hmin=0.008, numIter=1,sfConfig='alvin')
