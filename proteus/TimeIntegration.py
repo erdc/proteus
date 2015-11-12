@@ -1897,6 +1897,7 @@ class ExplicitRK_base(TI_base):
     def initialize_dt(self,t0,tOut,q):
         self.tLast = t0
         self.choose_dt()
+        self.t = t0+self.dt
     def choose_dt(self):
         """
         Modify self.dt
@@ -2034,6 +2035,7 @@ class ExplicitRK_base(TI_base):
         """
         if 'runCFL' in dir(nOptions):
             self.runCFL = nOptions.runCFL
+            self.isAdaptive=True
             #need to think of a name for temporal order
         if 'timeOrder' in dir(nOptions):
             if 'nStagesTime' in dir(nOptions):
@@ -2072,7 +2074,7 @@ class LinearSSPRKintegration(ExplicitRK_base):
     def __init__(self,transport,order=1,runCFL=0.1,usingSSPRKNewton=False):
         ExplicitRK_base.__init__(self,transport,timeOrder=order,nStages=order,runCFL=runCFL,
                                  usingDTinMass = not usingSSPRKNewton)
-
+        self.isAdaptive=True
 
     def setCoefficients(self):
         """

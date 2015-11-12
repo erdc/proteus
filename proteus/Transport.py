@@ -138,7 +138,7 @@ class OneLevelTransport(NonlinearEquation):
         ebqe       -- at element boundary quadrature, unique to global, exterior element boundary
         phi_ip     -- at the generalized interpolation points required to build a nonlinear  phi
         """
-        self.use_bij=False#True
+        self.use_bij=True
         self.has_fterm=False
         self.has_nu_L=False
         #
@@ -2508,7 +2508,7 @@ class OneLevelTransport(NonlinearEquation):
                                 den = 0.0
                                 for t in T:
                                     den -= self.b[t,j,i]
-                                self.nu_L[eN] = 0.001#max(self.nu_L[eN], max(0.0,self.fterm_a[n])/den)
+                                self.nu_L[eN] = max(self.nu_L[eN], max(0.0,self.fterm_a[n])/den)
             for ci in self.shockCapturing.components:
                 if self.use_bij and self.has_fterm and self.has_nu_L:
                     print "adding graph laplacian to element residual"
@@ -2757,6 +2757,10 @@ class OneLevelTransport(NonlinearEquation):
                                              self.elementSpatialResidual[ci],
                                              self.q[('mt',ci)])
     def calculateElementJacobian(self,skipMassTerms=False):
+        for ci in range(self.nc):
+            for cj in self.coefficients.stencil[ci]:
+                self.elementJacobian[ci][cj].fill(0.0)
+                self.elementJacobian_eb[ci][cj].fill(0.0)
         for ci,cjDict in self.coefficients.advection.iteritems():
             for cj in cjDict:
                 if self.timeIntegration.advectionIsImplicit[ci]:
