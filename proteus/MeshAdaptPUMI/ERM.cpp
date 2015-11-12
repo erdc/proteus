@@ -31,7 +31,7 @@ void getProps(double*rho,double*nu)
   return;
 }
 
-double getMPvalue(double field_val,double val_0, double val_1)
+double MeshAdaptPUMIDrvr::getMPvalue(double field_val,double val_0, double val_1)
 {
   return val_0*(1-field_val)+val_1*field_val;
 }
