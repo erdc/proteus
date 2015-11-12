@@ -80,10 +80,13 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   in->maximumIterations = numIter;
   in->shouldSnap = false;
   in->shouldFixShape = true;
+  double mass_before = getTotalMass();
   ma::adapt(in);
   freeField(size_frame);
   freeField(size_scale);
   m->verify();
+  double mass_after = getTotalMass();
+  std::cout<<std::setprecision(15)<<"Before "<<mass_before<<" After "<<mass_after<<" diff "<<mass_after-mass_before<<std::endl;
   nAdapt++; //counter for number of adapt steps
   return 0;
 }
@@ -99,4 +102,35 @@ double MeshAdaptPUMIDrvr::getMinimumQuality()
   m->end(it);
   delete isf;
   return PCU_Min_Double(minq);
+}
+
+double MeshAdaptPUMIDrvr::getTotalMass()
+{
+  double mass = 0.0;
+  apf::Field* voff = m->findField("vof");
+  assert(voff);
+  apf::Element* voff_elem;
+  int int_order = 4;
+  apf::MeshIterator* it = m->begin(m->getDimension());
+  apf::MeshEntity* e;
+  apf::MeshElement*elem;
+  apf::Vector3 qpt;
+  apf::Matrix3x3 J;
+  while(e=m->iterate(it)){
+    elem = apf::createMeshElement(m,e);
+    voff_elem = apf::createElement(voff,elem);
+    for(int l=0; l<apf::countIntPoints(elem,int_order);l++){
+      apf::getIntPoint(elem,int_order,l,qpt);
+      double vof_val = apf::getScalar(voff_elem,qpt);
+      double rho_val = getMPvalue(vof_val,rho[0],rho[1]);
+      double weight = apf::getIntWeight(elem,int_order,l);
+      apf::getJacobian(elem,qpt,J); //evaluate the Jacobian at the quadrature point
+      double Jdet = apf::getJacobianDeterminant(J,m->getDimension());
+      mass += rho_val*weight*Jdet;
+    }
+  }
+  apf::destroyElement(voff_elem);
+  apf::destroyMeshElement(elem);
+  m->end(it);  
+  return mass;
 }
