@@ -35,6 +35,8 @@ class MeshAdaptPUMIDrvr{
   int calculateAnisoSizeField();
   int getERMSizeField(double err_total);
   double getMinimumQuality();
+  double getTotalMass();
+  double getMPvalue(double field_val,double val_0, double val_1);
 
   double hmax, hmin;
   int numIter;
