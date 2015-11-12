@@ -38,7 +38,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
             self.numDiff_last=[]
             for ci in range(self.nc):
                 self.numDiff_last.append(self.numDiff[ci].copy())
-        log("VOF: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
+        #log("VOF: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),),level=7)
 
 class NumericalFlux(proteus.NumericalFlux.Advection_DiagonalUpwind_Diffusion_IIPG_exterior):
     def __init__(self,vt,getPointwiseBoundaryConditions,
