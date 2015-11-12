@@ -51,7 +51,7 @@ def get_flags(package):
         lib_dir = PROTEUS_LIB_DIR
     return include_dir, lib_dir
 
-PROTEUS_EXTRA_LINK_ARGS=['-L/usr/lib','-llapack','-lblas','-lX11','-lssl','-lcrypto'] + platform_extra_link_args
+PROTEUS_EXTRA_LINK_ARGS=['-L/usr/lib','-llapack','-lblas','-lssl','-lcrypto'] + platform_extra_link_args
 
 PROTEUS_EXTRA_FC_COMPILE_ARGS= ['-Wall']
 PROTEUS_EXTRA_FC_LINK_ARGS=['-llapack -lblas']
