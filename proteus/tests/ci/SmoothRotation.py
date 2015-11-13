@@ -95,6 +95,38 @@ class IC:
         return 0.5*(1.0 - math.tanh(((x[0]-self.x0[0])**2 +
                                      (x[1]-self.x0[1])**2)/self.r0**2 - 1.0))
 
+class IC_3B:
+    def __init__(self,
+                 xd=(0,0.5),
+                 xc=(0,-0.5),
+                 xh=(-0.5,0),
+                 r0=0.3):
+        self.xd=np.array(xd+(0.0,))
+        self.xc=np.array(xc+(0.0,))
+        self.xh=np.array(xh+(0.0,))
+        self.r0=r0
+    def g(self, r):
+        from math import cos, pi
+        return (1.+cos(pi*min(r/self.r0,1.)))/4.0
+    def uOfXT(self,x, t):
+        from math import fabs
+        import numpy as  np
+        from numpy.linalg import norm
+        x=np.array(x)
+        rd = norm(x-self.xd)
+        rc = norm(x-self.xc)
+        rh = norm(x-self.xh)
+        if ( rd <= self.r0 and
+             (fabs(x[0]) >= 0.05 or x[1] >= 0.7)):
+            return 1.0
+        elif rc <= self.r0:
+            return 1. - rc/self.r0
+        elif rh <= self.r0:
+            return self.g(rh)
+        else:
+            return 0.0
+
+#p.initialConditions  = {0:IC_3B()}
 p.initialConditions  = {0:IC()}
 
 
@@ -113,13 +145,21 @@ he = 0.00185*0.5**float(sys.argv[3])
 n.triangleOptions="VApq33Dena%8.8f" % (he,)
 if timeOrder is 1:
     n.timeIntegration = pr.TimeIntegration.LinearSSPRKintegration
+    n.nStagesTime = 1
     #n.timeIntegration = pr.TimeIntegration.BackwardEuler_cfl
 elif timeOrder is 2:
-    n.timeIntegration = pr.TimeIntegration.VBDF
+    n.timeIntegration = pr.TimeIntegration.LinearSSPRKintegration
+    #n.timeIntegration = pr.TimeIntegration.VBDF
     n.timeOrder = 2
+    n.nStagesTime = 2
+elif timeOrder is 3:
+    n.timeIntegration = pr.TimeIntegration.LinearSSPRKintegration
+    #n.timeIntegration = pr.TimeIntegration.VBDF
+    n.timeOrder = 3
+    n.nStagesTime = 3
 n.stepController = pr.StepControl.Min_dt_RKcontroller
 #n.stepController = pr.StepControl.Min_dt_controller
-n.runCFL=0.99
+n.runCFL=0.33
 
 if  spaceOrder is 1:
     n.femSpaces = {0:pr.FemTools.C0_AffineLinearOnSimplexWithNodalBasis}
