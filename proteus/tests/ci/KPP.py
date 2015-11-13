@@ -121,10 +121,10 @@ n.elementBoundaryQuadrature = pr.Quadrature.SimplexLobattoQuadrature(p.nd-1,1)
 n.subgridError = pr.SubgridError.AdvectionLag_ASGS(p.coefficients,
                                                    p.nd,
                                                    lag=False)
-#n.subgridError=None
+n.subgridError=None
 n.shockCapturing = pr.ShockCapturing.ResGradQuadDelayLag_SC(p.coefficients,
                                                             p.nd,
-                                                            shockCapturingFactor=0.9,
+                                                            shockCapturingFactor=0.0,
                                                             nStepsToDelay=1,
                                                             lag=False)
 #n.shockCapturing=None
