@@ -205,17 +205,16 @@ class Dispatcher():
         stripped_profile_name = profile_name + '_c' + str(comm.rank())
 
         prof.dump_stats(profile_rank_name)
-        comm.beginSequential()
-        stats = pstats.Stats(profile_rank_name)
-        stats.strip_dirs()
-        stats.dump_stats(stripped_profile_name)
-        stats.sort_stats('cumulative')
-        if verbose and comm.isMaster():
+        if comm.isMaster():
+            stats = pstats.Stats(profile_rank_name)
+            for i in range(1,comm.size()):
+                stats.add(profile_name+str(i))
+            stats.strip_dirs()
+            stats.dump_stats(stripped_profile_name)
+            stats.sort_stats('cumulative')
             stats.print_stats(30)
             stats.sort_stats('time')
-            if verbose and comm.isMaster():
-                stats.print_stats(30)
-        comm.endSequential()
+            stats.print_stats(30)
 
         return func_return
 
