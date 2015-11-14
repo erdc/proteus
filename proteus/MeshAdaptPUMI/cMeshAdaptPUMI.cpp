@@ -106,31 +106,29 @@ double MeshAdaptPUMIDrvr::getMinimumQuality()
 
 double MeshAdaptPUMIDrvr::getTotalMass()
 {
-  double mass = 0.0;
   apf::Field* voff = m->findField("vof");
   assert(voff);
-  apf::Element* voff_elem;
-  int int_order = 4;
-  apf::MeshIterator* it = m->begin(m->getDimension());
   apf::MeshEntity* e;
-  apf::MeshElement*elem;
-  apf::Vector3 qpt;
-  apf::Matrix3x3 J;
-  while(e=m->iterate(it)){
-    elem = apf::createMeshElement(m,e);
-    voff_elem = apf::createElement(voff,elem);
-    for(int l=0; l<apf::countIntPoints(elem,int_order);l++){
+  apf::MeshIterator* it = m->begin(m->getDimension());
+  double mass = 0.0;
+  while ((e = m->iterate(it))) {
+    apf::MeshElement* elem = apf::createMeshElement(m,e);
+    apf::Element* voff_elem = apf::createElement(voff, elem);
+    int int_order = 4;
+    for(int l = 0; l < apf::countIntPoints(elem, int_order); ++l) {
+      apf::Vector3 qpt;
       apf::getIntPoint(elem,int_order,l,qpt);
       double vof_val = apf::getScalar(voff_elem,qpt);
       double rho_val = getMPvalue(vof_val,rho[0],rho[1]);
       double weight = apf::getIntWeight(elem,int_order,l);
+      apf::Matrix3x3 J;
       apf::getJacobian(elem,qpt,J); //evaluate the Jacobian at the quadrature point
       double Jdet = apf::getJacobianDeterminant(J,m->getDimension());
       mass += rho_val*weight*Jdet;
     }
+    apf::destroyElement(voff_elem);
+    apf::destroyMeshElement(elem);
   }
-  apf::destroyElement(voff_elem);
-  apf::destroyMeshElement(elem);
-  m->end(it);  
+  m->end(it);
   return mass;
 }
