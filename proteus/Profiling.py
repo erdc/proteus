@@ -206,16 +206,40 @@ class Dispatcher():
 
         prof.dump_stats(profile_rank_name)
         if comm.isMaster():
-            stats = pstats.Stats(profile_rank_name)
+            import copy
+            import StringIO
+            profilingLog = StringIO.StringIO()
+            stats = pstats.Stats(profile_rank_name, stream=profilingLog)
+            stats.__dict__['files']=['Maximum times across MPI tasks for',
+                                     stats.__dict__['files'][0]]
             for i in range(1,comm.size()):
-                stats.add(profile_name+str(i))
-            stats.strip_dirs()
-            stats.dump_stats(stripped_profile_name)
+                statsm = stats.stats
+                pstatsi = pstats.Stats(profile_name+str(i))
+                statsi = pstatsi.stats
+                stats.__dict__['files'].append(pstatsi.__dict__['files'][0])
+                for f,c in statsi.iteritems():
+                    if f in statsm:
+                        if c[2] > statsm[f][2]:
+                            statsm[f] = c
+                    else:
+                        statsm[f] = c
             stats.sort_stats('cumulative')
             stats.print_stats(30)
             stats.sort_stats('time')
             stats.print_stats(30)
-
+            logEvent(profilingLog.getvalue())
+            msg = r"""
+Wall clock percentage of top 20 calls
+-------------------------------------
+"""
+            for f in stats.__dict__['fcn_list'][0:20]:
+                if f[0] == '~':
+                    fname=f[-1].strip("<").strip(">")
+                else:
+                    fname="function '{2:s}' at {0:s}:{1:d}".format(*f)
+                msg+=("{0:11.1%} {1:s}\n".format(statsm[f][2]/stats.__dict__['total_tt'],str(fname)))
+            logEvent(msg)
+                
         return func_return
 
 @atexit.register
