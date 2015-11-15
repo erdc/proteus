@@ -1451,7 +1451,7 @@ class Mesh:
             cmeshTools.allocateGeometricInfo_triangle(self.cmesh)
             cmeshTools.computeGeometricInfo_triangle(self.cmesh)
           self.buildFromC(self.cmesh)
-        log("meshInfo says : \n"+`self.meshInfo()`)
+        log("meshInfo says : \n"+self.meshInfo())
 
 class MultilevelMesh(Mesh):
     def __init__(self,levels=1):
