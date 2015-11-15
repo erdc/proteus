@@ -126,8 +126,8 @@ class IC_3B:
         else:
             return 0.0
 
-#p.initialConditions  = {0:IC_3B()}
-p.initialConditions  = {0:IC()}
+p.initialConditions  = {0:IC_3B()}
+#p.initialConditions  = {0:IC()}
 
 
 # # Numerics
@@ -141,8 +141,8 @@ import proteus as pr
 import sys
 timeOrder = int(sys.argv[1])
 spaceOrder = int(sys.argv[2])
-he = 0.00185*0.5**float(sys.argv[3])
-n.triangleOptions="VApq33Dena%8.8f" % (he,)
+he = 0.02*0.5**float(sys.argv[3])
+n.triangleOptions="VApq33Dena%8.8f" % (he**2/2.0,)
 if timeOrder is 1:
     n.timeIntegration = pr.TimeIntegration.LinearSSPRKintegration
     n.nStagesTime = 1
