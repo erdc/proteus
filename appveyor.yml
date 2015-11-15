@@ -1,0 +1,24 @@
+version: 1.0.{build}
+branches:
+  only:
+  - stable/cygwin32
+os: Windows Server 2012 R2
+environment:
+  CHERE_INVOKING: 1
+install:
+- cmd: >-
+    curl https://cygwin.com/setup-x86.exe -o setup-x86.exe
+    C:\cygwin\bin\bash.exe -l -c 'cd /cygdrive/c/projects/proteus'
+    git clone https://github.com/hashdist/hashstack stack -b stable/cygwin32
+    C:\cygwin\bin\bash.exe -l -c 'cp -f ./setup-x86.exe /usr/bin; cd stack/scripts; python setup_cygstack.py; cd ../..'
+    C:\cygwin\bin\dash.exe -c '/usr/bin/rebaseall -v'
+- cmd: >-
+    curl https://dl.dropboxusercontent.com/u/26353144/hashdist_cygwin32/config.yaml -o config.yaml
+    C:\cygwin\bin\bash.exe -l -c './hashdist/bin/hit init-home; cp -f ./config.yaml ${HOME}/.hashdist/; make profile'
+    C:\cygwin\bin\bash.exe -l -c 'find ${PWD}/cygwin -depth -name *.dll -print > hashstack-dlls.txt; find ${PWD}/cygwin -depth -name *.so* -print >> hashstack-dlls.txt; find ${HOME}/.hashdist/bld -depth -name *.dll -print >> hashstack-dlls.txt; find ${HOME}/.hashdist/bld -depth -name *.so* -print >> hashstack-dlls.txt'
+    C:\cygwin\bin\dash.exe -c '/usr/bin/rebaseall -v -T ./hashstack-dlls.txt'
+build_script:
+- cmd: >-
+    C:\cygwin\bin\bash.exe -l -c 'CC=mpicc CXX=mpicxx LDSHARED=mpicc LDFLAGS="-shared" make'
+test_script:
+- cmd: C:\cygwin\bin\bash.exe -l -c 'make check'
