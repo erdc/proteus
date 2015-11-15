@@ -13,6 +13,8 @@ install:
 
     git clone https://github.com/hashdist/hashstack stack -b stable/cygwin32
 
+    git clone https://github.com/hashdist/hashdist -b stable/cygwin
+
     C:\cygwin\bin\bash.exe -l -c 'cp -f ./setup-x86.exe /usr/bin; cd stack/scripts; python setup_cygstack.py; cd ../..'
 
     C:\cygwin\bin\dash.exe -c '/usr/bin/rebaseall -v'
