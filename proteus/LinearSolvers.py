@@ -578,6 +578,7 @@ class SimpleNavierStokes3D:
         #print "L_sizes",L_sizes
         neqns = L_sizes[0][0]
         #print "neqns",neqns
+        assert (neqns % 4) == 0
         self.pressureDOF = numpy.arange(start=L_range[0],
                                         stop=L_range[0]+neqns,
                                         step=4,
@@ -640,6 +641,7 @@ class SimpleNavierStokes2D:
         #print "L_sizes",L_sizes
         neqns = L_sizes[0][0]
         #print "neqns",neqns
+        assert (neqns % 3) == 0
         self.pressureDOF = numpy.arange(start=L_range[0],
                                         stop=L_range[0]+neqns,
                                         step=3,
