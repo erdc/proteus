@@ -47,7 +47,14 @@ setup(name='proteus',
       packages = ['proteus', 'proteus.config', 'proteus.tests', 'proteus.mprans'],
       cmdclass = {'build_ext':build_ext},
       ext_package='proteus',
-      ext_modules=[Extension("ADR",['proteus/ADR.pyx'],
+      ext_modules=[Extension("WaveTools",['proteus/WaveTools.pyx'],
+<<<<<<< HEAD
+=======
+#                             depends=['proteus/ADR.h'],
+>>>>>>> adimako/WaveTools/cython
+                             language='c',
+                             include_dirs=[numpy.get_include(),'proteus']),
+                   Extension("ADR",['proteus/ADR.pyx'],
                              depends=['proteus/ADR.h'],
                              language='c++',
                              include_dirs=[numpy.get_include(),'proteus']),
