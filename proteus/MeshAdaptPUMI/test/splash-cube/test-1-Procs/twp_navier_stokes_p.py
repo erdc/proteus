@@ -75,15 +75,15 @@ def getAFBC_p(x,flag):
         return lambda x,t: 0.0
 
 def getAFBC_u(x,flag):
-    if flag not in [boundaryTags['front'],boundaryTags['back']]:
+    if flag not in [boundaryTags['front'],boundaryTags['back'], boundaryTags['bottom'], boundaryTags['top']]:
         return lambda x,t: 0.0
 
 def getAFBC_v(x,flag):
-    if flag not in [boundaryTags['front'],boundaryTags['back']]:
+    if flag not in [boundaryTags['front'],boundaryTags['back'], boundaryTags['bottom'], boundaryTags['top']]:
         return lambda x,t: 0.0
 
 def getAFBC_w(x,flag):
-    if flag not in [boundaryTags['front'],boundaryTags['back']]:
+    if flag not in [boundaryTags['front'],boundaryTags['back'], boundaryTags['bottom'], boundaryTags['top']]:
         return lambda x,t: 0.0
 
 def getDFBC_u(x,flag):
