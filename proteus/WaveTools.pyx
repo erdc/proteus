@@ -17,7 +17,7 @@ import sys as sys
 
 
 def eta_mode(x,y,z,t,kDir,omega,phi,amplitude):
- """Returns a single frequency mode for free-surface elevation at point x,y,z,t
+    """Returns a single frequency mode for free-surface elevation at point x,y,z,t
     :param kDir: wave number vector [1/L]
     :param omega: angular frequency [1/T]
     :param phi: phase [0,2*pi]
@@ -26,7 +26,7 @@ def eta_mode(x,y,z,t,kDir,omega,phi,amplitude):
     phase = x*kDir[0]+y*kDir[1]+z*kDir[2] - omega*t  + phi
     return amplitude*cos(phase)
 def vel_mode(x,y,z,t,kDir,omega,phi,amplitude,mwl,depth,g,comp):
- """Returns a single frequency mode for velocity at point x,y,z,t
+    """Returns a single frequency mode for velocity at point x,y,z,t
     :param kDir: wave number vector [1/L]
     :param omega: angular frequency [1/T]
     :param phi: phase [0,2*pi]
