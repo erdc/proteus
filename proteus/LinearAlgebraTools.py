@@ -238,13 +238,18 @@ class SparseMatShell:
             self.ghosted_csr_mat.matvec(xlf,ylf)
         y.setArray(self.yGhosted.getArray())
 
+import Comm
+from mpi4py import MPI
+comm = Comm.get().comm.tompi4py()
 
 def l2Norm(x):
     """
     Compute the parallel l_2 norm
     """
-    return math.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
-
+    #return math.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
+    rvalue=numpy.array([numpy.dot(x,x)])
+    comm.Allreduce(MPI.IN_PLACE, [rvalue, MPI.DOUBLE], MPI.SUM)
+    return rvalue[0]
 
 def l1Norm(x):
     """
