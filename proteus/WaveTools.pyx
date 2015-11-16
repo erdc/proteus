@@ -16,6 +16,46 @@ import time as tt
 import sys as sys
 
 
+def eta_mode(x,y,z,t,kDir,omega,phi,amplitude):
+ """Returns a single frequency mode for free-surface elevation at point x,y,z,t
+    :param kDir: wave number vector [1/L]
+    :param omega: angular frequency [1/T]
+    :param phi: phase [0,2*pi]
+    :param amplitude: wave amplitude [L/T^2]
+    """
+    phase = x*kDir[0]+y*kDir[1]+z*kDir[2] - omega*t  + phi
+    return amplitude*cos(phase)
+def vel_mode(x,y,z,t,kDir,omega,phi,amplitude,mwl,depth,g,comp):
+ """Returns a single frequency mode for velocity at point x,y,z,t
+    :param kDir: wave number vector [1/L]
+    :param omega: angular frequency [1/T]
+    :param phi: phase [0,2*pi]
+    :param amplitude: wave amplitude [L/T^2]
+    :param mwl: mean water level [L]
+    :param depth: water depth [L]
+    :param g: gravity vector
+    :param comp: component "x", "y" or "z"
+    """
+
+    vDir = g/sqrt(sum(g))
+    phase = x*kDir[0]+y*kDir[1]+z*kDir[2] - omega*t  + phi
+    Z =  -(vDir[0]*x + vDir[1]*y+ vDir[2]*z) - mwl
+    UH = 0.
+    UV=0.
+    ii=0.
+    kAbs = sqrt(kDir[0]**2 + kDir[1]**2 + kDir[2]**2)
+    UH=amplitude*omega*cosh(kAbs*(Z + depth))*cos( phase )/sinh(kAbs*depth)
+    UV=omega*amplitude*sinh(kAbs*(Z + depth))*sin( phase )/sinh(kAbs*depth)
+    waveDir = kDir/kAbs       
+#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
+    Vcomp = {
+        "x":UH*waveDir[0] + UV*vDir[0],
+        "y":UH*waveDir[1] + UV*vDir[1],
+        "z":UH*waveDir[2] + UV*vDir[2],
+        }
+    return Vcomp[comp]
+
+
 
 def sigma(omega,omega0):
     """sigma function for JONSWAP spectrum
@@ -47,7 +87,7 @@ def JONSWAP(f,f0,Hs,g,gamma,TMA=False, h = -10):
 
     return (tma * alpha*Hs**2*omega0**4/omega**5)*np.exp(-(5.0/4.0)*(omega0/omega)**4)*gamma**r
 
-def piersonMoskovitz(f,f0,alpha=8.1e-3,beta=0.74,g=9.8):
+def piersonMoskovitz(f,f0,Hs,alpha=8.1e-3,beta=0.74,g=9.8):
     """Pierson-Moskovitz spectrum
 
     :param f: frequency [1/T]
@@ -61,7 +101,7 @@ def piersonMoskovitz(f,f0,alpha=8.1e-3,beta=0.74,g=9.8):
 def cos2s(theta,s):
     return cos(theta/2)**(2*s)
 
-def normInt(thetas,dir_fun,s,N):
+def normInt(dth,thetas,dir_fun,s,N):
     G0 = 0.
     theta = 0.
     for ii in range(N):
@@ -79,11 +119,12 @@ def dispersion(w,d, g = 9.81,niter = 1000):
     :param g: gravity [L/T^2
     """
 #    print("Initiating dispersion")
-    Kd = w*sqrt(d/g)
+    w_aux = np.array(w)
+    Kd = w_aux*sqrt(d/g)
 #    print("Initial dispersion value = %s" %str(Kd/d))
     for jj in range(niter):
        #Kdn_1 = Kd
-        Kd = w*w*d/g/np.tanh(Kd)
+        Kd =  w_aux* w_aux/g/np.tanh(Kd)
         #Kdn_1 /=0.01*Kd
         #Kdn_1 -= 100.
         #Kdn_1 = abs(Kdn_1)
@@ -92,7 +133,10 @@ def dispersion(w,d, g = 9.81,niter = 1000):
     #print "Solution convergence for dispersion relation %s percent" % Kdn_1
 #    print("Final k value = %s" %str(Kd/d))
 #    print("Wavelength= %s" %str(2.*pi*d/Kd))
-    return(Kd/d)
+    if (len(Kd))==1:
+        return Kd[0]/d
+    else:
+        return(Kd/d)
 
 def window(wname='Costap'):
     """Returns a window function, currently has dirichlet window and cosine taper
@@ -157,16 +201,14 @@ def decompose_tseries(time,eta,nfft, NFR, ret_only_freq=0):
 
 
 
-
-
 class MonochromaticWaves:
     """Generate a monochromatic wave train in the linear regime
     """
     def __init__(self,period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = 0.,phi0 = 0.):
-        self.knownWaveTypes = ["Linear","Fenton","userDefined"]
+        
+        self.knownWaveTypes = ["Linear","Fenton"]
         self.waveType = waveType
         self.g = g
-        self.gAbs = sqrt(sum(g * g))
         self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
         self.phi0=phi0
         if self.waveType not in self.knownWaveTypes:
@@ -195,72 +237,32 @@ class MonochromaticWaves:
         self.kDir = self.k * self.waveDir
         self.amplitude = 0.5*self.waveHeight
         self.meanVelocity = meanVelocity
-        self.vDir = self.g/self.gAbs
         self.Ycoeff = Ycoeff
         self.Bcoeff = Bcoeff
         if (Ycoeff is None) or (Bcoeff is None):
             if self.waveType is not "Linear":
-                pr.logEvent("Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
+                logEvent("Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
                 sys.exit(1)
-    def phase(self,x,y,z,t):
-#        return y*self.kDir[1] - self.omega*t + self.phi0
-        return x*self.kDir[0]+y*self.kDir[1]+z*self.kDir[2] - self.omega*t + self.phi0
-
     def eta(self,x,y,z,t):
         if self.waveType is "Linear":
-            global VTIME
-            a = tt.time()
-            aa = self.amplitude*cos(self.phase(x,y,z,t))
-            VTIME = (tt.time() - a)
-            return aa
-        else:
+            return eta_mode(x,y,z,t,self.kDir,self.omega,self.phi0,self.amplitude)
+        elif self.waveType is "Fenton":
             HH = 0.
             ii =0.
             for Y in self.Ycoeff:
                 ii+=1
-                HH+=Y*cos(ii*self.phase(x,y,z,t))
-            if self.waveType is "Fenton": return HH/self.k
-            else: return HH
-    def Z(self,x,y,z):
-        return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.mwl
+                HH+=eta_mode(x,y,z,t,ii*self.kDir,ii*self.omega,self.phi0,Y)
+            return HH/self.k
 
-    def u(self,x,y,z,t,ss = "x"):
-        """x-component of velocity
-
-        :param x: floating point x coordinate
-        :param z: floating point z coordinate (height above bottom)
-        :param t: time
-        """
-        UH=0.
-        UV=0.
-        ii=0.
+    def u(self,x,y,z,t,comp):
         if self.waveType is "Linear":
-            UH+=self.amplitude*self.omega*cosh(self.k*(self.Z(x,y,z)+self.depth))*cos(self.phase(x,y,z,t))/sinh(self.k*self.depth)
-            UV+=self.omega*self.amplitude*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.phase(x,y,z,t))/sinh(self.k*self.depth)
-#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
-            Vcomp = {
-                "x":UH*self.waveDir[0] + UV*self.vDir[0],
-                "y":UH*self.waveDir[1] + UV*self.vDir[1],
-                "z":UH*self.waveDir[2] + UV*self.vDir[2],
-                }
-
+            return vel_mode(x,y,z,t,self.kDir,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.g,comp)
         elif self.waveType is "Fenton":
+            U =0.
             for B in self.Bcoeff:
                 ii+=1
-                UV+=ii*B*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.phase(x,y,z,t))/cosh(self.k*self.depth)
-                UH+=ii*B*cosh(self.k*(self.Z(x,y,z)+self.depth))*cos(self.phase(x,y,z,t))/cosh(self.k*self.depth)
-#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
-                Vcomp = {
-                    "x":UH*self.waveDir[0] + UV*self.vDir[0],
-                    "y":UH*self.waveDir[1] + UV*self.vDir[1],
-                    "z":UH*self.waveDir[2] + UV*self.vDir[2],
-
-                    }
-        else:
-            logEvent("Check Wave types. Available wave types are %s" % waveType,level=0)
-            exit(1)
-        return Vcomp[ss]
-
+                U+=vel_mode(x,y,z,t,ii*self.kDir,ii*self.omega,self.phi0,ii*B,self.mwl,self.depth,self.g,comp)
+            return U+self.meanvelocity
 class RandomWaves:
     """Generate approximate random wave solutions
     :param Hs: significant wave height [L]
@@ -510,11 +512,12 @@ class timeSeries:
             Nf = self.N
             self.nfft=len(self.time)
             logEvent("WaveTools.py: performing a direct series decomposition")
-            self.decomp = decompose_tseries(self.time,self.eta,self.nfft,self.N,ret_only_freq=0)
+            self.decomp = decompose_tseries(self.time,self.eta,self.nfft,self.nfft/2-1,ret_only_freq=0)
             self.ai = self.decomp[1]
             ipeak = np.where(self.ai == max(self.ai))[0][0]
             imax = min(ipeak + Nf/2,len(self.ai))
             imin = max(0,ipeak - Nf/2)
+            print len(self.ai)
             self.ai = self.ai[imin:imax]
             self.omega = self.decomp[0][imin:imax]
             self.phi = self.decomp[2][imin:imax]
@@ -621,11 +624,11 @@ class timeSeries:
 #            logEvent("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
 #            logEvent("Stopping simulation",level=0)               
 #            exit(1)           
-        if var=="eta":
+        if var == "eta":
             Eta=0.
             for ii in range(len(self.ai)):
                 Eta+=self.ai[ii]*cos(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t - self.phi[ii])
-            return Eta
+                return Eta
         if var=="U":
             UH=0.
             UV=0.
@@ -692,8 +695,8 @@ class timeSeries:
             UH=0.
             UV=0.
             for ii in range(Nf):
-                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(Z(x,y,z)+depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*depth)
-                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(Z(x,y,z)+depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*depth)
+                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(self.Z(x,y,z)+self.depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*self.depth)
+                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(self.Z(x,y,z)+self.depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*self.depth)
 #waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
             Vcomp = {
                     "x":UH*self.waveDir[0] + UV*self.vDir[0],
@@ -753,7 +756,7 @@ class directionalWaves:
         for i in range(self.N):
             self.fi[i] = self.fmin+self.df*i
         self.ki = dispersion(2.0*pi*self.fi,self.d,g=self.gAbs)
-        self.wi = 2.*math.pi/self.ki
+        self.wi = 2.*pi/self.ki
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
         fim_tmp = (0.5*(self.fi[1:]+self.fi[:-1])).tolist()
         self.fim = np.array([fim_tmp[0]-0.5*self.df]+fim_tmp+[fim_tmp[-1]+0.5*self.df])
@@ -762,23 +765,23 @@ class directionalWaves:
         self.waves = MonochromaticWaves
         self.M = M
         self.thetas = np.linspace(0,thetamax,self.M+1)
-        self.dth = thetas[1]-thetas[0]
-        self.spread = dir_fun(thetas,s)
-        self.dirs = zeros((2*self.M + 1,3),'d')
-        self.ai_d = zeros((self.N,2*M+1),'d')
-        self.phi = zeros((self.N,2*M+1),'d')
+        self.dth = self.thetas[1]-self.thetas[0]
+        self.spread = dir_fun(self.thetas,s)
+        self.dirs = np.zeros((2*self.M + 1,3),'d')
+        self.ai_d = np.zeros((self.N,2*M+1),'d')
+        self.phi = np.zeros((self.N,2*M+1),'d')
         self.G_Int = normInt(self.dth,self.dir_fun,s,self.M+1)
         for ii in range(1,self.M+1):
             self.dirs[self.M+ii,:]= cos(self.thetas[ii])*waveDir + sin(self.thetas[ii])*normalWaveDir
             self.dirs[self.M-ii,:] = cos(self.thetas[ii])*waveDir - sin(self.thetas[ii])*normalWaveDir
-            self.ai_d[self.M+ii,:] = self.ai*self.G_Int*spread[ii]
-            self.ai_d[self.M-ii,:] = self.ai*self.G_Int*spread[ii]
+            self.ai_d[self.M+ii,:] = self.ai*self.G_Int*self.spread[ii]
+            self.ai_d[self.M-ii,:] = self.ai*self.G_Int*self.spread[ii]
             self.phi[self.M+ii,:] = 2.0*pi*np.random.random(self.fi.shape[0])
             self.phi[self.M-ii,:] = 2.0*pi*np.random.random(self.fi.shape[0])
 
         self.dirs[self.M,:] = self.waveDir
         self.phi[self.M,:] = 2.0*pi*np.random.random(self.fi.shape[0])
-        self.ai_d[self.M,:] = self.ai*self.G_Int*spread[0]
+        self.ai_d[self.M,:] = self.ai*self.G_Int*self.spread[0]
 
 
 
@@ -791,11 +794,11 @@ class directionalWaves:
         Eta=0.
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                Eta+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).eta(x,y,z,t)
+                Eta+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).eta(x,y,z,t)
         return Eta
     #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
 
-    def u(self,x,z,t):
+    def u(self,x,y,z,t):
         """x-component of velocity
 
         :param x: floating point x coordinate
@@ -805,10 +808,10 @@ class directionalWaves:
         U=0.
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                U+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).u(x,y,z,t)
+                U+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).u(x,y,z,t)
         return U
 
-    def v(self,x,z,t):
+    def v(self,x,y,z,t):
         """x-component of velocity
 
         :param x: floating point x coordinate
@@ -818,10 +821,10 @@ class directionalWaves:
         V=0.
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                V+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).v(x,y,z,t)
+                V+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).v(x,y,z,t)
         return V
 
-    def w(self,x,z,t):
+    def w(self,x,y,z,t):
         """x-component of velocity
 
         :param x: floating point x coordinate
@@ -831,7 +834,7 @@ class directionalWaves:
         W=0.
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                W+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).w(x,y,z,t)
+                W+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).w(x,y,z,t)
         return W
 
 
@@ -839,6 +842,24 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
     import os as os
     import tables
+
+"""
+# Unit test for Linear Monochromatic waves
+    Lwaves = MonochromaticWaves(period=1.94,waveHeight=0.0125,mwl=0.,depth=1.,g=[0,-9.81,0],waveDir[0.707,0.707,],wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = 0.,phi0 = 0.)
+    logEvent("Wavetools.py: Testing for a monochromatic linear wave:" 
+        
+
+
+
+
+
+
+
+
+
+
+
+
     lineData = tables.openFile("20150927-0000-01.FRFNProp.line.data.mat","r")
     z = lineData.root.lineGriddedFilteredData.waterGridFiltered[:]
     x = lineData.root.lineCoredat.downLineX[:]
@@ -880,7 +901,7 @@ if __name__ == '__main__':
                              N = Nf,          #number of frequency bins
                              Nwaves = 2,
                              mwl = 0.0,        #mean water level
-                             waveDir = np.array([1,0,0]),
+                             waveDir = np.array([ 1 , 0 , 0]),
                              g = np.array([0, -9.81, 0])         #accelerationof gravity
                              )
 #        graph = tseries.plotSeries()
@@ -918,7 +939,7 @@ if __name__ == '__main__':
     plt.savefig("Comp.pdf")
 
 
-"""#Regular, Random wave tests
+#Regular, Random wave tests
 if __name__ == '__main__':
     from matplotlib.pyplot import *
     import os as os
