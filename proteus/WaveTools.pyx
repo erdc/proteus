@@ -46,7 +46,7 @@ def JONSWAP(f,f0,Hs,g,gamma,TMA=False, h = -10):
 
     return (tma * alpha*Hs**2*omega0**4/omega**5)*np.exp(-(5.0/4.0)*(omega0/omega)**4)*gamma**r
 
-def piersonMoskovitz(f,f0,alpha=8.1e-3,beta=0.74,g=9.8):
+def piersonMoskovitz(f,f0,Hs,alpha=8.1e-3,beta=0.74,g=9.8):
     """Pierson-Moskovitz spectrum
 
     :param f: frequency [1/T]
@@ -60,7 +60,7 @@ def piersonMoskovitz(f,f0,alpha=8.1e-3,beta=0.74,g=9.8):
 def cos2s(theta,s):
     return cos(theta/2)**(2*s)
 
-def normInt(thetas,dir_fun,s,N):
+def normInt(dth, thetas,dir_fun,s,N):
     G0 = 0.
     theta = 0.
     for ii in range(N):
@@ -213,7 +213,7 @@ class MonochromaticWaves:
         self.Bcoeff = Bcoeff
         if (Ycoeff is None) or (Bcoeff is None):
             if self.waveType is not "Linear":
-                pr.logEvent("Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
+                logEvent("Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
                 sys.exit(1)
     def phase(self,x,y,z,t):
 #        return y*self.kDir[1] - self.omega*t + self.phi0
@@ -247,6 +247,7 @@ class MonochromaticWaves:
         UH=0.
         UV=0.
         ii=0.
+        y=0
         if self.waveType is "Linear":
             UH+=self.amplitude*self.omega*cosh(self.k*(self.Z(x,y,z)+self.depth))*cos(self.phase(x,y,z,t))/sinh(self.k*self.depth)
             UV+=self.omega*self.amplitude*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.phase(x,y,z,t))/sinh(self.k*self.depth)
@@ -270,7 +271,7 @@ class MonochromaticWaves:
 
                     }
         else:
-            logEvent("Check Wave types. Available wave types are %s" % waveType,level=0)
+            logEvent("Check Wave types. Available wave types are %s" % (self.waveType,),level=0)
             exit(1)
         return Vcomp[ss]
 
@@ -679,8 +680,8 @@ class timeSeries:
             UH=0.
             UV=0.
             for ii in range(Nf):
-                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(Z(x,y,z)+depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*depth)
-                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(Z(x,y,z)+depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*depth)
+                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(self.Z(x,y,z)+self.depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*self.depth)
+                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(self.Z(x,y,z)+self.depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*self.depth)
 #waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
             Vcomp = {
                     "x":UH*self.waveDir[0] + UV*self.vDir[0],
@@ -720,8 +721,6 @@ class directionalWaves:
                  s =5 ,                              # dir function coefficient
                  dir_fun = cos2s               # directional function
                  ): #wave spectrum
-
-
         self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
         self.normalWaveDir = normalWaveDir/sqrt(sum(normalWaveDir * normalWaveDir))
         self.g = g
@@ -740,7 +739,7 @@ class directionalWaves:
         for i in range(self.N):
             self.fi[i] = self.fmin+self.df*i
         self.ki = dispersion(2.0*pi*self.fi,self.d,g=self.gAbs)
-        self.wi = 2.*math.pi/self.ki
+        self.wi = 2.*pi/self.ki
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
         fim_tmp = (0.5*(self.fi[1:]+self.fi[:-1])).tolist()
         self.fim = np.array([fim_tmp[0]-0.5*self.df]+fim_tmp+[fim_tmp[-1]+0.5*self.df])
@@ -749,23 +748,23 @@ class directionalWaves:
         self.waves = MonochromaticWaves
         self.M = M
         self.thetas = np.linspace(0,thetamax,self.M+1)
-        self.dth = thetas[1]-thetas[0]
-        self.spread = dir_fun(thetas,s)
-        self.dirs = zeros((2*self.M + 1,3),'d')
-        self.ai_d = zeros((self.N,2*M+1),'d')
-        self.phi = zeros((self.N,2*M+1),'d')
+        self.dth = self.thetas[1]-self.thetas[0]
+        self.spread = dir_fun(self.thetas,s)
+        self.dirs = np.zeros((2*self.M + 1,3),'d')
+        self.ai_d = np.zeros((self.N,2*M+1),'d')
+        self.phi = np.zeros((self.N,2*M+1),'d')
         self.G_Int = normInt(self.dth,self.dir_fun,s,self.M+1)
         for ii in range(1,self.M+1):
             self.dirs[self.M+ii,:]= cos(self.thetas[ii])*waveDir + sin(self.thetas[ii])*normalWaveDir
             self.dirs[self.M-ii,:] = cos(self.thetas[ii])*waveDir - sin(self.thetas[ii])*normalWaveDir
-            self.ai_d[self.M+ii,:] = self.ai*self.G_Int*spread[ii]
-            self.ai_d[self.M-ii,:] = self.ai*self.G_Int*spread[ii]
+            self.ai_d[self.M+ii,:] = self.ai*self.G_Int*self.spread[ii]
+            self.ai_d[self.M-ii,:] = self.ai*self.G_Int*self.spread[ii]
             self.phi[self.M+ii,:] = 2.0*pi*np.random.random(self.fi.shape[0])
             self.phi[self.M-ii,:] = 2.0*pi*np.random.random(self.fi.shape[0])
 
         self.dirs[self.M,:] = self.waveDir
         self.phi[self.M,:] = 2.0*pi*np.random.random(self.fi.shape[0])
-        self.ai_d[self.M,:] = self.ai*self.G_Int*spread[0]
+        self.ai_d[self.M,:] = self.ai*self.G_Int*self.spread[0]
 
 
 
@@ -778,7 +777,7 @@ class directionalWaves:
         Eta=0.
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                Eta+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).eta(x,y,z,t)
+                Eta+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).eta(x,y,z,t)
         return Eta
     #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
 
@@ -790,9 +789,10 @@ class directionalWaves:
         :param t: time
         """
         U=0.
+        y=0
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                U+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).u(x,y,z,t)
+                U+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).u(x,y,z,t)
         return U
 
     def v(self,x,z,t):
@@ -802,10 +802,11 @@ class directionalWaves:
         :param z: floating point z coordinate (height above bottom)
         :param t: time
         """
-        V=0.
+        V=0
+        y=0.
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                V+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).v(x,y,z,t)
+                V+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).v(x,y,z,t)
         return V
 
     def w(self,x,z,t):
@@ -816,9 +817,10 @@ class directionalWaves:
         :param t: time
         """
         W=0.
+        y=0
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                W+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).w(x,y,z,t)
+                W+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).w(x,y,z,t)
         return W
 
 
