@@ -199,27 +199,37 @@ static void scaleFormula(double phi, double hmin, double hmax,
     clamp(scale[i], hmin, hmax);
 }
 
-static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest, double vol,apf::Vector3 const& curves, apf::Vector3& scale)
+static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest, double lambda[3], apf::Vector3& scale)
 {
   double epsilon = 7.0* hmin; 
+/*
   if (fabs(phi) < epsilon) {
      scale[0] = h_dest;
      scale[1] = sqrt(vol/h_dest);
      scale[2] = sqrt(vol/h_dest);
-//std::cout<<"compare "<<scale[1]<<" "<<sqrt(0.002/fabs(curves[1]))<<std::endl;
-     //scale[1] = sqrt(0.002/ fabs(curves[1]));
-     //scale[2] = sqrt(0.002/ fabs(curves[2]));
-  }else if(fabs(phi) < 4 * epsilon){
+  }
+  else if(fabs(phi) < 4 * epsilon){
      scale[0] = 2 * h_dest;
-     //scale[1] = 2 * sqrt(vol/h_dest);
-     //scale[2] = 2 * sqrt(vol/h_dest);
      scale[1] = 2 * sqrt(0.002/ fabs(curves[1]));
      scale[2] = 2 * sqrt(0.002/ fabs(curves[2]));
-  }else{
+  }
+  else{
      scale = apf::Vector3(1,1,1) * h_dest; 
- }	  
+  }	  
+*/
 
-
+  if(fabs(phi)<epsilon){
+/*
+    scale[0] = h_dest*pow((lambda[1]*lambda[2]/(lambda[0]*lambda[0])),1.0/6.0);
+    scale[1] = sqrt(lambda[0]/lambda[1])*scale[0];
+    scale[2] = sqrt(lambda[0]/lambda[2])*scale[0];
+*/
+    scale[0] = h_dest*pow((lambda[2]*lambda[2]/lambda[0]/lambda[1]),1.0/3.0);
+    scale[1] = sqrt(lambda[1]/lambda[3])*scale[0];
+    scale[2] = sqrt(lambda[2]/lambda[3])*scale[0];
+  }
+  else
+    scale = apf::Vector3(1,1,1) * h_dest; 
   for (int i = 0; i < 3; ++i)
     clamp(scale[i], hmin, hmax);
 }
@@ -442,9 +452,21 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
     apf::Vector3 curve;
     apf::getVector(curves, v, 0, curve);
     averageToEntity(size_iso_reg, size_iso, v);
-    //scale = apf::Vector3(1.0,1.0,1.0)* apf::getScalar(size_iso,v,0); //isotropic
-    vtx_vol=vertexVolume(m,v); 
-    scaleFormulaERM(phi,hmin,hmax,apf::getScalar(size_iso,v,0),vtx_vol,curve,scale);
+    //vtx_vol=vertexVolume(m,v); 
+
+    apf::Matrix3x3 hessian;
+    apf::getMatrix(hess, v, 0, hessian);
+    apf::Vector3 eigenVectors[3];
+    double eigenValues[3];
+    apf::eigen(hessian, eigenVectors, eigenValues);
+    SortingStruct ssa[3];
+    for (int i = 0; i < 3; ++i) {
+      ssa[i].v = eigenVectors[i];
+      ssa[i].wm = std::fabs(eigenValues[i]);
+    }
+    std::sort(ssa, ssa + 3);
+    double lambda[3] = {ssa[2].wm, ssa[1].wm, ssa[0].wm};
+    scaleFormulaERM(phi,hmin,hmax,apf::getScalar(size_iso,v,0),lambda,scale);
     apf::setVector(size_scale,v,0,scale);
   }
   m->end(it);
