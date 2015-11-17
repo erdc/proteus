@@ -4273,7 +4273,10 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         from matplotlib import tri as mpl_tri
         from scipy import interpolate as scipy_interpolate
         import TriangleTools
-        self.maxElementDiameter = maxElementDiameter
+        if maxElementDiameter:
+            self.maxElementDiameter = maxElementDiameter
+        else:
+            self.maxElementDiameter = np.inf
         self.atol = atol
         self.rtol = rtol
         self.maxLevels=maxLevels
@@ -4306,6 +4309,7 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
             self.pointElementsArray = -np.ones((self.nPoints_global,),'i')
             self.pointNodeWeightsArray = np.zeros((self.nPoints_global,3),'d')
             self.bathyInterpolant = scipy_interpolate.LinearNDInterpolator(self.domain.bathy[:,:2],self.domain.bathy[:,2])
+            self.bathyNearestNeighbor = scipy_interpolate.NearestNDInterpolator(self.domain.bathy[:,:2], self.domain.bathy[:,2])
         elif bathyType == "grid":
             self.nPoints_global = self.domain.bathy.shape[0]
             self.pointElementsArray_old = -np.ones((self.nPoints_global,),'i')
@@ -4354,6 +4358,8 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
             mesh.nodeArray[:,2] = self.bathyInterpolant.ev(mesh.nodeArray[:,0],mesh.nodeArray[:,1])
         else:
             mesh.nodeArray[:,2] = self.bathyInterpolant(mesh.nodeArray[:,0],mesh.nodeArray[:,1])
+            nI = np.isnan(mesh.nodeArray[:,2])
+            mesh.nodeArray[nI,2] = self.bathyNearestNeighbor(mesh.nodeArray[nI,0],mesh.nodeArray[nI,1])
 
     def setMeshBathymetry_localAveraging(self,mesh):
         """
