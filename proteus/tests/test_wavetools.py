@@ -101,32 +101,84 @@ class TestWaveParameters(unittest.TestCase):
         sigma = sigma(x,omega0)
         self.assertTrue((sigma == sigma0).all())
 
-class TestMonochromaticWaves(unittest.TestCase):
+class checkMonochromaticWavesFailures(unittest.TestCase):
     def testFailureModes(self):
         from proteus.WaveTools import MonochromaticWaves
 #Failure 1: Give non existent waveType
         with self.assertRaises(SystemExit) as cm1:
-            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([1,0,0]),wavelength=None,waveType="Error",Ycoeff = None, Bcoeff =None, meanVelocity = 0.,phi0 = 0.)   
+            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([1,0,0]),wavelength=None,waveType="Error",Ycoeff = None, Bcoeff =None, meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)   
         self.assertEqual(cm1.exception.code, 1)     
-#Failure 2: Give gravity direction parallel to wave direction
+#Failure 2: Give gravity direction not vertical to wave direction
         with self.assertRaises(SystemExit) as cm2:
-            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,0,-9.81]),wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = 0.,phi0 = 0.)   
+            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,0,-9.81]),wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)   
         self.assertEqual(cm2.exception.code, 1)     
 # Failure 3: Give Fenton type without wavelength
         with self.assertRaises(SystemExit) as cm3:
-            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([1,0,0]),wavelength=None,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =np.array([1.,1,1.]), meanVelocity = 0.,phi0 = 0.)   
+            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([1,0,0]),wavelength=None,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =np.array([1.,1,1.]), meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)   
         self.assertEqual(cm3.exception.code, 1) 
 # Failure 4: Give Fenton type without YCoeff  
         with self.assertRaises(SystemExit) as cm4:
-            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,0,1]),wavelength=5.,waveType="Fenton",Ycoeff = None, Bcoeff =np.array([1.,1,1.]), meanVelocity = 0.,phi0 = 0.)   
+            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = None, Bcoeff =np.array([1.,1,1.]), meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)   
         self.assertEqual(cm4.exception.code, 1)   
 # Failure 5: Give Fenton type without BCoeff  
         with self.assertRaises(SystemExit) as cm5:
-            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,0,1]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =None, meanVelocity = 0.,phi0 = 0.)   
-        self.assertEqual(cm5.exception.code, 1)   
+            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1.,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =None, meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)   
+        self.assertEqual(cm5.exception.code, 1) 
+ # Failure 6: Give meanVelocity a non - vector value  
+        with self.assertRaises(SystemExit) as cm5:
+            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =np.array([1.,1,1.]), meanVelocity = 5. ,phi0 = 0.)   
+        self.assertEqual(cm5.exception.code, 1) 
+  # Failure 7: Give meanVelocity a vector value but not with 3 components
+        with self.assertRaises(SystemExit) as cm5:
+            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =np.array([1.,1,1.]), meanVelocity =np.array([0.,0.,0.,0.]) ,phi0 = 0.)   
+        self.assertEqual(cm5.exception.code, 1) 
+  # Success!: Give all parameters in correct form!
+        a = MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =np.array([1.,1,1.]), meanVelocity =np.array([0.,0.,0.]) ,phi0 = 0.)   
+        self.assertTrue(None == None)
 
+class verifyMonoChromaticLinearWaves():
+        # Random 
+    def testLinear(self):
+        from proteus.WaveTools import MonochromaticWaves
+        import random
+# Wave direction, random in x,y plane
+        period = 1 
+        waveHeight = 0.15
+        mwl = 4.5
+        depth = 0.9
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        dir1 = 2*random.random() - 1 
+        dir2 = 2*random.random() - 1 
+        waveDir = np.array([dir1,dir2, 0])
+        phi0 = random.random()*2.*pi        
+        a = MonochromaticWaves(period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = np.array([0.,0,0.]),phi0 = phi0)
+        x = random.random()*200. - 100.
+        y = random.random()*200. - 100.
+        z = mwl - depth + random.random()*( depth)
+        t =  random.random()*200. - 100.
+        eta = a.eta(x,y,z,t)
+        ux = a.u(x,y,z,t,"x")
+        uy = a.u(x,y,z,t,"y")
+        uz = a.u(x,y,z,t,"z")
 
-
+        omega = 2.*pi/period
+# dispersion and setDirVector are tested above
+        from proteus.WaveTools import dispersion,setDirVector
+        kw = dispersion(omega,gAbs)
+        normDir = setDirVector(waveDir)
+        amp = 0.5 * waveHeight
+# Flow equation from Wikipedia, Airy wave theory https://en.wikipedia.org/wiki/Airy_wave_theoryhttps://en.wikipedia.org/wiki/Airy_wave_theory
+        etaRef = amp*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)
+        z0 = z - mwl
+        uxRef = normDir[0]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
+        uyRef = normDir[1]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
+        uzRef = amp*omega*sinh(kw*(z0+depth))*sin(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
+        self.assertTrue(eta - etaRef == 0)
+        self.assertTrue(ux - uxRef == 0)
+        self.assertTrue(uy - uyRef ==0)
+        self.assertTrue(uz - uzRef == 0)
+                         
 
 if __name__ == '__main__':
     unittest.main()
