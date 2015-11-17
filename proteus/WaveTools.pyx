@@ -258,8 +258,8 @@ class MonochromaticWaves:
         self.meanVelocity = meanVelocity
 #Checking that meanvelocity is a vector
         try:
-            if(len(meanVelocity == 3)):
-                continue
+            if(len(meanVelocity) == 3):
+                None
             else:
                 logEvent("WaveTools.py: meanVelocity should be a vector with 3 components. ",level=0)
                 sys.exit(1)                
