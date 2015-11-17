@@ -15,6 +15,20 @@ from Profiling import logEvent
 import time as tt
 import sys as sys
 
+def setVertDir(g):
+    return -g/(sqrt(g[0]**2 + g[1]**2 + g[2]**2)) 
+
+def setDirVector(vector):
+    return vector/(sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2))
+
+def dirCheck(v1, v2):
+    dircheck = abs(v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2])
+        #print self.dircheck
+    if dircheck > 1e-10:
+        logEvent("Wave direction is not perpendicular to gravity vector. Check input",level=0)
+        return sys.exit(1)
+    else:
+        return None
 
 def eta_mode(x,y,z,t,kDir,omega,phi,amplitude):
     """Returns a single frequency mode for free-surface elevation at point x,y,z,t
@@ -25,7 +39,8 @@ def eta_mode(x,y,z,t,kDir,omega,phi,amplitude):
     """
     phase = x*kDir[0]+y*kDir[1]+z*kDir[2] - omega*t  + phi
     return amplitude*cos(phase)
-def vel_mode(x,y,z,t,kDir,omega,phi,amplitude,mwl,depth,g,comp):
+
+def vel_mode(x,y,z,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,comp):
     """Returns a single frequency mode for velocity at point x,y,z,t
     :param kDir: wave number vector [1/L]
     :param omega: angular frequency [1/T]
@@ -34,18 +49,20 @@ def vel_mode(x,y,z,t,kDir,omega,phi,amplitude,mwl,depth,g,comp):
     :param mwl: mean water level [L]
     :param depth: water depth [L]
     :param g: gravity vector
+    :param vDir (vertical direction - opposite to the gravity vector)
     :param comp: component "x", "y" or "z"
     """
 
-    vDir = g/sqrt(sum(g))
     phase = x*kDir[0]+y*kDir[1]+z*kDir[2] - omega*t  + phi
-    Z =  -(vDir[0]*x + vDir[1]*y+ vDir[2]*z) - mwl
+    Z =  (vDir[0]*x + vDir[1]*y+ vDir[2]*z) - mwl
+    if( (Z < -depth) or (Z > 0)):
+        logEvent ("WaveTools.py: Z variable outside (-d,0), check depth or mwl")
+        exit(1)
     UH = 0.
     UV=0.
     ii=0.
-    kAbs = sqrt(kDir[0]**2 + kDir[1]**2 + kDir[2]**2)
     UH=amplitude*omega*cosh(kAbs*(Z + depth))*cos( phase )/sinh(kAbs*depth)
-    UV=omega*amplitude*sinh(kAbs*(Z + depth))*sin( phase )/sinh(kAbs*depth)
+    UV=amplitude*omega*sinh(kAbs*(Z + depth))*sin( phase )/sinh(kAbs*depth)
     waveDir = kDir/kAbs       
 #waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
     Vcomp = {
@@ -101,11 +118,8 @@ def piersonMoskovitz(f,f0,Hs,alpha=8.1e-3,beta=0.74,g=9.8):
 def cos2s(theta,s):
     return cos(theta/2)**(2*s)
 
-<<<<<<< HEAD:proteus/WaveTools.pyx
-def normInt(dth, thetas,dir_fun,s,N):
-=======
+
 def normInt(dth,thetas,dir_fun,s,N):
->>>>>>> adimako/WaveTools/cython:proteus/WaveTools.pyx
     G0 = 0.
     theta = 0.
     for ii in range(N):
@@ -137,7 +151,7 @@ def dispersion(w,d, g = 9.81,niter = 1000):
     #print "Solution convergence for dispersion relation %s percent" % Kdn_1
 #    print("Final k value = %s" %str(Kd/d))
 #    print("Wavelength= %s" %str(2.*pi*d/Kd))
-    if (len(Kd))==1:
+    if type(Kd) is float:
         return Kd[0]/d
     else:
         return(Kd/d)
@@ -209,25 +223,26 @@ class MonochromaticWaves:
     """Generate a monochromatic wave train in the linear regime
     """
     def __init__(self,period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = 0.,phi0 = 0.):
-        
         self.knownWaveTypes = ["Linear","Fenton"]
         self.waveType = waveType
-        self.g = g
-        self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
-        self.phi0=phi0
         if self.waveType not in self.knownWaveTypes:
             logEvent("Wrong wavetype given: Valid wavetypes are %s" %(self.knownWaveTypes), level=0)
             sys.exit(1)
-        self.dircheck = abs(sum(g * waveDir))
-        #print self.dircheck
-        if self.dircheck > 1e-6:
-            logEvent("Wave direction is not perpendicular to gravity vector. Check input",level=0)
-            sys.exit(1)
+        self.g = np.array(g)
+        self.waveDir =  setDirVector(np.array(waveDir))
+        self.vDir = setVertDir(g)
+        self.gAbs = sqrt(self.g[0]*self.g[0]+self.g[1]*self.g[1]+self.g[2]*self.g[2])
+
+#Checking if g and waveDir are perpendicular
+        dirCheck(self.waveDir,self.vDir)
+        self.phi0=phi0 
         self.period = period
         self.waveHeight = waveHeight
         self.mwl = mwl
         self.depth = depth
         self.omega = 2.0*pi/period
+
+#Calculating / checking wavelength data
         if  self.waveType is "Linear":
             self.k = dispersion(w=self.omega,d=self.depth,g=self.gAbs)
             self.wavelength = 2.0*pi/self.k
@@ -236,16 +251,29 @@ class MonochromaticWaves:
                 self.k = 2.0*pi/wavelength
                 self.wavelength=wavelength
             except:
-                logEvent("Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)
+                logEvent("WaveTools.py: Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)
                 sys.exit(1)
         self.kDir = self.k * self.waveDir
         self.amplitude = 0.5*self.waveHeight
         self.meanVelocity = meanVelocity
+#Checking that meanvelocity is a vector
+        try:
+            if(len(meanVelocity == 3)):
+                continue
+            else:
+                logEvent("WaveTools.py: meanVelocity should be a vector with 3 components. ",level=0)
+                sys.exit(1)                
+        except:
+                logEvent("WaveTools.py: meanVelocity should be a vector with 3 components. ",level=0)
+                sys.exit(1)
+                   
         self.Ycoeff = Ycoeff
         self.Bcoeff = Bcoeff
+
+# Checking for 
         if (Ycoeff is None) or (Bcoeff is None):
             if self.waveType is not "Linear":
-                logEvent("Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
+                logEvent("WaveTools.py: Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
                 sys.exit(1)
     def eta(self,x,y,z,t):
         if self.waveType is "Linear":
@@ -258,43 +286,19 @@ class MonochromaticWaves:
                 HH+=eta_mode(x,y,z,t,ii*self.kDir,ii*self.omega,self.phi0,Y)
             return HH/self.k
 
-<<<<<<< HEAD:proteus/WaveTools.pyx
-        :param x: floating point x coordinate
-        :param z: floating point z coordinate (height above bottom)
-        :param t: time
-        """
-        UH=0.
-        UV=0.
-        ii=0.
-        y=0
-=======
     def u(self,x,y,z,t,comp):
->>>>>>> adimako/WaveTools/cython:proteus/WaveTools.pyx
         if self.waveType is "Linear":
-            return vel_mode(x,y,z,t,self.kDir,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.g,comp)
+            return vel_mode(x,y,z,t,self.kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.g,self.vDir,comp)
         elif self.waveType is "Fenton":
             U =0.
+            ii = 0
             for B in self.Bcoeff:
                 ii+=1
-<<<<<<< HEAD:proteus/WaveTools.pyx
-                UV+=ii*B*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.phase(x,y,z,t))/cosh(self.k*self.depth)
-                UH+=ii*B*cosh(self.k*(self.Z(x,y,z)+self.depth))*cos(self.phase(x,y,z,t))/cosh(self.k*self.depth)
-#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
-                Vcomp = {
-                    "x":UH*self.waveDir[0] + UV*self.vDir[0],
-                    "y":UH*self.waveDir[1] + UV*self.vDir[1],
-                    "z":UH*self.waveDir[2] + UV*self.vDir[2],
+                amp = ii*B/self.omega
+                amp*= sqrt(self.gAbs/self.k)
+                U+=vel_mode(x,y,z,t,ii*self.kDir,ii*self.k,self.omega,amp,self.mwl,self.depth,self.g,self.vDir,comp)
+            return U+self.meanVelocity
 
-                    }
-        else:
-            logEvent("Check Wave types. Available wave types are %s" % (self.waveType,),level=0)
-            exit(1)
-        return Vcomp[ss]
-
-=======
-                U+=vel_mode(x,y,z,t,ii*self.kDir,ii*self.omega,self.phi0,ii*B,self.mwl,self.depth,self.g,comp)
-            return U+self.meanvelocity
->>>>>>> adimako/WaveTools/cython:proteus/WaveTools.pyx
 class RandomWaves:
     """Generate approximate random wave solutions
     :param Hs: significant wave height [L]
@@ -727,13 +731,8 @@ class timeSeries:
             UH=0.
             UV=0.
             for ii in range(Nf):
-<<<<<<< HEAD:proteus/WaveTools.pyx
-                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(self.Z(x,y,z)+self.depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*self.depth)
-                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(self.Z(x,y,z)+self.depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*self.depth)
-=======
                 UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(self.Z(x,y,z)+self.depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*self.depth)
                 UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(self.Z(x,y,z)+self.depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*self.depth)
->>>>>>> adimako/WaveTools/cython:proteus/WaveTools.pyx
 #waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
             Vcomp = {
                     "x":UH*self.waveDir[0] + UV*self.vDir[0],
