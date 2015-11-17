@@ -222,7 +222,7 @@ def decompose_tseries(time,eta,nfft, NFR, ret_only_freq=0):
 class MonochromaticWaves:
     """Generate a monochromatic wave train in the linear regime
     """
-    def __init__(self,period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = 0.,phi0 = 0.):
+    def __init__(self,period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = np.array([0.,0,0.]),phi0 = 0.):
         self.knownWaveTypes = ["Linear","Fenton"]
         self.waveType = waveType
         if self.waveType not in self.knownWaveTypes:
