@@ -1429,7 +1429,6 @@ class MultilevelMesh(Mesh):
         get array elementParents[l,e] = e_c, where element e_c is the parent of element e
             elementParents[0,:] = -1
         """
-        import np
         if (self.elementParents == None or recalculate):
             self.elementParents = {}
             nLevels = len(self.meshList)
@@ -4269,7 +4268,6 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
                  errorNormType="L2", #L1,Linfty
                  refineType=0,
                  ):
-        import np as np
         from matplotlib import tri as mpl_tri
         from scipy import interpolate as scipy_interpolate
         import TriangleTools
@@ -4365,7 +4363,6 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         """
         calculate the arithmetic mean bathymetry of points inside each triangle and then assign the area-weighted average of the element means to each node
         """
-        import np as np
         from FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
         interpolationSpace = LinearOnSimplexWithNodalBasis(nd=2)
         #maps = AffineMaps(mesh,interpolationSpace.referenceElement,interpolationSpace)
@@ -4426,7 +4423,6 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
 
         this should only be used on very coarse meshes
         """
-        import np as np
         from FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
         interpolationSpace = LinearOnSimplexWithNodalBasis(nd=2)
         #maps = AffineMaps(mesh,interpolationSpace.referenceElement,interpolationSpace)
@@ -4501,7 +4497,6 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
 
         this should only be used on very coarse meshes
         """
-        import np as np
         from FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
         interpolationSpace = LinearOnSimplexWithNodalBasis(nd=2)
         #maps = AffineMaps(mesh,interpolationSpace.referenceElement,interpolationSpace)
@@ -4577,7 +4572,6 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
         first find the nearest node, then loop over that node's  elements
         """
         from scipy.spatial import cKDTree
-        import np as np
         from FemTools import AffineMaps,ReferenceSimplex,LinearOnSimplexWithNodalBasis
         interpolationSpace = LinearOnSimplexWithNodalBasis(nd=2)
         #find the elements that contain bathymetry points and calculate:
@@ -4683,7 +4677,6 @@ class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
 
         this should only be used on very coarse meshes
         """
-        import np as np
         mesh.elementTags = np.zeros((mesh.nElements_global,),'i')
         mesh.errorAverage_element =  np.zeros((mesh.nElements_global,),'d')
         errorInfty = 0.0
