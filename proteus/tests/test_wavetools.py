@@ -23,6 +23,16 @@ class TestAuxFunctions(unittest.TestCase):
             dirCheck(np.array([9,9,9]),np.array([4,5,6]))
         self.assertEqual(cm.exception.code, 1)     
         self.assertTrue(dirCheck(np.array([1.,2.,3.]),np.array([7.,4.,-5.])==0))
+    def testReduceToIntervals(self):
+        from proteus.WaveTools import reduceToIntervals
+        fi = np.linspace(0, 100, 101)
+        df = 1
+        fr = reduceToIntervals(fi,df)
+        fi[:-1]+=0.5
+        fi_te = np.zeros(len(fi)+1,)
+        fi_te[1:] = fi[:]
+        self.assertTrue((fr- fi_te == 0).all())
+
     def testEtaMode(self):
         from proteus.WaveTools import eta_mode
         x = 10.
@@ -138,7 +148,6 @@ class TestWaveParameters(unittest.TestCase):
         S_PM = (5./16.) * Hs**2 * f0**4 / f**5 * np.exp(-5./4. * (f0/f)**4)
         S_PM2 =  piersonMoskovitz(f,f0,Hs,alpha=8.1e-3,beta=0.74,g =9.8)
         SCOMP = S_PM2/S_PM
-        print S_PM, S_PM2
         self.assertTrue((np.around(SCOMP,10)==1).all())
         
         
@@ -175,7 +184,6 @@ class checkMonochromaticWavesFailures(unittest.TestCase):
         self.assertTrue(None == None)
 
 class verifyMonoChromaticLinearWaves(unittest.TestCase):
-        # Random 
     def testLinear(self):
         from proteus.WaveTools import MonochromaticWaves
         import random
@@ -217,7 +225,7 @@ class verifyMonoChromaticLinearWaves(unittest.TestCase):
         self.assertTrue(round(ux,8) == round(uxRef,8) )
         self.assertTrue(round(uy,8) == round(uyRef,8) )
         self.assertTrue(round(uz,8) == round(uzRef,8) )
-
+class verifyMonoChromaticFentonWaves(unittest.TestCase):
     def testFenton(self):
         from proteus.WaveTools import MonochromaticWaves
         period = 1. 
@@ -278,7 +286,10 @@ class verifyMonoChromaticLinearWaves(unittest.TestCase):
 #Fenton methodology equations at http://johndfenton.com/Papers/Fenton88-The-numerical-solution-of-steady-water-wave-problems.pdf
 #http://johndfenton.com/Steady-waves/Fourier.html
 
-
+class verifyRandomWaves(unittest.TestCase):
+    from proteus.WaveTools import RandomWaves
+    import random
+   
 
 
 if __name__ == '__main__':
