@@ -107,9 +107,10 @@ def JONSWAP(f,f0,Hs,gamma,TMA=False, h = None):
 
     return tma * bj*(Hs**2)*(1./((Tp**4) *(f**5)))*np.exp(-1.25*(1./(Tp*f)**(4.)))*(gamma**r)
 
-def piersonMoskovitz(f,f0,Hs,alpha=8.1e-3,beta=0.74,g=9.8):
-    """Pierson-Moskovitz spectrum
-
+def piersonMoskovitz(f,f0,Hs,alpha=8.1e-3,beta=0.74,g=9.8,modified = True):
+    """modified Pierson-Moskovitz spectrum (or Bretschneider or ISSC)
+    Reference http://www.orcina.com/SoftwareProducts/OrcaFlex/Documentation/Help/Content/html/Waves,WaveSpectra.htm
+    And then to Tucker M J, 1991. Waves in Ocean Engineering. Ellis Horwood Ltd. (Chichester).
     :param f: frequency [1/T]
     :param f0: peak frequency [1/T]
     :param alpha: alpha fitting parameter [-]
