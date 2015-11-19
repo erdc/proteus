@@ -205,6 +205,7 @@ class Dispatcher():
         stripped_profile_name = profile_name + '_c' + str(comm.rank())
 
         prof.dump_stats(profile_rank_name)
+        comm.barrier()#ensure files are ready for master
         if comm.isMaster():
             import copy
             import StringIO
@@ -239,7 +240,7 @@ Wall clock percentage of top 20 calls
                     fname="function '{2:s}' at {0:s}:{1:d}".format(*f)
                 msg+=("{0:11.1%} {1:s}\n".format(statsm[f][2]/stats.__dict__['total_tt'],str(fname)))
             logEvent(msg)
-                
+
         return func_return
 
 @atexit.register
