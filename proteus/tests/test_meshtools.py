@@ -90,7 +90,7 @@ def test_Edge():
     sortTest = [edge1, edge0]
     sortTest.sort()
     for eO,eS in zip(edgesOrdered, sortTest):
-        ok_(eO == eS)
+        ok_(eO.nodes == eS.nodes)
     edge0.computeGeometricInfo()
     ok_((edge0.barycenter == EVec(0.5,0.5,0.5)).all())
     ok_(edge0.length == math.sqrt(3.0))
