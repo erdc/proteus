@@ -257,7 +257,11 @@ class MonochromaticWaves:
                 sys.exit(1)
         self.kDir = self.k * self.waveDir
         self.amplitude = 0.5*self.waveHeight
-        self.meanVelocity = meanVelocity
+        self.meanVelocity = {
+        "x": meanVelocity[0],
+        "y": meanVelocity[1],
+        "z":  meanVelocity[2]
+        }
 #Checking that meanvelocity is a vector
         try:
             if(len(meanVelocity) == 3):
@@ -276,7 +280,7 @@ class MonochromaticWaves:
         if (Ycoeff is None) or (Bcoeff is None):
             if self.waveType is not "Linear":
                 logEvent("WaveTools.py: Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
-                sys.exit(1)
+                sys.exit(1)               
     def eta(self,x,y,z,t):
         if self.waveType is "Linear":
             return eta_mode(x,y,z,t,self.kDir,self.omega,self.phi0,self.amplitude)
@@ -292,14 +296,17 @@ class MonochromaticWaves:
         if self.waveType is "Linear":
             return vel_mode(x,y,z,t,self.kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.g,self.vDir,comp)
         elif self.waveType is "Fenton":
-            U =0.
+            Ufenton = self.meanVelocity[comp]
             ii = 0
             for B in self.Bcoeff:
                 ii+=1
-                amp = ii*B/self.omega
-                amp*= sqrt(self.gAbs/self.k)
-                U+=vel_mode(x,y,z,t,ii*self.kDir,ii*self.k,self.omega,amp,self.mwl,self.depth,self.g,self.vDir,comp)
-            return U+self.meanVelocity
+                wmode = ii*self.omega
+                kmode = ii*self.k
+                kdir = self.waveDir*kmode
+                amp = tanh(kmode*self.depth)*sqrt(self.gAbs/self.k)*B/self.omega
+                Ufenton+= vel_mode(x,y,z,t,kdir,kmode,wmode,self.phi0,amp,self.mwl,self.depth,self.g,self.vDir,comp)
+            return Ufenton # + self.meanVelocity[comp]
+
 
 class RandomWaves:
     """Generate approximate random wave solutions
