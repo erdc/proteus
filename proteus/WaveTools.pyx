@@ -224,7 +224,17 @@ def decompose_tseries(time,eta,nfft, NFR, ret_only_freq=0):
 class MonochromaticWaves:
     """Generate a monochromatic wave train in the linear regime
     """
-    def __init__(self,period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = np.array([0.,0,0.]),phi0 = 0.):
+    def __init__(self,
+                 period,
+                 waveHeight,
+                 mwl,
+                 depth,
+                 g,
+                 waveDir,
+                 wavelength=None,
+                 waveType="Linear",
+                 Ycoeff = None, 
+                 Bcoeff =None, meanVelocity = np.array([0.,0,0.]),phi0 = 0.):
         self.knownWaveTypes = ["Linear","Fenton"]
         self.waveType = waveType
         if self.waveType not in self.knownWaveTypes:
@@ -318,25 +328,26 @@ class RandomWaves:
     :param mwl: mean water level [L]"""
 
     def __init__(self,
-                 Hs = 2.0,         #m significant wave height
-                 d = 2.0,           #m depth
-                 fp = 1.0/5.0,      #peak  frequency
-                 bandFactor = 2.0, #controls width of band  around fp
-                 N = 101,          #number of frequency bins
-                 mwl = 0.0,        #mean water level
-                 waveDir = np.array([1,0,0]),
-                 g = np.array([0, -9.81, 0]),         #accelerationof gravity
+                 Tp,
+                 Hs,
+                 mwl,#m significant wave height
+                 depth ,           #m depth
+                 g,      #peak  frequency
+                 waveDir,
+                 N,
+                 bandFactor,         #accelerationof gravity
                  spec_fun = JONSWAP,
                  gamma=3.3
                  ):
-        self.gamma=gamma
-        self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
         self.g = np.array(g)
-        self.gAbs = sqrt(sum(g * g))
-        self.vDir = self.g/self.gAbs
+        self.waveDir =  setDirVector(np.array(waveDir))
+        self.vDir = setVertDir(g)
+        self.gAbs = sqrt(self.g[0]*self.g[0]+self.g[1]*self.g[1]+self.g[2]*self.g[2])
+        self.gamma=gamma
         self.Hs = Hs
         self.depth = d
-        self.fp = fp
+        self.Tp = Tp
+        self.fp = 1./Tp
         self.bandFactor = bandFactor
         self.N = N
         self.mwl = mwl
@@ -355,8 +366,7 @@ class RandomWaves:
         self.fim = np.array([fim_tmp[0]-0.5*self.df]+fim_tmp+[fim_tmp[-1]+0.5*self.df])
         self.Si_Jm = spec_fun(self.fim,f0=self.fp,Hs=self.Hs,g=self.g,gamma=self.gamma)
         self.ai = np.sqrt((self.Si_Jm[1:]+self.Si_Jm[:-1])*(self.fim[1:]-self.fim[:-1]))
-        self.waves = MonochromaticWaves
-        self.kDir = np.zeros((self.N, 3) , "d")
+        self.kDir = self.ki*self.waveDir 
         for k in range(N):
             self.kDir[k,:] = self.ki[k]*self.waveDir[:]
     def Z(self,x,y,z):
