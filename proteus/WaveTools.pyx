@@ -83,29 +83,29 @@ def sigma(omega,omega0):
     sigmaReturn = np.where(omega > omega0,0.09,0.07)
     return sigmaReturn
 
-def JONSWAP(f,f0,Hs,g,gamma,TMA=False, h = -10):
+def JONSWAP(f,f0,Hs,gamma,TMA=False, h = None):
     """The wave spectrum from Joint North Sea Wave Observation Project
-
-    :param f: wave frequency [1/T]
-    :param f0: peak frequency [1/T]
+    Jonswap equation from "Random Seas and Design of Maritime Structures" - Y. Goda - 2010 (3rd ed) eq. 2.12 - 2.15 
+    TMA modification from "Random Seas and Design of Maritime Structures" - Y. Goda - 2010 (3rd ed) eq. 2.19 
+    :param f: wave frequency [1/T] (not angular frequency)
+    :param f0: peak frequency [1/T] (not angular frequency)
     :param Hs: significant wave height [L]
     :param g: gravity [L/T^2]
     :param gamma: peak enhancement factor [-]
     """
-    omega = 2.0*pi*f
-    omega0 = 2.0*pi*f0
-    alpha = 2.0*pi*0.0624*(1.094-0.01915*log(gamma))/(0.23+0.0336*gamma-0.0185/(1.9+gamma))
-    r = np.exp(- (omega-omega0)**2/(2*sigma(omega,omega0)**2*omega0**2))
+    Tp = 1./f0
+    bj = 0.0624*(1.094-0.01915*log(gamma))/(0.23+0.0336*gamma-0.185/(1.9+gamma))
+    r = np.exp(-(Tp*f-1.)**2/(2.*sigma(f,f0)**2))
     tma = 1.
     if TMA:
-        if (h < 0):
+        if (h == None):
             logEvent("Wavetools:py. Provide valid depth definition definition for TMA spectrum")
             logEvent("Wavetools:py. Stopping simulation")
             exit(1)
         k = dispersion(2*pi*f,h)
-        tma = tanh(k*h)*tanh(k*h)/(1.+ 2.*k*h/sinh(k*h))
+        tma = np.tanh(k*h)*np.tanh(k*h)/(1.+ 2.*k*h/np.sinh(2.*k*h))
 
-    return (tma * alpha*Hs**2*omega0**4/omega**5)*np.exp(-(5.0/4.0)*(omega0/omega)**4)*gamma**r
+    return tma * bj*(Hs**2)*(1./((Tp**4) *(f**5)))*np.exp(-1.25*(1./(Tp*f)**(4.)))*(gamma**r)
 
 def piersonMoskovitz(f,f0,Hs,alpha=8.1e-3,beta=0.74,g=9.8):
     """Pierson-Moskovitz spectrum
