@@ -10,7 +10,7 @@ Profiling.procID = comm.rank()
 
 
 Profiling.logEvent("Testing WaveTools")
-class TestModes(unittest.TestCase):
+class TestAuxFunctions(unittest.TestCase):
     def testVDir(self):
         from proteus.WaveTools import setVertDir
         self.assertTrue(np.array_equal(setVertDir(np.array([0,-9.81,0])), np.array([0,1,0])))
@@ -23,8 +23,6 @@ class TestModes(unittest.TestCase):
             dirCheck(np.array([9,9,9]),np.array([4,5,6]))
         self.assertEqual(cm.exception.code, 1)     
         self.assertTrue(dirCheck(np.array([1.,2.,3.]),np.array([7.,4.,-5.])==0))
-
-            
     def testEtaMode(self):
         from proteus.WaveTools import eta_mode
         x = 10.
@@ -90,16 +88,20 @@ class TestWaveParameters(unittest.TestCase):
         length-=5.
         length/=5
         self.assertTrue( (all(length) <0.001) or  (all(length) > -0.001))
-
-#Check lower sigma
-    def test_lower(self):#idea was  just to test what  happens  when omega is  constant and < omega0
+#Check  sigma
+    def test_sigma(self):#idea was  just to test what  happens  when omega is  constant and < omega0
         from proteus.WaveTools import sigma
         omega0=0.01
         sigma0 = 0.07
-        x = np.ones((10,),'d')
-        x *= omega0
+        sigma1 = 0.09
+        x = np.ones((3),'d')
+        x[0] = 0.5*omega0
+        x[1] = omega0
+        x[2] = 2.*omega0
         sigma = sigma(x,omega0)
-        self.assertTrue((sigma == sigma0).all())
+        self.assertTrue((sigma[0] == sigma0).all())
+        self.assertTrue((sigma[1] == sigma0).all())   
+        self.assertTrue((sigma[2] == sigma1).all())
 
 class checkMonochromaticWavesFailures(unittest.TestCase):
     def testFailureModes(self):
