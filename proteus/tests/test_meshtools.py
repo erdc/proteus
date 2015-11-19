@@ -1,3 +1,4 @@
+from proteus import Comm, Profiling
 from collections import namedtuple
 import numpy.testing as npt
 import numpy as np
@@ -27,6 +28,9 @@ from proteus.MeshTools import (Node,
                                intersectEdges,
                                intersectPolyhedron,
                                getMeshIntersections)
+
+comm = Comm.init()
+Profiling.procID = comm.rank()
 
 GNUPLOT=False
 
@@ -84,13 +88,16 @@ def test_Element():
         ok_(e0.nodes[N] == n)
 
 def test_Edge():
-    edge0 = Edge(0,nodes=[Node(0,0.0,0.0,0.0),Node(1,1.0,1.0,1.0)])
-    edge1 = Edge(0,nodes=[Node(0,1.0,1.0,1.0),Node(1,2.0,1.0,1.0)])
+    edge0 = Edge(0,nodes=[Node(0,0.0,0.0,0.0),
+                          Node(1,1.0,1.0,1.0)])
+    edge1 = Edge(1,nodes=[Node(1,1.0,1.0,1.0),
+                          Node(2,2.0,1.0,1.0)])
     edgesOrdered = [edge0, edge1]
-    sortTest = [edge1, edge0]
-    sortTest.sort()
-    for eO,eS in zip(edgesOrdered, sortTest):
-        ok_(eO.nodes == eS.nodes)
+    edgesDisordered = {edge1.nodes: edge1, edge0.nodes: edge0}
+    edgeKeys = edgesDisordered.keys()
+    edgeKeys.sort()
+    for e1,e2_key in zip(edgesOrdered, edgeKeys):
+        ok_(e1.nodes == edgesDisordered[e2_key].nodes)
     edge0.computeGeometricInfo()
     ok_((edge0.barycenter == EVec(0.5,0.5,0.5)).all())
     ok_(edge0.length == math.sqrt(3.0))
@@ -371,7 +378,6 @@ def test_QuadrilateralGrid():
      ok_(qg.nEdges_global == 12)
 
 def test_RectangularGrid_1D():
-     print "Testing 1D Rectangular Grid"
      grid1d = RectangularGrid(3,1,1,1.0,1.0,1.0)
      if GNUPLOT:
          grid1d.writeEdgesGnuplot('grid1d')
@@ -392,26 +398,26 @@ def test_RectangularGrid_3D():
 def test_EdgeMesh_1D():
     mesh1d = EdgeMesh()
     mesh1d.generateEdgeMeshFromRectangularGrid(3,1.0)
-    #if GNUPLOT:
-    #    mesh1d.buildLists()
-    #    mesh1d.writeEdgesGnuplot('mesh1d')
-    #    mesh1d.viewMeshGnuplotPipe('mesh1d')
+    if GNUPLOT:
+       mesh1d.buildLists()
+       mesh1d.writeEdgesGnuplot('mesh1d')
+       mesh1d.viewMeshGnuplotPipe('mesh1d')
 
 def test_TriangularMesh():
     mesh2d = TriangularMesh()
     mesh2d.generateTriangularMeshFromRectangularGrid(3,3,1.0,1.0)
-    #if GNUPLOT:
-    #    mesh2d.buildLists()
-    #    mesh2d.writeEdgesGnuplot('mesh2d')
-    #    mesh2d.viewMeshGnuplotPipe('mesh2d')
+    if GNUPLOT:
+       mesh2d.buildLists()
+       mesh2d.writeEdgesGnuplot('mesh2d')
+       mesh2d.viewMeshGnuplotPipe('mesh2d')
 
 def test_TetrahedralMesh():
     mesh3d = TetrahedralMesh()
     mesh3d.generateTetrahedralMeshFromRectangularGrid(3,3,3,1.0,1.0,1.0)
-    #if GNUPLOT:
-    #    mesh3d.buildLists()
-    #    mesh3d.writeEdgesGnuplot('mesh3d')
-    #    mesh3d.viewMeshGnuplotPipe('mesh3d')
+    if GNUPLOT:
+       mesh3d.buildLists()
+       mesh3d.writeEdgesGnuplot('mesh3d')
+       mesh3d.viewMeshGnuplotPipe('mesh3d')
 
 def test_Refine_1D():
     grid1d = RectangularGrid(3,1,1,1.0,1.0,1.0)
