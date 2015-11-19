@@ -107,7 +107,7 @@ class TestWaveParameters(unittest.TestCase):
         from proteus.WaveTools import sigma, JONSWAP, dispersion
         import random
         f0 = random.random() + 1.
-        f = np.linspace(f0/2.,2.*f0,10)
+        f = np.linspace(f0/2.,2.*f0,100)
         sig = sigma(f,f0)
         gamma = 6.*random.random() + 1. 
         Hs = random.random()
@@ -129,7 +129,19 @@ class TestWaveParameters(unittest.TestCase):
         JON2 = JONSWAP(f,f0,Hs,gamma,TMA=True, h=h)
         JCOMP = JON2/(TMA*JON)
         self.assertTrue((np.around(JCOMP,10)==1).all())
-
+    def test_PM(self): #PM tests
+        from proteus.WaveTools import piersonMoskovitz 
+        f0 = random.random() + 1.
+        f = np.linspace(f0/2.,2.*f0,10)        
+        Hs = random.random()
+        g = 9.81
+        S_PM = (5./16.) * Hs**2 * f0**4 / f**5 * np.exp(-5./4. * (f0/f)**4)
+        S_PM2 =  piersonMoskovitz(f,f0,Hs,alpha=8.1e-3,beta=0.74,g =9.8)
+        SCOMP = S_PM2/S_PM
+        print S_PM, S_PM2
+        self.assertTrue((np.around(SCOMP,10)==1).all())
+        
+        
 
 class checkMonochromaticWavesFailures(unittest.TestCase):
     def testFailureModes(self):
