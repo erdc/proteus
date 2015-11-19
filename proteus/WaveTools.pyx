@@ -1,4 +1,3 @@
-
 """Tools for working with water waves
 The primary objective of this module is to provide solutions (exact and
 
@@ -29,7 +28,11 @@ def dirCheck(v1, v2):
         return sys.exit(1)
     else:
         return None
-
+def reduceToIntervals(fi,df):
+    fim_tmp = (0.5*(fi[1:]+fi[:-1])).tolist()
+    return np.array([fim_tmp[0]-0.5*df]+fim_tmp+[fim_tmp[-1]+0.5*df])
+def integrateRectangles(a,x):
+    return 0.5*(a[1:]+a[:-1])*(x[1:]-x[:-1])
 def eta_mode(x,y,z,t,kDir,omega,phi,amplitude):
     """Returns a single frequency mode for free-surface elevation at point x,y,z,t
     :param kDir: wave number vector [1/L]
@@ -78,12 +81,11 @@ def vel_mode(x,y,z,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,comp):
 
 def sigma(omega,omega0):
     """sigma function for JONSWAP spectrum
-       http://www.wikiwaves.org/Ocean-Wave_Spectra
+       http://www.wikiwaves.org/Ocean-Wave_Sectra
     """
     sigmaReturn = np.where(omega > omega0,0.09,0.07)
     return sigmaReturn
-
-def JONSWAP(f,f0,Hs,gamma,TMA=False, h = None):
+def JONSWAP(f,f0,Hs,gamma=3.3,TMA=False, depth = None):
     """The wave spectrum from Joint North Sea Wave Observation Project
     Jonswap equation from "Random Seas and Design of Maritime Structures" - Y. Goda - 2010 (3rd ed) eq. 2.12 - 2.15 
     TMA modification from "Random Seas and Design of Maritime Structures" - Y. Goda - 2010 (3rd ed) eq. 2.19 
@@ -98,16 +100,16 @@ def JONSWAP(f,f0,Hs,gamma,TMA=False, h = None):
     r = np.exp(-(Tp*f-1.)**2/(2.*sigma(f,f0)**2))
     tma = 1.
     if TMA:
-        if (h == None):
+        if (depth == None):
             logEvent("Wavetools:py. Provide valid depth definition definition for TMA spectrum")
             logEvent("Wavetools:py. Stopping simulation")
             exit(1)
-        k = dispersion(2*pi*f,h)
-        tma = np.tanh(k*h)*np.tanh(k*h)/(1.+ 2.*k*h/np.sinh(2.*k*h))
+        k = dispersion(2*pi*f,depth)
+        tma = np.tanh(k*depth)*np.tanh(k*depth)/(1.+ 2.*k*depth/np.sinh(2.*k*depth))
 
     return tma * bj*(Hs**2)*(1./((Tp**4) *(f**5)))*np.exp(-1.25*(1./(Tp*f)**(4.)))*(gamma**r)
 
-def piersonMoskovitz(f,f0,Hs,alpha=8.1e-3,beta=0.74,g=9.8,modified = True):
+def PM_mod(f,f0,Hs):
     """modified Pierson-Moskovitz spectrum (or Bretschneider or ISSC)
     Reference http://www.orcina.com/SoftwareProducts/OrcaFlex/Documentation/Help/Content/html/Waves,WaveSpectra.htm
     And then to Tucker M J, 1991. Waves in Ocean Engineering. Ellis Horwood Ltd. (Chichester).
@@ -338,14 +340,25 @@ class RandomWaves:
                  waveDir,
                  N,
                  bandFactor,         #accelerationof gravity
-                 spec_fun = JONSWAP,
-                 gamma=3.3
+                 spectName = "JONSWAP",# random words will result in error and return the available spectra 
+                 spectral_params =  None #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth",depth} 
                  ):
+        validSpectra = [JONSWAP,PM_mod]
+        spec_fun = None
+        spectNames =[]
+        for spectrum in validSpectra:
+            spectNames.append(spectrum.__name__)
+            if spectrum.__name__ == spectName:
+                spec_fun = spectrum
+
+
+        if spec_fun == None:
+            logEvent("WaveTools.py: Wrong spectrum type (%s) given: Valid wavetypes are %s" %(spectName,spectNames), level=0)
+            
         self.g = np.array(g)
         self.waveDir =  setDirVector(np.array(waveDir))
         self.vDir = setVertDir(g)
         self.gAbs = sqrt(self.g[0]*self.g[0]+self.g[1]*self.g[1]+self.g[2]*self.g[2])
-        self.gamma=gamma
         self.Hs = Hs
         self.depth = depth
         self.Tp = Tp
@@ -355,24 +368,18 @@ class RandomWaves:
         self.mwl = mwl
         self.fmax = self.bandFactor*self.fp
         self.fmin = self.fp/self.bandFactor
-        self.df = (self.fmax-self.fmin)/float(self.N-1)
-        self.fi=np.zeros(self.N,'d')
-        for i in range(self.N):
-            self.fi[i] = self.fmin+self.df*i
+        self.df = (self.fmax-self.fmin)/float(self.N)
+        self.fi = np.linspace(self.fmin,self.fmax,self.N+1)
         self.omega = 2.*pi*self.fi
-        self.ki = dispersion(2.0*pi*self.fi,self.depth,g=self.gAbs)
-        self.wi = 2.*pi/self.ki
+        self.ki = dispersion(self.omega,self.depth,g=self.gAbs)
         self.phi = 2.0*pi*np.random.random(self.fi.shape[0])
+        logEvent('WaveTools.py: Outputing the phasing of the random waves')
+        logEvent(self.phi)
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
-        fim_tmp = (0.5*(self.fi[1:]+self.fi[:-1])).tolist()
-        self.fim = np.array([fim_tmp[0]-0.5*self.df]+fim_tmp+[fim_tmp[-1]+0.5*self.df])
-        self.Si_Jm = spec_fun(self.fim,f0=self.fp,Hs=self.Hs,g=self.g,gamma=self.gamma)
-        self.ai = np.sqrt((self.Si_Jm[1:]+self.Si_Jm[:-1])*(self.fim[1:]-self.fim[:-1]))
+        self.fim = reduceToIntervals(self.fi,self.df)
+        self.Si_Jm = spec_fun(self.fim,f0=self.fp,Hs=self.Hs,**spectral_params)
+        self.ai = np.sqrt(2.*integrateRectangles(self.Si_Jm,self.fim))
         self.kDir = self.ki*self.waveDir 
-        for k in range(N):
-            self.kDir[k,:] = self.ki[k]*self.waveDir[:]
-    def Z(self,x,y,z):
-        return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.mwl
     def eta(self,x,y,z,t):
         """Free surface displacement
 
@@ -380,32 +387,21 @@ class RandomWaves:
         :param t: time"""
         Eta=0.
         for ii in range(self.N):
-            Eta+=self.ai[ii]*cos(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t + self.phi[ii])
+            Eta+= eta_mode(x,y,z,t,self.kDir[ii],self.omega[ii],self.phi0[ii],self.amplitude[ii])
         return Eta
 #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
 
-    def u(self,x,y,z,t,ss = "x"):
+    def u(self,x,y,z,t,comp):
         """x-component of velocity
 
         :param x: floating point x coordinate
         :param z: floating point z coordinate (height above bottom)
         :param t: time
         """
-        UH=0.
-        UV=0.
+        U=0.
         for ii in range(self.N):
-            UH+=self.ai[ii]*self.omega[ii]*cosh(self.ki[ii]*(self.Z(x,y,z)+self.depth))*cos(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t + self.phi[ii])/sinh(self.ki[ii]*self.depth)
-            UV+=self.ai[ii]*self.omega[ii]*sinh(self.ki[ii]*(self.Z(x,y,z)+self.depth))*sin(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t + self.phi[ii])/sinh(self.ki[ii]*self.depth)
-#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
-        Vcomp = {
-            "x":UH*self.waveDir[0] + UV*self.vDir[0],
-            "y":UH*self.waveDir[1] + UV*self.vDir[1],
-            "z":UH*self.waveDir[2] + UV*self.vDir[2],
-            }
-        return Vcomp[ss]
-#        Z = z - self.mwl
-#        return (2.0*pi*self.fi*self.ai*np.cos(2.0*pi*self.fi*t-self.ki*x+self.phi)*
-#                np.cosh(self.ki*(self.d+Z))/np.sinh(self.ki*self.d)).sum()
+            U+= vel_mode(x,y,z,t,self.kDir[ii], self.ki[ii],self.omega[ii],self.phi0[ii],self.amplitude[ii],self.mwl,self.depth,self.g,self.vDir,comp)                
+        return U        
 
 class DoublePeakedRandomWaves(RandomWaves):
     """Generate approximate random wave solutions
@@ -812,7 +808,6 @@ class directionalWaves:
             self.fi[i] = self.fmin+self.df*i
         self.ki = dispersion(2.0*pi*self.fi,self.d,g=self.gAbs)
         self.wi = 2.*pi/self.ki
-        #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
         fim_tmp = (0.5*(self.fi[1:]+self.fi[:-1])).tolist()
         self.fim = np.array([fim_tmp[0]-0.5*self.df]+fim_tmp+[fim_tmp[-1]+0.5*self.df])
         self.Si_Jm = spec_fun(self.fim,f0=self.fp,Hs=self.Hs,g=self.g,gamma=3.3)
