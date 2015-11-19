@@ -3,7 +3,7 @@ import numpy as np
 import numpy.testing as npt
 import unittest
 import random
-from math import cos,sin,cosh,sinh,pi
+from math import cos,sin,cosh,sinh,pi,tanh
 
 comm = Comm.init()
 Profiling.procID = comm.rank()
@@ -124,19 +124,15 @@ class checkMonochromaticWavesFailures(unittest.TestCase):
         with self.assertRaises(SystemExit) as cm5:
             MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1.,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =None, meanVelocity = np.array([0.,0.,0.]),phi0 = 0.)   
         self.assertEqual(cm5.exception.code, 1) 
- # Failure 6: Give meanVelocity a non - vector value  
+  # Failure 6: Give meanVelocity a vector value but not with 3 components
         with self.assertRaises(SystemExit) as cm6:
-            MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =np.array([1.,1,1.]), meanVelocity = 5. ,phi0 = 0.)   
-        self.assertEqual(cm6.exception.code, 1) 
-  # Failure 7: Give meanVelocity a vector value but not with 3 components
-        with self.assertRaises(SystemExit) as cm7:
             MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =np.array([1.,1,1.]), meanVelocity =np.array([0.,0.,0.,0.]) ,phi0 = 0.)   
-        self.assertEqual(cm7.exception.code, 1) 
+        self.assertEqual(cm6.exception.code, 1) 
   # Success!: Give all parameters in correct form!
         a = MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =np.array([1.,1,1.]), meanVelocity =np.array([0.,0.,0.]) ,phi0 = 0.)   
         self.assertTrue(None == None)
 
-class verifyMonoChromaticLinearWaves():
+class verifyMonoChromaticLinearWaves(unittest.TestCase):
         # Random 
     def testLinear(self):
         from proteus.WaveTools import MonochromaticWaves
@@ -165,7 +161,7 @@ class verifyMonoChromaticLinearWaves():
         omega = 2.*pi/period
 # dispersion and setDirVector are tested above
         from proteus.WaveTools import dispersion,setDirVector
-        kw = dispersion(omega,gAbs)
+        kw = dispersion(omega,depth,gAbs)
         normDir = setDirVector(waveDir)
         amp = 0.5 * waveHeight
 # Flow equation from Wikipedia, Airy wave theory https://en.wikipedia.org/wiki/Airy_wave_theoryhttps://en.wikipedia.org/wiki/Airy_wave_theory
@@ -174,13 +170,14 @@ class verifyMonoChromaticLinearWaves():
         uxRef = normDir[0]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
         uyRef = normDir[1]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
         uzRef = amp*omega*sinh(kw*(z0+depth))*sin(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
-        self.assertTrue(eta - etaRef == 0)
-        self.assertTrue(ux - uxRef == 0)
-        self.assertTrue(uy - uyRef ==0)
-        self.assertTrue(uz - uzRef == 0)
+       
+        self.assertTrue(round(eta,8) == round(etaRef,8) )
+        self.assertTrue(round(ux,8) == round(uxRef,8) )
+        self.assertTrue(round(uy,8) == round(uyRef,8) )
+        self.assertTrue(round(uz,8) == round(uzRef,8) )
 
-"""
-    def testFenton(self):                         
+    def testFenton(self):
+        from proteus.WaveTools import MonochromaticWaves
         period = 1. 
         waveHeight = 0.15
         mwl = 4.5
@@ -199,7 +196,7 @@ class verifyMonoChromaticLinearWaves():
         a = MonochromaticWaves(period,waveHeight,mwl,depth,g,waveDir,wavelength=wl,waveType="Fenton",Ycoeff = YC, Bcoeff = BC, meanVelocity = mv,phi0 = phi0) 
         x = random.random()*200. - 100.
         y = random.random()*200. - 100.
-        z = mwl - depth + random.random()*( depth)
+        z =  mwl - depth + random.random()*( depth)
         t =  random.random()*200. - 100.
         eta = a.eta(x,y,z,t)
         ux = a.u(x,y,z,t,"x")
@@ -209,19 +206,38 @@ class verifyMonoChromaticLinearWaves():
 # setDirVector are tested above
         from proteus.WaveTools import setDirVector
         kw = 2*pi/wl
-        normDir = setDirVector(waveDir)
+        z0 = z - mwl
+        normDir = setDirVector(waveDir)       
         amp = 0.5 * waveHeight
         etaRef = 0.
-        ii = 0
+        uxRef = 0.
+        uyRef = 0.
+        uzRef = 0.
+        jj = 0
+        uxRef= mv[0]
+        uyRef= mv[1]
+        uzRef= mv[2]
+
         for ii in range(len(YC)):
-            ii+=1
-            etaRef+= Y*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/kw
-        
-        
+            jj+=1
+            etaRef+=YC[ii]*cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +phi0)/kw
+            uxRef += normDir[0]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +phi0)/cosh(jj*kw*depth)
+            uyRef += normDir[1]* np.sqrt(gAbs/kw)*jj*BC[ii]*cosh(jj*kw*(z0+depth)) *cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +phi0)/cosh(jj*kw*depth)
+            uzRef +=  np.sqrt(gAbs/kw)*jj*BC[ii]*sinh(jj*kw*(z0+depth)) *sin(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-jj*omega*t +phi0)/cosh(jj*kw*depth)
+            
+#            uxRef+=  normDir[0]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
+#*jj*BC[ii]*normDir[0]*cosh(jj*kw*(z0+depth))*cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - jj*omega * t +phi0)*tanh(jj*kw*depth)/sinh(jj*kw*depth)
+        self.assertTrue(round(eta,8) == round(etaRef,8) )
+        print ux,uxRef
+
+        self.assertTrue(round(ux,8) == round(uxRef,8))
+        self.assertTrue(round(uy,8) == round(uyRef,8))
+        self.assertTrue(round(uz,8) == round(uzRef,8))
+       
         
 #Fenton methodology equations at http://johndfenton.com/Papers/Fenton88-The-numerical-solution-of-steady-water-wave-problems.pdf
 #http://johndfenton.com/Steady-waves/Fourier.html
-"""
+
 
 
 
