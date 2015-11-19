@@ -3,7 +3,7 @@ import numpy as np
 import numpy.testing as npt
 import unittest
 import random
-from math import cos,sin,cosh,sinh,pi,tanh
+from math import cos,sin,cosh,sinh,pi,tanh,log
 
 comm = Comm.init()
 Profiling.procID = comm.rank()
@@ -89,8 +89,8 @@ class TestWaveParameters(unittest.TestCase):
         length/=5
         self.assertTrue( (all(length) <0.001) or  (all(length) > -0.001))
 #Check  sigma
-    def test_sigma(self):#idea was  just to test what  happens  when omega is  constant and < omega0
-        from proteus.WaveTools import sigma
+    def test_sigma(self):
+        from proteus.WaveTools import sigma,JONSWAP
         omega0=0.01
         sigma0 = 0.07
         sigma1 = 0.09
@@ -102,6 +102,34 @@ class TestWaveParameters(unittest.TestCase):
         self.assertTrue((sigma[0] == sigma0).all())
         self.assertTrue((sigma[1] == sigma0).all())   
         self.assertTrue((sigma[2] == sigma1).all())
+    def test_Jonswap(self): #JONSWAP tests
+# Test Jonswap spectrum without TMA modification
+        from proteus.WaveTools import sigma, JONSWAP, dispersion
+        import random
+        f0 = random.random() + 1.
+        f = np.linspace(f0/2.,2.*f0,10)
+        sig = sigma(f,f0)
+        gamma = 6.*random.random() + 1. 
+        Hs = random.random()
+        bj = 0.0624*(1.094 - 0.01915*log(gamma))/(0.23+0.0336*gamma-0.185/(1.9+gamma))
+        r_exp = np.exp(-(f/f0 -1 )**2/(2.*sig**2))
+        JON = (bj*(Hs**2)*(f0**4)/f**5)*np.exp(-1.25*(f0/f)**4)*(gamma**r_exp)
+        JON2 = JONSWAP(f,f0,Hs,gamma,TMA=False, h = None)
+        
+        JCOMP = JON2/JON
+        self.assertTrue((np.around(JCOMP,10)==1).all())
+        h = random.random()
+# Checking failure mode
+        with self.assertRaises(SystemExit) as cm:
+            JON2 = JONSWAP(f,f0,Hs,gamma,TMA=True)
+        self.assertEqual(cm.exception.code, 1)  
+# Check TMA modification           
+        k = dispersion(2*pi*f,h)
+        TMA = np.tanh(k*h)*np.tanh(k*h)/(1.+2.*k*h/np.sinh(2*k*h))
+        JON2 = JONSWAP(f,f0,Hs,gamma,TMA=True, h=h)
+        JCOMP = JON2/(TMA*JON)
+        self.assertTrue((np.around(JCOMP,10)==1).all())
+
 
 class checkMonochromaticWavesFailures(unittest.TestCase):
     def testFailureModes(self):
@@ -230,8 +258,6 @@ class verifyMonoChromaticLinearWaves(unittest.TestCase):
 #            uxRef+=  normDir[0]*amp*omega*cosh(kw*(z0+depth))*cos(kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - omega * t +phi0)/sinh(kw*depth)
 #*jj*BC[ii]*normDir[0]*cosh(jj*kw*(z0+depth))*cos(jj*kw*(normDir[0]*x+normDir[1]*y+normDir[2]*z) - jj*omega * t +phi0)*tanh(jj*kw*depth)/sinh(jj*kw*depth)
         self.assertTrue(round(eta,8) == round(etaRef,8) )
-        print ux,uxRef
-
         self.assertTrue(round(ux,8) == round(uxRef,8))
         self.assertTrue(round(uy,8) == round(uyRef,8))
         self.assertTrue(round(uz,8) == round(uzRef,8))
