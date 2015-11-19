@@ -78,6 +78,7 @@ def vel_mode(x,y,z,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,comp):
 
 def sigma(omega,omega0):
     """sigma function for JONSWAP spectrum
+       http://www.wikiwaves.org/Ocean-Wave_Spectra
     """
     sigmaReturn = np.where(omega > omega0,0.09,0.07)
     return sigmaReturn
@@ -345,7 +346,7 @@ class RandomWaves:
         self.gAbs = sqrt(self.g[0]*self.g[0]+self.g[1]*self.g[1]+self.g[2]*self.g[2])
         self.gamma=gamma
         self.Hs = Hs
-        self.depth = d
+        self.depth = depth
         self.Tp = Tp
         self.fp = 1./Tp
         self.bandFactor = bandFactor
