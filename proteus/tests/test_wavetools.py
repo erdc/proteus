@@ -164,7 +164,7 @@ class TestWaveParameters(unittest.TestCase):
         
         
 
-class checkMonochromaticWavesFailures(unittest.TestCase):
+class CheckMonochromaticWavesFailures(unittest.TestCase):
     def testFailureModes(self):
         from proteus.WaveTools import MonochromaticWaves
 #Failure 1: Give non existent waveType
@@ -195,7 +195,7 @@ class checkMonochromaticWavesFailures(unittest.TestCase):
         a = MonochromaticWaves(1.,1.,0.,10.,np.array([0,0,-9.81]),np.array([0,1,0]),wavelength=5.,waveType="Fenton",Ycoeff = np.array([1.,1,1.]), Bcoeff =np.array([1.,1,1.]), meanVelocity =np.array([0.,0.,0.]) ,phi0 = 0.)   
         self.assertTrue(None == None)
 
-class verifyMonoChromaticLinearWaves(unittest.TestCase):
+class VerifyMonoChromaticLinearWaves(unittest.TestCase):
     def testLinear(self):
         from proteus.WaveTools import MonochromaticWaves
         import random
@@ -237,7 +237,7 @@ class verifyMonoChromaticLinearWaves(unittest.TestCase):
         self.assertTrue(round(ux,8) == round(uxRef,8) )
         self.assertTrue(round(uy,8) == round(uyRef,8) )
         self.assertTrue(round(uz,8) == round(uzRef,8) )
-class verifyMonoChromaticFentonWaves(unittest.TestCase):
+class VerifyMonoChromaticFentonWaves(unittest.TestCase):
 #Fenton methodology equations at http://johndfenton.com/Papers/Fenton88-The-numerical-solution-of-steady-water-wave-problems.pdf
 #http://johndfenton.com/Steady-waves/Fourier.html
 
@@ -302,7 +302,7 @@ class verifyMonoChromaticFentonWaves(unittest.TestCase):
  
 
 
-class checkRandomWavesFailures(unittest.TestCase):
+class CheckRandomWavesFailures(unittest.TestCase):
     def testFailureModes(self):
         from proteus.WaveTools import RandomWaves
 #Failure 1: Give a wrong spectrum name
@@ -333,7 +333,7 @@ class checkRandomWavesFailures(unittest.TestCase):
         RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params={"gamma": 3.3, "TMA":True,"depth": 10.}, phi = np.zeros(100, float) )
         self.assertTrue(None == None)
     
-class verifyRandomWaves(unittest.TestCase):
+class VerifyRandomWaves(unittest.TestCase):
     def testRandom(self):
         from proteus.WaveTools import RandomWaves
         import random
@@ -418,11 +418,101 @@ class verifyRandomWaves(unittest.TestCase):
             uyRef += normDir[1]*ai[ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) * cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
             uzRef +=  ai[ii]*omega[ii] *sinh(ki[ii]*(z0+depth)) * sin(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
         
-        print ux, uxRef
+
         self.assertTrue(round(eta,8) == round(etaRef,8) )
         self.assertTrue(round(ux,8) == round(uxRef,8))
         self.assertTrue(round(uy,8) == round(uyRef,8))
         self.assertTrue(round(uz,8) == round(uzRef,8))
+
+class VerifyMultiSpectraRandomWaves(unittest.TestCase):
+    def testMultiSpectraDoubleExact(self):
+        from proteus.WaveTools import MultiSpectraRandomWaves, RandomWaves 
+        Tp = 1. 
+        Hs = 0.15
+        mwl = 4.5
+        depth = 0.9
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        dir1 = 2*random.random() - 1 
+        dir2 = 2*random.random() - 1 
+        waveDir = np.array([dir1,dir2, 0])
+        N = 100
+        phi = np.random.rand(N)
+        gamma = 1.2
+        TMA = True
+        spectName = "JONSWAP"
+        bandFactor = 2.0
+        x = random.random()*200. - 100.
+        y = random.random()*200. - 100.
+        z =  mwl - depth + random.random()*( depth)
+        t =  random.random()*200. - 100.
+        # Testing with a specific phi array
+        a= RandomWaves(
+            Tp,
+            Hs,
+            mwl,#m significant wave height
+            depth ,           #m depth
+            waveDir,
+            g,      #peak  frequency
+            N,
+            bandFactor,         #accelerationof gravity
+            spectName, 
+            spectral_params =  {"gamma": gamma, "TMA": TMA,"depth": depth}, 
+            phi = phi# random words will result in error and return the available spectra 
+    )
+        eta = a.eta(x,y,z,t)
+        ux = a.u(x,y,z,t,"x")
+        uy = a.u(x,y,z,t,"y")
+        uz = a.u(x,y,z,t,"z")
+
+#Doubling the spectral properties
+        aa= MultiSpectraRandomWaves(
+            2,
+            [Tp,Tp],
+            [Hs,Hs],
+            mwl,#m significant wave height
+            depth ,           #m depth
+            [waveDir,waveDir],
+            g,      #peak  frequency
+            np.array([N,N]),
+            [bandFactor,bandFactor],         #accelerationof gravity
+            [spectName, spectName], 
+            spectral_params =[  {"gamma": gamma, "TMA": TMA,"depth": depth},  {"gamma": gamma, "TMA": TMA,"depth": depth} ], 
+            phi = [phi,phi]# random words will result in error and return the available spectra 
+    )
+        eta2 = aa.eta(x,y,z,t)
+        ux2 = aa.u(x,y,z,t,"x")
+        uy2 = aa.u(x,y,z,t,"y")
+        uz2 = aa.u(x,y,z,t,"z")
+        
+        self.assertTrue(round(2.*eta,8) == round(eta2,8))
+        self.assertTrue(round(2.*ux,8) == round(ux2,8))
+        self.assertTrue(round(2.*uy,8) == round(uy2,8))
+        self.assertTrue(round(2.*uz,8) == round(uz2,8))
+# Testing with 10 spectra
+        aa= MultiSpectraRandomWaves(
+            5,
+            [Tp,Tp,Tp,Tp,Tp],
+            [Hs,Hs,Hs,Hs,Hs],
+            mwl,#m significant wave height
+            depth ,           #m depth
+            [waveDir,waveDir,waveDir,waveDir,waveDir],
+            g,      #peak  frequency
+            np.array([N,N,N,N,N]),
+            [bandFactor,bandFactor,bandFactor,bandFactor,bandFactor],         #accelerationof gravity
+            [spectName, spectName,spectName,spectName,spectName], 
+            spectral_params =[  {"gamma": gamma, "TMA": TMA,"depth": depth},  {"gamma": gamma, "TMA": TMA,"depth": depth}, {"gamma": gamma, "TMA": TMA,"depth": depth},  {"gamma": gamma, "TMA": TMA,"depth": depth}, {"gamma": gamma, "TMA": TMA,"depth": depth}  ], 
+            phi = [phi,phi,phi,phi,phi]# random words will result in error and return the available spectra 
+    )
+        eta2 = aa.eta(x,y,z,t)
+        ux2 = aa.u(x,y,z,t,"x")
+        uy2 = aa.u(x,y,z,t,"y")
+        uz2 = aa.u(x,y,z,t,"z")
+
+        self.assertTrue(round(5.*eta,8) == round(eta2,8))
+        self.assertTrue(round(5.*ux,8) == round(ux2,8))
+        self.assertTrue(round(5.*uy,8) == round(uy2,8))
+        self.assertTrue(round(5.*uz,8) == round(uz2,8))
 
 
 

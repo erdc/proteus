@@ -17,6 +17,7 @@ from Profiling import logEvent
 import time as tt
 import sys as sys
 
+
 def setVertDir(g):
     return -g/(sqrt(g[0]**2 + g[1]**2 + g[2]**2))
 
@@ -330,12 +331,18 @@ class MonochromaticWaves:
 
 class RandomWaves:
     """Generate approximate random wave solutions
+    :param Tp: frequency [1/T]
     :param Hs: significant wave height [L]
-    :param  d: depth [L]
-    :param fp: frequency [1/T]
-    :param bandFactor: width factor for band  around fp [-]
+    :param mwl: mean water level [L]
+    :param  depth: depth [L]
+    :param waveDir:wave Direction vector [-]
+    :param g: Gravitational acceleration vector [L/T^2]
     :param N: number of frequency bins [-]
-    :param mwl: mean water level [L]"""
+    :param bandFactor: width factor for band  around fp [-]
+    :param spectName: Name of spectral function. Use a random word and run the code to obtain the vaild spectra names
+    :param spectral_params: Additional arguments for spectral function, specific to each spectral function. If set to none, only Hs and Tp are given as parameters
+    :param phi: Array of component phases - if set to none, random phases are assigned
+"""
 
     def __init__(self,
                  Tp,
@@ -433,48 +440,99 @@ class RandomWaves:
             U+= vel_mode(x,y,z,t,self.kDir[ii], self.ki[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir,comp)                
         return U        
 
-class DoublePeakedRandomWaves(RandomWaves):
-    """Generate approximate random wave solutions
-
-    :param Tp: peak period [T]
-    :param Tp_2: second peak period [T]
-    :param Hs: significant wave height [L]
-    :param  d: depth [L]
-    :param fp: frequency [1/T]
-    :param bandFactor: width factor for band  around fp [-]
-    :param N: number of frequency bins [-]
-    :param mwl: mean water level [L]"""
-
+class MultiSpectraRandomWaves(RandomWaves):
+    """Generate a random wave timeseries from multiple spectra. 
+    Same input parameters as RandomWaves class but they have to be all in lists with the same lenght as the spectra (except from g!)
+    :param Nspectra, number of spectra
+    """
     def __init__(self,
-                 Tp = 5.0,         #s peak period
-                 Tp_2 = 2.5,         #s peak period
-                 Hs = 2.0,         #m significant wave height
-                 d = 2.0,           #m depth
-                 fp = 1.0/5.0,      #peak  frequency
-                 bandFactor = 2.0, #controls width of band  around fp
-                 N = 101,          #number of frequency bins
-                 mwl = 0.0,        #mean water level
-                 waveDir = np.array([1,0,0]),
-                 g = np.array([0, -9.81, 0]),         #accelerationof gravity
-                 spec_fun = JONSWAP,
-                 gamma=3.3):
-        self.fp_2 = 1.0/Tp_2
-        RandomWaves.__init__(self,
-                             Tp,
-                             Hs,
-                             d,
-                             fp,
-                             bandFactor,
-                             N,
-                             mwl,
-                             waveDir,
-                             g,
-                             spec_fun,
-                             gamma)
-        self.Si_Jm = spec_fun(self.fim,f0=self.fp,Hs=self.Hs,g=self.g,gamma=self.gamma) + spec_fun(self.fim,f0=self.fp_2,Hs=self.Hs,g=self.g,gamma=self.gamma)
-        self.ai = np.sqrt((self.Si_Jm[1:]+self.Si_Jm[:-1])*(self.fim[1:]-self.fim[:-1]))
+                 Nspectra, 
+                 Tp, # np array with 
+                 Hs,
+                 mwl,#m significant wave height
+                 depth ,           #m depth
+                 waveDir,
+                 g,      #peak  frequency
+                 N,
+                 bandFactor,         #accelerationof gravity
+                 spectName ,# random words will result in error and return the available spectra 
+                 spectral_params, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                 phi
+                 ):
+# Checking length of arrays / lists to be equal to NSpectra
+        try:
+            if (len(Tp) != Nspectra) or (len(Hs) != Nspectra) or (len(waveDir) != Nspectra) or \
+               (len(N) != Nspectra) or (len(bandFactor) != Nspectra) or \
+               (len(spectName) != Nspectra) or (len(spectral_params) != Nspectra) or(len(phi) != Nspectra):
 
-class timeSeries:
+                logEvent('WaveTools.py: Parameters passed in MultiSpectraRandomWaves must be in array or list form with length Nspectra  ')
+                sys.exit(1)
+               
+        except:
+            logEvent('WaveTools.py: Parameters passed in MultiSpectraRandomWaves must be in array or list form with length Nspectra  ')
+            sys.exit(1)
+        # Initialize numpy arrays for complete reconstruction
+        self.Nall = 0 
+        for nn in N:
+            self.Nall+=nn
+        
+
+        self.omegaM = np.zeros(self.Nall,float)
+        self.kiM = np.zeros(self.Nall,float)
+        self.aiM = np.zeros(self.Nall,float)
+        self.kDirM = np.zeros((self.Nall,3),float)
+        self.phiM= np.zeros(self.Nall,float)
+
+
+        NN = 0
+        for kk in range(Nspectra):
+            logEvent("WaveTools.py: Reading spectra No %s" %kk)
+            NN1 = NN
+            NN +=N[kk]
+            RandomWaves.__init__(self,
+                                 Tp[kk], # np array with 
+                                 Hs[kk],
+                                 mwl,#m significant wave height
+                                 depth,           #m depth
+                                 waveDir[kk],
+                                 g,      #peak  frequency
+                                 N[kk],
+                                 bandFactor[kk],         #accelerationof gravity
+                                 spectName[kk],# random words will result in error and return the available spectra 
+                                 spectral_params[kk], #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                                 phi[kk]
+                             )
+            self.omegaM[NN1:NN] = self.omega
+            self.kiM[NN1:NN] = self.ki
+            self.aiM[NN1:NN] = self.ai
+            self.kDirM[NN1:NN,:] =self.kDir[:,:]
+            self.phiM[NN1:NN] = self.phi
+        
+
+    def eta(self,x,y,z,t):
+        """Free surface displacement
+
+        :param x: floating point x coordinate
+        :param t: time"""
+        Eta=0.
+        for ii in range(self.Nall):
+            Eta+= eta_mode(x,y,z,t,self.kDirM[ii],self.omegaM[ii],self.phiM[ii],self.aiM[ii])
+        return Eta
+#        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
+
+    def u(self,x,y,z,t,comp):
+        """x-component of velocity
+
+        :param x: floating point x coordinate
+        :param z: floating point z coordinate (height above bottom)
+        :param t: time
+        """
+        U=0.
+        for ii in range(self.Nall):
+            U+= vel_mode(x,y,z,t,self.kDirM[ii], self.kiM[ii],self.omegaM[ii],self.phiM[ii],self.aiM[ii],self.mwl,self.depth,self.g,self.vDir,comp)                
+        return U        
+
+class TimeSeries:
     """Generate a time series by using spectral windowing method.
 
     :param ts: time-series array [T]
