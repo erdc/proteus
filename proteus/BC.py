@@ -72,6 +72,8 @@ class BoundaryConditions:
         elif len(b_or) > 2 and (b_or[2] == 1 or b_or[2] == -1):
             self.hz_dirichlet = constantBC(0.)
             self.w_stress = None
+        self.k_diffusive = constantBC(0.)
+        self.dissipation_diffusive = constantBC(0.)
 
     def setNoSlip(self):
         """
@@ -112,7 +114,6 @@ class BoundaryConditions:
         self.u_advective = None
         self.v_advective = None
         self.w_advective = None
-        self.k_advective = constantBC(0.)
         self.u_diffusive = constantBC(0.)
         self.v_diffusive = constantBC(0.)
         self.w_diffusive = constantBC(0.)
@@ -134,7 +135,7 @@ class BoundaryConditions:
         self.u_diffusive = None
         self.v_diffusive = None
         self.w_diffusive = None
-        self.DFBC_d = constantBC(0.)
+        self.dissipation_diffusive = constantBC(0.)
 
     def setMoveMesh(self, body):
         """
@@ -157,7 +158,8 @@ class BoundaryConditions:
         if len(body.last_position) > 2:
             self.hz_dirichlet = get_DBC_h(i=2)
 
-    def setTwoPhaseVelocityInlet(self, U, waterLevel, vert_axis=-1, air=1., water=0.):
+    def setTwoPhaseVelocityInlet(self, U, waterLevel, vert_axis=-1, air=1.,
+                                 water=0.):
         """
         Imposes a velocity profile lower than the sea level and an open
         boundary for higher than the sealevel.
@@ -182,7 +184,7 @@ class BoundaryConditions:
             def ux_dirichlet(x, t):
                 if x[vert_axis] < waterLevel:
                     return ux
-                elif x[vert_axis] >= waterLevel and ux==0:
+                elif x[vert_axis] >= waterLevel and ux == 0:
                     return 0.
             return ux_dirichlet
 
@@ -276,3 +278,57 @@ class BoundaryConditions:
         self.hydrostaticPressureOutlet(rhoUp, g, refLevel, pRef, vert_axis, air)
         self.p_dirichlet = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.vof_dirichlet = hydrostaticPressureOutletWithDepth_vof_dirichlet
+
+
+
+
+
+
+
+
+# ------------------------------------------------------------------------------ #
+# ---------------------------- INITIAL CONDITIONS ------------------------------ #
+# ------------------------------------------------------------------------------ #
+
+from proteus.ctransportCoefficients import smoothedHeaviside, smoothedHeaviside_integral
+
+# class InitialConditions:
+
+#     def __init__(self, domain):
+#         self.domain = domain
+#         self.nd = domain.nd
+#         self.initial_condition_func = 0.
+
+#     def twpflowPressure_init(self, x, t, waterLevel, ceiling=None,
+#                              axis=None, rho_0=998.2, rho_1=1.205, p_L=0.):
+#         if axis is None:
+#             axis = self.nd-1
+#         if ceiling is None:
+#             ceiling = self.domain[axis]
+#         p_L = p_L
+#         phi_L = ceiling - waterLevel
+#         phi = x[axis] - waterLevel
+#         return p_L -g[axis]*(rho_0*(phi_L - phi)+(rho_1 -rho_0)*(smoothedHeaviside_integral(epsFact_consrv_heaviside*he,phi_L)
+#                                                             -smoothedHeaviside_integral(epsFact_consrv_heaviside*he,phi)))
+
+#     def uOfXT(self, x, t):
+#         return self.initial_condition_func
+
+
+
+
+# class P_IC:
+#     def uOfXT(self, x, t):
+#         return ct.twpflowPressure_init(x, t)
+
+# class U_IC:
+#     def uOfXT(self, x, t):
+#         return 0.0
+
+# class V_IC:
+#     def uOfXT(self, x, t):
+#         return 0.0
+
+# class W_IC:
+#     def uOfXT(self, x, t):
+#         return 0.0
