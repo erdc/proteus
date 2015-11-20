@@ -4,6 +4,8 @@ import numpy.testing as npt
 import unittest
 import random
 from math import cos,sin,cosh,sinh,pi,tanh,log
+import sys
+import logging
 
 comm = Comm.init()
 Profiling.procID = comm.rank()
@@ -17,12 +19,13 @@ class TestAuxFunctions(unittest.TestCase):
     def testDirVector(self):
         from proteus.WaveTools import setDirVector
         self.assertTrue(all(setDirVector(np.array([2.,2.,1.]))== np.array([2.,2.,1])/3.))
-    def dirCheck(self):
+    def testDirCheck(self):
         from proteus.WaveTools import dirCheck
+        dirCheck(np.array([1.,2.,3.]),np.array([7.,4.,-5.]) )# Just loading the function with two vertical vectors
         with self.assertRaises(SystemExit) as cm:
             dirCheck(np.array([9,9,9]),np.array([4,5,6]))
         self.assertEqual(cm.exception.code, 1)     
-        self.assertTrue(dirCheck(np.array([1.,2.,3.]),np.array([7.,4.,-5.])==0))
+        
     def testReduceToIntervals(self):
         from proteus.WaveTools import reduceToIntervals
         fi = np.linspace(0, 100, 101)
@@ -33,6 +36,15 @@ class TestAuxFunctions(unittest.TestCase):
         fi_te[1:] = fi[:]
         self.assertTrue((fr- fi_te == 0).all())
 
+    def testIntegrateRectancles(self): # Testing the integration fynction for y = 2*x at [0,1]. The area should be 1
+        from proteus.WaveTools import reduceToIntervals,returnRectangles 
+        x = np.linspace(0,1,101)
+        dx = 0.01
+        y = 2*x
+        xim = reduceToIntervals(x,dx)
+        A = sum(returnRectangles(y,x))
+        self.assertTrue(A == 1)
+        
     def testEtaMode(self):
         from proteus.WaveTools import eta_mode
         x = 10.
@@ -226,6 +238,9 @@ class verifyMonoChromaticLinearWaves(unittest.TestCase):
         self.assertTrue(round(uy,8) == round(uyRef,8) )
         self.assertTrue(round(uz,8) == round(uzRef,8) )
 class verifyMonoChromaticFentonWaves(unittest.TestCase):
+#Fenton methodology equations at http://johndfenton.com/Papers/Fenton88-The-numerical-solution-of-steady-water-wave-problems.pdf
+#http://johndfenton.com/Steady-waves/Fourier.html
+
     def testFenton(self):
         from proteus.WaveTools import MonochromaticWaves
         period = 1. 
@@ -283,13 +298,132 @@ class verifyMonoChromaticFentonWaves(unittest.TestCase):
         self.assertTrue(round(uz,8) == round(uzRef,8))
        
         
-#Fenton methodology equations at http://johndfenton.com/Papers/Fenton88-The-numerical-solution-of-steady-water-wave-problems.pdf
-#http://johndfenton.com/Steady-waves/Fourier.html
+#========================================= RANDOM WAVES ======================================
+ 
 
+
+class checkRandomWavesFailures(unittest.TestCase):
+    def testFailureModes(self):
+        from proteus.WaveTools import RandomWaves
+#Failure 1: Give a wrong spectrum name
+        with self.assertRaises(SystemExit) as cm1:
+            RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"blahblah", spectral_params= None )
+        self.assertEqual(cm1.exception.code, 1 )     
+
+#Failure 2: Give gravity direction not vertical to wave direction
+        with self.assertRaises(SystemExit) as cm2:
+            RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,0,-9.81]),100,2.,"JONSWAP", spectral_params=None )
+        self.assertEqual(cm2.exception.code, 1 )
+#Failure 3: Give random spectral parameters
+        with self.assertRaises(SystemExit) as cm3:
+            RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", spectral_params= {"random1": 3.3, "random2":True,"random3" : 10.}  )
+        self.assertEqual(cm3.exception.code, 1)
+#Failure 4: Give wrong type of phases
+        with self.assertRaises(SystemExit) as cm4:
+            RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", spectral_params= {"random1": 3.3, "random2":True,"random3" : 10.}, phi = 0.  )
+        self.assertEqual(cm4.exception.code, 1)
+#Failure 5: Give wrong number of phase 
+        with self.assertRaises(SystemExit) as cm5:
+            RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", spectral_params= {"random1": 3.3, "random2":True,"random3" : 10.}, phi = np.zeros(1,)  )
+        self.assertEqual(cm5.exception.code, 1)
+
+  # Success!: Give all parameters in correct form!
+        RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params=None )
+        RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params={"gamma": 3.3, "TMA":True,"depth": 10.} )
+        RandomWaves(1.,1.,0.,10.,np.array([0,0,1]),np.array([0,1,0]),100,2.,"JONSWAP", spectral_params={"gamma": 3.3, "TMA":True,"depth": 10.}, phi = np.zeros(100, float) )
+        self.assertTrue(None == None)
+    
 class verifyRandomWaves(unittest.TestCase):
-    from proteus.WaveTools import RandomWaves
-    import random
-   
+    def testRandom(self):
+        from proteus.WaveTools import RandomWaves
+        import random
+        # Assinging a random value at a field and getting the expected output
+        Tp = 1. 
+        Hs = 0.15
+        mwl = 4.5
+        depth = 0.9
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        dir1 = 2*random.random() - 1 
+        dir2 = 2*random.random() - 1 
+        waveDir = np.array([dir1,dir2, 0])
+        N = 100
+        phi = np.random.rand(N)
+        gamma = 1.2
+        TMA = True
+        spectName = "JONSWAP"
+        bandFactor = 2.0
+
+        a= RandomWaves(Tp,
+                     Hs,
+                     mwl,#m significant wave height
+                     depth ,           #m depth
+                     waveDir,
+                     g,      #peak  frequency
+                     N,
+                     bandFactor,         #accelerationof gravity
+                     spectName# random words will result in error and return the available spectra 
+                   )
+        x = random.random()*200. - 100.
+        y = random.random()*200. - 100.
+        z =  mwl - depth + random.random()*( depth)
+        t =  random.random()*200. - 100.
+        # Just loading functions
+        eta = a.eta(x,y,z,t)
+        ux = a.u(x,y,z,t,"x")
+        uy = a.u(x,y,z,t,"y")
+        uz = a.u(x,y,z,t,"z")
+
+        # Testing with a specific phi array
+        a= RandomWaves(
+            Tp,
+            Hs,
+            mwl,#m significant wave height
+            depth ,           #m depth
+            waveDir,
+            g,      #peak  frequency
+            N,
+            bandFactor,         #accelerationof gravity
+            spectName, 
+            spectral_params =  {"gamma": gamma, "TMA": TMA,"depth": depth}, 
+            phi = phi# random words will result in error and return the available spectra 
+    )
+        eta = a.eta(x,y,z,t)
+        ux = a.u(x,y,z,t,"x")
+        uy = a.u(x,y,z,t,"y")
+        uz = a.u(x,y,z,t,"z")
+
+
+        # setDirVector are tested above
+        from proteus.WaveTools import setDirVector, dispersion, reduceToIntervals, returnRectangles, JONSWAP
+        fmin = 1./(Tp * bandFactor) 
+        fmax = bandFactor/(Tp)
+        fi = np.linspace(fmin,fmax,N)
+        df = (fmax-fmin)/(N -1 )
+        ki = dispersion(2*pi*fi,depth)
+        z0 = z - mwl
+        normDir = setDirVector(waveDir) 
+        fim = reduceToIntervals(fi,df)
+        Si_Jm = JONSWAP(fim,1./Tp,Hs,gamma,TMA, depth)
+        ai = np.sqrt(2.*returnRectangles(Si_Jm,fim))
+        omega = 2*pi*fi
+        etaRef = 0.
+        uxRef = 0.
+        uyRef = 0.
+        uzRef = 0.
+
+        for ii in range(N):
+            etaRef+=ai[ii]*cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])
+            uxRef += normDir[0]*ai[ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) *cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
+            uyRef += normDir[1]*ai[ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) * cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
+            uzRef +=  ai[ii]*omega[ii] *sinh(ki[ii]*(z0+depth)) * sin(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[ii])/sinh(ki[ii]*depth)
+        
+        print ux, uxRef
+        self.assertTrue(round(eta,8) == round(etaRef,8) )
+        self.assertTrue(round(ux,8) == round(uxRef,8))
+        self.assertTrue(round(uy,8) == round(uyRef,8))
+        self.assertTrue(round(uz,8) == round(uzRef,8))
+
 
 
 if __name__ == '__main__':
