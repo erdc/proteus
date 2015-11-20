@@ -1,13 +1,14 @@
 """
 A class hierarchy and tools for building domains of PDE's.
 """
-
+import BC
+import numpy as np
 
 class D_base:
     """
     The base class for domains
     """
-    def __init__(self,nd,name="defaultDomain",units="m"):
+    def __init__(self,nd,g=None,name="defaultDomain",units="m"):
         """
         Set dimensions (nd), name string, and units string
         """
@@ -18,6 +19,9 @@ class D_base:
         self.units=units
         self.x=[]#minx,miny,minz
         self.L=[]#bounding box when self.x is origin
+        self.g=g
+        self.bc = [BC.BoundaryConditions()]
+        self.barycenters = np.array([[0., 0., 0.]])
         self.auxiliaryVariables = []
     def writeAsymptote(self, fileprefix):
         """
@@ -41,6 +45,18 @@ class D_base:
             xMin = min(row[d] for row in self.vertices)
             self.x += [xMin]
             self.L += [xMax-xMin]
+
+    def setGravity(self, g='default'):
+        """
+        Sets gravity in the domain
+        """
+        if g == 'default':
+            if self.nd == 2:
+                self.g = [0., -9.81, 0.]
+            elif nd == 3:
+                self.g = [0., 0., -9.81]
+        else:
+            self.g = g
 
 class RectangularDomain(D_base):
     """
@@ -260,8 +276,7 @@ class PlanarStraightLineGraphDomain(D_base):
             self.segmentFlags = segmentFlags or []
             self.regionFlags = regionFlags or []
             self.regionConstraints = regionConstraints or []
-            self.bc = bc or []
-            self.barycenters = None
+            self.bc = bc or self.bc
             self.update()
 
     def update(self):
@@ -733,9 +748,8 @@ class PiecewiseLinearComplexDomain(D_base):
             self.regionConstraints = regionConstraints or []
             self.regionLegend = {}
             self.boundaryFlags = {}
-            self.bc = bc or []
+            self.bc = bc or self.bc
             import numpy as np
-            self.barycenters = None
             self.update()
             
     def update(self):
