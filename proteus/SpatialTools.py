@@ -11,10 +11,11 @@ classes:
 import BC as bc
 import numpy as np
 from math import cos, sin, sqrt, atan2, acos
-from proteus import AuxiliaryVariables, Archiver
+from proteus import AuxiliaryVariables, Archiver, Comm
 from proteus.Profiling import logEvent
 from itertools import compress
 import csv
+
 
 class BCContainer(object):
     def __init__(self, BC_dict):
@@ -1193,10 +1194,12 @@ class RigidBody(AuxiliaryVariables.AV_base):
                   rot_z, Fx, Fy, Fz, Mx, My, Mz, inertia,
                   vel_x, vel_y, vel_z, acc_x, acc_y, acc_z]
         values_towrite = list(compress(values, self.shape.record_bool))
-        if self.shape.record_values is True:
-            with open(self.shape.record_filename, 'a') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(values_towrite)
+        comm = Comm.get()
+        if  comm.isMaster():
+            if self.shape.record_values is True:
+                with open(self.shape.record_filename, 'a') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=',')
+                    writer.writerow(values_towrite)
         
     def attachModel(self, model, ar):
         self.model = model
@@ -1237,10 +1240,12 @@ class RigidBody(AuxiliaryVariables.AV_base):
             self.Fg = self.shape.mass*np.array([0., -9.81, 0.])
         if nd == 3:
             self.Fg = self.shape.mass*np.array([0., 0., -9.81])
-        if self.shape.record_values is True:
-            with open(self.shape.record_filename, 'w') as csvfile:
-                writer = csv.writer(csvfile, delimiter=',')
-                writer.writerow(self.shape.record_names)
+        comm = Comm.get()
+        if  comm.isMaster():
+            if self.shape.record_values is True:
+                with open(self.shape.record_filename, 'w') as csvfile:
+                    writer = csv.writer(csvfile, delimiter=',')
+                    writer.writerow(self.shape.record_names)
 
     def calculate(self):
         self.last_position[:] = self.position
