@@ -1088,30 +1088,24 @@ class CustomShape(Shape):
         Shape.__init__(self, domain)
         self.__class__.count += 1
         self.name = "custom" + str(self.__class__.count)
-        minFlag = min(vertexFlags)
-        if segmentFlags:
-            minFlag = min(minFlag, min(segmentFlags))
-        if facetFlags:
-            minFlag = min(minFlag, min(facetFlags))
         flagSet = set()
+        for tag, value in boundaryTags.iteritems():
+            flagSet.add(value)
+        print flagSet
+        minFlag = min(flagSet)
+        previous_flag = minFlag-1
+        for flag in flagSet:
+            print flag
+            assert flag == previous_flag+1, "Flags must be defined as a suite of numbers (e.g. 0, 1, 2, 3, 4 with no gap)!"
+            previous_flag = flag
         self.vertices = np.array(vertices)
         self.vertexFlags = np.array(vertexFlags)-(minFlag+1)
-        for flag in self.vertexFlags:
-            flagSet.add(flag)
         if segments:
             self.segments = np.array(segments)
             self.segmentFlags = np.array(segmentFlags)-(minFlag+1)
-            for flag in self.segmentFlags:
-                flagSet.add(flag)
         if facets:
             self.facets = np.array(facets)
             self.facetFlags = np.array(facetFlags)-(minFlag+1)
-            for flag in self.facetFlags:
-                flagSet.add(flag)
-        previous_flag = 0
-        for flag in flagSet:
-            assert flag == previous_flag+1, "Flags must be defined as a suite of numbers (e.g. 0, 1, 2, 3, 4 with no gap)!"
-            previous_flag = flag
         if holes is not None:
             self.holes = np.array(holes)
         if regions is not None:
@@ -1128,9 +1122,8 @@ class CustomShape(Shape):
         self.BC_dict = {}
         self.BC_list = [None]*len(flagSet)
         for tag, index in boundaryTags.iteritems():
-            if index-minFlag in flagSet:
-                self.BC_dict[tag] = bc.BoundaryConditions()
-                self.BC_list[index-minFlag] = self.BC_dict[tag]
+            self.BC_dict[tag] = bc.BoundaryConditions()
+            self.BC_list[index-minFlag] = self.BC_dict[tag]
         self.BC = BCContainer(self.BC_dict)
         self._addShape()
 
