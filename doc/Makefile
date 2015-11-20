@@ -55,11 +55,8 @@ html: source/api/modules.rst build/html/capi/html/files.html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-source/api/modules.rst: proteus
-	sphinx-apidoc --output-dir=source/api proteus --separate --force 
-
-proteus:
-	ln -s ../proteus proteus
+source/api/modules.rst:
+	sphinx-apidoc --output-dir=source/api ../proteus --separate --force -M
 
 build/html/capi/html/files.html:
 	-mkdir -p build/html/capi
@@ -187,3 +184,6 @@ pseudoxml:
 	$(SPHINXBUILD) -b pseudoxml $(ALLSPHINXOPTS) $(BUILDDIR)/pseudoxml
 	@echo
 	@echo "Build finished. The pseudo-XML files are in $(BUILDDIR)/pseudoxml."
+
+serve:
+	cd build/html && python -m SimpleHTTPServer 8000
