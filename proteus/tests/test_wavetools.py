@@ -124,7 +124,7 @@ class TestWaveParameters(unittest.TestCase):
         bj = 0.0624*(1.094 - 0.01915*log(gamma))/(0.23+0.0336*gamma-0.185/(1.9+gamma))
         r_exp = np.exp(-(f/f0 -1 )**2/(2.*sig**2))
         JON = (bj*(Hs**2)*(f0**4)/f**5)*np.exp(-1.25*(f0/f)**4)*(gamma**r_exp)
-        JON2 = JONSWAP(f,f0,Hs,gamma,TMA=False, h = None)
+        JON2 = JONSWAP(f,f0,Hs,gamma,TMA=False, depth = None)
         
         JCOMP = JON2/JON
         self.assertTrue((np.around(JCOMP,10)==1).all())
@@ -136,17 +136,17 @@ class TestWaveParameters(unittest.TestCase):
 # Check TMA modification           
         k = dispersion(2*pi*f,h)
         TMA = np.tanh(k*h)*np.tanh(k*h)/(1.+2.*k*h/np.sinh(2*k*h))
-        JON2 = JONSWAP(f,f0,Hs,gamma,TMA=True, h=h)
+        JON2 = JONSWAP(f,f0,Hs,gamma,TMA=True, depth=h)
         JCOMP = JON2/(TMA*JON)
         self.assertTrue((np.around(JCOMP,10)==1).all())
     def test_PM(self): #PM tests
-        from proteus.WaveTools import piersonMoskovitz 
+        from proteus.WaveTools import PM_mod
         f0 = random.random() + 1.
         f = np.linspace(f0/2.,2.*f0,10)        
         Hs = random.random()
         g = 9.81
         S_PM = (5./16.) * Hs**2 * f0**4 / f**5 * np.exp(-5./4. * (f0/f)**4)
-        S_PM2 =  piersonMoskovitz(f,f0,Hs,alpha=8.1e-3,beta=0.74,g =9.8)
+        S_PM2 =  PM_mod(f,f0,Hs)
         SCOMP = S_PM2/S_PM
         self.assertTrue((np.around(SCOMP,10)==1).all())
         
