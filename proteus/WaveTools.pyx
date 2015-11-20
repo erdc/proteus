@@ -31,7 +31,7 @@ def dirCheck(v1, v2):
 def reduceToIntervals(fi,df):
     fim_tmp = (0.5*(fi[1:]+fi[:-1])).tolist()
     return np.array([fim_tmp[0]-0.5*df]+fim_tmp+[fim_tmp[-1]+0.5*df])
-def integrateRectangles(a,x):
+def returnRectangles(a,x):
     return 0.5*(a[1:]+a[:-1])*(x[1:]-x[:-1])
 def eta_mode(x,y,z,t,kDir,omega,phi,amplitude):
     """Returns a single frequency mode for free-surface elevation at point x,y,z,t
@@ -85,6 +85,7 @@ def sigma(omega,omega0):
     """
     sigmaReturn = np.where(omega > omega0,0.09,0.07)
     return sigmaReturn
+def dummy(f,f0,Hs, **kwargs): return None # dummy function to initialise spectral functions
 def JONSWAP(f,f0,Hs,gamma=3.3,TMA=False, depth = None):
     """The wave spectrum from Joint North Sea Wave Observation Project
     Jonswap equation from "Random Seas and Design of Maritime Structures" - Y. Goda - 2010 (3rd ed) eq. 2.12 - 2.15 
@@ -238,7 +239,8 @@ class MonochromaticWaves:
                  wavelength=None,
                  waveType="Linear",
                  Ycoeff = None, 
-                 Bcoeff =None, meanVelocity = np.array([0.,0,0.]),phi0 = 0.):
+                 Bcoeff =None, meanVelocity = np.array([0.,0,0.]),
+                 phi0 = 0.):
         self.knownWaveTypes = ["Linear","Fenton"]
         self.waveType = waveType
         if self.waveType not in self.knownWaveTypes:
@@ -336,28 +338,30 @@ class RandomWaves:
                  Hs,
                  mwl,#m significant wave height
                  depth ,           #m depth
-                 g,      #peak  frequency
                  waveDir,
+                 g,      #peak  frequency
                  N,
                  bandFactor,         #accelerationof gravity
-                 spectName = "JONSWAP",# random words will result in error and return the available spectra 
-                 spectral_params =  None #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth",depth} 
+                 spectName ,# random words will result in error and return the available spectra 
+                 spectral_params =  None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
+                 phi=None
                  ):
         validSpectra = [JONSWAP,PM_mod]
-        spec_fun = None
         spectNames =[]
+        spec_fun = dummy 
         for spectrum in validSpectra:
             spectNames.append(spectrum.__name__)
             if spectrum.__name__ == spectName:
                 spec_fun = spectrum
-
-
-        if spec_fun == None:
+        
+        if spectName not in spectNames:
             logEvent("WaveTools.py: Wrong spectrum type (%s) given: Valid wavetypes are %s" %(spectName,spectNames), level=0)
-            
+            sys.exit(1)
+                
         self.g = np.array(g)
         self.waveDir =  setDirVector(np.array(waveDir))
         self.vDir = setVertDir(g)
+        dirCheck(self.waveDir,self.vDir)
         self.gAbs = sqrt(self.g[0]*self.g[0]+self.g[1]*self.g[1]+self.g[2]*self.g[2])
         self.Hs = Hs
         self.depth = depth
@@ -368,18 +372,40 @@ class RandomWaves:
         self.mwl = mwl
         self.fmax = self.bandFactor*self.fp
         self.fmin = self.fp/self.bandFactor
-        self.df = (self.fmax-self.fmin)/float(self.N)
-        self.fi = np.linspace(self.fmin,self.fmax,self.N+1)
+        self.df = (self.fmax-self.fmin)/float(self.N-1)
+        self.fi = np.linspace(self.fmin,self.fmax,self.N)
         self.omega = 2.*pi*self.fi
         self.ki = dispersion(self.omega,self.depth,g=self.gAbs)
-        self.phi = 2.0*pi*np.random.random(self.fi.shape[0])
-        logEvent('WaveTools.py: Outputing the phasing of the random waves')
-        logEvent(self.phi)
+        if phi == None:
+            self.phi = 2.0*pi*np.random.random(self.fi.shape[0])
+            logEvent('WaveTools.py: No phase array is given. Assigning random phases. Outputing the phasing of the random waves')
+        else:
+            try: 
+                self.phi = np.array(phi)
+                if self.phi.shape[0] != self.fi.shape[0]:
+                    logEvent('WaveTools.py: Phase array must have N elements')
+                    sys.exit(1)
+                    
+            except:
+                logEvent('WaveTools.py: phi argument must be an array with N elements')
+                exit(1)
+
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
         self.fim = reduceToIntervals(self.fi,self.df)
-        self.Si_Jm = spec_fun(self.fim,f0=self.fp,Hs=self.Hs,**spectral_params)
-        self.ai = np.sqrt(2.*integrateRectangles(self.Si_Jm,self.fim))
-        self.kDir = self.ki*self.waveDir 
+        if (spectral_params == None):
+            self.Si_Jm = spec_fun(self.fim,self.fp,self.Hs)
+        else:
+            try:
+                self.Si_Jm = spec_fun(self.fim,self.fp,self.Hs,**spectral_params)
+            except:
+                logEvent('WaveTools.py: Additional spectral parameters are not valid for the %s spectrum' %spectName)
+                sys.exit(1)
+        
+
+        self.ai = np.sqrt(2.*returnRectangles(self.Si_Jm,self.fim))
+        self.kDir = np.zeros((len(self.ki),3),)
+        for ii in range(3):
+             self.kDir[:,ii] = self.ki[:] * self.waveDir[ii] 
     def eta(self,x,y,z,t):
         """Free surface displacement
 
@@ -387,7 +413,7 @@ class RandomWaves:
         :param t: time"""
         Eta=0.
         for ii in range(self.N):
-            Eta+= eta_mode(x,y,z,t,self.kDir[ii],self.omega[ii],self.phi0[ii],self.amplitude[ii])
+            Eta+= eta_mode(x,y,z,t,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
         return Eta
 #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
 
@@ -400,7 +426,7 @@ class RandomWaves:
         """
         U=0.
         for ii in range(self.N):
-            U+= vel_mode(x,y,z,t,self.kDir[ii], self.ki[ii],self.omega[ii],self.phi0[ii],self.amplitude[ii],self.mwl,self.depth,self.g,self.vDir,comp)                
+            U+= vel_mode(x,y,z,t,self.kDir[ii], self.ki[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir,comp)                
         return U        
 
 class DoublePeakedRandomWaves(RandomWaves):
