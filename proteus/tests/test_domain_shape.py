@@ -1,11 +1,11 @@
 """
-Testing module for Domain.py, SHape.py, BC.py
+Testing module for Domain.py, Shape.py, BC.py
 Work in progress
 """
 
 
 from proteus import Domain
-from proteus import Shape as sp
+from proteus import SpatialTools as st
 from proteus.default_n import *
 
 
@@ -18,12 +18,12 @@ domain = Domain.PiecewiseLinearComplexDomain()
 
 tank_dim = [4., 4., 4.]
 tank_coords = [0., 0., 0.]
-tank = sp.Cuboid(domain, tank_dim)
+tank = st.Cuboid(domain, tank_dim)
 tank.setPosition(tank_coords)
 
 caisson_dim = [.3, .9, .1]
 caisson_coords = [2., 2., 2.]
-caisson3D = sp.Cuboid(domain, caisson_dim)
+caisson3D = st.Cuboid(domain, caisson_dim)
 caisson3D.setPosition(caisson_coords)
 caisson3D.setConstraints([0., 0., 1.], [1., 1., 0.])
 
@@ -68,7 +68,7 @@ facetFlags=[boundaryTags['bottom'],
             boundaryTags['back'],
             boundaryTags['left'],
             boundaryTags['top']]
-custom = sp.CustomShape(domain=domain,
+custom = st.CustomShape(domain=domain,
                         vertices=vertices,
                         vertexFlags=vertexFlags,
                         facets=facets,
