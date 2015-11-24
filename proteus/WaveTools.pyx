@@ -37,15 +37,17 @@ def reduceToIntervals(fi,df):
     return np.array([fim_tmp[0]-0.5*df]+fim_tmp+[fim_tmp[-1]+0.5*df])
 def returnRectangles(a,x):
     return 0.5*(a[1:]+a[:-1])*(x[1:]-x[:-1])
-def returnRectangles3D(a,x,b,y):
-    da = returnRectangles(a,x)
-    db = returnRectangles(b,y)
-    ai = np.zeros((len(x)-1,len(y)-1),)
-    for ii in range(ai.shape[0]):
-        for jj in range(ai.shape[1]):
-            ai[ii,jj] = da[ii]*db[jj]
-    return ai
+def returnRectangles3D(a,x,y):
 
+    ai = 0.5*(a[1:,:]+a[:-1,:])
+    ai = 0.5*(ai[:,1:]+ai[:,:-1])
+    for ii in range(len(x)-1):
+        ai[ii,:] *= (y[1:]-y[:-1]) 
+    for jj in range(len(y) - 1):
+        ai[:,jj] *= (x[1:]-x[:-1]) 
+        
+    
+    return ai
 def normIntegral(Sint,th):
     G0 = 1./sum(returnRectangles(Sint,th))
     return G0*Sint
@@ -571,7 +573,7 @@ class DirectionalWaves(RandomWaves):
                  spectral_params = None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
                  spread_params = None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}\ 
                  phi=None, # phi must be an (2*M+1)*N numpy array
-                 phiSymm = True # When true, phi[-pi/2,0] is symmetric to phi[0,pi/2]
+                 phiSymm = False # When true, phi[-pi/2,0] is symmetric to phi[0,pi/2]
                  ):   
         validSpread = [cos2s,mitsuyasu]
         spreadNames =[]
@@ -581,7 +583,7 @@ class DirectionalWaves(RandomWaves):
             if spread.__name__ == spreadName:
                 spread_fun = spread
     
-        if spread not in spreadNames:
+        if spreadName not in spreadNames:
             logEvent("WaveTools.py: Wrong spreadfunction type (%s) given: Valid wavetypes are %s" %(spreadName,spreadNames), level=0)
             sys.exit(1)
         self.M = M
@@ -617,7 +619,7 @@ class DirectionalWaves(RandomWaves):
         
 
         temp_array = np.zeros((1,3),)
-        temp_array[1,:] = waveDir0
+        temp_array[0,:] = waveDir0
         directions = range(0,self.Mtot)
 
 # initialising wave directions
@@ -628,14 +630,20 @@ class DirectionalWaves(RandomWaves):
 
 # Initialising phasing
         if phi == None:
-            self.phiDirs = 2.0*pi*np.random.random((self.Mtot),self.fi.shape[0])
+            self.phiDirs = 2.0*pi*np.random.rand(self.Mtot,self.fi.shape[0])
         elif np.shape(phi) == (2*M+1,self.fi.shape[0]):
             self.phiDirs = phi
         else:
-            logEvent("WaveTools.py: phi in DirectionalWaves class must be given either as None or as a list with 2*M + 1 nupy arrays with length N")
+            logEvent("WaveTools.py: phi in DirectionalWaves class must be given either as None or as a list with 2*M + 1 numpy arrays with length N")
             sys.exit(1)
-        
-        self.thetas_m = reduceToIntervals(self.thetas,self.dth)        
+            
+        if (phiSymm):
+            self.phiDirs[:self.M] = self.phiDirs[self.M+1::-1]
+            
+            
+
+
+        self.theta_m = reduceToIntervals(self.thetas,self.dth)        
         if (spread_params == None):
             self.Si_Sp = spread_fun(self.theta_m,self.fim)
         else:
@@ -651,8 +659,9 @@ class DirectionalWaves(RandomWaves):
     # Normalising integral over all frequencies
         for ii in freq:            
             self.Si_Sp[:,ii] = normIntegral(self.Si_Sp[:,ii],self.theta_m)
+            self.Si_Sp[:,ii] = self.Si_Jm[ii] 
     # Creating amplitudes spectrum
-            self.aiDirs[:,ii] = np.sqrt(2.*returnRectangles3D(self.Si_Sp[:,ii],self.theta_m,self.Si_Jm,self.fim))
+        self.aiDirs[:] = np.sqrt(2.*returnRectangles3D(self.Si_Sp,self.theta_m,self.fim))
             
 
 
