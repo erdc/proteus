@@ -36,29 +36,32 @@ class TestAuxFunctions(unittest.TestCase):
         fi_te[1:] = fi[:]
         self.assertTrue((fr- fi_te == 0).all())
 
-    def testIntegrateRectancles(self): # Testing the integration fynction for y = 2*x at [0,1]. The area should be 1
+    def testIntegrateRectangles(self): # Testing the integration fynction for y = 2*x at [0,1]. The area should be 1
 
         from proteus.WaveTools import reduceToIntervals,returnRectangles 
         x = np.linspace(0,1,101)
         dx = 0.01
-        y = 2*x 
         xim = reduceToIntervals(x,dx)
-        A = sum(returnRectangles(y,x))
-        self.assertTrue(A == 1)
-    def testIntegrateRectancles3D(self): # Testing the integration fynction for y = 2*x at [0,1]. The area should be 1
+        y = 2*xim 
+        A = sum(returnRectangles(y,xim))
+        self.assertTrue(round(A,10) == 1.0)
+    def testIntegrateRectangles3D(self): # Testing the integration fynction for y = 2*x at [0,1]. The area should be 1
         from proteus.WaveTools import reduceToIntervals,returnRectangles3D
         x = np.linspace(0,1,101)
         dx = 0.01
         z = np.linspace(0,1,201)
         dz = 0.005
-        y1 = 2*x 
-        y2 = z
         xim = reduceToIntervals(x,dx)
         zim = reduceToIntervals(z,dz)
-
-        A = sum(sum(returnRectangles3D(y2,z,y1,x)))
+        y1 = np.zeros((len(xim),len(zim)),)
+                
+        for j in range(len(zim)):
+            for i in range(len(xim)):
+                y1[i,j] = 2.*xim[i]*zim[j]
+        
+        A = sum(sum(returnRectangles3D(y1,xim,zim)))
         # Integrate function z*(2*x) over x[0,1], z[0,1] result == 0.5
-        self.assertTrue(A == 0.5)
+        self.assertTrue(round(A,10)== 0.5)
        
         
     def testEtaMode(self):
@@ -635,6 +638,29 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
         self.assertTrue(round(5.*ux,8) == round(ux2,8))
         self.assertTrue(round(5.*uy,8) == round(uy2,8))
         self.assertTrue(round(5.*uz,8) == round(uz2,8))
+
+
+class CheckDirectionalWaveFailures(unittest.TestCase):
+    def testFailureModes(self):
+        from proteus.WaveTools import DirectionalWaves
+        DirectionalWaves(200,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", "cos2s", spectral_params= None, spread_params = {"s":10}, phi = None, phiSymm = False  )
+       # Putting a silly name
+        with self.assertRaises(SystemExit) as cm1:
+            DirectionalWaves(200,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", "aaaargh", spectral_params= None, spread_params = {"s":10}, phi = None, phiSymm = False  )
+        self.assertEqual(cm1.exception.code, 1 )     
+       # Putting incorrect phi
+        with self.assertRaises(SystemExit) as cm2:
+            DirectionalWaves(200,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", "cos2s", spectral_params= None, spread_params = {"s":10}, phi = np.zeros(15,), phiSymm = False  )
+        self.assertEqual(cm2.exception.code, 1 )     
+        #putting non existent parameters
+        with self.assertRaises(SystemExit) as cm3:
+            DirectionalWaves(200,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", "cos2s", spectral_params= None, spread_params = {"blah":10}, phi = np.zeros(15,), phiSymm = False  )
+        self.assertEqual(cm3.exception.code, 1 )     
+        
+
+            
+        
+      
 
 
 
