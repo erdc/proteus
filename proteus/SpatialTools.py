@@ -11,10 +11,11 @@ classes:
 import BC as bc
 import numpy as np
 from math import cos, sin, sqrt, atan2, acos
-from proteus import AuxiliaryVariables, Archiver, Comm
+from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
 from proteus.Profiling import logEvent
 from itertools import compress
 import csv
+import os
 
 
 class BCContainer(object):
@@ -27,11 +28,10 @@ class Shape:
     Class defining a shape
     :param domain: domain in which the shape is defined
     """
-    _instances = []
-    
+
     def __init__(self, domain, dim=None, coords=None):
-        self.instance_i = len(self.__class__._instances)
-        self.__class__._instances.append(self)
+        self.instance_i = len(domain.shape_list)
+        domain.shape_list.append(self)
         self.domain = domain
         self.vertices = None
         self.vertexFlags = None
@@ -53,8 +53,8 @@ class Shape:
         self._snv = None  # total number of vertices in domain when shape.__init__
         self._snf = None
         self._sns = None
-        self._snr = None 
-        self._snh = None 
+        self._snr = None
+        self._snh = None
         self._snbc = None
 
     def _addShape(self):
@@ -164,7 +164,7 @@ class Shape:
         self._enbc = i0 + len(self.BC_list)
         # updating the attributes of the shape defined after current shape
         bcdiff = self._enbc - i1
-        for ind, inst in enumerate(self.__class__._instances):
+        for ind, inst in enumerate(self.domain.shape_list):
             if ind > self.instance_i:
                 inst._snv += vdiff
                 inst._env += vdiff
@@ -367,7 +367,7 @@ class Shape:
         elif self.domain.nd == 3:
             vec = relative_vec(vec, self.coords_system[2])
             cx, cy, cz = vec
-            # getting the tensor for calculaing moment of inertia from arbitrary axis 
+            # getting the tensor for calculaing moment of inertia from arbitrary axis
             vt = np.array([[cx**2, cx*cy, cx*cz],
                             [cx*cy, cy**2, cy*cz],
                             [cx*cz, cy*cz, cz**2]])
@@ -391,7 +391,7 @@ class Shape:
                         Fx=False, Fy=False, Fz=False, M=False, Mx=False,
                         My=False, Mz=False, inertia=False, vel=False,
                         vel_x=False, vel_y=False, vel_z=False, acc=False,
-                        acc_x=False, acc_y=False, acc_z=False):
+                        acc_x=False, acc_y=False, acc_z=False, filename=None):
         """
         values to be recorded in a csv file (for rigid bodies)
         """
@@ -413,12 +413,15 @@ class Shape:
                             vel_z, acc_x, acc_y, acc_z]
         if all_values is True:
             self.record_bool = [True for value in self.record_bool]
-        self.record_names = ['time', 'pos_x', 'pos_y', 'pos_z', 
+        self.record_names = ['time', 'pos_x', 'pos_y', 'pos_z',
                              'rot_x', 'rot_y', 'rot_z', 'Fx', 'Fy', 'Fz',
                              'Mx', 'My', 'Mz', 'inertia', 'vel_x', 'vel_y', 'vel_z',
                              'acc_x', 'acc_y', 'acc_z']
         self.record_names = list(compress(self.record_names, self.record_bool))
-        self.record_filename = 'record_' + self.name + '.csv'
+        if filename is None:
+            self.record_filename = 'record_' + self.name + '.csv'
+        else:
+            self.record_filename = filename + '.csv'
 
 
 class Cuboid(Shape):
@@ -1197,10 +1200,10 @@ class RigidBody(AuxiliaryVariables.AV_base):
         comm = Comm.get()
         if  comm.isMaster():
             if self.shape.record_values is True:
-                with open(self.shape.record_filename, 'a') as csvfile:
+                with open(self.record_file, 'a') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
                     writer.writerow(values_towrite)
-        
+
     def attachModel(self, model, ar):
         self.model = model
         self.ar = ar
@@ -1243,7 +1246,8 @@ class RigidBody(AuxiliaryVariables.AV_base):
         comm = Comm.get()
         if  comm.isMaster():
             if self.shape.record_values is True:
-                with open(self.shape.record_filename, 'w') as csvfile:
+                self.record_file = os.path.join(Profiling.logDir, self.shape.record_filename)
+                with open(self.record_file, 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
                     writer.writerow(self.shape.record_names)
 
@@ -1314,10 +1318,10 @@ class RigidBody(AuxiliaryVariables.AV_base):
 
 def rotation2D(points, rot, pivot=(0., 0.)):
     """
-    function to make a set of points/vertices/vectors (arg: points) to rotate 
-    around a pivot point (arg: pivot) 
+    function to make a set of points/vertices/vectors (arg: points) to rotate
+    around a pivot point (arg: pivot)
     :arg points: set of 3D points (list or array)
-    :arg rot: angle of rotation (in radians) 
+    :arg rot: angle of rotation (in radians)
     :arg pivot: point around which the set of points rotates (list or array)
     :return points_rot: the rotated set of points (numpy array)
     """
@@ -1351,10 +1355,10 @@ def rotation2D(points, rot, pivot=(0., 0.)):
 
 def rotation3D(points, rot, axis=(0.,0.,1.), pivot=(0.,0.,0.)):
     """
-    function to make a set of points/vertices/vectors (arg: points) to rotate 
-    around an arbitrary axis/vector (arg: axis) going through a pivot point (arg: pivot) 
+    function to make a set of points/vertices/vectors (arg: points) to rotate
+    around an arbitrary axis/vector (arg: axis) going through a pivot point (arg: pivot)
     :arg points: set of 3D points (array)
-    :arg rot: angle of rotation (in radians) 
+    :arg rot: angle of rotation (in radians)
     :arg axis: axis of rotation (list or array)
     :arg pivot: point around which the set of points rotates (list or array)
     :return points_rot: the rotated set of points (numpy array)
@@ -1363,7 +1367,7 @@ def rotation3D(points, rot, axis=(0.,0.,1.), pivot=(0.,0.,0.)):
     rot = float(rot)
     # get coordinates for translation
     x, y, z = pivot
-    # make axis a unity vector 
+    # make axis a unity vector
     axis = np.array(axis)
     r = np.linalg.norm(axis)
     axis = axis/r
@@ -1376,7 +1380,7 @@ def rotation3D(points, rot, axis=(0.,0.,1.), pivot=(0.,0.,0.)):
                        [0,         cz/d,     cy/d, 0],
                        [0,         -cy/d,    cz/d, 0],
                        [0,         0,        0,    1]])
-    else:  # special case: rotation axis aligned with x axis    
+    else:  # special case: rotation axis aligned with x axis
         Rx = np.array([[1,         0,        0,    0],
                        [0,         1,        0,    0],
                        [0,         0,        1,    0],
@@ -1415,7 +1419,7 @@ def relative_vec(vec1, vec0):
     (projecting vec0 as the z-axis for vec1)
     :arg vec1: vector to get new coordinates
     :arg vec0: vector of reference
-    :return: new coordinates of vec1 
+    :return: new coordinates of vec1
     """
     #spherical coords vec0
     x0, y0, z0 = vec0
@@ -1450,7 +1454,7 @@ class RelaxationZone:
 
 class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
     """ Prescribe a velocity penalty scaling in a material zone via a Darcy-Forchheimer penalty
-    
+
     :param zones: A dictionary mapping integer material types to Zones, where a Zone is a named tuple
     specifying the x coordinate of the zone center and the velocity components
     """
