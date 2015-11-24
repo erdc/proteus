@@ -37,6 +37,14 @@ def reduceToIntervals(fi,df):
     return np.array([fim_tmp[0]-0.5*df]+fim_tmp+[fim_tmp[-1]+0.5*df])
 def returnRectangles(a,x):
     return 0.5*(a[1:]+a[:-1])*(x[1:]-x[:-1])
+def returnRectangles3D(a,x,b,y):
+    da = returnRectangles(a,x)
+    db = returnRectangles(b,y)
+    ai = np.zeros((len(x)-1,len(y)-1),)
+    for ii in range(ai.shape[0]):
+        for jj in range(ai.shape[1]):
+            ai[ii,jj] = da[ii]*db[jj]
+    return ai
 
 def normIntegral(Sint,th):
     G0 = 1./sum(returnRectangles(Sint,th))
@@ -135,9 +143,19 @@ def PM_mod(f,f0,Hs):
     return (5.0/16.0)*Hs**2*(f0**4/f**5)*np.exp((-5.0/4.0)*(f0/f)**4)
 
 def cos2s(theta,f,s=10):
-    return cos(theta/2)**(2*s)
-def Mitsuyashu(theta,f,s):
-    return cos(theta/2)**(2*s)
+    fun = np.zeros((len(theta),len(f)),)
+    for ii in range(len(fun[0,:])):
+        fun[:,ii] = np.cos(theta/2)**(2*s)
+    return fun
+def mitsuyasu(theta,fi,f0,smax=10):
+    s = smax * (fi/f0)**(5)
+    ii = np.where(fi>f0)[0][0]
+    s[ii:] = smax * (fi[ii:]/f0)**(-2.5)
+    fun = np.zeros((len(theta),len(fi)),)
+    for ii in range(len(fun[0,:])):
+        fun[:,ii] = np.cos(theta/2)**(2.*s[ii])
+    return fun
+
 
 
 
@@ -555,7 +573,7 @@ class DirectionalWaves(RandomWaves):
                  phi=None, # phi must be an (2*M+1)*N numpy array
                  phiSymm = True # When true, phi[-pi/2,0] is symmetric to phi[0,pi/2]
                  ):   
-        validSpread = [cos2s,Mitsuyashu]
+        validSpread = [cos2s,mitsuyasu]
         spreadNames =[]
         spread_fun = dummy 
         for spread in validSpread:
@@ -592,6 +610,7 @@ class DirectionalWaves(RandomWaves):
         # Directional waves propagate usually in a plane -90 to 90 deg with respect to the direction vector, normal to the gavity direction. Rotating the waveDir0 vector around the g vector to produce the directional space
         from SpatialTools import rotation3D
         self.thetas = np.linspace(-pi/2,pi/2,2*M+1)
+        self.dth = self.thetas[1] - self.thetas[0]
         self.waveDirs = np.zeros((2*M+1,3),)
         self.phiDirs = np.zeros((2*M+1,N),)
         self.aiDirs = np.zeros((2*M+1,N),)
@@ -599,10 +618,10 @@ class DirectionalWaves(RandomWaves):
 
         temp_array = np.zeros((1,3),)
         temp_array[1,:] = waveDir0
-        iterArray = range(0,self.Mtot)
+        directions = range(0,self.Mtot)
 
 # initialising wave directions
-        for rr in iterArray: 
+        for rr in directions: 
             theta = self.thetas[rr]            
             self.waveDirs[rr,:] = rotation3D(temp_array,theta,self.vDir)[0,:]
 
@@ -616,7 +635,7 @@ class DirectionalWaves(RandomWaves):
             logEvent("WaveTools.py: phi in DirectionalWaves class must be given either as None or as a list with 2*M + 1 nupy arrays with length N")
             sys.exit(1)
         
-        self.thetas_m = reduceToIntervals(self.thetas)        
+        self.thetas_m = reduceToIntervals(self.thetas,self.dth)        
         if (spread_params == None):
             self.Si_Sp = spread_fun(self.theta_m,self.fim)
         else:
@@ -628,10 +647,15 @@ class DirectionalWaves(RandomWaves):
 
         # Setting amplitudes 
         #Normalising the spreading function
+        freq = range(0,self.N)
+    # Normalising integral over all frequencies
+        for ii in freq:            
+            self.Si_Sp[:,ii] = normIntegral(self.Si_Sp[:,ii],self.theta_m)
+    # Creating amplitudes spectrum
+            self.aiDirs[:,ii] = np.sqrt(2.*returnRectangles3D(self.Si_Sp[:,ii],self.theta_m,self.Si_Jm,self.fim))
+            
 
-        self.Si_Sp = normIntegral(self.Si_Sp,self.theta_m)
-        for rr in iterArray:
-            self.aiDirs[rr,:] = np.sqrt(2.*returnRectangles(self.Si_Jm,self.fim) * returnRectangles(self.Si_Sp[rr],self.theta_m) )
+
         
     def eta(self,x,y,z,t):
         """Free surface displacement
