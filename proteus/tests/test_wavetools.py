@@ -37,13 +37,29 @@ class TestAuxFunctions(unittest.TestCase):
         self.assertTrue((fr- fi_te == 0).all())
 
     def testIntegrateRectancles(self): # Testing the integration fynction for y = 2*x at [0,1]. The area should be 1
+
         from proteus.WaveTools import reduceToIntervals,returnRectangles 
         x = np.linspace(0,1,101)
         dx = 0.01
-        y = 2*x
+        y = 2*x 
         xim = reduceToIntervals(x,dx)
         A = sum(returnRectangles(y,x))
         self.assertTrue(A == 1)
+    def testIntegrateRectancles3D(self): # Testing the integration fynction for y = 2*x at [0,1]. The area should be 1
+        from proteus.WaveTools import reduceToIntervals,returnRectangles3D
+        x = np.linspace(0,1,101)
+        dx = 0.01
+        z = np.linspace(0,1,201)
+        dz = 0.005
+        y1 = 2*x 
+        y2 = z
+        xim = reduceToIntervals(x,dx)
+        zim = reduceToIntervals(z,dz)
+
+        A = sum(sum(returnRectangles3D(y2,z,y1,x)))
+        # Integrate function z*(2*x) over x[0,1], z[0,1] result == 0.5
+        self.assertTrue(A == 0.5)
+       
         
     def testEtaMode(self):
         from proteus.WaveTools import eta_mode
@@ -161,7 +177,38 @@ class TestWaveParameters(unittest.TestCase):
         S_PM2 =  PM_mod(f,f0,Hs)
         SCOMP = S_PM2/S_PM
         self.assertTrue((np.around(SCOMP,10)==1).all())
-        
+    def testCos2s(self):
+        from proteus.WaveTools import cos2s
+        f0 = random.random() + 1.
+        f = np.linspace(f0/2.,2.*f0,10.)        
+        thetas = np.linspace(-pi/2.,pi/2.,11)
+        s = 10. + 10. * np.random.random()
+        S_PM = np.zeros((len(thetas),len(f)),)
+        for ii in range(len(thetas)):
+            for jj in range(len(f)):
+                S_PM[ii,jj]= np.cos(thetas[ii]/2.)**(2*s)
+        S_PM2 =  cos2s(thetas,f,s)
+        SCOMP = S_PM2/S_PM
+        self.assertTrue(np.array_equal(S_PM,S_PM2))
+
+    def testMitsuyasu(self):
+        from proteus.WaveTools import mitsuyasu
+        f0 = random.random() + 1.
+        f = np.linspace(f0/2.,2.*f0,10.)        
+        thetas = np.linspace(-pi/2.,pi/2.,11)
+        s = 10 + 10. * np.random.random()
+        ss = np.zeros(len(f),)
+        ss = (f/f0)**5
+        i = np.where(f>f0)[0][0]
+        ss[i:] = (f[i:]/f0)**(-2.5)
+        ss[:] *= s
+        S_PM = np.zeros((len(thetas),len(f)),)
+        for ii in range(len(thetas)):
+            for jj in range(len(f)):
+                S_PM[ii,jj]= np.cos(thetas[ii]/2.)**(2.*ss[jj])
+        S_PM2 =  mitsuyasu(thetas,f,f0,s)
+        self.assertTrue(np.array_equal(S_PM,S_PM2))
+       
         
 
 class CheckMonochromaticWavesFailures(unittest.TestCase):
@@ -424,6 +471,81 @@ class VerifyRandomWaves(unittest.TestCase):
         self.assertTrue(round(uy,8) == round(uyRef,8))
         self.assertTrue(round(uz,8) == round(uzRef,8))
 
+class CheckMultiSpectraRandomWavesFailures(unittest.TestCase):
+    def testFailureModes(self):
+        
+
+        from proteus.WaveTools import MultiSpectraRandomWaves
+#Failure 1: Give parameters as float rather than list
+        Tp = 1. 
+        Hs = 0.15
+        mwl = 4.5
+        depth = 0.9
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        dir1 = 2*random.random() - 1 
+        dir2 = 2*random.random() - 1 
+        waveDir = np.array([dir1,dir2, 0])
+        N = 100
+        phi = np.random.rand(N)
+        gamma = 1.2
+        TMA = True
+        spectName = "JONSWAP"
+        bandFactor = 2.0
+# Give wrong length of list
+        with self.assertRaises(SystemExit) as cm1:
+            MultiSpectraRandomWaves(
+            2,
+            Tp,
+            [Hs,Hs],
+            mwl,#m significant wave height
+            depth ,           #m depth
+            [waveDir,waveDir],
+            g,      #peak  frequency
+            np.array([N,N]),
+            [bandFactor,bandFactor],         #accelerationof gravity
+            [spectName, spectName], 
+            spectral_params =[  {"gamma": gamma, "TMA": TMA,"depth": depth},  {"gamma": gamma, "TMA": TMA,"depth": depth} ], 
+            phi = [phi,phi]# random words will result in error and return the available spectra 
+        )
+        self.assertEqual(cm1.exception.code, 1 )     
+
+        with self.assertRaises(SystemExit) as cm2:
+            MultiSpectraRandomWaves(
+            2,
+                [Tp,Tp,Tp],
+            [Hs,Hs],
+            mwl,#m significant wave height
+            depth ,           #m depth
+            [waveDir,waveDir],
+            g,      #peak  frequency
+            np.array([N,N]),
+            [bandFactor,bandFactor],         #accelerationof gravity
+            [spectName, spectName], 
+            spectral_params =[  {"gamma": gamma, "TMA": TMA,"depth": depth},  {"gamma": gamma, "TMA": TMA,"depth": depth} ], 
+            phi = [phi,phi]# random words will result in error and return the available spectra 
+    )
+
+        self.assertEqual(cm2.exception.code, 1 )     
+
+        # Success!: Give all parameters in correct form!
+        MultiSpectraRandomWaves(
+            2,
+            [Tp,Tp],
+            [Hs,Hs],
+            mwl,#m significant wave height
+            depth ,           #m depth
+            [waveDir,waveDir],
+            g,      #peak  frequency
+            np.array([N,N]),
+            [bandFactor,bandFactor],         #accelerationof gravity
+            [spectName, spectName], 
+            spectral_params =[  {"gamma": gamma, "TMA": TMA,"depth": depth},  {"gamma": gamma, "TMA": TMA,"depth": depth} ], 
+            phi = [phi,phi]# random words will result in error and return the available spectra 
+    )
+
+        self.assertTrue(None == None)
+
 class VerifyMultiSpectraRandomWaves(unittest.TestCase):
     def testMultiSpectraDoubleExact(self):
         from proteus.WaveTools import MultiSpectraRandomWaves, RandomWaves 
@@ -458,7 +580,7 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
             bandFactor,         #accelerationof gravity
             spectName, 
             spectral_params =  {"gamma": gamma, "TMA": TMA,"depth": depth}, 
-            phi = phi# random words will result in error and return the available spectra 
+            phi = phi
     )
         eta = a.eta(x,y,z,t)
         ux = a.u(x,y,z,t,"x")
@@ -489,7 +611,7 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
         self.assertTrue(round(2.*ux,8) == round(ux2,8))
         self.assertTrue(round(2.*uy,8) == round(uy2,8))
         self.assertTrue(round(2.*uz,8) == round(uz2,8))
-# Testing with 10 spectra
+# Testing with 5 spectra
         aa= MultiSpectraRandomWaves(
             5,
             [Tp,Tp,Tp,Tp,Tp],
@@ -517,4 +639,4 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2)
