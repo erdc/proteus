@@ -111,11 +111,6 @@ class TestAuxFunctions(unittest.TestCase):
                 #4th Quadrant
                self.assertTrue((U_x > 0.) and (U_y == 0.) and (U_z < 0.))
         #Checking that the code does not allow z to be outside (-d,0)
-        zB = np.array([-50.,50.])
-        for z in zB:
-            with self.assertRaises(SystemExit) as cm:
-                vel_mode(x,y,z,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,"x")
-            self.assertEqual(cm.exception.code, 1)       
 #Checking vertical coherency
 # U_z = 0 at z = mwl-d
         self.assertTrue(vel_mode(x,y,1.,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,"z")==0.)
