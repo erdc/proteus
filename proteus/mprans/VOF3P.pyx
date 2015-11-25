@@ -47,7 +47,7 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                int lag_shockCapturing,
                                double shockCapturingDiffusion,
                                double sc_uref, double sc_alpha,
-                               const double * q_porosity,
+                               const double * q_vos,
                                int * u_l2g,
                                double * elementDiameter,
                                double * u_dof, double * u_dof_old,
@@ -67,7 +67,7 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                int * elementBoundaryElementsArray,
                                int * elementBoundaryLocalElementBoundariesArray,
                                double * ebqe_velocity_ext,
-                               const double * ebqe_porosity_ext,
+                               const double * ebqe_vos_ext,
                                int * isDOFBoundary_u,
                                double * ebqe_bc_u_ext,
                                int * isFluxBoundary_u,
@@ -100,7 +100,7 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                double alphaBDF,
                                int lag_shockCapturing,
                                double shockCapturingDiffusion,
-                               const double * q_porosity,
+                               const double * q_vos,
                                int * u_l2g,
                                double * elementDiameter,
                                double * u_dof,
@@ -116,7 +116,7 @@ cdef extern from "mprans/VOF3P.h" namespace "proteus":
                                int * elementBoundaryElementsArray,
                                int * elementBoundaryLocalElementBoundariesArray,
                                double * ebqe_velocity_ext,
-                               const double * ebqe_porosity_ext,
+                               const double * ebqe_vos_ext,
                                int * isDOFBoundary_u,
                                double * ebqe_bc_u_ext,
                                int * isFluxBoundary_u,
@@ -180,7 +180,7 @@ cdef class VOF3P:
                           int lag_shockCapturing,
                           double shockCapturingDiffusion,
                           double sc_uref, double sc_alpha,
-                          numpy.ndarray q_porosity,
+                          numpy.ndarray q_vos,
                           numpy.ndarray u_l2g,
                           numpy.ndarray elementDiameter,
                           numpy.ndarray u_dof, numpy.ndarray u_dof_old,
@@ -200,7 +200,7 @@ cdef class VOF3P:
                           numpy.ndarray elementBoundaryElementsArray,
                           numpy.ndarray elementBoundaryLocalElementBoundariesArray,
                           numpy.ndarray ebqe_velocity_ext,
-                          numpy.ndarray ebqe_porosity_ext,
+                          numpy.ndarray ebqe_vos_ext,
                           numpy.ndarray isDOFBoundary_u,
                           numpy.ndarray ebqe_bc_u_ext,
                           numpy.ndarray isFluxBoundary_u,
@@ -235,7 +235,7 @@ cdef class VOF3P:
                                        shockCapturingDiffusion,
                                        sc_uref,
                                        sc_alpha,
-                                       <double*> q_porosity.data,
+                                       <double*> q_vos.data,
                                        <int*> u_l2g.data,
                                        <double*> elementDiameter.data,
                                        <double*> u_dof.data,
@@ -257,7 +257,7 @@ cdef class VOF3P:
                                        <int*> elementBoundaryElementsArray.data,
                                        <int*> elementBoundaryLocalElementBoundariesArray.data,
                                        <double*> ebqe_velocity_ext.data,
-                                       <double*> ebqe_porosity_ext.data,
+                                       <double*> ebqe_vos_ext.data,
                                        <int*> isDOFBoundary_u.data,
                                        <double*> ebqe_bc_u_ext.data,
                                        <int*> isFluxBoundary_u.data,
@@ -292,7 +292,7 @@ cdef class VOF3P:
                           double alphaBDF,
                           int lag_shockCapturing,
                           double shockCapturingDiffusion,
-                          numpy.ndarray q_porosity,
+                          numpy.ndarray q_vos,
                           numpy.ndarray u_l2g,
                           numpy.ndarray elementDiameter,
                           numpy.ndarray u_dof,
@@ -308,7 +308,7 @@ cdef class VOF3P:
                           numpy.ndarray elementBoundaryElementsArray,
                           numpy.ndarray elementBoundaryLocalElementBoundariesArray,
                           numpy.ndarray ebqe_velocity_ext,
-                          numpy.ndarray ebqe_porosity_ext,
+                          numpy.ndarray ebqe_vos_ext,
                           numpy.ndarray isDOFBoundary_u,
                           numpy.ndarray ebqe_bc_u_ext,
                           numpy.ndarray isFluxBoundary_u,
@@ -344,7 +344,7 @@ cdef class VOF3P:
                                        alphaBDF,
                                        lag_shockCapturing,
                                        shockCapturingDiffusion,
-                                       <double*> q_porosity.data,
+                                       <double*> q_vos.data,
                                        <int*> u_l2g.data,
                                        <double*> elementDiameter.data,
                                        <double*> u_dof.data,
@@ -360,7 +360,7 @@ cdef class VOF3P:
                                        <int*> elementBoundaryElementsArray.data,
                                        <int*> elementBoundaryLocalElementBoundariesArray.data,
                                        <double*> ebqe_velocity_ext.data,
-                                       <double*> ebqe_porosity_ext.data,
+                                       <double*> ebqe_vos_ext.data,
                                        <int*> isDOFBoundary_u.data,
                                        <double*> ebqe_bc_u_ext.data,
                                        <int*> isFluxBoundary_u.data,
@@ -450,6 +450,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             V_model=0,
             RD_model=None,
             ME_model=1,
+            VOS_model=0,
             EikonalSolverFlag=0,
             checkMass=True,
             epsFact=0.0,
@@ -478,10 +479,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          self.variableNames,
                          movingDomain=movingDomain)
         self.epsFact = epsFact
-        self.flowModelIndex = V_model
+        self.V_model = V_model
         self.modelIndex = ME_model
         self.RD_modelIndex = RD_model
         self.LS_modelIndex = LS_model
+        self.VOS_model = VOS_model
         self.sc_uref = sc_uref
         self.sc_beta = sc_beta
         # mwf added
@@ -490,9 +492,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             assert self.RD_modelIndex < 0, "no redistance with eikonal solver too"
         self.checkMass = checkMass
         # VRANS
-        self.q_porosity = None
-        self.ebq_porosity = None
-        self.ebqe_porosity = None
+        self.q_vos = None
+        self.ebqe_vos = None
         self.setParamsFunc = setParamsFunc
         self.flowCoefficients = None
         self.movingDomain = movingDomain
@@ -523,23 +524,23 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     ('u', 0)].shape, 'd')  # cek hack, we don't need this
         # flow model
         # print "flow model
-        # index------------",self.flowModelIndex,modelList[self.flowModelIndex].q.has_key(('velocity',0))
-        if self.flowModelIndex is not None:
-            if modelList[self.flowModelIndex].q.has_key(('velocity', 0)):
-                self.q_v = modelList[self.flowModelIndex].q[('velocity', 0)]
+        # index------------",self.V_model,modelList[self.V_model].q.has_key(('velocity',0))
+        if self.V_model is not None:
+            if modelList[self.V_model].q.has_key(('velocity', 0)):
+                self.q_v = modelList[self.V_model].q[('velocity', 0)]
                 self.ebqe_v = modelList[
-                    self.flowModelIndex].ebqe[
+                    self.V_model].ebqe[
                     ('velocity', 0)]
             else:
-                self.q_v = modelList[self.flowModelIndex].q[('f', 0)]
-                self.ebqe_v = modelList[self.flowModelIndex].ebqe[('f', 0)]
-            if modelList[self.flowModelIndex].ebq.has_key(('velocity', 0)):
+                self.q_v = modelList[self.V_model].q[('f', 0)]
+                self.ebqe_v = modelList[self.V_model].ebqe[('f', 0)]
+            if modelList[self.V_model].ebq.has_key(('velocity', 0)):
                 self.ebq_v = modelList[
-                    self.flowModelIndex].ebq[
+                    self.V_model].ebq[
                     ('velocity', 0)]
             else:
-                if modelList[self.flowModelIndex].ebq.has_key(('f', 0)):
-                    self.ebq_v = modelList[self.flowModelIndex].ebq[('f', 0)]
+                if modelList[self.V_model].ebq.has_key(('f', 0)):
+                    self.ebq_v = modelList[self.V_model].ebq[('f', 0)]
         #
         if self.eikonalSolverFlag == 2:  # FSW
             self.resDummy = numpy.zeros(self.model.u[0].dof.shape, 'd')
@@ -573,9 +574,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #                                                              self.model.mesh)
         #         log("Attach Models VOF: Phase  0 mass conservation after VOF step = %12.5e" % (self.m_post - self.m_pre + self.model.timeIntegration.dt*self.fluxIntegral,),level=2)
         # VRANS
-        self.flowCoefficients = modelList[self.flowModelIndex].coefficients
-        if hasattr(self.flowCoefficients, 'q_porosity'):
-            self.q_porosity = self.flowCoefficients.q_porosity
+        self.flowCoefficients = modelList[self.V_model].coefficients
+        if self.VOS_model is not None:
+            self.q_vos = modelList[self.VOS_model].q[('u',0)]
+            self.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
         else:
             self.q_porosity = numpy.ones(
                 modelList[
@@ -618,19 +620,19 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         #
 
     def initializeElementQuadrature(self, t, cq):
-        if self.flowModelIndex is None:
+        if self.V_model is None:
             self.q_v = numpy.ones(cq[('f', 0)].shape, 'd')
         # VRANS
         self.q_porosity = numpy.ones(cq[('u', 0)].shape, 'd')
 
     def initializeElementBoundaryQuadrature(self, t, cebq, cebq_global):
-        if self.flowModelIndex is None:
+        if self.V_model is None:
             self.ebq_v = numpy.ones(cebq[('f', 0)].shape, 'd')
         # VRANS
         self.ebq_porosity = numpy.ones(cebq[('u', 0)].shape, 'd')
 
     def initializeGlobalExteriorElementBoundaryQuadrature(self, t, cebqe):
-        if self.flowModelIndex is None:
+        if self.V_model is None:
             self.ebqe_v = numpy.ones(cebqe[('f', 0)].shape, 'd')
         # VRANS
         self.ebqe_porosity = numpy.ones(cebqe[('u', 0)].shape, 'd')
@@ -1257,7 +1259,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.sc_uref,
             self.coefficients.sc_beta,
             # VRANS start
-            self.coefficients.q_porosity,
+            self.coefficients.q_vos,
             # VRANS end
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
@@ -1280,7 +1282,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
             # VRANS start
-            self.coefficients.ebqe_porosity,
+            self.coefficients.ebqe_vos,
             # VRANS end
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.ebqe[('u', 0)],
@@ -1333,7 +1335,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.shockCapturing.lag,
             self.shockCapturing.shockCapturingFactor,
             # VRANS start
-            self.coefficients.q_porosity,
+            self.coefficients.q_vos,
             # VRANS end
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
@@ -1350,7 +1352,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.mesh.elementBoundaryLocalElementBoundariesArray,
             self.coefficients.ebqe_v,
             # VRANS start
-            self.coefficients.ebqe_porosity,
+            self.coefficients.ebqe_vos,
             # VRANS end
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.ebqe[('u', 0)],

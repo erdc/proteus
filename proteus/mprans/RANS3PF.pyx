@@ -75,7 +75,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * eps_solid,
                                double * phi_solid,
                                double * q_velocity_solid,
-                               double * q_porosity,
+                               double * q_vos,
                                double * q_dragAlpha,
                                double * q_dragBeta,
                                double * q_mass_source,
@@ -131,7 +131,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * ebqe_normal_phi_ext,
                                double * ebqe_kappa_phi_ext,
                                # VRANS start
-                               double * ebqe_porosity_ext,
+                               double * ebqe_vos_ext,
                                double * ebqe_turb_var_0,
                                double * ebqe_turb_var_1,
                                # VRANS end
@@ -161,6 +161,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * q_x,
                                double * q_velocity,
                                double * ebqe_velocity,
+                               double * q_pressure,
+                               double * q_grad_pressure,
+                               double * ebqe_pressure,
                                double * flux,
                                double * elementResidual_p,
                                int * elementFlags,
@@ -223,7 +226,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * eps_solid,
                                double * phi_solid,
                                double * q_velocity_solid,
-                               double * q_porosity,
+                               double * q_vos,
                                double * q_dragAlpha,
                                double * q_dragBeta,
                                double * q_mass_source,
@@ -284,7 +287,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * ebqe_normal_phi_ext,
                                double * ebqe_kappa_phi_ext,
                                # VRANS start
-                               double * ebqe_porosity_ext,
+                               double * ebqe_vos_ext,
                                double * ebqe_turb_var_0,
                                double * ebqe_turb_var_1,
                                # VRANS end
@@ -434,7 +437,7 @@ cdef class RANS3PF:
                           numpy.ndarray eps_solid,
                           numpy.ndarray phi_solid,
                           numpy.ndarray q_velocity_solid,
-                          numpy.ndarray q_porosity,
+                          numpy.ndarray q_vos,
                           numpy.ndarray q_dragAlpha,
                           numpy.ndarray q_dragBeta,
                           numpy.ndarray q_mass_source,
@@ -489,7 +492,7 @@ cdef class RANS3PF:
                           numpy.ndarray ebqe_normal_phi_ext,
                           numpy.ndarray ebqe_kappa_phi_ext,
                           # VRANS start
-                          numpy.ndarray ebqe_porosity_ext,
+                          numpy.ndarray ebqe_vos_ext,
                           numpy.ndarray ebqe_turb_var_0,
                           numpy.ndarray ebqe_turb_var_1,
                           # VRANS end
@@ -519,6 +522,9 @@ cdef class RANS3PF:
                           numpy.ndarray q_x,
                           numpy.ndarray q_velocity,
                           numpy.ndarray ebqe_velocity,
+                          numpy.ndarray q_pressure,
+                          numpy.ndarray q_grad_pressure,
+                          numpy.ndarray ebqe_pressure,
                           numpy.ndarray flux,
                           numpy.ndarray elementResidual_p,
                           numpy.ndarray elementFlags,
@@ -582,7 +588,7 @@ cdef class RANS3PF:
                                         < double * > eps_solid.data,
                                         < double * > phi_solid.data,
                                         < double * > q_velocity_solid.data,
-                                        < double * > q_porosity.data,
+                                        < double * > q_vos.data,
                                         < double * > q_dragAlpha.data,
                                         < double * > q_dragBeta.data,
                                         < double * > q_mass_source.data,
@@ -637,7 +643,7 @@ cdef class RANS3PF:
                                         < double * > ebqe_normal_phi_ext.data,
                                         < double * > ebqe_kappa_phi_ext.data,
                                         # VRANS start
-                                        < double * > ebqe_porosity_ext.data,
+                                        < double * > ebqe_vos_ext.data,
                                         < double * > ebqe_turb_var_0.data,
                                         < double * > ebqe_turb_var_1.data,
                                         # VRANS end
@@ -667,6 +673,9 @@ cdef class RANS3PF:
                                         < double * > q_x.data,
                                         < double * > q_velocity.data,
                                         < double * > ebqe_velocity.data,
+                                        < double * > q_pressure.data,
+                                        < double * > q_grad_pressure.data,
+                                        < double * > ebqe_pressure.data,
                                         < double * > flux.data,
                                         < double * > elementResidual_p.data,
                                         < int * > elementFlags.data,
@@ -731,7 +740,7 @@ cdef class RANS3PF:
                           numpy.ndarray eps_solid,
                           numpy.ndarray phi_solid,
                           numpy.ndarray q_velocity_solid,
-                          numpy.ndarray q_porosity,
+                          numpy.ndarray q_vos,
                           numpy.ndarray q_dragAlpha,
                           numpy.ndarray q_dragBeta,
                           numpy.ndarray q_mass_source,
@@ -791,7 +800,7 @@ cdef class RANS3PF:
                           numpy.ndarray ebqe_normal_phi_ext,
                           numpy.ndarray ebqe_kappa_phi_ext,
                           # VRANS start
-                          numpy.ndarray ebqe_porosity_ext,
+                          numpy.ndarray ebqe_vos_ext,
                           numpy.ndarray ebqe_turb_var_0,
                           numpy.ndarray ebqe_turb_var_1,
                           # VRANS end
@@ -890,7 +899,7 @@ cdef class RANS3PF:
                                         < double * > eps_solid.data,
                                         < double * > phi_solid.data,
                                         < double * > q_velocity_solid.data,
-                                        < double * > q_porosity.data,
+                                        < double * > q_vos.data,
                                         < double * > q_dragAlpha.data,
                                         < double * > q_dragBeta.data,
                                         < double * > q_mass_source.data,
@@ -950,7 +959,7 @@ cdef class RANS3PF:
                                         < double * > ebqe_normal_phi_ext.data,
                                         < double * > ebqe_kappa_phi_ext.data,
                                         # VRANS start
-                                        < double * > ebqe_porosity_ext.data,
+                                        < double * > ebqe_vos_ext.data,
                                         < double * > ebqe_turb_var_0.data,
                                         < double * > ebqe_turb_var_1.data,
                                         # VRANS end
@@ -1095,7 +1104,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * eps_solid,
                                double * phi_solid,
                                double * q_velocity_solid,
-                               double * q_porosity,
+                               double * q_vos,
                                double * q_dragAlpha,
                                double * q_dragBeta,
                                double * q_mass_source,
@@ -1151,7 +1160,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * ebqe_normal_phi_ext,
                                double * ebqe_kappa_phi_ext,
                                # VRANS start
-                               double * ebqe_porosity_ext,
+                               double * ebqe_vos_ext,
                                double * ebqe_turb_var_0,
                                double * ebqe_turb_var_1,
                                # VRANS end
@@ -1181,6 +1190,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * q_x,
                                double * q_velocity,
                                double * ebqe_velocity,
+                               double * q_pressure,
+                               double * q_grad_pressure,
+                               double * ebqe_pressure,
                                double * flux,
                                double * elementResidual_p,
                                int * elementFlags,
@@ -1243,7 +1255,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * eps_solid,
                                double * phi_solid,
                                double * q_velocity_solid,
-                               double * q_porosity,
+                               double * q_vos,
                                double * q_dragAlpha,
                                double * q_dragBeta,
                                double * q_mass_source,
@@ -1304,7 +1316,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * ebqe_normal_phi_ext,
                                double * ebqe_kappa_phi_ext,
                                # VRANS start
-                               double * ebqe_porosity_ext,
+                               double * ebqe_vos_ext,
                                double * ebqe_turb_var_0,
                                double * ebqe_turb_var_1,
                                # VRANS end
@@ -1454,7 +1466,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray eps_solid,
                           numpy.ndarray phi_solid,
                           numpy.ndarray q_velocity_solid,
-                          numpy.ndarray q_porosity,
+                          numpy.ndarray q_vos,
                           numpy.ndarray q_dragAlpha,
                           numpy.ndarray q_dragBeta,
                           numpy.ndarray q_mass_source,
@@ -1509,7 +1521,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray ebqe_normal_phi_ext,
                           numpy.ndarray ebqe_kappa_phi_ext,
                           # VRANS start
-                          numpy.ndarray ebqe_porosity_ext,
+                          numpy.ndarray ebqe_vos_ext,
                           numpy.ndarray ebqe_turb_var_0,
                           numpy.ndarray ebqe_turb_var_1,
                           # VRANS end
@@ -1539,6 +1551,9 @@ cdef class RANS3PF2D:
                           numpy.ndarray q_x,
                           numpy.ndarray q_velocity,
                           numpy.ndarray ebqe_velocity,
+                          numpy.ndarray q_pressure,
+                          numpy.ndarray q_grad_pressure,
+                          numpy.ndarray ebqe_pressure,
                           numpy.ndarray flux,
                           numpy.ndarray elementResidual_p,
                           numpy.ndarray elementFlags,
@@ -1602,7 +1617,7 @@ cdef class RANS3PF2D:
                                         < double * > eps_solid.data,
                                         < double * > phi_solid.data,
                                         < double * > q_velocity_solid.data,
-                                        < double * > q_porosity.data,
+                                        < double * > q_vos.data,
                                         < double * > q_dragAlpha.data,
                                         < double * > q_dragBeta.data,
                                         < double * > q_mass_source.data,
@@ -1657,7 +1672,7 @@ cdef class RANS3PF2D:
                                         < double * > ebqe_normal_phi_ext.data,
                                         < double * > ebqe_kappa_phi_ext.data,
                                         # VRANS start
-                                        < double * > ebqe_porosity_ext.data,
+                                        < double * > ebqe_vos_ext.data,
                                         < double * > ebqe_turb_var_0.data,
                                         < double * > ebqe_turb_var_1.data,
                                         # VRANS end
@@ -1687,6 +1702,9 @@ cdef class RANS3PF2D:
                                         < double * > q_x.data,
                                         < double * > q_velocity.data,
                                         < double * > ebqe_velocity.data,
+                                        < double * > q_pressure.data,
+                                        < double * > q_grad_pressure.data,
+                                        < double * > ebqe_pressure.data,
                                         < double * > flux.data,
                                         < double * > elementResidual_p.data,
                                         < int * > elementFlags.data,
@@ -1751,7 +1769,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray eps_solid,
                           numpy.ndarray phi_solid,
                           numpy.ndarray q_velocity_solid,
-                          numpy.ndarray q_porosity,
+                          numpy.ndarray q_vos,
                           numpy.ndarray q_dragAlpha,
                           numpy.ndarray q_dragBeta,
                           numpy.ndarray q_mass_source,
@@ -1811,7 +1829,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray ebqe_normal_phi_ext,
                           numpy.ndarray ebqe_kappa_phi_ext,
                           # VRANS start
-                          numpy.ndarray ebqe_porosity_ext,
+                          numpy.ndarray ebqe_vos_ext,
                           numpy.ndarray ebqe_turb_var_0,
                           numpy.ndarray ebqe_turb_var_1,
                           # VRANS end
@@ -1910,7 +1928,7 @@ cdef class RANS3PF2D:
                                         < double * > eps_solid.data,
                                         < double * > phi_solid.data,
                                         < double * > q_velocity_solid.data,
-                                        < double * > q_porosity.data,
+                                        < double * > q_vos.data,
                                         < double * > q_dragAlpha.data,
                                         < double * > q_dragBeta.data,
                                         < double * > q_mass_source.data,
@@ -1970,7 +1988,7 @@ cdef class RANS3PF2D:
                                         < double * > ebqe_normal_phi_ext.data,
                                         < double * > ebqe_kappa_phi_ext.data,
                                         # VRANS start
-                                        < double * > ebqe_porosity_ext.data,
+                                        < double * > ebqe_vos_ext.data,
                                         < double * > ebqe_turb_var_0.data,
                                         < double * > ebqe_turb_var_1.data,
                                         # VRANS end
@@ -2181,7 +2199,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  rho_1=1.205, nu_1=1.500e-5,
                  g=[0.0, 0.0, -9.8],
                  nd=3,
-                 ME_model=0,
+                 ME_model=6,
+                 VOS_model=0,
+                 SED_model=5,
                  LS_model=None,
                  VF_model=None,
                  KN_model=None,
@@ -2238,6 +2258,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.epsFact_density = epsFact
         self.stokes = stokes
         self.ME_model = ME_model
+        self.VOS_model = VOS_model
+        self.SED_model = SED_model
         self.LS_model = LS_model
         self.VF_model = VF_model
         self.KN_model = KN_model
@@ -2391,7 +2413,12 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # level set
         self.model = modelList[self.ME_model]
         self.model.q['phi_solid'] = self.q_phi_solid
-        self.model.q['velocity_solid'] = self.q_velocity_solid
+        if self.VOS_model is not None:
+           self.q_vos = modelList[self.VOS_model].q[('u',0)]
+           self.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
+        if self.SED_model is not None:
+            self.q_velocity_solid = modelList[self.SED_model].q[('velocity',0)]
+            self.ebqe_velocity_solid = modelList[self.SED_model].ebqe[('velocity',0)]
         if self.LS_model is not None:
             self.q_phi = modelList[self.LS_model].q[('u', 0)]
             if modelList[self.LS_model].ebq.has_key(('u', 0)):
@@ -3105,6 +3132,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
+        self.q[('u', 0)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 1)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 2)] = numpy.zeros(
@@ -3320,6 +3349,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # RANS 2eq Models start
         self.q[
             ('grad(u)',
+             0)] = numpy.zeros(
+            (self.mesh.nElements_global,
+             self.nQuadraturePoints_element,
+             self.nSpace_global),
+            'd')
+        self.q[
+            ('grad(u)',
              1)] = numpy.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
@@ -3340,6 +3376,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nSpace_global),
             'd')
         # probably don't need ebqe gradients
+        self.ebqe[
+            ('grad(u)',
+             0)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
+            'd')
         self.ebqe[
             ('grad(u)',
              1)] = numpy.zeros(
@@ -3837,7 +3880,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.epsFact_solid,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
-            self.coefficients.q_porosity,
+            self.coefficients.q_vos,
             self.coefficients.q_dragAlpha,
             self.coefficients.q_dragBeta,
             self.q[('r', 0)],
@@ -3946,6 +3989,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['x'],
             self.q[('velocity', 0)],
             self.ebqe[('velocity', 0)],
+            self.q[('u', 0)],
+            self.q[('grad(u)', 0)],
+            self.ebqe[('u', 0)],
             self.ebq_global[('totalFlux', 0)],
             self.elementResidual[0],
             self.mesh.elementMaterialTypes,
@@ -4066,7 +4112,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.epsFact_solid,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
-            self.coefficients.q_porosity,
+            self.coefficients.q_vos,
             self.coefficients.q_dragAlpha,
             self.coefficients.q_dragBeta,
             self.q[('r', 0)],
