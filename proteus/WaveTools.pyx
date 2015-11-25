@@ -80,11 +80,6 @@ def vel_mode(x,y,z,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,comp):
 
     phase = x*kDir[0]+y*kDir[1]+z*kDir[2] - omega*t  + phi
     Z =  (vDir[0]*x + vDir[1]*y+ vDir[2]*z) - mwl
-# We should not really be enforcing the velocity outside these bounds
-    if( (Z < -depth) or (Z > 2*amplitude)):
-        logEvent ("WaveTools.py: Z variable outside (-d,amp), check depth or mwl")
-        exit(1)
-
     UH = 0.
     UV=0.
     ii=0.
