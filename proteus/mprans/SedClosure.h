@@ -37,7 +37,7 @@ public:
       {
 	du2+= (uFluid[ii] - uSolid[ii])*(uFluid[ii] - uSolid[ii]);
       }
-    double du = 5; //sqrt(du2);
+    double du = sqrt(du2);
     double weight = 1.;
     double gDrag1 = (aDarcy_*sedF*nu/((1. - sedF)*grain_*grain_) + betaForch_*du/grain_); // Darcy forchheimer term     
     double Cd = 0.44;
