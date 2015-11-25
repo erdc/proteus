@@ -11,7 +11,7 @@ class TestHsu(unittest.TestCase):
     def testVDir(self):
         from proteus.mprans.SedClosure import HsuSedStress
         closure = HsuSedStress(3.0)
-        self.assertTrue(closure.M_sf_x(2.0,3.0) == 21.0)
+        self.assertTrue(closure.dummy(2.0,3.0) == 21.0)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
