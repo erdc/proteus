@@ -68,7 +68,7 @@ namespace proteus
 				   const double* eps_solid,
 				   const double* phi_solid,
 				   const double* q_velocity_solid,
-				   const double* q_porosity,
+				   const double* q_vos,
 				   const double* q_dragAlpha,
 				   const double* q_dragBeta,
 				   const double* q_mass_source,
@@ -122,7 +122,7 @@ namespace proteus
 				   double* ebqe_normal_phi_ext,
 				   double* ebqe_kappa_phi_ext,
                                    //VRANS
-				   const double* ebqe_porosity_ext,
+				   const double* ebqe_vos_ext,
 				   const double* ebqe_turb_var_0,
 				   const double* ebqe_turb_var_1,
                                    //VRANS end
@@ -152,6 +152,9 @@ namespace proteus
 				   double* q_x,
 				   double* q_velocity,
 				   double* ebqe_velocity,
+				   double* q_pressure,
+				   double* q_grad_pressure,
+				   double* ebqe_pressure,
 				   double* flux,
 				   double* elementResidual_p,
 				   int* elementFlags,
@@ -217,7 +220,7 @@ namespace proteus
 				   const double* eps_solid,
 				   const double* phi_solid,
 				   const double* q_velocity_solid,
-				   const double* q_porosity,
+				   const double* q_vos,
 				   const double* q_dragAlpha,
 				   const double* q_dragBeta,
 				   const double* q_mass_source,
@@ -276,7 +279,7 @@ namespace proteus
 				   double* ebqe_normal_phi_ext,
 				   double* ebqe_kappa_phi_ext,
 				   //VRANS
-				   const double* ebqe_porosity_ext,
+				   const double* ebqe_vos_ext,
 				   const double* ebqe_turb_var_0,
 				   const double* ebqe_turb_var_1,
 				   //VRANS end					   
@@ -1621,7 +1624,7 @@ namespace proteus
 			   const double* eps_solid,
 			   const double* phi_solid,
 			   const double* q_velocity_solid,
-			   const double* q_porosity,
+			   const double* q_vos,
 			   const double* q_dragAlpha,
 			   const double* q_dragBeta,
 			   const double* q_mass_source,
@@ -1676,7 +1679,7 @@ namespace proteus
 			   double* ebqe_normal_phi_ext,
 			   double* ebqe_kappa_phi_ext,
 			   //VRANS
-			   const double* ebqe_porosity_ext,
+			   const double* ebqe_vos_ext,
 			   const double* ebqe_turb_var_0,
 			   const double* ebqe_turb_var_1,
 			   //VRANS end
@@ -1706,6 +1709,9 @@ namespace proteus
 			   double* q_x,
 			   double* q_velocity,
 			   double* ebqe_velocity,
+			   double* q_pressure,
+			   double* q_grad_pressure,
+			   double* ebqe_pressure,
 			   double* flux,
 			   double* elementResidual_p_save,
 			   int* elementFlags,
@@ -1909,10 +1915,14 @@ namespace proteus
               mesh_volume_conservation_element += (alphaBDF*(dV-q_dV_last[eN_k])/dV - div_mesh_velocity)*dV;
               div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
 	      //VRANS
-	      porosity      = q_porosity[eN_k];
+	      porosity      = 1.0 - q_vos[eN_k];
 	      //meanGrainSize = q_meanGrain[eN_k]; 
 	      //
 	      //save velocity at quadrature points for other models to use
+	      q_pressure[eN_k] = p;
+	      q_grad_pressure[eN_k_nSpace+0]=grad_p[0];
+	      q_grad_pressure[eN_k_nSpace+1]=grad_p[1];
+	      /* q_grad_pressure[eN_k_nSpace+2]=grad_p[2]; */
 	      q_velocity[eN_k_nSpace+0]=u;
 	      q_velocity[eN_k_nSpace+1]=v;
 	      /* q_velocity[eN_k_nSpace+2]=w; */
@@ -2538,7 +2548,8 @@ namespace proteus
 	      bc_v_ext = isDOFBoundary_v[ebNE_kb]*(ebqe_bc_v_ext[ebNE_kb] + MOVING_DOMAIN*yt_ext) + (1-isDOFBoundary_v[ebNE_kb])*v_ext;
 	      /* bc_w_ext = isDOFBoundary_w[ebNE_kb]*(ebqe_bc_w_ext[ebNE_kb] + MOVING_DOMAIN*zt_ext) + (1-isDOFBoundary_w[ebNE_kb])*w_ext; */
 	      //VRANS
-	      porosity_ext = ebqe_porosity_ext[ebNE_kb];
+	      porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb];
+              ebqe_pressure[ebNE_kb] = bc_p_ext;
 	      //
 	      //calculate the pde coefficients using the solution and the boundary values for the solution 
 	      // 
@@ -3198,7 +3209,7 @@ namespace proteus
 			   const double* eps_solid,
 			   const double* phi_solid,
 			   const double* q_velocity_solid,
-			   const double* q_porosity,
+			   const double* q_vos,
 			   const double* q_dragAlpha,
 			   const double* q_dragBeta,
 			   const double* q_mass_source,
@@ -3258,7 +3269,7 @@ namespace proteus
 			   double* ebqe_normal_phi_ext,
 			   double* ebqe_kappa_phi_ext,
 			   //VRANS
-			   const double* ebqe_porosity_ext,
+			   const double* ebqe_vos_ext,
 			   const double* ebqe_turb_var_0,
 			   const double* ebqe_turb_var_1,
 			   //
@@ -3520,7 +3531,7 @@ namespace proteus
               div_mesh_velocity = DM3*div_mesh_velocity + (1.0-DM3)*alphaBDF*(dV-q_dV_last[eN_k])/dV;
 	      //
 	      //VRANS
-	      porosity = q_porosity[eN_k];
+	      porosity = 1.0 - q_vos[eN_k];
 	      //
 	      //
 	      //calculate pde coefficients and derivatives at quadrature points
@@ -4217,7 +4228,7 @@ namespace proteus
 	      bc_v_ext = isDOFBoundary_v[ebNE_kb]*(ebqe_bc_v_ext[ebNE_kb] + MOVING_DOMAIN*yt_ext) + (1-isDOFBoundary_v[ebNE_kb])*v_ext;
 	      /* bc_w_ext = isDOFBoundary_w[ebNE_kb]*(ebqe_bc_w_ext[ebNE_kb] + MOVING_DOMAIN*zt_ext) + (1-isDOFBoundary_w[ebNE_kb])*w_ext; */
 	      //VRANS
-	      porosity_ext = ebqe_porosity_ext[ebNE_kb];
+	      porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb];
 	      // 
 	      //calculate the internal and external trace of the pde coefficients 
 	      // 

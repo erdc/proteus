@@ -2435,13 +2435,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.FLUID_model is not None:
             self.model.q_velocity_fluid = modelList[self.FLUID_model].q[('velocity',0)]
             self.model.ebqe_velocity_fluid = modelList[self.FLUID_model].ebqe[('velocity',0)]
-            self.model.q_p_flud = modelList[self.FLUID_model].q[('u',0)]
+            self.model.q_p_fluid = modelList[self.FLUID_model].q[('u',0)]
             self.model.ebqe_p_fluid = modelList[self.FLUID_model].ebqe[('u',0)]
             self.model.q_grad_p_fluid = modelList[self.FLUID_model].q[('grad(u)',0)]
-            self.model.ebqe_grad_p_fluid = modelList[self.FLUID_model].ebqe[('grad(u)',0)]
+            self.model.ebqe_grad_p_fluid = self.model.ebqe_velocity_fluid.copy()
+            self.model.ebqe_grad_p_fluid[:] = 0.0
         if self.VOS_model is not None:
-            self.model.q['vos'] = modelList[self.VOS_model].q[('u',0)]
-            self.model.ebqe['vos'] = modelList[self.VOS_model].ebqe[('u',0)]
+            self.model.q_vos = modelList[self.VOS_model].q[('u',0)]
+            self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
         if self.LS_model is not None:
             self.q_phi = modelList[self.LS_model].q[('u', 0)]
             if modelList[self.LS_model].ebq.has_key(('u', 0)):
@@ -3883,10 +3884,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.penalty_constant,
             # VRANS start
             self.coefficients.epsFact_solid,
-            self.coefficients.q_velocity_fluid,
-            self.coefficients.q_p_fluid,
-            self.coefficients.q_grad_p_fluid,
-            self.coefficients.q_vos,
+            self.q_velocity_fluid,
+            self.q_p_fluid,
+            self.q_grad_p_fluid,
+            self.q_vos,
             self.coefficients.q_dragAlpha,
             self.coefficients.q_dragBeta,
             self.q[('r', 0)],
@@ -3965,9 +3966,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_n,
             self.coefficients.ebqe_kappa,
             # VRANS start
-            self.coefficients.ebqe_vos,
-            self.coefficients.ebqe_p_fluid,
-            self.coefficients.ebqe_grad_p_fluid,
+            self.ebqe_vos,
+            self.ebqe_p_fluid,
+            self.ebqe_grad_p_fluid,
             self.coefficients.ebqe_turb_var[0],
             self.coefficients.ebqe_turb_var[1],
             # VRANS end
@@ -4115,10 +4116,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.penalty_constant,
             # VRANS start
             self.coefficients.epsFact_solid,
-            self.coefficients.q_velocity_fluid,
-            self.coefficients.q_p_fluid,
-            self.coefficients.q_grad_p_fluid,
-            self.coefficients.q_vos,
+            self.q_velocity_fluid,
+            self.q_p_fluid,
+            self.q_grad_p_fluid,
+            self.q_vos,
             self.coefficients.q_dragAlpha,
             self.coefficients.q_dragBeta,
             self.q[('r', 0)],
@@ -4203,9 +4204,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_n,
             self.coefficients.ebqe_kappa,
             # VRANS start
-            self.coefficients.ebqe_vos,
-            self.coefficients.ebqe_p_fluid,
-            self.coefficients.ebqe_grad_p_fluid,
+            self.ebqe_vos,
+            self.ebqe_p_fluid,
+            self.ebqe_grad_p_fluid,
             self.coefficients.ebqe_turb_var[0],
             self.coefficients.ebqe_turb_var[1],
             # VRANS end
