@@ -48,6 +48,7 @@ cdef extern from "mprans/VOS3P.h" namespace "proteus":
                                double shockCapturingDiffusion,
                                double sc_uref, double sc_alpha,
                                const double * q_porosity,
+                               double* q_dvos_dt,
                                int * u_l2g,
                                double * elementDiameter,
                                double * u_dof, double * u_dof_old,
@@ -181,6 +182,7 @@ cdef class VOS3P:
                           double shockCapturingDiffusion,
                           double sc_uref, double sc_alpha,
                           numpy.ndarray q_porosity,
+                          numpy.ndarray q_dvos_dt,
                           numpy.ndarray u_l2g,
                           numpy.ndarray elementDiameter,
                           numpy.ndarray u_dof, numpy.ndarray u_dof_old,
@@ -236,6 +238,7 @@ cdef class VOS3P:
                                        sc_uref,
                                        sc_alpha,
                                        <double*> q_porosity.data,
+                                       <double*> q_dvos_dt.data,
                                        <int*> u_l2g.data,
                                        <double*> elementDiameter.data,
                                        <double*> u_dof.data,
@@ -1258,6 +1261,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.sc_beta,
             # VRANS start
             self.coefficients.q_porosity,
+            self.q[('mt',0)],
             # VRANS end
             self.u[0].femSpace.dofMap.l2g,
             self.mesh.elementDiametersArray,
