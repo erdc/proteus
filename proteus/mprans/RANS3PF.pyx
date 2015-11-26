@@ -76,6 +76,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * phi_solid,
                                double * q_velocity_solid,
                                double * q_vos,
+                               double * q_dvos_dt,
                                double * q_dragAlpha,
                                double * q_dragBeta,
                                double * q_mass_source,
@@ -438,6 +439,7 @@ cdef class RANS3PF:
                           numpy.ndarray phi_solid,
                           numpy.ndarray q_velocity_solid,
                           numpy.ndarray q_vos,
+                          numpy.ndarray q_dvos_dt,
                           numpy.ndarray q_dragAlpha,
                           numpy.ndarray q_dragBeta,
                           numpy.ndarray q_mass_source,
@@ -589,6 +591,7 @@ cdef class RANS3PF:
                                         < double * > phi_solid.data,
                                         < double * > q_velocity_solid.data,
                                         < double * > q_vos.data,
+                                        < double * > q_dvos_dt.data,
                                         < double * > q_dragAlpha.data,
                                         < double * > q_dragBeta.data,
                                         < double * > q_mass_source.data,
@@ -1105,6 +1108,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * phi_solid,
                                double * q_velocity_solid,
                                double * q_vos,
+                               double * q_dvos_dt,
                                double * q_dragAlpha,
                                double * q_dragBeta,
                                double * q_mass_source,
@@ -1467,6 +1471,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray phi_solid,
                           numpy.ndarray q_velocity_solid,
                           numpy.ndarray q_vos,
+                          numpy.ndarray q_dvos_dt,
                           numpy.ndarray q_dragAlpha,
                           numpy.ndarray q_dragBeta,
                           numpy.ndarray q_mass_source,
@@ -1618,6 +1623,7 @@ cdef class RANS3PF2D:
                                         < double * > phi_solid.data,
                                         < double * > q_velocity_solid.data,
                                         < double * > q_vos.data,
+                                        < double * > q_dvos_dt.data,
                                         < double * > q_dragAlpha.data,
                                         < double * > q_dragBeta.data,
                                         < double * > q_mass_source.data,
@@ -2415,6 +2421,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.q['phi_solid'] = self.q_phi_solid
         if self.VOS_model is not None:
            self.q_vos = modelList[self.VOS_model].q[('u',0)]
+           self.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)]
            self.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
         if self.SED_model is not None:
             self.q_velocity_solid = modelList[self.SED_model].q[('velocity',0)]
@@ -3881,6 +3888,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
             self.coefficients.q_vos,
+            self.coefficients.q_dvos_dt,
             self.coefficients.q_dragAlpha,
             self.coefficients.q_dragBeta,
             self.q[('r', 0)],
