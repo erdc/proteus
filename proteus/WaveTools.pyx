@@ -19,12 +19,22 @@ import sys as sys
 
 
 def setVertDir(g):
+    """ Sets the unit vector for the vertical direction, opposite to the gravity vector
+    param: g : gravitational acceleration vector [L/T^2]
+    """
     return -g/(sqrt(g[0]**2 + g[1]**2 + g[2]**2))
 
 def setDirVector(vector):
+    """ Returns the direction of a vector in the form of a unit vector
+    param: vector : Any vector [-]
+    """
     return vector/(sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2))
 
 def dirCheck(v1, v2):
+    """ Checks if to vectors are vertical and returns system exit if not
+    param: v1 : 1st vector  [-]
+    param: v2 : 2nd vector  [-]
+    """
     dircheck = abs(v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2])
         #print self.dircheck
     if dircheck > 1e-10:
@@ -33,22 +43,39 @@ def dirCheck(v1, v2):
     else:
         return None
 def reduceToIntervals(fi,df):
+    """ Prepares the x- axis array of size N for numerical integration along he x- axis. 
+    If fi = [a1, a2, a3,...,a_N-1 a_N] then it returns the array 
+    [a1, 0.5(a1+a2), 0.5(a2+a3),...0.5(a_N-1+a_N), a_N]. Input array must have constant step
+    param: fi : x- array  [-]
+    param: df : dx constant step of array  [-]
+    """
     fim_tmp = (0.5*(fi[1:]+fi[:-1])).tolist()
     return np.array([fim_tmp[0]-0.5*df]+fim_tmp+[fim_tmp[-1]+0.5*df])
 def returnRectangles(a,x):
+    """ Returns \delta y of y(x) using the rectangle method (\delta y = 0.5*(a_n-1+a_n)*(x_n-1-x_n) 
+    param: a : y(x) function   [-]
+    param: x : x- coordinate  [-]
+    """
     return 0.5*(a[1:]+a[:-1])*(x[1:]-x[:-1])
 def returnRectangles3D(a,x,y):
-
+    """ Returns \delta y of  y(x,z) using the rectangle method 
+    \delta y = 0.25*(a_(n-1,m-1)+a_(n,m-1)+a_(n-1,m)+a_(n,m))*(x_n-1-x_n) *(z_m-1-z_m)
+    param: a : y(x,z) function   [-]
+    param: x : x- coordinate  [-]
+    param: z : z- coordinate  [-]
+    """
     ai = 0.5*(a[1:,:]+a[:-1,:])
     ai = 0.5*(ai[:,1:]+ai[:,:-1])
     for ii in range(len(x)-1):
         ai[ii,:] *= (y[1:]-y[:-1]) 
     for jj in range(len(y) - 1):
-        ai[:,jj] *= (x[1:]-x[:-1]) 
-        
-    
+        ai[:,jj] *= (x[1:]-x[:-1])    
     return ai
 def normIntegral(Sint,th):
+    """Given an Sint(th) function, it returns Sint_n, such as \int (Sint_n dth = 1)
+    param: Sint : Sint(th) function   [-]
+    param: th : th- coordinate  [-]
+    """
     G0 = 1./sum(returnRectangles(Sint,th))
     return G0*Sint
 
@@ -102,7 +129,9 @@ def sigma(omega,omega0):
     """
     sigmaReturn = np.where(omega > omega0,0.09,0.07)
     return sigmaReturn
-def dummy(f,f0,Hs, **kwargs): return None # dummy function to initialise spectral functions
+def dummy(f,f0,Hs, **kwargs):
+    """ dummy function to initialise spectral functions"""
+    return None 
 def JONSWAP(f,f0,Hs,gamma=3.3,TMA=False, depth = None):
     """The wave spectrum from Joint North Sea Wave Observation Project
     Jonswap equation from "Random Seas and Design of Maritime Structures" - Y. Goda - 2010 (3rd ed) eq. 2.12 - 2.15
@@ -140,11 +169,24 @@ def PM_mod(f,f0,Hs):
     return (5.0/16.0)*Hs**2*(f0**4/f**5)*np.exp((-5.0/4.0)*(f0/f)**4)
 
 def cos2s(theta,f,s=10):
+    """The cos2s wave directional Spread 
+    see USACE - CETN-I-28 http://chl.erdc.usace.army.mil/library/publications/chetn/pdf/cetn-i-28.pdf
+    :param theta: ange of wave direction, with respect to the peak direction
+    :param f: wave frequency [1/T] (not angular frequency). Dummy variable in this one
+    :param s: directional peak parameter. as s ->oo the distribution converges to 
+    """
     fun = np.zeros((len(theta),len(f)),)
     for ii in range(len(fun[0,:])):
         fun[:,ii] = np.cos(theta/2)**(2*s)
     return fun
 def mitsuyasu(theta,fi,f0,smax=10):
+    """The cos2s wave directional spread with wave frequency dependency (mitsuyasu spreas) 
+    Equation from "Random Seas and Design of Maritime Structures" - Y. Goda - 2010 (3rd ed) eq. 2.22 - 2.25
+    :param theta: ange of wave direction, with respect to the peak direction
+    :param f: wave frequency [1/T] (not angular frequency). Dummy variable in this one
+    :param s: directional peak parameter. as s ->oo the distribution converges to 
+    """
+
     s = smax * (fi/f0)**(5)
     ii = np.where(fi>f0)[0][0]
     s[ii:] = smax * (fi[ii:]/f0)**(-2.5)
@@ -607,7 +649,7 @@ class DirectionalWaves(RandomWaves):
         # Directional waves propagate usually in a plane -90 to 90 deg with respect to the direction vector, normal to the gavity direction. Rotating the waveDir0 vector around the g vector to produce the directional space
         from SpatialTools import rotation3D
         self.thetas = np.linspace(-pi/2,pi/2,2*M+1)
-        self.dth = self.thetas[1] - self.thetas[0]
+        self.dth = (self.thetas[1] - self.thetas[0])
         self.waveDirs = np.zeros((2*M+1,3),)
         self.phiDirs = np.zeros((2*M+1,N),)
         self.aiDirs = np.zeros((2*M+1,N),)
@@ -621,6 +663,7 @@ class DirectionalWaves(RandomWaves):
         for rr in directions: 
             theta = self.thetas[rr]            
             self.waveDirs[rr,:] = rotation3D(temp_array,theta,self.vDir)[0,:]
+            self.waveDirs[rr,:]=setDirVector( self.waveDirs[rr,:])
 
 
 # Initialising phasing
@@ -633,7 +676,7 @@ class DirectionalWaves(RandomWaves):
             sys.exit(1)
             
         if (phiSymm):
-            self.phiDirs[:self.M] = self.phiDirs[self.M+1::-1]
+            self.phiDirs[:self.M:1] = self.phiDirs[self.M+1::-1]
             
             
 
@@ -654,13 +697,9 @@ class DirectionalWaves(RandomWaves):
     # Normalising integral over all frequencies
         for ii in freq:            
             self.Si_Sp[:,ii] = normIntegral(self.Si_Sp[:,ii],self.theta_m)
-            self.Si_Sp[:,ii] = self.Si_Jm[ii] 
+            self.Si_Sp[:,ii]*= self.Si_Jm[ii] 
     # Creating amplitudes spectrum
         self.aiDirs[:] = np.sqrt(2.*returnRectangles3D(self.Si_Sp,self.theta_m,self.fim))
-            
-
-
-        
     def eta(self,x,y,z,t):
         """Free surface displacement
 
@@ -670,7 +709,7 @@ class DirectionalWaves(RandomWaves):
         for jj in range(self.Mtot):
             for ii in range(self.N):
                 kDiri = self.waveDirs[jj]*self.ki[ii]
-                Eta+= eta_mode(x,y,z,t,kDiri,self.omega[ii],self.phiDir[jj,ii],self.aiDir[jj,ii])
+                Eta+= eta_mode(x,y,z,t,kDiri,self.omega[ii],self.phiDirs[jj,ii],self.aiDirs[jj,ii])
         return Eta
 #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
 
@@ -684,8 +723,8 @@ class DirectionalWaves(RandomWaves):
         U=0.
         for jj in range(self.Mtot):
             for ii in range(self.N):
-                kDiri = self.waveDirs[jj]*self.k[ii]
-                U+= vel_mode(x,y,z,t,kDiri, self.ki[ii],self.omega[ii],self.phiDir[jj,ii],self.aiDir[jj,ii],self.mwl,self.depth,self.g,self.vDir,comp)                
+                kDiri = self.waveDirs[jj]*self.ki[ii]
+                U+= vel_mode(x,y,z,t,kDiri, self.ki[ii],self.omega[ii],self.phiDirs[jj,ii],self.aiDirs[jj,ii],self.mwl,self.depth,self.g,self.vDir,comp)                
         return U        
      
 
@@ -1011,136 +1050,6 @@ class TimeSeries:
 
 
 
-'''class DirectionalWavesObsolete:
-
-    """Generate approximate directiona random wave solutions
-
-    :param Tp: peak period [T]
-    :param Hs: significant wave height [L]
-    :param  d: depth [L]
-    :param fp: frequency [1/T]
-    :param bandFactor: width factor for band  around fp [-]
-    :param N: number of frequency bins [-]
-    :param mwl: mean water level [L]"""
-
-    def __init__(self,
-                 Tp ,         #s peak period
-                 Hs ,         #m significant wave height
-                 d ,           #m depth
-                 fp ,      #peak  frequency
-                 bandFactor, #controls width of band  around fp
-                 N ,          #number of frequency bins
-                 M  ,         #half number of directional bins
-                 mwl,        #mean water level
-                 waveDir,   #main wave direction
-                 normalWaveDir,# Normal to wave direction, on propagation plane
-                 g,         #accelerationof gravity
-                 spec_fun ,                  # spectral function
-                 thetamax = pi,         #max directional band, measured from lead wave direction, defaults to pi
-                 s =5 ,                              # dir function coefficient
-                 dir_fun = cos2s               # directional function
-                 ): #wave spectrum
-        self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
-        self.normalWaveDir = normalWaveDir/sqrt(sum(normalWaveDir * normalWaveDir))
-        self.g = g
-        self.gAbs = sqrt(sum(g * g))
-        self.Tp = Tp
-        self.Hs = Hs
-        self.d = d
-        self.fp = fp
-        self.bandFactor = bandFactor
-        self.N = N
-        self.mwl = mwl
-        self.fmax = self.bandFactor*self.fp
-        self.fmin = self.fp/self.bandFactor
-        self.df = (self.fmax-self.fmin)/float(self.N-1)
-        self.fi=np.zeros(self.N,'d')
-        for i in range(self.N):
-            self.fi[i] = self.fmin+self.df*i
-        self.ki = dispersion(2.0*pi*self.fi,self.d,g=self.gAbs)
-        self.wi = 2.*pi/self.ki
-        fim_tmp = (0.5*(self.fi[1:]+self.fi[:-1])).tolist()
-        self.fim = np.array([fim_tmp[0]-0.5*self.df]+fim_tmp+[fim_tmp[-1]+0.5*self.df])
-        self.Si_Jm = spec_fun(self.fim,f0=self.fp,Hs=self.Hs,g=self.g,gamma=3.3)
-        self.ai = np.sqrt((self.Si_Jm[1:]+self.Si_Jm[:-1])*(self.fim[1:]-self.fim[:-1]))
-        self.waves = MonochromaticWaves
-        self.M = M
-        self.thetas = np.linspace(0,thetamax,self.M+1)
-        self.dth = self.thetas[1]-self.thetas[0]
-        self.spread = dir_fun(self.thetas,s)
-        self.dirs = np.zeros((2*self.M + 1,3),'d')
-        self.ai_d = np.zeros((self.N,2*M+1),'d')
-        self.phi = np.zeros((self.N,2*M+1),'d')
-        self.G_Int = normInt(self.dth,self.dir_fun,s,self.M+1)
-        for ii in range(1,self.M+1):
-            self.dirs[self.M+ii,:]= cos(self.thetas[ii])*waveDir + sin(self.thetas[ii])*normalWaveDir
-            self.dirs[self.M-ii,:] = cos(self.thetas[ii])*waveDir - sin(self.thetas[ii])*normalWaveDir
-            self.ai_d[self.M+ii,:] = self.ai*self.G_Int*self.spread[ii]
-            self.ai_d[self.M-ii,:] = self.ai*self.G_Int*self.spread[ii]
-            self.phi[self.M+ii,:] = 2.0*pi*np.random.random(self.fi.shape[0])
-            self.phi[self.M-ii,:] = 2.0*pi*np.random.random(self.fi.shape[0])
-
-        self.dirs[self.M,:] = self.waveDir
-        self.phi[self.M,:] = 2.0*pi*np.random.random(self.fi.shape[0])
-        self.ai_d[self.M,:] = self.ai*self.G_Int*self.spread[0]
-
-
-
-
-    def eta(self,x,y,z,t):
-        """Free surface displacement
-
-        :param x: floating point x coordinate
-        :param t: time"""
-        Eta=0.
-        for jj in range(2*self.M + 1):
-            for ii in range(self.N):
-                Eta+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).eta(x,y,z,t)
-        return Eta
-    #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
-
-    def u(self,x,y,z,t):
-        """x-component of velocity
-
-        :param x: floating point x coordinate
-        :param z: floating point z coordinate (height above bottom)
-        :param t: time
-        """
-        U=0.
-        y=0
-        for jj in range(2*self.M + 1):
-            for ii in range(self.N):
-                U+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).u(x,y,z,t)
-        return U
-
-    def v(self,x,y,z,t):
-        """x-component of velocity
-
-        :param x: floating point x coordinate
-        :param z: floating point z coordinate (height above bottom)
-        :param t: time
-        """
-        V=0
-        y=0.
-        for jj in range(2*self.M + 1):
-            for ii in range(self.N):
-                V+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).v(x,y,z,t)
-        return V
-
-    def w(self,x,y,z,t):
-        """x-component of velocity
-
-        :param x: floating point x coordinate
-        :param z: floating point z coordinate (height above bottom)
-        :param t: time
-        """
-        W=0.
-        y=0
-        for jj in range(2*self.M + 1):
-            for ii in range(self.N):
-                W+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).w(x,y,z,t)
-        return W
-'''
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt

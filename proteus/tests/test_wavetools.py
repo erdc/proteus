@@ -62,6 +62,19 @@ class TestAuxFunctions(unittest.TestCase):
         A = sum(sum(returnRectangles3D(y1,xim,zim)))
         # Integrate function z*(2*x) over x[0,1], z[0,1] result == 0.5
         self.assertTrue(round(A,10)== 0.5)
+    def testNormInt(self): # Testing the integration fynction for y = 2*x at [0,1]. The area should be 1
+        from proteus.WaveTools import normIntegral, reduceToIntervals, returnRectangles
+        #pickin
+        
+        
+        x = np.linspace(0,1,101)
+        dx = 0.01
+        xim = reduceToIntervals(x,dx)        
+        y = 5*xim
+        A  = normIntegral(y,xim)
+        A = sum(returnRectangles(A,xim))
+        self.assertTrue(round(A,10)== 1)
+       
        
         
     def testEtaMode(self):
@@ -114,6 +127,9 @@ class TestAuxFunctions(unittest.TestCase):
 #Checking vertical coherency
 # U_z = 0 at z = mwl-d
         self.assertTrue(vel_mode(x,y,1.,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,"z")==0.)
+
+
+
 class TestWaveParameters(unittest.TestCase):
 #Checking dispersion calculation for a predicted wavelenght of 5.00m
     def test_dispersion(self):
@@ -649,12 +665,113 @@ class CheckDirectionalWaveFailures(unittest.TestCase):
         self.assertEqual(cm2.exception.code, 1 )     
         #putting non existent parameters
         with self.assertRaises(SystemExit) as cm3:
-            DirectionalWaves(200,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", "cos2s", spectral_params= None, spread_params = {"blah":10}, phi = np.zeros(15,), phiSymm = False  )
+            DirectionalWaves(200,1.,1.,0.,10.,np.array([0,0,1]),np.array([0,-9.81,0]),100,2.,"JONSWAP", "cos2s", spectral_params= None, spread_params = {"blah":10}, phi = None, phiSymm = False  )
         self.assertEqual(cm3.exception.code, 1 )     
         
 
             
+class VerifyDirectionals(unittest.TestCase):
+    def testDirectional(self):
+        from proteus.WaveTools import DirectionalWaves
+        import random
+        # Assinging a random value at a field and getting the expected output
+        Tp = 1. 
+        Hs = 0.15
+        mwl = 4.5
+        depth = 0.9
+        g = np.array([0,0,-9.81])
+        gAbs = 9.81
+        # Setting the angle to the first quadrant otherwise the acos function further below is confused
+        theta0 = 2*pi* random.random()
+        dir1 = cos(theta0)
+        dir2 = sin(theta0)
+
+        waveDir = np.array([dir1,dir2, 0])
+        N = 5
+        M = 10
+        phi =  2.0*pi*np.random.rand(2*M+1,N)
+        gamma = 1.2
+        TMA = True
+        spectName = "JONSWAP"
+        spectral_params =  {"gamma": gamma, "TMA": TMA,"depth": depth}
+        bandFactor = 2.0
+        spreadName = "mitsuyasu"
+        spread_params = {"f0": 1./Tp, "smax": 15.}
+        phiSymm = False
+
+        aa= DirectionalWaves(
+            M,
+            Tp,
+            Hs,
+            mwl,#m significant wave height
+            depth ,           #m depth
+            waveDir,
+            g,      #peak  frequency
+            N,
+            bandFactor,         #accelerationof gravity
+            spectName,
+            spreadName,
+            spectral_params,
+            spread_params,
+            phi,
+            phiSymm
+            )
+        x = random.random()*200. - 100.
+        y = random.random()*200. - 100.
+        z =  mwl - depth + random.random()*( depth)
+        t =  random.random()*200. - 100.
+        eta = aa.eta(x,y,z,t)
+        ux = aa.u(x,y,z,t,"x")
+        uy = aa.u(x,y,z,t,"y")
+        uz = aa.u(x,y,z,t,"z")
+
+        # Testing with a specific phi array
+
+        # setDirVector are tested above
+        from proteus.WaveTools import setDirVector, dispersion, reduceToIntervals, returnRectangles3D, JONSWAP,mitsuyasu, normIntegral
+
+        fmin = 1./(Tp * bandFactor) 
+        fmax = bandFactor/(Tp)
+        fi = np.linspace(fmin,fmax,N)
+        thetas = np.linspace(theta0 - pi/2,theta0+pi/2,2*M+1)
+        dth = pi/(2*M)
+        df = (fmax-fmin)/(N - 1 )
+        ki = dispersion(2*pi*fi,depth)
+        waveDirs = np.zeros((2*M+1,3),)
+        for jj in range(2*M+1):
+            waveDirs[jj,:] = np.array([cos(thetas[jj]),sin(thetas[jj]),0])
+        z0 = z - mwl
+        fim = reduceToIntervals(fi,df)
+        thetas-=theta0
+        thetas_m = reduceToIntervals(thetas,dth)
+        Si_Jm = JONSWAP(fim,1./Tp,Hs,gamma,TMA, depth)
+        Si_dir = mitsuyasu(thetas_m,fim,1./Tp, 15.)
+        for ii in range(0,N):            
+            Si_dir[:,ii] = normIntegral(Si_dir[:,ii],thetas_m)
+            Si_dir[:,ii]*= Si_Jm[ii] 
+        ai = np.sqrt(2.*returnRectangles3D(Si_dir,thetas_m,fim))
+
+        omega = 2*pi*fi
+        etaRef = 0.
+        uxRef = 0.
+        uyRef = 0.
+        uzRef = 0.
+
+        for ii in range(N):
+            for jj in range(2*M+1):
+                normDir = waveDirs[jj,:]
+                etaRef+=ai[jj,ii]*cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])
+                uxRef += normDir[0]*ai[jj,ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) *cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
+                uyRef += normDir[1]*ai[jj,ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) * cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
+                uzRef +=  ai[jj,ii]*omega[ii] *sinh(ki[ii]*(z0+depth)) * sin(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
         
+
+        
+        self.assertTrue(round(eta,8) == round(etaRef,8) )
+        self.assertTrue(round(ux,8) == round(uxRef,8))
+        self.assertTrue(round(uy,8) == round(uyRef,8))
+        self.assertTrue(round(uz,8) == round(uzRef,8))
+       
       
 
 
