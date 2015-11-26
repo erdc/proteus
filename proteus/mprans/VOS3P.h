@@ -43,6 +43,7 @@ namespace proteus
 			           double sc_uref, double sc_alpha,
 				   //VRANS
 				   const double* q_porosity,
+                                   double* q_dvos_dt,
 				   //
 				   int* u_l2g, 
 				   double* elementDiameter,
@@ -339,6 +340,7 @@ namespace proteus
 			   double sc_uref, double sc_alpha,
 			   //VRANS
 			   const double* q_porosity,
+                           double* q_dvos_dt,
 			   //
 			   int* u_l2g, 
 			   double* elementDiameter,
@@ -515,6 +517,7 @@ namespace proteus
 		     dm,
 		     m_t,
 		     dm_t);
+              q_dvos_dt[eN_k] = m_t;
 	      //
 	      //calculate subgrid error (strong residual and adjoint)
 	      //

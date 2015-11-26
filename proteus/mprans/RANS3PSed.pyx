@@ -77,6 +77,7 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * q_p_fluid,
                                double * q_grad_p_fluid,
                                double * q_vos,
+                               double * q_dvos_dt,
                                double * q_dragAlpha,
                                double * q_dragBeta,
                                double * q_mass_source,
@@ -442,6 +443,7 @@ cdef class RANS3PSed:
                           numpy.ndarray q_p_fluid,
                           numpy.ndarray q_grad_p_fluid,
                           numpy.ndarray q_vos,
+                          numpy.ndarray q_dvos_dt,
                           numpy.ndarray q_dragAlpha,
                           numpy.ndarray q_dragBeta,
                           numpy.ndarray q_mass_source,
@@ -593,6 +595,7 @@ cdef class RANS3PSed:
                                         < double * > q_p_fluid.data,
                                         < double * > q_grad_p_fluid.data,
                                         < double * > q_vos.data,
+                                        < double * > q_dvos_dt.data,
                                         < double * > q_dragAlpha.data,
                                         < double * > q_dragBeta.data,
                                         < double * > q_mass_source.data,
@@ -1115,6 +1118,7 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * q_p_fluid,
                                double * q_grad_p_fluid,
                                double * q_vos,
+                               double * q_dvos_dt,
                                double * q_dragAlpha,
                                double * q_dragBeta,
                                double * q_mass_source,
@@ -1480,6 +1484,7 @@ cdef class RANS3PSed2D:
                           numpy.ndarray q_p_fluid,
                           numpy.ndarray q_grad_p_fluid,
                           numpy.ndarray q_vos,
+                          numpy.ndarray q_dvos_dt,
                           numpy.ndarray q_dragAlpha,
                           numpy.ndarray q_dragBeta,
                           numpy.ndarray q_mass_source,
@@ -1631,6 +1636,7 @@ cdef class RANS3PSed2D:
                                         < double * > q_p_fluid.data,
                                         < double * > q_grad_p_fluid.data,
                                         < double * > q_vos.data,
+                                        < double * > q_dvos_dt.data,
                                         < double * > q_dragAlpha.data,
                                         < double * > q_dragBeta.data,
                                         < double * > q_mass_source.data,
@@ -2442,6 +2448,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.ebqe_grad_p_fluid[:] = 0.0
         if self.VOS_model is not None:
             self.model.q_vos = modelList[self.VOS_model].q[('u',0)]
+            self.model.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)]
             self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
         if self.LS_model is not None:
             self.q_phi = modelList[self.LS_model].q[('u', 0)]
@@ -3888,6 +3895,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q_p_fluid,
             self.q_grad_p_fluid,
             self.q_vos,
+            self.q_dvos_dt,
             self.coefficients.q_dragAlpha,
             self.coefficients.q_dragBeta,
             self.q[('r', 0)],
