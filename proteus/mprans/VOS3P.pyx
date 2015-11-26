@@ -610,7 +610,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         else:
             self.ebqe_porosity = numpy.ones(
                 modelList[
-                    self.LS_modelIndex].ebqe[
+                    self.modelIndex].ebqe[
                     ('u', 0)].shape, 'd')
             if self.setParamsFunc is not None:
                 self.setParamsFunc(
@@ -1229,6 +1229,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.u[0].dof[dofN] = g(
                     self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],
                     self.timeIntegration.t)
+        assert (self.coefficients.q_porosity == 1).all()
         self.vos.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
