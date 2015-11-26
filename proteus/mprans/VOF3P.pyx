@@ -1228,6 +1228,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.u[0].dof[dofN] = g(
                     self.dirichletConditionsForceDOF.DOFBoundaryPointDict[dofN],
                     self.timeIntegration.t)
+        assert (self.coefficients.q_porosity == 1).all()
         self.vof.calculateResidual(  # element
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
