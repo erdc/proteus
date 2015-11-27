@@ -43,6 +43,7 @@ namespace proteus
 			           double sc_uref, double sc_alpha,
 				   //VRANS
 				   const double* q_porosity,
+                                   double* q_dvos_dt,
 				   //
 				   int* u_l2g, 
 				   double* elementDiameter,
@@ -157,8 +158,8 @@ namespace proteus
     dm= porosity;
     for (int I=0; I < nSpace; I++)
       {
-	f[I] = v[I]*porosity*u;
-	df[I] = v[I]*porosity;
+	f[I] = v[I]*u;//v already has porosity in it
+	df[I] = v[I]; 
       }
     }
 
@@ -339,6 +340,7 @@ namespace proteus
 			   double sc_uref, double sc_alpha,
 			   //VRANS
 			   const double* q_porosity,
+                           double* q_dvos_dt,
 			   //
 			   int* u_l2g, 
 			   double* elementDiameter,
@@ -515,6 +517,7 @@ namespace proteus
 		     dm,
 		     m_t,
 		     dm_t);
+              q_dvos_dt[eN_k] = m_t;
 	      //
 	      //calculate subgrid error (strong residual and adjoint)
 	      //
