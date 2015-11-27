@@ -18,6 +18,19 @@ import time as tt
 import sys as sys
 
 
+def loadExistingFunction(funcName, validFunctions):
+    funcNames = []
+    for func  in validFunctions:
+            funcNames.append(func.__name__)
+            if func.__name__ == funcName:
+                func_ret = func
+    if funcName not in funcNames:
+        logEvent("WaveTools.py: Wrong function type (%s) given: Valid wavetypes are %s" %(funcName,funcNames), level=0)
+        sys.exit(1)
+    return func_ret
+       
+
+
 def setVertDir(g):
     """ Sets the unit vector for the vertical direction, opposite to the gravity vector
     param: g : gravitational acceleration vector [L/T^2]
@@ -129,9 +142,8 @@ def sigma(omega,omega0):
     """
     sigmaReturn = np.where(omega > omega0,0.09,0.07)
     return sigmaReturn
-def dummy(f,f0,Hs, **kwargs):
-    """ dummy function to initialise spectral functions"""
-    return None 
+
+
 def JONSWAP(f,f0,Hs,gamma=3.3,TMA=False, depth = None):
     """The wave spectrum from Joint North Sea Wave Observation Project
     Jonswap equation from "Random Seas and Design of Maritime Structures" - Y. Goda - 2010 (3rd ed) eq. 2.12 - 2.15
@@ -227,31 +239,25 @@ def dispersion(w,d, g = 9.81,niter = 1000):
     else:
         return(Kd/d)
 
-def window(wname='Costap'):
-    """Returns a window function, currently has dirichlet window and cosine taper
-    ntime : Number of sample points in window function
-    wname : filter type
-    See: On the use of Windows for Harmonic Analysis with Discrete Fourier Transform,
-    Harris JF (1978) Proceedings of the IEEE 66(1): 51-83"""
-    def diric(l):
-        """Dirichlet filter, only ones"""
-        return np.ones(l)
 
-    def costap(l,tail=0.1):
-        """ Cosine taper Goda (2010), Random Seas and Design of Maritime Structures
-        a particular window function. Looks like Hanning window. taper window"""
-        npoints = np.ceil(tail*l)
-        wind = np.ones(l)
-        for k in range(l): # (k,np) = (n,N) normally used
-            if k < npoints:
-                wind[k] = 0.5*(1.-cos(pi*float(k)/float(npoints)))
-            if k > l - npoints -1:
-                wind[k] = 0.5*(1.-cos(pi*float(l-k-1)/float(npoints)))
-        return wind
-    options= {"Dirichlet":diric,
-            "Costap":costap,
-            }
-    return options[wname]
+def diric(l,cutoff):
+    """Dirichlet filter, only ones"""
+    a = np.zeros(l,)
+    cut = int(cutoff*l)
+    a = a[cut:-cut]
+    return a
+
+def costap(l,cutoff=0.1):
+    """ Cosine taper Goda (2010), Random Seas and Design of Maritime Structures
+    a particular window function. Looks like Hanning window. taper window"""
+    npoints = np.ceil(cutoff*l)
+    wind = np.ones(l)
+    for k in range(l): # (k,np) = (n,N) normally used
+        if k < npoints:
+            wind[k] = 0.5*(1.-cos(pi*float(k)/float(npoints)))
+        if k > l - npoints -1:
+            wind[k] = 0.5*(1.-cos(pi*float(l-k-1)/float(npoints)))
+    return wind
 
 #fft function ( = Cooley-Tukey FFT algorithm ) already included in imported numpy library
 # fft( input array (here eta), x axis (here Time component) ).
@@ -418,17 +424,7 @@ class RandomWaves:
                  phi=None
                  ):
         validSpectra = [JONSWAP,PM_mod]
-        spectNames =[]
-        spec_fun = dummy 
-        for spectrum in validSpectra:
-            spectNames.append(spectrum.__name__)
-            if spectrum.__name__ == spectName:
-                spec_fun = spectrum
-        
-        if spectName not in spectNames:
-            logEvent("WaveTools.py: Wrong spectrum type (%s) given: Valid wavetypes are %s" %(spectName,spectNames), level=0)
-            sys.exit(1)
-                
+        spec_fun =loadExistingFunction(spectName, validSpectra)                 
         self.g = np.array(g)
         self.waveDir =  setDirVector(np.array(waveDir))
         self.vDir = setVertDir(g)
@@ -613,16 +609,7 @@ class DirectionalWaves(RandomWaves):
                  phiSymm = False # When true, phi[-pi/2,0] is symmetric to phi[0,pi/2]
                  ):   
         validSpread = [cos2s,mitsuyasu]
-        spreadNames =[]
-        spread_fun = dummy 
-        for spread in validSpread:
-            spreadNames.append(spread.__name__)
-            if spread.__name__ == spreadName:
-                spread_fun = spread
-    
-        if spreadName not in spreadNames:
-            logEvent("WaveTools.py: Wrong spreadfunction type (%s) given: Valid wavetypes are %s" %(spreadName,spreadNames), level=0)
-            sys.exit(1)
+        spread_fun =  loadExistingFunction(spreadName, validSpread)
         self.M = M
         self.Mtot = 2*M+1
         self.waveDir0 = setDirVector(waveDir0)
@@ -736,79 +723,59 @@ class DirectionalWaves(RandomWaves):
 
 class TimeSeries:
     """Generate a time series by using spectral windowing method.
-
-    :param ts: time-series array [T]
-    :param  d: depth [L]
+    :param timeSeriesFile: Time series file name
+    :param skiprows: How many rows to skip while reading time series
+    :param  depth: depth [L]
     :param peakFrequency: expected peak frequency
     :param N: number of frequency bins [-]
     :param Nwaves: Number of waves per window (Approx)
-    :param mwl: mean water level [L]"""
+    :param mwl: mean water level [L]
+    :param waveDir: wave Direction vector
+    """
 
     def __init__(self,
-                 timeSeriesFile= "Timeseries.txt",
-                 skiprows = 0,
-                 d = 2.0,
-                 bandFactor = 2.0, #controls width of band  around fp
-                 peakFrequency = 0.2,
-                 N = 32,          #number of frequency bins
-                 Nwaves = 4, #Nmumber of waves per windowmean water level
-                 mwl = 0.0,        #mean water level
-                 waveDir = np.array([1,0,0]), #accelerationof gravity
-                 g = np.array([0, -9.81, 0]),
-                 rec_direct = True
+                 timeSeriesFile, # e.g.= "Timeseries.txt",
+                 skiprows,
+                 depth  ,
+                 N ,          #number of frequency bins
+                 Nwaves , #Nmumber of waves per windowmean water level
+                 mwl ,        #mean water level
+                 waveDir, 
+                 g,
+                 rec_direct = True,
+                 wind_params = None #If rec_direct = False then wind_params = {"Nwaves":Nwaves,"Window":wind_fun}
                  ):
 
-# Setting the depth
-        self.depth = d
+        # Setting the depth
+        self.depth = depth
         self.rec_direct = rec_direct
-# Setting frequency and band factor. Consider removing these if not used
-        self.bandFactor = np.array(bandFactor)
-        self.peakFrequency = np.array(peakFrequency)
-# Number of wave components
+        # Number of wave components
         self.N = N
-# Number of waves per window (approx.)
-        self.Nwaves = Nwaves
-# Mean water level
+        # Mean water level
         self.mwl = mwl
-# Wave direction
-        self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
-# Gravity
+        # Wave direction
+        self.waveDir = setDirVector(waveDir)
+        # Gravity
         self.g = np.array(g)
-# Derived variables
-# Gravity magnitude
+        # Derived variables
+        # Gravity magnitude
         self.gAbs = sqrt(sum(g * g))
-# Definition of gravity direction
-        self.vDir = self.g/self.gAbs
-# Setting freq matrix
-        self.fmax = self.bandFactor*self.peakFrequency
-        self.fmin = self.peakFrequency/self.bandFactor
-        self.df = (self.fmax-self.fmin)/float(self.N-1)
-        self.fi=np.zeros((self.N),'d')
-
-
-        for i in range(N):
-            self.fi[i] = self.fmin+self.df*i
-
-# Derived arrays: angular freq, wavenumber, wavelength
-        self.omegai = 2.*pi*self.fi
-        self.ki = dispersion(self.omegai,self.depth,g=self.gAbs)
-        self.wi = 2.*pi/self.ki
-
-#Reading time series
+        # Definition of gravity direction
+        self.vDir = setVertDir(g)
+        #Reading time series
         filetype = timeSeriesFile[-4:]
-        logEvent("Reading timeseries from %s file: %s" % (filetype,timeSeriesFile),level=0)
+        logEvent("WaveTools.py: Reading timeseries from %s file: %s" % (filetype,timeSeriesFile),level=0)
         fid = open(timeSeriesFile,"r")
         if (filetype !=".txt") and (filetype != ".csv"):
                 logEvent("WaveTools.py: Timeseries must be given in .txt or .csv format",level=0)
-                logEvent("Stopping simulation",level=0)
                 sys.exit(1)
         elif (filetype == ".csv"):
             tdata = np.loadtxt(fid,skiprows=skiprows,delimiter=",")
         else:
             tdata = np.loadtxt(fid,skiprows=skiprows)
         fid.close()
-#Checks for tseries file
-# Only 2 columns: time & eta
+        #Checks for tseries file
+        # Only 2 columns: time & eta
         ncols = len(tdata[0,:])
         if ncols != 2:
             logEvent("WaveTools.py: Timeseries file must have only two columns [time, eta]",level=0)
@@ -816,18 +783,17 @@ class TimeSeries:
             sys.exit(1)
         time_temp = tdata[:,0]
         self.dt = (time_temp[-1]-time_temp[0])/len(time_temp)
-
-# If necessary, perform interpolation
+        
+        # If necessary, perform interpolation
         doInterp = False
         for i in range(1,len(time_temp)):
             dt_temp = time_temp[i]-time_temp[i-1]
         #check if time is at first column
-            if time_temp[i]<time_temp[i-1]:
-                logEvent("WaveTools.py:  Found not consistent time entry between %s and %s row. Time variable must be always at the first column of the file and increasing monotonically" %(i-1,i) )
-                logEvent("Stopping simulation",level=0)
+            if time_temp[i]<=time_temp[i-1]:
+                logEvent("WaveTools.py:  Found not consistent time entry between %s and %s row in %s file. Time variable must be always at the first column of the file and increasing monotonically" %(i-1,i,timeSeriesFile) )
                 sys.exit(1)
         #check if sampling rate is constant
-            if abs(dt_temp-self.dt)/self.dt <= 1e-4:
+            if abs(dt_temp-self.dt)/self.dt <= 1e-10:
                 doInterp = True
         if(doInterp):
             logEvent("WaveTools.py: Not constant sampling rate found, proceeding to signal interpolation to a constant sampling rate",level=0)
@@ -836,21 +802,23 @@ class TimeSeries:
         else:
             self.time = time_temp
             self.eta = tdata[:,1]
-# Remove mean level from raw data
+        # Remove mean level from raw data
         self.eta -= np.mean(self.eta)
-# Filter out first 2.5 % (equivalent to ramp time)
-        wind_fun = window(wname="Costap")
-        self.eta *=wind_fun(len(self.time),tail=0.025)
-# clear tdata from memory
+        # Filter out first 2.5 % and last 2.5% to make the signal periodic
+        self.eta *=costap(len(self.time),cutoff=0.025)
+        # clear tdata from memory
         del tdata
-
-# Calculate time lenght
+        # Calculate time lenght
         self.tlength = (self.time[-1]-self.time[0])
-
-# Matrix initialisation
+        # Matrix initialisation
         self.windows_handover = []
         self.windows_rec = []
-# Direct decomposition of the time series for using at reconstruct_direct
+
+
+
+
+
+        # Direct decomposition of the time series for using at reconstruct_direct
         if (self.rec_direct):
             Nf = self.N
             self.nfft=len(self.time)
@@ -860,7 +828,6 @@ class TimeSeries:
             ipeak = np.where(self.ai == max(self.ai))[0][0]
             imax = min(ipeak + Nf/2,len(self.ai))
             imin = max(0,ipeak - Nf/2)
-            print len(self.ai)
             self.ai = self.ai[imin:imax]
             self.omega = self.decomp[0][imin:imax]
             self.phi = self.decomp[2][imin:imax]
@@ -871,30 +838,53 @@ class TimeSeries:
                 self.kDir[ii,:] = self.ki[ii]*self.waveDir[:]
 
 
-# Spectral windowing
+                # Spectral windowing
         else:
+            if (wind_params==None):
+                logEvent("WaveTools.py: Set parameters for spectral windowing. Argument wind_params must be a dictionary")
+                sys.exit(1)
+            try:
+                self.Nwaves = wind_params["Nwaves"]
+            except:
+                logEvent("WaveTools.py: Dictionary key 'Nwaves' (waves per window) not found in wind_params dictionary")
+                sys.exit(1)
+            try:           
+                windowName = wind_params["Window"]
+            except:
+                logEvent("WaveTools.py: Dictionary key 'Window' (windo function type) not found in wind_params dictionary")
+                sys.exit(1)
+
+            validWindows = [costap, diric]
+            wind_fun =  loadExistingFunction(windowName, validWindows) 
             logEvent("WaveTools.py: performing series decomposition with spectral windows")
-# Portion of overlap, compared to window time
-            Overl = 0.25
-# Portion of window filtered with the Costap filter
-            Filt = 0.1
-# Setting the handover time, either at the middle of the overlap or just after the filter
-            Handover = min(Overl - 1.1 *Filt,  Overl / 2.)
-# setting the window duration (approx.). Twindow = Tmean * Nwaves = Tpeak * Nwaves /1.1
+            # Portion of overlap, compared to window time
+            try:
+                self.Nwaves = wind_params["Overlap"]            
+            except:
+                overlap = 0.25
+
+            try:
+                self.Nwaves = wind_params["Cutoff"]            
+            except:
+                cutoff= 0.1
+            # Portion of window filtered with the Costap filter
+            # Setting the handover time, either at the middle of the overlap or just after the filter
+            Handover = min(overlap - 1.1 *cutoff,  overlap / 2.)
+            # setting the window duration (approx.). Twindow = Tmean * Nwaves = Tpeak * Nwaves /1.1
             self.Twindow =  self.Nwaves / (1.1 * self.peakFrequency )
 #            print self.Twindow
             #Settling overlap 25% of Twindow
-            self.Toverlap = Overl * self.Twindow
+            self.Toverlap = overlap * self.Twindow
             #Getting the actual number of windows
             # (N-1) * (Twindow - Toverlap) + Twindow = total time
             self.Nwindows = int( (self.tlength -   self.Twindow ) / (self.Twindow - self.Toverlap) ) + 1
             # Correct Twindow and Toverlap for duration and integer number of windows
-            self.Twindow = self.tlength/(1. + (1. - Overl)*(self.Nwindows-1))
-            self.Toverlap = Overl*self.Twindow
+            self.Twindow = self.tlength/(1. + (1. - overlap)*(self.Nwindows-1))
+            self.Toverlap = overlap*self.Twindow
             logEvent("WaveTools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow * 1.1* self.peakFrequency) )
             diff = (self.Nwindows-1.)*(self.Twindow -self.Toverlap)+self.Twindow - self.tlength
             logEvent("WaveTools.py: Checking duration of windowed time series: %s per cent difference from original duration" %(100*diff) )
-            logEvent("WaveTools.py: Using %s windows for reconstruction with %s sec duration and %s per cent overlap" %(self.Nwindows, self.Twindow,100*Overl) )
+            logEvent("WaveTools.py: Using %s windows for reconstruction with %s sec duration and %s per cent overlap" %(self.Nwindows, self.Twindow,100*overlap) )
 # Setting where each window starts and ends
             for jj in range(self.Nwindows):
                 span = np.zeros(2,"d")
@@ -921,9 +911,7 @@ class TimeSeries:
 #            ii = 0
             for wind in self.windows_rec:
                 self.nfft=len(wind[:,0])
-                filt = window(wname = "Costap")
-                wind_fun = window(wname="Costap")
-                wind[:,1] *=wind_fun(self.nfft,tail = Filt)
+                wind[:,1] *=wind_fun(self.nfft,cutoff = cutoff)
                 decomp = decompose_tseries(wind[:,0],wind[:,1],self.nfft,self.N,ret_only_freq=0)
                 self.decompose_window.append(decomp)
 #                if style == "k-":
@@ -940,51 +928,29 @@ class TimeSeries:
 #            self.Twindow = self.Npw*self.dt
 #            self.Noverlap = int(self.Npw *0.25)
 
-    def rawdata(self):
-        A = [self.time, self.eta]
-        return A
+    def eta(self,x,y,z,t):
+        """Free surface displacement
 
-    def plotSeries(self):
-        "Plots the timeseries in timeSeries.pdf. If returnPlot is set to True, returns a line object"
-        from matplotlib import pyplot as plt
-#insert comm
-        fig = plt.figure(1)
-        line = plt.plot(self.time,self.eta)
-        plt.grid()
-        plt.xlabel("Time")
-        plt.ylabel("Elevation")
-        plt.savefig("timeSeries.pdf")
-        logEvent("WaveTools.py: Plotting timeseries in timeSeries.pdf",level=0)
-        plt.close("all")
-        del fig
-    def Z(self,x,y,z):
-        return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.mwl
+        :param x: floating point x coordinate
+        :param t: time"""
+        Eta=0.
+        if(self.rec_direct):
+            for ii in range(self.Nall):
+                Eta+= eta_mode(x,y,z,t,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
+            return Eta
 
-    def reconstruct_direct(self,x,y,z,t,var="eta",ss = "x"):
-        "Direct reconstruction of a timeseries"
-# Removing check, I believe it is slowing don the process
-#        if self.rec_direct==False:
-#            logEvent("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
-#            logEvent("Stopping simulation",level=0)
-#            exit(1)
-        if var == "eta":
-            Eta=0.
-            for ii in range(len(self.ai)):
-                Eta+=self.ai[ii]*cos(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t - self.phi[ii])
-                return Eta
-        if var=="U":
-            UH=0.
-            UV=0.
-            for ii in range(len(self.ai)):
-                UH+=self.ai[ii]*self.omega[ii]*cosh(self.ki[ii]*(self.Z(x,y,z)+self.depth))*cos(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t - self.phi[ii])/sinh(self.ki[ii]*self.depth)
-                UV+=self.ai[ii]*self.omega[ii]*sinh(self.ki[ii]*(self.Z(x,y,z)+self.depth))*sin(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t - self.phi[ii])/sinh(self.ki[ii]*self.depth)
-#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
-            Vcomp = {
-                    "x":UH*self.waveDir[0] + UV*self.vDir[0],
-                    "y":UH*self.waveDir[1] + UV*self.vDir[1],
-                    "z":UH*self.waveDir[2] + UV*self.vDir[2],
-                    }
-            return Vcomp[ss]
+    def u(self,x,y,z,t,comp):
+        """x-component of velocity
+
+        :param x: floating point x coordinate
+        :param z: floating point z coordinate (height above bottom)
+        :param t: time
+        """
+        U=0.
+        if(self.rec_direct):
+            for ii in range(self.Nall):
+                U+= vel_mode(x,y,z,t,self.kDir[ii], self.ki[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir,comp)                
+        return U        
 
 
     def reconstruct_window(self,x,y,z,t,Nf,var="eta",ss = "x"):
