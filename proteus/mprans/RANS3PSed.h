@@ -73,6 +73,7 @@ namespace proteus
 				   const double* q_p_fluid,
 				   const double* q_grad_p_fluid,
 				   const double* q_vos,
+				   const double* q_dvos_dt,
 				   const double* q_dragAlpha,
 				   const double* q_dragBeta,
 				   const double* q_mass_source,
@@ -1636,6 +1637,7 @@ namespace proteus
 			   const double* q_p_fluid,
 			   const double* q_grad_p_fluid,
 			   const double* q_vos,
+			   const double* q_dvos_dt,
 			   const double* q_dragAlpha,
 			   const double* q_dragBeta,
 			   const double* q_mass_source,
@@ -2135,7 +2137,8 @@ namespace proteus
 	      //calculate subgrid error (strong residual and adjoint)
 	      //
 	      //calculate strong residual
-	      pdeResidual_p = ck.Advection_strong(dmass_adv_u,grad_u) +
+	      pdeResidual_p = ck.Mass_strong(q_dvos_dt[eN_k]) +
+                ck.Advection_strong(dmass_adv_u,grad_u) +
                 ck.Advection_strong(dmass_adv_v,grad_v) +
 		ck.Advection_strong(dmass_adv_w,grad_w) +
                 DM2*MOVING_DOMAIN*ck.Reaction_strong(alphaBDF*(dV-q_dV_last[eN_k])/dV - div_mesh_velocity) +
@@ -2257,7 +2260,8 @@ namespace proteus
 		{ 
 		  register int i_nSpace=i*nSpace;
                   /* std::cout<<"elemRes_mesh "<<mesh_vel[0]<<'\t'<<mesh_vel[2]<<'\t'<<p_test_dV[i]<<'\t'<<(q_dV_last[eN_k]/dV)<<'\t'<<dV<<std::endl; */
-		  elementResidual_mesh[i] += ck.Reaction_weak(1.0,p_test_dV[i]) -
+		  elementResidual_mesh[i] += ck.Mass_weak(q_dvos_dt[eN_k],p_test_dV[i]) +
+                    ck.Reaction_weak(1.0,p_test_dV[i]) -
                     ck.Reaction_weak(1.0,p_test_dV[i]*q_dV_last[eN_k]/dV) -
                     ck.Advection_weak(mesh_vel,&p_grad_test_dV[i_nSpace]);
                   
