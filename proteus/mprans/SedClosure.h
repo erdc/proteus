@@ -32,7 +32,7 @@ public:
 			      double nu //Kinematic viscosity
 			      )
   {
-    double du2 = 0.;// (uFluid - uSolid);
+    double du2 = 0.;
     for (int ii=0; ii<nSpace;  ii++)
       {
 	du2+= (uFluid[ii] - uSolid[ii])*(uFluid[ii] - uSolid[ii]);
