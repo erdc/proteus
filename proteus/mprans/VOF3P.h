@@ -42,7 +42,7 @@ namespace proteus
 				   double shockCapturingDiffusion,
 			           double sc_uref, double sc_alpha,
 				   //VRANS
-				   const double* q_porosity,
+				   const double* q_vos,
 				   //
 				   int* u_l2g, 
 				   double* elementDiameter,
@@ -64,7 +64,7 @@ namespace proteus
 				   int* elementBoundaryLocalElementBoundariesArray,
 				   double* ebqe_velocity_ext,
 				   //VRANS
-				   const double* ebqe_porosity_ext,
+				   const double* ebqe_vos_ext,
 				   //
 				   int* isDOFBoundary_u,
 				   double* ebqe_bc_u_ext,
@@ -102,7 +102,7 @@ namespace proteus
 				   int lag_shockCapturing,/*mwf not used yet*/
 				   double shockCapturingDiffusion,
 				   //VRANS
-				   const double* q_porosity,
+				   const double* q_vos,
 				   //
 				   int* u_l2g,
 				   double* elementDiameter,
@@ -119,7 +119,7 @@ namespace proteus
 				   int* elementBoundaryLocalElementBoundariesArray,
 				   double* ebqe_velocity_ext,
 				   //VRANS
-				   const double* ebqe_porosity_ext,
+				   const double* ebqe_vos_ext,
 				   //
 				   int* isDOFBoundary_u,
 				   double* ebqe_bc_u_ext,
@@ -157,7 +157,7 @@ namespace proteus
     dm= porosity;
     for (int I=0; I < nSpace; I++)
       {
-	f[I] = v[I]*porosity*u;
+	f[I] = v[I]*u;//velocity already has porosity in it
 	df[I] = v[I]*porosity;
       }
     }
@@ -338,7 +338,7 @@ namespace proteus
 			   double shockCapturingDiffusion,
 			   double sc_uref, double sc_alpha,
 			   //VRANS
-			   const double* q_porosity,
+			   const double* q_vos,
 			   //
 			   int* u_l2g, 
 			   double* elementDiameter,
@@ -360,7 +360,7 @@ namespace proteus
 			   int* elementBoundaryLocalElementBoundariesArray,
 			   double* ebqe_velocity_ext,
 			   //VRANS
-			   const double* ebqe_porosity_ext,
+			   const double* ebqe_vos_ext,
 			   //
 			   int* isDOFBoundary_u,
 			   double* ebqe_bc_u_ext,
@@ -475,7 +475,7 @@ namespace proteus
 		    }
 		}
 	      //VRANS
-	      porosity = q_porosity[eN_k];
+	      porosity = 1.0 - q_vos[eN_k];
 	      //
 	      //
 	      //calculate pde coefficients at quadrature points
@@ -692,7 +692,7 @@ namespace proteus
 	      //
 	      bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext;
 	      //VRANS
-	      porosity_ext = ebqe_porosity_ext[ebNE_kb];
+	      porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb];
 	      //
 	      // 
 	      //calculate the pde coefficients using the solution and the boundary values for the solution 
@@ -799,7 +799,7 @@ namespace proteus
 			   int lag_shockCapturing,/*mwf not used yet*/
 			   double shockCapturingDiffusion,
 			   //VRANS
-			   const double* q_porosity,
+			   const double* q_vos,
 			   //
 			   int* u_l2g,
 			   double* elementDiameter,
@@ -816,7 +816,7 @@ namespace proteus
 			   int* elementBoundaryLocalElementBoundariesArray,
 			   double* ebqe_velocity_ext,
 			   //VRANS
-			   const double* ebqe_porosity_ext,
+			   const double* ebqe_vos_ext,
 			   //
 			   int* isDOFBoundary_u,
 			   double* ebqe_bc_u_ext,
@@ -923,7 +923,7 @@ namespace proteus
 		    }
 		}
 	      //VRANS
-	      porosity = q_porosity[eN_k];
+	      porosity = 1.0 - q_vos[eN_k];
 	      //
 	      //
 	      //calculate pde coefficients and derivatives at quadrature points
@@ -1144,7 +1144,7 @@ namespace proteus
 	      //
 	      bc_u_ext = isDOFBoundary_u[ebNE_kb]*ebqe_bc_u_ext[ebNE_kb]+(1-isDOFBoundary_u[ebNE_kb])*u_ext;
 	      //VRANS
-	      porosity_ext = ebqe_porosity_ext[ebNE_kb];
+	      porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb];
 	      //
 	      // 
 	      //calculate the internal and external trace of the pde coefficients 

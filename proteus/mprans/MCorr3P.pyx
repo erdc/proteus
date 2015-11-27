@@ -57,7 +57,7 @@ cdef extern from "mprans/MCorr3P.h" namespace "proteus":
                                double * ebqe_u,
                                double * ebqe_n,
                                double * q_r,
-                               double * q_porosity,
+                               double * q_vos,
                                int offset_u, int stride_u,
                                double * globalResidual,
                                int nExteriorElementBoundaries_global,
@@ -94,7 +94,7 @@ cdef extern from "mprans/MCorr3P.h" namespace "proteus":
                                double * q_phi,
                                double * q_normal_phi,
                                double * q_H,
-                               double * q_porosity,
+                               double * q_vos,
                                int * csrRowIndeces_u_u, int * csrColumnOffsets_u_u,
                                double * globalJacobian)
         void elementSolve(double * mesh_trial_ref,
@@ -134,7 +134,7 @@ cdef extern from "mprans/MCorr3P.h" namespace "proteus":
                           double * ebqe_u,
                           double * ebqe_n,
                           double * q_r,
-                          double * q_porosity,
+                          double * q_vos,
                           int offset_u, int stride_u,
                           double * globalResidual,
                           int nExteriorElementBoundaries_global,
@@ -180,7 +180,7 @@ cdef extern from "mprans/MCorr3P.h" namespace "proteus":
                                   double * ebqe_u,
                                   double * ebqe_n,
                                   double * q_r,
-                                  double * q_porosity,
+                                  double * q_vos,
                                   int offset_u, int stride_u,
                                   double * globalResidual,
                                   int nExteriorElementBoundaries_global,
@@ -226,7 +226,7 @@ cdef extern from "mprans/MCorr3P.h" namespace "proteus":
                               double * ebqe_u,
                               double * ebqe_n,
                               double * q_r,
-                              double * q_porosity,
+                              double * q_vos,
                               int offset_u, int stride_u,
                               double * globalResidual,
                               int nExteriorElementBoundaries_global,
@@ -275,7 +275,7 @@ cdef extern from "mprans/MCorr3P.h" namespace "proteus":
                            double * ebqe_u,
                            double * ebqe_n,
                            double * q_r,
-                           double * q_porosity,
+                           double * q_vos,
                            int offset_u, int stride_u,
                            double * globalResidual,
                            int nExteriorElementBoundaries_global,
@@ -320,7 +320,7 @@ cdef extern from "mprans/MCorr3P.h" namespace "proteus":
                                double * ebqe_u,
                                double * ebqe_n,
                                double * q_r,
-                               double * q_porosity,
+                               double * q_vos,
                                int offset_u, int stride_u,
                                double * globalResidual,
                                int nExteriorElementBoundaries_global,
@@ -396,7 +396,7 @@ cdef class MCorr3P:
                           numpy.ndarray ebqe_u,
                           numpy.ndarray ebqe_n,
                           numpy.ndarray q_r,
-                          numpy.ndarray q_porosity,
+                          numpy.ndarray q_vos,
                           int offset_u,
                           int stride_u,
                           numpy.ndarray globalResidual,
@@ -441,7 +441,7 @@ cdef class MCorr3P:
                                        < double * > ebqe_u.data,
                                        < double * > ebqe_n.data,
                                        < double * > q_r.data,
-                                       < double * > q_porosity.data,
+                                       < double * > q_vos.data,
                                        offset_u,
                                        stride_u,
                                        < double * > globalResidual.data,
@@ -481,7 +481,7 @@ cdef class MCorr3P:
                           numpy.ndarray q_phi,
                           numpy.ndarray q_normal_phi,
                           numpy.ndarray q_H,
-                          numpy.ndarray q_porosity,
+                          numpy.ndarray q_vos,
                           numpy.ndarray csrRowIndeces_u_u,
                           numpy.ndarray csrColumnOffsets_u_u,
                           globalJacobian):
@@ -517,7 +517,7 @@ cdef class MCorr3P:
                                        < double * > q_phi.data,
                                        < double * > q_normal_phi.data,
                                        < double * > q_H.data,
-                                       < double * > q_porosity.data,
+                                       < double * > q_vos.data,
                                        < int * > csrRowIndeces_u_u.data,
                                        < int * > csrColumnOffsets_u_u.data,
                                        < double * > globalJacobian_a.data)
@@ -560,7 +560,7 @@ cdef class MCorr3P:
                      numpy.ndarray ebqe_u,
                      numpy.ndarray ebqe_n,
                      numpy.ndarray q_r,
-                     numpy.ndarray q_porosity,
+                     numpy.ndarray q_vos,
                      int offset_u,
                      int stride_u,
                      numpy.ndarray globalResidual,
@@ -607,7 +607,7 @@ cdef class MCorr3P:
                                   < double * > ebqe_u.data,
                                   < double * > ebqe_n.data,
                                   < double * > q_r.data,
-                                  < double * > q_porosity.data,
+                                  < double * > q_vos.data,
                                   offset_u,
                                   stride_u,
                                   < double * > globalResidual.data,
@@ -656,7 +656,7 @@ cdef class MCorr3P:
                              numpy.ndarray ebqe_u,
                              numpy.ndarray ebqe_n,
                              numpy.ndarray q_r,
-                             numpy.ndarray q_porosity,
+                             numpy.ndarray q_vos,
                              int offset_u,
                              int stride_u,
                              numpy.ndarray globalResidual,
@@ -703,7 +703,7 @@ cdef class MCorr3P:
                                           < double * > ebqe_u.data,
                                           < double * > ebqe_n.data,
                                           < double * > q_r.data,
-                                          < double * > q_porosity.data,
+                                          < double * > q_vos.data,
                                           offset_u,
                                           stride_u,
                                           < double * > globalResidual.data,
@@ -752,7 +752,7 @@ cdef class MCorr3P:
                          numpy.ndarray ebqe_u,
                          numpy.ndarray ebqe_n,
                          numpy.ndarray q_r,
-                         numpy.ndarray q_porosity,
+                         numpy.ndarray q_vos,
                          int offset_u,
                          int stride_u,
                          numpy.ndarray globalResidual,
@@ -802,7 +802,7 @@ cdef class MCorr3P:
                                       < double * > ebqe_u.data,
                                       < double * > ebqe_n.data,
                                       < double * > q_r.data,
-                                      < double * > q_porosity.data,
+                                      < double * > q_vos.data,
                                       offset_u,
                                       stride_u,
                                       < double * > globalResidual.data,
@@ -855,7 +855,7 @@ cdef class MCorr3P:
                       numpy.ndarray ebqe_u,
                       numpy.ndarray ebqe_n,
                       numpy.ndarray q_r,
-                      numpy.ndarray q_porosity,
+                      numpy.ndarray q_vos,
                       int offset_u,
                       int stride_u,
                       numpy.ndarray globalResidual,
@@ -901,7 +901,7 @@ cdef class MCorr3P:
                                    < double * > ebqe_u.data,
                                    < double * > ebqe_n.data,
                                    < double * > q_r.data,
-                                   < double * > q_porosity.data,
+                                   < double * > q_vos.data,
                                    offset_u,
                                    stride_u,
                                    < double * > globalResidual.data,
@@ -950,7 +950,7 @@ cdef class MCorr3P:
                           numpy.ndarray ebqe_u,
                           numpy.ndarray ebqe_n,
                           numpy.ndarray q_r,
-                          numpy.ndarray q_porosity,
+                          numpy.ndarray q_vos,
                           int offset_u,
                           int stride_u,
                           numpy.ndarray globalResidual,
@@ -996,7 +996,7 @@ cdef class MCorr3P:
                                        < double * > ebqe_u.data,
                                        < double * > ebqe_n.data,
                                        < double * > q_r.data,
-                                       < double * > q_porosity.data,
+                                       < double * > q_vos.data,
                                        offset_u,
                                        stride_u,
                                        < double * > globalResidual.data,
@@ -1017,10 +1017,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             epsFactHeaviside=0.0,
             epsFactDirac=1.0,
             epsFactDiffusion=2.0,
-            LSModel_index=3,
+            LS_model=3,
             V_model=2,
-            me_model=5,
-            VOFModel_index=4,
+            ME_model=5,
+            VOS_model=0,
+            VOF_model=4,
             checkMass=True,
             sd=True,
             nd=None,
@@ -1064,13 +1065,14 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                          self.variableNames,
                          sparseDiffusionTensors=sdInfo,
                          useSparseDiffusion=sd)
-        self.levelSetModelIndex = LSModel_index
-        self.flowModelIndex = V_model
+        self.LS_model = LS_model
+        self.V_model = V_model
         self.epsFactHeaviside = epsFactHeaviside
         self.epsFactDirac = epsFactDirac
         self.epsFactDiffusion = epsFactDiffusion
-        self.me_model = me_model
-        self.VOFModelIndex = VOFModel_index
+        self.ME_model = ME_model
+        self.VOF_model = VOF_model
+        self.VOS_model = VOS_model
         self.useC = True
         self.applyCorrection = applyCorrection
         if self.applyCorrection:
@@ -1089,30 +1091,31 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         import copy
         log("Attaching models in LevelSetConservation")
         # level set
-        self.lsModel = modelList[self.levelSetModelIndex]
-        self.q_u_ls = modelList[self.levelSetModelIndex].q[('u', 0)]
-        self.q_n_ls = modelList[self.levelSetModelIndex].q[('grad(u)', 0)]
+        self.lsModel = modelList[self.LS_model]
+        self.q_u_ls = modelList[self.LS_model].q[('u', 0)]
+        self.q_n_ls = modelList[self.LS_model].q[('grad(u)', 0)]
 
-        self.ebqe_u_ls = modelList[self.levelSetModelIndex].ebqe[('u', 0)]
+        self.ebqe_u_ls = modelList[self.LS_model].ebqe[('u', 0)]
         self.ebqe_n_ls = modelList[
-            self.levelSetModelIndex].ebqe[
+            self.LS_model].ebqe[
             ('grad(u)', 0)]
 
-        if modelList[self.levelSetModelIndex].ebq.has_key(('u', 0)):
-            self.ebq_u_ls = modelList[self.levelSetModelIndex].ebq[('u', 0)]
+        if modelList[self.LS_model].ebq.has_key(('u', 0)):
+            self.ebq_u_ls = modelList[self.LS_model].ebq[('u', 0)]
         else:
             self.ebq_u_ls = None
         # volume of fluid
-        self.vofModel = modelList[self.VOFModelIndex]
-        self.q_H_vof = modelList[self.VOFModelIndex].q[('u', 0)]
-        self.q_porosity = modelList[self.VOFModelIndex].coefficients.q_porosity
-        self.ebqe_H_vof = modelList[self.VOFModelIndex].ebqe[('u', 0)]
-        if modelList[self.VOFModelIndex].ebq.has_key(('u', 0)):
-            self.ebq_H_vof = modelList[self.VOFModelIndex].ebq[('u', 0)]
+        self.vofModel = modelList[self.VOF_model]
+        self.q_H_vof = modelList[self.VOF_model].q[('u', 0)]
+        if  self.VOS_model is not None:
+            self.q_vos = modelList[self.VOS_model].q[('u',0)]
+        self.ebqe_H_vof = modelList[self.VOF_model].ebqe[('u', 0)]
+        if modelList[self.VOF_model].ebq.has_key(('u', 0)):
+            self.ebq_H_vof = modelList[self.VOF_model].ebq[('u', 0)]
         else:
             self.ebq_H_vof = None
         # correction
-        self.massCorrModel = modelList[self.me_model]
+        self.massCorrModel = modelList[self.ME_model]
         self.vofModel.q[('m_last', 0)][:] = self.vofModel.q[('m', 0)]
         if self.checkMass:
             self.m_tmp = copy.deepcopy(self.massCorrModel.q[('r', 0)])
@@ -1717,7 +1720,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('u', 0)],
             self.ebqe[('grad(u)', 0)],
             self.q[('r', 0)],
-            self.coefficients.q_porosity,
+            self.coefficients.q_vos,
             self.offset[0], self.stride[0],
             r,
             self.mesh.nExteriorElementBoundaries_global,
@@ -1769,7 +1772,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_u_ls,
             self.coefficients.q_n_ls,
             self.coefficients.q_H_vof,
-            self.coefficients.q_porosity,
+            self.coefficients.q_vos,
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
             jacobian)
         log("Jacobian ", level=10, data=jacobian)
@@ -1828,7 +1831,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('u', 0)],
             self.ebqe[('grad(u)', 0)],
             self.q[('r', 0)],
-            self.coefficients.q_porosity,
+            self.coefficients.q_vos,
             self.offset[0], self.stride[0],
             r,
             self.mesh.nExteriorElementBoundaries_global,
@@ -1889,7 +1892,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('u', 0)],
             self.ebqe[('grad(u)', 0)],
             self.q[('r', 0)],
-            self.coefficients.q_porosity,
+            self.coefficients.q_vos,
             self.offset[0], self.stride[0],
             r,
             self.mesh.nExteriorElementBoundaries_global,
@@ -1954,7 +1957,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q[('r', 0)],
             self.offset[0], self.stride[0],
             r,
-            self.coefficients.q_porosity,
+            self.coefficients.q_vos,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
             self.mesh.elementBoundaryElementsArray,
@@ -2074,7 +2077,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('u', 0)],
             self.ebqe[('grad(u)', 0)],
             self.q[('r', 0)],
-            self.coefficients.q_porosity,
+            self.coefficients.q_vos,
             self.offset[0], self.stride[0],
             self.u[0].dof,  # dummy r,not used
             self.mesh.nExteriorElementBoundaries_global,
@@ -2123,7 +2126,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('u', 0)],
             self.ebqe[('grad(u)', 0)],
             self.q[('r', 0)],
-            self.coefficients.q_porosity,
+            self.coefficients.q_vos,
             self.offset[0], self.stride[0],
             self.u[0].dof,  # dummy r,not used
             self.mesh.nExteriorElementBoundaries_global,
