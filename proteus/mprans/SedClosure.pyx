@@ -12,7 +12,7 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 		 double packMargin, #
                  double sigmaC
 		 )
-        double granularDrag(
+        double betaCoeff(
                             double sedF, # Sediment fraction
                             double* uFluid, #Fluid velocity
                             double* uSolid, #Sediment velocity
@@ -40,7 +40,7 @@ cdef class HsuSedStress:
         self.thisptr = new cppHsuSedStress( aDarcy, betaForch, grain, packFraction, packMargin, sigmaC)
     def __dealloc__(self):
         del self.thisptr
-    def granularDrag(self, 
+    def betaCoeff(self, 
                      sedF,  
                      numpy.ndarray uFluid, 
                      numpy.ndarray uSolid, 
@@ -52,7 +52,7 @@ cdef class HsuSedStress:
         param: uSolid: Solid velocity vector [L/T]
         param: nu  : Fluid kinematic viscosity [L^2/T]
         """
-        return self.thisptr.granularDrag(sedF, 
+        return self.thisptr.betaCoeff(sedF, 
                                   < double * > uFluid.data,
                                   < double * > uSolid.data, 
                                   nu)
