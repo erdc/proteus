@@ -12,14 +12,16 @@ public:
 		 double betaForch, // forchheimer parameter for drag term. Default value from Ergun (1952) is 1.75
 		 double grain, // Grain size, default assumed as d50
 		 double packFraction, //Critical volume fraction for switching the drag relation 0.2 by default, see Chen and Hsu 2014
-		 double packMargin // For packFraction +- packmargin, the drag coefficient is calculated by taking a weighted combination of the two relation (for packed and non-packed sediment
+		 double packMargin, // For packFraction +- packmargin, the drag coefficient is calculated by taking a weighted combination of the two relation (for packed and non-packed sediment
+		 double sigmaC
 ): 
  
     aDarcy_(aDarcy), 
     betaForch_(betaForch), 
     grain_(grain),
     packFraction_(packFraction),
-    packMargin_(packMargin)
+    packMargin_(packMargin),
+      sigmaC_(sigmaC)  
 
 
          
@@ -66,11 +68,27 @@ public:
     return weight*gDrag1 + (1.-weight)*gDrag2;
     }
 
+    inline double  turbSusp(  double sedF,
+			      double uFluid[nSpace], //Fluid velocity
+			      double uSolid[nSpace], //Sediment velocity
+			      double nu, //Kinematic viscosity
+			      double nuT
+			      )
+  {
+
+    return granularDrag(sedF,uFluid,uSolid,nu)*nuT/sigmaC_;
+      }
+    
+
+    
+    
+
   double aDarcy_;
   double betaForch_;
   double grain_; 
   double packFraction_;
   double packMargin_;
+  double sigmaC_;
 
  
 
