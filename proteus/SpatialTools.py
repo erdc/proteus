@@ -1088,7 +1088,7 @@ class CustomShape(Shape):
     def __init__(self, domain, barycenter=None, vertices=None,
                  vertexFlags=None, segments=None, segmentFlags=None,
                  facets=None, facetFlags=None, holes=None, regions=None,
-                 regionFlags=None, boundaryTags=None):
+                 regionFlags=None, boundaryTags=None, boundaryOrientations=None):
         Shape.__init__(self, domain)
         self.__class__.count += 1
         self.name = "custom" + str(self.__class__.count)
@@ -1126,7 +1126,13 @@ class CustomShape(Shape):
         self.BC_dict = {}
         self.BC_list = [None]*len(flagSet)
         for tag, index in boundaryTags.iteritems():
-            self.BC_dict[tag] = bc.BoundaryConditions()
+            if boundaryOrientations is not None:
+                b_or = boundaryOrientations[tag]
+                b_i = index-minFlag-1
+            else:
+                b_or = None
+                b_i = None
+            self.BC_dict[tag] = bc.BoundaryConditions(b_or=b_or, b_i=b_i)
             self.BC_list[index-minFlag] = self.BC_dict[tag]
         self.BC = BCContainer(self.BC_dict)
         self._addShape()
