@@ -16,11 +16,11 @@ public:
 		 double sigmaC
 ): 
  
-    aDarcy_(aDarcy), 
-    betaForch_(betaForch), 
-    grain_(grain),
-    packFraction_(packFraction),
-    packMargin_(packMargin),
+  aDarcy_(aDarcy), 
+      betaForch_(betaForch), 
+      grain_(grain),
+      packFraction_(packFraction),
+      packMargin_(packMargin),
       sigmaC_(sigmaC)  
 
 
@@ -68,16 +68,54 @@ public:
     return weight*gDrag1 + (1.-weight)*gDrag2;
     }
 
-    inline double  turbSusp(  double sedF,
-			      double uFluid[nSpace], //Fluid velocity
-			      double uSolid[nSpace], //Sediment velocity
+
+    inline double*  mInt(  double sedF,
+			      double uFluid_np1[nSpace], //Fluid velocity
+			      double uSolid_np1[nSpace], //Sediment velocity
+			      double uFluid_n[nSpace], //Fluid velocity
+			      double uSolid_n[nSpace], //Sediment velocity
 			      double nu, //Kinematic viscosity
-			      double nuT
+			      double nuT, //Turbulent viscosity
+			      double gradc[nSpace]
 			      )
     {
 
-      return betaCoeff(sedF,uFluid,uSolid,nu)*nuT/sigmaC_;
+      double beta = betaCoeff(sedF,uFluid_n,uSolid_n,nu);
+      double* mint2;
+      mint2 = new double[nSpace];
+      for  (int ii=0; ii<nSpace;  ii++)
+	{
+	  mint2[ii] = -sedF*beta*(uFluid_np1[ii]-uSolid_np1[ii]) - sedF*beta*nuT*gradc[ii]/sigmaC_;
+	    }
+      return  mint2;
+      
     }
+    
+    inline double  dmInt_duFluid
+                            (  double sedF,
+			      double uFluid_n[nSpace], //Fluid velocity
+			      double uSolid_n[nSpace], //Sediment velocity
+			      double nu //Kinematic viscosity
+
+			      )
+    {
+      return -sedF*betaCoeff(sedF,uFluid_n,uSolid_n,nu);
+
+    }
+
+
+       inline double  dmInt_duSolid
+                            (  double sedF,
+			      double uFluid_n[nSpace], //Fluid velocity
+			      double uSolid_n[nSpace], //Sediment velocity
+			      double nu //Kinematic viscosity
+
+			      )
+    {
+
+      return +sedF*betaCoeff(sedF,uFluid_n,uSolid_n,nu);
+    }
+
     
 
     

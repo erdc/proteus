@@ -99,7 +99,7 @@ class TestHsu(unittest.TestCase):
         sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC)
         drag2 = sedSt.betaCoeff(sedF, uf, us, nu)
         self.assertTrue(round(drag,10) == round(drag2,10))
-    def testTurbSusp(self):
+    def testMint(self):
         from proteus.mprans.SedClosure import HsuSedStress
         sigmaC = 1.1
         aDarcy = 1.
@@ -109,13 +109,51 @@ class TestHsu(unittest.TestCase):
         packMargin = 0.01
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
+        gradc = np.array([0.1,0.1],"d") 
         sedF = 0.205
         nu = 1e-4
         nuT = 1e-2
         sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC)
         beta = sedSt.betaCoeff(sedF, uf, us, nu)      
-        tSusp = sedSt.turbSusp(sedF, uf, us, nu, nuT)
-        self.assertTrue(round(tSusp,10) == round(beta*nuT/sigmaC,10))
+        mint = sedSt.mInt(sedF, uf, us, uf, us , nu, nuT, gradc)
+        self.assertTrue(round(mint.all(),10) == round((-sedF*beta*(uf-us) - sedF * beta * gradc * nuT / sigmaC).all() , 10))
+    def testdMintdUf(self):
+        from proteus.mprans.SedClosure import HsuSedStress
+        sigmaC = 1.1
+        aDarcy = 1.
+        bForch = 1.
+        grain = 0.1
+        packFraction = 0.2
+        packMargin = 0.01
+        uf = np.array([5.,4.],"d")
+        us = np.array([1.,1.],"d") 
+        gradc = np.array([0.1,0.1],"d") 
+        sedF = 0.205
+        nu = 1e-4
+        nuT = 1e-2
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC)
+        beta = sedSt.betaCoeff(sedF, uf, us, nu)      
+        mint = sedSt.dmInt_duFluid(sedF, uf, us , nu)
+        self.assertTrue(round(mint,10) == round(  - sedF*beta , 10))
+    def testdMintdUs(self):
+        from proteus.mprans.SedClosure import HsuSedStress
+        sigmaC = 1.1
+        aDarcy = 1.
+        bForch = 1.
+        grain = 0.1
+        packFraction = 0.2
+        packMargin = 0.01
+        uf = np.array([5.,4.],"d")
+        us = np.array([1.,1.],"d") 
+        gradc = np.array([0.1,0.1],"d") 
+        sedF = 0.205
+        nu = 1e-4
+        nuT = 1e-2
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC)
+        beta = sedSt.betaCoeff(sedF, uf, us, nu)      
+        mint = sedSt.dmInt_duSolid(sedF, uf, us , nu)
+        self.assertTrue(round(mint,10) == round(  sedF*beta , 10))
+
 
 
 if __name__ == '__main__':

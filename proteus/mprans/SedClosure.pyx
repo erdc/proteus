@@ -18,12 +18,29 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                             double* uSolid, #Sediment velocity
                             double nu #Kinematic viscosity
                            )
-        double turbSusp(
+
+
+        double*  mInt(
                             double sedF, # Sediment fraction
-                            double* uFluid, #Fluid velocity
-                            double* uSolid, #Sediment velocity
+                            double* uFluid_np1, #Fluid velocity
+                            double* uSolid_np1, #Sediment velocity
+                            double* uFluid_n, #Fluid velocity
+                            double* uSolid_n, #Sediment velocity
                             double nu, #Kinematic viscosity
-                            double nuT
+                            double nuT,
+                            double* gradc
+                           )
+        double dmInt_duFluid(
+                            double sedF, # Sediment fraction
+                            double* uFluid_n, #Fluid velocity
+                            double* uSolid_n, #Sediment velocity
+                            double nu #Kinematic viscosity
+                           )
+        double dmInt_duSolid(
+                            double sedF, # Sediment fraction
+                            double* uFluid_n, #Fluid velocity
+                            double* uSolid_n, #Sediment velocity
+                            double nu #Kinematic viscosity
                            )
 
 #define the way we want to present to Python
@@ -56,21 +73,54 @@ cdef class HsuSedStress:
                                   < double * > uFluid.data,
                                   < double * > uSolid.data, 
                                   nu)
-    def turbSusp(self, 
+    def  mInt(self, 
                      sedF,  
-                     numpy.ndarray uFluid, 
-                     numpy.ndarray uSolid, 
+                     numpy.ndarray uFluid_np1, 
+                     numpy.ndarray uSolid_np1, 
+                     numpy.ndarray uFluid_n, 
+                     numpy.ndarray uSolid_n,                                                      
                      nu, 
-                     nuT):
-        """ Function for calculating equation (7) from Chen and Hsu, CACR 14-08, A Multidimensional TwoPhase Eulerian Model for Sediment Transport TwoPhaseEulerSedFoam (Version 1.0) 
-        http://www.coastal.udel.edu/~thsu/simulation_data_files/CACR-14-08.pdf
-        param: sedF: Sediment fraction [-]
-        param: uFluid: Fluid velocity vector [L/T]
-        param: uSolid: Solid velocity vector [L/T]
-        param: nu  : Fluid kinematic viscosity [L^2/T]
-        """
-        return self.thisptr.turbSusp(sedF, 
-                                  < double * > uFluid.data,
-                                  < double * > uSolid.data, 
+                     nuT,
+                     numpy.ndarray gradc
+   ):
+        
+        mint = numpy.zeros(len(uFluid_n),"d")
+        cdef double* carr = self.thisptr.mInt(sedF, 
+                                  < double * > uFluid_np1.data,
+                                  < double * > uSolid_np1.data, 
+                                  < double * > uFluid_n.data,
+                                  < double * > uSolid_n.data, 
                                          nu,
-                                         nuT)
+                                         nuT, 
+                                  < double * > gradc.data)
+        for ii in range(len(mint)):
+            mint[ii] = carr[ii]
+        return mint
+                                 
+
+    def dmInt_duFluid(self,
+                            sedF, # Sediment fraction
+                            numpy.ndarray uFluid_n, #Fluid velocity
+                            numpy.ndarray uSolid_n, #Sediment velocity
+                            nu): #Kinematic viscosity
+                           
+         return self.thisptr.dmInt_duFluid(sedF, 
+                                  < double * > uFluid_n.data,
+                                  < double * > uSolid_n.data, 
+                                         nu)
+
+        
+
+    def dmInt_duSolid(self,
+                            sedF, # Sediment fraction
+                            numpy.ndarray uFluid_n, #Fluid velocity
+                            numpy.ndarray uSolid_n, #Sediment velocity
+                            nu): #Kinematic viscosity
+                           
+
+         return self.thisptr.dmInt_duSolid(sedF, 
+                                  < double * > uFluid_n.data,
+                                  < double * > uSolid_n.data, 
+                                         nu)
+
+
