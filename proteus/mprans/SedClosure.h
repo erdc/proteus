@@ -27,7 +27,7 @@ public:
          
     {}
   
-    inline double  granularDrag(     
+    inline double  betaCoeff(     
 			      double sedF, // Sediment fraction
 			      double uFluid[nSpace], //Fluid velocity
 			      double uSolid[nSpace], //Sediment velocity
@@ -74,10 +74,10 @@ public:
 			      double nu, //Kinematic viscosity
 			      double nuT
 			      )
-  {
+    {
 
-    return granularDrag(sedF,uFluid,uSolid,nu)*nuT/sigmaC_;
-      }
+      return betaCoeff(sedF,uFluid,uSolid,nu)*nuT/sigmaC_;
+    }
     
 
     

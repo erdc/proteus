@@ -29,7 +29,7 @@ class TestHsu(unittest.TestCase):
         drag = aDarcy * nu* sedF /((1.-sedF)*grain**2) +  bForch * umag / grain
         sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC)
         # For sedF > pacFraction - > drag = a * nu* sedF /((1-sedF)*grain^2) + beta * umag / grain
-        drag2 = sedSt.granularDrag(sedF, uf, us, nu)
+        drag2 = sedSt.betaCoeff(sedF, uf, us, nu)
 
         self.assertTrue(drag == drag2)
     def testGradularDrag2(self):
@@ -50,7 +50,7 @@ class TestHsu(unittest.TestCase):
         Rep = (1.- sedF)*umag*grain / nu    
         drag =  ( 24. * (1.+0.15*Rep**(0.687))/Rep) * 0.75 * umag * (1. -sedF)**(-1.65) / grain # Chen and Hsu 2014
         sedSt = HsuSedStress(aDarcy, bForch, grain, packFraction, packMargin, sigmaC)
-        drag2 = sedSt.granularDrag(sedF, uf, us, nu)
+        drag2 = sedSt.betaCoeff(sedF, uf, us, nu)
         self.assertTrue(round(drag,10) == round(drag2,10))
 
     def testGradularDrag3(self):
@@ -72,7 +72,7 @@ class TestHsu(unittest.TestCase):
         Rep = (1.- sedF) * umag * grain / nu    
         drag =  ( 0.44 * 0.75 * umag * (1. -sedF)**(-1.65) )/ grain # Chen and Hsu 2014
         sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC)
-        drag2 = sedSt.granularDrag(sedF, uf, us, nu)
+        drag2 = sedSt.betaCoeff(sedF, uf, us, nu)
         self.assertTrue(round(drag,10) == round(drag2,10))
     def testGradularDrag4(self):
         from proteus.mprans.SedClosure import HsuSedStress
@@ -97,7 +97,7 @@ class TestHsu(unittest.TestCase):
         w = 0.5 + (sedF - packFraction) / (2. * packMargin)
         drag = w*draga + (1.-w) * dragb
         sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC)
-        drag2 = sedSt.granularDrag(sedF, uf, us, nu)
+        drag2 = sedSt.betaCoeff(sedF, uf, us, nu)
         self.assertTrue(round(drag,10) == round(drag2,10))
     def testTurbSusp(self):
         from proteus.mprans.SedClosure import HsuSedStress
@@ -113,7 +113,7 @@ class TestHsu(unittest.TestCase):
         nu = 1e-4
         nuT = 1e-2
         sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC)
-        beta = sedSt.granularDrag(sedF, uf, us, nu)      
+        beta = sedSt.betaCoeff(sedF, uf, us, nu)      
         tSusp = sedSt.turbSusp(sedF, uf, us, nu, nuT)
         self.assertTrue(round(tSusp,10) == round(beta*nuT/sigmaC,10))
 
