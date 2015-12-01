@@ -99,6 +99,26 @@ class TestHsu(unittest.TestCase):
         sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC)
         drag2 = sedSt.betaCoeff(sedF, uf, us, nu)
         self.assertTrue(round(drag,10) == round(drag2,10))
+    def testgs0(self):
+        from proteus.mprans.SedClosure import HsuSedStress
+        sigmaC = 1.1
+        aDarcy = 1.
+        bForch = 1.
+        grain = 0.1
+        packFraction = 0.2
+        packMargin = 0.01
+        f = 8
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC)
+        sedF = 0.2
+        gs0 = sedSt.gs0(sedF)
+        self.assertTrue(gs0 == 0.5*(2-sedF)/(1-sedF)**3)
+        sedF = 0.55
+        gs0 = sedSt.gs0(sedF)
+        self.assertTrue(round(gs0,f) ==round( 0.5*(2-0.49)/(1-0.49)**3 * (0.64-0.49)/(0.64-sedF),f))
+        sedF = 0.65
+        gs0 = sedSt.gs0(sedF)
+        self.assertTrue(round(gs0,f) == round(0.5*(2-0.49)/(1-0.49)**3 * (0.64-0.49)/(0.64-0.635),f))
+
     def testMint(self):
         from proteus.mprans.SedClosure import HsuSedStress
         sigmaC = 1.1
