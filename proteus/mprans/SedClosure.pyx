@@ -21,23 +21,26 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
         double gs0(
                              double sedF # Sediment fraction
             )
-        double alphaResp( double rhoSolid,
-		      double sedF, 
-		      double* uFluid, 
-		      double* uSolid,
-		      double nu, 
-		      double theta_n,
-		      double kappa_n,
-		      double epsilon_n)                          
+        double kappa_sed(double sedF, 
+                       double rhoFluid,
+                       double rhoSolid,
+                       double* uFluid, 
+                       double* uSolid,
+                       double* gradC,
+                       double nu, 
+                       double theta_n,
+                       double kappa_n,
+                       double epsilon_n,
+                       double nuT_n)                          
 
 
         double*  mInt(
-                            double sedF, # Sediment fraction
-                            double* uFluid_np1, #Fluid velocity
-                            double* uSolid_np1, #Sediment velocity
-                            double* uFluid_n, #Fluid velocity
-                            double* uSolid_n, #Sediment velocity
-                            double nu, #Kinematic viscosity
+                            double sedF,         # Sediment fraction
+                            double* uFluid_np1,  #Fluid velocity
+                            double* uSolid_np1,  #Sediment velocity
+                            double* uFluid_n,    #Fluid velocity
+                            double* uSolid_n,    #Sediment velocity
+                            double nu,           #Kinematic viscosity
                             double nuT,
                             double* gradc
                            )
@@ -92,28 +95,34 @@ cdef class HsuSedStress:
         param: sedF: Sediment fraction [-]        
         """
         return self.thisptr.gs0(sedF) 
-    def alphaResp(self,
-                  rhoSolid,
-                  sedF,  
+    def kappa_sed(self,
+                  sedF,
+                  rhoFluid,
+                  rhoSolid,  
                   numpy.ndarray uFluid, 
                   numpy.ndarray uSolid, 
+                  numpy.ndarray gradC, 
                   nu,
                   theta_n,
                   kappa_n,
-                  epsilon_n):
+                  epsilon_n,
+                nuT_n):
         """ Radial distribution function for collision closure,  equation (2.31) from  Hsu et al 2004 'On two-phase sediment transport:
         sheet flow of massive particles', Proc. Royal Soc. Lond A 460, pp 2223-2250 
         http://www.coastal.udel.edu/~thsu/simulation_data_files/CACR-14-08.pdf
         param: sedF: Sediment fraction [-]        
         """
-        return self.thisptr.alphaResp(rhoSolid,
-                  sedF,  
+        return self.thisptr.kappa_sed(sedF,  
+                    rhoFluid,
+                    rhoSolid,
                   < double *> uFluid.data, 
                   < double *>  uSolid.data, 
+                  < double *>  gradC.data, 
                   nu,
                   theta_n,
                   kappa_n,
-                  epsilon_n)
+                epsilon_n,
+                nuT_n)
                                 
 
     def  mInt(self, 
