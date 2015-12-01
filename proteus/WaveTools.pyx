@@ -240,7 +240,7 @@ def dispersion(w,d, g = 9.81,niter = 1000):
         return(Kd/d)
 
 
-def diric(l,cutoff):
+def tophat(l,cutoff):
     """ returns a top hat filter 
     :param l: array length
     :param l: cut off fraction at either side of the array zero values will be imposed at the first and last cutoff*l array elements
@@ -252,9 +252,11 @@ def diric(l,cutoff):
     return a
 
 def costap(l,cutoff=0.1):
-    """ Cosine taper Goda (2010), Random Seas and Design of Maritime Structures
-    a particular window function. Looks like Hanning window. taper window"""
-    npoints = np.ceil(cutoff*l)
+    """ Cosine taper Goda (2010), Random Seas and Design of Maritime Structures equation 11.40
+    a particular window function. Looks like Hanning window. taper window
+    :param l: array length
+    :param l: cut off fraction at either side of the array zero values will be imposed at the first and last cutoff*l array elements"""
+    npoints = int(cutoff*l)
     wind = np.ones(l)
     for k in range(l): # (k,np) = (n,N) normally used
         if k < npoints:
@@ -858,7 +860,7 @@ class TimeSeries:
                 logEvent("WaveTools.py: Dictionary key 'Window' (windo function type) not found in wind_params dictionary")
                 sys.exit(1)
 
-            validWindows = [costap, diric]
+            validWindows = [costap, tophat]
             wind_fun =  loadExistingFunction(windowName, validWindows) 
             logEvent("WaveTools.py: performing series decomposition with spectral windows")
             # Portion of overlap, compared to window time

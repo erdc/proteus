@@ -128,15 +128,23 @@ class TestAuxFunctions(unittest.TestCase):
 # U_z = 0 at z = mwl-d
         self.assertTrue(vel_mode(x,y,1.,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,"z")==0.)
     
-    def testDiric(self):    
-        from proteus.WaveTools import diric
+    def testTophat(self):    
+        from proteus.WaveTools import tophat
         a  = np.random.rand(100)
-        filt = diric(100,0.1)
+        filt = tophat(100,0.1)
         af = a*filt
         a[:10] = 0.
-        a[:-10] =0.
+        a[-10:] =0.
         self.assertTrue( a.all() == af.all())
 
+    def testcosTap(self):    
+        from proteus.WaveTools import costap
+        a  = np.random.rand(100)
+        filt = costap(100,0.1)
+        af = a*filt
+        a[:10] = 0.5*(1.-np.cos(pi*np.linspace(0,9,10)/10.))
+        a[-10:] =0.5*(1.-np.cos(pi*np.linspace(9,0,10)/10.))
+        self.assertTrue( a.all() == af.all())
 
 
 class TestWaveParameters(unittest.TestCase):
