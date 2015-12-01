@@ -145,6 +145,22 @@ class TestAuxFunctions(unittest.TestCase):
         a[:10] = 0.5*(1.-np.cos(pi*np.linspace(0,9,10)/10.))
         a[-10:] =0.5*(1.-np.cos(pi*np.linspace(9,0,10)/10.))
         self.assertTrue( a.all() == af.all())
+    def testDecomposeFFT(self):    
+        from proteus.WaveTools import decompose_tseries
+        dt = 0.01
+        time = np.linspace(0,199,200 + int(0.5*random.random()))
+        eta = np.cos(0.2*pi*time + 0.2)
+        nfft = len(time)
+        # testing full decompistion
+        dec = decompose_tseries(time,eta)
+        time = np.linspace(0,199,len(dec[1]))
+        eta = np.cos(0.2*pi*time + 0.2)
+        rec = np.zeros(len(time),)
+        
+        for ii in range(len(dec[0])):
+            rec[:]+=dec[1][ii]*np.cos(dec[0][ii]*time[:]+dec[2][ii])
+        rec[:]+=dec[3]
+        self.assertTrue( rec.all() == eta.all())
 
 
 class TestWaveParameters(unittest.TestCase):
