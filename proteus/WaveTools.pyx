@@ -241,10 +241,14 @@ def dispersion(w,d, g = 9.81,niter = 1000):
 
 
 def diric(l,cutoff):
-    """Dirichlet filter, only ones"""
+    """ returns a top hat filter 
+    :param l: array length
+    :param l: cut off fraction at either side of the array zero values will be imposed at the first and last cutoff*l array elements
+
+    """
     a = np.zeros(l,)
     cut = int(cutoff*l)
-    a = a[cut:-cut]
+    a[cut:-cut] = 1.
     return a
 
 def costap(l,cutoff=0.1):
