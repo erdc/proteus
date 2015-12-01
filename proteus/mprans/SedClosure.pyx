@@ -10,7 +10,10 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 		 double grain, # Grain size, default assumed as d50
 		 double packFraction, #Critical volume fraction for switching the drag relation 0.2 by default, see Chen and Hsu 2014
 		 double packMargin, #
-                 double sigmaC
+                 double sigmaC,
+                 double C3e,
+                 double C4e
+            
 		 )
         double betaCoeff(
                             double sedF, # Sediment fraction
@@ -22,6 +25,17 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                              double sedF # Sediment fraction
             )
         double kappa_sed(double sedF, 
+                       double rhoFluid,
+                       double rhoSolid,
+                       double* uFluid, 
+                       double* uSolid,
+                       double* gradC,
+                       double nu, 
+                       double theta_n,
+                       double kappa_n,
+                       double epsilon_n,
+                       double nuT_n)                          
+        double eps_sed(double sedF, 
                        double rhoFluid,
                        double rhoSolid,
                        double* uFluid, 
@@ -60,7 +74,7 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 #define the way we want to present to Python
 cdef class HsuSedStress:
     cdef  cppHsuSedStress* thisptr
-    def __cinit__(self, aDarcy, betaForch, grain, packFraction,packMargin, sigmaC ):
+    def __cinit__(self, aDarcy, betaForch, grain, packFraction,packMargin, sigmaC, C3e, C4e ):
         """ Class for caclulating sediment / fluid momentum transfer, see Chen and Hsu, CACR 14-08, A Multidimensional TwoPhase Eulerian Model for Sediment Transport TwoPhaseEulerSedFoam (Version 1.0) 
         http://www.coastal.udel.edu/~thsu/simulation_data_files/CACR-14-08.pdf
         param: aDarcy: Darcy parameter for drag term [-]. Default value from Ergun (1952) is 150
@@ -68,7 +82,7 @@ cdef class HsuSedStress:
         param: grain: Grain size, default assumed as d50 [L]
         param: packFraction : Critical sediment fraction [-] for switching the drag relation 0.2 by default, see Chen and Hsu 2014, equation (7)
         param: packMargin : [-] For packFraction \pm packMargin where the two braches in equation (7) are blended with linear weighting. Currently no information on the default value of this """
-        self.thisptr = new cppHsuSedStress( aDarcy, betaForch, grain, packFraction, packMargin, sigmaC)
+        self.thisptr = new cppHsuSedStress( aDarcy, betaForch, grain, packFraction, packMargin, sigmaC, C3e, C4e)
     def __dealloc__(self):
         del self.thisptr
     def betaCoeff(self, 
@@ -107,11 +121,6 @@ cdef class HsuSedStress:
                   kappa_n,
                   epsilon_n,
                 nuT_n):
-        """ Radial distribution function for collision closure,  equation (2.31) from  Hsu et al 2004 'On two-phase sediment transport:
-        sheet flow of massive particles', Proc. Royal Soc. Lond A 460, pp 2223-2250 
-        http://www.coastal.udel.edu/~thsu/simulation_data_files/CACR-14-08.pdf
-        param: sedF: Sediment fraction [-]        
-        """
         return self.thisptr.kappa_sed(sedF,  
                     rhoFluid,
                     rhoSolid,
@@ -123,7 +132,32 @@ cdef class HsuSedStress:
                   kappa_n,
                 epsilon_n,
                 nuT_n)
-                                
+        
+
+    def eps_sed(self,
+                  sedF,
+                  rhoFluid,
+                  rhoSolid,  
+                  numpy.ndarray uFluid, 
+                  numpy.ndarray uSolid, 
+                  numpy.ndarray gradC, 
+                  nu,
+                  theta_n,
+                  kappa_n,
+                  epsilon_n,
+                nuT_n):
+        return self.thisptr.eps_sed(sedF,  
+                    rhoFluid,
+                    rhoSolid,
+                  < double *> uFluid.data, 
+                  < double *>  uSolid.data, 
+                  < double *>  gradC.data, 
+                  nu,
+                  theta_n,
+                  kappa_n,
+                epsilon_n,
+                nuT_n)
+
 
     def  mInt(self, 
                      sedF,  
