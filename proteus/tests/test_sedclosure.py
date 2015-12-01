@@ -118,7 +118,7 @@ class TestHsu(unittest.TestCase):
         sedF = 0.65
         gs0 = sedSt.gs0(sedF)
         self.assertTrue(round(gs0,f) == round(0.5*(2-0.49)/(1-0.49)**3 * (0.64-0.49)/(0.64-0.635),f))
-    def testAlphaResp(self):
+    def testTkeSed(self):
         from proteus.mprans.SedClosure import HsuSedStress
         import random
         sigmaC = 1.1
@@ -130,21 +130,34 @@ class TestHsu(unittest.TestCase):
         f = 10
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
+        gradC=np.array([0.1,0.1])
         rhoS = 2000
+        rhoF = 1000
         nu = 1e-4
+        nuT = 1e-2
         sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC)
         sedF = 0.3
 # Setting 0 t_c
         theta_n = random.random() + 1e-30
         kappa_n = random.random() + 1e-30
         epsilon_n = random.random() + 1e-30
-        alphaR = sedSt.alphaResp(rhoS, sedF, uf, us, nu, theta_n, kappa_n, epsilon_n)
-        
-        t_p =rhoS/ sedSt.betaCoeff(sedF, uf, us, nu)
+
+
+        beta = sedSt.betaCoeff(sedF, uf, us, nu)      
+        t_p =rhoS/ beta
         l_c = np.sqrt(np.pi)*grain / (24.*sedF * sedSt.gs0(sedF))
         t_cl = min(l_c/np.sqrt(theta_n),0.165*kappa_n/epsilon_n)
         aa = 1/( 1. + t_p/t_cl)
-        self.assertTrue(round(aa,f) ==round( alphaR,f))
+
+       
+        es1 = 2.*beta * rhoS*(1-aa)*sedF*kappa_n/((1-sedF)*rhoF)
+
+        UgradC = np.dot((uf - us),gradC)
+
+        es2  = beta * rhoF * nuT * UgradC / ((1-sedF)*rhoF)
+
+        kappa_sed = sedSt.kappa_sed(sedF,rhoF,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
+        self.assertTrue(round(kappa_sed,f) ==round( -es1+es2,f))
         
 
     def testMint(self):
