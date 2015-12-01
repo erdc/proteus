@@ -127,6 +127,15 @@ class TestAuxFunctions(unittest.TestCase):
 #Checking vertical coherency
 # U_z = 0 at z = mwl-d
         self.assertTrue(vel_mode(x,y,1.,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,"z")==0.)
+    
+    def testDiric(self):    
+        from proteus.WaveTools import diric
+        a  = np.random.rand(100)
+        filt = diric(100,0.1)
+        af = a*filt
+        a[:10] = 0.
+        a[:-10] =0.
+        self.assertTrue( a.all() == af.all())
 
 
 
