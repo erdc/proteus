@@ -252,8 +252,7 @@ def tophat(l,cutoff):
     return a
 
 def costap(l,cutoff=0.1):
-    """ Cosine taper Goda (2010), Random Seas and Design of Maritime Structures equation 11.40
-    a particular window function. Looks like Hanning window. taper window
+    """ Cosine taper filter Goda (2010), Random Seas and Design of Maritime Structures equation 11.40   
     :param l: array length
     :param l: cut off fraction at either side of the array zero values will be imposed at the first and last cutoff*l array elements"""
     npoints = int(cutoff*l)
@@ -265,28 +264,29 @@ def costap(l,cutoff=0.1):
             wind[k] = 0.5*(1.-cos(pi*float(l-k-1)/float(npoints)))
     return wind
 
-#fft function ( = Cooley-Tukey FFT algorithm ) already included in imported numpy library
-# fft( input array (here eta), x axis (here Time component) ).
-def decompose_tseries(time,eta,nfft, NFR, ret_only_freq=0):
-    # This function does a spectral decomposition of a time series with constant sampling.
-    # It returns a list with results with two elements:
-        # 0 -> numpy array with frequency components ww
-        # 1 -> numpy array with amplitude of each component aa
-        # 2 -> numpy array with phase of each component pp
+def decompose_tseries(time,eta):
+    """ This function does a spectral decomposition of a time series with constant sampling.
+     It returns a list with results with four entries:
+         0 -> numpy array with frequency components ww
+         1 -> numpy array with amplitude of each component aa
+         2 -> numpy array with phase of each component pp
+         3 -> float of the 0th fourier mode (wave setup) 
+         :param : time array [T]
+         :param : signal array
+         """
+    nfft = len(time) 
+    NN = int(np.ceil((nfft+1)/2)-1)
     results = []
-    NN = NFR  #                            %number of primary frequency components (excluding negative frequencies and 0 frequency)
-    ww = np.linspace(1,NN,NN)*2*pi/(time[2]-time[1])/nfft      #       %evenly spaced ang. frequency vector with NN points (excluding w=0)
-    if (ret_only_freq!=0):                                          #if return only frequency is not 0, then the script returns only the frequencies
-        return ww
     fft_x = np.fft.fft(eta,nfft)                                   #%complex spectrum
     setup = np.real(fft_x[0])/nfft
     fft_x = fft_x[1:NN+1]                              #%retaining only first half of the spectrum
     aa = abs(fft_x)/nfft                                 #%amplitudes (only the ones related to positive frequencies)
     if nfft%2:                                       #%odd nfft- excludes Nyquist point
-      aa[0:NN] = 2*aa[0:NN]                              #%multiply amplitudes by 2 since we neglected the negative half of the spectrum. Note that the index starts at 1 (not 2) since the vector a doesnt contain the 0 freq. component.
-    else:                                                 #%even nfft - includes Nyquist point
-      aa[0:NN -1] = 2*aa[0:NN -1]                        #%mulitply amplitudes by 2 since we neglected the negative half of the spectrum
-
+      aa[0:NN] = 2.*aa[0:NN]
+    else:                                               
+      aa[0:NN -1] = 2.* aa[0:NN -1]
+    ww = np.linspace(1,NN,NN)*2*pi/(time[2]-time[1])/nfft     
+    
 
     pp = np.zeros(len(aa),complex)
     for k in range(len(aa)):
@@ -356,15 +356,10 @@ class MonochromaticWaves:
         "z":  meanVelocity[2]
         }
 #Checking that meanvelocity is a vector
-        try:
-            if(len(meanVelocity) == 3):
-                None
-            else:
-                logEvent("WaveTools.py: meanVelocity should be a vector with 3 components. ",level=0)
-                sys.exit(1)
-        except:
-                logEvent("WaveTools.py: meanVelocity should be a vector with 3 components. ",level=0)
-                sys.exit(1)
+
+        if(len(meanVelocity) != 3):
+            logEvent("WaveTools.py: meanVelocity should be a vector with 3 components. ",level=0)
+            sys.exit(1)
 
         self.Ycoeff = Ycoeff
         self.Bcoeff = Bcoeff
