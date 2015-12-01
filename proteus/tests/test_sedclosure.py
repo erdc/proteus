@@ -118,6 +118,34 @@ class TestHsu(unittest.TestCase):
         sedF = 0.65
         gs0 = sedSt.gs0(sedF)
         self.assertTrue(round(gs0,f) == round(0.5*(2-0.49)/(1-0.49)**3 * (0.64-0.49)/(0.64-0.635),f))
+    def testAlphaResp(self):
+        from proteus.mprans.SedClosure import HsuSedStress
+        import random
+        sigmaC = 1.1
+        aDarcy = 1.
+        bForch = 1.
+        grain = 0.1
+        packFraction = 0.2
+        packMargin = 0.01
+        f = 10
+        uf = np.array([5.,4.],"d")
+        us = np.array([1.,1.],"d") 
+        rhoS = 2000
+        nu = 1e-4
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC)
+        sedF = 0.3
+# Setting 0 t_c
+        theta_n = random.random() + 1e-30
+        kappa_n = random.random() + 1e-30
+        epsilon_n = random.random() + 1e-30
+        alphaR = sedSt.alphaResp(rhoS, sedF, uf, us, nu, theta_n, kappa_n, epsilon_n)
+        
+        t_p =rhoS/ sedSt.betaCoeff(sedF, uf, us, nu)
+        l_c = np.sqrt(np.pi)*grain / (24.*sedF * sedSt.gs0(sedF))
+        t_cl = min(l_c/np.sqrt(theta_n),0.165*kappa_n/epsilon_n)
+        aa = 1/( 1. + t_p/t_cl)
+        self.assertTrue(round(aa,f) ==round( alphaR,f))
+        
 
     def testMint(self):
         from proteus.mprans.SedClosure import HsuSedStress
