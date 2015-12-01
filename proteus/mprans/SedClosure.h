@@ -68,6 +68,61 @@ public:
     return weight*gDrag1 + (1.-weight)*gDrag2;
     }
 
+    inline double gs0(double sedF)
+    {
+      double g0(0.);
+      if(sedF< 0.635)
+	{
+	  if(sedF< 0.49)
+	    {
+	      g0 = 0.5*(2.-sedF)/((1-sedF)*(1-sedF)*(1-sedF));
+	    }
+	  else 
+	    {
+	      g0= 0.853744035/(0.64-sedF);
+	    }
+	}
+      else g0 = 170.74880702;
+      return g0;
+    }
+
+    inline double alphaResp( double rhoSolid,
+		      double sedF, // Sediment fraction
+		      double uFluid[nSpace], //Fluid velocity
+		      double uSolid[nSpace], //Sediment velocity
+		      double nu, //Kinematic viscosity
+		      double theta_n,
+		      double kappa_n,
+		      double epsilon_n)
+    {
+      double small = 1e-30;
+      double beta = betaCoeff(sedF,uFluid,uSolid,nu)+small;
+      double gs = gs0(sedF)+small;
+      double l_c = sqrt(M_PI)*grain_/(24.*(sedF+small)*gs);
+      double t_p = rhoSolid/beta;
+      double t_c = l_c/(sqrt(theta_n) + small);
+      double t_l = 0.165*kappa_n/(epsilon_n + small);
+      double t_cl = std::min(t_c,t_l);
+      return t_cl/(t_cl + t_p);
+    }
+    
+		      /*
+    inline double tke_es1(
+			   double sedF, // Sediment fraction
+			   double uFluid[nSpace], //Fluid velocity
+			   double uSolid[nSpace], //Sediment velocity
+			   double nu, //Kinematic viscositydouble 
+			   double rhoFluid,
+			   double rhoSolid,
+			   double gradc[nSpace],
+			   double kappa_n
+			   )
+			   
+
+      double beta = betaCoeff(sedF,uFluid_n,uSolid_n,nu);
+      return double 2 * beta * rhoSolid 
+		      */
+
 
     inline double*  mInt(  double sedF,
 			      double uFluid_np1[nSpace], //Fluid velocity

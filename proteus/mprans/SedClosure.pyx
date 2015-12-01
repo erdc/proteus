@@ -20,7 +20,15 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                            )
         double gs0(
                              double sedF # Sediment fraction
-                           )
+            )
+        double alphaResp( double rhoSolid,
+		      double sedF, 
+		      double* uFluid, 
+		      double* uSolid,
+		      double nu, 
+		      double theta_n,
+		      double kappa_n,
+		      double epsilon_n)                          
 
 
         double*  mInt(
@@ -84,6 +92,28 @@ cdef class HsuSedStress:
         param: sedF: Sediment fraction [-]        
         """
         return self.thisptr.gs0(sedF) 
+    def alphaResp(self,
+                  rhoSolid,
+                  sedF,  
+                  numpy.ndarray uFluid, 
+                  numpy.ndarray uSolid, 
+                  nu,
+                  theta_n,
+                  kappa_n,
+                  epsilon_n):
+        """ Radial distribution function for collision closure,  equation (2.31) from  Hsu et al 2004 'On two-phase sediment transport:
+        sheet flow of massive particles', Proc. Royal Soc. Lond A 460, pp 2223-2250 
+        http://www.coastal.udel.edu/~thsu/simulation_data_files/CACR-14-08.pdf
+        param: sedF: Sediment fraction [-]        
+        """
+        return self.thisptr.alphaResp(rhoSolid,
+                  sedF,  
+                  < double *> uFluid.data, 
+                  < double *>  uSolid.data, 
+                  nu,
+                  theta_n,
+                  kappa_n,
+                  epsilon_n)
                                 
 
     def  mInt(self, 
