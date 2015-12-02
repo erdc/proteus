@@ -158,7 +158,7 @@ namespace proteus
     for (int I=0; I < nSpace; I++)
       {
 	f[I] = v[I]*u;//velocity already has porosity in it
-	df[I] = v[I]*porosity;
+	df[I] = v[I];
       }
     }
 
