@@ -1125,13 +1125,15 @@ class CustomShape(Shape):
             self.barycenters = np.array([self.barycenter for facet in self.facets])
         self.BC_dict = {}
         self.BC_list = [None]*len(flagSet)
+        if boundaryOrientations is not None:
+            b_or = []
+        else:
+            b_or = None
+            b_i = None
         for tag, index in boundaryTags.iteritems():
             if boundaryOrientations is not None:
-                b_or = boundaryOrientations[tag]
-                b_i = index-minFlag-1
-            else:
-                b_or = None
-                b_i = None
+                b_or += [boundaryOrientations[tag]]
+                b_i = index-minFlag
             self.BC_dict[tag] = bc.BoundaryConditions(b_or=b_or, b_i=b_i)
             self.BC_list[index-minFlag] = self.BC_dict[tag]
         self.BC = BCContainer(self.BC_dict)
