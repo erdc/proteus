@@ -12,7 +12,8 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 		 double packMargin, #
                  double sigmaC,
                  double C3e,
-                 double C4e
+                 double C4e,
+                 double eR
             
 		 )
         double betaCoeff(
@@ -74,7 +75,7 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 #define the way we want to present to Python
 cdef class HsuSedStress:
     cdef  cppHsuSedStress* thisptr
-    def __cinit__(self, aDarcy, betaForch, grain, packFraction,packMargin, sigmaC, C3e, C4e ):
+    def __cinit__(self, aDarcy, betaForch, grain, packFraction,packMargin, sigmaC, C3e, C4e, eR ):
         """ Class for caclulating sediment / fluid momentum transfer, see Chen and Hsu, CACR 14-08, A Multidimensional TwoPhase Eulerian Model for Sediment Transport TwoPhaseEulerSedFoam (Version 1.0) 
         http://www.coastal.udel.edu/~thsu/simulation_data_files/CACR-14-08.pdf
         param: aDarcy: Darcy parameter for drag term [-]. Default value from Ergun (1952) is 150
@@ -82,7 +83,7 @@ cdef class HsuSedStress:
         param: grain: Grain size, default assumed as d50 [L]
         param: packFraction : Critical sediment fraction [-] for switching the drag relation 0.2 by default, see Chen and Hsu 2014, equation (7)
         param: packMargin : [-] For packFraction \pm packMargin where the two braches in equation (7) are blended with linear weighting. Currently no information on the default value of this """
-        self.thisptr = new cppHsuSedStress( aDarcy, betaForch, grain, packFraction, packMargin, sigmaC, C3e, C4e)
+        self.thisptr = new cppHsuSedStress( aDarcy, betaForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
     def __dealloc__(self):
         del self.thisptr
     def betaCoeff(self, 
