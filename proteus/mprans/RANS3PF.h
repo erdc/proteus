@@ -3698,7 +3698,7 @@ namespace proteus
 		      elementJacobian_u_p[i][j] += ck.HamiltonianJacobian_weak(dmom_u_ham_grad_p,&p_grad_trial[j_nSpace],vel_test_dV[i]) + 
 			ck.SubgridErrorJacobian(dsubgridError_u_p[j],Lstar_u_u[i]); 
 		      elementJacobian_u_u[i][j] += ck.MassJacobian_weak(dmom_u_acc_u_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) +
-                        ck.HamiltonianJacobian_weak(dmom_u_ham_grad_u,&p_grad_trial[j_nSpace],vel_test_dV[i]) + 
+                        ck.HamiltonianJacobian_weak(dmom_u_ham_grad_u,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + 
 			ck.AdvectionJacobian_weak(dmom_u_adv_u,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
 			ck.SimpleDiffusionJacobian_weak(sdInfo_u_u_rowptr,sdInfo_u_u_colind,mom_uu_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 			//VRANS
@@ -3729,7 +3729,7 @@ namespace proteus
 			//
 			ck.SubgridErrorJacobian(dsubgridError_p_u[j],Lstar_p_v[i]);
 		      elementJacobian_v_v[i][j] += ck.MassJacobian_weak(dmom_v_acc_v_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
-                        ck.HamiltonianJacobian_weak(dmom_v_ham_grad_v,&p_grad_trial[j_nSpace],vel_test_dV[i]) + 
+                        ck.HamiltonianJacobian_weak(dmom_v_ham_grad_v,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + 
 			ck.AdvectionJacobian_weak(dmom_v_adv_v,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +
 			ck.SimpleDiffusionJacobian_weak(sdInfo_v_v_rowptr,sdInfo_v_v_colind,mom_vv_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 			//VRANS
@@ -3760,7 +3760,7 @@ namespace proteus
 			//
 			ck.SubgridErrorJacobian(dsubgridError_p_v[j],Lstar_p_w[i]); 
 		      elementJacobian_w_w[i][j] += ck.MassJacobian_weak(dmom_w_acc_w_t,vel_trial_ref[k*nDOF_trial_element+j],vel_test_dV[i]) + 
-                        ck.HamiltonianJacobian_weak(dmom_w_ham_grad_w,&p_grad_trial[j_nSpace],vel_test_dV[i]) + 
+                        ck.HamiltonianJacobian_weak(dmom_w_ham_grad_w,&vel_grad_trial[j_nSpace],vel_test_dV[i]) + 
 			ck.AdvectionJacobian_weak(dmom_w_adv_w,vel_trial_ref[k*nDOF_trial_element+j],&vel_grad_test_dV[i_nSpace]) +  
 			ck.SimpleDiffusionJacobian_weak(sdInfo_w_w_rowptr,sdInfo_w_w_colind,mom_ww_diff_ten,&vel_grad_trial[j_nSpace],&vel_grad_test_dV[i_nSpace]) + 
 			//VRANS
