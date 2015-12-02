@@ -221,6 +221,89 @@ class TestHsu(unittest.TestCase):
 
         self.assertTrue(round(eps_sed,f) ==round( -C3e*es1*epsilon_n/kappa_n+C4e*es2*epsilon_n/kappa_n,f))
 
+
+
+    def testPsc(self):
+        from proteus.mprans.SedClosure import HsuSedStress
+        import random
+        C4e = 1.
+        C3e = 1.2
+        sigmaC = 1.1
+        eR = 0.8
+        aDarcy = 1.
+        bForch = 1.
+        grain = 0.1
+        packFraction = 0.2
+        packMargin = 0.01
+        f = 10        
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
+
+
+        # Setting 0 t_c
+        sedF = 0.3
+        theta = random.random() + 1e-30
+        rhoS = 2000
+        eps_sed = sedSt.psc(sedF,rhoS,theta)
+        self.assertTrue(round(eps_sed,f) ==round(rhoS*sedF*(1. + 2*(1.+eR)*sedF*sedSt.gs0(sedF))*theta,f))
+
+    def testPscTerm(self):
+        from proteus.mprans.SedClosure import HsuSedStress
+        import random
+        C4e = 1.
+        C3e = 1.2
+        sigmaC = 1.1
+        eR = 0.8
+        aDarcy = 1.
+        bForch = 1.
+        grain = 0.1
+        packFraction = 0.2
+        packMargin = 0.01
+        f = 10        
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
+        # Setting 0 t_c
+        sedF = 0.3
+        theta = random.random() + 1e-30
+        dudx = random.random() + 1e-30
+        dvdy = random.random() + 1e-30
+        dwdz = random.random() + 1e-30
+        divU = dudx + dvdy + dwdz
+        rhoS = 2000
+        eps_sed = sedSt.psc_term(sedF,rhoS,theta,dudx,dvdy,dwdz)
+        self.assertTrue(round(eps_sed,f) == round(-2.*sedSt.psc(sedF,rhoS,theta)*divU/(3.*rhoS*sedF),f))
+
+
+    def testdpsc_term_dtheta(self):
+        from proteus.mprans.SedClosure import HsuSedStress
+        import random
+        C4e = 1.
+        C3e = 1.2
+        sigmaC = 1.1
+        eR = 0.8
+        aDarcy = 1.
+        bForch = 1.
+        grain = 0.1
+        packFraction = 0.2
+        packMargin = 0.01
+        f = 10        
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
+        # Setting 0 t_c
+        sedF = 0.3
+        theta = random.random() + 1e-30
+        dudx = random.random() + 1e-30
+        dvdy = random.random() + 1e-30
+        dwdz = random.random() + 1e-30
+        divU = dudx + dvdy + dwdz
+        rhoS = 2000
+        eps_sed = sedSt.dpsc_term_dtheta(sedF,rhoS,dudx,dvdy,dwdz)
+        self.assertTrue(round(eps_sed,f) == round(-2.*sedSt.psc(sedF,rhoS,theta)*divU/(3.*rhoS*sedF)/theta,f))
+
+
+
+
+
+
+
+
     def testMint(self):
         from proteus.mprans.SedClosure import HsuSedStress
         sigmaC = 1.1
