@@ -15,17 +15,19 @@ public:
 		 double packMargin, // For packFraction +- packmargin, the drag coefficient is calculated by taking a weighted combination of the two relation (for packed and non-packed sediment
 		 double sigmaC,
 		 double C3e,
-		 double C4e
+		 double C4e,
+		 double eR
 ): 
  
   aDarcy_(aDarcy), 
-      betaForch_(betaForch), 
-      grain_(grain),
-      packFraction_(packFraction),
-      packMargin_(packMargin),
+    betaForch_(betaForch), 
+    grain_(grain),
+    packFraction_(packFraction),
+    packMargin_(packMargin),
     sigmaC_(sigmaC),  
     C3e_(C3e),
-    C4e_(C4e)
+    C4e_(C4e),
+    eR_(eR)
 
 
          
@@ -94,16 +96,16 @@ public:
 		      
     inline double kappa_sed(
 		      double sedF, // Sediment fraction
-                     double rhoFluid,
-		     double rhoSolid,
+		      double rhoFluid,
+		      double rhoSolid,
 		      double uFluid[nSpace], //Fluid velocity
 		      double uSolid[nSpace], //Sediment velocity
 		      double gradC[nSpace], //Sediment velocity
 		      double nu, //Kinematic viscosity
 		      double theta_n,
 		      double kappa_n,
-		     double epsilon_n,
-		     double nuT_n)
+		      double epsilon_n,
+		      double nuT_n)
 			   
     {		   
       double small = 1e-30;
@@ -235,6 +237,7 @@ public:
   double sigmaC_;
   double C3e_;
   double C4e_;
+  double eR_;
 
  
 
