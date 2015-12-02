@@ -15,6 +15,7 @@ class TestHsu(unittest.TestCase):
         # Constant params
         C4e = 1.
         C3e = 1.2
+        eR = 0.8
         aDarcy = 1.
         bForch = 1.
         grain = 0.1
@@ -29,7 +30,7 @@ class TestHsu(unittest.TestCase):
         nu = 1.
         sedF = 0.5
         drag = aDarcy * nu* sedF /((1.-sedF)*grain**2) +  bForch * umag / grain
-        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e)
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
         # For sedF > pacFraction - > drag = a * nu* sedF /((1-sedF)*grain^2) + beta * umag / grain
         drag2 = sedSt.betaCoeff(sedF, uf, us, nu)
 
@@ -38,6 +39,7 @@ class TestHsu(unittest.TestCase):
         from proteus.mprans.SedClosure import HsuSedStress
         C4e = 1.
         C3e = 1.2
+        eR = 0.8
         sigmaC = 1.1
         aDarcy = 1.
         bForch = 1.
@@ -53,7 +55,7 @@ class TestHsu(unittest.TestCase):
         sedF = 0.1
         Rep = (1.- sedF)*umag*grain / nu    
         drag =  ( 24. * (1.+0.15*Rep**(0.687))/Rep) * 0.75 * umag * (1. -sedF)**(-1.65) / grain # Chen and Hsu 2014
-        sedSt = HsuSedStress(aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e)
+        sedSt = HsuSedStress(aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
         drag2 = sedSt.betaCoeff(sedF, uf, us, nu)
         self.assertTrue(round(drag,10) == round(drag2,10))
 
@@ -61,6 +63,7 @@ class TestHsu(unittest.TestCase):
         from proteus.mprans.SedClosure import HsuSedStress
         # Constant params
         C4e = 1.
+        eR = 0.8
         C3e = 1.2
         aDarcy = 1.
         sigmaC = 1.1
@@ -77,13 +80,14 @@ class TestHsu(unittest.TestCase):
         nu = 1e-4
         Rep = (1.- sedF) * umag * grain / nu    
         drag =  ( 0.44 * 0.75 * umag * (1. -sedF)**(-1.65) )/ grain # Chen and Hsu 2014
-        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e)
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
         drag2 = sedSt.betaCoeff(sedF, uf, us, nu)
         self.assertTrue(round(drag,10) == round(drag2,10))
     def testGradularDrag4(self):
         from proteus.mprans.SedClosure import HsuSedStress
         # Constant params
         C4e = 1.
+        eR = 0.8
         C3e = 1.2
         sigmaC = 1.1
         aDarcy = 1.
@@ -100,15 +104,15 @@ class TestHsu(unittest.TestCase):
         nu = 1e-4
         Rep = (1.- sedF) * umag * grain / nu
         draga = aDarcy * nu* sedF /((1.-sedF)*grain**2) +  bForch * umag / grain
-    
         dragb =  ( 0.44 * 0.75 * umag * (1. -sedF)**(-1.65) )/ grain # Chen and Hsu 2014
         w = 0.5 + (sedF - packFraction) / (2. * packMargin)
         drag = w*draga + (1.-w) * dragb
-        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e)
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
         drag2 = sedSt.betaCoeff(sedF, uf, us, nu)
         self.assertTrue(round(drag,10) == round(drag2,10))
     def testgs0(self):
         from proteus.mprans.SedClosure import HsuSedStress
+        eR = 0.8
         C4e = 1.
         C3e = 1.2
         sigmaC = 1.1
@@ -118,7 +122,7 @@ class TestHsu(unittest.TestCase):
         packFraction = 0.2
         packMargin = 0.01
         f = 8
-        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e)
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
         sedF = 0.2
         gs0 = sedSt.gs0(sedF)
         self.assertTrue(gs0 == 0.5*(2-sedF)/(1-sedF)**3)
@@ -132,6 +136,7 @@ class TestHsu(unittest.TestCase):
         from proteus.mprans.SedClosure import HsuSedStress
         import random
         C4e = 1.
+        eR = 0.8
         C3e = 1.2
         sigmaC = 1.1
         aDarcy = 1.
@@ -147,7 +152,7 @@ class TestHsu(unittest.TestCase):
         rhoF = 1000
         nu = 1e-4
         nuT = 1e-2
-        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e)
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
         sedF = 0.3
 # Setting 0 t_c
         theta_n = random.random() + 1e-30
@@ -177,6 +182,7 @@ class TestHsu(unittest.TestCase):
         C4e = 1.
         C3e = 1.2
         sigmaC = 1.1
+        eR = 0.8
         aDarcy = 1.
         bForch = 1.
         grain = 0.1
@@ -190,7 +196,7 @@ class TestHsu(unittest.TestCase):
         rhoF = 1000
         nu = 1e-4
         nuT = 1e-2
-        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e)
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
         sedF = 0.3
 # Setting 0 t_c
         theta_n = random.random() + 1e-30
@@ -219,6 +225,7 @@ class TestHsu(unittest.TestCase):
         from proteus.mprans.SedClosure import HsuSedStress
         sigmaC = 1.1
         C4e = 1.
+        eR = 0.8
         C3e = 1.2
         aDarcy = 1.
         bForch = 1.
@@ -231,13 +238,14 @@ class TestHsu(unittest.TestCase):
         sedF = 0.205
         nu = 1e-4
         nuT = 1e-2
-        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e)
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
         beta = sedSt.betaCoeff(sedF, uf, us, nu)      
         mint = sedSt.mInt(sedF, uf, us, uf, us , nu, nuT, gradc)
         self.assertTrue(round(mint.all(),10) == round((-sedF*beta*(uf-us) - sedF * beta * gradc * nuT / sigmaC).all() , 10))
     def testdMintdUf(self):
         from proteus.mprans.SedClosure import HsuSedStress
         sigmaC = 1.1
+        eR = 0.8
         C4e = 1.
         C3e = 1.2
         aDarcy = 1.
@@ -251,13 +259,14 @@ class TestHsu(unittest.TestCase):
         sedF = 0.205
         nu = 1e-4
         nuT = 1e-2
-        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e)
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
         beta = sedSt.betaCoeff(sedF, uf, us, nu)      
         mint = sedSt.dmInt_duFluid(sedF, uf, us , nu)
         self.assertTrue(round(mint,10) == round(  - sedF*beta , 10))
     def testdMintdUs(self):
         from proteus.mprans.SedClosure import HsuSedStress
         C4e = 1.
+        eR = 0.8
         C3e = 1.2
         sigmaC = 1.1
         aDarcy = 1.
@@ -271,7 +280,7 @@ class TestHsu(unittest.TestCase):
         sedF = 0.205
         nu = 1e-4
         nuT = 1e-2
-        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e)
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
         beta = sedSt.betaCoeff(sedF, uf, us, nu)      
         mint = sedSt.dmInt_duSolid(sedF, uf, us , nu)
         self.assertTrue(round(mint,10) == round(  sedF*beta , 10))
