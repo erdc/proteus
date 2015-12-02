@@ -170,8 +170,247 @@ public:
 
     }
 
+    inline double psc(		      double sedF, 
+				      double rhoSolid,
+				      double theta )
+      
+    {
+      double gs_0 = gs0(sedF);
+      double eRp1 = 1.+eR_;
+      double psc = rhoSolid * sedF * (1.+2.*eRp1*sedF*gs_0)*theta;
+      return psc;
+    }
+
+    inline double psc_term(		      double sedF, 
+					      double rhoSolid,
+					      double theta_np1,
+					      double du_dx,
+					      double dv_dy,
+					      double dw_dz)
+      
+    {
+      
+      return -2.*psc(sedF,rhoSolid,theta_np1)*(du_dx + dv_dy + dw_dz)/(3.*rhoSolid * sedF);
+    }
+
+    inline double dpsc_term_dtheta(		      double sedF, 
+					      double rhoSolid,
+					      double du_dx,
+					      double dv_dy,
+					      double dw_dz)
+      
+    {
+      
+      double gs_0 = gs0(sedF);
+      double eRp1 = 1.+eR_;
+      double dpsc = rhoSolid * sedF * (1.+2.*eRp1*sedF*gs_0);
+      return -2.*dpsc*(du_dx + dv_dy + dw_dz)/(3.*rhoSolid * sedF);
+    }
+
+    /*
+    inline double mu_sc(		      double sedF, 
+					      double rhoSolid, 
+					      double theta_n )
+
+    {
+      double gs_0 = gs0(sedF);
+      double sq_pi = (sqrt(M_PI));
+      double sedF2 = sedF * sedF;
+      double eRp1 = 1.+eR_;
+      double sq_theta = sqrt(theta_n);
+
+      double mu_sc = rhoSolid*grain_*sq_theta*( 0.8*sedF2*gs_0*eRp1/(sq_pi) + (1./15.)*sq_pi*sedF2*gs_0*eRp1 + (1./6.)*sq_pi*sedF + (5./48)*sq_pi/(gs_0*eRp1) );
+
+      return mu_sc;
+    }
+
+    inline double lamda(		      double sedF, 
+					      double rhoSolid, 
+					      double theta_n )
+
+    {
+      double gs_0 = gs0(sedF);
+      double sq_pi = (sqrt(M_PI));
+      double sedF2 = sedF * sedF;
+      double eRp1 = 1.+eR_;
+      double sq_theta = sqrt(theta_n);
+      double lambda = (4./3.)*sedF2*rhoSolid*grain_*gs_0*eRp1*sq_theta/sq_pi;
+
+      return lambda;
+    }
+
+
+
+    inline double psc_term (      double sedF, 
+				  double theta_n,
+				  double du_dx,
+				  double dv_dy,
+				  double dw_dz)
+    {
+
+
+      return -(2./3.)*psc_head(sedF,theta_n)*(du_dx + dv_dy + dw_dz);
+      
+    }
+
+    inline double d_psc_term_dtheta (      double sedF, 
+				  double du_dx,
+				  double dv_dy
+				  double dw_dz)
+    {
+
+      double gs_0 = gs0(sedF);
+      double sq_pi = (sqrt(M_PI));
+      double sedF2 = sedF * sedF;
+      double eRp1 = 1.+eR_;
+      double dpsc_dtheta = 1.+2.*eRp1*sedF*gs_0;
+
+      return -(2./3.)* dpsc_dtheta * (du_dx + dv_dy + dw_dz);
+      
+    }
+
+
+    inline double tausc_term(
+		      double sedF, // IN
+		      double rhoSolid, //IN
+		      double theta_n, //IN
+		      double du_dx,
+		      double du_dy,
+		      double du_dz,
+		      double dv_dx,
+		      double dv_dy,
+		      double dv_dz,
+		      double dw_dx,
+		      double dw_dy,
+		      double dw_dz)
+		     
+			   
+    {		   
+
+      double gs_0 = gs0(sedF);
+      double sq_pi = (sqrt(M_PI));
+      double sedF2 = sedF * sedF;
+      double eRp1 = 1.+eR_;
+      double sq_theta = sqrt(theta_n);
+
+
+	
+      double la = lambda(sedF, rhoSolid, theta_n);
+      double mu = mu_sc(sedF, rhoSolid, theta_n);
+
+      
+      double divU = du_dx + dv_dy + dw_dz;
+      double t11 = 2*mu*du_dx + (la - (2./3.)*mu)*divU ;
+      double t22 = 2*mu*dv_dy + (la - (2./3.)*mu)*divU ;
+      double t33 = 2*mu*dw_dz + (la - (2./3.)*mu)*divU ;
+      double t13 = mu*(du_dz + dw_dx);
+      double t23 = mu*(dv_dz + dw_dy);
+      double t12 = mu*(du_dy + dv_dx);
+      // No need to define t31, t32 and t21 as tensor is symmetric
+
+      //Taking the half of the product, as it is multiplied with 0.5 in the equations
+      double term = t11 * du_dx + t22 * dv_dy + t33 * dw_dz;
+      term += t12*du_dy + t12*dv_dx;
+      term += t13*du_dz + t13*dw_dx;
+      term += t23*dv_dz + t23*dw_dy;						   
+      
+      return term* (2./3.) / (rhoSolid*sedF);
+
+    }
+
+    inline double k_diff(		      double sedF, 
+					      double rhoSolid, 
+					      double theta_n )
+
+    {
+      double gs_0 = gs0(sedF);
+      double sq_pi = (sqrt(M_PI));
+      double sedF2 = sedF * sedF;
+      double eRp1 = 1.+eR_;
+      double sq_theta = sqrt(theta_n);
+      double k_diff = rhoSolid*grain_*sq_theta*( 2.*sedF2*gs_0*eRp1/(sq_pi) + (0.5625)*sq_pi*sedF2*gs_0*eRp1 + (0.9375)*sq_pi*sedF + (0.390625)*sq_pi/(gs_0*eRp1) );
+
+
+      return k_diff;
+    }
+    
+
+    inline double  diffusion_theta_rhs(  double sedF,
+					 double rhoSolid,
+				     double theta_n,
+				     double dtheta_dx,
+				     double dtheta_dy,
+				     double dtheta_dz
+			      )
+    {
+      
+      double gs_0 = gs0(sedF);
+      double sq_pi = (sqrt(M_PI));
+      double sedF2 = sedF * sedF;
+      double eRp1 = 1.+eR_;
+      double sq_theta = sqrt(theta_n);
+
+      double divTheta = dtheta_dx + dtheta_dy + dtheta_dz; 
+
+      double k_diff = k_diff(rhoSolid);
+
+      return kappa*divTheta;
+      
+    }
+
+
+    inline double  gamma_s(  double sedF,
+			     double rhoSolid,
+			     double theta_n,
+			     double theta_np1,
+			     double du_dx,
+			     double dv_dy,
+			     double dw_dz)
+
+			      )
+    {
+      
+      double gs_0 = gs0(sedF);
+      double sq_pi = (sqrt(M_PI));
+      double sedF2 = sedF * sedF;
+      double eRp1 = 1.+eR_;
+      double sq_theta = sqrt(theta_n);
+      double divU = du_dx + dv_dy + du_dz;
+      double gamma_s = 3*(1-eR_*eR_)*sedF*gs0(sedF)*(4.*sq_theta/(sq_pi*grain_ - divU))*theta_np1
+      return kappa*divTheta;
+      
+    }
 
  
+    inline double  Jint1(  double sedF,
+			   double uFluid_n,
+			   double uSolid_n,
+			   double rhoSolid,
+			   double kappa_n,
+			   double theta_n,
+			   double theta_np1,
+			   double du_dx,
+			   double dv_dy,
+			   double dw_dz,
+			   double nu)
+
+			      )
+    {
+      
+      double gs_0 = gs0(sedF);
+      double beta = betaCoeff(sedF,uFluid_n,uSolid_n,nu);
+      double sedF2 = sedF * sedF;
+      double eRp1 = 1.+eR_;
+      double sq_theta = sqrt(theta_n);
+      double divU = du_dx + dv_dy + du_dz;
+      double Jint1 = 2* sedF * beta *
+      return kappa*divTheta;
+      
+      }*/
+
+
+
+    
 
     inline double*  mInt(  double sedF,
 			      double uFluid_np1[nSpace], //Fluid velocity
@@ -193,7 +432,7 @@ public:
 	    }
       return  mint2;
       
-    }
+      }
 
 
 
