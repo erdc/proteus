@@ -48,6 +48,24 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                        double epsilon_n,
                        double nuT_n)                          
 
+        double psc(
+		      double sedF, 
+		      double rhoSolid, 
+		      double theta_n)
+        double psc_term(
+		      double sedF, 
+		      double rhoSolid, 
+		      double theta_np1,
+                      double du_dx,
+                      double dv_dy,
+                      double dw_dz)
+
+        double dpsc_term_dtheta(	      double sedF, 
+					      double rhoSolid,
+					      double du_dx,
+					      double dv_dy,
+					      double dw_dz)
+
 
         double*  mInt(
                             double sedF,         # Sediment fraction
@@ -158,8 +176,46 @@ cdef class HsuSedStress:
                   kappa_n,
                 epsilon_n,
                 nuT_n)
+    def psc(self,
+            sedF, 
+            rhoSolid, 
+            theta):
+        return self.thisptr.psc(sedF, rhoSolid, theta)
+
+    def psc_term(self,
+            sedF, 
+            rhoSolid, 
+            theta_np1,
+            du_dx,
+            dv_dy,
+            dw_dz):
+
+         return self.thisptr.psc_term(
+            sedF, 
+            rhoSolid, 
+            theta_np1,
+            du_dx,
+            dv_dy,
+            dw_dz)
+
+    def dpsc_term_dtheta(self,
+            sedF, 
+            rhoSolid, 
+            du_dx,
+            dv_dy,
+            dw_dz):
+
+       
+        return self.thisptr.dpsc_term_dtheta(
+            sedF, 
+            rhoSolid, 
+            du_dx,
+            dv_dy,
+            dw_dz)
 
 
+
+		       
     def  mInt(self, 
                      sedF,  
                      numpy.ndarray uFluid_np1, 
