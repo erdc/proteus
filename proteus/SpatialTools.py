@@ -564,7 +564,7 @@ class Rectangle(Shape):
         if barycenter is not None:
             self.barycenter[0:2] = barycenter[0:2]
         else:
-            self.barycenter = coords[0:2]
+            self.barycenter[0:2] = coords[0:2]
         self.barycenters = np.array([self.barycenter for seg in self.segments])
         self.b_or = np.array([[0., -1.],
                               [1., 0.],
