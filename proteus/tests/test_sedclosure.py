@@ -21,7 +21,11 @@ class GlobalVariables():
         self.sigmaC = 1.1
         self.maxFraction = 0.635
         self.frFraction = 0.57
-        self.sedSt = HsuSedStress( self.aDarcy, self.bForch, self.grain, self.packFraction,  self.packMargin, self.sigmaC, self.C3e, self.C4e, self.eR)
+        self.fContact = 0.02
+        self.mContact = 2.
+        self.nContact = 5.
+        self.angFriction = np.pi/6.
+        self.sedSt = HsuSedStress( self.aDarcy, self.bForch, self.grain, self.packFraction,  self.packMargin,self.maxFraction, self.frFraction, self.sigmaC, self.C3e, self.C4e, self.eR ,self.fContact, self.mContact, self.nContact, self.angFriction)
     
 
 class TestHsu(unittest.TestCase):
@@ -110,7 +114,101 @@ class TestHsu(unittest.TestCase):
 # Setting 0 t_c
         theta_n = random.random() + 1e-30
         kappa_n = random.random() + 1e-30
+        kappa_np1 = random.random() + 1e-30
         epsilon_n = random.random() + 1e-30
+
+
+        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
+        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
+        t_p =rhoS/ beta
+        l_c = np.sqrt(np.pi)*gl.grain / (24.*sedF * gl.sedSt.gs0(sedF))
+        t_cl = min(l_c/np.sqrt(theta_n),0.165*kappa_n/epsilon_n)
+        aa = 1/( 1. + t_p/t_cl)
+      
+        es1 = 2.*beta * rhoS*(1-aa)*sedF*kappa_np1/((1-sedF)*rhoF)
+
+
+        kappa_sed = gl.sedSt.kappa_sed1(sedF,rhoF,rhoS,uf,us,gradC,nu,theta_n,kappa_n,kappa_np1,epsilon_n,nuT)
+        self.assertTrue(round(kappa_sed,f) ==round( -es1,f))
+    def test_dTkeSed_dk(self):
+        gl=GlobalVariables()
+        import random
+        f = 10
+        uf = np.array([5.,4.],"d")
+        us = np.array([1.,1.],"d") 
+        gradC=np.array([0.1,0.1])
+        rhoS = 2000
+        rhoF = 1000
+        nu = 1e-4
+        nuT = 1e-2
+        sedF = 0.3
+# Setting 0 t_c
+        theta_n = random.random() + 1e-30
+        kappa_n = random.random() + 1e-30
+        kappa_np1 = random.random() + 1e-30
+        epsilon_n = random.random() + 1e-30
+
+
+        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
+        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
+        t_p =rhoS/ beta
+        l_c = np.sqrt(np.pi)*gl.grain / (24.*sedF * gl.sedSt.gs0(sedF))
+        t_cl = min(l_c/np.sqrt(theta_n),0.165*kappa_n/epsilon_n)
+        aa = 1/( 1. + t_p/t_cl)
+      
+        es1 = 2.*beta * rhoS*(1-aa)*sedF/((1-sedF)*rhoF)
+
+
+        kappa_sed = gl.sedSt.dkappa_sed1_dk(sedF,rhoF,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
+        self.assertTrue(round(kappa_sed,f) ==round( -es1,f))
+
+
+    def testTkeSed2(self):
+        gl=GlobalVariables()
+        import random
+        f = 10
+        uf = np.array([5.,4.],"d")
+        us = np.array([1.,1.],"d") 
+        gradC=np.array([0.1,0.1])
+        rhoS = 2000
+        rhoF = 1000
+        nu = 1e-4
+        nuT = 1e-2
+        sedF = 0.3
+# Setting 0 t_c
+        theta_n = random.random() + 1e-30
+        kappa_n = random.random() + 1e-30
+        kappa_np1 = random.random() + 1e-30
+        epsilon_n = random.random() + 1e-30
+
+
+        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
+
+        UgradC = np.dot((uf - us),gradC)
+
+        es2  = beta * rhoF * nuT * UgradC / ((1-sedF)*rhoF)
+       
+
+        kappa_sed2 = gl.sedSt.kappa_sed2(sedF,rhoF,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
+        self.assertTrue(round(kappa_sed2,f) ==round( es2,f))
+        
+    def testEpsSed(self):
+        gl=GlobalVariables()
+        import random
+        f = 8
+        uf = np.array([5.,4.],"d")
+        us = np.array([1.,1.],"d") 
+        gradC=np.array([0.1,0.1])
+        rhoS = 2000
+        rhoF = 1000
+        nu = 1e-4
+        nuT = 1e-2
+        sedF = 0.3
+# Setting 0 t_c
+        theta_n = random.random() + 1e-30
+        kappa_n = random.random() + 1e-30
+        epsilon_n = random.random() + 1e-30
+        epsilon_np1 = random.random() + 1e-30
 
 
         beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
@@ -126,10 +224,10 @@ class TestHsu(unittest.TestCase):
 
         es2  = beta * rhoF * nuT * UgradC / ((1-sedF)*rhoF)
 
-        kappa_sed = gl.sedSt.kappa_sed(sedF,rhoF,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
-        self.assertTrue(round(kappa_sed,f) ==round( -es1+es2,f))
-        
-    def testEpsSed(self):
+        eps_sed = gl.sedSt.eps_sed(sedF,rhoF,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n, epsilon_np1,nuT)
+
+        self.assertTrue(round(eps_sed,f) ==round( -gl.C3e*es1*epsilon_np1/kappa_n+gl.C4e*es2*epsilon_np1/kappa_n,f))
+    def test_dEpsSed_dE(self):
         gl=GlobalVariables()
         import random
         f = 8
@@ -160,9 +258,9 @@ class TestHsu(unittest.TestCase):
 
         es2  = beta * rhoF * nuT * UgradC / ((1-sedF)*rhoF)
 
-        eps_sed = gl.sedSt.eps_sed(sedF,rhoF,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
+        eps_sed = gl.sedSt.deps_sed_deps(sedF,rhoF,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
 
-        self.assertTrue(round(eps_sed,f) ==round( -gl.C3e*es1*epsilon_n/kappa_n+gl.C4e*es2*epsilon_n/kappa_n,f))
+        self.assertTrue(round(eps_sed,f) ==round( -gl.C3e*es1/kappa_n+gl.C4e*es2/kappa_n,f))
 
     def testPsc(self):
         gl=GlobalVariables()
@@ -405,20 +503,76 @@ class TestHsu(unittest.TestCase):
         valid = rhoS * gl.grain * sqrt(theta) * ( 2. *sedF**2 * g0 * (1. + gl.eR) / sqrt(np.pi) + (9./16) *sedF**2 * g0 * (1. + gl.eR) * sqrt(np.pi) +  (15./16.) *sedF * sqrt(np.pi) +  (25./64.) * sqrt(np.pi)/((1+gl.eR)*g0))
         
         self.assertTrue(round(test,f) == round(valid,f))
+    def test_pfriction(self):
+        gl=GlobalVariables()
+        import random
+        sqrt = np.sqrt
+        f = 10        
+        # Setting 0 t_c
+        sedF = 0.2
+        test = gl.sedSt.p_friction(sedF)
+        valid =0.
+        self.assertTrue(round(test,f) == round(valid,f))        
+        sedF = 0.6
+        test = gl.sedSt.p_friction(sedF)
+        valid = gl.fContact *(sedF - gl.frFraction)**(gl.mContact) / (gl.maxFraction - sedF )**(gl.nContact)
+        self.assertTrue(round(test,f) == round(valid,f))        
+        sedF = gl.maxFraction - 1e-10
+        test = gl.sedSt.p_friction(sedF)
+        valid =1e+6
+        self.assertTrue(round(test,f) == round(valid,f))        
+        sedF = 0.7
+        test = gl.sedSt.p_friction(sedF)
+        valid = 0.
+        self.assertTrue(round(test,f) == round(valid,f))        
+
+        
+        
 
 
 
-    def testMint(self):
+
+
+    def testMintFluid(self):
         gl=GlobalVariables()
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
+        ufp1 = np.array([5.,4.],"d")
+        usp1 = np.array([1.,1.],"d") 
         gradc = np.array([0.1,0.1],"d") 
         sedF = 0.205
         nu = 1e-4
         nuT = 1e-2
         beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
-        mint = gl.sedSt.mInt(sedF, uf, us, uf, us , nu, nuT, gradc)
-        self.assertTrue(round(mint.all(),10) == round((-sedF*beta*(uf-us) - sedF * beta * gradc * nuT / gl.sigmaC).all() , 10))
+        mint = gl.sedSt.mIntFluid(sedF, uf, us, ufp1, nu, nuT, gradc)
+        self.assertTrue(round(mint.all(),10) == round((-sedF*beta*(ufp1) ).all() , 10))
+    def testMintSolid(self):
+        gl=GlobalVariables()
+        uf = np.array([5.,4.],"d")
+        us = np.array([1.,1.],"d") 
+        ufp1 = np.array([5.,4.],"d")
+        usp1 = np.array([1.,1.],"d") 
+        gradc = np.array([0.1,0.1],"d") 
+        sedF = 0.205
+        nu = 1e-4
+        nuT = 1e-2
+        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
+        mint = gl.sedSt.mIntSolid(sedF, uf, us, usp1 , nu, nuT, gradc)
+        self.assertTrue(round(mint.all(),10) == round((-sedF*beta*( - usp1)).all() , 10))
+    def testMintgradC(self):
+        gl=GlobalVariables()
+        uf = np.array([5.,4.],"d")
+        us = np.array([1.,1.],"d") 
+        ufp1 = np.array([5.,4.],"d")
+        usp1 = np.array([1.,1.],"d") 
+        gradc = np.array([0.1,0.1],"d") 
+        sedF = 0.205
+        nu = 1e-4
+        nuT = 1e-2
+        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
+        mint = gl.sedSt.mIntgradC(sedF, uf, us , nu, nuT, gradc)
+        self.assertTrue(round(mint.all(),10) == round(( - sedF * beta * gradc * nuT / gl.sigmaC).all() , 10))
+
     def testdMintdUf(self):
         gl=GlobalVariables()
         uf = np.array([5.,4.],"d")

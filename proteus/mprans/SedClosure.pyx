@@ -10,11 +10,17 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 		 double grain, # Grain size, default assumed as d50
 		 double packFraction, #Critical volume fraction for switching the drag relation 0.2 by default, see Chen and Hsu 2014
 		 double packMargin, #
+		 double maxFraction,
+		 double frFraction,
                  double sigmaC,
                  double C3e,
                  double C4e,
-                 double eR
-            
+                 double eR,
+ 		 double fContact,
+                 double mContact,
+                 double nContact,
+                 double angFriction
+           
 		 )
         double betaCoeff(
                             double sedF, # Sediment fraction
@@ -25,7 +31,30 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
         double gs0(
                              double sedF # Sediment fraction
             )
-        double kappa_sed(double sedF, 
+        double kappa_sed1(double sedF, 
+                       double rhoFluid,
+                       double rhoSolid,
+                       double* uFluid, 
+                       double* uSolid,
+                       double* gradC,
+                       double nu, 
+                       double theta_n,
+                       double kappa_n,
+                       double kappa_np1,
+                       double epsilon_n,
+                       double nuT_n)                          
+        double kappa_sed2(double sedF, 
+                       double rhoFluid,
+                       double rhoSolid,
+                       double* uFluid, 
+                       double* uSolid,
+                       double* gradC,
+                       double nu, 
+                       double theta_n,
+                       double kappa_n,
+                       double epsilon_n,
+                       double nuT_n)                          
+        double dkappa_sed1_dk(double sedF, 
                        double rhoFluid,
                        double rhoSolid,
                        double* uFluid, 
@@ -37,6 +66,18 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                        double epsilon_n,
                        double nuT_n)                          
         double eps_sed(double sedF, 
+                       double rhoFluid,
+                       double rhoSolid,
+                       double* uFluid, 
+                       double* uSolid,
+                       double* gradC,
+                       double nu, 
+                       double theta_n,
+                       double kappa_n,
+                       double epsilon_n,
+                       double epsilon_np1,
+                       double nuT_n)                          
+        double deps_sed_deps(double sedF, 
                        double rhoFluid,
                        double rhoSolid,
                        double* uFluid, 
@@ -127,18 +168,36 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
         double k_diff(double sedF, double rhoSolid,  double theta )
 
 			      
-			      
+        double p_friction(double sedF)			      
 
-        double*  mInt(
+        double*  mIntFluid(
                             double sedF,         # Sediment fraction
-                            double* uFluid_np1,  #Fluid velocity
-                            double* uSolid_np1,  #Sediment velocity
+                            double* uFluid_n,    #Fluid velocity
+                            double* uSolid_n,    #Sediment velocity
+                            double* uFluid_np1,  #Fluid 
+                            double nu,           #Kinematic viscosity
+                            double nuT,
+                            double* gradc
+                           )
+        double*  mIntSolid(
+                            double sedF,         # Sediment fraction
+                            double* uFluid_n,    #Fluid velocity
+                            double* uSolid_n,    #Sediment velocity
+                            double* uFluid_np1,  #Fluid 
+                            double nu,           #Kinematic viscosity
+                            double nuT,
+                            double* gradc
+                           )
+
+        double*  mIntgradC(
+                            double sedF,         # Sediment fraction
                             double* uFluid_n,    #Fluid velocity
                             double* uSolid_n,    #Sediment velocity
                             double nu,           #Kinematic viscosity
                             double nuT,
                             double* gradc
                            )
+
         double dmInt_duFluid(
                             double sedF, # Sediment fraction
                             double* uFluid_n, #Fluid velocity
@@ -155,7 +214,7 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 #define the way we want to present to Python
 cdef class HsuSedStress:
     cdef  cppHsuSedStress* thisptr
-    def __cinit__(self, aDarcy, betaForch, grain, packFraction,packMargin, sigmaC, C3e, C4e, eR ):
+    def __cinit__(self, aDarcy, betaForch, grain, packFraction,packMargin, maxFraction, frFraction,sigmaC, C3e, C4e, eR,fContact, mContact, nContact, angFriction):
         """ Class for caclulating sediment / fluid momentum transfer, see Chen and Hsu, CACR 14-08, A Multidimensional TwoPhase Eulerian Model for Sediment Transport TwoPhaseEulerSedFoam (Version 1.0) 
         http://www.coastal.udel.edu/~thsu/simulation_data_files/CACR-14-08.pdf
         param: aDarcy: Darcy parameter for drag term [-]. Default value from Ergun (1952) is 150
@@ -163,7 +222,7 @@ cdef class HsuSedStress:
         param: grain: Grain size, default assumed as d50 [L]
         param: packFraction : Critical sediment fraction [-] for switching the drag relation 0.2 by default, see Chen and Hsu 2014, equation (7)
         param: packMargin : [-] For packFraction \pm packMargin where the two braches in equation (7) are blended with linear weighting. Currently no information on the default value of this """
-        self.thisptr = new cppHsuSedStress( aDarcy, betaForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
+        self.thisptr = new cppHsuSedStress( aDarcy, betaForch, grain, packFraction, packMargin, maxFraction, frFraction,sigmaC, C3e, C4e, eR, fContact,  mContact, nContact, angFriction)
     def __dealloc__(self):
         del self.thisptr
     def betaCoeff(self, 
@@ -190,7 +249,32 @@ cdef class HsuSedStress:
         param: sedF: Sediment fraction [-]        
         """
         return self.thisptr.gs0(sedF) 
-    def kappa_sed(self,
+    def kappa_sed1(self,
+                  sedF,
+                  rhoFluid,
+                  rhoSolid,  
+                  numpy.ndarray uFluid, 
+                  numpy.ndarray uSolid, 
+                  numpy.ndarray gradC, 
+                  nu,
+                  theta_n,
+                  kappa_n,
+                  kappa_np1,
+                  epsilon_n,
+    nuT_n):
+        return self.thisptr.kappa_sed1(sedF,  
+                    rhoFluid,
+                    rhoSolid,
+                  < double *> uFluid.data, 
+                  < double *>  uSolid.data, 
+                  < double *>  gradC.data, 
+                  nu,
+                  theta_n,
+                  kappa_n,
+                  kappa_np1,
+                epsilon_n,
+                nuT_n)
+    def dkappa_sed1_dk(self,
                   sedF,
                   rhoFluid,
                   rhoSolid,  
@@ -202,7 +286,7 @@ cdef class HsuSedStress:
                   kappa_n,
                   epsilon_n,
                 nuT_n):
-        return self.thisptr.kappa_sed(sedF,  
+        return self.thisptr.dkappa_sed1_dk(sedF,  
                     rhoFluid,
                     rhoSolid,
                   < double *> uFluid.data, 
@@ -213,7 +297,30 @@ cdef class HsuSedStress:
                   kappa_n,
                 epsilon_n,
                 nuT_n)
-        
+    def kappa_sed2(self,
+                  sedF,
+                  rhoFluid,
+                  rhoSolid,  
+                  numpy.ndarray uFluid, 
+                  numpy.ndarray uSolid, 
+                  numpy.ndarray gradC, 
+                  nu,
+                  theta_n,
+                  kappa_n,
+                  epsilon_n,
+                nuT_n):
+        return self.thisptr.kappa_sed2(sedF,  
+                    rhoFluid,
+                    rhoSolid,
+                  < double *> uFluid.data, 
+                  < double *>  uSolid.data, 
+                  < double *>  gradC.data, 
+                  nu,
+                  theta_n,
+                  kappa_n,
+                epsilon_n,
+                nuT_n)
+       
 
     def eps_sed(self,
                   sedF,
@@ -226,6 +333,7 @@ cdef class HsuSedStress:
                   theta_n,
                   kappa_n,
                   epsilon_n,
+                  epsilon_np1,
                 nuT_n):
         return self.thisptr.eps_sed(sedF,  
                     rhoFluid,
@@ -236,8 +344,34 @@ cdef class HsuSedStress:
                   nu,
                   theta_n,
                   kappa_n,
+                  epsilon_n,
+                epsilon_np1,
+                nuT_n)
+
+    def deps_sed_deps(self,
+                  sedF,
+                  rhoFluid,
+                  rhoSolid,  
+                  numpy.ndarray uFluid, 
+                  numpy.ndarray uSolid, 
+                  numpy.ndarray gradC, 
+                  nu,
+                  theta_n,
+                  kappa_n,
+                  epsilon_n,
+                nuT_n):
+        return self.thisptr.deps_sed_deps(sedF,  
+                    rhoFluid,
+                    rhoSolid,
+                  < double *> uFluid.data, 
+                  < double *>  uSolid.data, 
+                  < double *>  gradC.data, 
+                  nu,
+                  theta_n,
+                  kappa_n,
                 epsilon_n,
                 nuT_n)
+
     def psc(self,
             sedF, 
             rhoSolid, 
@@ -331,24 +465,65 @@ cdef class HsuSedStress:
     def k_diff(self,  sedF, rhoSolid, theta ):
         return self.thisptr.k_diff( sedF, rhoSolid, theta)
 
-
+    def p_friction(self, sedF):
+        return self.thisptr.p_friction(sedF)
 
 		       
-    def  mInt(self, 
+    def  mIntFluid(self, 
                      sedF,  
-                     numpy.ndarray uFluid_np1, 
-                     numpy.ndarray uSolid_np1, 
                      numpy.ndarray uFluid_n, 
-                     numpy.ndarray uSolid_n,                                                      
+                     numpy.ndarray uSolid_n, 
+                     numpy.ndarray uFluid_np1, 
                      nu, 
                      nuT,
                      numpy.ndarray gradc
    ):
         
         mint = numpy.zeros(len(uFluid_n),"d")
-        cdef double* carr = self.thisptr.mInt(sedF, 
+        cdef double* carr = self.thisptr.mIntFluid(sedF, 
+                                  < double * > uFluid_n.data,
+                                  < double * > uSolid_n.data, 
                                   < double * > uFluid_np1.data,
+                                         nu,
+                                         nuT, 
+                                  < double * > gradc.data)
+        for ii in range(len(mint)):
+            mint[ii] = carr[ii]
+        return mint
+
+    def  mIntSolid(self, 
+                     sedF,  
+                     numpy.ndarray uFluid_n, 
+                     numpy.ndarray uSolid_n, 
+                     numpy.ndarray uSolid_np1, 
+                     nu, 
+                     nuT,
+                     numpy.ndarray gradc
+   ):
+        
+        mint = numpy.zeros(len(uFluid_n),"d")
+        cdef double* carr = self.thisptr.mIntSolid(sedF, 
+                                  < double * > uFluid_n.data,
+                                  < double * > uSolid_n.data, 
                                   < double * > uSolid_np1.data, 
+                                         nu,
+                                         nuT, 
+                                  < double * > gradc.data)
+        for ii in range(len(mint)):
+            mint[ii] = carr[ii]
+        return mint
+
+    def  mIntgradC(self, 
+                     sedF,  
+                     numpy.ndarray uFluid_n, 
+                     numpy.ndarray uSolid_n, 
+                     nu, 
+                     nuT,
+                     numpy.ndarray gradc
+   ):
+        
+        mint = numpy.zeros(len(uFluid_n),"d")
+        cdef double* carr = self.thisptr.mIntgradC(sedF, 
                                   < double * > uFluid_n.data,
                                   < double * > uSolid_n.data, 
                                          nu,
@@ -357,6 +532,7 @@ cdef class HsuSedStress:
         for ii in range(len(mint)):
             mint[ii] = carr[ii]
         return mint
+
                                  
 
     def dmInt_duFluid(self,
