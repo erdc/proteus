@@ -229,6 +229,7 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * q_p_fluid,
                                double * q_grad_p_fluid,
                                double * q_vos,
+                               double * q_dvos_dt,
                                double * q_dragAlpha,
                                double * q_dragBeta,
                                double * q_mass_source,
@@ -353,6 +354,7 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                       double * u_dof,
                                       double * v_dof,
                                       double * w_dof,
+                                      double * vos_dof,
                                       double * vel_trial_trace_ref,
                                       double * ebqe_velocity,
                                       double * velocityAverage)
@@ -748,6 +750,7 @@ cdef class RANS3PSed:
                           numpy.ndarray q_p_fluid,
                           numpy.ndarray q_grad_p_fluid,
                           numpy.ndarray q_vos,
+                          numpy.ndarray q_dvos_dt,
                           numpy.ndarray q_dragAlpha,
                           numpy.ndarray q_dragBeta,
                           numpy.ndarray q_mass_source,
@@ -910,6 +913,7 @@ cdef class RANS3PSed:
                                         < double * > q_p_fluid.data,
                                         < double * > q_grad_p_fluid.data,
                                         < double * > q_vos.data,
+                                        < double * > q_dvos_dt.data,
                                         < double * > q_dragAlpha.data,
                                         < double * > q_dragBeta.data,
                                         < double * > q_mass_source.data,
@@ -1035,6 +1039,7 @@ cdef class RANS3PSed:
                                  numpy.ndarray u_dof,
                                  numpy.ndarray v_dof,
                                  numpy.ndarray w_dof,
+                                 numpy.ndarray vos_dof,
                                  numpy.ndarray vel_trial_trace_ref,
                                  numpy.ndarray ebqe_velocity,
                                  numpy.ndarray velocityAverage):
@@ -1056,6 +1061,7 @@ cdef class RANS3PSed:
                                               < double * > u_dof.data,
                                               < double * > v_dof.data,
                                               < double * > w_dof.data,
+                                              < double * > vos_dof.data,
                                               < double * > vel_trial_trace_ref.data,
                                               < double * > ebqe_velocity.data,
                                               < double * > velocityAverage.data)
@@ -1270,6 +1276,7 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * q_p_fluid,
                                double * q_grad_p_fluid,
                                double * q_vos,
+                               double * q_dvos_dt,
                                double * q_dragAlpha,
                                double * q_dragBeta,
                                double * q_mass_source,
@@ -1394,6 +1401,7 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                       double * u_dof,
                                       double * v_dof,
                                       double * w_dof,
+                                      double * vos_dof,
                                       double * vel_trial_trace_ref,
                                       double * ebqe_velocity,
                                       double * velocityAverage)
@@ -1789,6 +1797,7 @@ cdef class RANS3PSed2D:
                           numpy.ndarray q_p_fluid,
                           numpy.ndarray q_grad_p_fluid,
                           numpy.ndarray q_vos,
+                          numpy.ndarray q_dvos_dt,
                           numpy.ndarray q_dragAlpha,
                           numpy.ndarray q_dragBeta,
                           numpy.ndarray q_mass_source,
@@ -1951,6 +1960,7 @@ cdef class RANS3PSed2D:
                                         < double * > q_p_fluid.data,
                                         < double * > q_grad_p_fluid.data,
                                         < double * > q_vos.data,
+                                        < double * > q_dvos_dt.data,
                                         < double * > q_dragAlpha.data,
                                         < double * > q_dragBeta.data,
                                         < double * > q_mass_source.data,
@@ -2076,6 +2086,7 @@ cdef class RANS3PSed2D:
                                  numpy.ndarray u_dof,
                                  numpy.ndarray v_dof,
                                  numpy.ndarray w_dof,
+                                 numpy.ndarray vos_dof,
                                  numpy.ndarray vel_trial_trace_ref,
                                  numpy.ndarray ebqe_velocity,
                                  numpy.ndarray velocityAverage):
@@ -2097,6 +2108,7 @@ cdef class RANS3PSed2D:
                                               < double * > u_dof.data,
                                               < double * > v_dof.data,
                                               < double * > w_dof.data,
+                                              < double * > vos_dof.data,
                                               < double * > vel_trial_trace_ref.data,
                                               < double * > ebqe_velocity.data,
                                               < double * > velocityAverage.data)
@@ -2184,26 +2196,26 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
         self.mesh = mesh
         self.numDiff = {}
         self.numDiff_last = {}
-        for ci in range(1, 4):
+        for ci in range(0, 3):
             self.numDiff[ci] = cq[('numDiff', ci, ci)]
             self.numDiff_last[ci] = cq[('numDiff', ci, ci)]
 
     def updateShockCapturingHistory(self):
         self.nSteps += 1
         if self.lag:
-            for ci in range(1, 4):
+            for ci in range(0, 3):
                 self.numDiff_last[ci][:] = self.numDiff[ci]
         if self.lag == False and self.nStepsToDelay != None and self.nSteps > self.nStepsToDelay:
             log("RANS3PSed.ShockCapturing: switched to lagged shock capturing")
             self.lag = True
-            for ci in range(1, 4):
+            for ci in range(0, 3):
                 self.numDiff_last[ci] = self.numDiff[ci].copy()
         log(
             "RANS3PSed: max numDiff_1 %e numDiff_2 %e numDiff_3 %e" %
             (globalMax(
+                self.numDiff_last[0].max()), globalMax(
                 self.numDiff_last[1].max()), globalMax(
-                self.numDiff_last[2].max()), globalMax(
-                self.numDiff_last[3].max())))
+                self.numDiff_last[2].max())))
 
 
 class Coefficients(proteus.TransportCoefficients.TC_base):
@@ -2224,6 +2236,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  g=[0.0, 0.0, -9.8],
                  nd=3,
                  ME_model=5,
+                 PRESSURE_model=7,
                  FLUID_model=6,
                  VOS_model=0,
                  LS_model=None,
@@ -2283,6 +2296,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.stokes = stokes
         self.ME_model = ME_model
         self.FLUID_model = FLUID_model
+        self.PRESSURE_model = PRESSURE_model
         self.VOS_model = VOS_model
         self.LS_model = LS_model
         self.VF_model = VF_model
@@ -2328,35 +2342,85 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         reaction = {}
         hamiltonian = {}
         if nd == 2:
-            variableNames = ['vosStar', 'us', 'vs']
-            mass = {1: {1: 'linear'},
+            variableNames = ['us', 'vs']
+            mass = {0: {0: 'linear'},
+                    1: {1: 'linear'}}
+            advection = {0: {0: 'nonlinear',
+                             1: 'nonlinear'},
+                         1: {0: 'nonlinear',
+                             1: 'nonlinear'}}
+            diffusion = {0: {0: {0: 'constant'}, 1: {1: 'constant'}},
+                         1: {1: {1: 'constant'}, 0: {0: 'constant'}}}
+            sdInfo = {(0, 0): (numpy.array([0, 1, 2], dtype='i'),
+                               numpy.array([0, 1], dtype='i')),
+                      (0, 1): (numpy.array([0, 0, 1], dtype='i'),
+                               numpy.array([0], dtype='i')),
+                      (1, 1): (numpy.array([0, 1, 2], dtype='i'),
+                               numpy.array([0, 1], dtype='i')),
+                      (1, 0): (numpy.array([0, 1, 1], dtype='i'),
+                               numpy.array([1], dtype='i'))}
+            potential = {0: {0: 'u'},
+                         1: {1: 'u'}}
+            reaction = {0: {0: 'nonlinear', 1: 'nonlinear'},
+                        1: {0: 'nonlinear', 1: 'nonlinear'}}
+            hamiltonian = {0: {0: 'linear'},
+                           1: {1: 'linear'}}
+            TC_base.__init__(self,
+                             2,
+                             mass,
+                             advection,
+                             diffusion,
+                             potential,
+                             reaction,
+                             hamiltonian,
+                             variableNames,
+                             sparseDiffusionTensors=sdInfo,
+                             useSparseDiffusion=sd,
+                             movingDomain=movingDomain)
+            self.vectorComponents = [0, 1]
+            self.vectorName="sediment_velocity"
+        elif nd == 3:
+            variableNames = ['us', 'vs', 'ws']
+            mass = {0: {0: 'linear'},
+                    1: {1: 'linear'},
                     2: {2: 'linear'}}
-            advection = {0: {0: 'linear',
-                             1: 'linear',
-                             2: 'linear'},
+            advection = {0: {0: 'nonlinear',
+                             1: 'nonlinear',
+                             2: 'nonlinear'},
                          1: {0: 'nonlinear',
                              1: 'nonlinear',
                              2: 'nonlinear'},
                          2: {0: 'nonlinear',
                              1: 'nonlinear',
                              2: 'nonlinear'}}
-            diffusion = {1: {1: {1: 'constant'}, 2: {2: 'constant'}},
-                         2: {2: {2: 'constant'}, 1: {1: 'constant'}}}
-            sdInfo = {(1, 1): (numpy.array([0, 1, 2], dtype='i'),
-                               numpy.array([0, 1], dtype='i')),
-                      (1, 2): (numpy.array([0, 0, 1], dtype='i'),
-                               numpy.array([0], dtype='i')),
-                      (2, 2): (numpy.array([0, 1, 2], dtype='i'),
-                               numpy.array([0, 1], dtype='i')),
-                      (2, 1): (numpy.array([0, 1, 1], dtype='i'),
-                               numpy.array([1], dtype='i'))}
-            potential = {1: {1: 'u'},
+            diffusion = {0: {0: {0: 'constant'},
+                             1: {1: 'constant'},
+                             2: {2: 'constant'}},
+                         1: {0: {0: 'constant'},
+                             1: {1: 'constant'},
+                             2: {2: 'constant'}},
+                         2: {0: {0: 'constant'},
+                             1: {1: 'constant'},
+                             2: {2: 'constant'}}}
+            sdInfo = {}
+            sdInfo = {(0, 0): (numpy.array([0, 1, 2, 3], dtype='i'), numpy.array([0, 1, 2], dtype='i')),
+                      (0, 1): (numpy.array([0, 0, 1, 1], dtype='i'), numpy.array([0], dtype='i')),
+                      (0, 2): (numpy.array([0, 0, 0, 1], dtype='i'), numpy.array([0], dtype='i')),
+                      (1, 0): (numpy.array([0, 1, 1, 1], dtype='i'), numpy.array([1], dtype='i')),
+                      (1, 1): (numpy.array([0, 1, 2, 3], dtype='i'), numpy.array([0, 1, 2], dtype='i')),
+                      (1, 2): (numpy.array([0, 0, 0, 1], dtype='i'), numpy.array([1], dtype='i')),
+                      (2, 0): (numpy.array([0, 1, 1, 1], dtype='i'), numpy.array([2], dtype='i')),
+                      (2, 1): (numpy.array([0, 0, 1, 1], dtype='i'), numpy.array([2], dtype='i')),
+                      (2, 2): (numpy.array([0, 1, 2, 3], dtype='i'), numpy.array([0, 1, 2], dtype='i'))}
+            potential = {0: {0: 'u'},
+                         1: {1: 'u'},
                          2: {2: 'u'}}
-            reaction = {0: {0: 'constant'},
-                        1: {1: 'nonlinear', 2: 'nonlinear'},
-                        2: {1: 'nonlinear', 2: 'nonlinear'}}
-            hamiltonian = {1: {0: 'linear'},
-                           2: {0: 'linear'}}
+            reaction = {0: {0: 'nonlinear', 1: 'nonlinear', 2: 'nonlinear'},
+                        1: {0: 'nonlinear', 1: 'nonlinear', 2: 'nonlinear'},
+                        2: {0: 'nonlinear', 1: 'nonlinear', 2: 'nonlinear'}}
+            hamiltonian = {0: {0: 'linear'},
+                           1: {1: 'linear'},
+                           2: {2: 'linear'}}
             TC_base.__init__(self,
                              3,
                              mass,
@@ -2369,70 +2433,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                              sparseDiffusionTensors=sdInfo,
                              useSparseDiffusion=sd,
                              movingDomain=movingDomain)
-            self.vectorComponents = [1, 2]
-            self.vectorName="sediment_velocity"
-        elif nd == 3:
-            variableNames = ['vosStar', 'us', 'vs', 'ws']
-            mass = {1: {1: 'linear'},
-                    2: {2: 'linear'},
-                    3: {3: 'linear'}}
-            advection = {0: {1: 'linear',
-                             2: 'linear',
-                             3: 'linear'},
-                         1: {0: 'nonlinear',
-                             1: 'nonlinear',
-                             2: 'nonlinear',
-                             3: 'nonlinear'},
-                         2: {0: 'nonlinear',
-                             1: 'nonlinear',
-                             2: 'nonlinear',
-                             3: 'nonlinear'},
-                         3: {0: 'nonlinear',
-                             1: 'nonlinear',
-                             2: 'nonlinear',
-                             3: 'nonlinear'}}
-            diffusion = {1: {1: {1: 'constant'},
-                             2: {2: 'constant'},
-                             3: {3: 'constant'}},
-                         2: {1: {1: 'constant'},
-                             2: {2: 'constant'},
-                             3: {3: 'constant'}},
-                         3: {1: {1: 'constant'},
-                             2: {2: 'constant'},
-                             3: {3: 'constant'}}}
-            sdInfo = {}
-            sdInfo = {(1, 1): (numpy.array([0, 1, 2, 3], dtype='i'), numpy.array([0, 1, 2], dtype='i')),
-                      (1, 2): (numpy.array([0, 0, 1, 1], dtype='i'), numpy.array([0], dtype='i')),
-                      (1, 3): (numpy.array([0, 0, 0, 1], dtype='i'), numpy.array([0], dtype='i')),
-                      (2, 1): (numpy.array([0, 1, 1, 1], dtype='i'), numpy.array([1], dtype='i')),
-                      (2, 2): (numpy.array([0, 1, 2, 3], dtype='i'), numpy.array([0, 1, 2], dtype='i')),
-                      (2, 3): (numpy.array([0, 0, 0, 1], dtype='i'), numpy.array([1], dtype='i')),
-                      (3, 1): (numpy.array([0, 1, 1, 1], dtype='i'), numpy.array([2], dtype='i')),
-                      (3, 2): (numpy.array([0, 0, 1, 1], dtype='i'), numpy.array([2], dtype='i')),
-                      (3, 3): (numpy.array([0, 1, 2, 3], dtype='i'), numpy.array([0, 1, 2], dtype='i'))}
-            potential = {1: {1: 'u'},
-                         2: {2: 'u'},
-                         3: {3: 'u'}}
-            reaction = {0: {0: 'constant'},
-                        1: {1: 'nonlinear', 2: 'nonlinear', 3: 'nonlinear'},
-                        2: {1: 'nonlinear', 2: 'nonlinear', 3: 'nonlinear'},
-                        3: {1: 'nonlinear', 2: 'nonlinear', 3: 'nonlinear'}}
-            hamiltonian = {1: {0: 'linear'},
-                           2: {0: 'linear'},
-                           3: {0: 'linear'}}
-            TC_base.__init__(self,
-                             4,
-                             mass,
-                             advection,
-                             diffusion,
-                             potential,
-                             reaction,
-                             hamiltonian,
-                             variableNames,
-                             sparseDiffusionTensors=sdInfo,
-                             useSparseDiffusion=sd,
-                             movingDomain=movingDomain)
-            self.vectorComponents = [1, 2, 3]
+            self.vectorComponents = [0, 1, 2]
             self.vectorName="sediment_velocity"
 
     def attachModels(self, modelList):
@@ -2441,12 +2442,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         if self.FLUID_model is not None:
             self.model.q_velocity_fluid = modelList[self.FLUID_model].q[('velocity',0)]
             self.model.ebqe_velocity_fluid = modelList[self.FLUID_model].ebqe[('velocity',0)]
-            self.model.q_p_fluid = modelList[self.FLUID_model].q[('u',0)]
-            self.model.ebqe_p_fluid = modelList[self.FLUID_model].ebqe[('u',0)]
-            self.model.q_grad_p_fluid = modelList[self.FLUID_model].q[('grad(u)',0)]
+        if self.PRESSURE_model is not None:
+            self.model.pressureModel = modelList[self.PRESSURE_model]
+            self.model.q_p_fluid = modelList[self.PRESSURE_model].q[('u',0)]
+            self.model.ebqe_p_fluid = modelList[self.PRESSURE_model].ebqe[('u',0)]
+            self.model.q_grad_p_fluid = modelList[self.PRESSURE_model].q[('grad(u)',0)]
             self.model.ebqe_grad_p_fluid = self.model.ebqe_velocity_fluid.copy()
             self.model.ebqe_grad_p_fluid[:] = 0.0
         if self.VOS_model is not None:
+            self.model.vos_dof = modelList[self.VOS_model].u[0].dof
             self.model.q_vos = modelList[self.VOS_model].q[('u',0)]
             self.model.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)]
             self.model.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
@@ -2468,11 +2472,11 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.ebq_n = None
             self.ebqe_n = modelList[self.LS_model].ebqe[('grad(u)', 0)]
         else:
-            self.q_phi = 10.0 * numpy.ones(self.model.q[('u', 1)].shape, 'd')
+            self.q_phi = 10.0 * numpy.ones(self.model.q[('u', 0)].shape, 'd')
             self.ebqe_phi = 10.0 * \
-                numpy.ones(self.model.ebqe[('u', 1)].shape, 'd')
+                numpy.ones(self.model.ebqe[('u', 0)].shape, 'd')
             self.bc_ebqe_phi = 10.0 * \
-                numpy.ones(self.model.ebqe[('u', 1)].shape, 'd')
+                numpy.ones(self.model.ebqe[('u', 0)].shape, 'd')
             self.q_n = numpy.ones(self.model.q[('velocity', 0)].shape, 'd')
             self.ebqe_n = numpy.ones(
                 self.model.ebqe[
@@ -2488,9 +2492,9 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.VF_model].numericalFlux.ebqe[
                 ('u', 0)]
         else:
-            self.q_vf = numpy.zeros(self.model.q[('u', 1)].shape, 'd')
-            self.ebqe_vf = numpy.zeros(self.model.ebqe[('u', 1)].shape, 'd')
-            self.bc_ebqe_vf = numpy.zeros(self.model.ebqe[('u', 1)].shape, 'd')
+            self.q_vf = numpy.zeros(self.model.q[('u', 0)].shape, 'd')
+            self.ebqe_vf = numpy.zeros(self.model.ebqe[('u', 0)].shape, 'd')
+            self.bc_ebqe_vf = numpy.zeros(self.model.ebqe[('u', 0)].shape, 'd')
         # curvature
         if self.KN_model is not None:
             self.q_kappa = modelList[self.KN_model].q[('u', 0)]
@@ -2500,8 +2504,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             else:
                 self.ebq_kappa = None
         else:
-            self.q_kappa = -numpy.ones(self.model.q[('u', 1)].shape, 'd')
-            self.ebqe_kappa = -numpy.ones(self.model.ebqe[('u', 1)].shape, 'd')
+            self.q_kappa = -numpy.ones(self.model.q[('u', 0)].shape, 'd')
+            self.ebqe_kappa = -numpy.ones(self.model.ebqe[('u', 0)].shape, 'd')
         # Turbulence Closures
         # only option for now is k-epsilon
         self.q_turb_var = {}
@@ -2516,20 +2520,20 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.Closure_0_model].ebqe[
                 ('u', 0)]
         else:
-            self.q_turb_var[0] = numpy.ones(self.model.q[('u', 1)].shape, 'd')
+            self.q_turb_var[0] = numpy.ones(self.model.q[('u', 0)].shape, 'd')
             self.q_turb_var_grad[0] = numpy.ones(
-                self.model.q[('grad(u)', 1)].shape, 'd')
+                self.model.q[('grad(u)', 0)].shape, 'd')
             self.ebqe_turb_var[0] = numpy.ones(
-                self.model.ebqe[('u', 1)].shape, 'd')
+                self.model.ebqe[('u', 0)].shape, 'd')
         if self.Closure_1_model is not None:
             self.q_turb_var[1] = modelList[self.Closure_1_model].q[('u', 0)]
             self.ebqe_turb_var[1] = modelList[
                 self.Closure_1_model].ebqe[
                 ('u', 0)]
         else:
-            self.q_turb_var[1] = numpy.ones(self.model.q[('u', 1)].shape, 'd')
+            self.q_turb_var[1] = numpy.ones(self.model.q[('u', 0)].shape, 'd')
             self.ebqe_turb_var[1] = numpy.ones(
-                self.model.ebqe[('u', 1)].shape, 'd')
+                self.model.ebqe[('u', 0)].shape, 'd')
         if self.epsFact_solid is None:
             self.epsFact_solid = numpy.ones(
                 self.model.mesh.elementMaterialTypes.max() + 1)
@@ -3161,36 +3165,36 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
             'd')
+        self.q[('u', 0)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 1)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('u', 2)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('u', 3)] = numpy.zeros(
-            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('m', 0)] = self.q[('u', 0)]
         self.q[('m', 1)] = self.q[('u', 1)]
         self.q[('m', 2)] = self.q[('u', 2)]
-        self.q[('m', 3)] = self.q[('u', 3)]
+        self.q[('m_last', 0)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('m_last', 1)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('m_last', 2)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('m_last', 3)] = numpy.zeros(
+        self.q[('m_tmp', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('m_tmp', 1)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('m_tmp', 2)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('m_tmp', 3)] = numpy.zeros(
+        self.q[('mt', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('mt', 1)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('mt', 2)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('mt', 3)] = numpy.zeros(
-            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        #self.q[('dV_u',0)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         #self.q[('dV_u',1)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         #self.q[('dV_u',2)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
-        #self.q[('dV_u',3)] = (1.0/self.mesh.nElements_global)*numpy.ones((self.mesh.nElements_global,self.nQuadraturePoints_element),'d')
         self.q['dV'] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q['dV_last'] = -1000 * \
@@ -3215,12 +3219,12 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             (self.mesh.nElements_global, self.nQuadraturePoints_element, 3), 'd')
         self.q[('cfl', 0)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
+        self.q[('numDiff', 0, 0)] = numpy.zeros(
+            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('numDiff', 1, 1)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.q[('numDiff', 2, 2)] = numpy.zeros(
             (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
-        self.q[('numDiff', 3, 3)] = numpy.zeros(
-            (self.mesh.nElements_global, self.nQuadraturePoints_element), 'd')
         self.ebqe[
             ('u',
              0)] = numpy.zeros(
@@ -3236,12 +3240,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[
             ('u',
              2)] = numpy.zeros(
-            (self.mesh.nExteriorElementBoundaries_global,
-             self.nElementBoundaryQuadraturePoints_elementBoundary),
-            'd')
-        self.ebqe[
-            ('u',
-             3)] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
@@ -3264,8 +3262,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'i')
         self.ebqe[
-            ('advectiveFlux_bc_flag',
-             3)] = numpy.zeros(
+            ('diffusiveFlux_bc_flag',
+             0,
+             0)] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'i')
@@ -3284,13 +3283,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'i')
         self.ebqe[
-            ('diffusiveFlux_bc_flag',
-             3,
-             3)] = numpy.zeros(
-            (self.mesh.nExteriorElementBoundaries_global,
-             self.nElementBoundaryQuadraturePoints_elementBoundary),
-            'i')
-        self.ebqe[
             ('advectiveFlux_bc',
              0)] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
@@ -3309,15 +3301,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
         self.ebqe[
-            ('advectiveFlux_bc',
-             3)] = numpy.zeros(
-            (self.mesh.nExteriorElementBoundaries_global,
-             self.nElementBoundaryQuadraturePoints_elementBoundary),
-            'd')
-        self.ebqe[
             ('diffusiveFlux_bc',
-             1,
-             1)] = numpy.zeros(
+             0,
+             0)] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
@@ -3327,15 +3313,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             'd')
         self.ebqe[
             ('diffusiveFlux_bc',
-             2,
-             2)] = numpy.zeros(
+             1,
+             1)] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
         self.ebqe[
             ('diffusiveFlux_bc',
-             3,
-             3)] = numpy.zeros(
+             2,
+             2)] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary),
             'd')
@@ -3356,13 +3342,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[
             ('velocity',
              2)] = numpy.zeros(
-            (self.mesh.nExteriorElementBoundaries_global,
-             self.nElementBoundaryQuadraturePoints_elementBoundary,
-             self.nSpace_global),
-            'd')
-        self.ebqe[
-            ('velocity',
-             3)] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
@@ -3376,6 +3355,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # RANS 2eq Models start
         self.q[
             ('grad(u)',
+             0)] = numpy.zeros(
+            (self.mesh.nElements_global,
+             self.nQuadraturePoints_element,
+             self.nSpace_global),
+            'd')
+        self.q[
+            ('grad(u)',
              1)] = numpy.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
@@ -3384,13 +3370,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.q[
             ('grad(u)',
              2)] = numpy.zeros(
-            (self.mesh.nElements_global,
-             self.nQuadraturePoints_element,
-             self.nSpace_global),
-            'd')
-        self.q[
-            ('grad(u)',
-             3)] = numpy.zeros(
             (self.mesh.nElements_global,
              self.nQuadraturePoints_element,
              self.nSpace_global),
@@ -3398,6 +3377,13 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         # probably don't need ebqe gradients
         self.ebqe[
             ('grad(u)',
+             0)] = numpy.zeros(
+            (self.mesh.nExteriorElementBoundaries_global,
+             self.nElementBoundaryQuadraturePoints_elementBoundary,
+             self.nSpace_global),
+            'd')
+        self.ebqe[
+            ('grad(u)',
              1)] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
@@ -3406,13 +3392,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.ebqe[
             ('grad(u)',
              2)] = numpy.zeros(
-            (self.mesh.nExteriorElementBoundaries_global,
-             self.nElementBoundaryQuadraturePoints_elementBoundary,
-             self.nSpace_global),
-            'd')
-        self.ebqe[
-            ('grad(u)',
-             3)] = numpy.zeros(
             (self.mesh.nExteriorElementBoundaries_global,
              self.nElementBoundaryQuadraturePoints_elementBoundary,
              self.nSpace_global),
@@ -3725,30 +3704,30 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.elementDiameter = self.mesh.elementDiametersArray
         if self.nSpace_global == 2:
             import copy
-            self.u[3] = copy.deepcopy(self.u[2])
+            self.u[2] = copy.deepcopy(self.u[1])
             self.timeIntegration.m_tmp[
-                3] = self.timeIntegration.m_tmp[2].copy()
+                2] = self.timeIntegration.m_tmp[1].copy()
             self.timeIntegration.beta_bdf[
-                3] = self.timeIntegration.beta_bdf[2].copy()
-            self.coefficients.sdInfo[(1, 3)] = (numpy.array(
+                2] = self.timeIntegration.beta_bdf[1].copy()
+            self.coefficients.sdInfo[(0, 2)] = (numpy.array(
                 [0, 1, 2], dtype='i'), numpy.array([0, 1], dtype='i'))
-            self.coefficients.sdInfo[(2, 3)] = (numpy.array(
+            self.coefficients.sdInfo[(1, 2)] = (numpy.array(
                 [0, 1, 2], dtype='i'), numpy.array([0, 1], dtype='i'))
-            self.coefficients.sdInfo[(3, 0)] = (numpy.array(
+            self.coefficients.sdInfo[(2, 0)] = (numpy.array(
                 [0, 1, 2], dtype='i'), numpy.array([0, 1], dtype='i'))
-            self.coefficients.sdInfo[(3, 1)] = (numpy.array(
+            self.coefficients.sdInfo[(2, 0)] = (numpy.array(
                 [0, 1, 2], dtype='i'), numpy.array([0, 1], dtype='i'))
-            self.coefficients.sdInfo[(3, 2)] = (numpy.array(
+            self.coefficients.sdInfo[(2, 1)] = (numpy.array(
                 [0, 1, 2], dtype='i'), numpy.array([0, 1], dtype='i'))
-            self.coefficients.sdInfo[(3, 3)] = (numpy.array(
+            self.coefficients.sdInfo[(2, 2)] = (numpy.array(
                 [0, 1, 2], dtype='i'), numpy.array([0, 1], dtype='i'))
-            self.offset.append(self.offset[2])
-            self.stride.append(self.stride[2])
+            self.offset.append(self.offset[1])
+            self.stride.append(self.stride[1])
             self.numericalFlux.isDOFBoundary[
-                3] = self.numericalFlux.isDOFBoundary[2].copy()
+                2] = self.numericalFlux.isDOFBoundary[1].copy()
             self.numericalFlux.ebqe[
-                ('u', 3)] = self.numericalFlux.ebqe[
-                ('u', 2)].copy()
+                ('u', 2)] = self.numericalFlux.ebqe[
+                ('u', 1)].copy()
             log("calling RANS3PSed2D ctor")
             self.rans3pf = RANS3PSed2D(
                 self.nSpace_global,
@@ -3837,35 +3816,35 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
                                                  dofN], self.timeIntegration.t) + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
         self.rans3pf.calculateResidual(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
+            self.pressureModel.u[0].femSpace.elementMaps.psi,
+            self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
             self.mesh.nodeVelocityArray,
             self.MOVING_DOMAIN,
             self.mesh.elementNodesArray,
             self.elementQuadratureWeights[('u', 0)],
+            self.pressureModel.u[0].femSpace.psi,
+            self.pressureModel.u[0].femSpace.grad_psi,
+            self.pressureModel.u[0].femSpace.psi,
+            self.pressureModel.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
-            self.u[1].femSpace.psi,
-            self.u[1].femSpace.grad_psi,
-            self.u[1].femSpace.psi,
-            self.u[1].femSpace.grad_psi,
             # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
+            self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace,
             self.elementBoundaryQuadratureWeights[('u', 0)],
+            self.pressureModel.u[0].femSpace.psi_trace,
+            self.pressureModel.u[0].femSpace.grad_psi_trace,
+            self.pressureModel.u[0].femSpace.psi_trace,
+            self.pressureModel.u[0].femSpace.grad_psi_trace,
             self.u[0].femSpace.psi_trace,
             self.u[0].femSpace.grad_psi_trace,
             self.u[0].femSpace.psi_trace,
             self.u[0].femSpace.grad_psi_trace,
-            self.u[1].femSpace.psi_trace,
-            self.u[1].femSpace.grad_psi_trace,
-            self.u[1].femSpace.psi_trace,
-            self.u[1].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
+            self.pressureModel.u[0].femSpace.elementMaps.boundaryNormals,
+            self.pressureModel.u[0].femSpace.elementMaps.boundaryJacobians,
             # physics
             self.eb_adjoint_sigma,
             self.elementDiameter,  # mesh.elementDiametersArray,
@@ -3904,64 +3883,64 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_turb_var_grad[0],
             self.q['eddy_viscosity'],
             # VRANS end
+            self.pressureModel.u[0].femSpace.dofMap.l2g,
             self.u[0].femSpace.dofMap.l2g,
-            self.u[1].femSpace.dofMap.l2g,
+            self.pressureModel.u[0].dof,
             self.u[0].dof,
             self.u[1].dof,
             self.u[2].dof,
-            self.u[3].dof,
             self.coefficients.g,
             self.coefficients.useVF,
             self.coefficients.q_vf,
             self.coefficients.q_phi,
             self.coefficients.q_n,
             self.coefficients.q_kappa,
+            self.timeIntegration.m_tmp[0],
             self.timeIntegration.m_tmp[1],
             self.timeIntegration.m_tmp[2],
-            self.timeIntegration.m_tmp[3],
             self.q[('f', 0)],
+            self.timeIntegration.beta_bdf[0],
             self.timeIntegration.beta_bdf[1],
             self.timeIntegration.beta_bdf[2],
-            self.timeIntegration.beta_bdf[3],
             self.q['dV'],
             self.q['dV_last'],
             self.stabilization.v_last,
             self.q[('cfl', 0)],
+            self.q[('numDiff', 0, 0)],
             self.q[('numDiff', 1, 1)],
             self.q[('numDiff', 2, 2)],
-            self.q[('numDiff', 3, 3)],
+            self.shockCapturing.numDiff_last[0],
             self.shockCapturing.numDiff_last[1],
             self.shockCapturing.numDiff_last[2],
-            self.shockCapturing.numDiff_last[3],
+            self.coefficients.sdInfo[
+                (0, 0)][0], self.coefficients.sdInfo[
+                (0, 0)][1],
+            self.coefficients.sdInfo[
+                (0, 1)][0], self.coefficients.sdInfo[
+                (0, 1)][1],
+            self.coefficients.sdInfo[
+                (0, 2)][0], self.coefficients.sdInfo[
+                (0, 2)][1],
             self.coefficients.sdInfo[
                 (1, 1)][0], self.coefficients.sdInfo[
                 (1, 1)][1],
             self.coefficients.sdInfo[
+                (1, 0)][0], self.coefficients.sdInfo[
+                (1, 0)][1],
+            self.coefficients.sdInfo[
                 (1, 2)][0], self.coefficients.sdInfo[
                 (1, 2)][1],
-            self.coefficients.sdInfo[
-                (1, 3)][0], self.coefficients.sdInfo[
-                (1, 3)][1],
             self.coefficients.sdInfo[
                 (2, 2)][0], self.coefficients.sdInfo[
                 (2, 2)][1],
             self.coefficients.sdInfo[
+                (2, 0)][0], self.coefficients.sdInfo[
+                (2, 0)][1],
+            self.coefficients.sdInfo[
                 (2, 1)][0], self.coefficients.sdInfo[
                 (2, 1)][1],
-            self.coefficients.sdInfo[
-                (2, 3)][0], self.coefficients.sdInfo[
-                (2, 3)][1],
-            self.coefficients.sdInfo[
-                (3, 3)][0], self.coefficients.sdInfo[
-                (3, 3)][1],
-            self.coefficients.sdInfo[
-                (3, 1)][0], self.coefficients.sdInfo[
-                (3, 1)][1],
-            self.coefficients.sdInfo[
-                (3, 2)][0], self.coefficients.sdInfo[
-                (3, 2)][1],
-            self.offset[0], self.offset[1], self.offset[2], self.offset[3],
-            self.stride[0], self.stride[1], self.stride[2], self.stride[3],
+            self.pressureModel.offset[0], self.offset[0], self.offset[1], self.offset[2],
+            self.pressureModel.stride[0], self.stride[0], self.stride[1], self.stride[2],
             r,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
@@ -3980,29 +3959,29 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_turb_var[0],
             self.coefficients.ebqe_turb_var[1],
             # VRANS end
+            self.pressureModel.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.isDOFBoundary[1],
             self.numericalFlux.isDOFBoundary[2],
-            self.numericalFlux.isDOFBoundary[3],
+            self.pressureModel.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc_flag', 1)],
             self.ebqe[('advectiveFlux_bc_flag', 2)],
-            self.ebqe[('advectiveFlux_bc_flag', 3)],
+            self.ebqe[('diffusiveFlux_bc_flag', 0, 0)],
             self.ebqe[('diffusiveFlux_bc_flag', 1, 1)],
             self.ebqe[('diffusiveFlux_bc_flag', 2, 2)],
-            self.ebqe[('diffusiveFlux_bc_flag', 3, 3)],
-            self.numericalFlux.ebqe[('u', 0)],
+            self.pressureModel.numericalFlux.ebqe[('u', 0)],
+            self.pressureModel.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('advectiveFlux_bc', 1)],
             self.ebqe[('advectiveFlux_bc', 2)],
-            self.ebqe[('advectiveFlux_bc', 3)],
+            self.numericalFlux.ebqe[('u', 0)],
+            self.ebqe[('diffusiveFlux_bc', 0, 0)],
+            self.ebqe['penalty'],
             self.numericalFlux.ebqe[('u', 1)],
             self.ebqe[('diffusiveFlux_bc', 1, 1)],
-            self.ebqe['penalty'],
             self.numericalFlux.ebqe[('u', 2)],
             self.ebqe[('diffusiveFlux_bc', 2, 2)],
-            self.numericalFlux.ebqe[('u', 3)],
-            self.ebqe[('diffusiveFlux_bc', 3, 3)],
             self.q['x'],
             self.q[('velocity', 0)],
             self.ebqe[('velocity', 0)],
@@ -4049,58 +4028,58 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
                                        jacobian)
         if self.nSpace_global == 2:
-            self.csrRowIndeces[(0, 3)] = self.csrRowIndeces[(0, 2)]
-            self.csrColumnOffsets[(0, 3)] = self.csrColumnOffsets[(0, 2)]
-            self.csrRowIndeces[(1, 3)] = self.csrRowIndeces[(0, 2)]
-            self.csrColumnOffsets[(1, 3)] = self.csrColumnOffsets[(0, 2)]
-            self.csrRowIndeces[(2, 3)] = self.csrRowIndeces[(0, 2)]
-            self.csrColumnOffsets[(2, 3)] = self.csrColumnOffsets[(0, 2)]
-            self.csrRowIndeces[(3, 0)] = self.csrRowIndeces[(2, 0)]
-            self.csrColumnOffsets[(3, 0)] = self.csrColumnOffsets[(2, 0)]
-            self.csrRowIndeces[(3, 1)] = self.csrRowIndeces[(2, 0)]
-            self.csrColumnOffsets[(3, 1)] = self.csrColumnOffsets[(2, 0)]
-            self.csrRowIndeces[(3, 2)] = self.csrRowIndeces[(2, 0)]
-            self.csrColumnOffsets[(3, 2)] = self.csrColumnOffsets[(2, 0)]
-            self.csrRowIndeces[(3, 3)] = self.csrRowIndeces[(2, 0)]
-            self.csrColumnOffsets[(3, 3)] = self.csrColumnOffsets[(2, 0)]
-            self.csrColumnOffsets_eb[(0, 3)] = self.csrColumnOffsets[(0, 2)]
-            self.csrColumnOffsets_eb[(1, 3)] = self.csrColumnOffsets[(0, 2)]
-            self.csrColumnOffsets_eb[(2, 3)] = self.csrColumnOffsets[(0, 2)]
-            self.csrColumnOffsets_eb[(3, 0)] = self.csrColumnOffsets[(0, 2)]
-            self.csrColumnOffsets_eb[(3, 1)] = self.csrColumnOffsets[(0, 2)]
-            self.csrColumnOffsets_eb[(3, 2)] = self.csrColumnOffsets[(0, 2)]
-            self.csrColumnOffsets_eb[(3, 3)] = self.csrColumnOffsets[(0, 2)]
+            self.csrRowIndeces[(0, 2)] = self.csrRowIndeces[(0, 1)]
+            self.csrColumnOffsets[(0, 2)] = self.csrColumnOffsets[(0, 1)]
+            self.csrRowIndeces[(0, 2)] = self.csrRowIndeces[(0, 1)]
+            self.csrColumnOffsets[(0, 2)] = self.csrColumnOffsets[(0, 1)]
+            self.csrRowIndeces[(1, 2)] = self.csrRowIndeces[(0, 1)]
+            self.csrColumnOffsets[(1, 2)] = self.csrColumnOffsets[(0, 1)]
+            self.csrRowIndeces[(2, 0)] = self.csrRowIndeces[(1, 0)]
+            self.csrColumnOffsets[(2, 0)] = self.csrColumnOffsets[(1, 0)]
+            self.csrRowIndeces[(2, 0)] = self.csrRowIndeces[(1, 0)]
+            self.csrColumnOffsets[(2, 0)] = self.csrColumnOffsets[(1, 0)]
+            self.csrRowIndeces[(2, 1)] = self.csrRowIndeces[(1, 0)]
+            self.csrColumnOffsets[(2, 1)] = self.csrColumnOffsets[(1, 0)]
+            self.csrRowIndeces[(2, 2)] = self.csrRowIndeces[(1, 0)]
+            self.csrColumnOffsets[(2, 2)] = self.csrColumnOffsets[(1, 0)]
+            self.csrColumnOffsets_eb[(0, 2)] = self.csrColumnOffsets[(0, 1)]
+            self.csrColumnOffsets_eb[(0, 2)] = self.csrColumnOffsets[(0, 1)]
+            self.csrColumnOffsets_eb[(1, 2)] = self.csrColumnOffsets[(0, 1)]
+            self.csrColumnOffsets_eb[(2, 0)] = self.csrColumnOffsets[(0, 1)]
+            self.csrColumnOffsets_eb[(2, 0)] = self.csrColumnOffsets[(0, 1)]
+            self.csrColumnOffsets_eb[(2, 1)] = self.csrColumnOffsets[(0, 1)]
+            self.csrColumnOffsets_eb[(2, 2)] = self.csrColumnOffsets[(0, 1)]
 
         self.rans3pf.calculateJacobian(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
+            self.pressureModel.u[0].femSpace.elementMaps.psi,
+            self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
             self.mesh.nodeVelocityArray,
             self.MOVING_DOMAIN,
             self.mesh.elementNodesArray,
             self.elementQuadratureWeights[('u', 0)],
+            self.pressureModel.u[0].femSpace.psi,
+            self.pressureModel.u[0].femSpace.grad_psi,
+            self.pressureModel.u[0].femSpace.psi,
+            self.pressureModel.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
-            self.u[1].femSpace.psi,
-            self.u[1].femSpace.grad_psi,
-            self.u[1].femSpace.psi,
-            self.u[1].femSpace.grad_psi,
             # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
-            self.elementBoundaryQuadratureWeights[('u', 0)],
+            self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
+            self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.pressureModel.elementBoundaryQuadratureWeights[('u', 0)],
+            self.pressureModel.u[0].femSpace.psi_trace,
+            self.pressureModel.u[0].femSpace.grad_psi_trace,
+            self.pressureModel.u[0].femSpace.psi_trace,
+            self.pressureModel.u[0].femSpace.grad_psi_trace,
             self.u[0].femSpace.psi_trace,
             self.u[0].femSpace.grad_psi_trace,
             self.u[0].femSpace.psi_trace,
             self.u[0].femSpace.grad_psi_trace,
-            self.u[1].femSpace.psi_trace,
-            self.u[1].femSpace.grad_psi_trace,
-            self.u[1].femSpace.psi_trace,
-            self.u[1].femSpace.grad_psi_trace,
-            self.u[0].femSpace.elementMaps.boundaryNormals,
-            self.u[0].femSpace.elementMaps.boundaryJacobians,
+            self.pressureModel.u[0].femSpace.elementMaps.boundaryNormals,
+            self.pressureModel.u[0].femSpace.elementMaps.boundaryJacobians,
             self.eb_adjoint_sigma,
             self.elementDiameter,  # mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
@@ -4128,78 +4107,79 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q_p_fluid,
             self.q_grad_p_fluid,
             self.q_vos,
+            self.q_dvos_dt,
             self.coefficients.q_dragAlpha,
             self.coefficients.q_dragBeta,
-            self.q[('r', 0)],
+            self.pressureModel.q[('r', 0)],
             self.coefficients.q_turb_var[0],
             self.coefficients.q_turb_var[1],
             self.coefficients.q_turb_var_grad[0],
             # VRANS end
+            self.pressureModel.u[0].femSpace.dofMap.l2g,
             self.u[0].femSpace.dofMap.l2g,
-            self.u[1].femSpace.dofMap.l2g,
+            self.pressureModel.u[0].dof,
             self.u[0].dof,
             self.u[1].dof,
             self.u[2].dof,
-            self.u[3].dof,
             self.coefficients.g,
             self.coefficients.useVF,
             self.coefficients.q_vf,
             self.coefficients.q_phi,
             self.coefficients.q_n,
             self.coefficients.q_kappa,
+            self.timeIntegration.beta_bdf[0],
             self.timeIntegration.beta_bdf[1],
             self.timeIntegration.beta_bdf[2],
-            self.timeIntegration.beta_bdf[3],
             self.q['dV'],
             self.q['dV_last'],
             self.stabilization.v_last,
             self.q[('cfl', 0)],
+            self.shockCapturing.numDiff_last[0],
             self.shockCapturing.numDiff_last[1],
             self.shockCapturing.numDiff_last[2],
-            self.shockCapturing.numDiff_last[3],
+            self.coefficients.sdInfo[
+                (0, 0)][0], self.coefficients.sdInfo[
+                (0, 0)][1],
+            self.coefficients.sdInfo[
+                (0, 1)][0], self.coefficients.sdInfo[
+                (0, 1)][1],
+            self.coefficients.sdInfo[
+                (0, 2)][0], self.coefficients.sdInfo[
+                (0, 2)][1],
             self.coefficients.sdInfo[
                 (1, 1)][0], self.coefficients.sdInfo[
                 (1, 1)][1],
             self.coefficients.sdInfo[
+                (1, 0)][0], self.coefficients.sdInfo[
+                (1, 0)][1],
+            self.coefficients.sdInfo[
                 (1, 2)][0], self.coefficients.sdInfo[
                 (1, 2)][1],
-            self.coefficients.sdInfo[
-                (1, 3)][0], self.coefficients.sdInfo[
-                (1, 3)][1],
             self.coefficients.sdInfo[
                 (2, 2)][0], self.coefficients.sdInfo[
                 (2, 2)][1],
             self.coefficients.sdInfo[
+                (2, 0)][0], self.coefficients.sdInfo[
+                (2, 0)][1],
+            self.coefficients.sdInfo[
                 (2, 1)][0], self.coefficients.sdInfo[
                 (2, 1)][1],
-            self.coefficients.sdInfo[
-                (2, 3)][0], self.coefficients.sdInfo[
-                (2, 3)][1],
-            self.coefficients.sdInfo[
-                (3, 3)][0], self.coefficients.sdInfo[
-                (3, 3)][1],
-            self.coefficients.sdInfo[
-                (3, 1)][0], self.coefficients.sdInfo[
-                (3, 1)][1],
-            self.coefficients.sdInfo[
-                (3, 2)][0], self.coefficients.sdInfo[
-                (3, 2)][1],
+            self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
             self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
             self.csrRowIndeces[(0, 1)], self.csrColumnOffsets[(0, 1)],
             self.csrRowIndeces[(0, 2)], self.csrColumnOffsets[(0, 2)],
-            self.csrRowIndeces[(0, 3)], self.csrColumnOffsets[(0, 3)],
+            self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
+            self.csrRowIndeces[(0, 0)], self.csrColumnOffsets[(0, 0)],
+            self.csrRowIndeces[(0, 1)], self.csrColumnOffsets[(0, 1)],
+            self.csrRowIndeces[(0, 2)], self.csrColumnOffsets[(0, 2)],
+            self.csrRowIndeces[(1, 0)], self.csrColumnOffsets[(1, 0)],
             self.csrRowIndeces[(1, 0)], self.csrColumnOffsets[(1, 0)],
             self.csrRowIndeces[(1, 1)], self.csrColumnOffsets[(1, 1)],
             self.csrRowIndeces[(1, 2)], self.csrColumnOffsets[(1, 2)],
-            self.csrRowIndeces[(1, 3)], self.csrColumnOffsets[(1, 3)],
+            self.csrRowIndeces[(2, 0)], self.csrColumnOffsets[(2, 0)],
             self.csrRowIndeces[(2, 0)], self.csrColumnOffsets[(2, 0)],
             self.csrRowIndeces[(2, 1)], self.csrColumnOffsets[(2, 1)],
             self.csrRowIndeces[(2, 2)], self.csrColumnOffsets[(2, 2)],
-            self.csrRowIndeces[(2, 3)], self.csrColumnOffsets[(2, 3)],
-            self.csrRowIndeces[(3, 0)], self.csrColumnOffsets[(3, 0)],
-            self.csrRowIndeces[(3, 1)], self.csrColumnOffsets[(3, 1)],
-            self.csrRowIndeces[(3, 2)], self.csrColumnOffsets[(3, 2)],
-            self.csrRowIndeces[(3, 3)], self.csrColumnOffsets[(3, 3)],
             jacobian,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
@@ -4218,52 +4198,52 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_turb_var[0],
             self.coefficients.ebqe_turb_var[1],
             # VRANS end
+            self.pressureModel.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.isDOFBoundary[1],
             self.numericalFlux.isDOFBoundary[2],
-            self.numericalFlux.isDOFBoundary[3],
+            self.pressureModel.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc_flag', 1)],
             self.ebqe[('advectiveFlux_bc_flag', 2)],
-            self.ebqe[('advectiveFlux_bc_flag', 3)],
+            self.ebqe[('diffusiveFlux_bc_flag', 0, 0)],
             self.ebqe[('diffusiveFlux_bc_flag', 1, 1)],
             self.ebqe[('diffusiveFlux_bc_flag', 2, 2)],
-            self.ebqe[('diffusiveFlux_bc_flag', 3, 3)],
-            self.numericalFlux.ebqe[('u', 0)],
+            self.pressureModel.numericalFlux.ebqe[('u', 0)],
+            self.pressureModel.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('advectiveFlux_bc', 1)],
             self.ebqe[('advectiveFlux_bc', 2)],
-            self.ebqe[('advectiveFlux_bc', 3)],
+            self.numericalFlux.ebqe[('u', 0)],
+            self.ebqe[('diffusiveFlux_bc', 0, 0)],
+            self.ebqe['penalty'],
             self.numericalFlux.ebqe[('u', 1)],
             self.ebqe[('diffusiveFlux_bc', 1, 1)],
-            self.ebqe['penalty'],
             self.numericalFlux.ebqe[('u', 2)],
             self.ebqe[('diffusiveFlux_bc', 2, 2)],
-            self.numericalFlux.ebqe[('u', 3)],
-            self.ebqe[('diffusiveFlux_bc', 3, 3)],
+            self.csrColumnOffsets_eb[(0, 0)],
             self.csrColumnOffsets_eb[(0, 0)],
             self.csrColumnOffsets_eb[(0, 1)],
             self.csrColumnOffsets_eb[(0, 2)],
-            self.csrColumnOffsets_eb[(0, 3)],
+            self.csrColumnOffsets_eb[(0, 0)],
+            self.csrColumnOffsets_eb[(0, 0)],
+            self.csrColumnOffsets_eb[(0, 1)],
+            self.csrColumnOffsets_eb[(0, 2)],
+            self.csrColumnOffsets_eb[(1, 0)],
             self.csrColumnOffsets_eb[(1, 0)],
             self.csrColumnOffsets_eb[(1, 1)],
             self.csrColumnOffsets_eb[(1, 2)],
-            self.csrColumnOffsets_eb[(1, 3)],
+            self.csrColumnOffsets_eb[(2, 0)],
             self.csrColumnOffsets_eb[(2, 0)],
             self.csrColumnOffsets_eb[(2, 1)],
             self.csrColumnOffsets_eb[(2, 2)],
-            self.csrColumnOffsets_eb[(2, 3)],
-            self.csrColumnOffsets_eb[(3, 0)],
-            self.csrColumnOffsets_eb[(3, 1)],
-            self.csrColumnOffsets_eb[(3, 2)],
-            self.csrColumnOffsets_eb[(3, 3)],
             self.mesh.elementMaterialTypes)
 
         if not self.forceStrongConditions and max(
             numpy.linalg.norm(
+                self.u[0].dof, numpy.inf), numpy.linalg.norm(
                 self.u[1].dof, numpy.inf), numpy.linalg.norm(
-                self.u[2].dof, numpy.inf), numpy.linalg.norm(
-                self.u[3].dof, numpy.inf)) < 1.0e-8:
+                self.u[2].dof, numpy.inf)) < 1.0e-8:
             self.pp_hasConstantNullSpace = True
         else:
             self.pp_hasConstantNullSpace = False
@@ -4435,15 +4415,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.mesh.nodeVelocityArray,
                 self.MOVING_DOMAIN,
                 self.mesh.elementNodesArray,
-                self.u[0].femSpace.elementMaps.psi_trace,
-                self.u[0].femSpace.elementMaps.grad_psi_trace,
-                self.u[0].femSpace.elementMaps.boundaryNormals,
-                self.u[0].femSpace.elementMaps.boundaryJacobians,
-                self.u[1].femSpace.dofMap.l2g,
+                self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
+                self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace,
+                self.pressureModel.u[0].femSpace.elementMaps.boundaryNormals,
+                self.pressureModel.u[0].femSpace.elementMaps.boundaryJacobians,
+                self.u[0].femSpace.dofMap.l2g,
+                self.u[0].dof,
                 self.u[1].dof,
                 self.u[2].dof,
-                self.u[3].dof,
-                self.u[1].femSpace.psi_trace,
+                self.vos_dof,
+                self.u[0].femSpace.psi_trace,
                 self.ebqe[
                     ('velocity',
                      0)],
