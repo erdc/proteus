@@ -13,7 +13,7 @@ import BC as bc
 import numpy as np
 from math import cos, sin, sqrt, atan2, acos
 from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
-from proteus.Profiling import logEvent
+from proteus.Profiling import logEvent as log
 from itertools import compress
 import csv
 import os
@@ -68,7 +68,8 @@ class Shape:
         self._snbc = len(self.domain.bc)
         self._enbc = self._snbc + len(self.BC_list)
         self.domain.bc += self.BC_list
-        self.domain.barycenters = np.append(self.domain.barycenters, self.barycenters, axis=0)
+        self.domain.barycenters = np.append(self.domain.barycenters,
+                                            self.barycenters, axis=0)
         self._snv = len(self.domain.vertices)  # total nb of vertices in domain
         self._env = self._snv + len(self.vertices)
         flag = self._snbc-1
@@ -98,9 +99,9 @@ class Shape:
     def _resetShape(self):
         """
         Updates domain when shape has been changed.
-        This function deletes and resets values of the shape in the domain using
-        their attribute indice. The shapes that were defined after the current
-        shape have their attribute indice updated.
+        This function deletes and resets values of the shape in the domain
+        using their attribute indice. The shapes that were defined after the
+        current shape have their attribute indice updated.
         -----------------
         Updated parameters:
         - vertices
@@ -162,7 +163,8 @@ class Shape:
         ilist = [i0 + i for i in range(i1-i0)]
         domain.barycenters = np.delete(domain.barycenters, ilist, axis=0)
         domain.bc[i0:i0] = self.BC_list
-        domain.barycenters = np.insert(domain.barycenters, i0, self.barycenters, axis=0)
+        domain.barycenters = np.insert(domain.barycenters, i0,
+                                       self.barycenters, axis=0)
         self._enbc = i0 + len(self.BC_list)
         # updating the attributes of the shape defined after current shape
         bcdiff = self._enbc - i1
@@ -182,6 +184,9 @@ class Shape:
                     inst._enf += fdiff
                     inst.facets += vdiff
                     inst.facetFlags += bcdiff
+                if inst.holes is not None:
+                    inst._snh += hdiff
+                    inst._enh += hdiff
                 if inst.regions is not None:
                     inst._snr += rdiff
                     inst._enr += rdiff
@@ -279,25 +284,27 @@ class Shape:
             pivot = self.barycenter
         if self.domain.nd == 2:
             pivot = pivot[:2]
-            self.vertices[:] = rotation2D(points=self.vertices, rot=rot, pivot=pivot)
+            self.vertices[:] = rotation2D(self.vertices, rot, pivot)
             if self.holes is not None:
-                self.holes[:] = rotation2D(points=self.holes, rot=rot, pivot=pivot)
+                self.holes[:] = rotation2D(self.holes, rot, pivot)
             if self.regions is not None:
-                self.regions[:] = rotation2D(points=self.regions, rot=rot, pivot=pivot)
-            self.coords_system[:] = rotation2D(points=self.coords_system, rot=rot, pivot=(0.,0.))
-            self.b_or[:] = rotation2D(points=self.b_or, rot=rot, pivot=(0., 0.))
-            self.coords[:] = rotation2D(points=self.coords, rot=rot, pivot=pivot)
-            self.barycenter[:2] = rotation2D(points=self.barycenter[:nd], rot=rot, pivot=pivot)
+                self.regions[:] = rotation2D(self.regions, rot, pivot)
+            self.coords_system[:] = rotation2D(self.coords_system, rot,
+                                               (0., 0.))
+            self.b_or[:] = rotation2D(self.b_or, rot, (0., 0.))
+            self.coords[:] = rotation2D(self.coords, rot, pivot)
+            self.barycenter[:2] = rotation2D(self.barycenter[:nd], rot, pivot)
         elif self.domain.nd == 3:
-            self.vertices[:] = rotation3D(points=self.vertices, rot=rot, axis=axis, pivot=pivot)
+            self.vertices[:] = rotation3D(self.vertices, rot, axis, pivot)
             if self.holes is not None:
-                self.holes[:] = rotation3D(points=self.holes, rot=rot, axis=axis, pivot=pivot)
+                self.holes[:] = rotation3D(self.holes, rot, axis, pivot)
             if self.regions is not None:
-                self.regions[:] = rotation3D(points=self.regions, rot=rot, axis=axis, pivot=pivot)
-            self.coords_system[:] = rotation3D(points=self.coords_system, rot=rot, axis=axis, pivot=(0.,0.,0.))
-            self.b_or[:] = rotation3D(points=self.b_or, rot=rot, axis=axis, pivot=(0., 0., 0.))
-            self.barycenter[:] = rotation3D(points=self.barycenter, rot=rot, axis=axis, pivot=pivot)
-            self.coords[:] = rotation3D(points=self.coords, rot=rot, axis=axis, pivot=pivot)
+                self.regions[:] = rotation3D(self.regions, rot, axis, pivot)
+            self.coords_system[:] = rotation3D(self.coords_system, rot, axis,
+                                               (0., 0., 0.))
+            self.b_or[:] = rotation3D(self.b_or, rot, axis, (0., 0., 0.))
+            self.barycenter[:] = rotation3D(self.barycenter, rot, axis, pivot)
+            self.coords[:] = rotation3D(self.coords, rot, axis, pivot)
         self._updateDomain()
 
     def translate(self, trans):
@@ -354,7 +361,8 @@ class Shape:
         try:
             self.It
         except NameError:
-            print "This shape does not have its inertia tensor defined! (", self.name, ")"
+            print("This shape does not have its inertia tensor defined! (",
+                  self.name, ")")
         if pivot is None:
             pivot = self.barycenter
         # Pivot coords relative to shape centre of mass
@@ -369,10 +377,11 @@ class Shape:
         elif self.domain.nd == 3:
             vec = relative_vec(vec, self.coords_system[2])
             cx, cy, cz = vec
-            # getting the tensor for calculaing moment of inertia from arbitrary axis
+            # getting the tensor for calculaing moment of inertia
+            # from arbitrary axis
             vt = np.array([[cx**2, cx*cy, cx*cz],
-                            [cx*cy, cy**2, cy*cz],
-                            [cx*cz, cy*cz, cz**2]])
+                           [cx*cy, cy**2, cy*cz],
+                           [cx*cz, cy*cz, cz**2]])
             # total moment of inertia
             I = np.einsum('ij,ij->', self.mass*self.It, vt)
         return I
@@ -411,8 +420,8 @@ class Shape:
         if acc is True:
             acc_x = acc_y = acc_z = True
         self.record_bool = [time, pos, pos_x, pos_y, pos_z, rot, rot_x, rot_y,
-                            rot_z, F, Fx, Fy, Fz, M, Mx, My, Mz, inertia, vel_x, vel_y,
-                            vel_z, acc_x, acc_y, acc_z]
+                            rot_z, F, Fx, Fy, Fz, M, Mx, My, Mz, inertia,
+                            vel_x, vel_y, vel_z, acc_x, acc_y, acc_z]
         if all_values is True:
             self.record_bool = [True for value in self.record_bool]
         self.record_names = ['time', 'pos_x', 'pos_y', 'pos_z', 'rot_x',
@@ -434,6 +443,7 @@ class Cuboid(Shape):
     :arg coords: coordinates of the cuboid (list or array)
     """
     count = 0
+
     def __init__(self, domain, dim=(0., 0., 0.), coords=(0., 0., 0.),
                  barycenter=None, tank=False, add=True):
         Shape.__init__(self, domain)
@@ -452,8 +462,9 @@ class Cuboid(Shape):
                                   [x-0.5*L, y+0.5*W, z+0.5*H],
                                   [x+0.5*L, y+0.5*W, z+0.5*H],
                                   [x+0.5*L, y-0.5*W, z+0.5*H]])
-        self.segments = np.array([[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6],
-                                  [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]])
+        self.segments = np.array([[0, 1], [1, 2], [2, 3], [3, 0], [4, 5],
+                                  [5, 6], [6, 7], [7, 4], [0, 4], [1, 5],
+                                  [2, 6], [3, 7]])
         if self.domain.nd == 2:
             self.vertices = np.array([[x-0.5*L, y-0.5*H],
                                       [x+0.5*L, y-0.5*H],
@@ -473,12 +484,11 @@ class Cuboid(Shape):
                               [0.,  0.,  1.]])
         self.regions = np.array([[x, y, z]])
         # defining flags for boundary conditions
-        self.facetFlags = np.array([1, 2, 3, 4, 5, 6])  # bottom, front, right, back, left, top
-        self.vertexFlags = np.array([1, 1, 1, 1, 6, 6, 6, 6])  # only top and bottom for vertices
+        self.facetFlags = np.array([1, 2, 3, 4, 5, 6])
+        self.vertexFlags = np.array([1, 1, 1, 1, 6, 6, 6, 6])
         self.segmentFlags = np.array([1, 1, 1, 1, 6, 6, 6, 6, 2, 2, 4, 4])
         self.regionFlags = np.array([1])
         # Initialize (empty) boundary conditions
-        b_or = self.b_or
         self.BC_dict = {'bottom': bc.BoundaryConditions(b_or=self.b_or, b_i=0),
                         'front': bc.BoundaryConditions(b_or=self.b_or, b_i=1),
                         'right': bc.BoundaryConditions(b_or=self.b_or, b_i=2),
@@ -535,6 +545,7 @@ class Rectangle(Shape):
     :arg coords: coordinates of the rectangle (list or array)
     """
     count = 0
+
     def __init__(self, domain, dim=(0., 0.), coords=(0., 0.), barycenter=None,
                  tank=False, add=True):
         Shape.__init__(self, domain)
@@ -548,15 +559,13 @@ class Rectangle(Shape):
                                   [x+0.5*L, y-0.5*H],
                                   [x+0.5*L, y+0.5*H],
                                   [x-0.5*L, y+0.5*H]])
-        self.segments = np.array([[0, 1], [1, 2], [2, 3], [3, 0]])  # bottom, right, top, left
+        self.segments = np.array([[0, 1], [1, 2], [2, 3], [3, 0]])
+        self.barycenter = np.zeros(3)
         if barycenter is not None:
-            if len(barycenter) == 2:
-                self.barycenter = np.array([barycenter[0], barycenter[1], 0.])
-            if len(barycenter) == 3:
-                self.barycenter = np.array([barycenter[0], barycenter[1], barycenter[2]])
+            self.barycenter[0:2] = barycenter[0:2]
         else:
-            self.barycenter = np.array([coords[0], coords[1], 0.])
-        self.barycenters = np.array([self.barycenter for segment in self.segments])
+            self.barycenter = coords[0:2]
+        self.barycenters = np.array([self.barycenter for seg in self.segments])
         self.b_or = np.array([[0., -1.],
                               [1., 0.],
                               [0., 1.],
@@ -694,14 +703,15 @@ class Tank3D(Shape):
         for i in range(0, 5):
             self.BC_list[i].setTank()
         self.barycenter = np.array([0., 0., 0.])
-        self.barycenters = np.array([self.barycenter for bt in self.boundaryTags])
+        self.barycenters = np.array([self.barycenter for bco in self.BC_list])
         self.setDimensions(dim)
         self.porosityTypes = np.ones(len(self.regionFlags))
         self.dragAlphaTypes = np.zeros(len(self.regionFlags))
         self.dragBetaTypes = np.zeros(len(self.regionFlags))
         self.epsFact_solid = np.zeros(len(self.regionFlags))
         self.zones = {}
-        self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones, shape=self)
+        self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones,
+                                                           shape=self)
         self._addShape()  # adding shape to domain
 
     def setSponge(self, left=None, right=None, back=None, front=None):
@@ -730,7 +740,7 @@ class Tank3D(Shape):
         bt = self.boundaryTags
         leftSponge = self.leftSponge or 0.
         backSponge = self.backSponge or 0.
-        rightSponge =self.rightSponge or 0.
+        rightSponge = self.rightSponge or 0.
         frontSponge = self.frontSponge or 0.
         vertices = [[x0+frontSponge, y0+leftSponge, z0],
                     [x1-backSponge, y0+leftSponge, z0],
@@ -741,7 +751,9 @@ class Tank3D(Shape):
         segmentFlags = [bt['bottom'], bt['bottom'], bt['bottom'], bt['bottom']]
         facets = [[[0, 1, 2, 3]]]
         facetFlags = [bt['bottom']]
-        regions = [[((x0+frontSponge)+(x1-backSponge))/2., ((y0+leftSponge)+(y1-rightSponge))/2., (z0+z1)/2.]]
+        regions = [[((x0+frontSponge)+(x1-backSponge))/2.,
+                    ((y0+leftSponge)+(y1-rightSponge))/2.,
+                    (z0+z1)/2.]]
         regionFlags = [1]
         self.regionIndice = {0: 'tank'}
         v_i = 4  # index of next vector to add
@@ -753,7 +765,9 @@ class Tank3D(Shape):
                          [x1-backSponge, y0, z0]]
             segments += [[0, v_i], [v_i, v_i+1], [v_i+1, 1]]
             facets += [[[0, 1, v_i+1, v_i]]]
-            regions += [[((x0+frontSponge)+(x1-backSponge))/2., (y0+(y0+leftSponge))/2., (z0+z1)/2.]]
+            regions += [[((x0+frontSponge)+(x1-backSponge))/2.,
+                         (y0+(y0+leftSponge))/2.,
+                         (z0+z1)/2.]]
             self.regionIndice[r_i] = 'leftSponge'
             regionFlags += [r_i+1]
             v_i += 2  # 2 vertices were added
@@ -764,7 +778,9 @@ class Tank3D(Shape):
                          [x1, y1-rightSponge, z0]]
             segments += [[1, v_i], [v_i, v_i+1], [v_i+1, 2]]
             facets += [[[1, 2, v_i+1, v_i]]]
-            regions += [[((x1-backSponge)+x1)/2., ((y0+leftSponge)+(y1-rightSponge))/2., (z0+z1)/2.]]
+            regions += [[((x1-backSponge)+x1)/2.,
+                         ((y0+leftSponge)+(y1-rightSponge))/2.,
+                         (z0+z1)/2.]]
             self.regionIndice[r_i] = 'backSponge'
             regionFlags += [r_i+1]
             v_i += 2
@@ -775,7 +791,9 @@ class Tank3D(Shape):
                          [x0+frontSponge, y1, z0]]
             segments += [[2, v_i], [v_i, v_i+1], [v_i+1, 3]]
             facets += [[[2, 3, v_i+1, v_i]]]
-            regions += [[((x0+frontSponge)+(x1-backSponge))/2., (y1+(y1-rightSponge))/2., (z0+z1)/2.]]
+            regions += [[((x0+frontSponge)+(x1-backSponge))/2.,
+                         (y1+(y1-rightSponge))/2.,
+                         (z0+z1)/2.]]
             self.regionIndice[r_i] = 'rightSponge'
             regionFlags += [r_i+1]
             v_i += 2
@@ -786,7 +804,9 @@ class Tank3D(Shape):
                          [x0, y0+leftSponge, z0]]
             segments += [[3, v_i], [v_i, v_i+1], [v_i+1, 0]]
             facets += [[[3, 0, v_i+1, v_i]]]
-            regions += [[((x0+frontSponge)+x0)/2., ((y0+leftSponge)+(y1-rightSponge))/2., (z0+z1)/2.]]
+            regions += [[((x0+frontSponge)+x0)/2.,
+                         ((y0+leftSponge)+(y1-rightSponge))/2.,
+                         (z0+z1)/2.]]
             self.regionIndice[r_i] = 'frontSponge'
             regionFlags += [r_i+1]
             v_i += 2
@@ -802,7 +822,9 @@ class Tank3D(Shape):
             vertices += [[x1, y0, z0]]
             segments += [[5+nb_corner, v_i], [v_i, 6+nb_corner]]
             facets += [[[1, 5+nb_corner, v_i, 6+nb_corner]]]
-            regions += [[(x1+(x1-backSponge))/2., (y0+(y0+leftSponge))/2., (z0+z1)/2.]]
+            regions += [[(x1+(x1-backSponge))/2.,
+                         (y0+(y0+leftSponge))/2.,
+                         (z0+z1)/2.]]
             self.regionIndice[r_i] = 'back_left_Sponge'
             regionFlags += [r_i+1]
             nb_corner += 2
@@ -812,7 +834,9 @@ class Tank3D(Shape):
             vertices += [[x1, y1, z0]]
             segments += [[5+nb_corner, v_i], [v_i, 6+nb_corner]]
             facets += [[[2, 5+nb_corner, v_i, 6+nb_corner]]]
-            regions += [[(x1+(x1-backSponge))/2., (y1+(y1-rightSponge))/2., (z0+z1)/2.]]
+            regions += [[(x1+(x1-backSponge))/2.,
+                         (y1+(y1-rightSponge))/2.,
+                         (z0+z1)/2.]]
             self.regionIndice[r_i] = 'back_right_Sponge'
             regionFlags += [r_i+1]
             nb_corner += 2
@@ -822,7 +846,9 @@ class Tank3D(Shape):
             vertices += [[x0, y1, z0]]
             segments += [[5+nb_corner, v_i], [v_i, 6+nb_corner]]
             facets += [[[3, 5+nb_corner, v_i, 6+nb_corner]]]
-            regions += [[(x0+(x0+frontSponge))/2., (y1+(y1-rightSponge))/2., (z0+z1)/2.]]
+            regions += [[(x0+(x0+frontSponge))/2.,
+                         (y1+(y1-rightSponge))/2.,
+                         (z0+z1)/2.]]
             self.regionIndice[r_i] = 'front_right_Sponge'
             regionFlags += [r_i+1]
             nb_corner += 2
@@ -832,7 +858,9 @@ class Tank3D(Shape):
             vertices += [[x0, y0, z0]]
             segments += [[5+nb_corner, v_i], [v_i, 4]]
             facets += [[[0, 5+nb_corner, v_i, 4]]]
-            regions += [[(x0+(x0+frontSponge))/2., (y0+(y0+leftSponge))/2., (z0+z1)/2.]]
+            regions += [[(x0+(x0+frontSponge))/2.,
+                         (y0+(y0+leftSponge))/2.,
+                         (z0+z1)/2.]]
             self.regionIndice[r_i] = 'front_left_Sponge'
             regionFlags += [r_i+1]
             nb_corner += 2
@@ -847,13 +875,12 @@ class Tank3D(Shape):
         # ---------------------------------------------
         # copying list of bottom segments to get top and side segments
         segments_bottom = segments[:]
-        facets_bottom = facets[:]
         # getting top
         vertexFlags += [bt['top'] for i in range(len(vertices))]
         segmentFlags += [bt['top'] for i in range(len(segments))]
         facetFlags += [bt['top'] for i in range(len(facets))]
         vertices_top = np.array(vertices)
-        vertices_top[:,2] = z1
+        vertices_top[:, 2] = z1
         vertices += vertices_top.tolist()
         segments_top = np.array(segments)
         segments_top += v_i
@@ -861,7 +888,6 @@ class Tank3D(Shape):
         facets_top = np.array(facets)
         facets_top += v_i
         facets += facets_top.tolist()
-        facets_side = []
         # getting sides
         for s in segments_bottom:  # for vertical facets
             facets += [[[s[0], s[1], s[1]+v_i, s[0]+v_i]]]
@@ -869,7 +895,7 @@ class Tank3D(Shape):
                 facetFlags += [bt['front']]
             elif vertices[s[0]][0] == vertices[s[1]][0] == x1:
                 facetFlags += [bt['back']]
-            elif vertices[s[0]][1] ==  vertices[s[1]][1] == y0:
+            elif vertices[s[0]][1] == vertices[s[1]][1] == y0:
                 facetFlags += [bt['left']]
             elif vertices[s[0]][1] == vertices[s[1]][1] == y1:
                 facetFlags += [bt['right']]
@@ -899,13 +925,10 @@ class Tank3D(Shape):
         if self._snbc is not None:
             self._resetShape()
 
-
-
-
-
-    def setAbsorptionZones(self, allSponge=False, left=False, right=False, front=False,
-                           back=False, front_left=False, front_right=False,
-                           back_left=False, back_right=False):
+    def setAbsorptionZones(self, allSponge=False, left=False, right=False,
+                           front=False, back=False, front_left=False,
+                           front_right=False, back_left=False,
+                           back_right=False):
         self.abs_zones = {'leftSponge': left,
                           'rightSponge': right,
                           'frontSponge': front,
@@ -939,7 +962,8 @@ class Tank2D(Rectangle):
     :rightSponge: width of right sponge (float)
     """
     count = 0
-    def __init__(self, domain, dim=(0.,0.), leftSponge=None, rightSponge=None,
+
+    def __init__(self, domain, dim=(0., 0.), leftSponge=None, rightSponge=None,
                  from_0=True):
         L, H = dim
         if from_0 is True:
@@ -998,18 +1022,21 @@ class Tank2D(Rectangle):
         # need to check that original region is not in new sponge regions!
         if len(extra_vertices):
             self.vertices = np.append(self.vertices, extra_vertices, axis=0)
-            self.vertexFlags = np.append(self.vertexFlags, extra_vertexFlags, axis=0)
+            self.vertexFlags = np.append(self.vertexFlags, extra_vertexFlags,
+                                         axis=0)
         if len(extra_regions):
             self.regions = np.append(self.regions, extra_regions, axis=0)
-            self.regionFlags = np.append(self.regionFlags, extra_regionFlags, axis=0)
+            self.regionFlags = np.append(self.regionFlags, extra_regionFlags,
+                                         axis=0)
         self.porosityTypes = np.ones(len(self.regionFlags))
         self.dragAlphaTypes = np.zeros(len(self.regionFlags))
         self.dragBetaTypes = np.zeros(len(self.regionFlags))
         self.epsFact_solid = np.zeros(len(self.regionFlags))
         self.zones = {}
-        self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones, shape=self)
+        self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones,
+                                                           shape=self)
         self.barycenter = np.array([0., 0., 0.])
-        self.barycenters = np.array([self.barycenter for i in range(max(self.segmentFlags))])
+        self.barycenters = np.array([self.barycenter for bco in self.BC_list])
         self._addShape()  # adding shape to domain
 
     def setDimensions(self, dim):
@@ -1090,7 +1117,8 @@ class CustomShape(Shape):
     def __init__(self, domain, barycenter=None, vertices=None,
                  vertexFlags=None, segments=None, segmentFlags=None,
                  facets=None, facetFlags=None, holes=None, regions=None,
-                 regionFlags=None, boundaryTags=None, boundaryOrientations=None):
+                 regionFlags=None, boundaryTags=None,
+                 boundaryOrientations=None):
         Shape.__init__(self, domain)
         self.__class__.count += 1
         self.name = "custom" + str(self.__class__.count)
@@ -1100,7 +1128,8 @@ class CustomShape(Shape):
         minFlag = min(flagSet)
         previous_flag = minFlag-1
         for flag in flagSet:
-            assert flag == previous_flag+1, "Flags must be defined as a suite of numbers (e.g. 0, 1, 2, 3, 4 with no gap)!"
+            assert flag == previous_flag+1, 'Flags must be defined as a suite' \
+                                            'of numbers with no gap!'
             previous_flag = flag
         self.vertices = np.array(vertices)
         self.vertexFlags = np.array(vertexFlags)-(minFlag+1)
@@ -1165,8 +1194,9 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.position[:] = self.shape.barycenter
         # rotation due to moment
         if sum(self.M) != 0:
-            self.inertia = self.shape.getInertia(vec=self.M, pivot=self.shape.barycenter)
-            assert self.inertia != 0, "Zero inertia: inertia tensor (It) was not set correctly!"
+            self.inertia = self.shape.getInertia(self.M, self.shape.barycenter)
+            assert self.inertia != 0, 'Zero inertia: inertia tensor (It)' \
+                                      'was not set correctly!'
             ang_acc = self.M[:]/self.inertia
         else:
             self.inertia = None
@@ -1177,16 +1207,19 @@ class RigidBody(AuxiliaryVariables.AV_base):
         if nd == 2 and self.angvel[2] < 0:
             self.ang = -self.ang
         if self.ang != 0.:
-            self.shape.rotate(rot=self.ang, axis=self.angvel, pivot=self.shape.barycenter)
-            self.rotation[:nd,:nd] = self.shape.coords_system  # this rotation matrix will be used for moveMesh
-            self.rotation_matrix[:] = np.dot(np.linalg.inv(self.last_rotation), self.rotation)
+            self.shape.rotate(self.ang, self.angvel, self.shape.barycenter)
+            self.rotation[:nd, :nd] = self.shape.coords_system
+            self.rotation_matrix[:] = np.dot(np.linalg.inv(self.last_rotation),
+                                             self.rotation)
         else:
             self.rotation_matrix[:] = np.eye(3)
         if self.shape.record_values is True:
             self.recordValues()
 
     def recordValues(self):
-        time = self.model.stepController.t_model_last-self.model.levelModelList[-1].dt_last
+        t_last = self.model.stepController.t_model_last
+        dt_last = self.model.levelModelList[-1].dt_last
+        time = t_last-dt_last
         self.record_time = time
         pos_x, pos_y, pos_z = self.last_position
         rot = self.last_rotation
@@ -1203,7 +1236,7 @@ class RigidBody(AuxiliaryVariables.AV_base):
                   vel_x, vel_y, vel_z, acc_x, acc_y, acc_z]
         values_towrite = list(compress(values, self.shape.record_bool))
         comm = Comm.get()
-        if  comm.isMaster():
+        if comm.isMaster():
             if self.shape.record_values is True:
                 with open(self.record_file, 'a') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
@@ -1216,8 +1249,8 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.nd = model.levelModelList[-1].nSpace_global
         m = self.model.levelModelList[-1]
         flagMax = max(m.mesh.elementBoundaryMaterialTypes)
-        flagMin = min(m.mesh.elementBoundaryMaterialTypes)
-        self.nForces=flagMax+1
+        # flagMin = min(m.mesh.elementBoundaryMaterialTypes)
+        self.nForces = flagMax+1
         return self
 
     def calculate_init(self):
@@ -1231,9 +1264,9 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.acceleration = np.zeros(3, 'd')
         self.last_acceleration = np.zeros(3, 'd')
         self.rotation = np.eye(3)
-        self.rotation[:nd,:nd] = shape.coords_system
+        self.rotation[:nd, :nd] = shape.coords_system
         self.last_rotation = np.eye(3)
-        self.last_rotation[:nd,:nd] = shape.coords_system
+        self.last_rotation[:nd, :nd] = shape.coords_system
         self.F = np.zeros(3, 'd')
         self.M = np.zeros(3, 'd')
         self.last_F = np.zeros(3, 'd')
@@ -1249,9 +1282,10 @@ class RigidBody(AuxiliaryVariables.AV_base):
         if nd == 3:
             self.Fg = self.shape.mass*np.array([0., 0., -9.81])
         comm = Comm.get()
-        if  comm.isMaster():
+        if comm.isMaster():
             if self.shape.record_values is True:
-                self.record_file = os.path.join(Profiling.logDir, self.shape.record_filename)
+                self.record_file = os.path.join(Profiling.logDir,
+                                                self.shape.record_filename)
                 with open(self.record_file, 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
                     writer.writerow(self.shape.record_names)
@@ -1271,55 +1305,56 @@ class RigidBody(AuxiliaryVariables.AV_base):
         except:
             dt = self.dt_init
         i0, i1 = self.nb_start, self.nb_end
-        F = np.sum(self.model.levelModelList[-1].coefficients.netForces_p[i0:i1,:] + self.model.levelModelList[-1].coefficients.netForces_v[i0:i1,:], axis=0) + self.Fg
-        M = np.sum(self.model.levelModelList[-1].coefficients.netMoments[i0:i1,:], axis=0)
+        # get forces for current body
+        F_p = self.model.levelModelList[-1].coefficients.netForces_p[i0:i1, :]
+        F_v = self.model.levelModelList[-1].coefficients.netForces_v[i0:i1, :]
+        F_g = self.Fg
+        F = np.sum(F_p + F_v, axis=0) + F_g
+        # get moments for current body
+        M_t = self.model.levelModelList[-1].coefficients.netMoments[i0:i1, :]
+        M = np.sum(M_t, axis=0)
+        # store F and M and apply DOF constraints to body
         self.F[:] = F*self.shape.free_x
         self.M[:] = M*self.shape.free_r
-        logEvent("========================================================================")
-        logEvent("======================= Rigid Body Calculation =========================")
-        logEvent("========================================================================")
-        logEvent("Name: " + `self.shape.name`)
-        logEvent("========================================================================")
-        logEvent("[proteus]     t=%1.5fsec to t=%1.5fsec" % (self.model.stepController.t_model_last-dt, self.model.stepController.t_model_last))
-        logEvent("[proteus]    dt=%1.5fsec" % (dt))
-        logEvent("[body] ================== Pre-calculation attributes  ==================")
-        logEvent("[proteus]     t=%1.5fsec" % (self.model.stepController.t_model_last-dt))
-        logEvent("[proteus]     F=(% 21.16e, % 21.16e, % 21.16e)" % (F[0], F[1], F[2]))
-        logEvent("[proteus] F*DOF=(% 21.16e, % 21.16e, % 21.16e)" % (self.F[0], self.F[1], self.F[2]))
-        logEvent("[proteus]     M=(% 21.16e, % 21.16e, % 21.16e)" % (M[0], M[1], M[2]))
-        logEvent("[proteus] M*DOF=(% 21.16e, % 21.16e, % 21.16e)" % (self.M[0], self.M[1], self.M[2]))
-        logEvent("[body]        h=(% 21.16e, % 21.16e, % 21.16e)" % (self.h[0], self.h[1], self.h[2]))
-        logEvent("[body]      pos=(% 21.16e, % 21.16e, % 21.16e)" % (self.last_position[0], self.last_position[1], self.last_position[2]))
-        logEvent("[body]      vel=(% 21.16e, % 21.16e, % 21.16e)" % (self.last_velocity[0], self.last_velocity[1], self.last_velocity[2]))
+        log("========================================================================")
+        log("======================= Rigid Body Calculation =========================")
+        log("========================================================================")
+        log("Name: " + `self.shape.name`)
+        log("========================================================================")
+        log("[proteus]     t=%1.5fsec to t=%1.5fsec" % (self.model.stepController.t_model_last-dt, self.model.stepController.t_model_last))
+        log("[proteus]    dt=%1.5fsec" % (dt))
+        log("[body] ================== Pre-calculation attributes  ==================")
+        log("[proteus]     t=%1.5fsec" % (self.model.stepController.t_model_last-dt))
+        log("[proteus]     F=(% 21.16e, % 21.16e, % 21.16e)" % (F[0], F[1], F[2]))
+        log("[proteus] F*DOF=(% 21.16e, % 21.16e, % 21.16e)" % (self.F[0], self.F[1], self.F[2]))
+        log("[proteus]     M=(% 21.16e, % 21.16e, % 21.16e)" % (M[0], M[1], M[2]))
+        log("[proteus] M*DOF=(% 21.16e, % 21.16e, % 21.16e)" % (self.M[0], self.M[1], self.M[2]))
+        log("[body]        h=(% 21.16e, % 21.16e, % 21.16e)" % (self.h[0], self.h[1], self.h[2]))
+        log("[body]      pos=(% 21.16e, % 21.16e, % 21.16e)" % (self.last_position[0], self.last_position[1], self.last_position[2]))
+        log("[body]      vel=(% 21.16e, % 21.16e, % 21.16e)" % (self.last_velocity[0], self.last_velocity[1], self.last_velocity[2]))
         self.step(dt)
-        logEvent("[body] ================== Post-calculation attributes ==================")
-        logEvent("[body]        t=%1.5fsec" % (self.model.stepController.t_model_last))
-        logEvent("[body]      pos=(% 21.16e, % 21.16e, % 21.16e)" % (self.position[0], self.position[1], self.position[2]))
-        logEvent("[body]      vel=(% 21.16e, % 21.16e, % 21.16e)" % (self.velocity[0], self.velocity[1], self.velocity[2]))
-        logEvent("[body]    r vel=(% 21.16e, % 21.16e, % 21.16e)" % (self.angvel[0], self.angvel[1], self.angvel[2]))
+        log("[body] ================== Post-calculation attributes ==================")
+        log("[body]        t=%1.5fsec" % (self.model.stepController.t_model_last))
+        log("[body]      pos=(% 21.16e, % 21.16e, % 21.16e)" % (self.position[0], self.position[1], self.position[2]))
+        log("[body]      vel=(% 21.16e, % 21.16e, % 21.16e)" % (self.velocity[0], self.velocity[1], self.velocity[2]))
+        log("[body]    r vel=(% 21.16e, % 21.16e, % 21.16e)" % (self.angvel[0], self.angvel[1], self.angvel[2]))
         if sum(self.angvel) != 0:
-            rot_axis=self.angvel/np.linalg.norm(self.angvel)
+            rot_axis = self.angvel/np.linalg.norm(self.angvel)
         else:
-            rot_axis=(0., 0., 0.)
+            rot_axis = (0., 0., 0.)
         rot = self.rotation
         rot_x = -atan2(rot[2, 1], rot[1, 2])
         rot_y = -atan2(-rot[0, 2], sqrt(rot[2, 1]**2+rot[2, 2]**2))
         rot_z = -atan2(rot[1, 0], rot[0, 0])
-        logEvent("[body]   r axis=(% 21.16e, % 21.16e, % 21.16e)" % (rot_axis[0], rot_axis[1], rot_axis[2]))
-        logEvent("[body]    r ang=(% 21.16e)" % (self.ang))
-        logEvent("[body]      rot=(% 21.16e, % 21.16e, % 21.16e)" % (rot_x, rot_y, rot_z))
-        logEvent("========================================================================")
+        log("[body]   r axis=(% 21.16e, % 21.16e, % 21.16e)" % (rot_axis[0], rot_axis[1], rot_axis[2]))
+        log("[body]    r ang=(% 21.16e)" % (self.ang))
+        log("[body]      rot=(% 21.16e, % 21.16e, % 21.16e)" % (rot_x, rot_y, rot_z))
+        log("========================================================================")
 
 
-
-
-
-
-
-# ------------------------------------------------------------------------------ #
-# --------------------------SPATIAL TOOLS FOR SHAPES---------------------------- #
-# ------------------------------------------------------------------------------ #
-
+# --------------------------------------------------------------------------- #
+# -------------------------SPATIAL TOOLS FOR SHAPES-------------------------- #
+# --------------------------------------------------------------------------- #
 
 def rotation2D(points, rot, pivot=(0., 0.)):
     """
@@ -1346,10 +1381,10 @@ def rotation2D(points, rot, pivot=(0., 0.)):
     M = reduce(np.dot, [T, R, np.linalg.inv(T)])
     # transform points (check also if it is only a 1D array or 2D)
     if points.ndim > 1:
-        points_rot = np.ones((len(points),3))
-        points_rot[:,:-1] = points
+        points_rot = np.ones((len(points), 3))
+        points_rot[:, :-1] = points
         points_rot = np.dot(points_rot, M)  # matrix dot product on each vector
-        points_rot = points_rot[:,:-1]
+        points_rot = points_rot[:, :-1]
     else:
         points_rot = np.ones(3)
         points_rot[:-1] = points
@@ -1358,10 +1393,10 @@ def rotation2D(points, rot, pivot=(0., 0.)):
     return points_rot
 
 
-def rotation3D(points, rot, axis=(0.,0.,1.), pivot=(0.,0.,0.)):
+def rotation3D(points, rot, axis=(0., 0., 1.), pivot=(0., 0., 0.)):
     """
-    function to make a set of points/vertices/vectors (arg: points) to rotate
-    around an arbitrary axis/vector (arg: axis) going through a pivot point (arg: pivot)
+    function to make a set of points/vertices/vectors to rotate around an
+    arbitrary axis/vector (arg: axis) going through a pivot point.
     :arg points: set of 3D points (array)
     :arg rot: angle of rotation (in radians)
     :arg axis: axis of rotation (list or array)
@@ -1404,12 +1439,13 @@ def rotation3D(points, rot, axis=(0.,0.,1.), pivot=(0.,0.,0.)):
                   [0,  0,  1,  0],
                   [-x, -y, -z, 1]])
     # full transformation matrix
-    M = reduce(np.dot, [T, Rx, Ry, Rz, np.linalg.inv(Ry), np.linalg.inv(Rx), np.linalg.inv(T)])
+    inv = np.linalg.inv
+    M = reduce(np.dot, [T, Rx, Ry, Rz, inv(Ry), inv(Rx), inv(T)])
     if points.ndim > 1:
-        points_rot = np.ones((len(points),4))
-        points_rot[:,:-1] = points
+        points_rot = np.ones((len(points), 4))
+        points_rot[:, :-1] = points
         points_rot = np.dot(points_rot, M)  # matrix dot product on each vector
-        points_rot = points_rot[:,:-1]
+        points_rot = points_rot[:, :-1]
     else:
         points_rot = np.ones(4)
         points_rot[:-1] = points
@@ -1426,15 +1462,15 @@ def relative_vec(vec1, vec0):
     :arg vec0: vector of reference
     :return: new coordinates of vec1
     """
-    #spherical coords vec0
+    # spherical coords vec0
     x0, y0, z0 = vec0
-    r0 = sqrt(x0**2+y0**2+z0**2) # radius from origin
-    t0 = atan2(y0,x0) # angle on x-y plane
-    p0 = acos(z0/r0) # angle from z-axis
+    r0 = sqrt(x0**2+y0**2+z0**2)  # radius from origin
+    t0 = atan2(y0, x0)  # angle on x-y plane
+    p0 = acos(z0/r0)  # angle from z-axis
     # spherical coords vec1
     x1, y1, z1 = vec1
     r1 = sqrt(x1**2+y1**2+z1**2)
-    t1 = atan2(y1,x1)
+    t1 = atan2(y1, x1)
     p1 = acos(z1/r1)
     # get new coords for vec1:
     t1_new = t0-t1
@@ -1443,9 +1479,6 @@ def relative_vec(vec1, vec0):
     y1_new = r1*sin(p1_new)*sin(t1_new)
     z1_new = r1*cos(p1_new)
     return (x1_new, y1_new, z1_new)
-
-
-
 
 
 class RelaxationZone:
@@ -1458,28 +1491,33 @@ class RelaxationZone:
 
 
 class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
-    """ Prescribe a velocity penalty scaling in a material zone via a Darcy-Forchheimer penalty
-
-    :param zones: A dictionary mapping integer material types to Zones, where a Zone is a named tuple
-    specifying the x coordinate of the zone center and the velocity components
+    """
+    Prescribe a velocity penalty scaling in a material zone via a
+    Darcy-Forchheimer penalty
+    :param zones: A dictionary mapping integer material types to Zones, where a
+    Zone is a named tuple specifying the x coordinate of the zone center and
+    the velocity components
     """
     def __init__(self, zones, shape):
-        assert isinstance(zones,dict)
+        assert isinstance(zones, dict)
         self.zones = zones
         self.shape = shape
         shape.domain.auxiliaryVariables += [self]
+
     def calculate(self):
         for l, m in enumerate(self.model.levelModelList):
             for eN in range(m.coefficients.q_phi.shape[0]):
                 mType = m.mesh.elementMaterialTypes[eN]
-                if self.zones.has_key(mType):
+                if mType in self.zones:
                     for k in range(m.coefficients.q_phi.shape[1]):
                         t = m.timeIntegration.t
-                        x = m.q['x'][eN,k]
-                        m.coefficients.q_phi_solid[eN,k] = self.zones[mType].sign*(self.zones[mType].center_x - x[0])
-                        m.coefficients.q_velocity_solid[eN,k,0] = self.zones[mType].u(x,t)
-                        m.coefficients.q_velocity_solid[eN,k,1] = self.zones[mType].v(x,t)
+                        x = m.q['x'][eN, k]
+                        zone = self.zones[mType]
+                        coeff = m.coefficients
+                        coeff.q_phi_solid[eN, k] = zone.sign*(zone.center_x-x[0])
+                        coeff.q_velocity_solid[eN, k, 0] = zone.u(x, t)
+                        coeff.q_velocity_solid[eN, k, 1] = zone.v(x, t)
                         if self.shape.domain.nd > 2:
-                            m.coefficients.q_velocity_solid[eN,k,2] = self.zones[mType].w(x,t)
+                            coeff.q_velocity_solid[eN, k, 2] = zone.w(x, t)
         m.q['phi_solid'] = m.coefficients.q_phi_solid
         m.q['velocity_solid'] = m.coefficients.q_velocity_solid
