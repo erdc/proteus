@@ -116,6 +116,16 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 			   double rhoSolid,
 			   double theta,
 			   double nu)
+
+        double  djint2_dtheta(  double sedF,
+			   double* uFluid,
+			   double* uSolid,
+			   double rhoSolid,
+			   double nu)
+
+
+        double k_diff(double sedF, double rhoSolid,  double theta )
+
 			      
 			      
 
@@ -314,6 +324,12 @@ cdef class HsuSedStress:
 
     def  jint2( self, sedF,  numpy.ndarray uFluid ,numpy.ndarray uSolid, rhoSolid, theta,nu):
         return self.thisptr.jint2(sedF, < double * > uFluid.data, < double * > uSolid.data, rhoSolid,  theta, nu)
+    def  djint2_dtheta( self, sedF,  numpy.ndarray uFluid ,numpy.ndarray uSolid, rhoSolid,nu):
+        return self.thisptr.djint2_dtheta(sedF, < double * > uFluid.data, < double * > uSolid.data, rhoSolid, nu)
+
+
+    def k_diff(self,  sedF, rhoSolid, theta ):
+        return self.thisptr.k_diff( sedF, rhoSolid, theta)
 
 
 
