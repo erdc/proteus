@@ -2567,10 +2567,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
 
     def initializeElementQuadrature(self, t, cq):
         # VRANS
-        self.q_vos = numpy.ones(cq[('u', 1)].shape, 'd')
-        self.q_dragAlpha = numpy.ones(cq[('u', 1)].shape, 'd')
+        self.q_vos = numpy.ones(cq[('u', 0)].shape, 'd')
+        self.q_dragAlpha = numpy.ones(cq[('u', 0)].shape, 'd')
         self.q_dragAlpha.fill(self.dragAlpha)
-        self.q_dragBeta = numpy.ones(cq[('u', 1)].shape, 'd')
+        self.q_dragBeta = numpy.ones(cq[('u', 0)].shape, 'd')
         self.q_dragBeta.fill(self.dragBeta)
         if self.setParamsFunc is not None:
             self.setParamsFunc(
@@ -2692,10 +2692,10 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def initializeGlobalExteriorElementBoundaryQuadrature(self, t, cebqe):
         # VRANS
         log("ebqe_global allocations in coefficients")
-        self.ebqe_vos = numpy.ones(cebqe[('u', 1)].shape, 'd')
-        self.ebqe_dragAlpha = numpy.ones(cebqe[('u', 1)].shape, 'd')
+        self.ebqe_vos = numpy.ones(cebqe[('u', 0)].shape, 'd')
+        self.ebqe_dragAlpha = numpy.ones(cebqe[('u', 0)].shape, 'd')
         self.ebqe_dragAlpha.fill(self.dragAlpha)
-        self.ebqe_dragBeta = numpy.ones(cebqe[('u', 1)].shape, 'd')
+        self.ebqe_dragBeta = numpy.ones(cebqe[('u', 0)].shape, 'd')
         self.ebqe_dragBeta.fill(self.dragBeta)
         log("vos and drag")
         # TODO make loops faster
