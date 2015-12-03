@@ -358,24 +358,37 @@ public:
 
     }
 
+    inline double  djint2_dtheta(  double sedF,
+			   double uFluid[nSpace],
+			   double uSolid[nSpace],
+			   double rhoSolid,
+			   double nu)
 
-    /*    inline double k_diff(		      double sedF, 
+			      
+    {
+      double small = 1e-30;
+      double beta = betaCoeff(sedF,uFluid,uSolid,nu)+small;
+      return - 2*beta/rhoSolid;
+
+    }
+
+    inline double k_diff(		      double sedF, 
 					      double rhoSolid, 
-					      double theta_n )
+					      double theta )
 
     {
       double gs_0 = gs0(sedF);
       double sq_pi = (sqrt(M_PI));
       double sedF2 = sedF * sedF;
       double eRp1 = 1.+eR_;
-      double sq_theta = sqrt(theta_n);
+      double sq_theta = sqrt(theta);
       double k_diff = rhoSolid*grain_*sq_theta*( 2.*sedF2*gs_0*eRp1/(sq_pi) + (0.5625)*sq_pi*sedF2*gs_0*eRp1 + (0.9375)*sq_pi*sedF + (0.390625)*sq_pi/(gs_0*eRp1) );
 
 
       return k_diff;
     }
     
-
+    /*
     inline double  diffusion_theta_rhs(  double sedF,
 					 double rhoSolid,
 				     double theta_n,

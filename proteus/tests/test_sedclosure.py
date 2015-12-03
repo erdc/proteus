@@ -453,7 +453,6 @@ class TestHsu(unittest.TestCase):
         divU = dudx + dvdy + dwdz
         
         valid =  - 3. *  (1. - eR**2) * sedF**2 * rhoS * g0  * ( (sqrt(theta)/sqrt(np.pi)) * (4./grain) - divU) * (2./(3. * rhoS * sedF))
-        print valid, test
         self.assertTrue(round(test,f) == round(valid,f))
 
     def testJint1(self):
@@ -534,6 +533,63 @@ class TestHsu(unittest.TestCase):
 
         self.assertTrue(round(test,f) ==round(-3*beta*sedF*theta_n*(2./(3.*sedF*rhoS)),f ))
 
+    def testJint2dTheta(self):
+        from proteus.mprans.SedClosure import HsuSedStress
+        import random
+        C4e = 1.
+        C3e = 1.2
+        sigmaC = 1.1
+        eR = 0.8
+        aDarcy = 1.
+        bForch = 1.
+        grain = 0.1
+        packFraction = 0.2
+        packMargin = 0.01
+        f = 8
+        uf = np.array([5.,4.],"d")
+        us = np.array([1.,1.],"d") 
+        gradC=np.array([0.1,0.1])
+        rhoS = 2000
+        rhoF = 1000
+        nu = 1e-4
+        nuT = 1e-2
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
+        sedF = 0.3
+# Setting 0 t_c
+        theta_n = random.random() + 1e-30
+
+        beta = sedSt.betaCoeff(sedF, uf, us, nu)      
+
+       
+        test = sedSt.djint2_dtheta(sedF,uf,us,rhoS, nu)
+
+        self.assertTrue(round(test,f) ==round(-3*beta*sedF*(2./(3.*sedF*rhoS)),f ))
+
+
+    def testK_diff(self):
+        from proteus.mprans.SedClosure import HsuSedStress
+        import random
+        sqrt = np.sqrt
+        C4e = 1.
+        C3e = 1.2
+        sigmaC = 1.1
+        eR = 0.8
+        aDarcy = 1.
+        bForch = 1.
+        grain = 0.1
+        packFraction = 0.2
+        packMargin = 0.01
+        f = 10        
+        sedSt = HsuSedStress( aDarcy, bForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
+        # Setting 0 t_c
+        sedF = 0.3
+        theta = random.random() + 1e-30
+        rhoS = 2000
+        test = sedSt.k_diff(sedF,rhoS,theta)
+        g0 = sedSt.gs0(sedF)
+        valid = rhoS * grain * sqrt(theta) * ( 2. *sedF**2 * g0 * (1. + eR) / sqrt(np.pi) + (9./16) *sedF**2 * g0 * (1. + eR) * sqrt(np.pi) +  (15./16.) *sedF * sqrt(np.pi) +  (25./64.) * sqrt(np.pi)/((1+eR)*g0))
+        
+        self.assertTrue(round(test,f) == round(valid,f))
 
 
 
