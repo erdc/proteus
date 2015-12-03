@@ -114,11 +114,10 @@ class BoundaryConditions:
         self.u_advective = None
         self.v_advective = None
         self.w_advective = None
+        self.vof_advective = None
         self.u_diffusive = constantBC(0.)
         self.v_diffusive = constantBC(0.)
         self.w_diffusive = constantBC(0.)
-        self.k_diffusive = constantBC(0.)
-        self.dissipation_diffusive = constantBC(0.)
 
     def setObstacle(self):
         """
