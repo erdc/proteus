@@ -1,7 +1,8 @@
 """
-Module creating predifined shapes. Each shape needs a proteus.Domain as argument.
-Boundary conditions objects are automatically created for each facet (3D) or segment (2D) defining the shape.
-classes:
+Module creating predifined shapes. Each shape needs a Domain as argument.
+Boundary conditions objects are automatically created for each facet (3D) or
+segment (2D) defining the shape.
+Classes:
 - Shape: super class, regroups functions common to all shapes
 - Cuboid: creates a cuboid
 - Rectangle: creates a rectangle
@@ -50,7 +51,7 @@ class Shape:
         self.BC_list = None
         self.free_x = (1, 1, 1)
         self.free_r = (1, 1, 1)
-        self._snv = None  # total number of vertices in domain when shape.__init__
+        self._snv = None
         self._snf = None
         self._sns = None
         self._snr = None
@@ -68,8 +69,8 @@ class Shape:
         self._enbc = self._snbc + len(self.BC_list)
         self.domain.bc += self.BC_list
         self.domain.barycenters = np.append(self.domain.barycenters, self.barycenters, axis=0)
-        self._snv = len(self.domain.vertices)  # total number of vertices in domain when shape.__init__
-        self._env = self._snv + len(self.vertices)  # total number of vertices in domain when shape.__init__
+        self._snv = len(self.domain.vertices)  # total nb of vertices in domain
+        self._env = self._snv + len(self.vertices)
         flag = self._snbc-1
         self.domain.vertices += self.vertices.tolist()
         self.domain.vertexFlags += (self.vertexFlags+flag).tolist()
@@ -97,8 +98,9 @@ class Shape:
     def _resetShape(self):
         """
         Updates domain when shape has been changed.
-        This function deletes and resets values of the shape in the domain using their attribute indice.
-        The shapes that were defined after the current shape have their attribute indice updated.
+        This function deletes and resets values of the shape in the domain using
+        their attribute indice. The shapes that were defined after the current
+        shape have their attribute indice updated.
         -----------------
         Updated parameters:
         - vertices
@@ -413,9 +415,9 @@ class Shape:
                             vel_z, acc_x, acc_y, acc_z]
         if all_values is True:
             self.record_bool = [True for value in self.record_bool]
-        self.record_names = ['time', 'pos_x', 'pos_y', 'pos_z',
-                             'rot_x', 'rot_y', 'rot_z', 'Fx', 'Fy', 'Fz',
-                             'Mx', 'My', 'Mz', 'inertia', 'vel_x', 'vel_y', 'vel_z',
+        self.record_names = ['time', 'pos_x', 'pos_y', 'pos_z', 'rot_x',
+                             'rot_y', 'rot_z', 'Fx', 'Fy', 'Fz', 'Mx', 'My',
+                             'Mz', 'inertia', 'vel_x', 'vel_y', 'vel_z',
                              'acc_x', 'acc_y', 'acc_z']
         self.record_names = list(compress(self.record_names, self.record_bool))
         if filename is None:
@@ -1095,11 +1097,9 @@ class CustomShape(Shape):
         flagSet = set()
         for tag, value in boundaryTags.iteritems():
             flagSet.add(value)
-        print flagSet
         minFlag = min(flagSet)
         previous_flag = minFlag-1
         for flag in flagSet:
-            print flag
             assert flag == previous_flag+1, "Flags must be defined as a suite of numbers (e.g. 0, 1, 2, 3, 4 with no gap)!"
             previous_flag = flag
         self.vertices = np.array(vertices)
@@ -1115,14 +1115,6 @@ class CustomShape(Shape):
         if regions is not None:
             self.regions = np.array(regions)
             self.regionFlags = np.array(regionFlags)
-        if barycenter is not None:
-            self.barycenter = np.array(barycenter)
-        else:
-            self.barycenter = np.zeros(domain.nd)
-        if self.domain.nd == 2:
-            self.barycenters = np.array([self.barycenter for segment in self.segments])
-        elif self.domain.nd == 3:
-            self.barycenters = np.array([self.barycenter for facet in self.facets])
         self.BC_dict = {}
         self.BC_list = [None]*len(flagSet)
         if boundaryOrientations is not None:
@@ -1137,6 +1129,11 @@ class CustomShape(Shape):
             self.BC_dict[tag] = bc.BoundaryConditions(b_or=b_or, b_i=b_i)
             self.BC_list[index-minFlag] = self.BC_dict[tag]
         self.BC = BCContainer(self.BC_dict)
+        if barycenter is not None:
+            self.barycenter = np.array(barycenter)
+        else:
+            self.barycenter = np.zeros(3)
+        self.barycenters = np.array([self.barycenter for bco in self.BC_list])
         self._addShape()
 
     def _setInertiaTensor(self, It):
