@@ -26,8 +26,8 @@ class BoundaryConditions:
     class defining boundary conditions for a facet or a segment
     """
     def __init__(self, b_or=None, b_i=None):
-        self._b_or = b_or  # array of orientation of all facets/segments (boundaries) of shape
-        self._b_i = b_i  # indice for this boundary in list of boundaries in shape
+        self._b_or = b_or  # array of orientation of all boundaries of shape
+        self._b_i = b_i  # indice for this boundary in list of boundaries
         self.reset()
         # moveMesh boundary conditions
         self.hx_dirichlet = None
@@ -72,7 +72,7 @@ class BoundaryConditions:
         elif len(b_or) > 2 and (b_or[2] == 1 or b_or[2] == -1):
             self.hz_dirichlet = constantBC(0.)
             self.w_stress = None
-        self.k_diffusive = constantBC(0.)
+        self.dissipation_diffusive = constantBC(0.)
         self.dissipation_diffusive = constantBC(0.)
 
     def setNoSlip(self):
@@ -83,6 +83,10 @@ class BoundaryConditions:
         self.u_dirichlet = constantBC(0.)
         self.v_dirichlet = constantBC(0.)
         self.w_dirichlet = constantBC(0.)
+        self.k_dirichlet = constantBC(0.)
+        self.dissipation_dirichlet = constantBC(0.)
+        self.k_diffusive = constantBC(0.)
+        self.dissipation_diffusive = constantBC(0.)
 
     def setFreeSlip(self):
         """
@@ -94,22 +98,32 @@ class BoundaryConditions:
         self.k_advective = constantBC(0.)
         self.k_diffusive = constantBC(0.)
 
-    def setOpenAir(self):
+    def setOpenAir(self, orientation=None):
         """
         sets open boundary conditions (water can come out)
         """
-        b_or = self._b_or[self._b_i]
+
         def get_ux_dirichlet(i):
             if b_or[i] == 1. or b_or[i] == -1.:
                 return None
             else:
                 return constantBC(0.)
+
+        if orientation is None and self._b_or is not None:
+            b_or = self._b_or[self._b_i]
+        elif orientation is not None:
+            b_or = orientation
+        else:
+            print('Boundary orientation needs to be defined')
+
         self.p_dirichlet = constantBC(0.)
         self.u_dirichlet = get_ux_dirichlet(0)
         self.v_dirichlet = get_ux_dirichlet(1)
         if len(b_or) > 2:
             self.w_dirichlet = get_ux_dirichlet(2)
-        self.vof_dirichlet = constantBC(1.)
+        self.vof_dirichlet = constantBC(1.)  # air
+        self.k_dirichlet = constantBC(0.)
+        self.dissipation_dirichlet = constantBC(0.)
         self.p_advective = None
         self.u_advective = None
         self.v_advective = None
@@ -118,6 +132,8 @@ class BoundaryConditions:
         self.u_diffusive = constantBC(0.)
         self.v_diffusive = constantBC(0.)
         self.w_diffusive = constantBC(0.)
+        self.k_diffusive = constantBC(0.)
+        self.dissipation_diffusive = constantBC(0.)
 
     def setObstacle(self):
         """
@@ -127,6 +143,7 @@ class BoundaryConditions:
         self.v_dirichlet = constantBC(0.)
         self.w_dirichlet = constantBC(0.)
         self.k_dirichlet = constantBC(0.)
+        self.dissipation_dirichlet = constantBC(0.)
         self.u_advective = None
         self.v_advective = None
         self.w_advective = None
@@ -134,7 +151,6 @@ class BoundaryConditions:
         self.u_diffusive = None
         self.v_diffusive = None
         self.w_diffusive = None
-        self.dissipation_diffusive = constantBC(0.)
 
     def setMoveMesh(self, body):
         """
@@ -196,7 +212,8 @@ class BoundaryConditions:
         def inlet_p_advective(x, t, u=U):
             b_or = self._b_or[self._b_i]
             u_p = np.sum(U*b_or)
-            # This is the normal velocity, based on the inwards boundary orientation -b_or
+            # This is the normal velocity, based on the inwards boundary
+            # orientation -b_or
             u_p = -u_p
             if x[vert_axis] < waterLevel:
                 return u_p
@@ -260,36 +277,26 @@ class BoundaryConditions:
 
         def hydrostaticPressureOutletWithDepth_p_dirichlet(x, t):
             if x[vert_axis] < seaLevel:
-                a0 = pRef - rhoUp*g[vert_axis]*(refLevel - seaLevel) - rhoDown*g[vert_axis]*seaLevel
+                a0 = pRef-rhoUp*g[vert_axis]*(refLevel-seaLevel)-rhoDown*g[vert_axis]*seaLevel
                 a1 = rhoDown*g[vert_axis]
                 return a0 + a1*x[vert_axis]
 
         def hydrostaticPressureOutletWithDepth_vof_dirichlet(x, t):
             if x[vert_axis] < seaLevel:
-                a0 = pRef - rhoUp*g[vert_axis]*(refLevel - seaLevel) - rhoDown*g[vert_axis]*seaLevel
-                a1 = rhoDown*g[vert_axis]
                 return water
 
-        def hydrostaticPressureOutletWithDepth_vof_dirichlet(x, t):
-            if x[vert_axis] < seaLevel:
-                return water
-
-        self.hydrostaticPressureOutlet(rhoUp, g, refLevel, pRef, vert_axis, air)
+        self.hydrostaticPressureOutlet(rhoUp, g, refLevel, pRef, vert_axis,
+                                       air)
         self.p_dirichlet = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.vof_dirichlet = hydrostaticPressureOutletWithDepth_vof_dirichlet
 
 
+# --------------------------------------------------------------------------- #
+# --------------------------- INITIAL CONDITIONS ---------------------------- #
+# --------------------------------------------------------------------------- #
 
-
-
-
-
-
-# ------------------------------------------------------------------------------ #
-# ---------------------------- INITIAL CONDITIONS ------------------------------ #
-# ------------------------------------------------------------------------------ #
-
-from proteus.ctransportCoefficients import smoothedHeaviside, smoothedHeaviside_integral
+# from proteus.ctransportCoefficients import (smoothedHeaviside,
+#                                             smoothedHeaviside_integral)
 
 # class InitialConditions:
 
