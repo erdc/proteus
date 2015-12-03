@@ -12,7 +12,8 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 		 double packMargin, #
                  double sigmaC,
                  double C3e,
-                 double C4e
+                 double C4e,
+                 double eR
             
 		 )
         double betaCoeff(
@@ -47,6 +48,76 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                        double epsilon_n,
                        double nuT_n)                          
 
+        double psc(
+		      double sedF, 
+		      double rhoSolid, 
+		      double theta_n)
+        double psc_term(
+		      double sedF, 
+		      double rhoSolid, 
+		      double theta_np1,
+                      double du_dx,
+                      double dv_dy,
+                      double dw_dz)
+
+        double dpsc_term_dtheta(	      double sedF, 
+					      double rhoSolid,
+					      double du_dx,
+					      double dv_dy,
+					      double dw_dz)
+
+        double mu_sc(		      double sedF, 
+                                      double rhoSolid, 
+                                      double theta )
+        double l_sc(		      double sedF, 
+                                      double rhoSolid, 
+                                      double theta )
+
+        double tausc_term_theta(
+		      double sedF,
+		      double rhoSolid,
+		      double theta_n,
+		      double du_dx,
+		      double du_dy,
+		      double du_dz,
+		      double dv_dx,
+		      double dv_dy,
+		      double dv_dz,
+		      double dw_dx,
+		      double dw_dy,
+		      double dw_dz)
+
+        double  gamma_s(  double sedF,
+			     double rhoSolid,
+			     double theta_n,
+			     double theta_np1,
+			     double du_dx,
+			     double dv_dy,
+			     double dw_dz)
+
+        double  dgamma_s_dtheta(  double sedF,
+                                  double rhoSolid,
+                                  double theta_np1,
+                                  double du_dx,
+                                  double dv_dy,
+                                  double dw_dz)
+        double  jint1(  double sedF,
+			   double* uFluid,
+			   double* uSolid,
+			   double rhoSolid,
+			   double kappa,
+			   double epsilon,
+			   double theta_n,
+			   double nu)
+
+        double  jint2(  double sedF,
+			   double* uFluid,
+			   double* uSolid,
+			   double rhoSolid,
+			   double theta,
+			   double nu)
+			      
+			      
 
         double*  mInt(
                             double sedF,         # Sediment fraction
@@ -74,7 +145,7 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 #define the way we want to present to Python
 cdef class HsuSedStress:
     cdef  cppHsuSedStress* thisptr
-    def __cinit__(self, aDarcy, betaForch, grain, packFraction,packMargin, sigmaC, C3e, C4e ):
+    def __cinit__(self, aDarcy, betaForch, grain, packFraction,packMargin, sigmaC, C3e, C4e, eR ):
         """ Class for caclulating sediment / fluid momentum transfer, see Chen and Hsu, CACR 14-08, A Multidimensional TwoPhase Eulerian Model for Sediment Transport TwoPhaseEulerSedFoam (Version 1.0) 
         http://www.coastal.udel.edu/~thsu/simulation_data_files/CACR-14-08.pdf
         param: aDarcy: Darcy parameter for drag term [-]. Default value from Ergun (1952) is 150
@@ -82,7 +153,7 @@ cdef class HsuSedStress:
         param: grain: Grain size, default assumed as d50 [L]
         param: packFraction : Critical sediment fraction [-] for switching the drag relation 0.2 by default, see Chen and Hsu 2014, equation (7)
         param: packMargin : [-] For packFraction \pm packMargin where the two braches in equation (7) are blended with linear weighting. Currently no information on the default value of this """
-        self.thisptr = new cppHsuSedStress( aDarcy, betaForch, grain, packFraction, packMargin, sigmaC, C3e, C4e)
+        self.thisptr = new cppHsuSedStress( aDarcy, betaForch, grain, packFraction, packMargin, sigmaC, C3e, C4e, eR)
     def __dealloc__(self):
         del self.thisptr
     def betaCoeff(self, 
@@ -157,8 +228,96 @@ cdef class HsuSedStress:
                   kappa_n,
                 epsilon_n,
                 nuT_n)
+    def psc(self,
+            sedF, 
+            rhoSolid, 
+            theta):
+        return self.thisptr.psc(sedF, rhoSolid, theta)
+
+    def psc_term(self,
+            sedF, 
+            rhoSolid, 
+            theta_np1,
+            du_dx,
+            dv_dy,
+            dw_dz):
+
+         return self.thisptr.psc_term(
+            sedF, 
+            rhoSolid, 
+            theta_np1,
+            du_dx,
+            dv_dy,
+            dw_dz)
+
+    def dpsc_term_dtheta(self,
+            sedF, 
+            rhoSolid, 
+            du_dx,
+            dv_dy,
+            dw_dz):
+
+       
+        return self.thisptr.dpsc_term_dtheta(
+            sedF, 
+            rhoSolid, 
+            du_dx,
+            dv_dy,
+            dw_dz)
+
+    def mu_sc(self, 
+              sedF, 
+               rhoSolid, 
+               theta ):
+        return self.thisptr.mu_sc(sedF, rhoSolid, theta)
+
+    def l_sc(self, 
+              sedF, 
+               rhoSolid, 
+               theta ):
+        return self.thisptr.l_sc(sedF, rhoSolid, theta)
+
+    def tausc_term_theta(self,
+		       sedF,
+		       rhoSolid,
+		       theta_n,
+		       du_dx,
+		       du_dy,
+		       du_dz,
+		       dv_dx,
+		       dv_dy,
+		       dv_dz,
+		       dw_dx,
+		       dw_dy,
+		       dw_dz):
+        return self.thisptr.tausc_term_theta(sedF,rhoSolid,theta_n,du_dx,du_dy,du_dz,dv_dx,dv_dy,dv_dz,dw_dx,dw_dy,dw_dz)
+    def  gamma_s( self, sedF,
+			     rhoSolid,
+			     theta_n,
+			     theta_np1,
+			     du_dx,
+			     dv_dy,
+		             dw_dz):
+        return  self.thisptr.gamma_s( sedF, rhoSolid, theta_n, theta_np1,  du_dx, dv_dy, dw_dz)
+			      
+    def  dgamma_s_dtheta( self, sedF,
+			     rhoSolid,
+			     theta_n,
+			     du_dx,
+			     dv_dy,
+		             dw_dz):
+        return  self.thisptr.dgamma_s_dtheta( sedF, rhoSolid, theta_n,  du_dx, dv_dy, dw_dz)
+			      
+
+    def  jint1(self, sedF, numpy.ndarray uFluid, numpy.ndarray uSolid, rhoSolid, kappa, epsilon, theta_n, nu):
+        return self.thisptr.jint1(sedF, < double * > uFluid.data, < double * > uSolid.data, rhoSolid, kappa, epsilon, theta_n, nu)
+
+    def  jint2( self, sedF,  numpy.ndarray uFluid ,numpy.ndarray uSolid, rhoSolid, theta,nu):
+        return self.thisptr.jint2(sedF, < double * > uFluid.data, < double * > uSolid.data, rhoSolid,  theta, nu)
 
 
+
+		       
     def  mInt(self, 
                      sedF,  
                      numpy.ndarray uFluid_np1, 
