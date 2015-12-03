@@ -2437,6 +2437,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
            self.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)]
            self.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
         if self.SED_model is not None:
+            self.rho_s = modelList[self.SED_model].coefficients.rho_0
             self.q_velocity_solid = modelList[self.SED_model].q[('velocity',0)]
             self.ebqe_velocity_solid = modelList[self.SED_model].ebqe[('velocity',0)]
         if self.LS_model is not None:
@@ -4475,6 +4476,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.velocityPostProcessor.vpp_algorithms[
                             ci].updateConservationJacobian[cj] = True
         OneLevelTransport.calculateAuxiliaryQuantitiesAfterStep(self)
+        for i in range(self.nSpace_global):
+            self.coefficients.q_velocity_solid[...,i] -=  self.coefficients.q_vos*self.q[('grad(u)', 0)][...,i]/(self.timeIntegration.alpha_bdf*self.coefficients.rho_s)
 
     def updateAfterMeshMotion(self):
         pass
