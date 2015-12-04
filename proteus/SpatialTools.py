@@ -16,7 +16,7 @@ from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
 from proteus.Profiling import logEvent as log
 from itertools import compress
 import csv
-import os
+import os, sys
 
 
 class BCContainer(object):
@@ -433,6 +433,38 @@ class Shape:
             self.record_filename = 'record_' + self.name + '.csv'
         else:
             self.record_filename = filename + '.csv'
+
+    def setAbsorptionZones(self, indice, epsFact_solid, dragAlphaTypes=None,
+                          dragBetaTypes=None):
+        """
+        Sets a region (given the local index) to an absorption zone
+        :arg index: local indice of the region (first region of the Shape
+                    instance is 0). Can be an integer or a list of integers.
+        :arg epsFact_solid: absorption zone length (usually length of region/2)
+        """
+        if not hasattr(self, 'zones'):
+            self.zones = {}
+            self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones,
+                                                               shape=self)
+        self.porosityTypes = np.ones(len(self.regionFlags))
+        self.dragAlphaTypes = np.zeros(len(self.regionFlags))
+        self.dragBetaTypes = np.zeros(len(self.regionFlags))
+        self.epsFact_solid = np.zeros(len(self.regionFlags))
+        if isinstance(indice, int) or isinstance(indice, float):
+            indice = [indice]
+        elif self.domain.nd == 3:
+            log('3D absorption zones not implemented yet!')
+            sys.exit()
+        for index in indice:
+            key = index + (self._snr + 1)
+            center_x = self.regions[index, 0]
+            self.zones[key] = RelaxationZone(center_x,
+                                             1.,
+                                             lambda x, t: 0.,
+                                             lambda x, t: 0.,
+                                             lambda x, t: 0.,)
+        self.dragAlphaTypes[index] = dragAlphaTypes or 0.5/1.005e-6
+        self.epsFact_solid[index] = epsFact_solid
 
 
 class Cuboid(Shape):
