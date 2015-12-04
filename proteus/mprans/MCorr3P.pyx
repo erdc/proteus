@@ -1109,6 +1109,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.q_H_vof = modelList[self.VOF_model].q[('u', 0)]
         if  self.VOS_model is not None:
             self.q_vos = modelList[self.VOS_model].q[('u',0)]
+        else:
+            self.q_vos = self.vofModel.coefficients.q_vos
         self.ebqe_H_vof = modelList[self.VOF_model].ebqe[('u', 0)]
         if modelList[self.VOF_model].ebq.has_key(('u', 0)):
             self.ebq_H_vof = modelList[self.VOF_model].ebq[('u', 0)]
