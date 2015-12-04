@@ -2447,8 +2447,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.model.q_p_fluid = modelList[self.PRESSURE_model].q[('u',0)]
             self.model.ebqe_p_fluid = modelList[self.PRESSURE_model].ebqe[('u',0)]
             self.model.q_grad_p_fluid = modelList[self.PRESSURE_model].q[('grad(u)',0)]
-            self.model.ebqe_grad_p_fluid = self.model.ebqe_velocity_fluid.copy()
-            self.model.ebqe_grad_p_fluid[:] = 0.0
+            self.model.ebqe_grad_p_fluid = modelList[self.PRESSURE_model].ebqe[('grad(u)',0)]
         if self.VOS_model is not None:
             self.model.vos_dof = modelList[self.VOS_model].u[0].dof
             self.model.q_vos = modelList[self.VOS_model].q[('u',0)]
@@ -3816,8 +3815,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
                                                  dofN], self.timeIntegration.t) + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
         self.rans3pf.calculateResidual(  # element
-            self.pressureModel.u[0].femSpace.elementMaps.psi,
-            self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
             self.mesh.nodeVelocityArray,
             self.MOVING_DOMAIN,
@@ -3832,8 +3831,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             # element boundary
-            self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
-            self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.u[0].femSpace.elementMaps.psi_trace,
+            self.u[0].femSpace.elementMaps.grad_psi_trace,
             self.elementBoundaryQuadratureWeights[('u', 0)],
             self.pressureModel.u[0].femSpace.psi_trace,
             self.pressureModel.u[0].femSpace.grad_psi_trace,
@@ -3843,8 +3842,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.grad_psi_trace,
             self.u[0].femSpace.psi_trace,
             self.u[0].femSpace.grad_psi_trace,
-            self.pressureModel.u[0].femSpace.elementMaps.boundaryNormals,
-            self.pressureModel.u[0].femSpace.elementMaps.boundaryJacobians,
+            self.u[0].femSpace.elementMaps.boundaryNormals,
+            self.u[0].femSpace.elementMaps.boundaryJacobians,
             # physics
             self.eb_adjoint_sigma,
             self.elementDiameter,  # mesh.elementDiametersArray,
@@ -3963,7 +3962,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.isDOFBoundary[1],
             self.numericalFlux.isDOFBoundary[2],
-            self.pressureModel.ebqe[('advectiveFlux_bc_flag', 0)],
+            self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc_flag', 1)],
             self.ebqe[('advectiveFlux_bc_flag', 2)],
@@ -3971,7 +3970,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('diffusiveFlux_bc_flag', 1, 1)],
             self.ebqe[('diffusiveFlux_bc_flag', 2, 2)],
             self.pressureModel.numericalFlux.ebqe[('u', 0)],
-            self.pressureModel.ebqe[('advectiveFlux_bc', 0)],
+            self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('advectiveFlux_bc', 1)],
             self.ebqe[('advectiveFlux_bc', 2)],
@@ -4051,8 +4050,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 2)] = self.csrColumnOffsets[(0, 1)]
 
         self.rans3pf.calculateJacobian(  # element
-            self.pressureModel.u[0].femSpace.elementMaps.psi,
-            self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
+            self.u[0].femSpace.elementMaps.psi,
+            self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
             self.mesh.nodeVelocityArray,
             self.MOVING_DOMAIN,
@@ -4067,8 +4066,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             # element boundary
-            self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
-            self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.u[0].femSpace.elementMaps.psi_trace,
+            self.u[0].femSpace.elementMaps.grad_psi_trace,
             self.pressureModel.elementBoundaryQuadratureWeights[('u', 0)],
             self.pressureModel.u[0].femSpace.psi_trace,
             self.pressureModel.u[0].femSpace.grad_psi_trace,
@@ -4078,8 +4077,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.grad_psi_trace,
             self.u[0].femSpace.psi_trace,
             self.u[0].femSpace.grad_psi_trace,
-            self.pressureModel.u[0].femSpace.elementMaps.boundaryNormals,
-            self.pressureModel.u[0].femSpace.elementMaps.boundaryJacobians,
+            self.u[0].femSpace.elementMaps.boundaryNormals,
+            self.u[0].femSpace.elementMaps.boundaryJacobians,
             self.eb_adjoint_sigma,
             self.elementDiameter,  # mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
@@ -4202,7 +4201,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.isDOFBoundary[1],
             self.numericalFlux.isDOFBoundary[2],
-            self.pressureModel.ebqe[('advectiveFlux_bc_flag', 0)],
+            self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc_flag', 1)],
             self.ebqe[('advectiveFlux_bc_flag', 2)],
@@ -4210,7 +4209,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('diffusiveFlux_bc_flag', 1, 1)],
             self.ebqe[('diffusiveFlux_bc_flag', 2, 2)],
             self.pressureModel.numericalFlux.ebqe[('u', 0)],
-            self.pressureModel.ebqe[('advectiveFlux_bc', 0)],
+            self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('advectiveFlux_bc', 1)],
             self.ebqe[('advectiveFlux_bc', 2)],
@@ -4415,10 +4414,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.mesh.nodeVelocityArray,
                 self.MOVING_DOMAIN,
                 self.mesh.elementNodesArray,
-                self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
-                self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace,
-                self.pressureModel.u[0].femSpace.elementMaps.boundaryNormals,
-                self.pressureModel.u[0].femSpace.elementMaps.boundaryJacobians,
+                self.u[0].femSpace.elementMaps.psi_trace,
+                self.u[0].femSpace.elementMaps.grad_psi_trace,
+                self.u[0].femSpace.elementMaps.boundaryNormals,
+                self.u[0].femSpace.elementMaps.boundaryJacobians,
                 self.u[0].femSpace.dofMap.l2g,
                 self.u[0].dof,
                 self.u[1].dof,

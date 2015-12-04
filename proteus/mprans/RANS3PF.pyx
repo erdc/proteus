@@ -32,6 +32,10 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * p_grad_trial_ref,
                                double * p_test_ref,
                                double * p_grad_test_ref,
+                               double * q_p,
+                               double * q_grad_p,
+                               double * ebqe_p,
+                               double * ebqe_grad_p,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
                                double * vel_test_ref,
@@ -71,7 +75,6 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double Cd_sge,
                                double C_dc,
                                double C_b,
-                               # VRANS start
                                double * eps_solid,
                                double * phi_solid,
                                double * q_velocity_solid,
@@ -84,7 +87,6 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * q_turb_var_1,
                                double * q_turb_var_grad_0,
                                double * q_eddy_viscosity,
-                               # VRANS end
                                int * p_l2g,
                                int * vel_l2g,
                                double * p_dof,
@@ -101,25 +103,45 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * q_mom_v_acc,
                                double * q_mom_w_acc,
                                double * q_mass_adv,
-                               double * q_mom_u_acc_beta_bdf, double * \
-                               q_mom_v_acc_beta_bdf, double * q_mom_w_acc_beta_bdf,
+                               double * q_mom_u_acc_beta_bdf,
+                               double * q_mom_v_acc_beta_bdf,
+                               double * q_mom_w_acc_beta_bdf,
                                double * q_dV,
                                double * q_dV_last,
                                double * q_velocity_sge,
                                double * q_cfl,
-                               double * q_numDiff_u, double * q_numDiff_v, double * q_numDiff_w,
-                               double * q_numDiff_u_last, double * q_numDiff_v_last, double * q_numDiff_w_last,
-                               int * sdInfo_u_u_rowptr, int * sdInfo_u_u_colind,
-                               int * sdInfo_u_v_rowptr, int * sdInfo_u_v_colind,
-                               int * sdInfo_u_w_rowptr, int * sdInfo_u_w_colind,
-                               int * sdInfo_v_v_rowptr, int * sdInfo_v_v_colind,
-                               int * sdInfo_v_u_rowptr, int * sdInfo_v_u_colind,
-                               int * sdInfo_v_w_rowptr, int * sdInfo_v_w_colind,
-                               int * sdInfo_w_w_rowptr, int * sdInfo_w_w_colind,
-                               int * sdInfo_w_u_rowptr, int * sdInfo_w_u_colind,
-                               int * sdInfo_w_v_rowptr, int * sdInfo_w_v_colind,
-                               int offset_p, int offset_u, int offset_v, int offset_w,
-                               int stride_p, int stride_u, int stride_v, int stride_w,
+                               double * q_numDiff_u,
+                               double * q_numDiff_v,
+                               double * q_numDiff_w,
+                               double * q_numDiff_u_last,
+                               double * q_numDiff_v_last,
+                               double * q_numDiff_w_last,
+                               int * sdInfo_u_u_rowptr,
+                               int * sdInfo_u_u_colind,
+                               int * sdInfo_u_v_rowptr,
+                               int * sdInfo_u_v_colind,
+                               int * sdInfo_u_w_rowptr,
+                               int * sdInfo_u_w_colind,
+                               int * sdInfo_v_v_rowptr,
+                               int * sdInfo_v_v_colind,
+                               int * sdInfo_v_u_rowptr,
+                               int * sdInfo_v_u_colind,
+                               int * sdInfo_v_w_rowptr,
+                               int * sdInfo_v_w_colind,
+                               int * sdInfo_w_w_rowptr,
+                               int * sdInfo_w_w_colind,
+                               int * sdInfo_w_u_rowptr,
+                               int * sdInfo_w_u_colind,
+                               int * sdInfo_w_v_rowptr,
+                               int * sdInfo_w_v_colind,
+                               int offset_p,
+                               int offset_u,
+                               int offset_v,
+                               int offset_w,
+                               int stride_p,
+                               int stride_u,
+                               int stride_v,
+                               int stride_w,
                                double * globalResidual,
                                int nExteriorElementBoundaries_global,
                                int * exteriorElementBoundariesArray,
@@ -131,11 +153,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * bc_ebqe_phi_ext,
                                double * ebqe_normal_phi_ext,
                                double * ebqe_kappa_phi_ext,
-                               # VRANS start
                                double * ebqe_vos_ext,
                                double * ebqe_turb_var_0,
                                double * ebqe_turb_var_1,
-                               # VRANS end
                                int * isDOFBoundary_p,
                                int * isDOFBoundary_u,
                                int * isDOFBoundary_v,
@@ -162,9 +182,6 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * q_x,
                                double * q_velocity,
                                double * ebqe_velocity,
-                               double * q_pressure,
-                               double * q_grad_pressure,
-                               double * ebqe_pressure,
                                double * flux,
                                double * elementResidual_p,
                                int * elementFlags,
@@ -173,7 +190,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * wettedAreas,
                                double * netForces_p,
                                double * netForces_v,
-                               double * netMoments)
+                               double * netMoments,
+                               double * q_rho,
+                               double * ebqe_rho)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -185,6 +204,10 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * p_grad_trial_ref,
                                double * p_test_ref,
                                double * p_grad_test_ref,
+                               double * q_p,
+                               double * q_grad_p,
+                               double * ebqe_p,
+                               double * ebqe_grad_p,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
                                double * vel_test_ref,
@@ -397,6 +420,10 @@ cdef class RANS3PF:
                           numpy.ndarray p_grad_trial_ref,
                           numpy.ndarray p_test_ref,
                           numpy.ndarray p_grad_test_ref,
+                          numpy.ndarray q_p,
+                          numpy.ndarray q_grad_p,
+                          numpy.ndarray ebqe_p,
+                          numpy.ndarray ebqe_grad_p,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
                           numpy.ndarray vel_test_ref,
@@ -526,9 +553,6 @@ cdef class RANS3PF:
                           numpy.ndarray q_x,
                           numpy.ndarray q_velocity,
                           numpy.ndarray ebqe_velocity,
-                          numpy.ndarray q_pressure,
-                          numpy.ndarray q_grad_pressure,
-                          numpy.ndarray ebqe_pressure,
                           numpy.ndarray flux,
                           numpy.ndarray elementResidual_p,
                           numpy.ndarray elementFlags,
@@ -537,7 +561,9 @@ cdef class RANS3PF:
                           numpy.ndarray wettedAreas,
                           numpy.ndarray netForces_p,
                           numpy.ndarray netForces_v,
-                          numpy.ndarray netMoments):
+                          numpy.ndarray netMoments,
+                          numpy.ndarray q_rho,
+                          numpy.ndarray ebqe_rho):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -549,6 +575,10 @@ cdef class RANS3PF:
                                        < double * > p_grad_trial_ref.data,
                                        < double * > p_test_ref.data,
                                        < double * > p_grad_test_ref.data,
+                                        < double * > q_p.data,
+                                        < double * > q_grad_p.data,
+                                        < double * > ebqe_p.data,
+                                        < double * > ebqe_grad_p.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
                                        < double * > vel_test_ref.data,
@@ -678,9 +708,6 @@ cdef class RANS3PF:
                                         < double * > q_x.data,
                                         < double * > q_velocity.data,
                                         < double * > ebqe_velocity.data,
-                                        < double * > q_pressure.data,
-                                        < double * > q_grad_pressure.data,
-                                        < double * > ebqe_pressure.data,
                                         < double * > flux.data,
                                         < double * > elementResidual_p.data,
                                         < int * > elementFlags.data,
@@ -689,7 +716,9 @@ cdef class RANS3PF:
                                         < double * > wettedAreas.data,
                                         < double * > netForces_p.data,
                                         < double * > netForces_v.data,
-                                        < double * > netMoments.data)
+                                        < double * > netMoments.data,
+                                        < double * > q_rho.data,
+                                        < double * > ebqe_rho.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -703,6 +732,10 @@ cdef class RANS3PF:
                           numpy.ndarray p_grad_trial_ref,
                           numpy.ndarray p_test_ref,
                           numpy.ndarray p_grad_test_ref,
+                          numpy.ndarray q_p,
+                          numpy.ndarray q_grad_p,
+                          numpy.ndarray ebqe_p,
+                          numpy.ndarray ebqe_grad_p,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
                           numpy.ndarray vel_test_ref,
@@ -863,6 +896,10 @@ cdef class RANS3PF:
                                        < double * > p_grad_trial_ref.data,
                                        < double * > p_test_ref.data,
                                        < double * > p_grad_test_ref.data,
+                                        < double * > q_p.data,
+                                        < double * > q_grad_p.data,
+                                        < double * > ebqe_p.data,
+                                        < double * > ebqe_grad_p.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
                                        < double * > vel_test_ref.data,
@@ -1070,6 +1107,10 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * p_grad_trial_ref,
                                double * p_test_ref,
                                double * p_grad_test_ref,
+                               double * q_p,
+                               double * q_grad_p,
+                               double * ebqe_p,
+                               double * ebqe_grad_p,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
                                double * vel_test_ref,
@@ -1200,9 +1241,6 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * q_x,
                                double * q_velocity,
                                double * ebqe_velocity,
-                               double * q_pressure,
-                               double * q_grad_pressure,
-                               double * ebqe_pressure,
                                double * flux,
                                double * elementResidual_p,
                                int * elementFlags,
@@ -1211,7 +1249,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * wettedAreas,
                                double * netForces_p,
                                double * netForces_v,
-                               double * netMoments)
+                               double * netMoments,
+                               double * q_rho,
+                               double * ebqe_rho)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -1223,6 +1263,10 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * p_grad_trial_ref,
                                double * p_test_ref,
                                double * p_grad_test_ref,
+                               double * q_p,
+                               double * q_grad_p,
+                               double * ebqe_p,
+                               double * ebqe_grad_p,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
                                double * vel_test_ref,
@@ -1435,6 +1479,10 @@ cdef class RANS3PF2D:
                           numpy.ndarray p_grad_trial_ref,
                           numpy.ndarray p_test_ref,
                           numpy.ndarray p_grad_test_ref,
+                          numpy.ndarray q_p,
+                          numpy.ndarray q_grad_p,
+                          numpy.ndarray ebqe_p,
+                          numpy.ndarray ebqe_grad_p,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
                           numpy.ndarray vel_test_ref,
@@ -1564,9 +1612,6 @@ cdef class RANS3PF2D:
                           numpy.ndarray q_x,
                           numpy.ndarray q_velocity,
                           numpy.ndarray ebqe_velocity,
-                          numpy.ndarray q_pressure,
-                          numpy.ndarray q_grad_pressure,
-                          numpy.ndarray ebqe_pressure,
                           numpy.ndarray flux,
                           numpy.ndarray elementResidual_p,
                           numpy.ndarray elementFlags,
@@ -1575,7 +1620,9 @@ cdef class RANS3PF2D:
                           numpy.ndarray wettedAreas,
                           numpy.ndarray netForces_p,
                           numpy.ndarray netForces_v,
-                          numpy.ndarray netMoments):
+                          numpy.ndarray netMoments,
+                          numpy.ndarray q_rho,
+                          numpy.ndarray ebqe_rho):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1587,6 +1634,10 @@ cdef class RANS3PF2D:
                                        < double * > p_grad_trial_ref.data,
                                        < double * > p_test_ref.data,
                                        < double * > p_grad_test_ref.data,
+                                        <double * > q_p.data,
+                                        <double * > q_grad_p.data,
+                                        <double * > ebqe_p.data,
+                                        <double * > ebqe_grad_p.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
                                        < double * > vel_test_ref.data,
@@ -1716,9 +1767,6 @@ cdef class RANS3PF2D:
                                         < double * > q_x.data,
                                         < double * > q_velocity.data,
                                         < double * > ebqe_velocity.data,
-                                        < double * > q_pressure.data,
-                                        < double * > q_grad_pressure.data,
-                                        < double * > ebqe_pressure.data,
                                         < double * > flux.data,
                                         < double * > elementResidual_p.data,
                                         < int * > elementFlags.data,
@@ -1727,7 +1775,9 @@ cdef class RANS3PF2D:
                                         < double * > wettedAreas.data,
                                         < double * > netForces_p.data,
                                         < double * > netForces_v.data,
-                                        < double * > netMoments.data)
+                                        < double * > netMoments.data,
+                                        < double * > q_rho.data,
+                                        < double * > ebqe_rho.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -1741,6 +1791,10 @@ cdef class RANS3PF2D:
                           numpy.ndarray p_grad_trial_ref,
                           numpy.ndarray p_test_ref,
                           numpy.ndarray p_grad_test_ref,
+                          numpy.ndarray q_p,
+                          numpy.ndarray q_grad_p,
+                          numpy.ndarray ebqe_p,
+                          numpy.ndarray ebqe_grad_p,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
                           numpy.ndarray vel_test_ref,
@@ -1901,6 +1955,10 @@ cdef class RANS3PF2D:
                                        < double * > p_grad_trial_ref.data,
                                        < double * > p_test_ref.data,
                                        < double * > p_grad_test_ref.data,
+                                        < double * > q_p.data,
+                                        < double * > q_grad_p.data,
+                                        < double * > ebqe_p.data,
+                                        < double * > ebqe_grad_p.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
                                        < double * > vel_test_ref.data,
@@ -2222,7 +2280,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  VOS_model=0,
                  SED_model=5,
                  LS_model=None,
-                 VF_model=None,
+                 VOF_model=None,
                  KN_model=None,
                  Closure_0_model=None,  # Turbulence closure model
                  Closure_1_model=None,  # Second possible Turbulence closure model
@@ -2281,7 +2339,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.VOS_model = VOS_model
         self.SED_model = SED_model
         self.LS_model = LS_model
-        self.VF_model = VF_model
+        self.VOF_model = VOF_model
         self.KN_model = KN_model
         self.Closure_0_model = Closure_0_model
         self.Closure_1_model = Closure_1_model
@@ -2422,22 +2480,36 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         # level set
         self.model = modelList[self.ME_model]
         self.model.q['phi_solid'] = self.q_phi_solid
+        self.q_rho  = self.model.q[('u',0)].copy()
+        self.ebqe_rho  = self.model.ebqe[('u',0)].copy()
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
             self.model.q_p_fluid = modelList[self.PRESSURE_model].q[('u',0)]
             self.model.ebqe_p_fluid = modelList[self.PRESSURE_model].ebqe[('u',0)]
             self.model.q_grad_p_fluid = modelList[self.PRESSURE_model].q[('grad(u)',0)]
-            self.model.ebqe_grad_p_fluid = self.model.ebqe_velocity_fluid.copy()
-            self.model.ebqe_grad_p_fluid[:] = 0.0
+            self.model.ebqe_grad_p_fluid = modelList[self.PRESSURE_model].ebqe[('grad(u)',0)]
         if self.VOS_model is not None:
            self.vos_dof = modelList[self.VOS_model].u[0].dof
            self.q_vos = modelList[self.VOS_model].q[('u',0)]
            self.q_dvos_dt = modelList[self.VOS_model].q[('mt',0)]
            self.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
+        else:
+           self.vos_dof = modelList[self.VOF_model].u[0].dof.copy()
+           self.vos_dof[:] = 1.0
+           self.q_vos = modelList[self.VOF_model].coefficients.q_vos
+           self.q_dvos_dt = self.q_vos.copy()
+           self.q_dvos_dt[:] = 0.0
+           self.ebqe_vos = modelList[self.VOF_model].coefficients.ebqe_vos
         if self.SED_model is not None:
             self.rho_s = modelList[self.SED_model].coefficients.rho_0
             self.q_velocity_solid = modelList[self.SED_model].q[('velocity',0)]
             self.ebqe_velocity_solid = modelList[self.SED_model].ebqe[('velocity',0)]
+        else:
+            self.rho_s = self.rho_0
+            self.q_velocity_solid = self.model.q[('velocity',0)].copy()
+            self.q_velocity_solid[:] = 0.0
+            self.ebqe_velocity_solid = self.model.ebqe[('velocity',0)].copy()
+            self.ebqe_velocity_solid[:] = 0.0
         if self.LS_model is not None:
             self.q_phi = modelList[self.LS_model].q[('u', 0)]
             if modelList[self.LS_model].ebq.has_key(('u', 0)):
@@ -2465,15 +2537,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebqe_n = numpy.ones(
                 self.model.ebqe[
                     ('velocity', 0)].shape, 'd')
-        if self.VF_model is not None:
-            self.q_vf = modelList[self.VF_model].q[('u', 0)]
-            if modelList[self.VF_model].ebq.has_key(('u', 0)):
-                self.ebq_vf = modelList[self.VF_model].ebq[('u', 0)]
+        if self.VOF_model is not None:
+            self.q_vf = modelList[self.VOF_model].q[('u', 0)]
+            if modelList[self.VOF_model].ebq.has_key(('u', 0)):
+                self.ebq_vf = modelList[self.VOF_model].ebq[('u', 0)]
             else:
                 self.ebq_vf = None
-            self.ebqe_vf = modelList[self.VF_model].ebqe[('u', 0)]
+            self.ebqe_vf = modelList[self.VOF_model].ebqe[('u', 0)]
             self.bc_ebqe_vf = modelList[
-                self.VF_model].numericalFlux.ebqe[
+                self.VOF_model].numericalFlux.ebqe[
                 ('u', 0)]
         else:
             self.q_vf = numpy.zeros(self.model.q[('u', 0)].shape, 'd')
@@ -3813,11 +3885,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.pressureModel.u[0].femSpace.grad_psi,
             self.pressureModel.u[0].femSpace.psi,
             self.pressureModel.u[0].femSpace.grad_psi,
+            self.pressureModel.q[('u',0)],
+            self.pressureModel.q[('grad(u)',0)],
+            self.pressureModel.ebqe[('u',0)],
+            self.pressureModel.ebqe[('grad(u)',0)],
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
-            # element boundary
             self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
             self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace,
             self.elementBoundaryQuadratureWeights[('u', 0)],
@@ -3829,9 +3904,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.grad_psi_trace,
             self.u[0].femSpace.psi_trace,
             self.u[0].femSpace.grad_psi_trace,
-            self.pressureModel.u[0].femSpace.elementMaps.boundaryNormals,
-            self.pressureModel.u[0].femSpace.elementMaps.boundaryJacobians,
-            # physics
+            self.u[0].femSpace.elementMaps.boundaryNormals,
+            self.u[0].femSpace.elementMaps.boundaryJacobians,
             self.eb_adjoint_sigma,
             self.elementDiameter,  # mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
@@ -3854,7 +3928,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.Cd_sge,
             self.shockCapturing.shockCapturingFactor,
             self.numericalFlux.penalty_constant,
-            # VRANS start
             self.coefficients.epsFact_solid,
             self.coefficients.q_phi_solid,
             self.coefficients.q_velocity_solid,
@@ -3867,7 +3940,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_turb_var[1],
             self.coefficients.q_turb_var_grad[0],
             self.q['eddy_viscosity'],
-            # VRANS end
             self.pressureModel.u[0].femSpace.dofMap.l2g,
             self.u[0].femSpace.dofMap.l2g,
             self.pressureModel.u[0].dof,
@@ -3897,35 +3969,32 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.shockCapturing.numDiff_last[0],
             self.shockCapturing.numDiff_last[1],
             self.shockCapturing.numDiff_last[2],
-            self.coefficients.sdInfo[
-                (0, 0)][0], self.coefficients.sdInfo[
-                (0, 0)][1],
-            self.coefficients.sdInfo[
-                (0, 1)][0], self.coefficients.sdInfo[
-                (0, 1)][1],
-            self.coefficients.sdInfo[
-                (0, 2)][0], self.coefficients.sdInfo[
-                (0, 2)][1],
-            self.coefficients.sdInfo[
-                (1, 1)][0], self.coefficients.sdInfo[
-                (1, 1)][1],
-            self.coefficients.sdInfo[
-                (1, 0)][0], self.coefficients.sdInfo[
-                (1, 0)][1],
-            self.coefficients.sdInfo[
-                (1, 2)][0], self.coefficients.sdInfo[
-                (1, 2)][1],
-            self.coefficients.sdInfo[
-                (2, 2)][0], self.coefficients.sdInfo[
-                (2, 2)][1],
-            self.coefficients.sdInfo[
-                (2, 0)][0], self.coefficients.sdInfo[
-                (2, 0)][1],
-            self.coefficients.sdInfo[
-                (2, 1)][0], self.coefficients.sdInfo[
-                (2, 1)][1],
-            self.pressureModel.offset[0], self.offset[0], self.offset[1], self.offset[2],
-            self.pressureModel.stride[0], self.stride[0], self.stride[1], self.stride[2],
+            self.coefficients.sdInfo[(0, 0)][0],
+            self.coefficients.sdInfo[(0, 0)][1],
+            self.coefficients.sdInfo[(0, 1)][0],
+            self.coefficients.sdInfo[(0, 1)][1],
+            self.coefficients.sdInfo[(0, 2)][0],
+            self.coefficients.sdInfo[(0, 2)][1],
+            self.coefficients.sdInfo[(1, 1)][0],
+            self.coefficients.sdInfo[(1, 1)][1],
+            self.coefficients.sdInfo[(1, 0)][0],
+            self.coefficients.sdInfo[(1, 0)][1],
+            self.coefficients.sdInfo[(1, 2)][0],
+            self.coefficients.sdInfo[(1, 2)][1],
+            self.coefficients.sdInfo[(2, 2)][0],
+            self.coefficients.sdInfo[(2, 2)][1],
+            self.coefficients.sdInfo[(2, 0)][0],
+            self.coefficients.sdInfo[(2, 0)][1],
+            self.coefficients.sdInfo[(2, 1)][0],
+            self.coefficients.sdInfo[(2, 1)][1],
+            self.pressureModel.offset[0],
+            self.offset[0],
+            self.offset[1],
+            self.offset[2],
+            self.pressureModel.stride[0],
+            self.stride[0],
+            self.stride[1],
+            self.stride[2],
             r,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
@@ -3937,16 +4006,14 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.bc_ebqe_phi,
             self.coefficients.ebqe_n,
             self.coefficients.ebqe_kappa,
-            # VRANS start
             self.coefficients.ebqe_porosity,
             self.coefficients.ebqe_turb_var[0],
             self.coefficients.ebqe_turb_var[1],
-            # VRANS end
             self.pressureModel.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.isDOFBoundary[1],
             self.numericalFlux.isDOFBoundary[2],
-            self.pressureModel.ebqe[('advectiveFlux_bc_flag', 0)],
+            self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc_flag', 1)],
             self.ebqe[('advectiveFlux_bc_flag', 2)],
@@ -3954,7 +4021,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('diffusiveFlux_bc_flag', 1, 1)],
             self.ebqe[('diffusiveFlux_bc_flag', 2, 2)],
             self.pressureModel.numericalFlux.ebqe[('u', 0)],
-            self.pressureModel.ebqe[('advectiveFlux_bc', 0)],
+            self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('advectiveFlux_bc', 1)],
             self.ebqe[('advectiveFlux_bc', 2)],
@@ -3976,7 +4043,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.wettedAreas,
             self.coefficients.netForces_p,
             self.coefficients.netForces_v,
-            self.coefficients.netMoments)
+            self.coefficients.netMoments,
+            self.coefficients.q_rho,
+            self.coefficients.ebqe_rho)
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(
@@ -4045,6 +4114,10 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.pressureModel.u[0].femSpace.grad_psi,
             self.pressureModel.u[0].femSpace.psi,
             self.pressureModel.u[0].femSpace.grad_psi,
+            self.pressureModel.q[('u',0)],
+            self.pressureModel.q[('grad(u)',0)],
+            self.pressureModel.ebqe[('u',0)],
+            self.pressureModel.ebqe[('grad(u)',0)],
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,
@@ -4061,8 +4134,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.grad_psi_trace,
             self.u[0].femSpace.psi_trace,
             self.u[0].femSpace.grad_psi_trace,
-            self.pressureModel.u[0].femSpace.elementMaps.boundaryNormals,
-            self.pressureModel.u[0].femSpace.elementMaps.boundaryJacobians,
+            self.u[0].femSpace.elementMaps.boundaryNormals,
+            self.u[0].femSpace.elementMaps.boundaryJacobians,
             self.eb_adjoint_sigma,
             self.elementDiameter,  # mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
@@ -4182,7 +4255,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.isDOFBoundary[1],
             self.numericalFlux.isDOFBoundary[2],
-            self.pressureModel.ebqe[('advectiveFlux_bc_flag', 0)],
+            self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc_flag', 0)],
             self.ebqe[('advectiveFlux_bc_flag', 1)],
             self.ebqe[('advectiveFlux_bc_flag', 2)],
@@ -4190,7 +4263,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.ebqe[('diffusiveFlux_bc_flag', 1, 1)],
             self.ebqe[('diffusiveFlux_bc_flag', 2, 2)],
             self.pressureModel.numericalFlux.ebqe[('u', 0)],
-            self.pressureModel.ebqe[('advectiveFlux_bc', 0)],
+            self.pressureModel.numericalFlux.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('advectiveFlux_bc', 0)],
             self.ebqe[('advectiveFlux_bc', 1)],
             self.ebqe[('advectiveFlux_bc', 2)],
@@ -4395,15 +4468,15 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                 self.mesh.nodeVelocityArray,
                 self.MOVING_DOMAIN,
                 self.mesh.elementNodesArray,
-                self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
-                self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace,
-                self.pressureModel.u[0].femSpace.elementMaps.boundaryNormals,
-                self.pressureModel.u[0].femSpace.elementMaps.boundaryJacobians,
+                self.u[0].femSpace.elementMaps.psi_trace,
+                self.u[0].femSpace.elementMaps.grad_psi_trace,
+                self.u[0].femSpace.elementMaps.boundaryNormals,
+                self.u[0].femSpace.elementMaps.boundaryJacobians,
                 self.u[0].femSpace.dofMap.l2g,
                 self.u[0].dof,
                 self.u[1].dof,
                 self.u[2].dof,
-                self.vos_dof,
+                self.coefficients.vos_dof,
                 self.u[0].femSpace.psi_trace,
                 self.ebqe[
                     ('velocity',
