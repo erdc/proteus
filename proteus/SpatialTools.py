@@ -452,7 +452,7 @@ class Shape:
         self.epsFact_solid = np.zeros(len(self.regionFlags))
         if isinstance(indice, int) or isinstance(indice, float):
             indice = [indice]
-        elif self.domain.nd == 3:
+        if self.domain.nd == 3:
             log('3D absorption zones not implemented yet!')
             sys.exit()
         for index in indice:
@@ -463,8 +463,9 @@ class Shape:
                                              lambda x, t: 0.,
                                              lambda x, t: 0.,
                                              lambda x, t: 0.,)
-        self.dragAlphaTypes[index] = dragAlphaTypes or 0.5/1.005e-6
-        self.epsFact_solid[index] = epsFact_solid
+            self.dragAlphaTypes[index] = dragAlphaTypes or 0.5/1.005e-6
+            self.dragBetaTypes[index] = dragBetaTypes or 0.
+            self.epsFact_solid[index] = epsFact_solid
 
 
 class Cuboid(Shape):
