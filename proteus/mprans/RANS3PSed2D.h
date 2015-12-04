@@ -1043,24 +1043,24 @@ namespace proteus
       if (isDOFBoundary_u != 1)
 	{
 	  flux_mass += n[0]*f_mass[0];
-	  velocity[0] = f_mass[0];
+	  velocity[0] = u;
 	}
       else
 	{
 	  flux_mass += n[0]*f_mass[0];
-	  velocity[0] = f_mass[0];
+	  velocity[0] = u;
 	  if (flowDirection < 0.0)
             flux_umom+=bc_speed*(bc_u - u);
 	}
       if (isDOFBoundary_v != 1)
 	{
 	  flux_mass+=n[1]*f_mass[1];
-	  velocity[1] = f_mass[1];
+	  velocity[1] = v;
 	}
       else
 	{
 	  flux_mass+=n[1]*f_mass[1];
-	  velocity[1] = f_mass[1];
+	  velocity[1] = v;
 	  if (flowDirection < 0.0)
             flux_vmom+=bc_speed*(bc_v - v);
 	}
@@ -1084,8 +1084,8 @@ namespace proteus
 	}
       if (isFluxBoundary_p == 1)
 	{
-	  velocity[0] += (bc_flux_mass - flux_mass)*n[0];
-	  velocity[1] += (bc_flux_mass - flux_mass)*n[1];
+	  /* velocity[0] += (bc_flux_mass - flux_mass)*n[0]; */
+	  /* velocity[1] += (bc_flux_mass - flux_mass)*n[1]; */
 	  /* velocity[2] += (bc_flux_mass - flux_mass)*n[2]; */
 	  flux_mass = bc_flux_mass;
 	}
@@ -1692,8 +1692,8 @@ namespace proteus
 	      //meanGrainSize = q_meanGrain[eN_k]; 
 	      //
 	      //save velocity at quadrature points for other models to use
-	      q_velocity[eN_k_nSpace+0]=vos*u;
-	      q_velocity[eN_k_nSpace+1]=vos*v;
+	      q_velocity[eN_k_nSpace+0]=u;
+	      q_velocity[eN_k_nSpace+1]=v;
 	      /* q_velocity[eN_k_nSpace+2]=w; */
 	      q_x[eN_k_3d+0]=x;
 	      q_x[eN_k_3d+1]=y;
@@ -1732,7 +1732,7 @@ namespace proteus
 				   w,
                                    q_velocity_sge[eN_k_nSpace+0],
                                    q_velocity_sge[eN_k_nSpace+1],
-                                   q_velocity_sge[eN_k_nSpace+2],
+                                   q_velocity_sge[eN_k_nSpace+1],//hack, shouldn't be used
 				   q_eddy_viscosity[eN_k],
 				   mom_u_acc,
 				   dmom_u_acc_u,
@@ -1914,8 +1914,8 @@ namespace proteus
 		ck.Reaction_strong(mass_source);
 		//
 	  
-              dmom_adv_sge[0] = q_velocity_sge[eN_k_nSpace+0] - dmom_u_acc_u*(MOVING_DOMAIN*xt);
-              dmom_adv_sge[1] = q_velocity_sge[eN_k_nSpace+1] - dmom_u_acc_u*(MOVING_DOMAIN*yt);
+              dmom_adv_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
+              dmom_adv_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
               /* dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt); */
 
 	      pdeResidual_u = ck.Mass_strong(dmom_u_acc_u*mom_u_acc_t) +
@@ -1974,8 +1974,8 @@ namespace proteus
 					   subgridError_v,
 					   subgridError_w);
 	      // velocity used in adjoint (VMS or RBLES, with or without lagging the grid scale velocity)
-	      dmom_adv_star[0] = q_velocity_sge[eN_k_nSpace+0] + dmom_u_acc_u*(- MOVING_DOMAIN*xt + useRBLES*subgridError_u);
-	      dmom_adv_star[1] = q_velocity_sge[eN_k_nSpace+1] + dmom_u_acc_u*(- MOVING_DOMAIN*yt + useRBLES*subgridError_v);
+	      dmom_adv_star[0] =  dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt + useRBLES*subgridError_u);
+	      dmom_adv_star[1] =  dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt + useRBLES*subgridError_v);
               /* dmom_adv_star[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt + useRBLES*subgridError_w); */
          
 	      mom_u_adv[0] += dmom_u_acc_u*(useRBLES*subgridError_u*q_velocity_sge[eN_k_nSpace+0]);  	   
@@ -3382,7 +3382,7 @@ namespace proteus
 				   w,
                                    q_velocity_sge[eN_k_nSpace+0],
                                    q_velocity_sge[eN_k_nSpace+1],
-                                   q_velocity_sge[eN_k_nSpace+2],
+                                   q_velocity_sge[eN_k_nSpace+1],//cek hack, should not be used
 				   eddy_viscosity,
 				   mom_u_acc,
 				   dmom_u_acc_u,
@@ -3541,8 +3541,8 @@ namespace proteus
 	      //
 	      //calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
 	      //
-              dmom_adv_sge[0] = q_velocity_sge[eN_k_nSpace+0] - dmom_u_acc_u*(MOVING_DOMAIN*xt);
-              dmom_adv_sge[1] = q_velocity_sge[eN_k_nSpace+1] - dmom_u_acc_u*(MOVING_DOMAIN*yt);
+              dmom_adv_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
+              dmom_adv_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
               /* dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt); */
 	      //
 	      //calculate strong residual
@@ -3663,8 +3663,8 @@ namespace proteus
 						      dsubgridError_w_p,
 						      dsubgridError_w_w);
 	      // velocity used in adjoint (VMS or RBLES, with or without lagging the grid scale velocity)
-	      dmom_adv_star[0] = q_velocity_sge[eN_k_nSpace+0] + dmom_u_acc_u*(- MOVING_DOMAIN*xt + useRBLES*subgridError_u);
-	      dmom_adv_star[1] = q_velocity_sge[eN_k_nSpace+1] + dmom_u_acc_u*(- MOVING_DOMAIN*yt + useRBLES*subgridError_v);
+	      dmom_adv_star[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt + useRBLES*subgridError_u);
+	      dmom_adv_star[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt + useRBLES*subgridError_v);
 	      /* dmom_adv_star[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt + useRBLES*subgridError_w); */
           
 	      //calculate the adjoint times the test functions
@@ -4786,8 +4786,8 @@ namespace proteus
     	      ck.valFromDOF(v_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],v_right);
     	      /* ck.valFromDOF(w_dof,&vel_l2g[right_eN_nDOF_trial_element],&vel_trial_trace_ref[right_ebN_element_kb_nDOF_test_element],w_right); */
     	      //
-    	      velocityAverage[ebN_kb_nSpace+0]=0.5*(vos_left*u_left + vos_right*u_right);
-    	      velocityAverage[ebN_kb_nSpace+1]=0.5*(vos_left*v_left + vos_right*v_right);
+    	      velocityAverage[ebN_kb_nSpace+0]=0.5*(u_left + u_right);
+    	      velocityAverage[ebN_kb_nSpace+1]=0.5*(v_left + v_right);
     	      /* velocityAverage[ebN_kb_nSpace+2]=0.5*(w_left + w_right); */
     	    }//ebNI
     	}
