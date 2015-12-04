@@ -155,9 +155,6 @@ namespace proteus
 				   double* q_x,
 				   double* q_velocity,
 				   double* ebqe_velocity,
-				   double* q_pressure,
-				   double* q_grad_pressure,
-				   double* ebqe_pressure,
 				   double* flux,
 				   double* elementResidual_p,
 				   int* elementFlags,
@@ -166,7 +163,9 @@ namespace proteus
 				   double* wettedAreas,
 				   double* netForces_p,
 				   double* netForces_v,
-				   double* netMoments)=0;
+				   double* netMoments,
+                                   double* q_rho,
+                                   double* ebqe_rho)=0;
     virtual void calculateJacobian(//element
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
@@ -499,7 +498,8 @@ namespace proteus
 			      double dmom_v_ham_grad_v[nSpace],
 			      double& mom_w_ham,
 			      double dmom_w_ham_grad_p[nSpace],
-                              double dmom_w_ham_grad_w[nSpace])
+                              double dmom_w_ham_grad_w[nSpace],
+                              double& rhoSave)
     {
       double rho,nu,mu,H_rho,d_rho,H_mu,d_mu,norm_n,nu_t0=0.0,nu_t1=0.0,nu_t;
       H_rho = (1.0-useVF)*smoothedHeaviside(eps_rho,phi) + useVF*fmin(1.0,fmax(0.0,vf));
@@ -543,7 +543,7 @@ namespace proteus
       nu  = nu_0*(1.0-H_mu)+nu_1*H_mu;
       nu += nu_t;
       mu  = rho_0*nu_0*(1.0-H_mu)+rho_1*nu_1*H_mu;
-
+      rhoSave = rho;
       eddy_viscosity = nu_t;
       // mass (volume accumulation)
       //..hardwired
@@ -1033,36 +1033,36 @@ namespace proteus
       if (isDOFBoundary_u != 1)
 	{
 	  flux_mass += n[0]*f_mass[0];
-	  velocity[0] = f_mass[0];
+	  velocity[0] = u;
 	}
       else
 	{
 	  flux_mass += n[0]*f_mass[0];
-	  velocity[0] = f_mass[0];
+	  velocity[0] = u;
 	  if (flowDirection < 0.0)
             flux_umom+=bc_speed*(bc_u - u);
 	}
       if (isDOFBoundary_v != 1)
 	{
 	  flux_mass+=n[1]*f_mass[1];
-	  velocity[1] = f_mass[1];
+	  velocity[1] = v;
 	}
       else
 	{
 	  flux_mass+=n[1]*f_mass[1];
-	  velocity[1] = f_mass[1];
+	  velocity[1] = v;
 	  if (flowDirection < 0.0)
             flux_vmom+=bc_speed*(bc_v - v);
 	}
       if (isDOFBoundary_w != 1)
 	{
 	  flux_mass+=n[2]*f_mass[2];
-	  velocity[2] = f_mass[2];
+	  velocity[2] = w;
 	}
       else
 	{
 	  flux_mass +=n[2]*f_mass[2];
-	  velocity[2] = f_mass[2];
+	  velocity[2] = w;
 	  if (flowDirection < 0.0)
             flux_wmom+=bc_speed*(bc_w - w);
 	}
@@ -1074,9 +1074,9 @@ namespace proteus
 	}
       if (isFluxBoundary_p == 1)
 	{
-	  velocity[0] += (bc_flux_mass - flux_mass)*n[0];
-	  velocity[1] += (bc_flux_mass - flux_mass)*n[1];
-	  velocity[2] += (bc_flux_mass - flux_mass)*n[2];
+	  /* velocity[0] += (bc_flux_mass - flux_mass)*n[0]; */
+	  /* velocity[1] += (bc_flux_mass - flux_mass)*n[1]; */
+	  /* velocity[2] += (bc_flux_mass - flux_mass)*n[2]; */
 	  flux_mass = bc_flux_mass;
 	}
       if (isFluxBoundary_u == 1)
@@ -1469,9 +1469,6 @@ namespace proteus
 			   double* q_x,
 			   double* q_velocity,
 			   double* ebqe_velocity,
-			   double* q_pressure,
-			   double* q_grad_pressure,
-			   double* ebqe_pressure,
 			   double* flux,
 			   double* elementResidual_p_save,
 			   int* elementFlags,
@@ -1480,7 +1477,9 @@ namespace proteus
 			   double* wettedAreas,
 			   double* netForces_p,
 			   double* netForces_v,
-			   double* netMoments)
+			   double* netMoments,
+                           double* q_rho,
+                           double* ebqe_rho)
     {
       //
       //loop over elements to compute volume integrals and load them into element and global residual
@@ -1681,13 +1680,9 @@ namespace proteus
 	      //meanGrainSize = q_meanGrain[eN_k]; 
 	      //
 	      //save velocity at quadrature points for other models to use
-	      q_pressure[eN_k] = p;
-	      q_grad_pressure[eN_k_nSpace+0]=grad_p[0];
-	      q_grad_pressure[eN_k_nSpace+1]=grad_p[1];
-	      q_grad_pressure[eN_k_nSpace+2]=grad_p[2];
-	      q_velocity[eN_k_nSpace+0]=porosity*u;
-	      q_velocity[eN_k_nSpace+1]=porosity*v;
-	      q_velocity[eN_k_nSpace+2]=porosity*w;
+	      q_velocity[eN_k_nSpace+0]=u;
+	      q_velocity[eN_k_nSpace+1]=v;
+	      q_velocity[eN_k_nSpace+2]=w;
 	      q_x[eN_k_3d+0]=x;
 	      q_x[eN_k_3d+1]=y;
 	      q_x[eN_k_3d+2]=z;
@@ -1767,7 +1762,8 @@ namespace proteus
 				   dmom_v_ham_grad_v,
 				   mom_w_ham,
 				   dmom_w_ham_grad_p,          
-				   dmom_w_ham_grad_w);          
+				   dmom_w_ham_grad_w,
+                                   q_rho[eN_k]);          
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not?
@@ -1905,9 +1901,9 @@ namespace proteus
 		ck.Reaction_strong(mass_source);
 		//
 	  
-              dmom_adv_sge[0] = q_velocity_sge[eN_k_nSpace+0] - dmom_u_acc_u*(MOVING_DOMAIN*xt);
-              dmom_adv_sge[1] = q_velocity_sge[eN_k_nSpace+1] - dmom_u_acc_u*(MOVING_DOMAIN*yt);
-              dmom_adv_sge[2] = q_velocity_sge[eN_k_nSpace+2] - dmom_u_acc_u*(MOVING_DOMAIN*zt);
+              dmom_adv_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
+              dmom_adv_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
+              dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt);
 
 	      pdeResidual_u = ck.Mass_strong(dmom_u_acc_u*mom_u_acc_t) +
 		ck.Advection_strong(dmom_adv_sge,grad_u) + //note here and below: same in cons. and non-cons.
@@ -1965,9 +1961,9 @@ namespace proteus
 					   subgridError_v,
 					   subgridError_w);
 	      // velocity used in adjoint (VMS or RBLES, with or without lagging the grid scale velocity)
-	      dmom_adv_star[0] = q_velocity_sge[eN_k_nSpace+0] - dmom_u_acc_u*(MOVING_DOMAIN*xt + useRBLES*subgridError_u);
-	      dmom_adv_star[1] = q_velocity_sge[eN_k_nSpace+1] - dmom_u_acc_u*(MOVING_DOMAIN*yt + useRBLES*subgridError_v);
-              dmom_adv_star[2] = q_velocity_sge[eN_k_nSpace+2] - dmom_u_acc_u*(MOVING_DOMAIN*zt + useRBLES*subgridError_w);
+	      dmom_adv_star[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt + useRBLES*subgridError_u);
+	      dmom_adv_star[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt + useRBLES*subgridError_v);
+              dmom_adv_star[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt + useRBLES*subgridError_w);
          
 	      // adjoint times the test functions 
 	      for (int i=0;i<nDOF_test_element;i++)
@@ -2316,7 +2312,6 @@ namespace proteus
 	      bc_w_ext = isDOFBoundary_w[ebNE_kb]*(ebqe_bc_w_ext[ebNE_kb] + MOVING_DOMAIN*zt_ext) + (1-isDOFBoundary_w[ebNE_kb])*w_ext;
 	      //VRANS
 	      porosity_ext = 1.0 - ebqe_vos_ext[ebNE_kb];
-              ebqe_pressure[ebNE_kb] = bc_p_ext;
 	      //
 	      //calculate the pde coefficients using the solution and the boundary values for the solution 
 	      // 
@@ -2394,7 +2389,8 @@ namespace proteus
 				   dmom_v_ham_grad_v_ext,
 				   mom_w_ham_ext,
 				   dmom_w_ham_grad_p_ext,          
-				   dmom_w_ham_grad_w_ext);          
+				   dmom_w_ham_grad_w_ext,
+                                   ebqe_rho[ebNE_kb]);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -2468,7 +2464,8 @@ namespace proteus
 				   bc_dmom_v_ham_grad_v_ext,
 				   bc_mom_w_ham_ext,
 				   bc_dmom_w_ham_grad_p_ext,          
-				   bc_dmom_w_ham_grad_w_ext);          
+				   bc_dmom_w_ham_grad_w_ext,
+                                   ebqe_rho[ebNE_kb]);          
 
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
@@ -3327,7 +3324,7 @@ namespace proteus
 	      //
 	      //calculate pde coefficients and derivatives at quadrature points
 	      //
-	      double eddy_viscosity(0.);//not really interested in saving eddy_viscosity in jacobian
+	      double eddy_viscosity(0.), rhoSave;//not really interested in saving eddy_viscosity in jacobian
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -3401,7 +3398,8 @@ namespace proteus
 				   dmom_v_ham_grad_v,
 				   mom_w_ham,
 				   dmom_w_ham_grad_p,          
-				   dmom_w_ham_grad_w);          
+				   dmom_w_ham_grad_w,
+                                   rhoSave);          
 	      //VRANS
 	      mass_source = q_mass_source[eN_k];
 	      //todo: decide if these should be lagged or not
@@ -3516,9 +3514,9 @@ namespace proteus
 	      //
 	      //calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
 	      //
-              dmom_adv_sge[0] = q_velocity_sge[eN_k_nSpace+0] - dmom_u_acc_u*(MOVING_DOMAIN*xt);
-              dmom_adv_sge[1] = q_velocity_sge[eN_k_nSpace+1] - dmom_u_acc_u*(MOVING_DOMAIN*yt);
-              dmom_adv_sge[2] = q_velocity_sge[eN_k_nSpace+2] - dmom_u_acc_u*(MOVING_DOMAIN*zt);
+              dmom_adv_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
+              dmom_adv_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
+              dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt);
 	      //
 	      //calculate strong residual
 	      //
@@ -3637,9 +3635,9 @@ namespace proteus
 						      dsubgridError_w_p,
 						      dsubgridError_w_w);
 	      // velocity used in adjoint (VMS or RBLES, with or without lagging the grid scale velocity)
-	      dmom_adv_star[0] = q_velocity_sge[eN_k_nSpace+0] + dmom_u_acc_u*(- MOVING_DOMAIN*xt + useRBLES*subgridError_u);
-	      dmom_adv_star[1] = q_velocity_sge[eN_k_nSpace+1] + dmom_u_acc_u*(- MOVING_DOMAIN*yt + useRBLES*subgridError_v);
-	      dmom_adv_star[2] = q_velocity_sge[eN_k_nSpace+2] + dmom_u_acc_u*(- MOVING_DOMAIN*zt + useRBLES*subgridError_w);
+	      dmom_adv_star[0] =  dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt + useRBLES*subgridError_u);
+	      dmom_adv_star[1] =  dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt + useRBLES*subgridError_v);
+	      dmom_adv_star[2] =  dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt + useRBLES*subgridError_w);
           
 	      //calculate the adjoint times the test functions
 	      for (int i=0;i<nDOF_test_element;i++)
@@ -4042,7 +4040,7 @@ namespace proteus
 	      // 
 	      //calculate the internal and external trace of the pde coefficients 
 	      // 
-	      double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.);//not interested in saving boundary eddy viscosity for now
+	      double eddy_viscosity_ext(0.),bc_eddy_viscosity_ext(0.),rhoSave;//not interested in saving boundary eddy viscosity for now
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -4116,7 +4114,8 @@ namespace proteus
 				   dmom_v_ham_grad_v_ext,
 				   mom_w_ham_ext,
 				   dmom_w_ham_grad_p_ext,          
-				   dmom_w_ham_grad_w_ext);          
+				   dmom_w_ham_grad_w_ext,
+                                   rhoSave);          
 	      evaluateCoefficients(eps_rho,
 				   eps_mu,
 				   sigma,
@@ -4190,7 +4189,8 @@ namespace proteus
 				   bc_dmom_v_ham_grad_v_ext,
 				   bc_mom_w_ham_ext,
 				   bc_dmom_w_ham_grad_p_ext,          
-				   bc_dmom_w_ham_grad_w_ext);          
+				   bc_dmom_w_ham_grad_w_ext,
+                                   rhoSave);          
 	      //Turbulence closure model
 	      if (turbulenceClosureModel >= 3)
 		{
