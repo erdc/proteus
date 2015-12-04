@@ -24,6 +24,7 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 		 )
         double betaCoeff(
                             double sedF, # Sediment fraction
+                            double rhoFluid,
                             double* uFluid, #Fluid velocity
                             double* uSolid, #Sediment velocity
                             double nu #Kinematic viscosity
@@ -143,25 +144,28 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                                   double dv_dy,
                                   double dw_dz)
         double  jint1(  double sedF,
+			   double rhoFluid,
+			   double rhoSolid,
 			   double* uFluid,
 			   double* uSolid,
-			   double rhoSolid,
 			   double kappa,
 			   double epsilon,
 			   double theta_n,
 			   double nu)
 
         double  jint2(  double sedF,
+			   double rhoFluid,
+			   double rhoSolid,
 			   double* uFluid,
 			   double* uSolid,
-			   double rhoSolid,
 			   double theta,
 			   double nu)
 
         double  djint2_dtheta(  double sedF,
+			   double rhoFluid,
+			   double rhoSolid,
 			   double* uFluid,
 			   double* uSolid,
-			   double rhoSolid,
 			   double nu)
 
 
@@ -169,10 +173,21 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 
 			      
         double p_friction(double sedF)			      
+        double mu_fr(double sedF,
+		      double du_dx,
+		      double du_dy,
+		      double du_dz,
+		      double dv_dx,
+		      double dv_dy,
+		      double dv_dz,
+		      double dw_dx,
+		      double dw_dy,
+                     double dw_dz)
 
         double*  mIntFluid(
                             double sedF,         # Sediment fraction
-                            double* uFluid_n,    #Fluid velocity
+			   double rhoFluid,
+                           double* uFluid_n,    #Fluid velocity
                             double* uSolid_n,    #Sediment velocity
                             double* uFluid_np1,  #Fluid 
                             double nu,           #Kinematic viscosity
@@ -181,6 +196,7 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
                            )
         double*  mIntSolid(
                             double sedF,         # Sediment fraction
+			   double rhoFluid,
                             double* uFluid_n,    #Fluid velocity
                             double* uSolid_n,    #Sediment velocity
                             double* uFluid_np1,  #Fluid 
@@ -191,7 +207,8 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 
         double*  mIntgradC(
                             double sedF,         # Sediment fraction
-                            double* uFluid_n,    #Fluid velocity
+ 			   double rhoFluid,
+                           double* uFluid_n,    #Fluid velocity
                             double* uSolid_n,    #Sediment velocity
                             double nu,           #Kinematic viscosity
                             double nuT,
@@ -200,16 +217,30 @@ cdef extern from "mprans/SedClosure.h" namespace "proteus":
 
         double dmInt_duFluid(
                             double sedF, # Sediment fraction
+			   double rhoFluid,
                             double* uFluid_n, #Fluid velocity
                             double* uSolid_n, #Sediment velocity
                             double nu #Kinematic viscosity
                            )
         double dmInt_duSolid(
                             double sedF, # Sediment fraction
+			   double rhoFluid,
                             double* uFluid_n, #Fluid velocity
                             double* uSolid_n, #Sediment velocity
                             double nu #Kinematic viscosity
                            )
+        double p_s(		      double sedF, 
+					      double rhoSolid,
+					      double theta,
+					      double du_dx,
+					      double du_dy,
+					      double du_dz,
+					      double dv_dx,
+					      double dv_dy,
+					      double dv_dz,
+					      double dw_dx,
+					      double dw_dy,
+					      double dw_dz)
 
 #define the way we want to present to Python
 cdef class HsuSedStress:
@@ -227,7 +258,8 @@ cdef class HsuSedStress:
         del self.thisptr
     def betaCoeff(self, 
                      sedF,  
-                     numpy.ndarray uFluid, 
+                  rhoFluid,
+                  numpy.ndarray uFluid, 
                      numpy.ndarray uSolid, 
                      nu):
         """ Function for calculating equation (7) from Chen and Hsu, CACR 14-08, A Multidimensional TwoPhase Eulerian Model for Sediment Transport TwoPhaseEulerSedFoam (Version 1.0) 
@@ -238,7 +270,8 @@ cdef class HsuSedStress:
         param: nu  : Fluid kinematic viscosity [L^2/T]
         """
         return self.thisptr.betaCoeff(sedF, 
-                                  < double * > uFluid.data,
+                                   rhoFluid,
+                                 < double * > uFluid.data,
                                   < double * > uSolid.data, 
                                   nu)
 
@@ -414,6 +447,8 @@ cdef class HsuSedStress:
                rhoSolid, 
                theta ):
         return self.thisptr.mu_sc(sedF, rhoSolid, theta)
+    def mu_fr(self, sedF, du_dx, du_dy, du_dz, dv_dx, dv_dy, dv_dz, dw_dx, dw_dy, dw_dz):
+        return self.thisptr.mu_fr(sedF, du_dx, du_dy, du_dz, dv_dx, dv_dy, dv_dz, dw_dx, dw_dy, dw_dz)
 
     def l_sc(self, 
               sedF, 
@@ -453,13 +488,13 @@ cdef class HsuSedStress:
         return  self.thisptr.dgamma_s_dtheta( sedF, rhoSolid, theta_n,  du_dx, dv_dy, dw_dz)
 			      
 
-    def  jint1(self, sedF, numpy.ndarray uFluid, numpy.ndarray uSolid, rhoSolid, kappa, epsilon, theta_n, nu):
-        return self.thisptr.jint1(sedF, < double * > uFluid.data, < double * > uSolid.data, rhoSolid, kappa, epsilon, theta_n, nu)
+    def  jint1(self, sedF, rhoFluid ,rhoSolid, numpy.ndarray uFluid, numpy.ndarray uSolid, kappa, epsilon, theta_n, nu):
+        return self.thisptr.jint1(sedF, rhoFluid ,rhoSolid, < double * > uFluid.data, < double * > uSolid.data,  kappa, epsilon, theta_n, nu)
 
-    def  jint2( self, sedF,  numpy.ndarray uFluid ,numpy.ndarray uSolid, rhoSolid, theta,nu):
-        return self.thisptr.jint2(sedF, < double * > uFluid.data, < double * > uSolid.data, rhoSolid,  theta, nu)
-    def  djint2_dtheta( self, sedF,  numpy.ndarray uFluid ,numpy.ndarray uSolid, rhoSolid,nu):
-        return self.thisptr.djint2_dtheta(sedF, < double * > uFluid.data, < double * > uSolid.data, rhoSolid, nu)
+    def  jint2( self, sedF, rhoFluid ,rhoSolid, numpy.ndarray uFluid ,numpy.ndarray uSolid,  theta,nu):
+        return self.thisptr.jint2(sedF, rhoFluid ,rhoSolid,< double * > uFluid.data, < double * > uSolid.data,  theta, nu)
+    def  djint2_dtheta( self, sedF, rhoFluid ,rhoSolid, numpy.ndarray uFluid ,numpy.ndarray uSolid, nu):
+        return self.thisptr.djint2_dtheta(sedF, rhoFluid ,rhoSolid,< double * > uFluid.data, < double * > uSolid.data,  nu)
 
 
     def k_diff(self,  sedF, rhoSolid, theta ):
@@ -471,6 +506,7 @@ cdef class HsuSedStress:
 		       
     def  mIntFluid(self, 
                      sedF,  
+                     rhoFluid ,
                      numpy.ndarray uFluid_n, 
                      numpy.ndarray uSolid_n, 
                      numpy.ndarray uFluid_np1, 
@@ -480,7 +516,8 @@ cdef class HsuSedStress:
    ):
         
         mint = numpy.zeros(len(uFluid_n),"d")
-        cdef double* carr = self.thisptr.mIntFluid(sedF, 
+        cdef double* carr = self.thisptr.mIntFluid(sedF,rhoFluid ,
+ 
                                   < double * > uFluid_n.data,
                                   < double * > uSolid_n.data, 
                                   < double * > uFluid_np1.data,
@@ -492,7 +529,8 @@ cdef class HsuSedStress:
         return mint
 
     def  mIntSolid(self, 
-                     sedF,  
+                     sedF,
+                   rhoFluid ,
                      numpy.ndarray uFluid_n, 
                      numpy.ndarray uSolid_n, 
                      numpy.ndarray uSolid_np1, 
@@ -502,7 +540,7 @@ cdef class HsuSedStress:
    ):
         
         mint = numpy.zeros(len(uFluid_n),"d")
-        cdef double* carr = self.thisptr.mIntSolid(sedF, 
+        cdef double* carr = self.thisptr.mIntSolid(sedF,rhoFluid ,
                                   < double * > uFluid_n.data,
                                   < double * > uSolid_n.data, 
                                   < double * > uSolid_np1.data, 
@@ -515,6 +553,7 @@ cdef class HsuSedStress:
 
     def  mIntgradC(self, 
                      sedF,  
+                   rhoFluid ,
                      numpy.ndarray uFluid_n, 
                      numpy.ndarray uSolid_n, 
                      nu, 
@@ -523,7 +562,7 @@ cdef class HsuSedStress:
    ):
         
         mint = numpy.zeros(len(uFluid_n),"d")
-        cdef double* carr = self.thisptr.mIntgradC(sedF, 
+        cdef double* carr = self.thisptr.mIntgradC(sedF, rhoFluid ,
                                   < double * > uFluid_n.data,
                                   < double * > uSolid_n.data, 
                                          nu,
@@ -537,11 +576,12 @@ cdef class HsuSedStress:
 
     def dmInt_duFluid(self,
                             sedF, # Sediment fraction
-                            numpy.ndarray uFluid_n, #Fluid velocity
+                    rhoFluid ,
+                           numpy.ndarray uFluid_n, #Fluid velocity
                             numpy.ndarray uSolid_n, #Sediment velocity
                             nu): #Kinematic viscosity
                            
-         return self.thisptr.dmInt_duFluid(sedF, 
+         return self.thisptr.dmInt_duFluid(sedF, rhoFluid ,
                                   < double * > uFluid_n.data,
                                   < double * > uSolid_n.data, 
                                          nu)
@@ -550,14 +590,17 @@ cdef class HsuSedStress:
 
     def dmInt_duSolid(self,
                             sedF, # Sediment fraction
-                            numpy.ndarray uFluid_n, #Fluid velocity
+                      rhoFluid ,
+                           numpy.ndarray uFluid_n, #Fluid velocity
                             numpy.ndarray uSolid_n, #Sediment velocity
                             nu): #Kinematic viscosity
                            
 
-         return self.thisptr.dmInt_duSolid(sedF, 
+         return self.thisptr.dmInt_duSolid(sedF, rhoFluid , 
                                   < double * > uFluid_n.data,
                                   < double * > uSolid_n.data, 
                                          nu)
-
+    def p_s( self, sedF,  rhoSolid, theta, du_dx, du_dy, du_dz, dv_dx, dv_dy, dv_dz, dw_dx, dw_dy, dw_dz):
+        return self.thisptr.p_s( sedF,  rhoSolid, theta, du_dx, du_dy, du_dz, dv_dx, dv_dy, dv_dz, dw_dx, dw_dy, dw_dz)
+    
 
