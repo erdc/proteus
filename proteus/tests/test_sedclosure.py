@@ -29,21 +29,28 @@ class GlobalVariables():
     
 
 class TestHsu(unittest.TestCase):
-    def testGradularDrag1(self):
+    def testGranularDrag1(self):
         gl = GlobalVariables()
+        import random
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
+        rhoFluid = 1. + random.random()
         umag_temp = (uf - us)*(uf - us)
         umag = np.sqrt(sum(umag_temp))
         # Testing for sedF >> gl.packFraction
         nu = 1.
         sedF = 0.5
-        drag = gl.aDarcy * nu* sedF /((1.-sedF)*gl.grain**2) +  gl.bForch * umag / gl.grain
+        drag = (gl.aDarcy * nu* sedF /((1.-sedF)*gl.grain**2) +  gl.bForch * umag / gl.grain)*rhoFluid
         # For sedF > pacFraction - > drag = a * nu* sedF /((1-sedF)*gl.grain^2) + beta * umag / gl.grain
-        drag2 = gl.sedSt.betaCoeff(sedF, uf, us, nu)
+        drag2 = gl.sedSt.betaCoeff(sedF, rhoFluid, uf, us, nu)
+        if(drag2 != 0):
+            drag /=drag2
+            drag2/=drag2
         self.assertTrue(drag == drag2)
-    def testGradularDrag2(self):
+    def testGradunarDrag2(self):
         gl=GlobalVariables()
+        import random
+        rhoFluid = 1. + random.random()
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
         umag_temp = (uf - us)*(uf - us)
@@ -52,13 +59,17 @@ class TestHsu(unittest.TestCase):
         nu = 1.
         sedF = 0.1
         Rep = (1.- sedF)*umag*gl.grain / nu    
-        drag =  ( 24. * (1.+0.15*Rep**(0.687))/Rep) * 0.75 * umag * (1. -sedF)**(-1.65) / gl.grain # Chen and Hsu 2014
-        drag2 = gl.sedSt.betaCoeff(sedF, uf, us, nu)
+        drag = rhoFluid * ( 24. * (1.+0.15*Rep**(0.687))/Rep) * 0.75 * umag * (1. -sedF)**(-1.65) / gl.grain # Chen and Hsu 2014
+        drag2 = gl.sedSt.betaCoeff(sedF, rhoFluid, uf, us, nu)
+        if(drag2 != 0):
+            drag /=drag2
+            drag2/=drag2
         self.assertTrue(round(drag,10) == round(drag2,10))
 
     def testGradularDrag3(self):
         gl=GlobalVariables()
-        # Constant params
+        import random
+        rhoFluid = 1. + random.random()
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
         umag_temp = (uf - us)*(uf - us)
@@ -67,11 +78,16 @@ class TestHsu(unittest.TestCase):
         sedF = 0.1
         nu = 1e-4
         Rep = (1.- sedF) * umag * gl.grain / nu    
-        drag =  ( 0.44 * 0.75 * umag * (1. -sedF)**(-1.65) )/ gl.grain # Chen and Hsu 2014
-        drag2 = gl.sedSt.betaCoeff(sedF, uf, us, nu)
+        drag =  rhoFluid * ( 0.44 * 0.75 * umag * (1. -sedF)**(-1.65) )/ gl.grain # Chen and Hsu 2014
+        drag2 = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)
+        if(drag2 != 0):
+            drag /=drag2
+            drag2/=drag2
         self.assertTrue(round(drag,10) == round(drag2,10))
     def testGradularDrag4(self):
         gl=GlobalVariables()
+        import random
+        rhoFluid = 1. + random.random()
         # Constant params
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
@@ -84,8 +100,11 @@ class TestHsu(unittest.TestCase):
         draga = gl.aDarcy * nu* sedF /((1.-sedF)*gl.grain**2) +  gl.bForch * umag / gl.grain
         dragb =  ( 0.44 * 0.75 * umag * (1. -sedF)**(-1.65) )/ gl.grain # Chen and Hsu 2014
         w = 0.5 + (sedF - gl.packFraction) / (2. * gl.packMargin)
-        drag = w*draga + (1.-w) * dragb
-        drag2 = gl.sedSt.betaCoeff(sedF, uf, us, nu)
+        drag =rhoFluid* (w*draga + (1.-w) * dragb)
+        drag2 = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)
+        if(drag2 != 0):
+            drag /=drag2
+            drag2/=drag2
         self.assertTrue(round(drag,10) == round(drag2,10))
     def testgs0(self):
         gl=GlobalVariables()
@@ -102,76 +121,82 @@ class TestHsu(unittest.TestCase):
     def testTkeSed(self):
         gl=GlobalVariables()
         import random
+        rhoFluid = 10. + random.random()
         f = 10
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
         gradC=np.array([0.1,0.1])
         rhoS = 2000
-        rhoF = 1000
-        nu = 1e-4
-        nuT = 1e-2
+        nu = 1
+        nuT = 1
         sedF = 0.3
 # Setting 0 t_c
-        theta_n = random.random() + 1e-30
-        kappa_n = random.random() + 1e-30
-        kappa_np1 = random.random() + 1e-30
-        epsilon_n = random.random() + 1e-30
+        theta_n = 0.25 + 0.25*random.random() + 1e-30
+        kappa_n = 0.1 + 0.1*random.random() + 1e-30
+        kappa_np1 = 0.1  + 0.1 * random.random() + 1e-30
+        epsilon_n = 0.1  + 0.1 * random.random() + 1e-30
 
 
-        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
-        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
+        beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
+        beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
         t_p =rhoS/ beta
         l_c = np.sqrt(np.pi)*gl.grain / (24.*sedF * gl.sedSt.gs0(sedF))
-        t_cl = min(l_c/np.sqrt(theta_n),0.165*kappa_n/epsilon_n)
+        t_cl = min(l_c/np.sqrt(theta_n) , 0.165*kappa_n/epsilon_n)
         aa = 1/( 1. + t_p/t_cl)
       
-        es1 = 2.*beta * rhoS*(1-aa)*sedF*kappa_np1/((1-sedF)*rhoF)
+        es1 = 2.*beta * rhoS*(1-aa)*sedF*kappa_np1/((1-sedF)*rhoFluid)
 
 
-        kappa_sed = gl.sedSt.kappa_sed1(sedF,rhoF,rhoS,uf,us,gradC,nu,theta_n,kappa_n,kappa_np1,epsilon_n,nuT)
+        kappa_sed = gl.sedSt.kappa_sed1(sedF,rhoFluid,rhoS,uf,us,gradC,nu,theta_n,kappa_n,kappa_np1,epsilon_n,nuT)
+        if es1!=0:
+            kappa_sed/=es1
+            es1/=es1
+
         self.assertTrue(round(kappa_sed,f) ==round( -es1,f))
     def test_dTkeSed_dk(self):
         gl=GlobalVariables()
         import random
-        f = 10
+        rhoFluid = 1000. + random.random()
+        f = 8
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
         gradC=np.array([0.1,0.1])
         rhoS = 2000
-        rhoF = 1000
-        nu = 1e-4
+        nu = 1e-2
         nuT = 1e-2
         sedF = 0.3
 # Setting 0 t_c
-        theta_n = random.random() + 1e-30
-        kappa_n = random.random() + 1e-30
-        kappa_np1 = random.random() + 1e-30
-        epsilon_n = random.random() + 1e-30
+        theta_n = 0.25 + 0.25*random.random() + 1e-30
+        kappa_n = 0.1 + 0.1*random.random() + 1e-30
+        kappa_np1 = 0.1  + 0.1 * random.random() + 1e-30
+        epsilon_n = 0.1  + 0.1 * random.random() + 1e-30
 
 
-        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
-        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
+        beta = gl.sedSt.betaCoeff(sedF,rhoFluid, uf, us, nu)      
         t_p =rhoS/ beta
         l_c = np.sqrt(np.pi)*gl.grain / (24.*sedF * gl.sedSt.gs0(sedF))
         t_cl = min(l_c/np.sqrt(theta_n),0.165*kappa_n/epsilon_n)
         aa = 1/( 1. + t_p/t_cl)
       
-        es1 = 2.*beta * rhoS*(1-aa)*sedF/((1-sedF)*rhoF)
+        es1 = 2.*beta * rhoS*(1-aa)*sedF/((1-sedF)*rhoFluid)
 
 
-        kappa_sed = gl.sedSt.dkappa_sed1_dk(sedF,rhoF,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
+        kappa_sed = gl.sedSt.dkappa_sed1_dk(sedF,rhoFluid,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
+        if es1!=0:
+            kappa_sed/=es1
+            es1/=es1
         self.assertTrue(round(kappa_sed,f) ==round( -es1,f))
 
 
     def testTkeSed2(self):
         gl=GlobalVariables()
         import random
+        rhoFluid = 1. + random.random()
         f = 10
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
         gradC=np.array([0.1,0.1])
         rhoS = 2000
-        rhoF = 1000
         nu = 1e-4
         nuT = 1e-2
         sedF = 0.3
@@ -182,25 +207,29 @@ class TestHsu(unittest.TestCase):
         epsilon_n = random.random() + 1e-30
 
 
-        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
+        beta = gl.sedSt.betaCoeff(sedF,rhoFluid, uf, us, nu)      
 
         UgradC = np.dot((uf - us),gradC)
 
-        es2  = beta * rhoF * nuT * UgradC / ((1-sedF)*rhoF)
+        es2  = beta * rhoFluid * nuT * UgradC / ((1-sedF)*rhoFluid)
        
 
-        kappa_sed2 = gl.sedSt.kappa_sed2(sedF,rhoF,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
+        kappa_sed2 = gl.sedSt.kappa_sed2(sedF,rhoFluid,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
+        if es2!=0:
+            kappa_sed2/=es2
+            es2/=es2
+
         self.assertTrue(round(kappa_sed2,f) ==round( es2,f))
         
     def testEpsSed(self):
         gl=GlobalVariables()
         import random
+        rhoFluid = 1000. + random.random()
         f = 8
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
         gradC=np.array([0.1,0.1])
         rhoS = 2000
-        rhoF = 1000
         nu = 1e-4
         nuT = 1e-2
         sedF = 0.3
@@ -211,31 +240,32 @@ class TestHsu(unittest.TestCase):
         epsilon_np1 = random.random() + 1e-30
 
 
-        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
+        beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
         t_p =rhoS/ beta
         l_c = np.sqrt(np.pi)*gl.grain / (24.*sedF * gl.sedSt.gs0(sedF))
         t_cl = min(l_c/np.sqrt(theta_n),0.165*kappa_n/epsilon_n)
         aa = 1/( 1. + t_p/t_cl)
 
        
-        es1 = 2.*beta * rhoS*(1-aa)*sedF*kappa_n/((1-sedF)*rhoF)
-
+        es1 = 2.*beta * rhoS*(1-aa)*sedF*kappa_n/((1-sedF)*rhoFluid)
         UgradC = np.dot((uf - us),gradC)
-
-        es2  = beta * rhoF * nuT * UgradC / ((1-sedF)*rhoF)
-
-        eps_sed = gl.sedSt.eps_sed(sedF,rhoF,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n, epsilon_np1,nuT)
-
-        self.assertTrue(round(eps_sed,f) ==round( -gl.C3e*es1*epsilon_np1/kappa_n+gl.C4e*es2*epsilon_np1/kappa_n,f))
+        es2  = beta * rhoFluid * nuT * UgradC / ((1-sedF)*rhoFluid)
+        eps_sed = gl.sedSt.eps_sed(sedF,rhoFluid,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n, epsilon_np1,nuT)
+        valid = -gl.C3e*es1*epsilon_np1/kappa_n+gl.C4e*es2*epsilon_np1/kappa_n
+        if(valid!=0.):
+            eps_sed/=valid
+            valid/=valid
+        
+        self.assertTrue(round(eps_sed,f) ==round(valid ,f))
     def test_dEpsSed_dE(self):
         gl=GlobalVariables()
         import random
+        rhoFluid = 1000. + random.random()
         f = 8
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
         gradC=np.array([0.1,0.1])
         rhoS = 2000
-        rhoF = 1000
         nu = 1e-4
         nuT = 1e-2
         sedF = 0.3
@@ -245,22 +275,26 @@ class TestHsu(unittest.TestCase):
         epsilon_n = random.random() + 1e-30
 
 
-        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
+        beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
         t_p =rhoS/ beta
         l_c = np.sqrt(np.pi)*gl.grain / (24.*sedF * gl.sedSt.gs0(sedF))
         t_cl = min(l_c/np.sqrt(theta_n),0.165*kappa_n/epsilon_n)
         aa = 1/( 1. + t_p/t_cl)
 
        
-        es1 = 2.*beta * rhoS*(1-aa)*sedF*kappa_n/((1-sedF)*rhoF)
+        es1 = 2.*beta * rhoS*(1-aa)*sedF*kappa_n/((1-sedF)*rhoFluid)
 
         UgradC = np.dot((uf - us),gradC)
 
-        es2  = beta * rhoF * nuT * UgradC / ((1-sedF)*rhoF)
+        es2  = beta * rhoFluid * nuT * UgradC / ((1-sedF)*rhoFluid)
 
-        eps_sed = gl.sedSt.deps_sed_deps(sedF,rhoF,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
+        eps_sed = gl.sedSt.deps_sed_deps(sedF,rhoFluid,rhoS,uf,us,gradC,nu,theta_n,kappa_n,epsilon_n,nuT)
+        valid = -gl.C3e*es1/kappa_n+gl.C4e*es2/kappa_n
+        if(valid!=0.):
+            eps_sed/=valid
+            valid/=valid
 
-        self.assertTrue(round(eps_sed,f) ==round( -gl.C3e*es1/kappa_n+gl.C4e*es2/kappa_n,f))
+        self.assertTrue(round(eps_sed,f) ==round(valid,f))
 
     def testPsc(self):
         gl=GlobalVariables()
@@ -411,12 +445,12 @@ class TestHsu(unittest.TestCase):
     def testJint1(self):
         gl=GlobalVariables()
         import random
+        rhoFluid = 1. + random.random()
         f = 8
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
         gradC=np.array([0.1,0.1])
         rhoS = 2000
-        rhoF = 1000
         nu = 1e-4
         nuT = 1e-2
         sedF = 0.3
@@ -426,20 +460,20 @@ class TestHsu(unittest.TestCase):
         epsilon_n = random.random() + 1e-30
 
 
-        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
-        t_p =rhoS/ beta
+        beta = gl.sedSt.betaCoeff(sedF, rhoFluid, uf, us, nu)      
+        t_p =rhoS / beta
         l_c = np.sqrt(np.pi)*gl.grain / (24.*sedF * gl.sedSt.gs0(sedF))
         t_cl = min(l_c/np.sqrt(theta_n),0.165*kappa_n/epsilon_n)
         aa = 1/( 1. + t_p/t_cl)
 
        
-        es1 = 2.*beta * rhoS*(1-aa)*sedF*kappa_n/((1-sedF)*rhoF)
+        es1 = 2.*beta * rhoS*(1-aa)*sedF*kappa_n/((1-sedF)*rhoFluid)
 
         UgradC = np.dot((uf - us),gradC)
 
-        es2  = beta * rhoF * nuT * UgradC / ((1-sedF)*rhoF)
+        es2  = beta * rhoFluid * nuT * UgradC / ((1-sedF)*rhoFluid)
 
-        test = gl.sedSt.jint1(sedF,uf,us,rhoS, kappa_n,epsilon_n, theta_n, nu)
+        test = gl.sedSt.jint1(sedF,rhoFluid, rhoS, uf,us, kappa_n,epsilon_n, theta_n, nu)
 
         self.assertTrue(round(test,f) ==round(2*aa*beta*sedF*kappa_n*(2./(3.*sedF*rhoS)),f ))
 
@@ -447,44 +481,44 @@ class TestHsu(unittest.TestCase):
     def testJint2(self):
         gl=GlobalVariables()
         import random
+        rhoFluid = 1. + random.random()
         f = 8
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
         gradC=np.array([0.1,0.1])
         rhoS = 2000
-        rhoF = 1000
         nu = 1e-4
         nuT = 1e-2
         sedF = 0.3
 # Setting 0 t_c
         theta_n = random.random() + 1e-30
 
-        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
+        beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
 
        
-        test = gl.sedSt.jint2(sedF,uf,us,rhoS, theta_n, nu)
+        test = gl.sedSt.jint2(sedF,rhoFluid, rhoS,uf,us, theta_n, nu)
 
         self.assertTrue(round(test,f) ==round(-3*beta*sedF*theta_n*(2./(3.*sedF*rhoS)),f ))
 
     def testJint2dTheta(self):
         gl=GlobalVariables()
         import random
+        rhoFluid = 1. + random.random()
         f = 8
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
         gradC=np.array([0.1,0.1])
         rhoS = 2000
-        rhoF = 1000
         nu = 1e-4
         nuT = 1e-2
         sedF = 0.3
 # Setting 0 t_c
         theta_n = random.random() + 1e-30
 
-        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
+        beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
 
        
-        test = gl.sedSt.djint2_dtheta(sedF,uf,us,rhoS, nu)
+        test = gl.sedSt.djint2_dtheta(sedF,rhoFluid, rhoS,uf,us, nu)
 
         self.assertTrue(round(test,f) ==round(-3*beta*sedF*(2./(3.*sedF*rhoS)),f ))
 
@@ -503,27 +537,69 @@ class TestHsu(unittest.TestCase):
         valid = rhoS * gl.grain * sqrt(theta) * ( 2. *sedF**2 * g0 * (1. + gl.eR) / sqrt(np.pi) + (9./16) *sedF**2 * g0 * (1. + gl.eR) * sqrt(np.pi) +  (15./16.) *sedF * sqrt(np.pi) +  (25./64.) * sqrt(np.pi)/((1+gl.eR)*g0))
         
         self.assertTrue(round(test,f) == round(valid,f))
-    def test_pfriction(self):
+    def test_mu_fr(self):
         gl=GlobalVariables()
         import random
         sqrt = np.sqrt
         f = 10        
         # Setting 0 t_c
-        sedF = 0.2
-        test = gl.sedSt.p_friction(sedF)
-        valid =0.
-        self.assertTrue(round(test,f) == round(valid,f))        
-        sedF = 0.6
-        test = gl.sedSt.p_friction(sedF)
-        valid = gl.fContact *(sedF - gl.frFraction)**(gl.mContact) / (gl.maxFraction - sedF )**(gl.nContact)
-        self.assertTrue(round(test,f) == round(valid,f))        
-        sedF = gl.maxFraction - 1e-10
-        test = gl.sedSt.p_friction(sedF)
-        valid =1e+6
-        self.assertTrue(round(test,f) == round(valid,f))        
-        sedF = 0.7
-        test = gl.sedSt.p_friction(sedF)
+        sedF = 0.3
+        theta = random.random() + 1e-30
+        dudx = random.random() + 1e-30
+        dudy = random.random() + 1e-30
+        dudz = random.random() + 1e-30
+        dvdx = random.random() + 1e-30
+        dvdy = random.random() + 1e-30
+        dvdz = random.random() + 1e-30
+        dwdx = random.random() + 1e-30
+        dwdy = random.random() + 1e-30
+        dwdz = random.random() + 1e-30
+        rhoS = 2000
+        test = gl.sedSt.mu_fr(sedF,dudx,dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
+        divU = dudx + dvdy + dwdz
+        s_tensor = 0.5* np.array([ [ 2.*dudx  -(2./3.)*divU ,  dudy+dvdx,               dudz+dwdx],
+                                [ dudy+dvdx,                   2.*dvdy-(2./3.)*divU,    dvdz+dwdy],
+                                [ dudz+dwdx,                   dvdz+dwdy,               2.* (2./3.) * dwdz]])
+
+        product = s_tensor * s_tensor
         valid = 0.
+        for i in product:
+            for j in i:
+                valid+=j / (3.*rhoS*sedF)
+        valid = sqrt(2)*gl.sedSt.p_friction(sedF)*np.sin(gl.angFriction)/2./valid
+        self.assertTrue(round(test,f) == round(valid,f))
+
+
+
+    def test_p_s(self):
+        gl=GlobalVariables()
+        import random
+        sqrt = np.sqrt
+        f = 10        
+        # Setting 0 t_c
+        sedF = 0.3
+        theta = random.random() + 1e-30
+        dudx = random.random() + 1e-30
+        dudy = random.random() + 1e-30
+        dudz = random.random() + 1e-30
+        dvdx = random.random() + 1e-30
+        dvdy = random.random() + 1e-30
+        dvdz = random.random() + 1e-30
+        dwdx = random.random() + 1e-30
+        dwdy = random.random() + 1e-30
+        dwdz = random.random() + 1e-30
+        rhoS = 2000
+        test = gl.sedSt.tausc_term_theta(sedF,rhoS,theta,dudx,dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
+        divU = dudx + dvdy + dwdz
+        mu = gl.sedSt.mu_sc(sedF, rhoS, theta)
+        muf = gl.sedSt.mu_fr(sedF,dudx,dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
+
+        l = gl.sedSt.l_sc(sedF, rhoS, theta)
+
+        test = gl.sedSt.p_s( sedF, rhoS, theta, dudx, dudy, dudz, dvdx, dvdy, dvdz, dwdx, dwdy, dwdz)
+        valid =gl.sedSt.p_friction(sedF) + gl.sedSt.psc(sedF, rhoS, theta) + (2./3.*(mu+muf) - l)*divU 
+
+
         self.assertTrue(round(test,f) == round(valid,f))        
 
         
@@ -535,6 +611,8 @@ class TestHsu(unittest.TestCase):
 
     def testMintFluid(self):
         gl=GlobalVariables()
+        import random
+        rhoFluid = 1. + random.random()
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
         ufp1 = np.array([5.,4.],"d")
@@ -543,11 +621,13 @@ class TestHsu(unittest.TestCase):
         sedF = 0.205
         nu = 1e-4
         nuT = 1e-2
-        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
-        mint = gl.sedSt.mIntFluid(sedF, uf, us, ufp1, nu, nuT, gradc)
-        self.assertTrue(round(mint.all(),10) == round((-sedF*beta*(ufp1) ).all() , 10))
+        beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
+        mint = gl.sedSt.mIntFluid(sedF, rhoFluid, uf, us, ufp1, nu, nuT, gradc)
+        self.assertTrue(round(mint.all(),10) == round((-sedF*beta*(ufp1)/(1.-sedF)/rhoFluid ).all() , 10))
     def testMintSolid(self):
         gl=GlobalVariables()
+        import random
+        rhoFluid = 1. + random.random()
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
         ufp1 = np.array([5.,4.],"d")
@@ -556,11 +636,13 @@ class TestHsu(unittest.TestCase):
         sedF = 0.205
         nu = 1e-4
         nuT = 1e-2
-        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
-        mint = gl.sedSt.mIntSolid(sedF, uf, us, usp1 , nu, nuT, gradc)
-        self.assertTrue(round(mint.all(),10) == round((-sedF*beta*( - usp1)).all() , 10))
+        beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
+        mint = gl.sedSt.mIntSolid(sedF, rhoFluid, uf, us, usp1 , nu, nuT, gradc)
+        self.assertTrue(round(mint.all(),10) == round((-sedF*beta*( - usp1) / (1.-sedF)).all() , 10))
     def testMintgradC(self):
+        import random
         gl=GlobalVariables()
+        rhoFluid = 1. + random.random()
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
         ufp1 = np.array([5.,4.],"d")
@@ -569,11 +651,13 @@ class TestHsu(unittest.TestCase):
         sedF = 0.205
         nu = 1e-4
         nuT = 1e-2
-        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
-        mint = gl.sedSt.mIntgradC(sedF, uf, us , nu, nuT, gradc)
-        self.assertTrue(round(mint.all(),10) == round(( - sedF * beta * gradc * nuT / gl.sigmaC).all() , 10))
+        beta = gl.sedSt.betaCoeff(sedF,rhoFluid, uf, us, nu)      
+        mint = gl.sedSt.mIntgradC(sedF,rhoFluid, uf, us , nu, nuT, gradc)
+        self.assertTrue(round(mint.all(),10) == round(( - sedF * beta * gradc * nuT / gl.sigmaC / rhoFluid / (1.-sedF)).all() , 10))
 
     def testdMintdUf(self):
+        import random
+        rhoFluid = 1. + random.random()
         gl=GlobalVariables()
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
@@ -581,10 +665,13 @@ class TestHsu(unittest.TestCase):
         sedF = 0.205
         nu = 1e-4
         nuT = 1e-2
-        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
-        mint = gl.sedSt.dmInt_duFluid(sedF, uf, us , nu)
-        self.assertTrue(round(mint,10) == round(  - sedF*beta , 10))
+        beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
+        mint = gl.sedSt.dmInt_duFluid(sedF, rhoFluid, uf, us , nu)
+        self.assertTrue(round(mint,10) == round(  - sedF*beta/(1.-sedF)/rhoFluid , 10))
     def testdMintdUs(self):
+        import random
+        gl=GlobalVariables()
+        rhoFluid = 1. + random.random()
         gl=GlobalVariables()
         uf = np.array([5.,4.],"d")
         us = np.array([1.,1.],"d") 
@@ -592,9 +679,9 @@ class TestHsu(unittest.TestCase):
         sedF = 0.205
         nu = 1e-4
         nuT = 1e-2
-        beta = gl.sedSt.betaCoeff(sedF, uf, us, nu)      
-        mint = gl.sedSt.dmInt_duSolid(sedF, uf, us , nu)
-        self.assertTrue(round(mint,10) == round(  sedF*beta , 10))
+        beta = gl.sedSt.betaCoeff(sedF, rhoFluid,uf, us, nu)      
+        mint = gl.sedSt.dmInt_duSolid(sedF, rhoFluid, uf, us , nu)
+        self.assertTrue(round(mint,10) == round(  sedF*beta/(1.-sedF)/rhoFluid  , 10))
 
 
 
