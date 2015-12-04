@@ -450,7 +450,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             V_model=0,
             RD_model=None,
             ME_model=1,
-            VOS_model=0,
+            VOS_model=None,
             EikonalSolverFlag=0,
             checkMass=True,
             epsFact=0.0,
@@ -588,36 +588,34 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                     modelList[
                         self.modelIndex].q['x'],
                     self.q_porosity)
-            #
-        #
-        if hasattr(self.flowCoefficients, 'ebq_porosity'):
-            self.ebq_porosity = self.flowCoefficients.ebq_porosity
-        elif modelList[self.modelIndex].ebq.has_key(('u', 0)):
-            self.ebq_porosity = numpy.ones(
-                modelList[
-                    self.modelIndex].ebq[
-                    ('u', 0)].shape, 'd')
-            if self.setParamsFunc is not None:
-                self.setParamsFunc(
+            self.q_vos = 1.0 - self.q_porosity
+            if hasattr(self.flowCoefficients, 'ebq_porosity'):
+                self.ebq_porosity = self.flowCoefficients.ebq_porosity
+                self.ebq_vos = 1.0 - self.ebq_porosity
+            elif modelList[self.modelIndex].ebq.has_key(('u', 0)):
+                self.ebq_porosity = numpy.ones(
                     modelList[
-                        self.modelIndex].ebq['x'],
-                    self.ebq_porosity)
-            #
-        #
-        if hasattr(self.flowCoefficients, 'ebqe_porosity'):
-            self.ebqe_porosity = self.flowCoefficients.ebqe_porosity
-        else:
-            self.ebqe_porosity = numpy.ones(
-                modelList[
-                    self.LS_modelIndex].ebqe[
-                    ('u', 0)].shape, 'd')
-            if self.setParamsFunc is not None:
-                self.setParamsFunc(
+                        self.modelIndex].ebq[
+                        ('u', 0)].shape, 'd')
+                if self.setParamsFunc is not None:
+                    self.setParamsFunc(
+                        modelList[
+                            self.modelIndex].ebq['x'],
+                        self.ebq_porosity)
+                self.ebq_vos = 1.0 - self.ebq_porosity
+            if hasattr(self.flowCoefficients, 'ebqe_porosity'):
+                self.ebqe_porosity = self.flowCoefficients.ebqe_porosity
+            else:
+                self.ebqe_porosity = numpy.ones(
                     modelList[
-                        self.LS_modelIndex].ebqe['x'],
-                    self.ebqe_porosity)
-            #
-        #
+                        self.LS_modelIndex].ebqe[
+                        ('u', 0)].shape, 'd')
+                if self.setParamsFunc is not None:
+                    self.setParamsFunc(
+                        modelList[
+                            self.LS_modelIndex].ebqe['x'],
+                        self.ebqe_porosity)
+            self.ebqe_vos = 1.0-self.ebqe_porosity
 
     def initializeElementQuadrature(self, t, cq):
         if self.V_model is None:
