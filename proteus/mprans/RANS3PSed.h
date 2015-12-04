@@ -1040,36 +1040,36 @@ namespace proteus
       if (isDOFBoundary_u != 1)
 	{
 	  flux_mass += n[0]*f_mass[0];
-	  velocity[0] = f_mass[0];
+	  velocity[0] = u;
 	}
       else
 	{
 	  flux_mass += n[0]*f_mass[0];
-	  velocity[0] = f_mass[0];
+	  velocity[0] = u;
 	  if (flowDirection < 0.0)
             flux_umom+=bc_speed*(bc_u - u);
 	}
       if (isDOFBoundary_v != 1)
 	{
 	  flux_mass+=n[1]*f_mass[1];
-	  velocity[1] = f_mass[1];
+	  velocity[1] = v;
 	}
       else
 	{
 	  flux_mass+=n[1]*f_mass[1];
-	  velocity[1] = f_mass[1];
+	  velocity[1] = v;
 	  if (flowDirection < 0.0)
             flux_vmom+=bc_speed*(bc_v - v);
 	}
       if (isDOFBoundary_w != 1)
 	{
 	  flux_mass+=n[2]*f_mass[2];
-	  velocity[2] = f_mass[2];
+	  velocity[2] = w;
 	}
       else
 	{
 	  flux_mass +=n[2]*f_mass[2];
-	  velocity[2] = f_mass[2];
+	  velocity[2] = w;
 	  if (flowDirection < 0.0)
             flux_wmom+=bc_speed*(bc_w - w);
 	}
@@ -1081,9 +1081,9 @@ namespace proteus
 	}
       if (isFluxBoundary_p == 1)
 	{
-	  velocity[0] += (bc_flux_mass - flux_mass)*n[0];
-	  velocity[1] += (bc_flux_mass - flux_mass)*n[1];
-	  velocity[2] += (bc_flux_mass - flux_mass)*n[2];
+	  /* velocity[0] += (bc_flux_mass - flux_mass)*n[0]; */
+	  /* velocity[1] += (bc_flux_mass - flux_mass)*n[1]; */
+	  /* velocity[2] += (bc_flux_mass - flux_mass)*n[2]; */
 	  flux_mass = bc_flux_mass;
 	}
       if (isFluxBoundary_u == 1)
@@ -1910,9 +1910,9 @@ namespace proteus
 		ck.Reaction_strong(mass_source);
 		//
 	  
-              dmom_adv_sge[0] = q_velocity_sge[eN_k_nSpace+0] - dmom_u_acc_u*(MOVING_DOMAIN*xt);
-              dmom_adv_sge[1] = q_velocity_sge[eN_k_nSpace+1] - dmom_u_acc_u*(MOVING_DOMAIN*yt);
-              dmom_adv_sge[2] = q_velocity_sge[eN_k_nSpace+2] - dmom_u_acc_u*(MOVING_DOMAIN*zt);
+              dmom_adv_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
+              dmom_adv_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
+              dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt);
 
 	      pdeResidual_u = ck.Mass_strong(dmom_u_acc_u*mom_u_acc_t) +
 		ck.Advection_strong(dmom_adv_sge,grad_u) + //note here and below: same in cons. and non-cons.
@@ -1970,9 +1970,9 @@ namespace proteus
 					   subgridError_v,
 					   subgridError_w);
 	      // velocity used in adjoint (VMS or RBLES, with or without lagging the grid scale velocity)
-	      dmom_adv_star[0] = q_velocity_sge[eN_k_nSpace+0] - dmom_u_acc_u*(MOVING_DOMAIN*xt + useRBLES*subgridError_u);
-	      dmom_adv_star[1] = q_velocity_sge[eN_k_nSpace+1] - dmom_u_acc_u*(MOVING_DOMAIN*yt + useRBLES*subgridError_v);
-              dmom_adv_star[2] = q_velocity_sge[eN_k_nSpace+2] - dmom_u_acc_u*(MOVING_DOMAIN*zt + useRBLES*subgridError_w);
+	      dmom_adv_star[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt + useRBLES*subgridError_u);
+	      dmom_adv_star[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt + useRBLES*subgridError_v);
+              dmom_adv_star[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt + useRBLES*subgridError_w);
          
 	      // adjoint times the test functions 
 	      for (int i=0;i<nDOF_test_element;i++)
@@ -3529,9 +3529,9 @@ namespace proteus
 	      //
 	      //calculate subgrid error contribution to the Jacobian (strong residual, adjoint, jacobian of strong residual)
 	      //
-              dmom_adv_sge[0] = q_velocity_sge[eN_k_nSpace+0] - dmom_u_acc_u*(MOVING_DOMAIN*xt);
-              dmom_adv_sge[1] = q_velocity_sge[eN_k_nSpace+1] - dmom_u_acc_u*(MOVING_DOMAIN*yt);
-              dmom_adv_sge[2] = q_velocity_sge[eN_k_nSpace+2] - dmom_u_acc_u*(MOVING_DOMAIN*zt);
+              dmom_adv_sge[0] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt);
+              dmom_adv_sge[1] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt);
+              dmom_adv_sge[2] = dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt);
 	      //
 	      //calculate strong residual
 	      //
@@ -3650,9 +3650,9 @@ namespace proteus
 						      dsubgridError_w_p,
 						      dsubgridError_w_w);
 	      // velocity used in adjoint (VMS or RBLES, with or without lagging the grid scale velocity)
-	      dmom_adv_star[0] = q_velocity_sge[eN_k_nSpace+0] + dmom_u_acc_u*(- MOVING_DOMAIN*xt + useRBLES*subgridError_u);
-	      dmom_adv_star[1] = q_velocity_sge[eN_k_nSpace+1] + dmom_u_acc_u*(- MOVING_DOMAIN*yt + useRBLES*subgridError_v);
-	      dmom_adv_star[2] = q_velocity_sge[eN_k_nSpace+2] + dmom_u_acc_u*(- MOVING_DOMAIN*zt + useRBLES*subgridError_w);
+	      dmom_adv_star[0] =  dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+0] - MOVING_DOMAIN*xt + useRBLES*subgridError_u);
+	      dmom_adv_star[1] =  dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+1] - MOVING_DOMAIN*yt + useRBLES*subgridError_v);
+	      dmom_adv_star[2] =  dmom_u_acc_u*(q_velocity_sge[eN_k_nSpace+2] - MOVING_DOMAIN*zt + useRBLES*subgridError_w);
           
 	      //calculate the adjoint times the test functions
 	      for (int i=0;i<nDOF_test_element;i++)
