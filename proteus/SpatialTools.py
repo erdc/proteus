@@ -184,16 +184,13 @@ class Shape:
                     inst._enf += fdiff
                     inst.facets += vdiff
                     inst.facetFlags += bcdiff
-                if inst.holes is not None:
+                if inst.holes is not None and self.holes is not None:
                     inst._snh += hdiff
                     inst._enh += hdiff
                 if inst.regions is not None:
                     inst._snr += rdiff
                     inst._enr += rdiff
                     inst.regionFlags += bcdiff
-                if inst.holes is not None:
-                    inst._snh += fdiff
-                    inst._enh += fdiff
 
     def _updateDomain(self):
         """
@@ -748,7 +745,6 @@ class Tank3D(Shape):
         self._addShape()  # adding shape to domain
 
     def setSponge(self, left=None, right=None, back=None, front=None):
-        ''' Not working yet! '''
         self.leftSponge = left
         self.rightSponge = right
         self.backSponge = back
@@ -986,7 +982,7 @@ class Tank3D(Shape):
                 self.epsFact_solid[ind] = self.leftSponge/2.
 
 
-class Tank2D(Rectangle):
+class Tank2D(Shape):
     """
     Class to create a 2D tank (rectangle)
     :arg domain: domain of the tank
@@ -998,69 +994,38 @@ class Tank2D(Rectangle):
 
     def __init__(self, domain, dim=(0., 0.), leftSponge=None, rightSponge=None,
                  from_0=True):
-        L, H = dim
-        if from_0 is True:
-            x, y = L/2., H/2.
-        else:
-            x, y = 0., 0.
-        Rectangle.__init__(self, domain, dim=dim, coords=(x, y), add=False)
+        Shape.__init__(self, domain)
         self.__class__.count += 1
         self.name = "tank2d" + str(self.__class__.count)
         self.from_0 = from_0
-        self.regions = np.array([[L/2., H/2.]])
-        for boundcond in self.BC_list:
-            boundcond.setTank()
-        extra_vertices = []
-        extra_vertexFlags = []
-        extra_regions = []
-        extra_regionFlags = []
-        self.regionIndice = {'tank': 0}
-        ind_region = 1
-        x0 = x-0.5*L
-        x1 = x+0.5*L
-        y0 = y-0.5*H
-        y1 = y+0.5*H
+        self.coords_system = np.eye(2)
         self.leftSponge = leftSponge
         self.rightSponge = rightSponge
-        if leftSponge is not None:
-            extra_vertices += [[x0+leftSponge, y0], [x0+leftSponge, y1]]
-            extra_vertexFlags += [1, 3]
-            extra_regions += [[(x0+leftSponge)/2., (y0+y1)/2.]]
-            self.regionIndice['leftSponge'] = ind_region
-            ind_region += 1
-            extra_regionFlags += [ind_region]
-            self.BC_list += [bc.BoundaryConditions()]
-        if rightSponge is not None:
-            extra_vertices += [[x1-rightSponge, y0], [x1-rightSponge, y1]]
-            extra_vertexFlags += [1, 3]
-            extra_regions += [[((x1-rightSponge)+x1)/2., (y0+y1)/2.]]
-            self.regionIndice['rightSponge'] = ind_region
-            ind_region += 1
-            extra_regionFlags += [ind_region]
-            self.BC_list += [bc.BoundaryConditions()]
-        # getting the right segments if sponge layers are defined
-        if leftSponge is not None and rightSponge is not None:
-            self.segments = np.array([[0, 4], [4, 6], [6, 1], [1, 2], [2, 7],
-                                      [7, 5], [5, 3], [3, 0], [4, 5], [6, 7]])
-            self.segmentFlags = np.array([1, 1, 1, 2, 3, 3, 3, 4, 5, 6])
-            self.regions[0] = [(x0+leftSponge)+(x1-rightSponge)/2., (y0+y1)/2.]
-        elif leftSponge is not None or rightSponge is not None:
-            self.segments = np.array([[0, 4], [4, 1], [1, 2], [2, 5], [5, 3],
-                                      [3, 0], [4, 5]])
-            self.segmentFlags = np.array([1, 1, 2, 3, 3, 4, 5])
-            if leftSponge is not None:
-                self.regions[0] = [((x0+leftSponge)+x1)/2., (y0+y1)/2.]
-            elif rightSponge is not None:
-                self.regions[0] = [(x0+(x1-rightSponge))/2., (y0+y1)/2.]
-        # need to check that original region is not in new sponge regions!
-        if len(extra_vertices):
-            self.vertices = np.append(self.vertices, extra_vertices, axis=0)
-            self.vertexFlags = np.append(self.vertexFlags, extra_vertexFlags,
-                                         axis=0)
-        if len(extra_regions):
-            self.regions = np.append(self.regions, extra_regions, axis=0)
-            self.regionFlags = np.append(self.regionFlags, extra_regionFlags,
-                                         axis=0)
+        self.boundaryTags = {'bottom': 1,
+                             'right': 2,
+                             'top': 3,
+                             'left': 4,
+                             'sponge': 5}
+        self.b_or = np.array([[0., -1.],
+                              [1., 0.],
+                              [0., 1.],
+                              [-1., 0.]])
+        self.BC_dict = {'bottom': bc.BoundaryConditions(b_or=self.b_or, b_i=0),
+                        'right': bc.BoundaryConditions(b_or=self.b_or, b_i=1),
+                        'top': bc.BoundaryConditions(b_or=self.b_or, b_i=2),
+                        'left': bc.BoundaryConditions(b_or=self.b_or, b_i=3),
+                        'sponge': bc.BoundaryConditions()}
+        self.BC_list = [self.BC_dict['bottom'],
+                        self.BC_dict['right'],
+                        self.BC_dict['top'],
+                        self.BC_dict['left'],
+                        self.BC_dict['sponge']]
+        self.BC = BCContainer(self.BC_dict)
+        for i in range(0, 3):
+            self.BC_list[i].setTank()
+        self.barycenter = np.array([0., 0., 0.])
+        self.barycenters = np.array([self.barycenter for bco in self.BC_list])
+        self.setDimensions(dim)
         self.porosityTypes = np.ones(len(self.regionFlags))
         self.dragAlphaTypes = np.zeros(len(self.regionFlags))
         self.dragBetaTypes = np.zeros(len(self.regionFlags))
@@ -1068,47 +1033,73 @@ class Tank2D(Rectangle):
         self.zones = {}
         self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones,
                                                            shape=self)
-        self.barycenter = np.array([0., 0., 0.])
-        self.barycenters = np.array([self.barycenter for bco in self.BC_list])
         self._addShape()  # adding shape to domain
 
     def setDimensions(self, dim):
-        """
-        Set dimensions of the shape
-        :arg dim: new dimensions of the Shape
-        """
         self.dim = dim
         L, H = dim
         if self.from_0 is True:
             x, y = L/2., H/2.
-            self.coords[:] = [x, y]
         else:
-            x, y = self.coords
+            x, y = 0., 0.
+        self.coords = [x, y]
         x0, x1 = x-0.5*L, x+0.5*L
         y0, y1 = y-0.5*H, y+0.5*H
-        vertices = [[x0, y0],
-                    [x1, y0],
-                    [x1, y1],
-                    [x0, y1]]
-        leftSponge = self.leftSponge
-        rightSponge = self.rightSponge
-        if leftSponge is not None:
-            vertices += [[x0+leftSponge, y0],
-                         [x0+leftSponge, y1]]
-            regions = [[((x1-leftSponge)+x1)/2., (y0+y1)/2.],
-                       [(x0+leftSponge)/2., (y0+y1)/2.]]
-        if rightSponge is not None:
-            vertices += [[x1-rightSponge, y0],
-                         [x1-rightSponge, y1]]
-            regions = [[(x0+rightSponge)/2., (y0+y1)/2.],
-                       [((x1-rightSponge)+x1)/2., (y0+y1)/2.]]
-        if rightSponge is not None and leftSponge is not None:
-            regions = [[((x0+leftSponge)+(x1-rightSponge))/2., (y0+y1)/2.],
-                       [(x0+leftSponge)/2., (y0+y1)/2.],
-                       [((x1-rightSponge)+x1)/2., (y0+y1)/2.]]
-        self.vertices[:] = vertices
-        self.regions[:] = regions
-        self._updateDomain()
+        bt = self.boundaryTags
+        # add attributes
+        leftSponge = self.leftSponge or 0.
+        rightSponge = self.rightSponge or 0.
+        vertices = [[x-0.5*L, y-0.5*H],
+                    [x+0.5*L, y-0.5*H],
+                    [x+0.5*L, y+0.5*H],
+                    [x-0.5*L, y+0.5*H]]
+        vertexFlags = [bt['bottom'], bt['bottom'], bt['top'], bt['top']]
+        segments = [[0, 1], [1, 2], [2, 3], [3, 0]]
+        segmentFlags = [1, 2, 3, 4]  # bottom, right, top, left
+        regions = [[(leftSponge+rightSponge)/2., (y0+y1)/2.]]
+        regionFlags = [1]
+        self.regionIndice = {'tank': 0}
+        ind_region = 1
+        if leftSponge:
+            vertices += [[x0+leftSponge, y0], [x0+leftSponge, y1]]
+            vertexFlags += [bt['bottom'], bt['top']]
+            regions += [[(x0+leftSponge)/2., (y0+y1)/2.]]
+            self.regionIndice['leftSponge'] = ind_region
+            ind_region += 1
+            regionFlags += [ind_region]
+        if rightSponge:
+            vertices += [[x1-rightSponge, y0], [x1-rightSponge, y1]]
+            vertexFlags += [bt['bottom'], bt['top']]
+            regions += [[((x1-rightSponge)+x1)/2., (y0+y1)/2.]]
+            self.regionIndice['rightSponge'] = ind_region
+            ind_region += 1
+            regionFlags += [ind_region]
+        # getting the right segments if sponge layers are defined
+        if leftSponge and rightSponge:
+            segments = [[0, 4], [4, 6], [6, 1], [1, 2], [2, 7],
+                        [7, 5], [5, 3], [3, 0], [4, 5], [6, 7]]
+            segmentFlags = [1, 1, 1, 2, 3, 3, 3, 4, 5, 6]
+        elif leftSponge or rightSponge:
+            segments = [[0, 4], [4, 1], [1, 2], [2, 5], [5, 3], [3, 0], [4, 5]]
+            segmentFlags = [1, 1, 2, 3, 3, 4, 5]
+        else:
+            segments = [[0, 1], [1, 2], [2, 3], [3, 0]]
+            segmentFlags = [1, 2, 3, 4]  # bottom, right, top, left
+        # need to check that original region is not in new sponge regions!
+        self.vertices = np.array(vertices)
+        self.vertexFlags = np.array(vertexFlags)
+        self.segments = np.array(segments)
+        self.segmentFlags = np.array(segmentFlags)
+        self.regions = np.array(regions)
+        self.regionFlags = np.array(regionFlags)
+        if self._snbc is not None:
+            self._resetShape()
+
+    def setSponge(self, left=None, right=None):
+        self.leftSponge = left
+        self.rightSponge = right
+        self.setDimensions(self.dim)
+        self._resetShape()
 
     def setAbsorptionZones(self, left=False, right=False):
         self.leftSpongeAbs = left
