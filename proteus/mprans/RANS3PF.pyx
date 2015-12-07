@@ -192,7 +192,9 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * netForces_v,
                                double * netMoments,
                                double * q_rho,
-                               double * ebqe_rho)
+                               double * ebqe_rho,
+                               double * q_nu,
+                               double * ebqe_nu)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -563,7 +565,9 @@ cdef class RANS3PF:
                           numpy.ndarray netForces_v,
                           numpy.ndarray netMoments,
                           numpy.ndarray q_rho,
-                          numpy.ndarray ebqe_rho):
+                          numpy.ndarray ebqe_rho,
+                          numpy.ndarray q_nu,
+                          numpy.ndarray ebqe_nu):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -718,7 +722,9 @@ cdef class RANS3PF:
                                         < double * > netForces_v.data,
                                         < double * > netMoments.data,
                                         < double * > q_rho.data,
-                                        < double * > ebqe_rho.data)
+                                        < double * > ebqe_rho.data,
+                                        < double * > q_nu.data,
+                                        < double * > ebqe_nu.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -1251,7 +1257,9 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * netForces_v,
                                double * netMoments,
                                double * q_rho,
-                               double * ebqe_rho)
+                               double * ebqe_rho,
+                               double * q_nu,
+                               double * ebqe_nu)
         void calculateJacobian(double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
@@ -1622,7 +1630,9 @@ cdef class RANS3PF2D:
                           numpy.ndarray netForces_v,
                           numpy.ndarray netMoments,
                           numpy.ndarray q_rho,
-                          numpy.ndarray ebqe_rho):
+                          numpy.ndarray ebqe_rho,
+                          numpy.ndarray q_nu,
+                          numpy.ndarray ebqe_nu):
         self.thisptr.calculateResidual( < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
@@ -1777,7 +1787,9 @@ cdef class RANS3PF2D:
                                         < double * > netForces_v.data,
                                         < double * > netMoments.data,
                                         < double * > q_rho.data,
-                                        < double * > ebqe_rho.data)
+                                        < double * > ebqe_rho.data,
+                                        < double * > q_nu.data,
+                                        < double * > ebqe_nu.data)
 
     def calculateJacobian(self,
                           numpy.ndarray mesh_trial_ref,
@@ -2482,6 +2494,8 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.model.q['phi_solid'] = self.q_phi_solid
         self.q_rho  = self.model.q[('u',0)].copy()
         self.ebqe_rho  = self.model.ebqe[('u',0)].copy()
+        self.q_nu  = self.model.q[('u',0)].copy()
+        self.ebqe_nu  = self.model.ebqe[('u',0)].copy()
         if self.PRESSURE_model is not None:
             self.model.pressureModel = modelList[self.PRESSURE_model]
             self.model.q_p_fluid = modelList[self.PRESSURE_model].q[('u',0)]
@@ -4045,7 +4059,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.netForces_v,
             self.coefficients.netMoments,
             self.coefficients.q_rho,
-            self.coefficients.ebqe_rho)
+            self.coefficients.ebqe_rho,
+            self.coefficients.q_nu,
+            self.coefficients.ebqe_nu)
         from proteus.flcbdfWrappers import globalSum
         for i in range(self.coefficients.netForces_p.shape[0]):
             self.coefficients.wettedAreas[i] = globalSum(

@@ -294,6 +294,7 @@ namespace proteus
 				   int* elementBoundaryLocalElementBoundariesArray,
 				   double* globalMass)=0;
     virtual void setMassQuadrature(//element
+				   double* mesh_trial_ip,
 				   double* mesh_trial_ref,
 				   double* mesh_grad_trial_ref,
 				   double* mesh_dof,
@@ -1809,6 +1810,7 @@ namespace proteus
 	}//elements
     }
     void setMassQuadrature(//element
+			   double* mesh_trial_ip,
 			   double* mesh_trial_ref,
 			   double* mesh_grad_trial_ref,
 			   double* mesh_dof,
@@ -1913,8 +1915,14 @@ namespace proteus
 	  for (int i=0;i<nDOF_trial_element;i++)
 	    {
 	      int eN_i = eN*nDOF_trial_element + i;
-	      
-	      epsHeaviside = epsFactHeaviside*nodeDiametersArray[mesh_l2g[eN_i]];//cek hack, only works if isoparametric, but we can fix by including interpolation points
+              register double h_phi=0.0;
+	      ck.calculateH_element(eN,
+				    i,
+				    nodeDiametersArray,
+				    mesh_l2g,
+				    mesh_trial_ip,
+				    h_phi);
+	      epsHeaviside = epsFactHeaviside*h_phi;
 	      H_dof[phi_l2g[eN_i]] = smoothedHeaviside(epsHeaviside,phi_dof[phi_l2g[eN_i]]);//cek hack, only works if H and phi in same FEM space, but we can fix by passing in H_l2g
 	    }
 	}//elements

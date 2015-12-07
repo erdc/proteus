@@ -283,7 +283,8 @@ cdef extern from "mprans/MCorr3P.h" namespace "proteus":
                            int * elementBoundaryElementsArray,
                            int * elementBoundaryLocalElementBoundariesArray,
                            double * globalMass)
-        void setMassQuadrature(double * mesh_trial_ref,
+        void setMassQuadrature(double * mesh_trial_ip,
+                               double * mesh_trial_ref,
                                double * mesh_grad_trial_ref,
                                double * mesh_dof,
                                int * mesh_l2g,
@@ -913,6 +914,7 @@ cdef class MCorr3P:
         return globalMass
 
     def setMassQuadrature(self,
+                          numpy.ndarray mesh_trial_ip,
                           numpy.ndarray mesh_trial_ref,
                           numpy.ndarray mesh_grad_trial_ref,
                           numpy.ndarray mesh_dof,
@@ -959,7 +961,8 @@ cdef class MCorr3P:
                           numpy.ndarray elementBoundaryElementsArray,
                           numpy.ndarray elementBoundaryLocalElementBoundariesArray,
                           numpy.ndarray H_dof):
-        self.thisptr.setMassQuadrature( < double*> mesh_trial_ref.data,
+        self.thisptr.setMassQuadrature( < double*> mesh_trial_ip.data,
+                                        < double*> mesh_trial_ref.data,
                                        < double * > mesh_grad_trial_ref.data,
                                        < double * > mesh_dof.data,
                                        < int * > mesh_l2g.data,
@@ -2001,6 +2004,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         """
         # self.u[0].femSpace.elementMaps.getValues(self.elementQuadraturePoints,
         #                                          self.q['x'])
+        self.u[0].femSpace.elementMaps.getBasisValuesIP(
+            self.u[0].femSpace.referenceFiniteElement.interpolationConditions.quadraturePointArray)
         self.u[0].femSpace.elementMaps.getBasisValuesRef(
             self.elementQuadraturePoints)
         self.u[0].femSpace.elementMaps.getBasisGradientValuesRef(
@@ -2089,6 +2094,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
 
     def setMassQuadrature(self):
         self.mcorr3p.setMassQuadrature(  # element
+            self.u[0].femSpace.elementMaps.psi_ip,
             self.u[0].femSpace.elementMaps.psi,
             self.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
