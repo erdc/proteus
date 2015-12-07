@@ -2303,6 +2303,16 @@ class ParametricMaps(ElementMaps):
         self.localFunctionSpace = localFunctionSpace
         self.meshDOFMap=NodalDOFMap(mesh)
         self.useC=True
+    def getBasisValuesIP(self, interpolationPoints):
+        n_xi = interpolationPoints.shape[0]
+        range_n_xi = range(n_xi)
+        self.psi_ip = numpy.zeros((n_xi,
+                                self.localFunctionSpace.dim),
+                               'd')
+        for k in range_n_xi:
+            for j in self.localFunctionSpace.range_dim:
+                self.psi_ip[k,j] = self.localFunctionSpace.basis[j](interpolationPoints[k])
+        return self.psi_ip
     def getBasisValuesRef(self,xiArray):
         n_xi = xiArray.shape[0]
         range_n_xi = range(n_xi)
