@@ -798,15 +798,123 @@ class VerifyDirectionals(unittest.TestCase):
                 uyRef += normDir[1]*ai[jj,ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) * cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
                 uzRef +=  ai[jj,ii]*omega[ii] *sinh(ki[ii]*(z0+depth)) * sin(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
         
+class CheckTimeSeriesFailureModes(unittest.TestCase):
+    def testTimeSeriesFailureModes(self):
+        from proteus.WaveTools import TimeSeries
+        #load successfully - direct decomposition
+        aa= TimeSeries(
+            "test_timeSeries.txt",
+            0,
+            np.array([1.,0,0]), 
+            1.  ,
+            64 ,          #number of frequency bins
+            1. ,        
+            np.array([1.,0,0]), 
+            np.array([0,0,-9.81])
+            )
+
+        with self.assertRaises(SystemExit) as cm1:
+            aa= TimeSeries(
+                "test_timeSeries.dat",
+                0,
+                np.array([1.,0,0]), 
+                1.  ,
+               64 ,          #number of frequency bins
+                1. ,        
+                np.array([1,0,0]), 
+                np.array([0,0,-9.81])
+            )
+        with self.assertRaises(SystemExit) as cm2:
+            aa= TimeSeries(
+                "test_timeSeries_err1.csv",
+                0,
+                np.array([1.,0,0]), 
+                1.  ,
+                64 ,          #number of frequency bins
+                1. ,        
+                np.array([1,0,0]), 
+                np.array([0,0,-9.81])
+            )
+        self.assertEqual(cm2.exception.code, 1 )     
+        with self.assertRaises(SystemExit) as cm3:
+            aa= TimeSeries(
+                "test_timeSeries_err2.txt",
+                0,
+                np.array([1.,0,0]), 
+                1.  ,
+                64 ,          #number of frequency bins
+                1. ,        
+                np.array([1,0,0]), 
+                np.array([0,0,-9.81])
+            )
+        self.assertEqual(cm3.exception.code, 1 )     
+
+
+        with self.assertRaises(SystemExit) as cm4:
+            aa= TimeSeries(
+            "test_timeSeries.txt",
+            0,
+            np.array([1.,0,0]), 
+            1.  ,
+            64 ,          #number of frequency bins
+            1. ,        
+            np.array([1,0,0]), 
+            np.array([1,0,0])
+            )
+        self.assertEqual(cm4.exception.code, 1 )     
+
+        with self.assertRaises(SystemExit) as cm5:
+            aa= TimeSeries(
+            "test_timeSeries.txt",
+            0,
+            np.array([0,1.,0,0]), 
+            1.  ,
+            64 ,          #number of frequency bins
+            1. ,        
+            np.array([1,0,0]), 
+            np.array([0,0,-9.81])
+            )
+        self.assertEqual(cm5.exception.code, 1 )     
+
+
+
+       
 
         
-        self.assertTrue(round(eta,8) == round(etaRef,8) )
-        self.assertTrue(round(ux,8) == round(uxRef,8))
-        self.assertTrue(round(uy,8) == round(uyRef,8))
-        self.assertTrue(round(uz,8) == round(uzRef,8))
-       
-      
-
+class VerifyTimeSeries(unittest.TestCase):
+    def testDirect(self):
+        from proteus.WaveTools import TimeSeries
+        import random
+        aa= TimeSeries(
+            "test_timeSeries.txt",
+            0,
+             np.array([0.,0.,0]),            
+            1.  ,
+            1024 ,          #number of frequency bins
+            1. ,        
+            np.array([1,0,0]), 
+            np.array([0,0,-9.81])
+            )
+        fid = open("test_timeSeries.txt","r")
+        data = np.loadtxt(fid)
+        timeRef = data[:,0]
+        etaRef = data[:,1]
+        
+        timeInt = np.linspace(timeRef[0],timeRef[-1],len(timeRef))
+        etaInt = np.interp(timeInt, timeRef, etaRef)
+        etaTest = np.zeros(len(timeRef),"d")
+        x = 0.
+        y = 0.
+        z = 0.
+        ii = -1
+        for tt in timeInt:
+            ii+=1
+            etaTest[ii] = aa.etaDirect(x,y,z,tt) 
+        from matplotlib import pyplot as plt
+        plt.plot(timeInt,etaInt)
+        plt.plot(timeInt,etaTest + np.mean(etaInt),"k--")
+        plt.savefig("showTestSeries.pdf")
+        
 
 
 if __name__ == '__main__':
