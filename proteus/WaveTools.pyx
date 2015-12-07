@@ -737,9 +737,9 @@ class TimeSeries:
     def __init__(self,
                  timeSeriesFile, # e.g.= "Timeseries.txt",
                  skiprows,
+                 timeSeriesPosition,
                  depth  ,
                  N ,          #number of frequency bins
-                 Nwaves , #Nmumber of waves per windowmean water level
                  mwl ,        #mean water level
                  waveDir, 
                  g,
@@ -752,6 +752,17 @@ class TimeSeries:
         self.rec_direct = rec_direct
         # Number of wave components
         self.N = N
+        self.Nwaves = None
+        # Position of timeSeriesFile
+        if(len(timeSeriesPosition)==3):
+            self.x0 = timeSeriesPosition[0]
+            self.y0 = timeSeriesPosition[1]
+            self.z0 = timeSeriesPosition[2]
+        else:
+            logEvent("WaveTools.py: Location vector for timeSeries must have three-components",level=0)
+            sys.exit(1)
+            
+
         # Mean water level
         self.mwl = mwl
         # Wave direction
@@ -763,12 +774,13 @@ class TimeSeries:
         self.gAbs = sqrt(sum(g * g))
         # Definition of gravity direction
         self.vDir = setVertDir(g)
+        dirCheck(self.waveDir,self.vDir)
         #Reading time series
         filetype = timeSeriesFile[-4:]
         logEvent("WaveTools.py: Reading timeseries from %s file: %s" % (filetype,timeSeriesFile),level=0)
         fid = open(timeSeriesFile,"r")
         if (filetype !=".txt") and (filetype != ".csv"):
-                logEvent("WaveTools.py: Timeseries must be given in .txt or .csv format",level=0)
+                logEvent("WaveTools.py: File %s must be given in .txt or .csv format" % (timeSeriesFile),level=0)
                 sys.exit(1)
         elif (filetype == ".csv"):
             tdata = np.loadtxt(fid,skiprows=skiprows,delimiter=",")
@@ -779,12 +791,13 @@ class TimeSeries:
         # Only 2 columns: time & eta
         ncols = len(tdata[0,:])
         if ncols != 2:
-            logEvent("WaveTools.py: Timeseries file must have only two columns [time, eta]",level=0)
-            logEvent("Stopping simulation",level=0)
+            logEvent("WaveTools.py: Timeseries file (%s) must have only two columns [time, eta]" % (timeSeriesFile),level=0)
             sys.exit(1)
         time_temp = tdata[:,0]
-        self.dt = (time_temp[-1]-time_temp[0])/len(time_temp)
-        
+        self.dt = (time_temp[-1]-time_temp[0])/(len(time_temp)-1)
+
+
+
         # If necessary, perform interpolation
         doInterp = False
         for i in range(1,len(time_temp)):
@@ -803,6 +816,8 @@ class TimeSeries:
         else:
             self.time = time_temp
             self.eta = tdata[:,1]
+
+        self.t0  = self.time[0]        
         # Remove mean level from raw data
         self.eta -= np.mean(self.eta)
         # Filter out first 2.5 % and last 2.5% to make the signal periodic
@@ -824,7 +839,7 @@ class TimeSeries:
             Nf = self.N
             self.nfft=len(self.time)
             logEvent("WaveTools.py: performing a direct series decomposition")
-            self.decomp = decompose_tseries(self.time,self.eta,self.nfft,self.nfft/2-1,ret_only_freq=0)
+            self.decomp = decompose_tseries(self.time,self.eta)
             self.ai = self.decomp[1]
             ipeak = np.where(self.ai == max(self.ai))[0][0]
             imax = min(ipeak + Nf/2,len(self.ai))
@@ -832,8 +847,9 @@ class TimeSeries:
             self.ai = self.ai[imin:imax]
             self.omega = self.decomp[0][imin:imax]
             self.phi = self.decomp[2][imin:imax]
-            self.ki = self.ki[imin:imax]
-            self.setup = self.decomp[imin:imax]
+            self.ki = dispersion(self.omega,self.depth,g=self.gAbs)
+            self.Nf = imax - imin
+            self.setup = self.decomp[3]
             self.kDir = np.zeros((len(self.ki),3),"d")
             for ii in range(len(self.ki)):
                 self.kDir[ii,:] = self.ki[ii]*self.waveDir[:]
@@ -929,18 +945,16 @@ class TimeSeries:
 #            self.Twindow = self.Npw*self.dt
 #            self.Noverlap = int(self.Npw *0.25)
 
-    def eta(self,x,y,z,t):
+    def etaDirect(self,x,y,z,t):
         """Free surface displacement
-
         :param x: floating point x coordinate
         :param t: time"""
-        Eta=0.
-        if(self.rec_direct):
-            for ii in range(self.Nall):
-                Eta+= eta_mode(x,y,z,t,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
-            return Eta
+        Eta=0.        
+        for ii in range(self.Nf):
+            Eta+= eta_mode(x-self.x0,y-self.y0,z-self.z0,t-self.t0,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
+        return Eta
 
-    def u(self,x,y,z,t,comp):
+    def uDirect(self,x,y,z,t,comp):
         """x-component of velocity
 
         :param x: floating point x coordinate
@@ -948,9 +962,8 @@ class TimeSeries:
         :param t: time
         """
         U=0.
-        if(self.rec_direct):
-            for ii in range(self.Nall):
-                U+= vel_mode(x,y,z,t,self.kDir[ii], self.ki[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir,comp)                
+        for ii in range(self.N):
+            U+= vel_mode(x-self.x0,y-self.y0,z-self.z0,t-self.t0,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir,comp)                
         return U        
 
 
@@ -1017,210 +1030,3 @@ class TimeSeries:
 
 
 
-
-if __name__ == '__main__':
-    from matplotlib import pyplot as plt
-    import os as os
-    import tables
-
-"""
-# Unit test for Linear Monochromatic waves
-    Lwaves = MonochromaticWaves(period=1.94,waveHeight=0.0125,mwl=0.,depth=1.,g=[0,-9.81,0],waveDir[0.707,0.707,],wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = 0.,phi0 = 0.)
-    logEvent("Wavetools.py: Testing for a monochromatic linear wave:"
-
-
-
-
-
-
-
-
-
-
-
-
-
-    lineData = tables.openFile("20150927-0000-01.FRFNProp.line.data.mat","r")
-    z = lineData.root.lineGriddedFilteredData.waterGridFiltered[:]
-    x = lineData.root.lineCoredat.downLineX[:]
-    xfinite = x[:]
-    xfinite[np.isnan(x)] = -1000.0
-    i105 = np.where(xfinite > 105.0)[0][0]
-    print i105
-    rawtime = lineData.root.lineCoredat.tGPSVector[:500]
-    raweta = z[i105,:500]
-
-    rawtime = rawtime - rawtime[0]
-    rawtime*=86400
-
-
-    plt.plot(rawtime,raweta,"ko")
-
-
-    #from scipy.interpolate import interp1d
-
-    #from scipy import interpolate
-    not_nan = np.logical_not(np.isnan(raweta))
-
-    indices = np.arange(len(raweta))
-    neweta = np.interp(indices, indices[not_nan], raweta[not_nan])
-
-    plt.plot(rawtime,neweta)
-
-    plt.savefig("raw.pdf")
-    plt.close("all")
-    np.savetxt("Duck_series.txt",zip(rawtime,neweta))
-
-    for Nf in np.array([8,16,32,64,128]):
-
-        tseries = timeSeries(timeSeriesFile= "Duck_series.txt",
-                             skiprows = 2,
-                             d = 5.5,
-                             bandFactor = 2.0, #controls width of band  around fp
-                             peakFrequency = 0.2,
-                             N = Nf,          #number of frequency bins
-                             Nwaves = 2,
-                             mwl = 0.0,        #mean water level
-                             waveDir = np.array([ 1 , 0 , 0]),
-                             g = np.array([0, -9.81, 0])         #accelerationof gravity
-                             )
-#        graph = tseries.plotSeries()
-#        tseries_comp = np.loadtxt("Tseries_proteus.csv",skiprows=2, delimiter = ",")
-#        line1 = plt.plot(tseries_comp[:,0],tseries_comp[:,1])
-#        plt.savefig("timeSeries2.pdf")
-#        plt.close("all")
-        time = tseries.rawdata()[0]
-        eta = tseries.rawdata()[1]
-
-
-
-
-        decomp = decompose_tseries(time,eta,len(time),len(time),ret_only_freq=0)
-   # plt.plot(decomp[0],decomp[1])
-   # plt.plot(decomp[0],decomp[2])
-
-
-
-
-        tlim = len(time) # len(time)
-        ax = plt.subplot(111)
-        print Nf
-        eta_rec= np.zeros(len(time),"d")
-        for itime in range(tlim):
-            eta_rec[itime] = tseries.reconstruct_direct(0.,0.,0.,time[itime])
-        ax.plot(time,eta_rec,label = "Nf = %s" %Nf)
-        ax.legend()
-
-    rawm = np.mean(neweta)
-    ax.plot(time,eta,"ko",label="Actual",markersize=2)
-    plt.legend(loc="best")
-#    ax.set_xlim(0,50)
-    plt.grid()
-    plt.savefig("Comp.pdf")
-
-
-#Regular, Random wave tests
-if __name__ == '__main__':
-    from matplotlib.pyplot import *
-    import os as os
-    global VTIME
-    VTIME = 0.
-
-    def etaCalc(x,y,z,t,wave_fun,ttime):
-        eta = np.zeros((len(x),len(y),len(z),len(t)),float)
-        for n,T in enumerate(t):
-            for J,xi in enumerate(x):
-                for I,yi in enumerate(y):
-                    for K,zi in enumerate(z):
-                        eta[J,I,K,n] = wave_fun.eta(xi,yi,zi,T)
-
-        return eta
-    def velCalc(x,y,z,t,wave_fun,ttime,ss):
-        eta = np.zeros((len(x),len(y),len(z),len(t)),float)
-        for n,T in enumerate(t):
-            for J,xi in enumerate(x):
-                for I,yi in enumerate(y):
-                    for K,zi in enumerate(z):
-                        eta[J,I,K,n] = wave_fun.u(xi,yi,zi,T,ss)
-
-        return eta
-    def plotSeriesAlongAxis(x,t,ts,ifig,string):
-       # print(x)
-        fig = figure(ifig)
-        for i,xi in enumerate(x):
-            line1 = plot(t,ts[i,:])
-
-        savefig("timeseries_%s.png" %string)
-
-
-    print "Loading variables"
-
-    Tp = 5.0 #s peak period
-    Hs = 2.0 #m significant wave height
-    mwl = 0.0 #mean water level    Hs = 2.0
-    depth = 10.0 # water depth
-    waveDir = np.array([0,1,0])#wave Direction
-    g = np.array([0,0,-9.81]) #
-    print "Setting space and time arrays"
-    li =2.*pi/dispersion(2.*pi/Tp,depth,g=9.81)
-    bandFactor = 2.
-    x = np.linspace(0,0,1)
-    y = np.linspace(0,0,1)
-    z = np.linspace(0,0,1)
-    t=np.linspace(0,50.*Tp/1.1,625)
-#Fenton coefficients
-
-    Y = [0.04160592, #Surface elevation Fourier coefficients for non-dimensionalised solution
-         0.00555874,
-         0.00065892,
-         0.00008144,
-         0.00001078,
-         0.00000151,
-         0.00000023,
-         0.00000007]
-
-    B = [0.05395079,
-         0.00357780,
-         0.00020506,
-         0.00000719,
-         -0.00000016,
-         -0.00000005,
-         0.00000000,
-         0.00000000]
-    print "Calculating waves"
-
-
-
-    waveType = "Fenton" # Change between Linear, Fenton and random
-    if waveType is "Linear":
-        waves = MonochromaticWaves( Tp, Hs, mwl,  depth, g,  waveDir)
-    elif waveType is "Fenton":
-        wlength = 8.12
-        t=np.linspace(0,30,500)
-        waves = MonochromaticWaves( 2.95, 0.109 , mwl,  0.873, g,  waveDir,wlength, waveType, Y, B) #period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = 0.,phi0 = 0.):
-    elif waveType is "Random":
-        waves = RandomWaves(Tp = Tp,
-                            Hs = Hs,
-                            d = depth,
-                            fp = 1./Tp,
-                            bandFactor = bandFactor,
-                            N = 101,
-                            mwl = mwl,
-                            g = g)
-    print "Calculating free-surface"
-
-    print "Start-time: %s" %tt.time()
-    ttime = tt.time()
-    eta = etaCalc(x,y,z,t,waves,ttime)
-    v1 = velCalc(x,y,z,t,waves,ttime,"x")
-    v2 = velCalc(x,y,z,t,waves,ttime,"y")
-    v3 = velCalc(x,y,z,t,waves,ttime,"z")
-    duration = tt.time()-ttime
-    print "Duration: %s" %duration
-    print "Plotting free surface elevation"
-
-    plotSeriesAlongAxis(x,t,eta[0,0,:,:],0,"Eta")
-    plotSeriesAlongAxis(z,t,v1[0,0,:,:],1,"UX")
-    plotSeriesAlongAxis(y,t,v2[0,0,:,:],2,"UY")
-    plotSeriesAlongAxis(z,t,v3[0,0,:,:],3,"UZ")
-    print VTIME """
