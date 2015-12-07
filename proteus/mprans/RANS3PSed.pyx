@@ -32,6 +32,10 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * p_grad_trial_ref,
                                double * p_test_ref,
                                double * p_grad_test_ref,
+                               double * q_p,
+                               double * q_grad_p,
+                               double * ebqe_p,
+                               double * ebqe_grad_p,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
                                double * vel_test_ref,
@@ -71,11 +75,8 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double Cd_sge,
                                double C_dc,
                                double C_b,
-                               # VRANS start
                                double * eps_solid,
                                double * q_velocity_fluid,
-                               double * q_p_fluid,
-                               double * q_grad_p_fluid,
                                double * q_vos,
                                double * q_dvos_dt,
                                double * q_dragAlpha,
@@ -85,7 +86,6 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * q_turb_var_1,
                                double * q_turb_var_grad_0,
                                double * q_eddy_viscosity,
-                               # VRANS end
                                int * p_l2g,
                                int * vel_l2g,
                                double * p_dof,
@@ -102,25 +102,45 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * q_mom_v_acc,
                                double * q_mom_w_acc,
                                double * q_mass_adv,
-                               double * q_mom_u_acc_beta_bdf, double * \
-                               q_mom_v_acc_beta_bdf, double * q_mom_w_acc_beta_bdf,
+                               double * q_mom_u_acc_beta_bdf,
+                               double * q_mom_v_acc_beta_bdf,
+                               double * q_mom_w_acc_beta_bdf,
                                double * q_dV,
                                double * q_dV_last,
                                double * q_velocity_sge,
                                double * q_cfl,
-                               double * q_numDiff_u, double * q_numDiff_v, double * q_numDiff_w,
-                               double * q_numDiff_u_last, double * q_numDiff_v_last, double * q_numDiff_w_last,
-                               int * sdInfo_u_u_rowptr, int * sdInfo_u_u_colind,
-                               int * sdInfo_u_v_rowptr, int * sdInfo_u_v_colind,
-                               int * sdInfo_u_w_rowptr, int * sdInfo_u_w_colind,
-                               int * sdInfo_v_v_rowptr, int * sdInfo_v_v_colind,
-                               int * sdInfo_v_u_rowptr, int * sdInfo_v_u_colind,
-                               int * sdInfo_v_w_rowptr, int * sdInfo_v_w_colind,
-                               int * sdInfo_w_w_rowptr, int * sdInfo_w_w_colind,
-                               int * sdInfo_w_u_rowptr, int * sdInfo_w_u_colind,
-                               int * sdInfo_w_v_rowptr, int * sdInfo_w_v_colind,
-                               int offset_p, int offset_u, int offset_v, int offset_w,
-                               int stride_p, int stride_u, int stride_v, int stride_w,
+                               double * q_numDiff_u,
+                               double * q_numDiff_v,
+                               double * q_numDiff_w,
+                               double * q_numDiff_u_last,
+                               double * q_numDiff_v_last,
+                               double * q_numDiff_w_last,
+                               int * sdInfo_u_u_rowptr,
+                               int * sdInfo_u_u_colind,
+                               int * sdInfo_u_v_rowptr,
+                               int * sdInfo_u_v_colind,
+                               int * sdInfo_u_w_rowptr,
+                               int * sdInfo_u_w_colind,
+                               int * sdInfo_v_v_rowptr,
+                               int * sdInfo_v_v_colind,
+                               int * sdInfo_v_u_rowptr,
+                               int * sdInfo_v_u_colind,
+                               int * sdInfo_v_w_rowptr,
+                               int * sdInfo_v_w_colind,
+                               int * sdInfo_w_w_rowptr,
+                               int * sdInfo_w_w_colind,
+                               int * sdInfo_w_u_rowptr,
+                               int * sdInfo_w_u_colind,
+                               int * sdInfo_w_v_rowptr,
+                               int * sdInfo_w_v_colind,
+                               int offset_p,
+                               int offset_u,
+                               int offset_v,
+                               int offset_w,
+                               int stride_p,
+                               int stride_u,
+                               int stride_v,
+                               int stride_w,
                                double * globalResidual,
                                int nExteriorElementBoundaries_global,
                                int * exteriorElementBoundariesArray,
@@ -132,13 +152,9 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * bc_ebqe_phi_ext,
                                double * ebqe_normal_phi_ext,
                                double * ebqe_kappa_phi_ext,
-                               # VRANS start
                                double * ebqe_vos_ext,
-                               double * ebqe_p_fluid_ext,
-                               double * ebqe_grad_p_fluid_ext,
                                double * ebqe_turb_var_0,
                                double * ebqe_turb_var_1,
-                               # VRANS end
                                int * isDOFBoundary_p,
                                int * isDOFBoundary_u,
                                int * isDOFBoundary_v,
@@ -185,6 +201,10 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * p_grad_trial_ref,
                                double * p_test_ref,
                                double * p_grad_test_ref,
+                               double * q_p,
+                               double * q_grad_p,
+                               double * ebqe_p,
+                               double * ebqe_grad_p,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
                                double * vel_test_ref,
@@ -226,8 +246,6 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                # VRANS start
                                double * eps_solid,
                                double * q_velocity_fluid,
-                               double * q_p_fluid,
-                               double * q_grad_p_fluid,
                                double * q_vos,
                                double * q_dvos_dt,
                                double * q_dragAlpha,
@@ -291,8 +309,6 @@ cdef extern from "mprans/RANS3PSed.h" namespace "proteus":
                                double * ebqe_kappa_phi_ext,
                                # VRANS start
                                double * ebqe_vos_ext,
-                               double * ebqe_p_fluid_ext,
-                               double * ebqe_grad_p_fluid_ext,
                                double * ebqe_turb_var_0,
                                double * ebqe_turb_var_1,
                                # VRANS end
@@ -400,6 +416,10 @@ cdef class RANS3PSed:
                           numpy.ndarray p_grad_trial_ref,
                           numpy.ndarray p_test_ref,
                           numpy.ndarray p_grad_test_ref,
+                          numpy.ndarray q_p,
+                          numpy.ndarray q_grad_p,
+                          numpy.ndarray ebqe_p,
+                          numpy.ndarray ebqe_grad_p,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
                           numpy.ndarray vel_test_ref,
@@ -442,8 +462,6 @@ cdef class RANS3PSed:
                           # VRANS start
                           numpy.ndarray eps_solid,
                           numpy.ndarray q_velocity_fluid,
-                          numpy.ndarray q_p_fluid,
-                          numpy.ndarray q_grad_p_fluid,
                           numpy.ndarray q_vos,
                           numpy.ndarray q_dvos_dt,
                           numpy.ndarray q_dragAlpha,
@@ -501,8 +519,6 @@ cdef class RANS3PSed:
                           numpy.ndarray ebqe_kappa_phi_ext,
                           # VRANS start
                           numpy.ndarray ebqe_vos_ext,
-                          numpy.ndarray ebqe_p_fluid_ext,
-                          numpy.ndarray ebqe_grad_p_fluid_ext,
                           numpy.ndarray ebqe_turb_var_0,
                           numpy.ndarray ebqe_turb_var_1,
                           # VRANS end
@@ -552,6 +568,10 @@ cdef class RANS3PSed:
                                        < double * > p_grad_trial_ref.data,
                                        < double * > p_test_ref.data,
                                        < double * > p_grad_test_ref.data,
+                                        < double * > q_p.data,
+                                        < double * > q_grad_p.data,
+                                        < double * > ebqe_p.data,
+                                        < double * > ebqe_grad_p.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
                                        < double * > vel_test_ref.data,
@@ -594,8 +614,6 @@ cdef class RANS3PSed:
                                        # VRANS start
                                         < double * > eps_solid.data,
                                         < double * > q_velocity_fluid.data,
-                                        < double * > q_p_fluid.data,
-                                        < double * > q_grad_p_fluid.data,
                                         < double * > q_vos.data,
                                         < double * > q_dvos_dt.data,
                                         < double * > q_dragAlpha.data,
@@ -653,8 +671,6 @@ cdef class RANS3PSed:
                                         < double * > ebqe_kappa_phi_ext.data,
                                         # VRANS start
                                         < double * > ebqe_vos_ext.data,
-                                        < double * > ebqe_p_fluid_ext.data,
-                                        < double * > ebqe_grad_p_fluid_ext.data,
                                         < double * > ebqe_turb_var_0.data,
                                         < double * > ebqe_turb_var_1.data,
                                         # VRANS end
@@ -706,6 +722,10 @@ cdef class RANS3PSed:
                           numpy.ndarray p_grad_trial_ref,
                           numpy.ndarray p_test_ref,
                           numpy.ndarray p_grad_test_ref,
+                          numpy.ndarray q_p,
+                          numpy.ndarray q_grad_p,
+                          numpy.ndarray ebqe_p,
+                          numpy.ndarray ebqe_grad_p,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
                           numpy.ndarray vel_test_ref,
@@ -747,8 +767,6 @@ cdef class RANS3PSed:
                           # VRANS start
                           numpy.ndarray eps_solid,
                           numpy.ndarray q_velocity_fluid,
-                          numpy.ndarray q_p_fluid,
-                          numpy.ndarray q_grad_p_fluid,
                           numpy.ndarray q_vos,
                           numpy.ndarray q_dvos_dt,
                           numpy.ndarray q_dragAlpha,
@@ -811,8 +829,6 @@ cdef class RANS3PSed:
                           numpy.ndarray ebqe_kappa_phi_ext,
                           # VRANS start
                           numpy.ndarray ebqe_vos_ext,
-                          numpy.ndarray ebqe_p_fluid_ext,
-                          numpy.ndarray ebqe_grad_p_fluid_ext,
                           numpy.ndarray ebqe_turb_var_0,
                           numpy.ndarray ebqe_turb_var_1,
                           # VRANS end
@@ -869,6 +885,10 @@ cdef class RANS3PSed:
                                        < double * > p_grad_trial_ref.data,
                                        < double * > p_test_ref.data,
                                        < double * > p_grad_test_ref.data,
+                                        < double * > q_p.data,
+                                        < double * > q_grad_p.data,
+                                        < double * > ebqe_p.data,
+                                        < double * > ebqe_grad_p.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
                                        < double * > vel_test_ref.data,
@@ -910,8 +930,6 @@ cdef class RANS3PSed:
                                        # VRANS start
                                         < double * > eps_solid.data,
                                         < double * > q_velocity_fluid.data,
-                                        < double * > q_p_fluid.data,
-                                        < double * > q_grad_p_fluid.data,
                                         < double * > q_vos.data,
                                         < double * > q_dvos_dt.data,
                                         < double * > q_dragAlpha.data,
@@ -974,8 +992,6 @@ cdef class RANS3PSed:
                                         < double * > ebqe_kappa_phi_ext.data,
                                         # VRANS start
                                         < double * > ebqe_vos_ext.data,
-                                        < double * > ebqe_p_fluid_ext.data,
-                                        < double * > ebqe_grad_p_fluid_ext.data,
                                         < double * > ebqe_turb_var_0.data,
                                         < double * > ebqe_turb_var_1.data,
                                         # VRANS end
@@ -1079,6 +1095,10 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * p_grad_trial_ref,
                                double * p_test_ref,
                                double * p_grad_test_ref,
+                               double * q_p,
+                               double * q_grad_p,
+                               double * ebqe_p,
+                               double * ebqe_grad_p,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
                                double * vel_test_ref,
@@ -1121,8 +1141,6 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                # VRANS start
                                double * eps_solid,
                                double * q_velocity_fluid,
-                               double * q_p_fluid,
-                               double * q_grad_p_fluid,
                                double * q_vos,
                                double * q_dvos_dt,
                                double * q_dragAlpha,
@@ -1181,8 +1199,6 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * ebqe_kappa_phi_ext,
                                # VRANS start
                                double * ebqe_vos_ext,
-                               double * ebqe_p_fluid_ext,
-                               double * ebqe_grad_p_fluid_ext,
                                double * ebqe_turb_var_0,
                                double * ebqe_turb_var_1,
                                # VRANS end
@@ -1232,6 +1248,10 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * p_grad_trial_ref,
                                double * p_test_ref,
                                double * p_grad_test_ref,
+                               double * q_p,
+                               double * q_grad_p,
+                               double * ebqe_p,
+                               double * ebqe_grad_p,
                                double * vel_trial_ref,
                                double * vel_grad_trial_ref,
                                double * vel_test_ref,
@@ -1273,8 +1293,6 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                # VRANS start
                                double * eps_solid,
                                double * q_velocity_fluid,
-                               double * q_p_fluid,
-                               double * q_grad_p_fluid,
                                double * q_vos,
                                double * q_dvos_dt,
                                double * q_dragAlpha,
@@ -1338,8 +1356,6 @@ cdef extern from "mprans/RANS3PSed2D.h" namespace "proteus":
                                double * ebqe_kappa_phi_ext,
                                # VRANS start
                                double * ebqe_vos_ext,
-                               double * ebqe_p_fluid_ext,
-                               double * ebqe_grad_p_fluid_ext,
                                double * ebqe_turb_var_0,
                                double * ebqe_turb_var_1,
                                # VRANS end
@@ -1447,6 +1463,10 @@ cdef class RANS3PSed2D:
                           numpy.ndarray p_grad_trial_ref,
                           numpy.ndarray p_test_ref,
                           numpy.ndarray p_grad_test_ref,
+                          numpy.ndarray q_p,
+                          numpy.ndarray q_grad_p,
+                          numpy.ndarray ebqe_p,
+                          numpy.ndarray ebqe_grad_p,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
                           numpy.ndarray vel_test_ref,
@@ -1489,8 +1509,6 @@ cdef class RANS3PSed2D:
                           # VRANS start
                           numpy.ndarray eps_solid,
                           numpy.ndarray q_velocity_fluid,
-                          numpy.ndarray q_p_fluid,
-                          numpy.ndarray q_grad_p_fluid,
                           numpy.ndarray q_vos,
                           numpy.ndarray q_dvos_dt,
                           numpy.ndarray q_dragAlpha,
@@ -1548,8 +1566,6 @@ cdef class RANS3PSed2D:
                           numpy.ndarray ebqe_kappa_phi_ext,
                           # VRANS start
                           numpy.ndarray ebqe_vos_ext,
-                          numpy.ndarray ebqe_p_fluid_ext,
-                          numpy.ndarray ebqe_grad_p_fluid_ext,
                           numpy.ndarray ebqe_turb_var_0,
                           numpy.ndarray ebqe_turb_var_1,
                           # VRANS end
@@ -1599,6 +1615,10 @@ cdef class RANS3PSed2D:
                                        < double * > p_grad_trial_ref.data,
                                        < double * > p_test_ref.data,
                                        < double * > p_grad_test_ref.data,
+                                        <double * > q_p.data,
+                                        <double * > q_grad_p.data,
+                                        <double * > ebqe_p.data,
+                                        <double * > ebqe_grad_p.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
                                        < double * > vel_test_ref.data,
@@ -1641,8 +1661,6 @@ cdef class RANS3PSed2D:
                                        # VRANS start
                                         < double * > eps_solid.data,
                                         < double * > q_velocity_fluid.data,
-                                        < double * > q_p_fluid.data,
-                                        < double * > q_grad_p_fluid.data,
                                         < double * > q_vos.data,
                                         < double * > q_dvos_dt.data,
                                         < double * > q_dragAlpha.data,
@@ -1700,8 +1718,6 @@ cdef class RANS3PSed2D:
                                         < double * > ebqe_kappa_phi_ext.data,
                                         # VRANS start
                                         < double * > ebqe_vos_ext.data,
-                                        < double * > ebqe_p_fluid_ext.data,
-                                        < double * > ebqe_grad_p_fluid_ext.data,
                                         < double * > ebqe_turb_var_0.data,
                                         < double * > ebqe_turb_var_1.data,
                                         # VRANS end
@@ -1753,6 +1769,10 @@ cdef class RANS3PSed2D:
                           numpy.ndarray p_grad_trial_ref,
                           numpy.ndarray p_test_ref,
                           numpy.ndarray p_grad_test_ref,
+                          numpy.ndarray q_p,
+                          numpy.ndarray q_grad_p,
+                          numpy.ndarray ebqe_p,
+                          numpy.ndarray ebqe_grad_p,
                           numpy.ndarray vel_trial_ref,
                           numpy.ndarray vel_grad_trial_ref,
                           numpy.ndarray vel_test_ref,
@@ -1794,8 +1814,6 @@ cdef class RANS3PSed2D:
                           # VRANS start
                           numpy.ndarray eps_solid,
                           numpy.ndarray q_velocity_fluid,
-                          numpy.ndarray q_p_fluid,
-                          numpy.ndarray q_grad_p_fluid,
                           numpy.ndarray q_vos,
                           numpy.ndarray q_dvos_dt,
                           numpy.ndarray q_dragAlpha,
@@ -1858,8 +1876,6 @@ cdef class RANS3PSed2D:
                           numpy.ndarray ebqe_kappa_phi_ext,
                           # VRANS start
                           numpy.ndarray ebqe_vos_ext,
-                          numpy.ndarray ebqe_p_fluid_ext,
-                          numpy.ndarray ebqe_grad_p_fluid_ext,
                           numpy.ndarray ebqe_turb_var_0,
                           numpy.ndarray ebqe_turb_var_1,
                           # VRANS end
@@ -1916,6 +1932,10 @@ cdef class RANS3PSed2D:
                                        < double * > p_grad_trial_ref.data,
                                        < double * > p_test_ref.data,
                                        < double * > p_grad_test_ref.data,
+                                        < double * > q_p.data,
+                                        < double * > q_grad_p.data,
+                                        < double * > ebqe_p.data,
+                                        < double * > ebqe_grad_p.data,
                                        < double * > vel_trial_ref.data,
                                        < double * > vel_grad_trial_ref.data,
                                        < double * > vel_test_ref.data,
@@ -1957,8 +1977,6 @@ cdef class RANS3PSed2D:
                                        # VRANS start
                                         < double * > eps_solid.data,
                                         < double * > q_velocity_fluid.data,
-                                        < double * > q_p_fluid.data,
-                                        < double * > q_grad_p_fluid.data,
                                         < double * > q_vos.data,
                                         < double * > q_dvos_dt.data,
                                         < double * > q_dragAlpha.data,
@@ -2021,8 +2039,6 @@ cdef class RANS3PSed2D:
                                         < double * > ebqe_kappa_phi_ext.data,
                                         # VRANS start
                                         < double * > ebqe_vos_ext.data,
-                                        < double * > ebqe_p_fluid_ext.data,
-                                        < double * > ebqe_grad_p_fluid_ext.data,
                                         < double * > ebqe_turb_var_0.data,
                                         < double * > ebqe_turb_var_1.data,
                                         # VRANS end
@@ -2240,7 +2256,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  FLUID_model=6,
                  VOS_model=0,
                  LS_model=None,
-                 VF_model=None,
+                 VOF_model=None,
                  KN_model=None,
                  Closure_0_model=None,  # Turbulence closure model
                  Closure_1_model=None,  # Second possible Turbulence closure model
@@ -2299,7 +2315,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
         self.PRESSURE_model = PRESSURE_model
         self.VOS_model = VOS_model
         self.LS_model = LS_model
-        self.VF_model = VF_model
+        self.VOF_model = VOF_model
         self.KN_model = KN_model
         self.Closure_0_model = Closure_0_model
         self.Closure_1_model = Closure_1_model
@@ -2480,15 +2496,15 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
             self.ebqe_n = numpy.ones(
                 self.model.ebqe[
                     ('velocity', 0)].shape, 'd')
-        if self.VF_model is not None:
-            self.q_vf = modelList[self.VF_model].q[('u', 0)]
-            if modelList[self.VF_model].ebq.has_key(('u', 0)):
-                self.ebq_vf = modelList[self.VF_model].ebq[('u', 0)]
+        if self.VOF_model is not None:
+            self.q_vf = modelList[self.VOF_model].q[('u', 0)]
+            if modelList[self.VOF_model].ebq.has_key(('u', 0)):
+                self.ebq_vf = modelList[self.VOF_model].ebq[('u', 0)]
             else:
                 self.ebq_vf = None
-            self.ebqe_vf = modelList[self.VF_model].ebqe[('u', 0)]
+            self.ebqe_vf = modelList[self.VOF_model].ebqe[('u', 0)]
             self.bc_ebqe_vf = modelList[
-                self.VF_model].numericalFlux.ebqe[
+                self.VOF_model].numericalFlux.ebqe[
                 ('u', 0)]
         else:
             self.q_vf = numpy.zeros(self.model.q[('u', 0)].shape, 'd')
@@ -3815,8 +3831,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
                         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[
                                                  dofN], self.timeIntegration.t) + self.MOVING_DOMAIN * self.mesh.nodeVelocityArray[dofN, cj - 1]
         self.rans3pf.calculateResidual(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
+            self.pressureModel.u[0].femSpace.elementMaps.psi,
+            self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
             self.mesh.nodeVelocityArray,
             self.MOVING_DOMAIN,
@@ -3826,13 +3842,16 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.pressureModel.u[0].femSpace.grad_psi,
             self.pressureModel.u[0].femSpace.psi,
             self.pressureModel.u[0].femSpace.grad_psi,
+            self.pressureModel.q[('u',0)],
+            self.pressureModel.q[('grad(u)',0)],
+            self.pressureModel.ebqe[('u',0)],
+            self.pressureModel.ebqe[('grad(u)',0)],
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
-            # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
+            self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace,
             self.elementBoundaryQuadratureWeights[('u', 0)],
             self.pressureModel.u[0].femSpace.psi_trace,
             self.pressureModel.u[0].femSpace.grad_psi_trace,
@@ -3844,7 +3863,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.u[0].femSpace.grad_psi_trace,
             self.u[0].femSpace.elementMaps.boundaryNormals,
             self.u[0].femSpace.elementMaps.boundaryJacobians,
-            # physics
             self.eb_adjoint_sigma,
             self.elementDiameter,  # mesh.elementDiametersArray,
             self.mesh.nodeDiametersArray,
@@ -3867,11 +3885,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.Cd_sge,
             self.shockCapturing.shockCapturingFactor,
             self.numericalFlux.penalty_constant,
-            # VRANS start
             self.coefficients.epsFact_solid,
             self.q_velocity_fluid,
-            self.q_p_fluid,
-            self.q_grad_p_fluid,
             self.q_vos,
             self.q_dvos_dt,
             self.coefficients.q_dragAlpha,
@@ -3881,7 +3896,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.q_turb_var[1],
             self.coefficients.q_turb_var_grad[0],
             self.q['eddy_viscosity'],
-            # VRANS end
             self.pressureModel.u[0].femSpace.dofMap.l2g,
             self.u[0].femSpace.dofMap.l2g,
             self.pressureModel.u[0].dof,
@@ -3911,35 +3925,32 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.shockCapturing.numDiff_last[0],
             self.shockCapturing.numDiff_last[1],
             self.shockCapturing.numDiff_last[2],
-            self.coefficients.sdInfo[
-                (0, 0)][0], self.coefficients.sdInfo[
-                (0, 0)][1],
-            self.coefficients.sdInfo[
-                (0, 1)][0], self.coefficients.sdInfo[
-                (0, 1)][1],
-            self.coefficients.sdInfo[
-                (0, 2)][0], self.coefficients.sdInfo[
-                (0, 2)][1],
-            self.coefficients.sdInfo[
-                (1, 1)][0], self.coefficients.sdInfo[
-                (1, 1)][1],
-            self.coefficients.sdInfo[
-                (1, 0)][0], self.coefficients.sdInfo[
-                (1, 0)][1],
-            self.coefficients.sdInfo[
-                (1, 2)][0], self.coefficients.sdInfo[
-                (1, 2)][1],
-            self.coefficients.sdInfo[
-                (2, 2)][0], self.coefficients.sdInfo[
-                (2, 2)][1],
-            self.coefficients.sdInfo[
-                (2, 0)][0], self.coefficients.sdInfo[
-                (2, 0)][1],
-            self.coefficients.sdInfo[
-                (2, 1)][0], self.coefficients.sdInfo[
-                (2, 1)][1],
-            self.pressureModel.offset[0], self.offset[0], self.offset[1], self.offset[2],
-            self.pressureModel.stride[0], self.stride[0], self.stride[1], self.stride[2],
+            self.coefficients.sdInfo[(0, 0)][0],
+            self.coefficients.sdInfo[(0, 0)][1],
+            self.coefficients.sdInfo[(0, 1)][0],
+            self.coefficients.sdInfo[(0, 1)][1],
+            self.coefficients.sdInfo[(0, 2)][0],
+            self.coefficients.sdInfo[(0, 2)][1],
+            self.coefficients.sdInfo[(1, 1)][0],
+            self.coefficients.sdInfo[(1, 1)][1],
+            self.coefficients.sdInfo[(1, 0)][0],
+            self.coefficients.sdInfo[(1, 0)][1],
+            self.coefficients.sdInfo[(1, 2)][0],
+            self.coefficients.sdInfo[(1, 2)][1],
+            self.coefficients.sdInfo[(2, 2)][0],
+            self.coefficients.sdInfo[(2, 2)][1],
+            self.coefficients.sdInfo[(2, 0)][0],
+            self.coefficients.sdInfo[(2, 0)][1],
+            self.coefficients.sdInfo[(2, 1)][0],
+            self.coefficients.sdInfo[(2, 1)][1],
+            self.pressureModel.offset[0],
+            self.offset[0],
+            self.offset[1],
+            self.offset[2],
+            self.pressureModel.stride[0],
+            self.stride[0],
+            self.stride[1],
+            self.stride[2],
             r,
             self.mesh.nExteriorElementBoundaries_global,
             self.mesh.exteriorElementBoundariesArray,
@@ -3951,13 +3962,9 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.bc_ebqe_phi,
             self.coefficients.ebqe_n,
             self.coefficients.ebqe_kappa,
-            # VRANS start
             self.ebqe_vos,
-            self.ebqe_p_fluid,
-            self.ebqe_grad_p_fluid,
             self.coefficients.ebqe_turb_var[0],
             self.coefficients.ebqe_turb_var[1],
-            # VRANS end
             self.pressureModel.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.isDOFBoundary[0],
             self.numericalFlux.isDOFBoundary[1],
@@ -4050,8 +4057,8 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.csrColumnOffsets_eb[(2, 2)] = self.csrColumnOffsets[(0, 1)]
 
         self.rans3pf.calculateJacobian(  # element
-            self.u[0].femSpace.elementMaps.psi,
-            self.u[0].femSpace.elementMaps.grad_psi,
+            self.pressureModel.u[0].femSpace.elementMaps.psi,
+            self.pressureModel.u[0].femSpace.elementMaps.grad_psi,
             self.mesh.nodeArray,
             self.mesh.nodeVelocityArray,
             self.MOVING_DOMAIN,
@@ -4061,13 +4068,17 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.pressureModel.u[0].femSpace.grad_psi,
             self.pressureModel.u[0].femSpace.psi,
             self.pressureModel.u[0].femSpace.grad_psi,
+            self.pressureModel.q[('u',0)],
+            self.pressureModel.q[('grad(u)',0)],
+            self.pressureModel.ebqe[('u',0)],
+            self.pressureModel.ebqe[('grad(u)',0)],
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             self.u[0].femSpace.psi,
             self.u[0].femSpace.grad_psi,
             # element boundary
-            self.u[0].femSpace.elementMaps.psi_trace,
-            self.u[0].femSpace.elementMaps.grad_psi_trace,
+            self.pressureModel.u[0].femSpace.elementMaps.psi_trace,
+            self.pressureModel.u[0].femSpace.elementMaps.grad_psi_trace,
             self.pressureModel.elementBoundaryQuadratureWeights[('u', 0)],
             self.pressureModel.u[0].femSpace.psi_trace,
             self.pressureModel.u[0].femSpace.grad_psi_trace,
@@ -4103,8 +4114,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             # VRANS start
             self.coefficients.epsFact_solid,
             self.q_velocity_fluid,
-            self.q_p_fluid,
-            self.q_grad_p_fluid,
             self.q_vos,
             self.q_dvos_dt,
             self.coefficients.q_dragAlpha,
@@ -4192,8 +4201,6 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_kappa,
             # VRANS start
             self.ebqe_vos,
-            self.ebqe_p_fluid,
-            self.ebqe_grad_p_fluid,
             self.coefficients.ebqe_turb_var[0],
             self.coefficients.ebqe_turb_var[1],
             # VRANS end
