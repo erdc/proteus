@@ -9,17 +9,21 @@ Classes:
 - Custom: creates a custom shape from a given set vertices, facets, etc.
 """
 
-import BC as bc
-import numpy as np
 from math import cos, sin, sqrt, atan2, acos
-from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
-from proteus.Profiling import logEvent as log
 from itertools import compress
 import csv
-import os, sys
+import os
+import sys
+import numpy as np
+from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
+from proteus import BC as bc
+from proteus.Profiling import logEvent as log
 
 
 class BCContainer(object):
+    """
+    Creates a class from a dictionary (keys become class variable names)
+    """
     def __init__(self, BC_dict):
         self.__dict__ = BC_dict
 
@@ -30,10 +34,13 @@ class Shape:
     :param domain: domain in which the shape is defined
     """
 
-    def __init__(self, domain, dim=None, coords=None):
-        self.instance_i = len(domain.shape_list)
-        domain.shape_list.append(self)
+    def __init__(self, domain, nd=None):
+        if nd != domain.nd:
+            log('Shape ('+`nd`+'D) and Domain ('+`domain.nd`+'D)' \
+                ' have different dimensions!')
+            sys.exit()
         self.domain = domain
+        domain.shape_list.append(self)
         self.vertices = None
         self.vertexFlags = None
         self.segments = None
@@ -43,176 +50,28 @@ class Shape:
         self.regions = None
         self.regionFlags = None
         self.holes = None
+        self.barycenter = np.zeros(3)
+        self.coords = None  # Only used for predefined shapes
+                            # (can be different from barycenter)
+        self.coords_system = np.eye(domain.nd)
+        self.b_or = None  # boundary orientation
+        self.RigidBody = None
+        # the following should be attached to RigidBody directly
         self.volume = None
         self.mass = None
         self.density = None
-        self.barycenter = None
-        self.record_values = False
-        self.BC_list = None
         self.free_x = (1, 1, 1)
         self.free_r = (1, 1, 1)
-        self._snv = None
-        self._snf = None
-        self._sns = None
-        self._snr = None
-        self._snh = None
-        self._snbc = None
-
-    def _addShape(self):
-        """
-        Adds Shape information to the domain
-        """
-        # add new information to the domain
-        # get maximum flag defined in domain so far
-        # need to add +1 for flags as 0 cannot be used
-        self._snbc = len(self.domain.bc)
-        self._enbc = self._snbc + len(self.BC_list)
-        self.domain.bc += self.BC_list
-        self.domain.barycenters = np.append(self.domain.barycenters,
-                                            self.barycenters, axis=0)
-        self._snv = len(self.domain.vertices)  # total nb of vertices in domain
-        self._env = self._snv + len(self.vertices)
-        flag = self._snbc-1
-        self.domain.vertices += self.vertices.tolist()
-        self.domain.vertexFlags += (self.vertexFlags+flag).tolist()
-        if self.segments is not None:
-            self._sns = len(self.domain.segments)
-            self._ens = self._sns + len(self.segments)
-            self.domain.segments += (self.segments+self._snv).tolist()
-            self.domain.segmentFlags += (self.segmentFlags+flag).tolist()
-        if self.facets is not None:
-            self._snf = len(self.domain.facets)
-            self._enf = self._snf + len(self.facets)
-            self.domain.facets += (self.facets+self._snv).tolist()
-            self.domain.facetFlags += (self.facetFlags+flag).tolist()
-        if self.holes is not None:
-            self._snh = len(self.domain.holes)
-            self._enh = self._snh + len(self.holes)
-            self.domain.holes += self.holes.tolist()
-        if self.regions is not None:
-            self._snr = len(self.domain.regions)
-            self._enr = self._snr + len(self.regions)
-            self.domain.regions += self.regions.tolist()
-            self.domain.regionFlags += (self.regionFlags+flag).tolist()
-        self.domain.update()
-
-    def _resetShape(self):
-        """
-        Updates domain when shape has been changed.
-        This function deletes and resets values of the shape in the domain
-        using their attribute indice. The shapes that were defined after the
-        current shape have their attribute indice updated.
-        -----------------
-        Updated parameters:
-        - vertices
-        - segments (if any)
-        - facets (if any)
-        - regions (if any)
-        - holes (if any)
-        - boundary conditions
-        - barycenters
-        """
-        domain = self.domain
-        flag = self._snbc-1
-        # vertices
-        i0, i1 = self._snv, self._env
-        del domain.vertices[i0:i1]
-        del domain.vertexFlags[i0:i1]
-        domain.vertices[i0:i0] = self.vertices.tolist()
-        domain.vertexFlags[i0:i0] = (self.vertexFlags+flag).tolist()
-        self._env = i0 + len(self.vertices)
-        vdiff = self._env - i1
-        # segments
-        if self._sns is not None:
-            i0, i1 = self._sns, self._ens
-            del domain.segments[i0:i1]
-            del domain.segmentFlags[i0:i1]
-            domain.segments[i0:i0] = (self.segments+self._snv).tolist()
-            domain.segmentFlags[i0:i0] = (self.segmentFlags+flag).tolist()
-            self._ens = i0 + len(self.segments)
-            sdiff = self._ens - i1
-        # facets
-        if self._snf is not None:
-            i0, i1 = self._snf, self._enf
-            del domain.facets[i0:i1]
-            del domain.facetFlags[i0:i1]
-            domain.facets[i0:i0] = (self.facets+self._snv).tolist()
-            domain.facetFlags[i0:i0] = (self.facetFlags+flag).tolist()
-            self._enf = i0 + len(self.facets)
-            fdiff = self._enf - i1
-        # regions
-        if self._snr is not None:
-            i0, i1 = self._snr, self._enr
-            del domain.regions[i0:i1]
-            del domain.regionFlags[i0:i1]
-            domain.regions[i0:i0] = self.regions.tolist()
-            domain.regionFlags[i0:i0] = (self.regionFlags+self._snr).tolist()
-            self._enr = i0 + len(self.regions)
-            rdiff = self._enr - i1
-        # holes
-        if self._snh is not None:
-            i0, i1 = self._snh, self._enh
-            del domain.holes[i0:i1]
-            domain.holes[i0:i0] = self.holes.tolist()
-            self._enh = i0 + len(self.holes)
-            hdiff = self._enh - i1
-        # boundary conditions and barycenters
-        i0, i1 = self._snbc, self._enbc
-        del domain.bc[i0:i1]
-        # this is a numpy array!!
-        ilist = [i0 + i for i in range(i1-i0)]
-        domain.barycenters = np.delete(domain.barycenters, ilist, axis=0)
-        domain.bc[i0:i0] = self.BC_list
-        domain.barycenters = np.insert(domain.barycenters, i0,
-                                       self.barycenters, axis=0)
-        self._enbc = i0 + len(self.BC_list)
-        # updating the attributes of the shape defined after current shape
-        bcdiff = self._enbc - i1
-        for ind, inst in enumerate(self.domain.shape_list):
-            if ind > self.instance_i:
-                inst._snv += vdiff
-                inst._env += vdiff
-                inst._snbc += bcdiff
-                inst._enbc += bcdiff
-                if inst.segments is not None:
-                    inst._sns += sdiff
-                    inst._ens += sdiff
-                    inst.segments += vdiff
-                    inst.segmentFlags += bcdiff
-                if inst.facets is not None:
-                    inst._snf += fdiff
-                    inst._enf += fdiff
-                    inst.facets += vdiff
-                    inst.facetFlags += bcdiff
-                if inst.holes is not None and self.holes is not None:
-                    inst._snh += hdiff
-                    inst._enh += hdiff
-                if inst.regions is not None:
-                    inst._snr += rdiff
-                    inst._enr += rdiff
-                    inst.regionFlags += bcdiff
-
-    def _updateDomain(self):
-        """
-        Updates domain when shape has been changed.
-        -----------------
-        Updated parameters:
-        - vertices
-        - regions
-        - holes
-        - barycenters
-        """
-        self.domain.vertices[self._snv:self._env] = self.vertices.tolist()
-        if self.regions is not None:
-            self.domain.regions[self._snr:self._enr] = self.regions.tolist()
-        if self.holes is not None:
-            self.domain.holes[self._snh:self._enh]
-        self.domain.barycenters[self._snbc:self._enbc] = self.barycenter
-        self.domain.update()
+        # ----------------------
+        self.record_values = False
+        self.zones = {}  # for absorption/generation zones
+        self.zones_id = {}  # indice and type of zone
+        self.auxiliaryVariables = []  # list of auxvar attached to shape
+        self.BC_list = None
 
     def setPosition(self, coords):
         """
-        Set position of the Shape (coords from the barycenter)
+        Set position of the Shape (coords of the barycenter)
         :arg coords: new set of coordinates for the Shape
         """
         old_coords = np.array(self.barycenter)
@@ -236,9 +95,6 @@ class Shape:
                 self.barycenter = np.array(barycenter)
         if self.domain.nd == 3:
             self.barycenter = np.array(barycenter)
-        self.barycenters[:] = self.barycenter
-        self.domain.barycenters[self._snbc:self._enbc] = self.barycenters
-        self._resetShape()
 
     def setConstraints(self, free_x, free_r):
         """
@@ -254,11 +110,7 @@ class Shape:
         Sets new regions for the Shape
         :arg regions: coordinate of the new region(s) (list or array)
         """
-        self.regions = np.array([regions])
-        if not hasattr(self, '_snr'):
-            self._snr = len(self.domain.regions)
-        self._enr = self._snr + len(self.regions)
-        self._resetShape()
+        self.regions = np.array(regions)
 
     def rotate(self, rot, axis=(0, 0, 1), pivot=None):
         """
@@ -286,23 +138,26 @@ class Shape:
                 self.holes[:] = rotation2D(self.holes, rot, pivot)
             if self.regions is not None:
                 self.regions[:] = rotation2D(self.regions, rot, pivot)
+            self.barycenter[:2] = rotation2D(self.barycenter[:nd], rot, pivot)
             self.coords_system[:] = rotation2D(self.coords_system, rot,
                                                (0., 0.))
-            self.b_or[:] = rotation2D(self.b_or, rot, (0., 0.))
-            self.coords[:] = rotation2D(self.coords, rot, pivot)
-            self.barycenter[:2] = rotation2D(self.barycenter[:nd], rot, pivot)
+            if self.b_or is not None:
+                self.b_or[:] = rotation2D(self.b_or, rot, (0., 0.))
+            if self.coords is not None:
+                self.coords[:] = rotation2D(self.coords, rot, pivot)
         elif self.domain.nd == 3:
             self.vertices[:] = rotation3D(self.vertices, rot, axis, pivot)
             if self.holes is not None:
                 self.holes[:] = rotation3D(self.holes, rot, axis, pivot)
             if self.regions is not None:
                 self.regions[:] = rotation3D(self.regions, rot, axis, pivot)
+            self.barycenter[:] = rotation3D(self.barycenter, rot, axis, pivot)
             self.coords_system[:] = rotation3D(self.coords_system, rot, axis,
                                                (0., 0., 0.))
-            self.b_or[:] = rotation3D(self.b_or, rot, axis, (0., 0., 0.))
-            self.barycenter[:] = rotation3D(self.barycenter, rot, axis, pivot)
-            self.coords[:] = rotation3D(self.coords, rot, axis, pivot)
-        self._updateDomain()
+            if self.b_or is not None:
+                self.b_or[:] = rotation3D(self.b_or, rot, axis, (0., 0., 0.))
+            if self.coords is not None:
+                self.coords[:] = rotation3D(self.coords, rot, axis, pivot)
 
     def translate(self, trans):
         """
@@ -328,7 +183,6 @@ class Shape:
             self.barycenter += trans
         if self.holes is not None:
             self.holes += trans
-        self._updateDomain()
 
     def setMass(self, mass):
         """
@@ -384,10 +238,10 @@ class Shape:
         return I
 
     def setRigidBody(self):
-        self.RigidBodyLink = RigidBody(shape=self)
+        self.RigidBody = RigidBody(shape=self)
         self.holes = np.array([self.coords])
         for boundcond in self.BC_list:
-            boundcond.setMoveMesh(self.RigidBodyLink)
+            boundcond.setMoveMesh(self.RigidBody)
 
     def setTank(self):
         for boundcond in self.BC_list:
@@ -431,38 +285,55 @@ class Shape:
         else:
             self.record_filename = filename + '.csv'
 
-    def setAbsorptionZones(self, indice, epsFact_solid, dragAlphaTypes=None,
-                          dragBetaTypes=None):
+    def setAbsorptionZones(self, indice, epsFact_solid,
+                           dragAlphaTypes=0.5/1.005e-6,
+                           dragBetaTypes=0., porosityTypes=1.):
         """
         Sets a region (given the local index) to an absorption zone
         :arg index: local indice of the region (first region of the Shape
                     instance is 0). Can be an integer or a list of integers.
         :arg epsFact_solid: absorption zone length (usually length of region/2)
         """
-        if not hasattr(self, 'zones'):
-            self.zones = {}
+        if not self.zones_id:
             self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones,
                                                                shape=self)
-        self.porosityTypes = np.ones(len(self.regionFlags))
-        self.dragAlphaTypes = np.zeros(len(self.regionFlags))
-        self.dragBetaTypes = np.zeros(len(self.regionFlags))
-        self.epsFact_solid = np.zeros(len(self.regionFlags))
-        if isinstance(indice, int) or isinstance(indice, float):
+            self.porosityTypes = np.ones(len(self.regionFlags))
+            self.dragAlphaTypes = np.zeros(len(self.regionFlags))
+            self.dragBetaTypes = np.zeros(len(self.regionFlags))
+            self.epsFact_solid = np.zeros(len(self.regionFlags))
+        if isinstance(indice, int):
             indice = [indice]
-        if self.domain.nd == 3:
-            log('3D absorption zones not implemented yet!')
-            sys.exit()
-        for index in indice:
-            key = index + (self._snr + 1)
-            center_x = self.regions[index, 0]
-            self.zones[key] = RelaxationZone(center_x,
-                                             1.,
-                                             lambda x, t: 0.,
-                                             lambda x, t: 0.,
-                                             lambda x, t: 0.,)
-            self.dragAlphaTypes[index] = dragAlphaTypes or 0.5/1.005e-6
-            self.dragBetaTypes[index] = dragBetaTypes or 0.
-            self.epsFact_solid[index] = epsFact_solid
+        for ind in indice:
+            self.zones_id[ind] = 'absorption'
+            self.porosityTypes[ind] = porosityTypes
+            self.dragAlphaTypes[ind] = dragAlphaTypes
+            self.dragBetaTypes[ind] = dragBetaTypes
+            self.epsFact_solid[ind] = epsFact_solid
+
+    def setGenerationZones(self, indice, epsFact_solid,
+                           dragAlphaTypes=0.5/1.005e-6,
+                           dragBetaTypes=0., porosityTypes=1.):
+        """
+        Sets a region (given the local index) to an absorption zone
+        :arg index: local indice of the region (first region of the Shape
+                    instance is 0). Can be an integer or a list of integers.
+        :arg epsFact_solid: absorption zone length (usually length of region/2)
+        """
+        if not self.zones_id:
+            self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones,
+                                                               shape=self)
+            self.porosityTypes = np.ones(len(self.regionFlags))
+            self.dragAlphaTypes = np.zeros(len(self.regionFlags))
+            self.dragBetaTypes = np.zeros(len(self.regionFlags))
+            self.epsFact_solid = np.zeros(len(self.regionFlags))
+        if isinstance(indice, int):
+            indice = [indice]
+        for ind in indice:
+            self.zones_id[ind] = 'generation'
+            self.porosityTypes = porosityTypes
+            self.dragAlphaTypes[ind] = dragAlphaTypes
+            self.dragBetaTypes[ind] = dragBetaTypes
+            self.epsFact_solid[ind] = epsFact_solid
 
 
 class Cuboid(Shape):
@@ -475,15 +346,13 @@ class Cuboid(Shape):
     count = 0
 
     def __init__(self, domain, dim=(0., 0., 0.), coords=(0., 0., 0.),
-                 barycenter=None, tank=False, add=True):
-        Shape.__init__(self, domain)
-        if add is True:
-            self.__class__.count += 1
-            self.name = "cuboid" + str(self.__class__.count)
+                 barycenter=None):
+        Shape.__init__(self, domain, nd=3)
+        self.__class__.count += 1
+        self.name = "cuboid" + str(self.__class__.count)
         self.dim = L, W, H = dim  # length, width height
         self.volume = L*W*H
         self.coords = x, y, z = np.array(coords)
-        self.coords_system = np.eye(3)
         self.vertices = np.array([[x-0.5*L, y-0.5*W, z-0.5*H],
                                   [x-0.5*L, y+0.5*W, z-0.5*H],
                                   [x+0.5*L, y+0.5*W, z-0.5*H],
@@ -533,12 +402,9 @@ class Cuboid(Shape):
                         self.BC_dict['top']]
         self.BC = BCContainer(self.BC_dict)
         self.barycenter = np.array(barycenter) or self.coords
-        self.barycenters = np.array([self.barycenter for facet in self.facets])
         self.It = np.array([[(W**2.+H**2.)/12., 0, 0],
                             [0, (L**2.+H**2.)/12., 0],
                             [0, 0, (W**2.+L**2.)/12.]])
-        if add is True:
-            self._addShape()  # adding shape to domain
 
     def _setInertiaTensor(self):
         L, W, H = self.dim
@@ -564,7 +430,6 @@ class Cuboid(Shape):
                             [x+0.5*L, y-0.5*W, z+0.5*H]]
         self.volume = L*W*H
         self._setInertiaTensor()
-        self._updateDomain()
 
 
 class Rectangle(Shape):
@@ -576,15 +441,12 @@ class Rectangle(Shape):
     """
     count = 0
 
-    def __init__(self, domain, dim=(0., 0.), coords=(0., 0.), barycenter=None,
-                 tank=False, add=True):
-        Shape.__init__(self, domain)
-        if add is True:
-            self.__class__.count += 1
-            self.name = "rectangle" + str(self.__class__.count)
+    def __init__(self, domain, dim=(0., 0.), coords=(0., 0.), barycenter=None):
+        Shape.__init__(self, domain, nd=2)
+        self.__class__.count += 1
+        self.name = "rectangle" + str(self.__class__.count)
         self.dim = L, H = dim  # length, height
         self.coords = x, y = np.array(coords)
-        self.coords_system = np.eye(2)
         self.vertices = np.array([[x-0.5*L, y-0.5*H],
                                   [x+0.5*L, y-0.5*H],
                                   [x+0.5*L, y+0.5*H],
@@ -595,7 +457,6 @@ class Rectangle(Shape):
             self.barycenter[0:2] = barycenter[0:2]
         else:
             self.barycenter[0:2] = coords[0:2]
-        self.barycenters = np.array([self.barycenter for seg in self.segments])
         self.b_or = np.array([[0., -1.],
                               [1., 0.],
                               [0., 1.],
@@ -614,8 +475,6 @@ class Rectangle(Shape):
                         self.BC_dict['left']]
         self.BC = BCContainer(self.BC_dict)
         self.It = L**2+H**2/12
-        if add is True:
-            self._addShape()  # adding shape to domain
 
     def _setInertiaTensor(self):
         """
@@ -638,7 +497,6 @@ class Rectangle(Shape):
                             [x-0.5*L, y+0.5*H]]
         self.volume = L*H
         self._setInertiaTensor()
-        self._updateDomain()
 
 
 class BodyCuboid(Cuboid):
@@ -654,12 +512,11 @@ class BodyCuboid(Cuboid):
     def __init__(self, domain, dim=(0., 0., 0.), coords=(0., 0., 0.),
                  barycenter=None):
         Cuboid.__init__(self, domain, dim=dim, coords=coords,
-                        barycenter=barycenter, add=False)
+                        barycenter=barycenter)
         self.__class__.count += 1
         self.name = "body_cuboid" + str(self.__class__.count)
         self.setRigidBody()
         self.regions = None
-        self._addShape()
 
 
 class BodyRectangle(Rectangle):
@@ -674,12 +531,11 @@ class BodyRectangle(Rectangle):
 
     def __init__(self, domain, dim=(0., 0.), coords=(0., 0.), barycenter=None):
         Rectangle.__init__(self, domain, dim=dim, coords=coords,
-                           barycenter=barycenter, add=False)
+                           barycenter=barycenter)
         self.__class__.count += 1
         self.name = "body_rectangle" + str(self.__class__.count)
         self.setRigidBody()
         self.regions = None
-        self._addShape()
 
 
 class Tank3D(Shape):
@@ -692,12 +548,11 @@ class Tank3D(Shape):
 
     def __init__(self, domain, dim=(0., 0., 0.), from_0=True, leftSponge=None,
                  rightSponge=None, frontSponge=None, backSponge=None):
-        Shape.__init__(self, domain)
+        Shape.__init__(self, domain, nd=3)
         self.__class__.count += 1
         self.name = "tank3d" + str(self.__class__.count)
         self.from_0 = from_0
         self.holes = None
-        self.coords_system = np.eye(3)
         self.leftSponge = leftSponge
         self.rightSponge = rightSponge
         self.backSponge = backSponge
@@ -733,16 +588,11 @@ class Tank3D(Shape):
         for i in range(0, 5):
             self.BC_list[i].setTank()
         self.barycenter = np.array([0., 0., 0.])
-        self.barycenters = np.array([self.barycenter for bco in self.BC_list])
         self.setDimensions(dim)
         self.porosityTypes = np.ones(len(self.regionFlags))
         self.dragAlphaTypes = np.zeros(len(self.regionFlags))
         self.dragBetaTypes = np.zeros(len(self.regionFlags))
         self.epsFact_solid = np.zeros(len(self.regionFlags))
-        self.zones = {}
-        self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones,
-                                                           shape=self)
-        self._addShape()  # adding shape to domain
 
     def setSponge(self, left=None, right=None, back=None, front=None):
         self.leftSponge = left
@@ -750,7 +600,6 @@ class Tank3D(Shape):
         self.backSponge = back
         self.frontSponge = front
         self.setDimensions(self.dim)
-        self._resetShape()
 
     def setDimensions(self, dim):
         L, W, H = dim
@@ -951,13 +800,13 @@ class Tank3D(Shape):
         self.facetFlags = np.array(facetFlags)
         self.regions = np.array(regions)
         self.regionFlags = np.array(regionFlags)
-        if self._snbc is not None:
-            self._resetShape()
 
-    def setAbsorptionZones(self, allSponge=False, left=False, right=False,
-                           front=False, back=False, front_left=False,
-                           front_right=False, back_left=False,
-                           back_right=False):
+    def setAbsorptionZones(self, epsFact_solid, allSponge=False, left=False,
+                           right=False, front=False, back=False,
+                           front_left=False, front_right=False,
+                           back_left=False, back_right=False,
+                           dragAlphaTypes=0.5/1.005e-6, dragBetaTypes=0.,
+                           porosityTypes=1.):
         self.abs_zones = {'leftSponge': left,
                           'rightSponge': right,
                           'frontSponge': front,
@@ -969,17 +818,17 @@ class Tank3D(Shape):
         if allSponge is True:
             for key in self.abs_zones:
                 self.abs_zones[key] = True
+        if True in self.abs_zones.values() and not self.zones_id:
+            self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones,
+                                                               shape=self)
         for key, val in self.abs_zones.iteritems():
             if val is True:
                 ind = self.regionIndice[key]
-                key = ind + (self._snr + 1)
-                self.zones[key] = RelaxationZone(self.regions[ind, 0],
-                                                 1.,
-                                                 lambda x, t: 0.,
-                                                 lambda x, t: 0.,
-                                                 lambda x, t: 0.,)
-                self.dragAlphaTypes[ind] = 0.5/1.005e-6
-                self.epsFact_solid[ind] = self.leftSponge/2.
+                self.zones_id[ind] = 'absorption'
+            self.porosityTypes[ind] = porosityTypes
+            self.dragAlphaTypes[ind] = dragAlphaTypes
+            self.dragBetaTypes[ind] = dragBetaTypes
+            self.epsFact_solid[ind] = epsFact_solid
 
 
 class Tank2D(Shape):
@@ -994,13 +843,14 @@ class Tank2D(Shape):
 
     def __init__(self, domain, dim=(0., 0.), leftSponge=None, rightSponge=None,
                  from_0=True):
-        Shape.__init__(self, domain)
+        Shape.__init__(self, domain, nd=2)
         self.__class__.count += 1
         self.name = "tank2d" + str(self.__class__.count)
         self.from_0 = from_0
-        self.coords_system = np.eye(2)
         self.leftSponge = leftSponge
         self.rightSponge = rightSponge
+        self.leftAbs = False
+        self.rightAbs = False
         self.boundaryTags = {'bottom': 1,
                              'right': 2,
                              'top': 3,
@@ -1023,17 +873,11 @@ class Tank2D(Shape):
         self.BC = BCContainer(self.BC_dict)
         for i in range(0, 3):
             self.BC_list[i].setTank()
-        self.barycenter = np.array([0., 0., 0.])
-        self.barycenters = np.array([self.barycenter for bco in self.BC_list])
         self.setDimensions(dim)
         self.porosityTypes = np.ones(len(self.regionFlags))
         self.dragAlphaTypes = np.zeros(len(self.regionFlags))
         self.dragBetaTypes = np.zeros(len(self.regionFlags))
         self.epsFact_solid = np.zeros(len(self.regionFlags))
-        self.zones = {}
-        self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones,
-                                                           shape=self)
-        self._addShape()  # adding shape to domain
 
     def setDimensions(self, dim):
         self.dim = dim
@@ -1049,6 +893,7 @@ class Tank2D(Shape):
         # add attributes
         leftSponge = self.leftSponge or 0.
         rightSponge = self.rightSponge or 0.
+        regions_y = y1-y1/100.  # y coord of regions
         vertices = [[x-0.5*L, y-0.5*H],
                     [x+0.5*L, y-0.5*H],
                     [x+0.5*L, y+0.5*H],
@@ -1056,21 +901,21 @@ class Tank2D(Shape):
         vertexFlags = [bt['bottom'], bt['bottom'], bt['top'], bt['top']]
         segments = [[0, 1], [1, 2], [2, 3], [3, 0]]
         segmentFlags = [1, 2, 3, 4]  # bottom, right, top, left
-        regions = [[(leftSponge+rightSponge)/2., (y0+y1)/2.]]
+        regions = [[(x0+leftSponge+x1-rightSponge)/2., regions_y]]
         regionFlags = [1]
         self.regionIndice = {'tank': 0}
         ind_region = 1
         if leftSponge:
             vertices += [[x0+leftSponge, y0], [x0+leftSponge, y1]]
             vertexFlags += [bt['bottom'], bt['top']]
-            regions += [[(x0+leftSponge)/2., (y0+y1)/2.]]
+            regions += [[(x0+leftSponge)/2., regions_y]]
             self.regionIndice['leftSponge'] = ind_region
             ind_region += 1
             regionFlags += [ind_region]
         if rightSponge:
             vertices += [[x1-rightSponge, y0], [x1-rightSponge, y1]]
             vertexFlags += [bt['bottom'], bt['top']]
-            regions += [[((x1-rightSponge)+x1)/2., (y0+y1)/2.]]
+            regions += [[((x1-rightSponge)+x1)/2., regions_y]]
             self.regionIndice['rightSponge'] = ind_region
             ind_region += 1
             regionFlags += [ind_region]
@@ -1078,7 +923,7 @@ class Tank2D(Shape):
         if leftSponge and rightSponge:
             segments = [[0, 4], [4, 6], [6, 1], [1, 2], [2, 7],
                         [7, 5], [5, 3], [3, 0], [4, 5], [6, 7]]
-            segmentFlags = [1, 1, 1, 2, 3, 3, 3, 4, 5, 6]
+            segmentFlags = [1, 1, 1, 2, 3, 3, 3, 4, 5, 5]
         elif leftSponge or rightSponge:
             segments = [[0, 4], [4, 1], [1, 2], [2, 5], [5, 3], [3, 0], [4, 5]]
             segmentFlags = [1, 1, 2, 3, 3, 4, 5]
@@ -1092,38 +937,34 @@ class Tank2D(Shape):
         self.segmentFlags = np.array(segmentFlags)
         self.regions = np.array(regions)
         self.regionFlags = np.array(regionFlags)
-        if self._snbc is not None:
-            self._resetShape()
 
     def setSponge(self, left=None, right=None):
         self.leftSponge = left
         self.rightSponge = right
         self.setDimensions(self.dim)
-        self._resetShape()
 
-    def setAbsorptionZones(self, left=False, right=False):
+    def setAbsorptionZones(self, left=False, right=False, epsFact_solid=None,
+                           dragAlphaTypes=0.5/1.005e-6, dragBetaTypes=0.,
+                           porosityTypes=1.):
         self.leftSpongeAbs = left
         self.rightSpongeAbs = right
+        if (left is True or right is True) and not self.zones_id:
+            self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones,
+                                                               shape=self)
         if self.leftSpongeAbs is True:
             ind = self.regionIndice['leftSponge']
-            key = ind + self._snr + 1
-            self.zones[key] = RelaxationZone(self.regions[ind, 0],
-                                             1.,
-                                             lambda x, t: 0.,
-                                             lambda x, t: 0.,
-                                             lambda x, t: 0.,)
-            self.dragAlphaTypes[ind] = 0.5/1.005e-6
-            self.epsFact_solid[ind] = self.leftSponge/2.
+            self.zones_id[ind] = 'absorption'
+            self.porosityTypes = porosityTypes
+            self.dragAlphaTypes[ind] = dragAlphaTypes
+            self.dragBetaTypes[ind] = dragBetaTypes
+            self.epsFact_solid[ind] = epsFact_solid or self.leftSponge/2.
         if self.rightSpongeAbs is True:
             ind = self.regionIndice['rightSponge']
-            key = ind + self._snr + 1
-            self.zones[key] = RelaxationZone(self.regions[ind, 0],
-                                             1.,
-                                             lambda x, t: 0.,
-                                             lambda x, t: 0.,
-                                             lambda x, t: 0.,)
-            self.dragAlphaTypes[ind] = 0.5/1.005e-6
-            self.epsFact_solid[ind] = self.rightSponge/2.
+            self.zones_id[ind] = 'absorption'
+            self.porosityTypes = porosityTypes
+            self.dragAlphaTypes[ind] = dragAlphaTypes
+            self.dragBetaTypes[ind] = dragBetaTypes
+            self.epsFact_solid[ind] = epsFact_solid or self.rightSponge/2.
 
 
 class CustomShape(Shape):
@@ -1143,7 +984,7 @@ class CustomShape(Shape):
                  facets=None, facetFlags=None, holes=None, regions=None,
                  regionFlags=None, boundaryTags=None,
                  boundaryOrientations=None):
-        Shape.__init__(self, domain)
+        Shape.__init__(self, domain, nd=len(vertices[0]))
         self.__class__.count += 1
         self.name = "custom" + str(self.__class__.count)
         flagSet = set()
@@ -1152,7 +993,7 @@ class CustomShape(Shape):
         minFlag = min(flagSet)
         previous_flag = minFlag-1
         for flag in flagSet:
-            assert flag == previous_flag+1, 'Flags must be defined as a suite' \
+            assert flag == previous_flag+1, 'Flags must be defined as a suite'\
                                             'of numbers with no gap!'
             previous_flag = flag
         self.vertices = np.array(vertices)
@@ -1186,8 +1027,6 @@ class CustomShape(Shape):
             self.barycenter = np.array(barycenter)
         else:
             self.barycenter = np.zeros(3)
-        self.barycenters = np.array([self.barycenter for bco in self.BC_list])
-        self._addShape()
 
     def _setInertiaTensor(self, It):
         self.It = np.array(It)
@@ -1197,13 +1036,15 @@ class RigidBody(AuxiliaryVariables.AV_base):
 
     def __init__(self, shape, he=1., cfl_target=0.9, dt_init=0.001):
         self.shape = shape
-        shape.domain.auxiliaryVariables += [self]
+        shape.auxiliaryVariables += [self]
         self.dt_init = dt_init
         self.he = he
         self.cfl_target = 0.9
         self.last_position = np.array([0., 0., 0.])
         self.rotation_matrix = np.eye(3)
         self.h = np.array([0., 0., 0.])
+        self.i_start = None  # will be retrieved from setValues() of Domain
+        self.i_end = None  # will be retrieved from setValues() of Domain
 
     def step(self, dt):
         nd = self.shape.domain.nd
@@ -1213,8 +1054,8 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.h[:] = self.velocity*dt
         # update barycenters
         self.shape.translate(self.h[:nd])
-        i0, i1 = self.nb_start, self.nb_end
-        self.barycenters[i0:i1, :] = self.shape.barycenter
+        i0, i1 = self.i_start, self.i_end
+        self.barycenter[:] = self.shape.barycenter
         self.position[:] = self.shape.barycenter
         # rotation due to moment
         if sum(self.M) != 0:
@@ -1296,11 +1137,9 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.last_F = np.zeros(3, 'd')
         self.last_M = np.zeros(3, 'd')
         self.ang = 0.
-        self.barycenters = shape.domain.barycenters
+        self.barycenter = self.shape.barycenter
         self.angvel = np.zeros(3, 'd')
         self.last_angvel = np.zeros(3, 'd')
-        self.nb_start = self.shape._snbc
-        self.nb_end = self.shape._enbc
         if nd == 2:
             self.Fg = self.shape.mass*np.array([0., -9.81, 0.])
         if nd == 3:
@@ -1313,6 +1152,7 @@ class RigidBody(AuxiliaryVariables.AV_base):
                 with open(self.record_file, 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
                     writer.writerow(self.shape.record_names)
+        print self.i_start, self.i_end
 
     def calculate(self):
         self.last_position[:] = self.position
@@ -1328,7 +1168,7 @@ class RigidBody(AuxiliaryVariables.AV_base):
             dt = self.model.levelModelList[-1].dt_last
         except:
             dt = self.dt_init
-        i0, i1 = self.nb_start, self.nb_end
+        i0, i1 = self.i_start, self.i_end
         # get forces for current body
         F_p = self.model.levelModelList[-1].coefficients.netForces_p[i0:i1, :]
         F_v = self.model.levelModelList[-1].coefficients.netForces_v[i0:i1, :]
@@ -1340,40 +1180,46 @@ class RigidBody(AuxiliaryVariables.AV_base):
         # store F and M and apply DOF constraints to body
         self.F[:] = F*self.shape.free_x
         self.M[:] = M*self.shape.free_r
-        log("========================================================================")
-        log("======================= Rigid Body Calculation =========================")
-        log("========================================================================")
-        log("Name: " + `self.shape.name`)
-        log("========================================================================")
-        log("[proteus]     t=%1.5fsec to t=%1.5fsec" % (self.model.stepController.t_model_last-dt, self.model.stepController.t_model_last))
-        log("[proteus]    dt=%1.5fsec" % (dt))
-        log("[body] ================== Pre-calculation attributes  ==================")
-        log("[proteus]     t=%1.5fsec" % (self.model.stepController.t_model_last-dt))
-        log("[proteus]     F=(% 21.16e, % 21.16e, % 21.16e)" % (F[0], F[1], F[2]))
-        log("[proteus] F*DOF=(% 21.16e, % 21.16e, % 21.16e)" % (self.F[0], self.F[1], self.F[2]))
-        log("[proteus]     M=(% 21.16e, % 21.16e, % 21.16e)" % (M[0], M[1], M[2]))
-        log("[proteus] M*DOF=(% 21.16e, % 21.16e, % 21.16e)" % (self.M[0], self.M[1], self.M[2]))
-        log("[body]        h=(% 21.16e, % 21.16e, % 21.16e)" % (self.h[0], self.h[1], self.h[2]))
-        log("[body]      pos=(% 21.16e, % 21.16e, % 21.16e)" % (self.last_position[0], self.last_position[1], self.last_position[2]))
-        log("[body]      vel=(% 21.16e, % 21.16e, % 21.16e)" % (self.last_velocity[0], self.last_velocity[1], self.last_velocity[2]))
-        self.step(dt)
-        log("[body] ================== Post-calculation attributes ==================")
-        log("[body]        t=%1.5fsec" % (self.model.stepController.t_model_last))
-        log("[body]      pos=(% 21.16e, % 21.16e, % 21.16e)" % (self.position[0], self.position[1], self.position[2]))
-        log("[body]      vel=(% 21.16e, % 21.16e, % 21.16e)" % (self.velocity[0], self.velocity[1], self.velocity[2]))
-        log("[body]    r vel=(% 21.16e, % 21.16e, % 21.16e)" % (self.angvel[0], self.angvel[1], self.angvel[2]))
-        if sum(self.angvel) != 0:
-            rot_axis = self.angvel/np.linalg.norm(self.angvel)
-        else:
-            rot_axis = (0., 0., 0.)
+        t_previous = self.model.stepController.t_model_last-dt
+        t_current = self.model.stepController.t_model_last
+        h = self.h
+        last_pos = self.last_position
+        pos = self.position
+        last_vel = self.last_velocity
+        vel = self.velocity
         rot = self.rotation
         rot_x = -atan2(rot[2, 1], rot[1, 2])
         rot_y = -atan2(-rot[0, 2], sqrt(rot[2, 1]**2+rot[2, 2]**2))
         rot_z = -atan2(rot[1, 0], rot[0, 0])
-        log("[body]   r axis=(% 21.16e, % 21.16e, % 21.16e)" % (rot_axis[0], rot_axis[1], rot_axis[2]))
-        log("[body]    r ang=(% 21.16e)" % (self.ang))
-        log("[body]      rot=(% 21.16e, % 21.16e, % 21.16e)" % (rot_x, rot_y, rot_z))
-        log("========================================================================")
+        log("================================================================")
+        log("=================== Rigid Body Calculation =====================")
+        log("================================================================")
+        log("Name: " + `self.shape.name`)
+        log("================================================================")
+        log("[proteus]     t=%1.5fsec to t=%1.5fsec" % \
+            (t_previous, t_current))
+        log("[proteus]    dt=%1.5fsec" % (dt))
+        log("[body] ============== Pre-calculation attributes  ==============")
+        log("[proteus]     t=%1.5fsec" % (t_previous))
+        log("[proteus]     F=(% 12.7e, % 12.7e, % 12.7e)" % (F[0], F[1], F[2]))
+        log("[proteus] F*DOF=(% 12.7e, % 12.7e, % 12.7e)" % (F[0], F[1], F[2]))
+        log("[proteus]     M=(% 12.7e, % 12.7e, % 12.7e)" % (M[0], M[1], M[2]))
+        log("[proteus] M*DOF=(% 12.7e, % 12.7e, % 12.7e)" % (M[0], M[1], M[2]))
+        log("[body]      pos=(% 12.7e, % 12.7e, % 12.7e)" % \
+            (pos[0], pos[1], pos[2]))
+        log("[body]      vel=(% 12.7e, % 12.7e, % 12.7e)" % \
+            (last_vel[0], last_vel[1], last_vel[2]))
+        self.step(dt)
+        log("[body] ===============Post-calculation attributes ==============")
+        log("[body]        t=%1.5fsec" % (t_current))
+        log("[body]        h=(% 12.7e, % 12.7e, % 12.7e)" % (h[0], h[1], h[2]))
+        log("[body]      pos=(% 12.7e, % 12.7e, % 12.7e)" % \
+            (pos[0], pos[1], pos[2]))
+        log("[body]      vel=(% 12.7e, % 12.7e, % 12.7e)" % \
+            (vel[0], vel[1], vel[2]))
+        log("[body]      rot=(% 12.7e, % 12.7e, % 12.7e)" % \
+            (rot_x, rot_y, rot_z))
+        log("================================================================")
 
 
 # --------------------------------------------------------------------------- #
@@ -1526,8 +1372,8 @@ class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
         assert isinstance(zones, dict)
         self.zones = zones
         self.shape = shape
-        shape.domain.auxiliaryVariables += [self]
-
+        shape.auxiliaryVariables += [self]
+                
     def calculate(self):
         for l, m in enumerate(self.model.levelModelList):
             for eN in range(m.coefficients.q_phi.shape[0]):
@@ -1543,5 +1389,81 @@ class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
                         coeff.q_velocity_solid[eN, k, 1] = zone.v(x, t)
                         if self.shape.domain.nd > 2:
                             coeff.q_velocity_solid[eN, k, 2] = zone.w(x, t)
-        m.q['phi_solid'] = m.coefficients.q_phi_solid
-        m.q['velocity_solid'] = m.coefficients.q_velocity_solid
+            m.q['phi_solid'] = m.coefficients.q_phi_solid
+            m.q['velocity_solid'] = m.coefficients.q_velocity_solid
+
+
+
+# This funcion could be moved somewhere else
+# HAS TO BE CALLED BEFORE MESHING THE DOMAIN
+def buildDomain(domain):
+    """
+    This function sets up everything needed for the domain, meshing, and
+    auxiliary variable calucculations.
+    It should always be called after defining all the shapes to be attached to
+    the domain and before meshing.
+    """
+    domain.vertices = []
+    domain.vertexFlags = []
+    domain.segments = []
+    domain.segmentFlags = []
+    domain.facets = []
+    domain.facetFlags = []
+    domain.holes = []
+    domain.regions = []
+    domain.regionFlags = []
+    domain.bc = [bc.BoundaryConditions()]
+    domain.barycenters = np.array([[0., 0., 0.]])
+    domain.AuxiliaryVariables =[]
+    start_flag = 0
+    start_vertex = 0
+    for shape in domain.shape_list:
+        start_flag = len(domain.bc)-1
+        start_vertex = len(domain.vertices)
+        start_region = len(domain.regions)+1  # indice 0 ignored
+        domain.bc += shape.BC_list
+        domain.vertices += shape.vertices.tolist()
+        domain.vertexFlags += (shape.vertexFlags+start_flag).tolist()
+        barycenters = np.array([shape.barycenter for bco in shape.BC_list])
+        domain.barycenters = np.append(domain.barycenters, barycenters, axis=0)
+        if shape.segments is not None:
+            domain.segments += (shape.segments+start_vertex).tolist()
+            domain.segmentFlags += (shape.segmentFlags+start_flag).tolist()
+        if shape.facets is not None:
+            domain.facets += (shape+start_vertex).facets.tolist()
+            domain.facetFlags += (shape.facetFlags+start_flag).tolist()
+        if shape.regions is not None:
+            domain.regions += shape.regions.tolist()
+            domain.regionFlags += (shape.regionFlags+start_flag).tolist()
+        if shape.holes is not None:
+            domain.holes += shape.holes.tolist()
+        domain.getBoundingBox()
+        domain.auxiliaryVariables += shape.auxiliaryVariables
+        if shape.RigidBody is not None:
+            shape.RigidBody.i_start = start_flag+1
+            shape.RigidBody.i_end = start_flag+1+len(shape.BC_list)
+        if shape.zones_id:
+            if domain.porosityTypes is None:
+                domain.porosityTypes = np.ones(len(domain.regionFlags)+1)
+                domain.dragAlphaTypes = np.zeros(len(domain.regionFlags)+1)
+                domain.dragBetaTypes = np.zeros(len(domain.regionFlags)+1)
+                domain.epsFact_solid = np.zeros(len(domain.regionFlags)+1)
+            i0 = start_region
+            i1 = start_region+len(shape.regions)
+            domain.porosityTypes[i0:i1] = shape.porosityTypes
+            domain.dragAlphaTypes[i0:i1] = shape.dragAlphaTypes
+            domain.dragBetaTypes[i0:i1] = shape.dragBetaTypes
+            domain.epsFact_solid[i0:i1] = shape.epsFact_solid
+            for ind, zone_type in shape.zones_id.iteritems():
+                if zone_type == 'absorption':
+                    sign = 1.0
+                    u_func = v_func = w_func = lambda x, t: 0.0
+                if zone_type == 'generation':
+                    sign = -1.0
+                    u_func = 'to define!'
+                    v_func = 'to define!'
+                    w_func = 'to define!'
+                key = start_region + ind
+                shape.zones[key] = RelaxationZone(shape.regions[ind, 0], sign,
+                                                  u_func, v_func, w_func)
+
