@@ -20,10 +20,16 @@ class D_base:
         self.x=[]#minx,miny,minz
         self.L=[]#bounding box when self.x is origin
         self.g=g
-        self.bc = [BC.BoundaryConditions()]
-        self.barycenters = np.array([[0., 0., 0.]])
-        self.auxiliaryVariables = []
+        # list of shape instances automatically attached to domain
         self.shape_list = []
+        # list of auxiliaryVariables automatically attached to domaim
+        self.auxiliaryVariables = []
+        # For absorption/generation zones:
+        self.porosityTypes = None
+        self.dragAlphaTypes = None
+        self.dragBetaTypes = None
+        self.epsFact_solid = None
+
     def writeAsymptote(self, fileprefix):
         """
         Write a representation of the domain to file using the Asymptote vector graphics language.
@@ -47,17 +53,18 @@ class D_base:
             self.x += [xMin]
             self.L += [xMax-xMin]
 
-    def setGravity(self, g='default'):
+    def setGravity(self, g=None):
         """
         Sets gravity in the domain
         """
-        if g == 'default':
+        if g is None:
             if self.nd == 2:
                 self.g = [0., -9.81, 0.]
             elif nd == 3:
                 self.g = [0., 0., -9.81]
         else:
             self.g = g
+
 
 class RectangularDomain(D_base):
     """
@@ -277,7 +284,6 @@ class PlanarStraightLineGraphDomain(D_base):
             self.segmentFlags = segmentFlags or []
             self.regionFlags = regionFlags or []
             self.regionConstraints = regionConstraints or []
-            self.bc = bc or self.bc
             self.update()
 
     def update(self):
@@ -749,7 +755,6 @@ class PiecewiseLinearComplexDomain(D_base):
             self.regionConstraints = regionConstraints or []
             self.regionLegend = {}
             self.boundaryFlags = {}
-            self.bc = bc or self.bc
             import numpy as np
             self.update()
 
