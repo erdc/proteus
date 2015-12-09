@@ -4,11 +4,19 @@ import numpy.testing as npt
 import unittest
 import random
 from math import cos,sin,cosh,sinh,pi,tanh,log
-import sys
+import sys,os
 import logging
+
 
 comm = Comm.init()
 Profiling.procID = comm.rank()
+def getpath():
+    path =str(os.getcwd())
+    if "tests" in path[-6:]:
+        path =""
+    else:
+        path = path+"/proteus/tests/"
+    return path
 
 
 Profiling.logEvent("Testing WaveTools")
@@ -75,7 +83,7 @@ class TestAuxFunctions(unittest.TestCase):
         A = sum(returnRectangles(A,xim))
         self.assertTrue(round(A,10)== 1)
        
-       
+        
         
     def testEtaMode(self):
         from proteus.WaveTools import eta_mode
@@ -802,8 +810,9 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
     def testTimeSeriesFailureModes(self):
         from proteus.WaveTools import TimeSeries
         #load successfully - direct decomposition
+        path = getpath()
         aa= TimeSeries(
-            "test_timeSeries.txt",
+            path+"test_timeSeries.txt",
             0,
             np.array([1.,0,0]), 
             1.  ,
@@ -815,7 +824,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
 
         with self.assertRaises(SystemExit) as cm1:
             aa= TimeSeries(
-                "test_timeSeries.dat",
+                path+"test_timeSeries.dat",
                 0,
                 np.array([1.,0,0]), 
                 1.  ,
@@ -826,7 +835,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
             )
         with self.assertRaises(SystemExit) as cm2:
             aa= TimeSeries(
-                "test_timeSeries_err1.csv",
+                path+"test_timeSeries_err1.csv",
                 0,
                 np.array([1.,0,0]), 
                 1.  ,
@@ -838,7 +847,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
         self.assertEqual(cm2.exception.code, 1 )     
         with self.assertRaises(SystemExit) as cm3:
             aa= TimeSeries(
-                "test_timeSeries_err2.txt",
+                path+"test_timeSeries_err2.txt",
                 0,
                 np.array([1.,0,0]), 
                 1.  ,
@@ -852,7 +861,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
 
         with self.assertRaises(SystemExit) as cm4:
             aa= TimeSeries(
-            "test_timeSeries.txt",
+            path+"test_timeSeries.txt",
             0,
             np.array([1.,0,0]), 
             1.  ,
@@ -865,7 +874,7 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
 
         with self.assertRaises(SystemExit) as cm5:
             aa= TimeSeries(
-            "test_timeSeries.txt",
+            path+"test_timeSeries.txt",
             0,
             np.array([0,1.,0,0]), 
             1.  ,
@@ -883,10 +892,11 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
         
 class VerifyTimeSeries(unittest.TestCase):
     def testDirect(self):
+        path =getpath()
         from proteus.WaveTools import TimeSeries
         import random
         aa= TimeSeries(
-            "test_timeSeries.txt",
+            path+"test_timeSeries.txt",
             0,
              np.array([0.,0.,0]),            
             1.  ,
@@ -895,7 +905,7 @@ class VerifyTimeSeries(unittest.TestCase):
             np.array([1,0,0]), 
             np.array([0,0,-9.81])
             )
-        fid = open("test_timeSeries.txt","r")
+        fid = open(path+"test_timeSeries.txt","r")
         data = np.loadtxt(fid)
         timeRef = data[:,0]
         etaRef = data[:,1]
@@ -913,7 +923,7 @@ class VerifyTimeSeries(unittest.TestCase):
         from matplotlib import pyplot as plt
         plt.plot(timeInt,etaInt)
         plt.plot(timeInt,etaTest + np.mean(etaInt),"k--")
-        plt.savefig("showTestSeries.pdf")
+        #plt.savefig("showTestSeries.pdf")
         
 
 
