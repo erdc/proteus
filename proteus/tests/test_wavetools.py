@@ -884,11 +884,6 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
             np.array([0,0,-9.81])
             )
         self.assertEqual(cm5.exception.code, 1 )     
-
-
-
-       
-
         
 class VerifyTimeSeries(unittest.TestCase):
     def testDirect(self):
@@ -900,7 +895,7 @@ class VerifyTimeSeries(unittest.TestCase):
             0,
              np.array([0.,0.,0]),            
             1.  ,
-            1024 ,          #number of frequency bins
+            32 ,          #number of frequency bins
             1. ,        
             np.array([1,0,0]), 
             np.array([0,0,-9.81])
@@ -910,8 +905,8 @@ class VerifyTimeSeries(unittest.TestCase):
         timeRef = data[:,0]
         etaRef = data[:,1]
         
-        timeInt = np.linspace(timeRef[0],timeRef[-1],len(timeRef))
-        etaInt = np.interp(timeInt, timeRef, etaRef)
+        timeInt = timeRef #np.linspace(timeRef[0],timeRef[-1],len(timeRef))
+        etaInt = etaRef #np.interp(timeInt, timeRef, etaRef)
         etaTest = np.zeros(len(timeRef),"d")
         x = 0.
         y = 0.
@@ -920,10 +915,10 @@ class VerifyTimeSeries(unittest.TestCase):
         for tt in timeInt:
             ii+=1
             etaTest[ii] = aa.etaDirect(x,y,z,tt) 
-        from matplotlib import pyplot as plt
-        plt.plot(timeInt,etaInt)
-        plt.plot(timeInt,etaTest + np.mean(etaInt),"k--")
-        #plt.savefig("showTestSeries.pdf")
+#        from matplotlib import pyplot as plt
+#        plt.plot(timeInt,etaInt - np.mean(etaInt))
+#        plt.plot(timeInt,etaTest,"k--")
+#        plt.savefig("showTestSeries.pdf")
         
 
 
