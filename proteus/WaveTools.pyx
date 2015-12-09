@@ -275,17 +275,17 @@ def decompose_tseries(time,eta):
          :param : signal array
          """
     nfft = len(time) 
-    NN = int(np.ceil((nfft+1)/2)-1)
+    dt = time[1]-time[0]
     results = []
-    fft_x = np.fft.fft(eta,nfft)                                   #%complex spectrum
+    fft_x = np.fft.fft(eta,nfft)
+    freq = np.fft.fftfreq(nfft,dt)                              #%complex spectrum
+    iend = np.where(freq<0)[0][0]
     setup = np.real(fft_x[0])/nfft
-    fft_x = fft_x[1:NN+1]                              #%retaining only first half of the spectrum
-    aa = abs(fft_x)/nfft                                 #%amplitudes (only the ones related to positive frequencies)
-    if nfft%2:                                       #%odd nfft- excludes Nyquist point
-      aa[0:NN] = 2.*aa[0:NN]
-    else:                                               
-      aa[0:NN -1] = 2.* aa[0:NN -1]
-    ww = np.linspace(1,NN,NN)*2*pi/(time[2]-time[1])/nfft     
+    fft_x = fft_x[1:iend]
+    freq = freq[1:iend]
+                              #%retaining only first half of the spectrum
+    aa = 2.*abs(fft_x)/nfft                                 #%amplitudes (only the ones related to positive frequencies)
+    ww = 2*pi*freq
     
 
     pp = np.zeros(len(aa),complex)
@@ -821,7 +821,7 @@ class TimeSeries:
         # Remove mean level from raw data
         self.eta -= np.mean(self.eta)
         # Filter out first 2.5 % and last 2.5% to make the signal periodic
-        self.eta *=costap(len(self.time),cutoff=0.025)
+        self.eta *= costap(len(self.time),cutoff=0.025)
         # clear tdata from memory
         del tdata
         # Calculate time lenght
@@ -846,7 +846,7 @@ class TimeSeries:
             imin = max(0,ipeak - Nf/2)
             self.ai = self.ai[imin:imax]
             self.omega = self.decomp[0][imin:imax]
-            self.phi = self.decomp[2][imin:imax]
+            self.phi = - self.decomp[2][imin:imax]
             self.ki = dispersion(self.omega,self.depth,g=self.gAbs)
             self.Nf = imax - imin
             self.setup = self.decomp[3]
@@ -950,7 +950,7 @@ class TimeSeries:
         :param x: floating point x coordinate
         :param t: time"""
         Eta=0.        
-        for ii in range(self.Nf):
+        for ii in range(0,self.Nf):
             Eta+= eta_mode(x-self.x0,y-self.y0,z-self.z0,t-self.t0,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
         return Eta
 
