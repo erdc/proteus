@@ -999,13 +999,13 @@ class CustomShape(Shape):
                                             'of numbers with no gap!'
             previous_flag = flag
         self.vertices = np.array(vertices)
-        self.vertexFlags = np.array(vertexFlags)-(minFlag+1)
+        self.vertexFlags = np.array(vertexFlags)-(minFlag)+1
         if segments:
             self.segments = np.array(segments)
-            self.segmentFlags = np.array(segmentFlags)-(minFlag+1)
+            self.segmentFlags = np.array(segmentFlags)-(minFlag)+1
         if facets:
             self.facets = np.array(facets)
-            self.facetFlags = np.array(facetFlags)-(minFlag+1)
+            self.facetFlags = np.array(facetFlags)-(minFlag)+1
         if holes is not None:
             self.holes = np.array(holes)
         if regions is not None:
@@ -1154,7 +1154,6 @@ class RigidBody(AuxiliaryVariables.AV_base):
                 with open(self.record_file, 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
                     writer.writerow(self.shape.record_names)
-        print self.i_start, self.i_end
 
     def calculate(self):
         self.last_position[:] = self.position
@@ -1391,7 +1390,7 @@ def buildDomain(domain):
             domain.segments += (shape.segments+start_vertex).tolist()
             domain.segmentFlags += (shape.segmentFlags+start_flag).tolist()
         if shape.facets is not None:
-            domain.facets += (shape+start_vertex).facets.tolist()
+            domain.facets += (shape.facets+start_vertex).tolist()
             domain.facetFlags += (shape.facetFlags+start_flag).tolist()
         if shape.regions is not None:
             domain.regions += shape.regions.tolist()
