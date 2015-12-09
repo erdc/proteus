@@ -54,7 +54,7 @@ class D_base:
     """
     The base class for domains
     """
-    def __init__(self,nd,g=None,name="defaultDomain",units="m"):
+    def __init__(self,nd,name="defaultDomain",units="m"):
         """
         Set dimensions (nd), name string, and units string
         """
@@ -65,7 +65,7 @@ class D_base:
         self.units=units
         self.x=[]#minx,miny,minz
         self.L=[]#bounding box when self.x is origin
-        self.g=g
+        self.g=None
         # list of shape instances automatically attached to domain
         self.shape_list = []
         # list of auxiliaryVariables automatically attached to domaim
