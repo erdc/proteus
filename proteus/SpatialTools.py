@@ -295,8 +295,8 @@ class Shape:
         :arg epsFact_solid: absorption zone length (usually length of region/2)
         """
         if not self.zones_id:
-            self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones,
-                                                               shape=self)
+            self.RelaxationZones = bc.RelaxationZoneWaveGenerator(self.zones,
+                                                                  shape=self)
             self.porosityTypes = np.ones(len(self.regionFlags))
             self.dragAlphaTypes = np.zeros(len(self.regionFlags))
             self.dragBetaTypes = np.zeros(len(self.regionFlags))
@@ -310,7 +310,7 @@ class Shape:
             self.dragBetaTypes[ind] = dragBetaTypes
             self.epsFact_solid[ind] = epsFact_solid
 
-    def setGenerationZones(self, indice, epsFact_solid,
+    def setGenerationZones(self, indice, epsFact_solid, waves, wind=0.,
                            dragAlphaTypes=0.5/1.005e-6,
                            dragBetaTypes=0., porosityTypes=1.):
         """
@@ -320,8 +320,10 @@ class Shape:
         :arg epsFact_solid: absorption zone length (usually length of region/2)
         """
         if not self.zones_id:
-            self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones,
-                                                               shape=self)
+            self.RelaxationZones = bc.RelaxationZoneWaveGenerator(self.zones,
+                                                                  shape=self,
+                                                                  waves=waves,
+                                                                  wind=wind)
             self.porosityTypes = np.ones(len(self.regionFlags))
             self.dragAlphaTypes = np.zeros(len(self.regionFlags))
             self.dragBetaTypes = np.zeros(len(self.regionFlags))
@@ -585,7 +587,7 @@ class Tank3D(Shape):
                         self.BC_dict['top'],
                         self.BC_dict['sponge']]
         self.BC = BCContainer(self.BC_dict)
-        for i in range(0, 5):
+        for i in range(6):
             self.BC_list[i].setTank()
         self.barycenter = np.array([0., 0., 0.])
         self.setDimensions(dim)
@@ -819,8 +821,8 @@ class Tank3D(Shape):
             for key in self.abs_zones:
                 self.abs_zones[key] = True
         if True in self.abs_zones.values() and not self.zones_id:
-            self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones,
-                                                               shape=self)
+            self.RelaxationZones = bc.RelaxationZoneWaveGenerator(self.zones,
+                                                                  shape=self)
         for key, val in self.abs_zones.iteritems():
             if val is True:
                 ind = self.regionIndice[key]
@@ -871,7 +873,7 @@ class Tank2D(Shape):
                         self.BC_dict['left'],
                         self.BC_dict['sponge']]
         self.BC = BCContainer(self.BC_dict)
-        for i in range(0, 3):
+        for i in range(4):
             self.BC_list[i].setTank()
         self.setDimensions(dim)
         self.porosityTypes = np.ones(len(self.regionFlags))
@@ -949,8 +951,8 @@ class Tank2D(Shape):
         self.leftSpongeAbs = left
         self.rightSpongeAbs = right
         if (left is True or right is True) and not self.zones_id:
-            self.RelaxationZones = RelaxationZoneWaveGenerator(self.zones,
-                                                               shape=self)
+            self.RelaxationZones = bc.RelaxationZoneWaveGenerator(self.zones,
+                                                                  shape=self)
         if self.leftSpongeAbs is True:
             ind = self.regionIndice['leftSponge']
             self.zones_id[ind] = 'absorption'
@@ -1351,51 +1353,7 @@ def relative_vec(vec1, vec0):
     return (x1_new, y1_new, z1_new)
 
 
-class RelaxationZone:
-    def __init__(self, center_x, sign, u, v, w):
-        self.center_x = center_x
-        self.sign = sign
-        self.u = u
-        self.v = v
-        self.w = w
-
-
-class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
-    """
-    Prescribe a velocity penalty scaling in a material zone via a
-    Darcy-Forchheimer penalty
-    :param zones: A dictionary mapping integer material types to Zones, where a
-    Zone is a named tuple specifying the x coordinate of the zone center and
-    the velocity components
-    """
-    def __init__(self, zones, shape):
-        assert isinstance(zones, dict)
-        self.zones = zones
-        self.shape = shape
-        shape.auxiliaryVariables += [self]
-                
-    def calculate(self):
-        for l, m in enumerate(self.model.levelModelList):
-            for eN in range(m.coefficients.q_phi.shape[0]):
-                mType = m.mesh.elementMaterialTypes[eN]
-                if mType in self.zones:
-                    for k in range(m.coefficients.q_phi.shape[1]):
-                        t = m.timeIntegration.t
-                        x = m.q['x'][eN, k]
-                        zone = self.zones[mType]
-                        coeff = m.coefficients
-                        coeff.q_phi_solid[eN, k] = zone.sign*(zone.center_x-x[0])
-                        coeff.q_velocity_solid[eN, k, 0] = zone.u(x, t)
-                        coeff.q_velocity_solid[eN, k, 1] = zone.v(x, t)
-                        if self.shape.domain.nd > 2:
-                            coeff.q_velocity_solid[eN, k, 2] = zone.w(x, t)
-            m.q['phi_solid'] = m.coefficients.q_phi_solid
-            m.q['velocity_solid'] = m.coefficients.q_velocity_solid
-
-
-
-# This funcion could be moved somewhere else
-# HAS TO BE CALLED BEFORE MESHING THE DOMAIN
+# This funcion could be moved somewhere else (in Domain.py preferably)
 def buildDomain(domain):
     """
     This function sets up everything needed for the domain, meshing, and
@@ -1418,6 +1376,9 @@ def buildDomain(domain):
     start_flag = 0
     start_vertex = 0
     for shape in domain.shape_list:
+        # --------------------------- #
+        # ----- DOMAIN GEOMETRY ----- #
+        # --------------------------- #
         start_flag = len(domain.bc)-1
         start_vertex = len(domain.vertices)
         start_region = len(domain.regions)+1  # indice 0 ignored
@@ -1438,10 +1399,15 @@ def buildDomain(domain):
         if shape.holes is not None:
             domain.holes += shape.holes.tolist()
         domain.getBoundingBox()
+        # --------------------------- #
+        # --- AUXILIARY VARIABLES --- #
+        # --------------------------- #
         domain.auxiliaryVariables += shape.auxiliaryVariables
+        # rigid bodies
         if shape.RigidBody is not None:
             shape.RigidBody.i_start = start_flag+1
             shape.RigidBody.i_end = start_flag+1+len(shape.BC_list)
+        # absorption and generation zones
         if shape.zones_id:
             if domain.porosityTypes is None:
                 domain.porosityTypes = np.ones(len(domain.regionFlags)+1)
@@ -1460,10 +1426,26 @@ def buildDomain(domain):
                     u_func = v_func = w_func = lambda x, t: 0.0
                 if zone_type == 'generation':
                     sign = -1.0
-                    u_func = 'to define!'
-                    v_func = 'to define!'
-                    w_func = 'to define!'
+                    u_func = shape.RelaxationZone.setGenerationFunctions(0)
+                    v_func = shape.RelaxationZone.setGenerationFunctions(1)
+                    w_func = shape.RelaxationZone.setGenerationFunctions(2)
                 key = start_region + ind
-                shape.zones[key] = RelaxationZone(shape.regions[ind, 0], sign,
-                                                  u_func, v_func, w_func)
+                shape.zones[key] = bc.RelaxationZone(shape.regions[ind, 0],
+                                                     sign, u_func, v_func,
+                                                     w_func)
+    # --------------------------- #
+    # ----- MESH GENERATION ----- #
+    # --------------------------- #
+    mesh = domain.Mesh
+    if mesh.outputFiles['poly'] is True:
+        domain.writePoly(mesh.outputFiles['name'])
+    if mesh.outputFiles['ply'] is True:
+        domain.writePLY(mesh.outputFiles['name'])
+    if mesh.outputFiles['asymptote'] is True:
+        domain.writeAsymptote(mesh.outputFiles['name'])
+    mesh.setTriangleOptions()
+    log("""Mesh generated using: tetgen -%s %s"""  %
+        (mesh.triangleOptions,domain.polyfile+".poly"))
+
+
 

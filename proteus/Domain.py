@@ -1,9 +1,55 @@
 """
 A class hierarchy and tools for building domains of PDE's.
 """
-import BC
 import numpy as np
+import BC
+from MeshTools import MeshParallelPartitioningTypes as mpt
 
+class Mesh:
+    """
+    Mesh
+    """
+    def __init__(self, domain):
+        self.domain = domain
+        self.he = None
+        self.genMesh = True
+        self.outputFiles = {'name': 'mesh',
+                            'poly': True,
+                            'ply': False,
+                            'asymptote': False}
+        self.restrictFineSolutionToAllMeshes = False
+        self.parallelPartitioningType = mpt.node
+        self.nLayersOfOverlapForParallel = 0
+        if domain.nd == 2:
+            self.triangle_string = 'VApq30Dena'
+        if domain.nd == 3:
+            self.triangle_string = 'VApq1.35q12feena'
+        self.triangleOptions = None  # defined when setTriangleOptions called
+
+    def elementSize(self, he, refinement_lvl=0.):
+        self.he = he*0.5**refinement_lvl
+
+    def parallelPartitioningType(self, type='node', layers_overlap=0):
+        if type == 'element' or 0:
+            self.parallelPartitioningType = mpt.element
+        if type == 'node' or 1:
+            self.parallelPartitioningType = mpt.node
+        self.nLayersOfOverlapForParallel = layers_overlap
+
+    def setTriangleOptions(self):
+        if self.domain.nd == 2:
+            self.triangleOptions = self.triangle_string + \
+                                   '%8.8f' % (self.he**2/2.,)
+        elif self.domain.nd == 3:
+            self.triangleOptions = self.triangle_string + \
+                                    '%21.16e' % (self.he**3/6.,)
+    def outputFiles(self, name='mesh', poly=True, ply=False, asymptote=False):
+        self.outputFiles['name'] = name
+        self.outputFiles['poly'] = poly
+        self.outputFiles['ply'] = ply
+        self.outputFiles['asymptote'] = asymptote
+
+        
 class D_base:
     """
     The base class for domains
@@ -24,6 +70,8 @@ class D_base:
         self.shape_list = []
         # list of auxiliaryVariables automatically attached to domaim
         self.auxiliaryVariables = []
+        # attach a Mesh class
+        self.Mesh = Mesh(self)
         # For absorption/generation zones:
         self.porosityTypes = None
         self.dragAlphaTypes = None
