@@ -2,6 +2,11 @@
 Module for creating boundary conditions. Imported in Shape.py
 """
 import numpy as np
+from proteus import AuxiliaryVariables
+from proteus.Profiling import logEvent as log
+from proteus.ctransportCoefficients import (smoothedHeaviside,
+                                            smoothedHeaviside_integral)
+
 
 
 def constantBC(value):
@@ -290,6 +295,78 @@ class BoundaryConditions:
         self.p_dirichlet = hydrostaticPressureOutletWithDepth_p_dirichlet
         self.vof_dirichlet = hydrostaticPressureOutletWithDepth_vof_dirichlet
 
+
+
+# for regions
+
+class RelaxationZone:
+    def __init__(self, center_x, sign, u, v, w):
+        self.center_x = center_x
+        self.sign = sign
+        self.u = u
+        self.v = v
+        self.w = w
+
+
+class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
+    """
+    Prescribe a velocity penalty scaling in a material zone via a
+    Darcy-Forchheimer penalty
+    :param zones: A dictionary mapping integer material types to Zones, where a
+    Zone is a named tuple specifying the x coordinate of the zone center and
+    the velocity components
+    """
+    def __init__(self, zones, shape, waves=None, wind=None):
+        assert isinstance(zones, dict)
+        self.zones = zones
+        self.shape = shape
+        self.waves = waves
+        self.windVel = wind
+        shape.auxiliaryVariables += [self]
+                
+    def setGenerationFunctions(self, i):
+        """
+        Sets the functions necessary for generation zones
+        """
+        if i == 0:
+            s = 'x'
+        elif i == 1:
+            s = 'y'
+        elif i == 2:
+            s = 'z'
+        def twp_flowVelocity(x, t):
+            vert_axis = self.shape.domain.nd - 1
+            waterSpeed = self.waves.u(x[0], x[1], x[2], t, s)[i]
+            waveHeight = self.waves.eta(x[0], x[1], x[2], t)
+            wavePhi = x[vert_axis] - waveHeight
+            he = self.shape.domain.Mesh.he
+            # !!!!!!!!!!!!!!!!!!!!!!!
+            # epsFact_consrv_heaviside should be called from context!
+            # !!!!!!!!!!!!!!!!!!!!!!!
+            epsFact_consrv_heaviside = 3.0
+            H = smoothedHeaviside(epsFact_consrv_heaviside*he,
+                                wavePhi-epsFact_consrv_heaviside*he)
+            return H*self.windVel[0] + (1-H)*waterSpeed
+        return twp_flowVelocity
+
+    def calculate(self):
+        for l, m in enumerate(self.model.levelModelList):
+            for eN in range(m.coefficients.q_phi.shape[0]):
+                mType = m.mesh.elementMaterialTypes[eN]
+                if mType in self.zones:
+                    for k in range(m.coefficients.q_phi.shape[1]):
+                        t = m.timeIntegration.t
+                        x = m.q['x'][eN, k]
+                        zone = self.zones[mType]
+                        coeff = m.coefficients
+                        sign = zone.sign
+                        coeff.q_phi_solid[eN, k] = sign*(zone.center_x-x[0])
+                        coeff.q_velocity_solid[eN, k, 0] = zone.u(x, t)
+                        coeff.q_velocity_solid[eN, k, 1] = zone.v(x, t)
+                        if self.shape.domain.nd > 2:
+                            coeff.q_velocity_solid[eN, k, 2] = zone.w(x, t)
+            m.q['phi_solid'] = m.coefficients.q_phi_solid
+            m.q['velocity_solid'] = m.coefficients.q_velocity_solid
 
 # --------------------------------------------------------------------------- #
 # --------------------------- INITIAL CONDITIONS ---------------------------- #
