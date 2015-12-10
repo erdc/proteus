@@ -1370,6 +1370,7 @@ def buildDomain(domain):
     domain.regions = []
     domain.regionFlags = []
     domain.bc = [bc.BoundaryConditions()]
+    domain.bc[0].setParallelFlag0()
     domain.barycenters = np.array([[0., 0., 0.]])
     domain.AuxiliaryVariables =[]
     start_flag = 0
