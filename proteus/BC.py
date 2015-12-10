@@ -33,16 +33,6 @@ class BoundaryConditions:
     def __init__(self, b_or=None, b_i=None):
         self._b_or = b_or  # array of orientation of all boundaries of shape
         self._b_i = b_i  # indice for this boundary in list of boundaries
-        self.reset()
-        # moveMesh boundary conditions
-        self.hx_dirichlet = None
-        self.hy_dirichlet = None
-        self.hz_dirichlet = None
-        self.u_stress = 0.
-        self.v_stress = 0.
-        self.w_stress = 0.
-
-    def reset(self):
         # _dirichlet
         self.p_dirichlet = None  # pressure
         self.u_dirichlet = None  # velocity u
@@ -52,19 +42,61 @@ class BoundaryConditions:
         self.k_dirichlet = None  # kappa
         self.dissipation_dirichlet = None  # dissipation
         # _advective
-        self.p_advective = constantBC(0.)
-        self.u_advective = constantBC(0.)
-        self.v_advective = constantBC(0.)
-        self.w_advective = constantBC(0.)
-        self.vof_advective = constantBC(0.)
+        self.p_advective = None
+        self.u_advective = None
+        self.v_advective = None
+        self.w_advective = None
+        self.vof_advective = None
         self.k_advective = None
         self.dissipation_advective = None
         # _diffusive
+        self.u_diffusive = None
+        self.v_diffusive = None
+        self.w_diffusive = None
+        self.k_diffusive = None
+        self.dissipation_diffusive = None
+        # moveMesh boundary conditions
+        self.hx_dirichlet = None
+        self.hy_dirichlet = None
+        self.hz_dirichlet = None
+        self.u_stress = 0.
+        self.v_stress = 0.
+        self.w_stress = 0.
+
+    def reset(self):
+        """
+        Resets all boundary conditions to None, apart from:
+        - moveMesh BCs
+        """
+        self.p_dirichlet = None
+        self.u_dirichlet = None
+        self.v_dirichlet = None
+        self.w_dirichlet = None
+        self.vof_dirichlet = None
+        self.k_dirichlet = None
+        self.dissipation_dirichlet = None
+        self.p_advective = None
+        self.u_advective = None
+        self.v_advective = None
+        self.w_advective = None
+        self.vof_advective = None
+        self.k_advective = None
+        self.dissipation_advective = None
+        self.u_diffusive = None
+        self.v_diffusive = None
+        self.w_diffusive = None
+        self.k_diffusive = None
+        self.dissipation_diffusive = None
+
+    def setParallelFlag0(self):
+        """
+        This function should be used only on BC flag 0 (index 0 in the list
+        domain.bc)
+        """
+        self.vof_advective = constantBC(0.)
         self.u_diffusive = constantBC(0.)
         self.v_diffusive = constantBC(0.)
         self.w_diffusive = constantBC(0.)
-        self.k_diffusive = None
-        self.dissipation_diffusive = None
 
     def setTank(self):
         b_or = self._b_or[self._b_i].tolist()
@@ -77,8 +109,6 @@ class BoundaryConditions:
         elif len(b_or) > 2 and (b_or[2] == 1 or b_or[2] == -1):
             self.hz_dirichlet = constantBC(0.)
             self.w_stress = None
-        self.dissipation_diffusive = constantBC(0.)
-        self.dissipation_diffusive = constantBC(0.)
 
     def setNoSlip(self):
         """
@@ -90,6 +120,16 @@ class BoundaryConditions:
         self.w_dirichlet = constantBC(0.)
         self.k_dirichlet = constantBC(0.)
         self.dissipation_dirichlet = constantBC(0.)
+        self.p_advective = constantBC(0.)
+        self.u_advective = constantBC(0.)
+        self.v_advective = constantBC(0.)
+        self.w_advective = constantBC(0.)
+        self.vof_advective = constantBC(0.)
+        self.k_advective = constantBC(0.)
+        self.dissipation_advective = constantBC(0.)
+        self.u_diffusive = constantBC(0.)
+        self.v_diffusive = constantBC(0.)
+        self.w_diffusive = constantBC(0.)
         self.k_diffusive = constantBC(0.)
         self.dissipation_diffusive = constantBC(0.)
 
@@ -98,6 +138,18 @@ class BoundaryConditions:
         sets free slip conditions at the boundary
         """
         self.reset()
+        self.p_advective = constantBC(0.)
+        self.u_advective = constantBC(0.)
+        self.v_advective = constantBC(0.)
+        self.w_advective = constantBC(0.)
+        self.k_advective = constantBC(0.)
+        self.dissipation_advective = constantBC(0.)
+        self.vof_advective = constantBC(0.)
+        self.u_diffusive = constantBC(0.)
+        self.v_diffusive = constantBC(0.)
+        self.w_diffusive = constantBC(0.)
+        self.k_diffusive = constantBC(0.)
+        self.dissipation_diffusive = constantBC(0.)
 
     def setClosed(self):
         self.k_advective = constantBC(0.)
@@ -139,23 +191,6 @@ class BoundaryConditions:
         self.w_diffusive = constantBC(0.)
         self.k_diffusive = constantBC(0.)
         self.dissipation_diffusive = constantBC(0.)
-
-    def setObstacle(self):
-        """
-        sets rigid body boundary conditions
-        """
-        self.u_dirichlet = constantBC(0.)
-        self.v_dirichlet = constantBC(0.)
-        self.w_dirichlet = constantBC(0.)
-        self.k_dirichlet = constantBC(0.)
-        self.dissipation_dirichlet = constantBC(0.)
-        self.u_advective = None
-        self.v_advective = None
-        self.w_advective = None
-        self.vof_advective = constantBC(0.)
-        self.u_diffusive = None
-        self.v_diffusive = None
-        self.w_diffusive = None
 
     def setMoveMesh(self, body):
         """
