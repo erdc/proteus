@@ -40,6 +40,7 @@ class Shape:
                 ' have different dimensions!')
             sys.exit()
         self.domain = domain
+        self.nd = domain.nd
         domain.shape_list.append(self)
         self.vertices = None
         self.vertexFlags = None
@@ -55,7 +56,6 @@ class Shape:
                             # (can be different from barycenter)
         self.coords_system = np.eye(domain.nd)
         self.b_or = None  # boundary orientation
-        self.RigidBody = None
         # the following should be attached to RigidBody directly
         self.volume = None
         self.mass = None
@@ -65,9 +65,16 @@ class Shape:
         # ----------------------
         self.record_values = False
         self.zones = {}  # for absorption/generation zones
-        self.zones_id = {}  # indice and type of zone
-        self.auxiliaryVariables = []  # list of auxvar attached to shape
-        self.BC_list = None
+        self.auxiliaryVariables = {}  # list of auxvar attached to shape
+        self.BC_list = []
+
+    def _attachAuxiliaryVariable(self, key):
+        if key not in self.auxiliaryVariables:
+            if key == 'RigidBody':
+                self.auxiliaryVariables[key] = RigidBody(shape=self)
+            if key == 'RelaxZones':
+                self.auxiliaryVariables[key] = bc.RelaxationZoneWaveGenerator(self.zones,
+                                                                              self.nd)
 
     def setPosition(self, coords):
         """
@@ -238,10 +245,10 @@ class Shape:
         return I
 
     def setRigidBody(self):
-        self.RigidBody = RigidBody(shape=self)
+        self._attachAuxiliaryVariable('RigidBody')
         self.holes = np.array([self.coords])
         for boundcond in self.BC_list:
-            boundcond.setMoveMesh(self.RigidBody)
+            boundcond.setMoveMesh(self.auxiliaryVariables['RigidBody'])
 
     def setTank(self):
         for boundcond in self.BC_list:
@@ -285,33 +292,43 @@ class Shape:
         else:
             self.record_filename = filename + '.csv'
 
-    def setAbsorptionZones(self, indice, epsFact_solid,
-                           dragAlphaTypes=0.5/1.005e-6,
+    def setAbsorptionZones(self, indice, epsFact_solid, sign=None,
+                           center_x=None, dragAlphaTypes=0.5/1.005e-6,
                            dragBetaTypes=0., porosityTypes=1.):
         """
         Sets a region (given the local index) to an absorption zone
         :arg index: local indice of the region (first region of the Shape
                     instance is 0). Can be an integer or a list of integers.
-        :arg epsFact_solid: absorption zone length (usually length of region/2)
+        :arg epsFact_solid: half of absorption zone length
+        :arg sign: direction vector from the boundary to the sponge (x-axis)
+        :arg center_x: center of the absorption zone
+        :arg dragAlpha
         """
-        if not self.zones_id:
-            self.RelaxationZones = bc.RelaxationZoneWaveGenerator(self.zones,
-                                                                  shape=self)
-            self.porosityTypes = np.ones(len(self.regionFlags))
-            self.dragAlphaTypes = np.zeros(len(self.regionFlags))
-            self.dragBetaTypes = np.zeros(len(self.regionFlags))
-            self.epsFact_solid = np.zeros(len(self.regionFlags))
+        self._attachAuxiliaryVariable('RelaxZones')
+        waves = None
+        windSpeed = 0.
         if isinstance(indice, int):
             indice = [indice]
-        for ind in indice:
-            self.zones_id[ind] = 'absorption'
-            self.porosityTypes[ind] = porosityTypes
-            self.dragAlphaTypes[ind] = dragAlphaTypes
-            self.dragBetaTypes[ind] = dragBetaTypes
-            self.epsFact_solid[ind] = epsFact_solid
+            sign = [sign]
+            epsFact_solid = [epsFact_solid]
+            center_x = [center_x]
+            dragAlphaTypes = [dragAlphaTypes]
+            dragBetaTypes = [dragBetaTypes]
+            porosityTypes = [porosityTypes]
+        for i in indice:
+            self.zones[i] = bc.RelaxationZone(domain=self.domain,
+                                              zone_type='absorption',
+                                              sign=sign[i],
+                                              center_x=center_x[i],
+                                              waves=waves,
+                                              windSpeed=windSpeed,
+                                              epsFact_solid=epsFact_solid[i],
+                                              dragAlphaTypes=dragAlphaTypes[i],
+                                              dragBetaTypes=dragBetaTypes[i],
+                                              porosityTypes=porosityTypes[i])
 
-    def setGenerationZones(self, indice, epsFact_solid, waves, wind=0.,
-                           dragAlphaTypes=0.5/1.005e-6,
+    def setGenerationZones(self, indice, epsFact_solid, sign, center_x, waves,
+                           windSpeed=0., dragAlphaTypes=0.5/1.005e-6,
                            dragBetaTypes=0., porosityTypes=1.):
         """
         Sets a region (given the local index) to an absorption zone
@@ -319,23 +336,28 @@ class Shape:
                     instance is 0). Can be an integer or a list of integers.
         :arg epsFact_solid: absorption zone length (usually length of region/2)
         """
-        if not self.zones_id:
-            self.RelaxationZones = bc.RelaxationZoneWaveGenerator(self.zones,
-                                                                  shape=self,
-                                                                  waves=waves,
-                                                                  wind=wind)
-            self.porosityTypes = np.ones(len(self.regionFlags))
-            self.dragAlphaTypes = np.zeros(len(self.regionFlags))
-            self.dragBetaTypes = np.zeros(len(self.regionFlags))
-            self.epsFact_solid = np.zeros(len(self.regionFlags))
+        self._attachAuxiliaryVariable('RelaxZones')
         if isinstance(indice, int):
             indice = [indice]
-        for ind in indice:
-            self.zones_id[ind] = 'generation'
-            self.porosityTypes = porosityTypes
-            self.dragAlphaTypes[ind] = dragAlphaTypes
-            self.dragBetaTypes[ind] = dragBetaTypes
-            self.epsFact_solid[ind] = epsFact_solid
+            sign = [sign]
+            waves = [waves]
+            windSpeed = [windSpeed]
+            epsFact_solid = [epsFact_solid]
+            center_x = [center_x]
+            dragAlphaTypes = [dragAlphaTypes]
+            dragBetaTypes = [dragBetaTypes]
+            porosityTypes = [porosityTypes]
+        for i in indice:
+            self.zones[i] = bc.RelaxationZone(domain=self.domain,
+                                              zone_type='generation',
+                                              sign=sign[i],
+                                              center_x=center_x[i],
+                                              waves=waves[i],
+                                              windSpeed=windSpeed[i],
+                                              epsFact_solid=epsFact_solid[i],
+                                              dragAlphaTypes=dragAlphaTypes[i],
+                                              dragBetaTypes=dragBetaTypes[i],
+                                              porosityTypes=porosityTypes[i])
 
 
 class Cuboid(Shape):
@@ -803,12 +825,12 @@ class Tank3D(Shape):
         self.regions = np.array(regions)
         self.regionFlags = np.array(regionFlags)
 
-    def setAbsorptionZones(self, epsFact_solid, allSponge=False, left=False,
-                           right=False, front=False, back=False,
-                           front_left=False, front_right=False,
-                           back_left=False, back_right=False,
-                           dragAlphaTypes=0.5/1.005e-6, dragBetaTypes=0.,
-                           porosityTypes=1.):
+    def setAbsorptionZones(self, epsFact_solid, allSponge=False,
+                               left=False, right=False, front=False,
+                               back=False, front_left=False, front_right=False,
+                               back_left=False, back_right=False,
+                               dragAlphaTypes=0.5/1.005e-6, dragBetaTypes=0.,
+                               porosityTypes=1.):
         self.abs_zones = {'leftSponge': left,
                           'rightSponge': right,
                           'frontSponge': front,
@@ -820,17 +842,11 @@ class Tank3D(Shape):
         if allSponge is True:
             for key in self.abs_zones:
                 self.abs_zones[key] = True
-        if True in self.abs_zones.values() and not self.zones_id:
-            self.RelaxationZones = bc.RelaxationZoneWaveGenerator(self.zones,
-                                                                  shape=self)
-        for key, val in self.abs_zones.iteritems():
-            if val is True:
-                ind = self.regionIndice[key]
-                self.zones_id[ind] = 'absorption'
-            self.porosityTypes[ind] = porosityTypes
-            self.dragAlphaTypes[ind] = dragAlphaTypes
-            self.dragBetaTypes[ind] = dragBetaTypes
-            self.epsFact_solid[ind] = epsFact_solid
+        indice = []
+        for key, value in self.abs_zones:
+            if value is True:
+                indice += [self.regionIndice[key]]
+        print('not implemented yet!')
 
 
 class Tank2D(Shape):
@@ -945,28 +961,41 @@ class Tank2D(Shape):
         self.rightSponge = right
         self.setDimensions(self.dim)
 
-    def setAbsorptionZones(self, left=False, right=False, epsFact_solid=None,
-                           dragAlphaTypes=0.5/1.005e-6, dragBetaTypes=0.,
-                           porosityTypes=1.):
+    def setAbsorptionZones(self, left=False, right=False,
+                               epsFact_solid=None, dragAlphaTypes=0.5/1.005e-6,
+                               dragBetaTypes=0., porosityTypes=1.):
         self.leftSpongeAbs = left
         self.rightSpongeAbs = right
-        if (left is True or right is True) and not self.zones_id:
-            self.RelaxationZones = bc.RelaxationZoneWaveGenerator(self.zones,
-                                                                  shape=self)
+        waves = None
+        windSpeed = 0.
+        if left or right:
+            self._attachAuxiliaryVariable('RelaxZones')
         if self.leftSpongeAbs is True:
             ind = self.regionIndice['leftSponge']
-            self.zones_id[ind] = 'absorption'
-            self.porosityTypes = porosityTypes
-            self.dragAlphaTypes[ind] = dragAlphaTypes
-            self.dragBetaTypes[ind] = dragBetaTypes
-            self.epsFact_solid[ind] = epsFact_solid or self.leftSponge/2.
+            center_x = self.coords[0]-0.5*self.dim[0]+self.leftSponge/2.
+            sign = 1.
+            self.zones[ind] = bc.RelaxationZone(domain=self.domain,
+                                                zone_type='absorption',
+                                                sign=sign, center_x=center_x,
+                                                waves=waves,
+                                                windSpeed=windSpeed,
+                                                epsFact_solid=epsFact_solid,
+                                                dragAlphaTypes=dragAlphaTypes,
+                                                dragBetaTypes=dragBetaTypes,
+                                                porosityTypes=porosityTypes)
         if self.rightSpongeAbs is True:
             ind = self.regionIndice['rightSponge']
-            self.zones_id[ind] = 'absorption'
-            self.porosityTypes = porosityTypes
-            self.dragAlphaTypes[ind] = dragAlphaTypes
-            self.dragBetaTypes[ind] = dragBetaTypes
-            self.epsFact_solid[ind] = epsFact_solid or self.rightSponge/2.
+            center_x = self.coords[0]+0.5*self.dim[0]-self.rightSponge/2.
+            sign = -1.
+            self.zones[ind] = bc.RelaxationZone(domain=self.domain,
+                                                zone_type='absorption',
+                                                sign=sign, center_x=center_x,
+                                                waves=waves,
+                                                windSpeed=windSpeed,
+                                                epsFact_solid=epsFact_solid,
+                                                dragAlphaTypes=dragAlphaTypes,
+                                                dragBetaTypes=dragBetaTypes,
+                                                porosityTypes=porosityTypes)
 
 
 class CustomShape(Shape):
@@ -1038,13 +1067,13 @@ class RigidBody(AuxiliaryVariables.AV_base):
 
     def __init__(self, shape, he=1., cfl_target=0.9, dt_init=0.001):
         self.shape = shape
-        shape.auxiliaryVariables += [self]
         self.dt_init = dt_init
         self.he = he
         self.cfl_target = 0.9
         self.last_position = np.array([0., 0., 0.])
         self.rotation_matrix = np.eye(3)
         self.h = np.array([0., 0., 0.])
+        self.barycenter = np.zeros(3)
         self.i_start = None  # will be retrieved from setValues() of Domain
         self.i_end = None  # will be retrieved from setValues() of Domain
 
@@ -1070,6 +1099,7 @@ class RigidBody(AuxiliaryVariables.AV_base):
             ang_acc = np.array([0., 0., 0.])
         self.angvel[:] = self.last_angvel+ang_acc*dt
         ang_disp = self.angvel*dt
+        self.ang = np.linalg.norm(ang_disp)
         self.ang = np.linalg.norm(ang_disp)
         if nd == 2 and self.angvel[2] < 0:
             self.ang = -self.ang
@@ -1191,7 +1221,7 @@ class RigidBody(AuxiliaryVariables.AV_base):
         rot = self.rotation
         rot_x = -atan2(rot[2, 1], rot[1, 2])
         rot_y = -atan2(-rot[0, 2], sqrt(rot[2, 1]**2+rot[2, 2]**2))
-        rot_z = -atan2(rot[1, 0], rot[0, 0])
+        rot_z = np.degrees(-atan2(rot[1, 0], rot[0, 0]))
         log("================================================================")
         log("=================== Rigid Body Calculation =====================")
         log("================================================================")
@@ -1369,10 +1399,11 @@ def buildDomain(domain):
     domain.holes = []
     domain.regions = []
     domain.regionFlags = []
+    # boundary conditions for flag 0
     domain.bc = [bc.BoundaryConditions()]
     domain.bc[0].setParallelFlag0()
     domain.barycenters = np.array([[0., 0., 0.]])
-    domain.AuxiliaryVariables =[]
+    domain.auxiliaryVariables = []
     start_flag = 0
     start_vertex = 0
     for shape in domain.shape_list:
@@ -1399,40 +1430,43 @@ def buildDomain(domain):
         if shape.holes is not None:
             domain.holes += shape.holes.tolist()
         domain.getBoundingBox()
+                                  
         # --------------------------- #
         # --- AUXILIARY VARIABLES --- #
         # --------------------------- #
-        domain.auxiliaryVariables += shape.auxiliaryVariables
-        # rigid bodies
-        if shape.RigidBody is not None:
-            shape.RigidBody.i_start = start_flag+1
-            shape.RigidBody.i_end = start_flag+1+len(shape.BC_list)
-        # absorption and generation zones
-        if shape.zones_id:
-            if domain.porosityTypes is None:
-                domain.porosityTypes = np.ones(len(domain.regionFlags)+1)
-                domain.dragAlphaTypes = np.zeros(len(domain.regionFlags)+1)
-                domain.dragBetaTypes = np.zeros(len(domain.regionFlags)+1)
-                domain.epsFact_solid = np.zeros(len(domain.regionFlags)+1)
+        aux = domain.auxiliaryVariables
+        # ----------------------------
+        # RIGID BODIES
+        # ----------------------------
+        if 'RigidBody' in shape.auxiliaryVariables.keys():
+            aux += [shape.auxiliaryVariables['RigidBody']]
+            # update the indice for force/moment calculations
+            aux[-1].i_start = start_flag+1
+            aux[-1].i_end = start_flag+1+len(shape.BC_list)
+        # ----------------------------
+        # ABSORPTION/GENERATION ZONES
+        # ----------------------------
+        if 'RelaxZones' in shape.auxiliaryVariables.keys():
+            aux += [shape.auxiliaryVariables['RelaxZones']]
+            zones_global = {}
+            # create arrays of default values
+            domain.porosityTypes = np.ones(len(domain.regionFlags)+1)
+            domain.dragAlphaTypes = np.zeros(len(domain.regionFlags)+1)
+            domain.dragBetaTypes = np.zeros(len(domain.regionFlags)+1)
+            domain.epsFact_solid = np.zeros(len(domain.regionFlags)+1)
             i0 = start_region
             i1 = start_region+len(shape.regions)
-            domain.porosityTypes[i0:i1] = shape.porosityTypes
-            domain.dragAlphaTypes[i0:i1] = shape.dragAlphaTypes
-            domain.dragBetaTypes[i0:i1] = shape.dragBetaTypes
-            domain.epsFact_solid[i0:i1] = shape.epsFact_solid
-            for ind, zone_type in shape.zones_id.iteritems():
-                if zone_type == 'absorption':
-                    sign = 1.0
-                    u_func = v_func = w_func = lambda x, t: 0.0
-                if zone_type == 'generation':
-                    sign = -1.0
-                    u_func = shape.RelaxationZone.setGenerationFunctions(0)
-                    v_func = shape.RelaxationZone.setGenerationFunctions(1)
-                    w_func = shape.RelaxationZone.setGenerationFunctions(2)
+            for ind, zone in shape.zones.iteritems():
+                domain.porosityTypes[i0+ind] = zone.porosityTypes
+                domain.dragAlphaTypes[i0+ind] = zone.dragAlphaTypes
+                domain.dragBetaTypes[i0+ind] = zone.dragBetaTypes
+                domain.epsFact_solid[i0+ind] = zone.epsFact_solid
+                # update dict with global key instead of local key
                 key = start_region + ind
-                shape.zones[key] = bc.RelaxationZone(shape.regions[ind, 0],
-                                                     sign, u_func, v_func,
-                                                     w_func)
+                zones_global[key] = zone
+            # replace local dict to global dict
+            aux[-1].zones = zones_global
+            
     # --------------------------- #
     # ----- MESH GENERATION ----- #
     # --------------------------- #
