@@ -743,7 +743,7 @@ class TimeSeries:
                  waveDir, 
                  g,
                  rec_direct = True,
-                 wind_params = None #If rec_direct = False then wind_params = {"Nwaves":Nwaves,"Window":wind_fun}
+                 window_params = None #If rec_direct = False then wind_params = {"Nwaves":Nwaves,"Tm":Tm,"Window":wind_fun,"Overlap":overlap,"Cutoff":cutoff}
                  ):
 
         # Setting the depth
@@ -856,51 +856,57 @@ class TimeSeries:
 
                 # Spectral windowing
         else:
-            if (wind_params==None):
-                logEvent("WaveTools.py: Set parameters for spectral windowing. Argument wind_params must be a dictionary")
+            if (window_params==None):
+                logEvent("WaveTools.py: Set parameters for spectral windowing. Argument window_params must be a dictionary")
                 sys.exit(1)
             try:
-                self.Nwaves = wind_params["Nwaves"]
+                self.Nwaves = window_params["Nwaves"]
             except:
-                logEvent("WaveTools.py: Dictionary key 'Nwaves' (waves per window) not found in wind_params dictionary")
+                logEvent("WaveTools.py: Dictionary key 'Nwaves' (waves per window) not found in window_params dictionary")
                 sys.exit(1)
+
             try:           
-                windowName = wind_params["Window"]
+                self.Tm = window_params["Tm"]
             except:
-                logEvent("WaveTools.py: Dictionary key 'Window' (windo function type) not found in wind_params dictionary")
+                logEvent("WaveTools.py: Dictionary key 'Tm' (mean or characteristic wave period) not found in window_params dictionary")
+                sys.exit(1)
+
+            try:           
+                self.windowName = window_params["Window"]
+            except:
+                logEvent("WaveTools.py: Dictionary key 'Window' (windo function type) not found in window_params dictionary")
                 sys.exit(1)
 
             validWindows = [costap, tophat]
-            wind_fun =  loadExistingFunction(windowName, validWindows) 
+            wind_fun =  loadExistingFunction(self.windowName, validWindows) 
             logEvent("WaveTools.py: performing series decomposition with spectral windows")
             # Portion of overlap, compared to window time
             try:
-                self.Nwaves = wind_params["Overlap"]            
+                self.overlap = window_params["Overlap"]            
             except:
-                overlap = 0.25
+                self.overlap = 0.25
+                logEvent("WaveTools.py: Overlap entry in window_params dictionary not found. Setting default value of 0.25 (1/4 of the window length)")
 
             try:
-                self.Nwaves = wind_params["Cutoff"]            
+                self.cutoff = window_params["Cutoff"]            
             except:
-                cutoff= 0.1
+                self.cutoff= 0.1
+                logEvent("WaveTools.py: Cutoff entry in window_params dictionary not found. Setting default value of 0.1 (1/10 of the window length)")
             # Portion of window filtered with the Costap filter
             # Setting the handover time, either at the middle of the overlap or just after the filter
-            Handover = min(overlap - 1.1 *cutoff,  overlap / 2.)
-            # setting the window duration (approx.). Twindow = Tmean * Nwaves = Tpeak * Nwaves /1.1
-            self.Twindow =  self.Nwaves / (1.1 * self.peakFrequency )
-#            print self.Twindow
-            #Settling overlap 25% of Twindow
-            self.Toverlap = overlap * self.Twindow
-            #Getting the actual number of windows
-            # (N-1) * (Twindow - Toverlap) + Twindow = total time
-            self.Nwindows = int( (self.tlength -   self.Twindow ) / (self.Twindow - self.Toverlap) ) + 1
-            # Correct Twindow and Toverlap for duration and integer number of windows
-            self.Twindow = self.tlength/(1. + (1. - overlap)*(self.Nwindows-1))
-            self.Toverlap = overlap*self.Twindow
-            logEvent("WaveTools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow * 1.1* self.peakFrequency) )
+            self.handover = min(self.overlap - 1.1 *self.cutoff,  self.overlap / 2.)
+            if (self.handover < 1.1 * self.cutoff):
+                logEvent("WaveTools.py: Window handover will occur in an area affected by the cutoff filer. Decrease cutoff or increase overlap")
+                sys.exit(1)
+            self.Twindow =  self.Tm * self.Nwaves            # setting the window duration (approx.). Twindow = Tmean * Nwaves
+            self.Toverlap = self.overlap * self.Twindow             
+            self.Nwindows = int( (self.tlength -   self.Twindow ) / (self.Twindow - self.Toverlap) ) + 1             #Getting the actual number of windows  (N-1) * (Twindow - Toverlap) + Twindow = total time
+            self.Twindow = self.tlength/(1. + (1. - self.overlap)*(self.Nwindows-1))            # Correct Twindow and Toverlap for duration and integer number of windows
+            self.Toverlap = self.overlap*self.Twindow
+            logEvent("WaveTools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow / self.Tm) )
             diff = (self.Nwindows-1.)*(self.Twindow -self.Toverlap)+self.Twindow - self.tlength
             logEvent("WaveTools.py: Checking duration of windowed time series: %s per cent difference from original duration" %(100*diff) )
-            logEvent("WaveTools.py: Using %s windows for reconstruction with %s sec duration and %s per cent overlap" %(self.Nwindows, self.Twindow,100*overlap) )
+            logEvent("WaveTools.py: Using %s windows for reconstruction with %s sec duration and %s per cent overlap" %(self.Nwindows, self.Twindow,100*self.overlap ))
 # Setting where each window starts and ends
             for jj in range(self.Nwindows):
                 span = np.zeros(2,"d")
@@ -919,17 +925,42 @@ class TimeSeries:
                 span[0] = ispan1
                 span[1] = ispan2
 # Storing time series in windows and handover times
-                self.windows_handover.append( self.time[ispan2] - Handover*self.Twindow )
+                self.windows_handover.append( self.time[ispan2] - self.handover*self.Twindow )
                 self.windows_rec.append(np.array(zip(self.time[ispan1:ispan2],self.eta[ispan1:ispan2])))
 # Decomposing windows to frequency domain
             self.decompose_window = []
 #            style = "k-"
 #            ii = 0
+            
             for wind in self.windows_rec:
                 self.nfft=len(wind[:,0])
-                wind[:,1] *=wind_fun(self.nfft,cutoff = cutoff)
-                decomp = decompose_tseries(wind[:,0],wind[:,1],self.nfft,self.N,ret_only_freq=0)
+                wind[:,1] *=wind_fun(self.nfft,cutoff = self.cutoff)
+                decomp = decompose_tseries(wind[:,0],wind[:,1],self.nfft,self.dt)
+                self.N = min(self.N, len(decomp[0]))
+                Nftemp = self.N
+                ipeak =  np.where(self.ai == max(self.ai))[0][0]
+                imax = min(ipeak + Nftemp/2,len(self.ai))
+                imin = max(0,ipeak - Nftemp/2)
+                self.Nf = imax-imin
+                if (self.Nf < self.N):
+                    if imin == 0:
+                        imax = imax + (self.N - self.Nf)
+                    else:
+                        imin = imin - (self.N - self.Nf)
+                    self.Nf = self.N
+
+                self.decomp[1] = decomp[1][imin:imax]
+                self.decomp[0] = decomp[0][imin:imax]
+                self.decomp[2] = -decomp[2][imin:imax]
+                ki = dispersion(decomp[0],self.depth,g=self.gAbs)
+                kDir = np.zeros((len(ki),3),"d")
+                for ii in range(len(ki)):
+                    kDir[ii,:] = ki[ii]*self.waveDir[:]
+                decomp.append(kDir)
                 self.decompose_window.append(decomp)
+                
+            
+
 #                if style == "k-":
 #                    style = "kx"
 #                else:
@@ -965,27 +996,61 @@ class TimeSeries:
             U+= vel_mode(x-self.x0,y-self.y0,z-self.z0,t-self.t0,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir,comp)                
         return U        
 
-
-    def reconstruct_window(self,x,y,z,t,Nf,var="eta",ss = "x"):
-        "Direct reconstruction of a timeseries"
-#        if self.rec_direct==True:
-#            logEvent("WaveTools.py: While attempting  reconstruction in windows, wrong input for rec_direct found (should be set to False)",level=0)
-#            logEvent("Stopping simulation",level=0)
-#            exit(1)
-
-
-        #Tracking the time window (spatial coherency not yet implemented)
-        #Nw = 2
-        if t-self.time[0] >= 0.875*self.Twindow:
-            Nw = min(int((t-self.time[0] - 0.875*self.Twindow)/(self.Twindow - 2. * 0.125 * self.Twindow)) + 1, self.Nwindows-1)
+    def findWindow(self,t):
+        term = 1. - self.handover
+        if t-self.time[0] >= term*self.Twindow:
+            Nw = min(int((t-self.time[0] - term*self.Twindow)/(self.Twindow - 2. * self.handover * self.Twindow)) + 1, self.Nwindows-1)
             if t-self.time[0] < self.windows_handover[Nw-1] - self.time[0]:
                 Nw-=1
         else:
             Nw = 0
+        return Nw
+        
+    def etaWindow(self,x,y,z,t):
+        """Free surface displacement
+        :param x: floating point x coordinate
+        :param t: time"""
+        Nw = self.findWindow(t)
+        ai =  self.decompose_window[Nw][1]
+        omega = self.decompose_window[Nw][0]
+        phi = self.decompose_window[Nw][2]
+        kDir = self.decompose_window[Nw][4]
+        t0 = self.windows_rec[Nw][0]
+        Eta=0.        
+        for ii in range(0,self.Nf):
+            Eta+= eta_mode(x-self.x0,y-self.y0,z-self.z0,t-t0,kDir[ii],omega[ii],phi[ii],ai[ii])
+        return Eta
 
-        print t,Nw, self.windows_handover[Nw]
+    def uWindow(self,x,y,z,t,comp):
+        """x-component of velocity
 
-        tinit = self.windows_rec[Nw][0,0]
+        :param x: floating point x coordinate
+        :param z: floating point z coordinate (height above bottom)
+        :param t: time
+        """
+        Nw = self.findWindow(t)
+        ai =  self.decompose_window[Nw][1]
+        omega = self.decompose_window[Nw][0]
+        phi = self.decompose_window[Nw][2]
+        kDir = self.decompose_window[Nw][4]
+        U=0.
+        t0 = self.windows_rec[Nw][0]
+        for ii in range(self.N):
+            U+= vel_mode(x-self.x0,y-self.y0,z-self.z0,t-t0,kDir[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir,comp)                
+        return U        
+
+
+    def reconstruct_window(self,x,y,z,t,Nf,var="eta",ss = "x"):
+        "Direct reconstruction of a timeseries"
+        #        if self.rec_direct==True:
+        #            logEvent("WaveTools.py: While attempting  reconstruction in windows, wrong input for rec_direct found (should be set to False)",level=0)
+        #            logEvent("Stopping simulation",level=0)
+        #            exit(1)
+        
+        tinit = 0
+        #Tracking the time window (spatial coherency not yet implemented)
+        Nw = 2
+
 #        thand = self.windows_handover[Nw]
 #        tinit  = self.windows_rec[Nw][0,0]
 #       if t >= thand[1]:
