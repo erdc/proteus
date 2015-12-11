@@ -858,8 +858,26 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
             )
         self.assertEqual(cm3.exception.code, 1 )     
 
+    def testWindTimeSeriesFailureModes(self):
+        from proteus.WaveTools import TimeSeries
+        #load successfully - direct decomposition
+        path = getpath()
+        aa= TimeSeries(
+            path+"test_timeSeries.txt",
+            0,
+            np.array([1.,0,0]), 
+            1.  ,
+            64 ,          #number of frequency bins
+            1. ,        
+            np.array([1.,0,0]), 
+            np.array([0,0,-9.81]),
+            False,
+            {"Nwaves" : 5,"Tm":1, "Window":"costap"}
+            
+            )
 
-        with self.assertRaises(SystemExit) as cm4:
+        # Putting too many waves  
+        with self.assertRaises(SystemExit) as cm1:
             aa= TimeSeries(
             path+"test_timeSeries.txt",
             0,
@@ -867,21 +885,105 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
             1.  ,
             64 ,          #number of frequency bins
             1. ,        
-            np.array([1,0,0]), 
-            np.array([1,0,0])
+            np.array([1.,0,0]), 
+            np.array([0,0,-9.81]),
+            False,
+            {"Nwaves" : 500,"Tm":1, "Window":"costap"}
+            
             )
+        self.assertEqual(cm1.exception.code, 1 )     
+
+
+        #No Nwaves
+        with self.assertRaises(SystemExit) as cm2:
+            aa= TimeSeries(
+                path+"test_timeSeries.txt",
+                0,
+                np.array([1.,0,0]), 
+                1.  ,
+                64 ,          #number of frequency bins
+                1. ,        
+                np.array([1.,0,0]), 
+                np.array([0,0,-9.81]),
+                False,
+                {"Tm":1, "Window":"costap"}
+            
+            )
+
+        self.assertEqual(cm2.exception.code, 1 )     
+
+
+
+
+        #No tm
+        with self.assertRaises(SystemExit) as cm3:
+            aa= TimeSeries(
+                path+"test_timeSeries.txt",
+                0,
+                np.array([1.,0,0]), 
+                1.  ,
+                64 ,          #number of frequency bins
+                1. ,        
+                np.array([1.,0,0]), 
+                np.array([0,0,-9.81]),
+                False,
+                {"Nwaves":5, "Window":"costap"}
+            
+            )
+
+        self.assertEqual(cm3.exception.code, 1 )     
+
+        #No window
+        with self.assertRaises(SystemExit) as cm3a:
+            aa= TimeSeries(
+                path+"test_timeSeries.txt",
+                0,
+                np.array([1.,0,0]), 
+                1.  ,
+                64 ,          #number of frequency bins
+                1. ,        
+                np.array([1.,0,0]), 
+                np.array([0,0,-9.81]),
+                False,
+                {"Nwaves":5, "Tm":1}
+            
+            )
+        self.assertEqual(cm3a.exception.code, 1 )     
+
+
+        #Wrong window name
+        with self.assertRaises(SystemExit) as cm4:
+            aa= TimeSeries(
+                path+"test_timeSeries.txt",
+                0,
+                np.array([1.,0,0]), 
+                1.  ,
+                64 ,          #number of frequency bins
+                1. ,        
+                np.array([1.,0,0]), 
+                np.array([0,0,-9.81]),
+                False,
+                {"Nwaves":5, "Tm":1, "Window":"aargh"}
+            
+            )
+ 
         self.assertEqual(cm4.exception.code, 1 )     
 
+
         with self.assertRaises(SystemExit) as cm5:
+        
             aa= TimeSeries(
-            path+"test_timeSeries.txt",
-            0,
-            np.array([0,1.,0,0]), 
-            1.  ,
-            64 ,          #number of frequency bins
-            1. ,        
-            np.array([1,0,0]), 
-            np.array([0,0,-9.81])
+                path+"test_timeSeries.txt",
+                0,
+                np.array([1.,0,0]), 
+                1.  ,
+                64 ,          #number of frequency bins
+                1. ,        
+                np.array([1.,0,0]), 
+                np.array([0,0,-9.81]),
+                False,
+                {"Nwaves":5, "Tm":1, "Window":"costap", "Cutoff" : 0.4}
+            
             )
         self.assertEqual(cm5.exception.code, 1 )     
         
@@ -922,6 +1024,7 @@ class VerifyTimeSeries(unittest.TestCase):
         err = (etaInt - etaTest)**2
         err = np.sqrt(sum(err))/len(etaInt)/max(abs(etaInt))
         self.assertTrue(err<1e-3 )     
+
         
         
         
