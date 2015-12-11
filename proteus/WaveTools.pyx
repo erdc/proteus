@@ -874,8 +874,14 @@ class TimeSeries:
             try:           
                 self.windowName = window_params["Window"]
             except:
-                logEvent("WaveTools.py: Dictionary key 'Window' (windo function type) not found in window_params dictionary")
+                logEvent("WaveTools.py: Dictionary key 'Window' (window function type) not found in window_params dictionary")
                 sys.exit(1)
+
+            if(self.Nwaves > 0.5*self.tlength / self.Tm):
+                logEvent("WaveTools.py: Reconstruction is expected to have two windows or less. Plese reduce the number of waves per window or switch to direct decomposition )")
+                sys.exit(1)
+
+
 
             validWindows = [costap, tophat]
             wind_fun =  loadExistingFunction(self.windowName, validWindows) 
@@ -892,11 +898,14 @@ class TimeSeries:
             except:
                 self.cutoff= 0.1
                 logEvent("WaveTools.py: Cutoff entry in window_params dictionary not found. Setting default value of 0.1 (1/10 of the window length)")
+                
+                
+
             # Portion of window filtered with the Costap filter
             # Setting the handover time, either at the middle of the overlap or just after the filter
-            self.handover = min(self.overlap - 1.1 *self.cutoff,  self.overlap / 2.)
-            if (self.handover < 1.1 * self.cutoff):
-                logEvent("WaveTools.py: Window handover will occur in an area affected by the cutoff filer. Decrease cutoff or increase overlap")
+            self.handover = max(1.1 *self.cutoff,  self.overlap / 2.)
+            if (self.handover > 0.9 * self.overlap):
+                logEvent("WaveTools.py: Window handover is not optimal as the cutoff is too close to the overlap. Decrease cutoff or increase overlap")
                 sys.exit(1)
             self.Twindow =  self.Tm * self.Nwaves            # setting the window duration (approx.). Twindow = Tmean * Nwaves
             self.Toverlap = self.overlap * self.Twindow             
@@ -935,11 +944,11 @@ class TimeSeries:
             for wind in self.windows_rec:
                 self.nfft=len(wind[:,0])
                 wind[:,1] *=wind_fun(self.nfft,cutoff = self.cutoff)
-                decomp = decompose_tseries(wind[:,0],wind[:,1],self.nfft,self.dt)
+                decomp = decompose_tseries(wind[:,0],wind[:,1],self.dt)
                 self.N = min(self.N, len(decomp[0]))
                 Nftemp = self.N
-                ipeak =  np.where(self.ai == max(self.ai))[0][0]
-                imax = min(ipeak + Nftemp/2,len(self.ai))
+                ipeak =  np.where(decomp[1] == max(decomp[1]))[0][0]
+                imax = min(ipeak + Nftemp/2,len(decomp[1]))
                 imin = max(0,ipeak - Nftemp/2)
                 self.Nf = imax-imin
                 if (self.Nf < self.N):
@@ -949,9 +958,9 @@ class TimeSeries:
                         imin = imin - (self.N - self.Nf)
                     self.Nf = self.N
 
-                self.decomp[1] = decomp[1][imin:imax]
-                self.decomp[0] = decomp[0][imin:imax]
-                self.decomp[2] = -decomp[2][imin:imax]
+                decomp[1] = decomp[1][imin:imax]
+                decomp[0] = decomp[0][imin:imax]
+                decomp[2] = -decomp[2][imin:imax]
                 ki = dispersion(decomp[0],self.depth,g=self.gAbs)
                 kDir = np.zeros((len(ki),3),"d")
                 for ii in range(len(ki)):
