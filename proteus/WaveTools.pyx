@@ -1024,7 +1024,7 @@ class TimeSeries:
         omega = self.decompose_window[Nw][0]
         phi = self.decompose_window[Nw][2]
         kDir = self.decompose_window[Nw][4]
-        t0 = self.windows_rec[Nw][0]
+        t0 = self.windows_rec[Nw][0,0]
         Eta=0.        
         for ii in range(0,self.Nf):
             Eta+= eta_mode(x-self.x0,y-self.y0,z-self.z0,t-t0,kDir[ii],omega[ii],phi[ii],ai[ii])
@@ -1042,64 +1042,13 @@ class TimeSeries:
         omega = self.decompose_window[Nw][0]
         phi = self.decompose_window[Nw][2]
         kDir = self.decompose_window[Nw][4]
+        t0 = self.windows_rec[Nw][0,0]
         U=0.
-        t0 = self.windows_rec[Nw][0]
         for ii in range(self.N):
             U+= vel_mode(x-self.x0,y-self.y0,z-self.z0,t-t0,kDir[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir,comp)                
         return U        
 
 
-    def reconstruct_window(self,x,y,z,t,Nf,var="eta",ss = "x"):
-        "Direct reconstruction of a timeseries"
-        #        if self.rec_direct==True:
-        #            logEvent("WaveTools.py: While attempting  reconstruction in windows, wrong input for rec_direct found (should be set to False)",level=0)
-        #            logEvent("Stopping simulation",level=0)
-        #            exit(1)
-        
-        tinit = 0
-        #Tracking the time window (spatial coherency not yet implemented)
-        Nw = 2
-
-#        thand = self.windows_handover[Nw]
-#        tinit  = self.windows_rec[Nw][0,0]
-#       if t >= thand[1]:
-#           Nw = min(Nw+1, 3)
-
-
-        ai = self.decompose_window[Nw][1]
-        ipeak = np.where(ai == max(ai))[0][0]
-        imax = min(ipeak + Nf/2,len(ai))
-        imin = max(0,ipeak - Nf/2)
-        ai = ai[imin:imax]
-        omega = self.decompose_window[Nw][0][imin:imax]
-        phi = self.decompose_window[Nw][2][imin:imax]
-        setup = self.decompose_window[Nw][3]
-        ki = dispersion(omega,self.depth,g=self.gAbs)
-        kDir = np.zeros((len(ki),3),"d")
-        Nf = len(omega)
-        for ii in range(len(ki)):
-            kDir[ii,:] = ki[ii]*self.waveDir[:]
-        if var=="eta":
-            Eta=setup
-            for ii in range(Nf):
-                Eta+=ai[ii]*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*(t-tinit) - phi[ii])
-            if (Nw <10000):
-                return Eta
-            else:
-                return 0.
-        if var=="U":
-            UH=0.
-            UV=0.
-            for ii in range(Nf):
-                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(self.Z(x,y,z)+self.depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*self.depth)
-                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(self.Z(x,y,z)+self.depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*self.depth)
-#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
-            Vcomp = {
-                    "x":UH*self.waveDir[0] + UV*self.vDir[0],
-                    "y":UH*self.waveDir[1] + UV*self.vDir[1],
-                    "z":UH*self.waveDir[2] + UV*self.vDir[2],
-                    }
-            return Vcomp[ss]
 
 
 
