@@ -264,7 +264,7 @@ def costap(l,cutoff=0.1):
             wind[k] = 0.5*(1.-cos(pi*float(l-k-1)/float(npoints)))
     return wind
 
-def decompose_tseries(time,eta):
+def decompose_tseries(time,eta,dt):
     """ This function does a spectral decomposition of a time series with constant sampling.
      It returns a list with results with four entries:
          0 -> numpy array with frequency components ww
@@ -275,7 +275,6 @@ def decompose_tseries(time,eta):
          :param : signal array
          """
     nfft = len(time) 
-    dt = time[1]-time[0]
     results = []
     fft_x = np.fft.fft(eta,nfft)
     freq = np.fft.fftfreq(nfft,dt)                              #%complex spectrum
@@ -807,7 +806,7 @@ class TimeSeries:
                 logEvent("WaveTools.py:  Found not consistent time entry between %s and %s row in %s file. Time variable must be always at the first column of the file and increasing monotonically" %(i-1,i,timeSeriesFile) )
                 sys.exit(1)
         #check if sampling rate is constant
-            if abs(dt_temp-self.dt)/self.dt <= 1e-10:
+            if dt_temp!=self.dt:
                 doInterp = True
         if(doInterp):
             logEvent("WaveTools.py: Not constant sampling rate found, proceeding to signal interpolation to a constant sampling rate",level=0)
@@ -839,7 +838,7 @@ class TimeSeries:
             Nf = self.N
             self.nfft=len(self.time)
             logEvent("WaveTools.py: performing a direct series decomposition")
-            self.decomp = decompose_tseries(self.time,self.eta)
+            self.decomp = decompose_tseries(self.time,self.eta,self.dt)
             self.ai = self.decomp[1]
             ipeak = np.where(self.ai == max(self.ai))[0][0]
             imax = min(ipeak + Nf/2,len(self.ai))
