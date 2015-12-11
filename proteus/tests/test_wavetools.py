@@ -156,11 +156,11 @@ class TestAuxFunctions(unittest.TestCase):
     def testDecomposeFFT(self):    
         from proteus.WaveTools import decompose_tseries
         dt = 0.01
-        time = np.linspace(0,199,200 + int(0.5*random.random()))
+        time = np.linspace(0,199,200 )
         eta = np.cos(0.2*pi*time + 0.2)
         nfft = len(time)
         # testing full decompistion
-        dec = decompose_tseries(time,eta)
+        dec = decompose_tseries(time,eta,1)
         time = np.linspace(0,199,len(dec[1]))
         eta = np.cos(0.2*pi*time + 0.2)
         rec = np.zeros(len(time),)
@@ -888,14 +888,14 @@ class CheckTimeSeriesFailureModes(unittest.TestCase):
 class VerifyTimeSeries(unittest.TestCase):
     def testDirect(self):
         path =getpath()
-        from proteus.WaveTools import TimeSeries
+        from proteus.WaveTools import TimeSeries, costap
         import random
         aa= TimeSeries(
             path+"test_timeSeries.txt",
             0,
              np.array([0.,0.,0]),            
             1.  ,
-            32 ,          #number of frequency bins
+            256,          #number of frequency bins
             1. ,        
             np.array([1,0,0]), 
             np.array([0,0,-9.81])
@@ -915,10 +915,15 @@ class VerifyTimeSeries(unittest.TestCase):
         for tt in timeInt:
             ii+=1
             etaTest[ii] = aa.etaDirect(x,y,z,tt) 
-#        from matplotlib import pyplot as plt
-#        plt.plot(timeInt,etaInt - np.mean(etaInt))
-#        plt.plot(timeInt,etaTest,"k--")
-#        plt.savefig("showTestSeries.pdf")
+
+        etaInt-=np.mean(etaInt)
+        etaInt*=costap(len(data),0.025)
+        norm = max(etaRef)
+        err = (etaInt - etaTest)**2
+        err = np.sqrt(sum(err))/len(etaInt)/max(abs(etaInt))
+        self.assertTrue(err<1e-3 )     
+        
+        
         
 
 
