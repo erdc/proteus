@@ -997,7 +997,7 @@ class VerifyTimeSeries(unittest.TestCase):
             0,
              np.array([0.,0.,0]),            
             1.  ,
-            256,          #number of frequency bins
+            96,          #number of frequency bins
             1. ,        
             np.array([1,0,0]), 
             np.array([0,0,-9.81])
@@ -1007,8 +1007,8 @@ class VerifyTimeSeries(unittest.TestCase):
         timeRef = data[:,0]
         etaRef = data[:,1]
         
-        timeInt = timeRef #np.linspace(timeRef[0],timeRef[-1],len(timeRef))
-        etaInt = etaRef #np.interp(timeInt, timeRef, etaRef)
+        timeInt = np.linspace(timeRef[0],timeRef[-1],len(timeRef))
+        etaInt = np.interp(timeInt, timeRef, etaRef)
         etaTest = np.zeros(len(timeRef),"d")
         x = 0.
         y = 0.
@@ -1022,8 +1022,62 @@ class VerifyTimeSeries(unittest.TestCase):
         etaInt*=costap(len(data),0.025)
         norm = max(etaRef)
         err = (etaInt - etaTest)**2
-        err = np.sqrt(sum(err))/len(etaInt)/max(abs(etaInt))
-        self.assertTrue(err<1e-3 )     
+        err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
+        print "Timeseries error: %s" % str(err)
+        self.assertTrue(err<1e-2 )     
+#        from matplotlib import pyplot as plt
+#        plt.plot(timeInt,etaInt)
+#        fig = plt.figure(1)
+#        print "Timeseries error: %s" % str(err)
+#        plt.plot(timeInt,etaTest,"r--")
+#        plt.savefig("Direct.pdf")
+#        plt.clf()
+    def testWindow(self):
+        path =getpath()
+        from proteus.WaveTools import TimeSeries, costap
+        import random
+        aa= TimeSeries(
+            path+"test_timeSeries.txt",
+            0,
+             np.array([0.,0.,0]),            
+            1.  ,
+            32,          #number of frequency bins
+            1. ,        
+            np.array([1,0,0]), 
+            np.array([0,0,-9.81]),
+            False,
+            {"Nwaves":3, "Tm":8, "Window":"costap"}
+           
+            )
+        fid = open(path+"test_timeSeries.txt","r")
+        data = np.loadtxt(fid)
+        timeRef = data[:,0]
+        etaRef = data[:,1]
+        
+        timeInt = np.linspace(timeRef[0],timeRef[-1],len(timeRef))
+        etaInt = np.interp(timeInt, timeRef, etaRef)
+        etaTest = np.zeros(len(timeRef),"d")
+        x = 0.
+        y = 0.
+        z = 0.
+        ii = -1
+        for tt in timeInt:
+            ii+=1
+            etaTest[ii] = aa.etaWindow(x,y,z,tt) 
+
+        etaInt-=np.mean(etaInt)
+        etaInt*=costap(len(data),0.025)
+        norm = max(etaRef)
+        err = (etaInt - etaTest)**2
+        err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
+        print err
+        self.assertTrue(err<1e-2 )     
+#        from matplotlib import pyplot as plt
+#        fig = plt.figure(2)
+#        plt.plot(timeInt,etaInt)
+#        print "Timeseries error: %s" % str(err)
+#        plt.plot(timeInt,etaTest,"k--")
+#        plt.savefig("Window.pdf")
 
         
         
