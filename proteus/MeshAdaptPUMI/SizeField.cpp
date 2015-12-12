@@ -134,7 +134,7 @@ static void curveFormula(apf::Matrix3x3 const& h, apf::Vector3 const& g,
              + g[0] * g[2] * h[0][2]
              + g[1] * g[2] * h[1][2];
 
-  double Km = 0.5* (a - 2 * b) / pow(g * g, 1.5);
+  double Km = (a - 2 * b) / pow(g * g, 1.5);
 
   double c =   g[0] * g[0] * (h[1][1] * h[2][2] - h[1][2] * h[1][2])
              + g[1] * g[1] * (h[0][0] * h[2][2] - h[0][2] * h[0][2])
