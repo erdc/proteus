@@ -252,7 +252,7 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
   //  clamp(scale[i], hmin, hmax);
   }
   else{
-    std::cerr << "unknown adapt type config " << adapt_type_config << '\n';
+    std::cerr << "unknown adapt type config " << adapt_type << '\n';
     abort();
   }
 } 
