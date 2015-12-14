@@ -1,4 +1,4 @@
-# A type of -*- python -*- file
+!# A type of -*- python -*- file
 #cython: embedsignature=True
 """Tools for working with water waves.
 
@@ -19,6 +19,11 @@ import sys as sys
 
 
 def loadExistingFunction(funcName, validFunctions):
+    """ Checks if a function name  is present in a list of known functions, returns system exit if not present
+    param: funcName : function name in form of string under consideration
+    param: validFunctions: list of valid functions objects (not names in strings)
+
+    """
     funcNames = []
     for func  in validFunctions:
             funcNames.append(func.__name__)
@@ -33,20 +38,20 @@ def loadExistingFunction(funcName, validFunctions):
 
 def setVertDir(g):
     """ Sets the unit vector for the vertical direction, opposite to the gravity vector
-    param: g : gravitational acceleration vector [L/T^2]
+    param: g : gravitational acceleration vector [L/T^2] (must have 3 components)
     """
     return -g/(sqrt(g[0]**2 + g[1]**2 + g[2]**2))
 
 def setDirVector(vector):
     """ Returns the direction of a vector in the form of a unit vector
-    param: vector : Any vector [-]
+    param: vector : Any vector with three components
     """
     return vector/(sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2))
 
 def dirCheck(v1, v2):
     """ Checks if to vectors are vertical and returns system exit if not
-    param: v1 : 1st vector  [-]
-    param: v2 : 2nd vector  [-]
+    param: v1 : 1st vector  [-]  with three components
+    param: v2 : 2nd vector  [-]  with three components
     """
     dircheck = abs(v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2])
         #print self.dircheck
@@ -73,9 +78,9 @@ def returnRectangles(a,x):
 def returnRectangles3D(a,x,y):
     """ Returns \delta y of  y(x,z) using the rectangle method 
     \delta y = 0.25*(a_(n-1,m-1)+a_(n,m-1)+a_(n-1,m)+a_(n,m))*(x_n-1-x_n) *(z_m-1-z_m)
-    param: a : y(x,z) function   [-]
+    param: a : a(x,y) function   [-]
     param: x : x- coordinate  [-]
-    param: z : z- coordinate  [-]
+    param: y : y- coordinate  [-]
     """
     ai = 0.5*(a[1:,:]+a[:-1,:])
     ai = 0.5*(ai[:,1:]+ai[:,:-1])
@@ -96,7 +101,7 @@ def normIntegral(Sint,th):
 
 def eta_mode(x,y,z,t,kDir,omega,phi,amplitude):
     """Returns a single frequency mode for free-surface elevation at point x,y,z,t
-    :param kDir: wave number vector [1/L]
+    :param kDir: wave number vector [1/L] with three components
     :param omega: angular frequency [1/T]
     :param phi: phase [0,2*pi]
     :param amplitude: wave amplitude [L/T^2]
@@ -107,7 +112,7 @@ def eta_mode(x,y,z,t,kDir,omega,phi,amplitude):
 
 def vel_mode(x,y,z,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,comp):
     """Returns a single frequency mode for velocity at point x,y,z,t
-    :param kDir: wave number vector [1/L]
+    :param kDir: wave number vector [1/L] with three components
     :param omega: angular frequency [1/T]
     :param phi: phase [0,2*pi]
     :param amplitude: wave amplitude [L/T^2]
@@ -192,7 +197,7 @@ def cos2s(theta,f,s=10):
         fun[:,ii] = np.cos(theta/2)**(2*s)
     return fun
 def mitsuyasu(theta,fi,f0,smax=10):
-    """The cos2s wave directional spread with wave frequency dependency (mitsuyasu spreas) 
+    """The cos2s wave directional spread with wave frequency dependency (mitsuyasu spread) 
     Equation from "Random Seas and Design of Maritime Structures" - Y. Goda - 2010 (3rd ed) eq. 2.22 - 2.25
     :param theta: ange of wave direction, with respect to the peak direction
     :param f: wave frequency [1/T] (not angular frequency). Dummy variable in this one
@@ -212,9 +217,9 @@ def mitsuyasu(theta,fi,f0,smax=10):
 
 
 def dispersion(w,d, g = 9.81,niter = 1000):
-    """Calculates wave vector k from linear dispersion relation
+    """Calculates wave number magnitude as a scallar or an arry of modes linear dispersion relation
 
-    :param w: cyclical frequency
+    :param w: cyclical frequency (can be scalar or an aray of frequency modes)
     :param d: depth [L]
     :param niter: number  of solution iterations
     :param g: gravity [L/T^2
@@ -243,7 +248,7 @@ def dispersion(w,d, g = 9.81,niter = 1000):
 def tophat(l,cutoff):
     """ returns a top hat filter 
     :param l: array length
-    :param l: cut off fraction at either side of the array zero values will be imposed at the first and last cutoff*l array elements
+    :param cutoff: cut off fraction at either side of the array zero values will be imposed at the first and last cutoff*l array elements
 
     """
     a = np.zeros(l,)
@@ -254,7 +259,7 @@ def tophat(l,cutoff):
 def costap(l,cutoff=0.1):
     """ Cosine taper filter Goda (2010), Random Seas and Design of Maritime Structures equation 11.40   
     :param l: array length
-    :param l: cut off fraction at either side of the array zero values will be imposed at the first and last cutoff*l array elements"""
+    :param cutoff: cut off fraction at either side of the array zero values will be imposed at the first and last cutoff*l array elements"""
     npoints = int(cutoff*l)
     wind = np.ones(l)
     for k in range(l): # (k,np) = (n,N) normally used
@@ -271,8 +276,9 @@ def decompose_tseries(time,eta,dt):
          1 -> numpy array with amplitude of each component aa
          2 -> numpy array with phase of each component pp
          3 -> float of the 0th fourier mode (wave setup) 
-         :param : time array [T]
-         :param : signal array
+         :param time: time array [T]
+         :param eta: signal array
+         :param dt: sampling frequency [1/T] 
          """
     nfft = len(time) 
     results = []
@@ -303,7 +309,20 @@ def decompose_tseries(time,eta,dt):
 
 class MonochromaticWaves:
     """Generate a monochromatic wave train in the linear regime
-    """
+    :param period: Monochromatic wave period
+    :param waveHeight: Monochromatic wave height
+    :param mwl: Mean water level
+    :param depth: Mean water depth
+    :param g: gravitational acceleration
+    :param waveDir: wave direction vector (all 3 components needed)
+    :param wavelength: wavelength for nonlinear (Fenton) waves. Can assume None if waves are linear, need to declare if waveType is Fenton
+    :param waveType: can be Linear or Fenton (nonlinear). Linear by default
+    :param Ycoeff: Y coefficient array for Fenton waves (see JD Fenton (1988) THE NUMERICAL SOLUTION OF STEADY WATER WAVE PROBLEMS, Computer and Geosciences, 14(3), 357-368, 
+                   http://johndfenton.com/Papers/Fenton88-The-numerical-solution-of-steady-water-wave-problems.pdf    
+    :param BCoeff: B coefficient array for Fenton waves (see reference above)
+    :meanVelocity: Current velocity. Recommended use with Fenton waves
+    :phi0: Phase of the wave                 
+"""
     def __init__(self,
                  period,
                  waveHeight,
@@ -401,12 +420,12 @@ class RandomWaves:
     :param Hs: significant wave height [L]
     :param mwl: mean water level [L]
     :param  depth: depth [L]
-    :param waveDir:wave Direction vector [-]
-    :param g: Gravitational acceleration vector [L/T^2]
+    :param waveDir:wave Direction vector with three components [-]
+    :param g: Gravitational acceleration vector with three components [L/T^2]
     :param N: number of frequency bins [-]
     :param bandFactor: width factor for band  around fp [-]
-    :param spectName: Name of spectral function. Use a random word and run the code to obtain the vaild spectra names
-    :param spectral_params: Additional arguments for spectral function, specific to each spectral function. If set to none, only Hs and Tp are given as parameters
+    :param spectName: Name of spectral function in string format. Use a random word and run the code to obtain the vaild spectra names
+    :param spectral_params: Dictionary of additional arguments for spectral function, specific to each spectral function, except from Hs and Tp e.g. {"gamma": 3.3, "TMA" = True, "depth" = 1} for Jonswap. Check spectral function arguments 
     :param phi: Array of component phases - if set to none, random phases are assigned
 """
 
@@ -591,6 +610,15 @@ class MultiSpectraRandomWaves(RandomWaves):
 
 
 class DirectionalWaves(RandomWaves):
+    """Generate a random wave timeseries from directional waves
+    Same input parameters as RandomWaves with the addition of:
+    :param M: number of discrete directions
+    :param waveDir0: lead direction in vector form (3 components required)
+    :spreadName: Spreading function name (can be cos2s or mitsuyashu), given in string format
+    :spread_params: Parameters specific to each spread functions, e.g. {"s":15} or {fi0: 1, smax=20}, except from f and theta. Check spread functions for more info
+    :phiSymm: Logical variable, by default False, when set to True it generated same phase for symmetrically arranged directions, with respect to the lead direction
+    
+    """
     def __init__(self,
                  M,  #half bin of frequencies
                  Tp, # np array with 
@@ -725,12 +753,14 @@ class TimeSeries:
     """Generate a time series by using spectral windowing method.
     :param timeSeriesFile: Time series file name
     :param skiprows: How many rows to skip while reading time series
+    :param: timeSeriesPosition: 3D vector showing the position of the surface elevation sampling
     :param  depth: depth [L]
-    :param peakFrequency: expected peak frequency
     :param N: number of frequency bins [-]
-    :param Nwaves: Number of waves per window (Approx)
     :param mwl: mean water level [L]
     :param waveDir: wave Direction vector
+    :param g: Gravitational acceleration vector (3 components required)
+    :param rec_direct: Logical variable, True for direct reconstruction, False for windowed reconstrunction
+    :window_params: dictionary for window reconstruction parameters. Mandatory definition for Nwaves (how many waves per window) Tm (mean wave period), wind_filt (window filter name in string form). Optional: Overlap (window overlap as a percentage of window lenght), Cutoff (length of domain wher filter is applied, as a percentage of the 1/2 of window length)
     """
 
     def __init__(self,
@@ -743,7 +773,7 @@ class TimeSeries:
                  waveDir, 
                  g,
                  rec_direct = True,
-                 window_params = None #If rec_direct = False then wind_params = {"Nwaves":Nwaves,"Tm":Tm,"Window":wind_fun,"Overlap":overlap,"Cutoff":cutoff}
+                 window_params = None #If rec_direct = False then wind_params = {"Nwaves":Nwaves,"Tm":Tm,"Window":wind_filt,"Overlap":overlap,"Cutoff":cutoff}
                  ):
 
         # Setting the depth
@@ -884,7 +914,7 @@ class TimeSeries:
 
 
             validWindows = [costap, tophat]
-            wind_fun =  loadExistingFunction(self.windowName, validWindows) 
+            wind_filt =  loadExistingFunction(self.windowName, validWindows) 
             logEvent("WaveTools.py: performing series decomposition with spectral windows")
             # Portion of overlap, compared to window time
             try:
@@ -943,7 +973,7 @@ class TimeSeries:
             
             for wind in self.windows_rec:
                 self.nfft=len(wind[:,0])
-                wind[:,1] *=wind_fun(self.nfft,cutoff = self.cutoff)
+                wind[:,1] *=wind_filt(self.nfft,cutoff = self.cutoff)
                 decomp = decompose_tseries(wind[:,0],wind[:,1],self.dt)
                 self.N = min(self.N, len(decomp[0]))
                 Nftemp = self.N
