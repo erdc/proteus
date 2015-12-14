@@ -10,7 +10,7 @@
 #include "MeshAdaptPUMI.h"
 
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
-    const char* sfConfig)
+    const char* sfConfig, const char* maType)
 {
   m = 0;
   PCU_Comm_Init();
@@ -38,6 +38,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   casenum = 2;
   exteriorGlobaltoLocalElementBoundariesArray = NULL;
   size_field_config = sfConfig;
+  adapt_type_config = maType;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
@@ -66,8 +67,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   else if (size_field_config == "alvin")
     get_local_error();
     //std::cout<<"Skip error field calculation and adapt "<<std::endl;
-  else if (size_field_config == "none")
-    std::cout<<" no adapt "<<std::endl;
   else {
     std::cerr << "unknown size field config " << size_field_config << '\n';
     abort();
@@ -79,8 +78,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   for (int d = 0; d <= m->getDimension(); ++d)
     freeNumbering(local[d]);
   /// Adapt the mesh
-  if(size_field_config == "none"){}
-  else{
     ma::Input* in = ma::configure(m, size_scale, size_frame);
     ma::validateInput(in);
     in->shouldRunPreParma = true;
@@ -88,7 +85,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     in->shouldRunPostParma = true;
     in->maximumIterations = numIter;
     in->shouldSnap = false;
-    in->shouldFixShape = true;
+    in->shouldFixShape = false;//true;
     std::cout<<"Starting adapt (numIter "<<numIter<<")"<<std::endl;
     ma::adapt(in);
     std::cout<<"Finished adapt"<<std::endl;
@@ -96,7 +93,6 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
     freeField(size_scale);
     m->verify();
     nAdapt++; //counter for number of adapt steps
-  }
   return 0;
 }
 
