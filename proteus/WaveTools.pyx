@@ -1,4 +1,4 @@
-!# A type of -*- python -*- file
+# A type of -*- python -*- file
 #cython: embedsignature=True
 """Tools for working with water waves.
 
