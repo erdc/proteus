@@ -526,6 +526,41 @@ class VerifyRandomWaves(unittest.TestCase):
         self.assertTrue(round(uy,8) == round(uyRef,8))
         self.assertTrue(round(uz,8) == round(uzRef,8))
 
+
+
+
+        aa= RandomWaves(2,
+                     0.1,
+                     0.,#m significant wave height
+                     1. ,           #m depth
+                     np.array([0.,1,0]),
+                     g,      #peak  frequency
+                     N,
+                     bandFactor,         #accelerationof gravity
+                     spectName# random words will result in error and return the available spectra 
+                   )
+
+# Test contours
+"""
+        xi = np.linspace(0,20,101)
+        yi = np.linspace(0,20,101)
+
+        eta_t = np.zeros((101,101),)
+        for i in range(len(xi)):
+            for j in range(len(yi)):
+                eta_t[i,j] = aa.eta(xi[i],yi[j],0.,0.)
+
+
+        from matplotlib import pyplot as plt
+        fig = plt.figure(2)
+        X,Y = np.meshgrid(xi,yi)
+        CS = plt.contourf(X,Y,eta_t)
+#        fig.legend((line2,line1),("Field data from FRF", "Reconstructed time series"),"upper right",bbox_to_anchor=(0.6,0.9))
+#        plt.xlabel("x (m)",size=20)
+#        plt.ylabel("y (m)",size=20)
+        CB = plt.colorbar(CS, shrink=0.8, extend='both')
+        plt.savefig("Contour.png")
+"""
 class CheckMultiSpectraRandomWavesFailures(unittest.TestCase):
     def testFailureModes(self):
         
@@ -805,7 +840,55 @@ class VerifyDirectionals(unittest.TestCase):
                 uxRef += normDir[0]*ai[jj,ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) *cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
                 uyRef += normDir[1]*ai[jj,ii]*omega[ii] *cosh(ki[ii]*(z0+depth)) * cos(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
                 uzRef +=  ai[jj,ii]*omega[ii] *sinh(ki[ii]*(z0+depth)) * sin(ki[ii]*(normDir[0]*x+normDir[1]*y+normDir[2]*z)-omega[ii]*t +phi[jj,ii])/sinh(ki[ii]*depth)
+        self.assertTrue(round(eta,8) == round(etaRef,8) )
+        self.assertTrue(round(ux,8) == round(uxRef,8))
+        self.assertTrue(round(uy,8) == round(uyRef,8))
+        self.assertTrue(round(uz,8) == round(uzRef,8))
+
+
         
+        ab= DirectionalWaves(
+            50,
+            2.,
+            0.1,
+            mwl,
+            1. ,
+            np.array([1,1,0]),
+            g,     
+            51,
+            1.1,         #accelerationof gravity
+            "JONSWAP",
+            "cos2s",
+            spectral_params=None,
+            spread_params={"s":15},
+            phi=None,
+            phiSymm=False
+            )
+# For plotting a contour showing directional waves
+"""
+        xi = np.linspace(0,10,101)
+        yi = np.linspace(0,10,101)
+
+        eta_t = np.zeros((101,101),)
+        for i in range(len(xi)):
+            for j in range(len(yi)):
+                eta_t[i,j] = ab.eta(xi[i],yi[j],0.,0.)
+
+
+        from matplotlib import pyplot as plt
+        fig = plt.figure(2)
+        X,Y = np.meshgrid(xi,yi)
+        CS = plt.contourf(X,Y,eta_t)
+        plt.xlabel("x (m)",size=20)
+        plt.ylabel("y (m)",size=20)
+        CB = plt.colorbar(CS, shrink=0.8, extend='both')
+        CB.set_label("$\eta$ (m)",size = 20)
+        plt.savefig("Contour.png")
+"""
+        
+        
+
+       
 class CheckTimeSeriesFailureModes(unittest.TestCase):
     def testTimeSeriesFailureModes(self):
         from proteus.WaveTools import TimeSeries
@@ -997,7 +1080,7 @@ class VerifyTimeSeries(unittest.TestCase):
             0,
              np.array([0.,0.,0]),            
             1.  ,
-            96,          #number of frequency bins
+            256,          #number of frequency bins
             1. ,        
             np.array([1,0,0]), 
             np.array([0,0,-9.81])
@@ -1023,15 +1106,25 @@ class VerifyTimeSeries(unittest.TestCase):
         norm = max(etaRef)
         err = (etaInt - etaTest)**2
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
-        print "Timeseries error: %s" % str(err)
-        self.assertTrue(err<1e-2 )     
-#        from matplotlib import pyplot as plt
-#        plt.plot(timeInt,etaInt)
-#        fig = plt.figure(1)
+
+        """
+        from matplotlib import pyplot as plt
+ 
+
+        fig = plt.figure(2)
+        line2,=plt.plot(timeInt,etaInt,'ko')
 #        print "Timeseries error: %s" % str(err)
-#        plt.plot(timeInt,etaTest,"r--")
-#        plt.savefig("Direct.pdf")
-#        plt.clf()
+
+#Showing plot of window recontruction
+        
+        line1,=plt.plot(timeInt,etaTest,"b-")
+        plt.grid()
+        fig.legend((line2,line1),("Field data from FRF", "Reconstructed time series"),"upper right",bbox_to_anchor=(0.6,0.9))
+        plt.xlabel("Time (s)",size=20)
+        plt.ylabel("$\eta$ (m)",size=20)
+        plt.savefig("Direct.pdf")
+        """
+
     def testWindow(self):
         path =getpath()
         from proteus.WaveTools import TimeSeries, costap
@@ -1041,7 +1134,7 @@ class VerifyTimeSeries(unittest.TestCase):
             0,
              np.array([0.,0.,0]),            
             1.  ,
-            32,          #number of frequency bins
+            48,          #number of frequency bins
             1. ,        
             np.array([1,0,0]), 
             np.array([0,0,-9.81]),
@@ -1072,13 +1165,22 @@ class VerifyTimeSeries(unittest.TestCase):
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
         print err
         self.assertTrue(err<1e-2 )     
-#        from matplotlib import pyplot as plt
-#        fig = plt.figure(2)
-#        plt.plot(timeInt,etaInt)
-#        print "Timeseries error: %s" % str(err)
-#        plt.plot(timeInt,etaTest,"k--")
-#        plt.savefig("Window.pdf")
 
+        from matplotlib import pyplot as plt
+
+        fig = plt.figure(2)
+        line2,=plt.plot(timeInt,etaInt,'ko')
+#        print "Timeseries error: %s" % str(err)
+
+#Showing plot of window recontruction
+"""        
+        line1,=plt.plot(timeInt,etaTest,"g-")
+        plt.grid()
+        fig.legend((line2,line1),("Field data from FRF", "Reconstructed time series"),"upper right",bbox_to_anchor=(0.6,0.9))
+        plt.xlabel("Time (s)",size=20)
+        plt.ylabel("$\eta$ (m)",size=20)
+        plt.savefig("Window.pdf")
+"""
         
         
         
