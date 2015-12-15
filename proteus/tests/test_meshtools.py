@@ -27,7 +27,10 @@ from proteus.MeshTools import (Node,
                                intersectPoints,
                                intersectEdges,
                                intersectPolyhedron,
-                               getMeshIntersections)
+                               getMeshIntersections,
+                               MultilevelEdgeMesh,
+                               MultilevelTriangularMesh,
+                               MultilevelTetrahedralMesh)
 
 comm = Comm.init()
 Profiling.procID = comm.rank()
@@ -435,234 +438,153 @@ def test_Refine_1D():
         grid1dFine.writeEdgesGnuplot('grid1dFine')
         grid1dFine.viewMeshGnuplotPipe('grid1dFine')
 
-#def test_Refine_2D():
-    #ok_(True)
-    #grid2d = RectangularGrid(3,3,1,1.0,1.0,1.0)
-    #grid2dFine = RectangularGrid()
-    #children = grid2dFine.refine(grid2d,2,2)
-    # childElements = [[0, 4, 1, 5],
-    #                  [2, 6, 3, 7],
-    #                  [8, 12, 9, 13],
-    #                  [10, 14, 11, 15]]
-    # parent = 0
-    # for pN,cL in children.iteritems():
-    #     ok_(parent == pN)
-    #     for ci,c in enumerate(cL):
-    #         ok_(childElements[pN][ci] == c.N)
-    #     parent += 1
-    #if GNUPLOT:
-    #    grid2dFine.writeEdgesGnuplot('grid2dFine')
-    #    grid2dFine.viewMeshGnuplotPipe('grid2dFine')
-#      print "Testing 3D Rectangular Grid"
-#      grid3dFine = RectangularGrid()
-#      children = grid3dFine.refine(grid3d,2,2,2)
-#      for pN,cL in children.iteritems():
-#          print "Parent Element "+str(pN)
-#          print "Child Elements "
-#          for c in cL:
-#              print str(c.N)
-#      grid3dFine.writeEdgesGnuplot('grid3dFine')
-#      grid3dFine.viewMeshGnuplotPipe('grid3dFine')
-#      print "Testing 1D Edge Mesh Refinement"
-#      mesh1dFine = EdgeMesh()
-#      children = mesh1dFine.refine(mesh1d)
-#      for pN,cL in children.iteritems():
-#          print "Parent Element "+str(pN)
-#          print "Child Elements "
-#          for c in cL:
-#              print str(c.N)
-#      mesh1dFine.writeEdgesGnuplot('mesh1dFine')
-#      mesh1dFine.viewMeshGnuplotPipe('mesh1dFine')
-#      print "Testing 2D Triangular Mesh Refinement"
-#      mesh2dFine = TriangularMesh()
-#      children = mesh2dFine.refine(mesh2d)
-#      for pN,cL in children.iteritems():
-#          print "Parent Element "+str(pN)
-#          print "Child Elements "
-#          for c in cL:
-#              print str(c.N)
-#      mesh2dFine.writeEdgesGnuplot('mesh2dFine')
-#      mesh2dFine.viewMeshGnuplotPipe('mesh2dFine')
-#      print "Testing 3D Tetrahedral Mesh Refinement"
-#      mesh3dFine = TetrahedralMesh()
-#      children = mesh3dFine.refine(mesh3d)
-#      for pN,cL in children.iteritems():
-#          print "Parent Element "+str(pN)
-#          print "Child Elements "
-#          for c in cL:
-#              print str(c.N)
-#      mesh3dFine.writeEdgesGnuplot('mesh3dFine')
-#      mesh3dFine.viewMeshGnuplotPipe('mesh3dFine')
-#      print "Testing writeMeshADH"
-#      mesh3d.writeMeshADH('mesh')
-#      print "Testing MultilevelMeshes"
-#      print "Testing MultilevelEdgeMesh"
-#      mlMesh = MultilevelEdgeMesh(3,1,1,refinementLevels=3)
-#      for l in range(len(mlMesh.meshList)):
-#          meshFile="mesh"+str(l)
-#          mlMesh.meshList[l].writeEdgesGnuplot(meshFile)
-#          mlMesh.meshList[l].viewMeshGnuplotPipe(meshFile)
-#          print "++++++++++++++++Level "+str(l)+"++++++++++++++++++"
-#          for e in mlMesh.meshList[l].elementList:
-#              print "Parent Element is "+str(e.N)
-#              print e.nodes
-#              if l < len(mlMesh.meshList)-1:
-#                  for ec in mlMesh.elementChildren[l][e.N]:
-#                      print "Child Element is "+str(ec.N)
-#                      print ec.nodes
-#      print "Testing MultilevelTriangularMesh"
-#      mlMesh = MultilevelTriangularMesh(3,3,1,refinementLevels=2)
-#      level=0
-#      for l in range(len(mlMesh.meshList)):
-#          meshFile="mesh"+str(l)
-#          mlMesh.meshList[l].writeEdgesGnuplot(meshFile)
-#          mlMesh.meshList[l].viewMeshGnuplotPipe(meshFile)
-#          print "++++++++++++++++Level "+str(l)+"++++++++++++++++++"
-#          for e in mlMesh.meshList[l].elementList:
-#              print "Parent Element is "+str(e.N)
-#              print e.nodes
-#              if l < len(mlMesh.meshList)-1:
-#                  for ec in mlMesh.elementChildren[l][e.N]:
-#                      print "Child Element is "+str(ec.N)
-#                      print ec.nodes
-#      print "Testing MultiLevlTetrahedralMesh"
-#      mlMesh = MultilevelTetrahedralMesh(3,3,3,refinementLevels=3)
-#      level=0
-#      for l in range(len(mlMesh.meshList)):
-#          meshFile="mesh"+str(l)
-#          mlMesh.meshList[l].writeEdgesGnuplot(meshFile)
-#          mlMesh.meshList[l].viewMeshGnuplotPipe(meshFile)
-#          print "++++++++++++++++Level "+str(l)+"++++++++++++++++++"
-#          for e in mlMesh.meshList[l].elementList:
-#              print "Parent Element is "+str(e.N)
-#              print e.nodes
-#              if l < len(mlMesh.meshList)-1:
-#                  for ec in mlMesh.elementChildren[l][e.N]:
-#                      print "Child Element is "+str(ec.N)
-#                      print ec.nodes
-#     #
-#     # debuggin code from mwf
-#     #
-#     #how much junk to print out
-#     verboseLevel = 2
-#     #first just create a simple triangular mesh and look at it in a
-#     #couple of different ways
-#     Lx = 1.0   #domain length in x and y
-#     Ly = 1.0
+def test_Refine_2D():
+    grid2d = RectangularGrid(3,3,1,1.0,1.0,1.0)
+    grid2dFine = RectangularGrid()
+    children = grid2dFine.refine(grid2d,2,2)
+    childElements = [[0, 4, 1, 5],
+                     [2, 6, 3, 7],
+                     [8, 12, 9, 13],
+                     [10, 14, 11, 15]]
+    parent = 0
+    for pN,cL in children.iteritems():
+        ok_(parent == pN)
+        for ci,c in enumerate(cL):
+            ok_(childElements[pN][ci] == c.N)
+        parent += 1
 
-#     #number of nodes for rectangular grid upon which triangular mesh
-#     #will be built should get 2 triangles for each rectangle
-#     #(nx-1)(ny-1) in the original grid
-#     nx = 3
-#     ny = 3
+def test_Refine_3D():
+    grid3d = RectangularGrid(3,3,3,1.0,1.0,1.0)
+    grid3dFine = RectangularGrid()
+    children = grid3dFine.refine(grid3d,2,2,2)
+    childElements = [[0 ,16,4 ,20,1 ,17,5 ,21],
+                     [2 ,18,6 ,22,3 ,19,7 ,23],
+                     [8 ,24,12,28,9 ,25,13,29],
+                     [10,26,14,30,11,27,15,31],
+                     [32,48,36,52,33,49,37,53],
+                     [34,50,38,54,35,51,39,55],
+                     [40,56,44,60,41,57,45,61],
+                     [42,58,46,62,43,59,47,63]]
+    parent = 0
+    for pN,cL in children.iteritems():
+        ok_(parent == pN)
+        for ci,c in enumerate(cL):
+            ok_(childElements[pN][ci] == c.N)
+        parent += 1
 
-#     #flag for viewing mesh in construction
-#     #0 -- do nothing (default)
-#     #1 -- gnuplot
-#     #2 -- matlab
-#     viewMesh = 2
-#     meshFileBase='mesh2d'
-#     nz = 1
-#     Lz = 1.0
-#     grid = RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
-#     #grid2d.writeEdgesGnuplot('grid2d')
-#     #grid2d.viewMeshGnuplotPipe('grid2d')
+def test_MultilevelEdgeMesh():
+    n = 3
+    mlMesh = MultilevelEdgeMesh(3,1,1,refinementLevels=n)
+    elementChildren= [np.array([0, 1, 2, 3]),
+                      np.array([0, 1, 2, 3, 4, 5, 6, 7])]
+    elementChildrenOffsets= [np.array([0, 2, 4]),
+                             np.array([0, 2, 4, 6, 8])]
+    elementParents= [np.array([]),
+                     np.array([0, 0, 1, 1]),
+                     np.array([0, 0, 1, 1, 2, 2, 3, 3])]
+    for l in range(n):
+        if l < n-1:
+            ok_((elementChildren[l] == mlMesh.elementChildrenArrayList[l]).all())
+            ok_((elementChildrenOffsets[l] == mlMesh.elementChildrenOffsetsList[l]).all())
+        ok_((elementParents[l] == mlMesh.elementParentsArrayList[l]).all())
 
-#     mesh = TriangularMesh()
-
-#     mesh.rectangularToTriangular(grid)
-
-#     if viewMesh == 1:
-#         #print mesh in gnuplot format
-#         mesh.writeEdgesGnuplot(meshFileBase)
-#         #can view with
-#         #mesh.viewMeshGnuplotPipe(meshFileBase)
-#     elif viewMesh == 2:
-#         mesh.writeEdgesMatlab(meshFileBase)
-#         #view in matlab with meshFileBase.m
-#     #end else
-
-#     print 'mesh Info says \n',mesh.meshInfo()
-#     fileName2 = 'meshV2'
-#     mp,me,mt = mesh.buildMatlabMeshDataStructures(fileName2)
-
-#     if verboseLevel > 1:
-#         #do brute force loop through array to look at it
-#         print 'matlab node array is '
-#         for j in xrange(mp.shape[1]): #number of columns is number of nodes
-#             print '\t',mp[0,j],' ',mp[1,j]
-#         #end for
-
-#         #do brute force loop through edge array too
-#         print 'matlab edge array holds (matlab edge id, node 0, node 1)'
-#         print 'note base 0'
-#         for j in xrange(me.shape[1]): #number of columns is number of edges
-#             print '\t',me[4,j]-1,' ',me[0,j]-1,' ',me[1,j]-1
-#         #end for
-
-#         #do brute force loop through element array too
-#         print 'matlab elem array (matlab elem id, node 0, node 1, node 3)'
-#         print 'note base 0'
-#         for j in xrange(mt.shape[1]): #number of columns is number of edges
-#             print '\t',j,' ',mt[0,j]-1,' ',mt[1,j]-1,' ',mt[2,j]-1
-#         #end for
-#     #end verbose print out for mesh
-# #def testEdgeToElementMapping(mesh):
-#     """
-#     test mesh interface for going from a global edge identifier to its 2
-#     neighboring elements.
-
-#       globElem = mesh.elementBoundaryElementsArray[globEdge,neigId]
-
-#     where
-#       globEdge is a global edge identifier, neigId is 0,1 for interior edges
-#       and 0 for boundary edges (I think). globElem is the global element id
-#       for the element on local side neigId.
-
-#     I'm not sure about what I can deduce from the value of neigId in
-#     terms of the orientation of the edge and neighboring elements.
-
-
-#       mesh.exteriorBoundaryElementsArray holds the list of edges on
-#       the physical boundary and similarly,
-#       mesh.interiorBoundaryElementsArray holds the interior edges.
-
-
-#     """
-#     print "printing mesh edges and neighboring elements"
-#     print "format is globEdgeId : locId ---> element Id "
-#     for ie in range(mesh.elementBoundaryElementsArray.shape[0]):
-#         for neig in range(len(mesh.elementBoundaryElementsArray[ie,:])):
-#             elid = mesh.elementBoundaryElementsArray[ie,neig]
-#             print "\t ",ie," : ",neig," ---> ",elid
-#         #end loop through local element neigs
-#     #end loop through global edges
-#     print "printing mesh edges and neighboring elements that are defined"
-#     for ie in range(mesh.elementBoundaryElementsArray.shape[0]):
-#         for neig in range(len(mesh.elementBoundaryElementsArray[ie,:])):
-#             elid = mesh.elementBoundaryElementsArray[ie,neig]
-#             if (elid > -1):
-#                 print "\t ",ie," : ",neig," ---> ",elid
-#             #end check if valid index
-#         #end loop through local element neigs
-#     #end loop through global edges
-
-
-#     print "print element neighbors for interior edges"
-#     for ieI in range(mesh.nInteriorElementBoundaries_global):
-#         ie = mesh.interiorElementBoundariesArray[ieI]
-#         for neig in range(len(mesh.elementBoundaryElementsArray[ie,:])):
-#             elid = mesh.elementBoundaryElementsArray[ie,neig]
-#             print "\t ",ie," : ",neig," ---> ",elid
-#         #end loop through local element neigs
-#     #end loop through global edges
-
-#     print "print element neighbors for exterior edges"
-#     for ieE in range(mesh.nExteriorElementBoundaries_global):
-#         ie = mesh.exteriorElementBoundariesArray[ieE]
-#         for neig in range(len(mesh.elementBoundaryElementsArray[ie,:])):
-#             elid = mesh.elementBoundaryElementsArray[ie,neig]
-#             print "\t ",ie," : ",neig," ---> ",elid
-#         #end loop through local element neigs
-#     #end loop through global edges
-#end testEdgeToElementMapping
+def test_MultilevelTriangularMesh():
+    n = 3
+    mlMesh = MultilevelTriangularMesh(3,3,1,refinementLevels=n)
+    elementChildren= [np.array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16,
+                                 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31], dtype=np.int32), np.array([  0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,
+                                                                                                                           13,  14,  15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,
+                                                                                                                           26,  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  38,
+                                                                                                                           39,  40,  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,
+                                                                                                                           52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  62,  63,  64,
+                                                                                                                           65,  66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,
+                                                                                                                           78,  79,  80,  81,  82,  83,  84,  85,  86,  87,  88,  89,  90,
+                                                                                                                           91,  92,  93,  94,  95,  96,  97,  98,  99, 100, 101, 102, 103,
+                                                                                                                           104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
+                                                                                                                           117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127], dtype=np.int32)]
+    elementChildrenOffsets= [np.array([ 0,  4,  8, 12, 16, 20, 24, 28, 32], dtype=np.int32), np.array([  0,   4,   8,  12,  16,  20,  24,  28,  32,  36,  40,  44,  48,
+                                                                                                         52,  56,  60,  64,  68,  72,  76,  80,  84,  88,  92,  96, 100,
+                                                                                                         104, 108, 112, 116, 120, 124, 128], dtype=np.int32)]
+    elementParents= [np.array([], dtype=np.int32), np.array([0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5,
+                                                             5, 6, 6, 6, 6, 7, 7, 7, 7], dtype=np.int32), np.array([ 0,  0,  0,  0,  1,  1,  1,  1,  2,  2,  2,  2,  3,  3,  3,  3,  4,
+                                                                                                                     4,  4,  4,  5,  5,  5,  5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,
+                                                                                                                     8,  8,  9,  9,  9,  9, 10, 10, 10, 10, 11, 11, 11, 11, 12, 12, 12,
+                                                                                                                     12, 13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15, 16, 16, 16, 16,
+                                                                                                                     17, 17, 17, 17, 18, 18, 18, 18, 19, 19, 19, 19, 20, 20, 20, 20, 21,
+                                                                                                                     21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 23, 24, 24, 24, 24, 25, 25,
+                                                                                                                     25, 25, 26, 26, 26, 26, 27, 27, 27, 27, 28, 28, 28, 28, 29, 29, 29,
+                                                                                                                     29, 30, 30, 30, 30, 31, 31, 31, 31], dtype=np.int32)]
+    for l in range(n):
+        if l < n-1:
+            #pass
+            ok_((elementChildren[l] == mlMesh.elementChildrenArrayList[l]).all())
+            ok_((elementChildrenOffsets[l] == mlMesh.elementChildrenOffsetsList[l]).all())
+        ok_((elementParents[l] == mlMesh.elementParentsArrayList[l]).all())
+    #print "elementChildren=",mlMesh.elementChildrenArrayList
+    #print "elementChildrenOffsets=",mlMesh.elementChildrenOffsetsList
+    #print "elementParents=",mlMesh.elementParentsArrayList
+def test_MultilevelTetrahedralMesh():
+    n = 2
+    mlMesh = MultilevelTetrahedralMesh(3,3,3,refinementLevels=n)
+    elementChildren= [np.array([  0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,
+                                  13,  14,  15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,
+                                  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  37,  38,
+                                  39,  40,  41,  42,  43,  44,  45,  46,  47,  48,  49,  50,  51,
+                                  52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  62,  63,  64,
+                                  65,  66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  76,  77,
+                                  78,  79,  80,  81,  82,  83,  84,  85,  86,  87,  88,  89,  90,
+                                  91,  92,  93,  94,  95,  96,  97,  98,  99, 100, 101, 102, 103,
+                                  104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116,
+                                  117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129,
+                                  130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142,
+                                  143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155,
+                                  156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168,
+                                  169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181,
+                                  182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194,
+                                  195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207,
+                                  208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
+                                  221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233,
+                                  234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246,
+                                  247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259,
+                                  260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272,
+                                  273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285,
+                                  286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298,
+                                  299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311,
+                                  312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324,
+                                  325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337,
+                                  338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350,
+                                  351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363,
+                                  364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376,
+                                  377, 378, 379, 380, 381, 382, 383], dtype=np.int32)]
+    elementChildrenOffsets= [np.array([  0,   8,  16,  24,  32,  40,  48,  56,  64,  72,  80,  88,  96,
+                                         104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200,
+                                         208, 216, 224, 232, 240, 248, 256, 264, 272, 280, 288, 296, 304,
+                                         312, 320, 328, 336, 344, 352, 360, 368, 376, 384], dtype=np.int32)]
+    elementParents= [np.array([], dtype=np.int32), np.array([ 0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,  2,
+                                                              2,  2,  2,  2,  2,  2,  2,  3,  3,  3,  3,  3,  3,  3,  3,  4,  4,
+                                                              4,  4,  4,  4,  4,  4,  5,  5,  5,  5,  5,  5,  5,  5,  6,  6,  6,
+                                                              6,  6,  6,  6,  6,  7,  7,  7,  7,  7,  7,  7,  7,  8,  8,  8,  8,
+                                                              8,  8,  8,  8,  9,  9,  9,  9,  9,  9,  9,  9, 10, 10, 10, 10, 10,
+                                                              10, 10, 10, 11, 11, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 12,
+                                                              12, 12, 13, 13, 13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 14, 14, 14,
+                                                              14, 15, 15, 15, 15, 15, 15, 15, 15, 16, 16, 16, 16, 16, 16, 16, 16,
+                                                              17, 17, 17, 17, 17, 17, 17, 17, 18, 18, 18, 18, 18, 18, 18, 18, 19,
+                                                              19, 19, 19, 19, 19, 19, 19, 20, 20, 20, 20, 20, 20, 20, 20, 21, 21,
+                                                              21, 21, 21, 21, 21, 21, 22, 22, 22, 22, 22, 22, 22, 22, 23, 23, 23,
+                                                              23, 23, 23, 23, 23, 24, 24, 24, 24, 24, 24, 24, 24, 25, 25, 25, 25,
+                                                              25, 25, 25, 25, 26, 26, 26, 26, 26, 26, 26, 26, 27, 27, 27, 27, 27,
+                                                              27, 27, 27, 28, 28, 28, 28, 28, 28, 28, 28, 29, 29, 29, 29, 29, 29,
+                                                              29, 29, 30, 30, 30, 30, 30, 30, 30, 30, 31, 31, 31, 31, 31, 31, 31,
+                                                              31, 32, 32, 32, 32, 32, 32, 32, 32, 33, 33, 33, 33, 33, 33, 33, 33,
+                                                              34, 34, 34, 34, 34, 34, 34, 34, 35, 35, 35, 35, 35, 35, 35, 35, 36,
+                                                              36, 36, 36, 36, 36, 36, 36, 37, 37, 37, 37, 37, 37, 37, 37, 38, 38,
+                                                              38, 38, 38, 38, 38, 38, 39, 39, 39, 39, 39, 39, 39, 39, 40, 40, 40,
+                                                              40, 40, 40, 40, 40, 41, 41, 41, 41, 41, 41, 41, 41, 42, 42, 42, 42,
+                                                              42, 42, 42, 42, 43, 43, 43, 43, 43, 43, 43, 43, 44, 44, 44, 44, 44,
+                                                              44, 44, 44, 45, 45, 45, 45, 45, 45, 45, 45, 46, 46, 46, 46, 46, 46,
+                                                              46, 46, 47, 47, 47, 47, 47, 47, 47, 47], dtype=np.int32)]
+    for l in range(n):
+        if l < n-1:
+            ok_((elementChildren[l] == mlMesh.elementChildrenArrayList[l]).all())
+            ok_((elementChildrenOffsets[l] == mlMesh.elementChildrenOffsetsList[l]).all())
+        ok_((elementParents[l] == mlMesh.elementParentsArrayList[l]).all())
