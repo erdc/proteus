@@ -1,4 +1,4 @@
-!# A type of -*- python -*- file
+# A type of -*- python -*- file
 #cython: embedsignature=True
 """Tools for working with water waves.
 
@@ -632,7 +632,7 @@ class DirectionalWaves(RandomWaves):
                  spectName ,# random words will result in error and return the available spectra 
                  spreadName ,# random words will result in error and return the available spectra 
                  spectral_params = None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth} 
-                 spread_params = None, #JONPARAMS = {"gamma": 3.3, "TMA":True,"depth": depth}\ 
+                 spread_params = None,  
                  phi=None, # phi must be an (2*M+1)*N numpy array
                  phiSymm = False # When true, phi[-pi/2,0] is symmetric to phi[0,pi/2]
                  ):   
@@ -691,7 +691,8 @@ class DirectionalWaves(RandomWaves):
             sys.exit(1)
             
         if (phiSymm):
-            self.phiDirs[:self.M:1] = self.phiDirs[self.M+1::-1]
+            for i in range(0,M):
+                self.phiDirs[M+1+i,:] = self.phiDirs[self.M - 1 - i,:]
             
             
 
