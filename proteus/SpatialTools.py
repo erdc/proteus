@@ -71,10 +71,9 @@ class Shape:
     def _attachAuxiliaryVariable(self, key):
         if key not in self.auxiliaryVariables:
             if key == 'RigidBody':
-                self.auxiliaryVariables[key] = RigidBody(shape=self)
+                self.auxiliaryVariables[key] = True
             if key == 'RelaxZones':
-                self.auxiliaryVariables[key] = bc.RelaxationZoneWaveGenerator(self.zones,
-                                                                              self.nd)
+                self.auxiliaryVariables[key] = self.zones
 
     def setPosition(self, coords):
         """
@@ -247,8 +246,6 @@ class Shape:
     def setRigidBody(self):
         self._attachAuxiliaryVariable('RigidBody')
         self.holes = np.array([self.coords])
-        for boundcond in self.BC_list:
-            boundcond.setMoveMesh(self.auxiliaryVariables['RigidBody'])
 
     def setTank(self):
         for boundcond in self.BC_list:
@@ -292,12 +289,12 @@ class Shape:
         else:
             self.record_filename = filename + '.csv'
 
-    def setAbsorptionZones(self, indice, epsFact_solid, sign=None,
+    def setAbsorptionZones(self, flags, epsFact_solid, sign=None,
                            center_x=None, dragAlphaTypes=0.5/1.005e-6,
                            dragBetaTypes=0., porosityTypes=1.):
         """
         Sets a region (given the local index) to an absorption zone
-        :arg index: local indice of the region (first region of the Shape
+        :arg index: local flags of the region (first region of the Shape
                     instance is 0). Can be an integer or a list of integers.
         :arg epsFact_solid: half of absorption zone length
         :arg sign: direction vector from the boundary to the sponge (x-axis)
@@ -307,38 +304,38 @@ class Shape:
         self._attachAuxiliaryVariable('RelaxZones')
         waves = None
         windSpeed = 0.
-        if isinstance(indice, int):
-            indice = [indice]
+        if isinstance(flags, int):
+            flags = [flags]
             sign = [sign]
             epsFact_solid = [epsFact_solid]
             center_x = [center_x]
             dragAlphaTypes = [dragAlphaTypes]
             dragBetaTypes = [dragBetaTypes]
             porosityTypes = [porosityTypes]
-        for i in indice:
-            self.zones[i] = bc.RelaxationZone(domain=self.domain,
-                                              zone_type='absorption',
-                                              sign=sign[i],
-                                              center_x=center_x[i],
-                                              waves=waves,
-                                              windSpeed=windSpeed,
-                                              epsFact_solid=epsFact_solid[i],
-                                              dragAlphaTypes=dragAlphaTypes[i],
-                                              dragBetaTypes=dragBetaTypes[i],
-                                              porosityTypes=porosityTypes[i])
+        for i, flag in enumerate(flags):
+            self.zones[flag] = bc.RelaxationZone(domain=self.domain,
+                                                 zone_type='absorption',
+                                                 sign=sign[i],
+                                                 center_x=center_x[i],
+                                                 waves=waves,
+                                                 windSpeed=windSpeed,
+                                                 epsFact_solid=epsFact_solid[i],
+                                                 dragAlphaTypes=dragAlphaTypes[i],
+                                                 dragBetaTypes=dragBetaTypes[i],
+                                                 porosityTypes=porosityTypes[i])
 
-    def setGenerationZones(self, indice, epsFact_solid, sign, center_x, waves,
+    def setGenerationZones(self, flags, epsFact_solid, sign, center_x, waves,
                            windSpeed=0., dragAlphaTypes=0.5/1.005e-6,
                            dragBetaTypes=0., porosityTypes=1.):
         """
         Sets a region (given the local index) to an absorption zone
-        :arg index: local indice of the region (first region of the Shape
+        :arg index: local flags of the region (first region of the Shape
                     instance is 0). Can be an integer or a list of integers.
         :arg epsFact_solid: absorption zone length (usually length of region/2)
         """
         self._attachAuxiliaryVariable('RelaxZones')
-        if isinstance(indice, int):
-            indice = [indice]
+        if isinstance(flags, int):
+            flags = [flags]
             sign = [sign]
             waves = [waves]
             windSpeed = [windSpeed]
@@ -347,17 +344,17 @@ class Shape:
             dragAlphaTypes = [dragAlphaTypes]
             dragBetaTypes = [dragBetaTypes]
             porosityTypes = [porosityTypes]
-        for i in indice:
-            self.zones[i] = bc.RelaxationZone(domain=self.domain,
-                                              zone_type='generation',
-                                              sign=sign[i],
-                                              center_x=center_x[i],
-                                              waves=waves[i],
-                                              windSpeed=windSpeed[i],
-                                              epsFact_solid=epsFact_solid[i],
-                                              dragAlphaTypes=dragAlphaTypes[i],
-                                              dragBetaTypes=dragBetaTypes[i],
-                                              porosityTypes=porosityTypes[i])
+        for i, flag in enumerate(flags):
+            self.zones[flags] = bc.RelaxationZone(domain=self.domain,
+                                                  zone_type='generation',
+                                                  sign=sign[i],
+                                                  center_x=center_x[i],
+                                                  waves=waves[i],
+                                                  windSpeed=windSpeed[i],
+                                                  epsFact_solid=epsFact_solid[i],
+                                                  dragAlphaTypes=dragAlphaTypes[i],
+                                                  dragBetaTypes=dragBetaTypes[i],
+                                                  porosityTypes=porosityTypes[i])
 
 
 class Cuboid(Shape):
@@ -972,9 +969,10 @@ class Tank2D(Shape):
             self._attachAuxiliaryVariable('RelaxZones')
         if self.leftSpongeAbs is True:
             ind = self.regionIndice['leftSponge']
+            flag = self.regionFlags[ind]
             center_x = self.coords[0]-0.5*self.dim[0]+self.leftSponge/2.
             sign = 1.
-            self.zones[ind] = bc.RelaxationZone(domain=self.domain,
+            self.zones[flag] = bc.RelaxationZone(domain=self.domain,
                                                 zone_type='absorption',
                                                 sign=sign, center_x=center_x,
                                                 waves=waves,
@@ -985,9 +983,10 @@ class Tank2D(Shape):
                                                 porosityTypes=porosityTypes)
         if self.rightSpongeAbs is True:
             ind = self.regionIndice['rightSponge']
+            flag = self.regionFlags[ind]
             center_x = self.coords[0]+0.5*self.dim[0]-self.rightSponge/2.
             sign = -1.
-            self.zones[ind] = bc.RelaxationZone(domain=self.domain,
+            self.zones[flag] = bc.RelaxationZone(domain=self.domain,
                                                 zone_type='absorption',
                                                 sign=sign, center_x=center_x,
                                                 waves=waves,
@@ -1022,23 +1021,33 @@ class CustomShape(Shape):
         for tag, value in boundaryTags.iteritems():
             flagSet.add(value)
         minFlag = min(flagSet)
-        previous_flag = minFlag-1
+        checkFlag = minFlag
         for flag in flagSet:
-            assert flag == previous_flag+1, 'Flags must be defined as a suite'\
+            assert flag == checkFlag, 'Flags must be defined as a suite'\
                                             'of numbers with no gap!'
-            previous_flag = flag
+            checkFlag += 1
+        
         self.vertices = np.array(vertices)
-        self.vertexFlags = np.array(vertexFlags)-(minFlag)+1
+        self.vertexFlags = (np.array(vertexFlags)-minFlag)+1
         if segments:
             self.segments = np.array(segments)
-            self.segmentFlags = np.array(segmentFlags)-(minFlag)+1
+            self.segmentFlags = (np.array(segmentFlags)-minFlag)+1
         if facets:
             self.facets = np.array(facets)
-            self.facetFlags = np.array(facetFlags)-(minFlag)+1
+            self.facetFlags = (np.array(facetFlags)-minFlag)+1
         if holes is not None:
             self.holes = np.array(holes)
         if regions is not None:
+            rflagSet = set()  # for regions
+            for flag in regionFlags:
+                rflagSet.add(flag)
+            rcheckFlag = min(regionFlag)
+            for flag in rflagSet:
+                assert flag == rcheckFlag, 'Region flags must be defined' \
+                    'as a suite of numbers with no gap!'
+                rcheckFlag += 1
             self.regions = np.array(regions)
+            assert 0 not in regionFlags, 'A region cannot be have a flag = 0'
             self.regionFlags = np.array(regionFlags)
         self.BC_dict = {}
         self.BC_list = [None]*len(flagSet)
@@ -1406,13 +1415,18 @@ def buildDomain(domain):
     domain.auxiliaryVariables = []
     start_flag = 0
     start_vertex = 0
+    zones_global = {}
     for shape in domain.shape_list:
         # --------------------------- #
         # ----- DOMAIN GEOMETRY ----- #
         # --------------------------- #
         start_flag = len(domain.bc)-1
         start_vertex = len(domain.vertices)
-        start_region = len(domain.regions)+1  # indice 0 ignored
+        start_region = len(domain.regions)  # indice 0 ignored
+        if domain.regionFlags:
+            start_rflag = max(domain.regionFlags)
+        else:
+            start_rflag = 0
         domain.bc += shape.BC_list
         domain.vertices += shape.vertices.tolist()
         domain.vertexFlags += (shape.vertexFlags+start_flag).tolist()
@@ -1426,11 +1440,11 @@ def buildDomain(domain):
             domain.facetFlags += (shape.facetFlags+start_flag).tolist()
         if shape.regions is not None:
             domain.regions += shape.regions.tolist()
-            domain.regionFlags += (shape.regionFlags+start_flag).tolist()
+            domain.regionFlags += (shape.regionFlags+start_rflag).tolist()
         if shape.holes is not None:
             domain.holes += shape.holes.tolist()
         domain.getBoundingBox()
-                                  
+
         # --------------------------- #
         # --- AUXILIARY VARIABLES --- #
         # --------------------------- #
@@ -1439,7 +1453,10 @@ def buildDomain(domain):
         # RIGID BODIES
         # ----------------------------
         if 'RigidBody' in shape.auxiliaryVariables.keys():
-            aux += [shape.auxiliaryVariables['RigidBody']]
+            aux += [RigidBody(shape)]
+            # fixing mesh on rigid body
+            for boundcond in shape.BC_list:
+                boundcond.setMoveMesh(aux[-1])
             # update the indice for force/moment calculations
             aux[-1].i_start = start_flag+1
             aux[-1].i_end = start_flag+1+len(shape.BC_list)
@@ -1447,26 +1464,26 @@ def buildDomain(domain):
         # ABSORPTION/GENERATION ZONES
         # ----------------------------
         if 'RelaxZones' in shape.auxiliaryVariables.keys():
-            aux += [shape.auxiliaryVariables['RelaxZones']]
-            zones_global = {}
+            if not zones_global:
+                aux += [bc.RelaxationZoneWaveGenerator(zones_global,
+                                                       domain.nd)]
             # create arrays of default values
             domain.porosityTypes = np.ones(len(domain.regionFlags)+1)
             domain.dragAlphaTypes = np.zeros(len(domain.regionFlags)+1)
             domain.dragBetaTypes = np.zeros(len(domain.regionFlags)+1)
             domain.epsFact_solid = np.zeros(len(domain.regionFlags)+1)
-            i0 = start_region
-            i1 = start_region+len(shape.regions)
-            for ind, zone in shape.zones.iteritems():
-                domain.porosityTypes[i0+ind] = zone.porosityTypes
-                domain.dragAlphaTypes[i0+ind] = zone.dragAlphaTypes
-                domain.dragBetaTypes[i0+ind] = zone.dragBetaTypes
-                domain.epsFact_solid[i0+ind] = zone.epsFact_solid
+            i0 = start_region+1
+            for flag, zone in shape.zones.iteritems():
+                ind = [i for i, f in enumerate(shape.regionFlags) if f == flag]
+                for i1 in ind:
+                    domain.porosityTypes[i0+i1] = zone.porosityTypes
+                    domain.dragAlphaTypes[i0+i1] = zone.dragAlphaTypes
+                    domain.dragBetaTypes[i0+i1] = zone.dragBetaTypes
+                    domain.epsFact_solid[i0+i1] = zone.epsFact_solid
                 # update dict with global key instead of local key
-                key = start_region + ind
+                key = flag+start_rflag
                 zones_global[key] = zone
-            # replace local dict to global dict
-            aux[-1].zones = zones_global
-            
+
     # --------------------------- #
     # ----- MESH GENERATION ----- #
     # --------------------------- #
@@ -1480,6 +1497,3 @@ def buildDomain(domain):
     mesh.setTriangleOptions()
     log("""Mesh generated using: tetgen -%s %s"""  %
         (mesh.triangleOptions,domain.polyfile+".poly"))
-
-
-
