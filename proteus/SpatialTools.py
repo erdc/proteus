@@ -345,16 +345,16 @@ class Shape:
             dragBetaTypes = [dragBetaTypes]
             porosityTypes = [porosityTypes]
         for i, flag in enumerate(flags):
-            self.zones[flags] = bc.RelaxationZone(domain=self.domain,
-                                                  zone_type='generation',
-                                                  sign=sign[i],
-                                                  center_x=center_x[i],
-                                                  waves=waves[i],
-                                                  windSpeed=windSpeed[i],
-                                                  epsFact_solid=epsFact_solid[i],
-                                                  dragAlphaTypes=dragAlphaTypes[i],
-                                                  dragBetaTypes=dragBetaTypes[i],
-                                                  porosityTypes=porosityTypes[i])
+            self.zones[flag] = bc.RelaxationZone(domain=self.domain,
+                                                 zone_type='generation',
+                                                 sign=sign[i],
+                                                 center_x=center_x[i],
+                                                 waves=waves[i],
+                                                 windSpeed=windSpeed[i],
+                                                 epsFact_solid=epsFact_solid[i],
+                                                 dragAlphaTypes=dragAlphaTypes[i],
+                                                 dragBetaTypes=dragBetaTypes[i],
+                                                 porosityTypes=porosityTypes[i])
 
 
 class Cuboid(Shape):
@@ -1026,7 +1026,7 @@ class CustomShape(Shape):
             assert flag == checkFlag, 'Flags must be defined as a suite'\
                                             'of numbers with no gap!'
             checkFlag += 1
-        
+
         self.vertices = np.array(vertices)
         self.vertexFlags = (np.array(vertexFlags)-minFlag)+1
         if segments:
@@ -1041,7 +1041,7 @@ class CustomShape(Shape):
             rflagSet = set()  # for regions
             for flag in regionFlags:
                 rflagSet.add(flag)
-            rcheckFlag = min(regionFlag)
+            rcheckFlag = min(regionFlags)
             for flag in rflagSet:
                 assert flag == rcheckFlag, 'Region flags must be defined' \
                     'as a suite of numbers with no gap!'
