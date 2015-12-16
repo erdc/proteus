@@ -776,8 +776,8 @@ class PiecewiseLinearComplexDomain(D_base):
     """
     3D domains desribed by closed surfaces made up of general polygonal facets.
     """
-    def __init__(self, fileprefix=None, vertices=None, segments=None, facets=None,
-                 facetHoles=None, holes=None, regions=None, vertexFlags=None, segmentFlags=None, facetFlags=None,
+    def __init__(self, fileprefix=None, vertices=None, facets=None,
+                 facetHoles=None, holes=None, regions=None, vertexFlags=None, facetFlags=None,
                  regionFlags=None, regionConstraints=None, bc=None, name="PLCDomain", units="m"):
         """
         Read  the PLC domain from lists. If no flags are given, then default flags of 0 are assigned.
@@ -791,13 +791,11 @@ class PiecewiseLinearComplexDomain(D_base):
         else:
             self.polyfile = None
             self.vertices = vertices or []
-            self.segments = segments or []
             self.facets = facets or []
             self.facetHoles = facetHoles or []
             self.holes = holes or []
             self.regions = regions or []
             self.vertexFlags = vertexFlags or []
-            self.segmentFlags = segmentFlags or []
             self.facetFlags = facetFlags or []
             self.regionFlags = regionFlags or []
             self.regionConstraints = regionConstraints or []
