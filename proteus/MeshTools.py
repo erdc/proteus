@@ -154,6 +154,7 @@ def getEdgesFromPolygons(polygons):
     return edges.values()
 
 class Triangle(Polygon):
+    """A 2D triangular element"""
     edgeMap = {(1,2):0,(0,2):1,(0,1):2}
     zUnitVector = EVec(0.0,0.0,1.0)
     def __init__(self,triangleNumber=0,nodes=[],edgeDict=None):
@@ -206,6 +207,7 @@ class Triangle(Polygon):
             self.hasGeometricInfo=True
 
 class Quadrilateral(Polygon):
+    """A 2D quadrilateral element"""
     def __init__(self,quadrilateralNumber=0,edges=[]):
         Polygon.__init__(self,quadrilateralNumber)
         self.edges = edges
@@ -266,6 +268,7 @@ class Polyhedron(Element):
         return compareNodes(self.nodes,other.nodes)
 
 class Tetrahedron(Polyhedron):
+    """A 3D tetrahedral element"""
     triangleMap = {(1,2,3):0,(0,2,3):1,(0,1,3):2,(0,1,2):3}
     edgeMap = {(0,1): 0,
                (0,2): 1,
@@ -345,6 +348,7 @@ class Tetrahedron(Polyhedron):
             self.hasGeometricInfo=True
 
 class Hexahedron(Polyhedron):
+    """A 3D hexahedral element"""
     def __init__(self,HN,quadrilaterals):
         Polyhedron.__init__(self,HN)
         self.N = HN
@@ -1396,6 +1400,7 @@ class Mesh:
         raw_input('Please press return to continue... \n')
 
 class MultilevelMesh(Mesh):
+    """A hierchical multilevel mesh"""
     def __init__(self,levels=1):
         self.meshList=[]
         self.elementParents=None
@@ -1472,6 +1477,7 @@ J=1
 K=1
 
 class EdgeGrid(Mesh):
+    """A 1D regular grid on an interval"""
     def __init__(self,nx=2,Lx=1.0):
         Mesh.__init__(self)
         #dimensions and ranges
@@ -1520,6 +1526,7 @@ class EdgeGrid(Mesh):
                                               self.nodeArray[-1]],dtype='d'))
 
 class QuadrilateralGrid(Mesh):
+    """A 2D regular grid of quadrilateral cells"""
     def __init__(self,nx=2,ny=2,Lx=1.0,Ly=1.0):
         Mesh.__init__(self)
         #nodes
@@ -1930,6 +1937,7 @@ class RectangularGrid(Mesh):
         return childrenDict
 
 class MultilevelRectangularGrid(MultilevelMesh):
+    """A hierarchical multilevel grid"""
     def __init__(self,levels,nx,ny=1,nz=1,
                  Lx=1.0,Ly=1.0,Lz=1.0,
                  refinementLevels=1):
@@ -2561,7 +2569,7 @@ class HexahedralMesh(Mesh):
 
     def computeGeometricInfo(self):
         import cmeshTools
-        print "no info jet for hexahedral mesh"
+        print "no info yet for hexahedral mesh"
         #cmeshTools.computeGeometricInfo_tetrahedron(self.cmesh)
     def generateHexahedralMeshFromRectangularGrid(self,nx,ny,nz,Lx,Ly,Lz):
         import cmeshTools
@@ -2733,6 +2741,7 @@ min(h_k)             : %d\n""" % (self.nElements_global,
         self.buildFromC(self.cmesh)
 
 class Mesh2DM(Mesh):
+    """A triangular mesh based on an ADH 3dm file"""
     def __init__(self,filename,adhBase=1):
         meshIn = open(filename+'.3dm','r')
         firstLine = meshIn.readline()
@@ -3341,6 +3350,7 @@ class Mesh3DM(Mesh):
                     np.savetxt(ar.textDataDir+"/nodes"+name+".txt",self.nodeArray)
                     np.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes[:self.nElements_owned])
 class MultilevelTetrahedralMesh(MultilevelMesh):
+    """A hierarchical multilevel mesh with tetrahedral cells"""
     def __init__(self,nx,ny,nz,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.element):
         import cmeshTools
@@ -3432,12 +3442,16 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
             m.computeGeometricInfo()
 
 class MultilevelHexahedralMesh(MultilevelMesh):
+    """A hierarchical multilevel mesh with hexahedral cells"""
     def __init__(self,nx,ny,nz,px=0,py=0,pz=0,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.element):
         import cmeshTools
         import Comm
         MultilevelMesh.__init__(self)
-        self.useC = True
+        if refinementLevels == 1:
+            self.useC = True
+        else:
+            self.useC = False
         self.nLayersOfOverlap = nLayersOfOverlap; self.parallelPartitioningType = parallelPartitioningType
         log("Generating hexahedral mesh")
         if not skipInit:
@@ -3453,13 +3467,16 @@ class MultilevelHexahedralMesh(MultilevelMesh):
                     self.meshList[l].buildFromC(self.cmeshList[l])
                     self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
             else:
+                import pdb
+                pdb.set_trace()
                 grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
                 self.meshList.append(HexahedralMesh())
-                self.meshList[0].rectangularToTetrahedral(grid)
                 self.elementChildren=[]
+                self.meshList[0].sigmaMax=0.0
                 log(self.meshList[0].meshInfo())
                 for l in range(1,refinementLevels):
                     self.refine()
+                    self.meshList[-1].sigmaMax=0.0
                     log(self.meshList[-1].meshInfo())
                 self.buildArrayLists()
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
@@ -3483,7 +3500,8 @@ class MultilevelHexahedralMesh(MultilevelMesh):
 
 
     def refine(self):
-        self.meshList.append(TetrahedralMesh())
+        raise NotImplementedError
+        self.meshList.append(HexahedralMesh())
         childrenDict = self.meshList[-1].refine(self.meshList[-2])
         self.elementChildren.append(childrenDict)
     def computeGeometricInfo(self):
@@ -4166,6 +4184,7 @@ class QuadrilateralMesh(Mesh):
 
 
 class MultilevelTriangularMesh(MultilevelMesh):
+    """A hierarchical  multilevel mesh of triangular cells"""
     import cmeshTools
     def __init__(self,nx,ny,nz,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.element,triangleFlag=0):
@@ -4262,6 +4281,7 @@ class MultilevelTriangularMesh(MultilevelMesh):
         #
 
 class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
+    """A triangular mesh that interpolates bathymetry from a point cloud"""
     def __init__(self,
                  domain,
                  triangleOptions,
@@ -4874,6 +4894,7 @@ Number of nodes : %d\n""" % (self.nElements_global,self.nNodes_global)
         meshOut.close()
 
 class MultilevelEdgeMesh(MultilevelMesh):
+    """A hierarchical multilevel mesh of intervals (edges)"""
     import cmeshTools
     def __init__(self,nx,ny,nz,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.element):
@@ -4925,6 +4946,7 @@ class MultilevelEdgeMesh(MultilevelMesh):
         #
     #
 class MultilevelSimplicialMesh(MultilevelMesh):
+    """A wrapper for all the simplicial hierarchical meshes in 1,2, and 3D"""
     def __init__(self,nd,nx,ny=1,nz=1,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1):
         if nd==1:
             MultilevelEdgeMesh.__init__(self,nx,ny,nz,
