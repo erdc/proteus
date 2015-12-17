@@ -112,7 +112,14 @@ class Edge(Element):
             self.barycenter = (self.nodes[0].p + self.nodes[1].p)/2.0
             self.length = enorm(self.basis[0])
             self.normal = EVec(-self.basis[0][Y], self.basis[0][X],0.0)
-            self.unitNormal = self.normal/enorm(self.normal)
+            norm = enorm(self.normal)
+            if  norm:
+                self.unitNormal = self.normal/norm
+            else:
+                #in 3D edge normals don't make sense in general so above
+                #may divide by zero if edge has zero projection onto x-y plane
+                self.normal = EVec(0.0, -self.basis[0][Z], self.basis[0][Y])
+                self.unitNormal = self.normal/enorm(self.normal)
             self.diameter=self.length
             self.innerDiameter = self.length
             self.hasGeometricInfo = True
