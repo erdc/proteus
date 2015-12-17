@@ -14,6 +14,8 @@ from proteus.MeshTools import (Node,
                                getEdgesFromPolygons,
                                Triangle,
                                Quadrilateral,
+                               Tetrahedron,
+                               Hexahedron,
                                PointMesh,
                                EdgeGrid,
                                RectangularGrid,
@@ -167,10 +169,41 @@ def test_Quadrilateral():
     ok_(not q0.hasGeometricInfo)
     q0.computeGeometricInfo()
     ok_(q0.area == 1.0)
-    #todo  more tests...
 
-#def test_Tetrahedron():
-#def test_Hexahedron():
+def test_Tetrahedron():
+    nodes0=[Node(0, 0.0, 0.0, 0.0),
+           Node(1, 0.0, 1.0, 0.0),
+           Node(2, 1.0, 1.0, 0.0),
+           Node(3, 0.0, 0.0, 1.0)]
+    nodes1=nodes0[1:] + [Node(4, 1.0, 0.0, 1.0)]
+    T0 = Tetrahedron(0,nodes0)
+    T1 = Tetrahedron(1,nodes1)
+    ok_(T0.nodes < T1.nodes)
+    ok_(T0.nodes != T1.nodes)
+    ok_(not T0.nodes > T1.nodes)
+    ok_(not T0.hasGeometricInfo)
+    T0.computeGeometricInfo()
+    ok_(T0.volume == 1.0/6.0)
+    triangleDict={}
+    for t in T0.triangles:
+        triangleDict[t.nodes] = t
+    edgeDict={}
+    for e in T0.edges:
+        edgeDict[e.nodes] = e
+    T0_1 = Tetrahedron(0,nodes0, edgeDict=edgeDict)
+    T0_2 = Tetrahedron(0,nodes0, triangleDict=triangleDict)
+    T0_3 = Tetrahedron(0,nodes0, edgeDict=edgeDict, triangleDict=triangleDict)
+    ok_(T0.nodes == T0_1.nodes == T0_2.nodes)
+
+def test_Hexahedron():
+    hexGrid = RectangularGrid(3,2,2,
+                              2.0,1.0,1.0)
+    H0 = hexGrid.hexahedronList[0]
+    H1 = hexGrid.hexahedronList[1]
+    ok_(H0.nodes < H1.nodes)
+    ok_(H0.nodes != H1.nodes)
+    ok_(not H0.nodes > H1.nodes)
+    ok_(not H0.hasGeometricInfo)
 
 def test_MeshParallelPartitioningTypes():
     ok_(MeshParallelPartitioningTypes.element == 0)
@@ -520,9 +553,7 @@ def test_MultilevelTriangularMesh():
             ok_((elementChildren[l] == mlMesh.elementChildrenArrayList[l]).all())
             ok_((elementChildrenOffsets[l] == mlMesh.elementChildrenOffsetsList[l]).all())
         ok_((elementParents[l] == mlMesh.elementParentsArrayList[l]).all())
-    #print "elementChildren=",mlMesh.elementChildrenArrayList
-    #print "elementChildrenOffsets=",mlMesh.elementChildrenOffsetsList
-    #print "elementParents=",mlMesh.elementParentsArrayList
+
 def test_MultilevelTetrahedralMesh():
     n = 2
     mlMesh = MultilevelTetrahedralMesh(3,3,3,refinementLevels=n)
