@@ -3,19 +3,9 @@ This module adds functionality to proteus.SpatialTools module by enabling
 two-phase flow functionality such as converting shapes to moving rigid bodies,
 or adding wave absorption and generation zones.
 
-Extra classes:
- - Tank2D
- - Tank3D
-
-Extra functions:
- - setRigidBody
- - setAbsorptionZones
- - setGenerationZones
- - .... many more (to edit)
- - ....
 
 Example
---------
+-------
 from proteus import Domain
 from proteus.mprans import SpatialTools as st
 import numpy as np
@@ -35,8 +25,12 @@ from math import cos, sin, sqrt, atan2, acos
 from itertools import compress
 import csv
 import os
+import numpy as np
 from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
-from proteus.SpatialTools import *
+from proteus.Profiling import logEvent as log
+from proteus import BC as bc
+from proteus.SpatialTools import (Shape, BCContainer, Cuboid, Rectangle,
+                                  CustomShape)
 
 
 class ShapeRANS(Shape):
@@ -68,16 +62,23 @@ class ShapeRANS(Shape):
             if key == 'RelaxZones':
                 self.auxiliaryVariables[key] = self.zones
 
-    def setRigidBody(self):
+    def setRigidBody(self, holes=None):
         """
-        Sets the shape as a rigid body
+        Makes the shape a rigid body
+
+        :param holes: set of hole coordinates (the interior of the rigid body
+                      will not be meshed) (list/array)
         """
         self._attachAuxiliaryVariable('RigidBody')
-        self.holes = np.array([self.coords])
+        if holes is None:
+            self.holes = np.array([self.barycenter[:self.nd]])
+        else:
+            self._checkListOfLists(holes)
+            self.holes = np.array(holes)
 
     def setTank(self):
         """
-        Sets tank boundary conditions (for moving domain)
+        Sets tank boundary conditions (for moving domain).
         """
         for boundcond in self.BC_list:
             boundcond.setTank()
@@ -85,8 +86,9 @@ class ShapeRANS(Shape):
     def setConstraints(self, free_x, free_r):
         """
         Sets constraints on the Shape (for moving bodies)
-        :arg free_x: translational constraints
-        :arg free_r: rotational constraints
+
+        :param free_x: translational constraints
+        :param free_r: rotational constraints
         """
         self.free_x = np.array(free_x)
         self.free_r = np.array(free_r)
@@ -94,7 +96,8 @@ class ShapeRANS(Shape):
     def setMass(self, mass):
         """
         Set mass of the shape and calculate density
-        :arg mass: mass of the Shape
+
+        :param mass: mass (int/float)
         """
         self.mass = float(mass)
         if self.volume:
@@ -102,15 +105,28 @@ class ShapeRANS(Shape):
 
     def setDensity(self, density):
         """
-        Set density of the Shape and calculate mass
-        :arg density: density of the Shape
+        Set density and calculate mass
+
+        :param density: density (int/float)
         """
         self.density = float(density)
         if self.volume:
             self.mass = self.density*self.volume
 
     def _setInertiaTensor(self, It):
-        self.It = np.array(It)
+        """
+        Set the inertia tensor of the shape
+
+        :param It: inertia tensor (list/array)
+        """
+        It = np.array(It)
+        if self.nd == 2:
+            assert isinstance(It, float), 'the inertia tensor of a 2D shape ' \
+                'must be a float'
+        if self.nd == 3:
+            assert It.shape == (3, 3), 'the inertia tensor of a 3D shape ' \
+                'must have a (3, 3) shape'
+        self.It = It
 
     def getInertia(self, vec=(0., 0., 1.), pivot=None):
         """
@@ -184,11 +200,12 @@ class ShapeRANS(Shape):
                            dragBetaTypes=0., porosityTypes=1.):
         """
         Sets a region (given the local index) to an absorption zone
-        :arg flags: local flags of the region. Can be an integer or a list.
-        :arg epsFact_solid: half of absorption zone length
-        :arg sign: direction vector from the boundary to the sponge (x-axis)
-        :arg center_x: center of the absorption zone
-        :arg dragAlpha
+
+        :param flags: local flags of the region. Can be an integer or a list.
+        :param epsFact_solid: half of absorption zone length
+        :param sign: direction vector from the boundary to the sponge (x-axis)
+        :param center_x: center of the absorption zone
+        :param dragAlpha
         """
         self._attachAuxiliaryVariable('RelaxZones')
         waves = None
@@ -218,8 +235,9 @@ class ShapeRANS(Shape):
                            dragBetaTypes=0., porosityTypes=1.):
         """
         Sets a region (given the local index) to a generation zone
-        :arg flags: local flags of the region. Can be an integer or a list.
-        :arg epsFact_solid: absorption zone length (usually length of region/2)
+
+        :param flags: local flags of the region. Can be an integer or a list.
+        :param epsFact_solid: absorption zone length (length of region/2)
         """
         self._attachAuxiliaryVariable('RelaxZones')
         if isinstance(flags, int):
@@ -262,9 +280,9 @@ def _CuboidsetInertiaTensor(self):
     (!) should not be used manually
     """
     L, W, H = self.dim
-    self.It[:] = [[(W**2.+H**2.)/12., 0, 0],
-                    [0, (L**2.+H**2.)/12., 0],
-                    [0, 0, (W**2.+L**2.)/12.]]
+    self.It = [[(W**2.+H**2.)/12., 0, 0],
+               [0, (L**2.+H**2.)/12., 0],
+               [0, 0, (W**2.+L**2.)/12.]]
 
 Cuboid._setInertiaTensor = _CuboidsetInertiaTensor
 
@@ -274,7 +292,7 @@ def _RectanglesetInertiaTensor(self):
     (!) should not be used manually
     """
     L, H = self.dim
-    self.It[:] = (L**2+H**2)/12
+    self.It = (L**2+H**2)/12
 
 Rectangle._setInertiaTensor = _RectanglesetInertiaTensor
 
@@ -286,8 +304,9 @@ Rectangle._setInertiaTensor = _RectanglesetInertiaTensor
 class Tank3D(ShapeRANS):
     """
     Class to create a 3D tank (cuboid)
-    :arg domain: domain of the tank
-    :arg dim: dimensions of the tank (list or array)
+
+    :param domain: domain of the tank
+    :param dim: dimensions of the tank (list or array)
     """
     count = 0
 
@@ -340,6 +359,15 @@ class Tank3D(ShapeRANS):
         self.epsFact_solid = np.zeros(len(self.regionFlags))
 
     def setSponge(self, left=None, right=None, back=None, front=None):
+        """
+        Set length of sponge layers of the tank.
+        (!) Sponge layers expand inwards.
+
+        :param left: length of the left sponge (int/float)
+        :param right: length of the right sponge (int/float)
+        :param back: length of the back sponge (int/float)
+        :param front: length of the front sponge (int/float)
+        """
         self.leftSponge = left
         self.rightSponge = right
         self.backSponge = back
@@ -347,6 +375,11 @@ class Tank3D(ShapeRANS):
         self.setDimensions(self.dim)
 
     def setDimensions(self, dim):
+        """
+        Set dimension of the tank
+
+        :param dim: new dimensions (list/array)
+        """
         L, W, H = dim
         self.dim = dim
         if self.from_0 is True:
@@ -546,37 +579,39 @@ class Tank3D(ShapeRANS):
         self.regions = np.array(regions)
         self.regionFlags = np.array(regionFlags)
 
-    def setAbsorptionZones(self, epsFact_solid, allSponge=False,
-                               left=False, right=False, front=False,
-                               back=False, front_left=False, front_right=False,
-                               back_left=False, back_right=False,
-                               dragAlphaTypes=0.5/1.005e-6, dragBetaTypes=0.,
-                               porosityTypes=1.):
-        self.abs_zones = {'leftSponge': left,
-                          'rightSponge': right,
-                          'frontSponge': front,
-                          'backSponge': back,
-                          'front_left_Sponge': front_left,
-                          'front_right_Sponge': front_right,
-                          'back_left_Sponge': back_left,
-                          'back_right_Sponge': back_right}
-        if allSponge is True:
-            for key in self.abs_zones:
-                self.abs_zones[key] = True
-        indice = []
-        for key, value in self.abs_zones:
-            if value is True:
-                indice += [self.regionIndice[key]]
-        print('not implemented yet!')
+    # def setAbsorptionZones(self, epsFact_solid, allSponge=False, left=False,
+    #                        right=False, front=False, back=False,
+    #                        front_left=False, front_right=False,
+    #                        back_left=False, back_right=False,
+    #                        dragAlphaTypes=0.5/1.005e-6, dragBetaTypes=0.,
+    #                        porosityTypes=1.):
+    #     self.abs_zones = {'leftSponge': left,
+    #                       'rightSponge': right,
+    #                       'frontSponge': front,
+    #                       'backSponge': back,
+    #                       'front_left_Sponge': front_left,
+    #                       'front_right_Sponge': front_right,
+    #                       'back_left_Sponge': back_left,
+    #                       'back_right_Sponge': back_right}
+    #     if allSponge is True:
+    #         for key in self.abs_zones:
+    #             self.abs_zones[key] = True
+    #     indice = []
+    #     for key, value in self.abs_zones:
+    #         if value is True:
+    #             indice += [self.regionIndice[key]]
+    #     print('Tank3D absorption zones not implemented yet!')
+    #     sys.exit()
 
 
 class Tank2D(ShapeRANS):
     """
     Class to create a 2D tank (rectangle)
-    :arg domain: domain of the tank
-    :arg dim: dimensions of the tank (list or array)
-    :leftSponge: width of left sponge (float)
-    :rightSponge: width of right sponge (float)
+
+    :param domain: domain of the tank
+    :param dim: dimensions of the tank (list or array)
+    :param leftSponge: width of left sponge (float)
+    :param rightSponge: width of right sponge (float)
     """
     count = 0
 
@@ -619,6 +654,11 @@ class Tank2D(ShapeRANS):
         self.epsFact_solid = np.zeros(len(self.regionFlags))
 
     def setDimensions(self, dim):
+        """
+        Set dimension of the tank
+
+        :param dim: new dimensions (list/array)
+        """
         self.dim = dim
         L, H = dim
         if self.from_0 is True:
@@ -678,13 +718,20 @@ class Tank2D(ShapeRANS):
         self.regionFlags = np.array(regionFlags)
 
     def setSponge(self, left=None, right=None):
+        """
+        Set length of sponge layers of the tank.
+        (!) Sponge layers expand inwards.
+
+        :param leftSponge: length of left sponge (float)
+        :param rightSponge: length of right sponge (float)
+        """
         self.leftSponge = left
         self.rightSponge = right
         self.setDimensions(self.dim)
 
     def setAbsorptionZones(self, left=False, right=False,
-                               epsFact_solid=None, dragAlphaTypes=0.5/1.005e-6,
-                               dragBetaTypes=0., porosityTypes=1.):
+                           dragAlphaTypes=0.5/1.005e-6, dragBetaTypes=0.,
+                           porosityTypes=1.):
         self.leftSpongeAbs = left
         self.rightSpongeAbs = right
         waves = None
@@ -695,6 +742,7 @@ class Tank2D(ShapeRANS):
             ind = self.regionIndice['leftSponge']
             flag = self.regionFlags[ind]
             center_x = self.coords[0]-0.5*self.dim[0]+self.leftSponge/2.
+            epsFact_solid = self.leftSponge/2.
             sign = 1.
             self.zones[flag] = bc.RelaxationZone(domain=self.domain,
                                                  zone_type='absorption',
@@ -709,6 +757,7 @@ class Tank2D(ShapeRANS):
             ind = self.regionIndice['rightSponge']
             flag = self.regionFlags[ind]
             center_x = self.coords[0]+0.5*self.dim[0]-self.rightSponge/2.
+            epsFact_solid = self.rightSponge/2.
             sign = -1.
             self.zones[flag] = bc.RelaxationZone(domain=self.domain,
                                                  zone_type='absorption',
@@ -725,6 +774,8 @@ class RigidBody(AuxiliaryVariables.AV_base):
 
     def __init__(self, shape, he=1., cfl_target=0.9, dt_init=0.001):
         self.shape = shape
+        # if isinstance(shape, (Rectangle, Cuboid)):
+        #     shape._setInertiaTensor()
         self.dt_init = dt_init
         self.he = he
         self.cfl_target = 0.9
@@ -931,8 +982,9 @@ def relative_vec(vec1, vec0):
     """
     function giving coordinates of a vector relative to another vector
     (projecting vec0 as the z-axis for vec1)
-    :arg vec1: vector to get new coordinates
-    :arg vec0: vector of reference
+
+    :param vec1: vector to get new coordinates
+    :param vec0: vector of reference
     :return: new coordinates of vec1
     """
     # spherical coords vec0
@@ -958,9 +1010,10 @@ def assembleDomain(domain):
     """
     This function sets up everything needed for the domain, meshing, and
     AuxiliaryVariables calculations (if any).
-    It should always be called after defining all the shapes to be attached
-    to the domain.
-    :arg domain: domain to assemble
+    It should always be called after defining and manipulating all the shapes
+    to be attached to the domain.
+
+    :param domain: domain to assemble
     """
     # reinitialize geometry of domain
     domain.vertices = []
@@ -1057,4 +1110,4 @@ def assembleDomain(domain):
         domain.writeAsymptote(mesh.outputFiles['name'])
     mesh.setTriangleOptions()
     log("""Mesh generated using: tetgen -%s %s"""  %
-        (mesh.triangleOptions,domain.polyfile+".poly"))
+        (mesh.triangleOptions, domain.polyfile+".poly"))
