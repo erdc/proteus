@@ -9,6 +9,7 @@ Classes:
  - Rectangle: creates a 2D rectangle
  - Custom: creates a custom shape from a given set vertices, facets, etc.
 
+
 Example
 --------
 from proteus import Domain
@@ -19,6 +20,7 @@ domain = Domain.PlanarStraightLineGraphDomain()
 shape1 = st.Rectangle(domain, dim=[0.5, 0.5], coords=[1., 1.])
 shape2 = st.Rectangle(domain. dim=[0.3, 0.2], coords=[3., 3.])
 shape2.rotate(np.pi/3.)
+shape2.BC.left.setNoSlip()
 
 st.buildDomain(domain)
 """
@@ -33,6 +35,7 @@ from proteus.Profiling import logEvent as log
 class Shape(object):
     """
     Base/super class of all shapes.
+
     :param domain: domain in which the shape is defined
     """
 
@@ -61,10 +64,34 @@ class Shape(object):
         self.volume = None
         self.BC_list = []
 
+    def _checkFlags(self, flagSet):
+        """
+        Checks if flags are set correctly
+
+        :param flagSet: flags to be check (list/array/set)
+        """
+        flagSet = set(flagSet)
+        checkFlag = min(flagSet)
+        assert checkFlag == 1, 'Minimum boundary/region tag/flag must be 1'
+        for flag in flagSet:
+            assert flag == checkFlag, 'Boundary/region tags/flags must be'
+            'defined as a suite of numbers with no gap!'
+            checkFlag += 1
+
+    def _checkListOfLists(self, list_of_lists):
+        """
+        Checks if the list of lists has the right dimension
+
+        :param list_of_lists: a list of lists
+        """
+        assert len(list_of_lists[0]) == self.nd, 'must have be a list of: ' \
+            'lists of length ' + self.nd
+
     def setPosition(self, coords):
         """
-        Set position of the Shape (coords of the barycenter)
-        :arg coords: new set of coordinates for the barycenter of the shape
+        Set position with coords of the barycenter
+
+        :param coords: new set of coordinates for barycenter (list/array)
         """
         old_coords = np.array(self.barycenter)
         if self.domain.nd == 2 and len(old_coords) == 3:
@@ -76,38 +103,48 @@ class Shape(object):
     def setBarycenter(self, barycenter):
         """
         Set barycenter (center of mass) of the shape
-        :arg barycenter: coordinates of barycenter
+        (!) this function does not move the shape
+
+        :param barycenter: global coordinates of barycenter (list/array)
         """
         if self.domain.nd == 2 and len(barycenter) == 2:
             self.barycenter[:2] = barycenter
         else:
             self.barycenter[:] = barycenter
 
-    def _checkFlags(self, flagSet):
-        flagSet = set(flagSet)
-        checkFlag = min(flagSet)
-        assert min(checkFlag) == 1, 'Minimum boundary/region tag/flag must be 1'
-        for flag in flagSet:
-            assert flag == checkFlag, 'Boundary/region tags/flags must be'
-            'defined as a suite of numbers with no gap!'
-            checkFlag += 1
-
-    def setRegions(self, regions, regionFlags):
+    def setRegions(self, regions, regionFlags=None):
         """
         Sets new regions for the Shape
-        :arg regions: coordinate of the new region(s) (list or array)
+
+        :param regions: coordinate of the new region(s) (list/array)
         """
-        assert len(regions) == len(regionFlags), 'regions and regionFLags must'\
-            'have the same length'
+        self._checkListOfLists(regions)
+        if regionFlags is not None:
+            self._checkFlags(regionFlags)
+        else:
+            regionFLags = self.regionFlags
+        assert len(regions) == len(regionFlags), 'regions and regionFLags'\
+            'must have the same length'
         self.regions = np.array(regions)
         self.regionFlags = np.array(regionFlags)
+
+    def setHoles(self, holes):
+        """
+        Sets a 'hole' in the mesh. The region where the hole is defined will
+        not be meshed.
+
+        :param holes: set of coordinates of holes (list/array)
+        """
+        self._checkListOfLists(holes)
+        self.holes = np.array(holes)
 
     def rotate(self, rot, axis=(0, 0, 1), pivot=None):
         """
         Function to rotate Shape
-        :arg rot: angle of rotation in radians (float)
-        :arg axis: axis of rotation (list or array)
-        :arg pivot: point around which the Shape rotates
+
+        :param rot: angle of rotation ()in radians)
+        :param axis: axis of rotation (list/array)
+        :param pivot: point around which the Shape rotates (list/array)
         -----------------
         Rotated parameters:
         - vertices
@@ -115,13 +152,15 @@ class Shape(object):
         - regions
         - local coordinate system
         - boundary orientations
-        - coordinates
+        - coords (if not None)
         - barycenters
         """
-        nd = self.domain.nd
+        # This function and rotate2D/rotate3D could be optimized
+        rot = float(rot)
+        nd = self.nd
         if pivot is None:
             pivot = self.barycenter
-        if self.domain.nd == 2:
+        if nd == 2:
             pivot = pivot[:2]
             self.vertices[:] = rotation2D(self.vertices, rot, pivot)
             if self.holes is not None:
@@ -135,7 +174,7 @@ class Shape(object):
                 self.b_or[:] = rotation2D(self.b_or, rot, (0., 0.))
             if self.coords is not None:
                 self.coords[:] = rotation2D(self.coords, rot, pivot)
-        elif self.domain.nd == 3:
+        elif nd == 3:
             self.vertices[:] = rotation3D(self.vertices, rot, axis, pivot)
             if self.holes is not None:
                 self.holes[:] = rotation3D(self.holes, rot, axis, pivot)
@@ -152,7 +191,8 @@ class Shape(object):
     def translate(self, trans):
         """
         Function to translate Shape
-        :arg trans: translation values
+
+        :param trans: translation values
         -----------------
         Translated parameters:
         - vertices
@@ -175,18 +215,25 @@ class Shape(object):
             self.holes += trans
 
     def getPosition(self):
+        """
+        Returns current position of barycenter
+        """
         return self.barycenter
 
     def getRotation(self):
+        """
+        Returns local coordinate system relative to global coordinate system
+        """
         return self.coords_system
 
 
 class Cuboid(Shape):
     """
-    Class to create a cuboid
-    :arg domain: domain of the cuboid
-    :arg dim: dimensions of the cuboid (list or array)
-    :arg coords: coordinates of the cuboid (list or array)
+    Class to create a 3D cuboid
+
+    :param domain: domain of the cuboid
+    :param dim: dimensions of the cuboid (list/array)
+    :param coords: coordinates of the cuboid (list/array)
     """
     count = 0
 
@@ -254,7 +301,8 @@ class Cuboid(Shape):
     def setDimensions(self, dim):
         """
         Set dimensions of the shape
-        :arg dim: new dimensions of the Shape
+
+        :param dim: new dimensions (list/array)
         """
         self.dim = dim
         L, W, H = dim
@@ -273,9 +321,10 @@ class Cuboid(Shape):
 class Rectangle(Shape):
     """
     Class to create a rectangle
-    :arg domain: domain of the rectangle
-    :arg dim: dimensions of the rectangle (list or array)
-    :arg coords: coordinates of the rectangle (list or array)
+
+    :param domain: domain of the rectangle
+    :param dim: dimensions of the rectangle (list/array)
+    :param coords: coordinates of the rectangle (list/array)
     """
     count = 0
 
@@ -317,7 +366,8 @@ class Rectangle(Shape):
     def setDimensions(self, dim):
         """
         Set dimensions of the shape
-        :arg dim: new dimensions of the Shape
+
+        :param dim: new dimensions (list/array)
         """
         self.dim = dim
         L, H = dim
@@ -332,12 +382,19 @@ class Rectangle(Shape):
 class CustomShape(Shape):
     """
     Class to create a custom 2D or 3D shape
-    :arg domain: domain of the shape
-    :arg barycenter: barycenter of the shape (list or array)
-    :arg vertices: set of vertices of the shape (list or array)
-    :arg facets: set of facets of the shape (list or array)
-    :arg segments: set of segments of the shape (list or array)
-    :arg regions: set of regions of the shape (list or array)
+
+    :param domain: domain of the shape
+    :param barycenter: barycenter (list/array)
+    :param vertices: set of vertices (list/array)
+    :param vertexFlags: set of vertex flags (list/array)
+    :param segments: set of segments for 2D shape (list/array)
+    :param segmentFlags: set of segment flags for 2D shape (list/array)
+    :param facets: set of facets for 3D shape (list/array)
+    :param facetFlags: set of facet flags for 3D shape (list/array)
+    :param holes: set of hole coordinates (list/array)
+    :param regions: set of regions of the shape (list/array)
+    :param boundaryTags: set of boundary tags to flag shape elements (dict)
+    :param boundaryOrientations: set of boundary orientations (list/array)
     """
     count = 0
 
@@ -346,59 +403,41 @@ class CustomShape(Shape):
                  facets=None, facetFlags=None, holes=None, regions=None,
                  regionFlags=None, boundaryTags=None,
                  boundaryOrientations=None):
-        super(CustomShape, self).__init__(self, domain, nd=len(vertices[0]))
+        print(len(vertices[0]))
+        super(CustomShape, self).__init__(domain, nd=len(vertices[0]))
         self.__class__.count += 1
         self.name = "custom" + str(self.__class__.count)
-        assert min(boundaryTags) == 1, 'Minimum boundary tag must be 1'
-        flagSet = set()
-        for tag, value in boundaryTags.iteritems():
-            flagSet.add(value)
-        checkFlag = min(flagSet)
-        for flag in flagSet:
-            assert flag == checkFlag, 'Boundary tags must be defined as a' \
-                'suite of numbers with no gap!'
-            checkFlag += 1
+        self._checkFlags(boundaryTags.values())
         self.vertices = np.array(vertices)
-        self.vertexFlags = (np.array(vertexFlags)-minFlag)+1
+        self.vertexFlags = np.array(vertexFlags)
         if segments:
             self.segments = np.array(segments)
-            self.segmentFlags = (np.array(segmentFlags)-minFlag)+1
+            self.segmentFlags = np.array(segmentFlags)
         if facets:
             self.facets = np.array(facets)
-            self.facetFlags = (np.array(facetFlags)-minFlag)+1
+            self.facetFlags = np.array(facetFlags)
         if holes is not None:
             self.holes = np.array(holes)
         if regions is not None:
-            assert min(regionFlags) == 1, 'Minimum region flag must be 1'
-            rflagSet = set()  # for regions
-            for flag in regionFlags:
-                rflagSet.add(flag)
-            rcheckFlag = min(rflagSet)
-            for flag in rflagSet:
-                assert flag == rcheckFlag, 'Region flags must be defined as' \
-                    'a suite of numbers with no gap!'
-                rcheckFlag += 1
+            self._checkFlags(regionFlags)
             self.regions = np.array(regions)
-            assert 0 not in regionFlags, 'A region cannot be have a flag = 0'
             self.regionFlags = np.array(regionFlags)
         self.BC_dict = {}
-        self.BC_list = [None]*len(flagSet)
+        self.BC_list = [None]*len(boundaryTags)
         if boundaryOrientations is not None:
             b_or = []
         else:
             b_or = None
             b_i = None
-        for tag, index in boundaryTags.iteritems():
+        for tag, flag in boundaryTags.iteritems():
+            b_i = flag-1  # start at index 0
             if boundaryOrientations is not None:
                 b_or += [boundaryOrientations[tag]]
-                b_i = index-1  # start at index 0
             self.BC_dict[tag] = bc.BoundaryConditions(b_or=b_or, b_i=b_i)
-            self.BC_list[index-minFlag] = self.BC_dict[tag]
+            self.BC_list[b_i] = self.BC_dict[tag]
         self.BC = BCContainer(self.BC_dict)
         if barycenter is not None:
             self.barycenter = np.array(barycenter)
-        else:
-            self.barycenter = np.zeros(3)
 
 
 class BCContainer(object):
@@ -417,11 +456,13 @@ def rotation2D(points, rot, pivot=(0., 0.)):
     """
     function to make a set of points/vertices/vectors (arg: points) to rotate
     around a pivot point (arg: pivot)
-    :arg points: set of 3D points (list or array)
-    :arg rot: angle of rotation (in radians)
-    :arg pivot: point around which the set of points rotates (list or array)
+
+    :param points: set of 3D points (list or array)
+    :param rot: angle of rotation (in radians)
+    :param pivot: point around which the set of points rotates (list or array)
     :return points_rot: the rotated set of points (numpy array)
     """
+    # function could be optimized
     points = np.array(points)
     rot = float(rot)
     # get coordinates for translation
@@ -454,12 +495,14 @@ def rotation3D(points, rot, axis=(0., 0., 1.), pivot=(0., 0., 0.)):
     """
     function to make a set of points/vertices/vectors to rotate around an
     arbitrary axis/vector (arg: axis) going through a pivot point.
-    :arg points: set of 3D points (array)
-    :arg rot: angle of rotation (in radians)
-    :arg axis: axis of rotation (list or array)
-    :arg pivot: point around which the set of points rotates (list or array)
+
+    :param points: set of 3D points (array)
+    :param rot: angle of rotation (in radians)
+    :param axis: axis of rotation (list or array)
+    :param pivot: point around which the set of points rotates (list or array)
     :return points_rot: the rotated set of points (numpy array)
     """
+    # function could be optimized
     points = np.array(points)
     rot = float(rot)
     # get coordinates for translation
@@ -515,9 +558,10 @@ def assembleDomain(domain):
     """
     This function sets up everything needed for the domain, meshing, and
     AuxiliaryVariables calculations (if any).
-    It should always be called after defining all the shapes to be attached
-    to the domain.
-    :arg domain: domain to asssemble
+    It should always be called after defining and manipulating all the shapes
+    to be attached to the domain.
+
+    :param domain: domain to asssemble
     """
     # reinitialize geometry of domain
     domain.vertices = []
@@ -577,4 +621,4 @@ def assembleDomain(domain):
         domain.writeAsymptote(mesh.outputFiles['name'])
     mesh.setTriangleOptions()
     log("""Mesh generated using: tetgen -%s %s"""  %
-        (mesh.triangleOptions,domain.polyfile+".poly"))
+        (mesh.triangleOptions, domain.polyfile+".poly"))
