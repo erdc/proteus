@@ -56,59 +56,6 @@ class D_base:
             self.x += [xMin]
             self.L += [xMax-xMin]
 
-    def assembleDomain(self):
-        self.vertices = []
-        self.vertexFlags = []
-        self.segments = []
-        self.segmentFlags = []
-        self.facets = []
-        self.facetFlags = []
-        self.holes = []
-        self.regions = []
-        self.regionFlags = []
-        self.auxiliaryVariables = []
-        self.bc = [bc.BoundaryConditions()]  # BC at flag 0
-        self.bc[0].setParallelFlag0()  # set BC at flag 0
-        self.barycenters = np.array([[0., 0., 0.]])  # barycenter at flag 0
-        start_flag = 0
-        start_vertex = 0
-        for shape in self.shape_list:
-            # ----- DOMAIN GEOMETRY ----- #
-            start_flag = len(self.bc)-1
-            start_vertex = len(self.vertices)
-            if self.regionFlags:
-                start_rflag = max(self.regionFlags)
-            else:
-                start_rflag = 0
-                self.bc += shape.BC_list
-            self.vertices += list(shape.vertices)
-            self.vertexFlags += list(shape.vertexFlags+start_flag)
-            bary = np.array([shape.barycenter for bco in shape.BC_list])
-            self.barycenters = np.append(self.barycenters, bary, axis=0)
-            if shape.segments is not None:
-                self.segments += list(shape.segments+start_vertex)
-                self.segmentFlags += list(shape.segmentFlags+start_flag)
-            if shape.facets is not None:
-                self.facets += list(shape.facets+start_vertex)
-                self.facetFlags += list(shape.facetFlags+start_flag)
-            if shape.regions is not None:
-                self.regions += list(shape.regions)
-                self.regionFlags += list(shape.regionFlags+start_rflag)
-            if shape.holes is not None:
-                self.holes += list(shape.holes)
-            self.getBoundingBox()
-        # ----- MESH GENERATION ----- #
-        mesh = self.MeshOptions
-        if mesh.outputFiles['poly'] is True:
-            self.writePoly(mesh.outputFiles['name'])
-        if mesh.outputFiles['ply'] is True:
-            self.writePLY(mesh.outputFiles['name'])
-        if mesh.outputFiles['asymptote'] is True:
-            self.writeAsymptote(mesh.outputFiles['name'])
-        mesh.setTriangleOptions()
-        log("""Mesh generated using: tetgen -%s %s"""  %
-            (mesh.triangleOptions,self.polyfile+".poly"))
-
 
 class MeshOptions:
     """
