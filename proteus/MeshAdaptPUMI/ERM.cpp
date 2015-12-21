@@ -350,7 +350,170 @@ if(k==0)
   return star_err;
 }
 
+void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf){
+  std::cout<<"Begin computeDiffusiveFlux()"<<std::endl;
+  int nsd = m->getDimension();
+  int numbqpt, nshl;
+  int hier_off = 4;
+  apf::MeshEntity* bent,*ent;
+  apf::MeshIterator* iter = m->begin(nsd-1); //loop over faces
 
+  //Need to get number of bqpt
+  while(bent = m->iterate(iter)){
+    apf::MeshElement* b_elem;
+    b_elem = apf::createMeshElement(m,bent);
+    numbqpt = apf::countIntPoints(b_elem,int_order);
+    apf::destroyMeshElement(b_elem);
+    break;
+  }
+  m->end(iter);
+    
+  diffFlux = m->createDoubleTag("diffFlux",numbqpt*nsd*2);
+  apf::MeshElement* tempelem; apf::Element * tempvelo,*temppres,*tempvoff;
+  apf::MeshElement* b_elem;
+  apf::Adjacent adjFaces;
+  apf::Vector3 normal,centerdir;
+  int orientation;
+  double tempflux[numbqpt*nsd];
+  double *flux; flux = (double*) calloc(numbqpt*nsd*2,sizeof(double));
+  apf::NewArray <double> shpval;
+  apf::NewArray <double> shpval_temp;
+
+  apf::FieldShape* err_shape = apf::getHierarchic(2);
+  apf::EntityShape* elem_shape;
+  apf::Vector3 bqpt,bqptl,bqptshp;
+  double weight, Jdet;
+  apf::Matrix3x3 J;
+  apf::Matrix3x3 tempgrad_velo;
+  apf::Matrix3x3 identity(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
+  
+  iter=m->begin(nsd-1);
+  while(ent=m->iterate(iter))
+  {
+    m->setDoubleTag(ent,diffFlux,flux);
+  }
+  m->end(iter);
+  free(flux);
+
+  //loop over regions
+  PCU_Comm_Begin();
+  iter = m->begin(nsd);
+  int ent_count=0;
+  while(ent = m->iterate(iter))
+  { 
+    //Shape functions of the region and not the boundaries
+    if(ent_count==0){
+      nshl=apf::countElementNodes(err_shape,m->getType(ent));
+      shpval_temp.allocate(nshl);
+      nshl= nshl-hier_off;
+      shpval.allocate(nshl);
+      elem_shape = err_shape->getEntityShape(m->getType(ent));
+    }
+
+    m->getAdjacent(ent,nsd-1,adjFaces);
+    for(int adjcount =0;adjcount<adjFaces.getSize();adjcount++){
+      bent = adjFaces[adjcount];
+      normal=getFaceNormal(m,bent);
+      centerdir=apf::getLinearCentroid(m,ent)-apf::getLinearCentroid(m,bent);
+      if(isInTet(m,ent,apf::project(normal,centerdir)*centerdir.getLength()+apf::getLinearCentroid(m,bent)))
+        orientation = 0;
+      else
+        orientation = 1;
+
+      //begin calculation of flux
+      b_elem = apf::createMeshElement(m,bent);
+      tempelem = apf::createMeshElement(m,ent);
+      temppres = apf::createElement(pref,tempelem);
+      tempvelo = apf::createElement(velf,tempelem);
+      tempvoff = apf::createElement(voff,tempelem);
+
+      for(int l = 0;l<numbqpt;l++)
+      {
+        apf::Vector3 bflux(0.0,0.0,0.0); 
+        apf::Matrix3x3 tempbflux(0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0);
+        apf::getIntPoint(b_elem,int_order,l,bqpt);
+        weight = apf::getIntWeight(b_elem,int_order,l);
+        apf::getJacobian(b_elem,bqpt,J); //evaluate the Jacobian at the quadrature point
+        Jdet=apf::getJacobianDeterminant(J,nsd-1);
+        bqptl=apf::boundaryToElementXi(m,bent,ent,bqpt); 
+        apf::getVectorGrad(tempvelo,bqptl,tempgrad_velo);
+        tempbflux = ((tempgrad_velo+apf::transpose(tempgrad_velo))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
+              -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1))*weight*Jdet;
+        bflux = tempbflux*normal;
+        bflux.toArray(&(tempflux[l*nsd]));
+int eID=localNumber(ent);
+int fID=localNumber(bent);
+if(fID==565){
+std::cout<<"Reg "<<eID<<" Face "<<fID<<std::endl;
+apf::Vector3 xyz;
+apf::mapLocalToGlobal(tempelem,bqptl,xyz);
+std::cout<<"Local "<<bqptl<<" Global "<<xyz<<std::endl;
+std::cout<<"Gradient "<<tempgrad_velo<<std::endl;
+std::cout<<"Pressure "<<apf::getScalar(temppres,bqptl)<<std::endl;
+std::cout<<"Weight "<<weight<<" Jdet "<<Jdet<<std::endl;
+std::cout<<"Normal "<<normal<<std::endl;
+std::cout<<"Bflux "<<bflux<<std::endl;
+}
+      }
+      flux = (double*) calloc(numbqpt*nsd*2,sizeof(double));
+      m->getDoubleTag(bent,diffFlux,flux);
+      for (int i=0;i<numbqpt*nsd;i++){
+        flux[orientation*numbqpt*nsd+i] = tempflux[i];
+      }
+      m->setDoubleTag(bent,diffFlux,flux);
+
+int fID=localNumber(bent);
+if(fID==565){
+double*testflux;
+testflux = (double*) calloc(numbqpt*nsd*2,sizeof(double));
+m->getDoubleTag(bent,diffFlux,testflux);
+for(int s=0;s<numbqpt*nsd*2;s++){
+std::cout<<"testFlux "<<s<<" "<<testflux[s]<<std::endl;
+}
+free(testflux);
+}
+      free(flux);
+      apf::destroyMeshElement(tempelem);apf::destroyElement(tempvelo);apf::destroyElement(temppres); apf::destroyElement(tempvoff);
+      
+      //Parallel Communications
+      apf::ModelEntity* me=m->toModel(bent);
+      int tag = m->getModelTag(me);
+      apf::ModelEntity* boundary_face = m->findModelEntity(nsd-1,tag);
+      apf::Copies remotes;
+      apf::Parts residence;
+      if(m->isShared(bent))
+      {
+        std::cout<<"PARALLEL PCU"<<std::endl;
+        m->getRemotes(bent,remotes);
+        for(apf::Copies::iterator it=remotes.begin(); it!=remotes.end();++it)
+        {
+          PCU_COMM_PACK(it->first, it->second);
+          PCU_COMM_PACK(it->first, orientation);
+          PCU_Comm_Pack(it->first, tempflux,numbqpt*nsd);
+        }
+      } //end if
+      ent_count++;
+    } //end loop over faces
+  } //end loop over regions
+  m->end(iter);
+
+  PCU_Comm_Send(); 
+  while(PCU_Comm_Receive())
+  {
+    //double buffer[numbqpt*nsd];
+    //apf::MeshEntity* face;
+    PCU_COMM_UNPACK(bent);
+    PCU_COMM_UNPACK(orientation);
+    PCU_Comm_Unpack(tempflux,numbqpt*nsd);
+    m->getDoubleTag(bent,diffFlux,flux);
+    for (int i=0;i<numbqpt*nsd;i++){
+      flux[orientation*numbqpt*nsd+i] = flux[orientation*numbqpt*nsd+i]+tempflux[i];
+    }
+    m->setDoubleTag(bent,diffFlux,flux);
+  }
+  PCU_Barrier();
+  std::cout<<"End computeDiffusiveFlux()"<<std::endl;
+}
 
 void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux){
 
@@ -462,6 +625,20 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf:
                 tempbflux = ((tempgrad_velo[idx_neigh]+apf::transpose(tempgrad_velo[idx_neigh]))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
                   -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1))*weight*Jdet*flux_weight;
                 bflux = tempbflux*normal;
+
+int eID=localNumber(ent);
+int fID=localNumber(bent);
+
+if(eID==0 && fID==565){
+double*testflux;
+testflux = (double*) calloc(numqpt*nsd*2,sizeof(double));
+m->getDoubleTag(bent,diffFlux,testflux);
+std::cout<<"Reg "<< eID<<" Face "<<fID<<" Qpt "<<l<<std::endl;
+for(int tdex=0;tdex<nsd;tdex++){
+  std::cout<<"bflux "<<bflux[tdex]<<" tag data "<<testflux[l*nsd+tdex]<<" orientation 1 "<<testflux[numqpt*nsd+l*nsd+tdex]<<std::endl;
+}
+free(testflux);
+}
               }
 
               for(int i=0;i<nsd;i++){ 
@@ -510,6 +687,9 @@ void MeshAdaptPUMIDrvr::get_local_error()
     apf::setScalar(visc, ent, 0,visc_val);
   }
   m->end(iter);
+
+  //***** Compute diffusive flux *****//
+  computeDiffusiveFlux(m,voff,visc,pref,velf);
 
   //Initialize the Error Fields
   freeField(err_reg);
