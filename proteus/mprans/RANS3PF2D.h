@@ -15,6 +15,7 @@ namespace proteus
 				   double* mesh_dof,
 				   double* mesh_velocity_dof,
 				   double MOVING_DOMAIN,//0 or 1
+                                   double PSTAB,
 				   int* mesh_l2g,
 				   double* dV_ref,
 				   double* p_trial_ref,
@@ -190,6 +191,7 @@ namespace proteus
 				   double* mesh_dof,
 				   double* mesh_velocity_dof,
 				   double MOVING_DOMAIN,
+                                   double PSTAB,
 				   int* mesh_l2g,
 				   double* dV_ref,
 				   double* p_trial_ref,
@@ -1063,7 +1065,10 @@ namespace proteus
 	  flux_mass += n[0]*f_mass[0];
 	  velocity[0] = u;
 	  if (flowDirection < 0.0)
-            flux_umom+=bc_speed*(bc_u - u);
+            {
+              flux_umom+=flowDirection*(bc_u - u);
+              velocity[0] = bc_u;
+            }
 	}
       if (isDOFBoundary_v != 1)
 	{
@@ -1075,8 +1080,26 @@ namespace proteus
 	  flux_mass+=n[1]*f_mass[1];
 	  velocity[1] = v;
 	  if (flowDirection < 0.0)
-            flux_vmom+=bc_speed*(bc_v - v);
+            {
+              flux_vmom+=flowDirection*(bc_v - v);
+              velocity[1] = bc_v;
+            }
 	}
+      /* if (isDOFBoundary_w != 1) */
+      /*   { */
+      /*     flux_mass+=n[2]*f_mass[2]; */
+      /*     velocity[2] = w; */
+      /*   } */
+      /* else */
+      /*   { */
+      /*     flux_mass +=n[2]*f_mass[2]; */
+      /*     velocity[2] = w; */
+      /*     if (flowDirection < 0.0) */
+      /*       { */
+      /*         flux_wmom+=flowDirection*(bc_w - w); */
+      /*         //velocity[2] = bc_w; */
+      /*       } */
+      /*   } */
       /* if (isDOFBoundary_w != 1) */
       /*   { */
       /*     flux_mass+=n[2]*f_mass[2]; */
@@ -1210,7 +1233,7 @@ namespace proteus
 	{
 	  dflux_mass_du += n[0]*df_mass_du[0];
 	  if (flowDirection < 0.0)
-            dflux_umom_du += bc_speed;
+            dflux_umom_du -= flowDirection;
 	}
       if (isDOFBoundary_v != 1)
 	{
@@ -1220,8 +1243,18 @@ namespace proteus
 	{
 	  dflux_mass_dv += n[1]*df_mass_dv[1];
 	  if (flowDirection < 0.0)
-            dflux_vmom_dv += bc_speed;
+            dflux_vmom_dv -= flowDirection;
 	}
+      /* if (isDOFBoundary_w != 1) */
+      /*   { */
+      /*     dflux_mass_dw+=n[2]*df_mass_dw[2]; */
+      /*   } */
+      /* else */
+      /*   { */
+      /*     dflux_mass_dw += n[2]*df_mass_dw[2]; */
+      /*     if (flowDirection < 0.0) */
+      /*       dflux_wmom_dw -= flowDirection; */
+      /*   } */
       /* if (isDOFBoundary_w != 1) */
       /*   { */
       /*     dflux_mass_dw+=n[2]*df_mass_dw[2]; */
@@ -1355,6 +1388,7 @@ namespace proteus
 			   double* mesh_dof,
 			   double* mesh_velocity_dof,
 			   double MOVING_DOMAIN,
+                           double PSTAB,
 			   int* mesh_l2g,
 			   double* dV_ref,
 			   double* p_trial_ref,
@@ -1978,7 +2012,7 @@ namespace proteus
 					q_cfl[eN_k]);	
 
 	      tau_v = useMetrics*tau_v1+(1.0-useMetrics)*tau_v0;
-	      tau_p = useMetrics*tau_p1+(1.0-useMetrics)*tau_p0;
+	      tau_p = PSTAB*(useMetrics*tau_p1+(1.0-useMetrics)*tau_p0);
 
 	      calculateSubgridError_tauRes(tau_p,
 					   tau_v,
@@ -2981,6 +3015,7 @@ namespace proteus
 			   double* mesh_dof,
 			   double* mesh_velocity_dof,
 			   double MOVING_DOMAIN,
+                           double PSTAB,
 			   int* mesh_l2g,
 			   double* dV_ref,
 			   double* p_trial_ref,
@@ -3648,7 +3683,7 @@ namespace proteus
 					
 					
 	      tau_v = useMetrics*tau_v1+(1.0-useMetrics)*tau_v0;
-	      tau_p = useMetrics*tau_p1+(1.0-useMetrics)*tau_p0;					
+	      tau_p = PSTAB*(useMetrics*tau_p1+(1.0-useMetrics)*tau_p0);					
 					
 	      calculateSubgridError_tauRes(tau_p,
 					   tau_v,
