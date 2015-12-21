@@ -5,10 +5,10 @@ TC_base defines the interface. The classes derived from TC_base in
 this module define common PDE's.
 """
 from math import *
+from warnings import warn
 import numpy
 import Norms
 import Profiling
-
 log = Profiling.logEvent
 
 ## \file TransportCoefficients.py
