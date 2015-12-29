@@ -94,6 +94,10 @@ class BoundaryConditions:
         This function should be used only on BC flag 0 (index 0 in the list
         domain.bc)
         """
+        self.vof_advective = constantBC(0.)
+        self.u_diffusive = constantBC(0.)
+        self.v_diffusive = constantBC(0.)
+        self.w_diffusive = constantBC(0.)
         self.reset()
 
     def setTank(self):
@@ -261,7 +265,7 @@ class BoundaryConditions:
         """
         self.reset()
         U = np.array(U)
-        
+
         def get_inlet_ux_dirichlet(ux):
             def ux_dirichlet(x, t):
                 if x[vert_axis] < eta(x,t):
