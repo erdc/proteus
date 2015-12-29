@@ -110,6 +110,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * q_dV,
                                double * q_dV_last,
                                double * q_velocity_sge,
+                               double * ebqe_velocity_star,
                                double * q_cfl,
                                double * q_numDiff_u,
                                double * q_numDiff_v,
@@ -277,6 +278,7 @@ cdef extern from "mprans/RANS3PF.h" namespace "proteus":
                                double * q_dV,
                                double * q_dV_last,
                                double * q_velocity_sge,
+                               double * ebqe_velocity_star,
                                double * q_cfl,
                                double * q_numDiff_u_last, double * q_numDiff_v_last, double * q_numDiff_w_last,
                                int * sdInfo_u_u_rowptr, int * sdInfo_u_u_colind,
@@ -502,6 +504,7 @@ cdef class RANS3PF:
                           numpy.ndarray q_dV,
                           numpy.ndarray q_dV_last,
                           numpy.ndarray q_velocity_sge,
+                          numpy.ndarray ebqe_velocity_star,
                           numpy.ndarray q_cfl,
                           numpy.ndarray q_numDiff_u, numpy.ndarray q_numDiff_v, numpy.ndarray q_numDiff_w,
                           numpy.ndarray q_numDiff_u_last, numpy.ndarray q_numDiff_v_last, numpy.ndarray q_numDiff_w_last,
@@ -660,6 +663,7 @@ cdef class RANS3PF:
                                         < double * > q_dV.data,
                                         < double * > q_dV_last.data,
                                         < double * > q_velocity_sge.data,
+                                        < double * > ebqe_velocity_star.data,
                                         < double * > q_cfl.data,
                                         < double * > q_numDiff_u.data, < double * > q_numDiff_v.data, < double * > q_numDiff_w.data,
                                         < double * > q_numDiff_u_last.data, < double * > q_numDiff_v_last.data, < double * > q_numDiff_w_last.data,
@@ -811,6 +815,7 @@ cdef class RANS3PF:
                           numpy.ndarray q_dV,
                           numpy.ndarray q_dV_last,
                           numpy.ndarray q_velocity_sge,
+                          numpy.ndarray ebqe_velocity_star,
                           numpy.ndarray q_cfl,
                           numpy.ndarray q_numDiff_u_last, numpy.ndarray q_numDiff_v_last, numpy.ndarray q_numDiff_w_last,
                           numpy.ndarray sdInfo_u_u_rowptr, numpy.ndarray sdInfo_u_u_colind,
@@ -976,6 +981,7 @@ cdef class RANS3PF:
                                         < double * > q_dV.data,
                                         < double * > q_dV_last.data,
                                         < double * > q_velocity_sge.data,
+                                        < double * > ebqe_velocity_star.data,
                                         < double * > q_cfl.data,
                                         < double * > q_numDiff_u_last.data, < double * > q_numDiff_v_last.data, < double * > q_numDiff_w_last.data,
                                         < int * > sdInfo_u_u_rowptr.data, < int * > sdInfo_u_u_colind.data,
@@ -1198,6 +1204,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * q_dV,
                                double * q_dV_last,
                                double * q_velocity_sge,
+                               double * ebqe_velocity_star,
                                double * q_cfl,
                                double * q_numDiff_u, double * q_numDiff_v, double * q_numDiff_w,
                                double * q_numDiff_u_last, double * q_numDiff_v_last, double * q_numDiff_w_last,
@@ -1348,6 +1355,7 @@ cdef extern from "mprans/RANS3PF2D.h" namespace "proteus":
                                double * q_dV,
                                double * q_dV_last,
                                double * q_velocity_sge,
+                               double * ebqe_velocity_star,
                                double * q_cfl,
                                double * q_numDiff_u_last, double * q_numDiff_v_last, double * q_numDiff_w_last,
                                int * sdInfo_u_u_rowptr, int * sdInfo_u_u_colind,
@@ -1573,6 +1581,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray q_dV,
                           numpy.ndarray q_dV_last,
                           numpy.ndarray q_velocity_sge,
+                          numpy.ndarray ebqe_velocity_star,
                           numpy.ndarray q_cfl,
                           numpy.ndarray q_numDiff_u, numpy.ndarray q_numDiff_v, numpy.ndarray q_numDiff_w,
                           numpy.ndarray q_numDiff_u_last, numpy.ndarray q_numDiff_v_last, numpy.ndarray q_numDiff_w_last,
@@ -1731,6 +1740,7 @@ cdef class RANS3PF2D:
                                         < double * > q_dV.data,
                                         < double * > q_dV_last.data,
                                         < double * > q_velocity_sge.data,
+                                        < double * > ebqe_velocity_star.data,
                                         < double * > q_cfl.data,
                                         < double * > q_numDiff_u.data, < double * > q_numDiff_v.data, < double * > q_numDiff_w.data,
                                         < double * > q_numDiff_u_last.data, < double * > q_numDiff_v_last.data, < double * > q_numDiff_w_last.data,
@@ -1882,6 +1892,7 @@ cdef class RANS3PF2D:
                           numpy.ndarray q_dV,
                           numpy.ndarray q_dV_last,
                           numpy.ndarray q_velocity_sge,
+                          numpy.ndarray ebqe_velocity_star,
                           numpy.ndarray q_cfl,
                           numpy.ndarray q_numDiff_u_last, numpy.ndarray q_numDiff_v_last, numpy.ndarray q_numDiff_w_last,
                           numpy.ndarray sdInfo_u_u_rowptr, numpy.ndarray sdInfo_u_u_colind,
@@ -2047,6 +2058,7 @@ cdef class RANS3PF2D:
                                         < double * > q_dV.data,
                                         < double * > q_dV_last.data,
                                         < double * > q_velocity_sge.data,
+                                        < double * > ebqe_velocity_star.data,
                                         < double * > q_cfl.data,
                                         < double * > q_numDiff_u_last.data, < double * > q_numDiff_v_last.data, < double * > q_numDiff_w_last.data,
                                         < int * > sdInfo_u_u_rowptr.data, < int * > sdInfo_u_u_colind.data,
@@ -2523,7 +2535,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
            self.ebqe_vos = modelList[self.VOS_model].ebqe[('u',0)]
         else:
            self.vos_dof = modelList[self.VOF_model].u[0].dof.copy()
-           self.vos_dof[:] = 1.0
+           self.vos_dof[:] = 0.0
            self.q_vos = modelList[self.VOF_model].coefficients.q_vos
            self.q_dvos_dt = self.q_vos.copy()
            self.q_dvos_dt[:] = 0.0
@@ -2778,6 +2790,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
     def initializeGlobalExteriorElementBoundaryQuadrature(self, t, cebqe):
         # VRANS
         log("ebqe_global allocations in coefficients")
+        self.ebqe_velocity_last = numpy.zeros(cebqe[('velocity',0)].shape)
         self.ebqe_porosity = numpy.ones(cebqe[('u', 0)].shape, 'd')
         self.ebqe_dragAlpha = numpy.ones(cebqe[('u', 0)].shape, 'd')
         self.ebqe_dragAlpha.fill(self.dragAlpha)
@@ -3995,6 +4008,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['dV'],
             self.q['dV_last'],
             self.stabilization.v_last,
+            self.coefficients.ebqe_velocity_last,
             self.q[('cfl', 0)],
             self.q[('numDiff', 0, 0)],
             self.q[('numDiff', 1, 1)],
@@ -4039,7 +4053,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.bc_ebqe_phi,
             self.coefficients.ebqe_n,
             self.coefficients.ebqe_kappa,
-            self.coefficients.ebqe_porosity,
+            self.coefficients.ebqe_vos,
             self.coefficients.ebqe_turb_var[0],
             self.coefficients.ebqe_turb_var[1],
             self.pressureModel.numericalFlux.isDOFBoundary[0],
@@ -4228,6 +4242,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.q['dV'],
             self.q['dV_last'],
             self.stabilization.v_last,
+            self.coefficients.ebqe_velocity_last,
             self.q[('cfl', 0)],
             self.shockCapturing.numDiff_last[0],
             self.shockCapturing.numDiff_last[1],
@@ -4287,7 +4302,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
             self.coefficients.ebqe_n,
             self.coefficients.ebqe_kappa,
             # VRANS start
-            self.coefficients.ebqe_porosity,
+            self.coefficients.ebqe_vos,
             self.coefficients.ebqe_turb_var[0],
             self.coefficients.ebqe_turb_var[1],
             # VRANS end
