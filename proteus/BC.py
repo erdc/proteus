@@ -94,10 +94,7 @@ class BoundaryConditions:
         This function should be used only on BC flag 0 (index 0 in the list
         domain.bc)
         """
-        self.vof_advective = constantBC(0.)
-        self.u_diffusive = constantBC(0.)
-        self.v_diffusive = constantBC(0.)
-        self.w_diffusive = constantBC(0.)
+        self.reset()
 
     def setTank(self):
         b_or = self._b_or[self._b_i].tolist()
@@ -119,19 +116,8 @@ class BoundaryConditions:
         self.u_dirichlet = constantBC(0.)
         self.v_dirichlet = constantBC(0.)
         self.w_dirichlet = constantBC(0.)
-        self.k_dirichlet = constantBC(0.)
-        self.dissipation_dirichlet = constantBC(0.)
         self.p_advective = constantBC(0.)
-        self.u_advective = constantBC(0.)
-        self.v_advective = constantBC(0.)
-        self.w_advective = constantBC(0.)
-        self.vof_advective = constantBC(0.)
-        self.k_advective = constantBC(0.)
-        self.dissipation_advective = constantBC(0.)
-        self.u_diffusive = constantBC(0.)
-        self.v_diffusive = constantBC(0.)
-        self.w_diffusive = constantBC(0.)
-        self.k_diffusive = constantBC(0.)
+        self.k_dirichlet = constantBC(0.)
         self.dissipation_diffusive = constantBC(0.)
 
     def setFreeSlip(self):
@@ -143,13 +129,7 @@ class BoundaryConditions:
         self.u_advective = constantBC(0.)
         self.v_advective = constantBC(0.)
         self.w_advective = constantBC(0.)
-        self.k_advective = constantBC(0.)
-        self.dissipation_advective = constantBC(0.)
-        self.vof_advective = constantBC(0.)
-        self.u_diffusive = constantBC(0.)
-        self.v_diffusive = constantBC(0.)
-        self.w_diffusive = constantBC(0.)
-        self.k_diffusive = constantBC(0.)
+        self.k_dirichlet = constantBC(0.)
         self.dissipation_diffusive = constantBC(0.)
 
     def setClosed(self):
@@ -173,20 +153,13 @@ class BoundaryConditions:
             b_or = orientation
         else:
             print('Boundary orientation needs to be defined')
-
+        self.reset()
         self.p_dirichlet = constantBC(0.)
         self.u_dirichlet = get_ux_dirichlet(0)
         self.v_dirichlet = get_ux_dirichlet(1)
         if len(b_or) > 2:
             self.w_dirichlet = get_ux_dirichlet(2)
         self.vof_dirichlet = constantBC(1.)  # air
-        self.k_dirichlet = constantBC(0.)
-        self.dissipation_dirichlet = constantBC(0.)
-        self.p_advective = None
-        self.u_advective = None
-        self.v_advective = None
-        self.w_advective = None
-        self.vof_advective = None
         self.u_diffusive = constantBC(0.)
         self.v_diffusive = constantBC(0.)
         self.w_diffusive = constantBC(0.)
@@ -267,12 +240,64 @@ class BoundaryConditions:
                 self.w_dirichlet = get_inlet_ux_dirichlet(U[2])
         self.vof_dirichlet = inlet_vof_dirichlet
         self.p_advective = inlet_p_advective
-        self.u_diffusive = constantBC(0.)
-        self.v_diffusive = constantBC(0.)
-        self.w_diffusive = constantBC(0.)
 
-    def setHydrostaticPressureOutlet(self, rho, g, refLevel, pRef=0.0,
-                                     vert_axis=-1, air=1.0):
+    def setUnsteadyTwoPhaseVelocityInlet(self, U, eta, vert_axis=-1, air=1., water=0.):
+        """
+        Imposes a velocity profile lower than the sea level and an open
+        boundary for higher than the sealevel.
+        :arg U: Velocity vector at the global system.
+        :arg waterLevel: water level at global coordinate system.
+        :arg vert_axis: index of vertical in position vector, must always be
+                        aligned with gravity, by default set to 1].
+        :arg air: Volume fraction for air (1.0 by default).
+        :arg water: Volume fraction for water (0.0 by default).
+        Below the seawater level, the condition returns the _dirichlet and
+        p_advective condition according to the inflow velocity.
+        Above the sea water level, the condition returns the gravity as zero,
+        and sets _dirichlet condition to zero, only if there is a zero inflow
+        velocity component.
+        (!) This condition is best used for boundaries and gravity aligned with
+            one of the main axes.
+        """
+        self.reset()
+        U = np.array(U)
+        
+        def get_inlet_ux_dirichlet(ux):
+            def ux_dirichlet(x, t):
+                if x[vert_axis] < eta(x,t):
+                    return ux(x,t)
+                else:
+                    return 0
+            return ux_dirichlet
+
+        def inlet_vof_dirichlet(x, t):
+            if x[vert_axis] < eta(x,t):
+                return water
+            else:
+                return air
+
+        def inlet_p_advective(x, t, u=U):
+            b_or = self._b_or[self._b_i]
+            u_p = np.sum(U*b_or)
+            # This is the normal velocity, based on the inwards boundary
+            # orientation -b_or
+            u_p = -u_p
+            if x[vert_axis] < eta(x,t):
+                return u_p
+            else:
+                return None
+
+        self.u_dirichlet = get_inlet_ux_dirichlet(U[0])
+        self.v_dirichlet = get_inlet_ux_dirichlet(U[1])
+        if len(U) == 3:
+                self.w_dirichlet = get_inlet_ux_dirichlet(U[2])
+        self.vof_dirichlet = inlet_vof_dirichlet
+        self.p_advective = inlet_p_advective
+
+
+
+    def setHydrostaticPressureOutlet(self, rho, g, refLevel, vof, pRef=0.0,
+                                     vert_axis=-1):
         self.reset()
         a0 = pRef - rho*g[vert_axis]*refLevel
         a1 = rho*g[vert_axis]
@@ -288,7 +313,7 @@ class BoundaryConditions:
         if len(g) == 3:
             self.w_dirichlet = get_outlet_v_dirichletel(2)
         self.p_dirichlet = linearBC(a0, a1, vert_axis)
-        self.vof_dirichlet = constantBC(air)
+        self.vof_dirichlet = constantBC(vof)
         self.u_diffusive = constantBC(0.)
         self.v_diffusive = constantBC(0.)
         self.w_diffusive = constantBC(0.)
