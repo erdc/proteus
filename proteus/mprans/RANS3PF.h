@@ -103,6 +103,7 @@ namespace proteus
                                    double* q_dV,
                                    double* q_dV_last,
 				   double* q_velocity_sge,
+				   double* ebqe_velocity_star,
 				   double* q_cfl,
 				   double* q_numDiff_u,
                                    double* q_numDiff_v,
@@ -271,6 +272,7 @@ namespace proteus
                                    double* q_dV,
                                    double* q_dV_last,
 				   double* q_velocity_sge,
+                                   double* ebqe_velocity_star,
 				   double* q_cfl,
 				   double* q_numDiff_u_last, double* q_numDiff_v_last, double* q_numDiff_w_last,
 				   int* sdInfo_u_u_rowptr,int* sdInfo_u_u_colind,			      
@@ -1071,7 +1073,7 @@ namespace proteus
 	  if (flowDirection < 0.0)
             {
               flux_umom+=flowDirection*(bc_u - u);
-              //velocity[0] = bc_u;
+              velocity[0] = bc_u;
             }
 	}
       if (isDOFBoundary_v != 1)
@@ -1086,7 +1088,7 @@ namespace proteus
 	  if (flowDirection < 0.0)
             {
               flux_vmom+=flowDirection*(bc_v - v);
-              //velocity[1] = bc_v;
+              velocity[1] = bc_v;
             }
 	}
       if (isDOFBoundary_w != 1)
@@ -1101,7 +1103,7 @@ namespace proteus
 	  if (flowDirection < 0.0)
             {
               flux_wmom+=flowDirection*(bc_w - w);
-              //velocity[2] = bc_w;
+              velocity[2] = bc_w;
             }
 	}
       /* if (isDOFBoundary_p == 1) */
@@ -1456,6 +1458,7 @@ namespace proteus
                            double* q_dV,
                            double* q_dV_last,
 			   double* q_velocity_sge,
+			   double* ebqe_velocity_star,
 			   double* q_cfl,
 			   double* q_numDiff_u, double* q_numDiff_v, double* q_numDiff_w,
 			   double* q_numDiff_u_last, double* q_numDiff_v_last, double* q_numDiff_w_last,
@@ -3070,6 +3073,7 @@ namespace proteus
                            double* q_dV,
                            double* q_dV_last,
 			   double* q_velocity_sge,
+			   double* ebqe_velocity_star,
 			   double* q_cfl,
 			   double* q_numDiff_u_last, double* q_numDiff_v_last, double* q_numDiff_w_last,
 			   int* sdInfo_u_u_rowptr,int* sdInfo_u_u_colind,			      
