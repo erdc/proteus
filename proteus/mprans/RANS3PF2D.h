@@ -99,6 +99,7 @@ namespace proteus
                                    double* q_dV,
                                    double* q_dV_last,
 				   double* q_velocity_sge,
+				   double* ebqe_velocity_star,
 				   double* q_cfl,
 				   double* q_numDiff_u,
                                    double* q_numDiff_v,
@@ -267,6 +268,7 @@ namespace proteus
                                    double* q_dV,
                                    double* q_dV_last,
 				   double* q_velocity_sge,
+                                   double* ebqe_velocity_star,
 				   double* q_cfl,
 				   double* q_numDiff_u_last, double* q_numDiff_v_last, double* q_numDiff_w_last,
 				   int* sdInfo_u_u_rowptr,int* sdInfo_u_u_colind,			      
@@ -1044,87 +1046,79 @@ namespace proteus
 					double& flux_umom,
 					double& flux_vmom,
 					double& flux_wmom,
-					double* velocity)
+					double* velocity_star,
+                                        double* velocity)
     {
-      double flowDirection, speed, bc_flowDirection, bc_speed;
+      double flowSpeedNormal;
       flux_mass = 0.0;
       flux_umom = 0.0;
       flux_vmom = 0.0;
       /* flux_wmom = 0.0; */
-      flowDirection=porosity*(n[0]*u+n[1]*v);
-      speed = fabs(flowDirection);
-      bc_flowDirection=porosity*(n[0]*bc_u+n[1]*bc_v);
-      bc_speed = fabs(bc_flowDirection);
+      flowSpeedNormal=porosity*(n[0]*velocity_star[0] +
+                                n[1]*velocity_star[1]);
+      velocity[0] = u;
+      velocity[1] = v;
+      /* velocity[2] = w; */
       if (isDOFBoundary_u != 1)
 	{
 	  flux_mass += n[0]*f_mass[0];
-	  velocity[0] = u;
 	}
       else
 	{
 	  flux_mass += n[0]*f_mass[0];
-	  velocity[0] = u;
-	  if (flowDirection < 0.0)
+	  if (flowSpeedNormal < 0.0)
             {
-              flux_umom+=flowDirection*(bc_u - u);
-              velocity[0] = bc_u;
+              flux_umom+=flowSpeedNormal*(bc_u - u);
             }
 	}
       if (isDOFBoundary_v != 1)
 	{
 	  flux_mass+=n[1]*f_mass[1];
-	  velocity[1] = v;
 	}
       else
 	{
 	  flux_mass+=n[1]*f_mass[1];
-	  velocity[1] = v;
-	  if (flowDirection < 0.0)
+	  if (flowSpeedNormal < 0.0)
             {
-              flux_vmom+=flowDirection*(bc_v - v);
-              velocity[1] = bc_v;
+              flux_vmom+=flowSpeedNormal*(bc_v - v);
             }
 	}
       /* if (isDOFBoundary_w != 1) */
       /*   { */
       /*     flux_mass+=n[2]*f_mass[2]; */
-      /*     velocity[2] = w; */
       /*   } */
       /* else */
       /*   { */
       /*     flux_mass +=n[2]*f_mass[2]; */
-      /*     velocity[2] = w; */
-      /*     if (flowDirection < 0.0) */
+      /*     if (flowSpeedNormal < 0.0) */
       /*       { */
-      /*         flux_wmom+=flowDirection*(bc_w - w); */
-      /*         //velocity[2] = bc_w; */
+      /*         flux_wmom+=flowSpeedNormal*(bc_w - w); */
       /*       } */
       /*   } */
       /* if (isDOFBoundary_w != 1) */
       /*   { */
       /*     flux_mass+=n[2]*f_mass[2]; */
-      /*     velocity[2] = w; */
       /*   } */
       /* else */
       /*   { */
       /*     flux_mass +=n[2]*f_mass[2]; */
-      /*     velocity[2] = w; */
-      /*     if (flowDirection < 0.0) */
+      /*     if (flowSpeedNormal < 0.0) */
       /*       flux_wmom+=bc_speed*(bc_w - w); */
       /*   } */
-      /* if (isDOFBoundary_p == 1) */
-      /*   { */
-      /*     flux_umom+= n[0]*(bc_p*bc_oneByRho-p*oneByRho); */
-      /*     flux_vmom+= n[1]*(bc_p*bc_oneByRho-p*oneByRho); */
-      /*     /\* flux_wmom+= n[2]*(bc_p*bc_oneByRho-p*oneByRho); *\/ */
-      /*   } */
-      /* if (isFluxBoundary_p == 1) */
-      /*   { */
-      /*     /\* velocity[0] += (bc_flux_mass - flux_mass)*n[0]; *\/ */
-      /*     /\* velocity[1] += (bc_flux_mass - flux_mass)*n[1]; *\/ */
-      /*     /\* velocity[2] += (bc_flux_mass - flux_mass)*n[2]; *\/ */
-      /*     flux_mass = bc_flux_mass; */
-      /*   } */
+      if (isDOFBoundary_p == 1)
+        {
+          flux_umom+= n[0]*(bc_p*bc_oneByRho-p*oneByRho);
+          flux_vmom+= n[1]*(bc_p*bc_oneByRho-p*oneByRho);
+          /* flux_wmom+= n[2]*(bc_p*bc_oneByRho-p*oneByRho); */
+        }
+      if (isFluxBoundary_p == 1)
+        {
+          //correct velocity field to match mass flux BC
+          velocity[0] += (bc_flux_mass - flux_mass)*n[0];
+          velocity[1] += (bc_flux_mass - flux_mass)*n[1];
+          /* velocity[2] += (bc_flux_mass - flux_mass)*n[2]; */
+          flux_mass = bc_flux_mass;
+        }
       if (isFluxBoundary_u == 1)
 	{
 	  flux_umom = bc_flux_umom;
@@ -1200,9 +1194,10 @@ namespace proteus
 						   double& dflux_wmom_dp,
 						   double& dflux_wmom_du,
 						   double& dflux_wmom_dv,
-						   double& dflux_wmom_dw)
+						   double& dflux_wmom_dw,
+                                                   double* velocity_star)
     {
-      double flowDirection, speed, bc_flowDirection, bc_speed;
+      double flowSpeedNormal;
       dflux_mass_du = 0.0;
       dflux_mass_dv = 0.0;
       /* dflux_mass_dw = 0.0; */
@@ -1221,10 +1216,8 @@ namespace proteus
       dflux_wmom_du = 0.0;
       dflux_wmom_dv = 0.0;
       /* dflux_wmom_dw = 0.0; */
-      flowDirection=porosity*(n[0]*u+n[1]*v);
-      speed = fabs(flowDirection);
-      bc_flowDirection=porosity*(n[0]*bc_u+n[1]*bc_v);
-      bc_speed = fabs(bc_flowDirection);
+      flowSpeedNormal=porosity*(n[0]*velocity_star[0] +
+                                n[1]*velocity_star[1]);
       if (isDOFBoundary_u != 1)
 	{
 	  dflux_mass_du += n[0]*df_mass_du[0];
@@ -1232,8 +1225,8 @@ namespace proteus
       else
 	{
 	  dflux_mass_du += n[0]*df_mass_du[0];
-	  if (flowDirection < 0.0)
-            dflux_umom_du -= flowDirection;
+	  if (flowSpeedNormal < 0.0)
+            dflux_umom_du -= flowSpeedNormal;
 	}
       if (isDOFBoundary_v != 1)
 	{
@@ -1242,8 +1235,8 @@ namespace proteus
       else
 	{
 	  dflux_mass_dv += n[1]*df_mass_dv[1];
-	  if (flowDirection < 0.0)
-            dflux_vmom_dv -= flowDirection;
+	  if (flowSpeedNormal < 0.0)
+            dflux_vmom_dv -= flowSpeedNormal;
 	}
       /* if (isDOFBoundary_w != 1) */
       /*   { */
@@ -1252,8 +1245,8 @@ namespace proteus
       /* else */
       /*   { */
       /*     dflux_mass_dw += n[2]*df_mass_dw[2]; */
-      /*     if (flowDirection < 0.0) */
-      /*       dflux_wmom_dw -= flowDirection; */
+      /*     if (flowSpeedNormal < 0.0) */
+      /*       dflux_wmom_dw -= flowSpeedNormal; */
       /*   } */
       /* if (isDOFBoundary_w != 1) */
       /*   { */
@@ -1262,7 +1255,7 @@ namespace proteus
       /* else */
       /*   { */
       /*     dflux_mass_dw += n[2]*df_mass_dw[2]; */
-      /*     if (flowDirection < 0.0) */
+      /*     if (flowSpeedNormal < 0.0) */
       /*       dflux_wmom_dw += bc_speed; */
       /*   } */
       /* if (isDOFBoundary_p == 1) */
@@ -1474,6 +1467,7 @@ namespace proteus
                            double* q_dV,
                            double* q_dV_last,
 			   double* q_velocity_sge,
+                           double* ebqe_velocity_star,
 			   double* q_cfl,
 			   double* q_numDiff_u, double* q_numDiff_v, double* q_numDiff_w,
 			   double* q_numDiff_u_last, double* q_numDiff_v_last, double* q_numDiff_w_last,
@@ -2066,9 +2060,9 @@ namespace proteus
               double mesh_vel[2];
               mesh_vel[0] = xt;
               mesh_vel[1] = yt;
-	      q_velocity[eN_k_nSpace+0]=u+subgridError_u;
-	      q_velocity[eN_k_nSpace+1]=v+subgridError_v;
-	      /* q_velocity[eN_k_nSpace+2]=w+subgridError_w; */
+	      q_velocity[eN_k_nSpace+0]=u;
+	      q_velocity[eN_k_nSpace+1]=v;
+	      /* q_velocity[eN_k_nSpace+2]=w;*/
 	      for(int i=0;i<nDOF_test_element;i++) 
 		{ 
 		  register int i_nSpace=i*nSpace;
@@ -2414,9 +2408,9 @@ namespace proteus
 				   u_ext,
 				   v_ext,
 				   w_ext,
-				   u_ext,
-				   v_ext,
-				   w_ext,
+				   ebqe_velocity_star[ebNE_kb_nSpace+0],
+				   ebqe_velocity_star[ebNE_kb_nSpace+1],
+				   ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used
 				   eddy_viscosity_ext,
 				   mom_u_acc_ext,
 				   dmom_u_acc_u_ext,
@@ -2490,9 +2484,9 @@ namespace proteus
 				   bc_u_ext,
 				   bc_v_ext,
 				   bc_w_ext,
-				   bc_u_ext,
-				   bc_v_ext,
-				   bc_w_ext,
+				   ebqe_velocity_star[ebNE_kb_nSpace+0],
+				   ebqe_velocity_star[ebNE_kb_nSpace+1],
+				   ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used
 				   bc_eddy_viscosity_ext,
 				   bc_mom_u_acc_ext,
 				   bc_dmom_u_acc_u_ext,
@@ -2697,7 +2691,8 @@ namespace proteus
 					     flux_mom_u_adv_ext,
 					     flux_mom_v_adv_ext,
 					     flux_mom_w_adv_ext,
-					     &ebqe_velocity[ebNE_kb_nSpace]);
+					     &ebqe_velocity_star[ebNE_kb_nSpace],
+                                             &ebqe_velocity[ebNE_kb_nSpace]);
 	      exteriorNumericalDiffusiveFlux(eps_rho,
 					     ebqe_phi_ext[ebNE_kb],
 					     sdInfo_u_u_rowptr,
@@ -3092,6 +3087,7 @@ namespace proteus
                            double* q_dV,
                            double* q_dV_last,
 			   double* q_velocity_sge,
+                           double* ebqe_velocity_star,
 			   double* q_cfl,
 			   double* q_numDiff_u_last, double* q_numDiff_v_last, double* q_numDiff_w_last,
 			   int* sdInfo_u_u_rowptr,int* sdInfo_u_u_colind,			      
@@ -4150,9 +4146,9 @@ namespace proteus
 				   u_ext,
 				   v_ext,
 				   w_ext,
-				   u_ext,
-				   v_ext,
-				   w_ext,
+				   ebqe_velocity_star[ebNE_kb_nSpace+0],
+				   ebqe_velocity_star[ebNE_kb_nSpace+1],
+				   ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used
 				   eddy_viscosity_ext,
 				   mom_u_acc_ext,
 				   dmom_u_acc_u_ext,
@@ -4226,9 +4222,9 @@ namespace proteus
 				   bc_u_ext,
 				   bc_v_ext,
 				   bc_w_ext,
-				   bc_u_ext,
-				   bc_v_ext,
-				   bc_w_ext,
+				   ebqe_velocity_star[ebNE_kb_nSpace+0],
+				   ebqe_velocity_star[ebNE_kb_nSpace+1],
+				   ebqe_velocity_star[ebNE_kb_nSpace+1],//hack,not used
 				   bc_eddy_viscosity_ext,
 				   bc_mom_u_acc_ext,
 				   bc_dmom_u_acc_u_ext,
@@ -4437,7 +4433,8 @@ namespace proteus
 							dflux_mom_w_adv_p_ext,
 							dflux_mom_w_adv_u_ext,
 							dflux_mom_w_adv_v_ext,
-							dflux_mom_w_adv_w_ext);
+							dflux_mom_w_adv_w_ext,
+                                                        &ebqe_velocity_star[ebNE_kb_nSpace]);
 	      //
 	      //calculate the flux jacobian
 	      //
