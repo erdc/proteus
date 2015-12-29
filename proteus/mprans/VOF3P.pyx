@@ -605,6 +605,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                 self.ebq_vos = 1.0 - self.ebq_porosity
             if hasattr(self.flowCoefficients, 'ebqe_porosity'):
                 self.ebqe_porosity = self.flowCoefficients.ebqe_porosity
+                self.ebqe_vos = 1.0-self.ebqe_porosity
             else:
                 self.ebqe_porosity = numpy.ones(
                     modelList[
@@ -615,7 +616,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                         modelList[
                             self.LS_modelIndex].ebqe['x'],
                         self.ebqe_porosity)
-            self.ebqe_vos = 1.0-self.ebqe_porosity
+                self.ebqe_vos = 1.0-self.ebqe_porosity
 
     def initializeElementQuadrature(self, t, cq):
         if self.V_model is None:
