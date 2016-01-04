@@ -1,6 +1,7 @@
 """
 Module for creating boundary conditions. Imported in Shape.py
 """
+import sys
 import numpy as np
 from proteus import AuxiliaryVariables
 from proteus.Profiling import logEvent as log
@@ -97,6 +98,7 @@ class BoundaryConditions:
         self.u_diffusive = constantBC(0.)
         self.v_diffusive = constantBC(0.)
         self.w_diffusive = constantBC(0.)
+        self.reset()
 
     def setTank(self):
         b_or = self._b_or[self._b_i].tolist()
@@ -118,19 +120,8 @@ class BoundaryConditions:
         self.u_dirichlet = constantBC(0.)
         self.v_dirichlet = constantBC(0.)
         self.w_dirichlet = constantBC(0.)
-        self.k_dirichlet = constantBC(0.)
-        self.dissipation_dirichlet = constantBC(0.)
         self.p_advective = constantBC(0.)
-        self.u_advective = constantBC(0.)
-        self.v_advective = constantBC(0.)
-        self.w_advective = constantBC(0.)
-        self.vof_advective = constantBC(0.)
-        self.k_advective = constantBC(0.)
-        self.dissipation_advective = constantBC(0.)
-        self.u_diffusive = constantBC(0.)
-        self.v_diffusive = constantBC(0.)
-        self.w_diffusive = constantBC(0.)
-        self.k_diffusive = constantBC(0.)
+        self.k_dirichlet = constantBC(0.)
         self.dissipation_diffusive = constantBC(0.)
 
     def setFreeSlip(self):
@@ -142,13 +133,7 @@ class BoundaryConditions:
         self.u_advective = constantBC(0.)
         self.v_advective = constantBC(0.)
         self.w_advective = constantBC(0.)
-        self.k_advective = constantBC(0.)
-        self.dissipation_advective = constantBC(0.)
-        self.vof_advective = constantBC(0.)
-        self.u_diffusive = constantBC(0.)
-        self.v_diffusive = constantBC(0.)
-        self.w_diffusive = constantBC(0.)
-        self.k_diffusive = constantBC(0.)
+        self.k_dirichlet = constantBC(0.)
         self.dissipation_diffusive = constantBC(0.)
 
     def setClosed(self):
@@ -172,20 +157,13 @@ class BoundaryConditions:
             b_or = orientation
         else:
             print('Boundary orientation needs to be defined')
-
+        self.reset()
         self.p_dirichlet = constantBC(0.)
         self.u_dirichlet = get_ux_dirichlet(0)
         self.v_dirichlet = get_ux_dirichlet(1)
         if len(b_or) > 2:
             self.w_dirichlet = get_ux_dirichlet(2)
         self.vof_dirichlet = constantBC(1.)  # air
-        self.k_dirichlet = constantBC(0.)
-        self.dissipation_dirichlet = constantBC(0.)
-        self.p_advective = None
-        self.u_advective = None
-        self.v_advective = None
-        self.w_advective = None
-        self.vof_advective = None
         self.u_diffusive = constantBC(0.)
         self.v_diffusive = constantBC(0.)
         self.w_diffusive = constantBC(0.)
@@ -266,12 +244,64 @@ class BoundaryConditions:
                 self.w_dirichlet = get_inlet_ux_dirichlet(U[2])
         self.vof_dirichlet = inlet_vof_dirichlet
         self.p_advective = inlet_p_advective
-        self.u_diffusive = constantBC(0.)
-        self.v_diffusive = constantBC(0.)
-        self.w_diffusive = constantBC(0.)
 
-    def setHydrostaticPressureOutlet(self, rho, g, refLevel, pRef=0.0,
-                                     vert_axis=-1, air=1.0):
+    def setUnsteadyTwoPhaseVelocityInlet(self, U, eta, vert_axis=-1, air=1., water=0.):
+        """
+        Imposes a velocity profile lower than the sea level and an open
+        boundary for higher than the sealevel.
+        :arg U: Velocity vector at the global system.
+        :arg waterLevel: water level at global coordinate system.
+        :arg vert_axis: index of vertical in position vector, must always be
+                        aligned with gravity, by default set to 1].
+        :arg air: Volume fraction for air (1.0 by default).
+        :arg water: Volume fraction for water (0.0 by default).
+        Below the seawater level, the condition returns the _dirichlet and
+        p_advective condition according to the inflow velocity.
+        Above the sea water level, the condition returns the gravity as zero,
+        and sets _dirichlet condition to zero, only if there is a zero inflow
+        velocity component.
+        (!) This condition is best used for boundaries and gravity aligned with
+            one of the main axes.
+        """
+        self.reset()
+        U = np.array(U)
+
+        def get_inlet_ux_dirichlet(ux):
+            def ux_dirichlet(x, t):
+                if x[vert_axis] < eta(x,t):
+                    return ux(x,t)
+                else:
+                    return 0
+            return ux_dirichlet
+
+        def inlet_vof_dirichlet(x, t):
+            if x[vert_axis] < eta(x,t):
+                return water
+            else:
+                return air
+
+        def inlet_p_advective(x, t, u=U):
+            b_or = self._b_or[self._b_i]
+            u_p = np.sum(U*b_or)
+            # This is the normal velocity, based on the inwards boundary
+            # orientation -b_or
+            u_p = -u_p
+            if x[vert_axis] < eta(x,t):
+                return u_p
+            else:
+                return None
+
+        self.u_dirichlet = get_inlet_ux_dirichlet(U[0])
+        self.v_dirichlet = get_inlet_ux_dirichlet(U[1])
+        if len(U) == 3:
+                self.w_dirichlet = get_inlet_ux_dirichlet(U[2])
+        self.vof_dirichlet = inlet_vof_dirichlet
+        self.p_advective = inlet_p_advective
+
+
+
+    def setHydrostaticPressureOutlet(self, rho, g, refLevel, vof, pRef=0.0,
+                                     vert_axis=-1):
         self.reset()
         a0 = pRef - rho*g[vert_axis]*refLevel
         a1 = rho*g[vert_axis]
@@ -287,7 +317,7 @@ class BoundaryConditions:
         if len(g) == 3:
             self.w_dirichlet = get_outlet_v_dirichletel(2)
         self.p_dirichlet = linearBC(a0, a1, vert_axis)
-        self.vof_dirichlet = constantBC(air)
+        self.vof_dirichlet = constantBC(vof)
         self.u_diffusive = constantBC(0.)
         self.v_diffusive = constantBC(0.)
         self.w_diffusive = constantBC(0.)
@@ -335,30 +365,28 @@ class BoundaryConditions:
 # for regions
 
 class RelaxationZone:
-    def __init__(self, center_x, sign, u, v, w):
-        self.center_x = center_x
+    def __init__(self, domain, zone_type, sign, center_x, waves, windSpeed,
+                 epsFact_solid, dragAlphaTypes, dragBetaTypes, porosityTypes):
+        self.domain = domain
+        self.zone_type = zone_type
         self.sign = sign
-        self.u = u
-        self.v = v
-        self.w = w
-
-
-class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
-    """
-    Prescribe a velocity penalty scaling in a material zone via a
-    Darcy-Forchheimer penalty
-    :param zones: A dictionary mapping integer material types to Zones, where a
-    Zone is a named tuple specifying the x coordinate of the zone center and
-    the velocity components
-    """
-    def __init__(self, zones, shape, waves=None, wind=None):
-        assert isinstance(zones, dict)
-        self.zones = zones
-        self.shape = shape
+        self.center_x = center_x
         self.waves = waves
-        self.windVel = wind
-        shape.auxiliaryVariables += [self]
-                
+        self.windSpeed = windSpeed
+        if zone_type == 'absorption':
+            self.u = self.v = self.w = lambda x, t: 0.
+        elif zone_type == 'generation':
+            self.u = self.setGenerationFunctions(0)
+            self.v = self.setGenerationFunctions(1)
+            self.w = self.setGenerationFunctions(2)
+        else:
+            log('Wrong zone type: ' + self.zone_type)
+            sys.exit()
+        self.epsFact_solid = epsFact_solid
+        self.dragAlphaTypes = dragAlphaTypes
+        self.dragBetaTypes = dragBetaTypes
+        self.porosityTypes = porosityTypes
+
     def setGenerationFunctions(self, i):
         """
         Sets the functions necessary for generation zones
@@ -370,19 +398,33 @@ class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
         elif i == 2:
             s = 'z'
         def twp_flowVelocity(x, t):
-            vert_axis = self.shape.domain.nd - 1
-            waterSpeed = self.waves.u(x[0], x[1], x[2], t, s)[i]
+            vert_axis = self.domain.nd - 1
+            waterSpeed = self.waves.u(x[0], x[1], x[2], t, s)
             waveHeight = self.waves.eta(x[0], x[1], x[2], t)
             wavePhi = x[vert_axis] - waveHeight
-            he = self.shape.domain.Mesh.he
+            he = self.domain.Mesh.he
             # !!!!!!!!!!!!!!!!!!!!!!!
             # epsFact_consrv_heaviside should be called from context!
             # !!!!!!!!!!!!!!!!!!!!!!!
             epsFact_consrv_heaviside = 3.0
             H = smoothedHeaviside(epsFact_consrv_heaviside*he,
                                 wavePhi-epsFact_consrv_heaviside*he)
-            return H*self.windVel[0] + (1-H)*waterSpeed
+            return H*self.windSpeed[0] + (1-H)*waterSpeed
         return twp_flowVelocity
+
+
+class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
+    """
+    Prescribe a velocity penalty scaling in a material zone via a
+    Darcy-Forchheimer penalty
+    :param zones: A dictionary mapping integer material types to Zones, where a
+    Zone is a named tuple specifying the x coordinate of the zone center and
+    the velocity components
+    """
+    def __init__(self, zones, nd):
+        assert isinstance(zones, dict)
+        self.zones = zones
+        self.nd = nd
 
     def calculate(self):
         for l, m in enumerate(self.model.levelModelList):
@@ -398,7 +440,7 @@ class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
                         coeff.q_phi_solid[eN, k] = sign*(zone.center_x-x[0])
                         coeff.q_velocity_solid[eN, k, 0] = zone.u(x, t)
                         coeff.q_velocity_solid[eN, k, 1] = zone.v(x, t)
-                        if self.shape.domain.nd > 2:
+                        if self.nd > 2:
                             coeff.q_velocity_solid[eN, k, 2] = zone.w(x, t)
             m.q['phi_solid'] = m.coefficients.q_phi_solid
             m.q['velocity_solid'] = m.coefficients.q_velocity_solid
