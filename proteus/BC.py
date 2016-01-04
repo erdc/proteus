@@ -94,11 +94,11 @@ class BoundaryConditions:
         This function should be used only on BC flag 0 (index 0 in the list
         domain.bc)
         """
+        self.reset()
         self.vof_advective = constantBC(0.)
         self.u_diffusive = constantBC(0.)
         self.v_diffusive = constantBC(0.)
         self.w_diffusive = constantBC(0.)
-        self.reset()
 
     def setTank(self):
         b_or = self._b_or[self._b_i].tolist()
@@ -402,7 +402,7 @@ class RelaxationZone:
             waterSpeed = self.waves.u(x[0], x[1], x[2], t, s)
             waveHeight = self.waves.eta(x[0], x[1], x[2], t)
             wavePhi = x[vert_axis] - waveHeight
-            he = self.domain.Mesh.he
+            he = self.domain.MeshOptions.he
             # !!!!!!!!!!!!!!!!!!!!!!!
             # epsFact_consrv_heaviside should be called from context!
             # !!!!!!!!!!!!!!!!!!!!!!!
