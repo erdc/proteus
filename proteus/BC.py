@@ -269,7 +269,7 @@ class BoundaryConditions:
         def get_inlet_ux_dirichlet(ux):
             def ux_dirichlet(x, t):
                 if x[vert_axis] < eta(x,t):
-                    return ux(x,t)
+                    return ux
                 else:
                     return 0
             return ux_dirichlet
