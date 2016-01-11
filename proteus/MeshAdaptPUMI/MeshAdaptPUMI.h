@@ -43,7 +43,15 @@ class MeshAdaptPUMIDrvr{
 
   //Element Residual Method
   void get_local_error();
+  void computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf);
   void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux);
+  void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, double * endflux);
+  int getSimmetrixBC(const char* geomFile, const char* modelFile);
+  void removeBCData();
+  char* geomFileName; 
+  char* modelFileName; 
+  char* meshFileName; 
+  
   //tags used to identify types of BC
   apf::MeshTag* BCtag[4];
   apf::MeshTag* DBCtag[4];
@@ -65,6 +73,7 @@ class MeshAdaptPUMIDrvr{
 
   double rho[2], nu[2];
   double g[3];
+  apf::MeshTag* diffFlux;
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
   apf::Field* solution;
