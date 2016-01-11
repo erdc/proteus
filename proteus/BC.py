@@ -134,6 +134,9 @@ class BoundaryConditions:
         self.v_advective = constantBC(0.)
         self.w_advective = constantBC(0.)
         self.k_dirichlet = constantBC(0.)
+        self.u_diffusive = constantBC(0.)
+        self.v_diffusive = constantBC(0.)
+        self.w_diffusive = constantBC(0.)
         self.dissipation_diffusive = constantBC(0.)
 
     def setClosed(self):
