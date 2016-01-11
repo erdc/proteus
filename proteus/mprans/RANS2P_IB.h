@@ -766,10 +766,24 @@ namespace proteus
 	    {
 	      for(int l=0;l<beam_quadOrder; l++)
 		{
-		  delt= delta_h((x-xq[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l])/Beam_h[I*nBeamElements+k])*delta_h((y-yq[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l])/Beam_h[I*nBeamElements+k])*delta_h((z-zq[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l])/Beam_h[I*nBeamElements+k])/(Beam_h[I*nBeamElements+k]*Beam_h[I*nBeamElements+k]*Beam_h[I*nBeamElements+k]);
-		  mom_u_source += beam_Cd*rho*beamRadius[I]*u*vel*delt*dV_beam[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l];
-		  mom_v_source += beam_Cd*rho*beamRadius[I]*v*vel*delt*dV_beam[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l];
-		  mom_w_source += beam_Cd*rho*beamRadius[I]*w*vel*delt*dV_beam[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l];
+		  //delt= delta_h((x-xq[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l])/Beam_h[I*nBeamElements+k])*delta_h((y-yq[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l])/Beam_h[I*nBeamElements+k])*delta_h((z-zq[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l])/Beam_h[I*nBeamElements+k])/(Beam_h[I*nBeamElements+k]*Beam_h[I*nBeamElements+k]*Beam_h[I*nBeamElements+k]);
+		  delt = delta_h((x-xq[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l])/Beam_h[I*nBeamElements+k]);
+		     if (delt>0.0)
+		       {
+			 delt *= delta_h((y-yq[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l])/Beam_h[I*nBeamElements+k]);
+			 if (delt > 0.0)
+			   {
+			     delt *= delta_h((z-zq[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l])/Beam_h[I*nBeamElements+k]);
+			     
+			     if (delt > 0.0)
+			       {
+				 delt = delt/(Beam_h[I*nBeamElements+k]*Beam_h[I*nBeamElements+k]*Beam_h[I*nBeamElements+k]);
+				 mom_u_source += beam_Cd*rho*beamRadius[I]*u*vel*delt*dV_beam[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l];
+				 mom_v_source += beam_Cd*rho*beamRadius[I]*v*vel*delt*dV_beam[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l];
+				 mom_w_source += beam_Cd*rho*beamRadius[I]*w*vel*delt*dV_beam[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l];
+			       }
+			   }
+		       }
 		  /* q1[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l] += beam_Cd*rho*beamRadius[I]*u*vel*delt*dV; */
 		  /* q2[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l] += beam_Cd*rho*beamRadius[I]*v*vel*delt*dV; */
 		  /* q3[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l] += beam_Cd*rho*beamRadius[I]*w*vel*delt*dV; */
@@ -828,13 +842,17 @@ inline
 		    h_save = 0.5*Beam_h[I*nBeamElements+k];
 		  else
 		    h_save = Beam_h[I*nBeamElements+k];
-		  		  delt= delta_h((x-xq[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l])/h_save)*delta_h((y-yq[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l])/h_save)*delta_h((z-zq[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l])/h_save)/(h_save*h_save*h_save);
+		  
+		  delt= delta_h((x-xq[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l])/h_save)*delta_h((y-yq[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l])/h_save)*delta_h((z-zq[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l])/h_save)/(h_save*h_save*h_save);
 		  /* mom_u_source += beam_Cd*rho*beamRadius[I]*u*vel*delt*dV_beam[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l]; */
 		  /* mom_v_source += beam_Cd*rho*beamRadius[I]*v*vel*delt*dV_beam[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l]; */
 		  /* mom_w_source += beam_Cd*rho*beamRadius[I]*w*vel*delt*dV_beam[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l]; */
-		  q1[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l] += beam_Cd*rho*beamRadius[I]*u*vel*delt*dV;
-		  q2[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l] += beam_Cd*rho*beamRadius[I]*v*vel*delt*dV;
-		  q3[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l] += (beam_Cd*rho*beamRadius[I]*w*vel+buoy)*delt*dV;
+		  if (delt > 0.0)
+		    {
+		      q1[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l] += beam_Cd*rho*beamRadius[I]*u*vel*delt*dV;
+		      q2[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l] += beam_Cd*rho*beamRadius[I]*v*vel*delt*dV;
+		      q3[I*nBeamElements*beam_quadOrder+beam_quadOrder*k+l] += (beam_Cd*rho*beamRadius[I]*w*vel+buoy)*delt*dV;
+		    }
 		}
 	    }
 	}
