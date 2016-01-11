@@ -19,6 +19,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         MeshAdaptPUMIDrvr(double, double, int, char*, char*)
         int numIter, numAdaptSteps
         int loadModelAndMesh(char *, char*)
+        int getSimmetrixBC(char*, char*)
         int constructFromSerialPUMIMesh(Mesh&)
         int constructFromParallelPUMIMesh(Mesh&, Mesh&)
         int updateMaterialArrays(Mesh&, int, int)
@@ -43,6 +44,8 @@ cdef class MeshAdaptPUMI:
         del self.thisptr
     def loadModelAndMesh(self, geomName, meshName):
         return self.thisptr.loadModelAndMesh(geomName, meshName)
+    def getSimmetrixBC(self,geomFile,modelFile):
+        return self.thisptr.getSimmetrixBC(geomFile,modelFile)
     def constructFromSerialPUMIMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.constructFromSerialPUMIMesh(cmesh_ptr.mesh)

@@ -85,17 +85,6 @@ double getMPvalue(double field_val,double val_0, double val_1)
   return val_0*(1-field_val)+val_1*field_val;
 }
 
-/*
-bool isInTet(apf::Mesh* mesh, apf::MeshEntity* elem, apf::Vector3 pt);
-apf::Vector3 getFaceNormal(apf::Mesh* mesh, apf::MeshEntity* face);
-double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf);
-double getStarerror(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, apf::Field* estimate);
-double a_k(apf::Matrix3x3 u, apf::Matrix3x3 v,double nu);
-double b_k(double a, apf::Matrix3x3 b);
-double c_k(apf::Vector3 a, apf::Matrix3x3 b, apf::Vector3 c);
-double getDotProduct(apf::Matrix3x3 a, apf::Matrix3x3 b);
-*/
-
 apf::Vector3 getFaceNormal(apf::Mesh* mesh, apf::MeshEntity* face){ //get the normal vector
   apf::Vector3 normal;
   apf::Adjacent verts;
@@ -238,7 +227,8 @@ double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Fie
       }
       else if(casenumber ==1){
       //Couette Flow
-        u_exact = 1.0*xyz[2]/Lz;
+        //u_exact = 1.0*xyz[2]/Lz;
+        u_exact = 2e-3*xyz[2]/Lz;
         p_exact = 0;
       }
 
@@ -419,6 +409,7 @@ void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::
         orientation = 1;
       else
         orientation = 0;
+//      apf::getOrientation(m,ent,bent,adjcount,orientation,0);
 
       //begin calculation of flux
       b_elem = apf::createMeshElement(m,bent);
@@ -442,12 +433,11 @@ void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::
         int tag = m->getModelTag(me);
         apf::ModelEntity* boundary_face = m->findModelEntity(nsd-1,tag);
 
-        int BCtype[nsd];
-        double fluxdata[4][numbqpt];
         if(me==boundary_face){
+          int BCtype[4];
+          double fluxdata[4][numbqpt];
           for(int i=1;i<nsd+1;i++){ //ignores 0th index because that's pressure
             m->getIntTag(bent,BCtag[i],&BCtype[i]);                 
-            m->getDoubleTag(bent,fluxtag[i],&(fluxdata[i][0]));
           }
           if((BCtype[1]+BCtype[2]+BCtype[3] != 3) && BCtype[1] == 1 ){
             std::cerr << "diffusive flux not fully specified on face " << localNumber(bent) << '\n';
@@ -455,8 +445,22 @@ void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::
             abort();
           }        
           if(BCtype[1]+BCtype[2]+BCtype[3] == 3){
+            for(int i=1;i<nsd+1;i++)
+              m->getDoubleTag(bent,fluxtag[i],&(fluxdata[i][0]));
             bflux = {fluxdata[1][l],fluxdata[2][l],fluxdata[3][l]};
             bflux = bflux-identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1)*normal;
+/*
+if(comm_rank==0){
+//std::cout<<"Shared? "<<m->isShared(bent)<<std::endl;
+std::cout<<"BC Types "<<BCtype[1]<<" "<<BCtype[2]<<" "<<BCtype[3]<<std::endl;
+std::cout<<"Region ID "<<localNumber(ent)<<" "<<normal<<std::endl;
+std::cout<<"Bflux "<<bflux<<std::endl;
+tempbflux = (tempgrad_velo+apf::transpose(tempgrad_velo))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
+  -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1);
+bflux = tempbflux*normal;
+std::cout<<"Bflux 2 "<<bflux<<std::endl;
+}
+*/
           }
           else{
             tempbflux = (tempgrad_velo+apf::transpose(tempgrad_velo))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
@@ -471,19 +475,6 @@ void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::
         } //end if boundary
         bflux = bflux*weight*Jdet;
         bflux.toArray(&(tempflux[l*nsd]));
-int eID=localNumber(ent);
-int fID=localNumber(bent);
-if(fID==565){
-std::cout<<"Reg "<<eID<<" Face "<<fID<<std::endl;
-apf::Vector3 xyz;
-apf::mapLocalToGlobal(tempelem,bqptl,xyz);
-std::cout<<"Local "<<bqptl<<" Global "<<xyz<<std::endl;
-std::cout<<"Gradient "<<tempgrad_velo<<std::endl;
-std::cout<<"Pressure "<<apf::getScalar(temppres,bqptl)<<std::endl;
-std::cout<<"Weight "<<weight<<" Jdet "<<Jdet<<std::endl;
-std::cout<<"Normal "<<normal<<std::endl;
-std::cout<<"Bflux "<<bflux<<std::endl;
-}
       }
       flux = (double*) calloc(numbqpt*nsd*2,sizeof(double));
       m->getDoubleTag(bent,diffFlux,flux);
@@ -491,35 +482,21 @@ std::cout<<"Bflux "<<bflux<<std::endl;
         flux[orientation*numbqpt*nsd+i] = tempflux[i];
       }
       m->setDoubleTag(bent,diffFlux,flux);
-
-int fID=localNumber(bent);
-if(fID==565){
-double*testflux;
-testflux = (double*) calloc(numbqpt*nsd*2,sizeof(double));
-m->getDoubleTag(bent,diffFlux,testflux);
-for(int s=0;s<numbqpt*nsd*2;s++){
-std::cout<<"testFlux "<<s<<" "<<testflux[s]<<std::endl;
-}
-free(testflux);
-}
       free(flux);
       apf::destroyMeshElement(tempelem);apf::destroyElement(tempvelo);apf::destroyElement(temppres); apf::destroyElement(tempvoff);
       
       //Parallel Communications
       apf::ModelEntity* me=m->toModel(bent);
-      int tag = m->getModelTag(me);
-      apf::ModelEntity* boundary_face = m->findModelEntity(nsd-1,tag);
+      apf::ModelEntity* boundary_face = m->findModelEntity(nsd-1,m->getModelTag(me));
       apf::Copies remotes;
-      apf::Parts residence;
       if(m->isShared(bent))
       {
-        std::cout<<"PARALLEL PCU"<<std::endl;
         m->getRemotes(bent,remotes);
         for(apf::Copies::iterator it=remotes.begin(); it!=remotes.end();++it)
         {
           PCU_COMM_PACK(it->first, it->second);
           PCU_COMM_PACK(it->first, orientation);
-          PCU_Comm_Pack(it->first, tempflux,numbqpt*nsd);
+          PCU_COMM_PACK(it->first, tempflux);
         }
       } //end if
       ent_count++;
@@ -528,11 +505,12 @@ free(testflux);
   m->end(iter);
 
   PCU_Comm_Send(); 
+  flux = (double*) calloc(numbqpt*nsd*2,sizeof(double));
   while(PCU_Comm_Receive())
   {
     PCU_COMM_UNPACK(bent);
     PCU_COMM_UNPACK(orientation);
-    PCU_Comm_Unpack(tempflux,numbqpt*nsd);
+    PCU_COMM_UNPACK(tempflux);
     m->getDoubleTag(bent,diffFlux,flux);
     for (int i=0;i<numbqpt*nsd;i++){
       flux[orientation*numbqpt*nsd+i] = flux[orientation*numbqpt*nsd+i]+tempflux[i];
@@ -540,6 +518,7 @@ free(testflux);
     m->setDoubleTag(bent,diffFlux,flux);
   }
   PCU_Barrier();
+  free(flux);
   std::cout<<"End computeDiffusiveFlux()"<<std::endl;
 }
 
@@ -653,20 +632,6 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf:
                 tempbflux = ((tempgrad_velo[idx_neigh]+apf::transpose(tempgrad_velo[idx_neigh]))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
                   -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1))*weight*Jdet*flux_weight;
                 bflux = tempbflux*normal;
-
-int eID=localNumber(ent);
-int fID=localNumber(bent);
-
-if(eID==0 && fID==565){
-double*testflux;
-testflux = (double*) calloc(numqpt*nsd*2,sizeof(double));
-m->getDoubleTag(bent,diffFlux,testflux);
-std::cout<<"Reg "<< eID<<" Face "<<fID<<" Qpt "<<l<<std::endl;
-for(int tdex=0;tdex<nsd;tdex++){
-  std::cout<<"bflux "<<bflux[tdex]<<" tag data "<<testflux[l*nsd+tdex]<<" orientation 1 "<<testflux[numqpt*nsd+l*nsd+tdex]<<std::endl;
-}
-free(testflux);
-}
               }
 
               for(int i=0;i<nsd;i++){ 
@@ -966,7 +931,7 @@ double err_est_total=0;
       apf::getVectorGrad(velo_elem,qpt,grad_vel);
       //vector gradient is given in the transpose of the usual definition, need to retranspose it
       grad_vel = apf::transpose(grad_vel);
-      if(testcount==eID){
+      if(comm_rank==0 && testcount==eID){
         apf::Vector3 xyz;
         apf::mapLocalToGlobal(element,qpt,xyz);
         std::cout<<"Local "<<qpt<<" Global "<<xyz<<std::endl;
@@ -1163,13 +1128,20 @@ if(testcount==eID){
 
 testcount++;
   } //end element loop
+
+//Get the errors
+PCU_Barrier();
+PCU_Add_Doubles(&err_est_total,1);
 star_total = -2*(0.5*(err_est_total)-star_total); //before square root is taken
 err_est_total = sqrt(err_est_total);
 L2_total = sqrt(L2_total);
 if(star_total<0){ star_total=star_total*-1;std::cout<<"star err Was negative "<<std::endl;}
 star_total = sqrt(star_total);
+if(comm_rank==0){
+std::cout<<std::setprecision(10)<<std::endl;
 std::cout<<"Err_est "<<err_est_total<<" L2 "<<L2_total<<" Average "<<err_est_total/L2_total<<std::endl;
 std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est_total/star_total<<std::endl;
+}
   m->end(iter);
 
   //store error field onto vertices
@@ -1180,10 +1152,36 @@ std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est
   }
   m->end(iter_vtx);
 */
-  //getERMSizeField(err_est_total);
+  getERMSizeField(err_est_total);
   apf::destroyElement(visc_elem);apf::destroyElement(pres_elem);apf::destroyElement(velo_elem);apf::destroyElement(est_elem);
   apf::destroyField(voff);  apf::destroyField(visc); apf::destroyField(velf); apf::destroyField(pref); apf::destroyField(estimate);
+  removeBCData();
   printf("It cleared the function.\n");
+  PCU_Barrier();
+  //abort();
 }
 
-
+void MeshAdaptPUMIDrvr::removeBCData()
+{
+std::cout<<"Start of the function"<<std::endl;
+  apf::MeshEntity* ent;   
+  apf::MeshIterator* fIter = m->begin(2);
+  while(ent=m->iterate(fIter))
+  {
+    for(int i=0;i<4;i++)
+    {
+      if(m->hasTag(ent,BCtag[i]))
+        m->removeTag(ent,BCtag[i]);
+      if(i>0 && m->hasTag(ent,fluxtag[i]))
+        m->removeTag(ent,fluxtag[i]);
+    }
+  }
+  m->end(fIter);
+std::cout<<"Start of destruction"<<std::endl;
+  for(int i=0;i<4;i++)
+  {
+    m->destroyTag(BCtag[i]);
+    if(i>0)
+      m->destroyTag(fluxtag[i]);
+  }
+}
