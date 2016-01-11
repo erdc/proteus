@@ -312,7 +312,7 @@ class Tank3D(ShapeRANS):
 
     def __init__(self, domain, dim=(0., 0., 0.), from_0=True, leftSponge=None,
                  rightSponge=None, frontSponge=None, backSponge=None):
-        super(ShapeRANS, self).__init__(domain, nd=3)
+        super(Tank3D, self).__init__(domain, nd=3)
         self.__class__.count += 1
         self.name = "tank3d" + str(self.__class__.count)
         self.from_0 = from_0
@@ -1054,8 +1054,8 @@ def assembleDomain(domain):
             domain.segments += list(shape.segments+start_vertex)
             domain.segmentFlags += list(shape.segmentFlags+start_flag)
         if shape.facets is not None:
-            domain.facets += list(shape.facets+start_vertex).tolist()
-            domain.facetFlags += list(shape.facetFlags+start_flag).tolist()
+            domain.facets += list(shape.facets+start_vertex)
+            domain.facetFlags += list(shape.facetFlags+start_flag)
         if shape.regions is not None:
             domain.regions += list(shape.regions)
             domain.regionFlags += list(shape.regionFlags+start_rflag)
