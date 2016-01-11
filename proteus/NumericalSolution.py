@@ -910,12 +910,12 @@ class NS_base:  # (HasTraits):
                         #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
                         #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
                         #    diff_flux)
-                        p.domain.PUMIMesh.transferBCtagsToProteus(
-                            self.modelList[0].levelModelList[0].numericalFlux.isDiffusiveFluxBoundary[idx],
-                            idx,
-                            self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
-                            self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
-                            diff_flux)
+                        #p.domain.PUMIMesh.transferBCtagsToProteus(
+                        #    self.modelList[0].levelModelList[0].numericalFlux.isDiffusiveFluxBoundary[idx],
+                        #    idx,
+                        #    self.modelList[0].levelModelList[0].numericalFlux.mesh.exteriorElementBoundariesArray,
+                        #    self.modelList[0].levelModelList[0].numericalFlux.mesh.elementBoundaryElementsArray,
+                        #    diff_flux)
 
                     #
                     # Should we put in a hook here for forcing refinements?
