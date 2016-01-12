@@ -154,7 +154,7 @@ class BoundaryConditions:
             else:
                 return constantBC(0.)
 
-        if orientation is None and self._b_or is not None:
+        if orientation is None and self._b_or[self._b_i] is not None:
             b_or = self._b_or[self._b_i]
         elif orientation is not None:
             b_or = orientation
