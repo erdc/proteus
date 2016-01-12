@@ -385,6 +385,7 @@ void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::
   m->end(iter);
   free(flux);
 
+std::cout<<"Initialized flux"<<std::endl;
   //loop over regions
   PCU_Comm_Begin();
   iter = m->begin(nsd);
@@ -449,18 +450,6 @@ void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::
               m->getDoubleTag(bent,fluxtag[i],&(fluxdata[i][0]));
             bflux = {fluxdata[1][l],fluxdata[2][l],fluxdata[3][l]};
             bflux = bflux-identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1)*normal;
-/*
-if(comm_rank==0){
-//std::cout<<"Shared? "<<m->isShared(bent)<<std::endl;
-std::cout<<"BC Types "<<BCtype[1]<<" "<<BCtype[2]<<" "<<BCtype[3]<<std::endl;
-std::cout<<"Region ID "<<localNumber(ent)<<" "<<normal<<std::endl;
-std::cout<<"Bflux "<<bflux<<std::endl;
-tempbflux = (tempgrad_velo+apf::transpose(tempgrad_velo))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
-  -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1);
-bflux = tempbflux*normal;
-std::cout<<"Bflux 2 "<<bflux<<std::endl;
-}
-*/
           }
           else{
             tempbflux = (tempgrad_velo+apf::transpose(tempgrad_velo))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
@@ -504,6 +493,7 @@ std::cout<<"Bflux 2 "<<bflux<<std::endl;
   } //end loop over regions
   m->end(iter);
 
+std::cout<<"Sending flux"<<std::endl;
   PCU_Comm_Send(); 
   flux = (double*) calloc(numbqpt*nsd*2,sizeof(double));
   while(PCU_Comm_Receive())
