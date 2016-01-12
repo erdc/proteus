@@ -16,15 +16,16 @@ cdef extern from "cmeshToolsModule.h":
 
 cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
     cdef cppclass MeshAdaptPUMIDrvr:
-        MeshAdaptPUMIDrvr(double, double, int, char*)
+        MeshAdaptPUMIDrvr(double, double, int, char*, char*)
         int numIter, numAdaptSteps
         int loadModelAndMesh(char *, char*)
+        int getSimmetrixBC(char*)
         int constructFromSerialPUMIMesh(Mesh&)
         int constructFromParallelPUMIMesh(Mesh&, Mesh&)
         int updateMaterialArrays(Mesh&, int, int)
         int transferFieldToPUMI(char*, double*, int, int)
         int transferFieldToProteus(char*, double*, int, int)
-        int transferPropertiesToPUMI(double*, double*)
+        int transferPropertiesToPUMI(double*, double*,double*)
         int transferBCtagsToProteus(int*, int, int*, int*,double*)
         int transferBCsToProteus()
         int adaptPUMIMesh()
@@ -36,13 +37,15 @@ cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
     cdef double hmax, hmin
     cdef int numIter, numAdaptSteps
-    def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="farhad"):
+    def __cinit__(self, hmax=100.0, hmin=1e-8, numIter=10, sfConfig="farhad",maType="isotropic"):
         logEvent("MeshAdaptPUMI: hmax = {0} hmin = {1} numIter = {2}".format(hmax,hmin,numIter))
-        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig)
+        self.thisptr = new MeshAdaptPUMIDrvr(hmax, hmin, numIter, sfConfig,maType)
     def __dealloc__(self):
         del self.thisptr
     def loadModelAndMesh(self, geomName, meshName):
         return self.thisptr.loadModelAndMesh(geomName, meshName)
+    def getSimmetrixBC(self,modelFile):
+        return self.thisptr.getSimmetrixBC(modelFile)
     def constructFromSerialPUMIMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.constructFromSerialPUMIMesh(cmesh_ptr.mesh)
@@ -59,10 +62,11 @@ cdef class MeshAdaptPUMI:
     def transferFieldToProteus(self, name, np.ndarray[np.double_t,ndim=2,mode="c"] outArray):
         outArray = np.ascontiguousarray(outArray)
         return self.thisptr.transferFieldToProteus(name, &outArray[0,0], outArray.shape[1], outArray.shape[0])
-    def transferPropertiesToPUMI(self, np.ndarray[np.double_t,ndim=1,mode="c"] rho, np.ndarray[np.double_t,ndim=1,mode="c"] nu):
+    def transferPropertiesToPUMI(self, np.ndarray[np.double_t,ndim=1,mode="c"] rho, np.ndarray[np.double_t,ndim=1,mode="c"] nu, np.ndarray[np.double_t,ndim=1,mode="c"] g):
         rho = np.ascontiguousarray(rho)
         nu = np.ascontiguousarray(nu)
-        return self.thisptr.transferPropertiesToPUMI(&rho[0],&nu[0])
+        g = np.ascontiguousarray(g)
+        return self.thisptr.transferPropertiesToPUMI(&rho[0],&nu[0],&g[0])
     def transferBCtagsToProteus(self, np.ndarray[int,ndim=2,mode="c"] tagArray, int idx, np.ndarray[int,ndim=1,mode="c"] ebN, np.ndarray[int, ndim=2, mode="c"] eN_global, np.ndarray[np.double_t,ndim=2,mode="c"] fluxBC):
         tagArray = np.ascontiguousarray(tagArray)
         ebN = np.ascontiguousarray(ebN)
