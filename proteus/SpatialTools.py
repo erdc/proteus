@@ -394,7 +394,7 @@ class CustomShape(Shape):
     :param holes: set of hole coordinates (list/array)
     :param regions: set of regions of the shape (list/array)
     :param boundaryTags: set of boundary tags to flag shape elements (dict)
-    :param boundaryOrientations: set of boundary orientations (list/array)
+    :param boundaryOrientations: set of boundary orientations (dict)
     """
     count = 0
 
@@ -424,15 +424,11 @@ class CustomShape(Shape):
             self.regionFlags = np.array(regionFlags)
         self.BC_dict = {}
         self.BC_list = [None]*len(boundaryTags)
-        if boundaryOrientations is not None:
-            b_or = []
-        else:
-            b_or = None
-            b_i = None
+        b_or = [None]*len(boundaryTags)
         for tag, flag in boundaryTags.iteritems():
             b_i = flag-1  # start at index 0
             if boundaryOrientations is not None:
-                b_or += [boundaryOrientations[tag]]
+                b_or[b_i] = boundaryOrientations[tag]
             self.BC_dict[tag] = bc.BoundaryConditions(b_or=b_or, b_i=b_i)
             self.BC_list[b_i] = self.BC_dict[tag]
         self.BC = BCContainer(self.BC_dict)
