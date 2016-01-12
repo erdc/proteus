@@ -33,7 +33,6 @@ int MeshAdaptPUMIDrvr::transferSolutionToPUMI(double* inArray, int nVar, int nN)
     for(int j = 0; j < nVar; j++)
       tmp[j] = inArray[j * nN + i];
 
-    //int casenum = 2;
     //Rewrite only necessary components
     if(casenum ==0){
     //Poiseuille Flow dpdy=-1
@@ -49,7 +48,7 @@ int MeshAdaptPUMIDrvr::transferSolutionToPUMI(double* inArray, int nVar, int nN)
     //Couette 
              m->getPoint(v,0,pt);
              double Lz = 0.05;
-             double Uinf = 1.0;//2e-3;
+             double Uinf = 2e-3;
              tmp[0] =0 ; //pressure
              tmp[1] =0; //u
              tmp[2] = Uinf*pt[2]/Lz;
