@@ -23,6 +23,7 @@ int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double const* inArr
 {
   assert(nN == static_cast<int>(m->count(0)));
   apf::Field* f = m->findField(name);
+  solution = f;
   if (!strcmp(name, "coordinates")) {
     assert(!f); /* coordinates are special, not found by regular findField */
     f = m->getCoordinateField();
@@ -40,6 +41,7 @@ int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double const* inArr
   apf::NewArray<double> tmp(nVar);
   apf::MeshEntity* v;
   apf::MeshIterator* it = m->begin(0);
+  apf::Vector3 pt;
   while ((v = m->iterate(it))) {
     int i = localNumber(v);
     for(int j = 0; j < nVar; j++)
@@ -66,7 +68,7 @@ int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double const* inArr
              tmp[2] = Uinf*pt[2]/Lz;
              tmp[3] =0;
      }
-    apf::setComponents(solution, v, 0, &tmp[0]); 
+    apf::setComponents(f, v, 0, &tmp[0]); 
   }
   m->end(it);
   return 0;

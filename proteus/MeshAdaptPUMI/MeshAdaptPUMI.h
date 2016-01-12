@@ -75,6 +75,7 @@ class MeshAdaptPUMIDrvr{
   apf::MeshTag* diffFlux;
   apf::GlobalNumbering* global[4];
   apf::Numbering* local[4];
+  apf::Field* solution;
   apf::Field* err_reg; //error field from ERM
   /* this field stores isotropic size */
   apf::Field* size_iso;

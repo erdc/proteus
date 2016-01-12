@@ -32,6 +32,8 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int dumpMesh(Mesh&)
         int getERMSizeField(double)
         double getMinimumQuality()
+        double getTotalMass()
+        double getMPvalue(double,double, double)
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
@@ -82,3 +84,5 @@ cdef class MeshAdaptPUMI:
         return self.thisptr.dumpMesh(cmesh_ptr.mesh)
     def getERMSizeField(self, err_total):
         return self.thisptr.getERMSizeField(err_total);
+    def getMPvalue(self,field_val,val_0,val_1):
+        return self.thisptr.getMPvalue(field_val,val_0,val_1)
