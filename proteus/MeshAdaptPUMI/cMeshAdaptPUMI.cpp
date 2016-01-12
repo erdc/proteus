@@ -72,19 +72,16 @@ Temporary function used to read in BC from Simmetrix Model
 */
 int MeshAdaptPUMIDrvr::getSimmetrixBC(const char* modelFile)
 {
-  if(geomFileName == NULL)
+  if(modelFileName == NULL)
   {
     modelFileName=(char *) malloc(sizeof(char) * strlen(modelFile));
     strcpy(modelFileName,modelFile);
   }
   pGModel model = 0;
-
-  pProgress prog;
-  prog = Progress_new();
-  model=GM_load(modelFile,NULL,prog);
+  model=GM_load(modelFile,NULL,NULL);
 
   pAManager attmngr = SModel_attManager(model);
-  pACase acase = AMAN_findCase(attmngr, "geom");
+  pACase acase = AMAN_findCaseByType(attmngr, "problem definition");
   if (acase){
      std::cout<<"Found case, setting the model"<<std::endl;
      AttCase_setModel(acase,model);
@@ -92,7 +89,7 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC(const char* modelFile)
       std::cout<<"Case not found, rename case to geom\n"<<std::endl;
       exit(1);
   }
-  AttCase_associate(acase,prog);
+  AttCase_associate(acase,NULL);
 
   pGFace gFace;
   GFIter gfIter = GM_faceIter(model);
@@ -195,7 +192,6 @@ std::cout<<"Boundary label "<<label[idx]<<std::endl;
   }//end while
   m->end(fIter);
   AMAN_release( attmngr );
-  //GM_release(model);
   std::cout<<"Finished reading and storing diffusive flux BCs\n"; 
   return 0;
 } 
