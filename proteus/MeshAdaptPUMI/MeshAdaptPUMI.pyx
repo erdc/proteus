@@ -44,7 +44,7 @@ cdef class MeshAdaptPUMI:
         del self.thisptr
     def loadModelAndMesh(self, geomName, meshName):
         return self.thisptr.loadModelAndMesh(geomName, meshName)
-    def getSimmetrixBC(self,geomFile,modelFile):
+    def getSimmetrixBC(self,modelFile):
         return self.thisptr.getSimmetrixBC(modelFile)
     def constructFromSerialPUMIMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
