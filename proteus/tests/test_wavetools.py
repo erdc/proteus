@@ -96,7 +96,7 @@ class TestAuxFunctions(unittest.TestCase):
         phi = 3.14/5.
         amplitude =0.2
         eta = amplitude*cos(kDir[0]*x+kDir[1]*y+kDir[2]*z - omega*t +phi)
-        self.assertTrue((eta - eta_mode(x,y,z,t,kDir,omega,phi,amplitude)==0.))# check eta
+        self.assertTrue((eta - eta_mode([x,y,z],t,kDir,omega,phi,amplitude)==0.))# check eta
     def testVelMode(self): # Checking particle velocities
         from proteus.WaveTools import vel_mode
 
@@ -114,9 +114,7 @@ class TestAuxFunctions(unittest.TestCase):
         t= 0.
         kAbs = 2*pi
         for i in range(4):
-            U_x = vel_mode(x,y,z,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,"x")
-            U_y = vel_mode(x,y,z,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,"y")
-            U_z = vel_mode(x,y,z,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,"z")
+            U_x, U_y, U_z = vel_mode([x,y,z],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir)
             x+= 0.25
             # Checking velocity signs with quadrants
             if i ==0:
@@ -134,7 +132,7 @@ class TestAuxFunctions(unittest.TestCase):
         #Checking that the code does not allow z to be outside (-d,0)
 #Checking vertical coherency
 # U_z = 0 at z = mwl-d
-        self.assertTrue(vel_mode(x,y,1.,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,"z")==0.)
+        self.assertTrue(vel_mode([x,y,1.],t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir)[2]==0.)
     
     def testTophat(self):    
         from proteus.WaveTools import tophat
@@ -317,10 +315,8 @@ class VerifyMonoChromaticLinearWaves(unittest.TestCase):
         y = random.random()*200. - 100.
         z = mwl - depth + random.random()*( depth)
         t =  random.random()*200. - 100.
-        eta = a.eta(x,y,z,t)
-        ux = a.u(x,y,z,t,"x")
-        uy = a.u(x,y,z,t,"y")
-        uz = a.u(x,y,z,t,"z")
+        eta = a.eta([x, y, z], t)
+        ux, uy, uz = a.u([x, y, z], t)
 
         omega = 2.*pi/period
 # dispersion and setDirVector are tested above
@@ -365,10 +361,8 @@ class VerifyMonoChromaticFentonWaves(unittest.TestCase):
         y = random.random()*200. - 100.
         z =  mwl - depth + random.random()*( depth)
         t =  random.random()*200. - 100.
-        eta = a.eta(x,y,z,t)
-        ux = a.u(x,y,z,t,"x")
-        uy = a.u(x,y,z,t,"y")
-        uz = a.u(x,y,z,t,"z")
+        eta = a.eta([x, y, z], t)
+        ux, uy, uz = a.u([x, y, z], t)
         omega = 2.*pi/period
 # setDirVector are tested above
         from proteus.WaveTools import setDirVector
@@ -471,10 +465,8 @@ class VerifyRandomWaves(unittest.TestCase):
         z =  mwl - depth + random.random()*( depth)
         t =  random.random()*200. - 100.
         # Just loading functions
-        eta = a.eta(x,y,z,t)
-        ux = a.u(x,y,z,t,"x")
-        uy = a.u(x,y,z,t,"y")
-        uz = a.u(x,y,z,t,"z")
+        eta = a.eta([x, y, z], t)
+        ux, uy, uz = a.u([x, y, z], t)
 
         # Testing with a specific phi array
         a= RandomWaves(
@@ -490,10 +482,8 @@ class VerifyRandomWaves(unittest.TestCase):
             spectral_params =  {"gamma": gamma, "TMA": TMA,"depth": depth}, 
             phi = phi# random words will result in error and return the available spectra 
     )
-        eta = a.eta(x,y,z,t)
-        ux = a.u(x,y,z,t,"x")
-        uy = a.u(x,y,z,t,"y")
-        uz = a.u(x,y,z,t,"z")
+        eta = a.eta([x, y, z], t)
+        ux, uy, uz = a.u([x, y, z], t)
 
 
         # setDirVector are tested above
@@ -672,10 +662,8 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
             spectral_params =  {"gamma": gamma, "TMA": TMA,"depth": depth}, 
             phi = phi
     )
-        eta = a.eta(x,y,z,t)
-        ux = a.u(x,y,z,t,"x")
-        uy = a.u(x,y,z,t,"y")
-        uz = a.u(x,y,z,t,"z")
+        eta = a.eta([x, y, z], t)
+        ux, uy, uz = a.u([x, y, z], t)
 
 #Doubling the spectral properties
         aa= MultiSpectraRandomWaves(
@@ -692,10 +680,8 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
             spectral_params =[  {"gamma": gamma, "TMA": TMA,"depth": depth},  {"gamma": gamma, "TMA": TMA,"depth": depth} ], 
             phi = [phi,phi]# random words will result in error and return the available spectra 
     )
-        eta2 = aa.eta(x,y,z,t)
-        ux2 = aa.u(x,y,z,t,"x")
-        uy2 = aa.u(x,y,z,t,"y")
-        uz2 = aa.u(x,y,z,t,"z")
+        eta2 = aa.eta([x, y, z], t)
+        ux2, uy2, uz2 = aa.u([x, y, z], t)
         
         self.assertTrue(round(2.*eta,8) == round(eta2,8))
         self.assertTrue(round(2.*ux,8) == round(ux2,8))
@@ -716,10 +702,8 @@ class VerifyMultiSpectraRandomWaves(unittest.TestCase):
             spectral_params =[  {"gamma": gamma, "TMA": TMA,"depth": depth},  {"gamma": gamma, "TMA": TMA,"depth": depth}, {"gamma": gamma, "TMA": TMA,"depth": depth},  {"gamma": gamma, "TMA": TMA,"depth": depth}, {"gamma": gamma, "TMA": TMA,"depth": depth}  ], 
             phi = [phi,phi,phi,phi,phi]# random words will result in error and return the available spectra 
     )
-        eta2 = aa.eta(x,y,z,t)
-        ux2 = aa.u(x,y,z,t,"x")
-        uy2 = aa.u(x,y,z,t,"y")
-        uz2 = aa.u(x,y,z,t,"z")
+        eta2 = aa.eta([x, y, z], t)
+        ux2, uy2, uz2 = aa.u([x, y, z], t)
 
         self.assertTrue(round(5.*eta,8) == round(eta2,8))
         self.assertTrue(round(5.*ux,8) == round(ux2,8))
@@ -796,10 +780,8 @@ class VerifyDirectionals(unittest.TestCase):
         y = random.random()*200. - 100.
         z =  mwl - depth + random.random()*( depth)
         t =  random.random()*200. - 100.
-        eta = aa.eta(x,y,z,t)
-        ux = aa.u(x,y,z,t,"x")
-        uy = aa.u(x,y,z,t,"y")
-        uz = aa.u(x,y,z,t,"z")
+        eta = aa.eta([x, y, z], t)
+        ux, uy, uz = aa.u([x, y, z], t)
 
         # Testing with a specific phi array
 
@@ -1099,7 +1081,7 @@ class VerifyTimeSeries(unittest.TestCase):
         ii = -1
         for tt in timeInt:
             ii+=1
-            etaTest[ii] = aa.etaDirect(x,y,z,tt) 
+            etaTest[ii] = aa.etaDirect([x, y, z], tt)
 
         etaInt-=np.mean(etaInt)
         etaInt*=costap(len(data),0.025)
@@ -1156,7 +1138,7 @@ class VerifyTimeSeries(unittest.TestCase):
         ii = -1
         for tt in timeInt:
             ii+=1
-            etaTest[ii] = aa.etaWindow(x,y,z,tt) 
+            etaTest[ii] = aa.etaWindow([x, y, z], tt)
 
         etaInt-=np.mean(etaInt)
         etaInt*=costap(len(data),0.025)
