@@ -94,7 +94,8 @@ static apf::Field* extractSpeed(apf::Field* solution)
   apf::NewArray<double> tmp(apf::countComponents(solution));
   while ((v = m->iterate(it))) {
     apf::getComponents(solution, v, 0, &tmp[0]);
-    double speed = sqrt(tmp[VEX_IDX]*tmp[VEX_IDX]+tmp[VEY_IDX]*tmp[VEY_IDX]+tmp[VEZ_IDX]*tmp[VEZ_IDX]);
+    //double speed = sqrt(tmp[VEX_IDX]*tmp[VEX_IDX]+tmp[VEY_IDX]*tmp[VEY_IDX]+tmp[VEZ_IDX]*tmp[VEZ_IDX]);
+    double speed = 2.0;
     apf::setScalar(speedF, v, 0, speed);
   }
   m->end(it);
@@ -522,10 +523,10 @@ std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
   m->end(it); 
 
 //Get the anisotropic size frame
-  apf::Field* phif = extractPhi(solution);
+  apf::Field* phif = m->findField("phi");
   apf::Field* gradphi = apf::recoverGradientByVolume(phif);
   apf::Field* grad2phi = apf::recoverGradientByVolume(gradphi);
-  apf::Field* speedF = extractSpeed(solution);
+  apf::Field* speedF = extractSpeed(m->findField("velocity"));
   apf::Field* gradSpeed = apf::recoverGradientByVolume(speedF);
   apf::Field* grad2Speed = apf::recoverGradientByVolume(gradSpeed);
   apf::Field* hess = computeHessianField(grad2phi);
@@ -576,7 +577,7 @@ std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
   freeField(err_reg); //mAdapt will throw error if not destroyed. what about free?
   apf::destroyField(size_iso_reg); //will throw error if not destroyed
   apf::destroyField(grad2phi);
-  apf::destroyField(phif);
+  //apf::destroyField(phif);
   apf::destroyField(curves);
   apf::destroyField(hess);
   apf::destroyField(metricf);
