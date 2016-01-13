@@ -40,13 +40,13 @@ int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double const* inArr
   apf::NewArray<double> tmp(nVar);
   apf::MeshEntity* v;
   apf::MeshIterator* it = m->begin(0);
-  apf::Vector3 pt;
   while ((v = m->iterate(it))) {
     int i = localNumber(v);
     for(int j = 0; j < nVar; j++)
       tmp[j] = inArray[i * nVar + j];
 
     //Rewrite only necessary components
+    apf::Vector3 pt;
     if(casenum ==0){
     //Poiseuille Flow dpdy=-1
              m->getPoint(v,0,pt);
