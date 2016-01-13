@@ -207,6 +207,8 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
 
   if(adapt_type=="isotropic"){
     scale = apf::Vector3(1,1,1) * h_dest;
+    for(int i=0;i<3;i++)
+      clamp(scale[i], hmin, hmax);
   }
   else if(adapt_type=="anisotropic") { 
     double epsilon = 7.0* hmin; 
@@ -545,6 +547,7 @@ std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
     apf::setVector(size_scale,v,0,scale);
   }
   m->end(it);
+  SmoothField(size_iso);
 
   char namebuffer[20];
   sprintf(namebuffer,"pumi_adapt_%i",nAdapt);
