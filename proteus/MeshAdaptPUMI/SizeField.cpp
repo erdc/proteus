@@ -10,13 +10,6 @@
 #include <sstream>
 #include <PCU.h>
 
-enum {
-  VEX_IDX = 1,
-  VEY_IDX = 2,
-  VEZ_IDX = 3,
-  PHI_IDX = 5
-};
-
 static void SmoothField(apf::Field* f);
 
 /* Based on the distance from the interface epsilon can be controlled to determine
@@ -69,33 +62,16 @@ void MeshAdaptPUMIDrvr::averageToEntity(apf::Field* ef, apf::Field* vf,
   return;
 }
 
-static apf::Field* extractPhi(apf::Field* solution)
+static apf::Field* extractSpeed(apf::Field* velocity)
 {
-  apf::Mesh* m = apf::getMesh(solution);
-  apf::Field* phif = apf::createLagrangeField(m,"proteus_phi",apf::SCALAR,1);
-  apf::MeshIterator* it = m->begin(0);
-  apf::MeshEntity* v;
-  apf::NewArray<double> tmp(apf::countComponents(solution));
-  while ((v = m->iterate(it))) {
-    apf::getComponents(solution, v, 0, &tmp[0]);
-    double phi = tmp[PHI_IDX];
-    apf::setScalar(phif, v, 0, phi);
-  }
-  m->end(it);
-  return phif;
-}
-
-static apf::Field* extractSpeed(apf::Field* solution)
-{
-  apf::Mesh* m = apf::getMesh(solution);
+  apf::Mesh* m = apf::getMesh(velocity);
   apf::Field* speedF = apf::createLagrangeField(m,"proteus_speed",apf::SCALAR,1);
   apf::MeshIterator* it = m->begin(0);
   apf::MeshEntity* v;
-  apf::NewArray<double> tmp(apf::countComponents(solution));
+  apf::Vector3 vel_vect;
   while ((v = m->iterate(it))) {
-    apf::getComponents(solution, v, 0, &tmp[0]);
-    //double speed = sqrt(tmp[VEX_IDX]*tmp[VEX_IDX]+tmp[VEY_IDX]*tmp[VEY_IDX]+tmp[VEZ_IDX]*tmp[VEZ_IDX]);
-    double speed = 2.0;
+    apf::getVector(velocity, v, 0, vel_vect);
+    double speed = vel_vect.getLength();
     apf::setScalar(speedF, v, 0, speed);
   }
   m->end(it);
@@ -531,7 +507,7 @@ std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
   apf::Field* grad2Speed = apf::recoverGradientByVolume(gradSpeed);
   apf::Field* hess = computeHessianField(grad2phi);
   apf::Field* curves = getCurves(hess, gradphi);
-  apf::Field* metricf = computeMetricField(gradphi,grad2phi,size_iso,eps_u);
+  //apf::Field* metricf = computeMetricField(gradphi,grad2phi,size_iso,eps_u);
 
   apf::Field* frame_comps[3] = {apf::createLagrangeField(m, "frame_0", apf::VECTOR, 1),apf::createLagrangeField(m, "frame_1", apf::VECTOR, 1),apf::createLagrangeField(m, "frame_2", apf::VECTOR, 1)};
   //size_frame = getERMSizeFrames(hess, gradphi,frame_comps);
