@@ -34,6 +34,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         double getMinimumQuality()
         double getTotalMass()
         double getMPvalue(double,double, double)
+        void get_local_error()
 
 cdef class MeshAdaptPUMI:
     cdef MeshAdaptPUMIDrvr *thisptr
