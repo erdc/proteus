@@ -507,7 +507,7 @@ std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
   apf::Field* grad2Speed = apf::recoverGradientByVolume(gradSpeed);
   apf::Field* hess = computeHessianField(grad2phi);
   apf::Field* curves = getCurves(hess, gradphi);
-  //apf::Field* metricf = computeMetricField(gradphi,grad2phi,size_iso,eps_u);
+  apf::Field* metricf = computeMetricField(gradphi,grad2phi,size_iso,eps_u);
 
   apf::Field* frame_comps[3] = {apf::createLagrangeField(m, "frame_0", apf::VECTOR, 1),apf::createLagrangeField(m, "frame_1", apf::VECTOR, 1),apf::createLagrangeField(m, "frame_2", apf::VECTOR, 1)};
   //size_frame = getERMSizeFrames(hess, gradphi,frame_comps);
