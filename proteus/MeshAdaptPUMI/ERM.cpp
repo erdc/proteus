@@ -158,7 +158,7 @@ double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Fie
     double L2_err=0.0; 
 
     apf::MeshElement* element;
-    apf::Element* visc_elem, *pres_elem,*velo_elem;
+    apf::Element *pres_elem,*velo_elem;
     double weight, Jdet;
     apf::Matrix3x3 J;
     apf::Vector3 qpt;
@@ -174,7 +174,7 @@ double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Fie
     for(int k=0;k<numqpt;k++){
       apf::getIntPoint(element,norm_order,k,qpt);
       apf::getJacobian(element,qpt,J); 
-      Jdet=apf::getJacobianDeterminant(J,nsd); 
+      Jdet=fabs(apf::getJacobianDeterminant(J,nsd)); 
       weight = apf::getIntWeight(element,norm_order,k);
    
       apf::mapLocalToGlobal(element,qpt,xyz);
@@ -232,7 +232,7 @@ double getStarerror(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::F
     double star_err=0.0; 
 
     apf::MeshElement* element;
-    apf::Element* visc_elem, *pres_elem,*velo_elem, *est_elem;
+    apf::Element *pres_elem,*velo_elem, *est_elem;
     double weight, Jdet;
     apf::Matrix3x3 J,grad_u_exact,grad_u_h,grad_est;
     apf::Vector3 qpt;
@@ -251,7 +251,7 @@ double getStarerror(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::F
     for(int k=0;k<numqpt;k++){
       apf::getIntPoint(element,norm_order,k,qpt);
       apf::getJacobian(element,qpt,J); 
-      Jdet=apf::getJacobianDeterminant(J,nsd); 
+      Jdet=fabs(apf::getJacobianDeterminant(J,nsd)); 
       weight = apf::getIntWeight(element,norm_order,k);
    
       apf::mapLocalToGlobal(element,qpt,xyz);
@@ -389,7 +389,7 @@ std::cout<<"Initialized flux"<<std::endl;
         apf::getIntPoint(b_elem,int_order,l,bqpt);
         weight = apf::getIntWeight(b_elem,int_order,l);
         apf::getJacobian(b_elem,bqpt,J); //evaluate the Jacobian at the quadrature point
-        Jdet=apf::getJacobianDeterminant(J,nsd-1);
+        Jdet=fabs(apf::getJacobianDeterminant(J,nsd-1));
         bqptl=apf::boundaryToElementXi(m,bent,ent,bqpt); 
         apf::getVectorGrad(tempvelo,bqptl,tempgrad_velo);
 
@@ -553,7 +553,7 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf:
               apf::getIntPoint(b_elem,int_order,l,bqpt);
               weight = apf::getIntWeight(b_elem,int_order,l);
               apf::getJacobian(b_elem,bqpt,J); //evaluate the Jacobian at the quadrature point
-              Jdet=apf::getJacobianDeterminant(J,nsd-1);
+              Jdet=fabs(apf::getJacobianDeterminant(J,nsd-1));
               bqptl=apf::boundaryToElementXi(m,bent,neighbors[idx_neigh],bqpt); 
               bqptshp=apf::boundaryToElementXi(m,bent,ent,bqpt); 
               elem_shape->getValues(NULL,NULL,bqptshp,shpval_temp);
@@ -699,12 +699,11 @@ void MeshAdaptPUMIDrvr::get_local_error()
   //*****               *****//
   
   //***** Compute the viscosity field *****//
-  apf::Mesh*m = apf::getMesh(solution); 
   apf::MeshEntity* ent;
   apf::MeshIterator* iter = m->begin(0);
   double vof_val, visc_val;
   int nsd = m->getDimension();
-  while(ent = m->iterate(iter)){ //loop through all elements
+  while(ent = m->iterate(iter)){ //loop through all vertices
     vof_val=apf::getScalar(voff,ent,0);
     visc_val = getMPvalue(vof_val,nu_0, nu_1);
     apf::setScalar(visc, ent, 0,visc_val);
@@ -725,7 +724,6 @@ void MeshAdaptPUMIDrvr::get_local_error()
   int elem_type; //what type of topology
   double weight; //value container for the weight at each qpt
   double Jdet;
-  int numcomps = apf::countComponents(solution);
   //apf::FieldShape* err_shape = apf::getLagrange(approx_order);
   //apf::FieldShape* err_shape = apf::getSerendipity();
   apf::FieldShape* err_shape = apf::getHierarchic(2);
@@ -797,7 +795,7 @@ double err_est_total=0;
       apf::getJacobian(element,qpt,J); //evaluate the Jacobian at the quadrature point
       J = apf::transpose(J); //Is PUMI still defined in this way?
       invJ = invert(J);
-      Jdet=apf::getJacobianDeterminant(J,nsd); 
+      Jdet=fabs(apf::getJacobianDeterminant(J,nsd)); 
       weight = apf::getIntWeight(element,int_order,k);
       invJ_copy = apf::fromMatrix(invJ);
 
@@ -963,7 +961,7 @@ if(testcount==eID){
     VecSetSizes(coef,ndofs,ndofs);
     VecSetUp(coef);
 
-//    if(testcount==eID && comm_rank==0){
+if(testcount==eID && comm_rank==0){
 
 //Save Temporarily for Debugging
 /*
@@ -989,9 +987,10 @@ if(testcount==eID){
         myfile2<<vecstor<<std::endl;
       }
       myfile.close();
+    MatView(K,PETSC_VIEWER_STDOUT_SELF);
+    VecView(F,PETSC_VIEWER_STDOUT_SELF);
 */
-    //MatView(K,PETSC_VIEWER_STDOUT_SELF);
-    //VecView(F,PETSC_VIEWER_STDOUT_SELF);
+}
 
     KSP ksp; //initialize solver context
     KSPCreate(PETSC_COMM_SELF,&ksp);
@@ -1042,7 +1041,7 @@ if(testcount==eID){
 
       invJ = invert(J);
       invJ = apf::transpose(invJ);
-      Jdet=apf::getJacobianDeterminant(J,nsd); 
+      Jdet=fabs(apf::getJacobianDeterminant(J,nsd)); 
       weight = apf::getIntWeight(element,int_order,k);
       invJ_copy = apf::fromMatrix(invJ);
 
@@ -1063,7 +1062,6 @@ if(testcount==eID){
       Acomp = Acomp + getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
       Bcomp = Bcomp + apf::getDiv(velo_elem,qpt)*apf::getDiv(velo_elem,qpt)*weight;
     } //end compute local error
-
     Acomp = Acomp*Jdet; //Jacobian+nondimensionalize
     Bcomp = Bcomp*Jdet;
     err_est = sqrt(Acomp+Bcomp); //the square root should be here because the local error is given by this. but for statistics it's necessary for it to not be square rooted
@@ -1074,9 +1072,6 @@ if(testcount==eID){
     double starerr = getStarerror(m,ent,voff,visc,pref,velf,estimate);
     star_total = star_total+starerr;
    
-//    } //end if testcount 
-
-//   apf::setScalar(err_reg,ent,0,Jdet); //temporary place in
     MatDestroy(&K); //destroy the matrix
     VecDestroy(&F); //destroy vector
     VecDestroy(&coef); //destroy vector
@@ -1109,7 +1104,8 @@ std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est
 */
   getERMSizeField(err_est_total);
   apf::destroyElement(visc_elem);apf::destroyElement(pres_elem);apf::destroyElement(velo_elem);apf::destroyElement(est_elem);
-  apf::destroyField(voff);  apf::destroyField(visc); apf::destroyField(velf); apf::destroyField(pref); apf::destroyField(estimate);
+  apf::destroyField(visc);
+  apf::destroyField(estimate);
   removeBCData();
   printf("It cleared the function.\n");
   PCU_Barrier();

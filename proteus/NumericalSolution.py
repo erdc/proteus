@@ -900,17 +900,16 @@ class NS_base:  # (HasTraits):
                     nu = numpy.array([self.pList[0].nu_0,
                                       self.pList[0].nu_1])
                     g = numpy.asarray(self.pList[0].g)
-                    p0.domain.PUMIMesh.transferSolutionToPUMI(soldof)
                     p0.domain.PUMIMesh.transferPropertiesToPUMI(rho,nu,g)
-                    del soldof, rho, nu, g
+                    del rho, nu, g
                     #
                     # zhang-alvin's BC communication for N-S error estimation
                     #
-                    for idx in range (0, self.modelList[0].levelModelList[0].coefficients.nc):
-                        if idx>0:
-                            diff_flux = self.modelList[0].levelModelList[0].ebqe[('diffusiveFlux_bc',idx,idx)]
-                        else:
-                            diff_flux = numpy.empty([2,2]) #dummy diff flux
+                      #for idx in range (0, self.modelList[0].levelModelList[0].coefficients.nc):
+                        #if idx>0:
+                        #    diff_flux = self.modelList[0].levelModelList[0].ebqe[('diffusiveFlux_bc',idx,idx)]
+                        #else:
+                        #    diff_flux = numpy.empty([2,2]) #dummy diff flux
                         #p.domain.PUMIMesh.transferBCtagsToProteus(
                         #    self.modelList[0].levelModelList[0].numericalFlux.isDOFBoundary[idx],
                         #    idx,
