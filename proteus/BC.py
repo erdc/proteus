@@ -320,7 +320,7 @@ class BoundaryConditions:
             else:
                 epsFact_consrv_heaviside = 0.
             H = smoothedHeaviside(epsFact_consrv_heaviside*he, wavePhi)
-            U = H*windSpeed[i] + (1-H)*waterSpeed
+            U = H*windSpeed + (1-H)*waterSpeed
             u_p = np.sum(U[:nd]*b_or)
             return u_p
 
