@@ -1028,7 +1028,8 @@ class TimeSeries:
         """
         U=0.
         for ii in range(self.N):
-            U+= vel_mode(x-self.x0,y-self.y0,z-self.z0,t-self.t0,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
+            x1 = x-[self.x0, self.y0, self.z0]
+            U+= vel_mode(x1, t-self.t0, self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
 
     def findWindow(self,t):
