@@ -89,6 +89,8 @@ class MeshOptions:
         self.nLayersOfOverlapForParallel = layers_overlap
 
     def setTriangleOptions(self):
+        if self.he is None:
+            self.he = 1.
         if self.nd == 2:
             self.triangleOptions = self.triangle_string + '%8.8f' \
                                    % (self.he**2/2.,)

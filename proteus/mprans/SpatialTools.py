@@ -143,9 +143,9 @@ class ShapeRANS(Shape):
         length_vec = sqrt(vx**2+vy**2+vz**2)
         vec = vec/length_vec
         # vector relative to original position of shape:
-        if self.domain.nd == 2:
+        if self.Domain.nd == 2:
             I = self.It*self.mass
-        elif self.domain.nd == 3:
+        elif self.Domain.nd == 3:
             vec = relative_vec(vec, self.coords_system[2])
             cx, cy, cz = vec
             # getting the tensor for calculaing moment of inertia
@@ -219,7 +219,7 @@ class ShapeRANS(Shape):
             dragBetaTypes = [dragBetaTypes]
             porosityTypes = [porosityTypes]
         for i, flag in enumerate(flags):
-            self.zones[flag] = bc.RelaxationZone(domain=self.domain,
+            self.zones[flag] = bc.RelaxationZone(domain=self.Domain,
                                                  zone_type='absorption',
                                                  sign=sign[i],
                                                  center_x=center_x[i],
@@ -251,7 +251,7 @@ class ShapeRANS(Shape):
             dragBetaTypes = [dragBetaTypes]
             porosityTypes = [porosityTypes]
         for i, flag in enumerate(flags):
-            self.zones[flag] = bc.RelaxationZone(domain=self.domain,
+            self.zones[flag] = bc.RelaxationZone(domain=self.Domain,
                                                  zone_type='generation',
                                                  sign=sign[i],
                                                  center_x=center_x[i],
@@ -334,13 +334,23 @@ class Tank3D(ShapeRANS):
                               [1.,  0.,  0.],
                               [0., -1.,  0.],
                               [0.,  0.,  1.]])
-        self.BC_dict = {'bottom': bc.BoundaryConditions(b_or=self.b_or, b_i=0),
-                        'front': bc.BoundaryConditions(b_or=self.b_or, b_i=1),
-                        'right': bc.BoundaryConditions(b_or=self.b_or, b_i=2),
-                        'back': bc.BoundaryConditions(b_or=self.b_or, b_i=3),
-                        'left': bc.BoundaryConditions(b_or=self.b_or, b_i=4),
-                        'top': bc.BoundaryConditions(b_or=self.b_or, b_i=5),
-                        'sponge': bc.BoundaryConditions()}
+        self.BC_dict = {'bottom': bc.BoundaryConditions(shape=self,
+                                                        name='bottom',
+                                                        b_or=self.b_or, b_i=0),
+                        'front': bc.BoundaryConditions(shape=self,
+                                                       name='front',
+                                                       b_or=self.b_or, b_i=1),
+                        'right': bc.BoundaryConditions(shape=self,
+                                                       name='right',
+                                                       b_or=self.b_or, b_i=2),
+                        'back': bc.BoundaryConditions(shape=self, name='back',
+                                                      b_or=self.b_or, b_i=3),
+                        'left': bc.BoundaryConditions(shape=self, name='left',
+                                                      b_or=self.b_or, b_i=4),
+                        'top': bc.BoundaryConditions(shape=self, name='top',
+                                                     b_or=self.b_or, b_i=5),
+                        'sponge': bc.BoundaryConditions(shape=self,
+                                                        name='sponge')}
         self.BC_list = [self.BC_dict['bottom'],
                         self.BC_dict['front'],
                         self.BC_dict['right'],
@@ -615,12 +625,16 @@ class Tank2D(ShapeRANS):
     """
     count = 0
 
-    def __init__(self, domain, dim=(0., 0.), leftSponge=None, rightSponge=None,
-                 from_0=True):
+    def __init__(self, domain, dim=(0., 0.), coords=None, leftSponge=None,
+                 rightSponge=None):
         super(Tank2D, self).__init__(domain, nd=2)
         self.__class__.count += 1
         self.name = "tank2d" + str(self.__class__.count)
-        self.from_0 = from_0
+        self.dim = np.array(dim)
+        if coords is None:
+            self.coords = self.dim/2.
+        else:
+            self.coords = coords
         self.leftSponge = leftSponge
         self.rightSponge = rightSponge
         self.leftAbs = False
@@ -634,11 +648,18 @@ class Tank2D(ShapeRANS):
                               [1., 0.],
                               [0., 1.],
                               [-1., 0.]])
-        self.BC_dict = {'bottom': bc.BoundaryConditions(b_or=self.b_or, b_i=0),
-                        'right': bc.BoundaryConditions(b_or=self.b_or, b_i=1),
-                        'top': bc.BoundaryConditions(b_or=self.b_or, b_i=2),
-                        'left': bc.BoundaryConditions(b_or=self.b_or, b_i=3),
-                        'sponge': bc.BoundaryConditions()}
+        self.BC_dict = {'bottom': bc.BoundaryConditions(shape=self,
+                                                        name='bottom',
+                                                        b_or=self.b_or, b_i=0),
+                        'right': bc.BoundaryConditions(shape=self,
+                                                       name='right',
+                                                       b_or=self.b_or, b_i=1),
+                        'top': bc.BoundaryConditions(shape=self, name='top',
+                                                     b_or=self.b_or, b_i=2),
+                        'left': bc.BoundaryConditions(shape=self, name='left',
+                                                      b_or=self.b_or, b_i=3),
+                        'sponge': bc.BoundaryConditions(shape=self,
+                                                        name='sponge')}
         self.BC_list = [self.BC_dict['bottom'],
                         self.BC_dict['right'],
                         self.BC_dict['top'],
@@ -661,11 +682,7 @@ class Tank2D(ShapeRANS):
         """
         self.dim = dim
         L, H = dim
-        if self.from_0 is True:
-            x, y = L/2., H/2.
-        else:
-            x, y = 0., 0.
-        self.coords = [x, y]
+        x, y = self.coords
         x0, x1 = x-0.5*L, x+0.5*L
         y0, y1 = y-0.5*H, y+0.5*H
         bt = self.boundaryTags
@@ -744,7 +761,7 @@ class Tank2D(ShapeRANS):
             center_x = self.coords[0]-0.5*self.dim[0]+self.leftSponge/2.
             epsFact_solid = self.leftSponge/2.
             sign = 1.
-            self.zones[flag] = bc.RelaxationZone(domain=self.domain,
+            self.zones[flag] = bc.RelaxationZone(domain=self.Domain,
                                                  zone_type='absorption',
                                                  sign=sign, center_x=center_x,
                                                  waves=waves,
@@ -759,7 +776,7 @@ class Tank2D(ShapeRANS):
             center_x = self.coords[0]+0.5*self.dim[0]-self.rightSponge/2.
             epsFact_solid = self.rightSponge/2.
             sign = -1.
-            self.zones[flag] = bc.RelaxationZone(domain=self.domain,
+            self.zones[flag] = bc.RelaxationZone(domain=self.Domain,
                                                  zone_type='absorption',
                                                  sign=sign, center_x=center_x,
                                                  waves=waves,
@@ -773,7 +790,7 @@ class Tank2D(ShapeRANS):
 class RigidBody(AuxiliaryVariables.AV_base):
 
     def __init__(self, shape, he=1., cfl_target=0.9, dt_init=0.001):
-        self.shape = shape
+        self.Shape = shape
         # if isinstance(shape, (Rectangle, Cuboid)):
         #     shape._setInertiaTensor()
         self.dt_init = dt_init
@@ -787,12 +804,12 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.i_end = None  # will be retrieved from setValues() of Domain
 
     def step(self, dt):
-        nd = self.shape.domain.nd
+        nd = self.Shape.Domain.nd
         # acceleration from force
-        self.acceleration = self.F/self.shape.mass
+        self.acceleration = self.F/self.Shape.mass
         # angular acceleration from moment
         if sum(self.M) != 0:
-            self.inertia = self.shape.getInertia(self.M, self.shape.barycenter)
+            self.inertia = self.Shape.getInertia(self.M, self.Shape.barycenter)
             assert self.inertia != 0, 'Zero inertia: inertia tensor (It)' \
                                       'was not set correctly!'
             ang_acc = self.M[:]/self.inertia
@@ -812,21 +829,21 @@ class RigidBody(AuxiliaryVariables.AV_base):
             self.angvel += ang_acc*dt_sub
             ang_disp += self.angvel*dt_sub
         # translate
-        self.shape.translate(self.h[:nd])
+        self.Shape.translate(self.h[:nd])
         # rotate
         self.ang = np.linalg.norm(ang_disp)
         if nd == 2 and self.angvel[2] < 0:
             self.ang = -self.ang
         if self.ang != 0.:
-            self.shape.rotate(self.ang, self.angvel, self.shape.barycenter)
-            self.rotation[:nd, :nd] = self.shape.coords_system
+            self.Shape.rotate(self.ang, self.angvel, self.Shape.barycenter)
+            self.rotation[:nd, :nd] = self.Shape.coords_system
             self.rotation_matrix[:] = np.dot(np.linalg.inv(self.last_rotation),
                                              self.rotation)
         else:
             self.rotation_matrix[:] = np.eye(3)
-        self.barycenter[:] = self.shape.barycenter
-        self.position[:] = self.shape.barycenter
-        if self.shape.record_values is True:
+        self.barycenter[:] = self.Shape.barycenter
+        self.position[:] = self.Shape.barycenter
+        if self.Shape.record_values is True:
             self.recordValues()
 
     def recordValues(self):
@@ -847,10 +864,10 @@ class RigidBody(AuxiliaryVariables.AV_base):
         values = [time, pos_x, pos_y, pos_z, rot_x, rot_y,
                   rot_z, Fx, Fy, Fz, Mx, My, Mz, inertia,
                   vel_x, vel_y, vel_z, acc_x, acc_y, acc_z]
-        values_towrite = list(compress(values, self.shape.record_bool))
+        values_towrite = list(compress(values, self.Shape.record_bool))
         comm = Comm.get()
         if comm.isMaster():
-            if self.shape.record_values is True:
+            if self.Shape.record_values is True:
                 with open(self.record_file, 'a') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
                     writer.writerow(values_towrite)
@@ -871,10 +888,10 @@ class RigidBody(AuxiliaryVariables.AV_base):
         Function called at the very beginning of the simulation by proteus.
         (!) name of the function has to be calculate_init()
         """
-        nd = self.shape.domain.nd
-        shape = self.shape
+        nd = self.Shape.Domain.nd
+        shape = self.Shape
         self.position = np.zeros(3)
-        self.position[:] = self.shape.barycenter.copy()
+        self.position[:] = self.Shape.barycenter.copy()
         self.last_position[:] = self.position
         self.velocity = np.zeros(3, 'd')
         self.last_velocity = np.zeros(3, 'd')
@@ -889,21 +906,21 @@ class RigidBody(AuxiliaryVariables.AV_base):
         self.last_F = np.zeros(3, 'd')
         self.last_M = np.zeros(3, 'd')
         self.ang = 0.
-        self.barycenter = self.shape.barycenter
+        self.barycenter = self.Shape.barycenter
         self.angvel = np.zeros(3, 'd')
         self.last_angvel = np.zeros(3, 'd')
         if nd == 2:
-            self.Fg = self.shape.mass*np.array([0., -9.81, 0.])
+            self.Fg = self.Shape.mass*np.array([0., -9.81, 0.])
         if nd == 3:
-            self.Fg = self.shape.mass*np.array([0., 0., -9.81])
+            self.Fg = self.Shape.mass*np.array([0., 0., -9.81])
         comm = Comm.get()
         if comm.isMaster():
-            if self.shape.record_values is True:
+            if self.Shape.record_values is True:
                 self.record_file = os.path.join(Profiling.logDir,
-                                                self.shape.record_filename)
+                                                self.Shape.record_filename)
                 with open(self.record_file, 'w') as csvfile:
                     writer = csv.writer(csvfile, delimiter=',')
-                    writer.writerow(self.shape.record_names)
+                    writer.writerow(self.Shape.record_names)
 
     def calculate(self):
         """
@@ -934,8 +951,8 @@ class RigidBody(AuxiliaryVariables.AV_base):
         M_t = self.model.levelModelList[-1].coefficients.netMoments[i0:i1, :]
         M = np.sum(M_t, axis=0)
         # store F and M with DOF constraints to body
-        self.F[:] = F*self.shape.free_x
-        self.M[:] = M*self.shape.free_r
+        self.F[:] = F*self.Shape.free_x
+        self.M[:] = M*self.Shape.free_r
         # calculate new properties
         self.step(dt)
         # log values
@@ -951,7 +968,7 @@ class RigidBody(AuxiliaryVariables.AV_base):
         log("================================================================")
         log("=================== Rigid Body Calculation =====================")
         log("================================================================")
-        log("Name: " + `self.shape.name`)
+        log("Name: " + `self.Shape.name`)
         log("================================================================")
         log("[proteus]     t=%1.5fsec to t=%1.5fsec" % \
             (t_previous, t_current))
@@ -1046,21 +1063,21 @@ def assembleDomain(domain):
         else:
             start_rflag = 0
         domain.bc += shape.BC_list
-        domain.vertices += list(shape.vertices)
-        domain.vertexFlags += list(shape.vertexFlags+start_flag)
+        domain.vertices += (shape.vertices).tolist()
+        domain.vertexFlags += (shape.vertexFlags+start_flag).tolist()
         barycenters = np.array([shape.barycenter for bco in shape.BC_list])
         domain.barycenters = np.append(domain.barycenters, barycenters, axis=0)
         if shape.segments is not None:
-            domain.segments += list(shape.segments+start_vertex)
-            domain.segmentFlags += list(shape.segmentFlags+start_flag)
+            domain.segments += (shape.segments+start_vertex).tolist()
+            domain.segmentFlags += (shape.segmentFlags+start_flag).tolist()
         if shape.facets is not None:
-            domain.facets += list(shape.facets+start_vertex)
-            domain.facetFlags += list(shape.facetFlags+start_flag)
+            domain.facets += (shape.facets+start_vertex).tolist()
+            domain.facetFlags += (shape.facetFlags+start_flag).tolist()
         if shape.regions is not None:
-            domain.regions += list(shape.regions)
-            domain.regionFlags += list(shape.regionFlags+start_rflag)
+            domain.regions += (shape.regions).tolist()
+            domain.regionFlags += (shape.regionFlags+start_rflag).tolist()
         if shape.holes is not None:
-            domain.holes += list(shape.holes)
+            domain.holes += (shape.holes).tolist()
         domain.getBoundingBox()
         # --------------------------- #
         # --- AUXILIARY VARIABLES --- #
