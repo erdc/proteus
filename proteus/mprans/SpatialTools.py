@@ -231,7 +231,7 @@ class ShapeRANS(Shape):
                                                  porosityTypes=porosityTypes[i])
 
     def setGenerationZones(self, flags, epsFact_solid, sign, center_x, waves,
-                           windSpeed=0., dragAlphaTypes=0.5/1.005e-6,
+                           windSpeed=(0., 0., 0.), dragAlphaTypes=0.5/1.005e-6,
                            dragBetaTypes=0., porosityTypes=1.):
         """
         Sets a region (given the local index) to a generation zone
