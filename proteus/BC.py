@@ -273,6 +273,7 @@ class BoundaryConditions:
             one of the main axes.
         """
         self.reset()
+        windSpeed=np.array(windSpeed)
 
         def get_inlet_ux_dirichlet(i):
             def ux_dirichlet(x, t):
@@ -311,7 +312,7 @@ class BoundaryConditions:
             ct = Context.get()
             b_or = self._b_or[self._b_i]
             nd = len(b_or)
-            waterSpeed = wave.u(x, t)
+            waterSpeed = np.array(wave.u(x, t))
             waveHeight = wave.mwl+wave.eta(x, t)
             wavePhi = x[vert_axis]-waveHeight
             he = ct.domain.MeshOptions.he
