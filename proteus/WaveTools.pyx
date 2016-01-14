@@ -578,14 +578,14 @@ class MultiSpectraRandomWaves(RandomWaves):
             self.phiM[NN1:NN] = self.phi
         
 
-    def eta(self,x,y,z,t):
+    def eta(self, x, t):
         """Free surface displacement
 
         :param x: floating point x coordinate
         :param t: time"""
         Eta=0.
         for ii in range(self.Nall):
-            Eta+= eta_mode(x,y,z,t,self.kDirM[ii],self.omegaM[ii],self.phiM[ii],self.aiM[ii])
+            Eta+= eta_mode(x, t, self.kDirM[ii],self.omegaM[ii],self.phiM[ii],self.aiM[ii])
         return Eta
 #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
 
