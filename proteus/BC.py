@@ -1,8 +1,12 @@
 """
 Module for creating boundary conditions. Imported in Shape.py
+
+TO DO:
+Remove smoothing for TwoPhaseUnsteady and generation zone?
 """
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
 from proteus import AuxiliaryVariables
 from proteus.Profiling import logEvent as log
 from proteus.ctransportCoefficients import (smoothedHeaviside,
@@ -32,6 +36,8 @@ class BoundaryConditions:
     class defining boundary conditions for a facet or a segment
     """
     def __init__(self, b_or=None, b_i=None):
+        self.name = None
+        self.Shape = None
         self._b_or = b_or  # array of orientation of all boundaries of shape
         self._b_i = b_i  # indice for this boundary in list of boundaries
         # _dirichlet
@@ -248,7 +254,7 @@ class BoundaryConditions:
         self.vof_dirichlet = inlet_vof_dirichlet
         self.p_advective = inlet_p_advective
 
-    def setUnsteadyTwoPhaseVelocityInlet(self, U, eta, vert_axis=-1, air=1., water=0.):
+    def setUnsteadyTwoPhaseVelocityInlet(self, wave, vert_axis=-1, windSpeed=(0., 0., 0.), air=1., water=0., smooth=False):
         """
         Imposes a velocity profile lower than the sea level and an open
         boundary for higher than the sealevel.
@@ -267,41 +273,62 @@ class BoundaryConditions:
             one of the main axes.
         """
         self.reset()
-        U = np.array(U)
 
-        def get_inlet_ux_dirichlet(ux):
+        def get_inlet_ux_dirichlet(i):
             def ux_dirichlet(x, t):
-                if x[vert_axis] < eta(x,t):
-                    return ux
+                from proteus import Context
+                ct = Context.get()
+                waterSpeed = wave.u(x, t)[i]
+                waveHeight = wave.mwl+wave.eta(x, t)
+                wavePhi = x[vert_axis]-waveHeight
+                he = ct.domain.MeshOptions.he
+                if smooth is True:
+                    epsFact_consrv_heaviside = ct.epsFact_consrv_heaviside
                 else:
-                    return 0
+                    epsFact_consrv_heaviside = 0.
+                H = smoothedHeaviside(epsFact_consrv_heaviside*he, wavePhi)
+                return H*windSpeed[i] + (1-H)*waterSpeed
             return ux_dirichlet
 
         def inlet_vof_dirichlet(x, t):
-            if x[vert_axis] < eta(x,t):
-                return water
+            from proteus import Context
+            ct = Context.get()
+            level = wave.mwl + wave.eta(x,t)
+            mesh = ct.domain.MeshOptions
+            he = ct.domain.MeshOptions.he
+            if smooth is True:
+                epsFact_consrv_heaviside = ct.epsFact_consrv_heaviside
             else:
-                return air
+                epsFact_consrv_heaviside = 0.
+            def uOfXT(x, t):
+                return smoothedHeaviside(epsFact_consrv_heaviside*mesh.he,x[vert_axis]-level)
+            return uOfXT(x, t)
 
-        def inlet_p_advective(x, t, u=U):
+        def inlet_p_advective(x, t):
+            # This is the normal velocity, based on the outwards boundary
+            # orientation b_or
+            from proteus import Context
+            ct = Context.get()
             b_or = self._b_or[self._b_i]
-            u_p = np.sum(U*b_or)
-            # This is the normal velocity, based on the inwards boundary
-            # orientation -b_or
-            u_p = -u_p
-            if x[vert_axis] < eta(x,t):
-                return u_p
+            nd = len(b_or)
+            waterSpeed = wave.u(x, t)
+            waveHeight = wave.mwl+wave.eta(x, t)
+            wavePhi = x[vert_axis]-waveHeight
+            he = ct.domain.MeshOptions.he
+            if smooth is True:
+                epsFact_consrv_heaviside = ct.epsFact_consrv_heaviside
             else:
-                return None
+                epsFact_consrv_heaviside = 0.
+            H = smoothedHeaviside(epsFact_consrv_heaviside*he, wavePhi)
+            U = H*windSpeed[i] + (1-H)*waterSpeed
+            u_p = np.sum(U[:nd]*b_or)
+            return u_p
 
-        self.u_dirichlet = get_inlet_ux_dirichlet(U[0])
-        self.v_dirichlet = get_inlet_ux_dirichlet(U[1])
-        if len(U) == 3:
-                self.w_dirichlet = get_inlet_ux_dirichlet(U[2])
+        self.u_dirichlet = get_inlet_ux_dirichlet(0)
+        self.v_dirichlet = get_inlet_ux_dirichlet(1)
+        self.w_dirichlet = get_inlet_ux_dirichlet(2)
         self.vof_dirichlet = inlet_vof_dirichlet
         self.p_advective = inlet_p_advective
-
-
 
     def setHydrostaticPressureOutlet(self, rho, g, refLevel, vof, pRef=0.0,
                                      vert_axis=-1):
@@ -376,6 +403,7 @@ class RelaxationZone:
         self.center_x = center_x
         self.waves = waves
         self.windSpeed = windSpeed
+        self.smooth = False
         if zone_type == 'absorption':
             self.u = self.v = self.w = lambda x, t: 0.
         elif zone_type == 'generation':
@@ -394,25 +422,20 @@ class RelaxationZone:
         """
         Sets the functions necessary for generation zones
         """
-        if i == 0:
-            s = 'x'
-        elif i == 1:
-            s = 'y'
-        elif i == 2:
-            s = 'z'
         def twp_flowVelocity(x, t):
-            vert_axis = self.domain.nd - 1
-            waterSpeed = self.waves.u(x[0], x[1], x[2], t, s)
-            waveHeight = self.waves.eta(x[0], x[1], x[2], t)
-            wavePhi = x[vert_axis] - waveHeight
-            he = self.domain.MeshOptions.he
-            # !!!!!!!!!!!!!!!!!!!!!!!
-            # epsFact_consrv_heaviside should be called from context!
-            # !!!!!!!!!!!!!!!!!!!!!!!
-            epsFact_consrv_heaviside = 3.0
-            H = smoothedHeaviside(epsFact_consrv_heaviside*he,
-                                wavePhi-epsFact_consrv_heaviside*he)
-            return H*self.windSpeed[0] + (1-H)*waterSpeed
+            from proteus import Context
+            ct = Context.get()
+            vert_axis = self.domain.nd-1
+            waterSpeed = self.waves.u(x, t)[i]
+            waveHeight = self.waves.mwl+self.waves.eta(x, t)
+            wavePhi = x[vert_axis]-waveHeight
+            he = ct.domain.MeshOptions.he
+            if self.smooth is True:
+                epsFact_consrv_heaviside = ct.epsFact_consrv_heaviside
+            else:
+                epsFact_consrv_heaviside = 0.
+            H = smoothedHeaviside(epsFact_consrv_heaviside*he, wavePhi)
+            return H*self.windSpeed[i] + (1-H)*waterSpeed
         return twp_flowVelocity
 
 
