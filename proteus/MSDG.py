@@ -164,7 +164,7 @@ class OneLevelMSDG(Transport.OneLevelTransport):
         #add boundary integral terms
         self.alpha_p = 0.9
         self.alpha_beta = 1.0
-        for eN in range(self.mesh.nElements_global):
+        for eN in range(self.mesh.nElements_global):                            
             for  ebN in range(self.mesh.nElementBoundaries_element):
                 for i in range(self.nDOF_test_element[0]):#assumes equal  order across  components
                     for j in range(self.nDOF_trial_element[0]):#assumes equal  order across components
@@ -173,7 +173,8 @@ class OneLevelMSDG(Transport.OneLevelTransport):
 #                             h =1.0
 #                             lambda_norm = 1.0
                             h = self.q['abs(det(J))'][eN,k]/self.ebq['sqrt(det(g))'][eN,ebN,k]
-                            lambda_norm = abs(self.ebq[('dr',1,1)][eN,ebN,k])
+                            lambda_norm = 1.0 / abs(self.ebq[('dr',1,1)][eN,ebN,k])
+                            
 
                             #
                             #lhs matrix
@@ -274,6 +275,7 @@ class OneLevelMSDG(Transport.OneLevelTransport):
                         = self.transfer_rhs[(2,2)][eN,i,j]
                     #T
             self.T[eN] = np.dot(linalg.inv(self.til_M[eN]),self.bar_M[eN])
+#             self.Trhs[eN] = linalg.inv(self.til_M[eN])
         #we would then need to assemble the element Jacobians  into a global Jacobian based on the continuous element maps
         #this approach would need formal MSDG space with knowledge of  coarse and fine  spaces
         #let's first check  if M and T are right
