@@ -200,7 +200,7 @@ class BoundaryConditions:
         if len(body.last_position) > 2:
             self.hz_dirichlet = get_DBC_h(i=2)
 
-    def setTwoPhaseVelocityInlet(self, U, waterLevel, vert_axis=-1, air=1.,
+    def setTwoPhaseVelocityInlet(self, U, waterLevel, vert_axis=None, air=1.,
                                  water=0.):
         """
         Imposes a velocity profile lower than the sea level and an open
@@ -220,8 +220,11 @@ class BoundaryConditions:
             one of the main axes.
         """
         self.reset()
-        U = np.array(U)
 
+        U = np.array(U)
+        if vert_axis is None:
+            vert_axis = self.Shape.Domain.nd - 1
+    
         def get_inlet_ux_dirichlet(ux):
             def ux_dirichlet(x, t):
                 if x[vert_axis] < waterLevel:
@@ -259,7 +262,6 @@ class BoundaryConditions:
         Imposes a velocity profile lower than the sea level and an open
         boundary for higher than the sealevel.
         :param U: Velocity vector at the global system.
-        :param waterLevel: water level at global coordinate system.
         :param vert_axis: index of vertical in position vector, must always be
                         aligned with gravity, by default set to 1].
         :param air: Volume fraction for air (1.0 by default).
@@ -273,15 +275,16 @@ class BoundaryConditions:
             one of the main axes.
         """
         self.reset()
+
         windSpeed=np.array(windSpeed)
-        # if vert_axis is None:
-        #     vert_axis = self.Shape.nd
+        if vert_axis is None:
+            vert_axis = self.Shape.Domain.nd - 1
 
         def get_inlet_ux_dirichlet(i):
             def ux_dirichlet(x, t):
                 from proteus import Context
                 ct = Context.get()
-                waterSpeed = wave.u(x, t)[i]
+                waterSpeed = wave.u(x, t)
                 waveHeight = wave.mwl+wave.eta(x, t)
                 wavePhi = x[vert_axis]-waveHeight
                 he = ct.domain.MeshOptions.he
@@ -290,7 +293,7 @@ class BoundaryConditions:
                 else:
                     epsFact_consrv_heaviside = 0.
                 H = smoothedHeaviside(epsFact_consrv_heaviside*he, wavePhi)
-                return H*windSpeed[i] + (1-H)*waterSpeed
+                return H*windSpeed[i] + (1-H)*waterSpeed[i]
             return ux_dirichlet
 
         def inlet_vof_dirichlet(x, t):
@@ -356,7 +359,7 @@ class BoundaryConditions:
         self.w_diffusive = constantBC(0.)
 
     def hydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
-                                           refLevel, pRef=0.0, vert_axis=-1,
+                                           refLevel, pRef=0.0, vert_axis=None,
                                            air=1.0, water=0.0):
         """Imposes a hydrostatic pressure profile and open boundary conditions
         with a known otuflow depth
@@ -377,6 +380,9 @@ class BoundaryConditions:
             one of the main axes.
         """
         self.reset()
+
+        if vert_axis is None:
+            vert_axis = self.Shape.Domain.nd - 1
 
         def hydrostaticPressureOutletWithDepth_p_dirichlet(x, t):
             if x[vert_axis] < seaLevel:
