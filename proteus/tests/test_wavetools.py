@@ -1165,7 +1165,7 @@ class VerifyTimeSeries(unittest.TestCase):
         err = np.sqrt(sum(err))/len(etaInt)/np.mean(abs(etaInt))
         print err
         self.assertTrue(err<1e-2 )     
-
+"""
         from matplotlib import pyplot as plt
 
         fig = plt.figure(2)
@@ -1173,7 +1173,7 @@ class VerifyTimeSeries(unittest.TestCase):
 #        print "Timeseries error: %s" % str(err)
 
 #Showing plot of window recontruction
-"""        
+        
         line1,=plt.plot(timeInt,etaTest,"g-")
         plt.grid()
         fig.legend((line2,line1),("Field data from FRF", "Reconstructed time series"),"upper right",bbox_to_anchor=(0.6,0.9))
