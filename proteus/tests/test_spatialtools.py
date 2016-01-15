@@ -6,28 +6,43 @@ import unittest
 import numpy.testing as npt
 import numpy as np
 from nose.tools import eq_
-from proteus import Domain
-from proteus import SpatialTools as st
-from proteus.mprans import SpatialTools as strans
+from proteus import Comm, Profiling
+from proteus.Profiling import logEvent as log
+from proteus.Domain import (PiecewiseLinearComplexDomain,
+                            PlanarStraightLineGraphDomain)
+from proteus.SpatialTools import (Rectangle,
+                                  Cuboid,
+                                  CustomShape,
+                                  assembleDomain)
+from proteus.mprans.SpatialTools import (Rectangle as RectangleRANS,
+                                         Cuboid as CuboidRANS,
+                                         CustomShape as CustomShapeRANS,
+                                         assembleDomain as assembleDomainRANS,
+                                         Tank2D,
+                                         Tank3D)
 
+comm = Comm.init()
+Profiling.procID = comm.rank()
+
+log("Testing SpatialTools")
 
 def create_domain2D():
-    return Domain.PlanarStraightLineGraphDomain()
+    return PlanarStraightLineGraphDomain()
 
 def create_domain3D():
-    return Domain.PiecewiseLinearComplexDomain()
+    return PiecewiseLinearComplexDomain()
 
 def create_rectangle(domain, dim=(0., 0.), coords=(0., 0.), folder=None):
     if folder is None:
-        return st.Rectangle(domain, dim, coords)
+        return Rectangle(domain, dim, coords)
     elif folder == 'mprans':
-        return strans.Rectangle(domain, dim, coords)
+        return RectangleRANS(domain, dim, coords)
 
 def create_cuboid(domain, dim=(0., 0., 0.), coords=(0., 0., 0.), folder=None):
     if folder is None:
-        return st.Cuboid(domain, dim, coords)
+        return Cuboid(domain, dim, coords)
     elif folder == 'mprans':
-        return strans.Cuboid(domain, dim, coords)
+        return CuboidRANS(domain, dim, coords)
 
 def create_custom2D(domain, folder=None):
     domain2D = domain
@@ -37,12 +52,12 @@ def create_custom2D(domain, folder=None):
     segments2D = [[0, 1], [1, 2], [2, 3], [3, 0]]
     segmentFlags2D = [bt2D['bottom'], bt2D['right'], bt2D['top'], bt2D['left']]
     if folder is None:
-        mod = st
+        custom = CustomShape
     elif folder == 'mprans':
-        mod = strans
-    custom2D = mod.CustomShape(domain=domain2D, vertices=vertices2D,
-                               vertexFlags=vertexFlags2D, segments=segments2D,
-                               segmentFlags=segmentFlags2D, boundaryTags=bt2D)
+        custom = CustomShapeRANS
+    custom2D = custom(domain=domain2D, vertices=vertices2D,
+                      vertexFlags=vertexFlags2D, segments=segments2D,
+                      segmentFlags=segmentFlags2D, boundaryTags=bt2D)
     return custom2D
 
 def create_custom3D(domain, folder=None):
@@ -58,19 +73,19 @@ def create_custom3D(domain, folder=None):
     facetFlags3D = [bt3D['bottom'], bt3D['front'], bt3D['right'], bt3D['back'],
                     bt3D['left'], bt3D['top']]
     if folder is None:
-        mod = st
+        custom = CustomShape
     elif folder == 'mprans':
-        mod = strans
-    custom3D = mod.CustomShape(domain=domain3D, vertices=vertices3D,
-                               vertexFlags=vertexFlags3D, facets=facets3D,
-                               facetFlags=facetFlags3D, boundaryTags=bt3D)
+        custom = CustomShapeRANS
+    custom3D = custom(domain=domain3D, vertices=vertices3D,
+                      vertexFlags=vertexFlags3D, facets=facets3D,
+                      facetFlags=facetFlags3D, boundaryTags=bt3D)
     return custom3D
 
 def create_tank2D(domain, dim=(0., 0.), coords=(0., 0.)):
-    return strans.Tank2D(domain, dim, coords)
+    return Tank2D(domain, dim, coords)
 
 def create_tank3D(domain, dim=(0., 0., 0.), coords=(0., 0., 0.)):
-    return strans.Tank3D(domain, dim, coords)
+    return Tank3D(domain, dim, coords)
 
 
 class TestShapeDomainBuilding(unittest.TestCase):
@@ -83,7 +98,7 @@ class TestShapeDomainBuilding(unittest.TestCase):
         domain3D = create_domain3D()
         rectangle = create_rectangle(domain2D)
         rectangleRANS = create_rectangle(domain2D, folder='mprans')
-        cuboid = st.Cuboid(domain3D)
+        cuboid = create_cuboid(domain3D)
         cuboidRANS = create_cuboid(domain3D, folder='mprans')
         tand2D = create_tank2D(domain2D)
         tank3D = create_tank3D(domain3D)
@@ -126,10 +141,10 @@ class TestShapeDomainBuilding(unittest.TestCase):
         a = create_tank3D(domain3DRANS, dim=[50., 50., 50.],
                           coords=[25., 25., 25.])
         nb_bc3DRANS += len(a.BC_list)
-        st.assembleDomain(domain2D)
-        st.assembleDomain(domain3D)
-        strans.assembleDomain(domain2DRANS)
-        strans.assembleDomain(domain3DRANS)
+        assembleDomain(domain2D)
+        assembleDomain(domain3D)
+        assembleDomainRANS(domain2DRANS)
+        assembleDomainRANS(domain3DRANS)
         
         # check that each domain has the right number of shapes
         npt.assert_equal(len(domain2D.shape_list), nb_shapes)
@@ -188,10 +203,10 @@ class TestFlags(unittest.TestCase):
                 maxf = np.max([np.max(flags_v3DRANS), np.max(flags_f3DRANS)])
             flags_v3DRANS += (a.vertexFlags+maxf).tolist()
             flags_f3DRANS += (a.facetFlags+maxf).tolist()
-        st.assembleDomain(domain2D)
-        st.assembleDomain(domain3D)
-        strans.assembleDomain(domain2DRANS)
-        strans.assembleDomain(domain3DRANS)
+        assembleDomain(domain2D)
+        assembleDomain(domain3D)
+        assembleDomainRANS(domain2DRANS)
+        assembleDomainRANS(domain3DRANS)
 
         # test flags
         npt.assert_equal(domain2D.vertexFlags, flags_v2D)
