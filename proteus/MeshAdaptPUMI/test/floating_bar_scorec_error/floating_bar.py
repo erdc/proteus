@@ -133,7 +133,8 @@ input_mesh = "%s/%s/%s" % (case_dir,model_dir,case_mesh)
 domain.PUMIMesh.loadModelAndMesh(input_model, input_mesh)
 #domain.PUMIMesh.loadModelAndMesh("simModel/Floating_Bar.smd",
 #                                 "simModel/Floating_Bar.smb")
-domain.PUMIMesh.getSimmetrixBC(input_model)
+#domain.PUMIMesh.getSimmetrixBC(input_model)
+domain.PUMIMesh.simmetrixBCreloaded(input_model)
 
 restrictFineSolutionToAllMeshes=False
 parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
