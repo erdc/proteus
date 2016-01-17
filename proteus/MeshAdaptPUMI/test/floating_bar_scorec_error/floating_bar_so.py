@@ -35,8 +35,8 @@ if ct.useRANS > 0:
 name = "floating_bar"
 
 #systemStepControllerType = ISO_fixed_MinAdaptiveModelStep
-systemStepControllerType = Sequential_MinAdaptiveModelStep
-#systemStepControllerType = Sequential_FixedStep_Simple # uses time steps in so.tnList
+#systemStepControllerType = Sequential_MinAdaptiveModelStep
+systemStepControllerType = Sequential_FixedStep_Simple # uses time steps in so.tnList
 
 archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP
 

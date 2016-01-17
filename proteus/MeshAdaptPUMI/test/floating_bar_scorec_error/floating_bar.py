@@ -18,14 +18,14 @@ opts=Context.Options([
     ("tank_dim", (1.0,1.0,1.0), "Dimensions of the tank"),
     ("water_surface_height",0.5,"Height of free surface above bottom"),
     ("speed",0.0,"Speed of current if non-zero"),
-    ("bar_height",0.25,"Initial height of bar center above bottom"),
+    ("bar_height",0.85,"Initial height of bar center above bottom"),
     ("bar_rotation",(0,0,0),"Initial rotation about x,y,z axes"),
     ("refinement_level",0,"Set maximum element diameter to he/2**refinement_level"),
     ("gen_mesh",False,"Generate new mesh"),
-    ("T",0.05,"Simulation time"),
+    ("T",0.5,"Simulation time"),
     ("dt_init",0.001,"Initial time step"),
     ("cfl",0.33,"Target cfl"),
-    ("nsave",100,"Number of time steps to  save"),
+    ("nsave",30,"Number of time steps to  save"),
     ("parallel",True,"Run in parallel"),
     ("free_x",(0.0,0.0,1.0),"Free translations"),
     ("free_r",(1.0,1.0,0.0),"Free rotations")])
@@ -83,6 +83,7 @@ he *=(0.5)**opts.refinement_level
 boundaries = [ 'bottom', 'front', 'right', 'back', 'left', 'top', 'obstacle' ]
 boundaryTags = dict([(key,i+1) for (i,key) in enumerate(boundaries)])
 
+#Floating
 faceMap = { 'front'     : [82],
             'right'     : [24],
             'back'      : [78],
@@ -90,6 +91,15 @@ faceMap = { 'front'     : [82],
             'bottom'    : [80],
             'top'       : [76],
             'obstacle'  : [163,178,158,173,153,168] }
+
+#Falling
+faceMap = { 'front'     : [82],
+            'right'     : [24],
+            'back'      : [78],
+            'left'      : [42],
+            'bottom'    : [80],
+            'top'       : [76],
+            'obstacle'  : [174,164,179,154,159,169] }
 
 faceList = []
 for boundary in boundaries:
@@ -101,20 +111,29 @@ for boundary in boundaries:
 domain = Domain.PUMIDomain(dim=3)
 domain.faceList = faceList
 
+nLevels = 1
+parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
+
 adaptMesh = True
-adaptMesh_nSteps = 50
+adaptMesh_nSteps = 10
 adaptMesh_numIter = 3
 
-domain.PUMIMesh = MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.1,hmin=0.05,
+domain.PUMIMesh = MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.12,hmin=0.04,
                                               numIter=adaptMesh_numIter,sfConfig="alvin",maType="isotropic")
 comm = Comm.init()
+
+#Remember to change bar height: Floating = 0.25, Falling=0.85
+#Remember to change Face Maps @_@
+case_dir = "simModel/falling_bar"
 model_dir = "%s-Procs" % comm.size()
-case_mesh = "Floating_Bar.smb"
-input_mesh = "simModel/%s/%s" % (model_dir,case_mesh)
-domain.PUMIMesh.loadModelAndMesh("simModel/Floating_Bar.smd", input_mesh)
+case_mesh = "Floating_Bar_Falling.smb"
+case_model= "Floating_Bar_Falling.smd"
+input_model= "%s/%s" % (case_dir,case_model)
+input_mesh = "%s/%s/%s" % (case_dir,model_dir,case_mesh)
+domain.PUMIMesh.loadModelAndMesh(input_model, input_mesh)
 #domain.PUMIMesh.loadModelAndMesh("simModel/Floating_Bar.smd",
 #                                 "simModel/Floating_Bar.smb")
-domain.PUMIMesh.getSimmetrixBC("simModel/Floating_Bar.smd")
+domain.PUMIMesh.getSimmetrixBC(input_model)
 
 restrictFineSolutionToAllMeshes=False
 parallelPartitioningType = MeshTools.MeshParallelPartitioningTypes.element
