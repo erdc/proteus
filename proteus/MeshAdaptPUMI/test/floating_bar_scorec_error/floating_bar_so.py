@@ -38,6 +38,8 @@ name = "floating_bar"
 systemStepControllerType = Sequential_MinAdaptiveModelStep
 #systemStepControllerType = Sequential_FixedStep_Simple # uses time steps in so.tnList
 
+archiveFlag = ArchiveFlags.EVERY_SEQUENCE_STEP
+
 needEBQ_GLOBAL = False
 needEBQ = False
 
