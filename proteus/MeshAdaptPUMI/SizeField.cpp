@@ -540,14 +540,16 @@ std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
       ssa[i].wm = std::fabs(eigenValues[i]);
     }
     std::sort(ssa, ssa + 3);
+/*
     assert(ssa[2].wm >= ssa[1].wm);
     assert(ssa[1].wm >= ssa[0].wm);
+*/
     double lambda[3] = {ssa[2].wm, ssa[1].wm, ssa[0].wm};
     scaleFormulaERM(phi,hmin,hmax,apf::getScalar(size_iso,v,0),curve,lambda,eps_u,scale,adapt_type_config);
     apf::setVector(size_scale,v,0,scale);
   }
   m->end(it);
-  SmoothField(size_iso);
+  SmoothField(size_scale);
 
   char namebuffer[20];
   sprintf(namebuffer,"pumi_adapt_%i",nAdapt);
