@@ -12,6 +12,7 @@ from proteus.ctransportCoefficients import smoothedHeaviside
 from proteus.ctransportCoefficients import smoothedHeaviside_integral
 from proteus.MeshAdaptPUMI import MeshAdaptPUMI
 
+Profiling.verbose=True
 from proteus import Context
 opts=Context.Options([
     ("bar_dim", (0.33,0.33,0.2), "Dimensions of the bar"),
@@ -22,10 +23,10 @@ opts=Context.Options([
     ("bar_rotation",(0,0,0),"Initial rotation about x,y,z axes"),
     ("refinement_level",0,"Set maximum element diameter to he/2**refinement_level"),
     ("gen_mesh",False,"Generate new mesh"),
-    ("T",0.5,"Simulation time"),
+    ("T",0.1,"Simulation time"),
     ("dt_init",0.001,"Initial time step"),
     ("cfl",0.33,"Target cfl"),
-    ("nsave",30,"Number of time steps to  save"),
+    ("nsave",5,"Number of time steps to  save"),
     ("parallel",True,"Run in parallel"),
     ("free_x",(0.0,0.0,1.0),"Free translations"),
     ("free_r",(1.0,1.0,0.0),"Free rotations")])
@@ -115,10 +116,10 @@ nLevels = 1
 parallelPartitioningType = proteus.MeshTools.MeshParallelPartitioningTypes.element
 
 adaptMesh = True
-adaptMesh_nSteps = 10
+adaptMesh_nSteps = 1
 adaptMesh_numIter = 3
 
-domain.PUMIMesh = MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.12,hmin=0.04,
+domain.PUMIMesh = MeshAdaptPUMI.MeshAdaptPUMI(hmax=0.1,hmin=0.05,
                                               numIter=adaptMesh_numIter,sfConfig="alvin",maType="isotropic")
 comm = Comm.init()
 
@@ -126,8 +127,8 @@ comm = Comm.init()
 #Remember to change Face Maps @_@
 case_dir = "simModel/falling_bar"
 model_dir = "%s-Procs" % comm.size()
-case_mesh = "Floating_Bar_Falling.smb"
-case_model= "Floating_Bar_Falling.smd"
+case_mesh = "Floating_Bar_Falling_coarse.smb"
+case_model= "Floating_Bar_Falling_coarse.smd"
 input_model= "%s/%s" % (case_dir,case_model)
 input_mesh = "%s/%s/%s" % (case_dir,model_dir,case_mesh)
 domain.PUMIMesh.loadModelAndMesh(input_model, input_mesh)
