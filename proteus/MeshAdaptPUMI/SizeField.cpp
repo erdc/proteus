@@ -47,6 +47,7 @@ int MeshAdaptPUMIDrvr::calculateSizeField()
   return 0;
 }
 
+
 //taken from Dan's superconvergent patch recovery code
 void MeshAdaptPUMIDrvr::averageToEntity(apf::Field* ef, apf::Field* vf,
     apf::MeshEntity* ent)
@@ -571,5 +572,28 @@ std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
   freeField(size_iso); //no longer necessary
   return 0;
 }
+
+int MeshAdaptPUMIDrvr::testIsotropicSizeField()
+{
+    size_scale = apf::createLagrangeField(m, "proteus_size",apf::VECTOR,1);
+    size_frame = apf::createLagrangeField(m, "proteus_size_frame", apf::MATRIX, 1);
+    apf::MeshIterator* it = m->begin(0);
+    apf::MeshEntity* v;
+    apf::Field* phif = m->findField("phi");
+    while(v = m->iterate(it)){
+      double phi = apf::getScalar(phif, v, 0);
+      clamp(phi,hmin,hmax);
+      apf::Vector3 scale = (apf::Vector3(1.0,1.0,1.0))*phi;
+      apf::setVector(size_scale, v, 0, scale);
+      apf::Matrix3x3 frame(1.0,0.0,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0);
+      apf::setMatrix(size_frame, v, 0, frame);
+    }
+    for(int i=0; i < 3; i++)
+      SmoothField(size_scale);
+    char namebuffer[20];
+    sprintf(namebuffer,"pumi_adapt_%i",nAdapt);
+    apf::writeVtkFiles(namebuffer, m);
+}
+
 
 
