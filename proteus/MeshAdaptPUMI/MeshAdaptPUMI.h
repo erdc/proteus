@@ -46,8 +46,8 @@ class MeshAdaptPUMIDrvr{
   void computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf);
   void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux);
   void getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, double * endflux);
-  int getSimmetrixBC();
-  void simmetrixBCreloaded(const char* modelFile);
+  int getSimmetrixBC(const char* modelFile);
+  void simmetrixBCreloaded();
   void removeBCData();
   char* geomFileName; 
   char* modelFileName; 
