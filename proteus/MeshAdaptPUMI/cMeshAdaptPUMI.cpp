@@ -67,15 +67,10 @@ pAManager SModel_attManager(pModel model);
 /*
 Temporary function used to read in BC from Simmetrix Model
 */
-int MeshAdaptPUMIDrvr::getSimmetrixBC(const char* modelFile)
+int MeshAdaptPUMIDrvr::getSimmetrixBC()
 {
-  if(modelFileName == NULL)
-  {
-    modelFileName=(char *) malloc(sizeof(char) * strlen(modelFile));
-    strcpy(modelFileName,modelFile);
-  }
   pGModel model = 0;
-  model=GM_load(modelFile,NULL,NULL);
+  model=GM_load(modelFileName,NULL,NULL);
 
   pAManager attmngr = SModel_attManager(model);
   pACase acase = AMAN_findCaseByType(attmngr, "problem definition");
@@ -193,44 +188,18 @@ std::cout<<"Boundary label "<<label[idx]<<std::endl;
   return 0;
 } 
 
-void MeshAdaptPUMIDrvr::simmetrixBCreloaded()
+void MeshAdaptPUMIDrvr::simmetrixBCreloaded(const char* modelFile)
 { 
+  if(modelFileName == NULL)
+  {
+    modelFileName=(char *) malloc(sizeof(char) * strlen(modelFile));
+    strcpy(modelFileName,modelFile);
+  }
   for(int i=0;i<comm_size;i++){
     if(comm_rank==i)
-      getSimmetrixBC(modelFileName);
+      getSimmetrixBC();
     PCU_Barrier();
   }
-/*
-  int finished = 0;
-  int total = 0;
-  int ticket=1;
-  size_t size = sizeof(int);
-  int origin=comm_rank-1;
-  int dest = comm_rank+1;
-  if(comm_rank==comm_size-1)
-    dest = 0;
-  if(comm_rank ==0)
-    origin = comm_size-1;
-  while(total != comm_size)
-  {
-    if(comm_rank == 0)
-      ticket=0;
-    if(ticket==0 &&  finished == 0 ){
-      getSimmetrixBC(modelFileName);
-      finished = 1;
-    }
-    PCU_Barrier();
-    PCU_Comm_Begin();
-    PCU_Comm_Write(dest,&ticket,size);
-    PCU_Comm_Send();
-    if(comm_rank==1) std::cout<<"My ticket! "<<ticket<<std::endl;
-    void*data;
-    PCU_Comm_Read(&origin,&data,&size);
-    ticket = ((int*)data)[0];
-    total = finished;
-    PCU_Add_Ints(&total,size);
-  }
-*/
 }
 
 int MeshAdaptPUMIDrvr::adaptPUMIMesh()
@@ -269,8 +238,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   std::cout<<std::setprecision(15)<<"Before "<<mass_before<<" After "<<mass_after<<" diff "<<mass_after-mass_before<<std::endl;
   std::cout.flags(saved);
   if(size_field_config=="alvin")
-    //getSimmetrixBC(modelFileName);  
-    simmetrixBCreloaded();
+    simmetrixBCreloaded(modelFileName);
   nAdapt++; //counter for number of adapt steps
   return 0;
 }
