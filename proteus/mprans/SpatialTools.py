@@ -232,9 +232,10 @@ class ShapeRANS(Shape):
                                                  dragBetaTypes=dragBetaTypes[i],
                                                  porosityTypes=porosityTypes[i])
 
-    def setGenerationZones(self, flags, epsFact_solid, center, waves,
-                           windSpeed=(0., 0., 0.), dragAlphaTypes=0.5/1.005e-6,
-                           dragBetaTypes=0., porosityTypes=1.):
+    def setGenerationZones(self, flags, epsFact_solid, center, orientation,
+                           waves, windSpeed=(0., 0., 0.),
+                           dragAlphaTypes=0.5/1.005e-6, dragBetaTypes=0.,
+                           porosityTypes=1.):
         """
         Sets a region (given the local flag) to a generation zone
 
@@ -250,6 +251,7 @@ class ShapeRANS(Shape):
             flags = [flags]
             epsFact_solid = [epsFact_solid]
             center = [center]
+            orientation = [orientation]
             waves = [waves]
             windSpeed = [windSpeed]
             center = [center]
@@ -258,9 +260,11 @@ class ShapeRANS(Shape):
             porosityTypes = [porosityTypes]
         for i, flag in enumerate(flags):
             self._checkNd(center[i])
+            self._checkNd(orientation[i])
+            ori = get_unit_vector(orientation[i])
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='generation',
-                                                 orientation=waves[i].waveDir,
+                                                 orientation=ori,
                                                  center=center[i],
                                                  waves=waves[i],
                                                  windSpeed=windSpeed[i],
