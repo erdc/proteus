@@ -238,10 +238,8 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   std::ios::fmtflags saved(std::cout.flags());
   std::cout<<std::setprecision(15)<<"Before "<<mass_before<<" After "<<mass_after<<" diff "<<mass_after-mass_before<<std::endl;
   std::cout.flags(saved);
-/*
   if(size_field_config=="alvin")
     simmetrixBCreloaded(modelFileName);
-*/
   nAdapt++; //counter for number of adapt steps
   return 0;
 }
