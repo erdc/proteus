@@ -51,7 +51,7 @@ tolFac = 0.0
 linTolFac = 0.001
 l_atol_res = 0.001*ct.mesh_nl_atol_res
 nl_atol_res = ct.mesh_nl_atol_res
-maxNonlinearIts = 4#should be linear
+maxNonlinearIts = 50#should be linear
 maxLineSearches = 0
 
 conservativeFlux = None
