@@ -6,7 +6,6 @@ Remove smoothing for TwoPhaseUnsteady and generation zone?
 """
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 from proteus import AuxiliaryVariables
 from proteus.Profiling import logEvent as log
 from proteus.ctransportCoefficients import (smoothedHeaviside,
@@ -306,9 +305,8 @@ class BoundaryConditions:
                 epsFact_consrv_heaviside = ct.epsFact_consrv_heaviside
             else:
                 epsFact_consrv_heaviside = 0.
-            def uOfXT(x, t):
-                return smoothedHeaviside(epsFact_consrv_heaviside*mesh.he,x[vert_axis]-level)
-            return uOfXT(x, t)
+            H = smoothedHeaviside(epsFact_consrv_heaviside*mesh.he,x[vert_axis]-level)
+            return H
 
         def inlet_p_advective(x, t):
             # This is the normal velocity, based on the outwards boundary
@@ -343,15 +341,16 @@ class BoundaryConditions:
         a1 = rho*g[vert_axis]
         # This is the normal velocity, based on the boundary orientation
 
-        def get_outlet_v_dirichletel(i):
-            def u_dirichletx(x, t):
+        def get_outlet_ux_dirichlet(i):
+            def ux_dirichlet(x, t):
                 b_or = self._b_or[self._b_i]
                 if b_or[i] == 0:
                     return 0.
-        self.u_dirichlet = get_outlet_v_dirichletel(0)
-        self.v_dirichlet = get_outlet_v_dirichletel(1)
+            return ux_dirichlet
+        self.u_dirichlet = get_outlet_ux_dirichlet(0)
+        self.v_dirichlet = get_outlet_ux_dirichlet(1)
         if len(g) == 3:
-            self.w_dirichlet = get_outlet_v_dirichletel(2)
+            self.w_dirichlet = get_outlet_ux_dirichlet(2)
         self.p_dirichlet = linearBC(a0, a1, vert_axis)
         self.vof_dirichlet = constantBC(vof)
         self.u_diffusive = constantBC(0.)
@@ -404,12 +403,12 @@ class BoundaryConditions:
 # for regions
 
 class RelaxationZone:
-    def __init__(self, domain, zone_type, sign, center_x, waves, windSpeed,
+    def __init__(self, shape, zone_type, center, orientation, waves, windSpeed,
                  epsFact_solid, dragAlphaTypes, dragBetaTypes, porosityTypes):
-        self.domain = domain
+        self.Shape = shape
         self.zone_type = zone_type
-        self.sign = sign
-        self.center_x = center_x
+        self.center = center
+        self.orientation = orientation
         self.waves = waves
         self.windSpeed = windSpeed
         self.smooth = False
@@ -434,7 +433,7 @@ class RelaxationZone:
         def twp_flowVelocity(x, t):
             from proteus import Context
             ct = Context.get()
-            vert_axis = self.domain.nd-1
+            vert_axis = self.Shape.Domain.nd-1
             waterSpeed = self.waves.u(x, t)[i]
             waveHeight = self.waves.mwl+self.waves.eta(x, t)
             wavePhi = x[vert_axis]-waveHeight
@@ -471,8 +470,9 @@ class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
                         x = m.q['x'][eN, k]
                         zone = self.zones[mType]
                         coeff = m.coefficients
-                        sign = zone.sign
-                        coeff.q_phi_solid[eN, k] = sign*(zone.center_x-x[0])
+                        ori = zone.orientation
+                        nd = zone.Shape.Domain.nd
+                        coeff.q_phi_solid[eN, k] = np.dot(ori, zone.center[:nd]-x[:nd])
                         coeff.q_velocity_solid[eN, k, 0] = zone.u(x, t)
                         coeff.q_velocity_solid[eN, k, 1] = zone.v(x, t)
                         if self.nd > 2:
