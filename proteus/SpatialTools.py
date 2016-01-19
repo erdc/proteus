@@ -60,6 +60,7 @@ class Shape(object):
         self.coords = None  # Only used for predefined shapes
                             # (can be different from barycenter)
         self.coords_system = np.eye(nd)
+        self.boundaryTags = None
         self.b_or = None  # boundary orientation
         self.volume = None
         self.BC_list = []
@@ -86,6 +87,13 @@ class Shape(object):
         """
         assert len(list_of_lists[0]) == self.nd, 'must have be a list of: ' \
             'lists of length ' + self.nd
+
+    def _checkNd(self, array):
+        """
+        Checks if an array is of the same dimension of the Shape instance or
+        is of dimension 3
+        """
+        assert len(array) == self.nd or len(array) == 3, 'wrong dimension'
 
     def setPosition(self, coords):
         """
@@ -253,9 +261,6 @@ class Cuboid(Shape):
                                   [x-0.5*L, y+0.5*W, z+0.5*H],
                                   [x+0.5*L, y+0.5*W, z+0.5*H],
                                   [x+0.5*L, y-0.5*W, z+0.5*H]])
-        self.segments = np.array([[0, 1], [1, 2], [2, 3], [3, 0], [4, 5],
-                                  [5, 6], [6, 7], [7, 4], [0, 4], [1, 5],
-                                  [2, 6], [3, 7]])
         if self.Domain.nd == 2:
             self.vertices = np.array([[x-0.5*L, y-0.5*H],
                                       [x+0.5*L, y-0.5*H],
@@ -275,9 +280,17 @@ class Cuboid(Shape):
                               [0.,  0.,  1.]])
         self.regions = np.array([[x, y, z]])
         # defining flags for boundary conditions
-        self.facetFlags = np.array([1, 2, 3, 4, 5, 6])
-        self.vertexFlags = np.array([1, 1, 1, 1, 6, 6, 6, 6])
-        self.segmentFlags = np.array([1, 1, 1, 1, 6, 6, 6, 6, 2, 2, 4, 4])
+        self.boundaryTags = bt = {'bottom': 1,
+                                  'front': 2,
+                                  'right': 3,
+                                  'back': 4,
+                                  'left': 5,
+                                  'top': 6}
+        self.facetFlags = np.array([bt['bottom'], bt['front'], bt['right'],
+                                    bt['back'], bt['left'], bt['top']])
+        self.vertexFlags = np.array([bt['bottom'], bt['bottom'], bt['bottom'],
+                                     bt['bottom'], bt['top'], bt['top'],
+                                     bt['top'], bt['top']])
         self.regionFlags = np.array([1])
         # Initialize (empty) boundary conditions
         self.BC_dict = {'bottom': bc.BoundaryConditions(shape=self,
@@ -358,8 +371,14 @@ class Rectangle(Shape):
                               [0., 1.],
                               [-1., 0.]])
         self.regions = np.array([[x, y]])
-        self.segmentFlags = np.array([1, 2, 3, 4])  # bottom, right, top, left
-        self.vertexFlags = np.array([1, 1, 3, 3])  # bottom, bottom, top, top
+        self.boundaryTags = bt = {'bottom': 1,
+                                  'right': 2,
+                                  'top': 3,
+                                  'left': 4}
+        self.segmentFlags = np.array([bt['bottom'], bt['right'], bt['left'],
+                                      bt['top']])  # bottom, right, top, left
+        self.vertexFlags = np.array([bt['bottom'], bt['bottom'], bt['top'],
+                                     bt['top']])  # bottom, bottom, top, top
         self.regionFlags = np.array([1])
         self.BC_dict = {'bottom': bc.BoundaryConditions(shape=self,
                                                         name='bottom',
@@ -439,6 +458,7 @@ class CustomShape(Shape):
         self.BC_dict = {}
         self.BC_list = [None]*len(boundaryTags)
         b_or = [None]*len(boundaryTags)
+        self.b_or = b_or
         for tag, flag in boundaryTags.iteritems():
             b_i = flag-1  # start at index 0
             if boundaryOrientations is not None:

@@ -3,7 +3,6 @@ A class hierarchy and tools for building domains of PDE's.
 """
 
 import numpy as np
-from proteus import BC
 from proteus.MeshTools import MeshParallelPartitioningTypes as mpt
 
 
