@@ -891,21 +891,21 @@ double err_est_total=0;
         std::cout<<"Velocity "<<vel_vect<<" Gradient "<<grad_vel<<std::endl;
         std::cout<<"Pressure "<<apf::getScalar(pres_elem,qpt)<<std::endl;
       }
-
+      double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
       for( int i = 0; i<nsd; i++){
         double temp_vect[nshl];
         for( int s=0;s<nshl;s++){
           idx[s] = i*nshl+s;
 
           //forcing term
-          temp_vect[s] = (g[i]+0.0)*shpval[s];
+          temp_vect[s] = (g[i]+0.0)/density*shpval[s];
           //a(u,v) and c(u,u,v) term
           for(int j=0;j<nsd;j++){
             temp_vect[s] += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
             temp_vect[s] += -shpval[s]*grad_vel[i][j]*vel_vect[j];
           }
           //need to scale pressure by density b(p,v)
-          temp_vect[s] += apf::getScalar(pres_elem,qpt)/getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1)*shdrv[s][i]; //pressure term
+          temp_vect[s] += apf::getScalar(pres_elem,qpt)/density*shdrv[s][i]; //pressure term
 
           temp_vect[s] = temp_vect[s]*weight;
         } //end loop over number of shape functions
