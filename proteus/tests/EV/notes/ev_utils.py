@@ -8,6 +8,9 @@ import scipy
 from scipy import linalg,sparse
 from scipy.sparse import linalg
 
+import pyximport; pyximport.install()
+import cev_utils as cev
+
 
 def choose_stable_dt(uelem,dflux,he,x,t):
     """
