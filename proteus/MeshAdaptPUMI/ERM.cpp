@@ -654,6 +654,22 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, doub
    } //end for adjacent faces
 }
 
+apf::Field* MeshAdaptPUMIDrvr::getViscosityField(apf::Field* voff)
+{
+  apf::Field* visc = apf::createLagrangeField(m,"viscosity",apf::SCALAR,1);
+  apf::MeshEntity* ent;
+  apf::MeshIterator* iter = m->begin(0);
+  double vof_val, visc_val;
+  int nsd = m->getDimension();
+  while(ent = m->iterate(iter)){ //loop through all vertices
+    vof_val=apf::getScalar(voff,ent,0);
+    visc_val = getMPvalue(vof_val,nu_0, nu_1);
+    apf::setScalar(visc, ent, 0,visc_val);
+  }
+  m->end(iter);
+  return visc;
+}
+
 void MeshAdaptPUMIDrvr::removeBCData()
 {
   std::cout<<"Start removing BC tags/data"<<std::endl;
@@ -697,10 +713,16 @@ void MeshAdaptPUMIDrvr::get_local_error()
   assert(velf);
   apf::Field* pref = m->findField("p");
   assert(pref);
-  apf::Field* visc = apf::createLagrangeField(m,"viscosity",apf::SCALAR,1);
   //*****               *****//
   
   //***** Compute the viscosity field *****//
+  apf::Field* visc = getViscosityField(voff);
+  apf::MeshEntity* ent;
+  apf::MeshIterator* iter;
+  double visc_val;
+  int nsd = m->getDimension();
+/*
+  apf::Field* visc = apf::createLagrangeField(m,"viscosity",apf::SCALAR,1);
   apf::MeshEntity* ent;
   apf::MeshIterator* iter = m->begin(0);
   double vof_val, visc_val;
@@ -711,7 +733,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
     apf::setScalar(visc, ent, 0,visc_val);
   }
   m->end(iter);
-
+*/
   //***** Compute diffusive flux *****//
   computeDiffusiveFlux(m,voff,visc,pref,velf);
 
