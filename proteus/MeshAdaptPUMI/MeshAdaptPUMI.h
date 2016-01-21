@@ -37,10 +37,12 @@ class MeshAdaptPUMIDrvr{
   double getMinimumQuality();
   double getTotalMass();
   double getMPvalue(double field_val,double val_0, double val_1);
+  apf::Field* getViscosityField(apf::Field* voff);
 
   double hmax, hmin;
   int numIter;
   int nAdapt; //counter for number of adapt steps
+  int nsd; //number of spatial dimensions
 
   //Element Residual Method
   void get_local_error();
