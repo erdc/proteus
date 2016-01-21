@@ -479,6 +479,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   double err_dest = alpha*err_total/sqrt(numel);
 std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
   double err_curr = 0.0;
+  apf::Vector3 err_vect;
   //compute the new size field
   apf::MeshElement* element;
   apf::MeshEntity* reg;
@@ -487,7 +488,8 @@ std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
     double h_new;
     element = apf::createMeshElement(m,reg);
     h_old = pow(apf::measure(element),1.0/3.0);
-    err_curr = apf::getScalar(err_reg,reg,0);
+    apf::getVector(err_reg,reg,0,err_vect);
+    err_curr = err_vect[0];
     h_new = h_old*pow(err_dest/err_curr,0.5);
     apf::setScalar(size_iso_reg,reg,0,h_new);
   }
