@@ -113,6 +113,44 @@ double c_k(apf::Vector3 a, apf::Matrix3x3 b, apf::Vector3 c){
   return getDotProduct(b*a,c);
 }
 
+void getLHS(Mat K,apf::NewArray <apf::DynamicVector> &shdrv,int nsd,double weight, double visc_val,int nshl)
+{
+      PetscScalar term1[nshl][nshl], term2[nshl][nshl];
+      //Calculate LHS Diagonal Block Term
+      for(int s=0; s<nshl;s++){
+        for(int t=0; t<nshl;t++){
+          double temp=0;
+          for(int j=0;j<nsd;j++){
+            temp+=shdrv[s][j]*shdrv[t][j];
+          }
+          term1[s][t] = temp*weight*visc_val;
+        }
+      } 
+      int idx[nshl]; //indices for PETSc Mat insertion
+      for(int i=0; i<nsd;i++){
+        for(int j=0;j<nshl;j++){
+          idx[j] = i*nshl+j;
+        }
+        MatSetValues(K,nshl,idx,nshl,idx,term1[0],ADD_VALUES);
+      }
+      int idxr[nshl],idxc[nshl]; //indices for PETSc rows and columns
+      for(int i = 0; i< nsd;i++){
+        for(int j=0; j< nsd;j++){
+          for(int s=0;s<nshl;s++){
+            for(int t=0;t<nshl;t++){
+              term2[s][t] = shdrv[s][j]*shdrv[t][i]*weight*visc_val;
+            }
+          }
+          for(int count=0;count<nshl;count++){
+            idxr[count] = i*nshl+count;
+            idxc[count] = j*nshl+count;
+          }
+          MatSetValues(K,nshl,idxr,nshl,idxc,term2[0],ADD_VALUES);
+        }
+      } //end 2nd term loop
+}
+
+
 
 double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf){
 
@@ -714,28 +752,13 @@ void MeshAdaptPUMIDrvr::get_local_error()
   
   //***** Compute the viscosity field *****//
   apf::Field* visc = getViscosityField(voff);
-  apf::MeshEntity* ent;
-  apf::MeshIterator* iter;
-  double visc_val;
-/*
-  apf::Field* visc = apf::createLagrangeField(m,"viscosity",apf::SCALAR,1);
-  apf::MeshEntity* ent;
-  apf::MeshIterator* iter = m->begin(0);
-  double vof_val, visc_val;
-  while(ent = m->iterate(iter)){ //loop through all vertices
-    vof_val=apf::getScalar(voff,ent,0);
-    visc_val = getMPvalue(vof_val,nu_0, nu_1);
-    apf::setScalar(visc, ent, 0,visc_val);
-  }
-  m->end(iter);
-*/
+
   //***** Compute diffusive flux *****//
   computeDiffusiveFlux(m,voff,visc,pref,velf);
 
   //Initialize the Error Fields
   freeField(err_reg);
   err_reg = apf::createField(m,"ErrorRegion",apf::SCALAR,apf::getConstant(nsd));
-  //apf::Field* err_vtx = apf::createLagrangeField(m,"error_vtx",apf::SCALAR,1);  //for contraction
 
   //Start computing element quantities
   int numqpt; //number of quadrature points
@@ -743,9 +766,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
   int elem_type; //what type of topology
   double weight; //value container for the weight at each qpt
   double Jdet;
-  //apf::FieldShape* err_shape = apf::getLagrange(approx_order);
-  //apf::FieldShape* err_shape = apf::getSerendipity();
-  apf::FieldShape* err_shape = apf::getHierarchic(2);
+  apf::FieldShape* err_shape = apf::getHierarchic(approx_order);
   apf::Field * estimate = apf::createField(m, "err_est", apf::VECTOR, err_shape);
   apf::EntityShape* elem_shape;
   apf::Vector3 qpt; //container for quadrature points
@@ -762,7 +783,9 @@ void MeshAdaptPUMIDrvr::get_local_error()
   apf::NewArray <apf::DynamicVector> shdrv;
   apf::NewArray <apf::DynamicVector> shgval_copy;
   
-  iter = m->begin(nsd); //loop over elements
+  apf::MeshIterator* iter = m->begin(nsd); //loop over elements
+  apf::MeshEntity* ent;
+  
 int testcount = 0;
 int eID = 0; 
 double effectivity_avg=0.0;
@@ -772,16 +795,17 @@ double star_total=0;
 double err_est = 0;
 double err_est_total=0;
   while(ent = m->iterate(iter)){ //loop through all elements
-    element = apf::createMeshElement(m,ent);
-    pres_elem = apf::createElement(pref,element);
-    velo_elem = apf::createElement(velf,element);
-  
-    numqpt=apf::countIntPoints(element,int_order); //generally p*p maximum for shape functions
+    
     elem_type = m->getType(ent);
     if(elem_type != m->TET){
       std::cout<<"Not a Tet present"<<std::endl;
       exit(0); 
     }
+    element = apf::createMeshElement(m,ent);
+    pres_elem = apf::createElement(pref,element);
+    velo_elem = apf::createElement(velf,element);
+  
+    numqpt=apf::countIntPoints(element,int_order); //generally p*p maximum for shape functions
     nshl=apf::countElementNodes(err_shape,elem_type);
     shgval.allocate(nshl);
     shpval_temp.allocate(nshl);
@@ -789,8 +813,6 @@ double err_est_total=0;
     int hier_off = 4; //there is an offset that needs to be made to isolate the hierarchic edge modes
     nshl = nshl - hier_off;
 
-    if(testcount==eID && comm_rank==0)
-      std::cout<<"nshls "<<nshl<<" numqpt "<<numqpt<<std::endl;
     shpval.allocate(nshl);   shgval_copy.allocate(nshl); shdrv.allocate(nshl);
 
     //LHS Matrix Initialization
@@ -800,7 +822,6 @@ double err_est_total=0;
     MatSetSizes(K,ndofs,ndofs,ndofs,ndofs);
     MatSetFromOptions(K);
     MatSetUp(K); //is this inefficient? check later
-
 
     //RHS Vector Initialization
     Vec F;
@@ -829,10 +850,6 @@ double err_est_total=0;
         apf::multiply(shgval_copy[i],invJ_copy,shdrv[i]); 
       }
 
-      //Debugging Information
-      //if(testcount==eID) std::cout<<"Local shape gradients "<<shgval[0]<<" "<<shgval[1]<<" "<<shgval[2]<<" "<<shgval[3]<< std::endl;
-      //if(testcount==eID) std::cout<<"Global shape gradients "<<shdrv[0]<<" "<<shdrv[1]<<" "<<shdrv[2]<<" "<<shdrv[3]<<" "<<shdrv[4]<<" "<<shdrv[5]<<std::endl;
-      //if(testcount==eID) std::cout<<std::scientific<<std::setprecision(15)<< "qpt #"<< k << " value "<<qpt<<std::endl;
       apf::Adjacent dbg_vadj;
       m->getAdjacent(ent,0,dbg_vadj);
       if(testcount==eID && k==0){
@@ -848,50 +865,15 @@ double err_est_total=0;
       if(testcount==eID) std::cout<<"Jdet "<<Jdet<<std::endl;
       if(testcount==eID) std::cout<<"invJ "<<invJ<<std::endl;
       if(testcount==eID) std::cout<<"Shape function"<<shpval[0]<<" "<<shpval[1]<<" "<<shpval[2]<<" "<<shpval[3]<<" "<<shpval[4]<<" "<<shpval[5]<<std::endl;
-      if(testcount==eID) std::cout<<"visc_val "<<visc_val<<std::endl;
       if(testcount==eID) std::cout<<"weight "<<weight<<std::endl;
       
        
       //obtain viscosity value
       visc_elem = apf::createElement(visc,element); //at vof currently
-      visc_val = apf::getScalar(visc_elem,qpt);
+      double visc_val = apf::getScalar(visc_elem,qpt);
 
       //Left-Hand Side
-      PetscScalar term1[nshl][nshl], term2[nshl][nshl];
-
-      //Calculate LHS Diagonal Block Term
-      for(int s=0; s<nshl;s++){
-        for(int t=0; t<nshl;t++){
-          double temp=0;
-          for(int j=0;j<nsd;j++){
-            temp+=shdrv[s][j]*shdrv[t][j];
-          }
-          term1[s][t] = temp*weight*visc_val;
-        }
-      } 
-      int idx[nshl]; //indices for PETSc Mat insertion
-      for(int i=0; i<nsd;i++){
-        for(int j=0;j<nshl;j++){
-          idx[j] = i*nshl+j;
-        }
-        MatSetValues(K,nshl,idx,nshl,idx,term1[0],ADD_VALUES);
-      }
-
-      int idxr[nshl],idxc[nshl]; //indices for PETSc rows and columns
-      for(int i = 0; i< nsd;i++){
-        for(int j=0; j< nsd;j++){
-          for(int s=0;s<nshl;s++){
-            for(int t=0;t<nshl;t++){
-              term2[s][t] = shdrv[s][j]*shdrv[t][i]*weight*visc_val;
-            }
-          }
-          for(int count=0;count<nshl;count++){
-            idxr[count] = i*nshl+count;
-            idxc[count] = j*nshl+count;
-          }
-          MatSetValues(K,nshl,idxr,nshl,idxc,term2[0],ADD_VALUES);
-        }
-      } //end 2nd term loop
+      getLHS(K,shdrv,nsd,weight,visc_val,nshl);
 
       //Get RHS
       apf::Vector3 vel_vect;
@@ -910,6 +892,7 @@ double err_est_total=0;
         std::cout<<"Velocity "<<vel_vect<<" Gradient "<<grad_vel<<std::endl;
         std::cout<<"Pressure "<<apf::getScalar(pres_elem,qpt)<<std::endl;
       }
+      int idx[nshl];
       double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
       for( int i = 0; i<nsd; i++){
         double temp_vect[nshl];
@@ -949,25 +932,7 @@ if(comm_rank==0 && testcount==eID){
     double* bflux;
     int F_idx[ndofs];
     bflux = (double*) calloc(ndofs,sizeof(double));
-/*
-    if(testcount==eID){ getBoundaryFlux(m,ent,voff,visc,pref,velf,bflux); 
-    std::cout<<"Bflux Result "<<std::endl;
-    for(int s=0;s<ndofs;s++) std::cout<<bflux[s]<<std::endl;
-    }
-*/
-    //getBoundaryFlux(m,ent,voff,visc,pref,velf,bflux);
-/*
-if(testcount==eID){  
-    std::cout<<"Bflux Result "<<std::endl;
-    for(int s=0;s<ndofs;s++) std::cout<<bflux[s]<<std::endl;
 
-    for(int s=0;s<ndofs;s++) bflux[s]=0;
-    getBoundaryFlux(m, ent,bflux);
-
-    std::cout<<"2nd Bflux Result "<<std::endl;
-    for(int s=0;s<ndofs;s++) std::cout<<bflux[s]<<std::endl;
-}
-*/
     getBoundaryFlux(m, ent,bflux);
     for(int s=0;s<ndofs;s++){
       F_idx[s]=s;
@@ -1074,7 +1039,7 @@ if(testcount==eID && comm_rank==0){
         shpval[i] = shpval_temp[i+hier_off];
         apf::multiply(shgval_copy[i],invJ_copy,shdrv[i]); 
       }
-      visc_val = apf::getScalar(visc_elem,qpt);
+      double visc_val = apf::getScalar(visc_elem,qpt);
       apf::getVectorGrad(est_elem,qpt,phi_ij);
       phi_ij = apf::transpose(phi_ij);
       //Acomp = Acomp + visc_val*getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
