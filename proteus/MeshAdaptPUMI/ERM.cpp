@@ -810,7 +810,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
 
   //Initialize the Error Fields
   freeField(err_reg);
-  err_reg = apf::createField(m,"ErrorRegion",apf::SCALAR,apf::getConstant(nsd));
+  err_reg = apf::createField(m,"ErrorRegion",apf::VECTOR,apf::getConstant(nsd));
 
   //Start computing element quantities
   int numqpt; //number of quadrature points
@@ -1020,12 +1020,12 @@ if(testcount==eID && comm_rank==0){
     KSPDestroy(&ksp); //destroy ksp
     //PCDestroy(&pc);
 
+    setErrorField(estimate,coef,ent,nsd,nshl);
+
     //compute the local error  
     double Acomp=0;
     double Bcomp=0;
     apf::Matrix3x3 phi_ij;
-
-    setErrorField(estimate,coef,ent,nsd,nshl);
 
     est_elem= apf::createElement(estimate,element);   
     for(int k=0; k<numqpt;k++){ 
@@ -1056,8 +1056,9 @@ if(testcount==eID && comm_rank==0){
     } //end compute local error
     Acomp = Acomp*Jdet; //Jacobian+nondimensionalize
     Bcomp = Bcomp*Jdet;
-    err_est = sqrt(Acomp+Bcomp); //the square root should be here because the local error is given by this. but for statistics it's necessary for it to not be square rooted
-    apf::setScalar(err_reg,ent,0,err_est);
+    err_est = sqrt(Acomp+Bcomp); 
+    apf::Vector3 err_in(err_est,Acomp,Bcomp);
+    apf::setVector(err_reg,ent,0,err_in);
     err_est_total = err_est_total+(Acomp+Bcomp); //for tracking the upper bound
     double L2err= getL2error(m,ent,voff,visc,pref,velf); //non-dimensional
     L2_total = L2_total+L2err;
@@ -1074,15 +1075,15 @@ testcount++;
 
   } //end element loop
 
-//Get the errors
-PCU_Barrier();
-PCU_Add_Doubles(&err_est_total,1);
+  PCU_Barrier();
+  PCU_Add_Doubles(&err_est_total,1);
+  err_est_total = sqrt(err_est_total);
+
+if(comm_rank==0){
 star_total = -2*(0.5*(err_est_total)-star_total); //before square root is taken
-err_est_total = sqrt(err_est_total);
-L2_total = sqrt(L2_total);
 if(star_total<0){ star_total=star_total*-1;std::cout<<"star err Was negative "<<std::endl;}
 star_total = sqrt(star_total);
-if(comm_rank==0){
+L2_total = sqrt(L2_total);
 std::cout<<std::setprecision(10)<<std::endl;
 std::cout<<"Err_est "<<err_est_total<<" L2 "<<L2_total<<" Average "<<err_est_total/L2_total<<std::endl;
 std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est_total/star_total<<std::endl;
@@ -1094,8 +1095,6 @@ std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est
   apf::destroyField(estimate);
   removeBCData();
   printf("It cleared the function.\n");
-  PCU_Barrier();
-  //abort();
 }
 
 
