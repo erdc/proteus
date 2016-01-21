@@ -99,18 +99,18 @@ def normIntegral(Sint,th):
 
 
 
-def eta_mode(x,y,z,t,kDir,omega,phi,amplitude):
+def eta_mode(x, t, kDir, omega, phi, amplitude):
     """Returns a single frequency mode for free-surface elevation at point x,y,z,t
     :param kDir: wave number vector [1/L] with three components
     :param omega: angular frequency [1/T]
     :param phi: phase [0,2*pi]
     :param amplitude: wave amplitude [L/T^2]
     """
-    phase = x*kDir[0]+y*kDir[1]+z*kDir[2] - omega*t  + phi
+    phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi
     return amplitude*cos(phase)
 
 
-def vel_mode(x,y,z,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,comp):
+def vel_mode(x, t, kDir, kAbs, omega, phi, amplitude, mwl, depth, g, vDir):
     """Returns a single frequency mode for velocity at point x,y,z,t
     :param kDir: wave number vector [1/L] with three components
     :param omega: angular frequency [1/T]
@@ -123,8 +123,8 @@ def vel_mode(x,y,z,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,comp):
     :param comp: component "x", "y" or "z"
     """
 
-    phase = x*kDir[0]+y*kDir[1]+z*kDir[2] - omega*t  + phi
-    Z =  (vDir[0]*x + vDir[1]*y+ vDir[2]*z) - mwl
+    phase = x[0]*kDir[0]+x[1]*kDir[1]+x[2]*kDir[2] - omega*t  + phi
+    Z =  (vDir[0]*x[0] + vDir[1]*x[1]+ vDir[2]*x[2]) - mwl
     UH = 0.
     UV=0.
     ii=0.
@@ -132,12 +132,10 @@ def vel_mode(x,y,z,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,comp):
     UV=amplitude*omega*sinh(kAbs*(Z + depth))*sin( phase )/sinh(kAbs*depth)
     waveDir = kDir/kAbs
 #waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
-    Vcomp = {
-        "x":UH*waveDir[0] + UV*vDir[0],
-        "y":UH*waveDir[1] + UV*vDir[1],
-        "z":UH*waveDir[2] + UV*vDir[2],
-        }
-    return Vcomp[comp]
+    V = np.array([UH*waveDir[0]+UV*vDir[0],
+                  UH*waveDir[1]+UV*vDir[1],
+                  UH*waveDir[2]+UV*vDir[2]])
+    return V
 
 
 
@@ -167,7 +165,7 @@ def JONSWAP(f,f0,Hs,gamma=3.3,TMA=False, depth = None):
         if (depth == None):
             logEvent("Wavetools:py. Provide valid depth definition definition for TMA spectrum")
             logEvent("Wavetools:py. Stopping simulation")
-            exit(1)
+            sys.exit(1)
         k = dispersion(2*pi*f,depth)
         tma = np.tanh(k*depth)*np.tanh(k*depth)/(1.+ 2.*k*depth/np.sinh(2.*k*depth))
 
@@ -368,11 +366,7 @@ class MonochromaticWaves:
                 sys.exit(1)
         self.kDir = self.k * self.waveDir
         self.amplitude = 0.5*self.waveHeight
-        self.meanVelocity = {
-        "x": meanVelocity[0],
-        "y": meanVelocity[1],
-        "z":  meanVelocity[2]
-        }
+        self.meanVelocity = np.array(meanVelocity)
 #Checking that meanvelocity is a vector
 
         if(len(meanVelocity) != 3):
@@ -387,22 +381,22 @@ class MonochromaticWaves:
             if self.waveType is not "Linear":
                 logEvent("WaveTools.py: Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
                 sys.exit(1)
-    def eta(self,x,y,z,t):
+    def eta(self, x, t):
         if self.waveType is "Linear":
-            return eta_mode(x,y,z,t,self.kDir,self.omega,self.phi0,self.amplitude)
+            return eta_mode(x,t,self.kDir,self.omega,self.phi0,self.amplitude)
         elif self.waveType is "Fenton":
             HH = 0.
             ii =0.
             for Y in self.Ycoeff:
                 ii+=1
-                HH+=eta_mode(x,y,z,t,ii*self.kDir,ii*self.omega,self.phi0,Y)
+                HH+=eta_mode(x,t,ii*self.kDir,ii*self.omega,self.phi0,Y)
             return HH/self.k
 
-    def u(self,x,y,z,t,comp):
+    def u(self, x, t):
         if self.waveType is "Linear":
-            return vel_mode(x,y,z,t,self.kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.g,self.vDir,comp)
+            return vel_mode(x, t, self.kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.g,self.vDir)
         elif self.waveType is "Fenton":
-            Ufenton = self.meanVelocity[comp]
+            Ufenton = self.meanVelocity
             ii = 0
             for B in self.Bcoeff:
                 ii+=1
@@ -410,7 +404,7 @@ class MonochromaticWaves:
                 kmode = ii*self.k
                 kdir = self.waveDir*kmode
                 amp = tanh(kmode*self.depth)*sqrt(self.gAbs/self.k)*B/self.omega
-                Ufenton+= vel_mode(x,y,z,t,kdir,kmode,wmode,self.phi0,amp,self.mwl,self.depth,self.g,self.vDir,comp)
+                Ufenton+= vel_mode(x,t,kdir,kmode,wmode,self.phi0,amp,self.mwl,self.depth,self.g,self.vDir)
             return Ufenton # + self.meanVelocity[comp]
 
 
@@ -474,7 +468,7 @@ class RandomWaves:
                     
             except:
                 logEvent('WaveTools.py: phi argument must be an array with N elements')
-                exit(1)
+                sys.exit(1)
 
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
         self.fim = reduceToIntervals(self.fi,self.df)
@@ -492,18 +486,18 @@ class RandomWaves:
         self.kDir = np.zeros((len(self.ki),3),)
         for ii in range(3):
              self.kDir[:,ii] = self.ki[:] * self.waveDir[ii] 
-    def eta(self,x,y,z,t):
+    def eta(self, x, t):
         """Free surface displacement
 
         :param x: floating point x coordinate
         :param t: time"""
         Eta=0.
         for ii in range(self.N):
-            Eta+= eta_mode(x,y,z,t,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
+            Eta+= eta_mode(x, t,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
         return Eta
 #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
 
-    def u(self,x,y,z,t,comp):
+    def u(self, x, t):
         """x-component of velocity
 
         :param x: floating point x coordinate
@@ -512,8 +506,8 @@ class RandomWaves:
         """
         U=0.
         for ii in range(self.N):
-            U+= vel_mode(x,y,z,t,self.kDir[ii], self.ki[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir,comp)                
-        return U        
+            U+= vel_mode(x, t, self.kDir[ii], self.ki[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
+        return U
 
 class MultiSpectraRandomWaves(RandomWaves):
     """Generate a random wave timeseries from multiple spectra. 
@@ -584,18 +578,18 @@ class MultiSpectraRandomWaves(RandomWaves):
             self.phiM[NN1:NN] = self.phi
         
 
-    def eta(self,x,y,z,t):
+    def eta(self, x, t):
         """Free surface displacement
 
         :param x: floating point x coordinate
         :param t: time"""
         Eta=0.
         for ii in range(self.Nall):
-            Eta+= eta_mode(x,y,z,t,self.kDirM[ii],self.omegaM[ii],self.phiM[ii],self.aiM[ii])
+            Eta+= eta_mode(x, t, self.kDirM[ii],self.omegaM[ii],self.phiM[ii],self.aiM[ii])
         return Eta
 #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
 
-    def u(self,x,y,z,t,comp):
+    def u(self, x, t):
         """x-component of velocity
 
         :param x: floating point x coordinate
@@ -604,8 +598,8 @@ class MultiSpectraRandomWaves(RandomWaves):
         """
         U=0.
         for ii in range(self.Nall):
-            U+= vel_mode(x,y,z,t,self.kDirM[ii], self.kiM[ii],self.omegaM[ii],self.phiM[ii],self.aiM[ii],self.mwl,self.depth,self.g,self.vDir,comp)                
-        return U        
+            U+= vel_mode(x,t,self.kDirM[ii], self.kiM[ii],self.omegaM[ii],self.phiM[ii],self.aiM[ii],self.mwl,self.depth,self.g,self.vDir)
+        return U
 
 
 
@@ -716,7 +710,7 @@ class DirectionalWaves(RandomWaves):
             self.Si_Sp[:,ii]*= self.Si_Jm[ii] 
     # Creating amplitudes spectrum
         self.aiDirs[:] = np.sqrt(2.*returnRectangles3D(self.Si_Sp,self.theta_m,self.fim))
-    def eta(self,x,y,z,t):
+    def eta(self, x, t):
         """Free surface displacement
 
         :param x: floating point x coordinate
@@ -725,11 +719,11 @@ class DirectionalWaves(RandomWaves):
         for jj in range(self.Mtot):
             for ii in range(self.N):
                 kDiri = self.waveDirs[jj]*self.ki[ii]
-                Eta+= eta_mode(x,y,z,t,kDiri,self.omega[ii],self.phiDirs[jj,ii],self.aiDirs[jj,ii])
+                Eta+= eta_mode(x,t,kDiri,self.omega[ii],self.phiDirs[jj,ii],self.aiDirs[jj,ii])
         return Eta
 #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
 
-    def u(self,x,y,z,t,comp):
+    def u(self, x, t):
         """x-component of velocity
 
         :param x: floating point x coordinate
@@ -740,8 +734,8 @@ class DirectionalWaves(RandomWaves):
         for jj in range(self.Mtot):
             for ii in range(self.N):
                 kDiri = self.waveDirs[jj]*self.ki[ii]
-                U+= vel_mode(x,y,z,t,kDiri, self.ki[ii],self.omega[ii],self.phiDirs[jj,ii],self.aiDirs[jj,ii],self.mwl,self.depth,self.g,self.vDir,comp)                
-        return U        
+                U+= vel_mode(x,t,kDiri, self.ki[ii],self.omega[ii],self.phiDirs[jj,ii],self.aiDirs[jj,ii],self.mwl,self.depth,self.g,self.vDir)
+        return U
      
 
 
@@ -1015,16 +1009,17 @@ class TimeSeries:
 #            self.Twindow = self.Npw*self.dt
 #            self.Noverlap = int(self.Npw *0.25)
 
-    def etaDirect(self,x,y,z,t):
+    def etaDirect(self, x, t):
         """Free surface displacement
         :param x: floating point x coordinate
         :param t: time"""
         Eta=0.        
         for ii in range(0,self.Nf):
-            Eta+= eta_mode(x-self.x0,y-self.y0,z-self.z0,t-self.t0,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
+            x1 = np.array(x)-[self.x0, self.y0, self.z0]
+            Eta+= eta_mode(x1,t-self.t0,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii])
         return Eta
 
-    def uDirect(self,x,y,z,t,comp):
+    def uDirect(self, x, t):
         """x-component of velocity
 
         :param x: floating point x coordinate
@@ -1033,8 +1028,9 @@ class TimeSeries:
         """
         U=0.
         for ii in range(self.N):
-            U+= vel_mode(x-self.x0,y-self.y0,z-self.z0,t-self.t0,self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir,comp)                
-        return U        
+            x1 = x-[self.x0, self.y0, self.z0]
+            U+= vel_mode(x1, t-self.t0, self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
+        return U
 
     def findWindow(self,t):
         term = 1. - self.handover
@@ -1046,7 +1042,7 @@ class TimeSeries:
             Nw = 0
         return Nw
         
-    def etaWindow(self,x,y,z,t):
+    def etaWindow(self, x, t):
         """Free surface displacement
         :param x: floating point x coordinate
         :param t: time"""
@@ -1058,10 +1054,11 @@ class TimeSeries:
         t0 = self.windows_rec[Nw][0,0]
         Eta=0.        
         for ii in range(0,self.Nf):
-            Eta+= eta_mode(x-self.x0,y-self.y0,z-self.z0,t-t0,kDir[ii],omega[ii],phi[ii],ai[ii])
+            x1 = np.array(x)-[self.x0, self.y0, self.z0]
+            Eta+= eta_mode(x1, t-t0, kDir[ii], omega[ii], phi[ii], ai[ii])
         return Eta
 
-    def uWindow(self,x,y,z,t,comp):
+    def uWindow(self, x, t):
         """x-component of velocity
 
         :param x: floating point x coordinate
@@ -1076,8 +1073,9 @@ class TimeSeries:
         t0 = self.windows_rec[Nw][0,0]
         U=0.
         for ii in range(self.N):
-            U+= vel_mode(x-self.x0,y-self.y0,z-self.z0,t-t0,kDir[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir,comp)                
-        return U        
+            x1 = x-[self.x0, self.y0, self.z0]
+            U+= vel_mode(x1, t-t0, kDir[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir)
+        return U
 
 
 
