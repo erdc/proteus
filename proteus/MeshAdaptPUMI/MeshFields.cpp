@@ -62,10 +62,14 @@ int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double const* inArr
              m->getPoint(v,0,pt);
              double Lz = 0.05;
              double Uinf = 2e-3;
-             tmp[0] =0 ; //pressure
-             tmp[1] =0; //u
-             tmp[2] = Uinf*pt[2]/Lz;
-             tmp[3] =0;
+             //std::cout<<"name? "<<name<<std::endl;
+             if(!strcmp(name,"p"))
+               tmp[0] =0 ; //pressure
+             else if(!strcmp(name,"velocity")){
+               tmp[0] =0; //u
+               tmp[1] = Uinf*pt[2]/Lz;
+               tmp[2] =0;
+             }
      }
     apf::setComponents(f, v, 0, &tmp[0]); 
   }
