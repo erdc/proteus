@@ -19,29 +19,6 @@ double nu_0,nu_1,rho_0,rho_1;
 double a_kl = 0.5; //flux term weight
 int casenumber;
 
-//used to attach error estimates to nodes
-static void volumeAverageToEntity(apf::Field* ef, apf::Field* vf, apf::MeshEntity* ent)
-{
-  apf::Mesh* m = apf::getMesh(ef);
-  apf::Adjacent elements;
-  m->getAdjacent(ent, m->getDimension(), elements);
-  double s=0;
-  double vol_tot=0;
-  apf::MeshElement* elem;
-  for (std::size_t i=0; i < elements.getSize(); ++i){
-    elem = apf::createMeshElement(m,elements[i]);
-    vol_tot += apf::measure(elem);
-  }
-  for (std::size_t i=0; i < elements.getSize(); ++i){
-    elem = apf::createMeshElement(m,elements[i]);
-    s += apf::getScalar(ef, elements[i], 0)*(1-apf::measure(elem)/vol_tot);
-  }
-  s /= (elements.getSize()-1);
-  apf::setScalar(vf, ent, 0, s);
-  apf::destroyMeshElement(elem);
-  return;
-}
-
 void getProps(double*rho,double*nu)
 {
   rho_0 = rho[0];
@@ -1094,14 +1071,6 @@ std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est
 }
   m->end(iter);
 
-  //store error field onto vertices
-/*
-  apf::MeshIterator* iter_vtx = m->begin(0);
-  while(ent = m->iterate(iter_vtx)){
-    volumeAverageToEntity(err_reg, err_vtx, ent);
-  }
-  m->end(iter_vtx);
-*/
   getERMSizeField(err_est_total);
   apf::destroyElement(visc_elem);apf::destroyElement(pres_elem);apf::destroyElement(velo_elem);apf::destroyElement(est_elem);
   apf::destroyField(visc);
