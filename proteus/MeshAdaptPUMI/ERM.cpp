@@ -654,6 +654,31 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, doub
    } //end for adjacent faces
 }
 
+void MeshAdaptPUMIDrvr::removeBCData()
+{
+  std::cout<<"Start removing BC tags/data"<<std::endl;
+  apf::MeshEntity* ent;   
+  apf::MeshIterator* fIter = m->begin(2);
+  while(ent=m->iterate(fIter))
+  {
+    for(int i=0;i<4;i++)
+    {
+      if(m->hasTag(ent,BCtag[i]))
+        m->removeTag(ent,BCtag[i]);
+      if(i>0 && m->hasTag(ent,fluxtag[i]))
+        m->removeTag(ent,fluxtag[i]);
+    }
+  }
+  m->end(fIter);
+  for(int i=0;i<4;i++)
+  {
+    m->destroyTag(BCtag[i]);
+    if(i>0)
+      m->destroyTag(fluxtag[i]);
+  }
+  std::cout<<"Destroyed BC and flux tags"<<std::endl;
+}
+
 
 void MeshAdaptPUMIDrvr::get_local_error() 
 //This function aims to compute error at each element via ERM.
@@ -1081,27 +1106,4 @@ std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est
   //abort();
 }
 
-void MeshAdaptPUMIDrvr::removeBCData()
-{
-std::cout<<"Start of the function"<<std::endl;
-  apf::MeshEntity* ent;   
-  apf::MeshIterator* fIter = m->begin(2);
-  while(ent=m->iterate(fIter))
-  {
-    for(int i=0;i<4;i++)
-    {
-      if(m->hasTag(ent,BCtag[i]))
-        m->removeTag(ent,BCtag[i]);
-      if(i>0 && m->hasTag(ent,fluxtag[i]))
-        m->removeTag(ent,fluxtag[i]);
-    }
-  }
-  m->end(fIter);
-std::cout<<"Start of destruction"<<std::endl;
-  for(int i=0;i<4;i++)
-  {
-    m->destroyTag(BCtag[i]);
-    if(i>0)
-      m->destroyTag(fluxtag[i]);
-  }
-}
+
