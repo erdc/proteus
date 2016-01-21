@@ -731,6 +731,31 @@ apf::Field* MeshAdaptPUMIDrvr::getViscosityField(apf::Field* voff)
   return visc;
 }
 
+
+void setErrorField(apf::Field* estimate,Vec coef,apf::MeshEntity* ent,int nsd,int nshl)
+{
+    apf::Mesh* m = apf::getMesh(estimate);
+    double coef_ez[nshl*nsd];
+    int ez_idx[nshl*nsd];
+    for(int ez=0;ez<nshl*nsd;ez++){ez_idx[ez]=ez;}
+    VecGetValues(coef,nshl*nsd,ez_idx,coef_ez);
+
+    //Copy coefficients onto field
+    apf::Adjacent adjvert;
+    m->getAdjacent(ent,0,adjvert);
+    for(int idx=0;idx<4;idx++){
+      double coef_sub[3]={0,0,0};
+      apf::setVector(estimate,adjvert[idx],0,&coef_sub[0]);
+    }
+    
+    apf::Adjacent adjedg;
+    m->getAdjacent(ent,1,adjedg);
+    for(int idx=0;idx<nshl;idx++){
+      double coef_sub[3] ={coef_ez[idx],coef_ez[nshl+idx],coef_ez[nshl*2+idx]};
+      apf::setVector(estimate,adjedg[idx],0,&coef_sub[0]);
+    }
+}
+
 void MeshAdaptPUMIDrvr::removeBCData()
 {
   std::cout<<"Start removing BC tags/data"<<std::endl;
@@ -831,6 +856,7 @@ double err_est_total=0;
     element = apf::createMeshElement(m,ent);
     pres_elem = apf::createElement(pref,element);
     velo_elem = apf::createElement(velf,element);
+    visc_elem = apf::createElement(visc,element); //at vof currently
   
     numqpt=apf::countIntPoints(element,int_order); //generally p*p maximum for shape functions
     nshl=apf::countElementNodes(err_shape,elem_type);
@@ -894,9 +920,7 @@ double err_est_total=0;
         std::cout<<"weight "<<weight<<std::endl;
       }
        
-      //obtain viscosity value
-      visc_elem = apf::createElement(visc,element); //at vof currently
-      double visc_val = apf::getScalar(visc_elem,qpt);
+      //obtain needed values
 
       apf::Vector3 vel_vect;
       apf::Matrix3x3 grad_vel;
@@ -907,6 +931,7 @@ double err_est_total=0;
       apf::Element* vof_elem = apf::createElement(voff,element); //at vof currently
       double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
       double pressure = apf::getScalar(pres_elem,qpt);
+      double visc_val = apf::getScalar(visc_elem,qpt);
 
       //Left-Hand Side
       getLHS(K,shdrv,nsd,weight,visc_val,nshl);
@@ -1000,25 +1025,7 @@ if(testcount==eID && comm_rank==0){
     double Bcomp=0;
     apf::Matrix3x3 phi_ij;
 
-    double coef_ez[nshl*nsd];
-    int ez_idx[nshl*nsd];
-    for(int ez=0;ez<nshl*nsd;ez++){ez_idx[ez]=ez;}
-    VecGetValues(coef,nshl*nsd,ez_idx,coef_ez);
-
-    //Copy coefficients onto field
-    apf::Adjacent adjvert;
-    m->getAdjacent(ent,0,adjvert);
-    for(int idx=0;idx<4;idx++){
-      double coef_sub[3]={0,0,0};
-      apf::setVector(estimate,adjvert[idx],0,&coef_sub[0]);
-    }
-    
-    apf::Adjacent adjedg;
-    m->getAdjacent(ent,1,adjedg);
-    for(int idx=0;idx<nshl;idx++){
-      double coef_sub[3] ={coef_ez[idx],coef_ez[nshl+idx],coef_ez[nshl*2+idx]};
-      apf::setVector(estimate,adjedg[idx],0,&coef_sub[0]);
-    }
+    setErrorField(estimate,coef,ent,nsd,nshl);
 
     est_elem= apf::createElement(estimate,element);   
     for(int k=0; k<numqpt;k++){ 
@@ -1044,7 +1051,6 @@ if(testcount==eID && comm_rank==0){
       double visc_val = apf::getScalar(visc_elem,qpt);
       apf::getVectorGrad(est_elem,qpt,phi_ij);
       phi_ij = apf::transpose(phi_ij);
-      //Acomp = Acomp + visc_val*getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
       Acomp = Acomp + getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
       Bcomp = Bcomp + apf::getDiv(velo_elem,qpt)*apf::getDiv(velo_elem,qpt)*weight;
     } //end compute local error
@@ -1062,7 +1068,10 @@ if(testcount==eID && comm_rank==0){
     VecDestroy(&F); //destroy vector
     VecDestroy(&coef); //destroy vector
 
+  
+    apf::destroyElement(visc_elem);apf::destroyElement(pres_elem);apf::destroyElement(velo_elem);apf::destroyElement(est_elem);
 testcount++;
+
   } //end element loop
 
 //Get the errors
@@ -1081,7 +1090,6 @@ std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est
   m->end(iter);
 
   getERMSizeField(err_est_total);
-  apf::destroyElement(visc_elem);apf::destroyElement(pres_elem);apf::destroyElement(velo_elem);apf::destroyElement(est_elem);
   apf::destroyField(visc);
   apf::destroyField(estimate);
   removeBCData();
