@@ -254,11 +254,12 @@ class ShapeRANS(Shape):
             orientation = [orientation]
             waves = [waves]
             windSpeed = [windSpeed]
-            center = [center]
             dragAlphaTypes = [dragAlphaTypes]
             dragBetaTypes = [dragBetaTypes]
             porosityTypes = [porosityTypes]
         for i, flag in enumerate(flags):
+            print center[i]
+            print orientation[i]
             self._checkNd(center[i])
             self._checkNd(orientation[i])
             ori = get_unit_vector(orientation[i])
