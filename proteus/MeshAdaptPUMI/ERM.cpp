@@ -150,6 +150,33 @@ void getLHS(Mat K,apf::NewArray <apf::DynamicVector> &shdrv,int nsd,double weigh
       } //end 2nd term loop
 }
 
+void getRHS(Vec F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVector> &shdrv,apf::Vector3 vel_vect,apf::Matrix3x3 grad_vel,
+            int nsd,double weight,int nshl,
+            double visc_val,double density,double pressure,
+            double g[3])
+{
+      int idx[nshl];
+      for( int i = 0; i<nsd; i++){
+        double temp_vect[nshl];
+        for( int s=0;s<nshl;s++){
+          idx[s] = i*nshl+s;
+
+          //forcing term
+          temp_vect[s] = (g[i]+0.0)/density*shpval[s];
+          //need to scale pressure by density b(p,v)
+          temp_vect[s] += pressure/density*shdrv[s][i]; //pressure term
+
+          //a(u,v) and c(u,u,v) term
+          for(int j=0;j<nsd;j++){
+            temp_vect[s] += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
+            temp_vect[s] += -shpval[s]*grad_vel[i][j]*vel_vect[j];
+          }
+      
+          temp_vect[s] = temp_vect[s]*weight;
+        } //end loop over number of shape functions
+        VecSetValues(F,nshl,idx,temp_vect,ADD_VALUES);
+      } //end loop over spatial dimensions
+}
 
 
 double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf){
@@ -850,70 +877,44 @@ double err_est_total=0;
         apf::multiply(shgval_copy[i],invJ_copy,shdrv[i]); 
       }
 
-      apf::Adjacent dbg_vadj;
-      m->getAdjacent(ent,0,dbg_vadj);
-      if(testcount==eID && k==0){
+      if(testcount==eID && k==0 && comm_rank==0){
+        apf::Adjacent dbg_vadj;
+        m->getAdjacent(ent,0,dbg_vadj);
          std::cout<<"adjacent verts ";
          apf::Vector3 testpt;
          for(int test_count=0;test_count<4;test_count++){
            m->getPoint(dbg_vadj[test_count],0,testpt);
            std::cout<<testpt<<" ";
-          }
-          std::cout<<std::endl;
+         }
+         std::cout<<std::endl;
+         std::cout<<"Jacobian "<<J<<std::endl;
+         std::cout<<"Jdet "<<Jdet<<std::endl;
+        std::cout<<"invJ "<<invJ<<std::endl;
+        std::cout<<"Shape function"<<shpval[0]<<" "<<shpval[1]<<" "<<shpval[2]<<" "<<shpval[3]<<" "<<shpval[4]<<" "<<shpval[5]<<std::endl;
+        std::cout<<"weight "<<weight<<std::endl;
       }
-      if(testcount==eID) std::cout<<"Jacobian "<<J<<std::endl;
-      if(testcount==eID) std::cout<<"Jdet "<<Jdet<<std::endl;
-      if(testcount==eID) std::cout<<"invJ "<<invJ<<std::endl;
-      if(testcount==eID) std::cout<<"Shape function"<<shpval[0]<<" "<<shpval[1]<<" "<<shpval[2]<<" "<<shpval[3]<<" "<<shpval[4]<<" "<<shpval[5]<<std::endl;
-      if(testcount==eID) std::cout<<"weight "<<weight<<std::endl;
-      
        
       //obtain viscosity value
       visc_elem = apf::createElement(visc,element); //at vof currently
       double visc_val = apf::getScalar(visc_elem,qpt);
 
+      apf::Vector3 vel_vect;
+      apf::Matrix3x3 grad_vel;
+      apf::getVector(velo_elem,qpt,vel_vect);
+      apf::getVectorGrad(velo_elem,qpt,grad_vel);
+      grad_vel = apf::transpose(grad_vel);
+    
+      apf::Element* vof_elem = apf::createElement(voff,element); //at vof currently
+      double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
+      double pressure = apf::getScalar(pres_elem,qpt);
+
       //Left-Hand Side
       getLHS(K,shdrv,nsd,weight,visc_val,nshl);
 
       //Get RHS
-      apf::Vector3 vel_vect;
-      apf::Matrix3x3 grad_vel;
-    
-      apf::Element* vof_elem = apf::createElement(voff,element); //at vof currently
+      getRHS(F,shpval,shdrv,vel_vect,grad_vel,nsd,weight,nshl,visc_val,density,pressure,g);
 
-      apf::getVector(velo_elem,qpt,vel_vect);
-      apf::getVectorGrad(velo_elem,qpt,grad_vel);
-      //vector gradient is given in the transpose of the usual definition, need to retranspose it
-      grad_vel = apf::transpose(grad_vel);
-      if(comm_rank==0 && testcount==eID){
-        apf::Vector3 xyz;
-        apf::mapLocalToGlobal(element,qpt,xyz);
-        std::cout<<"Local "<<qpt<<" Global "<<xyz<<std::endl;
-        std::cout<<"Velocity "<<vel_vect<<" Gradient "<<grad_vel<<std::endl;
-        std::cout<<"Pressure "<<apf::getScalar(pres_elem,qpt)<<std::endl;
-      }
-      int idx[nshl];
-      double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
-      for( int i = 0; i<nsd; i++){
-        double temp_vect[nshl];
-        for( int s=0;s<nshl;s++){
-          idx[s] = i*nshl+s;
-
-          //forcing term
-          temp_vect[s] = (g[i]+0.0)/density*shpval[s];
-          //a(u,v) and c(u,u,v) term
-          for(int j=0;j<nsd;j++){
-            temp_vect[s] += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
-            temp_vect[s] += -shpval[s]*grad_vel[i][j]*vel_vect[j];
-          }
-          //need to scale pressure by density b(p,v)
-          temp_vect[s] += apf::getScalar(pres_elem,qpt)/density*shdrv[s][i]; //pressure term
-
-          temp_vect[s] = temp_vect[s]*weight;
-        } //end loop over number of shape functions
-        VecSetValues(F,nshl,idx,temp_vect,ADD_VALUES);
-      } //end loop over spatial dimensions
-    } //end loop over quadrature
+    } // end quadrature loop
 
     //to complete integration, scale by the determinant of the Jacobian
 
@@ -921,7 +922,8 @@ double err_est_total=0;
     MatAssemblyEnd(K,MAT_FINAL_ASSEMBLY);
     MatScale(K,Jdet); //must be done after assembly
     VecAssemblyBegin(F);
-    VecAssemblyEnd(F); VecScale(F,Jdet); //must be done after assembly
+    VecAssemblyEnd(F); 
+    VecScale(F,Jdet); //must be done after assembly
  
 if(comm_rank==0 && testcount==eID){ 
       //MatView(K,PETSC_VIEWER_STDOUT_SELF);
