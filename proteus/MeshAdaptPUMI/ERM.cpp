@@ -282,7 +282,6 @@ if(k==0)
 
 void MeshAdaptPUMIDrvr::computeDiffusiveFlux(apf::Mesh*m,apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf){
   std::cout<<"Begin computeDiffusiveFlux()"<<std::endl;
-  int nsd = m->getDimension();
   int numbqpt, nshl;
   int hier_off = 4;
   apf::MeshEntity* bent,*ent;
@@ -454,7 +453,6 @@ std::cout<<"Sending flux"<<std::endl;
 
 void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux){
 
-    int nsd = m->getDimension();
     int nshl;
     apf::NewArray <double> shpval;
     apf::NewArray <double> shpval_temp;
@@ -580,7 +578,6 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf:
 
 void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, double * endflux){
 
-    int nsd = m->getDimension();
     int nshl;
     apf::NewArray <double> shpval;
     apf::NewArray <double> shpval_temp;
@@ -660,7 +657,6 @@ apf::Field* MeshAdaptPUMIDrvr::getViscosityField(apf::Field* voff)
   apf::MeshEntity* ent;
   apf::MeshIterator* iter = m->begin(0);
   double vof_val, visc_val;
-  int nsd = m->getDimension();
   while(ent = m->iterate(iter)){ //loop through all vertices
     vof_val=apf::getScalar(voff,ent,0);
     visc_val = getMPvalue(vof_val,nu_0, nu_1);
@@ -705,6 +701,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
   approx_order = approximation_order; 
   int_order = integration_order;
   casenumber = casenum;
+  nsd = m->getDimension();
 
   //***** Get Solution Fields First *****//
   apf::Field* voff = m->findField("vof");
@@ -720,13 +717,11 @@ void MeshAdaptPUMIDrvr::get_local_error()
   apf::MeshEntity* ent;
   apf::MeshIterator* iter;
   double visc_val;
-  int nsd = m->getDimension();
 /*
   apf::Field* visc = apf::createLagrangeField(m,"viscosity",apf::SCALAR,1);
   apf::MeshEntity* ent;
   apf::MeshIterator* iter = m->begin(0);
   double vof_val, visc_val;
-  int nsd = m->getDimension();
   while(ent = m->iterate(iter)){ //loop through all vertices
     vof_val=apf::getScalar(voff,ent,0);
     visc_val = getMPvalue(vof_val,nu_0, nu_1);
