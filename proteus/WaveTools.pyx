@@ -224,11 +224,11 @@ def dispersion(w,d, g = 9.81,niter = 1000):
     """
 #    print("Initiating dispersion")
     w_aux = np.array(w)
-    Kd = w_aux*sqrt(d/g)
+    K = w_aux**2/g
 #    print("Initial dispersion value = %s" %str(Kd/d))
     for jj in range(niter):
        #Kdn_1 = Kd
-        Kd =  w_aux* w_aux/g/np.tanh(Kd)
+        K =  w_aux**2/(g*np.tanh(K*d))
         #Kdn_1 /=0.01*Kd
         #Kdn_1 -= 100.
         #Kdn_1 = abs(Kdn_1)
@@ -237,10 +237,10 @@ def dispersion(w,d, g = 9.81,niter = 1000):
     #print "Solution convergence for dispersion relation %s percent" % Kdn_1
 #    print("Final k value = %s" %str(Kd/d))
 #    print("Wavelength= %s" %str(2.*pi*d/Kd))
-    if type(Kd) is float:
-        return Kd[0]/d
+    if type(K) is float:
+        return K[0]
     else:
-        return(Kd/d)
+        return K
 
 
 def tophat(l,cutoff):
