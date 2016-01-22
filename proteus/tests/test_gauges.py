@@ -21,19 +21,22 @@ from nose.tools import eq_
 
 def build1DMesh(p, nnx):
     return MeshTools.MultilevelEdgeMesh(nnx, 1, 1,
-                                        p.domain.L[0], 1, 1,
+                                        p.domain.x[0], 0.0, 0.0,
+                                        p.domain.L[0], 1.0, 1.0,
                                         refinementLevels=1,
                                         nLayersOfOverlap=0,
                                         parallelPartitioningType=MeshTools.MeshParallelPartitioningTypes.node)
 def build2DMesh(p, nnx, nny):
     return MeshTools.MultilevelTriangularMesh(nnx,nny,1,
-                                              p.domain.L[0], p.domain.L[1],1,
+                                              p.domain.x[0], p.domain.x[1], 1.0,
+                                              p.domain.L[0], p.domain.L[1], 1.0,
                                               refinementLevels=1,
                                               nLayersOfOverlap=0,
                                               parallelPartitioningType=MeshTools.MeshParallelPartitioningTypes.node)
 
 def build3DMesh(p, nnx, nny, nnz):
     return MeshTools.MultilevelTetrahedralMesh(nnx,nny,nnz,
+                                               p.domain.x[0], p.domain.x[1], p.domain.x[2],
                                                p.domain.L[0], p.domain.L[1], p.domain.L[2],
                                                refinementLevels=1,
                                                nLayersOfOverlap=0,
