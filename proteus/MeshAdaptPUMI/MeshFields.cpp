@@ -103,7 +103,7 @@ int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, dou
 { 
  rho[0] = rho_p[0]; rho[1] = rho_p[1];
  nu[0] = nu_p[0]; nu[1] = nu_p[1];
- g[0] = g_p[0]; g[1] = g_p[1]; g[2] = g[2];
+ g[0] = g_p[0]; g[1] = g_p[1]; g[2] = g_p[2];
  return 0;
 }
 
