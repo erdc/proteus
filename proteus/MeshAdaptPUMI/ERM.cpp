@@ -113,7 +113,7 @@ double c_k(apf::Vector3 a, apf::Matrix3x3 b, apf::Vector3 c){
   return getDotProduct(b*a,c);
 }
 
-void getLHS(Mat K,apf::NewArray <apf::DynamicVector> &shdrv,int nsd,double weight, double visc_val,int nshl)
+void getLHS(Mat &K,apf::NewArray <apf::DynamicVector> &shdrv,int nsd,double weight, double visc_val,int nshl)
 {
       PetscScalar term1[nshl][nshl], term2[nshl][nshl];
       //Calculate LHS Diagonal Block Term
@@ -150,7 +150,7 @@ void getLHS(Mat K,apf::NewArray <apf::DynamicVector> &shdrv,int nsd,double weigh
       } //end 2nd term loop
 }
 
-void getRHS(Vec F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVector> &shdrv,apf::Vector3 vel_vect,apf::Matrix3x3 grad_vel,
+void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVector> &shdrv,apf::Vector3 vel_vect,apf::Matrix3x3 grad_vel,
             int nsd,double weight,int nshl,
             double visc_val,double density,double pressure,
             double g[3])
@@ -758,7 +758,7 @@ void setErrorField(apf::Field* estimate,Vec coef,apf::MeshEntity* ent,int nsd,in
 
 void MeshAdaptPUMIDrvr::removeBCData()
 {
-  std::cout<<"Start removing BC tags/data"<<std::endl;
+  if(comm_rank==0) std::cout<<"Start removing BC tags/data"<<std::endl;
   apf::MeshEntity* ent;   
   apf::MeshIterator* fIter = m->begin(2);
   while(ent=m->iterate(fIter))
@@ -778,7 +778,7 @@ void MeshAdaptPUMIDrvr::removeBCData()
     if(i>0)
       m->destroyTag(fluxtag[i]);
   }
-  std::cout<<"Destroyed BC and flux tags"<<std::endl;
+  if(comm_rank==0) std::cout<<"Destroyed BC and flux tags"<<std::endl;
 }
 
 
@@ -823,7 +823,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
   apf::EntityShape* elem_shape;
   apf::Vector3 qpt; //container for quadrature points
   apf::MeshElement* element;
-  apf::Element* visc_elem, *pres_elem,*velo_elem;
+  apf::Element* visc_elem, *pres_elem,*velo_elem,*vof_elem;
   apf::Element* est_elem;
   apf::Matrix3x3 J; //actual Jacobian matrix
   apf::Matrix3x3 invJ; //inverse of Jacobian
@@ -839,8 +839,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
   apf::MeshEntity* ent;
   
 int testcount = 0;
-int eID = 0; 
-double effectivity_avg=0.0;
+int eID = 3865; 
 
 double L2_total=0;
 double star_total=0;
@@ -857,6 +856,7 @@ double err_est_total=0;
     pres_elem = apf::createElement(pref,element);
     velo_elem = apf::createElement(velf,element);
     visc_elem = apf::createElement(visc,element); //at vof currently
+    vof_elem = apf::createElement(voff,element);
   
     numqpt=apf::countIntPoints(element,int_order); //generally p*p maximum for shape functions
     nshl=apf::countElementNodes(err_shape,elem_type);
@@ -903,23 +903,6 @@ double err_est_total=0;
         apf::multiply(shgval_copy[i],invJ_copy,shdrv[i]); 
       }
 
-      if(testcount==eID && k==0 && comm_rank==0){
-        apf::Adjacent dbg_vadj;
-        m->getAdjacent(ent,0,dbg_vadj);
-         std::cout<<"adjacent verts ";
-         apf::Vector3 testpt;
-         for(int test_count=0;test_count<4;test_count++){
-           m->getPoint(dbg_vadj[test_count],0,testpt);
-           std::cout<<testpt<<" ";
-         }
-         std::cout<<std::endl;
-         std::cout<<"Jacobian "<<J<<std::endl;
-         std::cout<<"Jdet "<<Jdet<<std::endl;
-        std::cout<<"invJ "<<invJ<<std::endl;
-        std::cout<<"Shape function"<<shpval[0]<<" "<<shpval[1]<<" "<<shpval[2]<<" "<<shpval[3]<<" "<<shpval[4]<<" "<<shpval[5]<<std::endl;
-        std::cout<<"weight "<<weight<<std::endl;
-      }
-       
       //obtain needed values
 
       apf::Vector3 vel_vect;
@@ -928,10 +911,41 @@ double err_est_total=0;
       apf::getVectorGrad(velo_elem,qpt,grad_vel);
       grad_vel = apf::transpose(grad_vel);
     
-      apf::Element* vof_elem = apf::createElement(voff,element); //at vof currently
       double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
       double pressure = apf::getScalar(pres_elem,qpt);
       double visc_val = apf::getScalar(visc_elem,qpt);
+
+      if(testcount==eID && k==0 && comm_rank==0){
+      
+        std::cout<<std::setprecision(15);
+        apf::Adjacent dbg_vadj;
+        m->getAdjacent(ent,0,dbg_vadj);
+        std::cout<<"adjacent verts ";
+        apf::Vector3 testpt;
+        for(int test_count=0;test_count<4;test_count++){
+          m->getPoint(dbg_vadj[test_count],0,testpt);
+          std::cout<<testpt<<" ";
+        }
+        std::cout<<std::endl;
+        std::cout<<"nshl & numqpt "<<nshl<<" "<<numqpt<<std::endl;
+        std::cout<<"Quadrature point "<<k<<std::endl;
+        std::cout<<"quad pt" <<qpt<<std::endl;
+        apf::Vector3 xyz;
+        apf::mapLocalToGlobal(element,qpt,xyz);
+        std::cout<<"Global qpt "<<xyz<<std::endl;
+        std::cout<<"Jacobian "<<J<<std::endl;
+        std::cout<<"Jdet "<<Jdet<<std::endl;
+        std::cout<<"invJ "<<invJ<<std::endl;
+        std::cout<<"Shape function"<<shpval[0]<<" "<<shpval[1]<<" "<<shpval[2]<<" "<<shpval[3]<<" "<<shpval[4]<<" "<<shpval[5]<<std::endl;
+        std::cout<<"weight "<<weight<<std::endl;
+        std::cout<<"Shape global derivatives\n";
+        for(int i=0;i<nshl;i++){
+          std::cout<<i<<" "<<shdrv[i][0]<<" "<<shdrv[i][1]<<" "<<shdrv[i][2]<<std::endl;
+        }
+        std::cout<<"Density "<<density<<std::endl;
+        std::cout<<"pressure "<<pressure<<std::endl;
+        std::cout<<"viscosity "<<visc_val<<std::endl;
+      }
 
       //Left-Hand Side
       getLHS(K,shdrv,nsd,weight,visc_val,nshl);
@@ -951,9 +965,8 @@ double err_est_total=0;
     VecScale(F,Jdet); //must be done after assembly
  
 if(comm_rank==0 && testcount==eID){ 
-      //MatView(K,PETSC_VIEWER_STDOUT_SELF);
-      //std::cout<<" NOW VECTOR with just a(.,.)" <<std::endl;
-      //VecView(F,PETSC_VIEWER_STDOUT_SELF);
+      std::cout<<" NOW VECTOR with just a(.,.)+b+c" <<std::endl;
+      VecView(F,PETSC_VIEWER_STDOUT_SELF);
 }
    
     double* bflux;
@@ -975,7 +988,6 @@ if(comm_rank==0 && testcount==eID){
 if(testcount==eID && comm_rank==0){
 
 //Save Temporarily for Debugging
-/*
       std::ofstream myfile ("stiffness.csv");
       std::ofstream myfile2 ("force.csv");
       std::ofstream myfilegsl("stiffness.txt");
@@ -998,9 +1010,8 @@ if(testcount==eID && comm_rank==0){
         myfile2<<vecstor<<std::endl;
       }
       myfile.close();
-    MatView(K,PETSC_VIEWER_STDOUT_SELF);
-    VecView(F,PETSC_VIEWER_STDOUT_SELF);
-*/
+    //MatView(K,PETSC_VIEWER_STDOUT_SELF);
+    //VecView(F,PETSC_VIEWER_STDOUT_SELF);
 }
 
     KSP ksp; //initialize solver context
@@ -1070,7 +1081,7 @@ if(testcount==eID && comm_rank==0){
     VecDestroy(&coef); //destroy vector
 
   
-    apf::destroyElement(visc_elem);apf::destroyElement(pres_elem);apf::destroyElement(velo_elem);apf::destroyElement(est_elem);
+    apf::destroyElement(visc_elem);apf::destroyElement(pres_elem);apf::destroyElement(velo_elem);apf::destroyElement(est_elem);apf::destroyElement(vof_elem);
 testcount++;
 
   } //end element loop
@@ -1095,6 +1106,7 @@ std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est
   apf::destroyField(estimate);
   removeBCData();
   printf("It cleared the function.\n");
+  abort();
 }
 
 
