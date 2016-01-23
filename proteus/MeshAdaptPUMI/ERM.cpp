@@ -18,6 +18,8 @@ int norm_order;
 double nu_0,nu_1,rho_0,rho_1;
 double a_kl = 0.5; //flux term weight
 int casenumber;
+int testcount = 0;
+int eID = 3865; 
 
 void getProps(double*rho,double*nu)
 {
@@ -169,7 +171,7 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
           //a(u,v) and c(u,u,v) term
           for(int j=0;j<nsd;j++){
             temp_vect[s] += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
-            temp_vect[s] += -shpval[s]*grad_vel[i][j]*vel_vect[j];
+            temp_vect[s] += -shpval[s]*grad_vel[i][j]*vel_vect[j]/density;
           }
       
           temp_vect[s] = temp_vect[s]*weight;
@@ -838,8 +840,6 @@ void MeshAdaptPUMIDrvr::get_local_error()
   apf::MeshIterator* iter = m->begin(nsd); //loop over elements
   apf::MeshEntity* ent;
   
-int testcount = 0;
-int eID = 3865; 
 
 double L2_total=0;
 double star_total=0;
