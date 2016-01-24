@@ -155,7 +155,7 @@ void getLHS(Mat &K,apf::NewArray <apf::DynamicVector> &shdrv,int nsd,double weig
 
 void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVector> &shdrv,apf::Vector3 vel_vect,apf::Matrix3x3 grad_vel,
             int nsd,double weight,int nshl,
-            double visc_val,double density,double pressure,
+            double visc_val,double density,double pressure, double volume,
             double g[3])
 {
       int idx[nshl];
@@ -165,10 +165,10 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
           idx[s] = i*nshl+s;
 
           //forcing term
-          temp_vect[s] = (g[i]+0.0)*shpval[s];
+          temp_vect[s] = (g[i]*volume+0.0)*shpval[s];
           //need to scale pressure by density b(p,v)
           temp_vect[s] += pressure/density*shdrv[s][i]; //pressure term
-          double force = (g[i]+0.0)*shpval[s];
+          double force = (g[i]*volume+0.0)*shpval[s];
           double pressure_force = pressure/density*shdrv[s][i];
           double a_term = 0; 
           double c_term = 0;
@@ -181,7 +181,7 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
           }
 if(testcount==eID){
   std::cout<<"RHS i "<<i<<" s "<<s<<std::endl;
-  std::cout<<"force "<<force<<" gravity? "<<g[i]<<std::endl;
+  std::cout<<"force "<<force<<" gravity? "<<g[i]<<" volume "<<volume<<std::endl;
   std::cout<<"pressure "<<pressure_force<<" pressure? "<<pressure<<std::endl;
   std::cout<<"a_term "<<a_term<<std::endl;
   std::cout<<"c_term "<<c_term<<" shpval? "<<shpval[s]<<" gradvel "<<grad_vel<<" vel_vect "<<vel_vect<<" density "<<density<<std::endl;
@@ -795,8 +795,8 @@ void MeshAdaptPUMIDrvr::removeBCData()
     m->destroyTag(BCtag[i]);
     if(i>0)
       m->destroyTag(fluxtag[i]);
-    m->destroyTag(diffFlux);
   }
+  m->destroyTag(diffFlux);
   if(comm_rank==0) std::cout<<"Destroyed BC and flux tags"<<std::endl;
 }
 
@@ -931,6 +931,7 @@ double err_est_total=0;
       double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
       double pressure = apf::getScalar(pres_elem,qpt);
       double visc_val = apf::getScalar(visc_elem,qpt);
+      double volume = apf::measure(element);
 
       if(testcount==eID && k==0 && comm_rank==0){
       
@@ -972,7 +973,7 @@ double err_est_total=0;
       getLHS(K,shdrv,nsd,weight,visc_val,nshl);
 
       //Get RHS
-      getRHS(F,shpval,shdrv,vel_vect,grad_vel,nsd,weight,nshl,visc_val,density,pressure,g);
+      getRHS(F,shpval,shdrv,vel_vect,grad_vel,nsd,weight,nshl,visc_val,density,pressure,volume,g);
 
     } // end quadrature loop
 
@@ -999,12 +1000,9 @@ if(comm_rank==0 && testcount==eID){
       F_idx[s]=s;
     }
     VecSetValues(F,ndofs,F_idx,bflux,ADD_VALUES);
-    VecAssemblyBegin(F); VecAssemblyEnd(F);
+    VecAssemblyBegin(F); 
+    VecAssemblyEnd(F);
     free(bflux);
-    Vec coef;
-    VecCreate(PETSC_COMM_SELF,&coef);
-    VecSetSizes(coef,ndofs,ndofs);
-    VecSetUp(coef);
 
 if(testcount==eID && comm_rank==0){
 
@@ -1034,6 +1032,11 @@ if(testcount==eID && comm_rank==0){
     //MatView(K,PETSC_VIEWER_STDOUT_SELF);
     //VecView(F,PETSC_VIEWER_STDOUT_SELF);
 }
+
+    Vec coef;
+    VecCreate(PETSC_COMM_SELF,&coef);
+    VecSetSizes(coef,ndofs,ndofs);
+    VecSetUp(coef);
 
     KSP ksp; //initialize solver context
     KSPCreate(PETSC_COMM_SELF,&ksp);
@@ -1127,7 +1130,7 @@ std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est
   apf::destroyField(estimate);
   removeBCData();
   printf("It cleared the function.\n");
-  abort();
+  //abort();
 }
 
 
