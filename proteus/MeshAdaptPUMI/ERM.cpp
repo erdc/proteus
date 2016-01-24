@@ -19,7 +19,8 @@ double nu_0,nu_1,rho_0,rho_1;
 double a_kl = 0.5; //flux term weight
 int casenumber;
 int testcount = 0;
-int eID = 3865; 
+//int eID = 3865; // water element
+int eID = 7418; // air element  
 
 void getProps(double*rho,double*nu)
 {
@@ -164,16 +165,29 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
           idx[s] = i*nshl+s;
 
           //forcing term
-          temp_vect[s] = (g[i]+0.0)/density*shpval[s];
+          temp_vect[s] = (g[i]+0.0)*shpval[s];
           //need to scale pressure by density b(p,v)
           temp_vect[s] += pressure/density*shdrv[s][i]; //pressure term
-
+          double force = (g[i]+0.0)*shpval[s];
+          double pressure_force = pressure/density*shdrv[s][i];
+          double a_term = 0; 
+          double c_term = 0;
           //a(u,v) and c(u,u,v) term
           for(int j=0;j<nsd;j++){
             temp_vect[s] += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
             temp_vect[s] += -shpval[s]*grad_vel[i][j]*vel_vect[j]/density;
+            a_term += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
+            c_term += -shpval[s]*grad_vel[i][j]*vel_vect[j]/density;
           }
-      
+if(testcount==eID){
+  std::cout<<"RHS i "<<i<<" s "<<s<<std::endl;
+  std::cout<<"force "<<force<<" gravity? "<<g[i]<<std::endl;
+  std::cout<<"pressure "<<pressure_force<<" pressure? "<<pressure<<std::endl;
+  std::cout<<"a_term "<<a_term<<std::endl;
+  std::cout<<"c_term "<<c_term<<" shpval? "<<shpval[s]<<" gradvel "<<grad_vel<<" vel_vect "<<vel_vect<<" density "<<density<<std::endl;
+  std::cout<<"combo " <<force+pressure_force+a_term+c_term<<std::endl;
+  std::cout<<"temp_vect "<< temp_vect[s]<<std::endl;
+}
           temp_vect[s] = temp_vect[s]*weight;
         } //end loop over number of shape functions
         VecSetValues(F,nshl,idx,temp_vect,ADD_VALUES);
@@ -771,6 +785,8 @@ void MeshAdaptPUMIDrvr::removeBCData()
         m->removeTag(ent,BCtag[i]);
       if(i>0 && m->hasTag(ent,fluxtag[i]))
         m->removeTag(ent,fluxtag[i]);
+      if(m->hasTag(ent,diffFlux))
+        m->removeTag(ent,diffFlux);
     }
   }
   m->end(fIter);
@@ -779,6 +795,7 @@ void MeshAdaptPUMIDrvr::removeBCData()
     m->destroyTag(BCtag[i]);
     if(i>0)
       m->destroyTag(fluxtag[i]);
+    m->destroyTag(diffFlux);
   }
   if(comm_rank==0) std::cout<<"Destroyed BC and flux tags"<<std::endl;
 }
@@ -945,6 +962,10 @@ double err_est_total=0;
         std::cout<<"Density "<<density<<std::endl;
         std::cout<<"pressure "<<pressure<<std::endl;
         std::cout<<"viscosity "<<visc_val<<std::endl;
+        std::cout<<"Velocity "<<std::endl;
+        std::cout<<vel_vect<<std::endl;
+        std::cout<<"Velocity Gradient "<<std::endl;
+        std::cout<<grad_vel<<std::endl;
       }
 
       //Left-Hand Side
