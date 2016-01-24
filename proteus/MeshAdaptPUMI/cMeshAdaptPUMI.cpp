@@ -75,7 +75,7 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
   pAManager attmngr = SModel_attManager(model);
   pACase acase = AMAN_findCaseByType(attmngr, "problem definition");
   if (acase){
-     std::cout<<"Found case, setting the model"<<std::endl;
+     if(comm_rank==0)std::cout<<"Found case, setting the model"<<std::endl;
      AttCase_setModel(acase,model);
   } else {
       std::cout<<"Case not found, rename case to geom\n"<<std::endl;
@@ -121,7 +121,7 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
     else if(idx == 3) sprintf(&type_flag,"w");
     sprintf(label[idx],"BCtype_%c",type_flag);
     BCtag[idx] = m->createIntTag(label[idx],1);
-std::cout<<"Boundary label "<<label[idx]<<std::endl;
+//std::cout<<"Boundary label "<<label[idx]<<std::endl;
     if(idx>0) sprintf(labelflux,"%c_flux",type_flag);
   }
 
@@ -184,7 +184,7 @@ std::cout<<"Boundary label "<<label[idx]<<std::endl;
   }//end while
   m->end(fIter);
   AMAN_release( attmngr );
-  std::cout<<"Finished reading and storing diffusive flux BCs\n"; 
+  if(comm_rank==0)std::cout<<"Finished reading and storing diffusive flux BCs\n"; 
   return 0;
 } 
 
