@@ -166,17 +166,16 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
           idx[s] = i*nshl+s;
 
           //forcing term
-          temp_vect[s] = (g[i]+0.0)*shpval[s];
-          //need to scale pressure by density b(p,v)
-          temp_vect[s] += pressure/density*shdrv[s][i]; //pressure term
+          //temp_vect[s] = (g[i]+0.0)*shpval[s];
+          //temp_vect[s] += pressure/density*shdrv[s][i]; //pressure term
           double force = (g[i]+0.0)*shpval[s];
           double pressure_force = pressure/density*shdrv[s][i];
           double a_term = 0; 
           double c_term = 0;
           //a(u,v) and c(u,u,v) term
           for(int j=0;j<nsd;j++){
-            temp_vect[s] += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
-            temp_vect[s] += -shpval[s]*grad_vel[i][j]*vel_vect[j]/density;
+            //temp_vect[s] += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
+            //temp_vect[s] += -shpval[s]*grad_vel[i][j]*vel_vect[j]/density;
             a_term += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
             c_term += -shpval[s]*grad_vel[i][j]*vel_vect[j]/density;
           }
