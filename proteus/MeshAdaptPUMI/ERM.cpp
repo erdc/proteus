@@ -191,6 +191,7 @@ if(testcount==eID){
   std::cout<<"temp_vect "<< temp_vect[s]<<std::endl;
 }
 */
+          temp_vect[s] = force+pressure_force+a_term+c_term;
           temp_vect[s] = temp_vect[s]*weight;
         } //end loop over number of shape functions
         VecSetValues(F,nshl,idx,temp_vect,ADD_VALUES);
@@ -1150,7 +1151,6 @@ std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est
   apf::destroyField(estimate);
   removeBCData();
   printf("It cleared the function.\n");
-  abort();
 }
 
 
