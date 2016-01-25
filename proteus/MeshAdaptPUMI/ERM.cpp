@@ -19,8 +19,9 @@ double nu_0,nu_1,rho_0,rho_1;
 double a_kl = 0.5; //flux term weight
 int casenumber;
 int testcount = 0;
-//int eID = 3865; // water element
-int eID = 7418; // air element  
+int eID = 3865; // water element
+//int eID = 7418; // air element  
+//int eID = 4482; //mixed element
 
 void getProps(double*rho,double*nu)
 {
@@ -165,10 +166,10 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
           idx[s] = i*nshl+s;
 
           //forcing term
-          temp_vect[s] = (g[i]*volume+0.0)*shpval[s];
+          temp_vect[s] = (g[i]+0.0)*shpval[s];
           //need to scale pressure by density b(p,v)
           temp_vect[s] += pressure/density*shdrv[s][i]; //pressure term
-          double force = (g[i]*volume+0.0)*shpval[s];
+          double force = (g[i]+0.0)*shpval[s];
           double pressure_force = pressure/density*shdrv[s][i];
           double a_term = 0; 
           double c_term = 0;
@@ -179,6 +180,7 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
             a_term += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
             c_term += -shpval[s]*grad_vel[i][j]*vel_vect[j]/density;
           }
+/*
 if(testcount==eID){
   std::cout<<"RHS i "<<i<<" s "<<s<<std::endl;
   std::cout<<"force "<<force<<" gravity? "<<g[i]<<" volume "<<volume<<std::endl;
@@ -188,6 +190,7 @@ if(testcount==eID){
   std::cout<<"combo " <<force+pressure_force+a_term+c_term<<std::endl;
   std::cout<<"temp_vect "<< temp_vect[s]<<std::endl;
 }
+*/
           temp_vect[s] = temp_vect[s]*weight;
         } //end loop over number of shape functions
         VecSetValues(F,nshl,idx,temp_vect,ADD_VALUES);
@@ -481,6 +484,19 @@ std::cout<<"Initialized flux"<<std::endl;
           tempbflux = (tempgrad_velo+apf::transpose(tempgrad_velo))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
               -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1);
           bflux = tempbflux*normal;
+if(localNumber(ent)==eID && l==0){
+  std::cout<<"velocity gradient "<<std::endl;
+  std::cout<<tempgrad_velo<<std::endl;
+  std::cout<<"Viscosity value "<<getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)<<std::endl;
+  std::cout<<"pressure "<<apf::getScalar(temppres,bqptl)<<std::endl;
+  std::cout<<"density "<<getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1)<<std::endl;
+  std::cout<<"tempbflux "<<std::endl;
+  std::cout<< (tempgrad_velo+apf::transpose(tempgrad_velo))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
+              -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1)<<std::endl;
+  std::cout<<"normal? "<<normal<<std::endl;
+  std::cout<<"bflux "<<tempbflux*normal<<std::endl;
+
+} 
         } //end if boundary
         bflux = bflux*weight*Jdet;
         bflux.toArray(&(tempflux[l*nsd]));
@@ -523,7 +539,11 @@ std::cout<<"Sending flux"<<std::endl;
     PCU_COMM_UNPACK(tempflux);
     m->getDoubleTag(bent,diffFlux,flux);
     for (int i=0;i<numbqpt*nsd;i++){
+if(localNumber(ent)==eID)
+std::cout<<"Before numbqpt i "<<i<<" flux "<<flux[orientation*numbqpt*nsd+i]<<" "<<tempflux[i]<<std::endl;
       flux[orientation*numbqpt*nsd+i] = flux[orientation*numbqpt*nsd+i]+tempflux[i];
+if(localNumber(ent)==eID)
+std::cout<<"After numbqpt i "<<i<<" flux "<<flux[orientation*numbqpt*nsd+i]<<" "<<tempflux[i]<<std::endl;
     }
     m->setDoubleTag(bent,diffFlux,flux);
   }
@@ -725,7 +745,8 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, doub
           for(int s=0;s<nshl;s++){
             endflux[i*nshl+s] = endflux[i*nshl+s]+(flux_weight[0]*flux[l*nsd+i]+flux_weight[1]*flux[numbqpt*nsd+l*nsd+i])*shpval[s];
           }
-//std::cout<<"Components "<<flux_weight[0]*flux[l*nsd+i]<<" "<<flux_weight[1]*flux[numbqpt*nsd+l*nsd+i]<<std::endl;
+if(localNumber(ent)==3865)
+std::cout<<"Components "<<flux_weight[0]*flux[l*nsd+i]<<" "<<flux_weight[1]*flux[numbqpt*nsd+l*nsd+i]<<std::endl;
         }
       }//end of boundary integration loop
       free(flux);
@@ -932,7 +953,7 @@ double err_est_total=0;
       double pressure = apf::getScalar(pres_elem,qpt);
       double visc_val = apf::getScalar(visc_elem,qpt);
       double volume = apf::measure(element);
-
+/*
       if(testcount==eID && k==0 && comm_rank==0){
       
         std::cout<<std::setprecision(15);
@@ -968,7 +989,7 @@ double err_est_total=0;
         std::cout<<"Velocity Gradient "<<std::endl;
         std::cout<<grad_vel<<std::endl;
       }
-
+*/
       //Left-Hand Side
       getLHS(K,shdrv,nsd,weight,visc_val,nshl);
 
@@ -985,12 +1006,12 @@ double err_est_total=0;
     VecAssemblyBegin(F);
     VecAssemblyEnd(F); 
     VecScale(F,Jdet); //must be done after assembly
- 
+/*
 if(comm_rank==0 && testcount==eID){ 
       std::cout<<" NOW VECTOR with just a(.,.)+b+c" <<std::endl;
       VecView(F,PETSC_VIEWER_STDOUT_SELF);
 }
-   
+*/
     double* bflux;
     int F_idx[ndofs];
     bflux = (double*) calloc(ndofs,sizeof(double));
@@ -1003,7 +1024,7 @@ if(comm_rank==0 && testcount==eID){
     VecAssemblyBegin(F); 
     VecAssemblyEnd(F);
     free(bflux);
-
+/*
 if(testcount==eID && comm_rank==0){
 
 //Save Temporarily for Debugging
@@ -1032,7 +1053,7 @@ if(testcount==eID && comm_rank==0){
     //MatView(K,PETSC_VIEWER_STDOUT_SELF);
     //VecView(F,PETSC_VIEWER_STDOUT_SELF);
 }
-
+*/
     Vec coef;
     VecCreate(PETSC_COMM_SELF,&coef);
     VecSetSizes(coef,ndofs,ndofs);
