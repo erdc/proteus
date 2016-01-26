@@ -33,7 +33,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   gmi_register_sim();
   approximation_order = 2;
   integration_order = 3;//approximation_order * 2;
-  casenum = 2;
+  casenum = 1;
   exteriorGlobaltoLocalElementBoundariesArray = NULL;
   size_field_config = sfConfig;
   geomFileName = NULL; 
@@ -238,8 +238,12 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   std::ios::fmtflags saved(std::cout.flags());
   std::cout<<std::setprecision(15)<<"Before "<<mass_before<<" After "<<mass_after<<" diff "<<mass_after-mass_before<<std::endl;
   std::cout.flags(saved);
-  if(size_field_config=="alvin")
+  if(size_field_config=="alvin"){
     simmetrixBCreloaded(modelFileName);
+    char namebuffer[20];
+    sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
+    apf::writeVtkFiles(namebuffer, m);
+  }
   nAdapt++; //counter for number of adapt steps
   return 0;
 }

@@ -555,7 +555,7 @@ std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
   SmoothField(size_scale);
 
   char namebuffer[20];
-  sprintf(namebuffer,"pumi_adapt_%i",nAdapt);
+  sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
   apf::writeVtkFiles(namebuffer, m);
 
   freeField(err_reg); //mAdapt will throw error if not destroyed. what about free?
