@@ -17,8 +17,9 @@ tank.setAbsorptionZones(left=true)
 shape = st.Rectangle(domain, dim=[0.5, 0.5], coords=[1., 1.])
 shape.setRigidBody()
 shape2.rotate(np.pi/3.)
+shape2.BC.left.setNoSlip()
 
-st.buildDomain(domain)
+st.assembleDomain(domain)
 """
 
 from math import cos, sin, sqrt, atan2, acos
@@ -28,9 +29,12 @@ import os
 import numpy as np
 from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
 from proteus.Profiling import logEvent as log
-from proteus import BC as bc
-from proteus.SpatialTools import (Shape, BCContainer, Cuboid, Rectangle,
-                                  CustomShape)
+from proteus.mprans import BC as bc
+from proteus.SpatialTools import (Shape,
+                                  Cuboid,
+                                  Rectangle,
+                                  CustomShape,
+                                  BCContainer)
 
 
 class ShapeRANS(Shape):
@@ -40,7 +44,7 @@ class ShapeRANS(Shape):
     """
 
     def __init__(self, domain, nd):
-        super(ShapeRANS, self).__init__(domain, nd)
+        super(ShapeRANS, self).__init__(domain, nd, BC_class=bc.BC_RANS)
         self.mass = None
         self.density = None
         self.free_x = (1, 1, 1)
@@ -208,7 +212,7 @@ class ShapeRANS(Shape):
         """
         self._attachAuxiliaryVariable('RelaxZones')
         waves = None
-        windSpeed = 0.
+        windSpeed = (0., 0., 0.)
         if isinstance(flags, int):
             flags = [flags]
             epsFact_solid = [epsFact_solid]
@@ -258,8 +262,6 @@ class ShapeRANS(Shape):
             dragBetaTypes = [dragBetaTypes]
             porosityTypes = [porosityTypes]
         for i, flag in enumerate(flags):
-            print center[i]
-            print orientation[i]
             self._checkNd(center[i])
             self._checkNd(orientation[i])
             ori = get_unit_vector(orientation[i])
@@ -341,22 +343,22 @@ class Tank3D(ShapeRANS):
                               [1.,  0.,  0.],
                               [0., -1.,  0.],
                               [0.,  0.,  1.]])
-        self.BC_dict = {'bottom': bc.BoundaryConditions(shape=self,
+        self.BC_dict = {'bottom': self.BC_class(shape=self,
                                                         name='bottom',
                                                         b_or=self.b_or, b_i=0),
-                        'front': bc.BoundaryConditions(shape=self,
+                        'front': self.BC_class(shape=self,
                                                        name='front',
                                                        b_or=self.b_or, b_i=1),
-                        'right': bc.BoundaryConditions(shape=self,
+                        'right': self.BC_class(shape=self,
                                                        name='right',
                                                        b_or=self.b_or, b_i=2),
-                        'back': bc.BoundaryConditions(shape=self, name='back',
+                        'back': self.BC_class(shape=self, name='back',
                                                       b_or=self.b_or, b_i=3),
-                        'left': bc.BoundaryConditions(shape=self, name='left',
+                        'left': self.BC_class(shape=self, name='left',
                                                       b_or=self.b_or, b_i=4),
-                        'top': bc.BoundaryConditions(shape=self, name='top',
+                        'top': self.BC_class(shape=self, name='top',
                                                      b_or=self.b_or, b_i=5),
-                        'sponge': bc.BoundaryConditions(shape=self,
+                        'sponge': self.BC_class(shape=self,
                                                         name='sponge')}
         self.BC_list = [self.BC_dict['bottom'],
                         self.BC_dict['front'],
@@ -403,8 +405,8 @@ class Tank3D(ShapeRANS):
             x, y, z = 0., 0., 0.
         self.coords = [x, y, z]
         x0, x1 = x-0.5*L, x+0.5*L
-        y0, y1 = y-0.5*H, y+0.5*H
-        z0, z1 = z-0.5*L, z+0.5*L
+        y0, y1 = y-0.5*W, y+0.5*W
+        z0, z1 = z-0.5*H, z+0.5*H
         # ---------------------------------------------
         # first add all vecors, facets, regions at the bottom
         # ---------------------------------------------
@@ -602,8 +604,8 @@ class Tank3D(ShapeRANS):
                            porosityTypes=1.):
         self.abs_zones = {'leftSponge': left,
                           'rightSponge': right,
-                          'frontSponge': front}
-                          # 'backSponge': back,
+                          'frontSponge': front,
+                          'backSponge': back}
                           # 'front_left_Sponge': front_left,
                           # 'front_right_Sponge': front_right,
                           # 'back_left_Sponge': back_left,
@@ -724,17 +726,17 @@ class Tank2D(ShapeRANS):
                               [1., 0.],
                               [0., 1.],
                               [-1., 0.]])
-        self.BC_dict = {'bottom': bc.BoundaryConditions(shape=self,
+        self.BC_dict = {'bottom': self.BC_class(shape=self,
                                                         name='bottom',
                                                         b_or=self.b_or, b_i=0),
-                        'right': bc.BoundaryConditions(shape=self,
+                        'right': self.BC_class(shape=self,
                                                        name='right',
                                                        b_or=self.b_or, b_i=1),
-                        'top': bc.BoundaryConditions(shape=self, name='top',
+                        'top': self.BC_class(shape=self, name='top',
                                                      b_or=self.b_or, b_i=2),
-                        'left': bc.BoundaryConditions(shape=self, name='left',
+                        'left': self.BC_class(shape=self, name='left',
                                                       b_or=self.b_or, b_i=3),
-                        'sponge': bc.BoundaryConditions(shape=self,
+                        'sponge': self.BC_class(shape=self,
                                                         name='sponge')}
         self.BC_list = [self.BC_dict['bottom'],
                         self.BC_dict['right'],
@@ -933,11 +935,11 @@ class RigidBody(AuxiliaryVariables.AV_base):
         ang_disp = 0
         substeps = 20
         dt_sub = dt/float(substeps)
-        self.h = np.zeros(3)
+        self.h[:] = np.zeros(3)
         for i in range(substeps):
             # displacement
             self.velocity += self.acceleration*dt_sub
-            self.h[:] += self.velocity*dt_sub
+            self.h += self.velocity*dt_sub
             # rotation
             self.angvel += ang_acc*dt_sub
             ang_disp += self.angvel*dt_sub
@@ -1156,8 +1158,8 @@ def assembleDomain(domain):
     domain.regions = []
     domain.regionFlags = []
     # BC at flag 0
-    domain.bc = [bc.BoundaryConditions()]
-    domain.bc[0].setParallelFlag0()
+    domain.bc = [bc.BC_RANS()]
+    domain.bc[0].setNonMaterial()
     # barycenter at flag 0
     domain.barycenters = np.array([[0., 0., 0.]])
     domain.auxiliaryVariables = []
@@ -1201,8 +1203,10 @@ def assembleDomain(domain):
         if 'RigidBody' in shape.auxiliaryVariables.keys():
             aux += [RigidBody(shape)]
             # fixing mesh on rigid body
+            body = aux[-1]
             for boundcond in shape.BC_list:
-                boundcond.setMoveMesh(aux[-1])
+                boundcond.setMoveMesh(body.last_position, body.h,
+                                      body.rotation_matrix)
             # update the indice for force/moment calculations
             aux[-1].i_start = start_flag+1
             aux[-1].i_end = start_flag+1+len(shape.BC_list)
