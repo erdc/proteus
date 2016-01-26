@@ -20,9 +20,9 @@ domain = Domain.PlanarStraightLineGraphDomain()
 shape1 = st.Rectangle(domain, dim=[0.5, 0.5], coords=[1., 1.])
 shape2 = st.Rectangle(domain. dim=[0.3, 0.2], coords=[3., 3.])
 shape2.rotate(np.pi/3.)
-shape2.BC.left.setNoSlip()
+shape2.BC.newBC
 
-st.buildDomain(domain)
+st.assembleDomain(domain)
 """
 
 from math import cos, sin, sqrt
@@ -39,7 +39,7 @@ class Shape(object):
     :param domain: domain in which the shape is defined
     """
 
-    def __init__(self, domain, nd=None):
+    def __init__(self, domain, nd=None, BC_class=None):
         if nd != domain.nd:
             log('Shape ('+`nd`+'D) and Domain ('+`domain.nd`+'D)' \
                 ' have different dimensions!')
@@ -47,6 +47,7 @@ class Shape(object):
         self.Domain = domain
         domain.shape_list.append(self)
         self.nd = nd
+        self.BC_class = BC_class or bc.BC_Base
         self.vertices = None
         self.vertexFlags = None
         self.segments = None
@@ -267,16 +268,16 @@ class Cuboid(Shape):
                                       [x+0.5*L, y+0.5*H],
                                       [x-0.5*L, y+0.5*H]])
         self.facets = np.array([[[0, 1, 2, 3]],  # bottom
-                                [[0, 1, 5, 4]],  # front
-                                [[1, 2, 6, 5]],  # right
-                                [[2, 3, 7, 6]],  # back
-                                [[3, 0, 4, 7]],  # left
+                                [[1, 2, 6, 5]],  # front
+                                [[2, 3, 7, 6]],  # right
+                                [[3, 0, 4, 7]],  # back
+                                [[0, 1, 5, 4]],  # left
                                 [[4, 5, 6, 7]]])  # top
         self.b_or = np.array([[0.,  0., -1.],
-                              [-1., 0.,  0.],
                               [0.,  1.,  0.],
                               [1.,  0.,  0.],
                               [0., -1.,  0.],
+                              [-1., 0.,  0.],
                               [0.,  0.,  1.]])
         self.regions = np.array([[x, y, z]])
         # defining flags for boundary conditions
@@ -293,21 +294,18 @@ class Cuboid(Shape):
                                      bt['top'], bt['top']])
         self.regionFlags = np.array([1])
         # Initialize (empty) boundary conditions
-        self.BC_dict = {'bottom': bc.BoundaryConditions(shape=self,
-                                                        name='bottom',
-                                                        b_or=self.b_or, b_i=0),
-                        'front': bc.BoundaryConditions(shape=self,
-                                                       name='front',
-                                                       b_or=self.b_or, b_i=1),
-                        'right': bc.BoundaryConditions(shape=self,
-                                                       name='right',
-                                                       b_or=self.b_or, b_i=2),
-                        'back': bc.BoundaryConditions(shape=self, name='back',
-                                                      b_or=self.b_or, b_i=3),
-                        'left': bc.BoundaryConditions(shape=self, name='left',
-                                                      b_or=self.b_or, b_i=4),
-                        'top': bc.BoundaryConditions(shape=self, name='top',
-                                                     b_or=self.b_or, b_i=5)}
+        self.BC_dict = {'bottom': self.BC_class(shape=self, name='bottom',
+                                                 b_or=self.b_or, b_i=0),
+                        'front': self.BC_class(shape=self, name='front',
+                                                b_or=self.b_or, b_i=1),
+                        'right': self.BC_class(shape=self, name='right',
+                                                b_or=self.b_or, b_i=2),
+                        'back': self.BC_class(shape=self, name='back',
+                                               b_or=self.b_or, b_i=3),
+                        'left': self.BC_class(shape=self, name='left',
+                                               b_or=self.b_or, b_i=4),
+                        'top': self.BC_class(shape=self, name='top',
+                                              b_or=self.b_or, b_i=5)}
         self.BC_list = [self.BC_dict['bottom'],
                         self.BC_dict['front'],
                         self.BC_dict['right'],
@@ -380,16 +378,14 @@ class Rectangle(Shape):
         self.vertexFlags = np.array([bt['bottom'], bt['bottom'], bt['top'],
                                      bt['top']])  # bottom, bottom, top, top
         self.regionFlags = np.array([1])
-        self.BC_dict = {'bottom': bc.BoundaryConditions(shape=self,
-                                                        name='bottom',
-                                                        b_or=self.b_or, b_i=0),
-                        'right': bc.BoundaryConditions(shape=self,
-                                                       name='right',
-                                                       b_or=self.b_or, b_i=1),
-                        'top': bc.BoundaryConditions(shape=self, name='top',
-                                                     b_or=self.b_or, b_i=2),
-                        'left': bc.BoundaryConditions(shape=self, name='left',
-                                                      b_or=self.b_or, b_i=3)}
+        self.BC_dict = {'bottom': self.BC_class(shape=self, name='bottom',
+                                                 b_or=self.b_or, b_i=0),
+                        'right': self.BC_class(shape=self, name='right',
+                                                b_or=self.b_or, b_i=1),
+                        'top': self.BC_class(shape=self, name='top',
+                                              b_or=self.b_or, b_i=2),
+                        'left': self.BC_class(shape=self, name='left',
+                                               b_or=self.b_or, b_i=3)}
         self.BC_list = [self.BC_dict['bottom'],
                         self.BC_dict['right'],
                         self.BC_dict['top'],
@@ -463,7 +459,7 @@ class CustomShape(Shape):
             b_i = flag-1  # start at index 0
             if boundaryOrientations is not None:
                 b_or[b_i] = boundaryOrientations[tag]
-            self.BC_dict[tag] = bc.BoundaryConditions(shape=self, name=tag, b_or=b_or, b_i=b_i)
+            self.BC_dict[tag] = self.BC_class(shape=self, name=tag, b_or=b_or, b_i=b_i)
             self.BC_list[b_i] = self.BC_dict[tag]
         self.BC = BCContainer(self.BC_dict)
         if barycenter is not None:
@@ -604,8 +600,8 @@ def assembleDomain(domain):
     domain.regions = []
     domain.regionFlags = []
     # BC at flag 0
-    domain.bc = [bc.BoundaryConditions()]
-    domain.bc[0].setParallelFlag0()
+    domain.bc = [bc.BC_Base()]
+    # domain.bc[0].setNonMaterial()  # function not defined in BC_Base
     # barycenter at flag 0
     domain.barycenters = np.array([[0., 0., 0.]])
     domain.auxiliaryVariables = []
