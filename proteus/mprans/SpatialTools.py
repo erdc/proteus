@@ -276,6 +276,34 @@ class ShapeRANS(Shape):
                                                  dragBetaTypes=dragBetaTypes[i],
                                                  porosityTypes=porosityTypes[i])
 
+    def setPorousZones(self, flags, epsFact_solid, dragAlpha=0.5/1.005e-6,
+                       dragBeta=0., porosity=1.):
+        """
+        Sets a region (given the local flag) to a porous zone
+
+        :param flags: local flags of the region. Can be an integer or a list.
+        :param epsFact_solid: half of absorption zone (region) length
+        :param center: coords of center of the absorption zone
+        :param orientation: orientation pointing TOWARDS incoming waves
+        """
+        self._attachAuxiliaryVariable('RelaxZones')
+        if isinstance(flags, int):
+            flags = [flags]
+            epsFact_solid = [epsFact_solid]
+            dragAlpha = [dragAlpha]
+            dragBeta = [dragBeta]
+            porosity = [porosity]
+        for i, flag in enumerate(flags):
+            self.zones[flag] = bc.RelaxationZone(shape=self,
+                                                 zone_type='porous',
+                                                 orientation=None,
+                                                 center=None,
+                                                 waves=None,
+                                                 windSpeed=None,
+                                                 epsFact_solid=epsFact_solid[i],
+                                                 dragAlphaTypes=dragAlpha[i],
+                                                 dragBetaTypes=dragBeta[i],
+                                                 porosityTypes=porosity[i])
 
 # -----------------------------------------------------------------------------
 # ADDING FUNCTIONALITY TO SHAPE FROM proteus.SpatialTools
