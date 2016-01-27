@@ -4,9 +4,9 @@ Module for creating boundary conditions. Imported in mprans.SpatialTools.py
 import sys
 import numpy as np
 from proteus import AuxiliaryVariables
-from proteus.BC import (BC_Base,
-                        constantBC,
-                        linearBC)
+from proteus.BoundaryConditions import (BC_Base,
+                                        constantBC,
+                                        linearBC)
 from proteus.Profiling import logEvent as log
 from proteus.ctransportCoefficients import (smoothedHeaviside,
                                             smoothedHeaviside_integral)
