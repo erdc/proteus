@@ -1517,6 +1517,7 @@ class StokesASGS_velocity_pressure(SGE_base):
                                                                     q[('a',1,1)],
                                                                     self.tau[0],
                                                                     self.tau[1])
+            self.tau[1] /= q[('dH',1,0)][...,0]#if mom. eqn. is scaled by density, rescale tau
             if self.lag:
                 tau0=self.tau_last[0]
                 tau1=self.tau_last[1]
