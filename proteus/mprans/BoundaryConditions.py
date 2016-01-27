@@ -400,7 +400,7 @@ class RelaxationZone:
         self.orientation = orientation
         self.waves = waves
         self.windSpeed = windSpeed
-        if zone_type == 'absorption':
+        if zone_type == 'absorption' or zone_type == 'porous':
             self.u = self.v = self.w = lambda x, t: 0.
         elif zone_type == 'generation':
             self.u = self.setGenerationFunctions(0)
@@ -461,7 +461,10 @@ class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
                         coeff = m.coefficients
                         ori = zone.orientation
                         nd = zone.Shape.Domain.nd
-                        coeff.q_phi_solid[eN, k] = np.dot(ori, zone.center[:nd]-x[:nd])
+                        if zone.zone_type == 'porous':
+                            coeff.q_phi_solid[eN, k] = zone.epsFact_solid
+                        else:
+                            coeff.q_phi_solid[eN, k] = np.dot(ori, zone.center[:nd]-x[:nd])
                         coeff.q_velocity_solid[eN, k, 0] = zone.u(x, t)
                         coeff.q_velocity_solid[eN, k, 1] = zone.v(x, t)
                         if self.nd > 2:
