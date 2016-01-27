@@ -28,7 +28,7 @@ st.assembleDomain(domain)
 from math import cos, sin, sqrt
 import sys
 import numpy as np
-from proteus import BC as bc
+from proteus import BoundaryConditions as bc
 from proteus.Profiling import logEvent as log
 
 

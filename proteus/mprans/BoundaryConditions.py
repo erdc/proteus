@@ -87,7 +87,7 @@ class BC_RANS(BC_Base):
         self.w_diffusive = constantBC(0.)
 
     def setTank(self):
-        b_or = self._b_or[self._b_i].tolist()
+        b_or = self._b_or[self._b_i]
         if b_or[0] == 1 or b_or[0] == -1:
             self.hx_dirichlet = constantBC(0.)
             self.u_stress = None
@@ -178,6 +178,92 @@ class BC_RANS(BC_Base):
         if len(last_pos) > 2:
             self.hz_dirichlet = get_DBC_h(i=2)
 
+    def setUnsteadyTwoPhaseVelocityInlet(self, wave, vert_axis=None,
+                                         windSpeed=(0., 0., 0.), air=1.,
+                                         water=0.):
+        """
+        Imposes a velocity profile lower than the sea level and an open
+        boundary for higher than the sealevel.
+        :param U: Velocity vector at the global system.
+        :param vert_axis: index of vertical in position vector, must always be
+                        aligned with gravity, by default set to 1].
+        :param air: Volume fraction for air (1.0 by default).
+        :param water: Volume fraction for water (0.0 by default).
+        Below the seawater level, the condition returns the _dirichlet and
+        p_advective condition according to the inflow velocity.
+        Above the sea water level, the condition returns the gravity as zero,
+        and sets _dirichlet condition to zero, only if there is a zero inflow
+        velocity component.
+        (!) This condition is best used for boundaries and gravity aligned with
+            one of the main axes.
+        (!) Boundary condition relies on specific variables defined in Context
+        """
+        self.reset()
+
+        windSpeed=np.array(windSpeed)
+        if vert_axis is None:
+            vert_axis = self.Shape.Domain.nd-1
+
+        def get_inlet_ux_dirichlet(i):
+            def ux_dirichlet(x, t):
+                from proteus import Context
+                ct = Context.get()
+                waveHeight = wave.mwl+wave.eta(x, t)
+                wavePhi = x[vert_axis]-waveHeight
+                if wavePhi <= 0:
+                    waterSpeed = wave.u(x, t)
+                else:
+                    x_max = list(x)
+                    x_max[vert_axis] = waveHeight
+                    waterSpeed = wave.u(x_max, t)
+                he, ecH = ct.domain.MeshOptions.he, ct.epsFact_consrv_heaviside
+                # smoothing only above wave, only on half the VOF smoothing length
+                H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH)
+                ux = H*windSpeed + (1-H)*waterSpeed
+                return ux[i]
+            return ux_dirichlet
+
+        def inlet_vof_dirichlet(x, t):
+            from proteus import Context
+            ct = Context.get()
+            level = wave.mwl + wave.eta(x,t)
+            mesh = ct.domain.MeshOptions
+            he, ecH = ct.domain.MeshOptions.he, ct.epsFact_consrv_heaviside
+            H = smoothedHeaviside(ecH*he,x[vert_axis]-level)
+            return H
+
+        def inlet_p_advective(x, t):
+            from proteus import Context
+            ct = Context.get()
+            # This is the normal velocity, based on the outwards boundary
+            # orientation b_or
+            # needs to be equal to -ux_dirichlet
+            b_or = self._b_or[self._b_i]
+            nd = len(b_or)
+            waterSpeed = np.array(wave.u(x, t))
+            waveHeight = wave.mwl+wave.eta(x, t)
+            wavePhi = x[vert_axis]-waveHeight
+            he = ct.domain.MeshOptions.he
+            if wavePhi <= 0:
+                waterSpeed = wave.u(x, t)
+            else:
+                x_max = list(x)
+                x_max[vert_axis] = waveHeight
+                waterSpeed = wave.u(x_max, t)
+            he, ecH = ct.domain.MeshOptions.he, ct.epsFact_consrv_heaviside
+            # smoothing only above wave, only on half the VOF smoothing length
+            H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH)
+            U = H*windSpeed + (1-H)*waterSpeed
+            u_p = np.sum(U[:nd]*b_or)
+            return u_p
+
+        self.u_dirichlet = get_inlet_ux_dirichlet(0)
+        self.v_dirichlet = get_inlet_ux_dirichlet(1)
+        self.w_dirichlet = get_inlet_ux_dirichlet(2)
+        self.vof_dirichlet = inlet_vof_dirichlet
+        self.p_advective = inlet_p_advective
+
+    # FOLLOWING BOUNDARY CONDITION IS UNTESTED #
     def setTwoPhaseVelocityInlet(self, U, waterLevel, vert_axis=None, air=1.,
                                  water=0.):
         """
@@ -236,92 +322,6 @@ class BC_RANS(BC_Base):
         self.vof_dirichlet = inlet_vof_dirichlet
         self.p_advective = inlet_p_advective
 
-    def setUnsteadyTwoPhaseVelocityInlet(self, wave, vert_axis=None, windSpeed=(0., 0., 0.), air=1., water=0., smooth=False):
-        """
-        Imposes a velocity profile lower than the sea level and an open
-        boundary for higher than the sealevel.
-        :param U: Velocity vector at the global system.
-        :param vert_axis: index of vertical in position vector, must always be
-                        aligned with gravity, by default set to 1].
-        :param air: Volume fraction for air (1.0 by default).
-        :param water: Volume fraction for water (0.0 by default).
-        Below the seawater level, the condition returns the _dirichlet and
-        p_advective condition according to the inflow velocity.
-        Above the sea water level, the condition returns the gravity as zero,
-        and sets _dirichlet condition to zero, only if there is a zero inflow
-        velocity component.
-        (!) This condition is best used for boundaries and gravity aligned with
-            one of the main axes.
-        (!) Boundary condition relies on specific variables defined in Context
-        """
-        self.reset()
-
-        windSpeed=np.array(windSpeed)
-        if vert_axis is None:
-            vert_axis = self.Shape.Domain.nd - 1
-
-        def get_inlet_ux_dirichlet(i):
-            def ux_dirichlet(x, t):
-                from proteus import Context
-                ct = Context.get()
-                waveHeight = wave.mwl+wave.eta(x, t)
-                wavePhi = x[vert_axis]-waveHeight
-                if wavePhi <= 0:
-                    waterSpeed = wave.u(x, t)
-                else:
-                    x_max = x[:]
-                    x_max[vert_axis] = waveHeight
-                    waterSpeed = wave.u(x_max, t)
-                he, ecH = ct.domain.MeshOptions.he, ct.epsFact_consrv_heaviside
-                # smoothing only above wave, only on half the VOF smoothing length
-                H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH)
-                return H*windSpeed[i] + (1-H)*waterSpeed[i]
-            return ux_dirichlet
-
-        def inlet_vof_dirichlet(x, t):
-            from proteus import Context
-            ct = Context.get()
-            level = wave.mwl + wave.eta(x,t)
-            mesh = ct.domain.MeshOptions
-            he = ct.domain.MeshOptions.he
-            if smooth is True:
-                epsFact_consrv_heaviside = ct.epsFact_consrv_heaviside
-            else:
-                epsFact_consrv_heaviside = 0.
-            H = smoothedHeaviside(epsFact_consrv_heaviside*mesh.he,x[vert_axis]-level)
-            return H
-
-        def inlet_p_advective(x, t):
-            from proteus import Context
-            ct = Context.get()
-            # This is the normal velocity, based on the outwards boundary
-            # orientation b_or
-            # needs to be equal to -ux_dirichlet
-            b_or = self._b_or[self._b_i]
-            nd = len(b_or)
-            waterSpeed = np.array(wave.u(x, t))
-            waveHeight = wave.mwl+wave.eta(x, t)
-            wavePhi = x[vert_axis]-waveHeight
-            he = ct.domain.MeshOptions.he
-            if wavePhi <= 0:
-                waterSpeed = wave.u(x, t)
-            else:
-                x_max = x[:]
-                x_max[vert_axis] = waveHeight
-                waterSpeed = wave.u(x_max, t)
-            he, ecH = ct.domain.MeshOptions.he, ct.epsFact_consrv_heaviside
-            # smoothing only above wave, only on half the VOF smoothing length
-            H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH)
-            U = H*windSpeed + (1-H)*waterSpeed
-            u_p = np.sum(U[:nd]*b_or)
-            return u_p
-
-        self.u_dirichlet = get_inlet_ux_dirichlet(0)
-        self.v_dirichlet = get_inlet_ux_dirichlet(1)
-        self.w_dirichlet = get_inlet_ux_dirichlet(2)
-        self.vof_dirichlet = inlet_vof_dirichlet
-        self.p_advective = inlet_p_advective
-
     def setHydrostaticPressureOutlet(self, rho, g, refLevel, vof, pRef=0.0,
                                      vert_axis=-1):
         self.reset()
@@ -345,6 +345,7 @@ class BC_RANS(BC_Base):
         self.v_diffusive = constantBC(0.)
         self.w_diffusive = constantBC(0.)
 
+    # FOLLOWING BOUNDARY CONDITION IS UNTESTED #
     def hydrostaticPressureOutletWithDepth(self, seaLevel, rhoUp, rhoDown, g,
                                            refLevel, pRef=0.0, vert_axis=None,
                                            air=1.0, water=0.0):
