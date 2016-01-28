@@ -991,6 +991,8 @@ class TimeSeries:
                 for ii in range(len(ki)):
                     kDir[ii,:] = ki[ii]*self.waveDir[:]
                 decomp.append(kDir)
+                decomp.append(ki)
+
                 self.decompose_window.append(decomp)
                 
             
@@ -1027,9 +1029,9 @@ class TimeSeries:
         :param t: time
         """
         U=0.
-        for ii in range(self.N):
+        for ii in range(0,self.Nf):
             x1 = x-[self.x0, self.y0, self.z0]
-            U+= vel_mode(x1, t-self.t0, self.kDir[ii],self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
+            U+= vel_mode(x1, t-self.t0, self.kDir[ii],self.ki[ii], self.omega[ii],self.phi[ii],self.ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
 
     def findWindow(self,t):
@@ -1070,11 +1072,12 @@ class TimeSeries:
         omega = self.decompose_window[Nw][0]
         phi = self.decompose_window[Nw][2]
         kDir = self.decompose_window[Nw][4]
+        ki = self.decompose_window[Nw][5]
         t0 = self.windows_rec[Nw][0,0]
         U=0.
-        for ii in range(self.N):
+        for ii in range(0,self.Nf):
             x1 = x-[self.x0, self.y0, self.z0]
-            U+= vel_mode(x1, t-t0, kDir[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir)
+            U+= vel_mode(x1, t-t0, kDir[ii],ki[ii],omega[ii],phi[ii],ai[ii],self.mwl,self.depth,self.g,self.vDir)
         return U
 
 
