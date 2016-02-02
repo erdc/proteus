@@ -931,6 +931,124 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
 
         return vx
 
+class VPP_PWL_BDM2(VPP_PWL_RT0):
+    """
+
+    WIP - this class is intended to implement BDM2 elements in proteus
+
+    Local Larson-Niklasson method with BDM1 representation for element velocities
+    This is not the correct postprocessing for optimized NS codes
+
+    Only difference from VPP_PWL_RT0 should be steps for local velocity representation
+    This one uses  BDM_1 space which is [P^1]^d locally with continuous
+    linear fluxes on each face
+    use standard basis
+      \vec N_i = \lambda_{i/d}\vec e_{i%d}
+      That is the dofs are locally (say in 2d) [v^x_0,v^y_0,v^x_1,v^y_1,v^x_2,v^y_2]
+
+    Have to use BDM projection to get degrees of freedom
+
+    TODO:
+      need additional code to compute velocities at ebq and ebq_global if desired
+      looks like ebq_global, ebqe may not be getting a good approximation if v.n=0 on boundary?
+        for example try LN_Example1 with no heterogeneity
+
+      Check what the problem is when running with numerical flux. mass balances are right
+        but getting strange convergence and error values. May need to check what is getting
+        added to ebq[('velocity',ci)] from numerical flux
+
+    """
+    from cpostprocessing import buildLocalBDM1projectionMatrices,factorLocalBDM1projectionMatrices
+    from cpostprocessing import solveLocalBDM1projection,getElementBDM1velocityValuesLagrangeRep
+    def __init__(self,vectorTransport=None,vtComponents=[0]):
+        VPP_PWL_RT0.__init__(self,vectorTransport=vectorTransport,vtComponents=vtComponents)
+        # have to directly modify the type now to show bdm
+        self.postProcessingType = 'pwl-bdm'
+        #how is the local velocity represented
+        #  0 -- BDM P^1 Lagrange rep
+        self.localVelocityRepresentationFlag = 0
+
+        #
+        for ci in self.vtComponents:
+            self.nDOFs_element[ci] = self.vt.nSpace_global*(self.vt.nSpace_global+1)
+            self.q[('velocity_dofs',ci)] = numpy.zeros((self.vt.mesh.nElements_global,self.nDOFs_element[ci]),'d')
+            if ci != self.vtComponents[0] and self.q.has_key(('velocity_l2g',self.vtComponents[0])):
+                self.q[('velocity_l2g',ci)]  = self.q[('velocity_l2g',self.vtComponents[0])]
+            else:
+                self.q[('velocity_l2g',ci)]  = numpy.arange((self.vt.mesh.nElements_global*self.nDOFs_element[ci]),dtype='i').reshape((self.vt.mesh.nElements_global,self.nDOFs_element[ci]))
+        #
+
+        self.BDMcomponent=self.vtComponents[0]
+        self.BDMprojectionMat_element = numpy.zeros((self.vt.mesh.nElements_global,
+                                                     self.nDOFs_element[self.BDMcomponent],
+                                                     self.nDOFs_element[self.BDMcomponent]),
+                                                    'd')
+        self.BDMprojectionMatPivots_element = numpy.zeros((self.vt.mesh.nElements_global,
+                                                           self.nDOFs_element[self.BDMcomponent]),
+                                                          'i')
+        self.computeBDM1projectionMatrices()
+
+    def computeBDM1projectionMatrices(self):
+#        print "!!!!!!!!!!!!!!!!!!!"
+#        print self.w_dS
+        cpostprocessing.buildLocalBDM1projectionMatrices(self.w_dS[self.BDMcomponent],#vt.ebq[('w*dS_u',self.BDMcomponent)],
+                                                         self.vt.ebq['n'],
+                                                         self.w[self.BDMcomponent],#self.vt.ebq[('v',self.BDMcomponent)],
+                                                         self.BDMprojectionMat_element)
+        cpostprocessing.factorLocalBDM1projectionMatrices(self.BDMprojectionMat_element,
+                                                          self.BDMprojectionMatPivots_element)
+    def computeGeometricInfo(self):
+        if self.BDMcomponent != None:
+            self.computeBDM1projectionMatrices()
+
+    def evaluateLocalVelocityRepresentation(self,ci):
+        """
+        project to BDM velocity from element boundary fluxes
+        """
+        assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
+
+        self.solveLocalBDM1projection(self.BDMprojectionMat_element,
+                                      self.BDMprojectionMatPivots_element,
+                                      self.w_dS[ci],
+                                      self.vt.ebq['n'],
+                                      self.ebq[('velocity',ci)],
+                                      self.q[('velocity_dofs',ci)])
+
+        cpostprocessing.getElementBDM1velocityValuesLagrangeRep(self.qv[ci],
+                                                                self.q[('velocity_dofs',ci)],
+                                                                self.vt.q[('velocity',ci)])
+
+    def evaluateElementVelocityField(self,x,ci):
+        """
+        evaluate velocity field assuming velocity_dofs already calculated
+        for now assumes x shaped like nE x nq x 3
+        TODO:
+           put python loops in c
+        """
+        assert len(x.shape) == 3, "wrong shape for x= %s " % x.shape
+        nE = x.shape[0]; nq = x.shape[1]; nd = self.vt.nSpace_global
+        vx = numpy.zeros((nE,nq,nd),'d')
+        #have to evaluate shape functions at new points. This is painful
+        #uci     = self.vt.u[ci]
+        xiArray = numpy.zeros(x.shape,'d')
+        vArray  = numpy.zeros((nE,nq,self.testSpace.max_nDOF_element),'d')
+        invJ    = numpy.zeros((nE,nq,self.vt.q['inverse(J)'].shape[2],self.vt.q['inverse(J)'].shape[3]),
+                                'd')
+        for ie in range(nE):
+            for iq in range(nq):
+                invJ[ie,iq,:,:] = self.vt.q['inverse(J)'][ie,0,:,:] #assume affine
+            #iq
+        #iq
+        self.testSpace.elementMaps.getInverseValues(invJ,x,xiArray)
+        self.testSpace.getBasisValuesAtArray(xiArray,vArray)
+
+        cpostprocessing.getElementBDM1velocityValuesLagrangeRep(vArray,
+                                                                self.q[('velocity_dofs',ci)],
+                                                                vx)
+
+        return vx
+
+
 class VPP_PWL_RT0_OPT(VPP_PWL_RT0):
     """
     Version of local Larson-Niklasson scheme to use with optimized
@@ -2667,6 +2785,7 @@ class AggregateVelocityPostProcessor:
                  'pwc':VPP_PWC_RT0,       #Larson Niklasson (global) piecewise constant correction, RT_0 velocity repres.
                  'pwl':VPP_PWL_RT0,       #Larson Niklasson (local) piecewise linear correction, RT_0 velocity repres.
                  'pwl-bdm':VPP_PWL_BDM,   #Larson Niklasson (local) piecewise linear correction, Brezzi Douglas Marini linear velocity repres.
+                 'pwl-bdm2':VPP_PWL_BDM2,        # Initial changes to adding BDM2 projection capabilities
                  'pwl-opt':VPP_PWL_RT0_OPT,      #Larson Niklasson (local) piecewise linear correction, RT_0 velocity repres. optimized code
                  'pwl-bdm-opt':VPP_PWL_BDM_OPT,  #Larson Niklasson (local) piecewise linear correction, Brezzi Douglas Marini linear velocity repres. optimized code
                  'sun-rt0':VPP_SUN_RT0,          #Sun and Wheeler global correction, RT_0 velocity repres.
