@@ -33,7 +33,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   gmi_register_sim();
   approximation_order = 2;
   integration_order = 3;//approximation_order * 2;
-  casenum = 1;
+  casenum = 2;
   exteriorGlobaltoLocalElementBoundariesArray = NULL;
   size_field_config = sfConfig;
   geomFileName = NULL; 
