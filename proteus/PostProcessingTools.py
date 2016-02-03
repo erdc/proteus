@@ -933,29 +933,7 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
 
 class VPP_PWL_BDM2(VPP_PWL_RT0):
     """
-
     WIP - this class is intended to implement BDM2 elements in proteus
-
-    Local Larson-Niklasson method with BDM1 representation for element velocities
-    This is not the correct postprocessing for optimized NS codes
-
-    Only difference from VPP_PWL_RT0 should be steps for local velocity representation
-    This one uses  BDM_1 space which is [P^1]^d locally with continuous
-    linear fluxes on each face
-    use standard basis
-      \vec N_i = \lambda_{i/d}\vec e_{i%d}
-      That is the dofs are locally (say in 2d) [v^x_0,v^y_0,v^x_1,v^y_1,v^x_2,v^y_2]
-
-    Have to use BDM projection to get degrees of freedom
-
-    TODO:
-      need additional code to compute velocities at ebq and ebq_global if desired
-      looks like ebq_global, ebqe may not be getting a good approximation if v.n=0 on boundary?
-        for example try LN_Example1 with no heterogeneity
-
-      Check what the problem is when running with numerical flux. mass balances are right
-        but getting strange convergence and error values. May need to check what is getting
-        added to ebq[('velocity',ci)] from numerical flux
 
     """
     from cpostprocessing import buildLocalBDM1projectionMatrices,factorLocalBDM1projectionMatrices
@@ -963,14 +941,14 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
     def __init__(self,vectorTransport=None,vtComponents=[0]):
         VPP_PWL_RT0.__init__(self,vectorTransport=vectorTransport,vtComponents=vtComponents)
         # have to directly modify the type now to show bdm
-        self.postProcessingType = 'pwl-bdm'
+        self.postProcessingType = 'pwl-bdm2'
         #how is the local velocity represented
-        #  0 -- BDM P^1 Lagrange rep
+        #  0 -- BDM P^2 Lagrange rep
         self.localVelocityRepresentationFlag = 0
 
         #
         for ci in self.vtComponents:
-            self.nDOFs_element[ci] = self.vt.nSpace_global*(self.vt.nSpace_global+1)
+            self.nDOFs_element[ci] = self.vt.nSpace_global*(self.vt.nSpace_global*3)  # BDM2 requires quadratic elements
             self.q[('velocity_dofs',ci)] = numpy.zeros((self.vt.mesh.nElements_global,self.nDOFs_element[ci]),'d')
             if ci != self.vtComponents[0] and self.q.has_key(('velocity_l2g',self.vtComponents[0])):
                 self.q[('velocity_l2g',ci)]  = self.q[('velocity_l2g',self.vtComponents[0])]
@@ -986,16 +964,17 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
         self.BDMprojectionMatPivots_element = numpy.zeros((self.vt.mesh.nElements_global,
                                                            self.nDOFs_element[self.BDMcomponent]),
                                                           'i')
-        self.computeBDM1projectionMatrices()
+        self.computeBDM2projectionMatrices()
 
-    def computeBDM1projectionMatrices(self):
-#        print "!!!!!!!!!!!!!!!!!!!"
-#        print self.w_dS
-        cpostprocessing.buildLocalBDM1projectionMatrices(self.w_dS[self.BDMcomponent],#vt.ebq[('w*dS_u',self.BDMcomponent)],
+    def computeBDM2projectionMatrices(self):
+        print "***************"
+        print self.w_dS
+        print "***************"
+        cpostprocessing.buildLocalBDM2projectionMatrices(self.w_dS[self.BDMcomponent],#vt.ebq[('w*dS_u',self.BDMcomponent)],
                                                          self.vt.ebq['n'],
                                                          self.w[self.BDMcomponent],#self.vt.ebq[('v',self.BDMcomponent)],
                                                          self.BDMprojectionMat_element)
-        cpostprocessing.factorLocalBDM1projectionMatrices(self.BDMprojectionMat_element,
+        cpostprocessing.factorLocalBDM2projectionMatrices(self.BDMprojectionMat_element,
                                                           self.BDMprojectionMatPivots_element)
     def computeGeometricInfo(self):
         if self.BDMcomponent != None:

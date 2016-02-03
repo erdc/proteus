@@ -474,6 +474,34 @@ cpostprocessingBuildLocalBDM1projectionMatrices(PyObject* self,
 }
 
 static PyObject*
+cpostprocessingBuildLocalBDM2projectionMatrices(PyObject* self,
+					      PyObject* args)
+{
+  
+  PyObject *w_dS_f,*ebq_n,*ebq_v,*BDMmat_element;
+  if(!PyArg_ParseTuple(args,"OOOO",
+                       &w_dS_f,
+                       &ebq_n,
+                       &ebq_v,
+		       &BDMmat_element))
+    return NULL;
+
+  buildLocalBDM2projectionMatrices(SHAPE(ebq_n)[0],
+				   SHAPE(ebq_n)[1],
+				   SHAPE(ebq_n)[2],
+				   SHAPE(ebq_n)[3],
+				   SHAPE(w_dS_f)[3],
+				   SHAPE(ebq_v)[3],
+				   SHAPE(BDMmat_element)[1],
+				   DDATA(w_dS_f),
+				   DDATA(ebq_n),
+				   DDATA(ebq_v),
+				   DDATA(BDMmat_element));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyObject*
 cpostprocessingFactorLocalBDM1projectionMatrices(PyObject* self,
 					       PyObject* args)
 {
@@ -2220,6 +2248,10 @@ static PyMethodDef cpostprocessingMethods[] = {
     cpostprocessingBuildLocalBDM1projectionMatrices,
     METH_VARARGS, 
     "build local projections to BDM1 assuming standard basis for P^1(E)"},
+  { "buildLocalBDM2projectionMatrices", 
+    cpostprocessingBuildLocalBDM2projectionMatrices,
+    METH_VARARGS, 
+    "build local projections to BDM2 assuming standard basis for P^2(E)"},
   { "factorLocalBDM1projectionMatrices", 
     cpostprocessingFactorLocalBDM1projectionMatrices,
     METH_VARARGS, 

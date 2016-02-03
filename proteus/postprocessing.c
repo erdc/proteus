@@ -2731,14 +2731,14 @@ void buildLocalBDM2projectionMatrices(int nElements_global,
 				      double * BDMprojectionMat_element)
 {
   /***********************************************************************
-   This function builds the LocalBDM2projectionMatrices
+   WIP - This function builds the LocalBDM2projectionMatrices
    ***********************************************************************/
 
   int eN,ebN,s,j,k,l,kp,irow,ibq,nVDOFs_element2,nSimplex;
   int TRANSPOSE_FOR_LAPACK=1;
   double pval;
   nSimplex = nSpace+1;
-  assert(nVDOFs_element == nSpace*(nSpace+1));
+  assert(nVDOFs_element == nSpace*(nSpace*3));
   assert(nSimplex == nDOFs_trial_element);
   assert(nSimplex == nDOFs_test_element);
   nVDOFs_element2 = nVDOFs_element*nVDOFs_element;
