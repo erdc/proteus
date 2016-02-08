@@ -2748,6 +2748,10 @@ void buildLocalBDM2projectionMatrices(int nElements_global,
     nVDOFs_element,nSpace);
   */
 
+  // pSpace represent the size of the polynomial test space
+  // NOTE - this is a significant difference from the BDM1 implementation where nSpace = pSpace
+  int pSpace = 3;  // There may be a better way to automate this, but for now I'm hard coding it
+  
   /* printf("BDM1 test information: \n"); */
   /* printf("nVDOFs_element: %d\n",nVDOFs_element); */
 
@@ -2755,13 +2759,13 @@ void buildLocalBDM2projectionMatrices(int nElements_global,
     {
       for (ebN = 0; ebN < nElementBoundaries_element; ebN++)
 	{
-	  for (s = 0; s < nSpace; s++)
+	  for (s = 0; s < pSpace; s++)
 	    {
 	      irow = ebN*nSpace + s;
 	      for (j = 0; j < nVDOFs_element; j++)
 		{
 		  k = j / nSpace;
-		  l = j % nSpace;
+		  l = j % nSpace;  // This needs to cycle through 0, and 1
 		  kp= (ebN+s+1) % nSimplex; /*neighbor (s) of node k*/
 		  /*mwf debug
 		  printf("BDM1 new eN=%d ebN=%d s=%d irow=%d j=%d k=%d l=%d kp=%d\n",
