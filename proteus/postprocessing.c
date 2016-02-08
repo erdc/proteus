@@ -2662,17 +2662,6 @@ Input Variables
 		    BDMprojectionMat_element[eN*nVDOFs_element2 + irow*nVDOFs_element + j] = 0.0;
 		  for (ibq = 0; ibq < nQuadraturePoints_elementBoundary; ibq++)
 		    {
-		  // ARB TEMP
-		  if (eN==0){
-		  /*
- 		             printf("ebq_n: %.2f, eN: %d, ebN: %d,s: %d, ibq: %d, k: %d, l: %d, j: %d, nDOFs_test_element: %d, nDOFs_trial_element: %d\n",ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
-			     ebN*nQuadraturePoints_elementBoundary*nSpace+ibq*nSpace+l], eN,ebN,s,ibq,k,l,j,nDOFs_test_element,nDOFs_trial_element);*/
-
- 		    printf("ebq_n: %.2f, w_dS_f: %.2f, eN: %d, ebN: %d,s: %d, ibq: %d, k: %d, l: %d, j: %d, nDOFs_test_element: %d, nDOFs_trial_element: %d, kp: %d\n",ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
-		    ebN*nQuadraturePoints_elementBoundary*nSpace+ibq*nSpace+l],w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+ibq*nDOFs_test_element+kp], eN,ebN,s,ibq,k,l,j,nDOFs_test_element,nDOFs_trial_element,kp);
-
-                            }
-		  // ARB TEMP
 		      pval = 
 			ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
 			      ebN*nQuadraturePoints_elementBoundary*nSpace+
