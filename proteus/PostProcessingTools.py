@@ -989,8 +989,6 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
         self.computeBDM1projectionMatrices()
 
     def computeBDM1projectionMatrices(self):
-#        print "!!!!!!!!!!!!!!!!!!!"
-#        print self.w_dS
         cpostprocessing.buildLocalBDM1projectionMatrices(self.w_dS[self.BDMcomponent],#vt.ebq[('w*dS_u',self.BDMcomponent)],
                                                          self.vt.ebq['n'],
                                                          self.w[self.BDMcomponent],#self.vt.ebq[('v',self.BDMcomponent)],
