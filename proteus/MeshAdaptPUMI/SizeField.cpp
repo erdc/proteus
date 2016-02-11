@@ -554,10 +554,11 @@ std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
   m->end(it);
   SmoothField(size_scale);
 
-  char namebuffer[20];
-  sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
-  apf::writeVtkFiles(namebuffer, m);
-
+  if(logging_config=="on"){
+    char namebuffer[20];
+    sprintf(namebuffer,"pumi_preadapt_%i",nAdapt);
+    apf::writeVtkFiles(namebuffer, m);
+  }
   freeField(err_reg); //mAdapt will throw error if not destroyed. what about free?
   apf::destroyField(size_iso_reg); //will throw error if not destroyed
   apf::destroyField(grad2phi);
