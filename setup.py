@@ -1,4 +1,5 @@
 import sys
+import setuptools
 from distutils.core import setup, Extension
 from petsc4py.conf.petscconf import Extension as PetscExtension
 
@@ -46,7 +47,10 @@ setup(name='proteus',
       packages = ['proteus', 'proteus.config', 'proteus.tests', 'proteus.mprans'],
       cmdclass = {'build_ext':build_ext},
       ext_package='proteus',
-      ext_modules=[Extension("ADR",['proteus/ADR.pyx'],
+      ext_modules=[Extension("WaveTools",['proteus/WaveTools.pyx'],
+                             language='c',
+                             include_dirs=[numpy.get_include(),'proteus']),
+                   Extension("ADR",['proteus/ADR.pyx'],
                              depends=['proteus/ADR.h'],
                              language='c++',
                              include_dirs=[numpy.get_include(),'proteus']),
@@ -306,6 +310,10 @@ setup(name='proteus',
                              include_dirs=[numpy.get_include(), 'proteus']),
                    Extension("mprans.cDissipation2D",["proteus/mprans/cDissipation2D.pyx"],
                              depends=["proteus/mprans/Dissipation2D.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
+                             language="c++",
+                             include_dirs=[numpy.get_include(), 'proteus']),
+                   Extension("mprans.cRANS2P_IB",["proteus/mprans/cRANS2P_IB.pyx"],
+                             depends=["proteus/mprans/RANS2P_IB.h"] + ["proteus/ModelFactory.h","proteus/CompKernel.h"],
                              language="c++",
                              include_dirs=[numpy.get_include(), 'proteus']),
 
