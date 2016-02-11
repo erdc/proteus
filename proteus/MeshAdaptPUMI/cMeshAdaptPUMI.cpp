@@ -7,10 +7,13 @@
 #include <SimUtil.h>
 #include <SimModel.h>
 
+#include <iostream>
+#include <fstream>
+
 #include "MeshAdaptPUMI.h"
 
 MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
-    const char* sfConfig, const char* maType)
+    const char* sfConfig, const char* maType,const char* logType)
 {
   m = 0;
   PCU_Comm_Init();
@@ -36,10 +39,9 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   casenum = 2;
   exteriorGlobaltoLocalElementBoundariesArray = NULL;
   size_field_config = sfConfig;
-  geomFileName = NULL; 
   modelFileName = NULL; 
-  meshFileName = NULL; 
   adapt_type_config = maType;
+  logging_config = logType;
 }
 
 MeshAdaptPUMIDrvr::~MeshAdaptPUMIDrvr()
@@ -195,19 +197,32 @@ void MeshAdaptPUMIDrvr::simmetrixBCreloaded(const char* modelFile)
     modelFileName=(char *) malloc(sizeof(char) * strlen(modelFile));
     strcpy(modelFileName,modelFile);
   }
+/*
   for(int i=0;i<comm_size;i++){
     if(comm_rank==i)
       getSimmetrixBC();
     PCU_Barrier();
   }
+*/
+  getSimmetrixBC();
 }
 
 int MeshAdaptPUMIDrvr::adaptPUMIMesh()
 {
   if (size_field_config == "farhad")
     calculateAnisoSizeField();
-  else if (size_field_config == "alvin")
-    get_local_error();
+  else if (size_field_config == "alvin"){
+      double t1 = PCU_Time();
+      get_local_error();
+      double t2 = PCU_Time();
+    if(comm_rank==0 && logging_config == "on"){
+      std::ofstream myfile;
+      myfile.open("error_estimator_timing.txt", std::ios::app );
+      myfile << t2-t1<<std::endl;
+      myfile.close();
+    }
+  
+  }  
   else if (size_field_config == "isotropic")
     testIsotropicSizeField();
   else {
@@ -223,30 +238,49 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   /// Adapt the mesh
   ma::Input* in = ma::configure(m, size_scale, size_frame);
   ma::validateInput(in);
-  in->shouldRunPreParma = true;
-  in->shouldRunMidParma = true;
-  in->shouldRunPostParma = true;
+  in->shouldRunPreZoltan = true;
+  in->shouldRunMidZoltan = true;
+  in->shouldRunPostZoltan = true;
   in->maximumIterations = numIter;
   in->shouldSnap = false;
   in->shouldFixShape = true;
   double mass_before = getTotalMass();
+
+  double t1 = PCU_Time();
   ma::adapt(in);
+  double t2 = PCU_Time();
+
+  if(comm_rank==0 && logging_config=="on"){
+    std::ofstream myfile;
+    myfile.open("adapt_timing.txt", std::ios::app);
+    myfile << t2-t1<<std::endl;
+    myfile.close();
+  }
+
   freeField(size_frame);
   freeField(size_scale);
   m->verify();
   double mass_after = getTotalMass();
   PCU_Add_Doubles(&mass_before,1);
   PCU_Add_Doubles(&mass_after,1);
-  if(comm_rank==0){
+  if(comm_rank==0 && logging_config=="on"){
+/*
     std::ios::fmtflags saved(std::cout.flags());
-    std::cout<<std::setprecision(15)<<"Before "<<mass_before<<" After "<<mass_after<<" diff "<<mass_after-mass_before<<std::endl;
-    std::cout.flags(saved); 
+    std::cout<<std::setprecision(15)<<"Mass Before "<<mass_before<<" After "<<mass_after<<" diff "<<mass_after-mass_before<<std::endl;
+    std::cout.flags(saved);
+*/
+    std::ofstream mymass;
+    mymass.open("mass_check.txt", std::ios::app);
+    mymass <<std::setprecision(15)<<mass_before<<","<<mass_after<<","<<mass_after-mass_before<<std::endl;
+    mymass.close();
   }
   if(size_field_config=="alvin"){
     simmetrixBCreloaded(modelFileName);
-    char namebuffer[20];
-    sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
-    apf::writeVtkFiles(namebuffer, m);
+    if(logging_config=="on"){
+      char namebuffer[20];
+      sprintf(namebuffer,"pumi_postadapt_%i",nAdapt);
+      apf::writeVtkFiles(namebuffer, m);
+    }
   }
   nAdapt++; //counter for number of adapt steps
   return 0;
