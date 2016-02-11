@@ -7,7 +7,7 @@
 class MeshAdaptPUMIDrvr{
  
   public:
-  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*); 
+  MeshAdaptPUMIDrvr(double, double, int, const char*, const char*,const char*); 
   ~MeshAdaptPUMIDrvr();
 
   int loadModelAndMesh(const char* modelFile, const char* meshFile);
@@ -52,9 +52,7 @@ class MeshAdaptPUMIDrvr{
   int getSimmetrixBC();
   void simmetrixBCreloaded(const char* modelFile);
   void removeBCData();
-  char* geomFileName; 
   char* modelFileName; 
-  char* meshFileName; 
   
   //tags used to identify types of BC
   apf::MeshTag* BCtag[4];
@@ -103,6 +101,7 @@ class MeshAdaptPUMIDrvr{
 
   std::string size_field_config;
   std::string adapt_type_config;
+  std::string logging_config;
 };
 
 
