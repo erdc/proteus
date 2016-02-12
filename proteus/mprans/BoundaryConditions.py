@@ -158,7 +158,7 @@ class BC_RANS(BC_Base):
         self.k_diffusive = constantBC(0.)
         self.dissipation_diffusive = constantBC(0.)
 
-    def setMoveMesh(self, last_pos, h, rot_matrix):
+    def setMoveMesh(self, last_pos, h=(0., 0., 0.), rot_matrix=None):
         """
         sets rigid body boundary conditions for moving the mesh
         :param last_pos: position (barycentre) of body pre-calculation
@@ -166,6 +166,10 @@ class BC_RANS(BC_Base):
         :param rot_matrix: rotation matrix of body pre-calculation
         (!) should not be set manually
         """
+        if rot_matrix is None:
+            rot_matrix = np.array([[1., 0., 0.],
+                                   [0., 1., 0.],
+                                   [0., 0., 1.]])
         def get_DBC_h(i):
             def DBC_h(x, t):
                 x_0 = x-last_pos
@@ -393,7 +397,7 @@ class BC_RANS(BC_Base):
 
 class RelaxationZone:
     def __init__(self, shape, zone_type, center, orientation, waves, windSpeed,
-                 epsFact_solid, dragAlphaTypes, dragBetaTypes, porosityTypes):
+                 epsFact_solid, dragAlpha, dragBeta, porosity):
         self.Shape = shape
         self.zone_type = zone_type
         self.center = center
@@ -410,9 +414,9 @@ class RelaxationZone:
             log('Wrong zone type: ' + self.zone_type)
             sys.exit()
         self.epsFact_solid = epsFact_solid
-        self.dragAlphaTypes = dragAlphaTypes
-        self.dragBetaTypes = dragBetaTypes
-        self.porosityTypes = porosityTypes
+        self.dragAlpha = dragAlpha
+        self.dragBeta = dragBeta
+        self.porosity = porosity
 
     def setGenerationFunctions(self, i):
         """
@@ -469,6 +473,15 @@ class RelaxationZoneWaveGenerator(AuxiliaryVariables.AV_base):
                         coeff.q_velocity_solid[eN, k, 1] = zone.v(x, t)
                         if self.nd > 2:
                             coeff.q_velocity_solid[eN, k, 2] = zone.w(x, t)
+                        # if zone.zone_type == 'generation' and x[0] < 0.2:
+                        #     print '$$$$$$$$$$'
+                        #     print 'x: ' + str(x)
+                        #     phi = zone.center[0]-x[0]
+                        #     print 'phi: ' + str(phi)
+                        #     new_x = max(0., min(1., 0.5+phi/(2*zone.epsFact_solid)))
+                        #     print 'new_x: ' + str(new_x)
+                        #     H_s = (np.exp(new_x**3.5)-1)/(np.exp(1)-1)
+                        #     print 'H_s: ' + str(H_s)
             m.q['phi_solid'] = m.coefficients.q_phi_solid
             m.q['velocity_solid'] = m.coefficients.q_velocity_solid
 
