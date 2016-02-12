@@ -8,7 +8,6 @@ import scipy
 from scipy import linalg,sparse
 from scipy.sparse import linalg
 
-import pyximport; pyximport.install()
 import cev_utils as cev
 
 
@@ -131,7 +130,8 @@ def high_order_divergence(un,nu_L,x,tn,R_e,eta,he,l2g,K,C,MinvH,out_ind,out_norm
                           stab_operator,
                           include_inverse_mass=True):
     """
-    compute high-order spatial divergence terms (integrated by parts)
+    compute high-order spatial divergence terms (integrated by parts) using entropy residual
+    and entropy from previous step
     This is G_I, I=0,\dots,Nn-1 in Guermond
     If include_inverse_mass is true, multiply by (M^H)-1
     Also returns high-order viscosity
@@ -159,6 +159,64 @@ def high_order_divergence(un,nu_L,x,tn,R_e,eta,he,l2g,K,C,MinvH,out_ind,out_norm
     #high-order stabilization
     B_H = stab_operator(he,Ndof,nu_H)
     b  += B_H.dot(un)
+ 
+    if include_inverse_mass:
+        b = MinvH.dot(b)
+    return b,nu_H
+
+def galerkin_divergence(un,x,tn,K,C,MinvH,out_ind,out_normals,
+                        flux,dflux,
+                        include_inverse_mass=True):
+    """
+    return galerkin portion of the spatial divergence terms (integrated by parts) 
+
+    This is G_I, I=0,\dots,Nn-1 in Guermond
+    If include_inverse_mass is true, multiply by (M^H)-1
+    
+    """
+    Ndof = un.shape[0]
+
+    #explicit diffusion
+    b = K.dot(un)
+
+    ##explicit advection
+    fn = flux(un,x,tn)
+    b -= C.dot(fn)
+    ##outflow
+    b[out_ind] += fn[out_ind]*out_normals
+
+ 
+    if include_inverse_mass:
+        b = MinvH.dot(b)
+    return b
+
+def entropy_viscosity_divergence(un,nu_L,x,tn,R_e,eta,he,l2g,MinvH,
+                                 flux,dflux,high_visc,edge_jump,entropy_normalization,
+                                 stab_operator,
+                                 include_inverse_mass=True):
+    """
+    compute the entropy viscosity portion of the high-order divergence assuming 
+    entropy and entropy residual have already been computed 
+    Integrates by parts
+
+    This is G_I, I=0,\dots,Nn-1 in Guermond
+    If include_inverse_mass is true, multiply by (M^H)-1
+    Also returns high-order viscosity
+    """
+    Ndof = un.shape[0]
+
+    ##high-order artificial viscosity
+    dfn=dflux(un,x,tn)
+    Re_norm = np.amax(np.absolute(R_e),1)
+    eta_jump = edge_jump(he,l2g,eta,dfn)
+    eta_diff = entropy_normalization(eta)
+
+    Jf = np.amax(np.absolute(eta_jump[l2g]),1)
+    nu_H = high_visc(nu_L,Re_norm,eta_diff,Jf)
+
+    #high-order stabilization
+    B_H = stab_operator(he,Ndof,nu_H)
+    b   = B_H.dot(un)
  
     if include_inverse_mass:
         b = MinvH.dot(b)
