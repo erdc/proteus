@@ -19,7 +19,9 @@ double nu_0,nu_1,rho_0,rho_1;
 double a_kl = 0.5; //flux term weight
 int casenumber;
 int testcount = 0;
-int eID = 3865; // water element
+
+int eID = -1;
+//int eID = 3865; // water element
 //int eID = 7418; // air element  
 //int eID = 4482; //mixed element
 
@@ -156,7 +158,7 @@ void getLHS(Mat &K,apf::NewArray <apf::DynamicVector> &shdrv,int nsd,double weig
 
 void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVector> &shdrv,apf::Vector3 vel_vect,apf::Matrix3x3 grad_vel,
             int nsd,double weight,int nshl,
-            double visc_val,double density,double pressure,
+            double visc_val,double density,apf::Vector3 grad_density,double pressure,
             double g[3])
 {
       int idx[nshl];
@@ -170,6 +172,8 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
           //temp_vect[s] += pressure/density*shdrv[s][i]; //pressure term
           double force = (g[i]+0.0)*shpval[s];
           double pressure_force = pressure/density*shdrv[s][i];
+          double a_rho_term = 0;
+          double b_rho_term = -pressure/(density*density)*grad_density[i]*shpval[s];
           double a_term = 0; 
           double c_term = 0;
           //a(u,v) and c(u,u,v) term
@@ -177,6 +181,7 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
             //temp_vect[s] += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
             //temp_vect[s] += -shpval[s]*grad_vel[i][j]*vel_vect[j]/density;
             a_term += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
+            a_rho_term += visc_val*(grad_vel[i][j]+grad_vel[j][i])*shpval[s]*grad_density[j]/(density*density);
             c_term += -shpval[s]*grad_vel[i][j]*vel_vect[j]/density;
           }
 /*
@@ -184,6 +189,8 @@ if(testcount==eID){
   std::cout<<"RHS i "<<i<<" s "<<s<<std::endl;
   std::cout<<"force "<<force<<" gravity? "<<g[i]<<std::endl;
   std::cout<<"pressure "<<pressure_force<<" pressure? "<<pressure<<std::endl;
+  std::cout<<"a_rho_term "<<a_rho_term<<" grad density "<< grad_density<<" density "<<density<<std::endl;
+  std::cout<<"b_rho_term "<<b_rho_term<<" grad density "<< grad_density<<" density "<<density<<std::endl;
   std::cout<<"a_term "<<a_term<<std::endl;
   std::cout<<"c_term "<<c_term<<" shpval? "<<shpval[s]<<" gradvel "<<grad_vel<<" vel_vect "<<vel_vect<<" density "<<density<<std::endl;
   std::cout<<"combo " <<force+pressure_force+a_term+c_term<<std::endl;
@@ -191,12 +198,12 @@ if(testcount==eID){
 }
 */
           temp_vect[s] = force+pressure_force+a_term+c_term;
+          //temp_vect[s] = force+pressure_force+a_rho_term+b_rho_term+a_term+c_term;
           temp_vect[s] = temp_vect[s]*weight;
         } //end loop over number of shape functions
         VecSetValues(F,nshl,idx,temp_vect,ADD_VALUES);
       } //end loop over spatial dimensions
 }
-
 
 double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf){
 
@@ -484,6 +491,7 @@ std::cout<<"Initialized flux"<<std::endl;
           tempbflux = (tempgrad_velo+apf::transpose(tempgrad_velo))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
               -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1);
           bflux = tempbflux*normal;
+/*
 if(localNumber(ent)==eID && l==0){
   std::cout<<"velocity gradient "<<std::endl;
   std::cout<<tempgrad_velo<<std::endl;
@@ -496,7 +504,8 @@ if(localNumber(ent)==eID && l==0){
   std::cout<<"normal? "<<normal<<std::endl;
   std::cout<<"bflux "<<tempbflux*normal<<std::endl;
 
-} 
+}
+*/ 
         } //end if boundary
         bflux = bflux*weight*Jdet;
         bflux.toArray(&(tempflux[l*nsd]));
@@ -745,8 +754,8 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, doub
           for(int s=0;s<nshl;s++){
             endflux[i*nshl+s] = endflux[i*nshl+s]+(flux_weight[0]*flux[l*nsd+i]+flux_weight[1]*flux[numbqpt*nsd+l*nsd+i])*shpval[s];
           }
-if(localNumber(ent)==3865)
-std::cout<<"Components "<<flux_weight[0]*flux[l*nsd+i]<<" "<<flux_weight[1]*flux[numbqpt*nsd+l*nsd+i]<<std::endl;
+//if(localNumber(ent)==3865)
+//std::cout<<"Components "<<flux_weight[0]*flux[l*nsd+i]<<" "<<flux_weight[1]*flux[numbqpt*nsd+l*nsd+i]<<std::endl;
         }
       }//end of boundary integration loop
       free(flux);
@@ -948,10 +957,14 @@ double err_est_total=0;
       apf::getVector(velo_elem,qpt,vel_vect);
       apf::getVectorGrad(velo_elem,qpt,grad_vel);
       grad_vel = apf::transpose(grad_vel);
+      apf::Vector3 grad_vof;
+      apf::getGrad(vof_elem,qpt,grad_vof);
     
       double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
       double pressure = apf::getScalar(pres_elem,qpt);
       double visc_val = apf::getScalar(visc_elem,qpt);
+      apf::Vector3 grad_rho = grad_vof*(rho_1-rho_0);
+
 /*
       if(testcount==eID && k==0 && comm_rank==0){
       
@@ -993,7 +1006,7 @@ double err_est_total=0;
       getLHS(K,shdrv,nsd,weight,visc_val,nshl);
 
       //Get RHS
-      getRHS(F,shpval,shdrv,vel_vect,grad_vel,nsd,weight,nshl,visc_val,density,pressure,g);
+      getRHS(F,shpval,shdrv,vel_vect,grad_vel,nsd,weight,nshl,visc_val,density,grad_rho,pressure,g);
 
     } // end quadrature loop
 
@@ -1115,10 +1128,12 @@ if(testcount==eID && comm_rank==0){
     apf::Vector3 err_in(err_est,Acomp,Bcomp);
     apf::setVector(err_reg,ent,0,err_in);
     err_est_total = err_est_total+(Acomp+Bcomp); //for tracking the upper bound
+/*
     double L2err= getL2error(m,ent,voff,visc,pref,velf); //non-dimensional
     L2_total = L2_total+L2err;
     double starerr = getStarerror(m,ent,voff,visc,pref,velf,estimate);
     star_total = star_total+starerr;
+*/
    
     MatDestroy(&K); //destroy the matrix
     VecDestroy(&F); //destroy vector
@@ -1135,13 +1150,16 @@ testcount++;
   err_est_total = sqrt(err_est_total);
 
 if(comm_rank==0){
+/*
 star_total = -2*(0.5*(err_est_total)-star_total); //before square root is taken
 if(star_total<0){ star_total=star_total*-1;std::cout<<"star err Was negative "<<std::endl;}
 star_total = sqrt(star_total);
 L2_total = sqrt(L2_total);
+*/
 std::cout<<std::setprecision(10)<<std::endl;
-std::cout<<"Err_est "<<err_est_total<<" L2 "<<L2_total<<" Average "<<err_est_total/L2_total<<std::endl;
-std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est_total/star_total<<std::endl;
+std::cout<<"Error estimate "<<err_est_total<<std::endl;
+//std::cout<<"Err_est "<<err_est_total<<" L2 "<<L2_total<<" Average "<<err_est_total/L2_total<<std::endl;
+//std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est_total/star_total<<std::endl;
 }
   m->end(iter);
 
