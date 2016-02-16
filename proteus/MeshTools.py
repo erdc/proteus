@@ -4182,6 +4182,46 @@ class QuadrilateralMesh(Mesh):
         self.elementList = self.triangleList
         self.elementBoundaryList = self.edgeList
 
+    def rectangularToQuadrilateral(self,grid):
+        ''' WIP - I think this is the first function that needs to be
+            written so that MultilevelQuadrilateralMesh can work.  This 
+            function does not call C functions.
+        '''
+        pass
+
+    def meshInfo(self):
+        ''' WIP -- this function will also be called in the Python Multilevel 
+            Quadrilateral Mesh class
+        '''
+        pass
+
+    def generateQuadrialteralMeshFromRectangularGrid(self,nx,ny,Lx,Ly,triangleFlag=1):
+        ''' WIP - This function needs to be constructed to allow MultilevelQuadrilateralMesh
+            to run using C.  Implementing this will require some work to the mesh.cpp module. '''
+        pass
+
+
+    def finalize(self):
+        ''' WIP '''
+        pass
+    
+    def buildLists(self):
+        ''' WIP '''
+        pass
+    
+    def buildListsNodes(self):
+        ''' WIP '''
+        pass
+
+    def buildListsEdges(self):
+        ''' WIP '''
+        pass
+
+    def buildListsElems(self):
+        ''' WIP '''
+        pass
+    
+
 
 class MultilevelTriangularMesh(MultilevelMesh):
     """A hierarchical  multilevel mesh of triangular cells"""
@@ -4279,6 +4319,37 @@ class MultilevelTriangularMesh(MultilevelMesh):
         else:
             print """locallyRefine not implemented for self.useC= %s """ % (self.useC)
         #
+
+class MultilevelQuadrilateralMesh(MultilevelMesh):
+    """ A heirarchical multilevel mesh of quadrilaterals 
+       WIP """
+    def __init__(self,nx,ny,nz,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
+                 parallelPartitioningType=MeshParallelPartitioningTypes.element,triangleFlag=0):
+        import cmeshTools
+        MultilevelMesh.__init__(self)
+        self.useC = False   # Implementing with C will take a bit more work. Disabling for now.
+        self.nLayersOfOverlap=nLayersOfOverlap ; self.parallelPartitioningType = parallelPartitioningType
+        if not skipInit:
+            if self.useC:
+                assert(useC==True,'WIP -- C functionality is not implemented for this class.')
+                pass
+            else:
+                grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
+                self.meshList.append(QuadrilateralMesh())
+                self.meshList[0].rectangularToQuadrilateral(grid)
+                self.meshList[0].subdomainMesh = self.meshList[0]
+                self.elementChildren=[]
+                log(self.meshList[0].meshInfo())
+                for l in range(1,refinementLevels):
+                    self.refine()
+                    self.meshList[l].subdomainMesh = self.meshList[l]
+                    log(self.meshList[-1].meshInfo())
+                self.buildArrayLists()
+
+    def refine(self):
+        """ WIP """
+        pass
+        
 
 class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
     """A triangular mesh that interpolates bathymetry from a point cloud"""
