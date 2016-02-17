@@ -640,17 +640,27 @@ class SimpleNavierStokes2D:
         #print "L_sizes",L_sizes
         neqns = L_sizes[0][0]
         #print "neqns",neqns
-        self.pressureDOF = numpy.arange(start=L_range[0],
-                                        stop=L_range[0]+neqns,
-                                        step=3,
-                                        dtype="i")
-        velocityDOF = []
-        for start in range(1,3):
-            velocityDOF.append(numpy.arange(start=L_range[0]+start,
-                                         stop=L_range[0]+neqns,
-                                         step=3,
-                                         dtype="i"))
-        self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
+        if self.L.pde.stride[0] == 1:#assume end to end
+            self.pressureDOF = numpy.arange(start=L_range[0],
+                                            stop=L_range[0]+self.L.pde.offset[1],
+                                            step=1,
+                                            dtype="i")
+            self.velocityDOF = numpy.arange(start=L_range[0]+self.L.pde.offset[1],
+                                            stop=L_range[0]+neqns,
+                                            step=1,
+                                            dtype="i")
+        else: #assume blocked
+            self.pressureDOF = numpy.arange(start=L_range[0],
+                                            stop=L_range[0]+neqns,
+                                            step=3,
+                                            dtype="i")
+            velocityDOF = []
+            for start in range(1,3):
+                velocityDOF.append(numpy.arange(start=L_range[0]+start,
+                                                stop=L_range[0]+neqns,
+                                                step=3,
+                                                dtype="i"))
+                self.velocityDOF = numpy.vstack(velocityDOF).transpose().flatten()
         self.pc = p4pyPETSc.PC().create()
         if prefix:
             self.pc.setOptionsPrefix(prefix)
