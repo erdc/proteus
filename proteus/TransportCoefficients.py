@@ -1484,6 +1484,7 @@ class Stokes(TC_base):
             potential = {1:{1:'u'},
                          2:{2:'u'},
                          3:{3:'u'}}
+
             reaction = {1:{1:'constant'},
                         2:{2:'constant'},
                         3:{3:'constant'}}
@@ -1501,6 +1502,10 @@ class Stokes(TC_base):
                              variableNames,
                              useSparseDiffusion=False)
             self.vectorComponents=[1,2,3]
+            
+    def attachModels(self,modelList):
+        modelList[0].pp_hasConstantNullSpace = False
+
     def evaluate(self,t,c):
         if self.nd==2:
             self.Stokes_2D_Evaluate(self.rho,
