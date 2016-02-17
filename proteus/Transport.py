@@ -6307,7 +6307,7 @@ class MultilevelTransport:
                 if mixed:
                     par_N = par_n = sum([ts.dofMap.nDOF_all_processes for ts in trialSpaceDict.values()])
                     subdomain2global = numpy.hstack([offset+ts.dofMap.subdomain2global for
-                                                     offset,ts in zip(transport.offsets,trialSpaceDict.values())])
+                                                     offset,ts in zip(transport.offset,trialSpaceDict.values())])
                     par_u = ParVec_petsc4py(u,1,par_n,par_N,par_nghost,subdomain2global[:par_n])
                     par_r = ParVec_petsc4py(r,1,par_n,par_N,par_nghost,subdomain2global[:par_n])
                     log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
