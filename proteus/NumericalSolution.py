@@ -211,10 +211,10 @@ class NS_base:  # (HasTraits):
 
             elif isinstance(p.domain,Domain.PlanarStraightLineGraphDomain):
                 log("Calling Triangle to generate 2D mesh for"+p.name)
-                tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
-                                                       nbase=1,
-                                                       verbose=10)
                 if comm.isMaster() and p.genMesh:
+                    tmesh = TriangleTools.TriangleBaseMesh(baseFlags=n.triangleOptions,
+                                                           nbase=1,
+                                                           verbose=10)
                     tmesh.readFromPolyFile(p.domain.polyfile)
                     tmesh.writeToFile(p.domain.polyfile)
                     log("Converting to Proteus Mesh")
