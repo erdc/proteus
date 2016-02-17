@@ -2,6 +2,7 @@
 #include "flcbdfWrappersModule.h"
 #include <algorithm>
 #include "meshio.h"
+
 //extern "C"
 //{
 //#include "metis.h"
@@ -3082,7 +3083,82 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   //get the new node numbers for nodes on this subdomain
   IS nodeNumberingIS_subdomain_old2new;
   ISPartitioningToNumbering(nodePartitioningIS_new,&nodeNumberingIS_subdomain_old2new);
+  //
+  //try out of core
+  //
+  /* 
+   * Set up file access property list with parallel I/O access
+   */
+  MPI_Info info  = MPI_INFO_NULL;
+  hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
+  H5Pset_fapl_mpio(plist_id, PROTEUS_COMM_WORLD, info);
   
+  /*
+   * Create a new file collectively and release property list identifier.
+   */
+  const char* H5FILE_NAME("mappings.h5");
+  hid_t file_id = H5Fcreate(H5FILE_NAME, H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
+  H5Pclose(plist_id);
+   
+  
+  /*
+   * Create the dataspace for the dataset.
+   */
+  hsize_t     dimsf[1];
+  dimsf[0] = nNodes_global;
+#define RANK   1
+  hid_t filespace = H5Screate_simple(RANK, dimsf, NULL); 
+  
+  /*
+   * Create the dataset with default properties and close filespace.
+   */
+  hid_t dset_id = H5Dcreate(file_id, "nodeNumbering_old2new", H5T_NATIVE_INT, filespace,
+                      H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+  H5Sclose(filespace);
+  
+  /* 
+   * Each process defines dataset in memory and writes it to the hyperslab
+   * in the file.
+   */
+  hsize_t	count[1];	          /* hyperslab selection parameters */
+  hsize_t	offset[1];
+  count[0] = nNodes_subdomain_old;
+  offset[0] = nodeOffsets_old[rank];
+  hid_t memspace = H5Screate_simple(RANK, count, NULL);
+
+  /*
+   * Select hyperslab in the file.
+   */
+  filespace = H5Dget_space(dset_id);
+  H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL, count, NULL);
+
+  /*
+   * Initialize data buffer 
+   */
+  // data = (int *) malloc(sizeof(int)*count[0]*count[1]);
+  // for (i=0; i < count[0]*count[1]; i++) {
+  //   data[i] = mpi_rank + 10;
+  // }
+  const PetscInt* data;
+  ISGetIndices(nodeNumberingIS_subdomain_old2new, &data);
+  
+  /*
+   * Create property list for collective dataset write.
+   */
+  plist_id = H5Pcreate(H5P_DATASET_XFER);
+  H5Pset_dxpl_mpio(plist_id, H5FD_MPIO_COLLECTIVE);
+  
+  herr_t status = H5Dwrite(dset_id, H5T_NATIVE_INT, memspace, filespace,
+                    plist_id, data);
+  //free(data);
+  ISRestoreIndices(nodeNumberingIS_subdomain_old2new, &data);
+  /*
+   * Close/release resources.
+   */
+  H5Dclose(dset_id);
+  //
+  //end try out of core
+  //
   //collect new node numbers for whole mesh so that subdomain reordering and renumbering
   //can be done easily
   
@@ -3090,7 +3166,34 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
   ISAllGather(nodeNumberingIS_subdomain_old2new,&nodeNumberingIS_global_old2new);
   const PetscInt * nodeNumbering_global_old2new;//needs restore call
   ISGetIndices(nodeNumberingIS_global_old2new,&nodeNumbering_global_old2new);
-  
+  //
+  //test out of core
+  //
+  if (rank == 0)
+    {
+      hid_t       dataset_id;  /* identifiers */
+      herr_t      status;
+      int         dset_data[nNodes_global];
+      
+      /* Open an existing file. */
+      //file_id = H5Fopen("mappings.h5", H5F_ACC_RDONLY, H5P_DEFAULT);
+      
+      /* Open an existing dataset. */
+      dataset_id = H5Dopen2(file_id, "/nodeNumbering_old2new", H5P_DEFAULT);
+      
+      status = H5Dread(dataset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
+                       dset_data);
+
+      /* Close the dataset. */
+      status = H5Dclose(dataset_id);
+      
+      for (int i=0;i<nNodes_global;i++)
+        assert(nodeNumbering_global_old2new[i] == dset_data[i]);
+      std::cout<<"==================out of core old2new is correct!===================="<<std::endl;
+    }
+  //
+  //end test out of core
+  //
   //reverse mapping for node numbers too
   //cek hack, not needed
   /*
@@ -4222,6 +4325,12 @@ int partitionNodesFromTetgenFiles(const char* filebase, int indexBase, Mesh& new
     newMesh.edgeNumbering_global2original[ig] = edgeNumbering_global_new2old[ig];
   */
   //cleanup
+  /* out of core*/
+  H5Sclose(filespace);
+  H5Sclose(memspace);
+  H5Pclose(plist_id);
+  H5Fclose(file_id);
+  /* out of core */
   PetscLogEventEnd(build_subdomains_cleanup_event,0,0,0,0);
   PetscLogStagePop();
   PetscLogView(PETSC_VIEWER_STDOUT_WORLD);
