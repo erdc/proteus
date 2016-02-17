@@ -1,6 +1,3 @@
-include ${PROTEUS_PREFIX}/conf/variables
-
-
 default: marinHexMesh gmsh2tetgen
 
 marinHexMesh: marinHexMesh.f 
