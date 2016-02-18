@@ -208,7 +208,7 @@ class Triangle(Polygon):
 
 class Quadrilateral(Polygon):
     """A 2D quadrilateral element"""
-    def __init__(self,quadrilateralNumber=0,edges=[]):
+    def __init__(self,quadrilateralNumber=0,edges=[],simple=True):
         Polygon.__init__(self,quadrilateralNumber)
         self.edges = edges
         nodeList = getNodesFromEdges(self.edges)
@@ -216,6 +216,10 @@ class Quadrilateral(Polygon):
         self.nodes = tuple(nodeList)
         self.hasGeometricInfo = False
         self.elementBoundaries = self.edges
+        # This boolean flags whether the quadrilateral is simple
+        # (eg. a rectangle).  Certain features are more difficult
+        # to implement if this is not the case.
+        self.simple = True 
 
     def computeGeometricInfo(self):
         if not self.hasGeometricInfo:
@@ -252,6 +256,28 @@ class Quadrilateral(Polygon):
             self.diameter = max(diagonal1.length,diagonal0.length)
             self.innerDiameter = 4.0*self.area/sum(
                 [e.length for e in self.edges])
+            # Calculate the coordinate of a simple quad
+            if self.simple==True:
+                self.xmin = self.nodes[0].p[X]
+                self.ymin = self.nodes[0].p[Y]
+                self.xmax = self.nodes[0].p[X]
+                self.ymax = self.nodes[0].p[Y]
+                for node in self.nodes:
+                    if node.p[X] < self.xmin:
+                        self.xmin = node.p[X]
+                    elif node.p[X] > self.xmax:
+                        self.xmax = node.p[X]
+                    else:
+                        pass
+                    if node.p[Y] < self.ymin:
+                        self.ymin = node.p[Y]
+                    elif node.p[Y] > self.ymax:
+                        self.ymax = node.p[Y]
+                    else:
+                        pass
+                self.xmid = (self.xmin+self.xmax)/2.
+                self.ymid = (self.ymin+self.ymax)/2.
+                self.zmid = 0.
 
 class Polyhedron(Element):
     """
@@ -947,6 +973,8 @@ class Mesh:
             del self.nodeStarList
     def buildArraysFromLists(self):
         #nodes
+#        import pdb
+#        pdb.set_trace()
         self.nNodes_global = len(self.nodeList)
         self.nodeArray = np.zeros((self.nNodes_global,3),'d')
         nodeElementsList=[]
@@ -3467,8 +3495,8 @@ class MultilevelHexahedralMesh(MultilevelMesh):
                     self.meshList[l].buildFromC(self.cmeshList[l])
                     self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
             else:
-                import pdb
-                pdb.set_trace()
+#                import pdb
+#                pdb.set_trace()
                 grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
                 self.meshList.append(HexahedralMesh())
                 self.elementChildren=[]
@@ -4171,6 +4199,8 @@ class QuadrilateralMesh(Mesh):
         self.quadDict={}
         self.quadList=[]
         self.oldToNewNode=[]
+        # tempoaray
+        self.max_nNodeNeighbors_node = 4
 
     def buildFromSets(self,faceSet,edgeSet,nodeSet):
         self.nodeList = list(nodeSet)
@@ -4187,13 +4217,113 @@ class QuadrilateralMesh(Mesh):
             written so that MultilevelQuadrilateralMesh can work.  This 
             function does not call C functions.
         '''
-        pass
-
+    #    import pdb
+    #    pdb.set_trace()
+        self.nodeList = [Node(n.N,n.p[X],n.p[Y],n.p[Z]) for n in grid.nodeList]
+        # Is the following line necessary?
+        self.nodeDict = dict([(n,n) for n in self.nodeList])
+        for i in range(grid.nHx):
+            for j in range(grid.nHy):
+                k=0
+                n0 = self.nodeList[grid.getNodeNumber(i,j,k)]
+                n1 = self.nodeList[grid.getNodeNumber(i,j+1,k)]
+                n2 = self.nodeList[grid.getNodeNumber(i+1,j,k)]
+                n3 = self.nodeList[grid.getNodeNumber(i+1,j+1,k)]
+                e0 = Edge(nodes=[n0,n2])
+                e1 = Edge(nodes=[n2,n3])
+                e2 = Edge(nodes=[n3,n1])
+                e3 = Edge(nodes=[n1,n0])
+                self.newQuadrilateral([e0,e1,e2,e3]) # TODO
+        self.finalize()
+        
     def meshInfo(self):
-        ''' WIP -- this function will also be called in the Python Multilevel 
-            Quadrilateral Mesh class
+        minfo = """Number of quadrilaterals  : %d
+Number of edges : %d
+Number of nodes : %d\n""" % (self.nElements_global,
+                             self.nElementBoundaries_global,
+                             self.nNodes_global)
+        if self.subdomainMesh != self:
+            sinfo = self.subdomainMesh.meshInfo()
+            info = "*** Global ***\n" + minfo + "\n*** Local ***\n" + sinfo
+            return info
+        return minfo
+
+    def newQuadrilateral(self,edges):
+        q = Quadrilateral(len(self.quadDict),edges)
+        self.quadDict[q.nodes] = q
+        self.registerEdges(q)
+        return q
+
+    def registerEdges(self,q):
+        '''check if an edge is in the mesh dictionary
+           if it is, point to existing entry
+           otherwise, create a new entry 
         '''
-        pass
+        for en,e in enumerate(q.edges):
+            if self.edgeDict.has_key(e.nodes):
+                q.edges[en]=self.edgeDict[e.nodes]
+            else:
+                eN=len(self.edgeDict)
+                e.N=eN
+                self.edgeDict[e.nodes]=e
+    
+    def registerNode(self,node):
+        ''' check if a node is in the mesh dictionary
+            if it is, point to existing entry
+            otherwise, create a new entry
+        '''
+        if self.nodeDict.has_key(node):
+            node = self.nodeDict[node]
+        else:
+            node.N = len(self.nodeDict)
+            self.nodeDict[node] = node
+        return node
+    
+    def refine(self,oldMesh):
+        log("Refining Using Standard Quadrilateral Refinement")
+        childrenDict={}
+        for q in oldMesh.quadDict.values():
+            qNodes = [Node(nN,n.p[X],n.p[Y],n.p[Z]) for nN,n in enumerate(q.nodes)]
+            for lnN,n in enumerate(qNodes): qNodes[lnN] = self.registerNode(n)
+            q.computeGeometricInfo()
+
+            newNodeLeft = Node(len(self.nodeDict),q.xmin,q.ymid,q.zmid)
+            newNodeLeft = self.registerNode(newNodeLeft)
+            newNodeTop = Node(len(self.nodeDict),q.xmid,q.ymax,q.zmid)
+            newNodeTop = self.registerNode(newNodeTop)
+            newNodeRight = Node(len(self.nodeDict),q.xmax,q.ymid,q.zmid)
+            newNodeRight = self.registerNode(newNodeRight)
+            newNodeBottom = Node(len(self.nodeDict),q.xmid,q.ymin,q.zmid)
+            newNodeBottom = self.registerNode(newNodeBottom)
+            newNodeMid = Node(len(self.nodeDict),q.xmid,q.ymid,q.zmid)
+            newNodeMid = self.registerNode(newNodeMid)
+
+            e1 = Edge(nodes=[qNodes[0],newNodeBottom])
+            e2 = Edge(nodes=[newNodeBottom,newNodeMid])
+            e3 = Edge(nodes=[newNodeMid,newNodeLeft])
+            e4 = Edge(nodes=[qNodes[0],newNodeLeft])
+            e5 = Edge(nodes=[qNodes[1],newNodeLeft])
+            e6 = Edge(nodes=[qNodes[1],newNodeTop])
+            e7 = Edge(nodes=[newNodeMid,newNodeTop])
+            e8 = Edge(nodes=[qNodes[3],newNodeTop])
+            e9 = Edge(nodes=[newNodeMid,newNodeRight])
+            e10 = Edge(nodes=[qNodes[3],newNodeRight])
+            e11 = Edge(nodes=[qNodes[2],newNodeMid])
+            e12 = Edge(nodes=[qNodes[2],newNodeRight])
+
+            q1 = self.newQuadrilateral([e1,e2,e3,e4])
+            self.registerEdges(q1)
+            q2 = self.newQuadrilateral([e5,e3,e6,e7])
+            self.registerEdges(q2)
+            q3 = self.newQuadrilateral([e7,e8,e9,e10])
+            self.registerEdges(q3)
+            q4 = self.newQuadrilateral([e2,e9,e11,e12])
+            self.registerEdges(q4)
+
+            childrenDict[q.N]=[q1,q2,q3,q4]
+        self.finalize()
+        return childrenDict
+    
 
     def generateQuadrialteralMeshFromRectangularGrid(self,nx,ny,Lx,Ly,triangleFlag=1):
         ''' WIP - This function needs to be constructed to allow MultilevelQuadrilateralMesh
@@ -4203,19 +4333,44 @@ class QuadrilateralMesh(Mesh):
 
     def finalize(self):
         ''' WIP '''
-        pass
-    
+        self.buildLists()
+        self.buildArraysFromLists()
+            
     def buildLists(self):
         ''' WIP '''
-        pass
+        self.buildListsNodes()
+        self.buildListsEdges()
+        self.buildListsQuadrilaterals()
+        self.elementList = self.quadList
+        self.elementBoundaryList = self.edgeList
     
+
     def buildListsNodes(self):
-        ''' WIP '''
-        pass
+        keyList = self.nodeDict.keys()
+        keyList.sort()
+        self.nodeList=[]
+        self.oldToNewNode=range(len(self.nodeDict))
+        for nN,k in enumerate(keyList):
+            self.oldToNewNode[self.nodeDict[k].N]=nN
+            self.nodeDict[k].N = nN
+            self.nodeList.append(self.nodeDict[k])
 
     def buildListsEdges(self):
-        ''' WIP '''
-        pass
+        keyList = self.edgeDict.keys()
+        keyList.sort()
+        self.edgeList=[]
+        for eN,k in enumerate(keyList):
+            self.edgeDict[k].N = eN
+            self.edgeList.append(self.edgeDict[k])
+
+    def buildListsQuadrilaterals(self):
+        keyList = self.quadDict.keys()
+        keyList.sort()
+        self.quadList = []
+        for qN,q in enumerate(keyList):
+            self.quadDict[q].N = qN
+            self.quadList.append(self.quadDict[q])
+        self.polygonList = self.quadList
 
     def buildListsElems(self):
         ''' WIP '''
@@ -4331,15 +4486,19 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
         self.nLayersOfOverlap=nLayersOfOverlap ; self.parallelPartitioningType = parallelPartitioningType
         if not skipInit:
             if self.useC:
-                assert(useC==True,'WIP -- C functionality is not implemented for this class.')
+             #   assert(useC==True,'WIP -- C functionality is not implemented for this class.')
                 pass
             else:
+#                import pdb
+#                pdb.set_trace()
                 grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
                 self.meshList.append(QuadrilateralMesh())
                 self.meshList[0].rectangularToQuadrilateral(grid)
                 self.meshList[0].subdomainMesh = self.meshList[0]
                 self.elementChildren=[]
                 log(self.meshList[0].meshInfo())
+                self.meshList[0].globalMesh = self.meshList[0]
+#                self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
                 for l in range(1,refinementLevels):
                     self.refine()
                     self.meshList[l].subdomainMesh = self.meshList[l]
@@ -4347,8 +4506,9 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                 self.buildArrayLists()
 
     def refine(self):
-        """ WIP """
-        pass
+        self.meshList.append(QuadrilateralMesh())
+        childrenDict = self.meshList[-1].refine(self.meshList[-2])
+        self.elementChildren.append(childrenDict)
         
 
 class InterpolatedBathymetryMesh(MultilevelTriangularMesh):
