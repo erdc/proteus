@@ -169,9 +169,7 @@ class NS_base:  # (HasTraits):
                         n.quad = False
 
                     if (n.quad):
-                        assert(n.quad)==True,'This addition is still a WIP and not implemented.')
                         mlMesh = MeshTools.MultilevelQuadrilateralMesh(nnx,nny,1,
-                                                                       n.px,n.py,
                                                                        p.domain.L[0],p.domain.L[1],1,
                                                                        refinementLevels=n.nLevels,
                                                                        nLayersOfOverlap=n.nLayersOfOverlapForParallel,
