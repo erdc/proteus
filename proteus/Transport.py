@@ -1782,11 +1782,16 @@ class OneLevelTransport(NonlinearEquation):
             for cj in range(self.nc):
                 for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
                     global_dofN = self.offset[cj]+self.stride[cj]*dofN
-                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
+                    self.nzval[numpy.where(self.colind == global_dofN)] == 0.0 #column
+                    zeroRow=True
+                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):#row
                         if (self.colind[i] == global_dofN):
                             self.nzval[i] = 1.0
+                            zeroRow = False
                         else:
                             self.nzval[i] = 0.0
+                    if zeroRow:
+                        raise RuntimeError("Jacobian has a zero row because sparse matrix has no diagonal entry at row "+`global_dofN`+". You probably need add diagonal mass or reaction term")
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         #cek debug
