@@ -1501,10 +1501,13 @@ class OneLevelTransport(NonlinearEquation):
         if comm.size() > 1:
             assert numericalFluxType != None and numericalFluxType.useWeakDirichletConditions,"You must use a numerical flux to apply weak boundary conditions for parallel runs"
 
-        interleave_DOF=True
-        for nDOF_trial_element_ci in self.nDOF_trial_element:
-            if nDOF_trial_element_ci != self.nDOF_trial_element[0]:
-                interleave_DOF=False
+        if numericalFluxType != None and numericalFluxType.useWeakDirichletConditions:
+            interleave_DOF=True
+            for nDOF_trial_element_ci in self.nDOF_trial_element:
+                if nDOF_trial_element_ci != self.nDOF_trial_element[0]:
+                    interleave_DOF=False
+        else:
+            interleave_DOF=False
         self.setupFieldStrides(interleaved=interleave_DOF)
 
         log(memory("stride+offset","OneLevelTransport"),level=4)
@@ -5604,7 +5607,7 @@ class OneLevelTransport(NonlinearEquation):
         portions of the reaction term, 'r', and boundary condition terms
         This is a temporary fix for linear model reduction.
         """
-        import pdb
+        #import pdb
         #pdb.set_trace()
         for ci in range(self.nc):
             self.elementResidual[ci].fill(0.0)
