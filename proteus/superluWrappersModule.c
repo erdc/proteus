@@ -122,10 +122,10 @@ SparseMatrix_getSubMatCSRrepresentation(SparseMatrix *self,
   assert(range_end > range_start);
   nr = range_end-range_start;
   assert(nr <= self->dim[0]);
-
-  a = (double*)self->A.nzval;
-  rowptr = self->A.rowptr;
-  colind = self->A.colind;
+  
+  rowptr = self->A.rowptr + range_start;
+  colind = self->A.colind + rowptr[0];
+  a = (double*)(self->A.nzval) + rowptr[0];
   nnz = self->A.rowptr[range_end]-self->A.rowptr[range_start];
 
   dims[0] = nr+1;
