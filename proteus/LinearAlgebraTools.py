@@ -50,6 +50,10 @@ class ParVec:
 class ParVec_petsc4py(p4pyPETSc.Vec):
     """
     Parallel vector using petsc4py's wrappers for PETSc
+    WIP -- This function builds the local to global mapping for the PETSc parallel vectors.  At this
+    point it only works when the variables can be interwoven (eg. stablized elements where velocity and
+    pressure come from the same space).  We would like to extend this functionality to include finite
+    element spaces that cannot be interwoven such as Taylor Hood.
     """
     def __init__(self,array=None,bs=None,n=None,N=None,nghosts=None,subdomain2global=None,blockVecType="simple"):
         if array == None:
@@ -85,6 +89,7 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
                     self.subdomain2global=subdomain2globalTotal
                 else:
                     self.subdomain2global=subdomain2global
+                # ARB - ? I'm not entirely sure where I can .LGMap() in the library ?
                 self.petsc_l2g = p4pyPETSc.LGMap()
                 self.petsc_l2g.create(self.subdomain2global)
                 self.setLGMap(self.petsc_l2g)

@@ -1433,7 +1433,8 @@ class Stokes(TC_base):
         hamiltonian={}
         if nd==2:
             variableNames=['p','u','v']
-            mass={1:{1:'linear'},
+            mass={0:{0:'linear'},
+                  1:{1:'linear'},
                   2:{2:'linear'}}
             if not weakBoundaryConditions:
                 advection = {0:{1:'linear',
@@ -1464,7 +1465,8 @@ class Stokes(TC_base):
             self.vectorComponents=[1,2]
         elif nd==3:
             variableNames=['p','u','v','w']
-            mass={1:{1:'linear'},
+            mass={0:{0:'linear'},
+                  1:{1:'linear'},
                   2:{2:'linear'},
                   3:{3:'linear'}}
             if not weakBoundaryConditions:
@@ -1484,6 +1486,7 @@ class Stokes(TC_base):
             potential = {1:{1:'u'},
                          2:{2:'u'},
                          3:{3:'u'}}
+
             reaction = {1:{1:'constant'},
                         2:{2:'constant'},
                         3:{3:'constant'}}
@@ -1501,6 +1504,10 @@ class Stokes(TC_base):
                              variableNames,
                              useSparseDiffusion=False)
             self.vectorComponents=[1,2,3]
+
+    def attachModels(self,modelList):
+        modelList[0].pp_hasConstantNullSpace = False
+
     def evaluate(self,t,c):
         if self.nd==2:
             self.Stokes_2D_Evaluate(self.rho,
