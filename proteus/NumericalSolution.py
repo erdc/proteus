@@ -390,7 +390,6 @@ class NS_base:  # (HasTraits):
                 linTolList.append(n.linTolFac*fac)
 
             log("Setting up MultilevelTransport for "+p.name)
-
             model = Transport.MultilevelTransport(p,n,mlMesh,OneLevelTransportType=p.LevelModelType)
             self.modelList.append(model)
             model.name = p.name
