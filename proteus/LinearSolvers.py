@@ -450,12 +450,13 @@ class KSP_petsc4py(LinearSolver):
         self.par_L   = par_L
         self.petsc_L = par_L
         self.ksp     = p4pyPETSc.KSP().create()
-        self.csr_rep_owned = self.petsc_L.csr_rep_owned
+        self.csr_rep_local = self.petsc_L.csr_rep_local
         self.csr_rep = self.petsc_L.csr_rep
         #shell for main operator
         self.Lshell = p4pyPETSc.Mat().create()
-        sizes = self.petsc_L.getSizes()
-        self.Lshell.setSizes([[sizes[0][0],None],[sizes[0][1],None]])
+        L_sizes = self.petsc_L.getSizes()
+        L_range = self.petsc_L.getOwnershipRange()
+        self.Lshell.setSizes(L_sizes)
         self.Lshell.setType('python')
         self.matcontext  = SparseMatShell(self.petsc_L.ghosted_csr_mat)
         self.Lshell.setPythonContext(self.matcontext)
@@ -504,7 +505,107 @@ class KSP_petsc4py(LinearSolver):
         self.petsc_L.zeroEntries()
         assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
         if self.par_fullOverlap == True:
-            self.petsc_L.setValuesLocalCSR(self.csr_rep_owned[0],self.csr_rep_owned[1],self.csr_rep_owned[2],p4pyPETSc.InsertMode.INSERT_VALUES)
+            if self.petsc_L.blockSize > 1 or self.petsc_L.pde.nc == 1:
+                self.petsc_L.setValuesLocalCSR(self.csr_rep_local[0],self.csr_rep_local[1],self.csr_rep_local[2],p4pyPETSc.InsertMode.INSERT_VALUES)
+            else:
+                #cek hack TH
+                # import pdb
+                # pdb.set_trace()
+                #csr_rep_owned_list=[]
+                #len_total = 0
+                # for i in range(self.petsc_L.pde.nc):
+                #     csr_rep_owned_list.append(self.petsc_L.ghosted_csr_mat.getSubMatCSRrepresentation(self.petsc_L.pde.offset[i],
+                #                                                                                       self.petsc_L.pde.offset[i] +
+                #                                                                                       self.petsc_L.pde.par_n_list[i]))
+                #     #drop last entry so we  can stack properly
+                #     print csr_rep_owned_list[-1][1].max()
+                #     if i < self.petsc_L.pde.nc - 1:
+                #         csr_rowptr = csr_rep_owned_list[-1][0][:-1].copy()
+                #     else:
+                #         csr_rowptr = csr_rep_owned_list[-1][0].copy()
+                #     #adjust  row ptrs to be relative to extracted block (should be fixed  in getSubMat)
+                #     csr_rowptr -= csr_rep_owned_list[-1][0][0]
+                #     #now shift row ptrs to be relative to stacked local CSR (without ghosts)
+                #     if i > 0:
+                #         for j in range(i):
+                #             csr_rowptr += csr_rep_owned_list[j][1].shape[0]
+                #     #reset list  entry to modified  csr_row_ptr
+                #     csr_rep_owned_list[-1] = (csr_rowptr, csr_rep_owned_list[-1][1], csr_rep_owned_list[-1][2])
+                #     # print "row_ptr"
+                #     # print csr_rep_owned_list[-1][0].shape
+                #     # print csr_rep_owned_list[-1][0]
+                #     # print "colind"
+                #     # print csr_rep_owned_list[-1][1].shape
+                #     # print csr_rep_owned_list[-1][1]
+                #     # print "nzval"
+                #     # print csr_rep_owned_list[-1][2].shape
+                #     # print csr_rep_owned_list[-1][2]
+                # csr_0 = numpy.hstack([csr[0] for csr in csr_rep_owned_list])
+                # csr_1 = numpy.hstack([csr[1] for csr in csr_rep_owned_list])
+                # csr_2 = numpy.hstack([csr[2] for csr in csr_rep_owned_list])
+                # csr_rep_owned = (csr_0, csr_1, csr_2)
+                # #import pdb
+                # #pdb.set_trace()
+                # from proteus import Comm
+                # comm = Comm.get()
+                # comm.beginSequential()
+                # print "row_ptr"
+                # print csr_rep_owned[0].shape
+                # print csr_rep_owned[0]
+                # print "colind"
+                # print csr_rep_owned[1].shape
+                # print csr_rep_owned[1]
+                # print "nzval"
+                # print csr_rep_owned[2].shape
+                # print csr_rep_owned[2]
+                # comm.endSequential()
+                # self.petsc_L.setValuesLocalCSR(csr_rep_owned[0],
+                #                               csr_rep_owned[1],
+                #                               csr_rep_owned[2],
+                #                               p4pyPETSc.InsertMode.INSERT_VALUES)
+                #
+                # zero unowned rows
+                #
+                from proteus import Comm
+                comm = Comm.get()
+                comm.beginSequential()
+                for i in range(self.petsc_L.pde.nc):
+                    #zero the ghost rows on this processor
+                    ghost_start_row = self.petsc_L.pde.offset[i] + self.petsc_L.pde.par_n_list[i]
+                    ghost_start_i = self.petsc_L.csr_rep[0][ghost_start_row]
+                    ghost_end_row = self.petsc_L.pde.offset[i] + self.petsc_L.pde.par_n_list[i] + self.petsc_L.pde.par_nghost_list[i]
+                    ghost_end_i = self.petsc_L.csr_rep[0][ghost_end_row]
+                    print "ghost start", ghost_start_row, ghost_start_i
+                    print "ghost end", ghost_end_row, ghost_end_i
+                    self.petsc_L.csr_rep[2][ghost_start_i:ghost_end_i] = 0.0
+                comm.endSequential()
+                # print "subdomain2global"
+                # print self.petsc_L.subdomain2global
+                # print "max old", self.petsc_L.pde.mesh.globalMesh.nodeNumbering_global2original.max()
+                # row31_global = numpy.where(self.petsc_L.pde.global2original == 31)[0]
+                # if row31_global:
+                #     print "row31_global", row31_global
+                #     row31_local = numpy.where(self.petsc_L.subdomain2global == row31_global)[0]
+                #     print "row31_local", row31_local
+                #     print "local columns"
+                #     print self.petsc_L.csr_rep[1][self.petsc_L.csr_rep[0][row31_local]:self.petsc_L.csr_rep[0][row31_local+1]]
+                #     print "global columns"
+                #     gc = self.petsc_L.subdomain2global[self.petsc_L.csr_rep[1][self.petsc_L.csr_rep[0][row31_local]:self.petsc_L.csr_rep[0][row31_local+1]]]
+                #     print gc
+                #     print "row old ",31, "row new  global", row31_global, "row local ", row31_local
+                #     print "original global columns"
+                #     print self.petsc_L.pde.global2original[gc]
+                #     line = "row 31: "
+                #     for j,a in zip(self.petsc_L.pde.global2original[gc],
+                #                    self.petsc_L.csr_rep[2][self.petsc_L.csr_rep[0][row31_local]:self.petsc_L.csr_rep[0][row31_local+1]]):
+                #         line += "("+`j`+","+`a`+")"
+                #     print line
+                # comm.endSequential()
+                self.petsc_L.setValuesLocalCSR(self.petsc_L.csr_rep[0],
+                                               self.petsc_L.csr_rep[1],
+                                               self.petsc_L.csr_rep[2],
+                                               p4pyPETSc.InsertMode.ADD_VALUES)#add values since  we can't  eliminate ghosts
+                #pdb.set_trace()
         else:
             if self.par_firstAssembly:
                 self.petsc_L.setOption(p4pyPETSc.Mat.Option.NEW_NONZERO_LOCATION_ERR,False)
@@ -514,6 +615,7 @@ class KSP_petsc4py(LinearSolver):
             self.petsc_L.setValuesLocalCSR(self.csr_rep[0],self.csr_rep[1],self.csr_rep[2],p4pyPETSc.InsertMode.ADD_VALUES)
         self.petsc_L.assemblyBegin()
         self.petsc_L.assemblyEnd()
+        self.petsc_L.save("L")
         if self.pc != None:
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()

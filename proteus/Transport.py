@@ -4258,30 +4258,30 @@ class OneLevelTransport(NonlinearEquation):
                     hasOutflowBoundary = int(self.fluxBoundaryConditions[ci] == 'outFlow')
                     needsOutflowJacobian_int = int(needOutflowJacobian == True)
                     self.sparsityInfo.findNonzeros(self.mesh.nElements_global,
-                                              self.nDOF_test_element[ci],
-                                              self.nDOF_trial_element[cj],
-                                              self.l2g[ci]['nFreeDOF'],
-                                              self.l2g[ci]['freeGlobal'],
-                                              self.l2g[cj]['nFreeDOF'],
-                                              self.l2g[cj]['freeGlobal'],
-                                              self.offset[ci],
-                                              self.stride[ci],
-                                              self.offset[cj],
-                                              self.stride[cj],
-                                              hasNumericalFlux,
-                                              hasDiffusionInMixedForm,
-                                              needNumericalFluxJacobian_int,
-                                              self.mesh.nElementBoundaries_element,
-                                              self.mesh.elementNeighborsArray,
-                                              self.mesh.nInteriorElementBoundaries_global,
-                                              self.mesh.interiorElementBoundariesArray,
-                                              self.mesh.elementBoundaryElementsArray,
-                                              self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                              self.fluxBoundaryConditions[ci] == 'outFlow',
-                                              self.mesh.nExteriorElementBoundaries_global,
-                                              self.mesh.exteriorElementBoundariesArray,
-                                              hasOutflowBoundary,
-                                              needsOutflowJacobian_int)
+                                                   self.nDOF_test_element[ci],
+                                                   self.nDOF_trial_element[cj],
+                                                   self.l2g[ci]['nFreeDOF'],
+                                                   self.l2g[ci]['freeGlobal'],
+                                                   self.l2g[cj]['nFreeDOF'],
+                                                   self.l2g[cj]['freeGlobal'],
+                                                   self.offset[ci],
+                                                   self.stride[ci],
+                                                   self.offset[cj],
+                                                   self.stride[cj],
+                                                   hasNumericalFlux,
+                                                   hasDiffusionInMixedForm,
+                                                   needNumericalFluxJacobian_int,
+                                                   self.mesh.nElementBoundaries_element,
+                                                   self.mesh.elementNeighborsArray,
+                                                   self.mesh.nInteriorElementBoundaries_global,
+                                                   self.mesh.interiorElementBoundariesArray,
+                                                   self.mesh.elementBoundaryElementsArray,
+                                                   self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                   self.fluxBoundaryConditions[ci] == 'outFlow',
+                                                   self.mesh.nExteriorElementBoundaries_global,
+                                                   self.mesh.exteriorElementBoundariesArray,
+                                                   hasOutflowBoundary,
+                                                   needsOutflowJacobian_int)
                 else:
                     for eN in range(self.mesh.nElements_global):
                         for ii in range(self.l2g[ci]['nFreeDOF'][eN]): #l2g is an array
@@ -6239,10 +6239,10 @@ class MultilevelTransport:
             comm = Comm.get()
             self.comm=comm
             ##\todo setup to let PETSc use the vector and matrix storage
-            #import pdb
-            #pdb.set_trace()
             #mwf hack element boundary partition
-            if comm.size() > 1:
+            if (comm.size() > 1 or
+                options.multilevelLinearSolver == KSP_petsc4py or
+                options.levelLinearSolver == KSP_petsc4py):
                 #problem with parallel info in dofMap not getting updated after partition mesh
                 #may want to call this elsewhere
                 #trialSpaceDict[0].dofMap.updateAfterParallelPartitioning(mesh)
@@ -6255,9 +6255,11 @@ class MultilevelTransport:
                 #initially assume all the spaces can share the same l2g information ...
                 par_n = trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned[comm.rank()+1] - trialSpaceDict[0].dofMap.dof_offsets_subdomain_owned[comm.rank()]
                 par_N = trialSpaceDict[0].dofMap.nDOF_all_processes
-                par_nghost = trialSpaceDict[0].dofMap.nDOF_subdomain - par_n
-                subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
-                max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
+                mixed = False
+                for ts in trialSpaceDict.values():
+                    if ts.dofMap.nDOF_all_processes != par_N:
+                        mixed=True
+                #
                 #for now move to solver specific branch
                 #log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                 #par_u = ParVec(u,par_bs,par_n,par_N,par_nghost,subdomain2global)
@@ -6267,15 +6269,115 @@ class MultilevelTransport:
                 #log("Allocating matrix on rank %i" % comm.rank(),level=2)
                 #par_jacobian = flcbdfWrappers.ParMat(par_bs,par_n,par_N,par_nghost,max_dof_neighbors,subdomain2global,jacobian)
                 if (options.multilevelLinearSolver == KSP_petsc4py or
-                   options.levelLinearSolver == KSP_petsc4py):
-                    log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
-                    par_u = ParVec_petsc4py(u,par_bs,par_n,par_N,par_nghost,subdomain2global)
-                    par_r = ParVec_petsc4py(r,par_bs,par_n,par_N,par_nghost,subdomain2global)
-                    log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
-                    par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
-                    log("Allocating matrix on rank %i" % comm.rank(),level=2)
-                    par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
+                    options.levelLinearSolver == KSP_petsc4py):
+                    if mixed:
+                        #create list of global dof  range for each component
+                        par_N_list = [ts.dofMap.nDOF_all_processes for ts in trialSpaceDict.values()]
+                        #calculate total global  dof
+                        par_N = sum(par_N_list)
+                        #calculate list of  locally owned  dof for  each component
+                        par_n_list = [ts.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] -
+                                      ts.dofMap.dof_offsets_subdomain_owned[comm.rank()]
+                                      for ts in trialSpaceDict.values()]
+                        transport.par_n_list = par_n_list
+                        #calculate total local dof
+                        par_n = sum(par_n_list)
+                        #calculate number of  ghosts  fo r each component
+                        par_nghost_list = [ts.dofMap.nDOF_subdomain - nDOF_owned
+                                           for ts,nDOF_owned in zip(trialSpaceDict.values(),
+                                                                    par_n_list)]
+                        transport.par_nghost_list = par_nghost_list
+                        #calculate total number of ghost dof
+                        par_nghost = sum(par_nghost_list)
+                        #calculate global offset for  each component
+                        global_offset = [0]
+                        for ts in trialSpaceDict.values():
+                            global_offset.append(global_offset[-1] + ts.dofMap.nDOF_all_processes)
+                        transport.global_offset = global_offset
+                        comm.beginSequential()
+                        print "par_N", par_N
+                        print "par_N_list", par_N_list
+                        print "par_n", par_n
+                        print "par_n_list", par_n_list
+                        print "global_offsets", global_offset
+                        print "par_nghost", par_nghost
+                        print "par_nghost_list", par_nghost_list
+                        print "transport.dim", transport.dim
+                        print "transport.offset", transport.offset
+                        #now create subdomain2global for stacked ghosted component DOF by shifting global DOF  numbers  by global offsets
+                        subdomain2global = numpy.hstack([offset+ts.dofMap.subdomain2global
+                                                         for offset,ts in
+                                                         zip(transport.global_offset, trialSpaceDict.values())])
+                        transport.global2original  = numpy.hstack([offset+transport.mesh.globalMesh.nodeNumbering_global2original
+                                                                   for offset in
+                                                                   global_offset[:-1]])
+                        if comm.isMaster():
+                            numpy.savetxt("g2o.txt",transport.global2original)
+                        print "p subdomain2global", trialSpaceDict[0].dofMap.subdomain2global
+                        print "p subdomain2original", transport.mesh.globalMesh.nodeNumbering_global2original[trialSpaceDict[0].dofMap.subdomain2global]
+                        print "p range", subdomain2global[transport.offset[0]:transport.offset[0]+par_n_list[0]]
+                        print "u range", subdomain2global[transport.offset[1]:transport.offset[1]+par_n_list[1]]
+                        print "v range", subdomain2global[transport.offset[2]:transport.offset[2]+par_n_list[2]]
+                        print "w range", subdomain2global[transport.offset[3]:transport.offset[3]+par_n_list[3]]
+                        comm.endSequential()
+                        comm.barrier()
+                        par_u = ParVec_petsc4py(u, 1, par_n, par_N, par_nghost,
+                                                subdomain2global)
+                        par_r = ParVec_petsc4py(r, 1, par_n, par_N, par_nghost,
+                                                subdomain2global)
+                        log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                        par_du = ParVec_petsc4py(du, 1, par_n, par_N, par_nghost,
+                                                 subdomain2global)
+                        #par_du = ParVec_petsc4py(du, 1, par_n, par_N)
+                        log("Allocating matrix on rank %i" % comm.rank(),level=2)
+                        par_jacobian = ParMat_petsc4py(jacobian, 1, par_n, par_N, par_nghost, subdomain2global, pde=transport)
+                        # par_u_list=[]
+                        # par_r_list=[]
+                        # par_du_list=[]
+                        # par_jacobian_list=[]
+                        # for ci, ts in enumerate(trialSpaceDict.values()):
+                        #     start = ts.dofMap.dof_offsets_subdomain_owned[comm.rank()]
+                        #     end = ts.dofMap.dof_offsets_subdomain_owned[comm.rank()+1]
+                        #     par_n = end - start
+                        #     par_N = ts.dofMap.nDOF_all_processes
+                        #     subdomain2global = ts.dofMap.subdomain2global
+                        #     par_nghost = ts.dofMap.nDOF_subdomain - par_n
+                        #     par_u_list.append(ParVec_petsc4py(u[start:end+par_nghost],1,par_n,par_N,par_nghost,subdomain2global))
+                        #     par_r_list.append(ParVec_petsc4py(r[start:end+par_nghost],1,par_n,par_N,par_nghost,subdomain2global))
+                        #     log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                        #     par_du_list.append(ParVec_petsc4py(du[start:end],1,par_n,par_N))
+                        #     log("Allocating matrix on rank %i" % comm.rank(),level=2)
+                        #     local_csr_rep = jacobian.getSubMatCSRrepresentation(start,end)
+                        #     (rowptr, colind, nzval) =  local_csr_rep
+                        #     colind -= transport.offset[ci]
+                        #     jacobian_block = SparseMat(par_n, par_n+par_nghost,
+                        #                                nzval.shape[0],
+                        #                                nzval,
+                        #                                colind - start,
+                        #                                rowptr)
+                        #     par_jacobian_list.append(ParMat_petsc4py(jacobian_block,1,par_n,par_N,par_nghost,subdomain2global,pde=transport))
+                        # par_u = p4pyPETSc.Vec()
+                        # par_u.createNest(par_u_list)
+                        # par_r = p4pyPETSc.Vec()
+                        # par_r.createNest(par_r_list)
+                        # par_du = p4pyPETSc.Vec()
+                        # par_du.createNest(par_du_list)
+                        # par_jacobian = p4pyPETSc.Mat()
+                        # par_pjacobian.createNest(par_jacobian_list)
+                    else:
+                        par_nghost = trialSpaceDict[0].dofMap.nDOF_subdomain - par_n
+                        subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
+                        log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                        par_u = ParVec_petsc4py(u,par_bs,par_n,par_N,par_nghost,subdomain2global)
+                        par_r = ParVec_petsc4py(r,par_bs,par_n,par_N,par_nghost,subdomain2global)
+                        log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                        par_du = ParVec_petsc4py(du,par_bs,par_n,par_N)
+                        log("Allocating matrix on rank %i" % comm.rank(),level=2)
+                        par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
                 else:
+                    par_nghost = trialSpaceDict[0].dofMap.nDOF_subdomain - par_n
+                    subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
+                    max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
                     log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
                     par_u = ParVec(u,par_bs,par_n,par_N,par_nghost,subdomain2global)
                     par_r = ParVec(r,par_bs,par_n,par_N,par_nghost,subdomain2global)
