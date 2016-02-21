@@ -19,6 +19,9 @@ def _petsc_view(obj, filename):
     """
     viewer = p4pyPETSc.Viewer().createBinary(filename, 'w')
     viewer(obj)
+    #viewer2 = p4pyPETSc.Viewer().createASCII(filename+".m", 'w')
+    #viewer2.setFormat(1)
+    #viewer2(obj)
 
 class ParVec:
     """
@@ -127,34 +130,39 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         self.blockVecType = blockVecType
         assert self.blockVecType == "simple", "petsc4py wrappers require self.blockVecType=simple"
         self.create(p4pyPETSc.COMM_WORLD)
-        blockSize = max(1,par_bs)
-        if blockSize >= 1 and blockVecType != "simple":
+        self.blockSize = max(1,par_bs)
+        if self.blockSize > 1 and blockVecType != "simple":
             ## \todo fix block aij in ParMat_petsc4py
             self.setType('baij')
-            self.setSizes([[blockSize*par_n,blockSize*par_N],[blockSize*par_n,blockSize*par_N]],bsize=blockSize)
-            self.setBlockSize(blockSize)
+            self.setSizes([[self.blockSize*par_n,self.blockSize*par_N],[self.blockSize*par_n,self.blockSize*par_N]],bsize=self.blockSize)
+            self.setBlockSize(self.blockSize)
             self.subdomain2global = subdomain2global #no need to include extra block dofs?
         else:
             self.setType('aij')
-            self.setSizes([[par_n*blockSize,par_N*blockSize],[par_n*blockSize,par_N*blockSize]],bsize=1)
-            if blockSize > 1: #have to build in block dofs
-                subdomain2globalTotal = numpy.zeros((blockSize*subdomain2global.shape[0],),'i')
-                for j in range(blockSize):
-                    subdomain2globalTotal[j::blockSize]=subdomain2global*blockSize+j
+            self.setSizes([[par_n*self.blockSize,par_N*self.blockSize],[par_n*self.blockSize,par_N*self.blockSize]],bsize=1)
+            if self.blockSize > 1: #have to build in block dofs
+                subdomain2globalTotal = numpy.zeros((self.blockSize*subdomain2global.shape[0],),'i')
+                for j in range(self.blockSize):
+                    subdomain2globalTotal[j::self.blockSize]=subdomain2global*self.blockSize+j
                 self.subdomain2global=subdomain2globalTotal
             else:
                 self.subdomain2global=subdomain2global
         import Comm
         comm = Comm.get()
         logEvent("ParMat_petsc4py comm.rank= %s blockSize = %s par_n= %s par_N=%s par_nghost=%s par_jacobian.getSizes()= %s "
-                 % (comm.rank(),blockSize,par_n,par_N,par_nghost,self.getSizes()))
+                 % (comm.rank(),self.blockSize,par_n,par_N,par_nghost,self.getSizes()))
         self.csr_rep = ghosted_csr_mat.getCSRrepresentation()
-        blockOwned = blockSize*par_n
-        self.csr_rep_owned = ghosted_csr_mat.getSubMatCSRrepresentation(0,blockOwned)
+        if self.blockSize > 1:
+            blockOwned = self.blockSize*par_n
+            self.csr_rep_local = ghosted_csr_mat.getSubMatCSRrepresentation(0,blockOwned)
+        else:
+            self.csr_rep_local = self.csr_rep
         self.petsc_l2g = p4pyPETSc.LGMap()
         self.petsc_l2g.create(self.subdomain2global)
-        self.colind_global = self.petsc_l2g.apply(self.csr_rep_owned[1]) #prealloc needs global indices
-        self.setPreallocationCSR([self.csr_rep_owned[0],self.colind_global,self.csr_rep_owned[2]])
+        #cek not working with TH
+        #self.colind_global = self.petsc_l2g.apply(self.csr_rep_local[1]) #prealloc needs global indices
+        #self.setPreallocationCSR([self.csr_rep_local[0],self.colind_global,self.csr_rep_local[2]])
+        #
         self.setUp()
         self.setLGMap(self.petsc_l2g)
         self.setFromOptions()
@@ -163,7 +171,6 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         """Saves to disk using a PETSc binary viewer.
         """
         _petsc_view(self, filename)
-
 
 def Vec(n):
     """
@@ -241,7 +248,7 @@ class SparseMatShell:
         self.xGhosted.ghostUpdateEnd(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
         self.yGhosted.zeroEntries()
         with self.xGhosted.localForm() as xlf, self.yGhosted.localForm() as ylf:
-            self.ghosted_csr_mat.matvec(xlf,ylf)
+            self.ghosted_csr_mat.matvec(xlf.getArray(),ylf.getArray())
         y.setArray(self.yGhosted.getArray())
 
 
