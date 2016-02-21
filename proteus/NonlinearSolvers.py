@@ -1235,6 +1235,8 @@ class NewtonNS(NonlinearSolver):
                     self.betaK_current = self.norm_2_Jinv_current
                 self.linearSolver.prepare(b=r)
             self.du[:]=0.0
+            #if par_du != None:
+            #    par_du.scatter_forward_insert()
             if not self.directSolver:
                 if self.EWtol:
                     self.setLinearSolverTolerance(r)
@@ -1245,6 +1247,8 @@ class NewtonNS(NonlinearSolver):
                 self.linearSolverFailed = self.linearSolver.failed()
             self.linearSolver.printPerformance()
             #print self.du
+            #if par_du != None:
+            #    par_du.scatter_forward_insert()
             u-=self.du
             if par_u != None:
                 par_u.scatter_forward_insert()
