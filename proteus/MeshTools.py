@@ -4257,7 +4257,7 @@ class QuadrilateralMesh(Mesh):
                 e1 = Edge(nodes=[n2,n3])
                 e2 = Edge(nodes=[n3,n1])
                 e3 = Edge(nodes=[n1,n0])
-                self.newQuadrilateral([e0,e1,e2,e3]) 
+                self.newQuadrilateral([e3,e2,e1,e0]) 
         self.finalize()
         
     def meshInfo(self):

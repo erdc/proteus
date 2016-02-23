@@ -194,9 +194,9 @@ class ReferenceCube(ReferenceElement):
             self.boundaryUnitNormalList.append(numpy.array([0.0,1.0]))
 
             #3: 3-0
-            self.boundaryMapList.append(lambda xBar: numpy.array([xBar[0],1.0]))
+            self.boundaryMapList.append(lambda xBar: numpy.array([-1.0,xBar[0]]))
             self.boundaryMapInverseList.append(lambda x: numpy.array([x[1]]))
-            self.boundaryJacobianList.append(numpy.array([[1.0],[0.0]]))
+            self.boundaryJacobianList.append(numpy.array([[0.0],[1.0]]))
             self.boundaryUnitNormalList.append(numpy.array([-1.0,0.0]))
 
         elif nd == 3:
