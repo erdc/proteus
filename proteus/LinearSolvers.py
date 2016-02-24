@@ -504,6 +504,8 @@ class KSP_petsc4py(LinearSolver):
     def prepare(self,b=None):
         self.petsc_L.zeroEntries()
         assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
+        if self.petsc_L.proteus_jacobian != None:
+            self.petsc_L.csr_rep[2][:] = self.petsc_L.proteus_csr_rep[2][self.petsc_L.nzval_proteus2petsc]
         if self.par_fullOverlap == True:
             if self.petsc_L.blockSize > 1 or self.petsc_L.pde.nc == 1:
                 self.petsc_L.setValuesLocalCSR(self.csr_rep_local[0],self.csr_rep_local[1],self.csr_rep_local[2],p4pyPETSc.InsertMode.INSERT_VALUES)
@@ -566,19 +568,19 @@ class KSP_petsc4py(LinearSolver):
                 #
                 # zero unowned rows
                 #
-                from proteus import Comm
-                comm = Comm.get()
-                comm.beginSequential()
-                for i in range(self.petsc_L.pde.nc):
-                    #zero the ghost rows on this processor
-                    ghost_start_row = self.petsc_L.pde.offset[i] + self.petsc_L.pde.par_n_list[i]
-                    ghost_start_i = self.petsc_L.csr_rep[0][ghost_start_row]
-                    ghost_end_row = self.petsc_L.pde.offset[i] + self.petsc_L.pde.par_n_list[i] + self.petsc_L.pde.par_nghost_list[i]
-                    ghost_end_i = self.petsc_L.csr_rep[0][ghost_end_row]
-                    print "ghost start", ghost_start_row, ghost_start_i
-                    print "ghost end", ghost_end_row, ghost_end_i
-                    self.petsc_L.csr_rep[2][ghost_start_i:ghost_end_i] = 0.0
-                comm.endSequential()
+                # from proteus import Comm
+                # comm = Comm.get()
+                # comm.beginSequential()
+                # for i in range(self.petsc_L.pde.nc):
+                #     #zero the ghost rows on this processor
+                #     ghost_start_row = self.petsc_L.pde.offset[i] + self.petsc_L.pde.par_n_list[i]
+                #     ghost_start_i = self.petsc_L.csr_rep[0][ghost_start_row]
+                #     ghost_end_row = self.petsc_L.pde.offset[i] + self.petsc_L.pde.par_n_list[i] + self.petsc_L.pde.par_nghost_list[i]
+                #     ghost_end_i = self.petsc_L.csr_rep[0][ghost_end_row]
+                #     print "ghost start", ghost_start_row, ghost_start_i
+                #     print "ghost end", ghost_end_row, ghost_end_i
+                #     self.petsc_L.csr_rep[2][ghost_start_i:ghost_end_i] = 0.0
+                # comm.endSequential()
                 # print "subdomain2global"
                 # print self.petsc_L.subdomain2global
                 # print "max old", self.petsc_L.pde.mesh.globalMesh.nodeNumbering_global2original.max()
@@ -601,10 +603,10 @@ class KSP_petsc4py(LinearSolver):
                 #         line += "("+`j`+","+`a`+")"
                 #     print line
                 # comm.endSequential()
-                self.petsc_L.setValuesLocalCSR(self.petsc_L.csr_rep[0],
-                                               self.petsc_L.csr_rep[1],
-                                               self.petsc_L.csr_rep[2],
-                                               p4pyPETSc.InsertMode.ADD_VALUES)#add values since  we can't  eliminate ghosts
+                self.petsc_L.setValuesLocalCSR(self.petsc_L.csr_rep_local[0],
+                                               self.petsc_L.csr_rep_local[1],
+                                               self.petsc_L.csr_rep_local[2],
+                                               p4pyPETSc.InsertMode.INSERT_VALUES)#add values since  we can't  eliminate ghosts
                 #pdb.set_trace()
         else:
             if self.par_firstAssembly:
@@ -649,7 +651,11 @@ class KSP_petsc4py(LinearSolver):
                 self.ksp.setNullSpace(self.preconditioner.nsp)
         except:
             pass
+        par_b.proteus_array[:] = par_b.proteus_array[par_b.petsc2proteus_subdomain]
+        par_u.proteus_array[:] = par_u.proteus_array[par_u.petsc2proteus_subdomain]
         self.ksp.solve(par_b,par_u)
+        par_b.proteus_array[:] = par_b.proteus_array[par_b.proteus2petsc_subdomain]
+        par_u.proteus_array[:] = par_u.proteus_array[par_u.proteus2petsc_subdomain]
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
                                                                                                              self.ksp.converged,
