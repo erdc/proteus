@@ -19,9 +19,9 @@ def _petsc_view(obj, filename):
     """
     viewer = p4pyPETSc.Viewer().createBinary(filename, 'w')
     viewer(obj)
-    #viewer2 = p4pyPETSc.Viewer().createASCII(filename+".m", 'w')
-    #viewer2.setFormat(1)
-    #viewer2(obj)
+    viewer2 = p4pyPETSc.Viewer().createASCII(filename+".m", 'w')
+    viewer2.setFormat(1)
+    viewer2(obj)
 
 class ParVec:
     """
@@ -58,10 +58,14 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
     pressure come from the same space).  We would like to extend this functionality to include finite
     element spaces that cannot be interwoven such as Taylor Hood.
     """
-    def __init__(self,array=None,bs=None,n=None,N=None,nghosts=None,subdomain2global=None,blockVecType="simple"):
+    def __init__(self,array=None,bs=None,n=None,N=None,nghosts=None,subdomain2global=None,blockVecType="simple",ghosts=None,
+                                                 proteus2petsc_subdomain=None,
+                                                 petsc2proteus_subdomain=None):
         if array == None:
             return#cek hack, don't know why init gets called by PETSc.Vec duplicate function
         p4pyPETSc.Vec.__init__(self)
+        self.proteus2petsc_subdomain=proteus2petsc_subdomain
+        self.petsc2proteus_subdomain=petsc2proteus_subdomain
         blockSize = max(1,bs)
         self.dim_proc = n*blockSize
         self.nghosts = nghosts
@@ -75,15 +79,16 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
                 self.createWithArray(array,size=(blockSize*n,blockSize*N),bsize=blockSize)
             self.subdomain2global=subdomain2global
             self.petsc_l2g = None
+            self.setUp()
         else:
             assert nghosts >= 0, "The number of ghostnodes must be non-negative"
             assert subdomain2global.shape[0] == (n+nghosts), ("The subdomain2global map is the wrong length n=%i,nghosts=%i,shape=%i \n" % (n,n+nghosts,subdomain2global.shape[0]))
             assert len(array.flat) == (n+nghosts)*blockSize, "%i  != (%i+%i)*%i \n" % (len(array.flat),  n,nghosts,blockSize)
-
             if blockVecType == "simple":
-                ghosts = numpy.zeros((blockSize*nghosts),'i')
-                for j in range(blockSize):
-                    ghosts[j::blockSize]=subdomain2global[n:]*blockSize+j
+                if ghosts == None:
+                    ghosts = numpy.zeros((blockSize*nghosts),'i')
+                    for j in range(blockSize):
+                        ghosts[j::blockSize]=subdomain2global[n:]*blockSize+j
                 self.createGhostWithArray(ghosts,array,size=(blockSize*n,blockSize*N),bsize=1)
                 if blockSize > 1: #have to build in block dofs
                     subdomain2globalTotal = numpy.zeros((blockSize*subdomain2global.shape[0],),'i')
@@ -92,26 +97,26 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
                     self.subdomain2global=subdomain2globalTotal
                 else:
                     self.subdomain2global=subdomain2global
-                # ARB - ? I'm not entirely sure where I can .LGMap() in the library ?
-                self.petsc_l2g = p4pyPETSc.LGMap()
-                self.petsc_l2g.create(self.subdomain2global)
-                self.setLGMap(self.petsc_l2g)
-
             else:
                 #TODO need to debug
                 ghosts = subdomain2global[n:]
                 self.createGhostWithArray(ghosts,array,size=(blockSize*n,blockSize*N),bsize=blockSize)
                 self.subdomain2global = subdomain2global
-                self.petsc_l2g = p4pyPETSc.LGMap()
-                self.petsc_l2g.create(self.subdomain2global)
-                self.setLGMap(self.petsc_l2g)
+            self.setUp()
+            self.petsc_l2g = p4pyPETSc.LGMap()
+            self.petsc_l2g.create(self.subdomain2global)
+            self.setLGMap(self.petsc_l2g)
         self.setFromOptions()
     def scatter_forward_insert(self):
+        self.proteus_array[:] = self.proteus_array[self.proteus2petsc_subdomain]
         self.ghostUpdateBegin(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
         self.ghostUpdateEnd(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
+        self.proteus_array[:] = self.proteus_array[self.petsc2proteus_subdomain]
     def scatter_reverse_add(self):
+        self.proteus_array[:] = self.proteus_array[self.proteus2petsc_subdomain]
         self.ghostUpdateBegin(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
         self.ghostUpdateEnd(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
+        self.proteus_array[:] = self.proteus_array[self.petsc2proteus_subdomain]
 
     def save(self, filename):
         """Saves to disk using a PETSc binary viewer.
@@ -123,8 +128,14 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
     """
     Parallel matrix based on petsc4py's wrappers for PETSc.
     """
-    def __init__(self,ghosted_csr_mat,par_bs,par_n,par_N,par_nghost,subdomain2global,blockVecType="simple",pde=None):
+    def __init__(self,ghosted_csr_mat,par_bs,par_n,par_N,par_nghost,subdomain2global,blockVecType="simple",pde=None, par_nc=None, par_Nc=None, proteus_jacobian=None, nzval_proteus2petsc=None):
         self.pde = pde
+        if par_nc == None:
+            par_nc = par_n
+        if par_Nc == None:
+            par_Nc = par_N
+        self.proteus_jacobian=proteus_jacobian
+        self.nzval_proteus2petsc = nzval_proteus2petsc
         p4pyPETSc.Mat.__init__(self)
         self.ghosted_csr_mat=ghosted_csr_mat
         self.blockVecType = blockVecType
@@ -134,12 +145,12 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
         if self.blockSize > 1 and blockVecType != "simple":
             ## \todo fix block aij in ParMat_petsc4py
             self.setType('baij')
-            self.setSizes([[self.blockSize*par_n,self.blockSize*par_N],[self.blockSize*par_n,self.blockSize*par_N]],bsize=self.blockSize)
+            self.setSizes([[self.blockSize*par_n,self.blockSize*par_N],[self.blockSize*par_nc,self.blockSize*par_Nc]],bsize=self.blockSize)
             self.setBlockSize(self.blockSize)
             self.subdomain2global = subdomain2global #no need to include extra block dofs?
         else:
             self.setType('aij')
-            self.setSizes([[par_n*self.blockSize,par_N*self.blockSize],[par_n*self.blockSize,par_N*self.blockSize]],bsize=1)
+            self.setSizes([[par_n*self.blockSize,par_N*self.blockSize],[par_nc*self.blockSize,par_Nc*self.blockSize]],bsize=1)
             if self.blockSize > 1: #have to build in block dofs
                 subdomain2globalTotal = numpy.zeros((self.blockSize*subdomain2global.shape[0],),'i')
                 for j in range(self.blockSize):
@@ -147,22 +158,24 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
                 self.subdomain2global=subdomain2globalTotal
             else:
                 self.subdomain2global=subdomain2global
-        import Comm
+        from proteus import Comm
         comm = Comm.get()
         logEvent("ParMat_petsc4py comm.rank= %s blockSize = %s par_n= %s par_N=%s par_nghost=%s par_jacobian.getSizes()= %s "
                  % (comm.rank(),self.blockSize,par_n,par_N,par_nghost,self.getSizes()))
         self.csr_rep = ghosted_csr_mat.getCSRrepresentation()
+        if self.proteus_jacobian != None:
+            self.proteus_csr_rep = self.proteus_jacobian.getCSRrepresentation()
         if self.blockSize > 1:
             blockOwned = self.blockSize*par_n
             self.csr_rep_local = ghosted_csr_mat.getSubMatCSRrepresentation(0,blockOwned)
         else:
-            self.csr_rep_local = self.csr_rep
+            self.csr_rep_local = ghosted_csr_mat.getSubMatCSRrepresentation(0,par_n)
         self.petsc_l2g = p4pyPETSc.LGMap()
         self.petsc_l2g.create(self.subdomain2global)
-        #cek not working with TH
-        #self.colind_global = self.petsc_l2g.apply(self.csr_rep_local[1]) #prealloc needs global indices
-        #self.setPreallocationCSR([self.csr_rep_local[0],self.colind_global,self.csr_rep_local[2]])
         #
+        self.colind_global = self.petsc_l2g.apply(self.csr_rep_local[1]) #prealloc needs global indices
+        #self.setPreallocationCSR([self.csr_rep_local[0],self.colind_global,self.csr_rep_local[2]])
+        #self.setPreallocationCSR([self.csr_rep_local[0],self.csr_rep_local[1],self.csr_rep_local[2]])
         self.setUp()
         self.setLGMap(self.petsc_l2g)
         self.setFromOptions()
