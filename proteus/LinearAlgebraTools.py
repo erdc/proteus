@@ -103,9 +103,9 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
                 self.createGhostWithArray(ghosts,array,size=(blockSize*n,blockSize*N),bsize=blockSize)
                 self.subdomain2global = subdomain2global
             self.setUp()
-            self.petsc_l2g = p4pyPETSc.LGMap()
-            self.petsc_l2g.create(self.subdomain2global)
-            self.setLGMap(self.petsc_l2g)
+            #self.petsc_l2g = p4pyPETSc.LGMap()
+            #self.petsc_l2g.create(self.subdomain2global)
+            #self.setLGMap(self.petsc_l2g)
         self.setFromOptions()
     def scatter_forward_insert(self):
         self.proteus_array[:] = self.proteus_array[self.proteus2petsc_subdomain]
@@ -172,12 +172,11 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
             self.csr_rep_local = ghosted_csr_mat.getSubMatCSRrepresentation(0,par_n)
         self.petsc_l2g = p4pyPETSc.LGMap()
         self.petsc_l2g.create(self.subdomain2global)
-        #
-        self.colind_global = self.petsc_l2g.apply(self.csr_rep_local[1]) #prealloc needs global indices
-        #self.setPreallocationCSR([self.csr_rep_local[0],self.colind_global,self.csr_rep_local[2]])
-        #self.setPreallocationCSR([self.csr_rep_local[0],self.csr_rep_local[1],self.csr_rep_local[2]])
         self.setUp()
         self.setLGMap(self.petsc_l2g)
+        #
+        self.colind_global = self.petsc_l2g.apply(self.csr_rep_local[1]) #prealloc needs global indices
+        self.setPreallocationCSR([self.csr_rep_local[0],self.colind_global,self.csr_rep_local[2]])
         self.setFromOptions()
 
     def save(self, filename):
