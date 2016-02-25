@@ -6308,8 +6308,8 @@ class MultilevelTransport:
                         petsc_component_offsets=[[0]]
                         component_ghost_proc={}
                         component_ghost_local_index={}
+                        total_dof_proc=0
                         for proc in range(comm.size()):
-                            total_dof_proc=0
                             for ci,ts in enumerate(trialSpaceDict.values()):
                                 total_dof_proc += (ts.dofMap.dof_offsets_subdomain_owned[proc+1] -
                                                    ts.dofMap.dof_offsets_subdomain_owned[proc])
@@ -6417,6 +6417,7 @@ class MultilevelTransport:
                         print "s2g",subdomain2global
                         print "petsc_s2g",petsc_subdomain2global
                         print "petsc_s2g_petsc",petsc_subdomain2global_petsc
+                        print "petsc_ghosts", petsc_ghosts
                         comm.endSequential()
                         comm.barrier()
                         if comm.size() == 1:
@@ -6441,16 +6442,16 @@ class MultilevelTransport:
                         nzval_petsc = nzval.copy()
                         nzval_proteus2petsc=colind.copy()
                         nzval_petsc2proteus=colind.copy()
-                        rowptr_petsc[i] = 0
+                        rowptr_petsc[0] = 0
                         comm.beginSequential()
                         for i in range(par_n+par_nghost):
                             start_proteus = rowptr[petsc2proteus_subdomain[i]]
                             end_proteus = rowptr[petsc2proteus_subdomain[i]+1]
                             nzrow =  end_proteus - start_proteus
-                            rowptr_petsc[i+1] = rowptr_petsc[i]+nzrow
+                            rowptr_petsc[i+1] = rowptr_petsc[i] + nzrow
                             start_petsc = rowptr_petsc[i]
                             end_petsc = rowptr_petsc[i+1]
-                            print "proteus_colind", colind[start_proteus:end_proteus]
+                            #print "proteus_colind", colind[start_proteus:end_proteus]
                             petsc_cols_i = proteus2petsc_subdomain[colind[start_proteus:end_proteus]]
                             j_sorted = petsc_cols_i.argsort()
                             colind_petsc[start_petsc:end_petsc] = petsc_cols_i[j_sorted]
@@ -6459,15 +6460,30 @@ class MultilevelTransport:
                                                           np.arange(start_proteus,end_proteus)[j_sorted]):
                                 nzval_petsc2proteus[j_petsc] = j_proteus
                                 nzval_proteus2petsc[j_proteus] = j_petsc
-                            print "petsc row length", rowptr_petsc[i+1] - rowptr_petsc[i]
-                            print "proteus row length", rowptr_petsc[i+1] - rowptr_petsc[i]
-                        print "nzval", nzval.shape
+                            #print "petsc row length", rowptr_petsc[i+1] - rowptr_petsc[i]
+                            #print "proteus row length", rowptr_petsc[i+1] - rowptr_petsc[i]
+                        #print "nzval", nzval.shape
                         #print "nzval to petsc", nzval[nzval_proteus2petsc]
                         #print "nzval_petsc actual", nzval_petsc
                         assert((nzval_petsc[nzval_proteus2petsc] == nzval).all())
                         assert((nzval[nzval_petsc2proteus] == nzval_petsc).all())
                         comm.endSequential()
                         assert(nzval_petsc.shape[0] == colind_petsc.shape[0] == rowptr_petsc[-1] - rowptr_petsc[0])
+                        petsc_a = np.zeros((transport.dim, transport.dim),'d')
+                        proteus_a = np.zeros((transport.dim, transport.dim),'d')
+                        for i in range(transport.dim):
+                            for j,k in zip(colind[rowptr[i]:rowptr[i+1]],range(rowptr[i],rowptr[i+1])):
+                                nzval[k] = i*transport.dim+j
+                                proteus_a[i,j] = nzval[k]
+                                petsc_a[proteus2petsc_subdomain[i],proteus2petsc_subdomain[j]] = nzval[k]
+                        for i in range(transport.dim):
+                            for j,k in zip(colind_petsc[rowptr_petsc[i]:rowptr_petsc[i+1]],range(rowptr_petsc[i],rowptr_petsc[i+1])):
+                                nzval_petsc[k] = petsc_a[i,j]
+                        assert((nzval_petsc[nzval_proteus2petsc] == nzval).all())
+                        assert((nzval[nzval_petsc2proteus] == nzval_petsc).all())
+                        assert (proteus_a[petsc2proteus_subdomain,:][:,petsc2proteus_subdomain] == petsc_a).all()
+                        assert((proteus_a == petsc_a[proteus2petsc_subdomain,:][:,proteus2petsc_subdomain]).all())
+                        petsc_a = np.arange(transport.dim**2).reshape(transport.dim,transport.dim)
                         transport.nzval_petsc = nzval_petsc
                         transport.colind_petsc = colind_petsc
                         transport.rowptr_petsc = rowptr_petsc
