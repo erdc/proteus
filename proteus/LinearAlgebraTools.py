@@ -108,15 +108,19 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
             #self.setLGMap(self.petsc_l2g)
         self.setFromOptions()
     def scatter_forward_insert(self):
-        self.proteus_array[:] = self.proteus_array[self.proteus2petsc_subdomain]
+        if self.proteus2petsc_subdomain:
+            self.proteus_array[:] = self.proteus_array[self.petsc2proteus_subdomain]
         self.ghostUpdateBegin(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
         self.ghostUpdateEnd(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
-        self.proteus_array[:] = self.proteus_array[self.petsc2proteus_subdomain]
+        if self.proteus2petsc_subdomain:
+            self.proteus_array[:] = self.proteus_array[self.proteus2petsc_subdomain]
     def scatter_reverse_add(self):
-        self.proteus_array[:] = self.proteus_array[self.proteus2petsc_subdomain]
+        if self.proteus2petsc_subdomain:
+            self.proteus_array[:] = self.proteus_array[self.petsc2proteus_subdomain]
         self.ghostUpdateBegin(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
         self.ghostUpdateEnd(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
-        self.proteus_array[:] = self.proteus_array[self.petsc2proteus_subdomain]
+        if self.proteus2petsc_subdomain:
+            self.proteus_array[:] = self.proteus_array[self.proteus2petsc_subdomain]
 
     def save(self, filename):
         """Saves to disk using a PETSc binary viewer.
