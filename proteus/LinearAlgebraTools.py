@@ -108,18 +108,18 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
             #self.setLGMap(self.petsc_l2g)
         self.setFromOptions()
     def scatter_forward_insert(self):
-        if self.proteus2petsc_subdomain:
+        if self.proteus2petsc_subdomain is not None:
             self.proteus_array[:] = self.proteus_array[self.petsc2proteus_subdomain]
         self.ghostUpdateBegin(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
         self.ghostUpdateEnd(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
-        if self.proteus2petsc_subdomain:
+        if self.proteus2petsc_subdomain is not None:
             self.proteus_array[:] = self.proteus_array[self.proteus2petsc_subdomain]
     def scatter_reverse_add(self):
-        if self.proteus2petsc_subdomain:
+        if self.proteus2petsc_subdomain is not None:
             self.proteus_array[:] = self.proteus_array[self.petsc2proteus_subdomain]
         self.ghostUpdateBegin(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
         self.ghostUpdateEnd(p4pyPETSc.InsertMode.ADD_VALUES,p4pyPETSc.ScatterMode.REVERSE)
-        if self.proteus2petsc_subdomain:
+        if self.proteus2petsc_subdomain is not None:
             self.proteus_array[:] = self.proteus_array[self.proteus2petsc_subdomain]
 
     def save(self, filename):
