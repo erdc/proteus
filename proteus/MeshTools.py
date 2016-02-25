@@ -4251,13 +4251,13 @@ class QuadrilateralMesh(Mesh):
                 k=0
                 n0 = self.nodeList[grid.getNodeNumber(i,j,k)]
                 n1 = self.nodeList[grid.getNodeNumber(i,j+1,k)]
-                n2 = self.nodeList[grid.getNodeNumber(i+1,j,k)]
-                n3 = self.nodeList[grid.getNodeNumber(i+1,j+1,k)]
-                e0 = Edge(nodes=[n0,n2])
-                e1 = Edge(nodes=[n2,n3])
-                e2 = Edge(nodes=[n3,n1])
-                e3 = Edge(nodes=[n1,n0])
-                self.newQuadrilateral([e3,e2,e1,e0]) 
+                n2 = self.nodeList[grid.getNodeNumber(i+1,j+1,k)]
+                n3 = self.nodeList[grid.getNodeNumber(i+1,j,k)]
+                e0 = Edge(nodes=[n0,n1])
+                e1 = Edge(nodes=[n1,n2])
+                e2 = Edge(nodes=[n2,n3])
+                e3 = Edge(nodes=[n3,n0])
+                self.newQuadrilateral([e0,e1,e2,e3]) 
         self.finalize()
         
     def meshInfo(self):
@@ -4322,26 +4322,26 @@ Number of nodes : %d\n""" % (self.nElements_global,
             newNodeMid = Node(len(self.nodeDict),q.xmid,q.ymid,q.zmid)
             newNodeMid = self.registerNode(newNodeMid)
 
-            e1 = Edge(nodes=[qNodes[0],newNodeBottom])
-            e2 = Edge(nodes=[newNodeBottom,newNodeMid])
-            e3 = Edge(nodes=[newNodeMid,newNodeLeft])
-            e4 = Edge(nodes=[qNodes[0],newNodeLeft])
-            e5 = Edge(nodes=[qNodes[1],newNodeLeft])
+            e1 = Edge(nodes=[qNodes[0],newNodeLeft])
+            e2 = Edge(nodes=[newNodeLeft,newNodeMid])
+            e3 = Edge(nodes=[newNodeMid,newNodeBottom])
+            e4 = Edge(nodes=[newNodeBottom,qNodes[0]])
+            e5 = Edge(nodes=[newNodeLeft,qNodes[1]])
             e6 = Edge(nodes=[qNodes[1],newNodeTop])
-            e7 = Edge(nodes=[newNodeMid,newNodeTop])
-            e8 = Edge(nodes=[qNodes[2],newNodeTop])
-            e9 = Edge(nodes=[newNodeMid,newNodeRight])
-            e10 = Edge(nodes=[qNodes[2],newNodeRight])
+            e7 = Edge(nodes=[newNodeTop,newNodeMid])
+            e8 = Edge(nodes=[newNodeTop,qNodes[2]])
+            e9 = Edge(nodes=[qNodes[2], newNodeRight])
+            e10 = Edge(nodes=[newNodeRight, newNodeMid])
             e11 = Edge(nodes=[qNodes[3],newNodeBottom])
-            e12 = Edge(nodes=[qNodes[3],newNodeRight])
+            e12 = Edge(nodes=[newNodeRight,qNodes[3]])
 
             q1 = self.newQuadrilateral([e1,e2,e3,e4])
             self.registerEdges(q1)
-            q2 = self.newQuadrilateral([e5,e3,e6,e7])
+            q2 = self.newQuadrilateral([e5,e6,e7,e2])
             self.registerEdges(q2)
-            q3 = self.newQuadrilateral([e7,e8,e9,e10])
+            q3 = self.newQuadrilateral([e3,e10,e12,e11])
             self.registerEdges(q3)
-            q4 = self.newQuadrilateral([e2,e9,e11,e12])
+            q4 = self.newQuadrilateral([e7,e8,e9,e10])
             self.registerEdges(q4)
 
             childrenDict[q.N]=[q1,q2,q3,q4]
