@@ -117,6 +117,7 @@ if __name__ == '__main__':
     test_c0p2()
     test_c0q1()
     test_c0q1_hex_mesh()
+    test_c0q2()
     Profiling.logEvent("Closing Log")
     try:
         Profiling.closeLog()

@@ -18,8 +18,6 @@ nd = 3
 #if unstructured would need variable polyfile or meshfile set
 x0 = (-3.,-3.,-3.)
 L  = ( 6., 6., 6.)
-# x0 = (0.0,0.0,0.0)
-# L  = (1.0,1.0,1.0)
 
 test_hexMesh_3x3 = False
 if test_hexMesh_3x3 == True:
