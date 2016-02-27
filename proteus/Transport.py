@@ -6518,6 +6518,7 @@ class MultilevelTransport:
                     log("Allocating matrix on rank %i" % comm.rank(),level=2)
                     par_jacobian = ParMat_petsc4py(jacobian,par_bs,par_n,par_N,par_nghost,subdomain2global,pde=transport)
             else:
+                transport.owned_local = numpy.arange(transport.dim)
                 par_u = None
                 par_r = None
                 par_du = None
