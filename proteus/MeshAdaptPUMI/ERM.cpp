@@ -467,9 +467,10 @@ std::cout<<"Initialized flux"<<std::endl;
         if(me==boundary_face){
           int BCtype[4];
           double fluxdata[4][numbqpt];
-          for(int i=1;i<nsd+1;i++){ //ignores 0th index because that's pressure
-            m->getIntTag(bent,BCtag[i],&BCtype[i]);                 
-          }
+          //for(int i=1;i<nsd+1;i++){ //ignores 0th index because that's pressure
+          //  m->getIntTag(bent,BCtag[i],&(BCtype[i]));                 
+          //}
+          m->getIntTag(bent,BCtag,&(BCtype[0]));                 
           if((BCtype[1]+BCtype[2]+BCtype[3] != 3) && BCtype[1] == 1 ){
             std::cerr << "diffusive flux not fully specified on face " << localNumber(bent) << '\n';
             std::cerr << "BCtype "<<BCtype[1]<<" "<<BCtype[2]<<" "<<BCtype[3]<<std::endl;
@@ -537,7 +538,6 @@ if(localNumber(ent)==eID && l==0){
     } //end loop over faces
   } //end loop over regions
   m->end(iter);
-
 std::cout<<"Sending flux"<<std::endl;
   PCU_Comm_Send(); 
   flux = (double*) calloc(numbqpt*nsd*2,sizeof(double));
@@ -548,11 +548,11 @@ std::cout<<"Sending flux"<<std::endl;
     PCU_COMM_UNPACK(tempflux);
     m->getDoubleTag(bent,diffFlux,flux);
     for (int i=0;i<numbqpt*nsd;i++){
-if(localNumber(ent)==eID)
-std::cout<<"Before numbqpt i "<<i<<" flux "<<flux[orientation*numbqpt*nsd+i]<<" "<<tempflux[i]<<std::endl;
+//if(localNumber(ent)==eID)
+//std::cout<<"Before numbqpt i "<<i<<" flux "<<flux[orientation*numbqpt*nsd+i]<<" "<<tempflux[i]<<std::endl;
       flux[orientation*numbqpt*nsd+i] = flux[orientation*numbqpt*nsd+i]+tempflux[i];
-if(localNumber(ent)==eID)
-std::cout<<"After numbqpt i "<<i<<" flux "<<flux[orientation*numbqpt*nsd+i]<<" "<<tempflux[i]<<std::endl;
+//if(localNumber(ent)==eID)
+//std::cout<<"After numbqpt i "<<i<<" flux "<<flux[orientation*numbqpt*nsd+i]<<" "<<tempflux[i]<<std::endl;
     }
     m->setDoubleTag(bent,diffFlux,flux);
   }
@@ -624,8 +624,9 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf:
             int BCtype[nsd];
             double fluxdata[4][numqpt];
             if(me==boundary_face){
+              m->getIntTag(bent,BCtag,&(BCtype[0]));                 
               for(int i=1;i<nsd+1;i++){ //ignores 0th index because that's pressure
-                m->getIntTag(bent,BCtag[i],&BCtype[i]);                 
+                //m->getIntTag(bent,BCtag[i],&BCtype[i]);                 
                 m->getDoubleTag(bent,fluxtag[i],&(fluxdata[i][0]));
               }
             }
@@ -809,10 +810,14 @@ void MeshAdaptPUMIDrvr::removeBCData()
   apf::MeshIterator* fIter = m->begin(2);
   while(ent=m->iterate(fIter))
   {
+    if(m->hasTag(ent,BCtag))
+      m->removeTag(ent,BCtag);
     for(int i=0;i<4;i++)
     {
+/*
       if(m->hasTag(ent,BCtag[i]))
         m->removeTag(ent,BCtag[i]);
+*/
       if(i>0 && m->hasTag(ent,fluxtag[i]))
         m->removeTag(ent,fluxtag[i]);
       if(m->hasTag(ent,diffFlux))
@@ -820,9 +825,9 @@ void MeshAdaptPUMIDrvr::removeBCData()
     }
   }
   m->end(fIter);
+  m->destroyTag(BCtag);
   for(int i=0;i<4;i++)
   {
-    m->destroyTag(BCtag[i]);
     if(i>0)
       m->destroyTag(fluxtag[i]);
   }
