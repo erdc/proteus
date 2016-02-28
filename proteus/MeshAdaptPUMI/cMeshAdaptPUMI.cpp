@@ -111,20 +111,20 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
   apf::Vector3 evalPt;
   int numqpt=0;
   const int nsd = 3;
-  int bcFlag[nsd+1] = {0,1,1,1};
+  const int bcFlag[nsd+1] = {0,1,1,1};
 
   //assign a label to the BC type tag
-  char label[4][9],labelflux[6],type_flag;
+  char label[9],labelflux[4][9],type_flag;
+  
+  sprintf(label,"BCtype");
+  BCtag = m->createIntTag(label,4);
   for(int idx=0;idx<4;idx++)
   {
     if(idx == 0) sprintf(&type_flag,"p");
     else if(idx == 1) sprintf(&type_flag,"u");
     else if(idx == 2) sprintf(&type_flag,"v");
     else if(idx == 3) sprintf(&type_flag,"w");
-    sprintf(label[idx],"BCtype_%c",type_flag);
-    BCtag[idx] = m->createIntTag(label[idx],1);
-//std::cout<<"Boundary label "<<label[idx]<<std::endl;
-    if(idx>0) sprintf(labelflux,"%c_flux",type_flag);
+    if(idx>0) sprintf(labelflux[idx],"%c_flux",type_flag);
   }
 
   while(fEnt = m->iterate(fIter))
@@ -137,7 +137,7 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
       apf::MeshElement* testElem = apf::createMeshElement(m,fEnt);
       numqpt = apf::countIntPoints(testElem,integration_order);
       for(int idx=1;idx<nsd+1;idx++)
-        fluxtag[idx]= m->createDoubleTag(labelflux,numqpt);
+        fluxtag[idx]= m->createDoubleTag(labelflux[idx],numqpt);
       apf::destroyMeshElement(testElem);
     }
     if(me==boundary_face)
@@ -158,29 +158,24 @@ int MeshAdaptPUMIDrvr::getSimmetrixBC()
             for(int j=0;j<nsd;j++)
               data[j+1][k]=AttributeTensor1_evalDS((pAttributeTensor1)Att[i], j,evalPtSim);
           }
+          m->setIntTag(fEnt,BCtag,&(bcFlag[0]));
           for(int idx=1;idx<nsd+1;idx++)
           {
-            m->setIntTag(fEnt,BCtag[idx],&bcFlag[idx]);
             m->setDoubleTag(fEnt,fluxtag[idx],data[idx]); //set the quadrature points
           }
           apf::destroyMeshElement(testElem);
+          break;
         } //end if on model
         else
         {
-          for(int idx=1;idx<nsd+1;idx++)
-          {
-            int dummy = 0;
-            m->setIntTag(fEnt,BCtag[idx],&dummy);
-          }
+          int dummy[4] = {0,0,0,0};
+          m->setIntTag(fEnt,BCtag,&(dummy[0]));
         }
       }//end loop over attributes
       if(nF==0)
       {
-          for(int idx=1;idx<nsd+1;idx++)
-          {
-            int dummy = 0;
-            m->setIntTag(fEnt,BCtag[idx],&dummy);
-          }
+          int dummy[4] = {0,0,0,0};
+          m->setIntTag(fEnt,BCtag,&(dummy[0]));
       }
     } 
   }//end while

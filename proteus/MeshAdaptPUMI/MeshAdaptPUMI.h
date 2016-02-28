@@ -55,7 +55,7 @@ class MeshAdaptPUMIDrvr{
   char* modelFileName; 
   
   //tags used to identify types of BC
-  apf::MeshTag* BCtag[4];
+  apf::MeshTag* BCtag;
   apf::MeshTag* DBCtag[4];
   apf::MeshTag* fluxtag[4];
 
