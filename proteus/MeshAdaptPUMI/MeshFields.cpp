@@ -109,6 +109,7 @@ int MeshAdaptPUMIDrvr::transferPropertiesToPUMI(double* rho_p, double* nu_p, dou
 
 int MeshAdaptPUMIDrvr::transferBCtagsToProteus(int* tagArray,int idx, int* ebN, int*eN_global,double* fluxBC)
 {
+/*
   //Suppose I have a list of identifiers from Proteus that classifies each boundary element
   apf::MeshIterator* it= m->begin(2);
   apf::MeshEntity* f;
@@ -160,6 +161,7 @@ int MeshAdaptPUMIDrvr::transferBCtagsToProteus(int* tagArray,int idx, int* ebN, 
   m->end(it);
 
   std::cout<<"Finished Transfer of BC Tags "<<std::endl;
+*/
   return 0;
 }
 
