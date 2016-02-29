@@ -166,7 +166,7 @@ class ReferenceCube(ReferenceElement):
             self.boundaryJacobianList.append(numpy.array([1.0]))
             self.boundaryUnitNormalList.append(numpy.array([1.0]))
             #1
-            self.boundaryMapList.append(lambda xBar: numpy.array([xBar[0] + 0.0]))
+            self.boundaryMapList.append(lambda xBar: numpy.array([xBar[0] - 1.0]))
             self.boundaryMapInverseList.append(lambda x: numpy.array([x[0]]))
             self.boundaryJacobianList.append(numpy.array([1.0]))
             self.boundaryUnitNormalList.append(numpy.array([-1.0]))
@@ -177,27 +177,27 @@ class ReferenceCube(ReferenceElement):
                            numpy.array([-1.0, 1.0])]
             #remember  boundary reference geometry is  [0,1], not [-1,1].
             #0: 0-1
-            self.boundaryMapList.append(lambda xBar: numpy.array([2.0*xBar[0]-1.0,-1.0]))
-            self.boundaryMapInverseList.append(lambda x: numpy.array([0.5*x[0]+0.5]))
-            self.boundaryJacobianList.append(numpy.array([[ 2.0],[0.0]]))
+            self.boundaryMapList.append(lambda xBar: numpy.array([xBar[0],-1.0]))
+            self.boundaryMapInverseList.append(lambda x: numpy.array([x[0]]))
+            self.boundaryJacobianList.append(numpy.array([[ 1.0],[0.0]]))
             self.boundaryUnitNormalList.append(numpy.array([0.0,-1.0]))
 
             #1:  1-2
-            self.boundaryMapList.append(lambda xBar: numpy.array([1.0,2.0*xBar[0]-1.0]))
-            self.boundaryMapInverseList.append(lambda x: numpy.array([0.5*x[1]+0.5]))
-            self.boundaryJacobianList.append(numpy.array([[0.0],[2.0]]))
+            self.boundaryMapList.append(lambda xBar: numpy.array([1.0,xBar[0]]))
+            self.boundaryMapInverseList.append(lambda x: numpy.array([x[1]]))
+            self.boundaryJacobianList.append(numpy.array([[0.0],[1.0]]))
             self.boundaryUnitNormalList.append(numpy.array([1.0,0.0]))
 
             #2: 2-3
-            self.boundaryMapList.append(lambda xBar: numpy.array([1.0-2.0*xBar[0],1.0]))
-            self.boundaryMapInverseList.append(lambda x: numpy.array([0.5-0.5*x[0]]))
-            self.boundaryJacobianList.append(numpy.array([[-2.0],[0.0]]))
+            self.boundaryMapList.append(lambda xBar: numpy.array([-xBar[0],1.0]))
+            self.boundaryMapInverseList.append(lambda x: numpy.array([-x[0]]))
+            self.boundaryJacobianList.append(numpy.array([[-1.0],[0.0]]))
             self.boundaryUnitNormalList.append(numpy.array([0.0,1.0]))
 
             #3: 3-0
-            self.boundaryMapList.append(lambda xBar: numpy.array([-1.0,1.0-2.0*xBar[0]]))
-            self.boundaryMapInverseList.append(lambda x: numpy.array([0.5-0.5*x[1]]))
-            self.boundaryJacobianList.append(numpy.array([[0.0],[-2.0]]))
+            self.boundaryMapList.append(lambda xBar: numpy.array([-1.0,-xBar[0]]))
+            self.boundaryMapInverseList.append(lambda x: numpy.array([-x[1]]))
+            self.boundaryJacobianList.append(numpy.array([[0.0],[-1.0]]))
             self.boundaryUnitNormalList.append(numpy.array([-1.0,0.0]))
         elif nd == 3:
             self.nodeList=[numpy.array([-1.0,-1.0,-1.0]),
