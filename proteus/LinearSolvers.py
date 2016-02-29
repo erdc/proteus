@@ -530,11 +530,11 @@ class KSP_petsc4py(LinearSolver):
         if par_b.proteus2petsc_subdomain is not None:
             par_b.proteus_array[:] = par_b.proteus_array[par_b.petsc2proteus_subdomain]
             par_u.proteus_array[:] = par_u.proteus_array[par_u.petsc2proteus_subdomain]
-#         if self.petsc_L.isSymmetric(tol=1.0e-14):
-#            self.petsc_L.setOption(p4pyPETSc.Mat.Option.SYMMETRIC, True)
-#            print "Matrix is symmetric"
-#         else:
-#            print "MATRIX IS NONSYMMETRIC"
+        # if self.petsc_L.isSymmetric(tol=1.0e-12):
+        #    self.petsc_L.setOption(p4pyPETSc.Mat.Option.SYMMETRIC, True)
+        #    print "Matrix is symmetric"
+        # else:
+        #    print "MATRIX IS NONSYMMETRIC"
         logEvent("before ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s " % (self.ksp.rtol,
                                                                                                    self.ksp.atol,
                                                                                                    self.ksp.converged,
