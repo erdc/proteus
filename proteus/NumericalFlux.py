@@ -1439,7 +1439,7 @@ class Stokes_Advection_DiagonalUpwind_Diffusion_IIPG_exterior(NF_base):
         self.hasInterior=False
         self.scale_penalty = 1
         self.penalty_floor = 0.0
-        self.penalty_constant = 10.0
+        self.penalty_constant = 100.0
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         pass
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):

@@ -247,7 +247,7 @@ class Quadrilateral(Polygon):
                 newList[3] = node
         for i,item in enumerate(newList):
             if not newList[i]:
-                assert 0,'Quadrialteral Mesh Generation Error'
+                assert 0,'Quadrialteral Mesh Generation Error '+`newList`+" i = "+`i`
         return newList
 
     def computeGeometricInfo(self):
