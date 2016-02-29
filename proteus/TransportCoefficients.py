@@ -1485,7 +1485,6 @@ class Stokes(TC_base):
             potential = {1:{1:'u'},
                          2:{2:'u'},
                          3:{3:'u'}}
-
             reaction = {0:{0:'linear'},
                         1:{1:'constant'},
                         2:{2:'constant'},
