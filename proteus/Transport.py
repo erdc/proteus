@@ -1702,9 +1702,6 @@ class OneLevelTransport(NonlinearEquation):
         #cek debug
         #u.tofile("u"+`self.nonlinear_function_evaluations`,sep="\n")
         r.fill(0.0)
-        # for cj in range(len(self.dirichletConditionsForceDOF)):
-        #     for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-        #         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -1790,6 +1787,10 @@ class OneLevelTransport(NonlinearEquation):
                             zeroRow = False
                     if zeroRow:
                         raise RuntimeError("Jacobian has a zero row because sparse matrix has no diagonal entry at row "+`global_dofN`+". You probably need add diagonal mass or reaction term")
+                    #print "row = ",global_dofN,"\t",self.nzval[self.rowptr[global_dofN]:self.rowptr[global_dofN+1]].max()
+        rowptr, colind, nzval = jacobian.getCSRrepresentation()
+        #for i in range(self.dim):
+        #   print "row i=",i,'\t',nzval[rowptr[i]:rowptr[i+1]].max()
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         #cek debug
