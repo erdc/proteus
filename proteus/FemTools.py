@@ -155,7 +155,7 @@ class ReferenceCube(ReferenceElement):
     def __init__(self,nd=3):
         ReferenceElement.__init__(self,nd,2**nd,2*nd)
         if nd == 1:
-            self.nodeList=[numpy.array([0.0]),
+            self.nodeList=[numpy.array([-1.0]),
                            numpy.array([1.0])]
             #build mapping from reference simplex of lower dimension to the boundaries of the simplex
             #for 1D the 0D space only contains 0 so the map is really just translation of 0 to the endpoint
@@ -166,8 +166,8 @@ class ReferenceCube(ReferenceElement):
             self.boundaryJacobianList.append(numpy.array([1.0]))
             self.boundaryUnitNormalList.append(numpy.array([1.0]))
             #1
-            self.boundaryMapList.append(lambda xBar: numpy.array([xBar[0] + 0.0]))
-            self.boundaryMapInverseList.append(lambda x: numpy.array([x[0]]))
+            self.boundaryMapList.append(lambda xBar: numpy.array([xBar[0] - 1.0]))
+            self.boundaryMapInverseList.append(lambda x: numpy.array([x[0] + 1.0]))
             self.boundaryJacobianList.append(numpy.array([1.0]))
             self.boundaryUnitNormalList.append(numpy.array([-1.0]))
         elif nd == 2:
@@ -188,15 +188,15 @@ class ReferenceCube(ReferenceElement):
             self.boundaryUnitNormalList.append(numpy.array([1.0,0.0]))
 
             #2: 2-3
-            self.boundaryMapList.append(lambda xBar: numpy.array([xBar[0],1.0]))
-            self.boundaryMapInverseList.append(lambda x: numpy.array([x[0]]))
-            self.boundaryJacobianList.append(numpy.array([[1.0],[0.0]]))
+            self.boundaryMapList.append(lambda xBar: numpy.array([-xBar[0],1.0]))
+            self.boundaryMapInverseList.append(lambda x: numpy.array([-x[0]]))
+            self.boundaryJacobianList.append(numpy.array([[-1.0],[0.0]]))
             self.boundaryUnitNormalList.append(numpy.array([0.0,1.0]))
 
             #3: 3-0
-            self.boundaryMapList.append(lambda xBar: numpy.array([xBar[0],1.0]))
-            self.boundaryMapInverseList.append(lambda x: numpy.array([x[1]]))
-            self.boundaryJacobianList.append(numpy.array([[1.0],[0.0]]))
+            self.boundaryMapList.append(lambda xBar: numpy.array([1.0,-xBar[0]]))
+            self.boundaryMapInverseList.append(lambda x: numpy.array([-x[1]]))
+            self.boundaryJacobianList.append(numpy.array([[0.0],[-1.0]]))
             self.boundaryUnitNormalList.append(numpy.array([-1.0,0.0]))
 
         elif nd == 3:
@@ -258,7 +258,7 @@ class ReferenceCube(ReferenceElement):
                                                           [0.0,1.0]]))
             self.boundaryUnitNormalList.append(numpy.array([-1.0,0.0,0.0]))
 
-            #3: 4-5-6-7
+            #5: 4-5-6-7
             self.boundaryMapList.append(lambda xBar: numpy.array([xBar[0],
                                                                   xBar[1],
                                                                   1.0]))
@@ -268,7 +268,7 @@ class ReferenceCube(ReferenceElement):
                                                           [0.0,0.0]]))
             self.boundaryUnitNormalList.append(numpy.array([0.0,0.0,1.0]))
     def onElement(self,xi):
-        return (xi >= 0.0).all() and (xi <= 1.0).all()
+        return (xi >= -1.0).all() and (xi <= 1.0).all()
 
 class LocalFunctionSpace:
     """
@@ -478,8 +478,6 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
         # Should use Gauss Labatto points
 
         self.nodes=[]
-        #for i in range(order+1):
-        #    self.nodes.append(2.0*float(i)/float(order)-1.0)
 
         self.quadrature = LobattoEdgeAlt(order=order)
         for i in range(order+1):
@@ -518,7 +516,6 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
             self. fun.append(lambda xi,fc=fc, den=den:   fun[fc](xi)/den)
             self.dfun.append(lambda xi,fc=fc, den=den:  dfun[fc](xi)/den)
 
-
         # Define multi-dimensional stuff
         basis= []
         basisGradients = []
@@ -529,18 +526,22 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
         elif nd == 2:
             for j in range(order+1):
                 for i in range(order+1):
-                    basis.append(lambda xi,i=1,j=j:self.fun[i](xi[0])*self.fun[j](xi[1]))
-                    basisGradients.append(lambda xi,i=i,j=j:numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
-                                                                              self. fun[i](xi[0])*self.dfun[j](xi[1])]))
+                    basis.append(
+                        lambda xi,i=1,j=j: self.fun[i](xi[0])*self.fun[j](xi[1]))
+                    basisGradients.append(
+                        lambda xi,i=i,j=j: numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
+                                                        self. fun[i](xi[0])*self.dfun[j](xi[1])]))
             funMap=[0,4,1,  7,8,5,   3,6,2]
         elif nd == 3:
             for k in range(order+1):
                 for j in range(order+1):
                     for i in range(order+1):
-                        basis.append(lambda xi,i=i,j=j,k=k:self.fun[i](xi[0])*self.fun[j](xi[1])*self.fun[k](xi[2]))
-                        basisGradients.append(lambda xi,i=i,j=j,k=k:numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1])*self. fun[k](xi[2]),
-                                                                                      self. fun[i](xi[0])*self.dfun[j](xi[1])*self. fun[k](xi[2]),
-                                                                                      self. fun[i](xi[0])*self. fun[j](xi[1])*self.dfun[k](xi[2])]))
+                        basis.append(
+                            lambda xi,i=i,j=j,k=k: self.fun[i](xi[0])*self.fun[j](xi[1])*self.fun[k](xi[2]))
+                        basisGradients.append(
+                            lambda xi,i=i,j=j,k=k: numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1])*self. fun[k](xi[2]),
+                                                                self. fun[i](xi[0])*self.dfun[j](xi[1])*self. fun[k](xi[2]),
+                                                                self. fun[i](xi[0])*self. fun[j](xi[1])*self.dfun[k](xi[2])]))
 
             #funMap=numpy.array([0,3,6,8,18,19,24,26])
             funMap = [ 0, 8, 1,
@@ -563,9 +564,6 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
             self.basisGradients.append(basisGradients[invMap[i]])
         # Get boundary data
         self.defineTraceFunctions()
-
-
-
 
 class QuadraticOnSimplexWithNodalBasis(LocalFunctionSpace):
     """
@@ -1453,6 +1451,22 @@ class NodalInterpolationConditions(InterpolationConditions):
                                                               interpolationValues,
                                                               finiteElementFunction.dof)
 
+class CubeNodalInterpolationConditions(NodalInterpolationConditions):
+    from RefUtils import quadrilateralLocalBoundaryLookup
+    from RefUtils import hexahedronLocalBoundaryLookup
+    def __init__(self,referenceElement):
+        NodalInterpolationConditions.__init__(self,referenceElement)
+    def definedOnLocalElementBoundary(self,k,ebN_local):
+        #overide this  one function from nodal interpolation conditions,
+        #which only holds for simplex
+        #return k < self.nQuadraturePoints and k != ebN_local
+        if self.referenceElement.dim == 1:
+            return k != ebN_local
+        elif self.referenceElement.dim == 2:
+            return ebN_local in self.quadrilateralLocalBoundaryLookup[k]
+        elif self.referenceElement.dim == 3:
+            return ebN_local in self.hexahedronLocalBoundaryLookup[k]
+
 class QuadraticLagrangeNodalInterpolationConditions(InterpolationConditions):
     """
     Obtains the DOF from the function values at vertices and
@@ -1492,7 +1506,8 @@ class QuadraticLagrangeNodalInterpolationConditions(InterpolationConditions):
     def quadrature2Node_element(self,k):
         if k <= self.referenceElement.dim:
             return k
-        return None
+        else:
+            return None
     def projectFiniteElementFunctionFromInterpolationConditions_opt(self,finiteElementFunction,interpolationValues):
         """
         Allow the interpolation conditions to control projection of a (global) finite element function from
@@ -1510,7 +1525,8 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
     Obtains the DOF from the function values at vertices and
     midpoints of edges (whole element is considered an edge in 1d)
     """
-    #from RefUtils import p2tetrahedronLocalBoundaryLookup
+    from RefUtils import q2quadrilateralLocalBoundaryLookup
+    from RefUtils import q2hexahedronLocalBoundaryLookup
     from math import fmod
     def __init__(self,referenceElement):
         from RefUtils import fact
@@ -1521,7 +1537,7 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
         self.quadraturePointArray = numpy.zeros((self.nInterpNodes,3),'d')
         for k in range(self.nInterpNodes):
             for I in range(sdim):
-                self.quadraturePointArray[k,I] = q2refNodes[0][k,I]
+                self.quadraturePointArray[k,I] = q2refNodes[2][k,I]
 
         #self.nQuadraturePoints = len(self.quadraturePointArray)
         self.nQuadraturePoints = self.quadraturePointArray.shape[0]
@@ -1533,20 +1549,20 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
         self.functionals_quadrature_map = numpy.arange(len(self.functionalsQuadrature),dtype='i')
    #end init
     def definedOnLocalElementBoundary(self,k,ebN_local):
-        print "definedOnLocalElementBoundary not defined for QuadraticLagrangeCubeNodalInterpolationConditions"
-        #if k <= self.referenceElement.dim:
-        #    return k != ebN_local
-        #if self.referenceElement.dim == 2:
-        #    i = int(fmod(k-3 + 2,3))
-        #    return i == ebN_local
-        #if self.referenceElement.dim == 3:
-        #    return ebN_local in self.p2tetrahedronLocalBoundaryLookup[k]
-        #return False
+        if self.referenceElement.dim == 1:
+            if k <= self.referenceElement.dim:
+                return k != ebN_local
+        elif self.referenceElement.dim == 2:
+            return ebN_local in self.q2quadrilateralLocalBoundaryLookup[k]
+        elif self.referenceElement.dim == 3:
+            return ebN_local in self.q2hexahedronLocalBoundaryLookup[k]
+        else:
+            return False
     def quadrature2Node_element(self,k):
-        print "quadrature2Node_element not defined for QuadraticLagrangeCubeNodalInterpolationConditions"
-        #i#f k <= self.referenceElement.dim:
-        # #   return k
-        #return None
+        if k <= self.referenceElement.dim**2:
+                return k
+        else:
+            return None
     def projectFiniteElementFunctionFromInterpolationConditions_opt(self,finiteElementFunction,interpolationValues):
         """
         Allow the interpolation conditions to control projection of a (global) finite element function from
@@ -3711,7 +3727,7 @@ class C0_LinearOnCubeWithNodalBasis(C0_AffineLinearOnSimplexWithNodalBasis):
     """
     def __init__(self,mesh,nd=3):
         localFunctionSpace = LinearOnCubeWithNodalBasis(nd)
-        interpolationConditions = NodalInterpolationConditions(localFunctionSpace.referenceElement)
+        interpolationConditions = CubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
         ParametricFiniteElementSpace.__init__(self,
                                               ReferenceFiniteElement(localFunctionSpace,
                                                                      interpolationConditions),
@@ -3731,7 +3747,7 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
     def __init__(self,mesh,nd=3):
 
         localFunctionSpace = LinearOnCubeWithNodalBasis(nd)
-        interpolationConditions = NodalInterpolationConditions(localFunctionSpace.referenceElement)
+        interpolationConditions = CubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
         ParametricFiniteElementSpace.__init__(self,
                                               ReferenceFiniteElement(localFunctionSpace,
                                                                      interpolationConditions),

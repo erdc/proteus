@@ -1591,7 +1591,6 @@ class StokesASGS_velocity_pressure(SGE_base):
                                                                        q[('subgridError',3)],
                                                                        q[('dsubgridError',3,0)],
                                                                        q[('dsubgridError',3,3)])
-
 #             csubgridError.calculateSubgridErrorStokes3D_GLS_velocity_pressure(self.mesh.elementDiametersArray,
 #                                                                                     q[('dm',1,1)],
 #                                                                                     q[('f',0)],
