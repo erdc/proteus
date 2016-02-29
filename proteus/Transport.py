@@ -1702,6 +1702,9 @@ class OneLevelTransport(NonlinearEquation):
         #cek debug
         #u.tofile("u"+`self.nonlinear_function_evaluations`,sep="\n")
         r.fill(0.0)
+        # for cj in range(len(self.dirichletConditionsForceDOF)):
+        #     for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+        #         self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
@@ -3549,11 +3552,9 @@ class OneLevelTransport(NonlinearEquation):
                 if self.coefficients.advection.has_key(ci):
                     self.ebqe[('advectiveFlux',ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
                     for cj in self.coefficients.advection[ci].keys():
-                        #
                         self.ebqe[('dadvectiveFlux_left',ci,cj)][t[0],t[1]] = 0.0
             for ck,diffusiveFluxBoundaryConditionsDict in fbcObject.diffusiveFluxBoundaryConditionsDictDict.iteritems():
                 for t,g in diffusiveFluxBoundaryConditionsDict.iteritems():
-                    #
                     self.ebqe[('diffusiveFlux',ck,ci)][t[0],t[1]] = g(self.ebqe[('x')][t[0],t[1]],self.timeIntegration.t)
         for ci,sbcObject  in self.stressFluxBoundaryConditionsObjectsDict.iteritems():
             for t,g in sbcObject.stressFluxBoundaryConditionsDict.iteritems():

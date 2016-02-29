@@ -1433,8 +1433,7 @@ class Stokes(TC_base):
         hamiltonian={}
         if nd==2:
             variableNames=['p','u','v']
-            mass={0:{0:'linear'},
-                  1:{1:'linear'},
+            mass={1:{1:'linear'},
                   2:{2:'linear'}}
             if not weakBoundaryConditions:
                 advection = {0:{1:'linear',
@@ -1448,7 +1447,8 @@ class Stokes(TC_base):
                          2:{2:{2:'constant'}}}
             potential = {1:{1:'u'},
                          2:{2:'u'}}
-            reaction = {1:{1:'constant'},
+            reaction = {0:{0:'linear'},
+                        1:{1:'constant'},
                         2:{2:'constant'}}
             hamiltonian = {1:{0:'linear'},
                            2:{0:'linear'}}
@@ -1461,12 +1461,11 @@ class Stokes(TC_base):
                              reaction,
                              hamiltonian,
                              variableNames,
-                             useSparseDiffusion=False)
+                             useSparseDiffusion=True)
             self.vectorComponents=[1,2]
         elif nd==3:
             variableNames=['p','u','v','w']
-            mass={0:{0:'linear'},
-                  1:{1:'linear'},
+            mass={1:{1:'linear'},
                   2:{2:'linear'},
                   3:{3:'linear'}}
             if not weakBoundaryConditions:
@@ -1487,7 +1486,8 @@ class Stokes(TC_base):
                          2:{2:'u'},
                          3:{3:'u'}}
 
-            reaction = {1:{1:'constant'},
+            reaction = {0:{0:'linear'},
+                        1:{1:'constant'},
                         2:{2:'constant'},
                         3:{3:'constant'}}
             hamiltonian = {1:{0:'linear'},
@@ -1502,7 +1502,7 @@ class Stokes(TC_base):
                              reaction,
                              hamiltonian,
                              variableNames,
-                             useSparseDiffusion=False)
+                             useSparseDiffusion=True)
             self.vectorComponents=[1,2,3]
 
     def attachModels(self,modelList):
