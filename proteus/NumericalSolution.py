@@ -171,12 +171,25 @@ class NS_base:  # (HasTraits):
                         nnx = n.nnx
                         nny = n.nny
                     log("Building %i x %i rectangular mesh for %s" % (nnx,nny,p.name))
-                    mlMesh = MeshTools.MultilevelTriangularMesh(nnx, nny, 1,
-                                                                p.domain.x[0], p.domain.x[1], 0.0,
-                                                                p.domain.L[0], p.domain.L[1], 1.0,
-                                                                refinementLevels=n.nLevels,
-                                                                nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                parallelPartitioningType=n.parallelPartitioningType)
+
+                    if not hasattr(n,'quad'):
+                        n.quad = False
+
+                    if (n.quad):
+                        mlMesh = MeshTools.MultilevelQuadrilateralMesh(nnx,nny,1,
+                                                                       p.domain.x[0], p.domain.x[1], 0.0,
+                                                                       p.domain.L[0],p.domain.L[1],1,
+                                                                       refinementLevels=n.nLevels,
+                                                                       nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                       parallelPartitioningType=n.parallelPartitioningType)
+                    else:
+                        mlMesh = MeshTools.MultilevelTriangularMesh(nnx,nny,1,
+                                                                    p.domain.x[0], p.domain.x[1], 0.0,
+                                                                    p.domain.L[0],p.domain.L[1],1,
+                                                                    refinementLevels=n.nLevels,
+                                                                    nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                    parallelPartitioningType=n.parallelPartitioningType)
+
                 elif p.domain.nd == 3:
                     if (n.nnx == n.nny == n.nnz ==None):
                         nnx = nny = nnz = n.nn

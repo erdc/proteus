@@ -5609,7 +5609,7 @@ class OneLevelTransport(NonlinearEquation):
         portions of the reaction term, 'r', and boundary condition terms
         This is a temporary fix for linear model reduction.
         """
-        import pdb
+        #import pdb
         #pdb.set_trace()
         for ci in range(self.nc):
             self.elementResidual[ci].fill(0.0)
