@@ -6297,11 +6297,30 @@ class MultilevelTransport:
                    options.levelLinearSolver == KSP_petsc4py):
                 assert trialSpaceDict[0].dofMap.subdomain2global != None, "need trivial subdomain2global in dofMap for running PETSc"
                 assert trialSpaceDict[0].dofMap.max_dof_neighbors!= None, "need max_dof_neighbors in dofMap for running PETSc"
+                # ARB start
+                print "!!!!!!!!!!!!!!!"
+                print par_bs
+                par_N_dv = 0
+                par_n_dv = 0
+                subdomain2global_dv = []
+                for element in trialSpaceDict:
+                    par_N_dv+=trialSpaceDict[element].dofMap.nDOF_all_processes
+                    par_n_dv+=trialSpaceDict[element].dofMap.nDOF_all_processes
+                    subdomain2global_dv.append(trialSpaceDict[element].dofMap.subdomain2global)
+                # ARB finish
                 par_N = par_n =  trialSpaceDict[0].dofMap.nDOF_all_processes
                 par_nghost = 0
                 subdomain2global = trialSpaceDict[0].dofMap.subdomain2global
+                # ARB start
+                print trialSpaceDict[1].dofMap.subdomain2global
+                print trialSpaceDict[1].dofMap.subdomain2global.shape[0]
+                # ARB finish
                 max_dof_neighbors= trialSpaceDict[0].dofMap.max_dof_neighbors
                 log("Allocating ghosted parallel vectors on rank %i" % comm.rank(),level=2)
+                # ARB start
+                par_u_dv = ParVec_petsc4pyTH(u,par_bs,par_n_dv,par_N_dv,par_nghost,subdomain2global_dv)
+                print 'PASSED'
+                # ARB finish
                 par_u = ParVec_petsc4py(u,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
                 par_r = ParVec_petsc4py(r,par_bs,par_n,par_N,par_nghost,subdomain2global[:par_n])
                 log("Allocating un-ghosted parallel vectors on rank %i" % comm.rank(),level=2)

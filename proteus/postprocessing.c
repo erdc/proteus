@@ -2728,7 +2728,8 @@ void buildLocalBDM2projectionMatrices(int nElements_global,
 				      double * w_dS_f,
 				      double * ebq_n,
 				      double * ebq_v,
-				      double * BDMprojectionMat_element)
+				      double * BDMprojectionMat_element,
+				      double * w_int_test_grads)
 {
   /***********************************************************************
    WIP - This function builds the LocalBDM2projectionMatrices
@@ -2750,10 +2751,16 @@ void buildLocalBDM2projectionMatrices(int nElements_global,
 
   // pSpace represent the size of the polynomial test space
   // NOTE - this is a significant difference from the BDM1 implementation where nSpace = pSpace
+
+  int interiorQuadPts = nQuadraturePoints_elementBoundary;
+  int interiorPspace = 3;
   int pSpace = 3;  // There may be a better way to automate this, but for now I'm hard coding it
-  
+  int edgeFlags[9] = {1,2,4,0,2,5,0,1,3}; //This is an edge flags list
+
   /* printf("BDM1 test information: \n"); */
   /* printf("nVDOFs_element: %d\n",nVDOFs_element); */
+
+  // This first loop calculates the boundary integrals.
 
   for (eN=0; eN < nElements_global; eN++)
     {
@@ -2761,12 +2768,13 @@ void buildLocalBDM2projectionMatrices(int nElements_global,
 	{
 	  for (s = 0; s < pSpace; s++)
 	    {
-	      irow = ebN*nSpace + s;
+	      irow = ebN*pSpace + s;
 	      for (j = 0; j < nVDOFs_element; j++)
 		{
 		  k = j / nSpace;
 		  l = j % nSpace;  // This needs to cycle through 0, and 1
-		  kp= (ebN+s+1) % nSimplex; /*neighbor (s) of node k*/
+		  kp = edgeFlags[ebN*pSpace+s];
+		  //		  kp= (ebN+s+1) % nSimplex; /*neighbor (s) of node k*/
 		  /*mwf debug
 		  printf("BDM1 new eN=%d ebN=%d s=%d irow=%d j=%d k=%d l=%d kp=%d\n",
 			 eN,ebN,s,irow,j,k,l,kp);
@@ -2777,10 +2785,13 @@ void buildLocalBDM2projectionMatrices(int nElements_global,
 		    BDMprojectionMat_element[eN*nVDOFs_element2 + irow*nVDOFs_element + j] = 0.0;
 		  for (ibq = 0; ibq < nQuadraturePoints_elementBoundary; ibq++)
 		    {
+		      // ARB debugging comment
+		      /*
 		      if (eN==0 && ibq==0){
+
 			printf("ebq_n = %.2f , ebq_v = %.2f , w_dS_f = %.2f , ebN = %d , j = %d ,  k = %d , kp = %d , l = %d, global index = %d, irow = %d \n",ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace + ebN*nQuadraturePoints_elementBoundary*nSpace+ibq*nSpace+ l],ebq_v[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_trial_element+ ebN*nQuadraturePoints_elementBoundary*nDOFs_trial_element+ibq*nDOFs_trial_element+k],	w_dS_f[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOFs_test_element+ebN*nQuadraturePoints_elementBoundary*nDOFs_test_element+ ibq*nDOFs_test_element+kp],ebN , j ,  k , kp , l , eN*nVDOFs_element2 + irow + j*nVDOFs_element,irow);
 		      }
-		      
+		      */		      // ARB
 		      pval = 
 			ebq_n[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nSpace +
 			      ebN*nQuadraturePoints_elementBoundary*nSpace+
@@ -2816,6 +2827,25 @@ void buildLocalBDM2projectionMatrices(int nElements_global,
 	}/*ebN*/
 
     }/*eN*/
+
+    
+  // Calculate triangle integrals
+  for (eN=0; eN < nElements_global; eN++){
+  // Iterate over triangles
+    for (s = 0; s < interiorPspace; interiorPspace++){
+      // Iterate over interior polynomial test space
+      for (j=0; j < nVDOFs_element; j++){
+	// Iterate over trial functions
+	for (ibq=0; ibq < interiorQuadPts; ibq++){
+	  // Iterate over quadrature points
+	  if (eN==0){
+	    //	  printf("Test");
+	  }
+	}
+      }
+    }
+  }
+  
 
 }
 

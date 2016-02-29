@@ -863,7 +863,7 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
                 self.q[('velocity_l2g',ci)]  = numpy.arange((self.vt.mesh.nElements_global*self.nDOFs_element[ci]),dtype='i').reshape((self.vt.mesh.nElements_global,self.nDOFs_element[ci]))
         #
 
-        self.BDMcomponent=self.vtComponents[0]
+        self.DMcomponent=self.vtComponents[0]
         self.BDMprojectionMat_element = numpy.zeros((self.vt.mesh.nElements_global,
                                                      self.nDOFs_element[self.BDMcomponent],
                                                      self.nDOFs_element[self.BDMcomponent]),
@@ -945,6 +945,13 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
         #how is the local velocity represented
         #  0 -- BDM P^2 Lagrange rep
         self.localVelocityRepresentationFlag = 0
+        self.degree = 2
+        # BDM2 has 12 degrees of freedom per side
+        self.dim = self.BDM_dimension(self.degree)
+        self.interiorTestSpace = None
+        self.setInteriorTestSpace(self.degree)
+        
+        self.getInteriorTestGradients()
 
         #
         for ci in self.vtComponents:
@@ -956,6 +963,8 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                 self.q[('velocity_l2g',ci)]  = numpy.arange((self.vt.mesh.nElements_global*self.nDOFs_element[ci]),dtype='i').reshape((self.vt.mesh.nElements_global,self.nDOFs_element[ci]))
         #
 
+#        self.getInteriorTestGradients()
+
         self.BDMcomponent=self.vtComponents[0]
         self.BDMprojectionMat_element = numpy.zeros((self.vt.mesh.nElements_global,
                                                      self.nDOFs_element[self.BDMcomponent],
@@ -966,14 +975,58 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
                                                           'i')
         self.computeBDM2projectionMatrices()
 
+    def BDM_dimension(self,degree):
+        ''' Calculate and return the BDM polynomial dimension
+            input - degree
+            output - dimension of the BDM polynomial space
+        '''
+        return (degree+1)*(degree+2)
+
+
+    def setInteriorTestSpace(self,degree):
+        ''' This function sets the interior test space corresponding to the dimension
+        of the BDM space        
+        '''
+        if degree==2:
+            self.interiorTestSpace = FemTools.C0_AffineLinearOnSimplexWithNodalBasis(self.vt.mesh,self.vt.nSpace_global)
+        else:
+            assert(degree==2,'BDM2 only implemented for degree 2 elements.')
+            pass
+
+    def getInteriorTestGradients(self):
+        '''
+        Calculate and return the gradient values of polynomials degree-1
+        '''
+        # Initialze some arrays to store the results...
+        self.interiorTestGradients = numpy.zeros((self.vt.mesh.nElements_global,
+                                              self.vt.nQuadraturePoints_element,
+                                              self.interiorTestSpace.referenceFiniteElement.localFunctionSpace.dim,
+                                              self.interiorTestSpace.referenceFiniteElement.referenceElement.dim),
+                                              'd')
+        self.weightedInteriorTestGradients = numpy.zeros((self.vt.mesh.nElements_global,
+                                              self.vt.nQuadraturePoints_element,
+                                              self.interiorTestSpace.referenceFiniteElement.localFunctionSpace.dim,
+                                              self.interiorTestSpace.referenceFiniteElement.referenceElement.dim),
+                                              'd')        
+        self.interiorTestSpace.getBasisGradientValues(self.vt.elementQuadraturePoints,
+                                                      self.vt.q['inverse(J)'],
+                                                      self.interiorTestGradients)
+        cfemIntegrals.calculateWeightedShapeGradients(self.vt.elementQuadratureWeights[('f',0)],
+                                                      self.vt.q['abs(det(J))'],
+                                                      self.interiorTestGradients,
+                                                      self.weightedInteriorTestGradients)
+        print self.weightedInteriorTestGradients[0]
+
+
     def computeBDM2projectionMatrices(self):
-        print "***************"
-        print self.w_dS
-        print "***************"
+        # Need to add self.weightedInteriorTestGradients as input into the following...
+        # I should be able to extract the number of quadrature points on the triangle from this...
         cpostprocessing.buildLocalBDM2projectionMatrices(self.w_dS[self.BDMcomponent],#vt.ebq[('w*dS_u',self.BDMcomponent)],
                                                          self.vt.ebq['n'],
                                                          self.w[self.BDMcomponent],#self.vt.ebq[('v',self.BDMcomponent)],
-                                                         self.BDMprojectionMat_element)
+                                                         self.BDMprojectionMat_element,
+                                                         self.weightedInteriorTestGradients)
+
         cpostprocessing.factorLocalBDM2projectionMatrices(self.BDMprojectionMat_element,
                                                           self.BDMprojectionMatPivots_element)
     def computeGeometricInfo(self):
