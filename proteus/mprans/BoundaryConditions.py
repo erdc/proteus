@@ -76,8 +76,8 @@ class BC_RANS(BC_Base):
 
     def setNonMaterial(self):
         """
-        This function should be used only on BC flag 0 (index 0 in the list
-        domain.bc)
+        For non-material boundaries.
+        Sets diffusive flux and advective vof to zero
         """
         self.reset()
         self.BC_type = 'NonMaterial'
@@ -108,6 +108,7 @@ class BC_RANS(BC_Base):
         self.v_dirichlet = constantBC(0.)
         self.w_dirichlet = constantBC(0.)
         self.p_advective = constantBC(0.)
+        self.vof_advective = constantBC(0.)
         self.k_dirichlet = constantBC(0.)
         self.dissipation_diffusive = constantBC(0.)
 
@@ -121,6 +122,7 @@ class BC_RANS(BC_Base):
         self.u_advective = constantBC(0.)
         self.v_advective = constantBC(0.)
         self.w_advective = constantBC(0.)
+        self.vof_advective = constantBC(0.)
         self.k_dirichlet = constantBC(0.)
         self.u_diffusive = constantBC(0.)
         self.v_diffusive = constantBC(0.)
@@ -222,7 +224,7 @@ class BC_RANS(BC_Base):
                     waterSpeed = wave.u(x_max, t)
                 he, ecH = ct.domain.MeshOptions.he, ct.epsFact_consrv_heaviside
                 # smoothing only above wave, only on half the VOF smoothing length
-                H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH)
+                H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH*he)
                 ux = H*windSpeed + (1-H)*waterSpeed
                 return ux[i]
             return ux_dirichlet
@@ -256,7 +258,7 @@ class BC_RANS(BC_Base):
                 waterSpeed = wave.u(x_max, t)
             he, ecH = ct.domain.MeshOptions.he, ct.epsFact_consrv_heaviside
             # smoothing only above wave, only on half the VOF smoothing length
-            H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH)
+            H = smoothedHeaviside(0.5*ecH*he, wavePhi-0.5*ecH*he)
             U = H*windSpeed + (1-H)*waterSpeed
             u_p = np.sum(U[:nd]*b_or)
             return u_p
@@ -293,7 +295,7 @@ class BC_RANS(BC_Base):
         U = np.array(U)
         if vert_axis is None:
             vert_axis = self.Shape.Domain.nd - 1
-    
+
         def get_inlet_ux_dirichlet(ux):
             def ux_dirichlet(x, t):
                 if x[vert_axis] < waterLevel:
@@ -435,7 +437,7 @@ class RelaxationZone:
                 x_max[vert_axis] = waveHeight
                 waterSpeed = self.waves.u(x_max, t)
             he, ech = ct.domain.MeshOptions.he, ct.epsFact_consrv_heaviside
-            H = smoothedHeaviside(0.5*ech*he, wavePhi-0.5*ech)
+            H = smoothedHeaviside(0.5*ech*he, wavePhi-0.5*ech*he)
             return H*self.windSpeed[i] + (1-H)*waterSpeed[i]
         return twp_flowVelocity
 
