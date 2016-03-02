@@ -477,6 +477,7 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   numel = m->count(nsd);
   it = m->begin(nsd); 
   double err_dest = alpha*err_total/sqrt(numel);
+if(comm_rank==0)
 std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
   double err_curr = 0.0;
   apf::Vector3 err_vect;
@@ -520,6 +521,10 @@ std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
   size_frame = getERMSizeFrames(grad2Speed,gradSpeed,frame_comps,adapt_type_config);
 //
 
+//Clipped Field
+
+  apf::Field* clipped_vtx = apf::createLagrangeField(m, "iso_clipped",apf::SCALAR,1);
+
 //Set the size scale for vertices
   it = m->begin(0);
   apf::Vector3 scale;
@@ -548,11 +553,19 @@ std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
     assert(ssa[1].wm >= ssa[0].wm);
 */
     double lambda[3] = {ssa[2].wm, ssa[1].wm, ssa[0].wm};
+
+    if(apf::getScalar(size_iso,v,0) < hmin)
+      apf::setScalar(clipped_vtx,v,0,-1);
+    else if(apf::getScalar(size_iso,v,0) > hmax)
+      apf::setScalar(clipped_vtx,v,0,1);
+    else
+      apf::setScalar(clipped_vtx,v,0,0);
+
     scaleFormulaERM(phi,hmin,hmax,apf::getScalar(size_iso,v,0),curve,lambda,eps_u,scale,adapt_type_config);
     apf::setVector(size_scale,v,0,scale);
   }
   m->end(it);
-  SmoothField(size_scale);
+  //SmoothField(size_scale);
 
   if(logging_config=="on"){
     char namebuffer[20];
@@ -561,6 +574,7 @@ std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
   }
   freeField(err_reg); //mAdapt will throw error if not destroyed. what about free?
   apf::destroyField(size_iso_reg); //will throw error if not destroyed
+  apf::destroyField(clipped_vtx);
   apf::destroyField(grad2phi);
   //apf::destroyField(phif);
   apf::destroyField(curves);
