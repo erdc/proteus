@@ -434,8 +434,7 @@ class LinearOnCubeWithNodalBasis(LocalFunctionSpace):
         self.referenceElement = ReferenceCube(nd)
         LocalFunctionSpace.__init__(self,2**nd,self.referenceElement)
         self.gradientList=[]
-
-
+    
         if nd == 1:
             #0
             self.basis.append(lambda xi: 0.5*(1.0 - xi[0]))
@@ -483,9 +482,6 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
         for i in range(order+1):
             self.nodes.append(self.quadrature.points[i][0] )
 
-        print "Lagrange nodes = ",self.nodes
-
-
         # Define 1D functions using recursion formulas
         self.fun=[]
         self.dfun=[]
@@ -526,12 +522,18 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
         elif nd == 2:
             for j in range(order+1):
                 for i in range(order+1):
-                    basis.append(
-                        lambda xi,i=1,j=j: self.fun[i](xi[0])*self.fun[j](xi[1]))
-                    basisGradients.append(
-                        lambda xi,i=i,j=j: numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
-                                                        self. fun[i](xi[0])*self.dfun[j](xi[1])]))
-            funMap=[0,4,1,  7,8,5,   3,6,2]
+#                    basis.append(
+#                        lambda xi,i=1,j=j: self.fun[i](xi[0])*self.fun[j](xi[1]))
+#                    basisGradients.append(
+#                        lambda xi,i=i,j=j: numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
+#                                                        self. fun[i](xi[0])*self.dfun[j](xi[1])]))
+#            funMap=[0,4,1,  7,8,5,   3,6,2]
+     #               import pdb
+     #               pdb.set_trace()
+                    basis.append(lambda xi,i=i,j=j:self.fun[i](xi[0])*self.fun[j](xi[1]))
+                    basisGradients.append(lambda xi,i=i,j=j:numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
+                                                                              self. fun[i](xi[0])*self.dfun[j](xi[1])]))
+            funMap=[0,7,3,  4,8,6,   1,5,2]
         elif nd == 3:
             for k in range(order+1):
                 for j in range(order+1):
@@ -1484,7 +1486,6 @@ class QuadraticLagrangeNodalInterpolationConditions(InterpolationConditions):
         for k in range(self.nInterpNodes):
             for I in range(sdim):
                 self.quadraturePointArray[k,I] = p2refNodes[sdim-1][k,I]
-
         #self.nQuadraturePoints = len(self.quadraturePointArray)
         self.nQuadraturePoints = self.quadraturePointArray.shape[0]
         for i in range(self.nQuadraturePoints):
@@ -1529,17 +1530,37 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
     from RefUtils import q2hexahedronLocalBoundaryLookup
     from math import fmod
     def __init__(self,referenceElement):
+#        import pdb
+#        pdb.set_trace()
         from RefUtils import fact
         from RefUtils import q2refNodes
         sdim  = referenceElement.dim
-        self.nInterpNodes = 27
+        if sdim==3:
+            self.nInterpNodes = 27
+        elif sdim==2:
+            self.nInterpNodes = 9
         InterpolationConditions.__init__(self,self.nInterpNodes,referenceElement)
         self.quadraturePointArray = numpy.zeros((self.nInterpNodes,3),'d')
         for k in range(self.nInterpNodes):
             for I in range(sdim):
                 self.quadraturePointArray[k,I] = q2refNodes[2][k,I]
-
         #self.nQuadraturePoints = len(self.quadraturePointArray)
+        if sdim==3:
+            for k in range(self.nInterpNodes):
+                for I in range(sdim):
+                    self.quadraturePointArray[k,I] = q2refNodes[0][k,I]
+        elif sdim==2:
+            # Think of a better way to do this?
+            self.quadraturePointArray[0,] = [-1.,-1.,0.]
+            self.quadraturePointArray[1,] = [-1.,1.,0.]
+            self.quadraturePointArray[2,] = [1.,1.,0.]
+            self.quadraturePointArray[3,] = [1.,-1.,0.]
+            self.quadraturePointArray[4,] = [-1.,0.,0.]
+            self.quadraturePointArray[5,] = [0.,1.,0.]
+            self.quadraturePointArray[6,] = [1.,0.,0.]
+            self.quadraturePointArray[7,] = [0.,-1.,0.]
+            self.quadraturePointArray[8,] = [0.,0.,0.]
+        self.nQuadraturePoints = len(self.quadraturePointArray)
         self.nQuadraturePoints = self.quadraturePointArray.shape[0]
         for i in range(self.nQuadraturePoints):
             self.functionals.append(lambda f,i=i: f(self.quadraturePointArray[i,:]))
@@ -1569,6 +1590,10 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
         an array of interpolation values in order to take advantage of specific structure, otherwise
         can just use functionals interface
         """
+        print "L2G Mapping:"
+        print finiteElementFunction.femSpace.dofMap.l2g
+        print "Interpolation Values:"
+        print interpolationValues
         cfemIntegrals.projectFromNodalInterpolationConditions(finiteElementFunction.dim_dof,
                                                               finiteElementFunction.femSpace.dofMap.l2g,
                                                               self.functionals_quadrature_map,
@@ -1872,6 +1897,8 @@ class NodalDOFMap(DOFMap):
     """
     def __init__(self,mesh):
         DOFMap.__init__(self,mesh.nNodes_global)
+     #   import pdb
+     #   pdb.set_trace()
         self.l2g=mesh.elementNodesArray
         #save for parallel now
         if mesh == mesh.subdomainMesh:
@@ -1972,8 +1999,9 @@ class QuadraticLagrangeCubeDOFMap(DOFMap):
             print "QuadraticLagrangeCubeDOFMap not supported for nd = 1"
             #ndof += mesh.nElements_global
         elif nd == 2:
-            print "QuadraticLagrangeCubeDOFMap not supported for nd = 2"
-            #ndof += mesh.nElementBoundaries_global
+            ndof = mesh.nNodes_global
+            ndof += mesh.nElementBoundaries_global
+            ndof += mesh.nElements_global
         else:
             ndof = mesh.nNodes_global
             ndof += mesh.nEdges_global
@@ -1982,6 +2010,7 @@ class QuadraticLagrangeCubeDOFMap(DOFMap):
 
         DOFMap.__init__(self,ndof)
         #holds lagrange nodes for all points
+        self.nd = nd
         self.lagrangeNodesArray = numpy.zeros((ndof,3),'d')
         self.l2g = numpy.zeros((mesh.nElements_global,
                                 localFunctionSpace.dim),
@@ -1998,32 +2027,84 @@ class QuadraticLagrangeCubeDOFMap(DOFMap):
         maxSeen = max(self.l2g.flat)
         assert maxSeen < self.nDOF,('QuadDOF max(l2g)= %d ndof= %d' % (maxSeen,self.nDOF))
         #save for parallel mappings
-        self.nd = nd
     #end init
     def updateAfterParallelPartitioning(self,globalMesh):
         """
         Fix self.nDOF_all_processes,self.nDOF_subdomain, self.max_dof_neighbors
         """
-        self.dof_offsets_subdomain_owned = numpy.zeros(globalMesh.nodeOffsets_subdomain_owned.shape,'i')
-        self.nDOF_all_processes = 0; self.nDOF_subdomain = 0; self.max_dof_neighbors = 0
-        self.subdomain2global = numpy.zeros((self.nDOF),'i')
-        (self.nDOF_all_processes,self.nDOF_subdomain,
-         self.max_dof_neighbors) = flcbdfWrappers.buildQuadraticCubeLocal2GlobalMappings(self.nd,
-                                                                                     globalMesh.cmesh,
-                                                                                     globalMesh.subdomainMesh.cmesh,
-                                                                                     globalMesh.elementOffsets_subdomain_owned,
-                                                                                     globalMesh.nodeOffsets_subdomain_owned,
-                                                                                     globalMesh.elementBoundaryOffsets_subdomain_owned,
-                                                                                     globalMesh.edgeOffsets_subdomain_owned,
-                                                                                     globalMesh.elementNumbering_subdomain2global,
-                                                                                     globalMesh.nodeNumbering_subdomain2global,
-                                                                                     globalMesh.elementBoundaryNumbering_subdomain2global,
-                                                                                     globalMesh.edgeNumbering_subdomain2global,
-                                                                                     self.dof_offsets_subdomain_owned,
-                                                                                     self.l2g,
-                                                                                     self.subdomain2global,
-                                                                                     self.lagrangeNodesArray)
-        assert self.nDOF == self.nDOF_subdomain
+        if self.nd==2:
+            # start with the vertex DoFs
+            for i,node in enumerate(globalMesh.nodeArray):
+                self.lagrangeNodesArray[i] = node
+            # next fill up the edge DoF
+            edge_indicator = numpy.zeros(globalMesh.nElementBoundaries_global,'i')
+            for i,edge_list in enumerate(globalMesh.elementBoundariesArray):
+                for j,edge in enumerate(edge_list):
+                    if edge_indicator[edge]==0:
+                        edge_indicator[edge]==1
+                        node1 = globalMesh.elementNodesArray[i][j]
+                        node2 = globalMesh.elementNodesArray[i][(j+1)%4]
+                        edge_coordinate = [0.,0.,0.]
+                        edge_coordinate[0] = 0.5*(globalMesh.nodeArray[node1][0]+globalMesh.nodeArray[node2][0])
+                        edge_coordinate[1] = 0.5*(globalMesh.nodeArray[node1][1]+globalMesh.nodeArray[node2][1])
+                        self.lagrangeNodesArray[len(globalMesh.nodeArray)+edge] = edge_coordinate
+                    else:
+                        pass
+            # fill up the DoF for the center of the elements
+            for i,element in enumerate(globalMesh.elementNodesArray):
+                element_coordinate = [0.,0.,0.]
+                element_coordinate[0] = 0.5*(globalMesh.nodeArray[element[0]][0] + globalMesh.nodeArray[element[-1]][0])
+                element_coordinate[1] = 0.5*(globalMesh.nodeArray[element[0]][1] + globalMesh.nodeArray[element[1]][1])
+                self.lagrangeNodesArray[globalMesh.nNodes_global + globalMesh.nElementBoundaries_global + i] = element_coordinate
+            # populate the l2g vector
+            for i in range(globalMesh.nElements_global):
+                # start by looping over element's vertices
+#                for j,vertex in enumerate(globalMesh.elementNodesArray[i]):
+#                    self.l2g[i][j] = vertex
+                self.l2g[i][0] = globalMesh.elementNodesArray[i][0]
+                self.l2g[i][1] = globalMesh.elementNodesArray[i][3]
+                self.l2g[i][2] = globalMesh.elementNodesArray[i][2]
+                self.l2g[i][3] = globalMesh.elementNodesArray[i][1]
+#                for j,edge in enumerate(globalMesh.elementBoundariesArray[i]):
+#                    self.l2g[i][j + len(globalMesh.elementNodesArray[i]) ] = edge + globalMesh.nNodes_global
+                self.l2g[i][4] = globalMesh.elementBoundariesArray[i][3]+globalMesh.nNodes_global
+                self.l2g[i][5] = globalMesh.elementBoundariesArray[i][2]+globalMesh.nNodes_global
+                self.l2g[i][6] = globalMesh.elementBoundariesArray[i][1]+globalMesh.nNodes_global
+                self.l2g[i][7] = globalMesh.elementBoundariesArray[i][0]+globalMesh.nNodes_global
+                self.l2g[i][len(globalMesh.elementNodesArray[i]) + len(globalMesh.elementBoundariesArray[0]) ] = globalMesh.nNodes_global + globalMesh.nElementBoundaries_global + i
+                import pdb
+         #       pdb.set_trace()
+            # subdomain2global is just the identity mapping in the serial case
+            self.subdomain2global = np.arange(self.nDOF)
+            # dof_offsets_subdomain_owned
+            # ARB - the next argument should use shape not len...something is being fed in wrong for 2D-Quads
+            self.dof_offsets_subdomain_owned = numpy.zeros(len(globalMesh.nodeOffsets_subdomain_owned),'i')
+            self.dof_offsets_subdomain_owned[1] = self.nDOF
+            self.nDOF_all_processes = self.nDOF
+            self.nDOF_subdomain = self.nDOF
+            # ??? #
+            self.max_dof_neighbors = 4
+        elif self.nd==3:
+            self.dof_offsets_subdomain_owned = numpy.zeros(globalMesh.nodeOffsets_subdomain_owned.shape,'i')
+            self.nDOF_all_processes = 0; self.nDOF_subdomain = 0; self.max_dof_neighbors = 0
+            self.subdomain2global = numpy.zeros((self.nDOF),'i')
+            (self.nDOF_all_processes,self.nDOF_subdomain,
+             self.max_dof_neighbors) = flcbdfWrappers.buildQuadraticCubeLocal2GlobalMappings(self.nd,
+                                                                                             globalMesh.cmesh,
+                                                                                             globalMesh.subdomainMesh.cmesh,
+                                                                                             globalMesh.elementOffsets_subdomain_owned,
+                                                                                             globalMesh.nodeOffsets_subdomain_owned,
+                                                                                             globalMesh.elementBoundaryOffsets_subdomain_owned,
+                                                                                             globalMesh.edgeOffsets_subdomain_owned,
+                                                                                             globalMesh.elementNumbering_subdomain2global,
+                                                                                             globalMesh.nodeNumbering_subdomain2global,
+                                                                                             globalMesh.elementBoundaryNumbering_subdomain2global,
+                                                                                             globalMesh.edgeNumbering_subdomain2global,
+                                                                                             self.dof_offsets_subdomain_owned,
+                                                                                             self.l2g,
+                                                                                             self.subdomain2global,
+                                                                                             self.lagrangeNodesArray)
+            assert self.nDOF == self.nDOF_subdomain
 #QuadraticDOFMap
 
 class QuadraticLagrangeDOFMap(DOFMap):
@@ -2093,7 +2174,7 @@ class QuadraticLagrangeDOFMap(DOFMap):
                                                                                      self.subdomain2global,
                                                                                      self.lagrangeNodesArray)
         assert self.nDOF == self.nDOF_subdomain
-#QuadraticDOFMap
+ #QuadraticDOFMap
 
 class p0DOFMap(DOFMap):
     def __init__(self,mesh):
@@ -2800,6 +2881,7 @@ class AffineMaps(ParametricMaps):
         if self.useC == True:
             cfemIntegrals.parametricMaps_getInverseValues(inverseJacobian,self.meshDOFMap.l2g,self.mesh.nodeArray,xArray,xiArray)
         else:
+            # I don't think this code works correctly when self.useC == False...
             xiArray.flat[:]=0.0
             n_x = xArray.shape[1]
             range_nx = range(n_x)
@@ -3051,6 +3133,8 @@ class ParametricFiniteElementSpace:
     dofMap -- a DOF
     """
     def __init__(self, referenceFiniteElement, elementMaps, dofMap):
+        import pdb
+#        pdb.set_trace()
         self.strongDirichletConditions = True
         self.dim=dofMap.nDOF
         self.range_dim = range(dofMap.nDOF)
@@ -3414,6 +3498,8 @@ class ParametricFiniteElementSpace:
                             grad_vArray[ebNE,k,j,m] += grad_psi[n]*inverseJacobianTraceArray[ebNE,k,n,m]
 
     def updateInterpolationPoints(self):
+        import pdb
+       # pdb.set_trace()
         self.elementMaps.getValues(self.referenceFiniteElement.interpolationConditions.quadraturePointArray,self.interpolationPoints)
         return self.interpolationPoints
     def endTimeSeriesEnsight(self,timeValues,filename,description,ts=1):
@@ -3745,7 +3831,8 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
     a linear affine mapping. The nodal basis is used on the reference simplex.
     """
     def __init__(self,mesh,nd=3):
-
+  #      import pdb
+  #      pdb.set_trace()
         localFunctionSpace = LinearOnCubeWithNodalBasis(nd)
         interpolationConditions = CubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
         ParametricFiniteElementSpace.__init__(self,
@@ -3868,13 +3955,15 @@ class C0_AffineLagrangeOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                                               AffineMaps(mesh,
                                                          localGeometricSpace.referenceElement,
                                                          LinearOnCubeWithNodalBasis(nd)),
-                                              QuadraticLagrangeCubeDOFMap(mesh,localFunctionSpace,nd))
+                                              QuadraticLagrangeCubeDOFMap(mesh,localFunctionSpace,nd)) 
 
+     #   import pdb
+     #   pdb.set_trace()
         for i in range(localFunctionSpace.dim):
             for j in range(localFunctionSpace.dim):
                 x_j = interpolationConditions.quadraturePointArray[j]
                 psi_ij = localFunctionSpace.basis[i](x_j)
-                #print i,j,x_j,psi_ij
+#                print i,j,x_j,psi_ij
                 if i==j:
                     assert(abs(1.0-psi_ij) < 1.0e-8)
                 else:
@@ -3892,6 +3981,14 @@ class C0_AffineLagrangeOnCubeWithNodalBasis(ParametricFiniteElementSpace):
         self.XdmfWriter.writeFunctionXdmf_C0P2Lagrange(ar,u,tCount=tCount,init=init)
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
         self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"c0p2_Lagrange",tCount=tCount,init=init)
+
+
+# Lagrange Factory On Cube
+def LagrangeCubeFactory(OrderIn):
+    class LagrangeCubeOrderN(C0_AffineLagrangeOnCubeWithNodalBasis):
+        def __init__(self,mesh,nd):
+            C0_AffineLagrangeOnCubeWithNodalBasis.__init__(self,mesh,nd,order=OrderIn)
+    return LagrangeCubeOrderN
 
 
 class DG_AffinePolynomialsOnSimplexWithMonomialBasis(ParametricFiniteElementSpace):
@@ -5757,8 +5854,8 @@ class FiniteElementFunction:
 
     def projectFromInterpolationConditions(self,interpolationValues):
         #mwf debug
-        #import pdb
-        #pdb.set_trace()
+#        import pdb
+#        pdb.set_trace()
         if self.useC and self.femSpace.referenceFiniteElement.interpolationConditions.projectFiniteElementFunctionFromInterpolationConditions_opt != None:
             self.femSpace.referenceFiniteElement.interpolationConditions.projectFiniteElementFunctionFromInterpolationConditions_opt(self,interpolationValues)
         else:
@@ -5940,6 +6037,8 @@ class FiniteElementFunction:
         """
         build data structure for parallel communication
         """
+#        import pdb
+#        pdb.set_trace()
         if self.femSpace.dofMap.dof_offsets_subdomain_owned == None:
             log("WARNING setupParallelCommunication not valid for %s must have parallel information for dofMap" % self,level=-1)
             return
@@ -6296,6 +6395,8 @@ class FluxBoundaryConditions:
         self.advectiveFluxBoundaryConditionsDict={}
         self.stressFluxBoundaryConditionsDict={}
         self.diffusiveFluxBoundaryConditionsDictDict=dict([(ck,{}) for ck in getDiffusiveFluxBoundaryConditions.keys()])
+        import pdb
+        pdb.set_trace()
         for ebNE in range(mesh.nExteriorElementBoundaries_global):
             ebN = mesh.exteriorElementBoundariesArray[ebNE]
             materialFlag = mesh.elementBoundaryMaterialTypes[ebN]
