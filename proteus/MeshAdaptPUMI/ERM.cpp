@@ -563,7 +563,7 @@ std::cout<<"Sending flux"<<std::endl;
   free(flux);
   std::cout<<"End computeDiffusiveFlux()"<<std::endl;
 }
-
+/*
 void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Field* visc,apf::Field* pref, apf::Field* velf, double * endflux){
 
     int nshl;
@@ -689,6 +689,7 @@ void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, apf:
         }
     } //end loop over adjacent faces
 }//end function
+*/
 
 void MeshAdaptPUMIDrvr::getBoundaryFlux(apf::Mesh* m, apf::MeshEntity* ent, double * endflux){
 
@@ -817,10 +818,6 @@ void MeshAdaptPUMIDrvr::removeBCData()
       m->removeTag(ent,BCtag);
     for(int i=0;i<4;i++)
     {
-/*
-      if(m->hasTag(ent,BCtag[i]))
-        m->removeTag(ent,BCtag[i]);
-*/
       if(i>0 && m->hasTag(ent,fluxtag[i]))
         m->removeTag(ent,fluxtag[i]);
       if(m->hasTag(ent,diffFlux))
