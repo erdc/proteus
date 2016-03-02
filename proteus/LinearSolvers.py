@@ -580,20 +580,21 @@ class KSP_petsc4py(LinearSolver):
     def info(self):
         self.ksp.view()
 
-class SimpleNavierStokes3D:
+class NavierStokes3D:
     def __init__(self,L,prefix=None):
         self.L = L
         L_sizes = L.getSizes()
         L_range = L.getOwnershipRange()
-        #print "L_sizes",L_sizes
         neqns = L_sizes[0][0]
-        #print "neqns",neqns
+        rank = p4pyPETSc.COMM_WORLD.rank
         if self.L.pde.stride[0] == 1:#assume end to end
+            pSpace = self.L.pde.u[0].femSpace
+            pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
+            nDOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
             self.pressureDOF = numpy.arange(start=L_range[0],
-                                            stop=L_range[0]+self.L.pde.offset[1],
-                                            step=1,
+                                            stop=L_range[0]+nDOF_pressure,
                                             dtype="i")
-            self.velocityDOF = numpy.arange(start=L_range[0]+self.L.pde.offset[1],
+            self.velocityDOF = numpy.arange(start=L_range[0]+nDOF_pressure,
                                             stop=L_range[0]+neqns,
                                             step=1,
                                             dtype="i")
@@ -617,18 +618,16 @@ class SimpleNavierStokes3D:
         self.isp.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.isv = p4pyPETSc.IS()
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
-        #self.pc.setFieldSplitIS(self.isv)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
-        #self.pc.setFieldSplitIS(('pressure',self.isp),('velocity',self.isv))
-        #self.pc.setFieldSplitIS(self.velocityDOF)
-        #self.pc.setFieldSplitIS(self.pressureDOF)
     def setUp(self):
         if self.L.pde.pp_hasConstantNullSpace:
             if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
                 self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
                 self.kspList = self.pc.getFieldSplitSubKSP()
                 self.kspList[1].setNullSpace(self.nsp)
+
+SimpleNavierStokes3D = NavierStokes3D
 
 class SimpleDarcyFC:
     def __init__(self,L):
@@ -652,20 +651,21 @@ class SimpleDarcyFC:
     def setUp(self):
         pass
 
-class SimpleNavierStokes2D:
+class NavierStokes2D:
     def __init__(self,L,prefix=None):
         self.L=L
         L_sizes = L.getSizes()
         L_range = L.getOwnershipRange()
-        #print "L_sizes",L_sizes
         neqns = L_sizes[0][0]
-        #print "neqns",neqns
+        rank = p4pyPETSc.COMM_WORLD.rank
         if self.L.pde.stride[0] == 1:#assume end to end
+            pSpace = self.L.pde.u[0].femSpace
+            pressure_offsets = pSpace.dofMap.dof_offsets_subdomain_owned
+            nDOF_pressure = pressure_offsets[rank+1] - pressure_offsets[rank]
             self.pressureDOF = numpy.arange(start=L_range[0],
-                                            stop=L_range[0]+self.L.pde.offset[1],
-                                            step=1,
+                                            stop=L_range[0]+nDOF_pressure,
                                             dtype="i")
-            self.velocityDOF = numpy.arange(start=L_range[0]+self.L.pde.offset[1],
+            self.velocityDOF = numpy.arange(start=L_range[0]+nDOF_pressure,
                                             stop=L_range[0]+neqns,
                                             step=1,
                                             dtype="i")
@@ -689,7 +689,6 @@ class SimpleNavierStokes2D:
         self.isp.createGeneral(self.pressureDOF,comm=p4pyPETSc.COMM_WORLD)
         self.isv = p4pyPETSc.IS()
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
-        #self.pc.setFieldSplitIS(self.isv)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
     def setUp(self):
@@ -698,6 +697,8 @@ class SimpleNavierStokes2D:
                 self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
                 self.kspList = self.pc.getFieldSplitSubKSP()
                 self.kspList[1].setNullSpace(self.nsp)
+
+SimpleNavierStokes2D = NavierStokes2D
 
 class NavierStokesPressureCorrection:
     def __init__(self,L,prefix=None):
