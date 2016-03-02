@@ -44,33 +44,6 @@ int MeshAdaptPUMIDrvr::transferFieldToPUMI(const char* name, double const* inArr
     int i = localNumber(v);
     for(int j = 0; j < nVar; j++)
       tmp[j] = inArray[i * nVar + j];
-
-    //Rewrite only necessary components
-    apf::Vector3 pt;
-    if(casenum ==0){
-    //Poiseuille Flow dpdy=-1
-             m->getPoint(v,0,pt);
-             double Lz = 0.05;
-             double Ly = 0.2;
-             tmp[0] = 1-pt[1]/Ly; //pressure starts at 1 and goes to 0
-             tmp[1] = 0;
-             tmp[2] = 0.5/0.0010021928*(-1/Ly)*(pt[2]*pt[2]-Lz*pt[2]);  //dpdy = 1/Ly
-             tmp[3] = 0;
-     }
-     else if(casenum==1){
-    //Couette 
-             m->getPoint(v,0,pt);
-             double Lz = 0.05;
-             double Uinf = 2e-3;
-             //std::cout<<"name? "<<name<<std::endl;
-             if(!strcmp(name,"p"))
-               tmp[0] =0 ; //pressure
-             else if(!strcmp(name,"velocity")){
-               tmp[0] =0; //u
-               tmp[1] = Uinf*pt[2]/Lz;
-               tmp[2] =0;
-             }
-     }
     apf::setComponents(f, v, 0, &tmp[0]); 
   }
   m->end(it);

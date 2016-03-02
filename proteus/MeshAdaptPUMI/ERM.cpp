@@ -17,7 +17,6 @@ int int_order;
 int norm_order;
 double nu_0,nu_1,rho_0,rho_1;
 double a_kl = 0.5; //flux term weight
-int casenumber;
 int testcount = 0;
 
 int eID = -1;
@@ -250,6 +249,7 @@ double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Fie
 
       //Hardcoded Exact Solution    
 //int casenum = 1;
+/*
       if(casenumber==0){ 
       //Poiseuille Flow
         dpdy = -1/Ly;
@@ -262,6 +262,7 @@ double getL2error(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::Fie
         u_exact = 2e-3*xyz[2]/Lz;
         p_exact = 0;
       }
+*/
 
       u_h = vel_vect[1]; 
       p_h = apf::getScalar(pres_elem,qpt);
@@ -327,6 +328,7 @@ double getStarerror(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::F
 
       //Hardcoded Exact Solution    
 //int casenum = 1;
+/*
       if(casenumber==0){ 
       //Poiseuille Flow
         dpdy = -1/Ly;
@@ -344,6 +346,7 @@ double getStarerror(apf::Mesh* m, apf::MeshEntity* ent, apf::Field* voff, apf::F
         p_exact = 0;
         grad_u_exact[1][2] = 1.0/Lz;
       }
+*/
 
       u_h = vel_vect; 
       p_h = apf::getScalar(pres_elem,qpt);
@@ -844,7 +847,6 @@ void MeshAdaptPUMIDrvr::get_local_error()
   getProps(rho,nu);
   approx_order = approximation_order; 
   int_order = integration_order;
-  casenumber = casenum;
   nsd = m->getDimension();
 
   //***** Get Solution Fields First *****//

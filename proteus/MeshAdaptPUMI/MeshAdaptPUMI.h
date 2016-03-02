@@ -66,7 +66,6 @@ class MeshAdaptPUMIDrvr{
   int integration_order; //determines number of integration points
   int num_quadrature; 
   int num_quarature_boundary;
-  int casenum;
 
   private: 
   apf::Mesh2* m;
