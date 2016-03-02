@@ -306,6 +306,8 @@ class StrongDirichlet(NF_base):
     def setFluxBoundaryConditions(self):
         pass
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
+        import pdb
+#        pdb.set_trace()
         for ci,cjDict in self.vt.coefficients.advection.iteritems():
             if (self.fluxBoundaryConditions[ci] == 'outFlow' or
                 self.fluxBoundaryConditions[ci] == 'mixedFlow'):
@@ -943,6 +945,8 @@ class ConstantAdvection_Diffusion_IIPG_exterior(NF_base):
     def calculateInteriorNumericalFlux(self,q,ebq,ebq_global):
         pass
     def calculateExteriorNumericalFlux(self,inflowFlag,q,ebqe):
+        import pdb
+        pdb.set_trace()
         self.setDirichletValues(ebqe)
         self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
         for ci in range(self.nc):
