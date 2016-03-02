@@ -177,8 +177,6 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
           double c_term = 0;
           //a(u,v) and c(u,u,v) term
           for(int j=0;j<nsd;j++){
-            //temp_vect[s] += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
-            //temp_vect[s] += -shpval[s]*grad_vel[i][j]*vel_vect[j]/density;
             a_term += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
             a_rho_term += visc_val*(grad_vel[i][j]+grad_vel[j][i])*shpval[s]*grad_density[j]/(density*density);
             c_term += -shpval[s]*grad_vel[i][j]*vel_vect[j]/density;
@@ -196,8 +194,8 @@ if(testcount==eID){
   std::cout<<"temp_vect "<< temp_vect[s]<<std::endl;
 }
 */
-          temp_vect[s] = force+pressure_force+a_term+c_term;
-          //temp_vect[s] = force+pressure_force+a_rho_term+b_rho_term+a_term+c_term;
+          //temp_vect[s] = force+pressure_force+a_term+c_term;
+          temp_vect[s] = force+pressure_force+a_rho_term+b_rho_term+a_term+c_term;
           temp_vect[s] = temp_vect[s]*weight;
         } //end loop over number of shape functions
         VecSetValues(F,nshl,idx,temp_vect,ADD_VALUES);
@@ -1097,6 +1095,7 @@ if(testcount==eID && comm_rank==0){
     //compute the local error  
     double Acomp=0;
     double Bcomp=0;
+    double visc_avg=0;
     apf::Matrix3x3 phi_ij;
 
     est_elem= apf::createElement(estimate,element);   
@@ -1123,10 +1122,12 @@ if(testcount==eID && comm_rank==0){
       double visc_val = apf::getScalar(visc_elem,qpt);
       apf::getVectorGrad(est_elem,qpt,phi_ij);
       phi_ij = apf::transpose(phi_ij);
-      Acomp = Acomp + getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
+      Acomp = Acomp + visc_val*getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
       Bcomp = Bcomp + apf::getDiv(velo_elem,qpt)*apf::getDiv(velo_elem,qpt)*weight;
+      visc_avg = visc_avg + visc_val*weight;
     } //end compute local error
-    Acomp = Acomp*Jdet; //Jacobian+nondimensionalize
+    visc_avg = visc_avg*Jdet/apf::measure(element);
+    Acomp = Acomp*Jdet/visc_avg; //nondimensionalize with average viscosity, Jacobians can cancel out, but this is done for clarity
     Bcomp = Bcomp*Jdet;
     err_est = sqrt(Acomp+Bcomp); 
     apf::Vector3 err_in(err_est,Acomp,Bcomp);
