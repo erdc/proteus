@@ -1616,11 +1616,13 @@ class OneLevelTransport(NonlinearEquation):
                 for eN in range(self.mesh.nElements_global):
                     materialFlag = self.mesh.elementMaterialTypes[eN]
                     for k in range(self.u[cj].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
+#                        pdb.set_trace()
                         interpolationValues[eN,k] = sol.uOfXT(self.u[cj].femSpace.interpolationPoints[eN,k],T,materialFlag)
             except TypeError:
                 for eN in range(self.mesh.nElements_global):
                     for k in range(self.u[cj].femSpace.referenceFiniteElement.interpolationConditions.nQuadraturePoints):
                         interpolationValues[eN,k] = sol.uOfXT(self.u[cj].femSpace.interpolationPoints[eN,k],T)
+#            pdb.set_trace()
             self.ua[cj].projectFromInterpolationConditions(interpolationValues)
             self.u[cj].femSpace.writeFunctionXdmf(archive,self.ua[cj],tCount)
     #what about setting initial conditions directly from dofs calculated elsewhere?
@@ -3606,7 +3608,7 @@ class OneLevelTransport(NonlinearEquation):
                                                           self.elementQuadratureWeights[('u',ci)],
                                                           self.q[('dV_u',ci)])
 
-            #
+            # 
             if not self.q.has_key('dV') and self.q.has_key(('dV_u',ci)):
                 self.q['dV'] = self.q[('dV_u',ci)]
 
@@ -3985,6 +3987,8 @@ class OneLevelTransport(NonlinearEquation):
         #get physical locations of element boundary quadrature points
         #
         #assume all components live on the same mesh
+        import pdb
+        pdb.set_trace()
         self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
                                                                     self.ebqe['x'])
         #
@@ -4186,6 +4190,8 @@ class OneLevelTransport(NonlinearEquation):
         list of local dof because of the exclusion of Dirichlet nodes
         (otherwise we could just loop over range(self.nDOF_element).
         """
+        import pdb
+#        pdb.set_trace()
         self.l2g=[{'nFreeDOF':numpy.zeros((self.mesh.nElements_global,),'i'),
                    'freeLocal':numpy.zeros((self.mesh.nElements_global,self.nDOF_trial_element[cj]),'i'),
                    'freeGlobal':numpy.zeros((self.mesh.nElements_global,self.nDOF_trial_element[cj]),'i')} for cj in range(self.nc)]
@@ -6061,8 +6067,8 @@ class MultilevelTransport:
             self.trialSpaceListDict[cj]=[]
             self.bcListDict[cj]=[]
         for mesh in mlMesh.meshList:
-            #import pdb
-            #pdb.set_trace()
+       #     import pdb
+       #     pdb.set_trace()
             sdmesh = mesh.subdomainMesh
             memory()
             log("Generating Trial Space",level=2)
@@ -6091,6 +6097,8 @@ class MultilevelTransport:
             else:
                 useWeakDirichletConditions=numericalFluxType.useWeakDirichletConditions
             log("Setting Boundary Conditions-1")
+            import pdb
+#            pdb.set_trace()
             for cj in trialSpaceDict.keys():
                 if not dirichletConditionsSetterDict.has_key(cj):
                     dirichletConditionsSetterDict[cj] = None
