@@ -244,7 +244,10 @@ check:
 	@echo "SCOREC-Proteus Test"
 	${PROTEUS_ENV} python proteus/MeshAdaptPUMI/test/meshLoad/meshLoad.py
 	@echo "************************"
-
+  
+	@echo "SCOREC-Error-Estimator Test"
+	${PROTEUS_ENV} python proteus/MeshAdaptPUMI/test/errorCheck/errorCheck.py
+	@echo "************************"
 
 doc: install
 	cd doc && ${PROTEUS_ENV} PROTEUS=${PWD} make html
