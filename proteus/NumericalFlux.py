@@ -12,7 +12,7 @@ from EGeometry import enorm
 #
 class NF_base:
     useWeakDirichletConditions=True
-    useStrongDirichletConstraints=True
+    useStrongDirichletConstraints=False
     hasInterior=True
     def __init__(self,vt,
                  getPointwiseBoundaryConditions,
