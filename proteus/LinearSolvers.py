@@ -583,6 +583,7 @@ class KSP_petsc4py(LinearSolver):
 class NavierStokes3D:
     def __init__(self,L,prefix=None):
         self.L = L
+        self.PCD=True
         L_sizes = L.getSizes()
         L_range = L.getOwnershipRange()
         neqns = L_sizes[0][0]
@@ -626,7 +627,110 @@ class NavierStokes3D:
                 self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
                 self.kspList = self.pc.getFieldSplitSubKSP()
                 self.kspList[1].setNullSpace(self.nsp)
-
+        if self.PCD:
+            #modify the mass term in the continuity equation so the p-p block is Q
+            rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
+            self.Qsys_rowptr = rowptr.copy()
+            self.Qsys_colind = colind.copy()
+            self.Qsys_nzval = nzval.copy()
+            nr = rowptr.shape[0] - 1
+            nc = nr
+            self.Qsys =SparseMat(nr,nc,
+                                 self.Qsys_nzval.shape[0],
+                                 self.Qsys_nzval,
+                                 self.Qsys_colind,
+                                 self.Qsys_rowptr)
+            self.L.pde.q[('dm',0,0)][:] = 1.0
+            self.L.pde.getMassJacobian(self.Qsys)
+            self.Qsys_petsc4py = self.L.duplicate()
+            L_sizes = self.L.getSizes()
+            Q_csr_rep_local = self.Qsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
+            self.Qsys_petsc4py.setValuesLocalCSR(Q_csr_rep_local[0],
+                                                 Q_csr_rep_local[1],
+                                                 Q_csr_rep_local[2],
+                                                 p4pyPETSc.InsertMode.INSERT_VALUES)
+            self.Qsys_petsc4py.assemblyBegin()
+            self.Qsys_petsc4py.assemblyEnd()
+            self.Qp = self.Qsys_petsc4py.getSubMatrix(self.isp,self.isp)
+            from LinearAlgebraTools import _petsc_view
+            _petsc_view(self.Qp, "Qp")#write to Qp.m
+            #running Qp.m will load into matlab  sparse matrix
+            #runnig Qpf = full(Mat_...) will get the full matrix
+            #
+            #modify the diffusion term in the mass equation so the p-p block is Ap
+            rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
+            self.Asys_rowptr = rowptr.copy()
+            self.Asys_colind = colind.copy()
+            self.Asys_nzval = nzval.copy()
+            L_sizes = self.L.getSizes()
+            nr = L_sizes[0][0]
+            nc = L_sizes[1][0]
+            self.Asys =SparseMat(nr,nc,
+                                 self.Asys_nzval.shape[0],
+                                 self.Asys_nzval,
+                                 self.Asys_colind,
+                                 self.Asys_rowptr)
+            self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
+            self.L.pde.q[('df',0,0)][:] = 0.0
+            self.L.pde.q[('df',0,1)][:] = 0.0
+            self.L.pde.q[('df',0,2)][:] = 0.0
+            self.L.pde.q[('df',0,3)][:] = 0.0
+            self.L.pde.getSpatialJacobian(self.Asys)#notice switched to  Spatial
+            self.Asys_petsc4py = self.L.duplicate()
+            A_csr_rep_local = self.Asys.getSubMatCSRrepresentation(0,L_sizes[0][0])
+            self.Asys_petsc4py.setValuesLocalCSR(A_csr_rep_local[0],
+                                                 A_csr_rep_local[1],
+                                                 A_csr_rep_local[2],
+                                                 p4pyPETSc.InsertMode.INSERT_VALUES)
+            self.Asys_petsc4py.assemblyBegin()
+            self.Asys_petsc4py.assemblyEnd()
+            self.Ap = self.Asys_petsc4py.getSubMatrix(self.isp,self.isp)
+            _petsc_view(self.Ap,"Ap")#write to A.m
+            #running A.m will load into matlab  sparse matrix
+            #runnig Af = full(Mat_...) will get the full matrix
+            #Af(1:np,1:np) whould be Ap, the pressure diffusion matrix
+            #modify the diffusion term in the mass equation so the p-p block is Ap
+            #modify the diffusion term in the mass equation so the p-p block is Fp
+            rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()
+            self.Fsys_rowptr = rowptr.copy()
+            self.Fsys_colind = colind.copy()
+            self.Fsys_nzval = nzval.copy()
+            L_sizes = self.L.getSizes()
+            nr = L_sizes[0][0]
+            nc = L_sizes[1][0]
+            self.Fsys =SparseMat(nr,nc,
+                                 self.Fsys_nzval.shape[0],
+                                 self.Fsys_nzval,
+                                 self.Fsys_colind,
+                                 self.Fsys_rowptr)
+            self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
+            self.L.pde.q[('df',0,0)][...,0] = self.L.pde.q[('u',1)]
+            self.L.pde.q[('df',0,0)][...,1] = self.L.pde.q[('u',2)]
+            self.L.pde.q[('df',0,0)][...,2] = self.L.pde.q[('u',3)]
+            self.L.pde.getSpatialJacobian(self.Fsys)#notice, switched  to spatial
+            self.Fsys_petsc4py = self.L.duplicate()
+            F_csr_rep_local = self.Fsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
+            self.Fsys_petsc4py.setValuesLocalCSR(F_csr_rep_local[0],
+                                                 F_csr_rep_local[1],
+                                                 F_csr_rep_local[2],
+                                                 p4pyPETSc.InsertMode.INSERT_VALUES)
+            self.Fsys_petsc4py.assemblyBegin()
+            self.Fsys_petsc4py.assemblyEnd()
+            self.Fp = self.Fsys_petsc4py.getSubMatrix(self.isp,self.isp)
+            _petsc_view(self.Fp, "Fp")#write to F.m
+            #running F.m will load into matlab  sparse matrix
+            #runnig Ff = full(Mat_...) will get the full matrix
+            #Ff(1:np,1:np) whould be Fp, the pressure convection-diffusion matrix
+            #
+            #now zero all the dummy coefficents
+            #
+            self.L.pde.q[('dm',0,0)][:] = 0.0
+            self.L.pde.q[('df',0,0)][:] = 0.0
+            self.L.pde.q[('a',0,0)][:] = 0.0
+            #
+            # I think the next step is to setup something that does
+            #  p = ksp(Qp, Fp*ksp(Ap,b)) for some input b
+            # where p represents the approximate solution of S p = b
 SimpleNavierStokes3D = NavierStokes3D
 
 class SimpleDarcyFC:
