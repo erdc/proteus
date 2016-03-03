@@ -3987,8 +3987,6 @@ class OneLevelTransport(NonlinearEquation):
         #get physical locations of element boundary quadrature points
         #
         #assume all components live on the same mesh
-        import pdb
-        pdb.set_trace()
         self.u[0].femSpace.elementMaps.getValuesGlobalExteriorTrace(self.elementBoundaryQuadraturePoints,
                                                                     self.ebqe['x'])
         #
