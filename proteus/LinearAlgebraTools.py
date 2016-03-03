@@ -61,9 +61,9 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
     def __init__(self,array=None,bs=None,n=None,N=None,nghosts=None,subdomain2global=None,blockVecType="simple",ghosts=None,
                                                  proteus2petsc_subdomain=None,
                                                  petsc2proteus_subdomain=None):
-        if array == None:
-            return#cek hack, don't know why init gets called by PETSc.Vec duplicate function
         p4pyPETSc.Vec.__init__(self)
+        if array == None:
+            return#when duplicating for petsc usage
         self.proteus2petsc_subdomain=proteus2petsc_subdomain
         self.petsc2proteus_subdomain=petsc2proteus_subdomain
         blockSize = max(1,bs)
@@ -132,7 +132,10 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
     """
     Parallel matrix based on petsc4py's wrappers for PETSc.
     """
-    def __init__(self,ghosted_csr_mat,par_bs,par_n,par_N,par_nghost,subdomain2global,blockVecType="simple",pde=None, par_nc=None, par_Nc=None, proteus_jacobian=None, nzval_proteus2petsc=None):
+    def __init__(self,ghosted_csr_mat=None,par_bs=None,par_n=None,par_N=None,par_nghost=None,subdomain2global=None,blockVecType="simple",pde=None, par_nc=None, par_Nc=None, proteus_jacobian=None, nzval_proteus2petsc=None):
+        p4pyPETSc.Mat.__init__(self)
+        if ghosted_csr_mat == None:
+            return#when duplicating for petsc usage
         self.pde = pde
         if par_nc == None:
             par_nc = par_n
@@ -140,7 +143,6 @@ class ParMat_petsc4py(p4pyPETSc.Mat):
             par_Nc = par_N
         self.proteus_jacobian=proteus_jacobian
         self.nzval_proteus2petsc = nzval_proteus2petsc
-        p4pyPETSc.Mat.__init__(self)
         self.ghosted_csr_mat=ghosted_csr_mat
         self.blockVecType = blockVecType
         assert self.blockVecType == "simple", "petsc4py wrappers require self.blockVecType=simple"
