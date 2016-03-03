@@ -862,6 +862,7 @@ void MeshAdaptPUMIDrvr::get_local_error()
   //Initialize the Error Fields
   freeField(err_reg);
   err_reg = apf::createField(m,"ErrorRegion",apf::VECTOR,apf::getConstant(nsd));
+  apf::Field* vof_err = apf::createField(m,"vofError",apf::SCALAR,apf::getConstant(nsd));
 
   //Start computing element quantities
   int numqpt; //number of quadrature points
@@ -1096,7 +1097,10 @@ if(testcount==eID && comm_rank==0){
     double Acomp=0;
     double Bcomp=0;
     double visc_avg=0;
+    double interface_norm = 0;
     apf::Matrix3x3 phi_ij;
+    apf::Vector3 vel_vect;
+    apf::Vector3 grad_vof;
 
     est_elem= apf::createElement(estimate,element);   
     for(int k=0; k<numqpt;k++){ 
@@ -1121,17 +1125,22 @@ if(testcount==eID && comm_rank==0){
       }
       double visc_val = apf::getScalar(visc_elem,qpt);
       apf::getVectorGrad(est_elem,qpt,phi_ij);
+      apf::getGrad(vof_elem,qpt,grad_vof);
+      apf::getVector(velo_elem,qpt,vel_vect);
       phi_ij = apf::transpose(phi_ij);
       Acomp = Acomp + visc_val*getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
       Bcomp = Bcomp + apf::getDiv(velo_elem,qpt)*apf::getDiv(velo_elem,qpt)*weight;
       visc_avg = visc_avg + visc_val*weight;
+      interface_norm = interface_norm + grad_vof.getLength()*vel_vect.getLength()*weight;
     } //end compute local error
     visc_avg = visc_avg*Jdet/apf::measure(element);
     Acomp = Acomp*Jdet/visc_avg; //nondimensionalize with average viscosity, Jacobians can cancel out, but this is done for clarity
     Bcomp = Bcomp*Jdet;
+    interface_norm = interface_norm*Jdet;
     err_est = sqrt(Acomp+Bcomp); 
     apf::Vector3 err_in(err_est,Acomp,Bcomp);
     apf::setVector(err_reg,ent,0,err_in);
+    apf::setScalar(vof_err,ent,0,interface_norm);
     err_est_total = err_est_total+(Acomp+Bcomp); //for tracking the upper bound
 /*
     double L2err= getL2error(m,ent,voff,visc,pref,velf); //non-dimensional
@@ -1144,13 +1153,11 @@ if(testcount==eID && comm_rank==0){
     VecDestroy(&F); //destroy vector
     VecDestroy(&coef); //destroy vector
 
-  
     apf::destroyElement(visc_elem);apf::destroyElement(pres_elem);apf::destroyElement(velo_elem);apf::destroyElement(est_elem);apf::destroyElement(vof_elem);
 testcount++;
 
   } //end element loop
 
-  PCU_Barrier();
   PCU_Add_Doubles(&err_est_total,1);
   err_est_total = sqrt(err_est_total);
 
@@ -1171,6 +1178,7 @@ std::cout<<"Error estimate "<<err_est_total<<std::endl;
   getERMSizeField(err_est_total);
   apf::destroyField(visc);
   apf::destroyField(estimate);
+  apf::destroyField(vof_err);
   removeBCData();
   printf("It cleared the function.\n");
 }
