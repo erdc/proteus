@@ -528,8 +528,6 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
 #                        lambda xi,i=i,j=j: numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
 #                                                        self. fun[i](xi[0])*self.dfun[j](xi[1])]))
 #            funMap=[0,4,1,  7,8,5,   3,6,2]
-     #               import pdb
-     #               pdb.set_trace()
                     basis.append(lambda xi,i=i,j=j:self.fun[i](xi[0])*self.fun[j](xi[1]))
                     basisGradients.append(lambda xi,i=i,j=j:numpy.array([self.dfun[i](xi[0])*self. fun[j](xi[1]),
                                                                               self. fun[i](xi[0])*self.dfun[j](xi[1])]))
@@ -1530,8 +1528,6 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
     from RefUtils import q2hexahedronLocalBoundaryLookup
     from math import fmod
     def __init__(self,referenceElement):
-#        import pdb
-#        pdb.set_trace()
         from RefUtils import fact
         from RefUtils import q2refNodes
         sdim  = referenceElement.dim
@@ -1590,10 +1586,6 @@ class QuadraticLagrangeCubeNodalInterpolationConditions(InterpolationConditions)
         an array of interpolation values in order to take advantage of specific structure, otherwise
         can just use functionals interface
         """
-        print "L2G Mapping:"
-        print finiteElementFunction.femSpace.dofMap.l2g
-        print "Interpolation Values:"
-        print interpolationValues
         cfemIntegrals.projectFromNodalInterpolationConditions(finiteElementFunction.dim_dof,
                                                               finiteElementFunction.femSpace.dofMap.l2g,
                                                               self.functionals_quadrature_map,
@@ -1897,8 +1889,6 @@ class NodalDOFMap(DOFMap):
     """
     def __init__(self,mesh):
         DOFMap.__init__(self,mesh.nNodes_global)
-     #   import pdb
-     #   pdb.set_trace()
         self.l2g=mesh.elementNodesArray
         #save for parallel now
         if mesh == mesh.subdomainMesh:
@@ -2059,6 +2049,7 @@ class QuadraticLagrangeCubeDOFMap(DOFMap):
             # populate the l2g vector
             for i in range(globalMesh.nElements_global):
                 # start by looping over element's vertices
+                # ARB *** - BEFORE Final merge, need to find a better way to organize this ***
 #                for j,vertex in enumerate(globalMesh.elementNodesArray[i]):
 #                    self.l2g[i][j] = vertex
                 self.l2g[i][0] = globalMesh.elementNodesArray[i][0]
@@ -2073,16 +2064,15 @@ class QuadraticLagrangeCubeDOFMap(DOFMap):
                 self.l2g[i][7] = globalMesh.elementBoundariesArray[i][0]+globalMesh.nNodes_global
                 self.l2g[i][len(globalMesh.elementNodesArray[i]) + len(globalMesh.elementBoundariesArray[0]) ] = globalMesh.nNodes_global + globalMesh.nElementBoundaries_global + i
                 import pdb
-         #       pdb.set_trace()
             # subdomain2global is just the identity mapping in the serial case
             self.subdomain2global = np.arange(self.nDOF)
             # dof_offsets_subdomain_owned
-            # ARB - the next argument should use shape not len...something is being fed in wrong for 2D-Quads
+            # ARB - the next argument should use shape not len...something is being fed in wrong for 2D-Quads...Fix before
+            # final merge
             self.dof_offsets_subdomain_owned = numpy.zeros(len(globalMesh.nodeOffsets_subdomain_owned),'i')
             self.dof_offsets_subdomain_owned[1] = self.nDOF
             self.nDOF_all_processes = self.nDOF
             self.nDOF_subdomain = self.nDOF
-            # ??? #
             self.max_dof_neighbors = 4
         elif self.nd==3:
             self.dof_offsets_subdomain_owned = numpy.zeros(globalMesh.nodeOffsets_subdomain_owned.shape,'i')
@@ -3133,8 +3123,6 @@ class ParametricFiniteElementSpace:
     dofMap -- a DOF
     """
     def __init__(self, referenceFiniteElement, elementMaps, dofMap):
-        import pdb
-#        pdb.set_trace()
         self.strongDirichletConditions = True
         self.dim=dofMap.nDOF
         self.range_dim = range(dofMap.nDOF)
@@ -3831,8 +3819,6 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
     a linear affine mapping. The nodal basis is used on the reference simplex.
     """
     def __init__(self,mesh,nd=3):
-  #      import pdb
-  #      pdb.set_trace()
         localFunctionSpace = LinearOnCubeWithNodalBasis(nd)
         interpolationConditions = CubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
         ParametricFiniteElementSpace.__init__(self,
@@ -3990,6 +3976,8 @@ def LagrangeCubeFactory(OrderIn):
             C0_AffineLagrangeOnCubeWithNodalBasis.__init__(self,mesh,nd,order=OrderIn)
     return LagrangeCubeOrderN
 
+#
+Q2 = LagrangeCubeFactory(2)
 
 class DG_AffinePolynomialsOnSimplexWithMonomialBasis(ParametricFiniteElementSpace):
     def __init__(self,mesh,nd=3,k=0):
@@ -6395,8 +6383,6 @@ class FluxBoundaryConditions:
         self.advectiveFluxBoundaryConditionsDict={}
         self.stressFluxBoundaryConditionsDict={}
         self.diffusiveFluxBoundaryConditionsDictDict=dict([(ck,{}) for ck in getDiffusiveFluxBoundaryConditions.keys()])
-        import pdb
-        pdb.set_trace()
         for ebNE in range(mesh.nExteriorElementBoundaries_global):
             ebN = mesh.exteriorElementBoundariesArray[ebNE]
             materialFlag = mesh.elementBoundaryMaterialTypes[ebN]
