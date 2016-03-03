@@ -370,8 +370,6 @@ class AR_base:
     def create_dataset_async(self,name,data):
         comm_world = self.comm.comm.tompi4py()
         metadata = comm_world.allgather((name,data.shape,data.dtype))
-#        import pdb
-#        pdb.set_trace()
         for i,m in enumerate(metadata):
             dataset = self.hdfFile.create_dataset(name  = m[0],
                                                   shape = m[1],
