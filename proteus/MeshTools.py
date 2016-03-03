@@ -4260,12 +4260,12 @@ class QuadrilateralMesh(Mesh):
         self.elementList = self.triangleList
         self.elementBoundaryList = self.edgeList
 
-    def rectangularToQuadrilateral(self,grid):
+    def rectangularToQuadrilateral(self,grid,x=0.0,y=0.0,z=0.0):
         ''' WIP - I think this is the first function that needs to be
             written so that MultilevelQuadrilateralMesh can work.  This
             function does not call C functions.
         '''
-        self.nodeList = [Node(n.N,n.p[X],n.p[Y],n.p[Z]) for n in grid.nodeList]
+        self.nodeList = [Node(n.N,n.p[X]+x,n.p[Y]+y,n.p[Z]+z) for n in grid.nodeList]
         # Is the following line necessary?
         self.nodeDict = dict([(n,n) for n in self.nodeList])
         for i in range(grid.nHx):
@@ -4327,6 +4327,8 @@ Number of nodes : %d\n""" % (self.nElements_global,
 
     def refine(self,oldMesh):
         log("Refining Using Standard Quadrilateral Refinement")
+        import pdb
+#        pdb.set_trace()
         childrenDict={}
         for q in oldMesh.quadDict.values():
             qNodes = [Node(nN,n.p[X],n.p[Y],n.p[Z]) for nN,n in enumerate(q.nodes)]
@@ -4533,7 +4535,13 @@ class MultilevelTriangularMesh(MultilevelMesh):
 class MultilevelQuadrilateralMesh(MultilevelMesh):
     """ A heirarchical multilevel mesh of quadrilaterals
        WIP """
-    def __init__(self,nx,ny,nz,x=0.0,y=0.0,z=0.0,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
+    def __init__(self,
+                 nx,ny,nz,
+                 x=0.0,y=0.0,z=0.0,
+                 Lx=1.0,Ly=1.0,Lz=1.0,
+                 refinementLevels=1,
+                 skipInit=False,
+                 nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.element,triangleFlag=0):
         import cmeshTools
         MultilevelMesh.__init__(self)
@@ -4546,10 +4554,7 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
             else:
                 grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
                 self.meshList.append(QuadrilateralMesh())
-                self.meshList[0].rectangularToQuadrilateral(grid)
-                self.meshList[0].nodeArray[:,0] += x
-                self.meshList[0].nodeArray[:,1] += y
-                self.meshList[0].nodeArray[:,2] += z
+                self.meshList[0].rectangularToQuadrilateral(grid,x,y,z)
                 self.meshList[0].subdomainMesh = self.meshList[0]
                 self.elementChildren=[]
                 log(self.meshList[0].meshInfo())
