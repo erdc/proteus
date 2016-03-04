@@ -2063,9 +2063,8 @@ class QuadraticLagrangeCubeDOFMap(DOFMap):
                 self.l2g[i][6] = globalMesh.elementBoundariesArray[i][1]+globalMesh.nNodes_global
                 self.l2g[i][7] = globalMesh.elementBoundariesArray[i][0]+globalMesh.nNodes_global
                 self.l2g[i][len(globalMesh.elementNodesArray[i]) + len(globalMesh.elementBoundariesArray[0]) ] = globalMesh.nNodes_global + globalMesh.nElementBoundaries_global + i
-                import pdb
             # subdomain2global is just the identity mapping in the serial case
-            self.subdomain2global = np.arange(self.nDOF)
+            self.subdomain2global = np.arange(self.nDOF,dtype='i')
             # dof_offsets_subdomain_owned
             # ARB - the next argument should use shape not len...something is being fed in wrong for 2D-Quads...Fix before
             # final merge
