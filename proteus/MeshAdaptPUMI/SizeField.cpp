@@ -116,7 +116,8 @@ static apf::Field* computeMetricField(apf::Field* gradphi, apf::Field*grad2phi,a
                              gphi[0]*gphi[1], gphi[1]*gphi[1], gphi[1]*gphi[2],
                              gphi[0]*gphi[2], gphi[1]*gphi[2], gphi[2]*gphi[2]); 
     apf::Matrix3x3 hess = hessianFormula(g2phi);
-    apf::Matrix3x3 metric = gphigphit/(apf::getScalar(size_iso,v,0)*apf::getScalar(size_iso,v,0))+ hess/eps_u;
+    //apf::Matrix3x3 metric = gphigphit/(apf::getScalar(size_iso,v,0)*apf::getScalar(size_iso,v,0))+ hess/eps_u;
+    apf::Matrix3x3 metric(1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0);
     apf::setMatrix(metricf, v, 0, metric);
   }
   m->end(it);
@@ -208,8 +209,8 @@ static void scaleFormulaERM(double phi, double hmin, double hmax, double h_dest,
 
   if(adapt_type=="isotropic"){
     scale = apf::Vector3(1,1,1) * h_dest;
-    for(int i=0;i<3;i++)
-      clamp(scale[i], hmin, hmax);
+    //for(int i=0;i<3;i++)
+    //  clamp(scale[i], hmin, hmax);
   }
   else if(adapt_type=="anisotropic") { 
     double epsilon = 7.0* hmin; 
@@ -455,10 +456,12 @@ static void SmoothField(apf::Field* f)
   op.applyToDimension(0);
 }
 
-int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
+int MeshAdaptPUMIDrvr::getERMSizeField(double err_total,double rel_err_total)
 {
-  double alpha = 0.6; //refinement constant
   double eps_u = 0.002; //distance from the interface
+  double tolerance = 0.5;
+  double alpha = tolerance/rel_err_total; //refinement constant
+if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<std::endl;
 
   freeField(size_frame);
   freeField(size_scale);
@@ -477,9 +480,8 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total)
   numel = m->count(nsd);
   it = m->begin(nsd); 
   double err_dest = alpha*err_total/sqrt(numel);
-if(comm_rank==0)
-std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
   double err_curr = 0.0;
+  double rel = 0.0;
   apf::Vector3 err_vect;
   //compute the new size field
   apf::MeshElement* element;
@@ -488,10 +490,16 @@ std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
     double h_old;
     double h_new;
     element = apf::createMeshElement(m,reg);
-    h_old = pow(apf::measure(element),1.0/3.0);
+    //h_old = pow(apf::measure(element),1.0/3.0);
+    h_old = pow(apf::measure(element)*6*sqrt(2),1.0/3.0); //radius of insphere of regular tet
     apf::getVector(err_reg,reg,0,err_vect);
     err_curr = err_vect[0];
-    h_new = h_old*pow(err_dest/err_curr,0.5);
+    if(tolerance <0){
+      rel=apf::getScalar(rel_err,reg,0);
+      h_new = sqrt(tolerance/rel)*h_old;
+    }
+    else
+        h_new = h_old;//*pow(err_dest/err_curr,0.5);
     apf::setScalar(size_iso_reg,reg,0,h_new);
   }
   apf::destroyMeshElement(element);
@@ -573,6 +581,7 @@ std::cout<<"Error Ratio "<<err_dest/(err_total/sqrt(numel))<<std::endl;
     apf::writeVtkFiles(namebuffer, m);
   }
   freeField(err_reg); //mAdapt will throw error if not destroyed. what about free?
+  freeField(rel_err); 
   apf::destroyField(size_iso_reg); //will throw error if not destroyed
   apf::destroyField(clipped_vtx);
   apf::destroyField(grad2phi);
