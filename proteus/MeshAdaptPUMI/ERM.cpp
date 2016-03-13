@@ -178,8 +178,8 @@ void getRHS(Vec &F,apf::NewArray <double> &shpval,apf::NewArray <apf::DynamicVec
           //a(u,v) and c(u,u,v) term
           for(int j=0;j<nsd;j++){
             a_term += -visc_val*shdrv[s][j]*(grad_vel[i][j]+grad_vel[j][i]);
-            a_rho_term += visc_val*(grad_vel[i][j]+grad_vel[j][i])*shpval[s]*grad_density[j]/(density*density);
-            c_term += -shpval[s]*grad_vel[i][j]*vel_vect[j]/density;
+            a_rho_term += visc_val*(grad_vel[i][j]+grad_vel[j][i])*shpval[s]*grad_density[j]/(density);
+            c_term += -shpval[s]*grad_vel[i][j]*vel_vect[j];///density;
           }
 /*
 if(testcount==eID){
@@ -194,8 +194,8 @@ if(testcount==eID){
   std::cout<<"temp_vect "<< temp_vect[s]<<std::endl;
 }
 */
-          //temp_vect[s] = force+pressure_force+a_term+c_term;
-          temp_vect[s] = force+pressure_force+a_rho_term+b_rho_term+a_term+c_term;
+          temp_vect[s] = force+pressure_force+a_term+c_term;
+          //temp_vect[s] = force+pressure_force+a_rho_term+b_rho_term+a_term+c_term;
           temp_vect[s] = temp_vect[s]*weight;
         } //end loop over number of shape functions
         VecSetValues(F,nshl,idx,temp_vect,ADD_VALUES);
@@ -833,7 +833,21 @@ void MeshAdaptPUMIDrvr::removeBCData()
   if(comm_rank==0) std::cout<<"Destroyed BC and flux tags"<<std::endl;
 }
 
-
+void setRelativeError(apf::Mesh* m,apf::Field* err_reg,apf::Field* rel_err,double u_norm){
+  int nsd = m->getDimension();
+  apf::MeshIterator* it = m->begin(nsd);
+  apf::Vector3 err_vect;
+  apf::MeshEntity* reg;
+  double err_curr = 0;
+  double rel_error;
+  while(reg=m->iterate(it)){
+    apf::getVector(err_reg,reg,0,err_vect);
+    err_curr = err_vect[0];
+    rel_error = err_curr/u_norm;
+    apf::setScalar(rel_err,reg,0,rel_error);
+  }
+  m->end(it);
+}
 void MeshAdaptPUMIDrvr::get_local_error() 
 //This function aims to compute error at each element via ERM.
 //First get the mesh and impose a 2nd order field
@@ -861,7 +875,9 @@ void MeshAdaptPUMIDrvr::get_local_error()
 
   //Initialize the Error Fields
   freeField(err_reg);
+  freeField(rel_err);
   err_reg = apf::createField(m,"ErrorRegion",apf::VECTOR,apf::getConstant(nsd));
+  rel_err = apf::createField(m,"relError",apf::SCALAR,apf::getConstant(nsd));
   apf::Field* vof_err = apf::createField(m,"vofError",apf::SCALAR,apf::getConstant(nsd));
 
   //Start computing element quantities
@@ -895,6 +911,8 @@ double L2_total=0;
 double star_total=0;
 double err_est = 0;
 double err_est_total=0;
+double rel_err_total=0;
+double u_norm_total=0;
   while(ent = m->iterate(iter)){ //loop through all elements
     
     elem_type = m->getType(ent);
@@ -1098,7 +1116,10 @@ if(testcount==eID && comm_rank==0){
     double Bcomp=0;
     double visc_avg=0;
     double interface_norm = 0;
+    double u_norm = 0;
+    double rel_error;
     apf::Matrix3x3 phi_ij;
+    apf::Matrix3x3 vel_ij;
     apf::Vector3 vel_vect;
     apf::Vector3 grad_vof;
 
@@ -1124,30 +1145,34 @@ if(testcount==eID && comm_rank==0){
         apf::multiply(shgval_copy[i],invJ_copy,shdrv[i]); 
       }
       double visc_val = apf::getScalar(visc_elem,qpt);
+      double pres_val = apf::getScalar(pres_elem,qpt);
+      double density = getMPvalue(apf::getScalar(vof_elem,qpt),rho_0,rho_1);
       apf::getVectorGrad(est_elem,qpt,phi_ij);
       apf::getGrad(vof_elem,qpt,grad_vof);
       apf::getVector(velo_elem,qpt,vel_vect);
+      apf::getVectorGrad(velo_elem,qpt,vel_ij);
+      vel_ij = apf::transpose(vel_ij);
       phi_ij = apf::transpose(phi_ij);
       Acomp = Acomp + visc_val*getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
       Bcomp = Bcomp + apf::getDiv(velo_elem,qpt)*apf::getDiv(velo_elem,qpt)*weight;
       visc_avg = visc_avg + visc_val*weight;
       interface_norm = interface_norm + grad_vof.getLength()*vel_vect.getLength()*weight;
+      u_norm = u_norm + visc_val*getDotProduct(vel_ij,vel_ij+apf::transpose(vel_ij))*weight;
     } //end compute local error
     visc_avg = visc_avg*Jdet/apf::measure(element);
     Acomp = Acomp*Jdet/visc_avg; //nondimensionalize with average viscosity, Jacobians can cancel out, but this is done for clarity
     Bcomp = Bcomp*Jdet;
     interface_norm = interface_norm*Jdet;
+    u_norm = u_norm/visc_avg*Jdet;
+    //rel_error = sqrt((Acomp+Bcomp)/(u_norm_H1+Bcomp));
     err_est = sqrt(Acomp+Bcomp); 
+
     apf::Vector3 err_in(err_est,Acomp,Bcomp);
     apf::setVector(err_reg,ent,0,err_in);
     apf::setScalar(vof_err,ent,0,interface_norm);
+    //apf::setScalar(rel_err,ent,0,rel_error);
     err_est_total = err_est_total+(Acomp+Bcomp); //for tracking the upper bound
-/*
-    double L2err= getL2error(m,ent,voff,visc,pref,velf); //non-dimensional
-    L2_total = L2_total+L2err;
-    double starerr = getStarerror(m,ent,voff,visc,pref,velf,estimate);
-    star_total = star_total+starerr;
-*/
+    u_norm_total = u_norm_total + u_norm;
    
     MatDestroy(&K); //destroy the matrix
     VecDestroy(&F); //destroy vector
@@ -1160,22 +1185,17 @@ testcount++;
 
   PCU_Add_Doubles(&err_est_total,1);
   err_est_total = sqrt(err_est_total);
+  u_norm_total = sqrt(u_norm_total);
+  setRelativeError(m,err_reg,rel_err,u_norm_total);
+  rel_err_total = err_est_total/u_norm_total;
 
 if(comm_rank==0){
-/*
-star_total = -2*(0.5*(err_est_total)-star_total); //before square root is taken
-if(star_total<0){ star_total=star_total*-1;std::cout<<"star err Was negative "<<std::endl;}
-star_total = sqrt(star_total);
-L2_total = sqrt(L2_total);
-*/
 std::cout<<std::setprecision(10)<<std::endl;
-std::cout<<"Error estimate "<<err_est_total<<std::endl;
-//std::cout<<"Err_est "<<err_est_total<<" L2 "<<L2_total<<" Average "<<err_est_total/L2_total<<std::endl;
-//std::cout<<"Err_est "<<err_est_total<<" star "<<star_total<<" Average "<<err_est_total/star_total<<std::endl;
+std::cout<<"Error estimate "<<err_est_total<<" Relative error "<<rel_err_total<<std::endl;
 }
   m->end(iter);
 
-  getERMSizeField(err_est_total);
+  getERMSizeField(err_est_total,rel_err_total);
   apf::destroyField(visc);
   apf::destroyField(estimate);
   apf::destroyField(vof_err);
