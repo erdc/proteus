@@ -31,7 +31,7 @@ cdef extern from "MeshAdaptPUMI/MeshAdaptPUMI.h":
         int transferBCsToProteus()
         int adaptPUMIMesh()
         int dumpMesh(Mesh&)
-        int getERMSizeField(double)
+        int getERMSizeField(double,double)
         double getMinimumQuality()
         double getTotalMass()
         double getMPvalue(double,double, double)
@@ -84,7 +84,7 @@ cdef class MeshAdaptPUMI:
     def dumpMesh(self, cmesh):
         cdef CMesh* cmesh_ptr = <CMesh*>cmesh
         return self.thisptr.dumpMesh(cmesh_ptr.mesh)
-    def getERMSizeField(self, err_total):
-        return self.thisptr.getERMSizeField(err_total);
+    def getERMSizeField(self, err_total,rel_err_total):
+        return self.thisptr.getERMSizeField(err_total,rel_err_total);
     def getMPvalue(self,field_val,val_0,val_1):
         return self.thisptr.getMPvalue(field_val,val_0,val_1)
