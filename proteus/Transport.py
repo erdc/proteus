@@ -201,35 +201,10 @@ class OneLevelTransport(NonlinearEquation):
         self.advectiveFluxBoundaryConditionsSetterDict=advectiveFluxBoundaryConditionsSetterDict
         self.diffusiveFluxBoundaryConditionsSetterDictDict = diffusiveFluxBoundaryConditionsSetterDictDict
         self.stressFluxBoundaryConditionsSetterDict = stressFluxBoundaryConditionsSetterDict
-        #determine whether  the stabilization term is nonlinear
-        self.stabilizationIsNonlinear = False
-        if self.stabilization != None:
-            for ci in range(self.nc):
-                if coefficients.mass.has_key(ci):
-                    for flag in coefficients.mass[ci].values():
-                        if flag == 'nonlinear':
-                            self.stabilizationIsNonlinear=True
-                if  coefficients.advection.has_key(ci):
-                    for  flag  in coefficients.advection[ci].values():
-                        if flag == 'nonlinear':
-                            self.stabilizationIsNonlinear=True
-                if  coefficients.diffusion.has_key(ci):
-                    for diffusionDict in coefficients.diffusion[ci].values():
-                        for  flag  in diffusionDict.values():
-                            if flag != 'constant':
-                                self.stabilizationIsNonlinear=True
-                if  coefficients.potential.has_key(ci):
-                    for flag in coefficients.potential[ci].values():
-                        if  flag == 'nonlinear':
-                            self.stabilizationIsNonlinear=True
-                if coefficients.reaction.has_key(ci):
-                    for flag in coefficients.reaction[ci].values():
-                        if  flag == 'nonlinear':
-                            self.stabilizationIsNonlinear=True
-                if coefficients.hamiltonian.has_key(ci):
-                    for flag in coefficients.hamiltonian[ci].values():
-                        if  flag == 'nonlinear':
-                            self.stabilizationIsNonlinear=True
+        #assume  the stabilization term is always nonlinear for model reduction?
+        self.stabilizationIsNonlinear = True
+        #do we want to add a projection for the initial conditions?
+        self.use_initial_condition_projection = False
         #determine if we need element boundary storage
         self.elementBoundaryIntegrals = {}
         for ci  in range(self.nc):
@@ -1328,6 +1303,17 @@ class OneLevelTransport(NonlinearEquation):
                          self.nDOF_test_element[ci],
                          self.nDOF_trial_element[cj]),
                         'd')
+        #for POD
+        self.elementLinearResidual = [numpy.zeros(
+                (self.mesh.nElements_global,
+                 self.nDOF_test_element[ci]),
+                'd') for ci in range(self.nc)]
+        self.elementLinearJacobian = {}
+        for ci in self.elementJacobian.keys():
+            self.elementLinearJacobian[ci] = {}
+            for cj in self.elementJacobian[ci].keys():
+                self.elementLinearJacobian[ci][cj]= self.elementJacobian[ci][cj].copy()
+
         log(memory("element Jacobian","OneLevelTransport"),level=4)
         self.fluxJacobian = {}
         self.fluxJacobian_eb = {}
@@ -1432,6 +1418,25 @@ class OneLevelTransport(NonlinearEquation):
                              self.nDOF_trial_element[cj]),
                             'd')
                   #should be able to reusefluxJacobian_exterior since only 1 flux at boundary
+
+        #need to add terms for boundaries too maybe
+        fluxJacobians = ['elementJacobian_eb',
+                         'fluxJacobian_exterior',
+                         'fluxJacobian',
+                         'fluxJacobian_eb',
+                         'fluxJacobian_hj']
+        linearFluxJacobians = ['elementLinearJacobian_eb',
+                               'fluxLinearJacobian_exterior',
+                               'fluxLinearJacobian',
+                               'fluxLinearJacobian_eb',
+                               'fluxLinearJacobian_hj']
+        for jac,linear_jac in zip(fluxJacobians,linearFluxJacobians):
+            setattr(self,linear_jac,{})
+            for ci in getattr(self,jac).keys():
+                getattr(self,linear_jac)[ci] = {}
+                for cj in getattr(self,jac)[ci].keys():
+                    getattr(self,linear_jac)[ci][cj] = getattr(self,jac)[ci][cj].copy()
+
         #
         # Build the node connectivity lists for solvers
         #
@@ -1554,8 +1559,12 @@ class OneLevelTransport(NonlinearEquation):
         #for model reduction
         self.mass_jacobian = None
         self.space_jacobian = None
+        self.linear_jacobian = None
+        self.nonlinear_jacobian = None
         self.nzval_mass = None
         self.nzval_space = None
+        self.nzval_linear = None
+        self.nzval_nonlinear = None
     #end __init__
 
     def setupFieldStrides(self, interleaved=True):
@@ -1595,6 +1604,21 @@ class OneLevelTransport(NonlinearEquation):
         for cj in range(self.nc):
             for dofN,g in self.dirichletConditions[cj].DOFBoundaryConditionsDict.iteritems():
                 self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        #what if we would like to perform a projection on the initial conditions?
+        if self.use_initial_condition_projection:
+            self.project_initial_conditions()
+    def project_initial_conditions(self):
+        """
+        Default algebraic projection for initial conditions. 
+        Testing for POD as initial example. Injecting member function from NonlinearSolvers didn't
+        work because of 'recursive' imports of Transport and NonlinearSolvers
+        """
+        if self.use_initial_condition_projection and 'ic_global_vector' in dir(self) and 'ic_projection_matrix' in dir(self):
+            self.setFreeDOF(self.ic_global_vector) #copy models degrees of freedom to global vector
+            projected_ics = numpy.dot(self.ic_projection_matrix,self.ic_global_vector) #project to reduced/target space dofs
+            self.ic_global_vector[:] = numpy.dot(self.ic_projection_matrix.T,projected_ics) #back to fine space
+            self.setUnknowns(self.ic_global_vector) #set models degrees of freedom from global vector
+
     #what about setting initial conditions directly from dofs calculated elsewhere?
     def archiveAnalyticalSolutions(self,archive,analyticalSolutionsDict,T=0.0,tCount=0):
         import copy
@@ -1779,14 +1803,24 @@ class OneLevelTransport(NonlinearEquation):
             raise TypeError("Matrix type must be SparseMatrix or array")
         log("Jacobian ",level=10,data=jacobian)
         if self.forceStrongConditions:
-            for cj in range(self.nc):
-                for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
-                    global_dofN = self.offset[cj]+self.stride[cj]*dofN
-                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
-                        if (self.colind[i] == global_dofN):
-                            self.nzval[i] = 1.0
-                        else:
-                            self.nzval[i] = 0.0
+            if self.matType == superluWrappers.SparseMatrix:
+                jac_rowptr,jac_colind,jac_nzval  = jacobian.getCSRrepresentation()
+                for cj in range(self.nc):
+                    for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                        global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                        for i in range(jac_rowptr[global_dofN],jac_rowptr[global_dofN+1]):
+                            if (self.colind[i] == global_dofN):
+                                jac_nzval[i] = 1.0
+                            else:
+                                jac_nzval[i] = 0.0
+                            
+            elif self.matType  == numpy.array:
+                for cj in range(self.nc):
+                    for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                        global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                        jacobian[global_dofN,:] = 0.
+                        jacobian[global_dofN,global_dofN] = 1.0
+
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         #cek debug
@@ -2326,6 +2360,80 @@ class OneLevelTransport(NonlinearEquation):
         #mwf debug
         #jacobian.fwrite("matdebug_p%s.txt" % self.comm.rank())
         return jacobian
+
+
+    def getLinearJacobian(self,jacobian):
+        import superluWrappers
+        import numpy
+        #todo clean up update,calculate,get,intialize usage
+        #assume boundary flux terms are always nonlinear for now
+	#self.calculateLinearElementBoundaryJacobian()
+        #self.calculateLinearExteriorElementBoundaryJacobian()
+        self.calculateLinearElementJacobian()
+        log("Linear Element Jacobian ",level=10,data=self.elementLinearJacobian)
+        if self.matType == superluWrappers.SparseMatrix:
+            self.getLinearJacobian_CSR(jacobian,includeBoundaryAdjointTermsInJacobian=False)
+        elif self.matType  == numpy.array:
+            self.getLinearJacobian_dense(jacobian,includeBoundaryAdjointTermsInJacobian=False)
+        else:
+            raise TypeError("Matrix type must be SparseMatrix or array")
+        log("Jacobian ",level=10,data=jacobian)
+        if self.forceStrongConditions:
+            if self.matType == superluWrappers.SparseMatrix:
+                jac_rowptr,jac_colind,jac_nzval  = jacobian.getCSRrepresentation()
+                for cj in range(self.nc):
+                    for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                        global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                        for i in range(jac_rowptr[global_dofN],jac_rowptr[global_dofN+1]):
+                            if (self.colind[i] == global_dofN):
+                                jac_nzval[i] = 1.0
+                            else:
+                                jac_nzval[i] = 0.0
+                            
+            elif self.matType  == numpy.array:
+                for cj in range(self.nc):
+                    for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                        global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                        jacobian[global_dofN,:] = 0.
+                        jacobian[global_dofN,global_dofN] = 1.0
+
+        return jacobian
+    def getNonlinearJacobian(self,jacobian):
+        import superluWrappers
+        import numpy
+        #todo clean up update,calculate,get,intialize usage
+        #assumes boundary flux terms are nonlinear
+	self.calculateElementBoundaryJacobian()
+        self.calculateExteriorElementBoundaryJacobian()
+        self.calculateElementJacobian()
+        #assumes linear element jacobian has already been calculated
+        for ci in self.elementLinearJacobian.keys():
+            for cj in self.elementLinearJacobian[ci].keys():
+                self.elementJacobian[ci][cj] -= self.elementLinearJacobian[ci][cj]
+        log("Element Nonlinear Jacobian ",level=10,data=self.elementJacobian)
+        if self.matType == superluWrappers.SparseMatrix:
+            self.getJacobian_CSR(jacobian)
+        elif self.matType  == numpy.array:
+            self.getJacobian_dense(jacobian)
+        else:
+            raise TypeError("Matrix type must be SparseMatrix or array")
+        log("Jacobian ",level=10,data=jacobian)
+        if self.forceStrongConditions:
+            if self.matType == superluWrappers.SparseMatrix:
+                jac_rowptr,jac_colind,jac_nzval  = jacobian.getCSRrepresentation()
+                for cj in range(self.nc):
+                    for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                        global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                        for i in range(jac_rowptr[global_dofN],jac_rowptr[global_dofN+1]):
+                            jac_nzval[i] = 0.0
+                            
+            elif self.matType  == numpy.array:
+                for cj in range(self.nc):
+                    for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
+                        global_dofN = self.offset[cj]+self.stride[cj]*dofN
+                        jacobian[global_dofN,:] = 0.
+
+        return jacobian
     def calculateElementResidual(self):
         """Calculate all the element residuals"""
         import pdb
@@ -2864,6 +2972,330 @@ class OneLevelTransport(NonlinearEquation):
                     for j in nodeSetList[eN]:
                         self.elementJacobian[cj][cj][eN,j,:]=0.0
                         self.elementJacobian[cj][cj][eN,j,j]=self.weakFactor*self.mesh.elementDiametersArray[eN]
+
+    def calculateLinearElementJacobian(self,skipMassTerms=False):
+        for ci in range(self.nc):
+            for cj in self.coefficients.stencil[ci]:
+                self.elementLinearJacobian[ci][cj].fill(0.0)
+                self.elementJacobian_eb[ci][cj].fill(0.0)
+        for ci,cjDict in self.coefficients.advection.iteritems():
+            if 'nonlinear' not in self.coefficients.advection[ci].values():
+                for cj in cjDict:
+                    if self.timeIntegration.advectionIsImplicit[ci]:
+                        if self.lowmem:
+                            cfemIntegrals.updateAdvectionJacobian_weak_lowmem(self.q[('df',ci,cj)],
+                                                                              self.q[('v',cj)],
+                                                                              self.q[('grad(w)*dV_f',ci)],
+                                                                              self.elementLinearJacobian[ci][cj])
+                        else:
+                            cfemIntegrals.updateAdvectionJacobian_weak(self.q[('df',ci,cj)],
+                                                                       self.q[('vXgrad(w)*dV_f',cj,ci)],
+                                                                       self.elementLinearJacobian[ci][cj])
+        ##\todo optimize nonlinear diffusion Jacobian calculation for the  different combinations of nonlinear a and phi
+        for ci,ckDict in self.coefficients.diffusion.iteritems():
+            for ck,cjDict in ckDict.iteritems():
+                if 'nonlinear' not in ckDict.values():
+                    for cj in set(cjDict.keys()+self.coefficients.potential[ck].keys()):
+                        if self.timeIntegration.diffusionIsImplicit[ci]:
+                            if self.numericalFlux == None or self.numericalFlux.mixedDiffusion[ci] == False:
+                                if self.sd:
+                                    cfemIntegrals.updateDiffusionJacobian_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                                  self.phi[ck].femSpace.dofMap.l2g,
+                                                                                  self.q[('a',ci,ck)],
+                                                                                  self.q[('da',ci,ck,cj)],
+                                                                                  self.q[('grad(phi)',ck)],
+                                                                                  self.q[('grad(w)*dV_a',ck,ci)],
+                                                                                  self.dphi[(ck,cj)].dof,
+                                                                                  self.q[('v',cj)],
+                                                                                  self.q[('grad(v)',cj)],
+                                                                                  self.elementLinearJacobian[ci][cj])
+                                elif self.lowmem:
+                                    #mwf getting a problem right now when have multiple potentials since
+                                    #femIntegral routine uses nDOF_trial_element for accessing phi but this might not
+                                    #be the same when there are different spaces for different components
+                                    #e.g. when computing jacobian[0][1], 0 component has local dim 3, (trial space)
+                                    #component 1 has local dim 2 and potential, ck = 1 so phi has local dim 2
+                                    cfemIntegrals.updateDiffusionJacobian_weak_lowmem(self.phi[ck].femSpace.dofMap.l2g,
+                                                                                      self.q[('a',ci,ck)],
+                                                                                      self.q[('da',ci,ck,cj)],
+                                                                                      self.q[('grad(phi)',ck)],
+                                                                                      self.q[('grad(w)*dV_a',ck,ci)],
+                                                                                      self.dphi[(ck,cj)].dof,
+                                                                                      self.q[('v',cj)],
+                                                                                      self.q[('grad(v)',cj)],
+                                                                                      self.elementLinearJacobian[ci][cj])
+                                else:
+                                    cfemIntegrals.updateDiffusionJacobian_weak(self.phi[ck].femSpace.dofMap.l2g,
+                                                                               self.q[('a',ci,ck)],
+                                                                               self.q[('da',ci,ck,cj)],
+                                                                               self.q[('grad(phi)Xgrad(w)*dV_a',ck,ci)],
+                                                                               self.dphi[(ck,cj)].dof,
+                                                                               self.q[('v',cj)],
+                                                                               self.q[('grad(v)Xgrad(w)*dV_a',ck,cj,ci)],
+                                                                               self.elementLinearJacobian[ci][cj])
+                            else:
+                                if self.sd:
+                                    cfemIntegrals.updateDiffusionJacobian_MixedForm_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                                            self.numericalFlux.aTilde[(ci,ck)],
+                                                                                            #self.q[('a',ci,ck)],
+                                                                                            self.q[('da',ci,ck,cj)],
+                                                                                            self.numericalFlux.qV[ck],
+                                                                                            self.numericalFlux.qDV[ck],
+                                                                                            self.numericalFlux.qDV_eb[ck],
+                                                                                            self.q[('grad(w)*dV_f',ck)],
+                                                                                            self.q[('v',cj)],
+                                                                                            self.elementLinearJacobian[ci][cj],
+                                                                                            self.elementJacobian_eb[ci][cj])
+                                else:
+                                    cfemIntegrals.updateDiffusionJacobian_MixedForm_weak(self.numericalFlux.aTilde[(ci,ck)],
+                                                                                         #self.q[('a',ci,ck)],
+                                                                                         self.q[('da',ci,ck,cj)],
+                                                                                         self.numericalFlux.qV[ck],
+                                                                                         self.numericalFlux.qDV[ck],
+                                                                                         self.numericalFlux.qDV_eb[ck],
+                                                                                         self.q[('grad(w)*dV_f',ck)],
+                                                                                         self.q[('v',cj)],
+                                                                                         self.elementLinearJacobian[ci][cj],
+                                                                                         self.elementJacobian_eb[ci][cj])
+        for ci,cjDict in self.coefficients.reaction.iteritems():
+            if 'nonlinear' not in self.coefficients.reaction[ci].values():
+                for cj in cjDict:
+                    if self.timeIntegration.reactionIsImplicit[ci]:
+                        if self.lowmem:
+                            cfemIntegrals.updateReactionJacobian_weak_lowmem(self.q[('dr',ci,cj)],
+                                                                             self.q[('v',cj)],
+                                                                             self.q[('w*dV_r',ci)],
+                                                                             self.elementLinearJacobian[ci][cj])
+                        else:
+                            cfemIntegrals.updateReactionJacobian_weak(self.q[('dr',ci,cj)],
+                                                                      self.q[('vXw*dV_r',cj,ci)],
+                                                                      self.elementLinearJacobian[ci][cj])
+        for ci,cjDict in self.coefficients.hamiltonian.iteritems():
+            if 'nonlinear' not in self.coefficients.hamiltonial[ci].values():
+                for cj in cjDict:
+                    if self.timeIntegration.hamiltonianIsImplicit[ci]:
+                        if self.lowmem:
+                            cfemIntegrals.updateHamiltonianJacobian_weak_lowmem(self.q[('dH',ci,cj)],
+                                                                                self.q[('grad(v)',cj)],
+                                                                                self.q[('w*dV_H',ci)],
+                                                                                self.elementLinearJacobian[ci][cj])
+                        else:
+                            cfemIntegrals.updateHamiltonianJacobian_weak(self.q[('dH',ci,cj)],
+                                                                         self.q[('grad(v)Xw*dV_H',cj,ci)],
+                                                                         self.elementLinearJacobian[ci][cj])
+        if len(self.coefficients.stress) > 0:
+            assert False, "POD not yet setup to handle problems with nonzero stress term"
+            cfemIntegrals.updateStressJacobian_weak(self.q[('dsigma',0,0)],
+                                                    self.q[('dsigma',0,1)],
+                                                    self.q[('dsigma',0,2)],
+                                                    self.q[('dsigma',1,0)],
+                                                    self.q[('dsigma',1,1)],
+                                                    self.q[('dsigma',1,2)],
+                                                    self.q[('dsigma',2,0)],
+                                                    self.q[('dsigma',2,1)],
+                                                    self.q[('dsigma',2,2)],
+                                                    self.q[('grad(v)',0)],
+                                                    self.q[('grad(w)*dV_sigma',0)],
+                                                    self.elementLinearJacobian[0][0],
+                                                    self.elementLinearJacobian[0][1],
+                                                    self.elementLinearJacobian[0][2],
+                                                    self.elementLinearJacobian[1][0],
+                                                    self.elementLinearJacobian[1][1],
+                                                    self.elementLinearJacobian[1][2],
+                                                    self.elementLinearJacobian[2][0],
+                                                    self.elementLinearJacobian[2][1],
+                                                    self.elementLinearJacobian[2][2])
+
+        #if any time terms are nonlinear then assume all of them are for now
+        massIsNonlinear=False
+        for ci in self.coefficients.mass.keys():
+            if 'nonlinear' in self.coefficients.mass[ci].values():
+                massIsNonlinear = True
+        if not massIsNonlinear:
+            self.timeIntegration.calculateElementSpatialJacobian(self.elementJacobian)
+        if not skipMassTerms and not massIsNonlinear:
+            for ci,cjDict in self.coefficients.mass.iteritems():
+                for cj in cjDict:
+                    if self.timeIntegration.massIsImplicit[ci]:
+                        if self.lowmem:
+                            cfemIntegrals.updateMassJacobian_weak_lowmem(self.q[('dmt',ci,cj)],
+                                                                         self.q[('v',cj)],
+                                                                         self.q[('w*dV_m',ci)],
+                                                                         self.elementLinearJacobian[ci][cj])
+                        else:
+                            cfemIntegrals.updateMassJacobian_weak(self.q[('dmt',ci,cj)],
+                                                                  self.q[('vXw*dV_m',cj,ci)],
+                                                                  self.elementLinearJacobian[ci][cj])
+            for cj in range(self.nc): #mwf this needs to be checked for POD
+                if self.timeIntegration.duStar_du[cj] != None:
+                    self.elementLinearJacobian[ci][cj] *= self.timeIntegration.duStar_du[cj]
+        if self.dirichletNodeSetList != None:
+            for cj,nodeSetList in self.dirichletNodeSetList.iteritems():
+                for eN in range(self.mesh.nElements_global):
+                    for j in nodeSetList[eN]:
+                        self.elementLinearJacobian[cj][cj][eN,j,:]=0.0
+                        self.elementLinearJacobian[cj][cj][eN,j,j]=self.weakFactor*self.mesh.elementDiametersArray[eN]
+
+    def calculateLinearElementJacobian_orig(self):
+        for ci in range(self.nc):
+            for cj in self.coefficients.stencil[ci]:
+                self.elementJacobian[ci][cj].fill(0.0)
+                self.elementJacobian_eb[ci][cj].fill(0.0)
+        ##todo optimize nonlinear diffusion Jacobian calculation for the  different combinations of nonlinear a and phi
+        for ci,ckDict in self.coefficients.diffusion.iteritems():
+            for ck,cjDict in ckDict.iteritems():
+                for cj in set(cjDict.keys()+self.coefficients.potential[ck].keys()):
+                    if self.timeIntegration.diffusionIsImplicit[ci]:
+                        if self.numericalFlux == None or self.numericalFlux.mixedDiffusion[ci] == False:
+                            if self.sd:
+                                cfemIntegrals.updateDiffusionJacobian_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                              self.phi[ck].femSpace.dofMap.l2g,
+                                                                              self.q[('a',ci,ck)],
+                                                                              self.q[('da',ci,ck,cj)],
+                                                                              self.q[('grad(phi)',ck)],
+                                                                              self.q[('grad(w)*dV_a',ck,ci)],
+                                                                              self.dphi[(ck,cj)].dof,
+                                                                              self.q[('v',cj)],
+                                                                              self.q[('grad(v)',cj)],
+                                                                              self.elementJacobian[ci][cj])
+                            elif self.lowmem:
+                                #mwf getting a problem right now when have multiple potentials since
+                                #femIntegral routine uses nDOF_trial_element for accessing phi but this might not
+                                #be the same when there are different spaces for different components
+                                #e.g. when computing jacobian[0][1], 0 component has local dim 3, (trial space)
+                                #component 1 has local dim 2 and potential, ck = 1 so phi has local dim 2
+                                cfemIntegrals.updateDiffusionJacobian_weak_lowmem(self.phi[ck].femSpace.dofMap.l2g,
+                                                                                  self.q[('a',ci,ck)],
+                                                                                  self.q[('da',ci,ck,cj)],
+                                                                                  self.q[('grad(phi)',ck)],
+                                                                                  self.q[('grad(w)*dV_a',ck,ci)],
+                                                                                  self.dphi[(ck,cj)].dof,
+                                                                                  self.q[('v',cj)],
+                                                                                  self.q[('grad(v)',cj)],
+                                                                                  self.elementJacobian[ci][cj])
+                            else:
+                                cfemIntegrals.updateDiffusionJacobian_weak(self.phi[ck].femSpace.dofMap.l2g,
+                                                                           self.q[('a',ci,ck)],
+                                                                           self.q[('da',ci,ck,cj)],
+                                                                           self.q[('grad(phi)Xgrad(w)*dV_a',ck,ci)],
+                                                                           self.dphi[(ck,cj)].dof,
+                                                                           self.q[('v',cj)],
+                                                                           self.q[('grad(v)Xgrad(w)*dV_a',ck,cj,ci)],
+                                                                           self.elementJacobian[ci][cj])
+                        else:
+                            if self.sd:
+                                cfemIntegrals.updateDiffusionJacobian_MixedForm_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                                        self.numericalFlux.aTilde[(ci,ck)],
+                                                                                        #self.q[('a',ci,ck)],
+                                                                                        self.q[('da',ci,ck,cj)],
+                                                                                        self.numericalFlux.qV[ck],
+                                                                                        self.numericalFlux.qDV[ck],
+                                                                                        self.numericalFlux.qDV_eb[ck],
+                                                                                        self.q[('grad(w)*dV_f',ck)],
+                                                                                        self.q[('v',cj)],
+                                                                                        self.elementJacobian[ci][cj],
+                                                                                        self.elementJacobian_eb[ci][cj])
+                            else:
+                                cfemIntegrals.updateDiffusionJacobian_MixedForm_weak(self.numericalFlux.aTilde[(ci,ck)],
+                                                                                     #self.q[('a',ci,ck)],
+                                                                                     self.q[('da',ci,ck,cj)],
+                                                                                     self.numericalFlux.qV[ck],
+                                                                                     self.numericalFlux.qDV[ck],
+                                                                                     self.numericalFlux.qDV_eb[ck],
+                                                                                     self.q[('grad(w)*dV_f',ck)],
+                                                                                     self.q[('v',cj)],
+                                                                                     self.elementJacobian[ci][cj],
+                                                                                     self.elementJacobian_eb[ci][cj])
+        #self.timeIntegration.calculateElementSpatialJacobian(self.elementJacobian)
+        for ci,cjDict in self.coefficients.mass.iteritems():
+            for cj in cjDict:
+                if self.timeIntegration.massIsImplicit[ci]:
+                    if self.lowmem:
+                        cfemIntegrals.updateMassJacobian_weak_lowmem(self.q[('dmt',ci,cj)],
+                                                                     self.q[('v',cj)],
+                                                                     self.q[('w*dV_m',ci)],
+                                                                     self.elementJacobian[ci][cj])
+                    else:
+                        cfemIntegrals.updateMassJacobian_weak(self.q[('dmt',ci,cj)],
+                                                              self.q[('vXw*dV_m',cj,ci)],
+                                                              self.elementJacobian[ci][cj])
+        for cj in range(self.nc):
+            if self.timeIntegration.duStar_du[cj] != None:
+                self.elementJacobian[ci][cj] *= self.timeIntegration.duStar_du[cj]
+        if self.dirichletNodeSetList != None:
+            for cj,nodeSetList in self.dirichletNodeSetList.iteritems():
+                for eN in range(self.mesh.nElements_global):
+                    for j in nodeSetList[eN]:
+                        self.elementJacobian[cj][cj][eN,j,:]=0.0
+                        self.elementJacobian[cj][cj][eN,j,j]=self.weakFactor*self.mesh.elementDiametersArray[eN]
+
+    def calculateNonlinearElementJacobian_orig(self,skipMassTerms=False):
+        for ci in range(self.nc):
+            for cj in self.coefficients.stencil[ci]:
+                self.elementJacobian[ci][cj].fill(0.0)
+                self.elementJacobian_eb[ci][cj].fill(0.0)
+        for ci,cjDict in self.coefficients.advection.iteritems():
+            for cj in cjDict:
+                if self.timeIntegration.advectionIsImplicit[ci]:
+                    if self.lowmem:
+                        cfemIntegrals.updateAdvectionJacobian_weak_lowmem(self.q[('df',ci,cj)],
+                                                                          self.q[('v',cj)],
+                                                                          self.q[('grad(w)*dV_f',ci)],
+                                                                          self.elementJacobian[ci][cj])
+                    else:
+                        cfemIntegrals.updateAdvectionJacobian_weak(self.q[('df',ci,cj)],
+                                                                   self.q[('vXgrad(w)*dV_f',cj,ci)],
+                                                                   self.elementJacobian[ci][cj])
+        #todo optimize nonlinear diffusion Jacobian calculation for the  different combinations of nonlinear a and phi
+        for ci,cjDict in self.coefficients.reaction.iteritems():
+            for cj in cjDict:
+                if self.timeIntegration.reactionIsImplicit[ci]:
+                    if self.lowmem:
+                        cfemIntegrals.updateReactionJacobian_weak_lowmem(self.q[('dr',ci,cj)],
+                                                                         self.q[('v',cj)],
+                                                                         self.q[('w*dV_r',ci)],
+                                                                         self.elementJacobian[ci][cj])
+                    else:
+                        cfemIntegrals.updateReactionJacobian_weak(self.q[('dr',ci,cj)],
+                                                                  self.q[('vXw*dV_r',cj,ci)],
+                                                                  self.elementJacobian[ci][cj])
+        if self.stabilization!= None:
+            for ci in range(self.coefficients.nc):
+                if self.timeIntegration.stabilizationIsImplicit[ci]:
+                    for cj in self.coefficients.stencil[ci]:
+                        for cjj in self.coefficients.stencil[ci]:
+                            cfemIntegrals.updateSubgridErrorJacobian(self.q[('dsubgridError',cj,cjj)],
+                                                                     self.q[('Lstar*w*dV',cj,ci)],
+                                                                     self.elementJacobian[ci][cjj])
+                    if self.stabilization.usesGradientStabilization == True:
+                        for cj in self.coefficients.stencil[ci]:
+                            if self.lowmem:
+                                #mwf hack to try to get something running for linear problems
+                                cfemIntegrals.updateNumericalDiffusionJacobian_lowmem(self.q[('dgrad(subgridError)',ci,cj)],
+                                                                                      self.q[('grad(v)',ci)],
+                                                                                      self.q[('grad(w)*dV_f',ci)],
+                                                                                      self.elementJacobian[ci][ci])
+                            else:
+                                assert False
+        if self.shockCapturing != None:
+            for ci in self.shockCapturing.components:
+                if self.timeIntegration.shockCapturingIsImplicit[ci]:
+                    if self.lowmem:
+                        cfemIntegrals.updateNumericalDiffusionJacobian_lowmem(self.q[('numDiff',ci,ci)],
+                                                                              self.q[('grad(v)',ci)],
+                                                                              self.q[('grad(w)*dV_numDiff',ci,ci)],
+                                                                              self.elementJacobian[ci][ci])
+                    else:
+                        cfemIntegrals.updateNumericalDiffusionJacobian(self.q[('numDiff',ci,ci)],
+                                                                       self.q[('grad(v)Xgrad(w)*dV_numDiff',ci,ci,ci)],
+                                                                       self.elementJacobian[ci][ci])
+        if self.dirichletNodeSetList != None:
+            for cj,nodeSetList in self.dirichletNodeSetList.iteritems():
+                for eN in range(self.mesh.nElements_global):
+                    for j in nodeSetList[eN]:
+                        self.elementJacobian[cj][cj][eN,j,:]=0.0
+                        self.elementJacobian[cj][cj][eN,j,j]=self.weakFactor*self.mesh.elementDiametersArray[eN]
+
     def calculateElementMassJacobian(self):
         """
         calculate just the mass matrix terms for element jacobian (i.e., those that multiply the accumulation term)
@@ -5570,6 +6002,40 @@ class OneLevelTransport(NonlinearEquation):
             raise TypeError("Matrix type must be sparse matrix or array")
         return self.space_jacobian
 
+    def initializeLinearJacobian(self):
+        """
+        Setup the storage for the linear jacobian and return as a ```SparseMat``` or ```Mat``` based on self.matType
+        """
+        if self.linear_jacobian != None:
+            return self.linear_jacobian
+        import superluWrappers
+        if self.matType == superluWrappers.SparseMatrix:
+            self.nzval_linear = self.nzval.copy()
+            self.linear_jacobian = SparseMat(self.nFreeVDOF_global,self.nFreeVDOF_global,self.nnz,
+                                           self.nzval_linear,self.colind,self.rowptr)
+        elif self.matType == numpy.array:
+            self.linear_jacobian = Mat(self.nFreeVDOF_global,self.nFreeVDOF_global)
+        else:
+            raise TypeError("Matrix type must be sparse matrix or array")
+        return self.linear_jacobian
+
+    def initializeNonlinearJacobian(self):
+        """
+        Setup the storage for the nonlinear jacobian and return as a ```SparseMat``` or ```Mat``` based on self.matType
+        """
+        if self.nonlinear_jacobian != None:
+            return self.nonlienar_jacobian
+        import superluWrappers
+        if self.matType == superluWrappers.SparseMatrix:
+            self.nzval_nonlinear = self.nzval.copy()
+            self.nonlinear_jacobian = SparseMat(self.nFreeVDOF_global,self.nFreeVDOF_global,self.nnz,
+                                           self.nzval_nonlinear,self.colind,self.rowptr)
+        elif self.matType == numpy.array:
+            self.nonlinear_jacobian = Mat(self.nFreeVDOF_global,self.nFreeVDOF_global)
+        else:
+            raise TypeError("Matrix type must be sparse matrix or array")
+        return self.nonlinear_jacobian
+
 
     def calculateElementLoadCoefficients_inhomogeneous(self):
         """
@@ -5805,114 +6271,254 @@ class OneLevelTransport(NonlinearEquation):
                                                                   f);
         log("Global Load Vector",level=9,data=f)
 
-
-    def getMassJacobian(self,jacobian):
-        """
-        assemble the portion of the jacobian coming from the time derivative terms
-        """
-        import superluWrappers
-        import numpy
-        self.calculateElementMassJacobian()
-        log("Element Mass Jacobian ",level=10,data=self.elementJacobian)
-        if self.matType == superluWrappers.SparseMatrix:
-            cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
-                                           jacobian)
-            for ci in range(self.nc):
-                for cj in self.coefficients.stencil[ci]:
-                    #
-                    #element contributions
-                    #
-                    cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[ci]['nFreeDOF'],
-                                                                              self.l2g[ci]['freeLocal'],
-                                                                              self.l2g[cj]['nFreeDOF'],
-                                                                              self.l2g[cj]['freeLocal'],
-                                                                              self.csrRowIndeces[(ci,cj)],
-                                                                              self.csrColumnOffsets[(ci,cj)],
-                                                                              self.elementJacobian[ci][cj],
-                                                                              jacobian)
-
-        elif self.matType  == numpy.array:
-            jacobian.fill(0.)
-            for ci in range(self.nc):
-                for cj in self.coefficients.stencil[ci]:
-                    #
-                    #element contributions
-                    #
-                    cfemIntegrals.updateGlobalJacobianFromElementJacobian_dense(self.offset[ci],
-                                                                                self.stride[ci],
-                                                                                self.offset[cj],
-                                                                                self.stride[cj],
-                                                                                self.nFreeVDOF_global,
-                                                                                self.l2g[ci]['nFreeDOF'],
-                                                                                self.l2g[ci]['freeLocal'],
-                                                                                self.l2g[ci]['freeGlobal'],
-                                                                                self.l2g[cj]['nFreeDOF'],
-                                                                                self.l2g[cj]['freeLocal'],
-                                                                                self.l2g[cj]['freeGlobal'],
-                                                                                self.elementJacobian[ci][cj],
-                                                                                jacobian)
-
-        else:
-            raise TypeError("Matrix type must be SparseMatrix or array")
-        log("Mass Jacobian ",level=10,data=jacobian)
-        if self.forceStrongConditions:
-            for cj in range(self.nc):
-                for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
-                    global_dofN = self.offset[cj]+self.stride[cj]*dofN
-                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
-                        if (self.colind[i] == global_dofN):
-                            self.nzval[i] = 1.0
-                        else:
-                            self.nzval[i] = 0.0
-        return jacobian
     #
-    def getSpatialJacobian(self,jacobian):
-        return self.getJacobian(jacobian,skipMassTerms=True)
-
-    def getSpatialResidual(self,u,r):
-        """
-        Calculate the element spatial residuals and add in to the global residual
-        This is being used right now to test nonlinear pod and deim
-        """
-        r.fill(0.0)
-        #Load the Dirichlet conditions
-        for cj in range(self.nc):
-            for dofN,g in self.dirichletConditions[cj].DOFBoundaryConditionsDict.iteritems():
-                self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
-        if self.forceStrongConditions:
-            for cj in range(len(self.dirichletConditionsForceDOF)):
-                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
-        #Load the unknowns into the finite element dof
-        self.timeIntegration.calculateU(u)
-        self.setUnknowns(self.timeIntegration.u)
-        self.calculateCoefficients()
-        self.calculateElementResidual()
-        self.scale_dt = False
-        log("Element spatial residual",level=9,data=self.elementSpatialResidual)
-        if self.timeIntegration.dt < 1.0e-8*self.mesh.h:
-            self.scale_dt = True
-            log("Rescaling residual for small time steps")
-        else:
-            self.scale_dt = False
+    def calculateLinearElementResidual(self):
+        """Calculate the element residuals for linear terms for POD"""
+        import pdb
+        #pdb.set_trace()
         for ci in range(self.nc):
-            if self.scale_dt:
-                self.elementSpatialResidual[ci]*=self.timeIntegration.dt
-            cfemIntegrals.updateGlobalResidualFromElementResidual(self.offset[ci],
-                                                                  self.stride[ci],
-                                                                  self.l2g[ci]['nFreeDOF'],
-                                                                  self.l2g[ci]['freeLocal'],
-                                                                  self.l2g[ci]['freeGlobal'],
-                                                                  self.elementSpatialResidual[ci],
-                                                                  r);
-        log("Global spatial residual",level=9,data=r)
-        if self.forceStrongConditions:#
-            for cj in range(len(self.dirichletConditionsForceDOF)):#
-                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    r[self.offset[cj]+self.stride[cj]*dofN] = 0
-    def getMassResidual(self,u,r):
+            self.elementLinearResidual[ci].fill(0.0)
+        for ci  in self.coefficients.advection.keys():
+            if 'nonlinear' not in self.coefficients.advection[ci].values():
+                cfemIntegrals.updateAdvection_weak(self.q[('f',ci)],
+                                                   self.q[('grad(w)*dV_f',ci)],
+                                                   self.elementLinearResidual[ci])
+        for ci,ckDict in self.coefficients.diffusion.iteritems():
+            for ck in ckDict.keys():
+                if 'nonlinear' not in ckDict.values():
+                    if self.numericalFlux == None or self.numericalFlux.mixedDiffusion[ci] == False:
+                            if self.sd:
+                                cfemIntegrals.updateDiffusion_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                      self.q[('a',ci,ck)],
+                                                                      self.q[('grad(phi)',ck)],
+                                                                      self.q[('grad(w)*dV_a',ck,ci)],
+                                                                      self.elementLinearResidual[ci])
+                            elif self.lowmem:
+                                cfemIntegrals.updateDiffusion_weak_lowmem(self.q[('a',ci,ck)],
+                                                                          self.q[('grad(phi)',ck)],
+                                                                          self.q[('grad(w)*dV_a',ck,ci)],
+                                                                          self.elementLinearResidual[ci])
+                            else:
+                                cfemIntegrals.updateDiffusion_weak(self.q[('a',ci,ck)],
+                                                                   self.q[('grad(phi)Xgrad(w)*dV_a',ck,ci)],
+                                                                   self.elementLinearResidual[ci])
+
+                    else:
+                        if not self.q.has_key(('grad(w)*dV_f',ck)):
+                            self.q[('grad(w)*dV_f',ck)] = self.q[('grad(w)*dV_a',ci,ck)]
+                        if 'rho_split' in dir(self.numericalFlux):
+                            rho_split = self.numericalFlux.rho_split
+                        else:
+                            rho_split = 0
+                        if self.sd:
+                            #tjp need to zero velocity because this just updates
+                            #import pdb
+                            #pdb.set_trace()
+                            self.q[('velocity',ck)].fill(0.0)
+                            cfemIntegrals.updateDiffusion_MixedForm_weak_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                            self.numericalFlux.aTilde[(ci,ck)],
+                                                                            self.numericalFlux.qV[ck],
+                                                                            self.q[('grad(w)*dV_f',ck)],
+                                                                            self.q[('velocity',ck)],#added for ldg coupling tjp
+                                                                            self.elementLinearResidual[ci],
+                                                                            rho_split)
+                        else:
+                            cfemIntegrals.updateDiffusion_MixedForm_weak(self.numericalFlux.aTilde[(ci,ck)],
+                                                                         self.numericalFlux.qV[ck],
+                                                                         self.q[('grad(w)*dV_f',ck)],
+                                                                         self.elementLinearResidual[ci])
+                #end nonlinear check
+            #end ck loop for potentials
+        #end diffusion check 
+        for ci in self.coefficients.reaction.keys():
+            if 'nonlinear' not in self.coefficients.reaction[ci].values():
+                cfemIntegrals.updateReaction_weak(self.q[('r',ci)],
+                                                  self.q[('w*dV_r',ci)],
+                                                  self.elementLinearResidual[ci])
+        for ci in self.coefficients.hamiltonian.keys():
+            if 'nonlinear' not in self.coefficients.hamiltonial[ci].values():
+                cfemIntegrals.updateHamiltonian_weak(self.q[('H',ci)],
+                                                     self.q[('w*dV_H',ci)],
+                                                     self.elementLinearResidual[ci])
+        if len(self.coefficients.stress.keys())>0:
+            assert False, "POD not yet setup to handle problems with nonzero stress term"
+            cfemIntegrals.updateStress_weak(self.q['sigma'],
+                                            self.q[('grad(w)*dV_sigma',0)],
+                                            self.elementResidual[0],
+                                            self.elementResidual[1],
+                                            self.elementResidual[2])
+        if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
+            for ci in self.coefficients.advection.keys():
+                if 'nonlinear' not in self.coefficients.advection[ci].values():
+                    if (self.numericalFlux.advectiveNumericalFlux.has_key(ci) and
+                        self.numericalFlux.advectiveNumericalFlux[ci]) == True:
+                        #cek do we let the numerical flux decide if interior is updated? yes we do. no we don't
+                        if self.numericalFlux.hasInterior:
+                            cfemIntegrals.updateInteriorElementBoundaryFlux(self.mesh.interiorElementBoundariesArray,
+                                                                            self.mesh.elementBoundaryElementsArray,
+                                                                            self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                            self.ebq_global[('advectiveFlux',ci)],
+                                                                            self.ebq[('w*dS_f',ci)],
+                                                                            self.elementLinearResidual[ci])
+                        cfemIntegrals.updateExteriorElementBoundaryFlux(self.mesh.exteriorElementBoundariesArray,
+                                                                        self.mesh.elementBoundaryElementsArray,
+                                                                        self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                        self.ebqe[('advectiveFlux',ci)],
+                                                                        self.ebqe[('w*dS_f',ci)],
+                                                                        self.elementLinearResidual[ci])
+            for ci in self.coefficients.diffusion.keys():
+                if (self.numericalFlux.diffusiveNumericalFlux.has_key(ci) and
+                    self.numericalFlux.diffusiveNumericalFlux[ci]) == True:
+                    for ck in self.coefficients.diffusion[ci]:
+                        if 'nonlinear' not in self.coefficients.diffusion[ci][ck].values():
+                            if self.numericalFlux.hasInterior:
+                                cfemIntegrals.updateInteriorElementBoundaryFlux(self.mesh.interiorElementBoundariesArray,
+                                                                                self.mesh.elementBoundaryElementsArray,
+                                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                self.ebq_global[('diffusiveFlux',ck,ci)],
+                                                                                self.ebq[('w*dS_a',ck,ci)],
+                                                                                self.elementLinearResidual[ci])
+                            cfemIntegrals.updateExteriorElementBoundaryFlux(self.mesh.exteriorElementBoundariesArray,
+                                                                            self.mesh.elementBoundaryElementsArray,
+                                                                            self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                            self.ebqe[('diffusiveFlux',ck,ci)],
+                                                                            self.ebqe[('w*dS_a',ck,ci)],
+                                                                            self.elementLinearResidual[ci])
+                            if self.numericalFlux.includeBoundaryAdjoint:
+                                if self.sd:
+                                    if self.numericalFlux.hasInterior:
+                                        cfemIntegrals.updateInteriorElementBoundaryDiffusionAdjoint_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                                                       self.mesh.interiorElementBoundariesArray,
+                                                                                                       self.mesh.elementBoundaryElementsArray,
+                                                                                                       self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                       self.numericalFlux.boundaryAdjoint_sigma,
+                                                                                                       self.ebq[('u',ck)],
+                                                                                                       self.ebq['n'],
+                                                                                                       self.ebq[('a',ci,ck)],
+                                                                                                       self.ebq[('grad(v)',ci)],#cek should be grad(w)
+                                                                                                       self.ebq[('dS_u',ci)],
+                                                                                                       self.elementLinearResidual[ci])
+                                    if not self.numericalFlux.includeBoundaryAdjointInteriorOnly: #added to only eval interior tjp
+                                        cfemIntegrals.updateExteriorElementBoundaryDiffusionAdjoint_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                                                       self.numericalFlux.isDOFBoundary[ck],
+                                                                                                       self.mesh.exteriorElementBoundariesArray,
+                                                                                                       self.mesh.elementBoundaryElementsArray,
+                                                                                                       self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                       self.numericalFlux.boundaryAdjoint_sigma,
+                                                                                                       self.ebqe[('u',ck)],
+                                                                                                       self.numericalFlux.ebqe[('u',ck)],
+                                                                                                       self.ebqe['n'],
+                                                                                                       self.numericalFlux.ebqe[('a',ci,ck)],
+                                                                                                       self.ebqe[('grad(v)',ci)],#cek grad w
+                                                                                                       self.ebqe[('dS_u',ci)],
+                                                                                                       self.elementLinearResidual[ci])
+                                else:
+                                    if self.numericalFlux.hasInterior:
+                                        cfemIntegrals.updateInteriorElementBoundaryDiffusionAdjoint(self.mesh.interiorElementBoundariesArray,
+                                                                                                    self.mesh.elementBoundaryElementsArray,
+                                                                                                    self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                    self.numericalFlux.boundaryAdjoint_sigma,
+                                                                                                    self.ebq[('u',ck)],
+                                                                                                    self.ebq['n'],
+                                                                                                    self.ebq[('a',ci,ck)],
+                                                                                                    self.ebq[('grad(v)',ci)],#cek grad w
+                                                                                                    self.ebq[('dS_u',ci)],
+                                                                                                    self.elementLinearResidual[ci])
+                                    if not self.numericalFlux.includeBoundaryAdjointInteriorOnly: #added to only eval interior tjp
+                                        cfemIntegrals.updateExteriorElementBoundaryDiffusionAdjoint(self.numericalFlux.isDOFBoundary[ck],
+                                                                                                    self.mesh.exteriorElementBoundariesArray,
+                                                                                                    self.mesh.elementBoundaryElementsArray,
+                                                                                                    self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                    self.numericalFlux.boundaryAdjoint_sigma,
+                                                                                                    self.ebqe[('u',ck)],
+                                                                                                    self.numericalFlux.ebqe[('u',ck)],
+                                                                                                    self.ebqe['n'],
+                                                                                                    self.numericalFlux.ebqe[('a',ci,ck)],
+                                                                                                    self.ebqe[('grad(v)',ci)],#cek grad w
+                                                                                                    self.ebqe[('dS_u',ci)],
+                                                                                                    self.elementLinearResidual[ci])
+            for ci in self.coefficients.hamiltonian.keys():
+                if 'nonlinear' not in self.coefficients.hamiltonian[ci].values():
+                    if (self.numericalFlux.HamiltonJacobiNumericalFlux.has_key(ci) and
+                        self.numericalFlux.HamiltonJacobiNumericalFlux[ci] == True):
+                        if self.numericalFlux.hasInterior:
+                            cfemIntegrals.updateInteriorTwoSidedElementBoundaryFlux(self.mesh.interiorElementBoundariesArray,
+                                                                                    self.mesh.elementBoundaryElementsArray,
+                                                                                    self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                    self.ebq[('HamiltonJacobiFlux',ci)],
+                                                                                    self.ebq[('w*dS_H',ci)],
+                                                                                    self.elementLinearResidual[ci])
+                        #1-sided on exterior boundary
+                        cfemIntegrals.updateExteriorElementBoundaryFlux(self.mesh.exteriorElementBoundariesArray,
+                                                                        self.mesh.elementBoundaryElementsArray,
+                                                                        self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                        self.ebqe[('HamiltonJacobiFlux',ci)],
+                                                                        self.ebqe[('w*dS_H',ci)],
+                                                                        self.elementLinearResidual[ci])
+            for ci in self.coefficients.stress.keys():
+                assert False, "POD not implemented for nonzero stress term"
+                cfemIntegrals.updateExteriorElementBoundaryStressFlux(self.mesh.exteriorElementBoundariesArray,
+                                                                      self.mesh.elementBoundaryElementsArray,
+                                                                      self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                      self.ebqe[('stressFlux',ci)],
+                                                                      self.ebqe[('w*dS_sigma',ci)],
+                                                                      self.elementLinearResidual[ci])
+        else:
+            #cek this will go away
+            #cek need to clean up how BC's interact with numerical fluxes
+            #outflow <=> zero diffusion, upwind advection
+            #mixedflow <=> you set, otherwise calculated as free
+            #setflow <=
+            for ci,flag in self.fluxBoundaryConditions.iteritems():
+                if (flag == 'outFlow' or
+                    flag == 'mixedFlow' or
+                    flag == 'setFlow'):
+                    if self.coefficients.advection.has_key(ci):
+                        if 'nonlinear' not in self.coefficients.advection[ci].values():
+                            cfemIntegrals.updateExteriorElementBoundaryFlux(self.mesh.exteriorElementBoundariesArray,
+                                                                            self.mesh.elementBoundaryElementsArray,
+                                                                            self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                            self.ebqe[('advectiveFlux',ci)],
+                                                                            self.ebqe[('w*dS_f',ci)],
+                                                                            self.elementLinearResidual[ci])
+                if (flag == 'mixedFlow' or
+                    flag == 'setFlow'):
+                    if self.coefficients.diffusion.has_key(ci):
+                        for ck in self.coefficients.diffusion[ci]:
+                            if 'nonlinear' not in self.coefficients.diffusion[ci][ck].values():
+                                #
+                                cfemIntegrals.updateExteriorElementBoundaryFlux(self.mesh.exteriorElementBoundariesArray,
+                                                                                self.mesh.elementBoundaryElementsArray,
+                                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                self.ebqe[('diffusiveFlux',ck,ci)],
+                                                                                self.ebqe[('w*dS_a',ck,ci)],
+                                                                                self.elementLinearResidual[ci])
+
+        #if any time terms are nonlinear then assume all of them are for now
+        massIsNonlinear=False
+        for ci in self.coefficients.mass.keys():
+            if 'nonlinear' in self.coefficients.mass[ci].values():
+                massIsNonlinear = True
+        if not massIsNonlinear:
+            self.timeIntegration.calculateElementSpatialResidual(self.elementLinearResidual)
+        if self.stabilization and not self.stabilizationIsNonlinear:
+            self.stabilization.accumulateSubgridMassHistory(self.q)
+        if not massIsNonlinear:
+            for ci in self.coefficients.mass.keys():
+                cfemIntegrals.updateMass_weak(self.q[('mt',ci)],
+                                              self.q[('w*dV_m',ci)],
+                                              self.elementLinearResidual[ci])
+        if self.dirichletNodeSetList != None:
+            for cj,nodeSetList in self.dirichletNodeSetList.iteritems():
+                for eN in range(self.mesh.nElements_global):
+                    for j in nodeSetList[eN]:
+                        J = self.u[cj].femSpace.dofMap.l2g[eN,j]
+                        self.weakFactor=3.0
+                        self.elementLinearResidual[cj][eN,j] = (self.u[cj].dof[J]-self.dirichletValues[cj][(eN,j)])*self.weakFactor*self.mesh.elementDiametersArray[eN]
+
+    def getLinearResidual(self,u,r):
         """
-        Calculate the portion of the element residuals associated with the temporal term and assemble into a global residual
+        Calculate the portion of the element residuals associated with the linear terms and assemble into a global residual
         This is being used right now to test nonlinear pod and deim and is inefficient
         """
         r.fill(0.0)
@@ -5928,14 +6534,9 @@ class OneLevelTransport(NonlinearEquation):
         self.timeIntegration.calculateU(u)
         self.setUnknowns(self.timeIntegration.u)
         self.calculateCoefficients()
-        self.calculateElementResidual()
-        elementMassResidual = {}
-        for ci in range(self.nc):
-            elementMassResidual[ci]=np.copy(self.elementResidual[ci])
-            elementMassResidual[ci]-= self.elementSpatialResidual[ci]
-
+        self.calculateLinearElementResidual()
         self.scale_dt = False
-        log("Element Mass residual",level=9,data=elementMassResidual)
+        log("Element linear residual",level=9,data=self.elementLinearResidual)
         if self.timeIntegration.dt < 1.0e-8*self.mesh.h:
             self.scale_dt = True
             log("Rescaling residual for small time steps")
@@ -5943,20 +6544,554 @@ class OneLevelTransport(NonlinearEquation):
             self.scale_dt = False
         for ci in range(self.nc):
             if self.scale_dt:
-                elementMassResidual[ci]*=self.timeIntegration.dt
+                self.elementLinearResidual[ci]*=self.timeIntegration.dt
             cfemIntegrals.updateGlobalResidualFromElementResidual(self.offset[ci],
                                                                   self.stride[ci],
                                                                   self.l2g[ci]['nFreeDOF'],
                                                                   self.l2g[ci]['freeLocal'],
                                                                   self.l2g[ci]['freeGlobal'],
-                                                                  elementMassResidual[ci],
+                                                                  self.elementLinearResidual[ci],
                                                                   r);
         log("Global mass residual",level=9,data=r)
         if self.forceStrongConditions:#
             for cj in range(len(self.dirichletConditionsForceDOF)):#
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    r[self.offset[cj]+self.stride[cj]*dofN] = 0
+                    #r[self.offset[cj]+self.stride[cj]*dofN] = 0
+                    r[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
 
+    def getNonlinearResidual(self,u,r):
+        """
+        Calculate the portion of the element residuals associated with the nonlinear terms and assemble into a global residual
+        This is being used right now to test nonlinear pod and deim and is inefficient. It computes the nonlinear terms by
+        computing the full residual and subtracting the linear terms
+        """
+        includeDirichletBCsInNonlinearResidual = False
+        r.fill(0.0)
+        #Load the Dirichlet conditions
+        for cj in range(self.nc):
+            for dofN,g in self.dirichletConditions[cj].DOFBoundaryConditionsDict.iteritems():
+                self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        if self.forceStrongConditions:
+            for cj in range(len(self.dirichletConditionsForceDOF)):
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                    self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        #Load the unknowns into the finite element dof
+        self.timeIntegration.calculateU(u)
+        self.setUnknowns(self.timeIntegration.u)
+        self.calculateCoefficients()
+        self.calculateElementResidual()
+        #could assume that linear residual has already been called ...
+        self.calculateLinearElementResidual()
+        elementNonlinearResidual = {}
+        for ci in range(self.nc):
+            elementNonlinearResidual[ci]=np.copy(self.elementResidual[ci])
+            elementNonlinearResidual[ci]-= self.elementLinearResidual[ci]
+
+        self.scale_dt = False
+        log("Element nonlinear residual",level=9,data=elementNonlinearResidual)
+        if self.timeIntegration.dt < 1.0e-8*self.mesh.h:
+            self.scale_dt = True
+            log("Rescaling residual for small time steps")
+        else:
+            self.scale_dt = False
+        for ci in range(self.nc):
+            if self.scale_dt:
+                elementNonlinearResidual[ci]*=self.timeIntegration.dt
+            cfemIntegrals.updateGlobalResidualFromElementResidual(self.offset[ci],
+                                                                  self.stride[ci],
+                                                                  self.l2g[ci]['nFreeDOF'],
+                                                                  self.l2g[ci]['freeLocal'],
+                                                                  self.l2g[ci]['freeGlobal'],
+                                                                  elementNonlinearResidual[ci],
+                                                                  r);
+        log("Global residual",level=9,data=r)
+        if self.forceStrongConditions and includeDirichletBCsInNonlinearResidual:#
+            for cj in range(len(self.dirichletConditionsForceDOF)):#
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                    r[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN] - g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+        elif self.forceStrongConditions:
+            for cj in range(len(self.dirichletConditionsForceDOF)):#
+                for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
+                    r[self.offset[cj]+self.stride[cj]*dofN] = 0.0
+            
+    def getLinearJacobian_CSR(self,jacobian,includeBoundaryAdjointTermsInJacobian=False):
+        """
+        Add in the element jacobians to the linear portion of the global jacobian
+        """
+        cfemIntegrals.zeroJacobian_CSR(self.nNonzerosInJacobian,
+                                       jacobian)
+        for ci in range(self.nc):
+            for cj in self.coefficients.stencil[ci]:
+                #
+                #element contributions
+                #
+                cfemIntegrals.updateGlobalJacobianFromElementJacobian_CSR(self.l2g[ci]['nFreeDOF'],
+                                                                          self.l2g[ci]['freeLocal'],
+                                                                          self.l2g[cj]['nFreeDOF'],
+                                                                          self.l2g[cj]['freeLocal'],
+                                                                          self.csrRowIndeces[(ci,cj)],
+                                                                          self.csrColumnOffsets[(ci,cj)],
+                                                                          self.elementLinearJacobian[ci][cj],
+                                                                          jacobian)
+                if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                    cfemIntegrals.updateGlobalJacobianFromElementJacobian_eb_CSR(self.mesh.elementNeighborsArray,
+                                                                                 self.l2g[ci]['nFreeDOF'],
+                                                                                 self.l2g[ci]['freeLocal'],
+                                                                                 self.l2g[cj]['nFreeDOF'],
+                                                                                 self.l2g[cj]['freeLocal'],
+                                                                                 self.csrRowIndeces[(ci,cj)],
+                                                                                 self.csrColumnOffsets_eNebN[(ci,cj)],
+                                                                                 self.elementLinearJacobian_eb[ci][cj],
+                                                                                 jacobian)
+                #
+                #element boundary contributions
+                #
+                if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
+                    if self.numericalFlux.hasInterior:
+                        cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_CSR(self.mesh.interiorElementBoundariesArray,
+                                                                                                      self.mesh.elementBoundaryElementsArray,
+                                                                                                      self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                      self.l2g[ci]['nFreeDOF'],
+                                                                                                      self.l2g[ci]['freeLocal'],
+                                                                                                      self.l2g[cj]['nFreeDOF'],
+                                                                                                      self.l2g[cj]['freeLocal'],
+                                                                                                      self.csrRowIndeces[(ci,cj)],
+                                                                                                      self.csrColumnOffsets_eb[(ci,cj)],
+                                                                                                      self.fluxLinearJacobian[ci][cj],
+                                                                                                      self.ebq[('w*dS_f',ci)],
+                                                                                                      jacobian)
+                        if self.numericalFlux.mixedDiffusion[ci] == True:
+                            cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_CSR(self.mesh.elementNeighborsArray,
+                                                                                                             self.mesh.interiorElementBoundariesArray,
+                                                                                                             self.mesh.elementBoundaryElementsArray,
+                                                                                                             self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                             self.l2g[ci]['nFreeDOF'],
+                                                                                                             self.l2g[ci]['freeLocal'],
+                                                                                                             self.l2g[cj]['nFreeDOF'],
+                                                                                                             self.l2g[cj]['freeLocal'],
+                                                                                                             self.csrRowIndeces[(ci,cj)],
+                                                                                                             self.csrColumnOffsets_eb_eNebN[(ci,cj)],
+                                                                                                             self.fluxLinearJacobian_eb[ci][cj],
+                                                                                                             self.ebq[('w*dS_f',ci)],
+                                                                                                             jacobian)
+                        if self.numericalFlux.HamiltonJacobiNumericalFlux[ci] == True:
+                            cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_CSR(self.mesh.interiorElementBoundariesArray,
+                                                                                                                 self.mesh.elementBoundaryElementsArray,
+                                                                                                                 self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                                 self.l2g[ci]['nFreeDOF'],
+                                                                                                                 self.l2g[ci]['freeLocal'],
+                                                                                                                 self.l2g[cj]['nFreeDOF'],
+                                                                                                                 self.l2g[cj]['freeLocal'],
+                                                                                                                 self.csrRowIndeces[(ci,cj)],
+                                                                                                                 self.csrColumnOffsets_eb[(ci,cj)],
+                                                                                                                 self.fluxLinearJacobian_hj[ci][cj],
+                                                                                                                 self.ebq[('w*dS_f',ci)],
+                                                                                                                 jacobian)
+                    cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_CSR(self.mesh.exteriorElementBoundariesArray,
+                                                                                                  self.mesh.elementBoundaryElementsArray,
+                                                                                                  self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                  self.l2g[ci]['nFreeDOF'],
+                                                                                                  self.l2g[ci]['freeLocal'],
+                                                                                                  self.l2g[cj]['nFreeDOF'],
+                                                                                                  self.l2g[cj]['freeLocal'],
+                                                                                                  self.csrRowIndeces[(ci,cj)],
+                                                                                                  self.csrColumnOffsets_eb[(ci,cj)],
+                                                                                                  self.fluxLinearJacobian_exterior[ci][cj],
+                                                                                                  self.ebqe[('w*dS_f',ci)],
+                                                                                                  jacobian)
+                    if self.numericalFlux.mixedDiffusion[ci] == True:
+                        cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(self.mesh.elementNeighborsArray,
+                                                                                                         self.mesh.exteriorElementBoundariesArray,
+                                                                                                         self.mesh.elementBoundaryElementsArray,
+                                                                                                         self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                         self.l2g[ci]['nFreeDOF'],
+                                                                                                         self.l2g[ci]['freeLocal'],
+                                                                                                         self.l2g[cj]['nFreeDOF'],
+                                                                                                         self.l2g[cj]['freeLocal'],
+                                                                                                         self.csrRowIndeces[(ci,cj)],
+                                                                                                         self.csrColumnOffsets_eb_eNebN[(ci,cj)],
+                                                                                                         self.fluxLinearJacobian_eb[ci][cj],
+                                                                                                         self.ebqe[('w*dS_f',ci)],
+                                                                                                         jacobian)
+                else:
+                    #this will go away
+                    if ((self.fluxBoundaryConditions[ci] == 'outFlow' or
+                         self.fluxBoundaryConditions[ci] == 'mixedFlow')
+                        and
+                        self.timeIntegration.advectionIsImplicit[ci]):
+                        if self.ebqe.has_key(('w*dS_f',ci)):
+                            #
+                            cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_CSR(self.mesh.exteriorElementBoundariesArray,
+                                                                                                          self.mesh.elementBoundaryElementsArray,
+                                                                                                          self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                          self.l2g[ci]['nFreeDOF'],
+                                                                                                          self.l2g[ci]['freeLocal'],
+                                                                                                          self.l2g[cj]['nFreeDOF'],
+                                                                                                          self.l2g[cj]['freeLocal'],
+                                                                                                          self.csrRowIndeces[(ci,cj)],
+                                                                                                          self.csrColumnOffsets_eb[(ci,cj)],
+                                                                                                          self.fluxLinearJacobian_exterior[ci][cj],
+                                                                                                          self.ebqe[('w*dS_f',ci)],
+                                                                                                          jacobian)
+                            #mwf TODO can't get here with current logic?
+                            if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                            #
+                                cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_CSR(self.mesh.exteriorElementBoundariesArray,
+                                                                                                                 self.mesh.elementBoundaryElementsArray,
+                                                                                                                 self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                                 self.l2g[ci]['nFreeDOF'],
+                                                                                                                 self.l2g[ci]['freeLocal'],
+                                                                                                                 self.l2g[cj]['nFreeDOF'],
+                                                                                                                 self.l2g[cj]['freeLocal'],
+                                                                                                                 self.csrRowIndeces[(ci,cj)],
+                                                                                                                 self.csrColumnOffsets_eb_eNebN[(ci,cj)],
+                                                                                                                 self.fluxLinearJacobian_eb[ci][cj],
+                                                                                                                 self.ebqe[('w*dS_f',ci)],
+                                                                                                                 jacobian)
+
+        #
+        #element boundary contributions from diffusion
+        #
+        for ci,ckDict in self.coefficients.diffusion.iteritems():
+            for ck in ckDict.keys():
+                if self.numericalFlux.includeBoundaryAdjoint and includeBoundaryAdjointTermsInJacobian:
+                    if self.sd:
+                        if self.numericalFlux.hasInterior:
+                            cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_CSR_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                                                                 self.offset[ci],
+                                                                                                                 self.stride[ci],
+                                                                                                                 self.offset[ck],
+                                                                                                                 self.stride[ck],
+                                                                                                                 self.nFreeVDOF_global,
+                                                                                                                 self.mesh.interiorElementBoundariesArray,
+                                                                                                                 self.mesh.elementBoundaryElementsArray,
+                                                                                                                 self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                                 self.l2g[ci]['nFreeDOF'],
+                                                                                                                 self.l2g[ci]['freeLocal'],
+                                                                                                                 self.l2g[ci]['freeGlobal'],
+                                                                                                                 self.l2g[ck]['nFreeDOF'],
+                                                                                                                 self.l2g[ck]['freeLocal'],
+                                                                                                                 self.l2g[ck]['freeGlobal'],
+                                                                                                                 self.csrRowIndeces[(ci,ck)],
+                                                                                                                 self.csrColumnOffsets_eb[(ci,ck)],
+                                                                                                                 self.numericalFlux.boundaryAdjoint_sigma,
+                                                                                                                 self.ebq[('v',ck)],
+                                                                                                                 self.ebq['n'],
+                                                                                                                 self.ebq[('a',ci,ck)],
+                                                                                                                 self.ebq[('grad(v)',ci)],
+                                                                                                                 self.ebq[('dS_u',ck)],
+                                                                                                                 jacobian)
+                        if not self.numericalFlux.includeBoundaryAdjointInteriorOnly: #added to only eval interior tjp
+                            cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_CSR_sd(self.coefficients.sdInfo[(ci,ck)][0],
+                                                                                                             self.coefficients.sdInfo[(ci,ck)][1],
+                                                                                                             self.offset[ci],
+                                                                                                             self.stride[ci],
+                                                                                                             self.offset[ck],
+                                                                                                             self.stride[ck],
+                                                                                                             self.nFreeVDOF_global,
+                                                                                                             self.mesh.exteriorElementBoundariesArray,
+                                                                                                             self.mesh.elementBoundaryElementsArray,
+                                                                                                             self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                             self.l2g[ci]['nFreeDOF'],
+                                                                                                             self.l2g[ci]['freeLocal'],
+                                                                                                             self.l2g[ci]['freeGlobal'],
+                                                                                                             self.l2g[ck]['nFreeDOF'],
+                                                                                                             self.l2g[ck]['freeLocal'],
+                                                                                                             self.l2g[ck]['freeGlobal'],
+                                                                                                             self.csrRowIndeces[(ci,ck)],
+                                                                                                             self.csrColumnOffsets_eb[(ci,ck)],
+                                                                                                             self.numericalFlux.isDOFBoundary[ck],
+                                                                                                             self.numericalFlux.boundaryAdjoint_sigma,
+                                                                                                             self.ebqe[('v',ck)],
+                                                                                                             self.ebqe['n'],
+                                                                                                             self.numericalFlux.ebqe[('a',ci,ck)],
+                                                                                                             self.ebqe[('grad(v)',ci)],
+                                                                                                             self.ebqe[('dS_u',ck)],
+                                                                                                             jacobian)
+                    else:
+                        raise RuntimeError("boundary adjoint terms with CSR jacobian and dense diffusion tensor not implemented")
+        #mwf debug
+        #jacobian.fwrite("matdebug_p%s.txt" % self.comm.rank())
+        return jacobian
+    def getLinearJacobian_dense(self,jacobian,includeBoundaryAdjointTermsInJacobian=False):
+        import copy
+        jacobian.fill(0.0)
+        for ci in range(self.nc):
+            for cj in self.coefficients.stencil[ci]:
+                #
+                #element contributions
+                #
+                cfemIntegrals.updateGlobalJacobianFromElementJacobian_dense(self.offset[ci],
+                                                                            self.stride[ci],
+                                                                            self.offset[cj],
+                                                                            self.stride[cj],
+                                                                            self.nFreeVDOF_global,
+                                                                            self.l2g[ci]['nFreeDOF'],
+                                                                            self.l2g[ci]['freeLocal'],
+                                                                            self.l2g[ci]['freeGlobal'],
+                                                                            self.l2g[cj]['nFreeDOF'],
+                                                                            self.l2g[cj]['freeLocal'],
+                                                                            self.l2g[cj]['freeGlobal'],
+                                                                            self.elementLinearJacobian[ci][cj],
+                                                                            jacobian)
+                if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                    cfemIntegrals.updateGlobalJacobianFromElementJacobian_eb_dense(self.mesh.elementNeighborsArray,
+                                                                                   self.offset[ci],
+                                                                                   self.stride[ci],
+                                                                                   self.offset[cj],
+                                                                                   self.stride[cj],
+                                                                                   self.nFreeVDOF_global,
+                                                                                   self.l2g[ci]['nFreeDOF'],
+                                                                                   self.l2g[ci]['freeLocal'],
+                                                                                   self.l2g[ci]['freeGlobal'],
+                                                                                   self.l2g[cj]['nFreeDOF'],
+                                                                                   self.l2g[cj]['freeLocal'],
+                                                                                   self.l2g[cj]['freeGlobal'],
+                                                                                   self.elementLinearJacobian_eb[ci][cj],
+                                                                                   jacobian)
+                #
+                #element boundary contributions
+                #
+                if self.numericalFlux != None and type(self.numericalFlux) != NumericalFlux.DoNothing:
+                    if self.numericalFlux.hasInterior:
+                        cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_dense(self.offset[ci],
+                                                                                                        self.stride[ci],
+                                                                                                        self.offset[cj],
+                                                                                                        self.stride[cj],
+                                                                                                        self.nFreeVDOF_global,
+                                                                                                        self.mesh.interiorElementBoundariesArray,
+                                                                                                        self.mesh.elementBoundaryElementsArray,
+                                                                                                        self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                        self.l2g[ci]['nFreeDOF'],
+                                                                                                        self.l2g[ci]['freeLocal'],
+                                                                                                        self.l2g[ci]['freeGlobal'],
+                                                                                                        self.l2g[cj]['nFreeDOF'],
+                                                                                                        self.l2g[cj]['freeLocal'],
+                                                                                                        self.l2g[cj]['freeGlobal'],
+                                                                                                        self.fluxLinearJacobian[ci][cj],
+                                                                                                        self.ebq[('w*dS_f',ci)],
+                                                                                                        jacobian)
+                        if self.numericalFlux.mixedDiffusion[ci] == True:
+                            cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_eb_dense(self.mesh.elementNeighborsArray,
+                                                                                                               self.mesh.nElements_global,
+                                                                                                               self.offset[ci],
+                                                                                                               self.stride[ci],
+                                                                                                               self.offset[cj],
+                                                                                                               self.stride[cj],
+                                                                                                               self.nFreeVDOF_global,
+                                                                                                               self.mesh.interiorElementBoundariesArray,
+                                                                                                               self.mesh.elementBoundaryElementsArray,
+                                                                                                               self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                               self.l2g[ci]['nFreeDOF'],
+                                                                                                               self.l2g[ci]['freeLocal'],
+                                                                                                               self.l2g[ci]['freeGlobal'],
+                                                                                                               self.l2g[cj]['nFreeDOF'],
+                                                                                                               self.l2g[cj]['freeLocal'],
+                                                                                                               self.l2g[cj]['freeGlobal'],
+                                                                                                               self.fluxLinearJacobian_eb[ci][cj],
+                                                                                                               self.ebq[('w*dS_f',ci)],
+                                                                                                               jacobian)
+                        if self.numericalFlux.HamiltonJacobiNumericalFlux[ci] == True:
+                            cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryFluxJacobian_2sided_dense(self.offset[ci],
+                                                                                                                   self.stride[ci],
+                                                                                                                   self.offset[cj],
+                                                                                                                   self.stride[cj],
+                                                                                                                   self.nFreeVDOF_global,
+                                                                                                                   self.mesh.interiorElementBoundariesArray,
+                                                                                                                   self.mesh.elementBoundaryElementsArray,
+                                                                                                                   self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                                   self.l2g[ci]['nFreeDOF'],
+                                                                                                                   self.l2g[ci]['freeLocal'],
+                                                                                                                   self.l2g[ci]['freeGlobal'],
+                                                                                                                   self.l2g[cj]['nFreeDOF'],
+                                                                                                                   self.l2g[cj]['freeLocal'],
+                                                                                                                   self.l2g[cj]['freeGlobal'],
+                                                                                                                   self.fluxLinearJacobian_hj[ci][cj],
+                                                                                                                   self.ebq[('w*dS_f',ci)],
+                                                                                                                   jacobian)
+                    cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(self.offset[ci],
+                                                                                                    self.stride[ci],
+                                                                                                    self.offset[cj],
+                                                                                                    self.stride[cj],
+                                                                                                    self.nFreeVDOF_global,
+                                                                                                    self.mesh.exteriorElementBoundariesArray,
+                                                                                                    self.mesh.elementBoundaryElementsArray,
+                                                                                                    self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                    self.l2g[ci]['nFreeDOF'],
+                                                                                                    self.l2g[ci]['freeLocal'],
+                                                                                                    self.l2g[ci]['freeGlobal'],
+                                                                                                    self.l2g[cj]['nFreeDOF'],
+                                                                                                    self.l2g[cj]['freeLocal'],
+                                                                                                    self.l2g[cj]['freeGlobal'],
+                                                                                                    self.fluxLinearJacobian_exterior[ci][cj],
+                                                                                                    self.ebqe[('w*dS_f',ci)],
+                                                                                                    jacobian)
+                    if self.numericalFlux.mixedDiffusion[ci] == True:
+                        cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(self.mesh.elementNeighborsArray,
+                                                                                                           self.mesh.nElements_global,
+                                                                                                           self.offset[ci],
+                                                                                                           self.stride[ci],
+                                                                                                           self.offset[cj],
+                                                                                                           self.stride[cj],
+                                                                                                           self.nFreeVDOF_global,
+                                                                                                           self.mesh.exteriorElementBoundariesArray,
+                                                                                                           self.mesh.elementBoundaryElementsArray,
+                                                                                                           self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                           self.l2g[ci]['nFreeDOF'],
+                                                                                                           self.l2g[ci]['freeLocal'],
+                                                                                                           self.l2g[ci]['freeGlobal'],
+                                                                                                           self.l2g[cj]['nFreeDOF'],
+                                                                                                           self.l2g[cj]['freeLocal'],
+                                                                                                           self.l2g[cj]['freeGlobal'],
+                                                                                                           self.fluxLinearJacobian_eb[ci][cj],
+                                                                                                           self.ebqe[('w*dS_f',ci)],
+                                                                                                           jacobian)
+                else:
+                    #cek these will be gone
+                    if (( self.fluxBoundaryConditions[ci] == 'outFlow' or
+                          self.fluxBoundaryConditions[ci] == 'mixedFlow')
+                        and
+                        self.timeIntegration.advectionIsImplicit[ci]):
+                        cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_dense(self.offset[ci],
+                                                                                                        self.stride[ci],
+                                                                                                        self.offset[cj],
+                                                                                                        self.stride[cj],
+                                                                                                        self.nFreeVDOF_global,
+                                                                                                        self.mesh.exteriorElementBoundariesArray,
+                                                                                                        self.mesh.elementBoundaryElementsArray,
+                                                                                                        self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                        self.l2g[ci]['nFreeDOF'],
+                                                                                                        self.l2g[ci]['freeLocal'],
+                                                                                                        self.l2g[ci]['freeGlobal'],
+                                                                                                        self.l2g[cj]['nFreeDOF'],
+                                                                                                        self.l2g[cj]['freeLocal'],
+                                                                                                        self.l2g[cj]['freeGlobal'],
+                                                                                                        self.fluxLinearJacobian_exterior[ci][cj],
+                                                                                                        self.ebqe[('w*dS_f',ci)],
+                                                                                                        jacobian)
+                    #mwf TODO can't get here in logic?
+                    if self.numericalFlux != None and self.numericalFlux.mixedDiffusion[ci] == True:
+                        #
+                        cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryFluxJacobian_eb_dense(self.mesh.elementNeighborsArray,
+                                                                                                           self.mesh.nElements_global,
+                                                                                                           self.offset[ci],
+                                                                                                           self.stride[ci],
+                                                                                                           self.offset[cj],
+                                                                                                           self.stride[cj],
+                                                                                                           self.nFreeVDOF_global,
+                                                                                                           self.mesh.exteriorElementBoundariesArray,
+                                                                                                           self.mesh.elementBoundaryElementsArray,
+                                                                                                           self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                           self.l2g[ci]['nFreeDOF'],
+                                                                                                           self.l2g[ci]['freeLocal'],
+                                                                                                           self.l2g[ci]['freeGlobal'],
+                                                                                                           self.l2g[cj]['nFreeDOF'],
+                                                                                                           self.l2g[cj]['freeLocal'],
+                                                                                                           self.l2g[cj]['freeGlobal'],
+                                                                                                           self.fluxLinearJacobian_eb[ci][cj],
+                                                                                                           self.ebqe[('w*dS_f',ci)],
+                                                                                                           jacobian)
+        #
+        #element boundary contributions from diffusion
+        #
+        for ci,ckDict in self.coefficients.diffusion.iteritems():
+            for ck in ckDict.keys():
+                if self.numericalFlux.includeBoundaryAdjoint and includeBoundaryAdjointTermsInJacobian:
+                    if self.sd:
+                        if self.numericalFlux.hasInterior:
+                            cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                                                                   self.offset[ci],
+                                                                                                                   self.stride[ci],
+                                                                                                                   self.offset[ck],
+                                                                                                                   self.stride[ck],
+                                                                                                                   self.nFreeVDOF_global,
+                                                                                                                   self.mesh.interiorElementBoundariesArray,
+                                                                                                                   self.mesh.elementBoundaryElementsArray,
+                                                                                                                   self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                                   self.l2g[ci]['nFreeDOF'],
+                                                                                                                   self.l2g[ci]['freeLocal'],
+                                                                                                                   self.l2g[ci]['freeGlobal'],
+                                                                                                                   self.l2g[ck]['nFreeDOF'],
+                                                                                                                   self.l2g[ck]['freeLocal'],
+                                                                                                                   self.l2g[ck]['freeGlobal'],
+                                                                                                                   self.numericalFlux.boundaryAdjoint_sigma,
+                                                                                                                   self.ebq[('v',ck)],
+                                                                                                                   self.ebq['n'],
+                                                                                                                   self.ebq[('a',ci,ck)],
+                                                                                                                   self.ebq[('grad(v)',ci)],
+                                                                                                                   self.ebq[('dS_u',ck)],
+                                                                                                                   jacobian)
+                        if not self.numericalFlux.includeBoundaryAdjointInteriorOnly: #added to only eval interior tjp
+                            cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense_sd(self.coefficients.sdInfo[(ci,ck)][0],self.coefficients.sdInfo[(ci,ck)][1],
+                                                                                                               self.offset[ci],
+                                                                                                               self.stride[ci],
+                                                                                                               self.offset[ck],
+                                                                                                               self.stride[ck],
+                                                                                                               self.nFreeVDOF_global,
+                                                                                                               self.mesh.exteriorElementBoundariesArray,
+                                                                                                               self.mesh.elementBoundaryElementsArray,
+                                                                                                               self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                               self.l2g[ci]['nFreeDOF'],
+                                                                                                               self.l2g[ci]['freeLocal'],
+                                                                                                               self.l2g[ci]['freeGlobal'],
+                                                                                                               self.l2g[ck]['nFreeDOF'],
+                                                                                                               self.l2g[ck]['freeLocal'],
+                                                                                                               self.l2g[ck]['freeGlobal'],
+                                                                                                               self.numericalFlux.isDOFBoundary[ck],
+                                                                                                               self.numericalFlux.boundaryAdjoint_sigma,
+                                                                                                               self.ebqe[('v',ck)],
+                                                                                                               self.ebqe['n'],
+                                                                                                               self.numericalFlux.ebqe[('a',ci,ck)],
+                                                                                                               self.ebqe[('grad(v)',ci)],
+                                                                                                               self.ebqe[('dS_u',ck)],
+                                                                                                               jacobian)
+                    else:
+                        if self.numericalFlux.hasInterior:
+                            cfemIntegrals.updateGlobalJacobianFromInteriorElementBoundaryDiffusionAdjoint_dense(self.offset[ci],
+                                                                                                                self.stride[ci],
+                                                                                                                self.offset[ck],
+                                                                                                                self.stride[ck],
+                                                                                                                self.nFreeVDOF_global,
+                                                                                                                self.mesh.interiorElementBoundariesArray,
+                                                                                                                self.mesh.elementBoundaryElementsArray,
+                                                                                                                self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                                self.l2g[ci]['nFreeDOF'],
+                                                                                                                self.l2g[ci]['freeLocal'],
+                                                                                                                self.l2g[ci]['freeGlobal'],
+                                                                                                                self.l2g[ck]['nFreeDOF'],
+                                                                                                                self.l2g[ck]['freeLocal'],
+                                                                                                                self.l2g[ck]['freeGlobal'],
+                                                                                                                self.numericalFlux.boundaryAdjoint_sigma,
+                                                                                                                self.ebq[('v',ck)],
+                                                                                                                self.ebq['n'],
+                                                                                                                self.ebq[('a',ci,ck)],
+                                                                                                                self.ebq[('grad(v)',ci)],
+                                                                                                                self.ebq[('dS_u',ck)],
+                                                                                                                jacobian)
+                        if not self.numericalFlux.includeBoundaryAdjointInteriorOnly: #added to only eval interior tjp
+                            cfemIntegrals.updateGlobalJacobianFromExteriorElementBoundaryDiffusionAdjoint_dense(self.offset[ci],
+                                                                                                            self.stride[ci],
+                                                                                                            self.offset[ck],
+                                                                                                            self.stride[ck],
+                                                                                                            self.nFreeVDOF_global,
+                                                                                                            self.mesh.exteriorElementBoundariesArray,
+                                                                                                            self.mesh.elementBoundaryElementsArray,
+                                                                                                            self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                                                                            self.l2g[ci]['nFreeDOF'],
+                                                                                                            self.l2g[ci]['freeLocal'],
+                                                                                                            self.l2g[ci]['freeGlobal'],
+                                                                                                            self.l2g[ck]['nFreeDOF'],
+                                                                                                            self.l2g[ck]['freeLocal'],
+                                                                                                            self.l2g[ck]['freeGlobal'],
+                                                                                                            self.numericalFlux.isDOFBoundary[ck],
+                                                                                                            self.numericalFlux.boundaryAdjoint_sigma,
+                                                                                                            self.ebqe[('v',ck)],
+                                                                                                            self.ebqe['n'],
+                                                                                                            self.numericalFlux.ebqe[('a',ci,ck)],
+                                                                                                            self.ebqe[('grad(v)',ci)],
+                                                                                                            self.ebqe[('dS_u',ck)],
+                                                                                                            jacobian)
+        return jacobian
 #end Transport definition
 class MultilevelTransport:
     """Nonlinear ADR on a multilevel mesh"""

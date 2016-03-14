@@ -10,7 +10,7 @@ from proteus.iproteus import *
 
 class Burgers(TransportCoefficients.TC_base):
     """
-    The coefficients of the viscout Burgers equation
+    The coefficients of the viscous Burgers equation
     """
     def __init__(self,A,B,nd=3,linearize=False):
         TransportCoefficients.TC_base.__init__(self,
@@ -74,8 +74,8 @@ def getDBC(x,flag):
     #    return constant_zero#won't be strongly enforced if B points out
 
 def getAFBC(x,flag):
-    #return None
     return constant_zero
+    #return None
 
 def getDFBC(x,flag):
     return constant_zero
@@ -93,7 +93,7 @@ class Initial:
 #physics
 
 a0 = 1.0e-2
-T = 1.0
+T = 1.0#e-2
 
 physics = default_p
 physics.nd = nd; #
@@ -108,16 +108,16 @@ physics.dirichletConditions = {0:getDBC}
 physics.advectiveFluxBoundaryConditions = {0:getAFBC}
 physics.diffusiveFluxBoundaryConditions = {0:{0:getDFBC}}
 physics.initialConditions = {0:Initial()}
-physics.fluxBoundaryConditions = {0:'outFlow'}
+#physics.fluxBoundaryConditions = {0:'outFlow'}
 #numerics
 
 nDTout = 100
 DT = T/float(nDTout)
 
 numerics=default_n
-numerics.timeIntegration = TimeIntegration.BackwardEuler_cfl
-numerics.stepController = StepControl.Min_dt_cfl_controller
-numerics.runCFL=0.99
+numerics.timeIntegration = TimeIntegration.BackwardEuler#_cfl
+#numerics.stepController = StepControl.Min_dt_cfl_controller
+#numerics.runCFL=0.99
 numerics.femSpaces = {0:FemTools.C0_AffineLinearOnSimplexWithNodalBasis} #piecewise linears
 numerics.elementQuadrature = Quadrature.SimplexGaussQuadrature(physics.nd,2) #Quadrature rule for elements
 numerics.elementBoundaryQuadrature = Quadrature.SimplexGaussQuadrature(physics.nd-1,2) #Quadrature rule for element boundaries
@@ -127,6 +127,7 @@ numerics.multilevelNonlinearSolver = NonlinearSolvers.Newton
 numerics.levelLinearSolver = NonlinearSolvers.Newton
 numerics.tolFac = 0.0#relative tolerance
 numerics.nl_atol_res = 1.0e-4 #nonlinear solver rtolerance
+numerics.maxNonlinearIts = 10
 
 numerics.matrix = LinearAlgebraTools.SparseMatrix #matrix type
 numerics.multilevelLinearSolver = LinearSolvers.LU
@@ -136,17 +137,27 @@ numerics.l_atol_res = 1.0e-8 #linear solver rtolerance
 
 numerics.periodicDirichletConditions=None 
 
-numerics.subgridError = SubgridError.AdvectionDiffusionReaction_ASGS(physics.coefficients,
-                                                                 physics.nd,lag=False)
-numerics.shockCapturing = ShockCapturing.ResGradQuad_SC(physics.coefficients,
-                                                        physics.nd,
-                                                        shockCapturingFactor=0.75,
-                                                        lag=True)
+#numerics.subgridError = SubgridError.AdvectionDiffusionReaction_ASGS(physics.coefficients,
+#                                                                 physics.nd,lag=False)
+#numerics.shockCapturing = ShockCapturing.ResGradQuad_SC(physics.coefficients,
+#                                                        physics.nd,
+#                                                        shockCapturingFactor=0.75,
+#                                                        lag=True)
+
 #numerics.numericalFluxType = NumericalFlux.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
-numerics.numericalFluxType = NumericalFlux.NoFlux
-
-#numerics.nl_atol_res = 1.0e-4
-
+#numerics.numericalFluxType = NumericalFlux.NoFlux
+numericalFluxBase = NumericalFlux.NoFlux #NumericalFlux.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
+class NoFluxDirichletConstraints(numericalFluxBase):
+    useStrongDirichletConstraints=True
+numerics.numericalFluxType = NoFluxDirichletConstraints
+##POD-specific controls
+numerics.use_pod = True
+##use_hyper below won't matter if use_pod = False
+numerics.use_hyper = True
+numerics.SVD_basis_file='SVD_basis_truncated'
+numerics.hyper_SVD_basis_file='Fn_SVD_basis_truncated'
+numerics.hyper_indices_file = 'DEIM_indices'
+numerics.hyper_Q_file = 'Q_DEIM_truncated'
 #
 # split operator options (trivial since we're not splitting)
 #
@@ -159,12 +170,13 @@ Profiling.verbose = 1
 opts.logLevel = 2
 
 #whether or not to use deim approximation
-use_deim = True
+use_pod = numerics.use_pod
+use_hyper = numerics.use_hyper
 
 simFlagsList=None
-if use_deim:
+if use_hyper:
     simFlagsList=[{}]
-    simFlagsList[0]['storeQuantities']=['pod_residuals']
+    simFlagsList[0]['storeQuantities']=['pod_residuals_linnonlin']
 
 
 def burgers_plot3d(ns):

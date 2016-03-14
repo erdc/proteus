@@ -4,14 +4,17 @@ utility module for generating deim interpolants
 """
 import numpy as np
 
-def read_from_hdf5(hdfFile,label,dof_map=None):
+def read_from_hdf5(hdfFile,label,dof_map=None,has_h5py=True):
     """
     Just grab the array stored in the node with label label and return it
     If dof_map is not none, use this to map values in the array
     If dof_map is not none, this determines shape of the output array
     """
     assert hdfFile != None, "requires hdf5 for heavy data"
-    vals = hdfFile.getNode(label).read()
+    if not has_h5py:
+        vals = hdfFile.getNode(label).read()
+    else:
+        vals = hdfFile[label][:]
     if dof_map is not None:
         dof = vals[dof_map]
     else:
@@ -22,26 +25,39 @@ def read_from_hdf5(hdfFile,label,dof_map=None):
 def read_snapshots(archive,nsnap,val_name):
     """
     assumes nsnap values of array in val_name are stored in h5file as
-    /val_name'i' for i=0,nspap-1
+    /val_name'i' for i=0,nsnap-1
 
     loads these into a matrix and returns
     """
-    label_base="/%s%d"
-    u = read_from_hdf5(archive.hdfFile,label_base % (val_name,0))
-    S = np.reshape(u,(u.shape[0],1))
-    for i in range(1,nsnap):
-        label=label_base % (val_name,i)
-        u = read_from_hdf5(archive.hdfFile,label)
-        u = np.reshape(u,(u.shape[0],1))
-        S = np.append(S,u,axis=1)
-    #
+    if archive.has_h5py:
+        label_base="/%s_p%d_t%d" #name, processor id, time step
+        u = read_from_hdf5(archive.hdfFile,label_base % (val_name,0,0),has_h5py=True)
+        S = np.reshape(u,(u.shape[0],1))
+        for i in range(1,nsnap):
+            label=label_base % (val_name,0,i)
+            u = read_from_hdf5(archive.hdfFile,label)
+            u = np.reshape(u,(u.shape[0],1))
+            S = np.append(S,u,axis=1)
+        
+    elif archive.hasTables:
+        label_base="/%s%d"
+        u = read_from_hdf5(archive.hdfFile,label_base % (val_name,0),has_h5py=False)
+        S = np.reshape(u,(u.shape[0],1))
+        for i in range(1,nsnap):
+            label=label_base % (val_name,i)
+            u = read_from_hdf5(archive.hdfFile,label)
+            u = np.reshape(u,(u.shape[0],1))
+            S = np.append(S,u,axis=1)
+        #
+    else:
+        raise NotImplementedError, "Assumes Archive has either tables or h5py based archive" 
     return S
 
 
 def generate_svd_decomposition(archive,nsnap,val_name,outbase):
     """
     assumes nsnap values of array in val_name are stored in h5file as
-    /val_name'i' for i=0,nspap-1
+    /val_name'i' for i=0,nsnap-1
 
     loads these into a matrix, performs an SVD, and stores the output in outbase_SVD_basis, 
       outbase_singular_values in numpy's binary format
@@ -64,6 +80,7 @@ def calculate_deim_indices(Uin):
 
     """
     n,m=Uin.shape
+    m = min(n,m)
     rind = np.argmax(np.absolute(Uin[:,0]))
     U=np.array(Uin[:,0])
     rho=np.array([rind],'i')
@@ -111,6 +128,65 @@ def deim_alg(Uin,m):
     PtUmInv = np.linalg.inv(PtUm)
     PF= np.dot(Um,PtUmInv)
     return rho,PF
+
+def calculate_gpod_indices(Uin):
+    """
+    input: Uin n x m array of basis vectors for nonlinear function snapshots
+    output: rho, vector of indices \rho_i for extracting $\vec F$ values, and nind, vector of index quantity rate per basis vector
+
+    """
+    n,m=Uin.shape
+    m = min(n,m)
+    indices = set()
+    rind = np.argmax(np.absolute(Uin[:,0]))
+    indices.add(rind)
+    neigs = set([max(0,rind-1)]+[min(n-1,rind+1)])
+    indices |= neigs
+    rho = np.array(list(indices),dtype='i')
+    l = len(indices)
+    nind = np.array([l])
+    for j in range(1,m):
+	U = Uin[:,0:j]
+	u = Uin[:,j]
+	c,l2res,rank,svals = np.linalg.lstsq(U[rho],u[rho])
+	r = u-np.dot(U,c)
+	r[rho] = 0.0
+	rind = np.argmax(np.absolute(r))
+	if not rind in indices:
+	    indices.add(rind)
+	else:
+	    break
+	neigs = set([max(0,rind-1)]+[min(n-1,rind+1)])
+	indices |= neigs
+	rho = np.array(list(indices),dtype='i')
+	nind = np.append(nind, len(indices)-l)
+	l = len(indices)
+    #
+    return rho, nind
+
+def gpod_alg(Uin,m):
+    """
+    Basic procedure
+
+    - given $m$, dimension for $F$ reduced basis $\mathbf{U}_m$
+    - call Gappy POD algorithm to determine $\vec \rho$.
+    - build $\mathbf{P}$ from $\rho$ as
+      $$
+      \mathbf{P} = [\vec e_{\rho_1},\vec e_{\rho_2},\dots,\vec e_{\rho_m}]
+      $$
+    - invert $\mathbf{P}^T\mathbf{U}_m$ in a presudo sense
+    - return \rho and $\mathbf{P}_F=\mathbf{U}_m(\mathbf{P}^T\mathbf{U}_m)^{-1}$
+
+
+    """
+    assert m <= Uin.shape[1]
+    Um = Uin[:,0:m]
+    rho, nind = calculate_gpod_indices(Um)
+    PtUm = Um[rho]
+    assert PtUm.shape == (np.sum(nind,dtype='i'),m)
+    PtUmInv = np.linalg.pinv(PtUm)
+    PF= np.dot(Um,PtUmInv)
+    return rho,nind,PF
 
 def visualize_zslice(variable,nnx,nny,iz,x=None,y=None,name=None):
     """
@@ -161,3 +237,25 @@ def extract_sub_matrix_csr(rho,rowptr,colind,nnzval):
             nzval_sub[rowptr_sub[k]+m]=nnzval[MM]
     #
     return rowptr_sub,colind_sub,nzval_sub
+
+#going to try to monkey patch Transport Model when setting initial conditions 
+def project_initial_conditions(self):
+    """
+    Set the Transport model to use the projection of the initial 
+    condition in some base bases rather than the initial 
+    condition in the fine space
+ 
+    Work In Progress
+    """
+
+    assert 'setFreeDOF' in dir(self)
+    assert  'setUnknowns' in dir(self)
+    assert 'ic_projection_matrix' in dir(self) #original space to reduced/target space
+    assert 'ic_global_vector' in dir(self) #size of complete degree of freedom
+
+    self.setFreeDOF(self.ic_global_vector) #copy models degrees of freedom to global vector
+    projected_ics = numpy.dot(self.ic_projection_matrix,self.ic_global_vector) #project to reduced/target space dofs
+    self.ic_global_vector[:] = numpy.dot(self.ic_projection_matrix.T,projected_ics) #back to fine space
+    self.setUnknowns(self.ic_global_vector) #set models degrees of freedom from global vector
+
+    

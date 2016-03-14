@@ -92,7 +92,7 @@ class NS_base:  # (HasTraits):
         self.archive_q                 = dict([(i,False) for i in range(len(self.pList))]);
         self.archive_ebq_global        = dict([(i,False) for i in range(len(self.pList))]);
         self.archive_ebqe              = dict([(i,False) for i in range(len(self.pList))]);
-        self.archive_pod_residuals = dict([(i,False) for i in range(len(self.pList))]);
+        self.archive_pod_residuals_linnonlin = dict([(i,False) for i in range(len(self.pList))]);
         if simFlagsList != None:
             assert len(simFlagsList) == len(self.pList), "len(simFlagsList) = %s should be %s " % (len(simFlagsList),len(self.pList))
             for index in range(len(self.pList)):
@@ -106,8 +106,8 @@ class NS_base:  # (HasTraits):
                         elif len(recType) > 1 and recType[0] == 'ebqe':
                             self.archive_ebqe[index] = True
                         #
-                        elif recType[0] == 'pod_residuals':
-                            self.archive_pod_residuals[index]=True
+                        elif recType[0] == 'pod_residuals_linnonlin':
+                            self.archive_pod_residuals_linnonlin[index]=True
                         else:
                             log("Warning Numerical Solution storeQuantity = %s not recognized won't archive" % quant)
                     #
@@ -468,9 +468,14 @@ class NS_base:  # (HasTraits):
                 smootherFullNewtonFlag=n.fullNewtonFlag,
                 EWtol=n.useEisenstatWalker,
                 maxLSits=n.maxLineSearches,
+                use_pod=n.use_pod,
+                use_hyper=n.use_hyper,
                 #\todo need to add logic in multilevel NL solver chooser to account for numerical method's stencil as well
                 parallelUsesFullOverlap=(n.nLayersOfOverlapForParallel > 0 or n.parallelPartitioningType == MeshTools.MeshParallelPartitioningTypes.node),
                 nonlinearSolverNorm = n.nonlinearSolverNorm))
+            #update nonlinear solvers using numerics options
+            for nls in self.nlsList:
+                nls.setFromOptions(n)
             model.solver=self.nlsList[-1]
             model.viewer = Viewers.V_base(p,n,s)
             Profiling.memory("MultilevelNonlinearSolver for"+p.name)
@@ -930,15 +935,15 @@ class NS_base:  # (HasTraits):
                                                                                     initialPhase=True,meshChanged=True)
 
         #for nonlinear POD
-        if self.archive_pod_residuals[index] == True:
-            res_space = {}; res_mass = {}
+        if self.archive_pod_residuals_linnonlin[index] == True:
+            res_lin = {}; res_nonlin = {}
             for ci in range(model.levelModelList[-1].coefficients.nc):
-                res_space[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
-                model.levelModelList[-1].getSpatialResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
-                res_mass[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
-                model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_mass[ci])
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_space,res_name_base='spatial_residual')
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_mass,res_name_base='mass_residual')
+                res_lin[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
+                model.levelModelList[-1].getLinearResidual(model.levelModelList[-1].u[ci].dof,res_lin[ci])
+                res_nonlin[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
+                model.levelModelList[-1].getNonlinearResidual(model.levelModelList[-1].u[ci].dof,res_nonlin[ci])
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_lin,res_name_base='linear_residual')
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_nonlin,res_name_base='nonlinear_residual')
 
         if not self.opts.cacheArchive:
             if not self.so.useOneArchive:
@@ -997,15 +1002,15 @@ class NS_base:  # (HasTraits):
                                                                                     scalarKeys=scalarKeys,vectorKeys=vectorKeys,tensorKeys=tensorKeys,
                                                                                     initialPhase=False,meshChanged=True)
         #for nonlinear POD
-        if self.archive_pod_residuals[index] == True:
-            res_space = {}; res_mass = {}
+        if self.archive_pod_residuals_linnonlin[index] == True:
+            res_lin = {}; res_nonlin = {}
             for ci in range(model.levelModelList[-1].coefficients.nc):
-                res_space[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
-                model.levelModelList[-1].getSpatialResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
-                res_mass[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
-                model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_mass[ci])
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],t,self.tCount,res_space,res_name_base='spatial_residual')
-            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],t,self.tCount,res_mass,res_name_base='mass_residual')
+                res_lin[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
+                model.levelModelList[-1].getLinearResidual(model.levelModelList[-1].u[ci].dof,res_lin[ci])
+                res_nonlin[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
+                model.levelModelList[-1].getNonlinearResidual(model.levelModelList[-1].u[ci].dof,res_nonlin[ci])
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_lin,res_name_base='linear_residual')
+            model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_nonlin,res_name_base='nonlinear_residual')
 
         if not self.opts.cacheArchive:
             if not self.so.useOneArchive:

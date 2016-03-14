@@ -27,10 +27,10 @@ if physics.nd == 3:
 #saving mass and stiffness matrices below
 
 Model = ns.modelList[0].levelModelList[-1]
-mj = Model.initializeMassJacobian()
-Model.getMassJacobian(mj)
-kj = Model.initializeSpatialJacobian()
-Model.getSpatialJacobian(kj)
+mj = Model.initializeLinearJacobian()
+Model.getLinearJacobian(mj)
+kj = Model.initializeNonlinearJacobian()
+Model.getNonlinearJacobian(kj)
 
 rowptr,colind,nzval = mj.getCSRrepresentation()
 np.savetxt('iam',rowptr,'%d', ' ')
