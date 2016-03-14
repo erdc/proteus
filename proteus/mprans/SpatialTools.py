@@ -136,6 +136,7 @@ class ShapeRANS(Shape):
         """
         Gives the inertia of the shape from an axis and a pivot
         (!) The inertia tensor of the shape must be set
+        (!) This is calculated using the local coordinate system of shape
         """
         assert self.It is not None, 'No inertia tensor! (' + self.name + ')'
         if pivot is None:
@@ -146,11 +147,11 @@ class ShapeRANS(Shape):
         vec = vx, vy, vz = np.array(vec)
         length_vec = sqrt(vx**2+vy**2+vz**2)
         vec = vec/length_vec
-        # vector relative to original position of shape:
         if self.Domain.nd == 2:
             I = self.It*self.mass
         elif self.Domain.nd == 3:
-            vec = relative_vec(vec, self.coords_system[2])
+            # vector relative to original position of shape:
+            vec = np.dot(vec, np.linalg.inv(self.coords_system))
             cx, cy, cz = vec
             # getting the tensor for calculaing moment of inertia
             # from arbitrary axis
@@ -1151,33 +1152,6 @@ class RigidBody(AuxiliaryVariables.AV_base):
             (rot_x, rot_y, rot_z))
         log("================================================================")
 
-
-def relative_vec(vec1, vec0):
-    """
-    function giving coordinates of a vector relative to another vector
-    (projecting vec0 as the z-axis for vec1)
-
-    :param vec1: vector to get new coordinates
-    :param vec0: vector of reference
-    :return: new coordinates of vec1
-    """
-    # spherical coords vec0
-    x0, y0, z0 = vec0
-    r0 = sqrt(x0**2+y0**2+z0**2)  # radius from origin
-    t0 = atan2(y0, x0)  # angle on x-y plane
-    p0 = acos(z0/r0)  # angle from z-axis
-    # spherical coords vec1
-    x1, y1, z1 = vec1
-    r1 = sqrt(x1**2+y1**2+z1**2)
-    t1 = atan2(y1, x1)
-    p1 = acos(z1/r1)
-    # get new coords for vec1:
-    t1_new = t0-t1
-    p1_new = p0-p1
-    x1_new = r1*sin(p1_new)*cos(t1_new)
-    y1_new = r1*sin(p1_new)*sin(t1_new)
-    z1_new = r1*cos(p1_new)
-    return (x1_new, y1_new, z1_new)
 
 
 def assembleDomain(domain):
