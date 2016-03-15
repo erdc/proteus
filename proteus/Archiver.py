@@ -971,8 +971,19 @@ class XdmfWriter:
                 print "No writeMeshXdmf_C0Q2Lagrange for 1D"
                 return 0
             elif spaceDim == 2:
-                print "No writeMeshXdmf_C0Q2Lagrange for 2D"
-                return 0
+                Xdmf_ElementTopology = "Quadrilateral"
+
+#                import pdb
+#                pdb.set_trace()
+
+                e2s=[ [0,4,8,7], [7,8,6,3],  [4,1,5,8], [8,5,2,6] ]
+
+                l2g = numpy.zeros((4*mesh.nElements_global,4),'i')
+                for eN in range(mesh.nElements_global):
+                    dofs=dofMap.l2g[eN,:]
+                    for i in range(4): #loop over subelements
+                        for j in range(4): # loop over nodes of subelements
+                            l2g[4*eN+i,j] = dofs[e2s[i][j]]
             elif spaceDim == 3:
                 Xdmf_ElementTopology = "Hexahedron"
 
