@@ -1158,20 +1158,22 @@ if(testcount==eID && comm_rank==0){
       visc_avg = visc_avg + visc_val*weight;
       interface_norm = interface_norm + grad_vof.getLength()*vel_vect.getLength()*weight;
       u_norm = u_norm + visc_val*getDotProduct(vel_ij,vel_ij+apf::transpose(vel_ij))*weight;
+//if(testcount==5) std::cout<<"u_norm "<<u_norm<<" visc_val "<<visc_val<<" grad vel "<<vel_ij<<" weight "<<weight<<std::endl;
     } //end compute local error
     visc_avg = visc_avg*Jdet/apf::measure(element);
     Acomp = Acomp*Jdet/visc_avg; //nondimensionalize with average viscosity, Jacobians can cancel out, but this is done for clarity
     Bcomp = Bcomp*Jdet;
     interface_norm = interface_norm*Jdet;
     u_norm = u_norm/visc_avg*Jdet;
-    //rel_error = sqrt((Acomp+Bcomp)/(u_norm_H1+Bcomp));
-    err_est = sqrt(Acomp+Bcomp); 
+    //err_est = sqrt(Acomp+Bcomp); 
+    err_est = sqrt(Acomp); 
 
     apf::Vector3 err_in(err_est,Acomp,Bcomp);
     apf::setVector(err_reg,ent,0,err_in);
     apf::setScalar(vof_err,ent,0,interface_norm);
     //apf::setScalar(rel_err,ent,0,rel_error);
-    err_est_total = err_est_total+(Acomp+Bcomp); //for tracking the upper bound
+    //err_est_total = err_est_total+(Acomp+Bcomp); //for tracking the upper bound
+    err_est_total = err_est_total+(Acomp); //for tracking the upper bound
     u_norm_total = u_norm_total + u_norm;
    
     MatDestroy(&K); //destroy the matrix
@@ -1184,14 +1186,15 @@ testcount++;
   } //end element loop
 
   PCU_Add_Doubles(&err_est_total,1);
+  PCU_Add_Doubles(&u_norm_total,1);
   err_est_total = sqrt(err_est_total);
   u_norm_total = sqrt(u_norm_total);
-  setRelativeError(m,err_reg,rel_err,u_norm_total);
+  setRelativeError(m,err_reg,rel_err,u_norm_total); //this needs to be fixed
   rel_err_total = err_est_total/u_norm_total;
 
 if(comm_rank==0){
 std::cout<<std::setprecision(10)<<std::endl;
-std::cout<<"Error estimate "<<err_est_total<<" Relative error "<<rel_err_total<<std::endl;
+std::cout<<"Error estimate "<<err_est_total<<" Relative error "<<rel_err_total<<" u_norm "<<u_norm_total<<std::endl;
 }
   m->end(iter);
 
@@ -1201,6 +1204,7 @@ std::cout<<"Error estimate "<<err_est_total<<" Relative error "<<rel_err_total<<
   apf::destroyField(vof_err);
   removeBCData();
   printf("It cleared the function.\n");
+//  abort();
 }
 
 

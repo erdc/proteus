@@ -32,6 +32,7 @@ MeshAdaptPUMIDrvr::MeshAdaptPUMIDrvr(double Hmax, double Hmin, int NumIter,
   size_scale = 0;
   size_frame = 0;
   err_reg = 0;
+  rel_err = 0;
   gmi_register_mesh();
   gmi_register_sim();
   approximation_order = 2;

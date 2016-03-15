@@ -459,7 +459,7 @@ static void SmoothField(apf::Field* f)
 int MeshAdaptPUMIDrvr::getERMSizeField(double err_total,double rel_err_total)
 {
   double eps_u = 0.002; //distance from the interface
-  double tolerance = 0.5;
+  double tolerance = 0.1;
   double alpha = tolerance/rel_err_total; //refinement constant
 if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<std::endl;
 
@@ -478,7 +478,6 @@ if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<std::endl;
   size_iso = apf::createLagrangeField(m, "proteus_size",apf::SCALAR,1);
 
   numel = m->count(nsd);
-  it = m->begin(nsd); 
   double err_dest = alpha*err_total/sqrt(numel);
   double err_curr = 0.0;
   double rel = 0.0;
@@ -486,6 +485,7 @@ if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<std::endl;
   //compute the new size field
   apf::MeshElement* element;
   apf::MeshEntity* reg;
+  it = m->begin(nsd); 
   while(reg=m->iterate(it)){
     double h_old;
     double h_new;
@@ -494,12 +494,7 @@ if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<std::endl;
     h_old = pow(apf::measure(element)*6*sqrt(2),1.0/3.0); //radius of insphere of regular tet
     apf::getVector(err_reg,reg,0,err_vect);
     err_curr = err_vect[0];
-    if(tolerance <0){
-      rel=apf::getScalar(rel_err,reg,0);
-      h_new = sqrt(tolerance/rel)*h_old;
-    }
-    else
-        h_new = h_old;//*pow(err_dest/err_curr,0.5);
+    h_new = h_old;//*pow(err_dest/err_curr,0.5);
     apf::setScalar(size_iso_reg,reg,0,h_new);
   }
   apf::destroyMeshElement(element);
@@ -507,10 +502,38 @@ if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<std::endl;
 
   apf::MeshEntity* v;
   it = m->begin(0);
+  apf::Adjacent regions;
+  apf::Adjacent edges;
+  while((v=m->iterate(it))){
+    double h_old, h_new;
+    m->getAdjacent(v,nsd,regions);
+    m->getAdjacent(v,1,edges);
+    err_curr= 0;
+    for(int i=0;i<regions.getSize();i++){
+      apf::getVector(err_reg,regions[i],0,err_vect);
+      err_curr += err_vect[0];
+    }
+    err_curr /= regions.getSize();
+
+    h_old = 0;
+    for(int i=0; i<edges.getSize();i++){
+      element = apf::createMeshElement(m,edges[i]);
+      h_old+=apf::measure(element); 
+      apf::destroyMeshElement(element);
+    }
+    h_old /= edges.getSize();
+    h_new = h_old*pow(err_dest/err_curr,0.5);
+    apf::setScalar(size_iso,v,0,h_new);
+  }
+  m->end(it);
+
+/*
+  it = m->begin(0);
   while((v=m->iterate(it))){
     averageToEntity(size_iso_reg, size_iso, v);
   }
   m->end(it); 
+*/
 
 //Get the anisotropic size frame
   apf::Field* phif = m->findField("phi");
