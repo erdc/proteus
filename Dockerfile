@@ -35,7 +35,24 @@ RUN apt-get update && apt-get install -yq --no-install-recommends \
     m4 \
     libssl-dev \
     ssh \
+    mpich2 \
+    python3 \
+    python3-pip \
+    python3-doc \
+    python3-tk \
+    python3-venv \
+    python3-genshi \
+    python3-lxml \
+    python3-openssl \
+    python3-pyasn1 \
+    python3.4-venv \
+    python3.4-doc \
+    binfmt-support \
+    python3-dev \
+    python3-wheel \
     && apt-get clean
+
+RUN pip3 install notebook terminado
 
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
@@ -55,36 +72,21 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
 
 # Create jovyan user with UID=1000 and in the 'users' group
-RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER
+RUN useradd -m -s /bin/bash -N -u $NB_UID $NB_USER && \
+    chown -R $NB_USER:users /home/$NB_USER
 
 USER jovyan
 
-# Setup jovyan home directory
 RUN mkdir /home/$NB_USER/work && \
     mkdir /home/$NB_USER/.jupyter && \
     mkdir /home/$NB_USER/.local
-
-
-USER root
-
 
 #RUN wget https://dl.dropboxusercontent.com/u/26353144/hashdist_config_jovyan.yaml && \
 #    mkdir /home/$NB_USER/.hashdist && \
 #    mv hashdist_config_jovyan.yaml /home/$NB_USER/.hashdist/config.yaml && \
 #    cat /home/$NB_USER/.hashdist/config.yaml
 
-RUN chown -R $NB_USER:users /home/$NB_USER
-
-RUN apt-get install -yq --no-install-recommends mpich2
-
-USER jovyan
-
 WORKDIR /home/$NB_USER
-
-RUN dpkg --get-selections | grep mpi && \
-    which mpicc && \
-    which mpirun && \
-    which mpiexec
 
 RUN git clone https://github.com/erdc-cm/proteus && \
     cd proteus && \
@@ -106,13 +108,10 @@ ENV F90 mpif90
 RUN cd proteus && make develop
 
 ENV PATH /home/$NB_USER/proteus/linux2/bin:$PATH
+ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux2/lib:$LD_LIBRARY_PATH
 
 USER root
 
-RUN /home/$NB_USER/proteus/linux2/bin/python \
-    /home/$NB_USER/proteus/linux2/bin/ipython \
-    kernelspec install-self
-    
 # Configure container startup as root
 EXPOSE 8888
 WORKDIR /home/$NB_USER/work
@@ -122,13 +121,31 @@ CMD ["start-notebook.sh"]
 RUN cd /usr/local/bin && \
     wget https://raw.githubusercontent.com/jupyter/docker-stacks/master/minimal-notebook/start-notebook.sh
 
+ADD https://raw.githubusercontent.com/jupyter/docker-stacks/master/minimal-notebook/jupyter_notebook_config.py /home/$NB_USER/.jupyter/jupyter_notebook_config.py
+
+RUN mkdir /etc/jupyter && \
+    chmod a+rwX /etc/jupyter && \
+    chown -R $NB_USER:users /home/$NB_USER
+
+#jupyter/ipython extensions
+RUN pip3 install \
+    ipyparallel \
+    ipywidgets
+
 # Switch back to jovyan to avoid accidental container runs as root
 USER jovyan
-
-RUN cd /home/$NB_USER/.jupyter && \
-    wget https://raw.githubusercontent.com/jupyter/docker-stacks/master/minimal-notebook/jupyter_notebook_config.py
     
+RUN cd ~/.jupyter && \
+    ipython profile create mpi --parallel && \
+    ipcluster nbextension enable && \
+    echo '\nc.NotebookApp.server_extensions.append("ipyparallel.nbextension")' >> /home/$NB_USER/.jupyter/jupyter_notebook_config.py && \
+    cp jupyter_notebook_config.py /etc/jupyter/ && \
+    echo "c.LocalControllerLauncher.controller_cmd = ['python2', '-m', 'ipyparallel.controller']\nc.LocalEngineSetLauncher.engine_cmd = ['python2', '-m', 'ipyparallel.engine']\n" \
+          >> /home/$NB_USER/.ipython/profile_mpi/ipcluster_config.py  
+
 USER root
+
+RUN jupyter kernelspec install-self
 
 # fetch juptyerhub-singleuser entrypoint
 RUN wget -q https://raw.githubusercontent.com/jupyter/jupyterhub/master/scripts/jupyterhub-singleuser -O /usr/local/bin/jupyterhub-singleuser && \
@@ -137,30 +154,6 @@ RUN wget -q https://raw.githubusercontent.com/jupyter/jupyterhub/master/scripts/
 ADD https://raw.githubusercontent.com/jupyter/dockerspawner/master/singleuser/singleuser.sh /srv/singleuser/singleuser.sh
 
 RUN chmod 755 /srv/singleuser/singleuser.sh
-
-RUN apt-get update && apt-get install -yq --no-install-recommends \
-    python3 \
-    python3-pip \
-    python3-doc \
-    python3-tk \
-    python3-venv \
-    python3-genshi \
-    python3-lxml \
-    python3-openssl \
-    python3-pyasn1 \
-    python3.4-venv \
-    python3.4-doc \
-    binfmt-support \
-    python3-dev \
-    python3-wheel \
-    && apt-get clean
-
-RUN pip3 install notebook terminado
-
-RUN /home/$NB_USER/proteus/linux2/bin/jupyter \
-    kernelspec install-self
-
-ENV LD_LIBRARY_PATH /home/$NB_USER/proteus/linux2/lib:$LD_LIBRARY_PATH
 
 USER jovyan
 
