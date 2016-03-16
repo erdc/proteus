@@ -134,26 +134,33 @@ class NS_base:  # (HasTraits):
             #support for old-style domain input
             if p.domain == None:
                 if p.nd == 1:
-                    p.domain = Domain.RectangularDomain(L=p.L[:1],name=p.name)
+                    p.domain = Domain.RectangularDomain(L=p.L[:1],
+                                                        x=p.x0[:1],
+                                                        name=p.name)
                 elif p.nd == 2:
                     if p.polyfile != None:
                         p.domain = Domain.PlanarStraightLineGraphDomain(fileprefix=p.polyfile,name=p.polyfile)
                     else:
-                        p.domain = Domain.RectangularDomain(L=p.L[:2],name=p.name)
+                        p.domain = Domain.RectangularDomain(L=p.L[:2],
+                                                            x=p.x0[:2],
+                                                            name=p.name)
                 elif p.nd == 3:
                     if p.polyfile != None:
                         p.domain = Domain.PiecewiseLinearComplexDomain(fileprefix=p.polyfile,name=p.polyfile)
                     elif p.meshfile != None:
                         p.domain = Domain.Mesh3DMDomain(p.meshfile)
                     else:
-                        p.domain = Domain.RectangularDomain(L=p.L[:3],name=p.name)
+                        p.domain = Domain.RectangularDomain(L=p.L[:3],
+                                                            x=p.x0[:3],
+                                                            name=p.name)
                 else:
                     raise RuntimeError("No support for domains in more than three dimensions")
             #now generate meshes, could move to Domain and use polymorphism or MeshTools
             if isinstance(p.domain,Domain.RectangularDomain):
                 if p.domain.nd == 1:
-                    mlMesh = MeshTools.MultilevelEdgeMesh(n.nn,1,1,
-                                                          p.domain.L[0],1,1,
+                    mlMesh = MeshTools.MultilevelEdgeMesh(n.nn, 1, 1,
+                                                          p.domain.x[0], 0.0, 0.0,
+                                                          p.domain.L[0], 1.0, 1.0,
                                                           refinementLevels=n.nLevels,
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
@@ -164,8 +171,9 @@ class NS_base:  # (HasTraits):
                         nnx = n.nnx
                         nny = n.nny
                     log("Building %i x %i rectangular mesh for %s" % (nnx,nny,p.name))
-                    mlMesh = MeshTools.MultilevelTriangularMesh(nnx,nny,1,
-                                                                p.domain.L[0],p.domain.L[1],1,
+                    mlMesh = MeshTools.MultilevelTriangularMesh(nnx, nny, 1,
+                                                                p.domain.x[0], p.domain.x[1], 0.0,
+                                                                p.domain.L[0], p.domain.L[1], 1.0,
                                                                 refinementLevels=n.nLevels,
                                                                 nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                                 parallelPartitioningType=n.parallelPartitioningType)
@@ -187,27 +195,30 @@ class NS_base:  # (HasTraits):
                     if (n.NURBS):
                         mlMesh = MeshTools.MultilevelNURBSMesh(nnx,nny,nnz,
                                                                n.px,n.py,n.pz,
-                                                                   p.L[0],p.L[1],p.L[2],
-                                                                   refinementLevels=n.nLevels,
-                                                                   nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                   parallelPartitioningType=n.parallelPartitioningType)
+                                                               p.domain.x[0], p.domain.x[1], p.domain.x[2],
+                                                               p.domain.L[0], p.domain.L[1], p.domain.L[2],
+                                                               refinementLevels=n.nLevels,
+                                                               nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                               parallelPartitioningType=n.parallelPartitioningType)
                     elif (n.hex):
                         if not hasattr(n,'px'):
                             n.px=0
                             n.py=0
                             n.pz=0
-                        mlMesh = MeshTools.MultilevelHexahedralMesh(nnx,nny,nnz,
-                                                                   n.px,n.py,n.pz,
-                                                                   p.L[0],p.L[1],p.L[2],
-                                                                   refinementLevels=n.nLevels,
-                                                                   nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                   parallelPartitioningType=n.parallelPartitioningType)
+                        mlMesh = MeshTools.MultilevelHexahedralMesh(nnx, nny, nnz,
+                                                                    n.px,n.py,n.pz,
+                                                                    p.domain.x[0], p.domain.x[1], p.domain.x[2],
+                                                                    p.domain.L[0], p.domain.L[1], p.domain.L[2],
+                                                                    refinementLevels=n.nLevels,
+                                                                    nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                    parallelPartitioningType=n.parallelPartitioningType)
                     else :
-                        mlMesh = MeshTools.MultilevelTetrahedralMesh(nnx,nny,nnz,
-                                                                   p.L[0],p.L[1],p.L[2],
-                                                                   refinementLevels=n.nLevels,
-                                                                   nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                                   parallelPartitioningType=n.parallelPartitioningType)
+                        mlMesh = MeshTools.MultilevelTetrahedralMesh(nnx, nny, nnz,
+                                                                     p.domain.x[0], p.domain.x[1], p.domain.x[2],
+                                                                     p.L[0], p.L[1], p.L[2],
+                                                                     refinementLevels=n.nLevels,
+                                                                     nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                     parallelPartitioningType=n.parallelPartitioningType)
 
             elif isinstance(p.domain,Domain.PlanarStraightLineGraphDomain):
                 log("Calling Triangle to generate 2D mesh for"+p.name)
@@ -925,7 +936,7 @@ class NS_base:  # (HasTraits):
                 res_space[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
                 model.levelModelList[-1].getSpatialResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
                 res_mass[ci] = numpy.zeros(model.levelModelList[-1].u[ci].dof.shape,'d')
-                model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_space[ci])
+                model.levelModelList[-1].getMassResidual(model.levelModelList[-1].u[ci].dof,res_mass[ci])
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_space,res_name_base='spatial_residual')
             model.levelModelList[-1].archiveFiniteElementResiduals(self.ar[index],self.tnList[0],self.tCount,res_mass,res_name_base='mass_residual')
 
