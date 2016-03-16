@@ -39,7 +39,7 @@ class ShockCapturing(proteus.ShockCapturing.ShockCapturing_base):
             self.numDiff_last=[]
             for ci in range(self.nc):
                 self.numDiff_last.append(self.numDiff[ci].copy())
-        log("NCLS: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),))
+        #log("NCLS: max numDiff %e" % (globalMax(self.numDiff_last[0].max()),),level=7)
 
 class NumericalFlux(proteus.NumericalFlux.HamiltonJacobi_DiagonalLesaintRaviart):
     def __init__(self,vt,getPointwiseBoundaryConditions,
