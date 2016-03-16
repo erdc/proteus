@@ -103,7 +103,7 @@ class Coefficients(proteus.TransportCoefficients.TC_base):
                  useRBLES=0.0,
                  useMetrics=0.0,
                  useConstant_he=False,
-                 dragAlpha=0.01,
+                 dragAlpha=0.0,
                  dragBeta =0.0,
                  setParamsFunc=None,      #uses setParamsFunc if given
                  dragAlphaTypes=None, #otherwise can use element constant values
