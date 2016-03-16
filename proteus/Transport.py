@@ -1702,14 +1702,10 @@ class OneLevelTransport(NonlinearEquation):
         #cek debug
         #u.tofile("u"+`self.nonlinear_function_evaluations`,sep="\n")
         r.fill(0.0)
-        #Load the Dirichlet conditions
-        for cj in range(self.nc):
-            for dofN,g in self.dirichletConditions[cj].DOFBoundaryConditionsDict.iteritems():
-                self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    self.u[cj].dof[dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+                    u[self.offset[cj]+self.stride[cj]*dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateU(u)
         self.setUnknowns(self.timeIntegration.u)
@@ -1782,11 +1778,15 @@ class OneLevelTransport(NonlinearEquation):
             for cj in range(self.nc):
                 for dofN in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.keys():
                     global_dofN = self.offset[cj]+self.stride[cj]*dofN
-                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):
+                    self.nzval[numpy.where(self.colind == global_dofN)] = 0.0 #column
+                    self.nzval[self.rowptr[global_dofN]:self.rowptr[global_dofN+1]] = 0.0 #row
+                    zeroRow=True
+                    for i in range(self.rowptr[global_dofN],self.rowptr[global_dofN+1]):#row
                         if (self.colind[i] == global_dofN):
                             self.nzval[i] = 1.0
-                        else:
-                            self.nzval[i] = 0.0
+                            zeroRow = False
+                    if zeroRow:
+                        raise RuntimeError("Jacobian has a zero row because sparse matrix has no diagonal entry at row "+`global_dofN`+". You probably need add diagonal mass or reaction term")
         #mwf decide if this is reasonable for solver statistics
         self.nonlinear_function_jacobian_evaluations += 1
         #cek debug
