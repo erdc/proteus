@@ -104,6 +104,51 @@ class Advection_ASGS(SGE_base):
                                                                q[('subgridError',ci)],
                                                                q[('dsubgridError',ci,cj)])
 
+class AdvectionLag_ASGS(SGE_base):
+    def __init__(self,coefficients,nd,stabFlag='1',lag=False):
+        SGE_base.__init__(self,coefficients,nd,lag)
+        self.stabilizationFlag = stabFlag
+
+    def initializeElementQuadrature(self,mesh,t,cq):
+        import copy
+        self.mesh=mesh
+        self.tau=[]
+        self.tau_last=[]
+        self.df_last={}
+        self.cq=cq
+        for ci in range(self.nc):
+            if self.lag:
+                self.tau_last.append(numpy.zeros(cq[('u',ci)].shape,'d'))
+                self.tau.append(numpy.zeros(cq[('u',ci)].shape,'d'))
+                if cq.has_key(('df',ci,ci)):
+                    self.df_last = copy.deepcopy(cq[('df',ci,ci)])
+                    cq[('df_sge',ci,ci)] = self.df_last
+            else:
+                if cq.has_key(('df',ci,ci)):
+                    cq[('df_sge',ci,ci)] = cq[('df',ci,ci)]
+                self.tau.append(numpy.zeros(cq[('u',ci)].shape,'d'))
+    def updateSubgridErrorHistory(self,initializationPhase=False):
+        if self.lag:
+            for ci in range(self.nc):
+                self.tau_last[ci][:] = self.tau[ci]
+                self.df_last[:] = self.cq[('df',ci,ci)]
+    def calculateSubgridError(self,q):
+        for ci in range(self.nc):
+            csubgridError.calculateSubgridError_A_tau(self.stabilizationFlag,
+                                                      self.mesh.elementDiametersArray,
+                                                      q[('dmt',ci,ci)],
+                                                      q[('df_sge',ci,ci)],
+                                                      q[('cfl',ci)],
+                                                      self.tau[ci])
+            tau=self.tau[ci]
+            for cj in range(self.nc):
+                if q.has_key(('dpdeResidual',ci,cj)):
+                    csubgridError.calculateSubgridError_tauRes(tau,
+                                                               q[('pdeResidual',ci)],
+                                                               q[('dpdeResidual',ci,cj)],
+                                                               q[('subgridError',ci)],
+                                                               q[('dsubgridError',ci,cj)])
+
 class AdvectionDiffusionReaction_ASGS(SGE_base):
     def __init__(self,coefficients,nd,stabFlag='1',lag=False):
         SGE_base.__init__(self,coefficients,nd,lag)
@@ -794,6 +839,7 @@ class StokesStabilization_1(SGE_base):
 class StokesASGS_velocity(SGE_base):
     def __init__(self,coefficients,nd):
         SGE_base.__init__(self,coefficients,nd,lag=False)
+        self.stabilizationFlag = '1'
         coefficients.stencil[0].add(0)
         if nd == 2:
             coefficients.stencil[1].add(2)
@@ -805,8 +851,6 @@ class StokesASGS_velocity(SGE_base):
             coefficients.stencil[2].add(3)
             coefficients.stencil[3].add(1)
             coefficients.stencil[3].add(2)
-    def initializeElementQuadrature(self,mesh,t,cq):
-        self.mesh=mesh
     def calculateSubgridError(self,q):
         if self.nd == 2:
             if self.coefficients.sd:
@@ -1473,6 +1517,7 @@ class StokesASGS_velocity_pressure(SGE_base):
                                                                     q[('a',1,1)],
                                                                     self.tau[0],
                                                                     self.tau[1])
+            self.tau[1] /= q[('dH',1,0)][...,0]#if mom. eqn. is scaled by density, rescale tau
             if self.lag:
                 tau0=self.tau_last[0]
                 tau1=self.tau_last[1]

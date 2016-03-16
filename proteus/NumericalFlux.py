@@ -386,7 +386,6 @@ class Advection_DiagonalUpwind(NF_base):
         self.vt.coefficients.evaluate(self.vt.timeIntegration.t,self.ebqe)
         if self.vt.movingDomain:
             self.vt.coefficients.updateToMovingDomain(self.vt.timeIntegration.t,self.ebqe)
-        logEvent('NumFlux external eval t= %s '% (self.vt.timeIntegration.t))
         #import pdb
         #pdb.set_trace()
         for ci in range(self.nc):
@@ -4731,7 +4730,8 @@ class Stress_IIPG_exterior(NF_base):
             for (ebNE,k),g,x in zip(self.DOFBoundaryConditionsDictList[ci].keys(),
                                     self.DOFBoundaryConditionsDictList[ci].values(),
                                     self.DOFBoundaryPointDictList[ci].values()):
-                self.ebqe[('u',ci)][ebNE,k]=g(x,self.vt.timeIntegration.t)
+                #cek todo: this needs to be generlzied for  all the numerical  fluxes when domain moves
+                self.ebqe[('u',ci)][ebNE,k]=g(ebqe['x'][ebNE,k],self.vt.timeIntegration.t)
         for ci in range(self.nc):
             for bci in self.periodicBoundaryConditionsDictList[ci].values():
                 self.ebqe[('u',ci)][bci[0]]=ebqe[('u',ci)][bci[1]]
