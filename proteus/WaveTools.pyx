@@ -1,3 +1,4 @@
+
 """Tools for working with water waves
 The primary objective of this module is to provide solutions (exact and
 
@@ -13,6 +14,63 @@ import cmath as cmath
 from Profiling import logEvent
 import time as tt
 import sys as sys
+
+def setVertDir(g):
+    return -g/(sqrt(g[0]**2 + g[1]**2 + g[2]**2)) 
+
+def setDirVector(vector):
+    return vector/(sqrt(vector[0]**2 + vector[1]**2 + vector[2]**2))
+
+def dirCheck(v1, v2):
+    dircheck = abs(v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2])
+        #print self.dircheck
+    if dircheck > 1e-10:
+        logEvent("Wave direction is not perpendicular to gravity vector. Check input",level=0)
+        return sys.exit(1)
+    else:
+        return None
+
+def eta_mode(x,y,z,t,kDir,omega,phi,amplitude):
+    """Returns a single frequency mode for free-surface elevation at point x,y,z,t
+    :param kDir: wave number vector [1/L]
+    :param omega: angular frequency [1/T]
+    :param phi: phase [0,2*pi]
+    :param amplitude: wave amplitude [L/T^2]
+    """
+    phase = x*kDir[0]+y*kDir[1]+z*kDir[2] - omega*t  + phi
+    return amplitude*cos(phase)
+
+def vel_mode(x,y,z,t,kDir,kAbs,omega,phi,amplitude,mwl,depth,g,vDir,comp):
+    """Returns a single frequency mode for velocity at point x,y,z,t
+    :param kDir: wave number vector [1/L]
+    :param omega: angular frequency [1/T]
+    :param phi: phase [0,2*pi]
+    :param amplitude: wave amplitude [L/T^2]
+    :param mwl: mean water level [L]
+    :param depth: water depth [L]
+    :param g: gravity vector
+    :param vDir (vertical direction - opposite to the gravity vector)
+    :param comp: component "x", "y" or "z"
+    """
+
+    phase = x*kDir[0]+y*kDir[1]+z*kDir[2] - omega*t  + phi
+    Z =  (vDir[0]*x + vDir[1]*y+ vDir[2]*z) - mwl
+    if( (Z < -depth) or (Z > 0)):
+        logEvent ("WaveTools.py: Z variable outside (-d,0), check depth or mwl")
+        exit(1)
+    UH = 0.
+    UV=0.
+    ii=0.
+    UH=amplitude*omega*cosh(kAbs*(Z + depth))*cos( phase )/sinh(kAbs*depth)
+    UV=amplitude*omega*sinh(kAbs*(Z + depth))*sin( phase )/sinh(kAbs*depth)
+    waveDir = kDir/kAbs       
+#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
+    Vcomp = {
+        "x":UH*waveDir[0] + UV*vDir[0],
+        "y":UH*waveDir[1] + UV*vDir[1],
+        "z":UH*waveDir[2] + UV*vDir[2],
+        }
+    return Vcomp[comp]
 
 
 
@@ -46,7 +104,7 @@ def JONSWAP(f,f0,Hs,g,gamma,TMA=False, h = -10):
 
     return (tma * alpha*Hs**2*omega0**4/omega**5)*np.exp(-(5.0/4.0)*(omega0/omega)**4)*gamma**r
 
-def piersonMoskovitz(f,f0,alpha=8.1e-3,beta=0.74,g=9.8):
+def piersonMoskovitz(f,f0,Hs,alpha=8.1e-3,beta=0.74,g=9.8):
     """Pierson-Moskovitz spectrum
 
     :param f: frequency [1/T]
@@ -60,7 +118,8 @@ def piersonMoskovitz(f,f0,alpha=8.1e-3,beta=0.74,g=9.8):
 def cos2s(theta,s):
     return cos(theta/2)**(2*s)
 
-def normInt(thetas,dir_fun,s,N):
+
+def normInt(dth,thetas,dir_fun,s,N):
     G0 = 0.
     theta = 0.
     for ii in range(N):
@@ -78,11 +137,12 @@ def dispersion(w,d, g = 9.81,niter = 1000):
     :param g: gravity [L/T^2
     """
 #    print("Initiating dispersion")
-    Kd = w*sqrt(d/g)
+    w_aux = np.array(w)
+    Kd = w_aux*sqrt(d/g)
 #    print("Initial dispersion value = %s" %str(Kd/d))
     for jj in range(niter):
        #Kdn_1 = Kd
-        Kd = w*w*d/g/np.tanh(Kd)
+        Kd =  w_aux* w_aux/g/np.tanh(Kd)
         #Kdn_1 /=0.01*Kd
         #Kdn_1 -= 100.
         #Kdn_1 = abs(Kdn_1)
@@ -91,7 +151,10 @@ def dispersion(w,d, g = 9.81,niter = 1000):
     #print "Solution convergence for dispersion relation %s percent" % Kdn_1
 #    print("Final k value = %s" %str(Kd/d))
 #    print("Wavelength= %s" %str(2.*pi*d/Kd))
-    return(Kd/d)
+    if type(Kd) is float:
+        return Kd[0]/d
+    else:
+        return(Kd/d)
 
 def window(wname='Costap'):
     """Returns a window function, currently has dirichlet window and cosine taper
@@ -121,45 +184,31 @@ def window(wname='Costap'):
 
 #fft function ( = Cooley-Tukey FFT algorithm ) already included in imported numpy library
 # fft( input array (here eta), x axis (here Time component) ).
-
-def decompose_tseries(time,eta,nfft,ret_only_freq=0):
+def decompose_tseries(time,eta,nfft, NFR, ret_only_freq=0):
+    # This function does a spectral decomposition of a time series with constant sampling.
+    # It returns a list with results with two elements:
+        # 0 -> numpy array with frequency components ww
+        # 1 -> numpy array with amplitude of each component aa
+        # 2 -> numpy array with phase of each component pp
     results = []
-    NN = np.ceil((nfft+1)/2)-1  #   %number of primary frequency components (excluding negative frequencies and 0 frequency)
-
-
-	#linspace( start, stop , nb of values returned (optionnal)) => return an array
-	# theory : ww = ( 2 pi * j ) / N   with loop on j and N = nb of frequencies
-	# here : ww = ( 2 pi * linspace ) * (nfft / dt)
-	# (nfft / dt) = nb of intervals.
-
-
-	#return an array composed with all the ww_k
-    ww = np.linspace(1,NN,NN)*2*pi/(time[2]-time[1])/nfft      	#evenly spaced ang. frequency vector with NN points (excluding w=0)
+    NN = NFR  #                            %number of primary frequency components (excluding negative frequencies and 0 frequency)
+    ww = np.linspace(1,NN,NN)*2*pi/(time[2]-time[1])/nfft      #       %evenly spaced ang. frequency vector with NN points (excluding w=0)
     if (ret_only_freq!=0):                                          #if return only frequency is not 0, then the script returns only the frequencies
         return ww
-    fft_x = np.fft.fft(eta,nfft)
-
-
-
-    setup = np.real(fft_x[0])/nfft   #first coefficient of Fourier series = average value
+    fft_x = np.fft.fft(eta,nfft)                                   #%complex spectrum           
+    setup = np.real(fft_x[0])/nfft
     fft_x = fft_x[1:NN+1]                              #%retaining only first half of the spectrum
-
-	#computes the abs(fft_x) component after component and returns the array aa
     aa = abs(fft_x)/nfft                                 #%amplitudes (only the ones related to positive frequencies)
-    if nfft%2:                                       #%odd nfft- excludes Nyquist point
-        aa[0:NN] = 2*aa[0:NN]                              #%multiply amplitudes by 2 since we neglected the negative half of the spectrum. Note that the index starts at 1 (not 2) since the vector a doesnt contain the 0 freq. component.
+    if nfft%2:                                       #%odd nfft- excludes Nyquist point    
+      aa[0:NN] = 2*aa[0:NN]                              #%multiply amplitudes by 2 since we neglected the negative half of the spectrum. Note that the index starts at 1 (not 2) since the vector a doesnt contain the 0 freq. component.
     else:                                                 #%even nfft - includes Nyquist point
-        aa[0:NN -1] = 2*aa[0:NN -1]                        #%mulitply amplitudes by 2 since we neglected the negative half of the spectrum
+      aa[0:NN -1] = 2*aa[0:NN -1]                        #%mulitply amplitudes by 2 since we neglected the negative half of the spectrum
 
 
-    pp = np.zeros(len(aa),complex)
-	#calculate the phase of each (fft_x[k]).
-	# returns an array
+    pp = np.zeros(len(aa),complex)     
     for k in range(len(aa)):
         pp[k]=cmath.phase(fft_x[k])                       #% Calculating phases phases
-        pp = np.real(pp)                                         # Append results to list
-
-
+    pp = np.real(pp)                                         # Append results to list
     results.append(ww)
     results.append(aa)
     results.append(pp)
@@ -170,31 +219,30 @@ def decompose_tseries(time,eta,nfft,ret_only_freq=0):
 
 
 
-
-
 class MonochromaticWaves:
     """Generate a monochromatic wave train in the linear regime
     """
     def __init__(self,period,waveHeight,mwl,depth,g,waveDir,wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = 0.,phi0 = 0.):
-        self.knownWaveTypes = ["Linear","Fenton","userDefined"]
+        self.knownWaveTypes = ["Linear","Fenton"]
         self.waveType = waveType
-        self.g = g
-        self.gAbs = sqrt(sum(g * g))
-        self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
-        self.phi0=phi0
         if self.waveType not in self.knownWaveTypes:
             logEvent("Wrong wavetype given: Valid wavetypes are %s" %(self.knownWaveTypes), level=0)
             sys.exit(1)
-        self.dircheck = abs(sum(g * waveDir))
-        #print self.dircheck
-        if self.dircheck > 1e-6:
-            logEvent("Wave direction is not perpendicular to gravity vector. Check input",level=0)
-            sys.exit(1)
+        self.g = np.array(g)
+        self.waveDir =  setDirVector(np.array(waveDir))
+        self.vDir = setVertDir(g)
+        self.gAbs = sqrt(self.g[0]*self.g[0]+self.g[1]*self.g[1]+self.g[2]*self.g[2])
+
+#Checking if g and waveDir are perpendicular
+        dirCheck(self.waveDir,self.vDir)
+        self.phi0=phi0 
         self.period = period
         self.waveHeight = waveHeight
         self.mwl = mwl
         self.depth = depth
         self.omega = 2.0*pi/period
+
+#Calculating / checking wavelength data
         if  self.waveType is "Linear":
             self.k = dispersion(w=self.omega,d=self.depth,g=self.gAbs)
             self.wavelength = 2.0*pi/self.k
@@ -203,76 +251,53 @@ class MonochromaticWaves:
                 self.k = 2.0*pi/wavelength
                 self.wavelength=wavelength
             except:
-                logEvent("Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)
+                logEvent("WaveTools.py: Wavelenght is not defined for nonlinear waves. Enter wavelength in class arguments",level=0)
                 sys.exit(1)
         self.kDir = self.k * self.waveDir
         self.amplitude = 0.5*self.waveHeight
         self.meanVelocity = meanVelocity
-        self.vDir = self.g/self.gAbs
+#Checking that meanvelocity is a vector
+        try:
+            if(len(meanVelocity) == 3):
+                None
+            else:
+                logEvent("WaveTools.py: meanVelocity should be a vector with 3 components. ",level=0)
+                sys.exit(1)                
+        except:
+                logEvent("WaveTools.py: meanVelocity should be a vector with 3 components. ",level=0)
+                sys.exit(1)
+                   
         self.Ycoeff = Ycoeff
         self.Bcoeff = Bcoeff
+
+# Checking for 
         if (Ycoeff is None) or (Bcoeff is None):
             if self.waveType is not "Linear":
-                pr.logEvent("Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
+                logEvent("WaveTools.py: Need to define Ycoeff and Bcoeff (free-surface and velocity) for nonlinear waves",level=0)
                 sys.exit(1)
-    def phase(self,x,y,z,t):
-#        return y*self.kDir[1] - self.omega*t + self.phi0
-        return x*self.kDir[0]+y*self.kDir[1]+z*self.kDir[2] - self.omega*t + self.phi0
-
     def eta(self,x,y,z,t):
         if self.waveType is "Linear":
-            global VTIME
-            a = tt.time()
-            aa = self.amplitude*cos(self.phase(x,y,z,t))
-            VTIME = (tt.time() - a)
-            return aa
-        else:
+            return eta_mode(x,y,z,t,self.kDir,self.omega,self.phi0,self.amplitude)
+        elif self.waveType is "Fenton":
             HH = 0.
             ii =0.
             for Y in self.Ycoeff:
                 ii+=1
-                HH+=Y*cos(ii*self.phase(x,y,z,t))
-            if self.waveType is "Fenton": return HH/self.k
-            else: return HH
-    def Z(self,x,y,z):
-        return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.mwl
+                HH+=eta_mode(x,y,z,t,ii*self.kDir,ii*self.omega,self.phi0,Y)
+            return HH/self.k
 
-    def u(self,x,y,z,t,ss = "x"):
-        """x-component of velocity
-
-        :param x: floating point x coordinate
-        :param z: floating point z coordinate (height above bottom)
-        :param t: time
-        """
-        UH=0.
-        UV=0.
-        ii=0.
+    def u(self,x,y,z,t,comp):
         if self.waveType is "Linear":
-            UH+=self.amplitude*self.omega*cosh(self.k*(self.Z(x,y,z)+self.depth))*cos(self.phase(x,y,z,t))/sinh(self.k*self.depth)
-            UV+=self.omega*self.amplitude*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.phase(x,y,z,t))/sinh(self.k*self.depth)
-#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
-            Vcomp = {
-                "x":UH*self.waveDir[0] + UV*self.vDir[0],
-                "y":UH*self.waveDir[1] + UV*self.vDir[1],
-                "z":UH*self.waveDir[2] + UV*self.vDir[2],
-                }
-
+            return vel_mode(x,y,z,t,self.kDir,self.k,self.omega,self.phi0,self.amplitude,self.mwl,self.depth,self.g,self.vDir,comp)
         elif self.waveType is "Fenton":
+            U =0.
+            ii = 0
             for B in self.Bcoeff:
                 ii+=1
-                UV+=ii*B*sinh(self.k*(self.Z(x,y,z)+self.depth))*sin(self.phase(x,y,z,t))/cosh(self.k*self.depth)
-                UH+=ii*B*cosh(self.k*(self.Z(x,y,z)+self.depth))*cos(self.phase(x,y,z,t))/cosh(self.k*self.depth)
-#waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
-                Vcomp = {
-                    "x":UH*self.waveDir[0] + UV*self.vDir[0],
-                    "y":UH*self.waveDir[1] + UV*self.vDir[1],
-                    "z":UH*self.waveDir[2] + UV*self.vDir[2],
-
-                    }
-        else:
-            logEvent("Check Wave types. Available wave types are %s" % waveType,level=0)
-            exit(1)
-        return Vcomp[ss]
+                amp = ii*B/self.omega
+                amp*= sqrt(self.gAbs/self.k)
+                U+=vel_mode(x,y,z,t,ii*self.kDir,ii*self.k,self.omega,amp,self.mwl,self.depth,self.g,self.vDir,comp)
+            return U+self.meanVelocity
 
 class RandomWaves:
     """Generate approximate random wave solutions
@@ -407,9 +432,7 @@ class timeSeries:
 
     :param ts: time-series array [T]
     :param  d: depth [L]
-    :param Npeaks: Number of spectral peaks
-    :param bandFactor[Npeaks]: width factor for band  around spectral peaks [-]
-    :param peakFrequencies[Npeaks]: expected peak frequencies
+    :param peakFrequency: expected peak frequency
     :param N: number of frequency bins [-]
     :param Nwaves: Number of waves per window (Approx)
     :param mwl: mean water level [L]"""
@@ -418,52 +441,48 @@ class timeSeries:
                  timeSeriesFile= "Timeseries.txt",
                  skiprows = 0,
                  d = 2.0,
-                 Npeaks = 1, #m depth
-                 bandFactor = [2.0], #controls width of band  around fp
-                 peakFrequencies = [0.2],
+                 bandFactor = 2.0, #controls width of band  around fp
+                 peakFrequency = 0.2,
                  N = 32,          #number of frequency bins
                  Nwaves = 4, #Nmumber of waves per windowmean water level
                  mwl = 0.0,        #mean water level
                  waveDir = np.array([1,0,0]), #accelerationof gravity
                  g = np.array([0, -9.81, 0]),
-                 rec_direct = False
+                 rec_direct = True
                  ): 
 
-
+# Setting the depth
         self.depth = d
-        self.Npeaks = Npeaks
-        if Npeaks is not len(bandFactor):
-            logEvent("WaveTools.py: bandFactor entries in should be as many as the number of frequencies",level=0)
-            logEvent("Stopping simulation",level=0)
-            exit(1)
-
-        if Npeaks is not len(peakFrequencies):
-            logEvent("WaveTools.py: peakFrequencies entries in should be as many as the number of frequencies",level=0)
-            logEvent("Stopping simulation",level=0)
-            exit(1)
-
-        self.rec_direct= rec_direct
+        self.rec_direct = rec_direct
+# Setting frequency and band factor. Consider removing these if not used
         self.bandFactor = np.array(bandFactor)        
-
-        self.peakFrequencies = np.array(peakFrequencies)
+        self.peakFrequency = np.array(peakFrequency)
+# Number of wave components
         self.N = N
+# Number of waves per window (approx.)
         self.Nwaves = Nwaves
+# Mean water level
         self.mwl = mwl
+# Wave direction
         self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
+# Gravity
         self.g = np.array(g)
-
-#derived variables
+# Derived variables
+# Gravity magnitude
         self.gAbs = sqrt(sum(g * g))
+# Definition of gravity direction
         self.vDir = self.g/self.gAbs
-        self.fmax = self.bandFactor*self.peakFrequencies
-        self.fmin = self.peakFrequencies/self.bandFactor
+# Setting freq matrix
+        self.fmax = self.bandFactor*self.peakFrequency
+        self.fmin = self.peakFrequency/self.bandFactor
         self.df = (self.fmax-self.fmin)/float(self.N-1)
-        self.fi=np.zeros((self.N,self.Npeaks),'d')
+        self.fi=np.zeros((self.N),'d')
 
-        for j in range(Npeaks):
-            for i in range(N):
-                self.fi[i,j] = self.fmin[j]+self.df[j]*i
 
+        for i in range(N):
+            self.fi[i] = self.fmin+self.df*i
+
+# Derived arrays: angular freq, wavenumber, wavelength
         self.omegai = 2.*pi*self.fi
         self.ki = dispersion(self.omegai,self.depth,g=self.gAbs)
         self.wi = 2.*pi/self.ki
@@ -482,16 +501,16 @@ class timeSeries:
             tdata = np.loadtxt(fid,skiprows=skiprows)
         fid.close()
 #Checks for tseries file
+# Only 2 columns: time & eta
         ncols = len(tdata[0,:])
         if ncols != 2:
             logEvent("WaveTools.py: Timeseries file must have only two columns [time, eta]",level=0)
             logEvent("Stopping simulation",level=0)
             sys.exit(1)
-
-
-
         time_temp = tdata[:,0]
         self.dt = (time_temp[-1]-time_temp[0])/len(time_temp)
+
+# If necessary, perform interpolation
         doInterp = False
         for i in range(1,len(time_temp)):
             dt_temp = time_temp[i]-time_temp[i-1]
@@ -510,40 +529,66 @@ class timeSeries:
         else:
             self.time = time_temp
             self.eta = tdata[:,1]
-        self.eta -=np.mean(self.eta)
+# Remove mean level from raw data
+        self.eta -= np.mean(self.eta)
+# Filter out first 2.5 % (equivalent to ramp time)
         wind_fun = window(wname="Costap")
-        self.eta *=wind_fun(len(self.time),tail=0.05)
-
-
+        self.eta *=wind_fun(len(self.time),tail=0.025)
+# clear tdata from memory
         del tdata
+
+# Calculate time lenght
         self.tlength = (self.time[-1]-self.time[0])
-        windows_span = []
-        windows_rec = []
+
+# Matrix initialisation
+        self.windows_handover = []
+        self.windows_rec = []
 # Direct decomposition of the time series for using at reconstruct_direct
         if (self.rec_direct):
+            Nf = self.N
             self.nfft=len(self.time)
-            self.decomp = decompose_tseries(self.time,self.eta,self.nfft,ret_only_freq=0)
-            self.setup = self.decomp[3]
-
+            logEvent("WaveTools.py: performing a direct series decomposition")
+            self.decomp = decompose_tseries(self.time,self.eta,self.nfft,self.nfft/2-1,ret_only_freq=0)
+            self.ai = self.decomp[1]
+            ipeak = np.where(self.ai == max(self.ai))[0][0]
+            imax = min(ipeak + Nf/2,len(self.ai))
+            imin = max(0,ipeak - Nf/2)
+            print len(self.ai)
+            self.ai = self.ai[imin:imax]
+            self.omega = self.decomp[0][imin:imax]
+            self.phi = self.decomp[2][imin:imax]
+            self.ki = self.ki[imin:imax]
+            self.setup = self.decomp[imin:imax]
+            self.kDir = np.zeros((len(self.ki),3),"d")
+            for ii in range(len(self.ki)):
+                self.kDir[ii,:] = self.ki[ii]*self.waveDir[:]
+             
 
 # Spectral windowing
         else:
-            #setting the window duration (approx.). Twindow = Tmean * Nwaves = Tpeak * Nwaves /1.1 
-            self.Twindow =  self.Nwaves / (1.1 * self.peakFrequencies )
-            print self.Twindow
+            logEvent("WaveTools.py: performing series decomposition with spectral windows")
+# Portion of overlap, compared to window time
+            Overl = 0.25
+# Portion of window filtered with the Costap filter
+            Filt = 0.1
+# Setting the handover time, either at the middle of the overlap or just after the filter 
+            Handover = min(Overl - 1.1 *Filt,  Overl / 2.)
+# setting the window duration (approx.). Twindow = Tmean * Nwaves = Tpeak * Nwaves /1.1 
+            self.Twindow =  self.Nwaves / (1.1 * self.peakFrequency )
+#            print self.Twindow
             #Settling overlap 25% of Twindow
-            self.Toverlap = 0.25 * self.Twindow
+            self.Toverlap = Overl * self.Twindow
             #Getting the actual number of windows
-            # (N-1) * (Twindow - Toverlap) + Twindow
+            # (N-1) * (Twindow - Toverlap) + Twindow = total time
             self.Nwindows = int( (self.tlength -   self.Twindow ) / (self.Twindow - self.Toverlap) ) + 1 
-            # Correct Twindow and Toverlap for duration
-            self.Twindow = self.tlength/(1. + 0.75*(self.Nwindows))
-            self.Toverlap = 0.25*self.Twindow
-            logEvent("WaveTools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow * 1.1* self.peakFrequencies) )
-            diff = self.Nwindows*(self.Twindow -self.Toverlap)+self.Twindow - self.tlength
+            # Correct Twindow and Toverlap for duration and integer number of windows
+            self.Twindow = self.tlength/(1. + (1. - Overl)*(self.Nwindows-1))
+            self.Toverlap = Overl*self.Twindow
+            logEvent("WaveTools.py: Correcting window duration for matching the exact time range of the series. Window duration correspond to %s waves approx." %(self.Twindow * 1.1* self.peakFrequency) )
+            diff = (self.Nwindows-1.)*(self.Twindow -self.Toverlap)+self.Twindow - self.tlength
             logEvent("WaveTools.py: Checking duration of windowed time series: %s per cent difference from original duration" %(100*diff) )
-            logEvent("WaveTools.py: Using %s windows for reconstruction with %s sec duration and 25 per cent overlap" %(self.Nwindows, self.Twindow) )
-
+            logEvent("WaveTools.py: Using %s windows for reconstruction with %s sec duration and %s per cent overlap" %(self.Nwindows, self.Twindow,100*Overl) )
+# Setting where each window starts and ends
             for jj in range(self.Nwindows):
                 span = np.zeros(2,"d")
                 tfirst = self.time[0] + self.Twindow
@@ -551,46 +596,40 @@ class timeSeries:
                 if jj == 0:
                     ispan1 = 0
                     ispan2 = np.where(self.time> tfirst)[0][0]
-                elif jj == self.Nwindows:
+                elif jj == self.Nwindows-1:
                     ispan1 = np.where(self.time > tlast)[0][0]
-                    ispan2 = len(self.time)
+                    ispan2 = len(self.time)-1
                 else: 
                     tstart = self.time[ispan2] - self.Toverlap
                     ispan1 = np.where(self.time > tstart)[0][0]
                     ispan2 = np.where(self.time > tstart + self.Twindow )[0][0]                    
                 span[0] = ispan1
                 span[1] = ispan2
-                
-                windows_span.append(span)
-                windows_rec.append(np.array(zip(self.time[ispan1:ispan2],self.eta[ispan1:ispan2])))
-                print jj
-                
-#            print (self.Twindow)
-#            print("number of windows: %s" % self.Nwindows)
-#            print(self.Nwindows*(self.Twindow -self.Toverlap)+self.Twindow )
-#            print(self.tlength)
+# Storing time series in windows and handover times 
+                self.windows_handover.append( self.time[ispan2] - Handover*self.Twindow )
+                self.windows_rec.append(np.array(zip(self.time[ispan1:ispan2],self.eta[ispan1:ispan2])))
+# Decomposing windows to frequency domain
             self.decompose_window = []
-            style = "k-"
-            for wind in windows_rec:
+#            style = "k-"
+#            ii = 0
+            for wind in self.windows_rec:
                 self.nfft=len(wind[:,0])
-                decomp = decompose_tseries(wind[:,0],wind[:,1],self.nfft,ret_only_freq=0)
+                filt = window(wname = "Costap")
+                wind_fun = window(wname="Costap")
+                wind[:,1] *=wind_fun(self.nfft,tail = Filt)
+                decomp = decompose_tseries(wind[:,0],wind[:,1],self.nfft,self.N,ret_only_freq=0)
                 self.decompose_window.append(decomp)
-
-
-                
-
-               
-
-                
-
-
-
-                if style == "k-":
-                    style = "kx"
-                else:
-                    style ="k-"
-                plt.plot(wind[:,0],wind[:,1],style)
-            plt.savefig("rec.pdf")
+#                if style == "k-":
+#                    style = "kx"
+#                else:
+#                    style ="k-"
+#                plt.plot(wind[:,0],wind[:,1],style)
+#                plt.plot(self.time,self.eta,"bo",markersize=2)
+#                plt.plot([self.windows_handover[ii],self.windows_handover[ii]] , [-1000,1000],"b--") 
+#                ii+=1    
+#            plt.ylim(-1,2)
+#            plt.grid()
+#            plt.savefig("rec.pdf")
 #            self.Twindow = self.Npw*self.dt
 #            self.Noverlap = int(self.Npw *0.25)
 
@@ -613,36 +652,25 @@ class timeSeries:
         del fig
     def Z(self,x,y,z):
         return   -(self.vDir[0]*x + self.vDir[1]*y+ self.vDir[2]*z) - self.mwl
-
-    def reconstruct_direct(self,x,y,z,t,Nf,var="eta",ss = "x"):
+    
+    def reconstruct_direct(self,x,y,z,t,var="eta",ss = "x"):
         "Direct reconstruction of a timeseries"
-        if self.rec_direct==False:
-            logEvent("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
-            logEvent("Stopping simulation",level=0)               
-            exit(1)           
-        ai = self.decomp[1]
-        ipeak = np.where(ai == max(ai))[0][0]
-        imax = min(ipeak + Nf/2,len(ai))
-        imin = max(0,ipeak - Nf/2)
-        ai = ai[imin:imax]
-        omega = self.decomp[0][imin:imax]
-        phi = self.decomp[2][imin:imax]
-        ki = dispersion(omega,self.depth,g=self.gAbs)
-        kDir = np.zeros((len(ki),3),"d")
-        Nf = len(omega)
-        for ii in range(len(ki)):
-            kDir[ii,:] = ki[ii]*self.waveDir[:]
-        if var=="eta":
+# Removing check, I believe it is slowing don the process
+#        if self.rec_direct==False:
+#            logEvent("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
+#            logEvent("Stopping simulation",level=0)               
+#            exit(1)           
+        if var == "eta":
             Eta=0.
-            for ii in range(Nf):
-                Eta+=ai[ii]*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])
-            return Eta
+            for ii in range(len(self.ai)):
+                Eta+=self.ai[ii]*cos(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t - self.phi[ii])
+                return Eta
         if var=="U":
             UH=0.
             UV=0.
-            for ii in range(Nf):
-                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(self.Z(x,y,z)+self.depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*self.depth)
-                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(self.Z(x,y,z)+self.depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*self.depth)
+            for ii in range(len(self.ai)):
+                UH+=self.ai[ii]*self.omega[ii]*cosh(self.ki[ii]*(self.Z(x,y,z)+self.depth))*cos(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t - self.phi[ii])/sinh(self.ki[ii]*self.depth)
+                UV+=self.ai[ii]*self.omega[ii]*sinh(self.ki[ii]*(self.Z(x,y,z)+self.depth))*sin(x*self.kDir[ii,0]+y*self.kDir[ii,1]+z*self.kDir[ii,2] - self.omega[ii]*t - self.phi[ii])/sinh(self.ki[ii]*self.depth)
 #waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
             Vcomp = {
                     "x":UH*self.waveDir[0] + UV*self.vDir[0],
@@ -654,33 +682,57 @@ class timeSeries:
 
     def reconstruct_window(self,x,y,z,t,Nf,var="eta",ss = "x"):
         "Direct reconstruction of a timeseries"
-        if self.rec_direct==False:
-            logEvent("WaveTools.py: While attempting direct reconstruction, wrong input for rec_direct found (should be set to True)",level=0)
-            logEvent("Stopping simulation",level=0)               
-            exit(1)           
-        ai = self.decomp[1]
+#        if self.rec_direct==True:
+#            logEvent("WaveTools.py: While attempting  reconstruction in windows, wrong input for rec_direct found (should be set to False)",level=0)
+#            logEvent("Stopping simulation",level=0)               
+#            exit(1)
+
+            
+        #Tracking the time window (spatial coherency not yet implemented)
+        #Nw = 2
+        if t-self.time[0] >= 0.875*self.Twindow:
+            Nw = min(int((t-self.time[0] - 0.875*self.Twindow)/(self.Twindow - 2. * 0.125 * self.Twindow)) + 1, self.Nwindows-1)            
+            if t-self.time[0] < self.windows_handover[Nw-1] - self.time[0]:
+                Nw-=1
+        else:
+            Nw = 0
+ 
+        print t,Nw, self.windows_handover[Nw]
+        
+        tinit = self.windows_rec[Nw][0,0] 
+#        thand = self.windows_handover[Nw]
+#        tinit  = self.windows_rec[Nw][0,0] 
+#       if t >= thand[1]: 
+#           Nw = min(Nw+1, 3)
+
+        
+        ai = self.decompose_window[Nw][1]
         ipeak = np.where(ai == max(ai))[0][0]
         imax = min(ipeak + Nf/2,len(ai))
         imin = max(0,ipeak - Nf/2)
         ai = ai[imin:imax]
-        omega = self.decomp[0][imin:imax]
-        phi = self.decomp[2][imin:imax]                              
+        omega = self.decompose_window[Nw][0][imin:imax]
+        phi = self.decompose_window[Nw][2][imin:imax]    
+        setup = self.decompose_window[Nw][3]
         ki = dispersion(omega,self.depth,g=self.gAbs)
         kDir = np.zeros((len(ki),3),"d")
         Nf = len(omega)
         for ii in range(len(ki)):
             kDir[ii,:] = ki[ii]*self.waveDir[:]
         if var=="eta":
-            Eta=0.
+            Eta=setup
             for ii in range(Nf):
-                Eta+=ai[ii]*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii]) 
-            return Eta
+                Eta+=ai[ii]*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*(t-tinit) - phi[ii])  
+            if (Nw <10000):
+                return Eta
+            else:
+                return 0.
         if var=="U":
             UH=0.
             UV=0.
             for ii in range(Nf):
-                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(Z(x,y,z)+depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*depth)
-                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(Z(x,y,z)+depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t + phi[ii])/sinh(ki[ii]*depth)
+                UH+=ai[ii]*omega[ii]*cosh(ki[ii]*(self.Z(x,y,z)+self.depth))*cos(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*self.depth)
+                UV+=ai[ii]*omega[ii]*sinh(ki[ii]*(self.Z(x,y,z)+self.depth))*sin(x*kDir[ii,0]+y*kDir[ii,1]+z*kDir[ii,2] - omega[ii]*t - phi[ii])/sinh(ki[ii]*self.depth)
 #waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.waveDir,wavelength=self.wi[ii], phi0 = self.phi[ii]).u(x,y,z,t)
             Vcomp = {
                     "x":UH*self.waveDir[0] + UV*self.vDir[0],
@@ -720,8 +772,6 @@ class directionalWaves:
                  s =5 ,                              # dir function coefficient
                  dir_fun = cos2s               # directional function
                  ): #wave spectrum
-
-
         self.waveDir = waveDir/sqrt(sum(waveDir * waveDir))
         self.normalWaveDir = normalWaveDir/sqrt(sum(normalWaveDir * normalWaveDir))
         self.g = g
@@ -740,7 +790,7 @@ class directionalWaves:
         for i in range(self.N):
             self.fi[i] = self.fmin+self.df*i
         self.ki = dispersion(2.0*pi*self.fi,self.d,g=self.gAbs)
-        self.wi = 2.*math.pi/self.ki
+        self.wi = 2.*pi/self.ki
         #ai = np.sqrt((Si_J[1:]+Si_J[:-1])*(fi[1:]-fi[:-1]))
         fim_tmp = (0.5*(self.fi[1:]+self.fi[:-1])).tolist()
         self.fim = np.array([fim_tmp[0]-0.5*self.df]+fim_tmp+[fim_tmp[-1]+0.5*self.df])
@@ -749,23 +799,23 @@ class directionalWaves:
         self.waves = MonochromaticWaves
         self.M = M
         self.thetas = np.linspace(0,thetamax,self.M+1)
-        self.dth = thetas[1]-thetas[0]
-        self.spread = dir_fun(thetas,s)
-        self.dirs = zeros((2*self.M + 1,3),'d')
-        self.ai_d = zeros((self.N,2*M+1),'d')
-        self.phi = zeros((self.N,2*M+1),'d')
+        self.dth = self.thetas[1]-self.thetas[0]
+        self.spread = dir_fun(self.thetas,s)
+        self.dirs = np.zeros((2*self.M + 1,3),'d')
+        self.ai_d = np.zeros((self.N,2*M+1),'d')
+        self.phi = np.zeros((self.N,2*M+1),'d')
         self.G_Int = normInt(self.dth,self.dir_fun,s,self.M+1)
         for ii in range(1,self.M+1):
             self.dirs[self.M+ii,:]= cos(self.thetas[ii])*waveDir + sin(self.thetas[ii])*normalWaveDir
             self.dirs[self.M-ii,:] = cos(self.thetas[ii])*waveDir - sin(self.thetas[ii])*normalWaveDir
-            self.ai_d[self.M+ii,:] = self.ai*self.G_Int*spread[ii]
-            self.ai_d[self.M-ii,:] = self.ai*self.G_Int*spread[ii]
+            self.ai_d[self.M+ii,:] = self.ai*self.G_Int*self.spread[ii]
+            self.ai_d[self.M-ii,:] = self.ai*self.G_Int*self.spread[ii]
             self.phi[self.M+ii,:] = 2.0*pi*np.random.random(self.fi.shape[0])
             self.phi[self.M-ii,:] = 2.0*pi*np.random.random(self.fi.shape[0])
 
         self.dirs[self.M,:] = self.waveDir
         self.phi[self.M,:] = 2.0*pi*np.random.random(self.fi.shape[0])
-        self.ai_d[self.M,:] = self.ai*self.G_Int*spread[0]
+        self.ai_d[self.M,:] = self.ai*self.G_Int*self.spread[0]
 
 
 
@@ -778,11 +828,11 @@ class directionalWaves:
         Eta=0.
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                Eta+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).eta(x,y,z,t)
+                Eta+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).eta(x,y,z,t)
         return Eta
     #        return (self.ai*np.cos(2.0*pi*self.fi*t - self.ki*x + self.phi)).sum()
 
-    def u(self,x,z,t):
+    def u(self,x,y,z,t):
         """x-component of velocity
 
         :param x: floating point x coordinate
@@ -790,25 +840,27 @@ class directionalWaves:
         :param t: time
         """
         U=0.
+        y=0
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                U+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).u(x,y,z,t)
+                U+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).u(x,y,z,t)
         return U
 
-    def v(self,x,z,t):
+    def v(self,x,y,z,t):
         """x-component of velocity
 
         :param x: floating point x coordinate
         :param z: floating point z coordinate (height above bottom)
         :param t: time
         """
-        V=0.
+        V=0
+        y=0.
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                V+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).v(x,y,z,t)
+                V+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).v(x,y,z,t)
         return V
 
-    def w(self,x,z,t):
+    def w(self,x,y,z,t):
         """x-component of velocity
 
         :param x: floating point x coordinate
@@ -816,18 +868,35 @@ class directionalWaves:
         :param t: time
         """
         W=0.
+        y=0
         for jj in range(2*self.M + 1):
             for ii in range(self.N):
-                W+=waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=wi[ii], phi0 = self.phi[ii,jj]).w(x,y,z,t)
+                W+=self.waves(period = 1./self.fi[ii], waveHeight = 2.*self.ai[ii,jj],mwl = self.mwl, depth = self.d,g = self.g,waveDir = self.dirs[ii,jj],wavelength=self.wi[ii], phi0 = self.phi[ii,jj]).w(x,y,z,t)
         return W
-
-
 
 
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
     import os as os
     import tables
+
+"""
+# Unit test for Linear Monochromatic waves
+    Lwaves = MonochromaticWaves(period=1.94,waveHeight=0.0125,mwl=0.,depth=1.,g=[0,-9.81,0],waveDir[0.707,0.707,],wavelength=None,waveType="Linear",Ycoeff = None, Bcoeff =None, meanVelocity = 0.,phi0 = 0.)
+    logEvent("Wavetools.py: Testing for a monochromatic linear wave:" 
+        
+
+
+
+
+
+
+
+
+
+
+
+
     lineData = tables.openFile("20150927-0000-01.FRFNProp.line.data.mat","r")
     z = lineData.root.lineGriddedFilteredData.waterGridFiltered[:]
     x = lineData.root.lineCoredat.downLineX[:]
@@ -859,55 +928,55 @@ if __name__ == '__main__':
     plt.close("all")
     np.savetxt("Duck_series.txt",zip(rawtime,neweta))
 
+    for Nf in np.array([8,16,32,64,128]):
 
-    tseries = timeSeries(timeSeriesFile= "Duck_series.txt",
-                         skiprows = 2,
-                         d = 5.5,
-                         Npeaks = 1, #m depth
-                         bandFactor = [2.0], #controls width of band  around fp
-                         peakFrequencies = [0.2],
-                         N = 32,          #number of frequency bins
-                         Nwaves = 4,
-                         mwl = 0.0,        #mean water level
-                         waveDir = np.array([1,0,0]),
-                         g = np.array([0, -9.81, 0])         #accelerationof gravity
-                         )
-    graph = tseries.plotSeries()
-    tseries_comp = np.loadtxt("Tseries_proteus.csv",skiprows=2, delimiter = ",")
-    line1 = plt.plot(tseries_comp[:,0],tseries_comp[:,1])
-    plt.savefig("timeSeries2.pdf")
-    plt.close("all")
-    time = tseries.rawdata()[0]
-    eta = tseries.rawdata()[1]
-
-
+        tseries = timeSeries(timeSeriesFile= "Duck_series.txt",
+                             skiprows = 2,
+                             d = 5.5,
+                             bandFactor = 2.0, #controls width of band  around fp
+                             peakFrequency = 0.2,
+                             N = Nf,          #number of frequency bins
+                             Nwaves = 2,
+                             mwl = 0.0,        #mean water level
+                             waveDir = np.array([ 1 , 0 , 0]),
+                             g = np.array([0, -9.81, 0])         #accelerationof gravity
+                             )
+#        graph = tseries.plotSeries()
+#        tseries_comp = np.loadtxt("Tseries_proteus.csv",skiprows=2, delimiter = ",")
+#        line1 = plt.plot(tseries_comp[:,0],tseries_comp[:,1])
+#        plt.savefig("timeSeries2.pdf")
+#        plt.close("all")
+        time = tseries.rawdata()[0]
+        eta = tseries.rawdata()[1]
 
 
-    decomp = decompose_tseries(time,eta,len(time),ret_only_freq=0)
+
+
+        decomp = decompose_tseries(time,eta,len(time),len(time),ret_only_freq=0)
    # plt.plot(decomp[0],decomp[1])
    # plt.plot(decomp[0],decomp[2])
 
 
 
 
-    tlim = len(time) # len(time)
-    ax = plt.subplot(111)
-    for Nf in np.array([16,32,64,128]):
+        tlim = len(time) # len(time)
+        ax = plt.subplot(111)
         print Nf
         eta_rec= np.zeros(len(time),"d")
         for itime in range(tlim):
-            eta_rec[itime] = tseries.reconstruct_direct(0.,0.,0.,time[itime],Nf)
+            eta_rec[itime] = tseries.reconstruct_direct(0.,0.,0.,time[itime])
         ax.plot(time,eta_rec,label = "Nf = %s" %Nf)
         ax.legend()
 
     rawm = np.mean(neweta)
-    ax.plot(time,eta,"ko",label="Actual")
+    ax.plot(time,eta,"ko",label="Actual",markersize=2)
     plt.legend(loc="best")
 #    ax.set_xlim(0,50)
+    plt.grid()
     plt.savefig("Comp.pdf")
 
 
-"""#Regular, Random wave tests
+#Regular, Random wave tests
 if __name__ == '__main__':
     from matplotlib.pyplot import *
     import os as os
