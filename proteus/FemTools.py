@@ -6616,7 +6616,7 @@ class MultilevelProjectionOperators:
                 #end coarse_eN
                 for I in range(coarseSpace.dim):
                     for J in rbcColumnIndeces[I]:
-                        rbcSum[I] += rbc[(I,J)]
+                        rbcSum[I] += abs(rbc[(I,J)])
                         if rbc[(I,J)] > 1.0-1.0e-8 and rbc[(I,J)] < 1.0 + 1.0e-8:
                             interp_bc[(I,J)] = 1.0
                 for I in range(offsetListList[l][cj],offsetListList[l][cj]+coarseDOFBoundaryConditions.nFreeDOF_global,strideListList[l][cj]):
@@ -6624,7 +6624,10 @@ class MultilevelProjectionOperators:
                         rSum[I] += r[(I,J)]
                 for I in range(coarseSpace.dim):
                     for J in rbcColumnIndeces[I]:
-                        scaled_rbc[(I,J)] = rbc[(I,J)]/rbcSum[I]
+                        if rbc[(I,J)] > 0.0 - 1.0e-8 and rbc[(I,J)] < 0.0 + 1.0e-8:
+                            scaled_rbc[(I,J)] = 0.0
+                        else:
+                            scaled_rbc[(I,J)] = rbc[(I,J)]/rbcSum[I]
                 #now make real sparse matrices
                 (rbc,rbczval) = SparseMatFromDict(coarseSpace.dim,fineSpace.dim,rbc)
                 (scaled_rbc,scaled_rbczval) = SparseMatFromDict(coarseSpace.dim,fineSpace.dim,scaled_rbc)
