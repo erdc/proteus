@@ -478,27 +478,37 @@ cpostprocessingBuildLocalBDM2projectionMatrices(PyObject* self,
 					      PyObject* args)
 {
   
-  PyObject *w_dS_f,*ebq_n,*ebq_v,*BDMmat_element,*w_int_test_grads;
-  if(!PyArg_ParseTuple(args,"OOOOO",
+  PyObject *w_dS_f,*ebq_n,*ebq_v,*BDMmat_element,*q_basis_vals,*w_int_test_grads,*w_int_div_free,*piola_trial_fun,*degree;
+  if(!PyArg_ParseTuple(args,"OOOOOOOOO",
+		       &degree,
                        &w_dS_f,
                        &ebq_n,
                        &ebq_v,
-		       &BDMmat_element,
-		       &w_int_test_grads))
+		       &q_basis_vals,
+		       &w_int_test_grads,
+		       &w_int_div_free,
+		       &piola_trial_fun,
+		       &BDMmat_element))
     return NULL;
 
-  buildLocalBDM2projectionMatrices(SHAPE(ebq_n)[0],
+  buildLocalBDM2projectionMatrices(DDATA(degree),
+				   SHAPE(ebq_n)[0],
 				   SHAPE(ebq_n)[1],
 				   SHAPE(ebq_n)[2],
+				   SHAPE(q_basis_vals)[1],
 				   SHAPE(ebq_n)[3],
 				   SHAPE(w_dS_f)[3],
 				   SHAPE(ebq_v)[3],
+				   SHAPE(w_int_test_grads)[2],
 				   SHAPE(BDMmat_element)[1],
 				   DDATA(w_dS_f),
 				   DDATA(ebq_n),
 				   DDATA(ebq_v),
 				   DDATA(BDMmat_element),
-				   DDATA(w_int_test_grads));
+				   DDATA(q_basis_vals),
+				   DDATA(w_int_test_grads),
+            			   DDATA(w_int_div_free),
+			           DDATA(piola_trial_fun));
   Py_INCREF(Py_None);
   return Py_None;
 }
@@ -515,6 +525,25 @@ cpostprocessingFactorLocalBDM1projectionMatrices(PyObject* self,
     return NULL;
 
   factorLocalBDM1projectionMatrices(SHAPE(BDMmat_element)[0],
+				    SHAPE(BDMmat_element)[1],
+				    DDATA(BDMmat_element),
+				    IDATA(BDMmatPivots_element));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyObject*
+cpostprocessingFactorLocalBDM2projectionMatrices(PyObject* self,
+					       PyObject* args)
+{
+  
+  PyObject *BDMmat_element,*BDMmatPivots_element;
+  if(!PyArg_ParseTuple(args,"OO",
+		       &BDMmat_element,
+		       &BDMmatPivots_element))
+    return NULL;
+
+  factorLocalBDM2projectionMatrices(SHAPE(BDMmat_element)[0],
 				    SHAPE(BDMmat_element)[1],
 				    DDATA(BDMmat_element),
 				    IDATA(BDMmatPivots_element));
@@ -547,6 +576,41 @@ cpostprocessingSolveLocalBDM1projection(PyObject* self,
 			   IDATA(BDMmatPivots_element),
 			   DDATA(w_dS_f),
 			   DDATA(ebq_n),
+			   DDATA(ebq_velocity),
+			   DDATA(q_vdofs));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyObject*
+cpostprocessingSolveLocalBDM2projection(PyObject* self,
+				      PyObject* args)
+{
+  
+  PyObject *w_dS_f,*ebq_n,*ebq_velocity,*q_vdofs,*BDMmat_element,*BDMmatPivots_element,*q_velocity,*w_interior_gradients;
+  if(!PyArg_ParseTuple(args,"OOOOOOOO",
+		       &BDMmat_element,
+		       &BDMmatPivots_element,
+                       &w_dS_f,
+                       &ebq_n,
+		       &w_interior_gradients,
+		       &q_velocity,
+                       &ebq_velocity,
+		       &q_vdofs))
+    return NULL;
+
+  solveLocalBDM2projection(SHAPE(ebq_n)[0],
+			   SHAPE(ebq_n)[1],
+			   SHAPE(ebq_n)[2],
+			   SHAPE(ebq_n)[3],
+			   SHAPE(w_dS_f)[3],
+			   SHAPE(BDMmat_element)[1],
+			   DDATA(BDMmat_element),
+			   IDATA(BDMmatPivots_element),
+			   DDATA(w_dS_f),
+			   DDATA(ebq_n),
+			   DDATA(w_interior_gradients),
+			   DDATA(q_velocity),
 			   DDATA(ebq_velocity),
 			   DDATA(q_vdofs));
   Py_INCREF(Py_None);
@@ -603,6 +667,35 @@ cpostprocessingGetElementBDM1velocityValuesLagrangeRep(PyObject* self,
     assert(nVDOFs_element == SHAPE(p1_vdofs)[1]);
 
   getElementBDM1velocityValuesLagrangeRep(SHAPE(q_velocity)[0],
+					  SHAPE(q_velocity)[1],
+					  SHAPE(q_velocity)[2],
+					  SHAPE(q_v)[2],
+					  nVDOFs_element,
+					  DDATA(q_v),
+					  DDATA(p1_vdofs),
+					  DDATA(q_velocity));
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
+static PyObject*
+cpostprocessingGetElementBDM2velocityValuesLagrangeRep(PyObject* self,
+						     PyObject* args)
+{
+  
+  PyObject *q_v,*p1_vdofs,*q_velocity;
+  int nVDOFs_element=1;
+  if(!PyArg_ParseTuple(args,"OOO",
+		       &q_v,
+		       &p1_vdofs,
+		       &q_velocity))
+    return NULL;
+  nVDOFs_element = SHAPE(q_velocity)[2]*(SHAPE(q_velocity)[2]+1);
+  
+  if (ND(p1_vdofs) > 1)
+    assert(nVDOFs_element == SHAPE(p1_vdofs)[1]);
+
+  getElementBDM2velocityValuesLagrangeRep(SHAPE(q_velocity)[0],
 					  SHAPE(q_velocity)[1],
 					  SHAPE(q_velocity)[2],
 					  SHAPE(q_v)[2],
@@ -2258,8 +2351,16 @@ static PyMethodDef cpostprocessingMethods[] = {
     cpostprocessingFactorLocalBDM1projectionMatrices,
     METH_VARARGS, 
     "compute LU factorization for local BDM projection matrices"},
+  { "factorLocalBDM2projectionMatrices", 
+    cpostprocessingFactorLocalBDM2projectionMatrices,
+    METH_VARARGS, 
+    "compute LU factorization for local BDM projection matrices"},
   { "solveLocalBDM1projection", 
     cpostprocessingSolveLocalBDM1projection,
+    METH_VARARGS, 
+    "solve for local [P^1(E)]^d dofs using BDM1 projection assuming system already factored" },
+  { "solveLocalBDM2projection", 
+    cpostprocessingSolveLocalBDM2projection,
     METH_VARARGS, 
     "solve for local [P^1(E)]^d dofs using BDM1 projection assuming system already factored" },
   { "solveLocalBDM1projectionFromFlux", 
@@ -2268,6 +2369,10 @@ static PyMethodDef cpostprocessingMethods[] = {
     "solve for local [P^1(E)]^d dofs using BDM1 projection assuming system already factored" },
   { "getElementBDM1velocityValuesLagrangeRep", 
     cpostprocessingGetElementBDM1velocityValuesLagrangeRep,
+    METH_VARARGS, 
+    "get velocity at quadrature points assuming have local dofs for local P^1(E) and std Lagr. basis" },
+  { "getElementBDM2velocityValuesLagrangeRep", 
+    cpostprocessingGetElementBDM2velocityValuesLagrangeRep,
     METH_VARARGS, 
     "get velocity at quadrature points assuming have local dofs for local P^1(E) and std Lagr. basis" },
   { "getElementLDGvelocityValuesLagrangeRep", 
