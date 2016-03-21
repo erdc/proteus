@@ -1173,7 +1173,6 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
         return vx
 
 
->>>>>>> BDM projection matrices completed.
 class VPP_PWL_BDM(VPP_PWL_RT0):
     """
     Local Larson-Niklasson method with BDM1 representation for element velocities
