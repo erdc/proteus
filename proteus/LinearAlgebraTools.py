@@ -71,7 +71,8 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
         else:
             assert nghosts >= 0, "The number of ghostnodes must be non-negative"
             assert subdomain2global.shape[0] == (n+nghosts), ("The subdomain2global map is the wrong length n=%i,nghosts=%i,shape=%i \n" % (n,n+nghosts,subdomain2global.shape[0]))
-            assert len(array.flat) == (n+nghosts)*blockSize
+            assert len(array.flat) == (n+nghosts)*blockSize, "%i  != (%i+%i)*%i \n" % (len(array.flat),  n,nghosts,blockSize)
+
             if blockVecType == "simple":
                 ghosts = numpy.zeros((blockSize*nghosts),'i')
                 for j in range(blockSize):
