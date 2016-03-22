@@ -2747,7 +2747,7 @@ void buildLocalBDM2projectionMatrices(int degree,
   double pval, pvalx, pvaly;
   nSimplex = nSpace+1;
   assert(nVDOFs_element == nSpace*(nSpace*3));
-  nVDOFs_element2 = nVDOFs_element*nVDOFs_element;
+  //  nVDOFs_element2 = nVDOFs_element*nVDOFs_element;
   /*mwf debug
     printf("build local BDM nE= %d nEb=%d nBq=%d nvd=%d nd=%d\n",
     nElements_global,nElementBoundaries_element,nQuadraturePoints_elementBoundary,

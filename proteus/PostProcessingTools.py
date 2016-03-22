@@ -841,57 +841,75 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
         self.testSpace = None
         #mesh information needed
         #building mesh infrastructure
-        self.globalNode2globalElementList = [[] for nN in range(self.vt.mesh.nNodes_global)]
+        import pdb
+        self.globalDOF2globalElementList = [[] for nN in range(self.vt.mesh.nNodes_global + self.vt.mesh.nEdges_global)]
+        
         for eN in range(self.vt.mesh.nElements_global):
             for nN in range(self.vt.mesh.nNodes_element):
                 nN_global = self.vt.mesh.elementNodesArray[eN,nN]
-                self.globalNode2globalElementList[nN_global].append(eN)
-        self.globalNodeGlobalElement2StarElement = []
-        self.nElements_node = numpy.zeros((self.vt.mesh.nNodes_global,),'i')
-        self.nodeStarElementsArray = numpy.ones((self.vt.mesh.nElements_global,
-                                                 self.vt.mesh.nNodes_element),'i')
-        self.nodeStarElementsArray[:]=-1
-        self.nodeStarElementNeighborsArray = numpy.zeros((self.vt.mesh.nElements_global,
-                                                            self.vt.mesh.nNodes_element,
-                                                            self.vt.mesh.nElementBoundaries_element),
-                                                           'i')
-        for I in range(self.vt.mesh.nNodes_global):
-            self.globalNode2globalElementList[I].sort()
-            self.nElements_node[I] = len(self.globalNode2globalElementList[I])
-            self.globalNodeGlobalElement2StarElement.append(dict([(eN_global,eN_node) for eN_node,eN_global in enumerate(self.globalNode2globalElementList[I])]))
+                self.globalDOF2globalElementList[nN_global].append(eN)
+            for nN in range(self.vt.mesh.nElementBoundaries_element):
+                e_global = self.vt.mesh.elementBoundariesArray[eN,nN]
+                self.globalDOF2globalElementList[e_global+len(self.vt.mesh.nodeArray)].append(eN)
+
+
+        self.globalDOFGlobalElement2StarElement = []
+        self.nElements_DOF = numpy.zeros((self.vt.mesh.nNodes_global + self.vt.mesh.nElementBoundaries_global,),'i')
+        self.dofStarElementsArray = numpy.ones((self.vt.mesh.nElements_global,
+                                                 self.vt.mesh.nNodes_element + self.vt.mesh.nElementBoundaries_element),'i')
+        self.dofStarElementsArray[:] = -1
+        self.dofStarElementNeighborsArray = numpy.zeros((self.vt.mesh.nElements_global,
+                                                         self.vt.mesh.nNodes_element + self.vt.mesh.nElementBoundaries_element,
+                                                         self.vt.mesh.nElementBoundaries_element),
+                                                        'i')
+
+
+        for I in range(self.vt.mesh.nNodes_global + self.vt.mesh.nElementBoundaries_global):
+            self.globalDOF2globalElementList[I].sort()
+            self.nElements_DOF[I] = len(self.globalDOF2globalElementList[I])
+            self.globalDOFGlobalElement2StarElement.append(dict([(eN_global,eN_node) for eN_node,eN_global in enumerate(self.globalDOF2globalElementList[I])]))
         for ebNI in range(self.vt.mesh.nInteriorElementBoundaries_global):
             ebN = self.vt.mesh.interiorElementBoundariesArray[ebNI]
-            left_eN_global   = self.vt.mesh.elementBoundaryElementsArray[ebN,0]
-            right_eN_global  = self.vt.mesh.elementBoundaryElementsArray[ebN,1]
+            left_eN_global  = self.vt.mesh.elementBoundaryElementsArray[ebN,0]
+            right_eN_global = self.vt.mesh.elementBoundaryElementsArray[ebN,1]
             left_ebN_element  = self.vt.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
             right_ebN_element = self.vt.mesh.elementBoundaryLocalElementBoundariesArray[ebN,1]
+            # start by storing the interior edge
+            self.dofStarElementsArray[left_eN_global,left_ebN_element+self.vt.mesh.nNodes_element] = self.globalDOFGlobalElement2StarElement[ebN+self.vt.mesh.nNodes_global][left_eN_global]
+            self.dofStarElementsArray[right_eN_global,right_ebN_element+self.vt.mesh.nNodes_element] = self.globalDOFGlobalElement2StarElement[ebN+self.vt.mesh.nNodes_global][right_eN_global]
+            self.dofStarElementNeighborsArray[left_eN_global,left_ebN_element+self.vt.mesh.nNodes_element,left_ebN_element] = self.globalDOFGlobalElement2StarElement[ebN+self.vt.mesh.nNodes_global][right_eN_global]
+            self.dofStarElementNeighborsArray[right_eN_global,right_ebN_element+self.vt.mesh.nNodes_element,right_ebN_element] = self.globalDOFGlobalElement2StarElement[ebN+self.vt.mesh.nNodes_global][left_eN_global]
+            # next populate the nodes
             for i in range(self.vt.mesh.nNodes_element):
                 left_I = self.vt.mesh.elementNodesArray[left_eN_global,i]
-                self.nodeStarElementsArray[left_eN_global,i] = self.globalNodeGlobalElement2StarElement[left_I][left_eN_global]
+                self.dofStarElementsArray[left_eN_global,i] = self.globalDOFGlobalElement2StarElement[left_I][left_eN_global]
                 if i != left_ebN_element:
-                    self.nodeStarElementNeighborsArray[left_eN_global,i,left_ebN_element] = self.globalNodeGlobalElement2StarElement[left_I][right_eN_global]
-                #if
+                    self.dofStarElementNeighborsArray[left_eN_global,i,left_ebN_element] = self.globalDOFGlobalElement2StarElement[left_I][right_eN_global]
+                 #if
                 right_I=self.vt.mesh.elementNodesArray[right_eN_global,i]
-                self.nodeStarElementsArray[right_eN_global,i] = self.globalNodeGlobalElement2StarElement[right_I][right_eN_global]
+                self.dofStarElementsArray[right_eN_global,i] = self.globalDOFGlobalElement2StarElement[right_I][right_eN_global]
                 if i != right_ebN_element:
-                    self.nodeStarElementNeighborsArray[right_eN_global,i,right_ebN_element] = self.globalNodeGlobalElement2StarElement[right_I][left_eN_global]
+                    self.dofStarElementNeighborsArray[right_eN_global,i,right_ebN_element] = self.globalDOFGlobalElement2StarElement[right_I][left_eN_global]
 
-            #i
-        #ebNi
         for ebNE in range(self.vt.mesh.nExteriorElementBoundaries_global):
             ebN = self.vt.mesh.exteriorElementBoundariesArray[ebNE]
             eN_global   = self.vt.mesh.elementBoundaryElementsArray[ebN,0]
             ebN_element  = self.vt.mesh.elementBoundaryLocalElementBoundariesArray[ebN,0]
+            self.dofStarElementsArray[eN_global, ebN_element+self.vt.mesh.nNodes_element] = self.globalDOFGlobalElement2StarElement[ebN+self.vt.mesh.nNodes_global][eN_global]
             for i in range(self.vt.mesh.nNodes_element):
                 I = self.vt.mesh.elementNodesArray[eN_global,i]
-                self.nodeStarElementsArray[eN_global,i] = self.globalNodeGlobalElement2StarElement[I][eN_global]
+                self.dofStarElementsArray[eN_global,i] = self.globalDOFGlobalElement2StarElement[I][eN_global]
+
+#        pdb.set_trace()
             #i
         #ebNE
         self.nodeStarFactors = {}
         for ci in self.vtComponents:
-            self.nodeStarFactors[ci] = cpostprocessing.NodeStarFactor(self.nElements_node,
-                                                                      self.nodeStarElementsArray,
-                                                                      self.nodeStarElementNeighborsArray)
+            import pdb
+#            pdb.set_trace()
+            self.nodeStarFactors[ci] = cpostprocessing.NodeStarFactor(self.nElements_DOF,
+                                                                      self.dofStarElementsArray,
+                                                                      self.dofStarElementNeighborsArray)
 
 
         #
@@ -1026,7 +1044,7 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
         Galerkin solution has already been found
         """
         import pdb
-        pdb.set_trace()     
+#        pdb.set_trace()     
         #must zero first time for average velocity
         self.nodeStarFactors[ci].setU(0.0)
         #correct first time through, in case there are Flux boundaries that
@@ -1043,7 +1061,7 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                     for i in range(self.testSpace.referenceFiniteElement.localFunctionSpace.dim):
                         for j in range(self.vt.u[ci].femSpace.referenceFiniteElement.localFunctionSpace.dim):
                             self.elementResidual[ci][eN,i] += self.alpha[ci][i,j]*self.vt.elementResidual[ci][eN,j]
-
+                            
         self.getConservationResidualPWL(ci,correctFlux=True)
         if verbose > 0:
             logEvent("""velpp Max local conservation (average velocity) = %12.5e""" % max(numpy.absolute(self.q[('conservationResidual',ci)].flat[0:self.vt.mesh.subdomainMesh.nElements_owned])))
@@ -1081,9 +1099,9 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                                                          self.vt.mesh.elementBoundaryElementsArray,
                                                          self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
                                                          self.vt.mesh.elementNodesArray,
-                                                         self.nodeStarElementsArray,
-                                                         self.nodeStarElementNeighborsArray,
-                                                         self.nElements_node,
+                                                         self.dofStarElementsArray,
+                                                         self.dofStarElementNeighborsArray,
+                                                         self.nElements_DOF,
                                                          self.fluxElementBoundaries[ci],
                                                          self.elementResidual[ci],
                                                          self.vt.ebq_global[('velocityAverage',ci)],
@@ -1288,7 +1306,7 @@ class VPP_PWL_BDM(VPP_PWL_RT0):
 
         return vx
 
-class VPP_PWL_BDM2(VPP_PWL_RT0):
+class VPP_PWL_BDM2(VPP_PWL_RT1):
     """
     WIP - this class is intended to implement BDM2 elements in proteus
 
@@ -1467,7 +1485,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT0):
 #        assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
 
         import pdb
-        pdb.set_trace()
+#        pdb.set_trace()
 
         self.solveLocalBDM2projection(self.BDMprojectionMat_element,
                                       self.BDMprojectionMatPivots_element,
