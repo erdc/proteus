@@ -1,7 +1,6 @@
 #ifndef FLCBDFWRAPPERSMODULE_H
 #define FLCBDFWRAPPERSMODULE_H 
 #include <cstddef>
-#define PETSC_INCLUDE_AS_C
 
 extern "C"
 {
