@@ -34,7 +34,9 @@ from proteus.SpatialTools import (Shape,
                                   Cuboid,
                                   Rectangle,
                                   CustomShape,
-                                  BCContainer)
+                                  BCContainer,
+                                  _assembleGeometry,
+                                  _generateMesh)
 
 
 class ShapeRANS(Shape):
@@ -277,8 +279,8 @@ class ShapeRANS(Shape):
                                                  dragBeta=dragBeta[i],
                                                  porosity=porosity[i])
 
-    def setPorousZones(self, flags, epsFact_solid, dragAlpha=0.5/1.005e-6,
-                       dragBeta=0., porosity=1.):
+    def setPorousZones(self, flags, dragAlpha=0.5/1.005e-6, dragBeta=0.,
+                       porosity=1.):
         """
         Sets a region (given the local flag) to a porous zone
 
@@ -290,18 +292,19 @@ class ShapeRANS(Shape):
         self._attachAuxiliaryVariable('RelaxZones')
         if isinstance(flags, int):
             flags = [flags]
-            epsFact_solid = [epsFact_solid]
             dragAlpha = [dragAlpha]
             dragBeta = [dragBeta]
             porosity = [porosity]
         for i, flag in enumerate(flags):
+            # note for porous zone:
+            # epsFact_solid = q_phi_solid, --> Hs always equal to 1.
             self.zones[flag] = bc.RelaxationZone(shape=self,
                                                  zone_type='porous',
                                                  orientation=None,
                                                  center=None,
                                                  waves=None,
                                                  windSpeed=None,
-                                                 epsFact_solid=epsFact_solid[i],
+                                                 epsFact_solid=1.,
                                                  dragAlpha=dragAlpha[i],
                                                  dragBeta=dragBeta[i],
                                                  porosity=porosity[i])
@@ -709,15 +712,23 @@ class Tank3D(ShapeRANS):
                 if key == 'front':
                     center[0] += 0.5*self.dim[0]-sl['front']/2.
                     orientation = [1., 0., 0.]
+                    self.BC.front.setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                        windSpeed=windSpeed)
                 elif key == 'back':
                     center[0] += -0.5*self.dim[0]+sl['back']/2.
                     orientation = [-1., 0., 0.]
+                    self.BC.back.setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                        windSpeed=windSpeed)
                 elif key == 'left':
                     center[1] += -0.5*self.dim[1]+sl['left']/2.
                     orientation = [0., 1., 0.]
+                    self.BC.left.setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                        windSpeed=windSpeed)
                 elif key == 'right':
                     center[1] += 0.5*self.dim[1]-sl['right']/2.
                     orientation = [0., -1., 0.]
+                    self.BC.right.setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                        windSpeed=windSpeed)
                 self.zones[flag] = bc.RelaxationZone(shape=self,
                                                      zone_type='generation',
                                                      orientation=orientation,
@@ -926,6 +937,8 @@ class Tank2D(ShapeRANS):
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
+            self.BC.left.setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                          windSpeed=windSpeed)
         if right is True:
             center = list(self.coords)
             ind = self.regionIndice['rightSponge']
@@ -943,6 +956,8 @@ class Tank2D(ShapeRANS):
                                                  dragAlpha=dragAlpha,
                                                  dragBeta=dragBeta,
                                                  porosity=porosity)
+            self.BC.right.setUnsteadyTwoPhaseVelocityInlet(wave=waves,
+                                                           windSpeed=windSpeed)
 
 
 class RigidBody(AuxiliaryVariables.AV_base):
@@ -1154,6 +1169,7 @@ class RigidBody(AuxiliaryVariables.AV_base):
 
 
 
+
 def assembleDomain(domain):
     """
     This function sets up everything needed for the domain, meshing, and
@@ -1163,56 +1179,21 @@ def assembleDomain(domain):
 
     :param domain: domain to assemble
     """
-    # reinitialize geometry of domain
-    domain.vertices = []
-    domain.vertexFlags = []
-    domain.segments = []
-    domain.segmentFlags = []
-    domain.facets = []
-    domain.facetFlags = []
-    domain.holes = []
-    domain.regions = []
-    domain.regionFlags = []
-    # BC at flag 0
-    domain.bc = [bc.BC_RANS()]
-    domain.bc[0].setNonMaterial()
-    # barycenter at flag 0
-    domain.barycenters = np.array([[0., 0., 0.]])
+    _assembleGeometry(domain, BC_class=bc.BC_RANS)
+    assembleAuxiliaryVariables(domain)
+    _generateMesh(domain)
+
+
+def assembleAuxiliaryVariables(domain):
+    """
+    Should be called after assembleGeometry
+    """
     domain.auxiliaryVariables = []
-    start_flag = 0
-    start_vertex = 0
     zones_global = {}
+    start_region = 0
+    start_rflag = 0
+    start_flag = 0
     for shape in domain.shape_list:
-        # --------------------------- #
-        # ----- DOMAIN GEOMETRY ----- #
-        # --------------------------- #
-        start_flag = len(domain.bc)-1
-        start_vertex = len(domain.vertices)
-        start_region = len(domain.regions)  # indice 0 ignored
-        if domain.regionFlags:
-            start_rflag = max(domain.regionFlags)
-        else:
-            start_rflag = 0
-        domain.bc += shape.BC_list
-        domain.vertices += (shape.vertices).tolist()
-        domain.vertexFlags += (shape.vertexFlags+start_flag).tolist()
-        barycenters = np.array([shape.barycenter for bco in shape.BC_list])
-        domain.barycenters = np.append(domain.barycenters, barycenters, axis=0)
-        if shape.segments is not None:
-            domain.segments += (shape.segments+start_vertex).tolist()
-            domain.segmentFlags += (shape.segmentFlags+start_flag).tolist()
-        if shape.facets is not None:
-            domain.facets += (shape.facets+start_vertex).tolist()
-            domain.facetFlags += (shape.facetFlags+start_flag).tolist()
-        if shape.regions is not None:
-            domain.regions += (shape.regions).tolist()
-            domain.regionFlags += (shape.regionFlags+start_rflag).tolist()
-        if shape.holes is not None:
-            domain.holes += (shape.holes).tolist()
-        domain.getBoundingBox()
-        # --------------------------- #
-        # --- AUXILIARY VARIABLES --- #
-        # --------------------------- #
         aux = domain.auxiliaryVariables
         # ----------------------------
         # RIGID BODIES
@@ -1232,11 +1213,12 @@ def assembleDomain(domain):
             if not zones_global:
                 aux += [bc.RelaxationZoneWaveGenerator(zones_global,
                                                        domain.nd)]
-            # create arrays of default values
-            domain.porosityTypes = np.ones(len(domain.regionFlags)+1)
-            domain.dragAlphaTypes = np.zeros(len(domain.regionFlags)+1)
-            domain.dragBetaTypes = np.zeros(len(domain.regionFlags)+1)
-            domain.epsFact_solid = np.zeros(len(domain.regionFlags)+1)
+            if not hasattr(domain, 'porosityTypes'):
+                # create arrays of default values
+                domain.porosityTypes = np.ones(len(domain.regionFlags)+1)
+                domain.dragAlphaTypes = np.zeros(len(domain.regionFlags)+1)
+                domain.dragBetaTypes = np.zeros(len(domain.regionFlags)+1)
+                domain.epsFact_solid = np.zeros(len(domain.regionFlags)+1)
             i0 = start_region+1
             for flag, zone in shape.zones.iteritems():
                 ind = [i for i, f in enumerate(shape.regionFlags) if f == flag]
@@ -1248,19 +1230,9 @@ def assembleDomain(domain):
                 # update dict with global key instead of local key
                 key = flag+start_rflag
                 zones_global[key] = zone
-    # --------------------------- #
-    # ----- MESH GENERATION ----- #
-    # --------------------------- #
-    mesh = domain.MeshOptions
-    if mesh.outputFiles['poly'] is True:
-        domain.writePoly(mesh.outputFiles['name'])
-    if mesh.outputFiles['ply'] is True:
-        domain.writePLY(mesh.outputFiles['name'])
-    if mesh.outputFiles['asymptote'] is True:
-        domain.writeAsymptote(mesh.outputFiles['name'])
-    mesh.setTriangleOptions()
-    log("""Mesh generated using: tetgen -%s %s"""  %
-        (mesh.triangleOptions, domain.polyfile+".poly"))
+        start_flag += len(shape.BC_list)
+        start_region += len(shape.regions)
+        start_rflag += max(domain.regionFlags[0:start_region])
 
 
 def get_unit_vector(vector):
