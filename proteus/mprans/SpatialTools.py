@@ -1231,8 +1231,9 @@ def assembleAuxiliaryVariables(domain):
                 key = flag+start_rflag
                 zones_global[key] = zone
         start_flag += len(shape.BC_list)
-        start_region += len(shape.regions)
-        start_rflag += max(domain.regionFlags[0:start_region])
+        if shape.regions is not None:
+            start_region += len(shape.regions)
+            start_rflag += max(domain.regionFlags[0:start_region])
 
 
 def get_unit_vector(vector):
