@@ -590,6 +590,11 @@ def assembleDomain(domain):
     :param domain: domain to asssemble
     """
     # reinitialize geometry of domain
+    assembleGeometry(domain, BC_class=bc.BC_Base)
+    generateMesh(domain)
+
+def _assembleGeometry(domain, BC_class):
+    # reinitialize geometry of domain
     domain.vertices = []
     domain.vertexFlags = []
     domain.segments = []
@@ -600,11 +605,10 @@ def assembleDomain(domain):
     domain.regions = []
     domain.regionFlags = []
     # BC at flag 0
-    domain.bc = [bc.BC_Base()]
-    # domain.bc[0].setNonMaterial()  # function not defined in BC_Base
+    domain.bc = [BC_class()]
+    domain.bc[0].setNonMaterial()
     # barycenter at flag 0
     domain.barycenters = np.array([[0., 0., 0.]])
-    domain.auxiliaryVariables = []
     start_flag = 0
     start_vertex = 0
     for shape in domain.shape_list:
@@ -613,21 +617,48 @@ def assembleDomain(domain):
         # --------------------------- #
         start_flag = len(domain.bc)-1
         start_vertex = len(domain.vertices)
-        start_region = len(domain.regions)  # indice 0 ignored
         if domain.regionFlags:
             start_rflag = max(domain.regionFlags)
         else:
             start_rflag = 0
         domain.bc += shape.BC_list
-        domain.vertices += (shape.vertices).tolist()
-        domain.vertexFlags += (shape.vertexFlags+start_flag).tolist()
+        vertices = shape.vertices.copy()
+        vertexFlags = shape.vertexFlags.copy()
+        if shape.segments is not None:
+            segments = shape.segments.copy()
+        if shape.facets is not None:
+            facets = shape.facets.copy()
+        del_v = 0
+        # deleting duplicate vertices and updating segment/facets accordingly
+        for i_s, vertex in enumerate(shape.vertices):
+            if vertex.tolist() in domain.vertices:
+                vertices = np.delete(vertices, i_s-del_v, axis=0)
+                verticesFlags = np.delete(vertexFlags, i_s-del_v)
+                i_s -= del_v
+                del_v += 1
+                i_d = domain.vertices.index(vertex.tolist())
+                if shape.segments is not None:
+                    for i in np.nditer(segments, op_flags=['readwrite']):
+                        if i > i_s:
+                            i[...] -= 1
+                        elif i == i_s:
+                            i[...] = i_d-start_vertex
+                if shape.facets is not None:
+                    for i in np.nditer(facets, op_flags=['readwrite']):
+                        if i > i_s:
+                            i[...] -= 1
+                        elif i == i_s:
+                            i[...] = i_d-start_vertex
+        # adding shape geometry to domain
+        domain.vertices += vertices.tolist()
+        domain.vertexFlags += (vertexFlags+start_flag).tolist()
         barycenters = np.array([shape.barycenter for bco in shape.BC_list])
         domain.barycenters = np.append(domain.barycenters, barycenters, axis=0)
         if shape.segments is not None:
-            domain.segments += (shape.segments+start_vertex).tolist()
+            domain.segments += (segments+start_vertex).tolist()
             domain.segmentFlags += (shape.segmentFlags+start_flag).tolist()
         if shape.facets is not None:
-            domain.facets += (shape.facets+start_vertex).tolist()
+            domain.facets += (facets+start_vertex).tolist()
             domain.facetFlags += (shape.facetFlags+start_flag).tolist()
         if shape.regions is not None:
             domain.regions += (shape.regions).tolist()
@@ -635,6 +666,9 @@ def assembleDomain(domain):
         if shape.holes is not None:
             domain.holes += (shape.holes).tolist()
         domain.getBoundingBox()
+
+
+def _generateMesh(domain):
     # --------------------------- #
     # ----- MESH GENERATION ----- #
     # --------------------------- #
