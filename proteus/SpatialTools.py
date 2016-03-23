@@ -590,8 +590,8 @@ def assembleDomain(domain):
     :param domain: domain to asssemble
     """
     # reinitialize geometry of domain
-    assembleGeometry(domain, BC_class=bc.BC_Base)
-    generateMesh(domain)
+    _assembleGeometry(domain, BC_class=bc.BC_Base)
+    _generateMesh(domain)
 
 def _assembleGeometry(domain, BC_class):
     # reinitialize geometry of domain
@@ -606,7 +606,7 @@ def _assembleGeometry(domain, BC_class):
     domain.regionFlags = []
     # BC at flag 0
     domain.bc = [BC_class()]
-    domain.bc[0].setNonMaterial()
+    # domain.bc[0].setNonMaterial()
     # barycenter at flag 0
     domain.barycenters = np.array([[0., 0., 0.]])
     start_flag = 0
@@ -622,14 +622,15 @@ def _assembleGeometry(domain, BC_class):
         else:
             start_rflag = 0
         domain.bc += shape.BC_list
+        # making copies of shape properties before operations/modifications
         vertices = shape.vertices.copy()
         vertexFlags = shape.vertexFlags.copy()
         if shape.segments is not None:
             segments = shape.segments.copy()
         if shape.facets is not None:
             facets = shape.facets.copy()
-        del_v = 0
         # deleting duplicate vertices and updating segment/facets accordingly
+        del_v = 0
         for i_s, vertex in enumerate(shape.vertices):
             if vertex.tolist() in domain.vertices:
                 vertices = np.delete(vertices, i_s-del_v, axis=0)
