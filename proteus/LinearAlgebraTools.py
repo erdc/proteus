@@ -71,7 +71,8 @@ class ParVec_petsc4py(p4pyPETSc.Vec):
         else:
             assert nghosts >= 0, "The number of ghostnodes must be non-negative"
             assert subdomain2global.shape[0] == (n+nghosts), ("The subdomain2global map is the wrong length n=%i,nghosts=%i,shape=%i \n" % (n,n+nghosts,subdomain2global.shape[0]))
-            assert len(array.flat) == (n+nghosts)*blockSize
+            assert len(array.flat) == (n+nghosts)*blockSize, "%i  != (%i+%i)*%i \n" % (len(array.flat),  n,nghosts,blockSize)
+
             if blockVecType == "simple":
                 ghosts = numpy.zeros((blockSize*nghosts),'i')
                 for j in range(blockSize):
@@ -238,32 +239,37 @@ class SparseMatShell:
             self.ghosted_csr_mat.matvec(xlf,ylf)
         y.setArray(self.yGhosted.getArray())
 
+import Comm
+from mpi4py import MPI
+comm = Comm.get().comm.tompi4py()
 
 def l2Norm(x):
     """
     Compute the parallel l_2 norm
     """
-    return math.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
-
+    #return math.sqrt(flcbdfWrappers.globalSum(numpy.dot(x,x)))
+    rvalue=numpy.array([numpy.dot(x,x)])
+    comm.Allreduce(MPI.IN_PLACE, [rvalue, MPI.DOUBLE], MPI.SUM)
+    return math.sqrt(rvalue[0])
 
 def l1Norm(x):
     """
     Compute the parallel :math:`l_1` norm
-    
+
     The :math:`l_1` norm of a vector :math:`\mathbf{x} \in
     \mathbb{R}^n` is
-    
-    .. math:: 
-    
+
+    .. math::
+
        \| \mathbf{x} \|_{1} = \sum_{i=0} |x_i|
-    
+
     If Python is running in parallel, then the sum is over all
     dimensions on all processors so that the input must not contain
     "ghost" entries.
-    
+
     This implemtation works for a distributed array with no ghost
     components (each component must be on a single processor).
-    
+
     :param x: numpy array of length n
     :return: float
     """
@@ -280,10 +286,10 @@ def lInfNorm(x):
     .. math::
 
        \|x\|_{\infty} = \max_i |x_i|
-       
+
     This implemtation works for a distributed array with no ghost
     components (each component must be on a single processor).
-    
+
     :param x: numpy array of length n
     :return: float
     """
@@ -294,17 +300,17 @@ def wDot(x,y,h):
     """
     Compute the parallel weighted dot product of vectors x and y using
     weight vector h.
-    
+
     The weighted dot product is defined for a weight vector
     :math:`\mathbf{h}` as
 
-    .. math:: 
+    .. math::
 
        (\mathbf{x},\mathbf{y})_h = \sum_{i} h_{i} x_{i} y_{i}
-    
+
     All weight vector components should be positive.
 
-    :param x,y,h: numpy arrays for vectors and weight 
+    :param x,y,h: numpy arrays for vectors and weight
     :return: the weighted dot product
     """
     return flcbdfWrappers.globalSum(numpy.sum(x*y*h))
@@ -384,7 +390,7 @@ class WeightedNorm:
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
-    
+
 
 # def test_MGV():
 #     n=2**8 + 1
