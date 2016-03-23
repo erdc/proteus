@@ -503,7 +503,7 @@ class KSP_petsc4py(LinearSolver):
             self.ksp.setPC(self.pc)
         self.ksp.setFromOptions()
         import pdb
-        pdb.set_trace()
+#        pdb.set_trace()
     def setResTol(self,rtol,atol):
         self.rtol_r = rtol
         self.atol_r = atol
@@ -531,7 +531,7 @@ class KSP_petsc4py(LinearSolver):
         self.petsc_L.save("L")
         if self.pc != None:
             import pdb
-#            pdb.set_trace()
+     #       pdb.set_trace()
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
             if self.preconditioner:
@@ -569,6 +569,8 @@ class KSP_petsc4py(LinearSolver):
                 self.ksp.setNullSpace(self.preconditioner.nsp)
         except:
             pass
+        import pdb
+      #  pdb.set_trace()
         self.ksp.solve(par_b,par_u)
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
@@ -774,12 +776,13 @@ class NavierStokes3D:
             self.PCD_shell.setType('python')
             self.matcontext = PCDShell(self.Qp,self.Fp,self.Ap)
             self.PCD_shell.setPythonContext(self.matcontext)
+            self.PCD_shell.setUp()
 
             # from petsc4py documentation 3 = 'USER'
 #            self.pc.setFieldSplitSchurPreType(0)
             self.pc.setFieldSplitSchurPreType(3,self.PCD_shell)
-
             import pdb
+#            pdb.set_trace()
 #            pdb.set_trace()
 
 
