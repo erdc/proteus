@@ -3351,7 +3351,13 @@ class Mesh3DM(Mesh):
                     np.savetxt(ar.textDataDir+"/"+"elementMaterialTypes"+str(tCount)+".txt",self.elementMaterialTypes[:self.nElements_owned])
 class MultilevelTetrahedralMesh(MultilevelMesh):
     """A hierarchical multilevel mesh with tetrahedral cells"""
-    def __init__(self,nx,ny,nz,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
+    def __init__(self,
+                 nx, ny, nz,
+                 x=0.0, y=0.0, z=0.0,
+                 Lx=1.0, Ly=1.0, Lz=1.0,
+                 refinementLevels=1,
+                 skipInit=False,
+                 nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.element):
         import cmeshTools
         import Comm
@@ -3365,6 +3371,9 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                 self.meshList[0].generateTetrahedralMeshFromRectangularGrid(nx,ny,nz,Lx,Ly,Lz)
                 self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
                 self.buildFromC(self.cmultilevelMesh)
+                self.meshList[0].nodeArray[:,0] += x
+                self.meshList[0].nodeArray[:,1] += y
+                self.meshList[0].nodeArray[:,2] += z
                 self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
                 for l in range(1,refinementLevels):
                     self.meshList.append(TetrahedralMesh())
@@ -3375,6 +3384,9 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
                 grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
                 self.meshList.append(TetrahedralMesh())
                 self.meshList[0].rectangularToTetrahedral(grid)
+                self.meshList[0].nodeArray[:,0] += x
+                self.meshList[0].nodeArray[:,1] += y
+                self.meshList[0].nodeArray[:,2] += z
                 self.elementChildren=[]
                 log(self.meshList[0].meshInfo())
                 for l in range(1,refinementLevels):
@@ -3443,7 +3455,14 @@ class MultilevelTetrahedralMesh(MultilevelMesh):
 
 class MultilevelHexahedralMesh(MultilevelMesh):
     """A hierarchical multilevel mesh with hexahedral cells"""
-    def __init__(self,nx,ny,nz,px=0,py=0,pz=0,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
+    def __init__(self,
+                 nx, ny, nz,
+                 px=0, py=0, pz=0,
+                 x=0.0, y=0.0, z=0.0,
+                 Lx=1.0, Ly=1.0, Lz=1.0,
+                 refinementLevels=1,
+                 skipInit=False,
+                 nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.element):
         import cmeshTools
         import Comm
@@ -3458,6 +3477,9 @@ class MultilevelHexahedralMesh(MultilevelMesh):
             if self.useC:
                 self.meshList.append(HexahedralMesh())
                 self.meshList[0].generateHexahedralMeshFromRectangularGrid(nx,ny,nz,Lx,Ly,Lz)
+                self.meshList[0].nodeArray[:,0] += x
+                self.meshList[0].nodeArray[:,1] += y
+                self.meshList[0].nodeArray[:,2] += z
                 self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
                 self.buildFromC(self.cmultilevelMesh)
                 self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
@@ -4186,7 +4208,13 @@ class QuadrilateralMesh(Mesh):
 class MultilevelTriangularMesh(MultilevelMesh):
     """A hierarchical  multilevel mesh of triangular cells"""
     import cmeshTools
-    def __init__(self,nx,ny,nz,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
+    def __init__(self,
+                 nx, ny, nz,
+                 x=0.0, y=0.0, z=0.0,
+                 Lx=1.0, Ly=1.0, Lz=1.0,
+                 refinementLevels=1,
+                 skipInit=False,
+                 nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.element,triangleFlag=0):
         import cmeshTools
         MultilevelMesh.__init__(self)
@@ -4199,6 +4227,9 @@ class MultilevelTriangularMesh(MultilevelMesh):
                 self.meshList[0].generateTriangularMeshFromRectangularGrid(nx,ny,Lx,Ly,triangleFlag=triangleFlag)
                 self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
                 self.buildFromC(self.cmultilevelMesh)
+                self.meshList[0].nodeArray[:,0] += x
+                self.meshList[0].nodeArray[:,1] += y
+                self.meshList[0].nodeArray[:,2] += z
                 self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
                 for l in range(1,refinementLevels):
                     self.meshList.append(TriangularMesh())
@@ -4209,6 +4240,9 @@ class MultilevelTriangularMesh(MultilevelMesh):
                 grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
                 self.meshList.append(TriangularMesh())
                 self.meshList[0].rectangularToTriangular(grid)
+                self.meshList[0].nodeArray[:,0] += x
+                self.meshList[0].nodeArray[:,1] += y
+                self.meshList[0].nodeArray[:,2] += z
                 self.meshList[0].subdomainMesh = self.meshList[0]
                 self.elementChildren=[]
                 log(self.meshList[0].meshInfo())
@@ -4896,7 +4930,12 @@ Number of nodes : %d\n""" % (self.nElements_global,self.nNodes_global)
 class MultilevelEdgeMesh(MultilevelMesh):
     """A hierarchical multilevel mesh of intervals (edges)"""
     import cmeshTools
-    def __init__(self,nx,ny,nz,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,nLayersOfOverlap=1,
+    def __init__(self,
+                 nx, ny, nz,
+                 x=0.0, y=0.0, z=0.0,
+                 Lx=1.0, Ly=1.0, Lz=1.0,
+                 refinementLevels=1,
+                 nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.element):
         import cmeshTools
         MultilevelMesh.__init__(self)
@@ -4907,6 +4946,9 @@ class MultilevelEdgeMesh(MultilevelMesh):
             self.meshList[0].generateEdgeMeshFromRectangularGrid(nx,Lx)
             self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
             self.buildFromC(self.cmultilevelMesh)
+            self.meshList[0].nodeArray[:,0] += x
+            self.meshList[0].nodeArray[:,1] += y
+            self.meshList[0].nodeArray[:,2] += z
             self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
             for l in range(1,refinementLevels):
                 self.meshList.append(EdgeMesh())
@@ -4917,12 +4959,14 @@ class MultilevelEdgeMesh(MultilevelMesh):
             grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
             self.meshList.append(EdgeMesh())
             self.meshList[0].rectangularToEdge(grid)
+            self.meshList[0].nodeArray[:,0] += x
+            self.meshList[0].nodeArray[:,1] += y
+            self.meshList[0].nodeArray[:,2] += z
             self.elementChildren=[]
             print self.meshList[0].meshInfo()
             for l in range(1,refinementLevels):
                 self.refine()
                 print self.meshList[-1].meshInfo()
-
     def refine(self):
         self.meshList.append(EdgeMesh())
         childrenDict = self.meshList[-1].refine(self.meshList[-2])
@@ -5240,7 +5284,14 @@ def writeHexMesh(mesh_info,hexfile_base,index_base=0):
 
 
 class MultilevelNURBSMesh(MultilevelMesh):
-    def __init__(self,nx,ny,nz,px=1,py=1,pz=1,Lx=1.0,Ly=1.0,Lz=1.0,refinementLevels=1,skipInit=False,nLayersOfOverlap=1,
+    def __init__(self,
+                 nx, ny, nz,
+                 x=0.0, y=0.0, z=0.0,
+                 px=1, py=1, pz=1,
+                 Lx=1.0, Ly=1.0, Lz=1.0,
+                 refinementLevels=1,
+                 skipInit=False,
+                 nLayersOfOverlap=1,
                  parallelPartitioningType=MeshParallelPartitioningTypes.element):
         import cmeshTools
         import Comm
@@ -5253,13 +5304,16 @@ class MultilevelNURBSMesh(MultilevelMesh):
             self.meshList[0].generateNURBSMeshFromRectangularGrid(nx,ny,nz,px,py,pz,Lx,Ly,Lz)
             self.cmultilevelMesh = cmeshTools.CMultilevelMesh(self.meshList[0].cmesh,refinementLevels)
             self.buildFromC(self.cmultilevelMesh)
+            self.meshList[0].nodeArray[:,0] += x
+            self.meshList[0].nodeArray[:,1] += y
+            self.meshList[0].nodeArray[:,2] += z
             self.meshList[0].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
             for l in range(1,refinementLevels):
                 self.meshList.append(NURBSMesh())
                 self.meshList[l].cmesh = self.cmeshList[l]
                 self.meshList[l].buildFromC(self.cmeshList[l])
                 self.meshList[l].partitionMesh(nLayersOfOverlap=nLayersOfOverlap,parallelPartitioningType=parallelPartitioningType)
-
+            
     def generateFromExistingCoarseMesh(self,mesh0,refinementLevels,nLayersOfOverlap=1,
                                        parallelPartitioningType=MeshParallelPartitioningTypes.element):
         import cmeshTools
