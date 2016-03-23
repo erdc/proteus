@@ -140,9 +140,9 @@ class RectangularDomain(D_base):
 # vertices
 4 2 0 1
 1 %(x0)f %(x1)f 1
-2 %(x0pL0)f %(x1)f 2
+2 %(x0pL0)f %(x1)f 1
 3 %(x0pL0)f %(x1pL1)f 3
-4 %(x0)f %(x1pL1)f 4
+4 %(x0)f %(x1pL1)f 3
 # segments
 4 1
 1 1 2 1
@@ -470,7 +470,7 @@ class PlanarStraightLineGraphDomain(D_base):
                     pf.write('%d %21.16e %21.16e ' % (rN+1,
                                                    r[0],
                                                    r[1]))
-                    if self.regionConstraints :
+                    if self.regionConstraints != None:
                         pf.write('%d %21.16e\n' % (self.regionFlags[rN],self.regionConstraints[rN]))
                     elif self.regionFlags :
                         pf.write('%d\n' % (self.regionFlags[rN]))
