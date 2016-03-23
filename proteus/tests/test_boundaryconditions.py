@@ -10,7 +10,7 @@ hydrostaticPressureOutletWithDepth()
 """
 
 
-import os
+import os, sys
 import random
 import unittest
 import numpy.testing as npt
@@ -267,9 +267,7 @@ class TestBC(unittest.TestCase):
         waves = MonochromaticWaves(period, height, mwl, depth, g, direction)
         # need to set epsFact and he with context as they are called in BC...
         from proteus import Context
-        current_file = os.path.basename(__file__)
-        print current_file
-        case = __import__('test_boundaryconditions')
+        case = sys.modules[__name__]
         Context.setFromModule(case)
         ct = Context.get()
         ecH = ct.epsFact_consrv_heaviside
