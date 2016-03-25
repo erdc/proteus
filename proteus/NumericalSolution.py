@@ -294,16 +294,24 @@ class NS_base:  # (HasTraits):
                                                           nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                           parallelPartitioningType=n.parallelPartitioningType)
             elif isinstance(p.domain,Domain.MeshTetgenDomain):
+                nbase = 1
                 mesh=MeshTools.TetrahedralMesh()
                 log("Reading coarse mesh from tetgen file")
-                mesh.generateFromTetgenFiles(p.domain.meshfile,1)
                 mlMesh = MeshTools.MultilevelTetrahedralMesh(0,0,0,skipInit=True,
                                                              nLayersOfOverlap=n.nLayersOfOverlapForParallel,
                                                              parallelPartitioningType=n.parallelPartitioningType)
-                log("Generating %i-level mesh from coarse Tetgen mesh" % (n.nLevels,))
-                mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
-                                                      nLayersOfOverlap=n.nLayersOfOverlapForParallel,
-                                                      parallelPartitioningType=n.parallelPartitioningType)
+                if opts.generatePartitionedMeshFromFiles:
+                    log("Generating partitioned mesh from Tetgen files")
+                    mlMesh.generatePartitionedMeshFromTetgenFiles(p.domain.meshfile,nbase,mesh,n.nLevels,
+                                                                  nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                                  parallelPartitioningType=n.parallelPartitioningType)
+                else:
+                    log("Generating coarse global mesh from Tetgen files")
+                    mesh.generateFromTetgenFiles(p.domain.polyfile,nbase,parallel = comm.size() > 1)
+                    log("Generating partitioned %i-level mesh from coarse global Tetgen mesh" % (n.nLevels,))
+                    mlMesh.generateFromExistingCoarseMesh(mesh,n.nLevels,
+                                                          nLayersOfOverlap=n.nLayersOfOverlapForParallel,
+                                                          parallelPartitioningType=n.parallelPartitioningType)
             elif isinstance(p.domain,Domain.Mesh3DMDomain):
                 mesh=MeshTools.TetrahedralMesh()
                 log("Reading coarse mesh from 3DM file")
