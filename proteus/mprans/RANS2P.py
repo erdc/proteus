@@ -1169,6 +1169,7 @@ class LevelModel(proteus.Transport.OneLevelTransport):
         self.elementQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.elementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
         self.exteriorElementBoundaryQuadratureDictionaryWriter = Archiver.XdmfWriter()
+        log(memory("XdmfWriters","OneLevelTransport"),level=4)
         log("flux bc objects")
         for ci,fbcObject  in self.fluxBoundaryConditionsObjectsDict.iteritems():
             self.ebqe[('advectiveFlux_bc_flag',ci)] = numpy.zeros(self.ebqe[('advectiveFlux_bc',ci)].shape,'i')
