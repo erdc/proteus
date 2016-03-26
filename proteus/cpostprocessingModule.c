@@ -1386,6 +1386,7 @@ cpostprocessingCalculateConservationResidualPWL(PyObject* self,
   PyObject* elementBoundaryElements;
   PyObject* elementBoundaryLocalElementBoundaries;
   PyObject* elementNodes;
+  PyObject* dofMapl2g;
   PyObject* nodeStarElements;
   PyObject* nodeStarElementNeighbors;
   PyObject* nElements_node;
@@ -1399,12 +1400,13 @@ cpostprocessingCalculateConservationResidualPWL(PyObject* self,
   PyObject* vConservative_element;
   PyObject* fluxElementBoundaries;
   PyObject* nodeStarFactor;
-  if(!PyArg_ParseTuple(args,"OOOOOOOOOOOOOOOOOO",
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOOOOOOOOOOO",
 		       &interiorElementBoundaries,
 		       &exteriorElementBoundaries,
 		       &elementBoundaryElements,
 		       &elementBoundaryLocalElementBoundaries,
 		       &elementNodes,
+		       &dofMapl2g,
 		       &nodeStarElements,
 		       &nodeStarElementNeighbors,
 		       &nElements_node,
@@ -1432,6 +1434,7 @@ cpostprocessingCalculateConservationResidualPWL(PyObject* self,
 				   IDATA(elementBoundaryElements),
 				   IDATA(elementBoundaryLocalElementBoundaries),
 				   IDATA(elementNodes),
+				   IDATA(dofMapl2g),
 				   IDATA(nodeStarElements),
 				   IDATA(nodeStarElementNeighbors),
 				   IDATA(nElements_node),
