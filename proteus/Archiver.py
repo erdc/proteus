@@ -1109,7 +1109,7 @@ class XdmfWriter:
                 elements = SubElement(topology,"DataItem",
                                       {"Format":ar.dataItemFormat,
                                        "DataType":"Int",
-                                       "Dimensions":"%i %i" % (dofMap.nDOF_all_processes,3)})
+                                       "Dimensions":"%i %i" % (mesh.globalMesh.nElements_global,dofMap.l2g.shape[-1])})
                 geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
                 concatNow = True
                 if concatNow:
@@ -1314,11 +1314,11 @@ class XdmfWriter:
 
                 topology = SubElement(self.arGrid,"Topology",
                                       {"Type":Xdmf_ElementTopology,
-                                       "NumberOfElements":str(mesh.globalMesh.nElements_global)})
+                                       "NumberOfElements":str(mesh.globalMesh.nElements_global*nsubelements)})
                 elements = SubElement(topology,"DataItem",
                                       {"Format":ar.dataItemFormat,
                                        "DataType":"Int",
-                                       "Dimensions":"%i %i" % (mesh.globalMesh.nElements_global, l2g.shape[-1])})
+                                       "Dimensions":"%i %i" % (mesh.globalMesh.nElements_global*nsubelements, l2g.shape[-1])})
                 geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
 
                 concatNow = True
