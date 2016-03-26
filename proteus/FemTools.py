@@ -3795,6 +3795,7 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
         return self.mesh.arGrid
 
     def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
+        comm = Comm.get()
         if ar.global_sync:
             attribute = SubElement(self.mesh.arGrid,"Attribute",{"Name":u.name,
                                                                  "AttributeType":"Scalar",
