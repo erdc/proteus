@@ -1088,6 +1088,7 @@ class XdmfWriter:
         """
         TODO: test new lagrangeNodes convention for 2d,3d, and concatNow=False
         """
+        comm = Comm.get()
         #write out basic geometry if not already done?
         mesh.writeMeshXdmf(ar,"Spatial_Domain",t,init,meshChanged,tCount=tCount)
         spaceSuffix = "_c0p2_Lagrange"
@@ -1153,7 +1154,7 @@ class XdmfWriter:
                             if ar.has_h5py:
                                 ar.create_dataset_sync('nodes'+spaceSuffix+`tCount`,
                                                        offsets = dofMap.dof_offsets_subdomain_owned,
-                                                       data = lagrangeNodesArray)
+                                                       data = lagrangeNodesArray[:dofMap.dof_offsets_subdomain_owned[comm.rank()+1]-dofMap.dof_offsets_subdomain_owned[comm.rank()]])
                             else:
                                 assert False, "global_sync not implemented for pytables"
                     else:
@@ -1282,6 +1283,7 @@ class XdmfWriter:
         """
         TODO: test new lagrangeNodes convention for 2d,3d, and concatNow=False
         """
+        comm = Comm.get()
         #write out basic geometry if not already done?
         #mesh.writeMeshXdmf(ar,"Spatial_Domain",t,init,meshChanged,tCount=tCount)
         spaceSuffix = "_c0q2_Lagrange"
@@ -1345,13 +1347,13 @@ class XdmfWriter:
                             if ar.has_h5py:
                                 ar.create_dataset_sync('elements'+spaceSuffix+`tCount`,
                                                        offsets = mesh.globalMesh.elementOffsets_subdomain_owned*nsubelements,
-                                                       data = l2g)
+                                                       data = l2g[:mesh.nElements_owned*nsubelements])
                             else:
                                 assert False, "global_sync not implemented for pytables"
                             if ar.has_h5py:
                                 ar.create_dataset_sync('nodes'+spaceSuffix+`tCount`,
                                                        offsets = dofMap.dof_offsets_subdomain_owned,
-                                                       data = lagrangeNodesArray)
+                                                       data = lagrangeNodesArray[:dofMap.dof_offsets_subdomain_owned[comm.rank()+1]-dofMap.dof_offsets_subdomain_owned[comm.rank()]])
                             else:
                                 assert False, "global_sync not implemented for pytables"
                     else:
