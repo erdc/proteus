@@ -3683,13 +3683,14 @@ void calculateConservationResidualPWL(int nElements_global,
 				      int nExteriorElementBoundaries_global,
 				      int nElementBoundaries_element,
 				      int nQuadraturePoints_elementBoundary,
-				      int nNodes_element,
+				      int nDOF_element,
 				      int nSpace,
 				      int* interiorElementBoundaries,
 				      int* exteriorElementBoundaries,
 				      int* elementBoundaryElements,
 				      int* elementBoundaryLocalElementBoundaries,
 				      int* elementNodes,
+				      int* dofMapl2g,
 				      int* nodeStarElements,
 				      int* nodeStarElementNeighbors,
 				      int* nElements_node,
@@ -3727,19 +3728,19 @@ void calculateConservationResidualPWL(int nElements_global,
   /*initial residual with element residual*/
   for (eN=0;eN<nElements_global;eN++)
    {
-     for (nN=0;nN<nNodes_element;nN++)
+     for (nN=0;nN<nDOF_element;nN++)
        {
-	 nN_global = elementNodes[eN*nNodes_element+
+	 nN_global = dofMapl2g[eN*nDOF_element+
 				  nN];
-	 eN_star  = nodeStarElements[eN*nNodes_element+
+	 eN_star  = nodeStarElements[eN*nDOF_element+
 				     nN];
 	 starR[nN_global][eN_star] 
 	   = 
-	   elementResidual[eN*nNodes_element+
+	   elementResidual[eN*nDOF_element+
 			   nN];
 	 conservationResidual[eN]
 	   += 
-	   elementResidual[eN*nNodes_element+
+	   elementResidual[eN*nDOF_element+
 			   nN];
 	 /*mwf debug
 	 printf("calcConsResPWL eN=%d nN=%d starR=%g\n",eN,nN,
@@ -3794,26 +3795,26 @@ void calculateConservationResidualPWL(int nElements_global,
                        k*nSpace+
                        I];
             }
-          for (nN=0;nN<nNodes_element;nN++)
+          for (nN=0;nN<nDOF_element;nN++)
 	    {
-	      nN_global = elementNodes[left_eN*nNodes_element+
+	      nN_global = dofMapl2g[left_eN*nDOF_element+
 				      nN];
-	      left_eN_star = nodeStarElements[left_eN*nNodes_element+
+	      left_eN_star = nodeStarElements[left_eN*nDOF_element+
 					      nN];
 	      /* check if node is opposite element boundary we're computing and ignore 0 contribution */
 	      /* this shouldn't be necessary */
 	      if (nN != left_ebN_element)
 		{
-		  right_eN_star = nodeStarElementNeighbors[left_eN*nNodes_element*nElementBoundaries_element+
+		  right_eN_star = nodeStarElementNeighbors[left_eN*nDOF_element*nElementBoundaries_element+
 							   nN*nElementBoundaries_element+
 							   left_ebN_element];
                   fluxCorrection = (starU[nN_global][left_eN_star]
                                     -
                                     starU[nN_global][right_eN_star])
                     *
-                    w[left_eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nNodes_element+
-                      left_ebN_element*nQuadraturePoints_elementBoundary*nNodes_element+
-                      k*nNodes_element+
+                    w[left_eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_element+
+                      left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_element+
+                      k*nDOF_element+
                       nN];
 		  for (I=0;I<nSpace;I++)
 		    {
@@ -3827,9 +3828,9 @@ void calculateConservationResidualPWL(int nElements_global,
                                k*nSpace+
                                I];
 		    }
-		  flux = (fluxAverage*w[left_eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nNodes_element+
-                                        left_ebN_element*nQuadraturePoints_elementBoundary*nNodes_element+
-                                        k*nNodes_element+
+		  flux = (fluxAverage*w[left_eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_element+
+                                        left_ebN_element*nQuadraturePoints_elementBoundary*nDOF_element+
+                                        k*nDOF_element+
                                         nN]
                           + fluxCorrection)*dx;
 		  starR[nN_global][left_eN_star]
@@ -3889,11 +3890,11 @@ void calculateConservationResidualPWL(int nElements_global,
                        k*nSpace+
                        I];
             }
-	  for (nN=0;nN<nNodes_element;nN++)
+	  for (nN=0;nN<nDOF_element;nN++)
 	    {
-	      nN_global = elementNodes[eN*nNodes_element+
+	      nN_global = dofMapl2g[eN*nDOF_element+
 				       nN];
-	      eN_star = nodeStarElements[eN*nNodes_element+
+	      eN_star = nodeStarElements[eN*nDOF_element+
 					      nN];
 	      /* check if this node lies opposite the element boundary whose contribution we're computing */
 	      /* in that case there is no flux contribution because the test function is zero*/
@@ -3902,9 +3903,9 @@ void calculateConservationResidualPWL(int nElements_global,
 		{
                   fluxCorrection = starU[nN_global][eN_star]
                     *
-                    w[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nNodes_element+
-                      ebN_element*nQuadraturePoints_elementBoundary*nNodes_element+
-                      k*nNodes_element+
+                    w[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_element+
+                      ebN_element*nQuadraturePoints_elementBoundary*nDOF_element+
+                      k*nDOF_element+
                       nN]; 
 		  for (I=0;I<nSpace;I++)
                     vConservative[ebN*nQuadraturePoints_elementBoundary*nSpace+
@@ -3917,9 +3918,9 @@ void calculateConservationResidualPWL(int nElements_global,
                              I];
 		  flux = (fluxAverage
                           *
-                          w[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nNodes_element+
-                            ebN_element*nQuadraturePoints_elementBoundary*nNodes_element+
-                            k*nNodes_element+
+                          w[eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nDOF_element+
+                            ebN_element*nQuadraturePoints_elementBoundary*nDOF_element+
+                            k*nDOF_element+
                             nN]
                           +
                           fluxCorrection)*dx;
@@ -4020,8 +4021,8 @@ void calculateConservationResidualPWL(int nElements_global,
   for (eN=0; eN < nElements_global; eN++)
     {
       resSum = 0;
-      for (ebN = 0; ebN < nNodes_element; ebN++)
-	resSum += elementResidual[eN*nNodes_element+ebN];
+      for (ebN = 0; ebN < nDOF_element; ebN++)
+	resSum += elementResidual[eN*nDOF_element+ebN];
       printf("eN=%d fluxSum=%g elemResid=%g consResid=%g \n",eN,fluxSumDebug[eN],resSum,
 	     conservationResidual[eN]);
     }

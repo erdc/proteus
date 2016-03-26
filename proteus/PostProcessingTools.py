@@ -700,7 +700,6 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         if self.updateConservationJacobian[ci]:
             self.getConservationJacobianPWL(ci)
             self.updateConservationJacobian[ci] = False #only depends on mesh need to resignal if mesh adapts
-
         cpostprocessing.calculateConservationFluxPWL(self.nElements_node,
                                                      self.vt.internalNodesArray,
                                                      self.fluxBoundaryNodes[ci],
@@ -722,12 +721,14 @@ class VPP_PWL_RT0(VelocityPostProcessingAlgorithmBase):
         if correctFlux == True:
             self.removeBoundaryFluxesFromResidual(ci,self.fluxElementBoundaries[ci])
 
-
+        import pdb
+        pdb.set_trace()
         cpostprocessing.calculateConservationResidualPWL(self.vt.mesh.interiorElementBoundariesArray,
                                                          self.vt.mesh.exteriorElementBoundariesArray,
                                                          self.vt.mesh.elementBoundaryElementsArray,
                                                          self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
                                                          self.vt.mesh.elementNodesArray,
+                                                         self.vt.u[0].femSpace.dofMap.l2g,
                                                          self.nodeStarElementsArray,
                                                          self.nodeStarElementNeighborsArray,
                                                          self.nElements_node,
