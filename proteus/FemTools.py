@@ -3807,7 +3807,7 @@ class C0_AffineLinearOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                                     "Dimensions":"%i" % (self.mesh.globalMesh.nNodes_global,)})
             if ar.hdfFile != None:
                 if ar.has_h5py:
-                    values.text = ar.hdfFilename+":/"+u.name+"_p"+`ar.comm.rank()`+"_t"+str(tCount)
+                    values.text = ar.hdfFilename+":/"+u.name+"_p"+"_t"+str(tCount)
                     ar.create_dataset_sync(u.name+"_p"+"_t"+str(tCount),
                                            offsets = self.dofMap.dof_offsets_subdomain_owned,
                                            data = u.dof[:(self.dofMap.dof_offsets_subdomain_owned[comm.rank()+1] - self.dofMap.dof_offsets_subdomain_owned[comm.rank()])])
