@@ -791,7 +791,7 @@ class XdmfWriter:
             else:
                 assert False, "global_sync not supported with text heavy data"
         else:
-                        Xdmf_NodesGlobal = u.shape[0]*u.shape[1]
+            Xdmf_NodesGlobal = u.shape[0]*u.shape[1]
             Xdmf_NumberOfComponents = u.shape[2]*u.shape[3] #Xdmf requires 9 though
             attribute = SubElement(self.arGrid,"Attribute",{"Name":name,
                                                             "AttributeType":"Tensor",
@@ -1109,7 +1109,7 @@ class XdmfWriter:
                 elements = SubElement(topology,"DataItem",
                                       {"Format":ar.dataItemFormat,
                                        "DataType":"Int",
-                                       "Dimensions":"%i %i" % dofMap.nDOF_all_processes})
+                                       "Dimensions":"%i %i" % (dofMap.nDOF_all_processes,3)})
                 geometry = SubElement(self.arGrid,"Geometry",{"Type":"XYZ"})
                 concatNow = True
                 if concatNow:
@@ -1300,6 +1300,7 @@ class XdmfWriter:
                      [12,21,26,24,4,16,25,19], [21,13,22,26,16,5,17,25], [24,26,23,15,19,25,18,7], [26,22,14,23,25,17,6,18] ]
 
                 l2g = numpy.zeros((8*mesh.nElements_global,8),'i')
+                nsubelements=8
                 for eN in range(mesh.nElements_global):
                     dofs=dofMap.l2g[eN,:]
                     for i in range(8): #loop over subelements
@@ -1343,7 +1344,7 @@ class XdmfWriter:
                         if init or meshChanged:
                             if ar.has_h5py:
                                 ar.create_dataset_sync('elements'+spaceSuffix+`tCount`,
-                                                       offsets = mesh.globalMesh.nElements_global,
+                                                       offsets = mesh.globalMesh.elementOffsets_subdomain_owned*nsubelements,
                                                        data = l2g)
                             else:
                                 assert False, "global_sync not implemented for pytables"
@@ -1358,7 +1359,7 @@ class XdmfWriter:
                 else:
                     assert False, "not implemented  for text heavy data"
             else:
-                                self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
+                self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
                 self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
 
                 lagrangeNodesArray = dofMap.lagrangeNodesArray
@@ -2420,6 +2421,7 @@ class XdmfWriter:
                 SubElement(values,"xi:include",{"parse":"text","href":"./"+ar.textDataDir+"/"+name+str(tCount)+".txt"})
 
     def writeFunctionXdmf_C0P2Lagrange(self,ar,u,tCount=0,init=True):
+        comm = Comm.get()
         attribute = SubElement(self.arGrid,"Attribute",{"Name":u.name,
                                                  "AttributeType":"Scalar",
                                                  "Center":"Node"})
@@ -2715,7 +2717,7 @@ class XdmfWriter:
                 else:
                     assert False, "global_sync not implemented for text heavy data"
             else:
-                                Xdmf_NumberOfElements= mesh.nElements_global
+                Xdmf_NumberOfElements= mesh.nElements_global
                 self.arGrid = SubElement(self.arGridCollection,"Grid",{"Name":gridName,"GridType":"Uniform"})
                 self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
                 topology    = SubElement(self.arGrid,"Topology",
