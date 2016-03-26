@@ -24,6 +24,7 @@ def test_c0p1():
     import poisson_3d_c0p1_n
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0p1_n]
+    nList[0].nnx =     nList[0].nny =     nList[0].nnz = 3
     so = default_so
     so.name = pList[0].name = "poisson_3d_c0p1"+"pe"+`comm.size()`
     so.sList=[default_s]
@@ -44,6 +45,7 @@ def test_c0p2():
     import poisson_3d_c0p2_n
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0p2_n]
+    nList[0].nnx =     nList[0].nny =     nList[0].nnz = 3
     so = default_so
     so.name = pList[0].name = "poisson_3d_c0p2"+"pe"+`comm.size()`
     so.sList=[default_s]
@@ -67,6 +69,7 @@ def check_c0q1(test_hexMesh_3x3=False,use_petsc=False,name="_hexMesh_"):
         poisson_3d_p.L  = ( 6., 6., 6.)
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0q1_n]
+    nList[0].nnx =     nList[0].nny =     nList[0].nnz = 3
     so = default_so
     so.name = pList[0].name = "poisson_3d_c0q1"+name+"pe"+`comm.size()`
     so.sList=[default_s]
@@ -101,6 +104,7 @@ def test_c0q2():
     import poisson_3d_c0q2_n
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0q2_n]
+    nList[0].nnx =     nList[0].nny =     nList[0].nnz = 3
     so = default_so
     so.name = pList[0].name = "poisson_3d_c0q2"+"pe"+`comm.size()`
     so.sList=[default_s]

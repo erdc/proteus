@@ -3004,11 +3004,11 @@ class Mesh2DM(Mesh):
                                                    offsets = self.globalMesh.elementOffsets_subdomain_owned,
                                                    data = self.elementMaterialTypes[:self.nElements_owned])
                     else:
-                        assert False, global_sync with pytables not supported
+                        assert False, "global_sync with pytables not supported"
                 else:
-                    assert False, global_sync with text heavy data not supported
+                    assert False, "global_sync with text heavy data not supported"
             else:
-                            self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
+                self.arGrid = SubElement(self.arGridCollection,"Grid",{"GridType":"Uniform"})
                 self.arTime = SubElement(self.arGrid,"Time",{"Value":str(t),"Name":str(tCount)})
                 topology = SubElement(self.arGrid,"Topology",
                                       {"Type":Xdmf_ElementTopology,
