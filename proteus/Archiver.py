@@ -1148,7 +1148,7 @@ class XdmfWriter:
                             if ar.has_h5py:
                                 ar.create_dataset_sync('elements'+spaceSuffix+`tCount`,
                                                        offsets = mesh.globalMesh.elementOffsets_subdomain_owned,
-                                                       data = elements[:mesh.nElements_owned])
+                                                       data = dofMap.subdomain2global[elements[:mesh.nElements_owned]])
                             else:
                                 assert False, "global_sync not implemented for pytables"
                             if ar.has_h5py:
@@ -1347,7 +1347,7 @@ class XdmfWriter:
                             if ar.has_h5py:
                                 ar.create_dataset_sync('elements'+spaceSuffix+`tCount`,
                                                        offsets = mesh.globalMesh.elementOffsets_subdomain_owned*nsubelements,
-                                                       data = l2g[:mesh.nElements_owned*nsubelements])
+                                                       data = dofMap.subdomain2global[l2g[:mesh.nElements_owned*nsubelements]])
                             else:
                                 assert False, "global_sync not implemented for pytables"
                             if ar.has_h5py:
