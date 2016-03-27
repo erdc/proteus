@@ -2657,7 +2657,10 @@ extern "C"
               elementBoundaryElements[ebt].right=eN;
               elementBoundaryElements[ebt].right_ebN_element=ebN;
       
-	      assert(elementBoundaryIds[ebt] == ebN_global);
+	      if (elementBoundaryIds[ebt] != ebN_global)
+                {
+                  std::cout<<nodes[0]<<'\t'<<nodes[1]<<'\t'<<nodes[2]<<'\t'<<nodes[3]<<'\n'<<ebN_global<<'\t'<<elementBoundaryIds[ebt]<<std::endl;
+                }
             }
           else
             {
