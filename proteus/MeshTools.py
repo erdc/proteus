@@ -3599,6 +3599,7 @@ def buildReferenceSimplex(nd=2):
                                                verbose=False)
         tmesh.readFromPolyFile(polyfile)
         mesh = tmesh.convertToProteusMesh(verbose=0)
+        mesh.partitionMesh()
         mesh.globalMesh = mesh
         return mesh
     if nd == 3:
