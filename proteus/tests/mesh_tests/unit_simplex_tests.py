@@ -32,7 +32,9 @@ def generate_reference_triangle():
     assert any(i in unit_simplex_2d.nodeArray[1] for i in [0.,1.,0.])
     assert any(i in unit_simplex_2d.nodeArray[2] for i in [1.,0.,0.])
     assert unit_simplex_2d.globalMesh == unit_simplex_2d, \
-        'Reference simplex should only have a single mesh global mesh'
+        'Reference simplex should only have a single mesh global mesh.'
+    assert unit_simplex_2d.nodeOffsets_subdomain_owned[1] == 3, \
+        'Mesh partitioner has likely not been called. '
 
 def generate_reference_simplex():
 
