@@ -3583,7 +3583,24 @@ class MultilevelHexahedralMesh(MultilevelMesh):
         for m in self.meshList:
             m.computeGeometricInfo()
 
-
+def buildReferenceSimplex(nd=2):
+    """
+    This function creates and returns a Proteus mesh object for the reference 
+    simplex.  This function can helpful for test development.
+    """
+    from proteus import Domain
+    from proteus import TriangleTools
+    if nd == 2:
+        unit_simplex_domain_2d = Domain.unitSimplex(2)
+        polyfile = "reference_triangle"
+        unit_simplex_domain_2d.writePoly(polyfile)
+        tmesh = TriangleTools.TriangleBaseMesh(baseFlags="Yp",
+                                               nbase=1,
+                                               verbose=False)
+        tmesh.readFromPolyFile(polyfile)
+        return tmesh.convertToProteusMesh(verbose=0)
+    if nd == 3:
+        pass
 
 
 class TriangularMesh(Mesh):

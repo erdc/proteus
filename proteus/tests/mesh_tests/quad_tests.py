@@ -12,7 +12,7 @@ Profiling.verbose=True
 import numpy.testing as npt
 from nose.tools import ok_ as ok
 from nose.tools import eq_ as eq
-from nose.tools import set_trace
+#from nose.tools import set_trace
 
 def test_mesh_build():
     '''
@@ -59,12 +59,13 @@ def test_2D_stokes():
     #nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('test1')
-  #  pass
-
+    del ns
 
 if __name__ == '__main__':
-    from proteus import Comm
-    comm = Comm.init()
-    import nose
-    nose.main()
+#    from proteus import Comm
+#    comm = Comm.init()
+    test_mesh_build()
+    test_2D_stokes()
+#    import nose
+#    nose.main()
 
