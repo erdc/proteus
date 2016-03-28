@@ -3598,7 +3598,9 @@ def buildReferenceSimplex(nd=2):
                                                nbase=1,
                                                verbose=False)
         tmesh.readFromPolyFile(polyfile)
-        return tmesh.convertToProteusMesh(verbose=0)
+        mesh = tmesh.convertToProteusMesh(verbose=0)
+        mesh.globalMesh = mesh
+        return mesh
     if nd == 3:
         pass
 
