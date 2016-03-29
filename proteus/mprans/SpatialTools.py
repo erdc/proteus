@@ -655,6 +655,7 @@ class Tank3D(ShapeRANS):
         sl = self.spongeLayers
         for key, value in self.abs_zones.iteritems():
             if value is True:
+                self._attachAuxiliaryVariable('RelaxZones')
                 ind = self.regionIndice[key]
                 flag = self.regionFlags[ind]
                 epsFact_solid = self.spongeLayers[key]/2.
@@ -705,6 +706,7 @@ class Tank3D(ShapeRANS):
         sl = self.spongeLayers
         for key, value in self.abs_zones.iteritems():
             if value is True:
+                self._attachAuxiliaryVariable('RelaxZones')
                 ind = self.regionIndice[key]
                 flag = self.regionFlags[ind]
                 epsFact_solid = self.spongeLayers[key]/2.
