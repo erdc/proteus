@@ -472,7 +472,7 @@ class PlanarStraightLineGraphDomain(D_base):
                                                    r[1]))
                     if self.regionConstraints:
                         pf.write('%d %21.16e\n' % (self.regionFlags[rN],self.regionConstraints[rN]))
-                    elif self.regionFlags :
+                    elif self.regionFlags:
                         pf.write('%d\n' % (self.regionFlags[rN]))
                     else:
                         pf.write('\n')
