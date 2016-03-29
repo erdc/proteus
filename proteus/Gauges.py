@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict, OrderedDict
 from itertools import product
 
@@ -10,6 +11,7 @@ from . import Comm
 from .AuxiliaryVariables import AV_base
 from .Profiling import logEvent as log
 from proteus.MeshTools import triangleVerticesToNormals, tetrahedronVerticesToNormals, getMeshIntersections
+from proteus import Profiling
 
 
 def PointGauges(gauges, activeTime=None, sampleRate=0, fileName='point_gauges.csv'):
@@ -254,6 +256,7 @@ class Gauges(AV_base):
             self.globalQuantitiesBuf = None
             self.globalQuantitiesCounts = None
         else:
+            self.fileName = os.path.join(Profiling.logDir, self.fileName)
             self.file = open(self.fileName, 'w')
 
             if self.isLineIntegralGauge:
