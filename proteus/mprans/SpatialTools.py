@@ -27,7 +27,7 @@ from itertools import compress
 import csv
 import os
 import numpy as np
-from proteus import AuxiliaryVariables, Archiver, Comm, Profiling
+from proteus import AuxiliaryVariables, Archiver, Comm, Profiling, Gauges
 from proteus.Profiling import logEvent as log
 from proteus.mprans import BoundaryConditions as bc
 from proteus.SpatialTools import (Shape,
@@ -1182,6 +1182,7 @@ def assembleDomain(domain):
     :param domain: domain to assemble
     """
     _assembleGeometry(domain, BC_class=bc.BC_RANS)
+    domain.bc[0].setNonMaterial()  # set BC for boundary between processors
     assembleAuxiliaryVariables(domain)
     _generateMesh(domain)
 
