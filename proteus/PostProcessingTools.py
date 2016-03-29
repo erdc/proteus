@@ -1070,8 +1070,11 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
         if self.updateConservationJacobian[ci]:
             self.getConservationJacobianPWL(ci)
             self.updateConservationJacobian[ci] = False #only depends on mesh need to resignal if mesh adapts
+        
+        import pdb
+        pdb.set_trace()
 
-        cpostprocessing.calculateConservationFluxPWL(self.nElements_node,
+        cpostprocessing.calculateConservationFluxPWL(self.nElements_DOF,
                                                      self.vt.internalNodesArray,
                                                      self.fluxBoundaryNodes[ci],
                                                      self.nodeStarFactors[ci])
@@ -1100,6 +1103,7 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                                                          self.vt.mesh.elementBoundaryElementsArray,
                                                          self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
                                                          self.vt.mesh.elementNodesArray,
+                                                         self.vt.u[0].femSpace.dofMap.l2g,
                                                          self.dofStarElementsArray,
                                                          self.dofStarElementNeighborsArray,
                                                          self.nElements_DOF,
@@ -1112,7 +1116,7 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                                                          self.nodeStarFactors[ci],
                                                          self.q[('conservationResidual',ci)],
                                                          self.ebq_global[('velocity',ci)],
-                                                         self.ebq[('velocity',ci)])
+                                                         self.ebq[('velocity',ci)])   # i'm not crazy about the nodeStarFactors term here...should it be dofStarFactors?
         #set boundary flux
         updateCoef = 0.0 #overwrite first
         cfemIntegrals.loadBoundaryFluxIntoGlobalElementBoundaryVelocity(self.vt.mesh.exteriorElementBoundariesArray,
@@ -1151,15 +1155,16 @@ class VPP_PWL_RT1(VelocityPostProcessingAlgorithmBase):
                                                          self.vt.mesh.elementBoundaryElementsArray,
                                                          self.vt.mesh.elementBoundaryLocalElementBoundariesArray,
                                                          self.vt.mesh.elementNodesArray,
-                                                         self.nodeStarElementsArray,
-                                                         self.nodeStarElementNeighborsArray,
-                                                         self.nElements_node,
+                                                         self.vt.u[0].femSpace.dofMap.l2g,
+                                                         self.dofStarElementsArray,
+                                                         self.dofStarElementNeighborsArray,
+                                                         self.nElements_DOF,
                                                          self.vt.internalNodesArray,
                                                          self.fluxElementBoundaries[ci],
                                                          self.fluxBoundaryNodes[ci],
                                                          self.w_dS[ci],
                                                          self.vt.ebq_global['n'],
-                                                         self.nodeStarFactors[ci])
+                                                         self.nodeStarFactors[ci])  # i'm not crazy about the nodeStarFactors term here...should it be dofStarFactors?
 
     def evaluateLocalVelocityRepresentation(self,ci):
         """
@@ -1454,7 +1459,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
     def computeBDM2projectionMatrices(self):
         import pdb
 #        import scipy.io
-#        pdb.set_trace()
+        pdb.set_trace()
 
         cpostprocessing.buildLocalBDM2projectionMatrices(self.degree,
                                                          self.w_dS[self.BDMcomponent],#vt.ebq[('w*dS_u',self.BDMcomponent)],
@@ -1486,7 +1491,7 @@ class VPP_PWL_BDM2(VPP_PWL_RT1):
 #        assert self.nDOFs_element[ci] == self.vt.nSpace_global*(self.vt.nSpace_global+1), "wrong size for BDM"
 
         import pdb
-#        pdb.set_trace()
+        pdb.set_trace()
 
         self.solveLocalBDM2projection(self.BDMprojectionMat_element,
                                       self.BDMprojectionMatPivots_element,

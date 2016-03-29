@@ -3101,7 +3101,7 @@ void solveLocalBDM2projection(int nElements_global,
 			      double * p1_velocity_dofs)
 {
   /***********************************************************************
-     build right hand side for projection to BDM1 space and then solve
+     build right hand side for projection to BDM2 space and then solve
      the local projection system. 
 
      Assumes ebq_velocity holds the velocity values at element boundaries
@@ -3124,16 +3124,9 @@ void solveLocalBDM2projection(int nElements_global,
   PROTEUS_LAPACK_INTEGER pivots_element[12]; /*maximum size for local space is ???*/
   PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER) nVDOFs_element);
 
-  nSimplex = nSpace+1;
-  assert(nVDOFs_element == nSpace*(nSpace+1));
-  assert(nSimplex == nDOFs_test_element);
-  assert(BDMprojectionMatPivots_element);
-  nVDOFs_element2 = nVDOFs_element*nVDOFs_element;
-
   // temporary variables...these will be added as inputs
   int degree = 2;
   int boundaryPspace = degree + 1;
-  
 
   // Specify the number of BDM degrees-of-freedom.
   int dof = (degree+1)*(degree+2);
@@ -3141,7 +3134,12 @@ void solveLocalBDM2projection(int nElements_global,
   int edge_dof = degree+1 ;
   int interior_dof = dof - boundary_dof;
 
+  nSimplex = nSpace+1;
+  assert(nVDOFs_element == dof);
+  assert(BDMprojectionMatPivots_element);
+  nVDOFs_element2 = nVDOFs_element*nVDOFs_element;
 
+  
   for (eN = 0; eN < nElements_global; eN++)
     {
       // Boundary Integrals
@@ -4491,7 +4489,7 @@ void calculateConservationResidualPWL(int nElements_global,
   */
 }
 
-void calculateConservationJacobianPWL(int nNodes_global,
+void calculateConservationJacobianPWL(int nDOF_global,
 				      int nNodes_internal,
 				      int nElements_global,
 				      int nInteriorElementBoundaries_global,
@@ -4505,8 +4503,9 @@ void calculateConservationJacobianPWL(int nNodes_global,
 				      int* elementBoundaryElements,
 				      int* elementBoundaryLocalElementBoundaries,
 				      int* elementNodes,
-				      int* nodeStarElements,
-				      int* nodeStarElementNeighbors,
+				      int* dofMapl2g,
+				      int* dofStarElements,
+				      int* dofStarElementNeighbors,
 				      int* nElements_node,
 				      int* internalNodes,
 				      int* fluxElementBoundaries,
@@ -4529,7 +4528,7 @@ void calculateConservationJacobianPWL(int nNodes_global,
  
   /*zero everything for safety*/
   assert(nodeStarFactor);
-  for (nN = 0; nN < nNodes_global; nN++)
+  for (nN = 0; nN < nDOF_global; nN++)
     {
       for(ii=0; ii < subdomain_dim[nN]; ii++)
 	{
@@ -4551,15 +4550,15 @@ void calculateConservationJacobianPWL(int nNodes_global,
 	{
 	  for (nN=0;nN<nNodes_element;nN++)
 	    {
-	      nN_global = elementNodes[left_eN*nNodes_element+
+	      nN_global = dofMapl2g[left_eN*nNodes_element+
 				      nN];
-	      left_eN_star = nodeStarElements[left_eN*nNodes_element+
+	      left_eN_star = dofStarElements[left_eN*nNodes_element+
 					      nN];
 	      /* check if node is opposite element boundary we're computing and ignore 0 contribution */
 	      /* this shouldn't be necessary */
 	      if (nN != left_ebN_element)
 		{
-		  right_eN_star = nodeStarElementNeighbors[left_eN*nNodes_element*nElementBoundaries_element+
+		  right_eN_star = dofStarElementNeighbors[left_eN*nNodes_element*nElementBoundaries_element+
 							   nN*nElementBoundaries_element+
 							   left_ebN_element];
 		  wflux = w[left_eN*nElementBoundaries_element*nQuadraturePoints_elementBoundary*nNodes_element+
@@ -4595,7 +4594,7 @@ void calculateConservationJacobianPWL(int nNodes_global,
 	    {
 	      nN_global = elementNodes[eN*nNodes_element+
 				       nN];
-	      eN_star = nodeStarElements[eN*nNodes_element+
+	      eN_star = dofStarElements[eN*nNodes_element+
 					 nN];
 	      /* check if this node lies opposite the element boundary whose contribution we're computing */
 	      /* in that case there is no flux contribution because the test function is zero*/
@@ -4627,7 +4626,7 @@ void calculateConservationJacobianPWL(int nNodes_global,
 	  =0.0;
     }
   /*repeat for Neumann boundary node stars*/
-  for (nN=0; nN < nNodes_global; nN++)
+  for (nN=0; nN < nDOF_global; nN++)
     {
       if (fluxBoundaryNodes[nN]==1)
 	{
@@ -4643,7 +4642,7 @@ void calculateConservationJacobianPWL(int nNodes_global,
     }
 
   /*factor with lapack*/
-  for (nN=0;nN<nNodes_global;nN++)
+  for (nN=0;nN<nDOF_global;nN++)
     {
       PROTEUS_LAPACK_INTEGER nE_n = ((PROTEUS_LAPACK_INTEGER)subdomain_dim[nN]);
 /*       dgetrf_(&nE_n, */

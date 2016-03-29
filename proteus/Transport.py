@@ -3849,6 +3849,7 @@ class OneLevelTransport(NonlinearEquation):
 #                 self.ebq['xt'][:]=0.0
         #now map the physical points back to the reference element
         #assume all components live  on same mesh
+
         self.u[0].femSpace.elementMaps.getInverseValuesTrace(self.ebq['inverse(J)'],self.ebq['x'],self.ebq['hat(x)'])
         self.u[0].femSpace.elementMaps.getPermutations(self.ebq['hat(x)'])
         #

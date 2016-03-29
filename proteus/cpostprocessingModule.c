@@ -690,7 +690,9 @@ cpostprocessingGetElementBDM2velocityValuesLagrangeRep(PyObject* self,
 		       &p1_vdofs,
 		       &q_velocity))
     return NULL;
-  nVDOFs_element = SHAPE(q_velocity)[2]*(SHAPE(q_velocity)[2]+1);
+  // this is really the dimension ... there should be a better way
+  // to handle this ...
+  nVDOFs_element = (SHAPE(q_velocity)[2]+1)*(SHAPE(q_velocity)[2]+2);
   
   if (ND(p1_vdofs) > 1)
     assert(nVDOFs_element == SHAPE(p1_vdofs)[1]);
@@ -1406,7 +1408,7 @@ cpostprocessingCalculateConservationResidualPWL(PyObject* self,
 		       &elementBoundaryElements,
 		       &elementBoundaryLocalElementBoundaries,
 		       &elementNodes,
-		       &dofMapl2g,
+    		       &dofMapl2g,
 		       &nodeStarElements,
 		       &nodeStarElementNeighbors,
 		       &nElements_node,
@@ -1461,9 +1463,10 @@ cpostprocessingCalculateConservationJacobianPWL(PyObject* self,
   PyObject* elementBoundaryElements;
   PyObject* elementBoundaryLocalElementBoundaries;
   PyObject* elementNodes;
-  PyObject* nodeStarElements;
-  PyObject* nodeStarElementNeighbors;
-  PyObject* nElements_node;
+  PyObject* dofMapl2g;
+  PyObject* dofStarElements;
+  PyObject* dofStarElementNeighbors;
+  PyObject* nElements_dof;
   PyObject* internalNodes;
   PyObject* nodeStarFactor;
   PyObject* w;
@@ -1471,15 +1474,16 @@ cpostprocessingCalculateConservationJacobianPWL(PyObject* self,
   PyObject* fluxElementBoundaries;
   PyObject* fluxBoundaryNodes;
 
-  if(!PyArg_ParseTuple(args,"OOOOOOOOOOOOOO",
+  if(!PyArg_ParseTuple(args,"OOOOOOOOOOOOOOO",
 		       &interiorElementBoundaries,
 		       &exteriorElementBoundaries,
 		       &elementBoundaryElements,
 		       &elementBoundaryLocalElementBoundaries,
 		       &elementNodes,
-		       &nodeStarElements,
-		       &nodeStarElementNeighbors,
-		       &nElements_node,
+		       &dofMapl2g,
+		       &dofStarElements,
+		       &dofStarElementNeighbors,
+		       &nElements_dof,
                        &internalNodes,
 		       &fluxElementBoundaries,
 		       &fluxBoundaryNodes,
@@ -1488,7 +1492,7 @@ cpostprocessingCalculateConservationJacobianPWL(PyObject* self,
 		       &nodeStarFactor))
     
     return NULL;
-  calculateConservationJacobianPWL(SHAPE(nElements_node)[0],
+  calculateConservationJacobianPWL(SHAPE(nElements_dof)[0],
 				     SHAPE(internalNodes)[0],
 				     SHAPE(w)[0],
 				     SHAPE(interiorElementBoundaries)[0],
@@ -1502,9 +1506,10 @@ cpostprocessingCalculateConservationJacobianPWL(PyObject* self,
 				     IDATA(elementBoundaryElements),
 				     IDATA(elementBoundaryLocalElementBoundaries),
 				     IDATA(elementNodes),
-				     IDATA(nodeStarElements),
-				     IDATA(nodeStarElementNeighbors),
-				     IDATA(nElements_node),
+  				     IDATA(dofMapl2g),
+				     IDATA(dofStarElements),
+				     IDATA(dofStarElementNeighbors),
+				     IDATA(nElements_dof),
 				     IDATA(internalNodes),
 				     IDATA(fluxElementBoundaries),
 				     IDATA(fluxBoundaryNodes),
