@@ -1026,10 +1026,6 @@ extern "C"
         mesh.elementBoundaryNodesArray[ebN*4 + 1] = eb->first.nodes_unsorted[1];
         mesh.elementBoundaryNodesArray[ebN*4 + 2] = eb->first.nodes_unsorted[2];
         mesh.elementBoundaryNodesArray[ebN*4 + 3] = eb->first.nodes_unsorted[3];
-        // mesh.elementBoundaryNodesArray[ebN*4 + 0] = eb->first.nodes[0];
-        // mesh.elementBoundaryNodesArray[ebN*4 + 1] = eb->first.nodes[1];
-        // mesh.elementBoundaryNodesArray[ebN*4 + 2] = eb->first.nodes[2];
-        // mesh.elementBoundaryNodesArray[ebN*4 + 3] = eb->first.nodes[3];
 
         mesh.elementBoundaryElementsArray[ebN*2 + 0] = eb->second.left;
         mesh.elementBoundaryLocalElementBoundariesArray[ebN*2 + 0] = eb->second.left_ebN_element;
@@ -2658,11 +2654,6 @@ extern "C"
             {
               elementBoundaryElements[ebt].right=eN;
               elementBoundaryElements[ebt].right_ebN_element=ebN;
-      
-	      if (elementBoundaryIds[ebt] != ebN_global)
-                {
-                  std::cout<<nodes[0]<<'\t'<<nodes[1]<<'\t'<<nodes[2]<<'\t'<<nodes[3]<<'\n'<<ebN_global<<'\t'<<elementBoundaryIds[ebt]<<std::endl;
-                }
             }
           else
             {
