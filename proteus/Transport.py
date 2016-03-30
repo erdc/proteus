@@ -1702,10 +1702,13 @@ class OneLevelTransport(NonlinearEquation):
         #cek debug
         #u.tofile("u"+`self.nonlinear_function_evaluations`,sep="\n")
         r.fill(0.0)
+        for cj in range(self.nc):
+            for dofN,g in self.dirichletConditions[cj].DOFBoundaryConditionsDict.iteritems():
+                self.u[cj].dof[dofN] = g(self.dirichletConditions[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
         if self.forceStrongConditions:
             for cj in range(len(self.dirichletConditionsForceDOF)):
                 for dofN,g in self.dirichletConditionsForceDOF[cj].DOFBoundaryConditionsDict.iteritems():
-                    u[self.offset[cj]+self.stride[cj]*dofN] = g(self.dirichletConditionsForceDOF[cj].DOFBoundaryPointDict[dofN],self.timeIntegration.t)
+                    u[self.offset[cj]+self.stride[cj]*dofN] = self.u[cj].dof[dofN]#load the BC value directly into the global array
         #Load the unknowns into the finite element dof
         self.timeIntegration.calculateU(u)
         self.setUnknowns(self.timeIntegration.u)
@@ -2454,12 +2457,6 @@ class OneLevelTransport(NonlinearEquation):
                     cfemIntegrals.updateNumericalDiffusion(self.q[('numDiff',ci,ci)],
                                                            self.q[('grad(u)Xgrad(w)*dV_numDiff',ci,ci)],
                                                            self.elementResidual[ci])
-        # for eN in range(self.mesh.nElements_global):
-        #     for i in range(self.nDOF_test_element[0]):
-        #         print "element residual "+`eN`+'\t'+`i`
-        #         print self.elementResidual[0][eN,i]
-        #         print self.elementResidual[1][eN,i]
-        #         print self.elementResidual[2][eN,i]
         if self.numericalFlux != None and not isinstance(self.numericalFlux, NumericalFlux.DoNothing):
             for ci in range(self.nc):
                 self.ebq_global[('totalFlux',ci)].fill(0.0)
@@ -4253,30 +4250,30 @@ class OneLevelTransport(NonlinearEquation):
                     hasOutflowBoundary = int(self.fluxBoundaryConditions[ci] == 'outFlow')
                     needsOutflowJacobian_int = int(needOutflowJacobian == True)
                     self.sparsityInfo.findNonzeros(self.mesh.nElements_global,
-                                              self.nDOF_test_element[ci],
-                                              self.nDOF_trial_element[cj],
-                                              self.l2g[ci]['nFreeDOF'],
-                                              self.l2g[ci]['freeGlobal'],
-                                              self.l2g[cj]['nFreeDOF'],
-                                              self.l2g[cj]['freeGlobal'],
-                                              self.offset[ci],
-                                              self.stride[ci],
-                                              self.offset[cj],
-                                              self.stride[cj],
-                                              hasNumericalFlux,
-                                              hasDiffusionInMixedForm,
-                                              needNumericalFluxJacobian_int,
-                                              self.mesh.nElementBoundaries_element,
-                                              self.mesh.elementNeighborsArray,
-                                              self.mesh.nInteriorElementBoundaries_global,
-                                              self.mesh.interiorElementBoundariesArray,
-                                              self.mesh.elementBoundaryElementsArray,
-                                              self.mesh.elementBoundaryLocalElementBoundariesArray,
-                                              self.fluxBoundaryConditions[ci] == 'outFlow',
-                                              self.mesh.nExteriorElementBoundaries_global,
-                                              self.mesh.exteriorElementBoundariesArray,
-                                              hasOutflowBoundary,
-                                              needsOutflowJacobian_int)
+                                                   self.nDOF_test_element[ci],
+                                                   self.nDOF_trial_element[cj],
+                                                   self.l2g[ci]['nFreeDOF'],
+                                                   self.l2g[ci]['freeGlobal'],
+                                                   self.l2g[cj]['nFreeDOF'],
+                                                   self.l2g[cj]['freeGlobal'],
+                                                   self.offset[ci],
+                                                   self.stride[ci],
+                                                   self.offset[cj],
+                                                   self.stride[cj],
+                                                   hasNumericalFlux,
+                                                   hasDiffusionInMixedForm,
+                                                   needNumericalFluxJacobian_int,
+                                                   self.mesh.nElementBoundaries_element,
+                                                   self.mesh.elementNeighborsArray,
+                                                   self.mesh.nInteriorElementBoundaries_global,
+                                                   self.mesh.interiorElementBoundariesArray,
+                                                   self.mesh.elementBoundaryElementsArray,
+                                                   self.mesh.elementBoundaryLocalElementBoundariesArray,
+                                                   self.fluxBoundaryConditions[ci] == 'outFlow',
+                                                   self.mesh.nExteriorElementBoundaries_global,
+                                                   self.mesh.exteriorElementBoundariesArray,
+                                                   hasOutflowBoundary,
+                                                   needsOutflowJacobian_int)
                 else:
                     for eN in range(self.mesh.nElements_global):
                         for ii in range(self.l2g[ci]['nFreeDOF'][eN]): #l2g is an array
