@@ -37,7 +37,8 @@ class AR_base:
                  gatherAtClose=True,
                  useGlobalXMF=True,
                  hotStart=False,
-                 readOnly=False):
+                 readOnly=False,
+                 global_sync=True):
         import os.path
         import copy
         self.useGlobalXMF=useGlobalXMF
@@ -53,13 +54,14 @@ class AR_base:
         self.n_datasets = 0
         import datetime
         #filename += datetime.datetime.now().isoformat()
+        self.global_sync = global_sync
         try:
             import h5py
             self.has_h5py=True
-            self.global_sync=True
             comm_world = self.comm.comm.tompi4py()
         except:
             self.has_h5py=False
+            self.global_sync=False
         try:
             import tables
             self.hasTables=True
