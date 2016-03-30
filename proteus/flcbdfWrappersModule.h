@@ -40,6 +40,7 @@ namespace Daetk
 #include "petscao.h"
 #include "petscbt.h"
 #include "petscksp.h"
+#include "petscconf.h"
 #endif
 #ifdef PROTEUSREDEFINECPP
 #define __cplusplus MYCPLUSPLUS
@@ -50,8 +51,8 @@ namespace Daetk
 #include "petscao.h"
 #include "petscbt.h"
 #include "petscksp.h"
-#endif
 #include "petscconf.h"
+#endif
 	/*cek try adding forward declarations since I can't find the header for these intel functions */
 #ifdef PETSC_HAVE__INTEL_FAST_MEMSET
           #include <string.h>
