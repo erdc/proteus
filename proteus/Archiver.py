@@ -241,7 +241,7 @@ class AR_base:
         log("Closing Archive")
         if not self.useGlobalXMF:
             self.xmlFile.close()
-        if self.comm.isMaster():
+        if self.comm.isMaster() and self.useGlobalXMF:
             self.gatherAndWriteTimes()
             self.xmlFileGlobal.close()
         if self.hdfFile != None:
