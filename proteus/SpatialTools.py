@@ -465,6 +465,59 @@ class CustomShape(Shape):
         if barycenter is not None:
             self.barycenter = np.array(barycenter)
 
+        
+class ShapeSTL(Shape):
+    def __init__(self, domain, filename):
+        super(ShapeSTL, self).__init__(domain, nd=3)
+        self.filename = filename
+        self.vertices, self.facets, self.facetnormals = getInfoFromSTL(self.filename)
+        self.facetFlags = np.ones(len(self.facets))
+        self.vertexFlags = np.ones(len(self.vertices))
+        self.BC_dict = {'stl': self.BC_class(shape=self, name='stl')}
+        self.BC_list = [self.BC_dict['stl']]
+        self.BC = BCContainer(self.BC_dict)
+
+def getInfoFromSTL(filename):
+    file = open(filename, 'r')
+    facetnormals = []
+    facet = []
+    facets = []
+    vertices = []
+    vFlag = 0
+    for line in file:
+        if "vertex" in line:
+            word_list = line.split()
+            vertex = (word_list[1], word_list[2], word_list[3])
+            vertices += [vertex]
+            facet += [vFlag]
+            vFlag += 1
+        if "facet normal" in line:
+            word_list = line.split()
+            facetnormals += [[word_list[2], word_list[3], word_list[4]]]
+        elif "endfacet" in line:
+            facets += [[facet]]
+            facet = []
+        elif "solid" in line:
+            word_list = line.split()
+            name = word_list[1]
+    file.close()
+    # vertices_u, inverse = np.unique(vertices, return_inverse=True)
+    vertices = np.array(vertices).astype(float)
+    facets = np.array(facets).astype(int)
+    vertices, inverse = unique_rows(vertices)
+    facets = inverse[facets]
+    facetnormals = np.array(facetnormals).astype(float)
+    return vertices, facets, facetnormals
+
+def unique_rows(arr):
+    arr = np.array(arr)
+    ca = np.ascontiguousarray(arr).view([('', arr.dtype)] * arr.shape[1])
+    unique, indices, inverse = np.unique(ca, return_index=True, return_inverse=True)
+    # counts = np.bincount(inverse)
+    # sort_indices = np.argsort(counts)[::-1]
+    # sorted_arr = arr[indices[sort_indices]]
+    # sorted_count = counts[sort_indices]
+    return (arr[indices], inverse)
 
 class BCContainer(object):
     """
@@ -683,3 +736,4 @@ def _generateMesh(domain):
     mesh.setTriangleOptions()
     log("""Mesh generated using: tetgen -%s %s"""  %
         (mesh.triangleOptions, domain.polyfile+".poly"))
+

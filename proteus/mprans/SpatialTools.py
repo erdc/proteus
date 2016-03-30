@@ -34,6 +34,7 @@ from proteus.SpatialTools import (Shape,
                                   Cuboid,
                                   Rectangle,
                                   CustomShape,
+                                  ShapeSTL,
                                   BCContainer,
                                   _assembleGeometry,
                                   _generateMesh)
@@ -317,6 +318,7 @@ class ShapeRANS(Shape):
 Rectangle.__bases__ = (ShapeRANS,)
 Cuboid.__bases__ = (ShapeRANS,)
 CustomShape.__bases__ = (ShapeRANS,)
+ShapeSTL.__bases__ = (ShapeRANS,)
 
 # adding extra functionality to predefined shapes
 
