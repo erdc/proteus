@@ -80,7 +80,8 @@ class NS_base:  # (HasTraits):
             self.femSpaceWritten={}
             tmp  = Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
                                         gatherAtClose=opts.gatherArchive,hotStart=opts.hotStart,
-                                        useGlobalXMF=(not opts.subdomainArchives))
+                                        useGlobalXMF=(not opts.subdomainArchives),
+                                        global_sync=opts.global_sync)
             self.ar = dict([(i,tmp) for i in range(len(self.pList))])
         elif len(self.pList) == 1:
             self.ar = {0:Archiver.XdmfArchive(opts.dataDir,so.name,useTextArchive=opts.useTextArchive,
@@ -388,7 +389,6 @@ class NS_base:  # (HasTraits):
                 linTolList.append(n.linTolFac*fac)
 
             log("Setting up MultilevelTransport for "+p.name)
-
             model = Transport.MultilevelTransport(p,n,mlMesh,OneLevelTransportType=p.LevelModelType)
             self.modelList.append(model)
             model.name = p.name
