@@ -1903,7 +1903,8 @@ class DiscontinuousGalerkinDOFMap(DOFMap):
         self.dof_offsets_subdomain_owned = numpy.zeros(globalMesh.nodeOffsets_subdomain_owned.shape,'i')
         self.nDOF_all_processes = 0; self.nDOF_subdomain = 0; self.max_dof_neighbors = 0
         self.subdomain2global = numpy.zeros((self.nDOF),'i')
-        (self.nDOF_all_processes,self.nDOF_subdomain,
+        (self.nDOF_all_processes,
+         self.nDOF_subdomain,
          self.max_dof_neighbors) = flcbdfWrappers.buildDiscontinuousGalerkinLocal2GlobalMappings(self.local_dim,
                                                                                                  globalMesh.cmesh,
                                                                                                  globalMesh.subdomainMesh.cmesh,
@@ -4099,7 +4100,7 @@ class DG_AffinePolynomialsOnSimplexWithMonomialBasis(ParametricFiniteElementSpac
                                                       u.femSpace.interpolationPoints.shape[1]),'d')
         u.getValues(u.basisValuesAtInterpolationPoints,u.interpolationValuesArray)
 
-        return self.XdmfWriter.writeFunctionXdmf_MonomialDGPK(ar,u.interpolationValuesArray,u.name,tCount=tCount,init=init)
+        return self.XdmfWriter.writeFunctionXdmf_MonomialDGPK(ar,u.interpolationValuesArray,u.name,tCount=tCount,init=init, mesh=u.femSpace.mesh)
     #
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
         """
@@ -4454,7 +4455,7 @@ class DG_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                                           arGrid=arGrid,tCount=tCount)
     #def
     def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
-        self.XdmfWriter.writeFunctionXdmf_DGP1Lagrange(ar,u,tCount=tCount,init=init)
+        self.XdmfWriter.writeFunctionXdmf_DGP1Lagrange(ar,u,tCount=tCount,init=init, dofMap = self.dofMap)
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
         self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"dgp1_Lagrange",tCount=tCount,init=init, dofMap=self.dofMap)
 
@@ -5308,7 +5309,7 @@ class DG_AffineQuadraticOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                                           tCount=tCount)
     #def
     def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
-        self.XdmfWriter.writeFunctionXdmf_DGP2Lagrange(ar,u,tCount=tCount,init=init)
+        self.XdmfWriter.writeFunctionXdmf_DGP2Lagrange(ar,u,tCount=tCount,init=init, dofMap=self.dofMap)
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
         self.XdmfWriter.writeVectorFunctionXdmf_nodal(ar,uList,components,vectorName,"dgp2_Lagrange",tCount=tCount,init=init)
 
@@ -5475,10 +5476,10 @@ class NC_AffineLinearOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                                                arGrid=arGrid,tCount=tCount)
 
     def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
-        return self.XdmfWriter.writeFunctionXdmf_CrouzeixRaviartP1(ar,u,tCount=tCount,init=init)
+        return self.XdmfWriter.writeFunctionXdmf_CrouzeixRaviartP1(ar,u,tCount=tCount,init=init, dofMap=self.dofMap)
 
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
-        return self.XdmfWriter.writeVectorFunctionXdmf_CrouzeixRaviartP1(ar,uList,components,vectorName,tCount=tCount,init=init)
+        return self.XdmfWriter.writeVectorFunctionXdmf_CrouzeixRaviartP1(ar,uList,components,vectorName,tCount=tCount,init=init, dofMap=self.dofMap)
 
     def writeFunctionMatlab(self,u,output,append=True,storeMeshData=True,figureOffset=1):
         """
@@ -5820,7 +5821,7 @@ class C0_AffineP1P0BubbleOnSimplexWithNodalBasis(ParametricFiniteElementSpace):
                                                       u.femSpace.interpolationPoints.shape[1]),'d')
         u.getValues(u.basisValuesAtInterpolationPoints,u.interpolationValuesArray)
 
-        return self.XdmfWriter.writeFunctionXdmf_MonomialDGPK(ar,u.interpolationValuesArray,u.name,tCount=tCount,init=init)
+        return self.XdmfWriter.writeFunctionXdmf_MonomialDGPK(ar,u.interpolationValuesArray,u.name,tCount=tCount,init=init,mesh=u.femSpace.mesh)
     #
     def writeVectorFunctionXdmf(self,ar,uList,components,vectorName,tCount=0,init=True):
         """
