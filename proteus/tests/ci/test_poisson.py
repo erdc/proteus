@@ -98,6 +98,7 @@ def test_c0q1_hex_mesh():
 
 def test_c0q2():
     import poisson_3d_p
+    reload(poisson_3d_p)
     import poisson_3d_c0q2_n
     pList = [poisson_3d_p]
     nList = [poisson_3d_c0q2_n]
