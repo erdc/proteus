@@ -1991,22 +1991,23 @@ class QuadraticLagrangeCubeDOFMap(DOFMap):
         self.dof_offsets_subdomain_owned = numpy.zeros(globalMesh.nodeOffsets_subdomain_owned.shape,'i')
         self.nDOF_all_processes = 0; self.nDOF_subdomain = 0; self.max_dof_neighbors = 0
         self.subdomain2global = numpy.zeros((self.nDOF),'i')
-        (self.nDOF_all_processes,self.nDOF_subdomain,
+        (self.nDOF_all_processes,
+         self.nDOF_subdomain,
          self.max_dof_neighbors) = flcbdfWrappers.buildQuadraticCubeLocal2GlobalMappings(self.nd,
-                                                                                     globalMesh.cmesh,
-                                                                                     globalMesh.subdomainMesh.cmesh,
-                                                                                     globalMesh.elementOffsets_subdomain_owned,
-                                                                                     globalMesh.nodeOffsets_subdomain_owned,
-                                                                                     globalMesh.elementBoundaryOffsets_subdomain_owned,
-                                                                                     globalMesh.edgeOffsets_subdomain_owned,
-                                                                                     globalMesh.elementNumbering_subdomain2global,
-                                                                                     globalMesh.nodeNumbering_subdomain2global,
-                                                                                     globalMesh.elementBoundaryNumbering_subdomain2global,
-                                                                                     globalMesh.edgeNumbering_subdomain2global,
-                                                                                     self.dof_offsets_subdomain_owned,
-                                                                                     self.l2g,
-                                                                                     self.subdomain2global,
-                                                                                     self.lagrangeNodesArray)
+                                                                                         globalMesh.cmesh,
+                                                                                         globalMesh.subdomainMesh.cmesh,
+                                                                                         globalMesh.elementOffsets_subdomain_owned,
+                                                                                         globalMesh.nodeOffsets_subdomain_owned,
+                                                                                         globalMesh.elementBoundaryOffsets_subdomain_owned,
+                                                                                         globalMesh.edgeOffsets_subdomain_owned,
+                                                                                         globalMesh.elementNumbering_subdomain2global,
+                                                                                         globalMesh.nodeNumbering_subdomain2global,
+                                                                                         globalMesh.elementBoundaryNumbering_subdomain2global,
+                                                                                         globalMesh.edgeNumbering_subdomain2global,
+                                                                                         self.dof_offsets_subdomain_owned,
+                                                                                         self.l2g,
+                                                                                         self.subdomain2global,
+                                                                                         self.lagrangeNodesArray)
         assert self.nDOF == self.nDOF_subdomain
 #QuadraticDOFMap
 
