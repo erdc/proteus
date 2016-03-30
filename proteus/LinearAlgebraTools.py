@@ -269,6 +269,51 @@ class SparseMatShell:
             self.ghosted_csr_mat.matvec(xlf.getArray(),ylf.getArray())
         y.setArray(self.yGhosted.getArray())
 
+class PCDShell:
+    """
+    This class creates an operator that acts as a PCD preconditioner for the Schur complement
+    """
+    def __init__(self, ghosted_csr_mat_Q, ghosted_csr_mat_F, ghosted_csr_mat_A):
+        self.ghosted_csr_mat_Q = ghosted_csr_mat_Q
+        self.ghosted_csr_mat_F = ghosted_csr_mat_F
+        self.ghosted_csr_mat_A = ghosted_csr_mat_A
+        self.temp1Ghosted = None
+        self.temp2Ghosted = None
+        self.par_b = None
+    def create(self, A):
+        pass
+    def mult(self, A, x, y):
+        logEvent("Using PCD Shell to matrix-vector multiply")
+        # First initialize PETSc objects that perform the linear solves
+        self.kspAp = p4pyPETSc.KSP().create()
+        self.kspQ = p4pyPETSc.KSP().create()
+        self.kspAp.setType('preonly')
+        self.kspQ.setType('preonly')
+        self.kspAp.getPC().setType('lu')
+        self.kspQ.getPC().setType('lu')
+        self.kspAp.setOperators(self.ghosted_csr_mat_A)
+        self.kspQ.setOperators(self.ghosted_csr_mat_Q)
+        # Initialize vectors
+        if self.temp1Ghosted == None:
+            self.temp1Ghosted = self.par_b.duplicate()
+            self.temp2Ghosted = self.par_b.duplicate()
+        t1 = x.duplicate()
+        t2 = y.duplicate()
+        # Ap^{-1} x = t1lf
+        self.kspAp.solve(x,t1)
+        # (Fp)(t1lf) = t2lf
+        self.temp1Ghosted.setArray(t1.getArray())
+        self.temp1Ghosted.ghostUpdateBegin(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
+        self.temp1Ghosted.ghostUpdateEnd(p4pyPETSc.InsertMode.INSERT,p4pyPETSc.ScatterMode.FORWARD)
+        self.temp2Ghosted.zeroEntries()
+        with self.temp1Ghosted.localForm() as t1lf, self.temp2Ghosted.localForm() as t2lf:
+            self.ghosted_csr_mat_F.matvec(t1lf,t2lf)
+        t2.setArray(self.temp2Ghosted.getArray())
+        # Q^{-1} t2lf = y
+        self.kspQ.solve(t2,y)
+
+        
+
 
 def l2Norm(x):
     """

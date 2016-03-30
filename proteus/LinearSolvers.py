@@ -8,6 +8,7 @@ from petsc4py import PETSc as p4pyPETSc
 from math import *
 from Profiling import logEvent
 
+
 class LinearSolver:
     """
     The base class for linear solvers.
@@ -452,15 +453,21 @@ class KSP_petsc4py(LinearSolver):
         self.ksp     = p4pyPETSc.KSP().create()
         self.csr_rep_local = self.petsc_L.csr_rep_local
         self.csr_rep = self.petsc_L.csr_rep
-        #shell for main operator
+        #shell for main operator ?? ARB - is Lshell even used anywhere ??
+      
         self.Lshell = p4pyPETSc.Mat().create()
         L_sizes = self.petsc_L.getSizes()
         L_range = self.petsc_L.getOwnershipRange()
+
         self.Lshell.setSizes(L_sizes)
         self.Lshell.setType('python')
         self.matcontext  = SparseMatShell(self.petsc_L.ghosted_csr_mat)
         self.Lshell.setPythonContext(self.matcontext)
-        #self.ksp.setOperators(self.petsc_L,self.Lshell)#,self.petsc_L)
+
+#        self.ksp.setOperators(self.petsc_L,self.Lshell)#,self.petsc_L)
+ #       import pdb
+  #      pdb.set_trace()
+
         #
         try:
             if self.preconditioner.hasNullSpace:
@@ -495,6 +502,8 @@ class KSP_petsc4py(LinearSolver):
         if Preconditioner != None:
             self.ksp.setPC(self.pc)
         self.ksp.setFromOptions()
+        import pdb
+#        pdb.set_trace()
     def setResTol(self,rtol,atol):
         self.rtol_r = rtol
         self.atol_r = atol
@@ -502,6 +511,8 @@ class KSP_petsc4py(LinearSolver):
         self.ksp.atol = atol
         logEvent("KSP atol %e rtol %e" % (self.ksp.atol,self.ksp.rtol))
     def prepare(self,b=None):
+        import pdb
+#        pdb.set_trace()
         self.petsc_L.zeroEntries()
         assert self.petsc_L.getBlockSize() == 1, "petsc4py wrappers currently require 'simple' blockVec (blockSize=1) approach"
         if self.petsc_L.proteus_jacobian != None:
@@ -519,6 +530,8 @@ class KSP_petsc4py(LinearSolver):
         self.petsc_L.assemblyEnd()
         self.petsc_L.save("L")
         if self.pc != None:
+            import pdb
+     #       pdb.set_trace()
             self.pc.setOperators(self.petsc_L,self.petsc_L)
             self.pc.setUp()
             if self.preconditioner:
@@ -526,6 +539,8 @@ class KSP_petsc4py(LinearSolver):
         self.ksp.setOperators(self.petsc_L,self.petsc_L)
         #self.ksp.setOperators(self.Lshell,self.petsc_L)
         self.ksp.setUp()
+#        pdb.set_trace()
+
     def solve(self,u,r=None,b=None,par_u=None,par_b=None,initialGuessIsZero=True):
         if par_b.proteus2petsc_subdomain is not None:
             par_b.proteus_array[:] = par_b.proteus_array[par_b.petsc2proteus_subdomain]
@@ -554,6 +569,8 @@ class KSP_petsc4py(LinearSolver):
                 self.ksp.setNullSpace(self.preconditioner.nsp)
         except:
             pass
+        import pdb
+      #  pdb.set_trace()
         self.ksp.solve(par_b,par_u)
         logEvent("after ksp.rtol= %s ksp.atol= %s ksp.converged= %s ksp.its= %s ksp.norm= %s reason = %s" % (self.ksp.rtol,
                                                                                                              self.ksp.atol,
@@ -620,8 +637,18 @@ class NavierStokes3D:
         self.isv = p4pyPETSc.IS()
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
-        self.pc.setFromOptions()
+        self.setUp()
+#        self.pc.setFromOptions()
+        import pdb
+#        pdb.set_trace()
+
+
     def setUp(self):
+        import pdb
+#        pdb.set_trace()
+        # Temporary addition - Think this this should really be set in NavierStokes class
+        # ksp does not have a method setNullSpace...This this be applied to the system matrix perhaps?
+        self.L.pde.pp_hasConstantNullSpace = False
         if self.L.pde.pp_hasConstantNullSpace:
             if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
                 self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
@@ -670,11 +697,16 @@ class NavierStokes3D:
                                  self.Asys_nzval,
                                  self.Asys_colind,
                                  self.Asys_rowptr)
+            import pdb
+      #      pdb.set_trace()
             self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
             self.L.pde.q[('df',0,0)][:] = 0.0
             self.L.pde.q[('df',0,1)][:] = 0.0
             self.L.pde.q[('df',0,2)][:] = 0.0
-            self.L.pde.q[('df',0,3)][:] = 0.0
+          #  self.L.pde.q[('df',0,3)][:] = 0.0
+            # ARB -  hack
+            self.L.pde.scale_dt = False
+            # ARB - hack
             self.L.pde.getSpatialJacobian(self.Asys)#notice switched to  Spatial
             self.Asys_petsc4py = self.L.duplicate()
             A_csr_rep_local = self.Asys.getSubMatCSRrepresentation(0,L_sizes[0][0])
@@ -706,7 +738,7 @@ class NavierStokes3D:
             self.L.pde.q[('a',0,0)][:] = self.L.pde.q[('a',1,1)][:]
             self.L.pde.q[('df',0,0)][...,0] = self.L.pde.q[('u',1)]
             self.L.pde.q[('df',0,0)][...,1] = self.L.pde.q[('u',2)]
-            self.L.pde.q[('df',0,0)][...,2] = self.L.pde.q[('u',3)]
+           # self.L.pde.q[('df',0,0)][...,2] = self.L.pde.q[('u',3)]
             self.L.pde.getSpatialJacobian(self.Fsys)#notice, switched  to spatial
             self.Fsys_petsc4py = self.L.duplicate()
             F_csr_rep_local = self.Fsys.getSubMatCSRrepresentation(0,L_sizes[0][0])
@@ -731,6 +763,29 @@ class NavierStokes3D:
             # I think the next step is to setup something that does
             #  p = ksp(Qp, Fp*ksp(Ap,b)) for some input b
             # where p represents the approximate solution of S p = b
+#            pdb.set_trace()
+
+#            self.pc.setType('fieldsplit')
+
+            # Option 4 - Schur field split type
+            self.pc.setFieldSplitType(4)
+            # Option 3 - Full Schur factorization type
+            self.pc.setFieldSplitSchurFactType(3)
+            self.PCD_shell = p4pyPETSc.Mat().create()
+            self.PCD_shell.setSizes(L_sizes)
+            self.PCD_shell.setType('python')
+            self.matcontext = PCDShell(self.Qp,self.Fp,self.Ap)
+            self.PCD_shell.setPythonContext(self.matcontext)
+            self.PCD_shell.setUp()
+
+            # from petsc4py documentation 3 = 'USER'
+#            self.pc.setFieldSplitSchurPreType(0)
+            self.pc.setFieldSplitSchurPreType(3,self.PCD_shell)
+            import pdb
+#            pdb.set_trace()
+#            pdb.set_trace()
+
+
 SimpleNavierStokes3D = NavierStokes3D
 
 class SimpleDarcyFC:
@@ -796,6 +851,9 @@ class NavierStokes2D:
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
     def setUp(self):
+        import pdb
+#        pdb.set_trace()
+        self.L.pde.pp_hasConstantNullSpace = False
         if self.L.pde.pp_hasConstantNullSpace:
             if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
                 self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
