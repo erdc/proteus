@@ -977,8 +977,6 @@ extern "C"
                        {3,0,4,7},
                        {4,5,6,7}};
     
-    
-    
     //cout<<"Extracting boundary elements"<<endl;
     for(int eN=0;eN<mesh.nElements_global;eN++)
       for(int ebN=0;ebN<mesh.nElementBoundaries_element;ebN++)
@@ -1024,10 +1022,10 @@ extern "C"
         eb != elementBoundaryElements.end();
         eb++,ebN++)
       {
-        mesh.elementBoundaryNodesArray[ebN*4 + 0] = eb->first.nodes[0];
-        mesh.elementBoundaryNodesArray[ebN*4 + 1] = eb->first.nodes[1];
-        mesh.elementBoundaryNodesArray[ebN*4 + 2] = eb->first.nodes[2];
-        mesh.elementBoundaryNodesArray[ebN*4 + 3] = eb->first.nodes[3];
+        mesh.elementBoundaryNodesArray[ebN*4 + 0] = eb->first.nodes_unsorted[0];
+        mesh.elementBoundaryNodesArray[ebN*4 + 1] = eb->first.nodes_unsorted[1];
+        mesh.elementBoundaryNodesArray[ebN*4 + 2] = eb->first.nodes_unsorted[2];
+        mesh.elementBoundaryNodesArray[ebN*4 + 3] = eb->first.nodes_unsorted[3];
 
         mesh.elementBoundaryElementsArray[ebN*2 + 0] = eb->second.left;
         mesh.elementBoundaryLocalElementBoundariesArray[ebN*2 + 0] = eb->second.left_ebN_element;
@@ -2656,8 +2654,6 @@ extern "C"
             {
               elementBoundaryElements[ebt].right=eN;
               elementBoundaryElements[ebt].right_ebN_element=ebN;
-      
-	      assert(elementBoundaryIds[ebt] == ebN_global);
             }
           else
             {

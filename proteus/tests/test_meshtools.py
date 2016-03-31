@@ -690,7 +690,7 @@ def test_L1():
     domain = setupStepGauss()
     mesh = InterpolatedBathymetryMesh(domain,triangleOptions="gVApq30Dena%8.8f" % (0.5**3,),atol=1.0e-1,rtol=1.0e-1,maxLevels=25,maxNodes=50000,
                                       bathyType="points",bathyAssignmentScheme="localAveraging",errorNormType="L1")
-    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_L1_")
+    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_L1_", global_sync=False)
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
     archive.sync(); archive.close()
@@ -699,7 +699,7 @@ def test_L2():
     domain = setupStepGauss()
     mesh = InterpolatedBathymetryMesh(domain,triangleOptions="gVApq30Dena%8.8f" % (0.5**3,),atol=1.0e-1,rtol=1.0e-1,maxLevels=25,maxNodes=50000,
                                       bathyType="points",bathyAssignmentScheme="localAveraging",errorNormType="L2")
-    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_L2_")
+    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_L2_", global_sync=False)
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
     archive.sync(); archive.close()
@@ -708,7 +708,7 @@ def test_Linfty():
     domain = setupStepGauss()
     mesh = InterpolatedBathymetryMesh(domain,triangleOptions="gVApq30Dena%8.8f" % (0.5**3,),atol=1.0e-1,rtol=1.0e-1,maxLevels=25,maxNodes=50000,
                                       bathyType="points",bathyAssignmentScheme="localAveraging",errorNormType="Linfty")
-    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_Linfty_")
+    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_Linfty_", global_sync=False)
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
     archive.sync(); archive.close()
@@ -717,7 +717,7 @@ def test_L1_interp():
     domain = setupStepGauss()
     mesh = InterpolatedBathymetryMesh(domain,triangleOptions="gVApq30Dena%8.8f" % (0.5**3,),atol=1.0e-1,rtol=1.0e-1,maxLevels=25,maxNodes=50000,
                                       bathyType="points",bathyAssignmentScheme="interpolation",errorNormType="L1")
-    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_L1_interp_")
+    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_L1_interp_", global_sync=False)
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
     archive.sync(); archive.close()
@@ -726,7 +726,7 @@ def test_L2_interp():
     domain = setupStepGauss()
     mesh = InterpolatedBathymetryMesh(domain,triangleOptions="gVApq30Dena%8.8f" % (0.5**3,),atol=1.0e-1,rtol=1.0e-1,maxLevels=25,maxNodes=50000,
                                       bathyType="points",bathyAssignmentScheme="interpolation",errorNormType="L2")
-    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_L2_interp_")
+    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_L2_interp_", global_sync=False)
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
     archive.sync(); archive.close()
@@ -735,7 +735,7 @@ def test_Linfty_interp():
     domain = setupStepGauss()
     mesh = InterpolatedBathymetryMesh(domain,triangleOptions="gVApq30Dena%8.8f" % (0.5**3,),atol=1.0e-1,rtol=1.0e-1,maxLevels=25,maxNodes=50000,
                                       bathyType="points",bathyAssignmentScheme="interpolation",errorNormType="Linfty")
-    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_Linfty_interp_")
+    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_Linfty_interp_", global_sync=False)
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
     archive.sync(); archive.close()
@@ -744,7 +744,7 @@ def test_L1_grid():
     domain = setupStepGauss()
     mesh = InterpolatedBathymetryMesh(domain,triangleOptions="gVApq30Dena%8.8f" % (0.5**3,),atol=1.0e-1,rtol=1.0e-1,maxLevels=25,maxNodes=50000,
                                       bathyType="grid",bathyAssignmentScheme="localAveraging",errorNormType="L1")
-    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_L1_")
+    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_L1_", global_sync=False)
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
     archive.sync(); archive.close()
@@ -753,7 +753,7 @@ def test_L2_grid():
     domain = setupStepGauss()
     mesh = InterpolatedBathymetryMesh(domain,triangleOptions="gVApq30Dena%8.8f" % (0.5**3,),atol=1.0e-1,rtol=1.0e-1,maxLevels=25,maxNodes=50000,
                                       bathyType="grid",bathyAssignmentScheme="localAveraging",errorNormType="L2")
-    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_L2_")
+    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_L2_", global_sync=False)
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
     archive.sync(); archive.close()
@@ -762,7 +762,7 @@ def test_Linfty_grid():
     domain = setupStepGauss()
     mesh = InterpolatedBathymetryMesh(domain,triangleOptions="gVApq30Dena%8.8f" % (0.5**3,),atol=1.0e-1,rtol=1.0e-1,maxLevels=25,maxNodes=50000,
                                       bathyType="grid",bathyAssignmentScheme="localAveraging",errorNormType="Linfty")
-    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_Linfty_")
+    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_Linfty_", global_sync=False)
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
     archive.sync(); archive.close()
@@ -771,7 +771,7 @@ def test_L1_interp_grid():
     domain = setupStepGauss()
     mesh = InterpolatedBathymetryMesh(domain,triangleOptions="gVApq30Dena%8.8f" % (0.5**3,),atol=1.0e-1,rtol=1.0e-1,maxLevels=25,maxNodes=50000,
                                       bathyType="grid",bathyAssignmentScheme="interpolation",errorNormType="L1")
-    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_L1_interp_")
+    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_L1_interp_", global_sync=False)
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
     archive.sync(); archive.close()
@@ -780,7 +780,7 @@ def test_L2_interp_grid():
     domain = setupStepGauss()
     mesh = InterpolatedBathymetryMesh(domain,triangleOptions="gVApq30Dena%8.8f" % (0.5**3,),atol=1.0e-1,rtol=1.0e-1,maxLevels=25,maxNodes=50000,
                                       bathyType="grid",bathyAssignmentScheme="interpolation",errorNormType="L2")
-    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_L2_interp_")
+    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_L2_interp_", global_sync=False)
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
     archive.sync(); archive.close()
@@ -789,7 +789,7 @@ def test_Linfty_interp_grid():
     domain = setupStepGauss()
     mesh = InterpolatedBathymetryMesh(domain,triangleOptions="gVApq30Dena%8.8f" % (0.5**3,),atol=1.0e-1,rtol=1.0e-1,maxLevels=25,maxNodes=50000,
                                       bathyType="grid",bathyAssignmentScheme="interpolation",errorNormType="Linfty")
-    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_Linfty_interp_")
+    archive = XdmfArchive(dataDir='.',filename="interpolatedBathySimpleTest_grid_Linfty_interp_", global_sync=False)
     archive.domain = ElementTree.SubElement(archive.tree.getroot(),"Domain")
     mesh.meshList[-1].writeMeshXdmf(ar=archive,init=True)
     archive.sync(); archive.close()

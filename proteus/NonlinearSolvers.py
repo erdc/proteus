@@ -270,8 +270,10 @@ class NonlinearSolver:
 
     def converged(self,r):
         self.convergedFlag = False
-        self.norm_r = self.norm(r)
-        self.norm_du = self.unorm(self.du)
+        if self.its:#else already computed norm_r
+            self.norm_r = self.norm(r)
+        if self.convergenceTest == 'u' or self.computeRates:
+            self.norm_du = self.unorm(self.du)
         if self.computeRates ==  True:
             self.computeConvergenceRates()
         if self.convergenceTest == 'its' or self.convergenceTest == 'rits':
@@ -353,7 +355,6 @@ class NonlinearSolver:
         self.infoString += "rtol_r                = %12.5e \n" % self.rtol_r
         self.infoString += "norm(r0)              = %12.5e \n" % self.norm_r0
         self.infoString += "norm(r)               = %12.5e \n" % self.norm_r
-        self.infoString += "norm(du)              = %12.5e \n" % self.norm_du
         if self.convergenceHistoryIsCorrupt:
             self.infoString += "CONVERGENCE HISTORY IS CORRUPT!!!\n"
         self.infoString += "************End Nonlinear Solver Info ************\n"
@@ -459,7 +460,6 @@ class Newton(NonlinearSolver):
                 #no overlap or overlap (until we compute norms over only owned dof)
                 par_r.scatter_forward_insert()
 
-        self.norm_r0 = self.norm(r)
         self.norm_r_hist = []
         self.norm_du_hist = []
         self.gammaK_max=0.0
@@ -548,7 +548,7 @@ class Newton(NonlinearSolver):
                 print "norm_J",self.norm_2_J_current
                 print "lambda_min",min(self.linearSolver.eigenvalues_r)
                 print "lambda_i_min",min(self.linearSolver.eigenvalues_i)
-            if self.lineSearch:
+            if self.lineSearch and self.maxLSits:
                 norm_r_cur = self.norm(r)
                 ls_its = 0
                     #print norm_r_cur,self.atol_r,self.rtol_r
