@@ -142,6 +142,7 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
             self.forceHistory_drag = open("forceHistory_drag.txt","w")
             self.velocityAverage=open("velocityAverage.txt","w")
             self.dragCoefficientHistory=open("dragCoefficientHistory.txt", "w")
+            self.beamDragHistory=open("dragBeamHistory.txt", "w")
             if self.beamRigid==False:
                 self.deflectionHistory=open("deflectionHistory.txt", "w")
 
@@ -168,8 +169,11 @@ class Coefficients(proteus.mprans.RANS2P.Coefficients):
             #self.momentHistory.flush()
             #self.forceHistory_drag.write("%21.16e %21.16e %21.16e  %21.16e\n" %tuple([t,self.beamDrag[0], self.beamDrag[1], self.beamDrag[2]]))
             #self.forceHistory_drag.flush()
-            #self.velocityAverage.write("%21.16e %21.16e %21.16e  %21.16e\n" %tuple([t,self.vel_avg[0], self.vel_avg[1], self.vel_avg[2]]))
-            #self.velocityAverage.flush()
+            self.vel_avg = self.vel_avg/self.rho_0
+            self.velocityAverage.write("%21.16e %21.16e %21.16e  %21.16e\n" %tuple([t,self.vel_avg[0], self.vel_avg[1], self.vel_avg[2]]))
+            self.velocityAverage.flush()
+            self.beamDragHistory.write("%21.16e %21.16e\n" %tuple([t,self.netBeamDrag[0]]))
+            self.beamDragHistory.flush()
             
             if self.beamRigid==False:
                 self.deflectionHistory.write("%21.16e %21.16e %21.16e %21.16e\n" %tuple([t, self.avgHeight, self.avgDeflection, self.avgAngle]))
