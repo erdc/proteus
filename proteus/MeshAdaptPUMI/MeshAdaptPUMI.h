@@ -98,6 +98,8 @@ class MeshAdaptPUMIDrvr{
 
   static void averageToEntity(apf::Field* ef, apf::Field* vf,
       apf::MeshEntity* ent);
+  void volumeAverageToEntity(apf::Field* ef, apf::Field* vf,
+      apf::MeshEntity* ent);
 
   std::string size_field_config;
   std::string adapt_type_config;
