@@ -20,6 +20,7 @@ double a_kl = 0.5; //flux term weight
 int testcount = 0;
 
 int eID = -1;
+//int eID = 5081;
 //int eID = 3865; // water element
 //int eID = 7418; // air element  
 //int eID = 4482; //mixed element
@@ -493,8 +494,9 @@ std::cout<<"Initialized flux"<<std::endl;
           tempbflux = (tempgrad_velo+apf::transpose(tempgrad_velo))*getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)
               -identity*apf::getScalar(temppres,bqptl)/getMPvalue(apf::getScalar(tempvoff,bqptl),rho_0,rho_1);
           bflux = tempbflux*normal;
-/*
-if(localNumber(ent)==eID && l==0){
+//*
+if(comm_rank==0 && localNumber(ent)==eID){
+  std::cout<<"quadrature point "<<l<<" value "<<bqpt<<" weight "<<weight<<" Jdet "<<Jdet<<std::endl;
   std::cout<<"velocity gradient "<<std::endl;
   std::cout<<tempgrad_velo<<std::endl;
   std::cout<<"Viscosity value "<<getMPvalue(apf::getScalar(tempvoff,bqptl),nu_0,nu_1)<<std::endl;
@@ -507,7 +509,7 @@ if(localNumber(ent)==eID && l==0){
   std::cout<<"bflux "<<tempbflux*normal<<std::endl;
 
 }
-*/ 
+//*/ 
         } //end if boundary
         bflux = bflux*weight*Jdet;
         bflux.toArray(&(tempflux[l*nsd]));
@@ -913,6 +915,7 @@ double err_est = 0;
 double err_est_total=0;
 double rel_err_total=0;
 double u_norm_total=0;
+double u_norm_augmented=0;
   while(ent = m->iterate(iter)){ //loop through all elements
     
     elem_type = m->getType(ent);
@@ -999,6 +1002,24 @@ double u_norm_total=0;
           std::cout<<testpt<<" ";
         }
         std::cout<<std::endl;
+  
+        apf::Vector3 vectpt;
+        std::cout<<"Velocity at Nodes\n";
+        for(int test_count=0;test_count<4;test_count++){
+          apf::getVector(velf,dbg_vadj[test_count],0,vectpt);
+          std::cout<<vectpt<<" ";
+        }
+        std::cout<<std::endl;
+        
+        double pressurept;
+        std::cout<<"Pressure at Nodes\n";
+        for(int test_count=0;test_count<4;test_count++){
+          pressurept = apf::getScalar(pref,dbg_vadj[test_count],0);
+          std::cout<<pressurept<<" ";
+        }
+        std::cout<<std::endl;
+
+
         std::cout<<"nshl & numqpt "<<nshl<<" "<<numqpt<<std::endl;
         std::cout<<"Quadrature point "<<k<<std::endl;
         std::cout<<"quad pt" <<qpt<<std::endl;
@@ -1039,12 +1060,12 @@ double u_norm_total=0;
     VecAssemblyBegin(F);
     VecAssemblyEnd(F); 
     VecScale(F,Jdet); //must be done after assembly
-/*
+//*
 if(comm_rank==0 && testcount==eID){ 
       std::cout<<" NOW VECTOR with just a(.,.)+b+c" <<std::endl;
       VecView(F,PETSC_VIEWER_STDOUT_SELF);
 }
-*/
+//*/
     double* bflux;
     int F_idx[ndofs];
     bflux = (double*) calloc(ndofs,sizeof(double));
@@ -1054,6 +1075,13 @@ if(comm_rank==0 && testcount==eID){
       F_idx[s]=s;
     }
     VecSetValues(F,ndofs,F_idx,bflux,ADD_VALUES);
+if(comm_rank==0 && testcount==eID){
+  std::cout<<"What is bflux?\n";
+  for(int s=0;s<ndofs;s++){
+    std::cout<<bflux[s]<<std::endl;
+  }
+  std::cout<<"End of bflux "<<std::endl;
+}
     VecAssemblyBegin(F); VecAssemblyEnd(F);
     free(bflux);
     Vec coef;
@@ -1061,16 +1089,14 @@ if(comm_rank==0 && testcount==eID){
     VecSetSizes(coef,ndofs,ndofs);
     VecSetUp(coef);
 
-/*
+//*
 if(testcount==eID && comm_rank==0){
 
 //Save Temporarily for Debugging
       std::ofstream myfile ("stiffness.csv");
       std::ofstream myfile2 ("force.csv");
-      std::ofstream myfilegsl("stiffness.txt");
       myfile<<std::scientific<<std::setprecision(15);
       myfile2<<std::scientific<<std::setprecision(15);
-      myfilegsl<<std::scientific<<std::setprecision(15);
       PetscScalar matstor;  
       PetscScalar vecstor;  
       int idxr[ndofs], idxc[ndofs];
@@ -1080,17 +1106,17 @@ if(testcount==eID && comm_rank==0){
           idxc[jj]=jj;
           MatGetValues(K,1,&idxr[ii],1,&idxc[jj],&matstor);
           myfile<<matstor<<","; 
-          myfilegsl<<matstor<<std::endl;
         }
         myfile<<std::endl;
         VecGetValues(F,1,&idxr[ii],&vecstor);
         myfile2<<vecstor<<std::endl;
       }
       myfile.close();
+      myfile2.close();
     //MatView(K,PETSC_VIEWER_STDOUT_SELF);
     //VecView(F,PETSC_VIEWER_STDOUT_SELF);
 }
-*/
+//*/
 
     KSP ksp; //initialize solver context
     KSPCreate(PETSC_COMM_SELF,&ksp);
@@ -1153,20 +1179,30 @@ if(testcount==eID && comm_rank==0){
       apf::getVectorGrad(velo_elem,qpt,vel_ij);
       vel_ij = apf::transpose(vel_ij);
       phi_ij = apf::transpose(phi_ij);
+if(comm_rank==0 && localNumber(ent)==eID){
+  std::cout<<"What is phi grad "<<phi_ij<<std::endl;
+  std::cout<<"What is Jdet? "<<Jdet <<std::endl;
+  std::cout<<"Acomp value? "<<visc_val*getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight<<std::endl;
+  std::cout<<"visc_val "<<visc_val<<std::endl;
+}
       Acomp = Acomp + visc_val*getDotProduct(phi_ij,phi_ij+apf::transpose(phi_ij))*weight;
       Bcomp = Bcomp + apf::getDiv(velo_elem,qpt)*apf::getDiv(velo_elem,qpt)*weight;
       visc_avg = visc_avg + visc_val*weight;
       interface_norm = interface_norm + grad_vof.getLength()*vel_vect.getLength()*weight;
       u_norm = u_norm + visc_val*getDotProduct(vel_ij,vel_ij+apf::transpose(vel_ij))*weight;
-//if(testcount==5) std::cout<<"u_norm "<<u_norm<<" visc_val "<<visc_val<<" grad vel "<<vel_ij<<" weight "<<weight<<std::endl;
     } //end compute local error
     visc_avg = visc_avg*Jdet/apf::measure(element);
     Acomp = Acomp*Jdet/visc_avg; //nondimensionalize with average viscosity, Jacobians can cancel out, but this is done for clarity
     Bcomp = Bcomp*Jdet;
     interface_norm = interface_norm*Jdet;
     u_norm = u_norm/visc_avg*Jdet;
-    //err_est = sqrt(Acomp+Bcomp); 
-    err_est = sqrt(Acomp); 
+    err_est = sqrt(Acomp+Bcomp); 
+    //err_est = sqrt(Acomp); 
+
+if(comm_rank==0 && localNumber(ent)==eID){
+std::cout<<"what is visc_avg "<<visc_avg<<std::endl;
+std::cout<<"What is Acomp ? "<<Acomp<<std::endl;
+}
 
     apf::Vector3 err_in(err_est,Acomp,Bcomp);
     apf::setVector(err_reg,ent,0,err_in);
@@ -1187,6 +1223,7 @@ testcount++;
 
   PCU_Add_Doubles(&err_est_total,1);
   PCU_Add_Doubles(&u_norm_total,1);
+  u_norm_augmented = sqrt(err_est_total + u_norm_total);
   err_est_total = sqrt(err_est_total);
   u_norm_total = sqrt(u_norm_total);
   setRelativeError(m,err_reg,rel_err,u_norm_total); //this needs to be fixed
@@ -1194,7 +1231,7 @@ testcount++;
 
 if(comm_rank==0){
 std::cout<<std::setprecision(10)<<std::endl;
-std::cout<<"Error estimate "<<err_est_total<<" Relative error "<<rel_err_total<<" u_norm "<<u_norm_total<<std::endl;
+std::cout<<"Error estimate "<<err_est_total<<" Relative error "<<rel_err_total<<" u_norm "<<u_norm_total<<" u_norm_augmented "<<u_norm_augmented<<std::endl;
 }
   m->end(iter);
 
@@ -1204,7 +1241,7 @@ std::cout<<"Error estimate "<<err_est_total<<" Relative error "<<rel_err_total<<
   apf::destroyField(vof_err);
   removeBCData();
   printf("It cleared the function.\n");
-//  abort();
+  //abort();
 }
 
 
