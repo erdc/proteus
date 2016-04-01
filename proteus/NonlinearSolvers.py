@@ -353,7 +353,6 @@ class NonlinearSolver:
         self.infoString += "rtol_r                = %12.5e \n" % self.rtol_r
         self.infoString += "norm(r0)              = %12.5e \n" % self.norm_r0
         self.infoString += "norm(r)               = %12.5e \n" % self.norm_r
-        self.infoString += "norm(du)              = %12.5e \n" % self.norm_du
         if self.convergenceHistoryIsCorrupt:
             self.infoString += "CONVERGENCE HISTORY IS CORRUPT!!!\n"
         self.infoString += "************End Nonlinear Solver Info ************\n"
