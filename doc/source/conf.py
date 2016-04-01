@@ -51,6 +51,7 @@ extensions = [
     'sphinx.ext.linkcode',
     'IPython.sphinxext.ipython_console_highlighting',
     'IPython.sphinxext.ipython_directive',
+    'sphinxtogithub',
 ]
 
 autodoc_member_order = 'bysource'
@@ -172,8 +173,8 @@ html_theme_options = {
     #     ("Examples", "examples"),
     #     ("Link", "http://example.com", True),
     # ],
-    'navbar_links': [("API","/api/proteus"),
-                     ("C/C++/Fortran","/capi/html/hierarchy")],
+    'navbar_links': [("API","api/proteus"),
+                     ("C/C++/Fortran","capi/html/hierarchy")],
     # Global TOC depth for "site" navbar tab. (Default: 1)
     # Switching to -1 shows all levels.
     'globaltoc_depth': 2,
