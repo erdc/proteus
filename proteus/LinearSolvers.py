@@ -583,7 +583,7 @@ class KSP_petsc4py(LinearSolver):
 class NavierStokes3D:
     def __init__(self,L,prefix=None):
         self.L = L
-        self.PCD=True
+        self.PCD=False
         L_sizes = L.getSizes()
         L_range = L.getOwnershipRange()
         neqns = L_sizes[0][0]
@@ -621,12 +621,16 @@ class NavierStokes3D:
         self.isv.createGeneral(self.velocityDOF,comm=p4pyPETSc.COMM_WORLD)
         self.pc.setFieldSplitIS(('velocity',self.isv),('pressure',self.isp))
         self.pc.setFromOptions()
+
     def setUp(self):
-        if self.L.pde.pp_hasConstantNullSpace:
-            if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
-                self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
-                self.kspList = self.pc.getFieldSplitSubKSP()
-                self.kspList[1].setNullSpace(self.nsp)
+        try:
+            if self.L.pde.pp_hasConstantNullSpace:
+                if self.pc.getType() == 'fieldsplit':#we can't guarantee that PETSc options haven't changed the type
+                    self.nsp = p4pyPETSc.NullSpace().create(constant=True,comm=p4pyPETSc.COMM_WORLD)
+                    self.kspList = self.pc.getFieldSplitSubKSP()
+                    self.kspList[1].setNullSpace(self.nsp)
+        except:
+            pass
         if self.PCD:
             #modify the mass term in the continuity equation so the p-p block is Q
             rowptr, colind, nzval = self.L.pde.jacobian.getCSRrepresentation()

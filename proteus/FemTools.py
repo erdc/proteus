@@ -472,7 +472,6 @@ class LagrangeOnCubeWithNodalBasis(LocalFunctionSpace):
         self.gradientList=[]
         self.order = order
 
-
         # Generate equi distance nodes for generation of lagrange basis
         # Should use Gauss Labatto points
 
@@ -3930,10 +3929,18 @@ class C0_AffineLagrangeOnCubeWithNodalBasis(ParametricFiniteElementSpace):
     a linear affine mapping. The nodal basis is used on the reference simplex.
     """
     def __init__(self,mesh,nd=3,order=2):
-        localFunctionSpace = LagrangeOnCubeWithNodalBasis(nd,order=2)
+        self.order = order
         localGeometricSpace= LinearOnCubeWithNodalBasis(nd)
         #todo fix these interpolation conditions to work on Cube
-        interpolationConditions = QuadraticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        if self.order==2:
+            localFunctionSpace = LagrangeOnCubeWithNodalBasis(nd,order=2)
+            interpolationConditions = QuadraticLagrangeCubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        # elif self.order==1:
+        #     localFunctionSpace = LagrangeOnCubeWithNodalBasis(nd,order=1)
+        #     interpolationConditions = CubeNodalInterpolationConditions(localFunctionSpace.referenceElement)
+        else:
+            raise NotImplementedError ("Lagrange factory only implemented for Q2" 
+                    "elements so far. For Q1 use C0_AffineLinearOnCubeWithNodalBasis.")
         ParametricFiniteElementSpace.__init__(self,
                                               ReferenceFiniteElement(localFunctionSpace,
                                                                      interpolationConditions),
@@ -3942,8 +3949,6 @@ class C0_AffineLagrangeOnCubeWithNodalBasis(ParametricFiniteElementSpace):
                                                          LinearOnCubeWithNodalBasis(nd)),
                                               QuadraticLagrangeCubeDOFMap(mesh,localFunctionSpace,nd)) 
 
-     #   import pdb
-     #   pdb.set_trace()
         for i in range(localFunctionSpace.dim):
             for j in range(localFunctionSpace.dim):
                 x_j = interpolationConditions.quadraturePointArray[j]
@@ -3958,9 +3963,13 @@ class C0_AffineLagrangeOnCubeWithNodalBasis(ParametricFiniteElementSpace):
         self.XdmfWriter=Archiver.XdmfWriter()
 
     def writeMeshXdmf(self,ar,name,t=0.0,init=False,meshChanged=False,arGrid=None,tCount=0):
-        return self.XdmfWriter.writeMeshXdmf_C0Q2Lagrange(ar,name,mesh=self.mesh,spaceDim=self.nSpace_global,
-                                                          dofMap=self.dofMap,t=t,init=init,meshChanged=meshChanged,
-                                                          arGrid=arGrid,tCount=tCount)
+        if self.order == 2:
+            return self.XdmfWriter.writeMeshXdmf_C0Q2Lagrange(ar,name,mesh=self.mesh,spaceDim=self.nSpace_global,
+                                                              dofMap=self.dofMap,t=t,init=init,meshChanged=meshChanged,
+                                                              arGrid=arGrid,tCount=tCount)
+        else:
+            raise NotImplementedError ("Lagrange factory only implemented for Q2" 
+                    "elements so far. For Q1 use C0_AffineLinearOnCubeWithNodalBasis.")
 
     def writeFunctionXdmf(self,ar,u,tCount=0,init=True):
         self.XdmfWriter.writeFunctionXdmf_C0P2Lagrange(ar,u,tCount=tCount,init=init)
@@ -3975,7 +3984,7 @@ def LagrangeCubeFactory(OrderIn):
             C0_AffineLagrangeOnCubeWithNodalBasis.__init__(self,mesh,nd,order=OrderIn)
     return LagrangeCubeOrderN
 
-#
+# Q1 = LagrangeCubeFactory(1)
 Q2 = LagrangeCubeFactory(2)
 
 class DG_AffinePolynomialsOnSimplexWithMonomialBasis(ParametricFiniteElementSpace):
@@ -6024,8 +6033,6 @@ class FiniteElementFunction:
         """
         build data structure for parallel communication
         """
-#        import pdb
-#        pdb.set_trace()
         if self.femSpace.dofMap.dof_offsets_subdomain_owned == None:
             log("WARNING setupParallelCommunication not valid for %s must have parallel information for dofMap" % self,level=-1)
             return
