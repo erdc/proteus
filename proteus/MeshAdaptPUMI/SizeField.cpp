@@ -63,6 +63,50 @@ void MeshAdaptPUMIDrvr::averageToEntity(apf::Field* ef, apf::Field* vf,
   return;
 }
 
+void minToEntity(apf::Field* ef, apf::Field* vf,
+    apf::MeshEntity* ent)
+{
+  apf::Mesh* m = apf::getMesh(ef);
+  apf::Adjacent elements;
+  m->getAdjacent(ent, m->getDimension(), elements);
+  double s=0;
+  for (std::size_t i=0; i < elements.getSize(); ++i){
+    if(i==0)
+      s = apf::getScalar(ef, elements[i], 0);
+    else if(apf::getScalar(ef,elements[i],0) < s)
+      s= apf::getScalar(ef,elements[i],0);
+  }
+  apf::setScalar(vf, ent, 0, s);
+  return;
+}
+
+void MeshAdaptPUMIDrvr::volumeAverageToEntity(apf::Field* ef, apf::Field* vf,
+    apf::MeshEntity* ent)
+{
+  apf::Mesh* m = apf::getMesh(ef);
+  apf::Adjacent elements;
+  apf::MeshElement* testElement;
+  m->getAdjacent(ent, m->getDimension(), elements);
+  double s=0;
+  double invVolumeTotal=0;
+  for (std::size_t i=0; i < elements.getSize(); ++i){
+      testElement = apf::createMeshElement(m,elements[i]);
+      s+= apf::getScalar(ef,elements[i],0)/apf::measure(testElement);
+      invVolumeTotal += 1.0/apf::measure(testElement);
+if(comm_rank==0){
+  std::cout<<"What is s "<<s<<" Volume? "<<apf::measure(testElement)<<" scale? "<<apf::getScalar(ef,elements[i],0)<<std::endl;
+}
+      apf::destroyMeshElement(testElement);
+  }
+  s /= invVolumeTotal;
+if(comm_rank==0){
+  std::cout<<"What is s final? "<<s<<std::endl;
+}
+  apf::setScalar(vf, ent, 0, s);
+  return;
+}
+
+
 static apf::Field* extractSpeed(apf::Field* velocity)
 {
   apf::Mesh* m = apf::getMesh(velocity);
@@ -461,7 +505,6 @@ int MeshAdaptPUMIDrvr::getERMSizeField(double err_total,double rel_err_total)
   double eps_u = 0.002; //distance from the interface
   double tolerance = 0.1;
   double alpha = tolerance/rel_err_total; //refinement constant
-if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<std::endl;
 
   freeField(size_frame);
   freeField(size_scale);
@@ -471,6 +514,7 @@ if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<std::endl;
   apf::Mesh* m = apf::getMesh(err_reg);
   size_scale = apf::createLagrangeField(m, "proteus_size_scale", apf::VECTOR, 1);
   apf::MeshIterator* it;
+  apf::MeshEntity* v;
   int numel = 0;
   int nsd = m->getDimension();
   it = m->begin(nsd);
@@ -479,6 +523,7 @@ if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<std::endl;
 
   numel = m->count(nsd);
   double err_dest = alpha*err_total/sqrt(numel);
+if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<" error destination "<<err_dest<<std::endl;
   double err_curr = 0.0;
   double rel = 0.0;
   apf::Vector3 err_vect;
@@ -491,16 +536,15 @@ if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<std::endl;
     double h_new;
     element = apf::createMeshElement(m,reg);
     //h_old = pow(apf::measure(element),1.0/3.0);
-    h_old = pow(apf::measure(element)*6*sqrt(2),1.0/3.0); //radius of insphere of regular tet
+    h_old = pow(apf::measure(element)*6*sqrt(2),1.0/3.0); //edge of a regular tet
     apf::getVector(err_reg,reg,0,err_vect);
     err_curr = err_vect[0];
-    h_new = h_old;//*pow(err_dest/err_curr,0.5);
+    h_new = h_old*sqrt(err_dest/err_curr);
     apf::setScalar(size_iso_reg,reg,0,h_new);
   }
   apf::destroyMeshElement(element);
   m->end(it);
-
-  apf::MeshEntity* v;
+/*
   it = m->begin(0);
   apf::Adjacent regions;
   apf::Adjacent edges;
@@ -522,18 +566,20 @@ if(comm_rank==0) std::cout<<"refinement ratio "<<alpha<<std::endl;
       apf::destroyMeshElement(element);
     }
     h_old /= edges.getSize();
-    h_new = h_old*pow(err_dest/err_curr,0.5);
+    h_new = h_old*sqrt(err_dest/err_curr);
     apf::setScalar(size_iso,v,0,h_new);
   }
   m->end(it);
-
-/*
+*/
+//*
   it = m->begin(0);
   while((v=m->iterate(it))){
-    averageToEntity(size_iso_reg, size_iso, v);
+    minToEntity(size_iso_reg, size_iso, v);
+    //volumeAverageToEntity(size_iso_reg, size_iso, v);
+    //averageToEntity(size_iso_reg, size_iso, v);
   }
   m->end(it); 
-*/
+//*/
 
 //Get the anisotropic size frame
   apf::Field* phif = m->findField("phi");

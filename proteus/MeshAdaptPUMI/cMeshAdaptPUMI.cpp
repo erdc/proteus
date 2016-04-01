@@ -242,7 +242,7 @@ int MeshAdaptPUMIDrvr::adaptPUMIMesh()
   double mass_before = getTotalMass();
 
   double t1 = PCU_Time();
-  ma::adapt(in);
+  //ma::adapt(in);
   double t2 = PCU_Time();
 
   if(comm_rank==0 && logging_config=="on"){
