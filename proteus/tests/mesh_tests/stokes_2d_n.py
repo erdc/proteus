@@ -31,13 +31,13 @@ elif numeric_scheme=="C0P1C0P1":
     subgridError = StokesASGS_velocity_pressure(coefficients,nd)
 elif numeric_scheme=="C0Q1C0Q1":
     femSpaces = {0:C0_AffineLinearOnCubeWithNodalBasis,
-                1:C0_AffineLinearOnCubeWithNodalBasis,
-                2:C0_AffineLinearOnCubeWithNodalBasis}
+                 1:C0_AffineLinearOnCubeWithNodalBasis,
+                 2:C0_AffineLinearOnCubeWithNodalBasis}
     subgridError = StokesASGS_velocity_pressure(coefficients,nd)
 elif numeric_scheme=="THQuads":
     femSpaces = {0:C0_AffineLinearOnCubeWithNodalBasis,
-                1:Q2,
-                2:Q2}
+                 1:Q2,
+                 2:Q2}
 else:
     print 'INVALID FINITE ELEMENT SELECTED'
 #######################################################
