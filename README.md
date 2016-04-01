@@ -1,6 +1,6 @@
 # Proteus: Computational Methods and Simulation Toolkit [![Build Status](https://travis-ci.org/erdc-cm/proteus.svg?branch=master)](https://travis-ci.org/erdc-cm/proteus)
 
-Proteus (http://proteus.usace.army.mil) is a Python package for
+Proteus (http://erdc-cm.github.io/proteus) is a Python package for
 rapidly developing computer models and numerical methods.
 
 # Installation
