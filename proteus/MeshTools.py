@@ -4549,8 +4549,7 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
         self.nLayersOfOverlap=nLayersOfOverlap ; self.parallelPartitioningType = parallelPartitioningType
         if not skipInit:
             if self.useC:
-             #   assert(useC==True,'WIP -- C functionality is not implemented for this class.')
-                pass
+                raise NotImplementedError ("C functionality sill not enabled for 2D quads")
             else:
                 grid=RectangularGrid(nx,ny,nz,Lx,Ly,Lz)
                 self.meshList.append(QuadrilateralMesh())
@@ -4559,11 +4558,14 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
                 self.elementChildren=[]
                 log(self.meshList[0].meshInfo())
                 self.meshList[0].globalMesh = self.meshList[0]
-                # This following commands really should live somewhere else...Most of this is done
-                # in the c function calls that are skipped about
+
+                # The following four lines should be called elsewhere...Most of this is don in
+                # the c-function calls that are not implemented yet for 2D quads
                 self.meshList[0].nElements_owned = self.meshList[0].nElements_global
                 self.meshList[0].nodeNumbering_subdomain2global.resize(self.meshList[0].nNodes_global)
                 self.meshList[0].elementNumbering_subdomain2global.resize(self.meshList[0].nElements_global)
+                self.meshList[0].nodeOffsets_subdomain_owned[-1] = self.meshList[0].nNodes_global
+
                 for node in range(self.meshList[0].nNodes_global):
                     self.meshList[0].nodeNumbering_subdomain2global.itemset(node,node)
                 for element in range(self.meshList[0].nElements_global):
@@ -4578,11 +4580,14 @@ class MultilevelQuadrilateralMesh(MultilevelMesh):
         self.meshList.append(QuadrilateralMesh())
         self.meshList[-1].globalMesh = self.meshList[-1]
         childrenDict = self.meshList[-1].refine(self.meshList[-2])
-        # These commands should really be put somewhere else.  Perhpas write seperate functions
-        # to manage them.
+
+        # The following four lines should be called elsewhere...Most of this is don in
+        # the c-function calls that are not implemented yet for 2D quads
         self.meshList[-1].nElements_owned = self.meshList[-1].nElements_global
         self.meshList[-1].nodeNumbering_subdomain2global.resize(self.meshList[-1].nNodes_global)
         self.meshList[-1].elementNumbering_subdomain2global.resize(self.meshList[-1].nElements_global)
+        self.meshList[-1].nodeOffsets_subdomain_owned[-1] = self.meshList[-1].nNodes_global
+
         for node in range(self.meshList[-1].nNodes_global):
             self.meshList[-1].nodeNumbering_subdomain2global.itemset(node,node)
         for element in range(self.meshList[-1].nElements_global):

@@ -39,6 +39,9 @@ def test_mesh_build():
     assert mlMesh.meshList[1].nElements_global == 4*(nnx-1)*(nny-1), 'Mesh generator has built incorrect number of quads'
 
 def test_2D_stokes():
+    '''
+    Runs a 2D Poiseulle Stokes problem on Quads with Taylor Hood elements
+    ''' 
     import stokes_2d_p
     import stokes_2d_n
     pList = [stokes_2d_p]
@@ -51,20 +54,13 @@ def test_2D_stokes():
     opts.verbose=True
     opts.profile=True
     opts.gatherArchive=True
-    # nList[0].femSpaces[0]  = default_n.C0_AffineLinearOnSimplexWithNodalBasis
-    # nList[0].linearSolver=default_n.KSP_petsc4py
-    # nList[0].multilevelLinearSolver=default_n.KSP_petsc4py
-    # nList[0].numericalFluxType = default_n.Advection_DiagonalUpwind_Diffusion_SIPG_exterior
-    #nList[0].linearSolver=default_n.LU
-    #nList[0].multilevelLinearSolver=default_n.LU
     ns = NumericalSolution.NS_base(so,pList,nList,so.sList,opts)
     ns.calculateSolution('test1')
-  #  pass
 
 
 if __name__ == '__main__':
-    from proteus import Comm
-    comm = Comm.init()
-    import nose
-    nose.main()
+   from proteus import Comm
+   comm = Comm.init()
+   import nose
+   nose.main()
 
