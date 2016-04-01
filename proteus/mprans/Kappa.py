@@ -136,7 +136,7 @@ c_{\mu} = 0.09, c_1 = 0.126, c_2 = 1.92, c_{\varepsilon} = 0.07
         self.variableNames=['kappa']
         nc=1
         self.nd = nd
-        assert self.nd == 3, "Kappa only implements 3d for now" #assume 3d for now
+        #assert self.nd == 3, "Kappa only implements 3d for now" #assume 3d for now
         self.rho_0 = rho_0; self.nu_0 = nu_0
         self.rho_1 = rho_1; self.nu_1 = nu_1
         self.c_mu = c_mu; self.sigma_k = sigma_k
